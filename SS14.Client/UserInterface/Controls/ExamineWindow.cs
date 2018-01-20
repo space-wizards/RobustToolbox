@@ -47,10 +47,10 @@ namespace SS14.Client.UserInterface.Components
             _entitySprite.Draw();
         }
 
-        public override void Dispose()
+        public override void Destroy()
         {
             _entitySprite = null;
-            base.Dispose();
+            base.Destroy();
         }
     }
 }

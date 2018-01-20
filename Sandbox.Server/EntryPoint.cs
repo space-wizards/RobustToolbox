@@ -5,7 +5,6 @@ using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Player;
-using SS14.Shared;
 using SS14.Shared.Console;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Enums;

@@ -62,12 +62,12 @@ namespace SS14.Client.UserInterface.CustomControls
                 (int)(CluwneLib.CurrentRenderTarget.Size.Y / 2f) - (int)(ClientArea.Height / 2f));
         }
         
-        public override void Dispose()
+        public override void Destroy()
         {
             if (Disposing) return;
             _placementManager.PlacementCanceled -= PlacementManagerPlacementCanceled;
-            _tileList.Dispose();
-            base.Dispose();
+            _tileList.Destroy();
+            base.Destroy();
         }
         
         public override bool KeyDown(KeyEventArgs e)
@@ -77,7 +77,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
             if (e.Key == Keyboard.Key.Escape)
             {
-                Dispose();
+                Destroy();
                 return true;
             }
             return false;
@@ -128,7 +128,7 @@ namespace SS14.Client.UserInterface.CustomControls
                     tileLabel.LocalPosition = new Vector2i(0, 5);
 
                 lastControl = tileLabel;
-                tileLabel.Alignment = Align.Bottom;
+                tileLabel.Alignment = ControlAlignments.Bottom;
 
                 tileLabel.BackgroundColor = Color4.Gray;
                 tileLabel.DrawBackground = true;

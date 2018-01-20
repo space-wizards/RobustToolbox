@@ -158,12 +158,12 @@ namespace SS14.Client.UserInterface.CustomControls
             return _input.TextEntered(e);
         }
 
-        public override void Dispose()
+        public override void Destroy()
         {
-            base.Dispose();
+            base.Destroy();
 
             TextSubmitted = null;
-            _input.Dispose();
+            _input.Destroy();
         }
 
         public override void DoLayout()
@@ -189,7 +189,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public override void Draw()
         {
-            if (Disposed || !Visible) return;
+            if (Destroyed || !Visible) return;
             base.Draw();
             _input.Draw();
         }
@@ -258,7 +258,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public void AddLine(string message, ChatChannel channel, Color color)
         {
-            if (Disposed) return;
+            if (Destroyed) return;
 
             if(ChannelBlacklist.Contains(channel))
                 return;

@@ -1,9 +1,7 @@
 ﻿using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.State;
-using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.State.States;
-using SS14.Client.UserInterface.Components;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
@@ -17,7 +15,6 @@ namespace SS14.Client.UserInterface.CustomControls
     internal class MenuWindow : Window
     {
         private readonly IClientNetManager _netMgr = IoCManager.Resolve<IClientNetManager>();
-        private readonly IUserInterfaceManager _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 
         public MenuWindow() : base("MainMenu", new Vector2i(140, 130))
         {
@@ -31,13 +28,13 @@ namespace SS14.Client.UserInterface.CustomControls
 
             var buttonTile = new Button("Spawn Tiles");
             buttonTile.LocalPosition = new Vector2i(0, 5);
-            buttonTile.Alignment = Align.Bottom;
+            buttonTile.Alignment = ControlAlignments.Bottom;
             buttonEntity.AddControl(buttonTile);
             buttonTile.Clicked += button_tile_Clicked;
 
             var buttonQuit = new Button("Quit");
             buttonQuit.LocalPosition = new Vector2i(0, 20);
-            buttonQuit.Alignment = Align.Bottom;
+            buttonQuit.Alignment = ControlAlignments.Bottom;
             buttonTile.AddControl(buttonQuit);
             buttonQuit.Clicked += button_quit_Clicked;
         }
@@ -62,32 +59,33 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             // request disconnect
             _netMgr.ClientDisconnect("Client disconnected from game.");
+            Destroy();
         }
 
         private void button_tile_Clicked(Button sender)
         {
-            _userInterfaceManager.DisposeAllComponents<TileSpawnWindow>(); //Remove old ones.
+            UiManager.DisposeAllComponents<TileSpawnWindow>(); //Remove old ones.
 
             var tileSpawnPanel = new TileSpawnWindow(new Vector2i(350, 410));
-            _userInterfaceManager.AddComponent(tileSpawnPanel);
+            UiManager.AddComponent(tileSpawnPanel);
             tileSpawnPanel.DoLayout();
 
             // hide me
             Visible = !Visible;
-            _userInterfaceManager.RemoveFocus(this);
+            UiManager.RemoveFocus(this);
         }
 
         private void button_entity_Clicked(Button sender)
         {
-            _userInterfaceManager.DisposeAllComponents<EntitySpawnWindow>(); //Remove old ones.
+            UiManager.DisposeAllComponents<EntitySpawnWindow>(); //Remove old ones.
 
             var entitySpawnWindow = new EntitySpawnWindow(new Vector2i(350, 410));
-            _userInterfaceManager.AddComponent(entitySpawnWindow);
+            UiManager.AddComponent(entitySpawnWindow);
             entitySpawnWindow.DoLayout();
 
             //Create a new one.
             Visible = !Visible;
-            _userInterfaceManager.RemoveFocus(this);
+            UiManager.RemoveFocus(this);
         }
     }
 }

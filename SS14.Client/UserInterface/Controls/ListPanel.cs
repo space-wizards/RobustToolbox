@@ -15,7 +15,7 @@ namespace SS14.Client.UserInterface.Controls
             {
                 child.DoLayout(); // only called to set up the ClientRect
                 child.LocalPosition = new Vector2i(0, lastHeight); // offset from top left of list
-                child.Alignment = Align.None; // don't align yourself to anything special
+                child.Alignment = ControlAlignments.None; // don't align yourself to anything special
                 lastHeight += child.ClientArea.Height;
             }
 

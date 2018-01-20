@@ -45,7 +45,7 @@ namespace SS14.Client.UserInterface.Controls
             _dropDown = new ScrollableContainer(new Vector2i(width, dropDownLength))
             {
                 Visible = false,
-                Alignment = Align.Bottom,
+                Alignment = ControlAlignments.Bottom,
                 LocalPosition = new Vector2i(),
                 Parent = this
             };
@@ -105,10 +105,10 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         /// <inheritdoc />
-        public override void Dispose()
+        public override void Destroy()
         {
             _contentStrings.Clear();
-            _dropDown.Dispose();
+            _dropDown.Destroy();
             _dropDown = null;
             _selectedLabel = null;
             _listboxLeft = null;
@@ -116,7 +116,7 @@ namespace SS14.Client.UserInterface.Controls
             _listboxRight = null;
             ItemSelected = null;
 
-            base.Dispose();
+            base.Destroy();
         }
 
         /// <inheritdoc />

@@ -75,11 +75,11 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         /// <inheritdoc />
-        public override void Dispose()
+        public override void Destroy()
         {
             _text = null;
             Clicked = null;
-            base.Dispose();
+            base.Destroy();
             GC.SuppressFinalize(this);
         }
 

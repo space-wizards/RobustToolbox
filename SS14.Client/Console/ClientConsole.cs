@@ -30,7 +30,7 @@ namespace SS14.Client.Console
 
     public class ClientConsole : IClientConsole, IDebugConsole
     {
-        private static readonly Color4 MsgColor = new Color4(65, 105, 225, 255);
+        private static readonly Color4 _msgColor = new Color4(65, 105, 225, 255);
 
         [Dependency]
         protected readonly IClientNetManager _network;
@@ -86,7 +86,7 @@ namespace SS14.Client.Console
         {
             var msg = (MsgConCmdAck) message;
 
-            AddLine("< " + msg.Text, ChatChannel.Default, MsgColor);
+            AddLine("< " + msg.Text, ChatChannel.Default, _msgColor);
         }
 
         private void HandleConCmdReg(NetMessage message)

@@ -20,8 +20,6 @@ namespace SS14.Client.UserInterface.Controls
         protected bool Disposing;
 
         private RenderImage _clippingRi;
-        private float _maxX;
-        private float _maxY;
 
         public UiAnchor Container { get; }
 
@@ -52,12 +50,10 @@ namespace SS14.Client.UserInterface.Controls
             ScrollbarV = new Scrollbar(false);
 
             Container = new UiAnchor();
-            // Container.Size = size; // using this as a list
             Container.Position = Vector2i.Zero; //this must always be 0 to work with RT
-            //Container.BackgroundColor = Color4.Magenta;
             Container.DrawBackground = false;
             Container.DrawBorder = false;
-            // AddControl(Container); // this needs to always be at screenPos {0,0}, setting a parent breaks that
+            // this needs to always be at screenPos {0,0}, setting a parent breaks that
 
             ScrollbarH.Update(0);
             ScrollbarV.Update(0);
@@ -80,34 +76,11 @@ namespace SS14.Client.UserInterface.Controls
 
             ScrollbarH.Position = Position + new Vector2i(ClientArea.Left, ClientArea.Bottom - ScrollbarH.ClientArea.Height);
             ScrollbarV.Position = Position + new Vector2i(ClientArea.Right - ScrollbarV.ClientArea.Width, ClientArea.Top);
-
-            /*
-            _maxX = 0;
-            _maxY = 0;
-
-            foreach (var component in Components)
-            {
-                if (component.Position.X + component.ClientArea.Width > _maxX)
-                    _maxX = component.Position.X + component.ClientArea.Width;
-
-                if (component.Position.Y + component.ClientArea.Height > _maxY)
-                    _maxY = component.Position.Y + component.ClientArea.Height;
-            }
-            */
         }
 
         public override void DoLayout()
         {
             Container.DoLayout();
-
-            /*
-            foreach (var component in Components)
-            {
-                component.DoLayout();
-                component.Position = new Vector2i(component.Position.X - (int) ScrollbarH.Value, component.Position.Y - (int) ScrollbarV.Value);
-                component.Update(0);
-            }
-            */
             base.DoLayout();
         }
 
@@ -116,20 +89,17 @@ namespace SS14.Client.UserInterface.Controls
             if (Disposing || !Visible) return;
 
             Container.Update(frameTime);
-            /*
-            if (_innerFocus != null && !Components.Contains(_innerFocus)) ClearFocus();
-            */
             var bounds = Container.GetShrinkBounds(false);
 
             bounds = new Box2i(Container.Position, bounds.BottomRight); // screen to local size
-            _maxX = bounds.Width;
-            _maxY = bounds.Height;
+            float maxX = bounds.Width;
+            float maxY = bounds.Height;
 
-            ScrollbarH.Max = (int)_maxX - ClientArea.Width + (_maxY > _clippingRi.Height ? ScrollbarV.ClientArea.Width : 0);
-            ScrollbarH.Visible = _maxX > _clippingRi.Width;
+            ScrollbarH.Max = (int)maxX - ClientArea.Width + (maxY > _clippingRi.Height ? ScrollbarV.ClientArea.Width : 0);
+            ScrollbarH.Visible = maxX > _clippingRi.Width;
 
-            ScrollbarV.Max = (int)_maxY - ClientArea.Height + (_maxX > _clippingRi.Height ? ScrollbarH.ClientArea.Height : 0);
-            ScrollbarV.Visible = _maxY > _clippingRi.Height;
+            ScrollbarV.Max = (int)maxY - ClientArea.Height + (maxX > _clippingRi.Height ? ScrollbarH.ClientArea.Height : 0);
+            ScrollbarV.Visible = maxY > _clippingRi.Height;
 
             ScrollbarH.Update(frameTime);
             ScrollbarV.Update(frameTime);
@@ -169,13 +139,13 @@ namespace SS14.Client.UserInterface.Controls
             ScrollbarV.Draw();
         }
 
-        public override void Dispose()
+        public override void Destroy()
         {
             if (Disposing) return;
             Disposing = true;
             _clippingRi.Dispose();
             _clippingRi = null;
-            base.Dispose();
+            base.Destroy();
             GC.SuppressFinalize(this);
         }
 
@@ -242,11 +212,11 @@ namespace SS14.Client.UserInterface.Controls
             if (Container.MouseWheelMove(rtArgs))
                 return true;
 
-            if (ScrollbarV.Visible && ClientArea.Translated(Position).Contains(e.X, e.Y))
-            {
-                if (ScrollbarV.MouseWheelMove(e))
-                    return true;
-            }
+            if (!ScrollbarV.Visible || !ClientArea.Translated(Position).Contains(e.X, e.Y))
+                return false;
+
+            if (ScrollbarV.MouseWheelMove(e))
+                return true;
 
             return false;
         }

@@ -1,8 +1,5 @@
 ﻿using OpenTK.Graphics;
 using SS14.Client.Graphics.Input;
-using SS14.Client.Interfaces.Resource;
-using SS14.Shared;
-using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
@@ -22,11 +19,9 @@ namespace SS14.Client.UserInterface.Components
         #endregion Delegates
 
         protected readonly List<KeyValuePair<ImageButton, Object>> _items = new List<KeyValuePair<ImageButton, object>>();
-        protected readonly IResourceCache _resourceCache;
         protected readonly SimpleImage _selectionGlow;
         public int AdditionalColumns { get; set; } = 2;//Number of additional visible columns beside the selection. 1 = 3 total visible. selection + 1 left + 1 right.
         public int ItemSpacing { get; set; } = 10; //Additional space between items.
-        public Vector2i Size { get; set; } = new Vector2i(300, 100);
         protected ImageButton _buttonLeft;
         private Color4 ctemp;
         protected ImageButton _buttonRight;
@@ -45,8 +40,8 @@ namespace SS14.Client.UserInterface.Components
 
         public Showcase()
         {
-            _resourceCache = IoCManager.Resolve<IResourceCache>();
-
+            Size = new Vector2i(300, 100);
+            
             _buttonLeft = new ImageButton();
             _buttonLeft.Clicked += _buttonLeft_Clicked;
 
@@ -233,12 +228,12 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
-        public override void Dispose()
+        public override void Destroy()
         {
             _buttonRight = null;
             _buttonLeft = null;
             SelectionChanged = null;
-            base.Dispose();
+            base.Destroy();
             GC.SuppressFinalize(this);
         }
 

@@ -27,7 +27,7 @@ namespace SS14.Shared.Timers
         /// <summary>
         /// Called when the timer is fired.
         /// </summary>
-        public Action OnFired;
+        public Action OnFired { get; set; }
 
         public Timer(int time, bool isRepeating, Action onFired)
         {

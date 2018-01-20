@@ -1,10 +1,7 @@
-﻿using OpenTK;
-using SS14.Client.Graphics;
-using SS14.Client.Graphics.Utility;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
-using SS14.Shared.Utility;
 using SS14.Shared.Maths;
 using System;
 using Vector2i = SS14.Shared.Maths.Vector2i;
@@ -17,7 +14,6 @@ namespace SS14.Client.UserInterface.Components
 {
     internal class FloatingDecoration : Control
     {
-        private readonly IResourceCache _resourceCache;
         private readonly UserInterfaceManager _uiMgr;
         public bool BounceRotate = false; //Rotation inverts after hitting a certain angle?
         public float BounceRotateAngle = 0; //Angle at which to change rotation direction.
@@ -41,9 +37,8 @@ namespace SS14.Client.UserInterface.Components
 
         private float spriteRotation;
 
-        public FloatingDecoration(IResourceCache resourceCache, string spriteName)
+        public FloatingDecoration(string spriteName)
         {
-            _resourceCache = resourceCache;
             DrawSprite = _resourceCache.GetSprite(spriteName);
 
             _uiMgr = (UserInterfaceManager)IoCManager.Resolve<IUserInterfaceManager>();
@@ -123,10 +118,10 @@ namespace SS14.Client.UserInterface.Components
             DrawSprite.Draw();
         }
 
-        public override void Dispose()
+        public override void Destroy()
         {
             DrawSprite = null;
-            base.Dispose();
+            base.Destroy();
             GC.SuppressFinalize(this);
         }
 

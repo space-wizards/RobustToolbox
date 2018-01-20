@@ -1,8 +1,5 @@
-
-using System;
+﻿using System;
 using System.Collections.Generic;
-
-
 
 namespace SS14.Client.Graphics.VertexData
 {
@@ -15,46 +12,24 @@ namespace SS14.Client.Graphics.VertexData
     /// will contain texture coordinates, normals, etc...  This will allow us to manage different types
     /// of vertices so that we can efficiently use mesh data.
     /// </remarks>
-    public class VertexType : IDisposable
+    public class VertexType
     {
-        #region Variables.
         private bool _changed;						// Flag to indicate that the vertex has changed.
         private bool _sizeChanged;					// Flag to indicate that the size has changed.
         private int _vertexSize;					// Size of the vertex in bytes.
       
         private List<VertexField> _fields;			// List of vertex fields.
-        #endregion
-
-        #region Properties.
-        /// <summary>
-        /// Property to create and return the Direct 3D vertex declaration.
-        /// </summary>
-      
 
         /// <summary>
         /// Property to return whether this type has changed or not.
         /// </summary>
-        public bool NeedsUpdate
-        {
-            get
-            {
-                return _changed;
-            }
-        }
+        public bool NeedsUpdate => _changed;
 
         /// <summary>
         /// Property to return the number of fields in the list.
         /// </summary>
-        public int Count
-        {
-            get
-            {
-                return _fields.Count;
-            }
-        }
-        #endregion
+        public int Count => _fields.Count;
 
-        #region Methods.
         /// <summary>
         /// Function to add a field to this vertex.
         /// </summary>
@@ -124,7 +99,7 @@ namespace SS14.Client.Graphics.VertexData
         public void UpdateField ( short stream , int fieldIndex , short fieldOffset , VertexFieldContext context , VertexFieldType fieldType , byte index )
         {
             if ((fieldIndex < 0) || (fieldIndex >= _fields.Count))
-                throw new IndexOutOfRangeException("The index " + index.ToString() + " is not valid for this collection.");
+                throw new ArgumentOutOfRangeException(nameof(index), index, "Value must be inside " + nameof(fieldIndex));
 
             _fields[fieldIndex] = new VertexField(stream , fieldOffset , context , fieldType , index);
 
@@ -284,78 +259,19 @@ namespace SS14.Client.Graphics.VertexData
         }
 
         /// <summary>
-        /// Determines whether the specified <see cref="T:System.Object"></see> is equal to the current <see cref="T:System.Object"></see>.
-        /// </summary>
-        /// <param name="obj">The <see cref="T:System.Object"></see> to compare with the current <see cref="T:System.Object"></see>.</param>
-        /// <returns>
-        /// true if the specified <see cref="T:System.Object"></see> is equal to the current <see cref="T:System.Object"></see>; otherwise, false.
-        /// </returns>
-        public override bool Equals ( object obj )
-        {
-            VertexType comparer = obj as VertexType;		// Comparison object.
-
-            if ((comparer != null) && (comparer.Count == Count))
-            {
-                // Compare fields.
-                for (int i = 0 ; i < _fields.Count ; i++)
-                {
-                    if (!comparer.Contains(_fields[i]))
-                        return false;
-                }
-            }
-
-            return false;
-        }
-
-        /// <summary>
         /// Property to return whether a field exists within this type or not.
         /// </summary>
         /// <param name="field">Field value.</param>
         /// <returns>TRUE if it exists, FALSE if not.</returns>
-        public bool Contains ( VertexField field )
+        public bool Contains(VertexField field)
         {
             return _fields.Contains(field);
         }
-
-        /// <summary>
-        /// Serves as a hash function for a particular type. <see cref="M:System.Object.GetHashCode"></see> is suitable for use in hashing algorithms and data structures like a hash table.
-        /// </summary>
-        /// <returns>
-        /// A hash code for the current <see cref="T:System.Object"></see>.
-        /// </returns>
-        public override int GetHashCode ( )
-        {
-            int code = 0;		// Hash code.
-
-            for (int i = 0 ; i < _fields.Count ; i++)
-                code ^= _fields[i].GetHashCode();
-
-            return code;
-        }
-        #endregion
-
-        #region Properties.
+        
         /// <summary>
         /// Property to return a vertex field by its index.
         /// </summary>
-        public VertexField this[int index]
-        {
-            get
-            {
-                return this[index , 0];
-            }
-        }
-
-        /// <summary>
-        /// Property to return a vertex field by its context.
-        /// </summary>
-        public VertexField this[VertexFieldContext context]
-        {
-            get
-            {
-                return this[context , 0];
-            }
-        }
+        public VertexField this[int index] => this[index , 0];
 
         /// <summary>
         /// Property to return a vertex field by its index.
@@ -364,16 +280,13 @@ namespace SS14.Client.Graphics.VertexData
         {
             get
             {
-                VertexField field;		// Field in question
-
-                for (int i = 0 ; i < _fields.Count ; i++)
+                foreach (var f in _fields)
                 {
-                    field = _fields[i];
-                    if (field.Index == fieldindex)
-                        return field;
+                    if (f.Index == fieldindex)
+                        return f;
                 }
 
-                throw new IndexOutOfRangeException("The index " + index.ToString() + " is not valid for this collection.");
+                throw new ArgumentException("The index " + index + " is not valid for this collection.");
             }
         }
 
@@ -393,10 +306,9 @@ namespace SS14.Client.Graphics.VertexData
                         return field;
                 }
 
-                throw new ArgumentException("There is no vertex field context '" + context.ToString() + "' in this vertex type." , "context");
+                throw new ArgumentException("There is no vertex field context '" + context + "' in this vertex type." , "context");
             }
         }
-        #endregion
 
         #region Constructors and Destructors.
         /// <summary>
@@ -407,32 +319,6 @@ namespace SS14.Client.Graphics.VertexData
             _fields = new List<VertexField>();
             _changed = true;
             _sizeChanged = true;
-        }
-        #endregion
-
-        #region IDisposable Members
-        /// <summary>
-        /// Function to perform clean up.
-        /// </summary>
-        /// <param name="disposing">TRUE to dispose all resources, FALSE to only release unmanaged.</param>
-        private void Dispose ( bool disposing )
-        {
-            if (disposing)
-            {
-
-                _fields.Clear();
-                _fields = null;
-              
-            }
-        }
-
-        /// <summary>
-        /// Function to perform clean up.
-        /// </summary>
-        public void Dispose ( )
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
         #endregion
     }

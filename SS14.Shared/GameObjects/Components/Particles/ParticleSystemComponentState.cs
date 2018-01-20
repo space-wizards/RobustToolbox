@@ -6,12 +6,14 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public class ParticleSystemComponentState : ComponentState
     {
-        public readonly Dictionary<string, bool> emitters;
+        private readonly Dictionary<string, bool> _emitters;
 
-        public ParticleSystemComponentState(Dictionary<string, bool> _emitters)
+        public IReadOnlyDictionary<string, bool> Emitters => _emitters;
+
+        public ParticleSystemComponentState(Dictionary<string, bool> emitters)
             : base(NetIDs.PARTICLE_SYSTEM)
         {
-            emitters = _emitters;
+            _emitters = emitters;
         }
     }
 }

@@ -30,7 +30,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public EntitySpawnSelectButton(EntityPrototype entityTemplate, string templateName)
         {
-            var spriteNameParam = entityTemplate.GetBaseSpriteParamaters().FirstOrDefault();
+            var spriteNameParam = entityTemplate.GetBaseSpriteParameters().FirstOrDefault();
             var spriteName = "";
             if (spriteNameParam != null)
                 spriteName = spriteNameParam.GetValue<string>();

@@ -119,8 +119,8 @@ namespace SS14.Client.Graphics.Lighting
             }
 
             private Godot.Light2D Light2D;
-            private LightManager _manager;
-            private bool Deferred => _manager.Deferred;
+            private LightManager Manager;
+            private bool Deferred => Manager.Deferred;
 
             private IClientTransformComponent parentTransform;
 
@@ -130,14 +130,17 @@ namespace SS14.Client.Graphics.Lighting
                 {
                     // TODO: Allow this to be modified.
                     ShadowEnabled = true,
+                    ShadowFilter = Godot.Light2D.ShadowFilterEnum.Pcf13,
+                    ShadowGradientLength = 1,
+                    ShadowFilterSmooth = 0.25f,
                 };
-                _manager = manager;
+                Manager = manager;
                 Mode = new LightModeConstant();
                 Mode.Start(this);
 
                 if (Deferred)
                 {
-                    _manager.deferredViewport.AddChild(Light2D);
+                    Manager.deferredViewport.AddChild(Light2D);
                 }
             }
 
@@ -159,7 +162,6 @@ namespace SS14.Client.Graphics.Lighting
                 if (!Deferred)
                 {
                     node.SceneNode.AddChild(Light2D);
-                    UpdateLightPosition();
                 }
                 parentTransform = node;
                 UpdateEnabled();
@@ -173,8 +175,8 @@ namespace SS14.Client.Graphics.Lighting
                     return;
                 }
 
-                _manager.RemoveLight(this);
-                _manager = null;
+                Manager.RemoveLight(this);
+                Manager = null;
 
                 Light2D.QueueFree();
                 Light2D.Dispose();
@@ -195,7 +197,7 @@ namespace SS14.Client.Graphics.Lighting
 
             public void UpdateEnabled()
             {
-                Light2D.Visible = Enabled && _manager.Enabled && parentTransform != null;
+                Light2D.Visible = Enabled && Manager.Enabled && parentTransform != null;
             }
 
             public void FrameProcess(FrameEventArgs args)
@@ -204,14 +206,6 @@ namespace SS14.Client.Graphics.Lighting
                 if (Deferred && parentTransform != null)
                 {
                     Light2D.Position = parentTransform.SceneNode.GlobalPosition;
-                }
-            }
-
-            private void UpdateLightPosition()
-            {
-                if (!Deferred)
-                {
-                    return;
                 }
             }
         }

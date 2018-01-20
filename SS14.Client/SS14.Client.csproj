@@ -129,6 +129,7 @@
     <Compile Include="GameStates\GameStateManager.cs" />
     <Compile Include="Graphics\CanvasLayers.cs" />
     <Compile Include="Graphics\Lighting\LightManager.Light.cs" />
+    <Compile Include="Graphics\Lighting\LightManager.Occluder.cs" />
     <Compile Include="Graphics\Lighting\LightManager.cs" />
     <Compile Include="Graphics\Lighting\LightMode\LightModeConstant.cs" />
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
@@ -146,6 +147,7 @@
     <Compile Include="Interfaces\Graphics\Lighting\ILight.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILightManager.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILightMode.cs" />
+    <Compile Include="Interfaces\Graphics\Lighting\IOccluder.cs" />
     <Compile Include="Interfaces\IBaseClient.cs" />
     <Compile Include="Interfaces\ISceneTreeHolder.cs" />
     <Compile Include="Interfaces\Map\IClientTileDefinitionManager.cs" />

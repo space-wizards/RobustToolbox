@@ -20,6 +20,5 @@ namespace SS14.Client.Interfaces.Graphics.Lighting
 
         void ParentTo(IClientTransformComponent node);
         void DeParent();
-        void UpdateEnabled();
     }
 }

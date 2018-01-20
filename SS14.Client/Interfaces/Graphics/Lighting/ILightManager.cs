@@ -9,6 +9,7 @@ namespace SS14.Client.Interfaces.Graphics.Lighting
         bool Enabled { get; set; }
 
         ILight MakeLight();
+        IOccluder MakeOccluder();
         void FrameProcess(FrameEventArgs args);
     }
 }

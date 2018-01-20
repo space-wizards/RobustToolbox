@@ -1,6 +1,7 @@
 ﻿using System;
 using OpenTK;
 using SS14.Client.Interfaces.GameObjects.Components;
+using SS14.Client.Interfaces.Graphics.Lighting;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
@@ -12,54 +13,36 @@ namespace SS14.Client.GameObjects
     public class OccluderComponent : Component
     {
         public override string Name => "Occluder";
-
         public Box2 BoundingBox { get; private set; } = new Box2(-16, -16, 16, 16);
-        private bool enabled = true;
         public bool Enabled
         {
-            get => enabled;
-            set
-            {
-                if (value == enabled)
-                {
-                    return;
-                }
-
-                enabled = value;
-                occluder.Visible = value;
-            }
+            get => occluder.Enabled;
+            set => occluder.Enabled = value;
         }
 
         private IClientTransformComponent transform;
-        private Godot.LightOccluder2D occluder;
+        private IOccluder occluder;
+        private ILightManager lightManager;
 
         public override void Initialize()
         {
             base.Initialize();
-            transform = Owner.GetComponent<IClientTransformComponent>();
+            lightManager = IoCManager.Resolve<ILightManager>();
+            var transform = Owner.GetComponent<IClientTransformComponent>();
 
-            occluder = new Godot.LightOccluder2D();
-            occluder.SetName("OccluderComponent");
-            transform.SceneNode.AddChild(occluder);
+            occluder.ParentTo(transform);
+        }
 
-            var poly = new Godot.OccluderPolygon2D();
-            occluder.Occluder = poly;
-            poly.Polygon = new Godot.Vector2[4]
-            {
-                new Godot.Vector2(BoundingBox.Left, BoundingBox.Top),
-                new Godot.Vector2(BoundingBox.Right, BoundingBox.Top),
-                new Godot.Vector2(BoundingBox.Right, BoundingBox.Bottom),
-                new Godot.Vector2(BoundingBox.Left, BoundingBox.Bottom),
-            };
-            occluder.Occluder = poly;
+        public override void Spawned()
+        {
+            lightManager = IoCManager.Resolve<ILightManager>();
+            occluder = lightManager.MakeOccluder();
         }
 
         public override void OnRemove()
         {
-            occluder.QueueFree();
             occluder.Dispose();
             occluder = null;
-            transform = null;
 
             base.OnRemove();
         }
@@ -95,8 +78,18 @@ namespace SS14.Client.GameObjects
 
             if (mapping.TryGetNode("enabled", out node))
             {
-                enabled = node.AsBool();
+                Enabled = node.AsBool();
             }
+
+            var poly = new Godot.Vector2[4]
+            {
+                new Godot.Vector2(BoundingBox.Left, BoundingBox.Top),
+                new Godot.Vector2(BoundingBox.Right, BoundingBox.Top),
+                new Godot.Vector2(BoundingBox.Right, BoundingBox.Bottom),
+                new Godot.Vector2(BoundingBox.Left, BoundingBox.Bottom),
+            };
+
+            occluder.SetGodotPolygon(poly);
         }
     }
 }

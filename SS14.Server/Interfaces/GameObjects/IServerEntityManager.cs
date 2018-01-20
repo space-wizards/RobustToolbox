@@ -77,21 +77,21 @@ namespace SS14.Server.Interfaces.GameObjects
         IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity);
 
         /// <summary>
-        /// Gets entities within a certain range of this local coordinate
+        /// Gets entities within a certain *square* range of this local coordinate
         /// </summary>
         /// <param name="position"></param>
         /// <param name="Range"></param>
         IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float Range);
 
         /// <summary>
-        /// Gets entities within a certain range of this entity
+        /// Gets entities within a certain *square* range of this entity
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="Range"></param>
         IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float Range);
 
         /// <summary>
-        /// Gets entities within a certain range of this bounding box
+        /// Gets entities within a certain *square* range of this bounding box
         /// </summary>
         /// <param name="mapID"></param>
         /// <param name="box"></param>

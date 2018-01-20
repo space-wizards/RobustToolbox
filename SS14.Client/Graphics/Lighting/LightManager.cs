@@ -7,10 +7,11 @@ using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
+using SS14.Shared.Log;
 
 namespace SS14.Client.Graphics.Lighting
 {
-    class LightManager : ILightManager, IDisposable, IPostInjectInit
+    partial class LightManager : ILightManager, IDisposable, IPostInjectInit
     {
         [Dependency]
         readonly ISceneTreeHolder sceneTreeHolder;
@@ -35,13 +36,15 @@ namespace SS14.Client.Graphics.Lighting
             }
         }
 
-        private List<ILight> lights = new List<ILight>();
+        private List<Light> lights = new List<Light>();
 
-        public bool Deferred { get; private set; } = false;
+        private bool Deferred = false;
 
         private Godot.CanvasModulate canvasModulate;
+        private Godot.Viewport rootViewport;
         private Godot.Viewport deferredViewport;
         private Godot.CanvasLayer deferredMaskLayer;
+        private Godot.CanvasLayer deferredBackgroundLayer;
         private Godot.Sprite deferredMaskBackground;
         private Godot.Sprite deferredMaskSprite;
         private GodotGlue.GodotSignalSubscriber0 deferredSizeChangedSubscriber;
@@ -58,25 +61,36 @@ namespace SS14.Client.Graphics.Lighting
             {
                 // Black
                 Color = new Godot.Color(0.1f, 0.1f, 0.1f),
+                Name = "LightingCanvasModulate"
             };
 
             if (Deferred)
             {
-                var rootViewport = sceneTreeHolder.SceneTree.Root;
+                rootViewport = sceneTreeHolder.SceneTree.Root;
                 deferredViewport = new Godot.Viewport
                 {
                     Name = "LightingViewport",
-                    RenderTargetUpdateMode = Godot.Viewport.UpdateMode.Always
+                    RenderTargetUpdateMode = Godot.Viewport.UpdateMode.Always,
+                    RenderTargetVFlip = true,
                 };
                 deferredViewport.AddChild(canvasModulate);
                 rootViewport.AddChild(deferredViewport);
 
+                deferredBackgroundLayer = new Godot.CanvasLayer()
+                {
+                    Name = "DeferredMaskBackgroundLayer",
+                    Layer = -1
+                };
+                deferredViewport.AddChild(deferredBackgroundLayer);
+
                 var whiteTex = resourceCache.GetResource<TextureResource>(@"./Textures/Effects/Light/white.png");
                 deferredMaskBackground = new Godot.Sprite()
                 {
+                    Name = "DeferredMaskBackground",
                     Texture = whiteTex.Texture.Texture,
                     Centered = false
                 };
+                deferredBackgroundLayer.AddChild(deferredMaskBackground);
 
                 deferredSizeChangedSubscriber = new GodotGlue.GodotSignalSubscriber0();
                 deferredSizeChangedSubscriber.Connect(rootViewport, "size_changed");
@@ -137,13 +151,15 @@ namespace SS14.Client.Graphics.Lighting
             }
         }
 
-        public void AddLight(ILight light)
+        public ILight MakeLight()
         {
+            var light = new Light(this);
             lights.Add(light);
             light.UpdateEnabled();
+            return light;
         }
 
-        public void RemoveLight(ILight light)
+        private void RemoveLight(Light light)
         {
             // TODO: This removal is O(n) because it's a regualar list,
             // and might become a performance issue.
@@ -157,6 +173,17 @@ namespace SS14.Client.Graphics.Lighting
             foreach (var light in lights)
             {
                 light.UpdateEnabled();
+            }
+        }
+
+        public void FrameProcess(FrameEventArgs args)
+        {
+            Logger.Debug(rootViewport.CanvasTransform.ToString());
+            deferredViewport.CanvasTransform = rootViewport.CanvasTransform;
+
+            foreach (var light in lights)
+            {
+                light.FrameProcess(args);
             }
         }
     }

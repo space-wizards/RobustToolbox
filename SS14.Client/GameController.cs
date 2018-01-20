@@ -132,6 +132,12 @@ namespace SS14.Client
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, eventArgs.Elapsed);
         }
 
+        public override void FrameProcess(float delta)
+        {
+            var eventArgs = new FrameEventArgs(delta);
+            lightManager.FrameProcess(eventArgs);
+        }
+
         private void LoadContentAssembly<T>(string name) where T : GameShared
         {
             // get the assembly from the file  system

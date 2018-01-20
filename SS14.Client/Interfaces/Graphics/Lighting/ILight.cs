@@ -2,6 +2,7 @@
 using SS14.Client.Graphics;
 using SS14.Shared;
 using SS14.Shared.Maths;
+using SS14.Client.Interfaces.GameObjects.Components;
 
 namespace SS14.Client.Interfaces.Graphics.Lighting
 {
@@ -17,7 +18,7 @@ namespace SS14.Client.Interfaces.Graphics.Lighting
         TextureSource Texture { get; set; }
         bool Enabled { get; set; }
 
-        void ParentTo(Godot.Node node);
+        void ParentTo(IClientTransformComponent node);
         void DeParent();
         void UpdateEnabled();
     }

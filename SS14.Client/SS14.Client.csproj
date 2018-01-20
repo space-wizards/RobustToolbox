@@ -128,7 +128,7 @@
     <Compile Include="Console\Commands\Debug.cs" />
     <Compile Include="GameStates\GameStateManager.cs" />
     <Compile Include="Graphics\CanvasLayers.cs" />
-    <Compile Include="Graphics\Lighting\Light.cs" />
+    <Compile Include="Graphics\Lighting\LightManager.Light.cs" />
     <Compile Include="Graphics\Lighting\LightManager.cs" />
     <Compile Include="Graphics\Lighting\LightMode\LightModeConstant.cs" />
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />

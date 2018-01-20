@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics;
+using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.GameObjects;
@@ -152,6 +153,21 @@ namespace SS14.Client.Console.Commands
 
             var window = new SS14Window();
             uiMgr.RootControl.AddChild(window);
+            return false;
+        }
+    }
+
+    class DumpDeferredLightingCommand : IConsoleCommand
+    {
+        public string Command => "dumpdeferredlighting";
+        public string Help => "";
+        public string Description => "";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var viewport = IoCManager.Resolve<ISceneTreeHolder>().SceneTree.Root.GetNode("LightingViewport") as Godot.Viewport;
+            var tex = viewport.GetTexture().GetData();
+            tex.SavePng("res://deferredlightingdump.png");
             return false;
         }
     }

@@ -21,6 +21,8 @@ namespace SS14.Client.GameObjects
         public override Type StateType => typeof(PointLightComponentState);
 
         private ILight Light;
+        [Dependency]
+        private ILightManager lightManager;
 
         public Color Color
         {
@@ -72,12 +74,8 @@ namespace SS14.Client.GameObjects
 
         public override void Spawned()
         {
-            // TODO: move this pixels per meter somewhere else like a centralized camera system.
-            //const float PixelsPerMeter = 32;
-            // Yes, this only cares about X axis. I know and don't care.
-            //texRadius = res.Texture.Texture.GetWidth() / PixelsPerMeter;
-
-            Light = new Light();
+            lightManager = IoCManager.Resolve<ILightManager>();
+            Light = lightManager.MakeLight();
         }
 
         public override void Initialize()
@@ -85,7 +83,7 @@ namespace SS14.Client.GameObjects
             base.Initialize();
 
             var transform = Owner.GetComponent<IClientTransformComponent>();
-            Light.ParentTo(transform.SceneNode);
+            Light.ParentTo(transform);
         }
 
         public override void LoadParameters(YamlMappingNode mapping)

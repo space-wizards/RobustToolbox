@@ -24,7 +24,8 @@ namespace SS14.Shared.GameObjects
         public IEntityNetworkManager EntityNetworkManager { get; private set; }
         public IEntityManager EntityManager { get; private set; }
 
-        public int Uid { get; private set; }
+        /// <inheritdoc />
+        public EntityUid Uid { get; private set; }
         public EntityPrototype Prototype { get; set; }
         public string Name { get; set; }
 
@@ -48,21 +49,49 @@ namespace SS14.Shared.GameObjects
             EntityNetworkManager = networkManager;
         }
 
-        public void SetUid(int uid)
+        public void SetUid(EntityUid uid)
         {
-            if (Uid != 0)
-            {
+            if(!uid.IsValid())
+                throw new ArgumentException("Uid is not valid.", nameof(uid));
+
+            if(Uid.IsValid())
                 throw new InvalidOperationException("Entity already has a UID.");
-            }
+            
             Uid = uid;
         }
 
-        public virtual void PreInitialize()
+        /// <inheritdoc />
+        public virtual void PreInitialize() { }
+
+        /// <summary>
+        ///     Calls Initialize() on all registered components.
+        /// </summary>
+        public void InitializeComponents()
         {
+            // Initialize() can modify _components.
+            // TODO: This code can only handle additions to the list. Is there a better way?
+            for (int i = 0; i < _components.Count; i++)
+            {
+                _components[i].Initialize();
+            }
+        }
+
+        /// <summary>
+        ///     Calls Startup() on all registered components.
+        /// </summary>
+        public void StartAllComponents()
+        {
+            // Startup() can modify _components
+            // TODO: This code can only handle additions to the list. Is there a better way?
+            for (int i = 0; i < _components.Count; i++)
+            {
+                _components[i].Startup();
+            }
         }
 
         public virtual void LoadData(YamlMappingNode parameters)
         {
+            // Override me.
         }
 
         /// <summary>

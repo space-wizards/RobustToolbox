@@ -28,13 +28,15 @@ namespace SS14.Shared.GameObjects
         private readonly INetManager _network;
         # endregion Dependencies
 
-        protected readonly Dictionary<int, IEntity> Entities = new Dictionary<int, IEntity>();
+        protected readonly Dictionary<EntityUid, IEntity> Entities = new Dictionary<EntityUid, IEntity>();
         /// <summary>
         /// List of all entities, used for iteration.
         /// </summary>
-        private readonly List<IEntity> _allEntities = new List<IEntity>();
+        private readonly List<Entity> _allEntities = new List<Entity>();
         protected readonly Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
-        protected int NextUid;
+
+        // This MUST start > 0
+        protected int NextUid = 1;
 
         private readonly Dictionary<Type, List<Delegate>> _eventSubscriptions
             = new Dictionary<Type, List<Delegate>>();
@@ -87,22 +89,22 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         /// Returns an entity by id
         /// </summary>
-        /// <param name="eid">entity id</param>
+        /// <param name="uid"></param>
         /// <returns>Entity or null if entity id doesn't exist</returns>
-        public IEntity GetEntity(int eid)
+        public IEntity GetEntity(EntityUid uid)
         {
-            return Entities[eid];
+            return Entities[uid];
         }
 
         /// <summary>
         /// Attempt to get an entity, returning whether or not an entity was gotten.
         /// </summary>
-        /// <param name="eid">The entity ID to look up.</param>
+        /// <param name="uid"></param>
         /// <param name="entity">The requested entity or null if the entity couldn't be found.</param>
         /// <returns>True if a value was returned, false otherwise.</returns>
-        public bool TryGetEntity(int eid, out IEntity entity)
+        public bool TryGetEntity(EntityUid uid, out IEntity entity)
         {
-            if (Entities.TryGetValue(eid, out entity) && !entity.Deleted)
+            if (Entities.TryGetValue(uid, out entity) && !entity.Deleted)
             {
                 return true;
             }
@@ -144,21 +146,21 @@ namespace SS14.Shared.GameObjects
             e.Shutdown();
         }
 
-        public void DeleteEntity(int entityUid)
+        public void DeleteEntity(EntityUid uid)
         {
-            if (TryGetEntity(entityUid, out var entity))
+            if (TryGetEntity(uid, out var entity))
             {
                 DeleteEntity(entity);
             }
             else
             {
-                throw new ArgumentException(string.Format("No entity with ID {0} exists.", entityUid));
+                throw new ArgumentException(string.Format("No entity with ID {0} exists.", uid));
             }
         }
 
-        public bool EntityExists(int eid)
+        public bool EntityExists(EntityUid uid)
         {
-            return TryGetEntity(eid, out var _);
+            return TryGetEntity(uid, out var _);
         }
 
         /// <summary>
@@ -179,19 +181,20 @@ namespace SS14.Shared.GameObjects
         /// <param name="prototypeName">name of entity template to execute</param>
         /// <param name="uid">UID to give to the new entity.</param>
         /// <returns>spawned entity</returns>
-        public IEntity SpawnEntity(string prototypeName, int? uid = null)
+        public IEntity SpawnEntity(string prototypeName, EntityUid? uid = null)
         {
             if (uid == null)
             {
-                uid = NextUid++;
+                uid = new EntityUid(NextUid++);
             }
+
             if (EntityExists(uid.Value))
             {
                 throw new InvalidOperationException($"UID already taken: {uid}");
             }
 
             EntityPrototype prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
-            IEntity entity = prototype.CreateEntity(uid.Value, this, EntityNetworkManager, ComponentFactory);
+            Entity entity = prototype.CreateEntity(uid.Value, this, EntityNetworkManager, ComponentFactory);
             Entities[uid.Value] = entity;
             _allEntities.Add(entity);
 
@@ -204,20 +207,13 @@ namespace SS14.Shared.GameObjects
             return entity;
         }
 
-        private void InitializeEntity(IEntity entity)
+        private void InitializeEntity(Entity entity)
         {
             entity.PreInitialize();
-            foreach (var component in entity.GetComponents())
-            {
-                component.Initialize();
-            }
-
+            entity.InitializeComponents();
             entity.Initialize();
 
-            foreach (var component in entity.GetComponents())
-            {
-                component.Startup();
-            }
+            entity.StartAllComponents();
         }
 
         /// <summary>
@@ -225,9 +221,14 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         protected void InitializeEntities()
         {
-            foreach (var entity in GetEntities().Where(e => !e.Initialized))
+            for (var i = 0; i < _allEntities.Count; i++)
             {
-                InitializeEntity(entity);
+                var ent = _allEntities[i];
+
+                if(ent.Deleted || ent.Initialized)
+                    continue;
+
+                InitializeEntity(ent);
             }
         }
 

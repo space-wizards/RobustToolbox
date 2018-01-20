@@ -115,8 +115,7 @@ namespace SS14.Client.GameObjects
             sprite.SetLoop(loop);
         }
 
-        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
+        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type, params object[] list)
         {
             ComponentReplyMessage reply = base.ReceiveMessage(sender, type, list);
 
@@ -126,7 +125,7 @@ namespace SS14.Client.GameObjects
             switch (type)
             {
                 case ComponentMessageType.SlaveAttach:
-                    SetMaster(Owner.EntityManager.GetEntity((int)list[0]));
+                    SetMaster(Owner.EntityManager.GetEntity(new EntityUid((int) list[0])));
                     break;
                 case ComponentMessageType.ItemUnEquipped:
                 case ComponentMessageType.Dropped:
@@ -360,23 +359,23 @@ namespace SS14.Client.GameObjects
             master = mastercompo;
         }
 
-        public void SetMaster(int? mUid)
+        public void SetMaster(EntityUid? uid)
         {
             if (master != null)
             {
-                if (mUid == null)
+                if (uid == null)
                 {
                     UnsetMaster();
                 }
-                else if (mUid != master.Owner.Uid)
+                else if (uid != master.Owner.Uid)
                 {
                     UnsetMaster();
-                    SetMaster(Owner.EntityManager.GetEntity((int)mUid));
+                    SetMaster(Owner.EntityManager.GetEntity(uid.Value));
                 }
             }
-            else if (mUid != null)
+            else if (uid != null)
             {
-                SetMaster(Owner.EntityManager.GetEntity((int)mUid));
+                SetMaster(Owner.EntityManager.GetEntity(uid.Value));
             }
         }
 
@@ -411,7 +410,7 @@ namespace SS14.Client.GameObjects
             if (sprite.CurrentAnimationStateKey != newState.CurrentAnimation)
                 sprite.SetAnimationState(newState.CurrentAnimation ?? "idle");
 
-            SetMaster(newState.MasterUid);
+            SetMaster((EntityUid?) newState.MasterUid);
 
             sprite.SetLoop(newState.Loop);
         }

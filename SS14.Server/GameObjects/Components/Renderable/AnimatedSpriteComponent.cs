@@ -54,7 +54,7 @@ namespace SS14.Server.GameObjects
 
         public override ComponentState GetComponentState()
         {
-            var masterUid = master != null ? (int?)master.Owner.Uid : null;
+            var masterUid = master?.Owner.Uid;
             return new AnimatedSpriteComponentState(Visible, DrawDepth, SpriteName, CurrentAnimation, Loop, masterUid);
         }
 

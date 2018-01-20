@@ -222,7 +222,7 @@ namespace SS14.Client.GameObjects
                     SetSpriteByKey((string)list[0]);
                     break;
                 case ComponentMessageType.SlaveAttach:
-                    SetMaster(Owner.EntityManager.GetEntity((int)list[0]));
+                    SetMaster(Owner.EntityManager.GetEntity(new EntityUid((int)list[0])));
                     break;
                 case ComponentMessageType.ItemUnEquipped:
                 case ComponentMessageType.Dropped:

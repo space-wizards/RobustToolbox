@@ -23,7 +23,7 @@ namespace SS14.Shared.Network.Messages
         public EntitySystemMessage SystemMessage { get; set; }
         public NetConnection Sender { get; set; }
 
-        public int EntityUid { get; set; }
+        public EntityUid EntityUid { get; set; }
         public uint NetId { get; set; }
         public List<object> Parameters { get; set; }
 
@@ -43,7 +43,7 @@ namespace SS14.Shared.Network.Messages
                     }
                     break;
                 case EntityMessageType.ComponentMessage:
-                    EntityUid = buffer.ReadInt32();
+                    EntityUid = new EntityUid(buffer.ReadInt32());
                     NetId = buffer.ReadUInt32();
                     Parameters = UnPackParams(buffer);
                     break;
@@ -66,7 +66,7 @@ namespace SS14.Shared.Network.Messages
                     }
                     break;
                 case EntityMessageType.ComponentMessage:
-                    buffer.Write(EntityUid);
+                    buffer.Write((int)EntityUid);
                     buffer.Write(NetId);
                     PackParams(buffer, Parameters);
                     break;

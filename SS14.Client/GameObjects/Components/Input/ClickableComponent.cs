@@ -27,7 +27,7 @@ namespace SS14.Client.GameObjects
         public void DispatchClick(IEntity user, int clickType)
         {
             OnClick?.Invoke(this, new ClickEventArgs(user, Owner, clickType));
-            Owner.SendComponentNetworkMessage(this, clickType, user.Uid);
+            Owner.SendComponentNetworkMessage(this, clickType, (int)user.Uid);
         }
     }
 }

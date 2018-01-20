@@ -2,6 +2,7 @@
 using SS14.Server.Player;
 using SS14.Shared;
 using SS14.Shared.Enums;
+using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Players;
@@ -11,7 +12,7 @@ namespace SS14.Server.Interfaces.Player
     public interface IPlayerSession
     {
         IEntity attachedEntity { get; }
-        int? AttachedEntityUid { get; }
+        EntityUid? AttachedEntityUid { get; }
         string Name { get; set; }
         SessionStatus Status { get; set; }
         INetChannel ConnectedClient { get; }

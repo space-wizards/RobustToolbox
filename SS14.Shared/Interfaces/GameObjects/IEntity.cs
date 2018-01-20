@@ -22,7 +22,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     Unique IDs are unique per entity,
         ///     and correspond to counterparts across the network.
         /// </summary>
-        int Uid { get; }
+        EntityUid Uid { get; }
 
         /// <summary>
         ///     Whether this entity has fully initialized.
@@ -51,7 +51,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <exception cref="InvalidOperationException">
         ///     Thrown if the method is called and the entity already has a UID.
         /// </exception>
-        void SetUid(int newUid);
+        void SetUid(EntityUid newUid);
 
         /// <summary>
         ///     Sets fundamental managers after the entity has been created.

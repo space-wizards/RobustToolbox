@@ -1,5 +1,4 @@
-﻿using SS14.Shared;
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using System;
 
@@ -16,10 +15,10 @@ namespace SS14.Server.GameObjects
         {
             var type = (int)message.MessageParameters[0]; // Click type.
             var uid = (int)message.MessageParameters[1]; // ID of the user
-            var user = Owner.EntityManager.GetEntity(uid);
+            var user = Owner.EntityManager.GetEntity(new EntityUid(uid));
 
             OnClick?.Invoke(this, new ClickEventArgs(user, Owner, type));
-            Owner.RaiseEvent(new ClickedOnEntityEventArgs { Clicked = Owner.Uid, Clicker = uid, MouseButton = type });
+            Owner.RaiseEvent(new ClickedOnEntityEventArgs { Clicked = Owner.Uid, Clicker = new EntityUid(uid), MouseButton = type });
         }
     }
 }

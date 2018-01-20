@@ -33,7 +33,7 @@ namespace SS14.Server.GameObjects
             {
                 case ComponentMessageType.Bumped:
                     //TODO check who bumped us, how far away they are, etc.
-                    var bumper = Owner.EntityManager.GetEntity((int)message.MessageParameters[1]);
+                    var bumper = Owner.EntityManager.GetEntity(new EntityUid((int)message.MessageParameters[1]));
                     if (bumper != null)
                         Owner.SendMessage(this, ComponentMessageType.Bumped, bumper);
                     break;

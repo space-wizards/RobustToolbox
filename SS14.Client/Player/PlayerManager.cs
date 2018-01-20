@@ -9,6 +9,7 @@ using SS14.Client.Player.PostProcessing;
 using SS14.Shared;
 using SS14.Shared.Configuration;
 using SS14.Shared.Enums;
+using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
@@ -164,13 +165,13 @@ namespace SS14.Client.Player
         ///     Compares the server attachedEntity to the client one, and updates if needed.
         /// </summary>
         /// <param name="entity">AttachedEntity in the server session.</param>
-        private void UpdateAttachedEntity(int? entity)
+        private void UpdateAttachedEntity(EntityUid? entity)
         {
             if (entity != null &&
                 (LocalPlayer.ControlledEntity == null ||
                  LocalPlayer.ControlledEntity != null && entity != LocalPlayer.ControlledEntity.Uid))
                 LocalPlayer.AttachEntity(
-                    IoCManager.Resolve<IEntityManager>().GetEntity((int) entity));
+                    IoCManager.Resolve<IEntityManager>().GetEntity(entity.Value));
         }
 
         /// <summary>

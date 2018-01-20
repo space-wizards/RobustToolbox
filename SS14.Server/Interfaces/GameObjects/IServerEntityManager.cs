@@ -13,7 +13,7 @@ namespace SS14.Server.Interfaces.GameObjects
     {
         void Initialize();
 
-        IEntity SpawnEntity(string template, int? uid = null);
+        IEntity SpawnEntity(string template, EntityUid? uid = null);
 
         /// <summary>
         /// Spawns an entity at a specific position

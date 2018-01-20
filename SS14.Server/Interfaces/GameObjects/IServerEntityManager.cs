@@ -90,6 +90,14 @@ namespace SS14.Server.Interfaces.GameObjects
         /// <param name="Range"></param>
         IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float Range);
 
+        /// <summary>
+        /// Gets entities within a certain range of this bounding box
+        /// </summary>
+        /// <param name="mapID"></param>
+        /// <param name="box"></param>
+        /// <param name="Range"></param>
+        IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float Range);
+
         List<EntityState> GetEntityStates();
     }
 }

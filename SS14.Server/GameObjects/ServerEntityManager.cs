@@ -148,26 +148,27 @@ namespace SS14.Server.GameObjects
 
         public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float Range)
         {
-            Range *= Range; // Square it here to avoid Sqrt
+            var AABB = new Box2(position.Position - new Vector2(Range / 2, Range / 2), position.Position + new Vector2(Range / 2, Range / 2));
+            return GetEntitiesIntersecting(position.MapID, AABB);
+        }
 
-            foreach (var entity in GetEntities())
-            {
-                var transform = entity.GetComponent<ITransformComponent>();
-                if (transform.MapID != position.MapID)
-                    continue;
-
-                var relativePosition = position.ToWorld().Position - transform.WorldPosition;
-                if (relativePosition.LengthSquared <= Range)
-                {
-                    yield return entity;
-                }
-            }
+        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float Range)
+        {
+            var AABB = new Box2(box.Left-Range, box.Top+Range, box.Right+Range, box.Bottom-Range);
+            return GetEntitiesIntersecting(mapID, AABB);
         }
 
         public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float Range)
         {
-            LocalCoordinates coords = entity.GetComponent<ITransformComponent>().LocalPosition;
-            return GetEntitiesInRange(coords, Range);
+            if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
+            {
+                return GetEntitiesInRange(entity.GetComponent<ITransformComponent>().MapID, component.WorldAABB, Range);
+            }
+            else
+            {
+                LocalCoordinates coords = entity.GetComponent<ITransformComponent>().LocalPosition;
+                return GetEntitiesInRange(coords, Range);
+            }
         }
 
         #endregion LocationGetters

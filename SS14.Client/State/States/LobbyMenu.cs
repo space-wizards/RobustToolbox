@@ -8,7 +8,8 @@ namespace SS14.Client.State.States
     {
         public override void Shutdown()
         {
-            // throw new System.NotImplementedException();
+            // Nothing but it's abstract so we need to override it.
+            // Yay.
         }
 
         public override void Startup()

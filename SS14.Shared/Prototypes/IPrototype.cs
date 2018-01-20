@@ -1,5 +1,4 @@
-﻿using SS14.Shared.IoC;
-using YamlDotNet.RepresentationModel;
+﻿using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Prototypes
 {
@@ -15,7 +14,7 @@ namespace SS14.Shared.Prototypes
         /// <summary>
         /// Load data from the YAML mappings in the prototype files.
         /// </summary>
-        void LoadFrom(YamlMappingNode node);
+        void LoadFrom(YamlMappingNode mapping);
     }
 
     /// <summary>

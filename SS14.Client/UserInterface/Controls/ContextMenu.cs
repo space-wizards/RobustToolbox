@@ -3,7 +3,6 @@ using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Maths;
@@ -18,18 +17,13 @@ namespace SS14.Client.UserInterface.Components
 {
     public class ContextMenu : Control
     {
-        private readonly Vector2 _buttonSize = new Vector2(150, 20);
+        private readonly Vector2i _buttonSize = new Vector2i(150, 20);
         private readonly List<ContextMenuButton> _buttons = new List<ContextMenuButton>();
-        private readonly IResourceCache _resourceCache;
-        private readonly IUserInterfaceManager _userInterfaceManager;
         private IEntity _owningEntity;
 
-        public ContextMenu(IEntity entity, Vector2 creationPos, IResourceCache resourceCache,
-                           IUserInterfaceManager userInterfaceManager, bool showExamine = true)
+        public ContextMenu(IEntity entity, Vector2 creationPos, bool showExamine = true)
         {
             _owningEntity = entity;
-            _resourceCache = resourceCache;
-            _userInterfaceManager = userInterfaceManager;
 
             var entries = new List<ContextMenuEntry>();
             var replies = new List<ComponentReplyMessage>();
@@ -46,8 +40,7 @@ namespace SS14.Client.UserInterface.Components
                 var examineButton =
                     new ContextMenuButton(
                         new ContextMenuEntry
-                        { ComponentMessage = "examine", EntryName = "Examine", IconName = "context_eye" }, _buttonSize,
-                        _resourceCache);
+                            { ComponentMessage = "examine", EntryName = "Examine", IconName = "context_eye" }, _buttonSize);
                 examineButton.Selected += ContextSelected;
                 _buttons.Add(examineButton);
                 examineButton.Update(0);
@@ -55,7 +48,7 @@ namespace SS14.Client.UserInterface.Components
 
             foreach (ContextMenuEntry entry in entries)
             {
-                var newButton = new ContextMenuButton(entry, _buttonSize, _resourceCache);
+                var newButton = new ContextMenuButton(entry, _buttonSize);
                 newButton.Selected += ContextSelected;
                 _buttons.Add(newButton);
                 newButton.Update(0);
@@ -76,7 +69,7 @@ namespace SS14.Client.UserInterface.Components
             if ((string)sender.UserData == "examine")
             {
                 var newExamine = new ExamineWindow(new Vector2i(300, 200), _owningEntity, _resourceCache);
-                _userInterfaceManager.AddComponent(newExamine);
+                UiManager.AddComponent(newExamine);
                 newExamine.Position = new Vector2i(ClientArea.Left, ClientArea.Top);
             }
             else
@@ -92,7 +85,7 @@ namespace SS14.Client.UserInterface.Components
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            _userInterfaceManager.SetFocus(this);
+            UiManager.SetFocus(this);
             foreach (ContextMenuButton button in _buttons)
                 button.Update(frameTime);
         }
@@ -106,18 +99,18 @@ namespace SS14.Client.UserInterface.Components
                                                    Color4.Black);
         }
 
-        public override void Dispose()
+        public override void Destroy()
         {
             foreach (ContextMenuButton button in _buttons)
-                button.Dispose();
+                button.Destroy();
 
             _buttons.Clear();
             _owningEntity = null;
 
-            _userInterfaceManager.RemoveFocus();
-            _userInterfaceManager.RemoveComponent(this);
+            UiManager.RemoveFocus();
+            UiManager.RemoveComponent(this);
 
-            base.Dispose();
+            base.Destroy();
         }
 
         public override bool MouseDown(MouseButtonEventArgs e)
@@ -129,7 +122,7 @@ namespace SS14.Client.UserInterface.Components
         {
             foreach (ContextMenuButton button in _buttons)
                 button.MouseUp(e);
-            Dispose();
+            Destroy();
             return false;
         }
 
@@ -157,20 +150,16 @@ namespace SS14.Client.UserInterface.Components
         public delegate void ContextPressHandler(ContextMenuButton sender);
 
         #endregion Delegates
-
-        private readonly IResourceCache _resourceCache;
+        
         private readonly Label _textLabel;
-
-        public Vector2 Size { get; set; }
+        
         private Color4 _currentColor = Color4.Gray;
         private Sprite _iconSprite;
 
         
 
-        public ContextMenuButton(ContextMenuEntry entry, Vector2 size, IResourceCache resourceCache)
+        public ContextMenuButton(ContextMenuEntry entry, Vector2i size)
         {
-            _resourceCache = resourceCache;
-
             UserData = entry.ComponentMessage;
             Size = size;
             _iconSprite = _resourceCache.GetSprite(entry.IconName);
@@ -206,12 +195,12 @@ namespace SS14.Client.UserInterface.Components
             _iconSprite.Draw();
         }
 
-        public override void Dispose()
+        public override void Destroy()
         {
-            _textLabel.Dispose();
+            _textLabel.Destroy();
             _iconSprite = null;
             Selected = null;
-            base.Dispose();
+            base.Destroy();
         }
 
         public override bool MouseUp(MouseButtonEventArgs e)

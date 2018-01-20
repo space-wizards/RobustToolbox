@@ -31,6 +31,10 @@ namespace SS14.Client.Map
                     lastDef = tileReference.TileDef;
                     sprite = cache.GetSprite(lastDef.SpriteName);
                 }
+
+                if(sprite == null)
+                    continue;
+
                 sprite.Position = new Vector2(tileReference.X, tileReference.Y) * ppm;
                 floorBatch.Draw(sprite);
             }

@@ -160,14 +160,14 @@ namespace SS14.Client.GameObjects
         {
             var newState = (ParticleSystemComponentState) state;
 
-            foreach (var a in newState.emitters)
+            foreach (var a in newState.Emitters)
                 if (_emitters.ContainsKey(a.Key))
                     SetParticleSystemActive(a.Key, a.Value);
                 else
                     AddParticleSystem(a.Key, a.Value);
 
             //Remove emitters that are not in the new state.
-            foreach (var toRemove in new List<string>(_emitters.Keys.Except(newState.emitters.Keys)))
+            foreach (var toRemove in new List<string>(_emitters.Keys.Except(newState.Emitters.Keys)))
                 RemoveParticleSystem(toRemove);
         }
     }

@@ -15,20 +15,20 @@ namespace SS14.Client.UserInterface.Controls
     /// <summary>
     ///     Base GUI class that all other controls inherit from.
     /// </summary>
-    public abstract class Control : IDisposable
+    public abstract class Control
     {
         private static readonly Color4 _dbgBoundColor = new Color4(255, 0, 0, 32);
         private static readonly Color4 _dbgFocusColor = new Color4(0, 0, 255, 32);
 
         public static bool GlobalDebug { get; set; } = false;
 
-        protected static IResourceCache _resourceCache;
-        protected static IUserInterfaceManager UiManager;
+        protected readonly IResourceCache _resourceCache;
+        protected readonly IUserInterfaceManager UiManager;
 
         private readonly List<Control> _children = new List<Control>();
 
         public object UserData { get; set; }
-        private Align _align;
+        private ControlAlignments _align;
         protected Box2i _clientArea;
         protected Box2i _localBounds;
         private Vector2i _localPos;
@@ -154,7 +154,7 @@ namespace SS14.Client.UserInterface.Controls
         /// <summary>
         ///     How to align the control inside of its parent. Default is Top Left.
         /// </summary>
-        public Align Alignment
+        public ControlAlignments Alignment
         {
             get => _align;
             set => _align = value;
@@ -208,9 +208,9 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         /// <summary>
-        ///     If this control is currently disposed.
+        ///     If this control is currently destroyed.
         /// </summary>
-        public bool Disposed { get; private set; } = false;
+        public bool Destroyed { get; private set; } = false;
 
         protected Control()
         {
@@ -218,13 +218,15 @@ namespace SS14.Client.UserInterface.Controls
             UiManager = IoCManager.Resolve<IUserInterfaceManager>();
         }
 
-        /// <inheritdoc />
-        public virtual void Dispose()
+        /// <summary>
+        ///     Destroys this control and all child controls.
+        /// </summary>
+        public virtual void Destroy()
         {
-            if (Disposed)
+            if (Destroyed)
                 return;
 
-            Disposed = true;
+            Destroyed = true;
             IoCManager.Resolve<IUserInterfaceManager>().RemoveComponent(this);
 
             DisposeAllChildren();
@@ -452,18 +454,18 @@ namespace SS14.Client.UserInterface.Controls
 
                 // horizontal
                 int scrX;
-                if ((Alignment & Align.HCenter) == Align.HCenter)
+                if ((Alignment & ControlAlignments.HCenter) == ControlAlignments.HCenter)
                     scrX = parentRect.Width / 2 - Width / 2;
-                else if ((Alignment & Align.Right) == Align.Right)
+                else if ((Alignment & ControlAlignments.Right) == ControlAlignments.Right)
                     scrX = parentRect.Width + _localPos.X;
                 else // aligning left = not aligning
                     scrX = _localPos.X;
 
                 // vertical
                 int scrY;
-                if ((Alignment & Align.VCenter) == Align.VCenter)
+                if ((Alignment & ControlAlignments.VCenter) == ControlAlignments.VCenter)
                     scrY = parentRect.Height / 2 - Height / 2;
-                else if ((Alignment & Align.Bottom) == Align.Bottom)
+                else if ((Alignment & ControlAlignments.Bottom) == ControlAlignments.Bottom)
                     scrY = parentRect.Height + _localPos.Y;
                 else // aligning top == not aligning
                     scrY = _localPos.Y;
@@ -523,7 +525,7 @@ namespace SS14.Client.UserInterface.Controls
             var children = new List<Control>(_children); // must cache list because children modify it
             foreach (var child in children)
             {
-                child.Dispose();
+                child.Destroy();
             }
         }
 

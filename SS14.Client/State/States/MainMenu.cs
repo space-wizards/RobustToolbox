@@ -38,13 +38,13 @@ namespace SS14.Client.State.States
 
             var imgTitle = new SimpleImage();
             imgTitle.Sprite = "ss14_logo";
-            imgTitle.Alignment = Align.Right;
+            imgTitle.Alignment = ControlAlignments.Right;
             imgTitle.LocalPosition = new Vector2i(-550, 100);
             _uiScreen.AddControl(imgTitle);
 
             var txtConnect = new Textbox(100);
             txtConnect.Text = ConfigurationManager.GetCVar<string>("net.server");
-            txtConnect.Alignment = Align.Left | Align.Bottom;
+            txtConnect.Alignment = ControlAlignments.Left | ControlAlignments.Bottom;
             txtConnect.LocalPosition = new Vector2i(10, 50);
             txtConnect.OnSubmit += (sender, text) =>
             {
@@ -58,7 +58,7 @@ namespace SS14.Client.State.States
             var btnConnect = new ImageButton();
             btnConnect.ImageNormal = "connect_norm";
             btnConnect.ImageHover = "connect_hover";
-            btnConnect.Alignment = Align.Left | Align.Bottom;
+            btnConnect.Alignment = ControlAlignments.Left | ControlAlignments.Bottom;
             btnConnect.LocalPosition = new Vector2i(0, 20);
             btnConnect.Clicked += sender =>
             {
@@ -71,7 +71,7 @@ namespace SS14.Client.State.States
             var btnOptions = new ImageButton();
             btnOptions.ImageNormal = "options_norm";
             btnOptions.ImageHover = "options_hover";
-            btnOptions.Alignment = Align.Left | Align.Bottom;
+            btnOptions.Alignment = ControlAlignments.Left | ControlAlignments.Bottom;
             btnOptions.LocalPosition = new Vector2i(0, 20);
             btnOptions.Clicked += sender =>
             {
@@ -83,7 +83,7 @@ namespace SS14.Client.State.States
             var btnExit = new ImageButton();
             btnExit.ImageNormal = "exit_norm";
             btnExit.ImageHover = "exit_hover";
-            btnExit.Alignment = Align.Left | Align.Bottom;
+            btnExit.Alignment = ControlAlignments.Left | ControlAlignments.Bottom;
             btnExit.LocalPosition = new Vector2i(0, 20);
             btnExit.Clicked += sender => CluwneLib.Stop();
             btnOptions.AddControl(btnExit);
@@ -91,7 +91,7 @@ namespace SS14.Client.State.States
             var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
             var lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI");
             lblVersion.ForegroundColor = new Color(245, 245, 245);
-            lblVersion.Alignment = Align.Right | Align.Bottom;
+            lblVersion.Alignment = ControlAlignments.Right | ControlAlignments.Bottom;
             lblVersion.Resize += (sender, args) => { lblVersion.LocalPosition = new Vector2i(-3 + -lblVersion.ClientArea.Width, -3 + -lblVersion.ClientArea.Height); };
             _uiScreen.AddControl(lblVersion);
         }

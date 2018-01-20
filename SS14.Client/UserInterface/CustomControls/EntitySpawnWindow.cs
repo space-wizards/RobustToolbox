@@ -53,7 +53,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
             var overLabel = new Label("Override Placement:", "CALIBRI");
             overLabel.LocalPosition = new Vector2i(0, 15);
-            overLabel.Alignment = Align.Bottom;
+            overLabel.Alignment = ControlAlignments.Bottom;
             _clearLabel.AddControl(overLabel);
 
             var initOpts = new List<string>();
@@ -75,13 +75,13 @@ namespace SS14.Client.UserInterface.CustomControls
             _lstOverride.ItemSelected += _lstOverride_ItemSelected;
             _lstOverride.SelectItem("PlaceFree");
             _lstOverride.LocalPosition = new Vector2i(0, 0);
-            _lstOverride.Alignment = Align.Bottom;
+            _lstOverride.Alignment = ControlAlignments.Bottom;
             overLabel.AddControl(_lstOverride);
 
             _eraserButton = new ImageButton();
             _eraserButton.ImageNormal = "erasericon";
             _eraserButton.LocalPosition = new Vector2i(5, 0);
-            _eraserButton.Alignment = Align.Right;
+            _eraserButton.Alignment = ControlAlignments.Right;
             _clearLabel.AddControl(_eraserButton);
             _eraserButton.Clicked += EraserButtonClicked;
 
@@ -105,12 +105,12 @@ namespace SS14.Client.UserInterface.CustomControls
             base.Draw();
         }
 
-        public override void Dispose()
+        public override void Destroy()
         {
             if (Disposing) return;
             _placementManager.PlacementCanceled -= PlacementManagerPlacementCanceled;
-            _entityList.Dispose();
-            base.Dispose();
+            _entityList.Destroy();
+            base.Destroy();
         }
 
         public override bool KeyDown(KeyEventArgs e)
@@ -120,7 +120,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
             if (e.Key == Keyboard.Key.Escape)
             {
-                Dispose();
+                Destroy();
                 return true;
             }
             return false;
@@ -200,7 +200,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 lastControl.AddControl(newButton);
                 lastControl = newButton;
                 newButton.FixedWidth = _entityList.Width;
-                newButton.Alignment = Align.Bottom;
+                newButton.Alignment = ControlAlignments.Bottom;
                 newButton.DoLayout();
                 newButton.Clicked += NewButtonClicked;
 

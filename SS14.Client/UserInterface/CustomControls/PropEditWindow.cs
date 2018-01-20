@@ -43,7 +43,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
             _fieldList = new ListPanel();
             _fieldList.LocalPosition = new Vector2i(5, 0);
-            _fieldList.Alignment = Align.Bottom;
+            _fieldList.Alignment = ControlAlignments.Bottom;
             search.AddControl(_fieldList);
 
             BuildPropList(_fieldList);

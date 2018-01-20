@@ -92,11 +92,11 @@ namespace SS14.Client.UserInterface.CustomControls
             _txtInput.Draw();
         }
 
-        public override void Dispose()
+        public override void Destroy()
         {
-            _txtInput.Dispose();
+            _txtInput.Destroy();
             _console.Dispose();
-            base.Dispose();
+            base.Destroy();
         }
 
         public override bool MouseDown(MouseButtonEventArgs e)

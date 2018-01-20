@@ -1,18 +1,14 @@
-﻿using OpenTK;
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.Map;
-using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using System.Collections.Generic;
+using OpenTK;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Server.Interfaces.GameObjects
 {
     public interface IServerEntityManager : IEntityManager
     {
-        void Initialize();
-
         IEntity SpawnEntity(string template, EntityUid? uid = null);
 
         /// <summary>

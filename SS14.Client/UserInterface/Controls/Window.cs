@@ -81,10 +81,10 @@ namespace SS14.Client.UserInterface.Controls
             if (CloseButtonVisible) closeButton.Draw();
         }
 
-        public override void Dispose()
+        public override void Destroy()
         {
             if (Disposing) return;
-            base.Dispose();
+            base.Destroy();
         }
 
         public override bool MouseDown(MouseButtonEventArgs e)
@@ -137,7 +137,7 @@ namespace SS14.Client.UserInterface.Controls
 
         protected virtual void CloseButtonClicked(ImageButton sender)
         {
-            Dispose();
+            Destroy();
         }
     }
 

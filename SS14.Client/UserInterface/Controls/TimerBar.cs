@@ -12,7 +12,7 @@ namespace SS14.Client.UserInterface.Components
         private Stopwatch stopwatch;
 
         public Timer_Bar(Vector2i size, TimeSpan countdownTime, IResourceCache resourceCache)
-            : base(size, resourceCache)
+            : base(size)
         {
             stopwatch = new Stopwatch();
             max = (float)Math.Round(countdownTime.TotalSeconds);
@@ -43,12 +43,12 @@ namespace SS14.Client.UserInterface.Components
             ClientArea = Box2i.FromDimensions(Position, Size);
         }
 
-        public override void Dispose()
+        public override void Destroy()
         {
             stopwatch.Stop();
             stopwatch = null;
             Text = null;
-            base.Dispose();
+            base.Destroy();
             GC.SuppressFinalize(this);
         }
 

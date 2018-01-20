@@ -41,7 +41,7 @@ namespace SS14.Client.State.States
 
             var imgMainBg = new SimpleImage();
             imgMainBg.Sprite = "lobby_mainbg";
-            imgMainBg.Alignment = Align.HCenter | Align.VCenter;
+            imgMainBg.Alignment = ControlAlignments.HCenter | ControlAlignments.VCenter;
             _uiScreen.AddControl(imgMainBg);
 
             var imgStatus = new SimpleImage();
@@ -57,43 +57,43 @@ namespace SS14.Client.State.States
             _lblServerInfo = new Label("------", "MICROGME");
             _lblServerInfo.ForegroundColor = new Color(139, 0, 0);
             _lblServerInfo.FixedWidth = 100;
-            _lblServerInfo.Alignment = Align.Right;
+            _lblServerInfo.Alignment = ControlAlignments.Right;
             lblServer.AddControl(_lblServerInfo);
 
             var lblMode = new Label("GAMEMODE: ", "MICROGME");
             lblMode.ForegroundColor = new Color(245, 245, 245);
-            lblMode.Alignment = Align.Right;
+            lblMode.Alignment = ControlAlignments.Right;
             lblMode.LocalPosition = new Vector2i(10, 0);
             _lblServerInfo.AddControl(lblMode);
 
             _lblModeInfo = new Label("------", "MICROGME");
             _lblModeInfo.ForegroundColor = new Color(139, 0, 0);
             _lblModeInfo.FixedWidth = 90;
-            _lblModeInfo.Alignment = Align.Right;
+            _lblModeInfo.Alignment = ControlAlignments.Right;
             lblMode.AddControl(_lblModeInfo);
 
             var lblPlayers = new Label("PLAYERS: ", "MICROGME");
             lblPlayers.ForegroundColor = new Color(245, 245, 245);
-            lblPlayers.Alignment = Align.Right;
+            lblPlayers.Alignment = ControlAlignments.Right;
             lblPlayers.LocalPosition = new Vector2i(10, 0);
             _lblModeInfo.AddControl(lblPlayers);
 
             _lblPlayersInfo = new Label("--/--", "MICROGME");
             _lblPlayersInfo.ForegroundColor = new Color(139, 0, 0);
             _lblPlayersInfo.FixedWidth = 60;
-            _lblPlayersInfo.Alignment = Align.Right;
+            _lblPlayersInfo.Alignment = ControlAlignments.Right;
             lblPlayers.AddControl(_lblPlayersInfo);
 
             var lblPort = new Label("PORT: ", "MICROGME");
             lblPort.ForegroundColor = new Color(245, 245, 245);
-            lblPort.Alignment = Align.Right;
+            lblPort.Alignment = ControlAlignments.Right;
             lblPort.LocalPosition = new Vector2i(10, 0);
             _lblPlayersInfo.AddControl(lblPort);
 
             _lblPortInfo = new Label("----", "MICROGME");
             _lblPortInfo.ForegroundColor = new Color(139, 0, 0);
             _lblPortInfo.FixedWidth = 50;
-            _lblPortInfo.Alignment = Align.Right;
+            _lblPortInfo.Alignment = ControlAlignments.Right;
             lblPort.AddControl(_lblPortInfo);
 
             _tabs = new TabbedMenu();
@@ -119,19 +119,19 @@ namespace SS14.Client.State.States
 
             var imgChatBg = new SimpleImage();
             imgChatBg.Sprite = "lobby_chatbg";
-            imgChatBg.Alignment = Align.HCenter | Align.Bottom;
+            imgChatBg.Alignment = ControlAlignments.HCenter | ControlAlignments.Bottom;
             imgChatBg.Resize += (sender, args) => { imgChatBg.LocalPosition = new Vector2i(0, -9 + -imgChatBg.Height); };
             imgMainBg.AddControl(imgChatBg);
 
             _lobbyChat = new Chatbox(new Vector2i(780, 225));
-            _lobbyChat.Alignment = Align.HCenter | Align.VCenter;
+            _lobbyChat.Alignment = ControlAlignments.HCenter | ControlAlignments.VCenter;
             _lobbyChat.DefaultChatFormat = "ooc \"{0}\"";
             imgChatBg.AddControl(_lobbyChat);
 
             var btnReady = new ImageButton();
             btnReady.ImageNormal = "lobby_ready";
             btnReady.ImageHover = "lobby_ready_green";
-            btnReady.Alignment = Align.Right;
+            btnReady.Alignment = ControlAlignments.Right;
             btnReady.Resize += (sender, args) => { btnReady.LocalPosition = new Vector2i(-5 + -btnReady.Width, -5 + -btnReady.Height); };
             imgChatBg.AddControl(btnReady);
             btnReady.Clicked += _btnReady_Clicked;

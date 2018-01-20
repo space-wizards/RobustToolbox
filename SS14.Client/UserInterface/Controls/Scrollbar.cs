@@ -132,7 +132,7 @@ namespace SS14.Client.UserInterface.Components
             if (base.MouseWheelMove(e))
                 return true;
 
-            if (!Visible || Disposed)
+            if (!Visible || Destroyed)
                 return false;
             
             Value += (e.Delta * -1) * Math.Max((Max / 20), 1) * Multipler;

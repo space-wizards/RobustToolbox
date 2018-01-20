@@ -9,6 +9,7 @@ using SS14.Server.GameObjects;
 using System;
 using SS14.Server.Interfaces;
 using SS14.Shared.Enums;
+using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
@@ -42,7 +43,7 @@ namespace SS14.Server.Player
         public INetChannel ConnectedClient { get; }
 
         public IEntity attachedEntity { get; set; }
-        public int? AttachedEntityUid => attachedEntity?.Uid;
+        public EntityUid? AttachedEntityUid => attachedEntity?.Uid;
 
         private string _name = "<TERU-SAMA>";
         private SessionStatus _status = SessionStatus.Connecting;

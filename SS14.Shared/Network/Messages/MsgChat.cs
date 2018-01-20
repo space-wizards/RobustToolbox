@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.Console;
+using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Players;
 
@@ -16,7 +17,7 @@ namespace SS14.Shared.Network.Messages
         public ChatChannel Channel { get; set; }
         public string Text { get; set; }
         public PlayerIndex? Index { get; set; }
-        public int? EntityId { get; set; }
+        public EntityUid? EntityId { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
@@ -33,7 +34,7 @@ namespace SS14.Shared.Network.Messages
             if (id == -1)
                 EntityId = null;
             else
-                EntityId = id;
+                EntityId = new EntityUid(id);
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)

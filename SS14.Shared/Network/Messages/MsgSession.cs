@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.Enums;
+using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network.Messages
@@ -13,7 +14,7 @@ namespace SS14.Shared.Network.Messages
         #endregion
 
         public PlayerSessionMessage MsgType { get; set; }
-        public int Uid { get; set; }
+        public EntityUid Uid { get; set; }
         public PostProcessingEffectType PpType { get; set; }
         public float PpDuration { get; set; }
 
@@ -24,7 +25,7 @@ namespace SS14.Shared.Network.Messages
             switch (MsgType)
             {
                 case PlayerSessionMessage.AttachToEntity:
-                    Uid = buffer.ReadInt32();
+                    Uid = new EntityUid(buffer.ReadInt32());
                     break;
                 case PlayerSessionMessage.AddPostProcessingEffect:
                     PpType = (PostProcessingEffectType) buffer.ReadInt32();
@@ -39,7 +40,7 @@ namespace SS14.Shared.Network.Messages
             switch (MsgType)
             {
                 case PlayerSessionMessage.AttachToEntity:
-                    buffer.Write(Uid);
+                    buffer.Write((int)Uid);
                     break;
                 case PlayerSessionMessage.AddPostProcessingEffect:
                     buffer.Write((int)PpType);

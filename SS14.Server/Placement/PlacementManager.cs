@@ -10,6 +10,7 @@ using SS14.Shared.Map;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Enums;
+using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
@@ -117,7 +118,7 @@ namespace SS14.Server.Placement
             }
         }
 
-        private static void HandleEntRemoveReq(int entityUid)
+        private static void HandleEntRemoveReq(EntityUid entityUid)
         {
             //TODO: Some form of admin check
             var entities = IoCManager.Resolve<IServerEntityManager>();
@@ -289,7 +290,7 @@ namespace SS14.Server.Placement
 
         #endregion IPlacementManager Members
 
-        private PlacementInformation GetPermission(int uid, string alignOpt)
+        private PlacementInformation GetPermission(EntityUid uid, string alignOpt)
         {
             var permission = BuildPermissions
                 .Where(p => p.MobUid == uid && p.PlacementOption.Equals(alignOpt))

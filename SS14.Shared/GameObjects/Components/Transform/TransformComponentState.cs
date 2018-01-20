@@ -13,7 +13,7 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         ///     Current parent entity of this entity.
         /// </summary>
-        public readonly int? ParentID;
+        public readonly EntityUid? ParentID;
 
         /// <summary>
         ///     Current position offset of the entity.
@@ -32,8 +32,8 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         /// <param name="position">Current position offset of the entity.</param>
         /// <param name="rotation">Current direction offset of the entity.</param>
-        /// <param name="parent">Current parent transform of this entity.</param>
-        public TransformComponentState(LocalCoordinates position, Angle rotation, int? parentID)
+        /// <param name="parentID">Current parent transform of this entity.</param>
+        public TransformComponentState(LocalCoordinates position, Angle rotation, EntityUid? parentID)
             : base(NetIDs.TRANSFORM)
         {
             Position = position.Position;

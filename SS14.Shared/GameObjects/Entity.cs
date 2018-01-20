@@ -24,7 +24,8 @@ namespace SS14.Shared.GameObjects
         public IEntityNetworkManager EntityNetworkManager { get; private set; }
         public IEntityManager EntityManager { get; private set; }
 
-        public int Uid { get; private set; }
+        /// <inheritdoc />
+        public EntityUid Uid { get; private set; }
         public EntityPrototype Prototype { get; set; }
         public string Name { get; set; }
 
@@ -48,12 +49,14 @@ namespace SS14.Shared.GameObjects
             EntityNetworkManager = networkManager;
         }
 
-        public void SetUid(int uid)
+        public void SetUid(EntityUid uid)
         {
-            if (Uid != 0)
-            {
+            if(!uid.IsValid())
+                throw new ArgumentException("Uid is not valid.", nameof(uid));
+
+            if(Uid.IsValid())
                 throw new InvalidOperationException("Entity already has a UID.");
-            }
+            
             Uid = uid;
         }
 

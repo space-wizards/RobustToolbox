@@ -25,8 +25,8 @@ namespace SS14.Shared.GameObjects
 
     public class ClickedOnEntityEventArgs : EntityEventArgs
     {
-        public int Clicker { get; set; }
-        public int Clicked { get; set; }
+        public EntityUid Clicker { get; set; }
+        public EntityUid Clicked { get; set; }
         public int MouseButton { get; set; }
     }
 

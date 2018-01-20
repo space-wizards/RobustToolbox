@@ -297,7 +297,7 @@ namespace SS14.Shared.GameObjects
         /// Do not call this directly, use the server entity manager instead.
         /// </summary>
         /// <returns></returns>
-        public Entity CreateEntity(int uid, IEntityManager manager, IEntityNetworkManager networkManager, IComponentFactory componentFactory)
+        public Entity CreateEntity(EntityUid uid, IEntityManager manager, IEntityNetworkManager networkManager, IComponentFactory componentFactory)
         {
             var entity = (Entity)Activator.CreateInstance(ClassType ?? typeof(Entity));
 

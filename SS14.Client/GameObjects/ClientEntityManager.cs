@@ -120,7 +120,7 @@ namespace SS14.Client.GameObjects
 
         public void ApplyEntityStates(IEnumerable<EntityState> entityStates, float serverTime)
         {
-            var entityKeys = new HashSet<int>();
+            var entityKeys = new HashSet<EntityUid>();
             foreach (EntityState es in entityStates)
             {
                 //Todo defer component state result processing until all entities are loaded and initialized...
@@ -140,8 +140,8 @@ namespace SS14.Client.GameObjects
             }
 
             //Delete entities that exist here but don't exist in the entity states
-            int[] toDelete = Entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
-            foreach (int k in toDelete)
+            var toDelete = Entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
+            foreach (var k in toDelete)
             {
                 DeleteEntity(k);
             }

@@ -6,9 +6,9 @@ namespace SS14.Shared.GameObjects
     public class RenderableComponentState : ComponentState
     {
         public readonly DrawDepth DrawDepth;
-        public readonly int? MasterUid;
+        public readonly EntityUid? MasterUid;
 
-        public RenderableComponentState(DrawDepth drawDepth, int? masterUid, uint netID) :
+        public RenderableComponentState(DrawDepth drawDepth, EntityUid? masterUid, uint netID) :
             base(netID)
         {
             DrawDepth = drawDepth;

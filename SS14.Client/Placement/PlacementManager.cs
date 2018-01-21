@@ -246,14 +246,14 @@ namespace SS14.Client.Placement
             message.Align = CurrentMode.ModeName;
             message.IsTile = CurrentPermission.IsTile;
 
-            if (CurrentPermission.IsTile) message.TileType = CurrentPermission.TileType;
-            else message.EntityTemplateName = CurrentPermission.EntityType;
+            if (CurrentPermission.IsTile)
+                message.TileType = CurrentPermission.TileType;
+            else
+                message.EntityTemplateName = CurrentPermission.EntityType;
 
             message.XValue = CurrentMode.MouseCoords.X;
             message.YValue = CurrentMode.MouseCoords.Y;
-            message.GridIndex = CurrentMode.MouseCoords.GridID;
-            message.MapIndex = CurrentMode.MouseCoords.MapID;
-
+            
             message.DirRcv = Direction;
 
             NetworkManager.ClientSendMessage(message);

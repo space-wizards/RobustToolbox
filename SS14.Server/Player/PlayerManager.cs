@@ -2,7 +2,6 @@
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
-using SS14.Shared;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
@@ -201,8 +200,8 @@ namespace SS14.Server.Player
             //TODO: This needs to be moved to the PVS system.
             return
                 _sessions.Where(x => x != null &&
-                    x.attachedEntity != null &&
-                    position.InRange(x.attachedEntity.GetComponent<ITransformComponent>().LocalPosition, range))
+                    x.AttachedEntity != null &&
+                    position.InRange(x.AttachedEntity.GetComponent<ITransformComponent>().LocalPosition, range))
                     .Cast<IPlayerSession>()
                     .ToList();
         }

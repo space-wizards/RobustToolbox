@@ -16,6 +16,8 @@ namespace SS14.Client.GodotGlue
         public IReadOnlyList<ClientEntryPoint> EntryPoints => entryPoints;
         private List<ClientEntryPoint> entryPoints = new List<ClientEntryPoint>();
 
+        private bool Started = false;
+
         public override void _Ready()
         {
             CallDeferred(nameof(AnnounceMain));
@@ -23,6 +25,11 @@ namespace SS14.Client.GodotGlue
 
         public void AnnounceMain()
         {
+            if (Started)
+            {
+                return;
+            }
+            Started = true;
             SS14Assembly = Assembly.LoadFrom("../bin/Client/SS14.Client.dll");
             var entryType = typeof(ClientEntryPoint);
             foreach (var type in SS14Assembly.GetTypes())

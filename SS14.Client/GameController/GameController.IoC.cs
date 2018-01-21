@@ -43,6 +43,8 @@ using SS14.Shared.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using SS14.Client.Interfaces.Graphics;
+using SS14.Client.Graphics;
 
 namespace SS14.Client
 {
@@ -64,6 +66,7 @@ namespace SS14.Client
 
         private static void RegisterIoC()
         {
+            Godot.GD.Print("wat" + Environment.StackTrace);
             // Shared stuff.
             IoCManager.Register<ILogManager, GodotLogManager>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
@@ -98,6 +101,7 @@ namespace SS14.Client
             IoCManager.Register<IClientConsole, ClientChatConsole>();
             IoCManager.Register<IClientChatConsole, ClientChatConsole>();
             IoCManager.Register<ILightManager, LightManager>();
+            IoCManager.Register<IDisplayManager, DisplayManager>();
 
             IoCManager.BuildGraph();
         }

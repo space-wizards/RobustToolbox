@@ -198,10 +198,12 @@
     <Compile Include="UserInterface\Controls\AcceptDialog.cs" />
     <Compile Include="UserInterface\Controls\RichTextLabel.cs" />
     <Compile Include="UserInterface\Controls\TextureButton.cs" />
+    <Compile Include="UserInterface\Controls\OptionButton.cs" />
     <Compile Include="UserInterface\CustomControls\DebugConsole.cs" />
     <Compile Include="UserInterface\CustomControls\SS14Window.cs" />
     <Compile Include="UserInterface\CustomControls\EscapeMenu.cs" />
     <Compile Include="UserInterface\CustomControls\FPSCounter.cs" />
+    <Compile Include="UserInterface\CustomControls\OptionsMenu.cs" />
     <Compile Include="GameController\GameControllerProxy.cs" />
     <Compile Include="Interfaces\IGameControllerProxy.cs" />
     <Compile Include="Interfaces\IGameController.cs" />
@@ -210,8 +212,10 @@
     <Compile Include="State\States\LobbyMenu.cs" />
     <Compile Include="State\States\GameScreen.cs" />
     <Compile Include="Graphics\TextureSource.cs" />
+    <Compile Include="Graphics\DisplayManager.cs" />
     <Compile Include="Debugging\DebugDrawing.cs" />
     <Compile Include="Interfaces\Debugging\IDebugDrawing.cs" />
+    <Compile Include="Interfaces\Graphics\IDisplayManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="client_config.toml">

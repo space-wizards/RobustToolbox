@@ -7,8 +7,13 @@
 margin_left = 361.0
 margin_top = 174.0
 margin_right = 488.0
-margin_bottom = 308.0
+margin_bottom = 325.0
+mouse_default_cursor_shape = 0
 _sections_unfolded = [ "Anchor", "Margin", "custom_styles" ]
+
+[node name="Contents" parent="." index="0"]
+
+mouse_default_cursor_shape = 0
 
 [node name="SpawnEntitiesButton" type="Button" parent="Contents" index="0"]
 
@@ -18,7 +23,9 @@ anchor_right = 1.0
 anchor_bottom = 0.0
 margin_bottom = 20.0
 rect_pivot_offset = Vector2( 0, 0 )
+focus_mode = 2
 mouse_filter = 0
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 toggle_mode = false
@@ -38,7 +45,9 @@ anchor_bottom = 0.0
 margin_top = 25.0
 margin_bottom = 45.0
 rect_pivot_offset = Vector2( 0, 0 )
+focus_mode = 2
 mouse_filter = 0
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 toggle_mode = false
@@ -48,9 +57,30 @@ group = null
 text = "Spawn Tiles"
 flat = false
 align = 1
-_sections_unfolded = [ "Margin" ]
 
-[node name="QuitButton" type="Button" parent="Contents" index="2"]
+[node name="OptionsButton" type="Button" parent="Contents" index="2"]
+
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+margin_top = 56.0
+margin_bottom = 76.0
+rect_pivot_offset = Vector2( 0, 0 )
+focus_mode = 2
+mouse_filter = 0
+mouse_default_cursor_shape = 0
+size_flags_horizontal = 1
+size_flags_vertical = 1
+toggle_mode = false
+enabled_focus_mode = 2
+shortcut = null
+group = null
+text = "Options"
+flat = false
+align = 1
+
+[node name="QuitButton" type="Button" parent="Contents" index="3"]
 
 anchor_left = 0.0
 anchor_top = 1.0
@@ -58,7 +88,9 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 margin_top = -20.0
 rect_pivot_offset = Vector2( 0, 0 )
+focus_mode = 2
 mouse_filter = 0
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 toggle_mode = false
@@ -69,8 +101,18 @@ text = "Quit"
 flat = false
 align = 1
 
+[node name="Header" parent="." index="1"]
+
+mouse_default_cursor_shape = 0
+
 [node name="Header Text" parent="Header" index="0"]
 
+mouse_default_cursor_shape = 0
 text = "Main Menu"
+
+[node name="CloseButton" parent="Header" index="1"]
+
+focus_mode = 2
+mouse_default_cursor_shape = 0
 
 

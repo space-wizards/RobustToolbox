@@ -24,6 +24,7 @@ using System.IO;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Console;
 using SS14.Client.Interfaces.Graphics.Lighting;
+using SS14.Client.Interfaces.Graphics;
 
 namespace SS14.Client
 {
@@ -60,6 +61,8 @@ namespace SS14.Client
         readonly IClientChatConsole _console;
         [Dependency]
         readonly ILightManager lightManager;
+        [Dependency]
+        readonly IDisplayManager displayManager;
 
         public override void Main(Godot.SceneTree tree)
         {
@@ -69,6 +72,8 @@ namespace SS14.Client
 
             // Load config.
             _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
+
+            displayManager.Initialize();
 
             // Init resources.
             // Doesn't do anything right now because TODO Godot asset management is a bit ad-hoc.

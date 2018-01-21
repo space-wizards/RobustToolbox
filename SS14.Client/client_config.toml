@@ -10,8 +10,7 @@ pack = "./ResourcePack.zip"
 [display]
 width = 1280
 height = 720
-fullscreen = false
-refresh = 60
+windowmode = 0
 vsync = false
 deferred_lighting = false
 

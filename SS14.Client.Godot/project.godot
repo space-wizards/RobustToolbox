@@ -25,6 +25,10 @@ SS14Loader="*res://SS14Loader.cs"
 
 singletons=[  ]
 
+[mono]
+
+debugger_agent/wait_timeout=10000
+
 [network]
 
 limits/debugger_stdout/max_chars_per_second=8128

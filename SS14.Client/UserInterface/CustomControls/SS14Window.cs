@@ -242,9 +242,9 @@ namespace SS14.Client.UserInterface.CustomControls
         public void MoveToFront()
         {
             var root = UserInterfaceManager.WindowRoot;
-            if (!root.TryGetChild(Name, out var test) || test != this)
+            if (Parent != root)
             {
-                throw new InvalidOperationException("This window is not a child of the window root!");
+                throw new InvalidOperationException("Window is not a child of the window root! You need to call AddToScreen first!");
             }
             root.SceneControl.RemoveChild(SceneControl);
             root.SceneControl.AddChild(SceneControl);
@@ -254,7 +254,7 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             if (Parent != UserInterfaceManager.WindowRoot)
             {
-                throw new InvalidOperationException("Window is not a child of the window root!");
+                throw new InvalidOperationException("Window is not a child of the window root! You need to call AddToScreen first!");
             }
             var siblings = Parent.SceneControl.GetChildren();
             var ourPos = SceneControl.GetPositionInParent();
@@ -280,12 +280,20 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public void Open()
         {
+            if (Parent != UserInterfaceManager.WindowRoot)
+            {
+                throw new InvalidOperationException("Window is not a child of the window root! You need to call AddToScreen first!");
+            }
             Visible = true;
             MoveToFront();
         }
 
         public void OpenCentered()
         {
+            if (Parent != UserInterfaceManager.WindowRoot)
+            {
+                throw new InvalidOperationException("Window is not a child of the window root! You need to call AddToScreen first!");
+            }
             Position = (Parent.Size - Size) / 2;
             Open();
         }

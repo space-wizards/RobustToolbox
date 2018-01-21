@@ -11,6 +11,7 @@ using SS14.Shared.Maths;
 using SS14.Shared.Log;
 using SS14.Client.Interfaces.State;
 using SS14.Client.UserInterface.Controls;
+using SS14.Client.UserInterface.CustomControls;
 
 namespace SS14.Client.State.States
 {
@@ -64,7 +65,9 @@ namespace SS14.Client.State.States
 
         private void OptionsButtonPressed(BaseButton.ButtonEventArgs args)
         {
-            userInterfaceManager.Popup("Sorry, options menu's not implemented yet!", "// TODO:");
+            var optionsMenu = new OptionsMenu();
+            optionsMenu.AddToScreen();
+            optionsMenu.OpenCentered();
         }
 
         private void ConnectButtonPressed(BaseButton.ButtonEventArgs args)

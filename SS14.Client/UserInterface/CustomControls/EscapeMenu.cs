@@ -21,6 +21,7 @@ namespace SS14.Client.UserInterface.CustomControls
         }
 
         private BaseButton QuitButton;
+        private BaseButton OptionsButton;
 
         protected override void Initialize()
         {
@@ -33,6 +34,9 @@ namespace SS14.Client.UserInterface.CustomControls
 
             QuitButton = Contents.GetChild<BaseButton>("QuitButton");
             QuitButton.OnPressed += OnQuitButtonClicked;
+
+            OptionsButton = Contents.GetChild<BaseButton>("OptionsButton");
+            OptionsButton.OnPressed += OnOptionsButtonClicked;
         }
 
         private void OnQuitButtonClicked(BaseButton.ButtonEventArgs args)
@@ -40,6 +44,11 @@ namespace SS14.Client.UserInterface.CustomControls
             netManager.ClientDisconnect("Client disconnected from game.");
             stateManager.RequestStateChange<MainScreen>();
             Dispose();
+        }
+
+        private void OnOptionsButtonClicked(BaseButton.ButtonEventArgs args)
+        {
+
         }
     }
 }

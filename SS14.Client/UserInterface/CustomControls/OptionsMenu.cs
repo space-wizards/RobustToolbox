@@ -24,6 +24,10 @@ namespace SS14.Client.UserInterface.CustomControls
         protected override void Initialize()
         {
             base.Initialize();
+
+            Resizable = false;
+            HideOnClose = true;
+
             configManager = IoCManager.Resolve<IConfigurationManager>();
 
             var vbox = Contents.GetChild("VBoxContainer");
@@ -31,10 +35,10 @@ namespace SS14.Client.UserInterface.CustomControls
             ApplyButton.OnPressed += OnApplyButtonPressed;
 
             VSyncCheckBox = vbox.GetChild<Button>("VSyncCheckBox");
-            VSyncCheckBox.OnToggled += OnVSyncCheckBoxToggled;
+            VSyncCheckBox.OnToggled += OnCheckBoxToggled;
 
             FullscreenCheckBox = vbox.GetChild<Button>("FullscreenCheckBox");
-            FullscreenCheckBox.OnToggled += OnFullscreenCheckBoxToggled;
+            FullscreenCheckBox.OnToggled += OnCheckBoxToggled;
 
             VSyncCheckBox.Pressed = configManager.GetCVar<bool>("display.vsync");
             FullscreenCheckBox.Pressed = ConfigIsFullscreen;
@@ -49,12 +53,7 @@ namespace SS14.Client.UserInterface.CustomControls
             IoCManager.Resolve<IDisplayManager>().ReadConfig();
         }
 
-        private void OnVSyncCheckBoxToggled(BaseButton.ButtonToggledEventArgs args)
-        {
-            UpdateApplyButton();
-        }
-
-        private void OnFullscreenCheckBoxToggled(BaseButton.ButtonToggledEventArgs args)
+        private void OnCheckBoxToggled(BaseButton.ButtonToggledEventArgs args)
         {
             UpdateApplyButton();
         }

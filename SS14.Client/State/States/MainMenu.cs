@@ -30,6 +30,8 @@ namespace SS14.Client.State.States
 
         private Control MainMenuControl;
 
+        private OptionsMenu OptionsMenu;
+
         /// <inheritdoc />
         public override void Startup()
         {
@@ -47,6 +49,12 @@ namespace SS14.Client.State.States
             VBox.GetChild<LineEdit>("IPBox").OnTextEntered += IPBoxEntered;
 
             _client.RunLevelChanged += RunLevelChanged;
+
+            OptionsMenu = new OptionsMenu()
+            {
+                Visible = false,
+            };
+            OptionsMenu.AddToScreen();
         }
 
         /// <inheritdoc />
@@ -54,8 +62,8 @@ namespace SS14.Client.State.States
         {
             _client.RunLevelChanged -= RunLevelChanged;
 
-            userInterfaceManager.StateRoot.RemoveChild(MainMenuControl);
             MainMenuControl.Dispose();
+            OptionsMenu.Dispose();
         }
 
         private void ExitButtonPressed(BaseButton.ButtonEventArgs args)
@@ -65,9 +73,7 @@ namespace SS14.Client.State.States
 
         private void OptionsButtonPressed(BaseButton.ButtonEventArgs args)
         {
-            var optionsMenu = new OptionsMenu();
-            optionsMenu.AddToScreen();
-            optionsMenu.OpenCentered();
+            OptionsMenu.OpenCentered();
         }
 
         private void ConnectButtonPressed(BaseButton.ButtonEventArgs args)

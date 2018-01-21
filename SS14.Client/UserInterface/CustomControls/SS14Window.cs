@@ -113,6 +113,9 @@ namespace SS14.Client.UserInterface.CustomControls
                 DragOffsetTopLeft = args.GlobalPosition - Position;
                 DragOffsetBottomRight = Position + Size - args.GlobalPosition;
             }
+
+            UserInterfaceManager.Focused?.ReleaseFocus();
+            MoveToFront();
         }
 
         protected override void MouseUp(GUIMouseButtonEventArgs args)

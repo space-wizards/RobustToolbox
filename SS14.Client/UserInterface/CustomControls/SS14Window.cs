@@ -297,5 +297,20 @@ namespace SS14.Client.UserInterface.CustomControls
             Position = (Parent.Size - Size) / 2;
             Open();
         }
+
+        // Prevent window headers from getting off screen due to game window resizes.
+        protected override void Update(FrameEventArgs args)
+        {
+            var windowSize = Godot.OS.GetWindowSize().Convert();
+            if (Position.Y > windowSize.Y)
+            {
+                Position = new Vector2(Position.X, windowSize.Y - HEADER_SIZE_Y);
+            }
+            if (Position.X > windowSize.X)
+            {
+                // 50 is arbitrary here. As long as it's bumped back into view.
+                Position = new Vector2(windowSize.X - 50, Position.Y);
+            }
+        }
     }
 }

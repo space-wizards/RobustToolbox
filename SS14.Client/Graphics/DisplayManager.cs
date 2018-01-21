@@ -25,13 +25,10 @@ namespace SS14.Client.Graphics
         readonly IConfigurationManager configurationManager;
 
         public WindowMode WindowMode { get; private set; } = WindowMode.Windowed;
-        public Vector2i Resolution { get; private set; } = new Vector2i(1280, 720);
         public bool VSync { get; private set; } = false;
 
         void IPostInjectInit.PostInject()
         {
-            configurationManager.RegisterCVar("display.width", Resolution.X, CVar.ARCHIVE);
-            configurationManager.RegisterCVar("display.height", Resolution.Y, CVar.ARCHIVE);
             configurationManager.RegisterCVar("display.vsync", VSync, CVar.ARCHIVE);
             configurationManager.RegisterCVar("display.windowmode", (int)WindowMode, CVar.ARCHIVE);
         }
@@ -44,14 +41,10 @@ namespace SS14.Client.Graphics
         public void ReadConfig()
         {
             WindowMode = (WindowMode)configurationManager.GetCVar<int>("display.windowmode");
-            var width = configurationManager.GetCVar<int>("display.width");
-            var height = configurationManager.GetCVar<int>("display.height");
-            Resolution = new Vector2i(width, height);
             VSync = configurationManager.GetCVar<bool>("display.vsync");
 
             Godot.OS.VsyncEnabled = VSync;
             Godot.OS.WindowFullscreen = WindowMode == WindowMode.Fullscreen;
-            Godot.OS.WindowSize = ((Vector2)Resolution).Convert();
         }
     }
 }

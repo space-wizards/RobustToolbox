@@ -11,7 +11,7 @@ pack = "./ResourcePack.zip"
 width = 1280
 height = 720
 windowmode = 0
-vsync = false
+vsync = true
 deferred_lighting = false
 
 [net]

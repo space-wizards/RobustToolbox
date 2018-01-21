@@ -123,6 +123,7 @@ namespace SS14.Client.Graphics.Lighting
             private bool Deferred => Manager.Deferred;
 
             private IClientTransformComponent parentTransform;
+            private Godot.Vector2 CurrentPos;
 
             public Light(LightManager manager)
             {
@@ -205,7 +206,11 @@ namespace SS14.Client.Graphics.Lighting
                 // TODO: Maybe use OnMove events to make this less expensive.
                 if (Deferred && parentTransform != null)
                 {
-                    Light2D.Position = parentTransform.SceneNode.GlobalPosition;
+                    var newpos = parentTransform.SceneNode.GlobalPosition;
+                    if (CurrentPos != newpos)
+                    {
+                        Light2D.Position = newpos;
+                    }
                 }
             }
         }

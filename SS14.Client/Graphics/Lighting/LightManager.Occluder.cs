@@ -29,6 +29,7 @@ namespace SS14.Client.Graphics.Lighting
 
             private bool Deferred => Manager.Deferred;
             private IClientTransformComponent parentTransform;
+            private Godot.Vector2 CurrentPos;
 
             public Occluder(LightManager manager)
             {
@@ -113,7 +114,11 @@ namespace SS14.Client.Graphics.Lighting
                 // TODO: Maybe use OnMove events to make this less expensive.
                 if (Deferred && parentTransform != null)
                 {
-                    occluder.Position = parentTransform.SceneNode.GlobalPosition;
+                    var newPos = parentTransform.SceneNode.GlobalPosition;
+                    if (CurrentPos != newPos)
+                    {
+                        occluder.Position = newPos;
+                    }
                 }
             }
         }

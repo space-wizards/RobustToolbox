@@ -126,9 +126,12 @@
     <Compile Include="ContentPack\PathHelpers.cs" />
     <Compile Include="ContentPack\ResourceManager.cs" />
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
+    <Compile Include="GameObjects\EntitySerializer.cs" />
     <Compile Include="GameObjects\EntityUid.cs" />
+    <Compile Include="GameObjects\EntityYamlSerializer.cs" />
     <Compile Include="GameObjects\IncomingEntityComponentMessage.cs" />
     <Compile Include="GameObjects\IncomingEntityMessage.cs" />
+    <Compile Include="GameObjects\NetComponent.cs" />
     <Compile Include="Interfaces\Configuration\IConfigurationManager.cs" />
     <Compile Include="Console\ICommand.cs" />
     <Compile Include="GameObjects\EntityEvents.cs" />

@@ -247,7 +247,7 @@ namespace SS14.Shared.Prototypes
         private void LoadFromDocument(YamlDocument document)
         {
             var rootNode = (YamlSequenceNode)document.RootNode;
-            foreach (YamlMappingNode node in rootNode.Select((YamlNode n) => (YamlMappingNode)n))
+            foreach (YamlMappingNode node in rootNode.Select(n => (YamlMappingNode)n))
             {
                 var type = ((YamlScalarNode)node[new YamlScalarNode("type")]).Value;
                 if (!prototypeTypes.ContainsKey(type))

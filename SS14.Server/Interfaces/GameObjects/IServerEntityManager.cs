@@ -95,5 +95,7 @@ namespace SS14.Server.Interfaces.GameObjects
         IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float Range);
 
         List<EntityState> GetEntityStates();
+
+        void SaveEntities(string path);
     }
 }

@@ -102,6 +102,8 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         void LoadParameters(YamlMappingNode mapping);
 
+        void ExposeData(EntitySerializer serializer);
+
         /// <summary>
         ///     Main method for updating the component. This is called from a big loop in ComponentManager.
         /// </summary>

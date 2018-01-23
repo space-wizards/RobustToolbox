@@ -6,6 +6,8 @@ using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using System;
 using System.IO;
+using SS14.Server.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Map;
 
 namespace SS14.Server.ServerConsole.Commands
@@ -50,6 +52,19 @@ namespace SS14.Server.ServerConsole.Commands
             }
             var mapManager = IoCManager.Resolve<IMapManager>();
             IoCManager.Resolve<IMapLoader>().Save(mapName, mapManager.GetMap(new MapId(1)));
+        }
+    }
+
+    public class SaveEnts : IConsoleCommand
+    {
+        public string Command => "save_ents";
+        public string Description => "Serialize all entities to disk.";
+        public string Help => "save_ents";
+        public void Execute(params string[] args)
+        {
+            var entMan = IoCManager.Resolve<IServerEntityManager>();
+
+            entMan.SaveEntities("./Maps/Demo/Entities.yaml");
         }
     }
 }

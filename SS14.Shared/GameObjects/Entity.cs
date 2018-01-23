@@ -4,6 +4,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Prototypes;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
@@ -20,14 +21,28 @@ namespace SS14.Shared.GameObjects
         private readonly Dictionary<Type, IComponent> _componentReferences = new Dictionary<Type, IComponent>();
         private readonly Dictionary<uint, IComponent> _netIDs = new Dictionary<uint, IComponent>();
         private readonly List<IComponent> _components = new List<IComponent>();
+        private string _name;
+        private EntityPrototype _prototype;
+        private string _type = "entity";
+        private string _id;
 
         public IEntityNetworkManager EntityNetworkManager { get; private set; }
         public IEntityManager EntityManager { get; private set; }
 
         /// <inheritdoc />
         public EntityUid Uid { get; private set; }
-        public EntityPrototype Prototype { get; set; }
-        public string Name { get; set; }
+
+        public EntityPrototype Prototype
+        {
+            get { return _prototype; }
+            set { _prototype = value; }
+        }
+
+        public string Name
+        {
+            get => _name;
+            set => _name = value;
+        }
 
         public bool Initialized { get; set; }
 
@@ -92,6 +107,30 @@ namespace SS14.Shared.GameObjects
         public virtual void LoadData(YamlMappingNode parameters)
         {
             // Override me.
+        }
+
+        public virtual void ExposeData(EntitySerializer serializer)
+        {
+            _id = Prototype.ID;
+            _type = Prototype.TypeString;
+            
+            serializer.EntityHeader();
+            
+            serializer.DataField(ref _type, "type", "entity", true);
+            serializer.DataField(ref _id, "id", String.Empty, true);
+            serializer.DataField(ref _name, "name", String.Empty, true);
+
+            serializer.CompHeader();
+
+            foreach (var component in _components)
+            {
+                serializer.CompStart();
+
+                string type = component.Name;
+                serializer.DataField(ref type, "type", component.Name, true);
+
+                component.ExposeData(serializer);
+            }
         }
 
         /// <summary>

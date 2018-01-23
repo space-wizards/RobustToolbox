@@ -79,6 +79,19 @@ namespace SS14.Server.GameObjects
             return stateEntities;
         }
 
+        public void SaveEntities(string path)
+        {
+            var serializer = new EntityYamlSerializer();
+
+            // serialize all entities to disk
+            foreach (var entity in _allEntities)
+            {
+                entity.ExposeData(serializer);
+            }
+
+            serializer.WriteToFile(path);
+        }
+
         #endregion IEntityManager Members
 
         #region EntityGetters

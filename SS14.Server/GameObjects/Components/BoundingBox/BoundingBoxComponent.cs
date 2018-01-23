@@ -14,6 +14,8 @@ namespace SS14.Server.GameObjects
     /// </summary>
     public class BoundingBoxComponent : Component
     {
+        private Box2 _aabb;
+
         /// <inheritdoc />
         public override string Name => "BoundingBox";
 
@@ -23,7 +25,11 @@ namespace SS14.Server.GameObjects
         /// <summary>
         /// Local Axis Aligned Bounding Box of the entity.
         /// </summary>
-        public Box2 AABB { get; set; } = new Box2(-0.5f, -0.5f, 0.5f, 0.5f);
+        public Box2 AABB
+        {
+            get => _aabb;
+            set => _aabb = value;
+        }
 
         /// <summary>
         /// World Axis Aligned Bounding Box of the entity.
@@ -33,9 +39,7 @@ namespace SS14.Server.GameObjects
             get
             {
                 var trans = Owner.GetComponent<ITransformComponent>();
-                var bounds = AABB;
-
-                return bounds.Translated(trans.WorldPosition);
+                return AABB.Translated(trans.WorldPosition);
             }
         }
 
@@ -43,6 +47,13 @@ namespace SS14.Server.GameObjects
         public override ComponentState GetComponentState()
         {
             return new BoundingBoxComponentState(AABB);
+        }
+
+        public override void ExposeData(EntitySerializer serializer)
+        {
+            base.ExposeData(serializer);
+
+            serializer.DataField(ref _aabb, "aabb", new Box2(-0.5f, -0.5f, 0.5f, 0.5f), true);
         }
 
         /// <inheritdoc />

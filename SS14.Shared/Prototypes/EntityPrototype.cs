@@ -21,6 +21,11 @@ namespace SS14.Shared.GameObjects
     public class EntityPrototype : IPrototype, IIndexedPrototype, ISyncingPrototype
     {
         /// <summary>
+        /// The type string of this prototype used in files.
+        /// </summary>
+        public string TypeString { get; private set; }
+
+        /// <summary>
         /// The "in code name" of the object. Must be unique.
         /// </summary>
         public string ID { get; private set; }
@@ -87,7 +92,7 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
         /// </summary>
-        public Dictionary<string, YamlMappingNode> Components { get; private set; } = new Dictionary<string, YamlMappingNode>();
+        public Dictionary<string, YamlMappingNode> Components { get; } = new Dictionary<string, YamlMappingNode>();
 
         /// <summary>
         /// The mapping node inside the <c>data</c> field of the prototype. Null if no data field exists.
@@ -96,6 +101,8 @@ namespace SS14.Shared.GameObjects
 
         public void LoadFrom(YamlMappingNode mapping)
         {
+            TypeString = mapping.GetNode("type").ToString();
+
             ID = mapping.GetNode("id").AsString();
             
             if (mapping.TryGetNode("name", out YamlNode node))
@@ -306,17 +313,22 @@ namespace SS14.Shared.GameObjects
             entity.Name = Name;
             entity.Prototype = this;
 
-            foreach (KeyValuePair<string, YamlMappingNode> componentData in Components)
-            {
-                IComponent component = componentFactory.GetComponent(componentData.Key);
-                component.LoadParameters(componentData.Value);
-                entity.AddComponent(component);
-            }
-
             if (DataNode != null)
             {
                 entity.LoadData(DataNode);
+                entity.ExposeData(new EntityYamlSerializer(DataNode));
             }
+
+            foreach (KeyValuePair<string, YamlMappingNode> componentData in Components)
+            {
+                IComponent component = componentFactory.GetComponent(componentData.Key);
+
+                component.LoadParameters(componentData.Value);
+                component.ExposeData(new EntityYamlSerializer(componentData.Value));
+
+                entity.AddComponent(component);
+            }
+
 
             return entity;
         }

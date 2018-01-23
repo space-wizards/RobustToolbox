@@ -19,19 +19,24 @@ namespace SS14.Server.GameObjects
         private string _currentBaseName;
         private string _currentSpriteKey;
 
+        /// <summary>
+        ///     Offsets the sprite from the entity origin by this many meters.
+        /// </summary>
+        private Vector2 _offset;
+        private bool _visible = true;
+
         public SpriteComponent()
         {
             _slaves = new List<IRenderableComponent>();
         }
 
-        /// <summary>
-        ///     Offsets the sprite from the entity origin by this many meters.
-        /// </summary>
-        public Vector2 Offset { get; set; }
-        
         public DrawDepth DrawDepth { get; set; } = DrawDepth.FloorTiles;
 
-        public bool Visible { get; set; } = true;
+        public bool Visible
+        {
+            get { return _visible; }
+            set { _visible = value; }
+        }
 
         public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
@@ -65,13 +70,20 @@ namespace SS14.Server.GameObjects
             
             if (mapping.TryGetNode("offset", out var node))
             {
-                Offset = node.AsVector2();
+                _offset = node.AsVector2();
             }
+        }
+        
+        public override void ExposeData(EntitySerializer serializer)
+        {
+            base.ExposeData(serializer);
+
+            serializer.DataField(ref _offset, "offset", Vector2.Zero, true);
         }
 
         public override ComponentState GetComponentState()
         {
-            return new SpriteComponentState(Visible, DrawDepth, _currentSpriteKey, _currentBaseName, Offset);
+            return new SpriteComponentState(Visible, DrawDepth, _currentSpriteKey, _currentBaseName, _offset);
         }
 
         public bool IsSlaved()

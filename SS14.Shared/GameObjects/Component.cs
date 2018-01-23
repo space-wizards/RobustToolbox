@@ -71,9 +71,10 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void LoadParameters(YamlMappingNode mapping)
-        {
-        }
+        public virtual void LoadParameters(YamlMappingNode mapping) { }
+
+        /// <inheritdoc />
+        public virtual void ExposeData(EntitySerializer serializer) { }
 
         /// <inheritdoc />
         public virtual void Update(float frameTime)

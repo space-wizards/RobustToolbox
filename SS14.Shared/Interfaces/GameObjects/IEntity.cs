@@ -74,6 +74,8 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="parameters">The mapping representing the <c>data</c> field.</param>
         void LoadData(YamlMappingNode parameters);
 
+        void ExposeData(EntitySerializer serializer);
+
         /// <summary>
         ///     "Matches" this entity with the provided entity query, returning whether or not the query matched.
         ///     This is effectively equivalent to calling <see cref="IEntityQuery.Match(IEntity)" /> with this entity.

@@ -579,7 +579,10 @@ namespace SS14.Client.State.States
         #region Mouse
         public override void MouseUp(MouseButtonEventArgs e)
         {
-            UserInterfaceManager.MouseUp(e);
+            if(UserInterfaceManager.MouseUp(e))
+                return;
+
+            PlacementManager.MouseUp(e);
         }
 
         public override void MouseDown(MouseButtonEventArgs e)
@@ -591,21 +594,8 @@ namespace SS14.Client.State.States
                 // MouseDown returns true if the click is handled by the ui component.
                 return;
 
-            if (PlacementManager.IsActive && !PlacementManager.Eraser)
-            {
-                switch (e.Button)
-                {
-                    case Mouse.Button.Left:
-                        PlacementManager.HandlePlacement();
-                        return;
-                    case Mouse.Button.Right:
-                        PlacementManager.Clear();
-                        return;
-                    case Mouse.Button.Middle:
-                        PlacementManager.Rotate();
-                        return;
-                }
-            }
+            if(PlacementManager.MouseDown(e))
+                return;
 
             #region Object clicking
 

@@ -41,10 +41,10 @@ namespace SS14.Server.ClientConsoleHost.Commands
 
         public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
         {
-            if(player.attachedEntity == null)
+            if(player.AttachedEntity == null)
                 return;
 
-            var pos = player.attachedEntity.GetComponent<ITransformComponent>().LocalPosition;
+            var pos = player.AttachedEntity.GetComponent<ITransformComponent>().LocalPosition;
 
             host.SendConsoleReply(player.ConnectedClient, $"MapID:{pos.MapID} GridID:{pos.GridID} X:{pos.X:N2} Y:{pos.Y:N2}");
         }

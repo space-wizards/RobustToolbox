@@ -127,7 +127,6 @@ namespace SS14.Client.Graphics
             var wind = new RenderWindow(video.GetVideoMode().SFMLVideoMode, "Developer Station 14", video.GetWindowStyle());
             Window = new CluwneWindow(wind, video);
             Window.Graphics.SetVerticalSyncEnabled(true);
-            Window.Graphics.SetFramerateLimit(300);
 
             renderTargetArray = new IRenderTarget[5];
             IsInitialized = true;

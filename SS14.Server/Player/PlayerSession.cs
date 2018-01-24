@@ -1,6 +1,5 @@
 ﻿using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
-using SS14.Shared;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
@@ -42,8 +41,8 @@ namespace SS14.Server.Player
 
         public INetChannel ConnectedClient { get; }
 
-        public IEntity attachedEntity { get; set; }
-        public EntityUid? AttachedEntityUid => attachedEntity?.Uid;
+        public IEntity AttachedEntity { get; set; }
+        public EntityUid? AttachedEntityUid => AttachedEntity?.Uid;
 
         private string _name = "<TERU-SAMA>";
         private SessionStatus _status = SessionStatus.Connecting;
@@ -105,7 +104,7 @@ namespace SS14.Server.Player
             actorComponent.playerSession = this;
             a.AddComponent(actorComponent);
 
-            attachedEntity = a;
+            AttachedEntity = a;
             SendAttachMessage();
             SetAttachedEntityName();
             UpdatePlayerState();
@@ -114,12 +113,12 @@ namespace SS14.Server.Player
         /// <inheritdoc />
         public void DetachFromEntity()
         {
-            if (attachedEntity == null) return;
+            if (AttachedEntity == null) return;
 
-            attachedEntity.RemoveComponent<KeyBindingInputComponent>();
-            attachedEntity.RemoveComponent<PlayerInputMoverComponent>();
-            attachedEntity.RemoveComponent<BasicActorComponent>();
-            attachedEntity = null;
+            AttachedEntity.RemoveComponent<KeyBindingInputComponent>();
+            AttachedEntity.RemoveComponent<PlayerInputMoverComponent>();
+            AttachedEntity.RemoveComponent<BasicActorComponent>();
+            AttachedEntity = null;
             UpdatePlayerState();
         }
         
@@ -164,23 +163,23 @@ namespace SS14.Server.Player
         
         private void SendAttachMessage()
         {
-            if (attachedEntity == null)
+            if (AttachedEntity == null)
                 throw new Exception("Cannot attach player session to entity: No entity attached.");
 
             var net = IoCManager.Resolve<IServerNetManager>();
             var message = net.CreateNetMessage<MsgSession>();
 
             message.MsgType = PlayerSessionMessage.AttachToEntity;
-            message.Uid = attachedEntity.Uid;
+            message.Uid = AttachedEntity.Uid;
 
             net.ServerSendMessage(message, ConnectedClient);
         }
         
         private void SetAttachedEntityName()
         {
-            if (Name != null && attachedEntity != null)
+            if (Name != null && AttachedEntity != null)
             {
-                attachedEntity.Name = Name;
+                AttachedEntity.Name = Name;
             }
         }
 
@@ -210,10 +209,10 @@ namespace SS14.Server.Player
         {
             PlayerState.Status = Status;
             PlayerState.Name = Name;
-            if (attachedEntity == null)
+            if (AttachedEntity == null)
                 PlayerState.ControlledEntity = null;
             else
-                PlayerState.ControlledEntity = attachedEntity.Uid;
+                PlayerState.ControlledEntity = AttachedEntity.Uid;
         }
 
         /// <inheritdoc />

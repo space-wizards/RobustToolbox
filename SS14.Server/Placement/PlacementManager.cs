@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
@@ -67,20 +68,30 @@ namespace SS14.Server.Placement
 
             var xValue = msg.XValue;
             var yValue = msg.YValue;
-            var gridIndex = msg.GridIndex;
-            var mapIndex = msg.MapIndex;
-            var coordinates = new LocalCoordinates(xValue, yValue, gridIndex, mapIndex);
-
             var dirRcv = msg.DirRcv;
 
+            var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.MsgChannel);
+            var plyEntity = session.AttachedEntity;
+
+            // Don't have an entity, don't get to place.
+            if (plyEntity == null)
+                return;
+
+            // get the MapID the player is on
+            var plyTransform = plyEntity.GetComponent<ITransformComponent>();
+            var mapIndex = plyTransform.MapID;
+            
             // no building in null space!
             if(mapIndex == MapId.Nullspace)
                 return;
 
-            var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.MsgChannel);
-            if (session.attachedEntity == null)
-                return; //Don't accept placement requests from nobody
+            //TODO: Distance check, so you can't place things off of screen.
 
+            // get the grid under the worldCoords.
+            var grid = IoCManager.Resolve<IMapManager>().GetMap(mapIndex).FindGridAt(new Vector2(xValue, yValue));
+            var coordinates = new LocalCoordinates(xValue, yValue, grid.Index, mapIndex);
+
+            
             /* TODO: Redesign permission system, or document what this is supposed to be doing
             var permission = GetPermission(session.attachedEntity.Uid, alignRcv);
             if (permission == null)

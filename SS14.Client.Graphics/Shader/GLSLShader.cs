@@ -1,15 +1,12 @@
-﻿using OpenTK;
-using SFML.System;
+﻿using SFML.System;
 using SFML.Graphics.Glsl;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Utility;
 using SS14.Shared.Maths;
-using SS14.Shared.Utility;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using ShaderClass = SFML.Graphics.Shader;
-using Vector2 = SS14.Shared.Maths.Vector2;
 using System; //TODO: Remove when all NotImplementedExcpetions are removed
 
 
@@ -102,7 +99,7 @@ namespace SS14.Client.Graphics.Shader
 
         public void SetUniform(string Parameter, Vector3 vec3)
         {
-            SFMLShader.SetUniform(Parameter, vec3.Convert());
+            SFMLShader.SetUniform(Parameter, new Vec3(vec3.X, vec3.Y, vec3.Z));
         }
 
         public void SetUniform(string Parameter, Vector4 vec4)

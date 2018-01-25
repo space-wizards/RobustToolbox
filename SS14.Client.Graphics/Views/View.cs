@@ -1,9 +1,7 @@
-﻿using OpenTK;
-using SS14.Client.Graphics.Utility;
+﻿using SS14.Client.Graphics.Utility;
 using SS14.Shared.Maths;
 using System;
 using SView = SFML.Graphics.View;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Graphics.Views
 {
@@ -21,7 +19,7 @@ namespace SS14.Client.Graphics.Views
 
         public View(Box2 box)
         {
-            SFMLView = new SView(box.Convert());
+            SFMLView = new SView(box.Rect());
         }
 
         public View(Vector2 center, Vector2 size)
@@ -93,7 +91,7 @@ namespace SS14.Client.Graphics.Views
 
         public Box2 Viewport
         {
-            get => SFMLView.Viewport.Convert();
+            get => SFMLView.Viewport.ToBox();
             set => SFMLView.Viewport = value.Convert();
         }
 

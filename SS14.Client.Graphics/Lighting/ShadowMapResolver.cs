@@ -1,10 +1,7 @@
 ﻿using System;
-using OpenTK;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
-using SS14.Client.Graphics.Textures;
 using SS14.Shared.Maths;
-using Vector2 = SS14.Shared.Maths.Vector2;
 using System.Collections.Generic;
 using SS14.Client.Graphics.Sprites;
 

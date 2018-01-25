@@ -5,9 +5,6 @@ using System.Collections.Generic;
 using System;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Maths;
-using SS14.Shared.Utility;
-using YamlDotNet.RepresentationModel;
-
 
 namespace SS14.Server.GameObjects
 {
@@ -24,19 +21,24 @@ namespace SS14.Server.GameObjects
         ///     Offsets the sprite from the entity origin by this many meters.
         /// </summary>
         private Vector2 _offset;
-        private bool _visible = true;
+        private bool _visible;
+        private DrawDepth _drawDepth;
 
         public SpriteComponent()
         {
             _slaves = new List<IRenderableComponent>();
         }
 
-        public DrawDepth DrawDepth { get; set; } = DrawDepth.FloorTiles;
+        public DrawDepth DrawDepth
+        {
+            get => _drawDepth;
+            set => _drawDepth = value;
+        }
 
         public bool Visible
         {
-            get { return _visible; }
-            set { _visible = value; }
+            get => _visible;
+            set => _visible = value;
         }
 
         public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
@@ -65,20 +67,14 @@ namespace SS14.Server.GameObjects
             return reply;
         }
         
-        public override void LoadParameters(YamlMappingNode mapping)
-        {
-            base.LoadParameters(mapping);
-            
-            if (mapping.TryGetNode("offset", out var node))
-            {
-                _offset = node.AsVector2();
-            }
-        }
-        
         public override void ExposeData(EntitySerializer serializer)
         {
             base.ExposeData(serializer);
 
+            serializer.DataField(ref _visible, "visible", true);
+            serializer.DataField(ref _drawDepth, "depth", DrawDepth.FloorTiles);
+            serializer.DataField(ref _currentSpriteKey, "skey", String.Empty);
+            serializer.DataField(ref _currentBaseName, "sbase", String.Empty);
             serializer.DataField(ref _offset, "offset", Vector2.Zero);
         }
 

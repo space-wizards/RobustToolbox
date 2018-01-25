@@ -1,10 +1,8 @@
-﻿using OpenTK;
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Log;
-using SS14.Shared.Utility;
-using YamlDotNet.RepresentationModel;
-using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Shared.Maths;
 
 namespace SS14.Server.GameObjects
 {
@@ -15,6 +13,9 @@ namespace SS14.Server.GameObjects
     /// </summary>
     public class PhysicsComponent : Component
     {
+        private float _mass;
+        private Vector2 _velocity;
+
         /// <inheritdoc />
         public override string Name => "Physics";
 
@@ -24,12 +25,20 @@ namespace SS14.Server.GameObjects
         /// <summary>
         ///     Current mass of the entity.
         /// </summary>
-        public float Mass { get; set; }
+        public float Mass
+        {
+            get => _mass;
+            set => _mass = value;
+        }
 
         /// <summary>
         ///     Current velocity of the entity.
         /// </summary>
-        public Vector2 Velocity { get; set; }
+        public Vector2 Velocity
+        {
+            get => _velocity;
+            set => _velocity = value;
+        }
 
         /// <inheritdoc />
         public override void OnAdd(IEntity owner)
@@ -42,17 +51,18 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void ExposeData(EntitySerializer serializer)
         {
-            YamlNode node;
-            if (mapping.TryGetNode("mass", out node))
-                Mass = node.AsFloat();
+            base.ExposeData(serializer);
+
+            serializer.DataField(ref _mass, "mass", 1);
+            serializer.DataField(ref _velocity, "vel", Vector2.Zero);
         }
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new PhysicsComponentState(Mass, Velocity);
+            return new PhysicsComponentState(_mass, _velocity);
         }
     }
 }

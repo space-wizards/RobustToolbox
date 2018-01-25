@@ -126,7 +126,6 @@
     <Compile Include="ContentPack\PathHelpers.cs" />
     <Compile Include="ContentPack\ResourceManager.cs" />
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
-    <Compile Include="GameObjects\Serialization\CustomSerializers.cs" />
     <Compile Include="GameObjects\Serialization\EntitySerializer.cs" />
     <Compile Include="GameObjects\EntityUid.cs" />
     <Compile Include="GameObjects\Serialization\EntityYamlSerializer.cs" />

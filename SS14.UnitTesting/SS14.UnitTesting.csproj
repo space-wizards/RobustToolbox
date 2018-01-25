@@ -110,9 +110,6 @@
   <ItemGroup />
   <ItemGroup>
     <None Include="app.config" />
-    <Content Include="C:\Users\shatt\Documents\Visual Studio 2017\Projects\space-station-14\packages\OpenTK.3.0.0-pre\content\OpenTK.dll.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <Choose>

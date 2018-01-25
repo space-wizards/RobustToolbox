@@ -167,9 +167,6 @@
     <Content Include="client_config.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(SolutionDir)packages\OpenTK.3.0.0-pre\content\OpenTK.dll.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="packages.config" />
     <Compile Include="GameObjects\AnimatedSprite.cs" />
     <Compile Include="GameObjects\Components\Input\ClickableComponent.cs" />

@@ -8,6 +8,7 @@ using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using System;
 using SS14.Shared.Enums;
+using SS14.Shared.GameObjects.Serialization;
 
 namespace SS14.Server.GameObjects
 {
@@ -21,7 +22,7 @@ namespace SS14.Server.GameObjects
         /// </summary>
         public IServerTransformComponent Parent
         {
-            get => IoCManager.Resolve<IServerEntityManager>().GetEntity(_parent).GetComponent<IServerTransformComponent>();
+            get => !_parent.IsValid() ? null : IoCManager.Resolve<IServerEntityManager>().GetEntity(_parent).GetComponent<IServerTransformComponent>();
             private set => _parent = value.Owner.Uid;
         }
 
@@ -97,11 +98,11 @@ namespace SS14.Server.GameObjects
         {
             base.ExposeData(serializer);
 
+            serializer.DataField(ref _parent, "parent", new EntityUid());
             serializer.DataField(ref _mapID, "map", MapId.Nullspace);
             serializer.DataField(ref _gridID, "grid", GridId.DefaultGrid);
             serializer.DataField(ref _position, "pos", Vector2.Zero);
             serializer.DataField(ref _rotation, "rot", new Angle());
-            serializer.DataField(ref _parent, "parent", new EntityUid());
         }
 
         /// <inheritdoc />

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Serialization;
 using YamlDotNet.RepresentationModel;
 using SS14.Shared.Interfaces.Network;
 

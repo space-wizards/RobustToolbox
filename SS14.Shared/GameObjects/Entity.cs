@@ -4,6 +4,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Prototypes;
 using YamlDotNet.RepresentationModel;
 

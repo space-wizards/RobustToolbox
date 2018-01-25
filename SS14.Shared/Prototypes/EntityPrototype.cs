@@ -8,6 +8,7 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Log;
 using YamlDotNet.RepresentationModel;
 using Vector2i = SS14.Shared.Maths.Vector2i;
@@ -322,14 +323,13 @@ namespace SS14.Shared.GameObjects
             foreach (KeyValuePair<string, YamlMappingNode> componentData in Components)
             {
                 IComponent component = componentFactory.GetComponent(componentData.Key);
-
+                
                 component.LoadParameters(componentData.Value);
                 component.ExposeData(new EntityYamlSerializer(componentData.Value));
 
                 entity.AddComponent(component);
             }
-
-
+            
             return entity;
         }
 

@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SS14.Shared.GameObjects
+﻿namespace SS14.Shared.GameObjects.Serialization
 {
     public abstract class EntitySerializer
     {
+        public bool Reading { get; protected set; }
+
         public abstract void EntityHeader();
         public abstract void EntityFooter();
 

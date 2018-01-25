@@ -10,6 +10,7 @@ using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 using OpenTK;
+using SS14.Shared.GameObjects.Serialization;
 
 namespace SS14.Server.GameObjects
 {

@@ -3,6 +3,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using System.Collections.Generic;
 using System;
+using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
@@ -78,7 +79,7 @@ namespace SS14.Server.GameObjects
         {
             base.ExposeData(serializer);
 
-            serializer.DataField(ref _offset, "offset", Vector2.Zero, true);
+            serializer.DataField(ref _offset, "offset", Vector2.Zero);
         }
 
         public override ComponentState GetComponentState()

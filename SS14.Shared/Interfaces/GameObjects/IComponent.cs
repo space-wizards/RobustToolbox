@@ -1,5 +1,6 @@
 ﻿using System;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Serialization;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Interfaces.GameObjects
@@ -100,6 +101,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     This should basically be overridden by every inheriting component, as parameters will be different
         ///     across the board.
         /// </summary>
+        [Obsolete("Use the ExposeData serialization system.")]
         void LoadParameters(YamlMappingNode mapping);
 
         void ExposeData(EntitySerializer serializer);

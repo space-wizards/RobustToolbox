@@ -1,6 +1,7 @@
 ﻿using OpenTK;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
@@ -53,15 +54,13 @@ namespace SS14.Server.GameObjects
         {
             base.ExposeData(serializer);
 
-            serializer.DataField(ref _aabb, "aabb", new Box2(-0.5f, -0.5f, 0.5f, 0.5f), true);
+            serializer.DataField(ref _aabb, "aabb", new Box2(-0.5f, -0.5f, 0.5f, 0.5f));
         }
 
         /// <inheritdoc />
         public override void LoadParameters(YamlMappingNode mapping)
         {
-
-            YamlNode node;
-            if (mapping.TryGetNode("sizeX", out node))
+            if (mapping.TryGetNode("sizeX", out var node))
             {
                 var width = node.AsFloat();
                 AABB = Box2.FromDimensions(AABB.Left + (AABB.Width - width) / 2f, AABB.Top, width, AABB.Height);

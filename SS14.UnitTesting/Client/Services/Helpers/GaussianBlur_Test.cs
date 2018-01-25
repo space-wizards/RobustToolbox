@@ -1,5 +1,4 @@
 ﻿using NUnit.Framework;
-using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Sprites;
@@ -7,8 +6,6 @@ using SS14.Client.Helpers;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Maths;
-using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.UnitTesting.Client.Helpers
 {
@@ -58,7 +55,7 @@ namespace SS14.UnitTesting.Client.Helpers
                 var lastFrameTime = clock.ElapsedTimeAsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(Color4.Black);
+                CluwneLib.ClearCurrentRendertarget(Color.Black);
                 CluwneLib.Window.DispatchEvents();
 
                 preblur.BeginDrawing(); // set temp as CRT (Current Render Target)
@@ -92,7 +89,7 @@ namespace SS14.UnitTesting.Client.Helpers
                 var lastFrameTime = clock.ElapsedTimeAsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(Color4.Black);
+                CluwneLib.ClearCurrentRendertarget(Color.Black);
                 CluwneLib.Window.DispatchEvents();
 
                 preblur.BeginDrawing(); // set temp as CRT
@@ -124,7 +121,7 @@ namespace SS14.UnitTesting.Client.Helpers
                 var lastFrameTime = clock.ElapsedTimeAsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(Color4.Black);
+                CluwneLib.ClearCurrentRendertarget(Color.Black);
                 CluwneLib.Window.DispatchEvents();
 
                 preblur.BeginDrawing(); // set temp as CRT
@@ -156,7 +153,7 @@ namespace SS14.UnitTesting.Client.Helpers
                 var lastFrameTime = clock.ElapsedTimeAsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(Color4.Black);
+                CluwneLib.ClearCurrentRendertarget(Color.Black);
                 CluwneLib.Window.DispatchEvents();
 
                 preblur.BeginDrawing(); // set temp as CRT
@@ -188,7 +185,7 @@ namespace SS14.UnitTesting.Client.Helpers
                 var lastFrameTime = clock.ElapsedTimeAsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(Color4.Black);
+                CluwneLib.ClearCurrentRendertarget(Color.Black);
                 CluwneLib.Window.DispatchEvents();
 
                 preblur.BeginDrawing(); // set temp as CRT

@@ -219,27 +219,6 @@ namespace SS14.Shared.Maths
 
         #endregion
 
-        #region public float LengthFast
-
-        /// <summary>
-        /// Gets an approximation of the vector length (magnitude).
-        /// </summary>
-        /// <remarks>
-        /// This property uses an approximation of the square root function to calculate vector magnitude, with
-        /// an upper error bound of 0.001.
-        /// </remarks>
-        /// <see cref="Length"/>
-        /// <seealso cref="LengthSquared"/>
-        public float LengthFast
-        {
-            get
-            {
-                return 1.0f / OpenTK.MathHelper.InverseSqrtFast(X * X + Y * Y + Z * Z);
-            }
-        }
-
-        #endregion
-
         #region public float LengthSquared
 
         /// <summary>

@@ -27,8 +27,6 @@ using System.Runtime.InteropServices;
 
 namespace SS14.Shared.Maths
 {
-    // Todo: Remove this warning when the code goes public.
-#pragma warning disable 3019
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
     public struct Matrix3 : IEquatable<Matrix3>
@@ -270,7 +268,7 @@ namespace SS14.Shared.Maths
         /// Constructs a new instance.
         /// </summary>
         /// <param name="matrix">A Matrix4 to take the upper-left 3x3 from.</param>
-        public Matrix3(OpenTK.Matrix4 matrix)
+        public Matrix3(Matrix4 matrix)
         {
             R0C0 = matrix.Row0.X;
             R0C1 = matrix.Row0.Y;
@@ -290,7 +288,7 @@ namespace SS14.Shared.Maths
         #region Equality
 
         /// <summary>Indicates whether the current matrix is equal to another matrix.</summary>
-        /// <param name="matrix">The OpenTK.Matrix3 structure to compare with.</param>
+        /// <param name="matrix">The Matrix3 structure to compare with.</param>
         /// <returns>true if the current matrix is equal to the matrix parameter; otherwise, false.</returns>
         [CLSCompliant(false)]
         public bool Equals(Matrix3 matrix)
@@ -308,7 +306,7 @@ namespace SS14.Shared.Maths
         }
 
         /// <summary>Indicates whether the current matrix is equal to another matrix.</summary>
-        /// <param name="matrix">The OpenTK.Matrix3 structure to compare to.</param>
+        /// <param name="matrix">The Matrix3 structure to compare to.</param>
         /// <returns>true if the current matrix is equal to the matrix parameter; otherwise, false.</returns>
         public bool Equals(ref Matrix3 matrix)
         {
@@ -343,7 +341,7 @@ namespace SS14.Shared.Maths
         }
 
         /// <summary>Indicates whether the current matrix is approximately equal to another matrix.</summary>
-        /// <param name="matrix">The OpenTK.Matrix3 structure to compare with.</param>
+        /// <param name="matrix">The Matrix3 structure to compare with.</param>
         /// <param name="tolerance">The limit below which the matrices are considered equal.</param>
         /// <returns>true if the current matrix is approximately equal to the matrix parameter; otherwise, false.</returns>
         public bool EqualsApprox(ref Matrix3 matrix, float tolerance)
@@ -605,9 +603,9 @@ namespace SS14.Shared.Maths
 
         public void Transpose()
         {
-            OpenTK.MathHelper.Swap(ref R0C1, ref R1C0);
-            OpenTK.MathHelper.Swap(ref R0C2, ref R2C0);
-            OpenTK.MathHelper.Swap(ref R1C2, ref R2C1);
+            MathHelper.Swap(ref R0C1, ref R1C0);
+            MathHelper.Swap(ref R0C2, ref R2C0);
+            MathHelper.Swap(ref R1C2, ref R2C1);
         }
         public void Transpose(out Matrix3 result)
         {
@@ -638,7 +636,7 @@ namespace SS14.Shared.Maths
 
         #region Transformation Functions
 
-        public void Transform(ref OpenTK.Vector3 vector)
+        public void Transform(ref Vector3 vector)
         {
             float x = R0C0 * vector.X + R0C1 * vector.Y + R0C2 * vector.Z;
             float y = R1C0 * vector.X + R1C1 * vector.Y + R1C2 * vector.Z;
@@ -646,7 +644,7 @@ namespace SS14.Shared.Maths
             vector.X = x;
             vector.Y = y;
         }
-        public static void Transform(ref Matrix3 matrix, ref OpenTK.Vector3 vector)
+        public static void Transform(ref Matrix3 matrix, ref Vector3 vector)
         {
             float x = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2 * vector.Z;
             float y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2 * vector.Z;
@@ -654,13 +652,13 @@ namespace SS14.Shared.Maths
             vector.X = x;
             vector.Y = y;
         }
-        public void Transform(ref OpenTK.Vector3 vector, out OpenTK.Vector3 result)
+        public void Transform(ref Vector3 vector, out Vector3 result)
         {
             result.X = R0C0 * vector.X + R0C1 * vector.Y + R0C2 * vector.Z;
             result.Y = R1C0 * vector.X + R1C1 * vector.Y + R1C2 * vector.Z;
             result.Z = R2C0 * vector.X + R2C1 * vector.Y + R2C2 * vector.Z;
         }
-        public static void Transform(ref Matrix3 matrix, ref OpenTK.Vector3 vector, out OpenTK.Vector3 result)
+        public static void Transform(ref Matrix3 matrix, ref Vector3 vector, out Vector3 result)
         {
             result.X = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2 * vector.Z;
             result.Y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2 * vector.Z;
@@ -669,7 +667,7 @@ namespace SS14.Shared.Maths
 
         public void Rotate(float angle)
         {
-            float angleRadians = OpenTK.MathHelper.DegreesToRadians(angle);
+            float angleRadians = MathHelper.DegreesToRadians(angle);
             float sin = (float)System.Math.Sin(angleRadians);
             float cos = (float)System.Math.Cos(angleRadians);
 
@@ -687,7 +685,7 @@ namespace SS14.Shared.Maths
         }
         public void Rotate(float angle, out Matrix3 result)
         {
-            float angleRadians = OpenTK.MathHelper.DegreesToRadians(angle);
+            float angleRadians = MathHelper.DegreesToRadians(angle);
             float sin = (float)System.Math.Sin(angleRadians);
             float cos = (float)System.Math.Cos(angleRadians);
 
@@ -703,7 +701,7 @@ namespace SS14.Shared.Maths
         }
         public static void Rotate(ref Matrix3 matrix, float angle, out Matrix3 result)
         {
-            float angleRadians = OpenTK.MathHelper.DegreesToRadians(angle);
+            float angleRadians = MathHelper.DegreesToRadians(angle);
             float sin = (float)System.Math.Sin(angleRadians);
             float cos = (float)System.Math.Cos(angleRadians);
 
@@ -719,7 +717,7 @@ namespace SS14.Shared.Maths
         }
         public static void RotateMatrix(float angle, out Matrix3 result)
         {
-            float angleRadians = OpenTK.MathHelper.DegreesToRadians(angle);
+            float angleRadians = MathHelper.DegreesToRadians(angle);
             float sin = (float)System.Math.Sin(angleRadians);
             float cos = (float)System.Math.Cos(angleRadians);
 

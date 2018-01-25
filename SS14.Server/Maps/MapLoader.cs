@@ -11,7 +11,9 @@ using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
 using System;
 using System.Globalization;
+using System.IO;
 using System.Xml.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.Maps
 {
@@ -23,7 +25,65 @@ namespace SS14.Server.Maps
         [Dependency]
         private IServerEntityManager entityManager;
 
-        public void Load(string filename, IMap map)
+        [Dependency]
+        private IPrototypeManager protoMan;
+
+        /// <inheritdoc />
+        public void LoadGrid(IMap map, string path)
+        {
+            //TODO: Make me work
+        }
+
+        /// <inheritdoc />
+        public void LoadEntities(IMap map, string path)
+        {
+            var resMan = IoCManager.Resolve<IResourceManager>();
+
+            var rootPath = resMan.ConfigDirectory;
+            var comb = Path.Combine(rootPath, path);
+            var fullPath = Path.GetFullPath(comb);
+
+            if (!File.Exists(fullPath))
+            {
+                Logger.Error($"[MAP] Cannot load entity path: {fullPath}");
+                return;
+            }
+
+            using (var reader = new StreamReader(fullPath))
+            {
+                var stream = new YamlStream();
+                stream.Load(reader);
+
+                foreach (var document in stream.Documents)
+                {
+                    LoadEntityDocument(document);
+                }
+            }
+        }
+
+        private void LoadEntityDocument(YamlDocument doc)
+        {
+            // first node is always sequence
+            var root = (YamlSequenceNode)doc.RootNode;
+
+            // sequence always contains mappings
+            foreach (var yamlNode in root.Children)
+            {
+                var yamlEnt = (YamlMappingNode) yamlNode;
+                LoadEntityYaml(yamlEnt);
+            }
+        }
+
+        private void LoadEntityYaml(YamlMappingNode node)
+        {
+            var protoName = node[new YamlScalarNode("id")].ToString();
+
+            var entity = entityManager.SpawnEntity(protoName);
+            
+            protoMan.LoadData(entity, node);
+        }
+
+        public void EntityLoader(IMap map, string filename)
         {
             if (!resourceManager.TryContentFileRead(filename, out var stream))
             {
@@ -67,7 +127,7 @@ namespace SS14.Server.Maps
             entity.GetComponent<IServerTransformComponent>().Rotation = dir.ToAngle();
         }
 
-        public void Save(string filename, IMap map)
+        public void Save(IMap map, string filename)
         {
             var rootElement = new XElement("SavedEntities");
 

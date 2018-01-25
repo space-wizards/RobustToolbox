@@ -1,14 +1,15 @@
-﻿using OpenTK;
-using OpenTK.Graphics;
+﻿using OpenTK.Graphics;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects.Serialization;
+using SS14.Shared.Maths;
+using Vector2 = OpenTK.Vector2;
 
 namespace SS14.Server.GameObjects
 {
     public class PointLightComponent : Component
     {
-        private Color4 _color;
+        private Color _color;
         private LightModeClass _mode;
         private LightState _state;
         private int _radius;
@@ -17,7 +18,7 @@ namespace SS14.Server.GameObjects
         public override string Name => "PointLight";
         public override uint? NetID => NetIDs.POINT_LIGHT;
 
-        public Color4 Color
+        public Color Color
         {
             get => _color;
             set => _color = value;

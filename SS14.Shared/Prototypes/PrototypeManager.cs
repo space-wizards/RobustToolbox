@@ -16,6 +16,7 @@ using OpenTK;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Serialization;
 
 namespace SS14.Shared.Prototypes
 {
@@ -67,6 +68,8 @@ namespace SS14.Shared.Prototypes
         /// Syncs all inter-prototype data. Call this when operations adding new prototypes are done.
         /// </summary>
         void Resync();
+
+        void LoadData(IEntity entity, YamlMappingNode node);
     }
 
     /// <summary>
@@ -129,6 +132,12 @@ namespace SS14.Shared.Prototypes
             prototypes.Clear();
             prototypeTypes.Clear();
             indexedPrototypes.Clear();
+        }
+
+        public void LoadData(IEntity entity, YamlMappingNode node)
+        {
+            var ent = entity as Entity;
+            ent.ExposeData(new EntityYamlSerializer(node));
         }
 
         public void Resync()

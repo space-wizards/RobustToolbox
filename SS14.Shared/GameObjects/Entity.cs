@@ -125,9 +125,10 @@ namespace SS14.Shared.GameObjects
 
             foreach (var component in _components)
             {
-                serializer.CompStart();
-
                 string type = component.Name;
+
+                serializer.CompStart(type);
+
                 serializer.DataField(ref type, "type", component.Name, true);
 
                 component.ExposeData(serializer);

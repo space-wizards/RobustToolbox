@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using OpenTK;
 using SS14.Shared.Interfaces;
@@ -65,15 +66,16 @@ namespace SS14.Shared.GameObjects.Serialization
 
         public override void EntityFooter()
         {
-            if(!Reading)
-            {
-                _curMap = null;
-            }
         }
 
         public override void CompHeader()
         {
-            if(!Reading)
+            if (Reading)
+            {
+                _compSeq = (YamlSequenceNode) _curMap.Children["components"];
+                _curMap = null;
+            }
+            else
             {
                 _compSeq = new YamlSequenceNode();
                 _entMap.Children.Add("components", _compSeq);
@@ -81,9 +83,15 @@ namespace SS14.Shared.GameObjects.Serialization
             }
         }
 
-        public override void CompStart()
+        public override void CompStart(string name)
         {
-            if(!Reading)
+            if (Reading)
+            {
+                var compMaps = _compSeq.Children;
+
+                _curMap = (YamlMappingNode)compMaps.First(m => m["type"].ToString() == name);
+            }
+            else
             {
                 _curMap = new YamlMappingNode();
                 _compSeq.Children.Add(_curMap);

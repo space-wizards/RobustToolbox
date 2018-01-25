@@ -51,7 +51,7 @@ namespace SS14.Server.ServerConsole.Commands
                 mapName = args[0];
             }
             var mapManager = IoCManager.Resolve<IMapManager>();
-            IoCManager.Resolve<IMapLoader>().Save(mapName, mapManager.GetMap(new MapId(1)));
+            IoCManager.Resolve<IMapLoader>().Save(mapManager.GetMap(new MapId(1)), mapName);
         }
     }
 

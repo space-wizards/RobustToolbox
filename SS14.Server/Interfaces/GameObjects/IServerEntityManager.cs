@@ -2,8 +2,7 @@
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Map;
 using System.Collections.Generic;
-using OpenTK;
-using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Shared.Maths;
 
 namespace SS14.Server.Interfaces.GameObjects
 {

@@ -1,5 +1,4 @@
 ﻿using System;
-using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Sprites;
@@ -17,7 +16,7 @@ namespace SS14.Client.UserInterface.Controls
 
         public int FixedHeight { get; set; } = -1;
         public int FixedWidth { get; set; } = -1;
-        public Color4 HighlightColor { get; set; } = Color4.Gray;
+        public Color HighlightColor { get; set; } = Color.Gray;
 
         public uint FontSize
         {

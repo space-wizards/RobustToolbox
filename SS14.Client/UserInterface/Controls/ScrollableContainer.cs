@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Render;
@@ -32,7 +31,7 @@ namespace SS14.Client.UserInterface.Controls
             // the controls stars out with the same size as container
             Size = size;
 
-            BackgroundColor = new Color4(169, 169, 169, 255);
+            BackgroundColor = new Color(169, 169, 169, 255);
             DrawBackground = false;
             DrawBorder = true;
 

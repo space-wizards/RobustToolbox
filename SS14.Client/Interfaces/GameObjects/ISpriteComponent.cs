@@ -1,7 +1,7 @@
-﻿using OpenTK;
-using SS14.Client.Graphics.Sprites;
+﻿using SS14.Client.Graphics.Sprites;
 using SS14.Shared.Interfaces.GameObjects;
 using System.Collections.Generic;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.GameObjects
 {

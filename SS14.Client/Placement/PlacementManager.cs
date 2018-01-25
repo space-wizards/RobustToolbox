@@ -1,5 +1,4 @@
-﻿using OpenTK.Graphics;
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprites;
 using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Placement;
@@ -24,7 +23,6 @@ using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Timing;
-using SS14.Shared.Log;
 using SS14.Shared.Network;
 
 namespace SS14.Client.Placement
@@ -250,7 +248,7 @@ namespace SS14.Client.Placement
                         (int)Math.Floor(pos.Y),
                         CurrentPermission.Range * CluwneLib.Camera.PixelsPerMeter,
                         3f,
-                        Color4.White);
+                        Color.White);
                 }
             }
         }

@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using OpenTK.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.ResourceManagement;
@@ -23,11 +22,8 @@ namespace SS14.Client.UserInterface.CustomControls
         private readonly Sprite _sprite;
 
         public int FixedWidth { get; set; } = -1;
-        public bool Selected { get; set; } = false;
-
+        public bool Selected { get; set; }
         
-        
-
         public EntitySpawnSelectButton(EntityPrototype entityTemplate, string templateName)
         {
             var spriteNameParam = entityTemplate.GetBaseSpriteParameters().FirstOrDefault();
@@ -90,7 +86,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public override void Draw()
         {
-            BackgroundColor = Selected ? new Color4(34, 139, 34, 255) : new Color4(255, 250, 240, 255);
+            BackgroundColor = Selected ? new Color(34, 139, 34) : new Color(255, 250, 240);
 
             base.Draw();
 

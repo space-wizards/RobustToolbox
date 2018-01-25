@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using OpenTK.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Interfaces.GameObjects;
@@ -54,9 +53,9 @@ namespace SS14.Client.UserInterface.CustomControls
             foreach (var struc in ObjPropList)
             {
                 if (struc.VarName.IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0)
-                    struc.LabelName.BackgroundColor = new Color4(255, 228, 196, 255);
+                    struc.LabelName.BackgroundColor = new Color(255, 228, 196, 255);
                 else
-                    struc.LabelName.BackgroundColor = Color4.Gray;
+                    struc.LabelName.BackgroundColor = Color.Gray;
             }
         }
 
@@ -189,8 +188,8 @@ namespace SS14.Client.UserInterface.CustomControls
 
                     newEntry.LabelName.Position = new Vector2i(5, pos);
                     newEntry.LabelName.DrawBorder = true;
-                    newEntry.LabelName.BorderColor = new Color4(240, 255, 240, 255);
-                    newEntry.LabelName.BackgroundColor = Color4.Gray;
+                    newEntry.LabelName.BorderColor = new Color(240, 255, 240, 255);
+                    newEntry.LabelName.BackgroundColor = Color.Gray;
                     newEntry.LabelName.DrawBackground = true;
                     newEntry.LabelName.Update(0);
 
@@ -212,8 +211,8 @@ namespace SS14.Client.UserInterface.CustomControls
                         newEntry.LabelName = new Label(item.ToString(), "CALIBRI");
                         newEntry.LabelName.Position = new Vector2i(15, pos);
                         newEntry.LabelName.DrawBorder = true;
-                        newEntry.LabelName.BorderColor = new Color4(0, 191, 255, 255);
-                        newEntry.LabelName.BackgroundColor = Color4.Gray;
+                        newEntry.LabelName.BorderColor = new Color(0, 191, 255, 255);
+                        newEntry.LabelName.BackgroundColor = Color.Gray;
                         newEntry.LabelName.DrawBackground = true;
                         newEntry.LabelName.Clicked += LabelName_Clicked;
                         newEntry.LabelName.Update(0);
@@ -236,8 +235,8 @@ namespace SS14.Client.UserInterface.CustomControls
                     newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : ""), "CALIBRI");
                     newEntry.LabelName.Position = new Vector2i(5, pos);
                     newEntry.LabelName.DrawBorder = true;
-                    newEntry.LabelName.BorderColor = newEntry.CanEdit ? new Color4(127, 255, 0, 255) : new Color4(205, 92, 92, 255);
-                    newEntry.LabelName.BackgroundColor = Color4.Gray;
+                    newEntry.LabelName.BorderColor = newEntry.CanEdit ? new Color(127, 255, 0, 255) : new Color(205, 92, 92, 255);
+                    newEntry.LabelName.BackgroundColor = Color.Gray;
                     newEntry.LabelName.DrawBackground = true;
                     newEntry.LabelName.Clicked += LabelName_Clicked;
                     newEntry.LabelName.Update(0);

@@ -1,11 +1,9 @@
 ﻿using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
-using OpenTK;
 using SS14.Client.Graphics.Collection;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Textures;
-using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using SS14.Shared.GameObjects;
@@ -24,8 +22,6 @@ using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Maths;
-using Vector2u = SS14.Shared.Maths.Vector2u;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Resources
 {

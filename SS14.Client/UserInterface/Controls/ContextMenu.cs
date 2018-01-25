@@ -1,15 +1,11 @@
-﻿using OpenTK.Graphics;
-using SS14.Client.GameObjects;
+﻿using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
-using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
-using Vector2i = SS14.Shared.Maths.Vector2i;
-using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.UserInterface.Controls;
 
@@ -96,7 +92,7 @@ namespace SS14.Client.UserInterface.Components
             foreach (ContextMenuButton button in _buttons)
                 button.Draw();
             CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
-                                                   Color4.Black);
+                                                   Color.Black);
         }
 
         public override void Destroy()
@@ -153,7 +149,7 @@ namespace SS14.Client.UserInterface.Components
         
         private readonly Label _textLabel;
         
-        private Color4 _currentColor = Color4.Gray;
+        private Color _currentColor = Color.Gray;
         private Sprite _iconSprite;
 
         
@@ -213,8 +209,8 @@ namespace SS14.Client.UserInterface.Components
         public override void MouseMove(MouseMoveEventArgs e)
         {
             _currentColor = ClientArea.Contains(new Vector2i(e.X, e.Y))
-                                ? new Color4(211, 211, 211, 255)
-                                : Color4.Gray;
+                                ? new Color(211, 211, 211, 255)
+                                : Color.Gray;
         }
     }
 }

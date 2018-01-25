@@ -1,9 +1,9 @@
-using OpenTK;
-using SS14.Client.Graphics.Render;
+﻿using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Helpers;
 using SS14.Shared.IoC;
 using System;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Player.PostProcessing
 {

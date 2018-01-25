@@ -1,9 +1,8 @@
-﻿using OpenTK;
-using SS14.Client.Graphics.Collection;
+﻿using SS14.Client.Graphics.Collection;
 using System;
 using System.Runtime.InteropServices;
+using SS14.Shared.Maths;
 using Color = SS14.Shared.Maths.Color;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Graphics.VertexData
 {

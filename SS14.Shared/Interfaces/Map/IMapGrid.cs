@@ -1,8 +1,7 @@
-﻿using OpenTK;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using SS14.Shared.Map;
-using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Shared.Maths;
 
 namespace SS14.Shared.Interfaces.Map
 {

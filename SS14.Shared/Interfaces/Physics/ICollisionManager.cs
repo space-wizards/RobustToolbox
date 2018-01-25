@@ -1,6 +1,5 @@
-﻿using OpenTK;
-using SS14.Shared.Interfaces.GameObjects;
-using Vector2 = SS14.Shared.Maths.Vector2;
+﻿using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Maths;
 
 namespace SS14.Shared.Interfaces.Physics
 {

@@ -1,6 +1,4 @@
-﻿using OpenTK;
-using SS14.Shared.Utility;
-using System;
+﻿using System;
 
 namespace SS14.Shared.Maths
 {

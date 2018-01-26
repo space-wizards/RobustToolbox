@@ -1,9 +1,7 @@
-﻿using OpenTK;
-using OpenTK.Graphics;
-using SS14.Shared;
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.Utility;
 using SS14.Shared.Enums;
+using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
@@ -13,7 +11,7 @@ namespace SS14.Server.GameObjects
         public override string Name => "PointLight";
         public override uint? NetID => NetIDs.POINT_LIGHT;
 
-        public Color4 Color { get; set; } = new Color4(200, 200, 200, 255);
+        public Color Color { get; set; } = new Color(200, 200, 200, 255);
         public LightModeClass Mode { get; set; } = LightModeClass.Constant;
         public LightState State { get; set; } = LightState.On;
         public int Radius { get; set; } = 512;

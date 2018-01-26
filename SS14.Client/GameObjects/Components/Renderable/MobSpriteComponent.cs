@@ -1,18 +1,12 @@
-﻿using OpenTK;
-using SS14.Client.Graphics.Sprites;
+﻿using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics;
-using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
-using System.Collections.Generic;
 using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
-using OpenTK.Graphics;
 using SS14.Shared.Console;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.GameObjects
 {

@@ -1,6 +1,5 @@
 ﻿using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.Maths;
-using Vector2 = OpenTK.Vector2;
 
 namespace SS14.Shared.Physics
 {

@@ -1,5 +1,4 @@
 ﻿using System;
-using OpenTK.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.VertexData;
 using SS14.Shared.Maths;
@@ -33,8 +32,8 @@ namespace SS14.Client.UserInterface.Controls
             title = new Label(windowTitle, "CALIBRI");
             gradient = new GradientBox();
 
-            BackgroundColor = new Color4(169, 169, 169, 255);
-            BorderColor = Color4.Black;
+            BackgroundColor = new Color(169, 169, 169, 255);
+            BorderColor = Color.Black;
             DrawBackground = true;
             DrawBorder = true;
             BorderWidth = 1;
@@ -153,7 +152,7 @@ namespace SS14.Client.UserInterface.Controls
 
         public override void Update(float frameTime)
         {
-            OpenTK.Vector3 position = box[0].Position;
+            Vector3 position = box[0].Position;
             position.X = ClientArea.Left;
             position.Y = ClientArea.Top;
             box[0].Position = position;

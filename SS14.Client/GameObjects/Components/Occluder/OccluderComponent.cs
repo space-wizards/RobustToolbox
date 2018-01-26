@@ -1,12 +1,11 @@
-﻿using OpenTK;
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 using SS14.Client.Graphics.Lighting;
 using SS14.Shared.Enums;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {

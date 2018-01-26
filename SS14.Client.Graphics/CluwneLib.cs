@@ -1,5 +1,4 @@
-﻿using OpenTK;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics.Input;
@@ -14,8 +13,6 @@ using SS14.Shared.Maths;
 using SS14.Shared.Timing;
 using System;
 using Color = SS14.Shared.Maths.Color;
-using GraphicsContext = OpenTK.Graphics.GraphicsContext;
-using Vector2 = SS14.Shared.Maths.Vector2;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using VideoMode = SS14.Client.Graphics.Render.VideoMode;
 using Font = SS14.Client.Graphics.Sprites.Font;

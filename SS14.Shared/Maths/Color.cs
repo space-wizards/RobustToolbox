@@ -1,6 +1,4 @@
-﻿using OpenTK;
-using OpenTK.Graphics;
-using System;
+﻿using System;
 using SystemColor = System.Drawing.Color;
 
 namespace SS14.Shared.Maths
@@ -126,15 +124,15 @@ namespace SS14.Shared.Maths
                 if (hexColor.Length == 9)
                 {
                     return new Color(Convert.ToByte(hexColor.Substring(1, 2), 16),
-                                     Convert.ToByte(hexColor.Substring(3, 2), 16),
-                                     Convert.ToByte(hexColor.Substring(5, 2), 16),
-                                     Convert.ToByte(hexColor.Substring(7, 2), 16));
+                        Convert.ToByte(hexColor.Substring(3, 2), 16),
+                        Convert.ToByte(hexColor.Substring(5, 2), 16),
+                        Convert.ToByte(hexColor.Substring(7, 2), 16));
                 }
                 else if (hexColor.Length == 7)
                 {
                     return new Color(Convert.ToByte(hexColor.Substring(1, 2), 16),
-                                     Convert.ToByte(hexColor.Substring(3, 2), 16),
-                                     Convert.ToByte(hexColor.Substring(5, 2), 16));
+                        Convert.ToByte(hexColor.Substring(3, 2), 16),
+                        Convert.ToByte(hexColor.Substring(5, 2), 16));
                 }
                 else if (hexColor.Length == 5)
                 {
@@ -144,9 +142,9 @@ namespace SS14.Shared.Maths
                     string a = hexColor[4].ToString();
 
                     return new Color(Convert.ToByte(r + r, 16),
-                                     Convert.ToByte(g + g, 16),
-                                     Convert.ToByte(b + b, 16),
-                                     Convert.ToByte(a + a, 16));
+                        Convert.ToByte(g + g, 16),
+                        Convert.ToByte(b + b, 16),
+                        Convert.ToByte(a + a, 16));
                 }
                 else if (hexColor.Length == 4)
                 {
@@ -155,8 +153,8 @@ namespace SS14.Shared.Maths
                     string b = hexColor[3].ToString();
 
                     return new Color(Convert.ToByte(r + r, 16),
-                                     Convert.ToByte(g + g, 16),
-                                     Convert.ToByte(b + b, 16));
+                        Convert.ToByte(g + g, 16),
+                        Convert.ToByte(b + b, 16));
                 }
             }
 
@@ -199,11 +197,6 @@ namespace SS14.Shared.Maths
         public override string ToString()
         {
             return _color.ToString();
-        }
-
-        public static explicit operator SystemColor(Color color)
-        {
-            return (SystemColor)color._color;
         }
 
         public override bool Equals(object obj)

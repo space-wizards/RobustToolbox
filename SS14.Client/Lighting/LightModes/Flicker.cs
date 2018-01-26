@@ -1,17 +1,16 @@
 ﻿using System.Diagnostics;
-using OpenTK.Graphics;
 using SS14.Client.Graphics.Lighting;
 using SS14.Client.Interfaces.Utility;
-using SS14.Shared;
 using SS14.Shared.Enums;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects.Light.LightModes
 {
     public class LightFlicker : LightMode
     {
         private readonly Stopwatch timer = new Stopwatch();
-        private Color4 _lightColorOriginal;
+        private Color _lightColorOriginal;
         private int flickerCount;
         private bool flickering;
         private bool lightOn = true;
@@ -51,7 +50,7 @@ namespace SS14.Client.GameObjects.Light.LightModes
                 }
                 else if (timer.ElapsedMilliseconds >= 50 && IoCManager.Resolve<IRand>().Next(1, 6) == 2)
                 {
-                    owner.Color = new Color4(_lightColorOriginal.R / 2, _lightColorOriginal.G / 2,
+                    owner.Color = new Color(_lightColorOriginal.R / 2, _lightColorOriginal.G / 2,
                         _lightColorOriginal.B / 2, _lightColorOriginal.A / 2);
                     owner.Calculated = false;
                     lightOn = false;
@@ -65,7 +64,7 @@ namespace SS14.Client.GameObjects.Light.LightModes
                     flickering = true;
                     flickerCount = 0;
                     lightOn = false;
-                    owner.Color = new Color4(_lightColorOriginal.R / 2, _lightColorOriginal.G / 2,
+                    owner.Color = new Color(_lightColorOriginal.R / 2, _lightColorOriginal.G / 2,
                         _lightColorOriginal.B / 2, _lightColorOriginal.A / 2);
                     owner.Calculated = false;
                     timer.Reset();

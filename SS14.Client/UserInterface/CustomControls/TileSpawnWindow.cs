@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Linq;
-using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Placement;
-using SS14.Client.UserInterface.Components;
 using SS14.Client.UserInterface.Controls;
-using SS14.Shared;
 using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
@@ -27,8 +24,8 @@ namespace SS14.Client.UserInterface.CustomControls
 
             _tileList = new ScrollableContainer(new Vector2i(200, 400));
             _tileList.LocalPosition = new Vector2i(5, 5);
-            _tileList.BorderColor = Color4.Black;
-            _tileList.BackgroundColor = Color4.White;
+            _tileList.BorderColor = Color.Black;
+            _tileList.BackgroundColor = Color.White;
             Container.AddControl(_tileList);
 
             var searchLabel = new Label("Tile Search:", "CALIBRI");
@@ -42,7 +39,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
             //TODO: This needs to be a button.
             _clearLabel = new Label("[Clear Filter]", "CALIBRI");
-            _clearLabel.BackgroundColor = Color4.Gray;
+            _clearLabel.BackgroundColor = Color.Gray;
             _clearLabel.DrawBackground = true;
             _clearLabel.DrawBorder = true;
             _clearLabel.LocalPosition = new Vector2i(210, 55);
@@ -85,7 +82,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private void ClearLabelClicked(Label sender, MouseButtonEventArgs e)
         {
-            _clearLabel.BackgroundColor = Color4.Gray;
+            _clearLabel.BackgroundColor = Color.Gray;
             BuildTileList();
         }
 
@@ -98,7 +95,7 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             foreach (Label curr in _tileList.Container.Children.Where(curr => curr is Label))
             {
-                curr.BackgroundColor = Color4.Gray;
+                curr.BackgroundColor = Color.Gray;
             }
         }
 
@@ -112,7 +109,7 @@ namespace SS14.Client.UserInterface.CustomControls
             if (!string.IsNullOrEmpty(searchStr))
             {
                 tileDefs = tileDefs.Where(s => s.IndexOf(searchStr, StringComparison.InvariantCultureIgnoreCase) >= 0);
-                _clearLabel.BackgroundColor = new Color4(211, 211, 211, 255);
+                _clearLabel.BackgroundColor = new Color(211, 211, 211, 255);
             }
 
             var maxWidth = 0;
@@ -130,7 +127,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 lastControl = tileLabel;
                 tileLabel.Alignment = ControlAlignments.Bottom;
 
-                tileLabel.BackgroundColor = Color4.Gray;
+                tileLabel.BackgroundColor = Color.Gray;
                 tileLabel.DrawBackground = true;
                 tileLabel.DrawBorder = true;
                 tileLabel.Update(0);
@@ -151,7 +148,7 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             foreach (var curr in _tileList.Container.Children.Where(curr => curr.GetType() == typeof(Label)))
             {
-                ((Label) curr).BackgroundColor = Color4.Gray;
+                ((Label) curr).BackgroundColor = Color.Gray;
             }
 
             var newObjInfo = new PlacementInformation
@@ -164,7 +161,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
             _placementManager.BeginPlacing(newObjInfo);
 
-            sender.BackgroundColor = new Color4(34, 139, 34, 255);
+            sender.BackgroundColor = new Color(34, 139, 34, 255);
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using OpenTK.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.UserInterface;
@@ -40,7 +39,7 @@ namespace SS14.Client.UserInterface.Controls
             _listboxRight = _resourceCache.GetSprite("button_right");
 
             _selectedLabel = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font)
-            { FillColor = Color4.Black };
+            { FillColor = Color.Black };
 
             _dropDown = new ScrollableContainer(new Vector2i(width, dropDownLength))
             {
@@ -266,9 +265,9 @@ namespace SS14.Client.UserInterface.Controls
 
             // mouseover color
             if (ClientArea.Translated(Position).Contains(e.X, e.Y))
-                BackgroundColor = new Color4(47, 79, 79, 255);
+                BackgroundColor = new Color(47, 79, 79, 255);
             else
-                BackgroundColor = Color4.Gray;
+                BackgroundColor = Color.Gray;
         }
     }
 }

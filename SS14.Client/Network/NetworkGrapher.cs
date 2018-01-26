@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Network;
@@ -100,13 +99,13 @@ namespace SS14.Client.Network
                     (int)CluwneLib.CurrentRenderTarget.Size.Y - (int)(_dataPoints[i].SentBytes * 0.1f),
                     2,
                     (int)(_dataPoints[i].SentBytes * 0.2f),
-                    new Color4(0, 128, 0, 255));
+                    new Color(0, 128, 0, 255));
 
                 CluwneLib.drawRectangle((int) CluwneLib.CurrentRenderTarget.Size.X - 2 * (MaxDataPoints - i),
                     (int) CluwneLib.CurrentRenderTarget.Size.Y - (int) (_dataPoints[i].ReceivedBytes * 0.1f),
                     2,
                     (int) (_dataPoints[i].ReceivedBytes * 0.2f),
-                    new Color4(255, 0, 0, 128));
+                    new Color(255, 0, 0, 128));
 
             }
 

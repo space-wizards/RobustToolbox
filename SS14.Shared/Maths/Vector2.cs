@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 namespace SS14.Shared.Maths
@@ -227,17 +227,7 @@ namespace SS14.Shared.Maths
         {
             return $"({X}, {Y})";
         }
-
-        public static implicit operator Vector2(OpenTK.Vector2 vector)
-        {
-            return new Vector2(vector.X, vector.Y);
-        }
-
-        public static implicit operator OpenTK.Vector2(Vector2 vector)
-        {
-            return new OpenTK.Vector2(vector.X, vector.Y);
-        }
-
+        
         public static bool operator ==(Vector2 a, Vector2 b)
         {
             return a.Equals(b);

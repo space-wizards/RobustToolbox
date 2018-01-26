@@ -1,6 +1,4 @@
-﻿using OpenTK.Graphics;
-using SS14.Shared;
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
@@ -10,8 +8,8 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Enums;
 using SS14.Shared.Log;
 using YamlDotNet.RepresentationModel;
-using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Shared.Map;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -23,7 +21,7 @@ namespace SS14.Client.GameObjects
 
         private ILight Light { get; set; }
 
-        public Color4 Color
+        public Color Color
         {
             get => Light.Color;
             set => Light.Color = value;

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using OpenTK.Graphics;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
@@ -11,12 +10,12 @@ using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.State;
 using SS14.Client.State.States;
-using SS14.Shared;
 using SS14.Shared.Console;
 using SS14.Shared.ContentPack;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Console.Commands
 {
@@ -32,7 +31,7 @@ namespace SS14.Client.Console.Commands
 
             foreach (IEntity e in entitymanager.GetEntities(new ComponentEntityQuery()))
             {
-                console.AddLine($"entity {e.Uid}, {e.Prototype.Name}.", ChatChannel.Default, Color4.White);
+                console.AddLine($"entity {e.Uid}, {e.Prototype.Name}.", ChatChannel.Default, Color.White);
             }
 
             return false;
@@ -55,7 +54,7 @@ namespace SS14.Client.Console.Commands
 
             foreach (var component in components)
             {
-                console.AddLine($"{component.Owner.Uid}: {component.GetType()}", ChatChannel.Default, Color4.White);
+                console.AddLine($"{component.Owner.Uid}: {component.GetType()}", ChatChannel.Default, Color.White);
             }
             return false;
         }
@@ -71,7 +70,7 @@ namespace SS14.Client.Console.Commands
         {
             if (args.Length < 1)
             {
-                console.AddLine($"Not enough arguments.", ChatChannel.Default, Color4.Red);
+                console.AddLine($"Not enough arguments.", ChatChannel.Default, Color.Red);
                 return false;
             }
             var componentFactory = IoCManager.Resolve<IComponentFactory>();
@@ -91,16 +90,16 @@ namespace SS14.Client.Console.Commands
                 }
                 message.Append($", NSE: {registration.NetworkSynchronizeExistence}, references:");
 
-                console.AddLine(message.ToString(), ChatChannel.Default, Color4.White);
+                console.AddLine(message.ToString(), ChatChannel.Default, Color.White);
 
                 foreach (Type type in registration.References)
                 {
-                    console.AddLine($"  {type}", ChatChannel.Default, Color4.White);
+                    console.AddLine($"  {type}", ChatChannel.Default, Color.White);
                 }
             }
             catch (UnknownComponentException)
             {
-                console.AddLine($"No registration found for '{args[0]}'", ChatChannel.Default, Color4.Red);
+                console.AddLine($"No registration found for '{args[0]}'", ChatChannel.Default, Color.Red);
             }
 
             return false;
@@ -133,18 +132,18 @@ List of valid keys: playerocclusion, occluderdebug, light, lightintermediate, co
         {
             if (args.Length == 0)
             {
-                console.AddLine("No key specified.", ChatChannel.Default, Color4.Red);
+                console.AddLine("No key specified.", ChatChannel.Default, Color.Red);
                 return false;
             }
             if (args.Length > 1)
             {
-                console.AddLine("This command only takes one argument.", ChatChannel.Default, Color4.Red);
+                console.AddLine("This command only takes one argument.", ChatChannel.Default, Color.Red);
                 return false;
             }
             var statemgr = IoCManager.Resolve<IStateManager>();
             if (!(statemgr.CurrentState is GameScreen screen))
             {
-                console.AddLine("Wrong game state active. Must be GameScreen", ChatChannel.Default, Color4.Red);
+                console.AddLine("Wrong game state active. Must be GameScreen", ChatChannel.Default, Color.Red);
                 return false;
             }
             RenderImage target;
@@ -184,7 +183,7 @@ List of valid keys: playerocclusion, occluderdebug, light, lightintermediate, co
                     target = screen.ShadowIntermediate;
                     break;
                 default:
-                    console.AddLine("Unknown key", ChatChannel.Default, Color4.Red);
+                    console.AddLine("Unknown key", ChatChannel.Default, Color.Red);
                     return false;
             }
 
@@ -193,7 +192,7 @@ List of valid keys: playerocclusion, occluderdebug, light, lightintermediate, co
                 var timestamp = DateTime.Now.ToString("yyyyMMddTHHmmsszzz");
                 var filename = Path.GetFullPath(PathHelpers.ExecutableRelativeFile($"dumprt-{key}-{timestamp}.png"));
                 image.SaveToFile(filename);
-                console.AddLine($"Saved dump to {filename}!", ChatChannel.Default, Color4.Green);
+                console.AddLine($"Saved dump to {filename}!", ChatChannel.Default, Color.Green);
             }
 
             return false;

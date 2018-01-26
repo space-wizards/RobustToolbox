@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using OpenTK.Graphics;
 using SS14.Client.Interfaces.Console;
 using SS14.Shared.Console;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Maths;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Reflection;
@@ -17,10 +17,10 @@ namespace SS14.Client.Console
     public class AddStringArgs : EventArgs
     {
         public string Text { get; }
-        public Color4 Color { get; }
+        public Color Color { get; }
         public ChatChannel Channel { get; }
 
-        public AddStringArgs(string text, Color4 color, ChatChannel channel)
+        public AddStringArgs(string text, Color color, ChatChannel channel)
         {
             Text = text;
             Color = color;
@@ -30,7 +30,7 @@ namespace SS14.Client.Console
 
     public class ClientConsole : IClientConsole, IDebugConsole
     {
-        private static readonly Color4 _msgColor = new Color4(65, 105, 225, 255);
+        private static readonly Color _msgColor = new Color(65, 105, 225, 255);
 
         [Dependency]
         protected readonly IClientNetManager _network;
@@ -69,7 +69,7 @@ namespace SS14.Client.Console
 
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => _commands;
 
-        public void AddLine(string text, ChatChannel channel, Color4 color)
+        public void AddLine(string text, ChatChannel channel, Color color)
         {
             AddString?.Invoke(this, new AddStringArgs(text, color, channel));
         }
@@ -119,7 +119,7 @@ namespace SS14.Client.Console
                 return;
 
             // echo the command locally
-            AddLine("> " + text, ChatChannel.Default, new Color4(255, 250, 240, 255));
+            AddLine("> " + text, ChatChannel.Default, new Color(255, 250, 240, 255));
 
             //Commands are processed locally and then sent to the server to be processed there again.
             var args = new List<string>();
@@ -137,7 +137,7 @@ namespace SS14.Client.Console
             }
             else if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
             {
-                AddLine("Unknown command: " + commandname, ChatChannel.Default, Color4.Red);
+                AddLine("Unknown command: " + commandname, ChatChannel.Default, Color.Red);
                 return;
             }
 

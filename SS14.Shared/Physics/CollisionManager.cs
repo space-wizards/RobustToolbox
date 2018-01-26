@@ -1,16 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using OpenTK;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Physics;
-using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using SS14.Shared.Utility;
-using Vector2i = SS14.Shared.Maths.Vector2i;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.Physics
 {
@@ -101,10 +95,7 @@ namespace SS14.Shared.Physics
             var colliderAABB = collider.WorldAABB;
             if (offset.LengthSquared > 0)
             {
-                colliderAABB.Left += offset.X;
-                colliderAABB.Right += offset.X;
-                colliderAABB.Top += offset.Y;
-                colliderAABB.Bottom += offset.Y;
+                colliderAABB = colliderAABB.Translated(offset);
             }
 
             Vector2[] points =

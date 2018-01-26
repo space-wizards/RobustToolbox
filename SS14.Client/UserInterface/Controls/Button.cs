@@ -1,5 +1,4 @@
 ﻿using System;
-using OpenTK.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.ResourceManagement;
@@ -11,7 +10,7 @@ namespace SS14.Client.UserInterface.Controls
     {
         public delegate void ButtonPressHandler(Button sender);
 
-        public Color4 MouseOverColor = Color4.White;
+        public Color MouseOverColor = Color.White;
 
         private Sprite _buttonLeft;
         private Sprite _buttonMain;
@@ -21,7 +20,7 @@ namespace SS14.Client.UserInterface.Controls
         private Box2i _clientAreaMain;
         private Box2i _clientAreaRight;
 
-        private Color4 _drawColor = Color4.White;
+        private Color _drawColor = Color.White;
 
         public TextSprite Label { get; private set; }
 
@@ -33,7 +32,7 @@ namespace SS14.Client.UserInterface.Controls
 
             Label = new TextSprite(buttonText, _resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font)
             {
-                FillColor = Color4.Black
+                FillColor = Color.Black
             };
         }
 
@@ -99,10 +98,10 @@ namespace SS14.Client.UserInterface.Controls
         {
             base.MouseMove(e);
 
-            if (MouseOverColor == Color4.White)
+            if (MouseOverColor == Color.White)
                 return;
 
-            _drawColor = ClientArea.Translated(Position).Contains(new Vector2i(e.X, e.Y)) ? MouseOverColor : Color4.White;
+            _drawColor = ClientArea.Translated(Position).Contains(new Vector2i(e.X, e.Y)) ? MouseOverColor : Color.White;
         }
 
         /// <inheritdoc />

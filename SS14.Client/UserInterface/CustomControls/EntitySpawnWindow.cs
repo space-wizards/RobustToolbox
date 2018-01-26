@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Placement;
-using SS14.Client.UserInterface.Components;
 using SS14.Client.UserInterface.Controls;
-using SS14.Shared;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
@@ -48,7 +45,7 @@ namespace SS14.Client.UserInterface.CustomControls
             _clearLabel.DrawBorder = true;
             _clearLabel.LocalPosition = new Vector2i(210, 55);
             _clearLabel.Clicked += ClearLabelClicked;
-            _clearLabel.BackgroundColor = Color4.Gray;
+            _clearLabel.BackgroundColor = Color.Gray;
             Container.AddControl(_clearLabel);
 
             var overLabel = new Label("Override Placement:", "CALIBRI");
@@ -101,7 +98,7 @@ namespace SS14.Client.UserInterface.CustomControls
         public override void Draw()
         {
             if (Disposing || !Visible) return;
-            _eraserButton.ForegroundColor = _placementManager.Eraser ? new Color4(255, 99, 71, 255) : Color4.White;
+            _eraserButton.ForegroundColor = _placementManager.Eraser ? new Color(255, 99, 71) : Color.White;
             base.Draw();
         }
 
@@ -152,7 +149,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private void ClearLabelClicked(Label sender, MouseButtonEventArgs e)
         {
-            _clearLabel.BackgroundColor = Color4.Gray;
+            _clearLabel.BackgroundColor = Color.Gray;
             BuildEntityList();
         }
 
@@ -191,7 +188,7 @@ namespace SS14.Client.UserInterface.CustomControls
                     .Select(p => new KeyValuePair<string, EntityPrototype>(p.ID, p));
             }
 
-            if (searchStr != null) _clearLabel.BackgroundColor = new Color4(211, 211, 211, 255);
+            if (searchStr != null) _clearLabel.BackgroundColor = new Color(211, 211, 211, 255);
 
             var maxWidth = 0;
             Control lastControl = _entityList.Container;

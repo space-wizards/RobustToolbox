@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Sprites;
@@ -17,8 +16,8 @@ namespace SS14.Client.UserInterface.Controls
     /// </summary>
     public abstract class Control
     {
-        private static readonly Color4 _dbgBoundColor = new Color4(255, 0, 0, 32);
-        private static readonly Color4 _dbgFocusColor = new Color4(0, 0, 255, 32);
+        private static readonly Color _dbgBoundColor = new Color(255, 0, 0, 32);
+        private static readonly Color _dbgFocusColor = new Color(0, 0, 255, 32);
 
         public static bool GlobalDebug { get; set; } = false;
 

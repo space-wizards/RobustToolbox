@@ -1,10 +1,6 @@
 ﻿using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Maths;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SS14.Shared.Map
 {
@@ -115,7 +111,7 @@ namespace SS14.Shared.Map
         /// </summary>
         /// <param name="worldArea">The are in world coordinates to search.</param>
         /// <returns></returns>
-        public IEnumerable<IMapGrid> FindGridsIntersecting(OpenTK.Box2 worldArea)
+        public IEnumerable<IMapGrid> FindGridsIntersecting(Box2 worldArea)
         {
             var gridList = new List<MapGrid>();
             foreach (var kvGrid in _grids)

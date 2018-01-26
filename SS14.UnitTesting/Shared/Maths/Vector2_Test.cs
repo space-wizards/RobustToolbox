@@ -1,6 +1,5 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SS14.Shared.Maths;
-using System;
 
 namespace SS14.UnitTesting.Shared.Maths
 {
@@ -80,12 +79,12 @@ namespace SS14.UnitTesting.Shared.Maths
                                          [Random(-1.0f, 1.0f, 5)] float y)
         {
             var vec = new Vector2(x, y);
-            OpenTK.Vector2 ovec = vec;
+            Vector2 ovec = vec;
 
             Assert.That(ovec.X, Is.EqualTo(x));
             Assert.That(ovec.Y, Is.EqualTo(y));
 
-            Assert.That((Vector2)ovec, Is.EqualTo(vec));
+            Assert.That(ovec, Is.EqualTo(vec));
         }
     }
 }

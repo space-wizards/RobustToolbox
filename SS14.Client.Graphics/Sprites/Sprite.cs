@@ -1,12 +1,10 @@
-﻿using OpenTK;
-using SS14.Client.Graphics.Render;
+﻿using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Textures;
 using SS14.Client.Graphics.Utility;
 using SS14.Shared.Maths;
 using System;
 using SSprite = SFML.Graphics.Sprite;
 using STransformable = SFML.Graphics.Transformable;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Graphics.Sprites
 {
@@ -37,7 +35,7 @@ namespace SS14.Client.Graphics.Sprites
             set => SFMLSprite.TextureRect = value.Convert();
         }
 
-        public Box2 LocalBounds => SFMLSprite.GetLocalBounds().Convert();
+        public Box2 LocalBounds => SFMLSprite.GetLocalBounds().ToBox();
 
         public SFML.Graphics.Drawable SFMLDrawable => SFMLSprite;
 

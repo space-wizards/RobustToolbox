@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows.Forms;
-using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Sprites;
@@ -131,7 +130,7 @@ namespace SS14.Client.UserInterface.Controls
             _textboxRight.Draw();
 
             if (Focus && blinkCount <= 0.25f)
-                CluwneLib.drawRectangle(_textSprite.Position.X + _caretPos - CaretWidth, _textSprite.Position.Y + _textSprite.Height / 2f - CaretHeight / 2f, CaretWidth, CaretHeight, new Color4(255, 255, 250, 255));
+                CluwneLib.drawRectangle(_textSprite.Position.X + _caretPos - CaretWidth, _textSprite.Position.Y + _textSprite.Height / 2f - CaretHeight / 2f, CaretWidth, CaretHeight, new Color(255, 255, 250, 255));
 
             _textSprite.FillColor = ForegroundColor;
 

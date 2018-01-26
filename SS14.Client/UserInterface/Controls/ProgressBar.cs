@@ -1,21 +1,18 @@
-﻿using OpenTK.Graphics;
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.Maths;
 using System;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.UserInterface.Controls;
-using Vector2i = SS14.Shared.Maths.Vector2i;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.UserInterface.Components
 {
     internal class Progress_Bar : Control
     {
-        public Color4 backgroundColor = new Color4(70, 130, 180, 255);
-        public Color4 barColor = new Color4(176, 196, 222, 255);
-        public Color4 borderColor = Color4.Black;
+        public Color backgroundColor = new Color(70, 130, 180, 255);
+        public Color barColor = new Color(176, 196, 222, 255);
+        public Color borderColor = Color.Black;
 
         protected float max = 1000;
         protected float min = 0;
@@ -26,8 +23,8 @@ namespace SS14.Client.UserInterface.Components
         public Progress_Bar(Vector2i size)
         {
             Text = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
-            Text.FillColor = Color4.Black;
-            Text.ShadowColor = new Color4(105, 105, 105, 255);
+            Text.FillColor = Color.Black;
+            Text.ShadowColor = new Color(105, 105, 105, 255);
             Text.ShadowOffset = new Vector2(1, 1);
             Text.Shadowed = true;
 

@@ -39,19 +39,35 @@ namespace SS14.Server.ServerConsole.Commands
 
     public class SaveMap : IConsoleCommand
     {
-        public string Command => "savemap";
-        public string Description => "Saves the map";
-        public string Help => "Saves the map. A file path to save to can be provided, defaulting to Resources/SavedEntities.xml when not specified.";
+        public string Command => "save_map";
+        public string Description => "Serializes the map to disk.";
+        public string Help => "save_map <mapID>";
 
         public void Execute(params string[] args)
         {
-            var mapName = PathHelpers.ExecutableRelativeFile(Path.Combine("Resources", "SavedEntities.xml"));
-            if (args.Length > 0)
-            {
-                mapName = args[0];
-            }
+            if (args.Length < 1)
+                return;
+
+            if (!int.TryParse(args[0], out var intGridId))
+                return;
+
+            var gridId = new GridId(intGridId);
+
+            // no saving default grid
+            if(gridId == GridId.DefaultGrid)
+                return;
+
             var mapManager = IoCManager.Resolve<IMapManager>();
-            IoCManager.Resolve<IMapLoader>().Save(mapManager.GetMap(new MapId(1)), mapName);
+
+            var mapID = new MapId(1);
+
+            if(!mapManager.TryGetMap(mapID, out var map))
+                return;
+
+            if(!map.GridExists(gridId))
+                return;
+
+            IoCManager.Resolve<IMapLoader>().SaveGrid(map, gridId, "./Maps/Demo/Grid.yaml");
         }
     }
 

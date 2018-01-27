@@ -12,6 +12,7 @@ using SS14.Shared.Prototypes;
 using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 using YamlDotNet.RepresentationModel;
 
@@ -31,7 +32,69 @@ namespace SS14.Server.Maps
         /// <inheritdoc />
         public void LoadGrid(IMap map, string path)
         {
-            //TODO: Make me work
+            var resMan = IoCManager.Resolve<IResourceManager>();
+
+            var rootPath = resMan.ConfigDirectory;
+            var comb = Path.Combine(rootPath, path);
+            var fullPath = Path.GetFullPath(comb);
+
+            if (!File.Exists(fullPath))
+            {
+                Logger.Error($"[MAP] Cannot load map path: {fullPath}");
+                return;
+            }
+
+            using (var reader = new StreamReader(fullPath))
+            {
+                var stream = new YamlStream();
+                stream.Load(reader);
+
+                foreach (var document in stream.Documents)
+                {
+                    LoadGridDocument(document);
+                }
+            }
+        }
+
+        private void LoadGridDocument(YamlDocument document)
+        {
+            var root = (YamlSequenceNode)document.RootNode;
+            
+            var mapMan = IoCManager.Resolve<IMapManager>();
+            var map = mapMan.GetMap(new MapId(1));
+
+            foreach (YamlMappingNode gridNode in root.Children)
+            {
+                var info = (YamlMappingNode)gridNode[new YamlScalarNode("settings")];
+                var chunk = (YamlSequenceNode)gridNode[new YamlScalarNode("chunks")];
+
+                YamlGridSerializer.DeserializeGrid(map, new GridId(1), info, chunk);
+            }
+        }
+
+        public void SaveGrid(IMap map, GridId gridId, string yamlPath)
+        {
+            var grid = map.GetGrid(gridId);
+
+            var node = YamlGridSerializer.SerializeGrid(grid);
+            var document = new YamlDocument(node);
+
+            var resMan = IoCManager.Resolve<IResourceManager>();
+            var rootPath = resMan.ConfigDirectory;
+            var path = Path.Combine(rootPath, yamlPath);
+            var fullPath = Path.GetFullPath(path);
+
+            var dir = Path.GetDirectoryName(fullPath);
+            Directory.CreateDirectory(dir);
+
+            using (var writer = new StreamWriter(fullPath))
+            {
+                var stream = new YamlStream();
+
+                stream.Add(document);
+
+                stream.Save(writer);
+            }
         }
 
         /// <inheritdoc />
@@ -82,6 +145,8 @@ namespace SS14.Server.Maps
             
             protoMan.LoadData(entity, node);
         }
+
+        #region OldCode
 
         public void EntityLoader(IMap map, string filename)
         {
@@ -164,5 +229,7 @@ namespace SS14.Server.Maps
             }
             return element;
         }
+
+        #endregion
     }
 }

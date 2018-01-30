@@ -66,7 +66,6 @@ namespace SS14.Client
 
         private static void RegisterIoC()
         {
-            Godot.GD.Print("wat" + Environment.StackTrace);
             // Shared stuff.
             IoCManager.Register<ILogManager, GodotLogManager>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();

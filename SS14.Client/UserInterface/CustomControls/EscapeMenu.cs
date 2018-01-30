@@ -22,10 +22,17 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private BaseButton QuitButton;
         private BaseButton OptionsButton;
+        private OptionsMenu optionsMenu;
 
         protected override void Initialize()
         {
             base.Initialize();
+
+            optionsMenu = new OptionsMenu
+            {
+                Visible = false
+            };
+            optionsMenu.AddToScreen();
 
             Resizable = false;
             HideOnClose = true;
@@ -48,7 +55,16 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private void OnOptionsButtonClicked(BaseButton.ButtonEventArgs args)
         {
+            optionsMenu.OpenCentered();
+        }
 
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing)
+            {
+                optionsMenu.Dispose();
+            }
         }
     }
 }

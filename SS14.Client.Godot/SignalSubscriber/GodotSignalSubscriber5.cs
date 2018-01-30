@@ -11,7 +11,7 @@ namespace SS14.Client.GodotGlue
             Signal?.Invoke(a, b, c, d, e);
         }
 
-        public override void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
 

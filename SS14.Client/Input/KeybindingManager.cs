@@ -12,6 +12,7 @@ using System.Xml;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Log;
 using SS14.Client.UserInterface.Controls;
+using SS14.Shared.Enums;
 
 namespace SS14.Client.Input
 {

@@ -95,7 +95,6 @@ namespace SS14.Shared.Maths
         /// Gets or sets an OpenTK.Vector3 with the X, Y and Z components of this instance.
         /// </summary>
         [Obsolete("Use Xyz property instead.")]
-        [CLSCompliant(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         [XmlIgnore]
         public Vector3 XYZ { get { return Xyz; } set { Xyz = value; } }
@@ -166,7 +165,7 @@ namespace SS14.Shared.Maths
             }
             else
             {
-                // This occurs when the angle is zero. 
+                // This occurs when the angle is zero.
                 // Not a problem: just set an arbitrary normalized axis.
                 result.Xyz = Vector3.UnitX;
             }
@@ -506,7 +505,7 @@ namespace SS14.Shared.Maths
         #region Slerp
 
         /// <summary>
-        /// Do Spherical linear interpolation between two quaternions 
+        /// Do Spherical linear interpolation between two quaternions
         /// </summary>
         /// <param name="q1">The first quaternion</param>
         /// <param name="q2">The second quaternion</param>
@@ -677,7 +676,7 @@ namespace SS14.Shared.Maths
         #region public override bool Equals (object o)
 
         /// <summary>
-        /// Compares this object instance to another object for equality. 
+        /// Compares this object instance to another object for equality.
         /// </summary>
         /// <param name="other">The other object to be used in the comparison.</param>
         /// <returns>True if both objects are Quaternions of equal value. Otherwise it returns false.</returns>
@@ -692,7 +691,7 @@ namespace SS14.Shared.Maths
         #region public override int GetHashCode ()
 
         /// <summary>
-        /// Provides the hash code for this object. 
+        /// Provides the hash code for this object.
         /// </summary>
         /// <returns>A hash code formed from the bitwise XOR of this objects members.</returns>
         public override int GetHashCode()
@@ -709,7 +708,7 @@ namespace SS14.Shared.Maths
         #region IEquatable<Quaternion> Members
 
         /// <summary>
-        /// Compares this Quaternion instance to another Quaternion for equality. 
+        /// Compares this Quaternion instance to another Quaternion for equality.
         /// </summary>
         /// <param name="other">The other Quaternion to be used in the comparison.</param>
         /// <returns>True if both instances are equal; false otherwise.</returns>

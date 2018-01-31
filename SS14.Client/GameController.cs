@@ -1,18 +1,9 @@
-<<<<<<< HEAD
 ﻿using SS14.Client.GodotGlue;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.ResourceManagement;
-=======
-﻿using SS14.Client.Graphics;
-using SS14.Client.Graphics.Render;
-using SS14.Client.Graphics.Input;
-using SS14.Client.Interfaces.Input;
-using SS14.Client.Interfaces.Network;
-using SS14.Client.Interfaces.Resource;
->>>>>>> upstream/master
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.ResourceManagement;
@@ -32,22 +23,10 @@ using System;
 using System.IO;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Console;
-<<<<<<< HEAD
 using SS14.Client.Interfaces.Graphics.Lighting;
 using SS14.Client.Interfaces.Graphics;
-=======
-using SS14.Shared.ContentPack;
-using SS14.Shared.Interfaces;
-using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Interfaces.Timers;
-using SS14.Shared.Network.Messages;
-using SS14.Client.Interfaces.GameObjects;
-using SS14.Client.Interfaces.GameStates;
-using SS14.Shared.Maths;
-using SS14.Client.Graphics.Lighting;
-using SS14.Client.Interfaces.Placement;
->>>>>>> upstream/master
+using SS14.Shared.Configuration;
 
 namespace SS14.Client
 {

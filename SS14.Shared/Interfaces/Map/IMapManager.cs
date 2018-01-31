@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
 
@@ -12,7 +13,7 @@ namespace SS14.Shared.Interfaces.Map
     /// <param name="oldTile">The old tile that is being replaced.</param>
     public delegate void TileChangedEventHandler(TileRef tileRef, Tile oldTile);
 
-    public delegate void GridEventHandler(int mapId, int gridId);
+    public delegate void GridEventHandler(MapId mapId, GridId gridId);
 
     /// <summary>
     ///     This manages all of the grids in the world.

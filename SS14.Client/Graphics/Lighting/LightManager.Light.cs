@@ -4,6 +4,7 @@ using SS14.Client.Utility;
 using SS14.Shared;
 using SS14.Shared.Maths;
 using System;
+using SS14.Shared.Enums;
 
 namespace SS14.Client.Graphics.Lighting
 {

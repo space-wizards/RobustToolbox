@@ -8,6 +8,7 @@ using System.Linq;
 using System;
 using SS14.Shared.Log;
 using SS14.Client.Input;
+using SS14.Shared.Enums;
 
 namespace SS14.Client.GameObjects
 {

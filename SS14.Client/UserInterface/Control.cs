@@ -142,7 +142,7 @@ namespace SS14.Client.UserInterface
             set => SceneControl.SetPosition(value.Convert());
         }
 
-        public OpenTK.Box2 Rect
+        public Box2 Rect
         {
             get => SceneControl.GetRect().Convert();
         }

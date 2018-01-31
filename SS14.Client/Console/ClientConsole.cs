@@ -96,7 +96,7 @@ namespace SS14.Client.Console
         {
             var msg = (MsgConCmdAck)message;
 
-            AddLine("< " + msg.Text, ChatChannel.Default, _msgColor);
+            AddLine("< " + msg.Text, ChatChannel.Default, MsgColor);
         }
 
         private void HandleConCmdReg(NetMessage message)
@@ -184,7 +184,7 @@ namespace SS14.Client.Console
 
             var msg = _network.CreateNetMessage<MsgConCmdReg>();
             // empty message to request commands
-            netMgr.ClientSendMessage(msg);
+            _network.ClientSendMessage(msg);
 
             _requestedCommands = true;
         }
@@ -201,7 +201,7 @@ namespace SS14.Client.Console
 
             var msg = _network.CreateNetMessage<MsgConCmd>();
             msg.Text = text;
-            netMgr.ClientSendMessage(msg);
+            _network.ClientSendMessage(msg);
         }
     }
 

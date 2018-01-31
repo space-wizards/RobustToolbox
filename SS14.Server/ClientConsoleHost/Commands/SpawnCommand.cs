@@ -14,7 +14,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
         {
             var ent = IoCManager.Resolve<IServerEntityManager>();
-            ent.ForceSpawnEntityAt(args[0], player.attachedEntity.GetComponent<IServerTransformComponent>().LocalPosition);
+            ent.ForceSpawnEntityAt(args[0], player.AttachedEntity.GetComponent<IServerTransformComponent>().LocalPosition);
         }
     }
 }

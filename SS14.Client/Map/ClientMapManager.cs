@@ -15,22 +15,22 @@ namespace SS14.Client.Map
         [Dependency]
         private ISceneTreeHolder sceneTree;
 
-        private Dictionary<(int mapId, int gridId), Godot.TileMap> RenderTileMaps = new Dictionary<(int mapId, int gridId), Godot.TileMap>();
+        private Dictionary<(MapId mapId, GridId gridId), Godot.TileMap> RenderTileMaps = new Dictionary<(MapId mapId, GridId gridId), Godot.TileMap>();
 
         public ClientMapManager()
         {
-            OnTileChanged += UpdateTileMapOnUpdate;
+            TileChanged += UpdateTileMapOnUpdate;
             OnGridCreated += UpdateOnGridCreated;
             OnGridRemoved += UpdateOnGridRemoved;
         }
 
-        private void UpdateTileMapOnUpdate(TileRef tileRef, Tile oldTile)
+        private void UpdateTileMapOnUpdate(object sender, TileChangedEventArgs args)
         {
-            var tilemap = RenderTileMaps[(tileRef.MapIndex, tileRef.GridIndex)];
-            tilemap.SetCell(tileRef.X, tileRef.Y, tileRef.Tile.TileId);
+            var tilemap = RenderTileMaps[(args.NewTile.MapIndex, args.NewTile.GridIndex)];
+            tilemap.SetCell(args.NewTile.X, args.NewTile.Y, args.NewTile.Tile.TileId);
         }
 
-        private void UpdateOnGridCreated(int mapId, int gridId)
+        private void UpdateOnGridCreated(MapId mapId, GridId gridId)
         {
             var tilemap = new Godot.TileMap
             {
@@ -47,7 +47,7 @@ namespace SS14.Client.Map
             RenderTileMaps[(mapId, gridId)] = tilemap;
         }
 
-        private void UpdateOnGridRemoved(int mapId, int gridId)
+        private void UpdateOnGridRemoved(MapId mapId, GridId gridId)
         {
             Logger.Debug($"Removing grid {mapId}.{gridId}");
             var tilemap = RenderTileMaps[(mapId, gridId)];

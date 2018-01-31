@@ -11,6 +11,6 @@ namespace SS14.Client.Interfaces.GameObjects
         float Bottom { get; }
         Box2 LocalAABB { get; }
         Box2 AverageAABB { get; }
-        int MapID { get; }
+        MapId MapID { get; }
     }
 }

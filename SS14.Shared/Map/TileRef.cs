@@ -9,8 +9,8 @@ namespace SS14.Shared.Map
     /// </summary>
     public struct TileRef
     {
-        private readonly MapId _mapIndex;
-        private readonly GridId _gridIndex;
+        public readonly MapId MapIndex;
+        public readonly GridId GridIndex;
         private readonly Tile _tile;
         private readonly MapGrid.Indices _gridTile;
 

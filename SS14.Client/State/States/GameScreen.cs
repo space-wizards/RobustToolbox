@@ -80,9 +80,9 @@ namespace SS14.Client.State.States
             var maps = mapManager.GetAllMaps().ToArray();
             foreach (var map in maps)
             {
-                if (map.Index != MapManager.NULLSPACE)
+                if (map.Index != MapId.Nullspace)
                 {
-                    mapManager.UnregisterMap(map.Index);
+                    mapManager.DeleteMap(map.Index);
                 }
             }
         }

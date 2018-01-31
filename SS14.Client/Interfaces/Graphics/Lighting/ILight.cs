@@ -3,6 +3,7 @@ using SS14.Client.Graphics;
 using SS14.Shared;
 using SS14.Shared.Maths;
 using SS14.Client.Interfaces.GameObjects.Components;
+using SS14.Shared.Enums;
 
 namespace SS14.Client.Interfaces.Graphics.Lighting
 {

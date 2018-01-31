@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using SS14.Shared.Log;
 using YamlDotNet.RepresentationModel;
+using SS14.Shared.Enums;
 
 // Warning: Shitcode ahead!
 namespace SS14.Client.GameObjects
@@ -69,6 +70,22 @@ namespace SS14.Client.GameObjects
         public bool Cardinal { get; private set; } = true;
 
         public Vector2 Scale { get; private set; } = Vector2.One;
+
+        private Vector2 offset = Vector2.Zero;
+        public Vector2 Offset
+        {
+            get => offset;
+            set
+            {
+                if (value == offset)
+                {
+                    return;
+                }
+
+                // TODO: Unhardcode pixelspermeter here.
+                SceneSprite.Offset = value.Convert() * 32;
+            }
+        }
 
         #region ISpriteComponent Members
 

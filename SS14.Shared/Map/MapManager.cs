@@ -75,12 +75,12 @@ namespace SS14.Shared.Map
             _netManager.ServerSendToAll(message);
         }
 
-        public void RaiseOnGridCreated(int mapId, int gridId)
+        public void RaiseOnGridCreated(MapId mapId, GridId gridId)
         {
             OnGridCreated?.Invoke(mapId, gridId);
         }
 
-        public void RaiseOnGridRemoved(int mapId, int gridId)
+        public void RaiseOnGridRemoved(MapId mapId, GridId gridId)
         {
             OnGridRemoved?.Invoke(mapId, gridId);
         }
@@ -163,9 +163,9 @@ namespace SS14.Shared.Map
             return false;
         }
 
-        private IEnumerable<IMap> GetAllMaps()
+        public IEnumerable<IMap> GetAllMaps()
         {
-            return _maps.Select(kvMap => kvMap.Value);
+            return _maps.Values;
         }
     }
 

@@ -176,29 +176,33 @@ namespace SS14.Client.UserInterface.CustomControls
             }
             else
             {
-                var rect = Rect;
+                var top = Rect.Top;
+                var bottom = Rect.Bottom;
+                var left = Rect.Left;
+                var right = Rect.Right;
 
                 if ((CurrentDrag & DragMode.Top) == DragMode.Top)
                 {
-                    var MaxY = rect.Bottom - MinSize.Y;
-                    rect.Top = Math.Min(args.GlobalPosition.Y - DragOffsetTopLeft.Y, MaxY);
+                    var MaxY = bottom - MinSize.Y;
+                    top = Math.Min(args.GlobalPosition.Y - DragOffsetTopLeft.Y, MaxY);
                 }
                 else if ((CurrentDrag & DragMode.Bottom) == DragMode.Bottom)
                 {
-                    rect.Bottom = Math.Max(args.GlobalPosition.Y + DragOffsetBottomRight.Y, rect.Top + MinSize.Y);
+                    bottom = Math.Max(args.GlobalPosition.Y + DragOffsetBottomRight.Y, top + MinSize.Y);
                 }
 
                 if ((CurrentDrag & DragMode.Left) == DragMode.Left)
                 {
-                    var MaxX = rect.Right - MinSize.X;
-                    rect.Left = Math.Min(args.GlobalPosition.X - DragOffsetTopLeft.X, MaxX);
+                    var MaxX = right - MinSize.X;
+                    left = Math.Min(args.GlobalPosition.X - DragOffsetTopLeft.X, MaxX);
                 }
                 else if ((CurrentDrag & DragMode.Right) == DragMode.Right)
                 {
-                    rect.Right = Math.Max(args.GlobalPosition.X + DragOffsetBottomRight.X, rect.Left + MinSize.X);
+                    right = Math.Max(args.GlobalPosition.X + DragOffsetBottomRight.X, left + MinSize.X);
                 }
 
-                Position = new Vector2(rect.Left, rect.Top);
+                Position = new Vector2(left, top);
+                var rect = new Box2(left, top, right, bottom);
                 Size = new Vector2(rect.Width, rect.Height);
             }
         }

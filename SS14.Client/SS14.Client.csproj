@@ -173,9 +173,6 @@
     <Compile Include="Player\LocalPlayer.cs" />
     <Compile Include="Player\PlayerManager.cs" />
     <Compile Include="Player\PlayerSession.cs" />
-    <Compile Include="Player\PostProcessing\BlurPostProcessingEffect.cs" />
-    <Compile Include="Player\PostProcessing\DeathPostProcessingEffect.cs" />
-    <Compile Include="Player\PostProcessing\PostProcessingEffect.cs" />
     <Compile Include="Interfaces\UserInterface\IUserInterfaceManager.cs" />
     <Compile Include="UserInterface\Control.cs" />
     <Compile Include="UserInterface\Control.Signals.cs" />

@@ -27,15 +27,11 @@ namespace SS14.Client.State.States
     public sealed partial class GameScreen : State
     {
         [Dependency]
-        readonly IConfigurationManager _config;
-        [Dependency]
         readonly IClientEntityManager _entityManager;
         [Dependency]
         readonly IComponentManager _componentManager;
         [Dependency]
         readonly IKeyBindingManager keyBindingManager;
-        [Dependency]
-        readonly IClientNetManager networkManager;
         [Dependency]
         readonly IPlayerManager playerManager;
         [Dependency]

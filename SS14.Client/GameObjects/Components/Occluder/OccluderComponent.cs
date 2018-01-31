@@ -21,7 +21,6 @@ namespace SS14.Client.GameObjects
             set => occluder.Enabled = value;
         }
 
-        private IClientTransformComponent transform;
         private IOccluder occluder;
         private ILightManager lightManager;
 

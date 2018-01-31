@@ -6,38 +6,35 @@ using System.IO;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
+using SS14.Shared.Enums;
 
 namespace SS14.Shared.Network.Messages
 {
     public class MsgEntity : NetMessage
     {
         #region REQUIRED
-        public static readonly NetMessages ID = NetMessages.EntityMessage;
         public static readonly MsgGroups GROUP = MsgGroups.Entity;
-
-        public static readonly string NAME = ID.ToString();
-        public MsgEntity(INetChannel channel)
-            : base(NAME, GROUP, ID)
-        { }
+        public static readonly string NAME = nameof(MsgEntity);
+        public MsgEntity(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
 
-        public EntityMessage Type { get; set; }
+        public EntityMessageType Type { get; set; }
 
         public EntitySystemMessage SystemMessage { get; set; }
         public NetConnection Sender { get; set; }
 
-        public int EntityId { get; set; }
+        public EntityUid EntityUid { get; set; }
         public uint NetId { get; set; }
         public List<object> Parameters { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            Type = (EntityMessage)buffer.ReadByte();
+            Type = (EntityMessageType)buffer.ReadByte();
             Sender = buffer.SenderConnection;
 
             switch (Type)
             {
-                case EntityMessage.SystemMessage:
+                case EntityMessageType.SystemMessage:
                     ISS14Serializer serializer = IoCManager.Resolve<ISS14Serializer>();
                     int messageLength = buffer.ReadInt32();
                     using (var stream = new MemoryStream(buffer.ReadBytes(messageLength)))
@@ -45,8 +42,8 @@ namespace SS14.Shared.Network.Messages
                         SystemMessage = serializer.Deserialize<EntitySystemMessage>(stream);
                     }
                     break;
-                case EntityMessage.ComponentMessage:
-                    EntityId = buffer.ReadInt32();
+                case EntityMessageType.ComponentMessage:
+                    EntityUid = new EntityUid(buffer.ReadInt32());
                     NetId = buffer.ReadUInt32();
                     Parameters = UnPackParams(buffer);
                     break;
@@ -59,7 +56,7 @@ namespace SS14.Shared.Network.Messages
 
             switch (Type)
             {
-                case EntityMessage.SystemMessage:
+                case EntityMessageType.SystemMessage:
                     ISS14Serializer serializer = IoCManager.Resolve<ISS14Serializer>();
                     using (var stream = new MemoryStream())
                     {
@@ -68,8 +65,8 @@ namespace SS14.Shared.Network.Messages
                         buffer.Write(stream.ToArray());
                     }
                     break;
-                case EntityMessage.ComponentMessage:
-                    buffer.Write(EntityId);
+                case EntityMessageType.ComponentMessage:
+                    buffer.Write((int)EntityUid);
                     buffer.Write(NetId);
                     PackParams(buffer, Parameters);
                     break;

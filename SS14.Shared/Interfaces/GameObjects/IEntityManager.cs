@@ -1,19 +1,16 @@
-﻿using Lidgren.Network;
-using OpenTK;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using SS14.Shared.IoC;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Network.Messages;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
     public interface IEntityManager
     {
+        void Initialize();
+        void Startup();
         void Shutdown();
         void Update(float frameTime);
-        void HandleEntityNetworkMessage(MsgEntity msg);
         bool MapsInitialized { get; set; }
 
 
@@ -22,17 +19,17 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <summary>
         /// Returns an entity by id
         /// </summary>
-        /// <param name="eid">entity id</param>
+        /// <param name="uid"></param>
         /// <returns>Entity or null if entity id doesn't exist</returns>
-        IEntity GetEntity(int eid);
+        IEntity GetEntity(EntityUid uid);
 
         /// <summary>
         /// Attempt to get an entity, returning whether or not an entity was gotten.
         /// </summary>
-        /// <param name="eid">The entity ID to look up.</param>
+        /// <param name="uid"></param>
         /// <param name="entity">The requested entity or null if the entity couldn't be found.</param>
         /// <returns>True if a value was returned, false otherwise.</returns>
-        bool TryGetEntity(int eid, out IEntity entity);
+        bool TryGetEntity(EntityUid uid, out IEntity entity);
 
         /// <summary>
         /// Returns all entities that match with the provided query.
@@ -52,7 +49,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <summary>
         /// Checks whether an entity with the specified ID exists.
         /// </summary>
-        bool EntityExists(int eid);
+        bool EntityExists(EntityUid uid);
 
         /// <summary>
         /// Disposes all entities and clears all lists.

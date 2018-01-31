@@ -1,8 +1,7 @@
 ﻿using System;
-using OpenTK;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.Utility;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {

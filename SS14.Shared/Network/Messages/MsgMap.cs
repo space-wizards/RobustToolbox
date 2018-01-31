@@ -1,22 +1,21 @@
-﻿using System;
-using Lidgren.Network;
+﻿using Lidgren.Network;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Map;
 
 namespace SS14.Shared.Network.Messages
 {
     public class MsgMap : NetMessage
     {
         #region REQUIRED
-        public const NetMessages ID = NetMessages.MapMessage;
         public const MsgGroups Group = MsgGroups.Entity;
-
-        public static readonly string NAME = ID.ToString();
-        public MsgMap(INetChannel channel) : base(NAME, Group, ID) { }
+        public static readonly string NAME = nameof(MsgMap);
+        public MsgMap(INetChannel channel) : base(NAME, Group) { }
         #endregion
 
         public MapMessage MessageType { get; set; }
-        public int MapIndex { get; set; }
-        public int GridIndex { get; set; }
+        public MapId MapIndex { get; set; }
+        public GridId GridIndex { get; set; }
 
         public Turf SingleTurf { get; set; }
 
@@ -54,6 +53,8 @@ namespace SS14.Shared.Network.Messages
             switch (MessageType)
             {
                 case MapMessage.TurfUpdate:
+                    MapIndex = new MapId(buffer.ReadInt32());
+                    GridIndex = new GridId(buffer.ReadInt32());
                     SingleTurf = new Turf()
                     {
                         X = buffer.ReadInt32(),
@@ -62,8 +63,8 @@ namespace SS14.Shared.Network.Messages
                     };
                     break;
                 case MapMessage.SendTileMap:
-                    GridIndex = buffer.ReadInt32();
-                    MapIndex = buffer.ReadInt32();
+                    GridIndex = new GridId(buffer.ReadInt32());
+                    MapIndex = new MapId(buffer.ReadInt32());
 
                     //tile defs
                     var numTileDefs = buffer.ReadInt32();
@@ -103,6 +104,10 @@ namespace SS14.Shared.Network.Messages
                 case MapMessage.SendMapInfo:
                     MapGridsToSend = buffer.ReadInt32();
                     break;
+                case MapMessage.CreateMap:
+                case MapMessage.DeleteMap:
+                    MapIndex = new MapId(buffer.ReadInt32());
+                    break;
             }
         }
 
@@ -112,13 +117,15 @@ namespace SS14.Shared.Network.Messages
             switch (MessageType)
             {
                 case MapMessage.TurfUpdate:
+                    buffer.Write((int)MapIndex);
+                    buffer.Write((int)GridIndex);
                     buffer.Write(SingleTurf.X);
                     buffer.Write(SingleTurf.Y);
                     buffer.Write(SingleTurf.Tile);
                     break;
                 case MapMessage.SendTileMap:
-                    buffer.Write(GridIndex);
-                    buffer.Write(MapIndex);
+                    buffer.Write((int)GridIndex);
+                    buffer.Write((int)MapIndex);
 
                     // Tile defs, ordered list
                     buffer.Write(TileDefs.Length);
@@ -141,6 +148,10 @@ namespace SS14.Shared.Network.Messages
                     break;
                 case MapMessage.SendMapInfo:
                     buffer.Write(MapGridsToSend);
+                    break;
+                case MapMessage.CreateMap:
+                case MapMessage.DeleteMap:
+                    buffer.Write((int)MapIndex);
                     break;
             }
         }

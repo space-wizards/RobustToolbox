@@ -1,8 +1,7 @@
-﻿using OpenTK;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using SS14.Shared.Map;
-using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Shared.Maths;
 
 namespace SS14.Shared.Interfaces.Map
 {
@@ -14,9 +13,9 @@ namespace SS14.Shared.Interfaces.Map
         /// <summary>
         ///     The integer ID of the map this grid is located within
         /// </summary>
-        int MapID { get; }
+        MapId MapID { get; }
 
-        int Index { get; }
+        GridId Index { get; }
 
         /// <summary>
         ///     The length of the side of a square tile in world units.

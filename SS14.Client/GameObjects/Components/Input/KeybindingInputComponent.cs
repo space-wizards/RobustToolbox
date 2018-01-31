@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using SS14.Client.Interfaces.Input;
+﻿using SS14.Client.Interfaces.Input;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
@@ -8,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using SS14.Shared.Log;
+using SS14.Client.Input;
 
 namespace SS14.Client.GameObjects
 {
@@ -91,7 +91,7 @@ namespace SS14.Client.GameObjects
             //Remove all active key states and send keyup messages for them.
             foreach (var state in _keyStates.ToList())
             {
-                Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, state.Key, BoundKeyState.Up);
+                Owner.SendComponentNetworkMessage(this, state.Key, BoundKeyState.Up);
                 Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, state.Key, BoundKeyState.Up);
                 _keyStates.Remove(state.Key);
             }
@@ -102,7 +102,7 @@ namespace SS14.Client.GameObjects
             if (!_enabled || GetKeyState(e.Function))
                 return; //Don't repeat keys that are already down.
 
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
+            Owner.SendComponentNetworkMessage(this, e.Function, e.FunctionState);
             SetKeyState(e.Function, true);
             Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, e.Function, e.FunctionState);
         }
@@ -111,7 +111,7 @@ namespace SS14.Client.GameObjects
         {
             if (!_enabled)
                 return;
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
+            Owner.SendComponentNetworkMessage(this, e.Function, e.FunctionState);
             SetKeyState(e.Function, false);
             Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, e.Function, e.FunctionState);
         }

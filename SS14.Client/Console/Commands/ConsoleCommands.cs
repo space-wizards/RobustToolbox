@@ -3,10 +3,9 @@
 // Couldn't think of a better name sorry.
 
 using System;
-using OpenTK.Graphics;
 using SS14.Client.Interfaces.Console;
-using SS14.Shared;
 using SS14.Shared.Console;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Console.Commands
 {
@@ -31,7 +30,7 @@ namespace SS14.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            Color4[] colors = { Color4.Green, Color4.Blue, Color4.Red };
+            Color[] colors = { Color.Green, Color.Blue, Color.Red };
             Random random = new Random();
             for (int x = 0; x < 50; x++)
             {

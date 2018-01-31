@@ -11,14 +11,10 @@ namespace SS14.Shared.Network.Messages
     public class MsgFullState : NetMessage
     {
         #region REQUIRED
-        public static readonly NetMessages ID = NetMessages.FullState;
         public static readonly MsgGroups GROUP = MsgGroups.Entity;
-
-        public static readonly string NAME = ID.ToString();
-        public MsgFullState(INetChannel channel)
-            : base(NAME, GROUP, ID)
-        { }
-        #endregion REQUIRED
+        public static readonly string NAME = nameof(MsgFullState);
+        public MsgFullState(INetChannel channel) : base(NAME, GROUP) { }
+        #endregion
 
         public GameState State { get; set; }
 

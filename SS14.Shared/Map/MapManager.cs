@@ -1,31 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using OpenTK;
+using System.Linq;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Map;
-using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
-using Vector2 = SS14.Shared.Maths.Vector2;
-using System.Linq;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Shared.Map
 {
+    /// <inheritdoc />
     public partial class MapManager : IMapManager
     {
-        public const int NULLSPACE = 0;
-        public const int DEFAULTGRID = 0;
-        private const ushort DefaultTileSize = 1;
+        /// <inheritdoc />
+        public IMap DefaultMap => GetMap(MapId.Nullspace);
 
         /// <inheritdoc />
         public void Initialize()
         {
-            NetSetup();
-            CreateMap(NULLSPACE);
+            _netManager.RegisterNetMessage<MsgMap>(MsgMap.NAME, message => HandleNetworkMessage((MsgMap)message));
+            CreateMap(MapId.Nullspace);
         }
 
         /// <inheritdoc />
-        public event TileChangedEventHandler OnTileChanged;
+        public event EventHandler<TileChangedEventArgs> TileChanged;
 
         public event GridEventHandler OnGridCreated;
 
@@ -35,6 +33,16 @@ namespace SS14.Shared.Map
         ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
         ///     so that you don't spam an event for each of the million station tiles.
         /// </summary>
+        /// <inheritdoc />
+        public event EventHandler<GridChangedEventArgs> GridChanged;
+
+        /// <inheritdoc />
+        public event EventHandler<MapEventArgs> MapCreated;
+
+        /// <inheritdoc />
+        public event EventHandler<MapEventArgs> MapDestroyed;
+
+        /// <inheritdoc />
         public bool SuppressOnTileChanged { get; set; }
 
         /// <summary>
@@ -47,7 +55,24 @@ namespace SS14.Shared.Map
             if (SuppressOnTileChanged)
                 return;
 
-            OnTileChanged?.Invoke(tileRef, oldTile);
+            TileChanged?.Invoke(this, new TileChangedEventArgs(tileRef, oldTile));
+
+            if(_netManager.IsClient)
+                return;
+
+            var message = _netManager.CreateNetMessage<MsgMap>();
+
+            message.MessageType = MapMessage.TurfUpdate;
+            message.SingleTurf = new MsgMap.Turf
+            {
+                X = tileRef.X,
+                Y = tileRef.Y,
+                Tile = (uint)tileRef.Tile
+            };
+            message.GridIndex = tileRef.LocalPos.GridID;
+            message.MapIndex = tileRef.LocalPos.MapID;
+
+            _netManager.ServerSendToAll(message);
         }
 
         public void RaiseOnGridCreated(int mapId, int gridId)
@@ -60,62 +85,150 @@ namespace SS14.Shared.Map
             OnGridRemoved?.Invoke(mapId, gridId);
         }
 
-        #region MapAccess
-
         /// <summary>
         ///     Holds an indexed collection of map grids.
         /// </summary>
-        private readonly Dictionary<int, Map> _Maps = new Dictionary<int, Map>();
+        private readonly Dictionary<MapId, Map> _maps = new Dictionary<MapId, Map>();
 
-        public virtual void UnregisterMap(int mapID)
+        /// <inheritdoc />
+        public void DeleteMap(MapId mapID)
         {
-            if (!_Maps.TryGetValue(mapID, out var map))
+            if (!_maps.ContainsKey(mapID))
             {
-                Logger.Warning($"Attempted to unregister nonexistent map {mapID}.");
+                Logger.Warning("[MAP] Attempted to delete nonexistent map.");
+                return;
             }
-            else
-            {
-                // Unregister grids so that RaiseOnGridRemoved gets raised.
-                var grids = map.GetAllGrids().ToArray();
-                foreach (var grid in grids)
-                {
-                    map.RemoveGrid(grid.Index);
-                }
-                _Maps.Remove(mapID);
-            }
+
+            MapDestroyed?.Invoke(this, new MapEventArgs(_maps[mapID]));
+            _maps.Remove(mapID);
+
+            if(_netManager.IsClient)
+                return;
+
+            var msg = _netManager.CreateNetMessage<MsgMap>();
+
+            msg.MessageType = MapMessage.DeleteMap;
+            msg.MapIndex = mapID;
+
+            _netManager.ServerSendToAll(msg);
         }
 
-        public IMap CreateMap(int mapID)
+        /// <inheritdoc />
+        public IMap CreateMap(MapId mapID, bool overwrite = false)
         {
+            if(!overwrite && _maps.ContainsKey(mapID))
+            {
+                Logger.Warning("[MAP] Attempted to overwrite existing map.");
+                return null;
+            }
+
             var newMap = new Map(this, mapID);
-            _Maps.Add(mapID, newMap);
+            _maps.Add(mapID, newMap);
+            MapCreated?.Invoke(this, new MapEventArgs(newMap));
+
+            if (_netManager.IsClient)
+                return newMap;
+
+            var msg = _netManager.CreateNetMessage<MsgMap>();
+
+            msg.MessageType = MapMessage.CreateMap;
+            msg.MapIndex = newMap.Index;
+
+            _netManager.ServerSendToAll(msg);
+
             return newMap;
         }
 
-        public IMap GetMap(int mapID)
+        /// <inheritdoc />
+        public IMap GetMap(MapId mapID)
         {
-            return _Maps[mapID];
+            return _maps[mapID];
         }
 
-        public bool TryGetMap(int mapID, out IMap map)
+        /// <inheritdoc />
+        public bool MapExists(MapId mapID)
         {
-            if (_Maps.ContainsKey(mapID))
+            return _maps.ContainsKey(mapID);
+        }
+
+        /// <inheritdoc />
+        public bool TryGetMap(MapId mapID, out IMap map)
+        {
+            if (_maps.ContainsKey(mapID))
             {
-                map = _Maps[mapID];
+                map = _maps[mapID];
                 return true;
             }
             map = null;
             return false;
         }
 
-        public IEnumerable<IMap> GetAllMaps()
+        private IEnumerable<IMap> GetAllMaps()
         {
-            foreach (var kmap in _Maps)
-            {
-                yield return kmap.Value;
-            }
+            return _maps.Select(kvMap => kvMap.Value);
         }
+    }
 
-        #endregion MapAccess
+    /// <summary>
+    ///     Arguments for when a map is created or deleted locally ore remotely.
+    /// </summary>
+    public class MapEventArgs : EventArgs
+    {
+        /// <summary>
+        ///     Map that is being modified.
+        /// </summary>
+        public IMap Map { get; }
+
+        /// <summary>
+        ///     Creates a new instance of this class.
+        /// </summary>
+        public MapEventArgs(IMap map)
+        {
+            Map = map;
+        }
+    }
+
+    /// <summary>
+    ///     Arguments for when a tile is changed locally or remotely.
+    /// </summary>
+    public class TileChangedEventArgs : EventArgs
+    {
+        /// <summary>
+        ///     New tile that replaced the old one.
+        /// </summary>
+        public TileRef NewTile { get; }
+
+        /// <summary>
+        ///     Old tile that was replaced.
+        /// </summary>
+        public Tile OldTile { get; }
+
+        /// <summary>
+        ///     Creates a new instance of this class.
+        /// </summary>
+        public TileChangedEventArgs(TileRef newTile, Tile oldTile)
+        {
+            NewTile = newTile;
+            OldTile = oldTile;
+        }
+    }
+
+    /// <summary>
+    ///     Arguments for when a Grid is changed locally or remotely.
+    /// </summary>
+    public class GridChangedEventArgs : EventArgs
+    {
+        /// <summary>
+        ///     Grid being changed.
+        /// </summary>
+        public IMapGrid Grid { get; }
+
+        /// <summary>
+        ///     Creates a new instance of this class.
+        /// </summary>
+        public GridChangedEventArgs(IMapGrid grid)
+        {
+            Grid = grid;
+        }
     }
 }

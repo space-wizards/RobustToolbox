@@ -1,6 +1,4 @@
-﻿using Lidgren.Network;
-using OpenTK;
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.ResourceManagement;
@@ -18,10 +16,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using YamlDotNet.RepresentationModel;
-using Vector2 = SS14.Shared.Maths.Vector2;
-using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Shared.Log;
+using YamlDotNet.RepresentationModel;
 
 // Warning: Shitcode ahead!
 namespace SS14.Client.GameObjects
@@ -54,7 +50,7 @@ namespace SS14.Client.GameObjects
             }
         }
         public Color Color { get; set; } = Color.White;
-        public int MapID { get; private set; }
+        public MapId MapID { get; private set; }
 
         public override Type StateType => typeof(SpriteComponentState);
 
@@ -329,6 +325,7 @@ namespace SS14.Client.GameObjects
         {
             var newState = (SpriteComponentState)state;
             DrawDepth = newState.DrawDepth;
+            Offset = newState.Offset;
 
             if (newState.SpriteKey != null && sprites.ContainsKey(newState.SpriteKey) &&
                 currentBaseSprite != sprites[newState.SpriteKey])

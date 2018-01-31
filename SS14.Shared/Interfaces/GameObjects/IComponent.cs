@@ -1,5 +1,4 @@
 ﻿using System;
-using Lidgren.Network;
 using SS14.Shared.GameObjects;
 using YamlDotNet.RepresentationModel;
 
@@ -48,6 +47,11 @@ namespace SS14.Shared.Interfaces.GameObjects
         Type StateType { get; }
 
         /// <summary>
+        ///     This is true when the component is active. This value is changed when Startup and Shutdown are called.
+        /// </summary>
+        bool Running { get; }
+
+        /// <summary>
         ///     True if the component has been removed from its owner, AKA deleted.
         /// </summary>
         bool Deleted { get; }
@@ -73,7 +77,7 @@ namespace SS14.Shared.Interfaces.GameObjects
 
         /// <summary>
         ///     Called when all of the entity's other components have been added and are available,
-        ///     But are not necessarily initialized yet.
+        ///     But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.
         /// </summary>
         void Initialize();
 
@@ -85,7 +89,14 @@ namespace SS14.Shared.Interfaces.GameObjects
         event Action<ComponentShutdownEventArgs> OnShutdown;
 
         /// <summary>
-        ///     Shuts down the component. The is called Automatically by OnRemove.
+        ///     Starts up a component. This is called automatically after all components are Initialized and the entity is Initialized.
+        ///     This can be called multiple times during the component's life, and at any time.
+        /// </summary>
+        void Startup();
+
+        /// <summary>
+        ///     Shuts down the component. The is called Automatically by OnRemove. This can be called multiple times during
+        ///     the component's life, and at any time.
         /// </summary>
         void Shutdown();
 
@@ -121,8 +132,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     Handles an incoming input message from counterpart server/client components.
         /// </summary>
         /// <param name="message"></param>
-        /// <param name="sender"></param>
-        void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender);
+        void HandleNetworkMessage(IncomingEntityComponentMessage message);
 
         /// <summary>
         ///     Handles an incoming component state from the server.

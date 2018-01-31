@@ -1,17 +1,12 @@
-﻿using OpenTK;
-using SS14.Client.Interfaces.GameObjects;
+﻿using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.Utility;
 using SS14.Shared.Map;
-using Vector2 = SS14.Shared.Maths.Vector2;
-using SS14.Client.Interfaces.GameObjects.Components;
 
 namespace SS14.Client.GameObjects
 {
@@ -20,25 +15,20 @@ namespace SS14.Client.GameObjects
     /// </summary>
     public class ClientEntityManager : EntityManager, IClientEntityManager
     {
-        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates worldPos, float Range)
+        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float Range)
         {
-            Range *= Range; // Square it here to avoid Sqrt
+            var AABB = new Box2(position.Position - new Vector2(Range / 2, Range / 2), position.Position + new Vector2(Range / 2, Range / 2));
+            return GetEntitiesIntersecting(position.MapID, AABB);
+        }
 
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position)
+        {
             foreach (var entity in GetEntities())
             {
                 var transform = entity.GetComponent<ITransformComponent>();
-                var relativePosition = worldPos.Position - transform.WorldPosition;
-                if (relativePosition.LengthSquared <= Range)
-                {
-                    yield return entity;
-                }
-            }
-        }
+                if (transform.MapID != mapId)
+                    continue;
 
-        public IEnumerable<IEntity> GetEntitiesIntersecting(Box2 position)
-        {
-            foreach (var entity in GetEntities())
-            {
                 if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
                 {
                     if (position.Intersects(component.WorldAABB))
@@ -46,7 +36,6 @@ namespace SS14.Client.GameObjects
                 }
                 else
                 {
-                    var transform = entity.GetComponent<ITransformComponent>();
                     if (position.Contains(transform.WorldPosition))
                     {
                         yield return entity;
@@ -55,10 +44,14 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public IEnumerable<IEntity> GetEntitiesIntersecting(Vector2 position)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position)
         {
             foreach (var entity in GetEntities())
             {
+                var transform = entity.GetComponent<ITransformComponent>();
+                if(transform.MapID != mapId)
+                    continue;
+
                 if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
                 {
                     if (component.WorldAABB.Contains(position))
@@ -66,7 +59,6 @@ namespace SS14.Client.GameObjects
                 }
                 else
                 {
-                    var transform = entity.GetComponent<ITransformComponent>();
                     if (FloatMath.CloseTo(transform.LocalPosition.X, position.X) && FloatMath.CloseTo(transform.LocalPosition.Y, position.Y))
                     {
                         yield return entity;
@@ -75,19 +67,22 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public bool AnyEntitiesIntersecting(Box2 position)
+        public bool AnyEntitiesIntersecting(MapId mapId, Box2 box)
         {
             foreach (var entity in GetEntities())
             {
+                var transform = entity.GetComponent<ITransformComponent>();
+                if (transform.MapID != mapId)
+                    continue;
+
                 if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
                 {
-                    if (position.Intersects(component.WorldAABB))
+                    if (box.Intersects(component.WorldAABB))
                         return true;
                 }
                 else
                 {
-                    var transform = entity.GetComponent<ITransformComponent>();
-                    if (position.Contains(transform.WorldPosition))
+                    if (box.Contains(transform.WorldPosition))
                     {
                         return true;
                     }
@@ -96,27 +91,29 @@ namespace SS14.Client.GameObjects
             return false;
         }
 
-        public void Initialize()
+        public override void Startup()
         {
-            if (Initialized)
+            base.Startup();
+
+            if (Started)
             {
                 throw new InvalidOperationException("InitializeEntities() called multiple times");
             }
             InitializeEntities();
             EntitySystemManager.Initialize();
-            Initialized = true;
+            Started = true;
         }
 
         public void ApplyEntityStates(IEnumerable<EntityState> entityStates, float serverTime)
         {
-            var entityKeys = new HashSet<int>();
+            var entityKeys = new HashSet<EntityUid>();
             foreach (EntityState es in entityStates)
             {
                 //Todo defer component state result processing until all entities are loaded and initialized...
                 es.ReceivedTime = serverTime;
                 entityKeys.Add(es.StateData.Uid);
                 //Known entities
-                if (_entities.TryGetValue(es.StateData.Uid, out var entity))
+                if (Entities.TryGetValue(es.StateData.Uid, out var entity))
                 {
                     entity.HandleEntityState(es);
                 }
@@ -129,16 +126,16 @@ namespace SS14.Client.GameObjects
             }
 
             //Delete entities that exist here but don't exist in the entity states
-            int[] toDelete = _entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
-            foreach (int k in toDelete)
+            var toDelete = Entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
+            foreach (var k in toDelete)
             {
                 DeleteEntity(k);
             }
 
-            // After the first set of states comes in we do the initialization.
-            if (!Initialized && MapsInitialized)
+            // After the first set of states comes in we do the startup.
+            if (!Started && MapsInitialized)
             {
-                Initialize();
+                Startup();
             }
         }
     }

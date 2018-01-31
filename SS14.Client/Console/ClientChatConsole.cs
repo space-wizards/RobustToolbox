@@ -54,7 +54,7 @@ namespace SS14.Client.Console
         {
             base.Initialize();
 
-            _network.RegisterNetMessage<MsgChat>(MsgChat.NAME, (int)MsgChat.ID, msg => HandleChatMsg((MsgChat)msg));
+            _network.RegisterNetMessage<MsgChat>(MsgChat.NAME, msg => HandleChatMsg((MsgChat) msg));
         }
 
         /// <inheritdoc />

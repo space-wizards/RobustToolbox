@@ -10,7 +10,6 @@ using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Xml.Linq;
 
@@ -53,7 +52,7 @@ namespace SS14.Server.Maps
             IEntity entity;
             try
             {
-                entity = entityManager.ForceSpawnEntityAt(prototype, new LocalCoordinates(X, Y, 1, map.Index));
+                entity = entityManager.ForceSpawnEntityAt(prototype, new LocalCoordinates(X, Y, GridId.DefaultGrid, map.Index));
             }
             catch (UnknownPrototypeException)
             {

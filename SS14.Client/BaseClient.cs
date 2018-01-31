@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
-using Lidgren.Network;
-using SS14.Client.Console;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Player;
 using SS14.Client.State.States;
-using SS14.Shared;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -25,7 +23,7 @@ namespace SS14.Client
 
         [Dependency]
         private readonly IPlayerManager _playMan;
-        
+
         /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;
 
@@ -38,7 +36,7 @@ namespace SS14.Client
         /// <inheritdoc />
         public void Initialize()
         {
-            _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int)MsgServerInfo.ID, HandleServerInfo);
+            _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, HandleServerInfo);
 
             _net.Connected += OnConnected;
             _net.ConnectFailed += OnConnectFailed;
@@ -84,12 +82,17 @@ namespace SS14.Client
         /// <inheritdoc />
         public event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
 
+        public event EventHandler<PlayerEventArgs> PlayerJoinedServer;
+        public event EventHandler<PlayerEventArgs> PlayerJoinedLobby;
+        public event EventHandler<PlayerEventArgs> PlayerJoinedGame;
+        public event EventHandler<PlayerEventArgs> PlayerLeaveServer;
+
         private void OnConnected(object sender, NetChannelArgs args)
         {
             // request base info about the server
             var msgInfo = _net.CreateNetMessage<MsgServerInfoReq>();
             msgInfo.PlayerName = "Joe Hello";
-            _net.ClientSendMessage(msgInfo, NetDeliveryMethod.ReliableOrdered);
+            _net.ClientSendMessage(msgInfo);
         }
 
         /// <summary>
@@ -97,36 +100,36 @@ namespace SS14.Client
         ///     receiving states when they join the lobby.
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        private void PlayerJoinedServer(PlayerSession session)
+        private void OnPlayerJoinedServer(PlayerSession session)
         {
             Debug.Assert(RunLevel < ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.Connected);
 
-            //TODO: Notify Content
+            PlayerJoinedServer?.Invoke(this, new PlayerEventArgs(session));
         }
 
         /// <summary>
         ///     Player is joining the lobby for whatever reason.
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        private void PlayerJoinedLobby(PlayerSession session)
+        private void OnPlayerJoinedLobby(PlayerSession session)
         {
             Debug.Assert(RunLevel >= ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.Lobby);
 
-            //TODO: Notify Content
+            PlayerJoinedLobby?.Invoke(this, new PlayerEventArgs(session));
         }
 
         /// <summary>
         ///     Player is joining the game (usually from lobby.)
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        private void PlayerJoinedGame(PlayerSession session)
+        private void OnPlayerJoinedGame(PlayerSession session)
         {
             Debug.Assert(RunLevel >= ClientRunLevel.Lobby);
             OnRunLevelChanged(ClientRunLevel.Ingame);
 
-            //TODO: Notify Content
+            PlayerJoinedGame?.Invoke(this, new PlayerEventArgs(session));
         }
 
         private void Reset()
@@ -144,8 +147,11 @@ namespace SS14.Client
         {
             Debug.Assert(RunLevel > ClientRunLevel.Initialize);
 
-            _playMan.Shutdown();
+            PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer.Session));
 
+            IoCManager.Resolve<IStateManager>().RequestStateChange<MainScreen>();
+
+            _playMan.Shutdown();
             Reset();
         }
 
@@ -177,21 +183,25 @@ namespace SS14.Client
         private void OnLocalStatusChanged(object obj, StatusEventArgs eventArgs)
         {
             // player finished fully connecting to the server.
-            if (eventArgs.OldStatus == SessionStatus.Connected)
-                PlayerJoinedServer(_playMan.LocalPlayer.Session);
+            if (eventArgs.OldStatus == SessionStatus.Connecting)
+                OnPlayerJoinedServer(_playMan.LocalPlayer.Session);
 
+            var stateMan = IoCManager.Resolve<IStateManager>();
             if (eventArgs.NewStatus == SessionStatus.InLobby)
             {
-                var stateMan = IoCManager.Resolve<IStateManager>();
                 stateMan.RequestStateChange<Lobby>();
-                PlayerJoinedLobby(_playMan.LocalPlayer.Session);
+                OnPlayerJoinedLobby(_playMan.LocalPlayer.Session);
             }
 
-            if (eventArgs.NewStatus == SessionStatus.InGame)
+            else if (eventArgs.NewStatus == SessionStatus.InGame)
             {
-                var stateMan = IoCManager.Resolve<IStateManager>();
                 stateMan.RequestStateChange<GameScreen>();
-                PlayerJoinedGame(_playMan.LocalPlayer.Session);
+
+                OnPlayerJoinedGame(_playMan.LocalPlayer.Session);
+
+                // request entire map be sent to us
+                var mapMsg = _net.CreateNetMessage<MsgMapReq>();
+                _net.ClientSendMessage(mapMsg);
             }
         }
 
@@ -216,6 +226,25 @@ namespace SS14.Client
         Lobby,
         Ingame,
         ChangeMap
+    }
+
+    /// <summary>
+    ///     Event arguments for when something changed with the player.
+    /// </summary>
+    public class PlayerEventArgs : EventArgs
+    {
+        /// <summary>
+        ///     The session that triggered the event.
+        /// </summary>
+        private PlayerSession Session { get; }
+
+        /// <summary>
+        ///     Constructs a new instance of the class.
+        /// </summary>
+        public PlayerEventArgs(PlayerSession session)
+        {
+            Session = session;
+        }
     }
 
     /// <summary>

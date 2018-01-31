@@ -1,13 +1,8 @@
-﻿using OpenTK;
-using SFML.Graphics;
-using SFML.System;
-using SS14.Client.Graphics.Collection;
-using SS14.Client.Graphics.Utility;
-using SS14.Shared.Maths;
+﻿using SS14.Client.Graphics.Collection;
 using System;
 using System.Runtime.InteropServices;
+using SS14.Shared.Maths;
 using Color = SS14.Shared.Maths.Color;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Graphics.VertexData
 {
@@ -183,10 +178,6 @@ namespace SS14.Client.Graphics.VertexData
         /// </summary>
         protected void Clear()
         {
-            // Destroy all the vertex types.
-            foreach (VertexType vertexType in this)
-                vertexType.Dispose();
-
             base.ClearItems();
         }
 

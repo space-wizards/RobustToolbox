@@ -1,4 +1,5 @@
 ﻿using System;
+using SS14.Shared.Enums;
 using SS14.Shared.Maths;
 using SS14.Shared.Map;
 
@@ -54,11 +55,11 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         /// <summary>
         ///     Returns the index of the map which this object is on
         /// </summary>
-        int MapID { get; }
+        MapId MapID { get; }
 
         /// <summary>
         ///     Returns the index of the grid which this object is on
         /// </summary>
-        int GridID { get; }
+        GridId GridID { get; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using SS14.Shared;
 using System.Collections.Generic;
+using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 

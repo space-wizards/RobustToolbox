@@ -8,6 +8,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using System;
+using SS14.Shared.Enums;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Client.Interfaces;
@@ -22,8 +23,8 @@ namespace SS14.Client.GameObjects
         public Godot.Node2D SceneNode { get; private set; }
 
         private Vector2 _position;
-        public int MapID { get; private set; }
-        public int GridID { get; private set; }
+        public MapId MapID { get; private set; }
+        public GridId GridID { get; private set; }
         public Angle Rotation { get; private set; }
         public ITransformComponent Parent { get; private set; }
         //TODO: Make parenting actually work.
@@ -55,7 +56,12 @@ namespace SS14.Client.GameObjects
                 }
                 else
                 {
-                    return IoCManager.Resolve<IMapManager>().GetMap(MapID).GetGrid(GridID).ConvertToWorld(_position);
+                    var maps = IoCManager.Resolve<IMapManager>();
+                    if (maps.TryGetMap(MapID, out var map) && map.GridExists(GridID))
+                    {
+                        return map.GetGrid(GridID).ConvertToWorld(_position);
+                    }
+                    return new Vector2();
                 }
             }
         }
@@ -83,7 +89,7 @@ namespace SS14.Client.GameObjects
             if (Parent?.Owner?.Uid != newState.ParentID)
             {
                 DetachParent();
-                if (!(newState.ParentID is int parentID))
+                if (!(newState.ParentID is EntityUid parentID))
                 {
                     return;
                 }

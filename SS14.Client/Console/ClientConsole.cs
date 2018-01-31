@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using System;
+using System.Collections.Generic;
 using SS14.Client.Interfaces.Console;
 using SS14.Shared.Console;
 using SS14.Shared.Interfaces.Network;
@@ -10,8 +11,6 @@ using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Reflection;
 using SS14.Shared.Utility;
-using System;
-using System.Collections.Generic;
 
 namespace SS14.Client.Console
 {
@@ -42,9 +41,9 @@ namespace SS14.Client.Console
         /// <inheritdoc />
         public virtual void Initialize()
         {
-            _network.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, (int)MsgConCmdReg.ID, HandleConCmdReg);
-            _network.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, (int)MsgConCmdAck.ID, HandleConCmdAck);
-            _network.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, (int)MsgConCmd.ID);
+            _network.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, HandleConCmdReg);
+            _network.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, HandleConCmdAck);
+            _network.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME);
 
             Reset();
         }
@@ -97,7 +96,7 @@ namespace SS14.Client.Console
         {
             var msg = (MsgConCmdAck)message;
 
-            AddLine("< " + msg.Text, ChatChannel.Default, MsgColor);
+            AddLine("< " + msg.Text, ChatChannel.Default, _msgColor);
         }
 
         private void HandleConCmdReg(NetMessage message)
@@ -185,7 +184,7 @@ namespace SS14.Client.Console
 
             var msg = _network.CreateNetMessage<MsgConCmdReg>();
             // empty message to request commands
-            _network.ClientSendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            netMgr.ClientSendMessage(msg);
 
             _requestedCommands = true;
         }
@@ -202,7 +201,7 @@ namespace SS14.Client.Console
 
             var msg = _network.CreateNetMessage<MsgConCmd>();
             msg.Text = text;
-            _network.ClientSendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            netMgr.ClientSendMessage(msg);
         }
     }
 

@@ -3,6 +3,7 @@ using System.Xml.Serialization;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Console;
+using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
@@ -29,26 +30,26 @@ namespace SS14.Server.Chat
         /// <inheritdoc />
         public void Initialize()
         {
-            _network.RegisterNetMessage<MsgChat>(MsgChat.NAME, (int) MsgChat.ID);
+            _network.RegisterNetMessage<MsgChat>(MsgChat.NAME);
             LoadEmotes();
         }
 
         /// <inheritdoc />
-        public void DispatchMessage(INetChannel client, ChatChannel channel, string text, PlayerIndex? index = null, int? entityUid = null)
+        public void DispatchMessage(INetChannel client, ChatChannel channel, string text, PlayerIndex? index = null, EntityUid? entityUid = null)
         {
             var msg = BuildChatMessage(channel, text, index, entityUid);
             _network.ServerSendMessage(msg, client);
         }
 
         /// <inheritdoc />
-        public void DispatchMessage(List<INetChannel> clients, ChatChannel channel, string text, PlayerIndex? index = null, int? entityUid = null)
+        public void DispatchMessage(List<INetChannel> clients, ChatChannel channel, string text, PlayerIndex? index = null, EntityUid? entityUid = null)
         {
             var msg = BuildChatMessage(channel, text, index, entityUid);
             _network.ServerSendToMany(msg, clients);
         }
 
         /// <inheritdoc />
-        public void DispatchMessage(ChatChannel channel, string text, PlayerIndex? index = null, int? entityUid = null)
+        public void DispatchMessage(ChatChannel channel, string text, PlayerIndex? index = null, EntityUid? entityUid = null)
         {
             var msg = BuildChatMessage(channel, text, index, entityUid);
             _network.ServerSendToAll(msg);
@@ -72,7 +73,7 @@ namespace SS14.Server.Chat
             return false;
         }
 
-        private MsgChat BuildChatMessage(ChatChannel channel, string text, PlayerIndex? index, int? entityUid)
+        private MsgChat BuildChatMessage(ChatChannel channel, string text, PlayerIndex? index, EntityUid? entityUid)
         {
             var message = _network.CreateNetMessage<MsgChat>();
 

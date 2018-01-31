@@ -1,4 +1,6 @@
-﻿namespace SS14.Shared.GameObjects.Events
+﻿using SS14.Shared.Enums;
+
+namespace SS14.Shared.GameObjects.Events
 {
     public class BoundKeyChangeEventArgs : EntityEventArgs
     {

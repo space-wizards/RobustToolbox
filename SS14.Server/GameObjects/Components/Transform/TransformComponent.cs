@@ -7,6 +7,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using System;
+using SS14.Shared.Enums;
 
 namespace SS14.Server.GameObjects
 {
@@ -22,8 +23,8 @@ namespace SS14.Server.GameObjects
         ITransformComponent ITransformComponent.Parent => Parent;
 
         private Vector2 _position;
-        public int MapID { get; private set; } = MapManager.NULLSPACE;
-        public int GridID { get; private set; } = 0;
+        public MapId MapID { get; private set; }
+        public GridId GridID { get; private set; }
 
         /// <summary>
         ///     Current rotation offset of the entity.
@@ -54,20 +55,9 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public LocalCoordinates LocalPosition
         {
-            get
-            {
-                if (Parent != null)
-                {
-                    return GetMapTransform().LocalPosition; //Search up the tree for the true map position
-                }
-                else
-                {
-                    return new LocalCoordinates(_position, GridID, MapID);
-                }
-            }
+            get => Parent != null ? GetMapTransform().LocalPosition : new LocalCoordinates(_position, GridID, MapID);
             set
             {
-                var oldPosition = LocalPosition;
                 _position = value.Position;
 
                 MapID = value.MapID;
@@ -77,22 +67,12 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        /// <inheritdoc />
         public Vector2 WorldPosition
         {
-            get
-            {
-                if (Parent != null)
-                {
-                    return GetMapTransform().WorldPosition; //Search up the tree for the true map position
-                }
-                else
-                {
-                    return IoCManager.Resolve<IMapManager>().GetMap(MapID).GetGrid(GridID).ConvertToWorld(_position);
-                }
-            }
+            get => Parent != null ? GetMapTransform().WorldPosition : IoCManager.Resolve<IMapManager>().GetMap(MapID).GetGrid(GridID).ConvertToWorld(_position);
             set
             {
-                var oldPosition = LocalPosition;
                 _position = value;
                 GridID = IoCManager.Resolve<IMapManager>().GetMap(MapID).FindGridAt(_position).Index;
 

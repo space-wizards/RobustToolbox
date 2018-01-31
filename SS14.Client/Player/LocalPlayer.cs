@@ -3,9 +3,13 @@ using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared;
+using SS14.Shared.Enums;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
+using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
 
 namespace SS14.Client.Player
@@ -18,12 +22,12 @@ namespace SS14.Client.Player
         /// <summary>
         ///     An entity has been attached to the local player.
         /// </summary>
-        public EventHandler EntityAttached;
+        public event EventHandler EntityAttached;
 
         /// <summary>
         ///     An entity has been detached from the local player.
         /// </summary>
-        public EventHandler EntityDetached;
+        public event EventHandler EntityDetached;
 
         /// <summary>
         ///     Game entity that the local player is controlling. If this is null, the player
@@ -40,6 +44,15 @@ namespace SS14.Client.Player
         ///     Session of the local client.
         /// </summary>
         public PlayerSession Session { get; set; }
+
+        /// <summary>
+        ///     In game name of the local player.
+        /// </summary>
+        public string Name
+        {
+            get => IoCManager.Resolve<IConfigurationManager>().GetCVar<string>("player.name");
+            set => SetName(value);
+        }
 
         /// <summary>
         ///     The client's entity has moved. This only is raised when the player is attached to an entity.
@@ -119,6 +132,25 @@ namespace SS14.Client.Player
             var args = new StatusEventArgs(Session.Status, newStatus);
             Session.Status = newStatus;
             StatusChanged?.Invoke(this, args);
+        }
+
+        private void SetName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return;
+            var fixedName = name.Trim();
+            if (fixedName.Length < 3)
+                fixedName = $"Player {Session.Index}";
+
+            IoCManager.Resolve<IConfigurationManager>().SetCVar("player.name", fixedName);
+
+            var network = IoCManager.Resolve<IClientNetManager>();
+            if(!network.IsConnected)
+                return;
+
+            var msg = network.CreateNetMessage<MsgClGreet>();
+            msg.PlyName = name;
+            network.ClientSendMessage(msg);
         }
     }
 

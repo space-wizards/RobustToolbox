@@ -10,8 +10,8 @@ namespace SS14.Shared.GameObjects
         public readonly string Name;
         public readonly bool Visible;
 
-        public AnimatedSpriteComponentState(bool visible, DrawDepth drawDepth, string name, string currentAnimation,
-            bool loop, int? masterUid, uint netID = NetIDs.ANIMATED_SPRITE)
+        public AnimatedSpriteComponentState(bool visible, DrawDepth drawDepth, string name,
+            string currentAnimation, bool loop, EntityUid? masterUid, uint netID = NetIDs.ANIMATED_SPRITE)
             : base(drawDepth, masterUid, netID)
         {
             Visible = visible;

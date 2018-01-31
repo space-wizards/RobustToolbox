@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 
 namespace SS14.Client.Graphics.VertexData
@@ -8,91 +8,50 @@ namespace SS14.Client.Graphics.VertexData
     /// </summary>
     public class VertexField
 	{
-		#region Variables.
-		private short _stream;					                // Stream to which this element is bound.
-		private short _offset;					                // Offset of the field within the field type.
-        private VertexFieldContext _context;	                // The purpose of this field.
-		private VertexFieldType   _type;			            // Data type of this field.
-		private byte _index;					                // Index of the item, only applicable to certain types of fields. (i.e. textures).
-		private short _size;					                // Size of this field in bytes.
-		#endregion
+	    private readonly short _stream;					                // Stream to which this element is bound.
+		private readonly short _offset;					                // Offset of the field within the field type.
+        private readonly VertexFieldContext _context;	                // The purpose of this field.
+		private readonly VertexFieldType   _type;			            // Data type of this field.
+		private readonly byte _index;					                // Index of the item, only applicable to certain types of fields. (i.e. textures).
+		private readonly short _size;					                // Size of this field in bytes.
 
-		#region Properties.
-		/// <summary>
+	    /// <summary>
 		/// Property to return the offset of this field within the field type.
 		/// </summary>
-		public short Offset
-		{
-			get
-			{
-				return _offset;
-			}
-		}
+		public short Offset => _offset;
 
-		/// <summary>
+	    /// <summary>
 		/// Property to return the context of this field.
 		/// </summary>
-		public VertexFieldContext Context
-		{
-			get
-			{
-				return _context;
-			}
-		}
+		public VertexFieldContext Context => _context;
 
-		/// <summary>
+	    /// <summary>
 		/// Property to return the data type of the field.
 		/// </summary>
-		public VertexFieldType Type
-		{
-			get
-			{
-				return _type;
-			}
-		}
+		public VertexFieldType Type => _type;
 
-		/// <summary>
+	    /// <summary>
 		/// Property to return the index of this field.
 		/// Only applicable to particular types of fields (i.e. textures).
 		/// </summary>
-		public byte Index
-		{
-			get
-			{
-				return _index;
-			}
-		}
+		public byte Index => _index;
 
-		/// <summary>
+	    /// <summary>
 		/// Property to return the number of bytes occupied by this field.
 		/// </summary>
-		public int Bytes
-		{
-			get
-			{
-				return _size;
-			}
-		}
+		public int Bytes => _size;
 
-		/// <summary>
+	    /// <summary>
 		/// Property to return the stream to which this element is bound.
 		/// </summary>
-		public short Stream
-		{
-			get
-			{
-				return _stream;
-			}
-		}
-		#endregion
+		public short Stream => _stream;
 
-		#region Methods.
-		/// <summary>
+	    /// <summary>
 		/// Function to return the size in bytes of a vertex field.
 		/// </summary>
 		/// <param name="type">Type of the field to evaluate.</param>
 		/// <returns>Size of the field in bytes.</returns>
-		static public int SizeOf(VertexFieldType type)
+		public static int SizeOf(VertexFieldType type)
 		{
 			switch(type)
 			{
@@ -116,9 +75,9 @@ namespace SS14.Client.Graphics.VertexData
 					return sizeof(int);
 				case VertexFieldType.UByte4:
 					return sizeof(byte) * 4;
-			}
-
-			throw new Exception( "Vertex field type '" + type.ToString() + "' is not recognized.");
+			    default:
+			        throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported value.");
+            }
 		}
 
 		/// <summary>
@@ -126,7 +85,7 @@ namespace SS14.Client.Graphics.VertexData
 		/// </summary>
 		/// <param name="type">Type of this field.</param>
 		/// <returns>The number of elements within a field.</returns>
-		static public int FieldElementCount(VertexFieldType type)
+		public static int FieldElementCount(VertexFieldType type)
 		{
 			switch(type)
 			{
@@ -150,66 +109,10 @@ namespace SS14.Client.Graphics.VertexData
 					return 1;
 				case VertexFieldType.UByte4:
 					return 4;
+			    default:
+			        throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported value.");
 			}
-
-			throw new Exception( "Vertex field type '" + type.ToString() + "' is not recognized.");
 		}
-
-		/// <summary>
-		/// Indicates whether this instance and a specified object are equal.
-		/// </summary>
-		/// <param name="obj">Another object to compare to.</param>
-		/// <returns>
-		/// true if obj and this instance are the same type and represent the same value; otherwise, false.
-		/// </returns>
-		public override bool Equals(object obj)
-		{
-			VertexField left = obj as VertexField;		// Comparison vertex field.
-
-			if ((left != null) && ((left._context == _context) && (left._index == _index) && (left._offset == _offset) && (left._stream == _stream) && (left._type == _type)))
-				return true;
-
-			return false;
-		}
-
-		/// <summary>
-		/// Returns the hash code for this instance.
-		/// </summary>
-		/// <returns>
-		/// A 32-bit signed integer that is the hash code for this instance.
-		/// </returns>
-		public override int GetHashCode()
-		{
-			return ((_context.GetHashCode()) ^ (_index.GetHashCode()) ^ (_offset.GetHashCode()) ^ (_stream.GetHashCode()) ^ (_type.GetHashCode()));
-		}
-		#endregion
-
-		#region Operators.
-		/// <summary>
-		/// Operator to test two vertex fields for equality.
-		/// </summary>
-		/// <param name="left">Left vertex field to compare.</param>
-		/// <param name="right">Right vertex field to compare.</param>
-		/// <returns>TRUE if left and right are equal, FALSE if not.</returns>
-		public static bool operator ==(VertexField left, VertexField right)
-		{
-			if (left != null && right != null && (left._context == right._context) && (left._index == right._index) && (left._offset == right._offset) && (left._stream == right._stream) && (left._type == right._type))
-				return true;
-
-			return false;
-		}
-
-		/// <summary>
-		/// Operator to test two vertex fields for inequality.
-		/// </summary>
-		/// <param name="left">Left vertex field to compare.</param>
-		/// <param name="right">Right vertex field to compare.</param>
-		/// <returns>TRUE if left and right are not equal, FALSE if they are.</returns>
-		public static bool operator !=(VertexField left, VertexField right)
-		{
-			return !(left == right);
-		}
-		#endregion
 
 		#region Constructors and Destructors.
 		/// <summary>

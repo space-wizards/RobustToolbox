@@ -1,18 +1,13 @@
-﻿using OpenTK;
-using SS14.Shared.Map;
-using SS14.Shared.Maths;
-using System;
+﻿using SS14.Shared.Map;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using SS14.Shared.Maths;
 
 namespace SS14.Shared.Interfaces.Map
 {
     public interface IMap
     {
-        int Index { get; }
-
+        MapId Index { get; }
+        
         #region GridAccess
 
         /// <summary>
@@ -23,21 +18,21 @@ namespace SS14.Shared.Interfaces.Map
         /// <param name="chunkSize">Optional chunk size of the new grid.</param>
         /// <param name="snapSize">Optional size of the snap grid</param>
         /// <returns></returns>
-        IMapGrid CreateGrid(int gridId, ushort chunkSize = 16, float snapSize = 1);
+        IMapGrid CreateGrid(GridId gridId, ushort chunkSize = 16, float snapSize = 1);
 
         /// <summary>
         ///     Checks if a grid exists with the given ID.
         /// </summary>
         /// <param name="gridId">The ID of the grid to check.</param>
         /// <returns></returns>
-        bool GridExists(int gridId);
+        bool GridExists(GridId gridId);
 
         /// <summary>
         ///     Gets the grid associated with the given grid ID. If the grid with the given ID does not exist, return null.
         /// </summary>
         /// <param name="gridId">The id of the grid to get.</param>
         /// <returns></returns>
-        IMapGrid GetGrid(int gridId);
+        IMapGrid GetGrid(GridId gridId);
 
         /// <summary>
         ///     Alias of IMapManager.GetGrid(IMapManager.DefaultGridId);
@@ -49,7 +44,7 @@ namespace SS14.Shared.Interfaces.Map
         ///     Deletes the grid associated with the given grid ID.
         /// </summary>
         /// <param name="gridId">The grid to remove.</param>
-        void RemoveGrid(int gridId);
+        void RemoveGrid(GridId gridId);
 
         /// <summary>
         ///     Finds all of the grids at this position in the world.

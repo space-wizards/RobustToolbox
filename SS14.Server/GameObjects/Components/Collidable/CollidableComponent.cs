@@ -1,14 +1,11 @@
 ﻿using System;
-using Lidgren.Network;
-using OpenTK;
-using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
+using SS14.Shared.Map;
 using SS14.Shared.Maths;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Server.GameObjects
 {
@@ -25,16 +22,16 @@ namespace SS14.Server.GameObjects
         public override uint? NetID => NetIDs.COLLIDABLE;
 
         /// <inheritdoc />
-        public int MapID => Owner.GetComponent<ITransformComponent>().MapID;
+        public MapId MapID => Owner.GetComponent<ITransformComponent>().MapID;
 
         /// <inheritdoc />
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
             switch ((ComponentMessageType)message.MessageParameters[0])
             {
                 case ComponentMessageType.Bumped:
                     //TODO check who bumped us, how far away they are, etc.
-                    var bumper = Owner.EntityManager.GetEntity((int)message.MessageParameters[1]);
+                    var bumper = Owner.EntityManager.GetEntity(new EntityUid((int)message.MessageParameters[1]));
                     if (bumper != null)
                         Owner.SendMessage(this, ComponentMessageType.Bumped, bumper);
                     break;
@@ -59,7 +56,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         void ICollidable.Bump(IEntity ent)
         {
-            OnBump?.Invoke(this, new BumpEventArgs(this.Owner, ent));
+            OnBump?.Invoke(this, new BumpEventArgs(Owner, ent));
         }
 
         /// <summary>

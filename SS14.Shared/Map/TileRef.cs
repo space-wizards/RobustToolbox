@@ -1,7 +1,6 @@
 ﻿using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using Vector2f = OpenTK.Vector2;
 
 namespace SS14.Shared.Map
 {
@@ -10,12 +9,12 @@ namespace SS14.Shared.Map
     /// </summary>
     public struct TileRef
     {
-        public readonly int MapIndex;
-        public readonly int GridIndex;
+        private readonly MapId _mapIndex;
+        private readonly GridId _gridIndex;
         private readonly Tile _tile;
         private readonly MapGrid.Indices _gridTile;
 
-        internal TileRef(int argMap, int gridIndex, int xIndex, int yIndex, Tile tile)
+        internal TileRef(MapId argMap, GridId gridIndex, int xIndex, int yIndex, Tile tile)
         {
             MapIndex = argMap;
             _gridTile = new MapGrid.Indices(xIndex, yIndex);
@@ -23,7 +22,7 @@ namespace SS14.Shared.Map
             _tile = tile;
         }
 
-        internal TileRef(int argMap, int gridIndex, MapGrid.Indices gridTile, Tile tile)
+        internal TileRef(MapId argMap, GridId gridIndex, MapGrid.Indices gridTile, Tile tile)
         {
             MapIndex = argMap;
             _gridTile = gridTile;

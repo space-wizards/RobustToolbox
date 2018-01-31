@@ -1,32 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using OpenTK;
-using SS14.Shared;
 using SS14.Shared.Maths;
-using Vector2 = SS14.Shared.Maths.Vector2;
-using SS14.Client.Graphics.Sprites;
-using System.Reflection;
+using SS14.Client.Graphics.Textures;
+using SS14.Shared.Interfaces;
+using SS14.Shared.Enums;
 using SS14.Shared.Log;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.Map;
 
 namespace SS14.Client.Graphics.Lighting
 {
     public class LightManager : ILightManager
     {
+        private const string DefaultLightMaskTex = @"Textures/Unatlased/whitemask.png";
+
         private readonly List<ILight> _lights = new List<ILight>();
         private readonly List<Type> LightModes = new List<Type>();
 
         [Dependency]
         private readonly IReflectionManager reflectionManager;
 
+        [Dependency]
+        private readonly IResourceManager _resources;
+
         public void Initialize()
         {
             LightModes.AddRange(reflectionManager.GetAllChildren<LightMode>());
+
+            if (_resources.TryContentFileRead(DefaultLightMaskTex, out var stream))
+            {
+                _defaultLightMask = new Texture(stream);
+            }
+            else
+            {
+                Logger.Error("Default light map texture could not be found!");
+            }
+
         }
 
-        public Sprite LightMask { get; set; }
+        private Texture _defaultLightMask;
 
         public void SetLightMode(LightModeClass? mode, ILight light)
         {
@@ -74,32 +87,38 @@ namespace SS14.Client.Graphics.Lighting
             return _lights.ToArray();
         }
 
-        public ILight[] LightsIntersectingRect(Box2 rect)
+        public ILight[] LightsIntersectingRect(MapId mapId, Box2 rect)
         {
+            if(rect.IsEmpty())
+                return new ILight[0];
+
             return _lights
-                .FindAll(l => Box2.FromDimensions(l.LightArea.LightPosition - l.LightArea.LightAreaSize / 2, l.LightArea.LightAreaSize).Intersects(rect))
+                .FindAll(l => l.Coordinates.MapID == mapId &&
+                Box2.FromDimensions(l.LightPosition - l.LightMapSize / 2, l.LightMapSize).Intersects(rect))
                 .ToArray();
         }
 
         public ILight CreateLight()
         {
-            return new Light();
+            var light = new Light();
+            light.Mask = _defaultLightMask;
+            return light;
         }
 
         public void RecalculateLights()
         {
             foreach (var l in _lights)
             {
-                l.LightArea.Calculated = false;
+                l.Calculated = false;
             }
         }
 
-        public void RecalculateLightsInView(Box2 rect)
+        public void RecalculateLightsInView(MapId mapId, Box2 rect)
         {
-            var lights = LightsIntersectingRect(rect);
+            var lights = LightsIntersectingRect(mapId, rect);
             foreach (var l in lights)
             {
-                l.LightArea.Calculated = false;
+                l.Calculated = false;
             }
         }
 
@@ -111,7 +130,7 @@ namespace SS14.Client.Graphics.Lighting
         public ILight[] LightsIntersectingPoint(Vector2 point)
         {
             return _lights
-                .FindAll(l => Box2.FromDimensions(l.LightArea.LightPosition - l.LightArea.LightAreaSize / 2, l.LightArea.LightAreaSize).Contains(point))
+                .FindAll(l => Box2.FromDimensions(l.LightPosition - l.LightMapSize / 2, l.LightMapSize).Contains(point))
                 .ToArray();
         }
 
@@ -120,7 +139,7 @@ namespace SS14.Client.Graphics.Lighting
             var lights = LightsIntersectingPoint(point);
             foreach (var l in lights)
             {
-                l.LightArea.Calculated = false;
+                l.Calculated = false;
             }
         }
     }

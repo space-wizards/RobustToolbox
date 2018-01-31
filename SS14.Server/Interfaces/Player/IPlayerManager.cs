@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using SS14.Server.Player;
+using SS14.Shared;
+using SS14.Shared.Enums;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
-using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
-using SS14.Shared.ServerEnums;
 
 namespace SS14.Server.Interfaces.Player
 {
@@ -13,18 +15,27 @@ namespace SS14.Server.Interfaces.Player
     /// </summary>
     public interface IPlayerManager
     {
-        //TODO: What is this? Should it be in BaseServer?
-        RunLevel RunLevel { get; set; }
-
         /// <summary>
         ///     Number of players currently connected to this server.
         /// </summary>
         int PlayerCount { get; }
 
+        string PlayerPrototypeName { get; set; }
+
         /// <summary>
         ///     Maximum number of players that can connect to this server at one time.
         /// </summary>
         int MaxPlayers { get; }
+
+        /// <summary>
+        ///     Fallback spawn point to use if map does not provide it.
+        /// </summary>
+        LocalCoordinates FallbackSpawnPoint { get; set; }
+
+        /// <summary>
+        ///     Raised when the <see cref="SessionStatus"/> of a <see cref="IPlayerSession"/> is changed.
+        /// </summary>
+        event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
 
         /// <summary>
         ///     Initializes the manager.
@@ -37,16 +48,17 @@ namespace SS14.Server.Interfaces.Player
 
         IPlayerSession GetSessionByChannel(INetChannel channel);
 
+        /// <summary>
+        ///     Checks to see if a PlayerIndex is a valid session.
+        /// </summary>
+        bool ValidSessionId(PlayerIndex index);
+
         //TODO: Move to IPlayerSession
         void SpawnPlayerMob(IPlayerSession session);
-
-        //TODO: These go in BaseServer
+        
         void SendJoinGameToAll();
         void SendJoinLobbyToAll();
-
-        //TODO: Use new networking system.
-        void HandleNetworkMessage(MsgSession msg);
-
+        
         void DetachAll();
         List<IPlayerSession> GetPlayersInLobby();
         List<IPlayerSession> GetPlayersInRange(LocalCoordinates worldPos, int range);

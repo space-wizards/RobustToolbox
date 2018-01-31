@@ -1,9 +1,6 @@
 ﻿using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Interfaces.Round;
-using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
 {
@@ -28,11 +25,6 @@ namespace SS14.Server.GameObjects
                     break;
                 case ComponentMessageType.GetActorSession:
                     reply = new ComponentReplyMessage(ComponentMessageType.ReturnActorSession, playerSession);
-                    break;
-                case ComponentMessageType.Die:
-                    playerSession.AddPostProcessingEffect(PostProcessingEffectType.Death, -1);
-                    IoCManager.Resolve<IRoundManager>().CurrentGameMode.PlayerDied(playerSession);
-                    // Tell the current game mode a player just died
                     break;
             }
 

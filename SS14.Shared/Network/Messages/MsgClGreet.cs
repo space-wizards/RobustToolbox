@@ -7,11 +7,9 @@ namespace SS14.Shared.Network.Messages
     public class MsgClGreet : NetMessage
     {
         #region REQUIRED
-        public const NetMessages ID = NetMessages.ClientName;
         public const MsgGroups GROUP = MsgGroups.Core;
-
-        public static readonly string NAME = ID.ToString();
-        public MsgClGreet(INetChannel channel) : base(NAME, GROUP, ID) { }
+        public static readonly string NAME = nameof(MsgClGreet);
+        public MsgClGreet(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
 
         public string PlyName { get; set; }

@@ -4,6 +4,7 @@ using SS14.Shared.GameObjects.System;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Enums;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {

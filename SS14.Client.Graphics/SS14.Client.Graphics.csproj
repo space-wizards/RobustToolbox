@@ -54,9 +54,6 @@
     <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.CSharp">
-      <Name>Microsoft.CSharp</Name>
-    </Reference>
     <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
     </Reference>
@@ -83,7 +80,6 @@
     <Compile Include="Lighting\ILight.cs" />
     <Compile Include="Lighting\ILightArea.cs" />
     <Compile Include="Lighting\ILightManager.cs" />
-    <Compile Include="Lighting\LightArea.cs" />
     <Compile Include="Lighting\LightManager.cs" />
     <Compile Include="Lighting\LightMode.cs" />
     <Compile Include="Lighting\Light.cs" />

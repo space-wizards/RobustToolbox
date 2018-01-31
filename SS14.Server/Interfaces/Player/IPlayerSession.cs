@@ -1,16 +1,17 @@
 ﻿using System;
-using SS14.Shared;
+using SS14.Server.Player;
+using SS14.Shared.Enums;
+using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
 
 namespace SS14.Server.Interfaces.Player
 {
     public interface IPlayerSession
     {
-        IEntity attachedEntity { get; }
-        int? AttachedEntityUid { get; }
+        IEntity AttachedEntity { get; }
+        EntityUid? AttachedEntityUid { get; }
         string Name { get; set; }
         SessionStatus Status { get; set; }
         INetChannel ConnectedClient { get; }
@@ -18,15 +19,15 @@ namespace SS14.Server.Interfaces.Player
 
         PlayerIndex Index { get; }
 
+        event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
+
         void JoinLobby();
         void JoinGame();
 
         void SetName(string name);
 
         void AttachToEntity(IEntity a);
-
-        void HandleNetworkMessage(MsgSession message);
-
+        
         void DetachFromEntity();
         void OnConnect();
         void OnDisconnect();

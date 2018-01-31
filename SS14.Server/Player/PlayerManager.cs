@@ -1,28 +1,20 @@
 ﻿using System;
-using OpenTK;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
-using SS14.Shared;
-using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
-using SS14.Shared.Maths;
-using SS14.Shared.Prototypes;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Map;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
-using SS14.Shared.ServerEnums;
-using SS14.Shared.Utility;
-using SS14.Shared.Map;
 using SS14.Shared.Players;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Server.Player
 {
@@ -34,9 +26,11 @@ namespace SS14.Server.Player
         /// <summary>
         /// The server that instantiated this manager.
         /// </summary>
-        public IBaseServer Server { get; set; }
+        private IBaseServer _server;
 
         public string PlayerPrototypeName { get; set; } = "__engine_human";
+
+        public LocalCoordinates FallbackSpawnPoint { get; set; }
 
         /// <summary>
         ///     Number of active sessions.
@@ -53,35 +47,34 @@ namespace SS14.Server.Player
         private readonly IServerEntityManager _entityManager;
 
         [Dependency]
-        private readonly IPrototypeManager _prototypeManager;
+        private readonly IServerNetManager _network;
         
+        /// <inheritdoc />
         public int PlayerCount => _sessionCount;
+
+        /// <inheritdoc />
         public int MaxPlayers => _sessions.Length;
 
+        /// <inheritdoc />
+        public event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
+
+        /// <inheritdoc />
         public void Initialize(BaseServer server, int maxPlayers)
         {
-            Server = server;
-            Server.OnRunLevelChanged += RunLevelChanged;
+            _server = server;
             
             _sessions = new PlayerSession[maxPlayers];
 
-            var netMan = IoCManager.Resolve<IServerNetManager>();
+            _network.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, message => HandleClientGreet((MsgClGreet)message));
 
-            netMan.Connecting += OnConnecting;
-            netMan.Connected += NewSession;
-            netMan.Disconnect += EndSession;
+            _network.Connecting += OnConnecting;
+            _network.Connected += NewSession;
+            _network.Disconnect += EndSession;
         }
-
-        private void RunLevelChanged(RunLevel oldLevel, RunLevel newLevel)
-        {
-            RunLevel = newLevel;
-        }
-
-        #region IPlayerManager Members
 
         private void OnConnecting(object sender, NetConnectingArgs args)
         {
-            if (PlayerCount >= Server.MaxPlayers)
+            if (PlayerCount >= _server.MaxPlayers)
                 args.Deny = true;
         }
 
@@ -100,9 +93,16 @@ namespace SS14.Server.Player
             var index = new PlayerIndex(pos);
             var session = new PlayerSession(this, args.Channel, index);
 
+            session.PlayerStatusChanged += (obj, sessionArgs) => OnPlayerStatusChanged(session, sessionArgs.OldStatus, sessionArgs.NewStatus);
+
             Debug.Assert(_sessions[pos] == null);
             _sessionCount++;
             _sessions[pos] = session;
+        }
+
+        private void OnPlayerStatusChanged(IPlayerSession session, SessionStatus oldStatus, SessionStatus newStatus)
+        {
+            PlayerStatusChanged?.Invoke(this, new SessionStatusEventArgs(session, oldStatus, newStatus));
         }
 
         /// <summary>
@@ -111,20 +111,20 @@ namespace SS14.Server.Player
         /// <param name="session"></param>
         public void SpawnPlayerMob(IPlayerSession session)
         {
-            IEntity entity = _entityManager.ForceSpawnEntityAt(PlayerPrototypeName, new Vector2(0, 0), 1); //TODO: Fix this
+            IEntity entity = _entityManager.ForceSpawnEntityAt(PlayerPrototypeName, FallbackSpawnPoint);
             session.AttachToEntity(entity);
         }
 
         public IPlayerSession GetSessionByChannel(INetChannel client)
         {
             // Should only be one session per client. Returns that session, in theory.
-            return _sessions.FirstOrDefault(s => s.ConnectedClient == client);
+            return _sessions.FirstOrDefault(s => s?.ConnectedClient == client);
         }
 
         /// <summary>
         /// Returns the client session of the networkId.
         /// </summary>
-        /// <param name="networkId">The network id of the client.</param>
+        /// <param name="index">The id of the client.</param>
         /// <returns></returns>
         public IPlayerSession GetSessionById(PlayerIndex index)
         {
@@ -132,15 +132,9 @@ namespace SS14.Server.Player
             return _sessions[index];
         }
 
-        public RunLevel RunLevel { get; set; }
-
-        /// <summary>
-        /// Processes an incoming network message.
-        /// </summary>
-        /// <param name="msg">Incoming message.</param>
-        public void HandleNetworkMessage(MsgSession msg)
+        public bool ValidSessionId(PlayerIndex index)
         {
-            GetSessionByChannel(msg.MsgChannel)?.HandleNetworkMessage(msg);
+            return _sessions[index] != null;
         }
 
         /// <summary>
@@ -206,8 +200,8 @@ namespace SS14.Server.Player
             //TODO: This needs to be moved to the PVS system.
             return
                 _sessions.Where(x => x != null &&
-                    x.attachedEntity != null &&
-                    position.InRange(x.attachedEntity.GetComponent<ITransformComponent>().LocalPosition, range))
+                    x.AttachedEntity != null &&
+                    position.InRange(x.AttachedEntity.GetComponent<ITransformComponent>().LocalPosition, range))
                     .Cast<IPlayerSession>()
                     .ToList();
         }
@@ -264,6 +258,28 @@ namespace SS14.Server.Player
             return -1;
         }
 
-        #endregion IPlayerManager Members
+        private void HandleClientGreet(MsgClGreet msg)
+        {
+            var p = GetSessionByChannel(msg.MsgChannel);
+
+            var fixedName = msg.PlyName.Trim();
+            if (fixedName.Length < 3)
+                fixedName = $"Player {p.Index}";
+
+            p.SetName(fixedName);
+        }
+    }
+    public class SessionStatusEventArgs : EventArgs
+    {
+        public IPlayerSession Session { get; }
+        public SessionStatus OldStatus { get; }
+        public SessionStatus NewStatus { get; }
+
+        public SessionStatusEventArgs(IPlayerSession session, SessionStatus oldStatus, SessionStatus newStatus)
+        {
+            Session = session;
+            OldStatus = oldStatus;
+            NewStatus = newStatus;
+        }
     }
 }

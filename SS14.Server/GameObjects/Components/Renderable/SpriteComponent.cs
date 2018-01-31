@@ -1,10 +1,12 @@
-﻿using Lidgren.Network;
-using SS14.Server.Interfaces.GameObjects;
+﻿using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.IoC;
 using System.Collections.Generic;
-using System; //TODO: Remove this when all NotImplementedExceptions are dealt with
+using System;
+using SS14.Shared.Maths;
+using SS14.Shared.Utility;
+using YamlDotNet.RepresentationModel;
+
 
 namespace SS14.Server.GameObjects
 {
@@ -12,53 +14,24 @@ namespace SS14.Server.GameObjects
     {
         public override string Name => "Sprite";
         public override uint? NetID => NetIDs.SPRITE;
-        protected IRenderableComponent master;
-        protected List<IRenderableComponent> slaves;
+        private IRenderableComponent _master;
+        private readonly List<IRenderableComponent> _slaves;
         private string _currentBaseName;
         private string _currentSpriteKey;
-        private DrawDepth _drawDepth = DrawDepth.FloorTiles;
-        private bool visible = true;
 
         public SpriteComponent()
         {
-            slaves = new List<IRenderableComponent>();
+            _slaves = new List<IRenderableComponent>();
         }
 
-        public DrawDepth drawDepth
-        {
-            get { return _drawDepth; }
+        /// <summary>
+        ///     Offsets the sprite from the entity origin by this many meters.
+        /// </summary>
+        public Vector2 Offset { get; set; }
+        
+        public DrawDepth DrawDepth { get; set; } = DrawDepth.FloorTiles;
 
-            set
-            {
-                if (value != _drawDepth)
-                {
-                    _drawDepth = value;
-                    SendDrawDepth(null);
-                }
-            }
-        }
-
-        public bool Visible
-        {
-            get { return visible; }
-
-            set
-            {
-                if (value == visible) return;
-                visible = value;
-                SendVisible(null);
-            }
-        }
-
-        private void SendVisible(NetConnection connection)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void SendDrawDepth(NetConnection connection)
-        {
-            throw new NotImplementedException();
-        }
+        public bool Visible { get; set; } = true;
 
         public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
@@ -85,15 +58,25 @@ namespace SS14.Server.GameObjects
 
             return reply;
         }
+        
+        public override void LoadParameters(YamlMappingNode mapping)
+        {
+            base.LoadParameters(mapping);
+            
+            if (mapping.TryGetNode("offset", out var node))
+            {
+                Offset = node.AsVector2();
+            }
+        }
 
         public override ComponentState GetComponentState()
         {
-            return new SpriteComponentState(Visible, drawDepth, _currentSpriteKey, _currentBaseName);
+            return new SpriteComponentState(Visible, DrawDepth, _currentSpriteKey, _currentBaseName, Offset);
         }
 
         public bool IsSlaved()
         {
-            return master != null;
+            return _master != null;
         }
 
         public void SetMaster(IEntity m)
@@ -106,26 +89,26 @@ namespace SS14.Server.GameObjects
                 return;
 
             mastercompo.AddSlave(this);
-            master = mastercompo;
+            _master = mastercompo;
         }
 
         public void UnsetMaster()
         {
-            if (master == null)
+            if (_master == null)
                 return;
-            master.RemoveSlave(this);
-            master = null;
+            _master.RemoveSlave(this);
+            _master = null;
         }
 
         public void AddSlave(IRenderableComponent slavecompo)
         {
-            slaves.Add(slavecompo);
+            _slaves.Add(slavecompo);
         }
 
         public void RemoveSlave(IRenderableComponent slavecompo)
         {
-            if (slaves.Contains(slavecompo))
-                slaves.Remove(slavecompo);
+            if (_slaves.Contains(slavecompo))
+                _slaves.Remove(slavecompo);
         }
     }
 }

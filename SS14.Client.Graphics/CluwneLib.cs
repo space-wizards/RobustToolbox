@@ -1,5 +1,4 @@
-﻿using OpenTK;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics.Input;
@@ -14,8 +13,6 @@ using SS14.Shared.Maths;
 using SS14.Shared.Timing;
 using System;
 using Color = SS14.Shared.Maths.Color;
-using GraphicsContext = OpenTK.Graphics.GraphicsContext;
-using Vector2 = SS14.Shared.Maths.Vector2;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using VideoMode = SS14.Client.Graphics.Render.VideoMode;
 using Font = SS14.Client.Graphics.Sprites.Font;
@@ -127,19 +124,9 @@ namespace SS14.Client.Graphics
             var wind = new RenderWindow(video.GetVideoMode().SFMLVideoMode, "Developer Station 14", video.GetWindowStyle());
             Window = new CluwneWindow(wind, video);
             Window.Graphics.SetVerticalSyncEnabled(true);
-            Window.Graphics.SetFramerateLimit(300);
 
             renderTargetArray = new IRenderTarget[5];
-            //Window.Viewport = new Viewport(0, 0, 800, 600);
             IsInitialized = true;
-
-            //Hook OpenTK into SFMLs Opengl
-            OpenTK.Toolkit.Init(new OpenTK.ToolkitOptions
-            {
-                // Non-Native backend doesn't have a default GetAddress method
-                Backend = OpenTK.PlatformBackend.PreferNative
-            });
-            new GraphicsContext(OpenTK.ContextHandle.Zero, null);
         }
 
         public static void ClearCurrentRendertarget(Color color)
@@ -155,7 +142,7 @@ namespace SS14.Client.Graphics
 
         public static void RunIdle(object sender, FrameEventArgs e)
         {
-            FrameEvent?.Invoke(sender, e);
+            FrameEvent?.Invoke(null, e);
         }
 
         public static void Stop()
@@ -435,9 +422,11 @@ namespace SS14.Client.Graphics
         /// </summary>
         public static LocalCoordinates ScreenToCoordinates(ScreenCoordinates point)
         {
+            // world pos in current map
             var pos = (point.Position - Window.Viewport.Size / 2) / Camera.PixelsPerMeter + Camera.Position;
-            var grid = IoCManager.Resolve<IMapManager>().GetMap(point.MapID).FindGridAt(pos);
-            return new LocalCoordinates(pos, grid);
+
+            // world coords on map
+            return new LocalCoordinates(pos, GridId.DefaultGrid, point.MapID);
         }
 
         /// <summary>
@@ -455,7 +444,7 @@ namespace SS14.Client.Graphics
         /// <summary>
         /// Transforms a point from the screen (pixel) space, to world (tile) space.
         /// </summary>
-        public static LocalCoordinates ScreenToWorld(Vector2i point, int argMap)
+        public static LocalCoordinates ScreenToWorld(Vector2i point, MapId argMap)
         {
             var pos = ((Vector2)point - Window.Viewport.Size / 2) / Camera.PixelsPerMeter + Camera.Position;
             var grid = IoCManager.Resolve<IMapManager>().GetMap(argMap).FindGridAt(pos);
@@ -465,7 +454,7 @@ namespace SS14.Client.Graphics
         /// <summary>
         /// Scales a vector from pixel coordinates to tile coordinates.
         /// </summary>
-        /// <param name="size"></param>
+        /// <param name="vec"></param>
         /// <returns></returns>
         public static Vector2 PixelToTile(Vector2 vec)
         {

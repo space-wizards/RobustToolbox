@@ -32,7 +32,10 @@ namespace SS14.Shared.GameObjects
 
         private IEnumerable<IComponent> GetComponents(Type type)
         {
-            return _components[type].Where(c => !c.Deleted);
+            if (_components.TryGetValue(type, out var compList))
+                return compList.Where(c => !c.Deleted);
+
+            return Enumerable.Empty<IComponent>();
         }
 
         public IEnumerable<T> GetComponents<T>() where T : IComponent

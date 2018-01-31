@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
 
@@ -11,11 +7,9 @@ namespace SS14.Shared.Network.Messages
     public class MsgConCmdReg : NetMessage
     {
         #region REQUIRED
-        public const NetMessages ID = NetMessages.ConsoleCommandRegister;
         public const MsgGroups GROUP = MsgGroups.String;
-
-        public static readonly string NAME = ID.ToString();
-        public MsgConCmdReg(INetChannel channel) : base(NAME, GROUP, ID) { }
+        public static readonly string NAME = nameof(MsgConCmdReg);
+        public MsgConCmdReg(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
 
         public Command[] Commands { get; set; }

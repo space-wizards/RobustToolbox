@@ -1,11 +1,9 @@
 ﻿using System;
-using OpenTK;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
-using SS14.Client.Graphics.Textures;
 using SS14.Shared.Maths;
-using Vector2 = SS14.Shared.Maths.Vector2;
 using System.Collections.Generic;
+using SS14.Client.Graphics.Sprites;
 
 namespace SS14.Client.Graphics.Lighting
 {
@@ -73,25 +71,37 @@ namespace SS14.Client.Graphics.Lighting
                 ImageBufferFormats.BufferRGB888A8);
         }
 
-        public void ResolveShadows(LightArea Area, bool attenuateShadows, Texture mask = null)
+        public void ResolveShadows(ILight light, bool attenuateShadows)
         {
-            var Result = Area.RenderTarget;
-            var MaskTexture = mask ?? Area.Mask.Texture;
+            var lightRt = light.RenderTarget;
+            var lightMask = light.Mask;
+            var maskSize = lightMask.Size;
             var MaskProps = Vector4.Zero;
             var diffuseColor = Vector4.One;
 
-            ExecuteTechnique(Area.RenderTarget, distancesRT, "ComputeDistances");
-            ExecuteTechnique(distancesRT, distortRT, "Distort");
+            ExecuteTechnique(light.RenderTarget, distancesRT, "ComputeDistances", null);
+            ExecuteTechnique(distancesRT, distortRT, "Distort", null);
 
             // Working now
             ApplyHorizontalReduction(distortRT, shadowMap);
+
+            lightRt.BeginDrawing();
+            {
+                //clear lightRT
+                lightRt.Clear(Color.Black);
+
+                // draw light mask onto lightRT
+                var sprite = new Sprite(lightMask);
+                sprite.Scale = new Vector2((float)lightRt.Width / maskSize.X, (float)lightRt.Height / maskSize.Y);
+                lightRt.Draw(sprite);
+            }
+            lightRt.EndDrawing();
 
             //only DrawShadows needs these vars
             resolveShadowsEffectTechnique["DrawShadows"].SetUniform("AttenuateShadows", attenuateShadows ? 0 : 1);
             resolveShadowsEffectTechnique["DrawShadows"].SetUniform("MaskProps", MaskProps);
             resolveShadowsEffectTechnique["DrawShadows"].SetUniform("DiffuseColor", diffuseColor);
-
-            var maskSize = MaskTexture.Size;
+            
             // I have TRIED to get this to work without this blank one.
             // I give the hell up.
             // I'll just cache them so they're not being recreated constantly.
@@ -100,7 +110,7 @@ namespace SS14.Client.Graphics.Lighting
                 MaskTarget = new RenderImage("MaskTarget", maskSize.X, maskSize.Y);
                 BlankRenderImages[maskSize] = MaskTarget;
             }
-            ExecuteTechnique(MaskTarget, Result, "DrawShadows", shadowMap);
+            ExecuteTechnique(MaskTarget, lightRt, "DrawShadows", shadowMap);
 
             resolveShadowsEffectTechnique["DrawShadows"].ResetCurrentShader();
         }
@@ -113,18 +123,15 @@ namespace SS14.Client.Graphics.Lighting
             dst.EndDrawing();
         }
 
-        private void ExecuteTechnique(RenderImage source, RenderImage destination, string techniqueName)
-        {
-            ExecuteTechnique(source, destination, techniqueName, null);
-        }
-
         private void ExecuteTechnique(RenderImage source, RenderImage destinationTarget, string techniqueName, RenderImage shadowMap)
         {
             Vector2 renderTargetSize;
             renderTargetSize = new Vector2(baseSize, baseSize);
 
             destinationTarget.BeginDrawing();
-            destinationTarget.Clear(Color.White);
+
+            if(shadowMap == null)
+                destinationTarget.Clear(Color.White);
 
             resolveShadowsEffectTechnique[techniqueName].setAsCurrentShader();
 

@@ -1,4 +1,4 @@
-﻿using OpenTK;
+﻿using SS14.Shared.Maths;
 
 namespace SS14.Shared.Physics
 {

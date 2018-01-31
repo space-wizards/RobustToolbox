@@ -1,5 +1,6 @@
-﻿using OpenTK;
-using SS14.Shared.Interfaces.GameObjects;
+﻿using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Map;
+using SS14.Shared.Maths;
 
 namespace SS14.Shared.Interfaces.Physics
 {
@@ -28,6 +29,6 @@ namespace SS14.Shared.Interfaces.Physics
         /// <summary>
         ///     The map index this collidable is located upon
         /// </summary>
-        int MapID { get; }
+        MapId MapID { get; }
     }
 }

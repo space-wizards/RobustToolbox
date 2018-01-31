@@ -1,4 +1,5 @@
-﻿using SS14.Shared.Maths;
+﻿using SS14.Shared.Map;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics.Views
 {
@@ -6,5 +7,6 @@ namespace SS14.Client.Graphics.Views
     {
         public int PixelsPerMeter { get; } = 32;
         public Vector2 Position { get; set; }
+        public MapId CurrentMap { get; set; }
     }
 }

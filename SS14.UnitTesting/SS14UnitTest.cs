@@ -12,14 +12,12 @@ using SS14.Server.Interfaces.Log;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Interfaces.Round;
 using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Log;
 using SS14.Server.Maps;
 using SS14.Server.Placement;
 using SS14.Server.Player;
 using SS14.Server.Reflection;
-using SS14.Server.Round;
 using SS14.Server.ServerConsole;
 using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
@@ -32,7 +30,7 @@ using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Serialization;
-using SS14.Shared.Interfaces.Timing;
+using SS14.Shared.Interfaces.Timers;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Network;
@@ -43,6 +41,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Windows.Forms;
+using SS14.Shared.Interfaces.Physics;
+using SS14.Shared.Interfaces.Timing;
+using SS14.Shared.Physics;
+using SS14.Shared.Timers;
+using SS14.Shared.Maths;
 
 namespace SS14.UnitTesting
 {
@@ -158,6 +162,7 @@ namespace SS14.UnitTesting
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IGameTiming, GameTiming>();
             IoCManager.Register<IResourceManager, ResourceManager>();
+            IoCManager.Register<ITimerManager, TimerManager>();
 
             switch (Project)
             {
@@ -198,7 +203,6 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IPlacementManager, PlacementManager>();
                     IoCManager.Register<IConsoleManager, ConsoleManager>();
                     IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
-                    IoCManager.Register<IRoundManager, RoundManager>();
                     IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();
                     IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
                     IoCManager.Register<IGameStateManager, GameStateManager>();
@@ -270,7 +274,7 @@ namespace SS14.UnitTesting
                 var lastFrameTime = GetClock.ElapsedTimeAsSeconds();
                 GetClock.Restart();
                 frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(Color4.Black);
+                CluwneLib.ClearCurrentRendertarget(Color.Black);
                 CluwneLib.Window.DispatchEvents();
                 InjectedMethod();
                 CluwneLib.Window.Graphics.Display();

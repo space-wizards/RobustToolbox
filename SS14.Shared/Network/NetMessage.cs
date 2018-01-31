@@ -48,12 +48,7 @@ namespace SS14.Shared.Network
         /// The group this message type belongs to.
         /// </summary>
         public MsgGroups MsgGroup { get; }
-
-        /// <summary>
-        /// Legacy enum ID for this message.
-        /// </summary>
-        public NetMessages MsgId { get; }
-
+        
         /// <summary>
         /// The channel that this message came in on.
         /// </summary>
@@ -64,12 +59,10 @@ namespace SS14.Shared.Network
         /// </summary>
         /// <param name="name">String identifier of the message type.</param>
         /// <param name="group">The group this message type belongs to.</param>
-        /// <param name="id">Legacy enum ID for this message.</param>
-        internal NetMessage(string name, MsgGroups group, NetMessages id)
+        internal NetMessage(string name, MsgGroups group)
         {
             MsgName = name;
             MsgGroup = group;
-            MsgId = id;
         }
 
         /// <summary>

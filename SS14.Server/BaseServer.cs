@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Lidgren.Network;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
@@ -13,9 +12,7 @@ using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Log;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Interfaces.Round;
 using SS14.Server.Interfaces.ServerConsole;
-using SS14.Server.Round;
 using SS14.Shared;
 using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
@@ -27,31 +24,18 @@ using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Interfaces.Timing;
+using SS14.Shared.Interfaces.Timers;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
-using SS14.Shared.ServerEnums;
 using SS14.Shared.Map;
 using SS14.Server.Interfaces.Maps;
-using SS14.Shared.Console;
+using SS14.Shared.Enums;
 
 namespace SS14.Server
 {
-    /// <summary>
-    /// Event delegate for when the run level of the BaseServer changes.
-    /// </summary>
-    /// <param name="oldLevel">Previous level.</param>
-    /// <param name="newLevel">Net Level.</param>
-    public delegate void EventRunLevelChanged(RunLevel oldLevel, RunLevel newLevel);
-
-    /// <summary>
-    /// Event delegate for when the server ticks.
-    /// </summary>
-    /// <param name="curTick">Current tick the server is at.</param>
-    public delegate void EventTick(int curTick);
-
     /// <summary>
     /// The master class that runs the rest of the engine.
     /// </summary>
@@ -66,37 +50,32 @@ namespace SS14.Server
         [Dependency]
         private readonly IServerEntityManager _entities;
         [Dependency]
-        private readonly IServerLogManager _logman;
+        private readonly IServerLogManager _log;
         [Dependency]
-        private readonly ISS14Serializer Serializer;
+        private readonly ISS14Serializer _serializer;
         [Dependency]
         private readonly IGameTiming _time;
         [Dependency]
         private readonly IResourceManager _resources;
         [Dependency]
-        private readonly IMapLoader mapLoader;
+        private readonly IMapLoader _mapLoader;
         [Dependency]
-        private readonly IMapManager mapManager;
+        private readonly IMapManager _mapManager;
+        [Dependency]
+        private readonly ITimerManager timerManager;
 
-        private const int GAME_COUNTDOWN = 15;
-
-        private RunLevel _runLevel;
         private bool _active;
-        private int _lastAnnounced;
-        private DateTime _startAt;
+        private ServerRunLevel _runLevel;
 
         private TimeSpan _lastTitleUpdate;
         private int _lastReceivedBytes;
         private int _lastSentBytes;
 
-        private RunLevel Level
+        /// <inheritdoc />
+        public ServerRunLevel RunLevel
         {
             get => _runLevel;
-            set
-            {
-                IoCManager.Resolve<IPlayerManager>().RunLevel = value;
-                _runLevel = value;
-            }
+            set => OnRunLevelChanged(value);
         }
 
         /// <inheritdoc />
@@ -112,7 +91,10 @@ namespace SS14.Server
         public string Motd => _config.GetCVar<string>("game.welcomemsg");
 
         /// <inheritdoc />
-        public event EventRunLevelChanged OnRunLevelChanged;
+        public string GameModeName { get; set; } = string.Empty;
+
+        /// <inheritdoc />
+        public event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
 
         /// <inheritdoc />
         public void Restart()
@@ -122,7 +104,6 @@ namespace SS14.Server
             IoCManager.Resolve<IPlayerManager>().SendJoinLobbyToAll();
             SendGameStateUpdate();
             DisposeForRestart();
-            StartLobby();
         }
 
         /// <inheritdoc />
@@ -138,7 +119,7 @@ namespace SS14.Server
         /// <inheritdoc />
         public void SaveGame()
         {
-            mapLoader.Save(PathHelpers.ExecutableRelativeFile(Path.Combine("Resources", MapName)), mapManager.GetMap(1));
+            _mapLoader.Save(PathHelpers.ExecutableRelativeFile(Path.Combine("Resources", MapName)), _mapManager.GetMap(new MapId(1)));
         }
 
         /// <inheritdoc />
@@ -162,10 +143,11 @@ namespace SS14.Server
 
             // Create log directory if it does not exist yet.
             Directory.CreateDirectory(Path.GetDirectoryName(logPath));
-            _logman.CurrentLevel = _config.GetCVar<LogLevel>("log.level");
-            _logman.LogPath = logPath;
 
-            Level = RunLevel.Init;
+            _log.CurrentLevel = _config.GetCVar<LogLevel>("log.level");
+            _log.LogPath = logPath;
+
+            OnRunLevelChanged(ServerRunLevel.Init);
 
             LoadSettings();
 
@@ -188,24 +170,18 @@ namespace SS14.Server
             }
 
             //TODO: After the client gets migrated to new net system, hardcoded IDs will be removed, and these need to be put in their respective modules.
-            netMan.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, (int)MsgClGreet.ID, message => HandleClientGreet((MsgClGreet)message));
-            netMan.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, (int)MsgServerInfoReq.ID, HandleWelcomeMessageReq);
-            netMan.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int)MsgServerInfo.ID, HandleErrorMessage);
-            netMan.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int)MsgPlayerListReq.ID, HandlePlayerListReq);
-            netMan.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int)MsgPlayerList.ID, HandleErrorMessage);
+            netMan.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, HandleWelcomeMessageReq);
+            netMan.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME);
+            netMan.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, HandlePlayerListReq);
+            netMan.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME);
 
-            netMan.RegisterNetMessage<MsgSession>(MsgSession.NAME, (int)MsgSession.ID, message => IoCManager.Resolve<IPlayerManager>().HandleNetworkMessage((MsgSession)message));
+            netMan.RegisterNetMessage<MsgSession>(MsgSession.NAME);
 
-            netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, (int)MsgMapReq.ID, message => SendMap(message.MsgChannel));
+            netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, message => SendMap(message.MsgChannel));
 
-            netMan.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, (int)MsgPlacement.ID, message => IoCManager.Resolve<IPlacementManager>().HandleNetMessage((MsgPlacement)message));
-            netMan.RegisterNetMessage<MsgUi>(MsgUi.NAME, (int)MsgUi.ID, HandleErrorMessage);
-
-            netMan.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => _entities.HandleEntityNetworkMessage((MsgEntity)message));
-            netMan.RegisterNetMessage<MsgAdmin>(MsgAdmin.NAME, (int)MsgAdmin.ID, message => HandleAdminMessage((MsgAdmin)message));
-            netMan.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, (int)MsgStateUpdate.ID, message => HandleErrorMessage(message));
-            netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, (int)MsgStateAck.ID, message => HandleStateAck((MsgStateAck)message));
-            netMan.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, (int)MsgFullState.ID, message => HandleErrorMessage(message));
+            netMan.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME);
+            netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, message => HandleStateAck((MsgStateAck)message));
+            netMan.RegisterNetMessage<MsgFullState>(MsgFullState.NAME);
 
             // Set up the VFS
             _resources.Initialize();
@@ -224,18 +200,26 @@ namespace SS14.Server
             //mount the default game ContentPack defined in config
             // _resources.MountDefaultContentPack();
 
-            LoadContentAssembly<GameShared>("Shared");
-            LoadContentAssembly<GameServer>("Server");
+            //identical code in game controller for client
+            if(!TryLoadAssembly<GameShared>($"Content.Shared"))
+                if(!TryLoadAssembly<GameShared>($"Sandbox.Shared"))
+                    Logger.Warning($"[ENG] Could not load any Shared DLL.");
+
+            if (!TryLoadAssembly<GameServer>($"Content.Server"))
+                if (!TryLoadAssembly<GameServer>($"Sandbox.Server"))
+                    Logger.Warning($"[ENG] Could not load any Server DLL.");
 
             // HAS to happen after content gets loaded.
             // Else the content types won't be included.
             // TODO: solve this properly.
-            Serializer.Initialize();
+            _serializer.Initialize();
 
             // Initialize Tier 2 services
+            IoCManager.Resolve<IEntityManager>().Initialize();
             IoCManager.Resolve<IChatManager>().Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(this, MaxPlayers);
             IoCManager.Resolve<IMapManager>().Initialize();
+            IoCManager.Resolve<IPlacementManager>().Initialize();
 
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
@@ -251,33 +235,33 @@ namespace SS14.Server
             var consoleManager = IoCManager.Resolve<IConsoleManager>();
             consoleManager.Initialize();
 
-            IoCManager.Resolve<ITileDefinitionManager>().Initialize();
-
-            StartLobby();
-            StartGame();
+            OnRunLevelChanged(ServerRunLevel.PreGame);
 
             _active = true;
             return false;
         }
 
-        private void LoadContentAssembly<T>(string name) where T : GameShared
+        //identical code in gamecontroller for client
+        private bool TryLoadAssembly<T>(string name) where T : GameShared
         {
             // get the assembly from the file system
-            if (_resources.TryContentFileRead($@"Assemblies/Content.{name}.dll", out MemoryStream gameDll))
+            if (_resources.TryContentFileRead($@"Assemblies/{name}.dll", out MemoryStream gameDll))
             {
-                Logger.Debug($"[SRV] Loading {name} Content DLL");
+                Logger.Debug($"[SRV] Loading {name} DLL");
 
                 // see if debug info is present
-                if (_resources.TryContentFileRead($@"Assemblies/Content.{name}.pdb", out MemoryStream gamePdb))
+                if (_resources.TryContentFileRead($@"Assemblies/{name}.pdb", out MemoryStream gamePdb))
                 {
                     try
                     {
                         // load the assembly into the process, and bootstrap the GameServer entry point.
                         AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray(), gamePdb.ToArray());
+                        return true;
                     }
                     catch (Exception e)
                     {
-                        Logger.Error($"[SRV] Exception loading DLL Content.{name}.dll: {e}");
+                        Logger.Error($"[SRV] Exception loading DLL {name}.dll: {e}");
+                        return false;
                     }
                 }
                 else
@@ -286,18 +270,22 @@ namespace SS14.Server
                     {
                         // load the assembly into the process, and bootstrap the GameServer entry point.
                         AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray());
+                        return true;
                     }
                     catch (Exception e)
                     {
-                        Logger.Error($"[SRV] Exception loading DLL Content.{name}.dll: {e}");
+                        Logger.Error($"[SRV] Exception loading DLL {name}.dll: {e}");
+                        return false;
                     }
                 }
             }
             else
             {
-                Logger.Warning($"[ENG] Could not find {name} Content DLL");
+                Logger.Warning($"[ENG] Could not load {name} DLL.");
+                return false;
             }
         }
+
 
         private TimeSpan _lastTick;
         private TimeSpan _lastKeepUpAnnounce;
@@ -333,6 +321,9 @@ namespace SS14.Server
                         _lastKeepUpAnnounce = _time.RealTime;
                     }
                 }
+
+                // process the CLI console of the program
+                IoCManager.Resolve<IConsoleManager>().Update();
 
                 _time.InSimulation = true;
 
@@ -403,102 +394,35 @@ namespace SS14.Server
         }
 
         /// <summary>
-        ///     Controls what modules are running.
+        ///     Switches the run level of the BaseServer to the desired value.
         /// </summary>
-        /// <param name="runLevel"></param>
-        private void InitModules(RunLevel runLevel = RunLevel.Lobby)
+        private void OnRunLevelChanged(ServerRunLevel level)
         {
-            if (runLevel == Level)
+            if (level == _runLevel)
                 return;
 
-            var oldLevel = Level;
-            Level = runLevel;
-            OnRunLevelChanged?.Invoke(oldLevel, Level);
-            if (Level == RunLevel.Lobby)
-            {
-                _startAt = DateTime.Now.AddSeconds(GAME_COUNTDOWN);
+            Logger.Debug($"[ENG] Runlevel changed to: {level}");
+            var args = new RunLevelChangedEventArgs(_runLevel, level);
+            _runLevel = level;
+            RunLevelChanged?.Invoke(this, args);
+
+            // positive edge triggers
+            switch (level) {
+                case ServerRunLevel.PreGame:
+                    _entities.Startup();
+                    break;
             }
-            else if (Level == RunLevel.Game)
-            {
-                LoadMap(MapName);
-                _entities.Initialize();
-                IoCManager.Resolve<IRoundManager>().CurrentGameMode.StartGame();
-            }
-        }
-
-        #region File Operations
-
-        public bool LoadMap(string mapName)
-        {
-            var defManager = IoCManager.Resolve<ITileDefinitionManager>();
-            var mapMgr = IoCManager.Resolve<IMapManager>();
-
-            NewDefaultMap(mapMgr, defManager, 1);
-            mapLoader.Load(MapName, mapMgr.GetMap(1));
-
-            return true;
-        }
-
-        //TODO: This whole method should be removed once file loading/saving works, and replaced with a 'Demo' map.
-        /// <summary>
-        ///     Generates 'Demo' grid and inserts it into the map manager.
-        /// </summary>
-        /// <param name="mapManager">The map manager to work with.</param>
-        /// <param name="defManager">The definition manager to work with.</param>
-        /// <param name="gridId">The ID of the grid to generate and insert into the map manager.</param>
-        private static void NewDefaultMap(IMapManager mapManager, ITileDefinitionManager defManager, int gridID)
-        {
-            mapManager.SuppressOnTileChanged = true;
-            try
-            {
-                Logger.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
-                var floor = defManager["Floor"].TileId;
-                Logger.Debug($"floor: {floor}");
-
-                Debug.Assert(floor > 0);
-
-                var map = mapManager.CreateMap(1); //TODO: default map
-                var grid = map.CreateGrid(1); //TODO: huh wha maybe? check grid ID
-
-                for (var y = -32; y <= 32; ++y)
-                {
-                    for (var x = -32; x <= 32; ++x)
-                    {
-                        grid.SetTile(new LocalCoordinates(x, y, gridID, 1), new Tile(floor)); //TODO: Fix this
-                    }
-                }
-            }
-            finally
-            {
-                mapManager.SuppressOnTileChanged = false;
-            }
-        }
-
-        #endregion File Operations
-
-        private void StartLobby()
-        {
-            IoCManager.Resolve<IRoundManager>().Initialize(new Gamemode(this));
-            InitModules();
-        }
-
-        /// <summary>
-        ///     Moves all players to the game.
-        /// </summary>
-        private void StartGame()
-        {
-            InitModules(RunLevel.Game);
-            IoCManager.Resolve<IPlayerManager>().SendJoinGameToAll();
         }
 
         private void DisposeForRestart()
         {
             IoCManager.Resolve<IPlayerManager>().DetachAll();
-            if(Level == RunLevel.Game)
+            if(_runLevel == ServerRunLevel.Game)
             {
                 var mapMgr = IoCManager.Resolve<IMapManager>();
 
-                mapMgr.UnregisterMap(1);
+                // TODO: Unregister all maps.
+                mapMgr.DeleteMap(new MapId(1));
             }
             _entities.Shutdown();
             GC.Collect();
@@ -526,34 +450,16 @@ namespace SS14.Server
             IoCManager.Resolve<IServerNetManager>().ProcessPackets();
 
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, frameTime);
-            switch (Level)
+
+            timerManager.UpdateTimers(frameTime);
+            if (_runLevel >= ServerRunLevel.PreGame)
             {
-                case RunLevel.Game:
-
-                    _components.Update(frameTime);
-                    _entities.Update(frameTime);
-
-                    IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
-
-                    break;
-
-                case RunLevel.Lobby:
-
-                    var countdown = _startAt.Subtract(DateTime.Now);
-                    if (_lastAnnounced != countdown.Seconds)
-                    {
-                        _lastAnnounced = countdown.Seconds;
-                        IoCManager.Resolve<IChatManager>()
-                            .DispatchMessage(ChatChannel.Server, $"Starting in {_lastAnnounced} seconds...");
-                    }
-                    if (countdown.Seconds <= 0)
-                        StartGame();
-                    break;
+                _components.Update(frameTime);
+                _entities.Update(frameTime);
             }
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, frameTime);
 
             SendGameStateUpdate();
-            IoCManager.Resolve<IConsoleManager>().Update();
         }
 
         private void SendGameStateUpdate()
@@ -587,11 +493,6 @@ namespace SS14.Server
         private void SendConnectionGameStateUpdate(INetChannel c, GameState state)
         {
             var netMan = IoCManager.Resolve<IServerNetManager>();
-            if (c.Connection.Status != NetConnectionStatus.Connected)
-            {
-                return;
-            }
-
             var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(c);
             if (session == null || session.Status != SessionStatus.InGame && session.Status != SessionStatus.InLobby)
             {
@@ -640,44 +541,16 @@ namespace SS14.Server
             netMsg.ServerWelcomeMessage = Motd;
             netMsg.ServerMaxPlayers = MaxPlayers;
             netMsg.ServerMapName = MapName;
-            netMsg.GameMode = IoCManager.Resolve<IRoundManager>().CurrentGameMode.Name;
+            netMsg.GameMode = GameModeName;
             netMsg.ServerPlayerCount = IoCManager.Resolve<IPlayerManager>().PlayerCount;
             netMsg.PlayerIndex = session.Index;
 
             message.MsgChannel.SendMessage(netMsg);
-
-
-        }
-
-        /// <summary>
-        /// Player session is fully built, player is an active member of the server. Player is prepaired to start
-        /// receiving states when they join the lobby.
-        /// </summary>
-        /// <param name="session">Fully built session</param>
-        public void PlayerJoinedServer(IPlayerSession session)
-        {
-            //TODO: There should be a way to notify the content
-
-            // send the player to the lobby screen
-            session.JoinLobby();
-        }
-
-        private void HandleAdminMessage(MsgAdmin msg)
-        {
-            if (msg.MsgId == NetMessages.RequestEntityDeletion)
-            {
-                //TODO: Admin Permissions, requires admin system.
-                //    IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).
-                //        adminPermissions.isAdmin || true)
-
-                var delEnt = _entities.GetEntity(msg.EntityId);
-                if (delEnt != null) _entities.DeleteEntity(delEnt);
-            }
         }
 
         private static void HandleErrorMessage(NetMessage msg)
         {
-            Logger.Error($"[SRV] Unhandled NetMessage type: {msg.MsgId}");
+            Logger.Error($"[SRV] Unhandled NetMessage type: {msg.MsgName}");
         }
 
         private void HandlePlayerListReq(NetMessage message)
@@ -710,18 +583,7 @@ namespace SS14.Server
 
             // client session is complete
             var session = plyMgr.GetSessionByChannel(channel);
-            PlayerJoinedServer(session);
-        }
-
-        private static void HandleClientGreet(MsgClGreet msg)
-        {
-            var p = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.MsgChannel);
-
-            var fixedName = msg.PlyName.Trim();
-            if (fixedName.Length < 3)
-                fixedName = $"Player {p.Index}";
-
-            p.SetName(fixedName);
+            session.Status = SessionStatus.Connected;
         }
 
         private static void HandleStateAck(MsgStateAck msg)
@@ -729,22 +591,79 @@ namespace SS14.Server
             IoCManager.Resolve<IGameStateManager>().Ack(msg.MsgChannel.ConnectionId, msg.Sequence);
         }
 
-        // The size of the map being sent is almost exactly 1 byte per tile.
-        // The default 30x30 map is 900 bytes, a 100x100 one is 10,000 bytes (10kb).
-        private static void SendMap(INetChannel client)
+        //TODO: Chunk requests need to be handled in MapManager
+        private void SendMap(INetChannel client)
         {
             // Send Tiles
             IoCManager.Resolve<IMapManager>().SendMap(client);
-
-            // TODO: Lets also send them all the items and mobs.
-
-            // TODO: Send atmos state to player
-
-            // Todo: Preempt this with the lobby.
-            IoCManager.Resolve<IRoundManager>().SpawnPlayer(
-                IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(client)); //SPAWN PLAYER
         }
 
         #endregion MessageProcessing
+    }
+
+    /// <summary>
+    ///     Enumeration of the run levels of the BaseServer.
+    /// </summary>
+    public enum ServerRunLevel
+    {
+        Error = 0,
+        Init,
+        PreGame,
+        Game,
+        PostGame,
+        MapChange,
+    }
+
+    /// <summary>
+    ///     Type of game currently running.
+    /// </summary>
+    public enum GameType
+    {
+        MapEditor = 0,
+        Game,
+    }
+
+    /// <summary>
+    ///     Event arguments for when something changed with the player.
+    /// </summary>
+    public class PlayerEventArgs : EventArgs
+    {
+        /// <summary>
+        ///     The session that triggered the event.
+        /// </summary>
+        public IPlayerSession Session { get; }
+
+        /// <summary>
+        ///     Constructs a new instance of the class.
+        /// </summary>
+        public PlayerEventArgs(IPlayerSession session)
+        {
+            Session = session;
+        }
+    }
+
+    /// <summary>
+    ///     Event arguments for when the RunLevel has changed in the BaseClient.
+    /// </summary>
+    public class RunLevelChangedEventArgs : EventArgs
+    {
+        /// <summary>
+        ///     RunLevel that the BaseClient switched from.
+        /// </summary>
+        public ServerRunLevel OldLevel { get; }
+
+        /// <summary>
+        ///     RunLevel that the BaseClient switched to.
+        /// </summary>
+        public ServerRunLevel NewLevel { get; }
+
+        /// <summary>
+        ///     Constructs a new instance of the class.
+        /// </summary>
+        public RunLevelChangedEventArgs(ServerRunLevel oldLevel, ServerRunLevel newLevel)
+        {
+            OldLevel = oldLevel;
+            NewLevel = newLevel;
+        }
     }
 }

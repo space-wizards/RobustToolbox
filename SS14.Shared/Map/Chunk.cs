@@ -94,8 +94,11 @@ namespace SS14.Shared.Map
             if (xChunkTile >= ChunkSize || yChunkTile >= ChunkSize)
                 throw new ArgumentException("Tile indices out of bounds.");
 
-            var gridTile = ChunkTileToGridTile(new MapGrid.Indices(xChunkTile, yChunkTile));
+            // same tile, no point to continue
+            if(_tiles[xChunkTile, yChunkTile].TileId == tile.TileId)
+                return;
 
+            var gridTile = ChunkTileToGridTile(new MapGrid.Indices(xChunkTile, yChunkTile));
             var newTileRef = new TileRef(_grid.MapID, _grid.Index, gridTile.X, gridTile.Y, tile);
             var oldTile = _tiles[xChunkTile, yChunkTile];
             _mapManager.RaiseOnTileChanged(newTileRef, oldTile);

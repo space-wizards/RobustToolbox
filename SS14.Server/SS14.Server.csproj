@@ -74,30 +74,12 @@
     <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NetSerializer, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)packages\NetSerializer.4.1.0\lib\net45\NetSerializer.dll</HintPath>
-    </Reference>
-    <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
-    </Reference>
     <Reference Include="System">
       <Name>System</Name>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Core">
       <Name>System.Core</Name>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Data">
-      <Name>System.Data</Name>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <Name>System.Data.DataSetExtensions</Name>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Xml">
@@ -111,21 +93,11 @@
     <Reference Include="CommandLine">
       <HintPath>$(SolutionDir)packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
     </Reference>
-    <Reference Include="System.ServiceModel">
-      <Name>System.ServiceModel</Name>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="YamlDotNet">
       <HintPath>$(SolutionDir)packages\YamlDotNet.4.2.1\lib\net35\YamlDotNet.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
-      <Name>Lidgren.Network</Name>
-      <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\SS14.Shared\SS14.Shared.csproj">
       <Name>SS14.Shared</Name>
       <Project>{0529F740-0000-0000-0000-000000000000}</Project>
@@ -136,7 +108,9 @@
   <ItemGroup>
     <Compile Include="ClientConsoleHost\Commands\SpawnCommand.cs" />
     <Compile Include="ClientConsoleHost\Commands\ChatCommands.cs" />
-    <Compile Include="ClientConsoleHost\Commands\JoinGameCommand.cs" />
+    <Compile Include="ClientConsoleHost\Commands\MapCommands.cs" />
+    <Compile Include="ClientConsoleHost\Commands\PlayerCommands.cs" />
+    <Compile Include="ClientConsoleHost\Commands\RoundCommands.cs" />
     <Compile Include="ClientConsoleHost\Commands\SysCommands.cs" />
     <Compile Include="GameObjects\Components\Container\Container.cs" />
     <Compile Include="GameObjects\Components\Container\ContainerManagerComponent.cs" />
@@ -150,9 +124,6 @@
     <Compile Include="Reflection\ServerReflectionManager.cs" />
     <Compile Include="BaseServer.cs" />
     <Compile Include="Signals.cs" />
-    <Content Include="$(SolutionDir)packages\OpenTK.3.0.0-pre\content\OpenTK.dll.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="server_config.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -161,7 +132,6 @@
     <Compile Include="CommandLineArgs.cs" />
     <Compile Include="Chat\ChatManager.cs" />
     <Compile Include="ClientConsoleHost\Commands\ListCommands.cs" />
-    <Compile Include="ClientConsoleHost\Commands\Test.cs" />
     <Compile Include="ClientConsoleHost\ClientConsoleHost.cs" />
     <Compile Include="ClientConsoleHost\Commands\DrugsCommand.cs" />
     <Compile Include="GameObjects\ServerComponentFactory.cs" />
@@ -194,7 +164,6 @@
     <Compile Include="Interfaces\Chat\IChatManager.cs" />
     <Compile Include="Interfaces\ClientConsoleHost\IClientCommand.cs" />
     <Compile Include="Interfaces\ClientConsoleHost\IClientConsoleHost.cs" />
-    <Compile Include="Interfaces\GameMode\IGameMode.cs" />
     <Compile Include="Interfaces\GameObjects\IActorComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IMoverComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IServerEntityManager.cs" />
@@ -205,14 +174,11 @@
     <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerSession.cs" />
-    <Compile Include="Interfaces\Round\IRoundManager.cs" />
     <Compile Include="Interfaces\ServerConsole\IConsoleCommand.cs" />
     <Compile Include="Interfaces\ServerConsole\IConsoleManager.cs" />
     <Compile Include="Placement\PlacementManager.cs" />
     <Compile Include="Player\PlayerManager.cs" />
     <Compile Include="Player\PlayerSession.cs" />
-    <Compile Include="Round\Gamemodes.cs" />
-    <Compile Include="Round\RoundManager.cs" />
     <Compile Include="ServerConsole\ConsoleManager.cs" />
     <Compile Include="ServerConsole\Commands\HelpCommand.cs" />
     <Compile Include="ServerConsole\Commands\ListCommands.cs" />

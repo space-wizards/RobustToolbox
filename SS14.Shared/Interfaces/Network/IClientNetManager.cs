@@ -1,5 +1,4 @@
 ﻿using System;
-using Lidgren.Network;
 using SS14.Shared.Network;
 
 namespace SS14.Shared.Interfaces.Network
@@ -13,12 +12,6 @@ namespace SS14.Shared.Interfaces.Network
         ///     The NetChannel of the server.
         /// </summary>
         INetChannel ServerChannel { get; }
-
-        /// <summary>
-        ///     Called when a new NetMessage is received.
-        /// </summary>
-        [Obsolete("You should be registering a callback in RegisterNetMessage.")]
-        event EventHandler<NetMessageArgs> MessageArrived;
 
         /// <summary>
         ///     The attempted connection by a client to a server failed.
@@ -44,14 +37,6 @@ namespace SS14.Shared.Interfaces.Network
         ///     Sends a message to the server. Make sure to Initialize(true) and Connect() to a server before calling this.
         /// </summary>
         /// <param name="message"></param>
-        /// <param name="deliveryMethod"></param>
-        void ClientSendMessage(NetOutgoingMessage message, NetDeliveryMethod deliveryMethod);
-
-        /// <summary>
-        ///     Sends a message to the server. Make sure to Initialize(true) and Connect() to a server before calling this.
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="deliveryMethod"></param>
-        void ClientSendMessage(NetMessage message, NetDeliveryMethod deliveryMethod);
+        void ClientSendMessage(NetMessage message);
     }
 }

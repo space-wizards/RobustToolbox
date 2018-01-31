@@ -56,9 +56,9 @@ namespace SS14.Server.ClientConsoleHost
                 AvailableCommands[instance.Command] = instance;
             }
 
-            _net.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, (int)MsgConCmd.ID, message => ProcessCommand((MsgConCmd)message));
-            _net.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, (int)MsgConCmdAck.ID);
-            _net.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, (int)MsgConCmdReg.ID, message => HandleRegistrationRequest(message.MsgChannel));
+            _net.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, message => ProcessCommand((MsgConCmd)message));
+            _net.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME);
+            _net.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, message => HandleRegistrationRequest(message.MsgChannel));
         }
 
         public void ProcessCommand(MsgConCmd message)

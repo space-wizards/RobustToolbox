@@ -8,6 +8,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Enums;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {

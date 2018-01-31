@@ -1,5 +1,5 @@
-﻿using SS14.Shared.Maths;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using SS14.Shared.Maths;
 using SS14.Shared;
 using SS14.Shared.Console;
 

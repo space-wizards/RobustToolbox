@@ -1,4 +1,5 @@
 ﻿using SS14.Shared;
+using SS14.Shared.Enums;
 using SS14.Shared.Players;
 
 namespace SS14.Client.Player
@@ -11,7 +12,7 @@ namespace SS14.Client.Player
         /// <summary>
         ///     Status of the session.
         /// </summary>
-        public SessionStatus Status { get; set; } = SessionStatus.Zombie;
+        public SessionStatus Status { get; set; } = SessionStatus.Connecting;
 
         /// <summary>
         ///     Index of the session.

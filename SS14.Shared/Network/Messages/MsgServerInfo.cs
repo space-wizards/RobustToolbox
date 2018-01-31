@@ -7,16 +7,9 @@ namespace SS14.Shared.Network.Messages
     public class MsgServerInfo : NetMessage
     {
         #region REQUIRED
-
-        public static readonly string NAME = "WelcomeMessage";
         public static readonly MsgGroups GROUP = MsgGroups.Core;
-        public static readonly NetMessages ID = NetMessages.WelcomeMessage;
-
-        public MsgServerInfo(INetChannel channel)
-            : base(NAME, GROUP, ID)
-        {
-        }
-
+        public static readonly string NAME = nameof(MsgServerInfo);
+        public MsgServerInfo(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
 
         public string ServerName { get; set; }

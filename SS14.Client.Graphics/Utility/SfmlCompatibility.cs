@@ -1,6 +1,4 @@
-﻿using OpenTK;
-using OpenTK.Graphics;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Shared.Maths;
 using Vector2i = SS14.Shared.Maths.Vector2i;
@@ -39,7 +37,7 @@ namespace SS14.Client.Graphics.Utility
         /// </summary>
         /// <param name="vec">OpenTK Vector3.</param>
         /// <returns>SFML Vector3.</returns>
-        public static Vector3f Convert(this Vector3 vec)
+        public static Vector3f Convert(this OpenTK.Vector3 vec)
         {
             return new Vector3f(vec.X, vec.Y, vec.Z);
         }
@@ -49,9 +47,9 @@ namespace SS14.Client.Graphics.Utility
         /// </summary>
         /// <param name="vec">SFML Vector3.</param>
         /// <returns>OpenTK Vector3.</returns>
-        public static Vector3 Convert(this Vector3f vec)
+        public static OpenTK.Vector3 Convert(this Vector3f vec)
         {
-            return new Vector3(vec.X, vec.Y, vec.Z);
+            return new OpenTK.Vector3(vec.X, vec.Y, vec.Z);
         }
 
         /// <summary>
@@ -59,7 +57,17 @@ namespace SS14.Client.Graphics.Utility
         /// </summary>
         /// <param name="box">OpenTK Box2.</param>
         /// <returns>SFML FloatRect.</returns>
-        public static FloatRect Convert(this Box2 box)
+        public static FloatRect Convert(this OpenTK.Box2 box)
+        {
+            return new FloatRect(box.Left, box.Top, box.Width, box.Height);
+        }
+
+        /// <summary>
+        /// Converts a SS14 Box2 to a SFML FloatRect.
+        /// </summary>
+        /// <param name="box">OpenTK Box2.</param>
+        /// <returns>SFML FloatRect.</returns>
+        public static FloatRect Rect(this Box2 box)
         {
             return new FloatRect(box.Left, box.Top, box.Width, box.Height);
         }
@@ -69,9 +77,27 @@ namespace SS14.Client.Graphics.Utility
         /// </summary>
         /// <param name="rect">SFML FloatRect.</param>
         /// <returns>OpenTK Box2.</returns>
-        public static Box2 Convert(this FloatRect rect)
+        public static OpenTK.Box2 Convert(this FloatRect rect)
         {
-            return new Box2(rect.Left, rect.Top, rect.Right(), rect.Bottom());
+            return new OpenTK.Box2(rect.Left, rect.Top, rect.Right(), rect.Bottom());
+        }
+
+        /// <summary>
+        ///     Converts a SFML FloatRect to a SS14 Box2.
+        /// </summary>
+        public static Shared.Maths.Box2 ToBox(this FloatRect rect)
+        {
+            return new Shared.Maths.Box2(rect.Left, rect.Top, rect.Right(), rect.Bottom());
+        }
+
+        public static OpenTK.Box2 ToBox(this Shared.Maths.Box2 rect)
+        {
+            return new OpenTK.Box2(rect.Left, rect.Top, rect.Right, rect.Bottom);
+        }
+
+        public static FloatRect Convert(this Shared.Maths.Box2 box)
+        {
+            return new FloatRect(box.Left, box.Top, box.Width, box.Height);
         }
 
         public static IntRect Convert(this Box2i box)

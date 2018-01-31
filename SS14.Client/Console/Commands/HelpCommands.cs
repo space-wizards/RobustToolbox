@@ -1,7 +1,8 @@
-﻿using OpenTK.Graphics;
-using SS14.Client.Interfaces.Console;
+﻿using SS14.Client.Interfaces.Console;
+using SS14.Shared.Console;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Console.Commands
 {
@@ -26,7 +27,7 @@ namespace SS14.Client.Console.Commands
                         if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
                         {
                             // No server so nothing to respond with unknown command.
-                            console.AddLine("Unknown command: " + commandname, Color4.Red);
+                            console.AddLine("Unknown command: " + commandname, Color.Red);
                             return false;
                         }
                         // TODO: Maybe have a server side help?

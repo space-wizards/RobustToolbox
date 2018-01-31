@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using SS14.Client.Console;
+﻿using SS14.Client.Console;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Input;
@@ -65,20 +64,6 @@ namespace SS14.Client.State.States
             _gameChat.TextSubmitted += console.ParseChatMessage;
             console.AddString += _gameChat.AddLine;
             _gameChat.DefaultChatFormat = "say \"{0}\"";
-
-            _config.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
-
-            NetOutgoingMessage message = networkManager.CreateMessage();
-            message.Write((byte)NetMessages.RequestMap);
-            networkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
-
-            // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
-            var message1 = networkManager.CreateMessage();
-            message1.Write((byte)NetMessages.ClientName);
-            message1.Write(_config.GetCVar<string>("player.name"));
-            networkManager.ClientSendMessage(message1, NetDeliveryMethod.ReliableOrdered);
-
-            networkManager.MessageArrived += NetworkManagerMessageArrived;
         }
 
         public override void Shutdown()
@@ -91,7 +76,6 @@ namespace SS14.Client.State.States
 
             _entityManager.Shutdown();
             userInterfaceManager.StateRoot.DisposeAllChildren();
-            networkManager.MessageArrived -= NetworkManagerMessageArrived;
 
             var maps = mapManager.GetAllMaps().ToArray();
             foreach (var map in maps)
@@ -146,36 +130,6 @@ namespace SS14.Client.State.States
         public override void KeyUp(KeyEventArgs e)
         {
             keyBindingManager.KeyUp(e);
-        }
-
-        private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
-        {
-            NetIncomingMessage message = args.RawMessage;
-            if (message == null)
-            {
-                return;
-            }
-            switch (message.MessageType)
-            {
-                case NetIncomingMessageType.StatusChanged:
-                    var statMsg = (NetConnectionStatus)message.ReadByte();
-                    if (statMsg == NetConnectionStatus.Disconnected)
-                    {
-                        string disconnectMessage = message.ReadString();
-                        //UserInterfaceManager.AddComponent(new DisconnectedScreenBlocker(StateManager,
-                        //                                                                UserInterfaceManager,
-                        //                                                                ResourceCache,
-                        //                                                                disconnectMessage));
-                    }
-                    break;
-                case NetIncomingMessageType.Data:
-                    var messageType = (NetMessages)message.ReadByte();
-                    if (messageType == NetMessages.PlacementManagerMessage)
-                    {
-                        // PlacementManager.HandleNetMessage(message);
-                    }
-                    break;
-            }
         }
     }
 }

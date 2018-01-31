@@ -61,19 +61,15 @@ namespace SS14.Shared.Network
 
         public bool IsRunning => _netPeer != null;
 
-        /// <inheritdoc />
-        [Obsolete("You should be using NetPeer.")]
-        public NetPeer Peer => _netPeer;
-
-        /// <inheritdoc />
-        [Obsolete]
-        public NetPeerStatistics Statistics => _netPeer.Statistics;
+        public NetworkStats Statistics => new NetworkStats(_netPeer.Statistics);
 
         /// <inheritdoc />
         public List<INetChannel> Channels => _channels.Values.Cast<INetChannel>().ToList();
 
         /// <inheritdoc />
         public int ChannelCount => _channels.Count;
+
+        public IReadOnlyDictionary<Type, ProcessMessage> CallbackAudit => _callbacks;
 
         /// <inheritdoc />
         public void Initialize(bool isServer)
@@ -336,7 +332,7 @@ namespace SS14.Shared.Network
             var conn = message.SenderConnection;
             var channel = _channels[conn];
 
-            Logger.Info($"[NET] {channel.RemoteAddress}:{channel.Connection.RemoteEndPoint.Port}: Disconnected ({reason})");
+            Logger.Info($"[NET] {channel.RemoteAddress}:{conn.RemoteEndPoint.Port}: Disconnected ({reason})");
 
             OnDisconnected(channel);
             _channels.Remove(conn);
@@ -345,19 +341,26 @@ namespace SS14.Shared.Network
                 _strings.Reset();
         }
 
-        // server-side disconnect
-        private void DisconnectChannel(NetChannel channel, string reason)
+        /// <inheritdoc />
+        public void DisconnectChannel(INetChannel channel, string reason)
         {
-            channel.Connection.Disconnect(reason);
+            channel.Disconnect(reason);
         }
 
         private void DispatchNetMessage(NetIncomingMessage msg)
         {
-            string address = msg.SenderConnection.RemoteEndPoint.Address.ToString();
+            if(_netPeer.Status == NetPeerStatus.ShutdownRequested)
+                return;
+
+            if(_netPeer.Status == NetPeerStatus.NotRunning)
+                return;
+
+            if(!IsConnected)
+                return;
 
             if (msg.LengthBytes < 1)
             {
-                Logger.Warning($"[NET] {address}: Received empty packet.");
+                Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: Received empty packet.");
                 return;
             }
 
@@ -365,31 +368,13 @@ namespace SS14.Shared.Network
 
             if (!_strings.TryGetString(id, out string name))
             {
-                //If the message was not registered, fallback to the old broadcast event on the client.
-                //TODO: Convert client code to the new net message system, then remove this.
-                if (IsClient)
-                {
-                    msg.Position = 0;
-                    OnMessageArrived(msg);
-                    return;
-                }
-
-                Logger.Warning($"[NET] {address}:  No string in table with ID {(NetMessages)id}.");
+                Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}:  No string in table with ID {id}.");
                 return;
             }
 
             if (!_messages.TryGetValue(name, out Type packetType))
             {
-                //If the message was not registered, fallback to the old broadcast event on the client.
-                //TODO: Convert client code to the new net message system, then remove this.
-                if (IsClient)
-                {
-                    msg.Position = 0;
-                    OnMessageArrived(msg);
-                    return;
-                }
-
-                Logger.Warning($"[NET] {address}: No message with Name {name}.");
+                Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: No message with Name {name}.");
                 return;
             }
 
@@ -403,44 +388,25 @@ namespace SS14.Shared.Network
             }
             catch (Exception e) // yes, we want to catch ALL exeptions for security
             {
-                Logger.Warning($"[NET] {address}: Failed to deserialize {packetType.Name} packet:\n{e}");
+                Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: Failed to deserialize {packetType.Name} packet: {e.Message}");
             }
 
-            DebugIn(instance);
-
             if (!_callbacks.TryGetValue(packetType, out ProcessMessage callback))
+            {
+                Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: Received packet {id}:{name}, but callback was not registered.");
                 return;
+            }
 
             callback?.Invoke(instance);
         }
 
-        #region Packets
-
-        public NetOutgoingMessage CreateMessage()
-        {
-            return _netPeer.CreateMessage();
-        }
-
-        public void ServerSendToAll(NetOutgoingMessage message, NetDeliveryMethod method)
-        {
-            if (_netPeer.Connections.Count > 0)
-                _netPeer.SendMessage(message, _netPeer.Connections, method, 0);
-        }
-
-        public void ServerSendMessage(NetOutgoingMessage message, NetConnection client, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
-        {
-            _netPeer.SendMessage(message, client, method);
-        }
-
-        #endregion Packets
-
         #region NetMessages
 
         /// <inheritdoc />
-        public void RegisterNetMessage<T>(string name, int id, ProcessMessage rxCallback = null)
+        public void RegisterNetMessage<T>(string name, ProcessMessage rxCallback = null)
             where T : NetMessage
         {
-            _strings.AddStringFixed(id, name);
+            _strings.AddString(name);
 
             _messages.Add(name, typeof(T));
 
@@ -470,11 +436,12 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void ServerSendToAll(NetMessage message)
         {
-            if (_netPeer == null)
+            if(_netPeer == null || _netPeer.ConnectionsCount == 0)
                 return;
 
             var packet = BuildMessage(message);
-            ServerSendToAll(packet, NetDeliveryMethod.ReliableOrdered);
+            var method = GetMethod(message.MsgGroup);
+            _netPeer.SendMessage(packet, _netPeer.Connections, method, 0);
         }
 
         /// <inheritdoc />
@@ -483,9 +450,14 @@ namespace SS14.Shared.Network
             if (_netPeer == null)
                 return;
 
-            DebugOut(message);
             var packet = BuildMessage(message);
-            ServerSendMessage(packet, recipient.Connection);
+            var connection = ChanToCon(recipient);
+            _netPeer.SendMessage(packet, connection, NetDeliveryMethod.ReliableOrdered);
+        }
+
+        private NetConnection ChanToCon(INetChannel channel)
+        {
+            return _channels.FirstOrDefault(x => x.Value == channel).Key;
         }
 
         /// <inheritdoc />
@@ -501,44 +473,21 @@ namespace SS14.Shared.Network
         }
 
         /// <inheritdoc />
-        public void ClientSendMessage(NetMessage message, NetDeliveryMethod deliveryMethod)
-        {
-            if (_netPeer == null)
-                return;
-
-            var packet = BuildMessage(message);
-            ClientSendMessage(packet, deliveryMethod);
-        }
-
-        /// <inheritdoc />
-        public void ClientSendMessage(NetOutgoingMessage message, NetDeliveryMethod deliveryMethod)
+        public void ClientSendMessage(NetMessage message)
         {
             if (_netPeer == null)
                 return;
 
             // not connected to a server, so a message cannot be sent to it.
-            if (ServerChannel == null)
+            if (!IsConnected)
                 return;
 
-            _netPeer.SendMessage(message, ServerChannel.Connection, deliveryMethod);
+            var packet = BuildMessage(message);
+            var method = GetMethod(message.MsgGroup);
+            _netPeer.SendMessage(packet, _netPeer.Connections[0], method);
         }
+
         #endregion NetMessages
-
-        #region NetDebug
-
-        [Conditional("DEBUG")]
-        private void DebugOut(NetMessage msg)
-        {
-            //Logger.Debug($"[NET] OUT: {msg.MsgName}");
-        }
-
-        [Conditional("DEBUG")]
-        private void DebugIn(NetMessage msg)
-        {
-            //Logger.Debug($"[NET]  IN: {msg.MsgName}");
-        }
-
-        #endregion NetDebug
 
         #region Events
 
@@ -565,11 +514,6 @@ namespace SS14.Shared.Network
             Disconnect?.Invoke(this, new NetChannelArgs(channel));
         }
 
-        protected virtual void OnMessageArrived(NetIncomingMessage message)
-        {
-            MessageArrived?.Invoke(this, new NetMessageArgs(null, message));
-        }
-
         /// <inheritdoc />
         public event EventHandler<NetConnectingArgs> Connecting;
 
@@ -582,10 +526,22 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public event EventHandler<NetChannelArgs> Disconnect;
 
-        /// <inheritdoc />
-        public event EventHandler<NetMessageArgs> MessageArrived;
-
         #endregion Events
+
+        private static NetDeliveryMethod GetMethod(MsgGroups group)
+        {
+            switch (group)
+            {
+                case MsgGroups.Entity:
+                    return NetDeliveryMethod.Unreliable;
+                case MsgGroups.Core:
+                case MsgGroups.String:
+                case MsgGroups.Command:
+                    return NetDeliveryMethod.ReliableUnordered;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(group), group, null);
+            }
+        }
     }
 
     /// <summary>
@@ -593,18 +549,46 @@ namespace SS14.Shared.Network
     /// </summary>
     public class NetManagerException : Exception
     {
-        public NetManagerException()
-        {
-        }
-
         public NetManagerException(string message)
             : base(message)
         {
         }
+    }
 
-        public NetManagerException(string message, Exception inner)
-            : base(message, inner)
+    /// <summary>
+    ///     Traffic statistics for a NetChannel.
+    /// </summary>
+    public struct NetworkStats
+    {
+        /// <summary>
+        ///     Total sent bytes.
+        /// </summary>
+        public readonly int SentBytes;
+
+        /// <summary>
+        ///     Total received bytes.
+        /// </summary>
+        public readonly int ReceivedBytes;
+
+        /// <summary>
+        ///     Total sent packets.
+        /// </summary>
+        public readonly int SentPackets;
+
+        /// <summary>
+        ///     Total received packets.
+        /// </summary>
+        public readonly int ReceivedPackets;
+
+        /// <summary>
+        ///     Creates an instance of this object.
+        /// </summary>
+        public NetworkStats(NetPeerStatistics statistics)
         {
+            SentBytes = statistics.SentBytes;
+            ReceivedBytes = statistics.ReceivedBytes;
+            SentPackets = statistics.SentPackets;
+            ReceivedPackets = statistics.ReceivedPackets;
         }
     }
 }

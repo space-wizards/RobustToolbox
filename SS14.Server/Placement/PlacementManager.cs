@@ -1,25 +1,20 @@
 ﻿using SS14.Server.GameObjects;
-using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared;
-using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
 using SS14.Shared.Map;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using OpenTK;
+using SS14.Shared.Enums;
+using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Maths;
-using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
-using SS14.Shared.Utility;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Server.Placement
@@ -34,6 +29,11 @@ namespace SS14.Server.Placement
 
         #region IPlacementManager Members
 
+        public void Initialize()
+        {
+            var netMan = IoCManager.Resolve<IServerNetManager>();
+            netMan.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, message => HandleNetMessage((MsgPlacement)message));
+        }
 
         /// <summary>
         ///  Handles placement related client messages.
@@ -49,6 +49,9 @@ namespace SS14.Server.Placement
                 case PlacementManagerMessage.RequestPlacement:
                     HandlePlacementRequest(msg);
                     break;
+                case PlacementManagerMessage.RequestEntRemove:
+                    HandleEntRemoveReq(msg.EntityUid);
+                    break;
             }
         }
 
@@ -56,7 +59,6 @@ namespace SS14.Server.Placement
         {
             var alignRcv = msg.Align;
             var isTile = msg.IsTile;
-            var mapMgr = IoCManager.Resolve<IMapManager>();
 
             ushort tileType = 0;
             var entityTemplateName = "";
@@ -64,62 +66,75 @@ namespace SS14.Server.Placement
             if (isTile) tileType = msg.TileType;
             else entityTemplateName = msg.EntityTemplateName;
 
-            float XValue = msg.XValue;
-            float YValue = msg.YValue;
-            int GridIndex = msg.GridIndex;
-            int MapIndex = msg.MapIndex;
-            var coordinates = new LocalCoordinates(XValue, YValue, GridIndex, MapIndex);
-
+            var xValue = msg.XValue;
+            var yValue = msg.YValue;
             var dirRcv = msg.DirRcv;
 
-            IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.MsgChannel);
-            if (session.attachedEntity == null)
-                return; //Don't accept placement requests from nobodys
+            var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.MsgChannel);
+            var plyEntity = session.AttachedEntity;
 
-            PlacementInformation permission = GetPermission(session.attachedEntity.Uid, alignRcv);
+            // Don't have an entity, don't get to place.
+            if (plyEntity == null)
+                return;
 
-            float a = (float)Math.Floor(XValue);
-            float b = (float)Math.Floor(YValue);
-            Vector2 tilePos = new Vector2(a, b);
+            // get the MapID the player is on
+            var plyTransform = plyEntity.GetComponent<ITransformComponent>();
+            var mapIndex = plyTransform.MapID;
+            
+            // no building in null space!
+            if(mapIndex == MapId.Nullspace)
+                return;
 
-            if (permission != null || true)
-            //isAdmin) Temporarily disable actual permission check / admin check. REENABLE LATER
+            //TODO: Distance check, so you can't place things off of screen.
+
+            // get the grid under the worldCoords.
+            var grid = IoCManager.Resolve<IMapManager>().GetMap(mapIndex).FindGridAt(new Vector2(xValue, yValue));
+            var coordinates = new LocalCoordinates(xValue, yValue, grid.Index, mapIndex);
+
+            
+            /* TODO: Redesign permission system, or document what this is supposed to be doing
+            var permission = GetPermission(session.attachedEntity.Uid, alignRcv);
+            if (permission == null)
+                return;
+
+            if (permission.Uses > 0)
             {
-                if (permission != null)
+                permission.Uses--;
+                if (permission.Uses <= 0)
                 {
-                    if (permission.Uses > 0)
-                    {
-                        permission.Uses--;
-                        if (permission.Uses <= 0)
-                        {
-                            BuildPermissions.Remove(permission);
-                            SendPlacementCancel(session.attachedEntity);
-                        }
-                    }
-                    else
-                    {
-                        BuildPermissions.Remove(permission);
-                        SendPlacementCancel(session.attachedEntity);
-                        return;
-                    }
-                }
-
-                if (!isTile)
-                {
-                    var manager = IoCManager.Resolve<IServerEntityManager>();
-                    if(manager.TrySpawnEntityAt(entityTemplateName, coordinates, out IEntity created))
-                    {
-                        created.GetComponent<TransformComponent>().WorldPosition =
-                            new Vector2(XValue, YValue);
-                        if (created.TryGetComponent<TransformComponent>(out var component))
-                            component.Rotation = dirRcv.ToAngle();
-                    }
-                }
-                else
-                {
-                    coordinates.Grid.SetTile(coordinates, new Tile(tileType));
+                    BuildPermissions.Remove(permission);
+                    SendPlacementCancel(session.attachedEntity);
                 }
             }
+            else
+            {
+                BuildPermissions.Remove(permission);
+                SendPlacementCancel(session.attachedEntity);
+                return;
+            }
+            */
+            if (!isTile)
+            {
+                var manager = IoCManager.Resolve<IServerEntityManager>();
+                if (!manager.TrySpawnEntityAt(entityTemplateName, coordinates, out IEntity created))
+                    return;
+
+                created.GetComponent<TransformComponent>().WorldPosition = new Vector2(xValue, yValue);
+                if (created.TryGetComponent<TransformComponent>(out var component))
+                    component.Rotation = dirRcv.ToAngle();
+            }
+            else
+            {
+                coordinates.Grid.SetTile(coordinates, new Tile(tileType));
+            }
+        }
+
+        private static void HandleEntRemoveReq(EntityUid entityUid)
+        {
+            //TODO: Some form of admin check
+            var entities = IoCManager.Resolve<IServerEntityManager>();
+            if(entities.TryGetEntity(entityUid, out var entity))
+                entities.DeleteEntity(entity);
         }
 
         /// <summary>
@@ -276,9 +291,9 @@ namespace SS14.Server.Placement
         /// </summary>
         public void RevokeAllBuildPermissions(IEntity mob)
         {
-            IEnumerable<PlacementInformation> mobPermissions = from PlacementInformation permission in BuildPermissions
-                                                               where permission.MobUid == mob.Uid
-                                                               select permission;
+            var mobPermissions = BuildPermissions
+                .Where(permission => permission.MobUid == mob.Uid)
+                .ToList();
 
             if (mobPermissions.Any())
                 BuildPermissions.RemoveAll(x => mobPermissions.Contains(x));
@@ -286,14 +301,13 @@ namespace SS14.Server.Placement
 
         #endregion IPlacementManager Members
 
-        private PlacementInformation GetPermission(int uid, string alignOpt)
+        private PlacementInformation GetPermission(EntityUid uid, string alignOpt)
         {
-            IEnumerable<PlacementInformation> permission = from p in BuildPermissions
-                                                           where p.MobUid == uid && p.PlacementOption.Equals(alignOpt)
-                                                           select p;
+            var permission = BuildPermissions
+                .Where(p => p.MobUid == uid && p.PlacementOption.Equals(alignOpt))
+                .ToList();
 
-            if (permission.Any()) return permission.First();
-            else return null;
+            return permission.Any() ? permission.First() : null;
         }
     }
 }

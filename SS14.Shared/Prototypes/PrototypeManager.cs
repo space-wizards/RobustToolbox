@@ -12,10 +12,6 @@ using SS14.Shared.Interfaces;
 using SS14.Shared.Log;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
-using OpenTK;
-using SS14.Shared.Interfaces.Map;
-using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.GameObjects;
 
 namespace SS14.Shared.Prototypes
 {

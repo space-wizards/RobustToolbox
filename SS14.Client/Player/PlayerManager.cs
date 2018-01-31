@@ -2,15 +2,17 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Lidgren.Network;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Player;
 using SS14.Shared;
+using SS14.Shared.Configuration;
+using SS14.Shared.Enums;
+using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 
@@ -30,6 +32,9 @@ namespace SS14.Client.Player
 
         [Dependency]
         private readonly IBaseClient _client;
+
+        [Dependency]
+        private readonly IConfigurationManager _config;
 
         /// <summary>
         ///     Active sessions of connected clients to the server.
@@ -59,12 +64,15 @@ namespace SS14.Client.Player
         {
             _sessions = new Dictionary<int, PlayerSession>();
 
-            _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int)MsgPlayerListReq.ID, message =>
-               Logger.Error($"[PLY] Unhandled NetMessage type: {message.MsgId}"));
+            _config.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
 
-            _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int)MsgPlayerList.ID, HandlePlayerList);
+            _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME);
 
-            _network.RegisterNetMessage<MsgSession>(MsgSession.NAME, (int)MsgSession.ID, HandleSessionMessage);
+            _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, HandlePlayerList);
+
+            _network.RegisterNetMessage<MsgSession>(MsgSession.NAME, HandleSessionMessage);
+
+            _network.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME);
         }
 
         /// <inheritdoc />
@@ -74,7 +82,7 @@ namespace SS14.Client.Player
 
             var msgList = _network.CreateNetMessage<MsgPlayerListReq>();
             // message is empty
-            _network.ClientSendMessage(msgList, NetDeliveryMethod.ReliableOrdered);
+            _network.ClientSendMessage(msgList);
         }
 
         /// <inheritdoc />
@@ -110,7 +118,7 @@ namespace SS14.Client.Player
         /// <inheritdoc />
         public void ApplyPlayerStates(List<PlayerState> list)
         {
-            Debug.Assert(_network.IsConnected, "Received player state before fully connected");
+            Debug.Assert(_network.IsConnected, "Received player state without being connected?");
             Debug.Assert(LocalPlayer != null, "Call Startup()");
             Debug.Assert(LocalPlayer.Session != null, "Received player state before Session finished setup.");
 
@@ -157,13 +165,13 @@ namespace SS14.Client.Player
         ///     Compares the server attachedEntity to the client one, and updates if needed.
         /// </summary>
         /// <param name="entity">AttachedEntity in the server session.</param>
-        private void UpdateAttachedEntity(int? entity)
+        private void UpdateAttachedEntity(EntityUid? entity)
         {
             if (entity != null &&
                 (LocalPlayer.ControlledEntity == null ||
                  LocalPlayer.ControlledEntity != null && entity != LocalPlayer.ControlledEntity.Uid))
                 LocalPlayer.AttachEntity(
-                    IoCManager.Resolve<IEntityManager>().GetEntity((int)entity));
+                    IoCManager.Resolve<IEntityManager>().GetEntity(entity.Value));
         }
 
         /// <summary>

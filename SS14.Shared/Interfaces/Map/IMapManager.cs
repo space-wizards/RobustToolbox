@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
-using SS14.Shared.Maths;
-using OpenTK;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.Interfaces.Map
 {
@@ -22,11 +19,10 @@ namespace SS14.Shared.Interfaces.Map
     /// </summary>
     public interface IMapManager
     {
-        void UnregisterMap(int mapID);
-
-        IMap CreateMap(int mapID);
-
-        IMap GetMap(int mapID);
+        /// <summary>
+        ///     The default <see cref="IMap" /> that is always available. Equivalent to SS13 Null space.
+        /// </summary>
+        IMap DefaultMap { get; }
 
         IEnumerable<IMap> GetAllMaps();
 
@@ -37,21 +33,44 @@ namespace SS14.Shared.Interfaces.Map
         bool SuppressOnTileChanged { get; set; }
 
         /// <summary>
+        ///     Starts up the map system.
+        /// </summary>
+        void Initialize();
+
+        IMap CreateMap(MapId mapID, bool overwrite = false);
+
+        bool MapExists(MapId mapID);
+
+        IMap GetMap(MapId mapID);
+
+        bool TryGetMap(MapId mapID, out IMap map);
+
+        void SendMap(INetChannel channel);
+
+        void DeleteMap(MapId mapID);
+
+        /// <summary>
         ///     A tile is being modified.
         /// </summary>
-        event TileChangedEventHandler OnTileChanged;
+        event EventHandler<TileChangedEventArgs> TileChanged;
 
         event GridEventHandler OnGridCreated;
 
         event GridEventHandler OnGridRemoved;
 
         /// <summary>
-        ///     Starts up the map system.
+        ///     A Grid was modified.
         /// </summary>
-        void Initialize();
+        event EventHandler<GridChangedEventArgs> GridChanged;
 
-        void SendMap(INetChannel channel);
+        /// <summary>
+        ///     A new map has been created.
+        /// </summary>
+        event EventHandler<MapEventArgs> MapCreated;
 
-        bool TryGetMap(int mapID, out IMap map);
+        /// <summary>
+        ///     An existing map has been destroyed.
+        /// </summary>
+        event EventHandler<MapEventArgs> MapDestroyed;
     }
 }

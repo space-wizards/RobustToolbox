@@ -114,7 +114,6 @@ namespace SS14.Client.UserInterface.CustomControls
                 DragOffsetBottomRight = Position + Size - args.GlobalPosition;
             }
 
-            UserInterfaceManager.Focused?.ReleaseFocus();
             MoveToFront();
         }
 
@@ -124,6 +123,9 @@ namespace SS14.Client.UserInterface.CustomControls
 
             DragOffsetTopLeft = DragOffsetBottomRight = Vector2.Zero;
             CurrentDrag = DragMode.None;
+
+            // If this is done in MouseDown, Godot won't fire MouseUp as you need focus to receive MouseUps.
+            UserInterfaceManager.Focused?.ReleaseFocus();
         }
 
         protected override void MouseMove(GUIMouseMoveEventArgs args)
@@ -249,8 +251,7 @@ namespace SS14.Client.UserInterface.CustomControls
             {
                 throw new InvalidOperationException("Window is not a child of the window root! You need to call AddToScreen first!");
             }
-            root.SceneControl.RemoveChild(SceneControl);
-            root.SceneControl.AddChild(SceneControl);
+            root.SceneControl.MoveChild(SceneControl, root.SceneControl.GetChildCount());
         }
 
         public bool IsAtFront()

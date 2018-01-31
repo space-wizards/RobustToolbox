@@ -5,9 +5,11 @@ using SS14.Client.Input;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Console;
 using SS14.Shared.Maths;
+using SS14.Shared.Reflection;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
+    [Reflect(false)]
     public class Chatbox : Panel
     {
         public delegate void TextSubmitHandler(Chatbox chatbox, string text);

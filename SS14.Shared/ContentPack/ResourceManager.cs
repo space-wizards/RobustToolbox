@@ -21,7 +21,7 @@ namespace SS14.Shared.ContentPack
         private readonly IConfigurationManager _config;
 
         private DirectoryInfo _configRoot;
-        private readonly List<IContentRoot> _contentRoots = new List<IContentRoot>();
+        private readonly List<(string prefix, IContentRoot root)> _contentRoots = new List<(string, IContentRoot)>();
 
         /// <inheritdoc />
         public string ConfigDirectory => _configRoot.FullName;
@@ -55,7 +55,7 @@ namespace SS14.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public void MountContentPack(string pack)
+        public void MountContentPack(string pack, string prefix=null)
         {
             pack = PathHelpers.ExecutableRelativeFile(pack);
 
@@ -68,19 +68,20 @@ namespace SS14.Shared.ContentPack
             var loader = new PackLoader(packInfo);
 
             if (loader.Mount())
-                _contentRoots.Add(loader);
+                _contentRoots.Add((prefix, loader));
         }
 
         /// <inheritdoc />
-        public void MountContentDirectory(string path)
+        public void MountContentDirectory(string path, string prefix=null)
         {
             path = PathHelpers.ExecutableRelativeFile(path);
+            Logger.Debug(path);
             var pathInfo = new DirectoryInfo(path);
 
             var loader = new DirLoader(pathInfo);
             if (loader.Mount())
             {
-                _contentRoots.Add(loader);
+                _contentRoots.Add((prefix, loader));
             }
             else
             {
@@ -92,9 +93,13 @@ namespace SS14.Shared.ContentPack
         public MemoryStream ContentFileRead(string path)
         {
             // loop over each root trying to get the file
-            foreach (var root in _contentRoots)
+            foreach ((var prefix, var root) in _contentRoots)
             {
-                var file = root.GetFile(path);
+                if (!TryHandlePrefix(path, prefix, out var tempPath))
+                {
+                    continue;
+                }
+                var file = root.GetFile(tempPath);
                 if (file != null)
                     return file;
             }
@@ -123,11 +128,44 @@ namespace SS14.Shared.ContentPack
         /// <inheritdoc />
         public IEnumerable<string> ContentFindFiles(string path)
         {
-            // some LINQ magic
-            return _contentRoots
-                .Select(root => root.FindFiles(path)) // get a collection of strings (paths) from each root
-                .SelectMany(x => x) // merge the collections together to one big collection of strings
-                .Distinct(); // remove duplicate strings
+            var alreadyReturnedFiles = new HashSet<string>();
+            foreach ((var prefix, var root) in _contentRoots)
+            {
+                if (!TryHandlePrefix(path, prefix, out var tempPath))
+                {
+                    continue;
+                }
+
+                foreach (var filename in root.FindFiles(tempPath))
+                {
+                    var newpath = prefix + filename;
+                    if (!alreadyReturnedFiles.Contains(newpath))
+                    {
+                        alreadyReturnedFiles.Add(newpath);
+                        yield return newpath;
+                    }
+                }
+            }
+        }
+
+        private bool TryHandlePrefix(string path, string prefix, out string actualPath)
+        {
+            if (string.IsNullOrWhiteSpace(prefix))
+            {
+                actualPath = path;
+                return true;
+            }
+
+            if (path.StartsWith(prefix))
+            {
+                actualPath = path.Substring(prefix.Length);
+                return true;
+            }
+            else
+            {
+                actualPath = null;
+                return false;
+            }
         }
     }
 }

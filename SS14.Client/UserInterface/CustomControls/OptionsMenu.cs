@@ -5,9 +5,11 @@ using SS14.Client.Utility;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Reflection;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
+    [Reflect(false)]
     class OptionsMenu : SS14Window
     {
         Button ApplyButton;

@@ -33,6 +33,7 @@ namespace SS14.Client.ResourceManagement
             _resources.MountContentDirectory(@"./Resources/");
 #else
             _resources.MountContentDirectory(@"../../Resources/");
+            _resources.MountContentDirectory(@"Resources/Assemblies", "Assemblies/");
 #endif
             //_resources.MountContentPack(@"./EngineContentPack.zip");
         }

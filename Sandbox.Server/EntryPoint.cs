@@ -42,7 +42,7 @@ namespace Sandbox.Server
         {
             _server.RunLevelChanged -= HandleRunLevelChanged;
             _players.PlayerStatusChanged -= HandlePlayerStatusChanged;
-            
+
             base.Dispose();
         }
 

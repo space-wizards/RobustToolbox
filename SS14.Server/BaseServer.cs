@@ -192,6 +192,7 @@ namespace SS14.Server
             // Load from the resources dir in the repo root instead.
             // It's a debug build so this is fine.
             _resources.MountContentDirectory(@"../../Resources/");
+            _resources.MountContentDirectory(@"Resources/Assemblies", "Assemblies/");
 #endif
 
             //mount the engine content pack
@@ -223,6 +224,8 @@ namespace SS14.Server
 
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
+
+            IoCManager.Resolve<ITileDefinitionManager>().Initialize();
 
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared

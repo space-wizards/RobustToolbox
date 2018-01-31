@@ -1,9 +1,8 @@
-﻿using OpenTK.Graphics;
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Maths;
-using Vector2 = OpenTK.Vector2;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {

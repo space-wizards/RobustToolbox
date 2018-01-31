@@ -6,10 +6,8 @@ using System.Collections.Generic;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Map;
-using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
-using OpenTK;
 using SS14.Shared.GameObjects.Serialization;
 
 namespace SS14.Server.GameObjects

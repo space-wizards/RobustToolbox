@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using OpenTK.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.UserInterface.Components;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Maths;
-using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
     public class LobbyShowcase : Showcase
     {
-        protected int ScrollOffset = 0;
+        protected int ScrollOffset;
         public Vector2i ItemOffsets { get; set; } = new Vector2i(0, 0);
         
         protected override void _buttonRight_Clicked(ImageButton sender)
@@ -94,7 +92,7 @@ namespace SS14.Client.UserInterface.CustomControls
                         new Vector2i(ItemOffsets.X + ClientArea.Left + (int)(ClientArea.Width / 2f - middle.Key.ClientArea.Width / 2f),
                                   ItemOffsets.Y + ClientArea.Top + (int)(ClientArea.Height / 2f - middle.Key.ClientArea.Height / 2f));
                     if (FadeItems)
-                        middle.Key.ForegroundColor = Color4.White;
+                        middle.Key.ForegroundColor = Color.White;
 
                     if (_selectionGlow != null && Selected == ScrollOffset)
                     {

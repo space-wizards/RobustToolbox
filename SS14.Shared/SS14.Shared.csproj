@@ -74,9 +74,6 @@
     <Reference Include="Nett, Version=0.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\Nett.0.7.0\lib\Net40\Nett.dll</HintPath>
     </Reference>
-    <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
-    </Reference>
     <Reference Include="System">
       <Name>System</Name>
     </Reference>
@@ -182,6 +179,7 @@
     <Compile Include="Map\Coordinates.cs" />
     <Compile Include="Map\MapId.cs" />
     <Compile Include="Maths\Angle.cs" />
+    <Compile Include="Maths\Box2.cs" />
     <Compile Include="Maths\Box2i.cs" />
     <Compile Include="Map\Chunk.cs" />
     <Compile Include="Map\DefaultTileDefinitions.cs" />
@@ -192,14 +190,20 @@
     <Compile Include="Map\TileDefinition.cs" />
     <Compile Include="Map\TileDefinitionManager.cs" />
     <Compile Include="Map\TileRef.cs" />
-    <Compile Include="Maths\Box2Ext.cs" />
     <Compile Include="Maths\Color.cs" />
+    <Compile Include="Maths\Color4.cs" />
     <Compile Include="Maths\FloatMath.cs" />
     <Compile Include="Maths\Direction.cs" />
     <Compile Include="Maths\Circle.cs" />
+    <Compile Include="Maths\MathHelper.cs" />
+    <Compile Include="Maths\Matrix3.cs" />
+    <Compile Include="Maths\Matrix4.cs" />
+    <Compile Include="Maths\Quaternion.cs" />
     <Compile Include="Maths\Vector2.cs" />
     <Compile Include="Maths\Vector2i.cs" />
     <Compile Include="Maths\Vector2u.cs" />
+    <Compile Include="Maths\Vector3.cs" />
+    <Compile Include="Maths\Vector4.cs" />
     <Compile Include="Network\Messages\MsgFullState.cs" />
     <Compile Include="Network\Messages\MsgStateUpdate.cs" />
     <Compile Include="Network\NetChannelArgs.cs" />
@@ -301,9 +305,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <Content Include="$(SolutionDir)packages\OpenTK.3.0.0-pre\content\OpenTK.dll.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />

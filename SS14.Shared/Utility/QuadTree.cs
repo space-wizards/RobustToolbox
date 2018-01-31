@@ -3,10 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using OpenTK;
 using SS14.Shared.Maths;
-using Vector2i = SS14.Shared.Maths.Vector2i;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.Utility
 {

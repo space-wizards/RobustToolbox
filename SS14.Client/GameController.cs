@@ -1,6 +1,4 @@
-﻿using OpenTK;
-using OpenTK.Graphics;
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Input;
@@ -29,9 +27,6 @@ using SS14.Shared.Interfaces.Timers;
 using SS14.Shared.Network.Messages;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
-using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
-using VideoMode = SS14.Client.Graphics.Render.VideoMode;
-using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Shared.Maths;
 using SS14.Client.Graphics.Lighting;
 using SS14.Client.Interfaces.Placement;
@@ -288,7 +283,7 @@ namespace SS14.Client
         /// <param name="e">Current GameTiming.RealFrameTime</param>
         private void Render(FrameEventArgs e)
         {
-            CluwneLib.ClearCurrentRendertarget(Color4.Black);
+            CluwneLib.ClearCurrentRendertarget(Color.Black);
             CluwneLib.Window.DispatchEvents();
 
             // draw everything

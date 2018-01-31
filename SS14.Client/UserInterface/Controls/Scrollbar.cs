@@ -1,13 +1,9 @@
-﻿using OpenTK.Graphics;
-using SS14.Client.Graphics;
-using SS14.Client.Interfaces.Resource;
-using SS14.Client.ResourceManagement;
+﻿using SS14.Client.ResourceManagement;
 using SS14.Shared.Maths;
 using System;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.UserInterface.Controls;
-using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -60,11 +56,11 @@ namespace SS14.Client.UserInterface.Components
             }
 
             _debugText = new TextSprite("Position:", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
-            _debugText.FillColor = new Color4(255, 128, 0, 255);
-            _debugText.ShadowColor = new Color4(0, 0, 128, 255);
+            _debugText.FillColor = new Color(255, 128, 0, 255);
+            _debugText.ShadowColor = new Color(0, 0, 128, 255);
             _debugText.Shadowed = true;
 
-            BackgroundColor = new Color4(47, 79, 79, 255);
+            BackgroundColor = new Color(47, 79, 79, 255);
             DrawBackground = true;
 
             Update(0);

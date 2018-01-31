@@ -1,7 +1,5 @@
 ﻿using System;
 using System.IO;
-using OpenTK;
-using SFML.Graphics;
 using SS14.Shared.Maths;
 using SFont = SFML.Graphics.Font;
 

@@ -1,12 +1,9 @@
-﻿using OpenTK;
-using OpenTK.Graphics;
-using SS14.Shared.Maths;
+﻿using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using YamlDotNet.RepresentationModel;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.Utility
 {
@@ -94,7 +91,7 @@ namespace SS14.Shared.Utility
             return (T)Enum.Parse(typeof(T), node.AsString(), true);
         }
 
-        public static Color AsHexColor(this YamlNode node, Color4? fallback = null)
+        public static Color AsHexColor(this YamlNode node, Color? fallback = null)
         {
             return Color.FromHex(node.AsString(), fallback);
         }

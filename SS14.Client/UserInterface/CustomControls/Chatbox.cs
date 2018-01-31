@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using OpenTK.Graphics;
 using SS14.Client.Console;
 using SS14.Client.Graphics.Input;
 using SS14.Client.UserInterface.Controls;
@@ -55,8 +54,8 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public Chatbox(Vector2i size)
         {
-            BackgroundColor = new Color4(128, 128, 128, 128);
-            BorderColor = new Color4(0, 0, 0, 128);
+            BackgroundColor = new Color(128, 128, 128, 128);
+            BorderColor = new Color(0, 0, 0, 128);
             DrawBackground = true;
             DrawBorder = true;
 
@@ -70,8 +69,8 @@ namespace SS14.Client.UserInterface.CustomControls
 
             _input = new Textbox(Size.X)
             {
-                BackgroundColor = new Color4(128, 128, 128, 128),
-                ForegroundColor = new Color4(255, 250, 240, 255)
+                BackgroundColor = new Color(128, 128, 128, 128),
+                ForegroundColor = new Color(255, 250, 240, 255)
             };
             _input.OnSubmit += (sender, text) => input_OnSubmit(sender, text);
 

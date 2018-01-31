@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using OpenTK;
+using SS14.Shared.Maths;
 
 namespace SS14.Shared.Serialization
 {

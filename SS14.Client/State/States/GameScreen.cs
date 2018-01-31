@@ -1,5 +1,4 @@
-﻿using OpenTK;
-using SS14.Client.GameObjects;
+﻿using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Lighting;
@@ -15,7 +14,6 @@ using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Map;
 using SS14.Client.ResourceManagement;
-using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
@@ -29,9 +27,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.Console;
-using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
-using Vector2 = SS14.Shared.Maths.Vector2;
-using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
@@ -579,7 +574,10 @@ namespace SS14.Client.State.States
         #region Mouse
         public override void MouseUp(MouseButtonEventArgs e)
         {
-            UserInterfaceManager.MouseUp(e);
+            if(UserInterfaceManager.MouseUp(e))
+                return;
+
+            PlacementManager.MouseUp(e);
         }
 
         public override void MouseDown(MouseButtonEventArgs e)
@@ -591,21 +589,8 @@ namespace SS14.Client.State.States
                 // MouseDown returns true if the click is handled by the ui component.
                 return;
 
-            if (PlacementManager.IsActive && !PlacementManager.Eraser)
-            {
-                switch (e.Button)
-                {
-                    case Mouse.Button.Left:
-                        PlacementManager.HandlePlacement();
-                        return;
-                    case Mouse.Button.Right:
-                        PlacementManager.Clear();
-                        return;
-                    case Mouse.Button.Middle:
-                        PlacementManager.Rotate();
-                        return;
-                }
-            }
+            if(PlacementManager.MouseDown(e))
+                return;
 
             #region Object clicking
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
@@ -24,11 +23,11 @@ namespace SS14.Client.Placement.Modes
                     (float) Math.Round(position.Y / _snapSize, MidpointRounding.AwayFromZero) * _snapSize));
                 for (var a = gridstart.X; a < CluwneLib.Window.Viewport.Size.X; a += _snapSize * 32) //Iterate through screen creating gridlines
                 {
-                    CluwneLib.drawLine(a, 0, CluwneLib.Window.Viewport.Size.Y, 90, 0.5f, Color4.Blue);
+                    CluwneLib.drawLine(a, 0, CluwneLib.Window.Viewport.Size.Y, 90, 0.5f, Color.Blue);
                 }
                 for (var a = gridstart.Y; a < CluwneLib.Window.Viewport.Size.Y; a += _snapSize * 32)
                 {
-                    CluwneLib.drawLine(0, a, CluwneLib.Window.Viewport.Size.X, 0, 0.5f, Color4.Blue);
+                    CluwneLib.drawLine(0, a, CluwneLib.Window.Viewport.Size.X, 0, 0.5f, Color.Blue);
                 }
             }
         }

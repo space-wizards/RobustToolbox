@@ -3,7 +3,6 @@ using Lidgren.Network;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Map;
 using SS14.Shared.Maths;
 
 namespace SS14.Shared.Network.Messages
@@ -23,8 +22,6 @@ namespace SS14.Shared.Network.Messages
         public string EntityTemplateName { get; set; }
         public float XValue { get; set; }
         public float YValue { get; set; }
-        public GridId GridIndex { get; set; }
-        public MapId MapIndex { get; set; }
         public Direction DirRcv { get; set; }
         public EntityUid EntityUid { get; set; }
 
@@ -46,8 +43,6 @@ namespace SS14.Shared.Network.Messages
 
                     XValue = buffer.ReadFloat();
                     YValue = buffer.ReadFloat();
-                	GridIndex = new GridId(buffer.ReadInt32());
-                	MapIndex = new MapId(buffer.ReadInt32());
                     DirRcv = (Direction)buffer.ReadByte();
                     break;
                 case PlacementManagerMessage.StartPlacement:
@@ -79,8 +74,6 @@ namespace SS14.Shared.Network.Messages
 
                     buffer.Write(XValue);
                     buffer.Write(YValue);
-                    buffer.Write((int)GridIndex);
-                    buffer.Write((int)MapIndex);
                     buffer.Write((byte)DirRcv);
                     break;
                 case PlacementManagerMessage.StartPlacement:

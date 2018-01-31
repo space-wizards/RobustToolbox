@@ -1,16 +1,10 @@
-﻿using OpenTK;
-using SS14.Client.Graphics.Render;
-using SS14.Client.Graphics.Collection;
+﻿using SS14.Client.Graphics.Collection;
 using SS14.Client.Graphics.States;
-using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
-using SS14.Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Maths;
-using OpenTK.Graphics;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Graphics.Sprites
 {

@@ -1,10 +1,8 @@
-﻿using OpenTK.Graphics;
-using SS14.Client.Graphics.Input;
+﻿using SS14.Client.Graphics.Input;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using SS14.Client.UserInterface.Controls;
-using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -23,7 +21,7 @@ namespace SS14.Client.UserInterface.Components
         public int AdditionalColumns { get; set; } = 2;//Number of additional visible columns beside the selection. 1 = 3 total visible. selection + 1 left + 1 right.
         public int ItemSpacing { get; set; } = 10; //Additional space between items.
         protected ImageButton _buttonLeft;
-        private Color4 ctemp;
+        private Color ctemp;
         protected ImageButton _buttonRight;
         protected int Selected
         {
@@ -171,7 +169,7 @@ namespace SS14.Client.UserInterface.Components
                         new Vector2i(ClientArea.Left + (int)(ClientArea.Width / 2f - selected.Key.ClientArea.Width / 2f),
                                   ClientArea.Top + (int)(ClientArea.Height / 2f - selected.Key.ClientArea.Height / 2f));
                     if (FadeItems)
-                        ctemp = Color4.White;
+                        ctemp = Color.White;
                     selected.Key.ForegroundColor = ctemp;
                     selected.Key.Draw();
 

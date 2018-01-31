@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
-using OpenTK.Graphics;
 using SS14.Client.Console;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Console;
 using SS14.Shared.IoC;
-using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
@@ -25,15 +24,15 @@ namespace SS14.Client.UserInterface.CustomControls
             _txtInput = new Textbox(size.X)
             {
                 ClearFocusOnSubmit = false,
-                BackgroundColor = new Color4(64, 64, 64, 100),
-                ForegroundColor = new Color4(255, 250, 240, 255)
+                BackgroundColor = new Color(64, 64, 64, 100),
+                ForegroundColor = new Color(255, 250, 240)
             };
             _txtInput.OnSubmit += TxtInputOnSubmit;
 
             _historyList = new ListPanel();
             Container.AddControl(_historyList);
 
-            BackgroundColor = new Color4(64, 64, 64, 200);
+            BackgroundColor = new Color(64, 64, 64, 200);
             DrawBackground = true;
             DrawBorder = true;
             
@@ -43,7 +42,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => _console.Commands;
 
-        public void AddLine(string text, ChatChannel channel, Color4 color)
+        public void AddLine(string text, ChatChannel channel, Color color)
         {
             var atBottom = ScrollbarV.Value >= ScrollbarV.Max;
             var newLabel = new Label(text, "CALIBRI")

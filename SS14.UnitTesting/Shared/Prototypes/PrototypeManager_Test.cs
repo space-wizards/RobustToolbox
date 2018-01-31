@@ -1,6 +1,4 @@
 ﻿using NUnit.Framework;
-using OpenTK;
-using OpenTK.Graphics;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
@@ -9,7 +7,6 @@ using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using System.IO;
 using YamlDotNet.RepresentationModel;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.UnitTesting.Shared.Prototypes
 {

@@ -5,14 +5,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using OpenTK;
 using SS14.Shared.Interfaces;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.GameObjects.Serialization
 {

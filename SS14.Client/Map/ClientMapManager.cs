@@ -22,6 +22,16 @@ namespace SS14.Client.Map
             TileChanged += UpdateTileMapOnUpdate;
             OnGridCreated += UpdateOnGridCreated;
             OnGridRemoved += UpdateOnGridRemoved;
+            GridChanged += UpdateOnGridModified;
+        }
+
+        private void UpdateOnGridModified(object sender, GridChangedEventArgs args)
+        {
+            var tilemap = RenderTileMaps[(args.Grid.MapID, args.Grid.Index)];
+            foreach ((int x, int y, Tile tile) in args.Modified)
+            {
+                tilemap.SetCell(x, y, tile.TileId);
+            }
         }
 
         private void UpdateTileMapOnUpdate(object sender, TileChangedEventArgs args)

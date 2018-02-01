@@ -56,7 +56,7 @@ namespace SS14.Shared.GameObjects
 
             if(Uid.IsValid())
                 throw new InvalidOperationException("Entity already has a UID.");
-            
+
             Uid = uid;
         }
 

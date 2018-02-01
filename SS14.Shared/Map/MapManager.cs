@@ -223,12 +223,15 @@ namespace SS14.Shared.Map
         /// </summary>
         public IMapGrid Grid { get; }
 
+        public IReadOnlyCollection<(int x, int y, Tile tile)> Modified { get; }
+
         /// <summary>
         ///     Creates a new instance of this class.
         /// </summary>
-        public GridChangedEventArgs(IMapGrid grid)
+        public GridChangedEventArgs(IMapGrid grid, IReadOnlyCollection<(int x, int y, Tile tile)> modified)
         {
             Grid = grid;
+            Modified = modified;
         }
     }
 }

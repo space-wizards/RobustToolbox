@@ -172,7 +172,7 @@ namespace SS14.Shared.GameObjects
             {
                 e.Shutdown();
             }
-            Entities.Clear();
+            CullDeletedEntities();
         }
 
         /// <summary>

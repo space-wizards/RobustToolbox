@@ -232,6 +232,11 @@ namespace SS14.Client.GameObjects
                 baseSprite = node.AsString();
                 SetSprite(baseSprite);
             }
+            else
+            {
+                baseSprite = "";
+                SetSprite(""); //Use default sprite
+            }
         }
 
         public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
@@ -404,7 +409,7 @@ namespace SS14.Client.GameObjects
                 sprite.SetAnimationState(newState.CurrentAnimation ?? "idle");
 
             SetMaster((EntityUid?) newState.MasterUid);
-
+            
             sprite.SetLoop(newState.Loop);
         }
     }

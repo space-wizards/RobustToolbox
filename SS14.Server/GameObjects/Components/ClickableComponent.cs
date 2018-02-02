@@ -13,7 +13,7 @@ namespace SS14.Server.GameObjects
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            var type = (int)message.MessageParameters[0]; // Click type.
+            ClickType type = (ClickType)((int)message.MessageParameters[0]); // Click type.
             var uid = (int)message.MessageParameters[1]; // ID of the user
             var user = Owner.EntityManager.GetEntity(new EntityUid(uid));
 

@@ -27,7 +27,7 @@ namespace SS14.Shared.GameObjects
     {
         public EntityUid Clicker { get; set; }
         public EntityUid Clicked { get; set; }
-        public int MouseButton { get; set; }
+        public ClickType MouseButton { get; set; }
     }
 
 }

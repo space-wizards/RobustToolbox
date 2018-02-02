@@ -1,5 +1,6 @@
 ﻿using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Server.GameObjects
@@ -9,11 +10,19 @@ namespace SS14.Server.GameObjects
         public override string Name => "Clickable";
         public override uint? NetID => NetIDs.CLICKABLE;
 
+
+        //private readonly InteractionSystem InteractionController;
+
+        //ClickableComponent()
+        //{
+        //    InteractionController = IoCManager.Resolve<EntitySystemManager>().GetEntitySystem<InteractionSystem>();
+        //}
+
         public event EventHandler<ClickEventArgs> OnClick;
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
-            var type = (int)message.MessageParameters[0]; // Click type.
+            Clicktype type = (Clicktype)((int)message.MessageParameters[0]); // Click type.
             var uid = (int)message.MessageParameters[1]; // ID of the user
             var user = Owner.EntityManager.GetEntity(new EntityUid(uid));
 

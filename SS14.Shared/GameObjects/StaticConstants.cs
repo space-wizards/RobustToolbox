@@ -1,79 +1,69 @@
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 
 namespace SS14.Shared.GameObjects
 {
     public class MouseClickType
     {
-        public const int None = 0;
-        public const int Left = 1;
-        public const int Right = 2;
-        public const int LeftAlt = 3;
-        public const int RightAlt = 4;
-        public const int LeftShift = 5;
-        public const int RightShift = 6;
-        public const int LeftCtrl = 7;
-        public const int RightCtrl = 8;
-
-        public static int ConvertComponentMessageTypeToClickType(ComponentMessageType type)
+        public static Clicktype ConvertComponentMessageTypeToClickType(ComponentMessageType type)
         {
-            int result = 0;
+            Clicktype result = 0;
             switch (type)
             {
                 case ComponentMessageType.LeftClick:
-                    result = MouseClickType.Left;
+                    result = Clicktype.Left;
                     break;
                 case ComponentMessageType.RightClick:
-                    result = MouseClickType.Right;
+                    result = Clicktype.Right;
                     break;
                 case ComponentMessageType.AltLeftClick:
-                    result = MouseClickType.LeftAlt;
+                    result = Clicktype.LeftAlt;
                     break;
                 case ComponentMessageType.AltRightClick:
-                    result = MouseClickType.RightAlt;
+                    result = Clicktype.RightAlt;
                     break;
                 case ComponentMessageType.ShiftLeftClick:
-                    result = MouseClickType.LeftShift;
+                    result = Clicktype.LeftShift;
                     break;
                 case ComponentMessageType.ShiftRightClick:
-                    result = MouseClickType.RightShift;
+                    result = Clicktype.RightShift;
                     break;
                 case ComponentMessageType.CtrlLeftClick:
-                    result = MouseClickType.LeftCtrl;
+                    result = Clicktype.LeftCtrl;
                     break;
                 case ComponentMessageType.CtrlRightClick:
-                    result = MouseClickType.RightCtrl;
+                    result = Clicktype.RightCtrl;
                     break;
             }
             return result;
         }
 
-        public static ComponentMessageType ConvertClickTypeToComponentMessageType(int clickType)
+        public static ComponentMessageType ConvertClickTypeToComponentMessageType(Clicktype clickType)
         {
             ComponentMessageType result = ComponentMessageType.Null;
             switch(clickType)
             {
-                case MouseClickType.Left:
+                case Clicktype.Left:
                     result = ComponentMessageType.LeftClick;
                     break;
-                case MouseClickType.Right:
+                case Clicktype.Right:
                     result = ComponentMessageType.RightClick;
                     break;
-                case MouseClickType.LeftAlt:
+                case Clicktype.LeftAlt:
                     result = ComponentMessageType.AltLeftClick;
                     break;
-                case MouseClickType.RightAlt:
+                case Clicktype.RightAlt:
                     result = ComponentMessageType.AltRightClick;
                     break;
-                case MouseClickType.LeftShift:
+                case Clicktype.LeftShift:
                     result = ComponentMessageType.ShiftLeftClick;
                     break;
-                case MouseClickType.RightShift:
+                case Clicktype.RightShift:
                     result = ComponentMessageType.ShiftRightClick;
                     break;
-                case MouseClickType.LeftCtrl:
+                case Clicktype.LeftCtrl:
                     result = ComponentMessageType.CtrlLeftClick;
                     break;
-                case MouseClickType.RightCtrl:
+                case Clicktype.RightCtrl:
                     result = ComponentMessageType.CtrlRightClick;
                     break;
 
@@ -82,6 +72,16 @@ namespace SS14.Shared.GameObjects
         }
     }
 
-
-
+    public enum Clicktype
+    {
+        None = 0,
+        Left = 1,
+        Right = 2,
+        LeftAlt = 3,
+        RightAlt = 4,
+        LeftShift = 5,
+        RightShift = 6,
+        LeftCtrl = 7,
+        RightCtrl = 8
+    }
 }

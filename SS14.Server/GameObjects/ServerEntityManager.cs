@@ -27,9 +27,13 @@ namespace SS14.Server.GameObjects
             var prototype = _protoManager.Index<EntityPrototype>(entityType);
             if (prototype.CanSpawnAt(coordinates.Grid, coordinates.Position))
             {
-                entity = SpawnEntity(entityType);
-                entity.GetComponent<TransformComponent>().LocalPosition = coordinates;
-                entity.Initialize();
+                Entity result = SpawnEntity(entityType);
+                result.GetComponent<TransformComponent>().LocalPosition = coordinates;
+                if (Started)
+                {
+                    InitializeEntity(result);
+                }
+                entity = result;
                 return true;
             }
             entity = null;
@@ -47,9 +51,12 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public IEntity ForceSpawnEntityAt(string entityType, LocalCoordinates coordinates)
         {
-            IEntity entity = SpawnEntity(entityType);
+            Entity entity = SpawnEntity(entityType);
             entity.GetComponent<TransformComponent>().LocalPosition = coordinates;
-            entity.Initialize();
+            if (Started)
+            {
+                InitializeEntity(entity);
+            }
             return entity;
         }
 
@@ -152,7 +159,7 @@ namespace SS14.Server.GameObjects
 
         public IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float Range)
         {
-            var AABB = new Box2(box.Left-Range, box.Top+Range, box.Right+Range, box.Bottom-Range);
+            var AABB = new Box2(box.Left-Range, box.Top-Range, box.Right+Range, box.Bottom+Range);
             return GetEntitiesIntersecting(mapID, AABB);
         }
 

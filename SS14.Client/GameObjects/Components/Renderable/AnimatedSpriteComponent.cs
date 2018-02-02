@@ -232,6 +232,11 @@ namespace SS14.Client.GameObjects
                 baseSprite = node.AsString();
                 SetSprite(baseSprite);
             }
+            else
+            {
+                baseSprite = "";
+                SetSprite(""); //Use default sprite
+            }
         }
 
         public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
@@ -397,15 +402,19 @@ namespace SS14.Client.GameObjects
             var newState = (AnimatedSpriteComponentState)state;
             DrawDepth = newState.DrawDepth;
             visible = newState.Visible;
-            if (sprite.Name != newState.Name)
-                SetSprite(newState.Name);
+            if(sprite != null)
+            {
+                if (sprite.Name != newState.Name)
+                    SetSprite(newState.Name);
 
-            if (sprite.CurrentAnimationStateKey != newState.CurrentAnimation)
-                sprite.SetAnimationState(newState.CurrentAnimation ?? "idle");
+                if (sprite.CurrentAnimationStateKey != newState.CurrentAnimation)
+                    sprite.SetAnimationState(newState.CurrentAnimation ?? "idle");
+            }
 
             SetMaster((EntityUid?) newState.MasterUid);
 
-            sprite.SetLoop(newState.Loop);
+            if(sprite != null)
+                sprite.SetLoop(newState.Loop);
         }
     }
 }

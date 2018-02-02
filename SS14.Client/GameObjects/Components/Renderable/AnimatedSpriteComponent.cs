@@ -402,19 +402,15 @@ namespace SS14.Client.GameObjects
             var newState = (AnimatedSpriteComponentState)state;
             DrawDepth = newState.DrawDepth;
             visible = newState.Visible;
-            if(sprite != null)
-            {
-                if (sprite.Name != newState.Name)
-                    SetSprite(newState.Name);
+            if (sprite.Name != newState.Name)
+                SetSprite(newState.Name);
 
-                if (sprite.CurrentAnimationStateKey != newState.CurrentAnimation)
-                    sprite.SetAnimationState(newState.CurrentAnimation ?? "idle");
-            }
+            if (sprite.CurrentAnimationStateKey != newState.CurrentAnimation)
+                sprite.SetAnimationState(newState.CurrentAnimation ?? "idle");
 
             SetMaster((EntityUid?) newState.MasterUid);
-
-            if(sprite != null)
-                sprite.SetLoop(newState.Loop);
+            
+            sprite.SetLoop(newState.Loop);
         }
     }
 }

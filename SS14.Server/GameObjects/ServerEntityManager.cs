@@ -159,7 +159,7 @@ namespace SS14.Server.GameObjects
 
         public IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float Range)
         {
-            var AABB = new Box2(box.Left-Range, box.Top+Range, box.Right+Range, box.Bottom-Range);
+            var AABB = new Box2(box.Left-Range, box.Top-Range, box.Right+Range, box.Bottom+Range);
             return GetEntitiesIntersecting(mapID, AABB);
         }
 

@@ -119,7 +119,11 @@ namespace SS14.Client.GameObjects
                 }
                 else //Unknown entities
                 {
-                    IEntity newEntity = SpawnEntity(es.StateData.TemplateName, es.StateData.Uid);
+                    Entity newEntity = SpawnEntity(es.StateData.TemplateName, es.StateData.Uid);
+                    if (Started)
+                    {
+                        InitializeEntity(newEntity);
+                    }
                     newEntity.Name = es.StateData.Name;
                     newEntity.HandleEntityState(es);
                 }

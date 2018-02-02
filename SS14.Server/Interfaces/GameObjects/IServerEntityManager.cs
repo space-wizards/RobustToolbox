@@ -8,7 +8,7 @@ namespace SS14.Server.Interfaces.GameObjects
 {
     public interface IServerEntityManager : IEntityManager
     {
-        IEntity SpawnEntity(string template, EntityUid? uid = null);
+        Entity SpawnEntity(string template, EntityUid? uid = null);
 
         /// <summary>
         /// Spawns an entity at a specific position

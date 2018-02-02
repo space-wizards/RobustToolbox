@@ -636,10 +636,10 @@ namespace SS14.Client.State.States
             switch (e.Button)
             {
                 case Mouse.Button.Left:
-                    clickable.DispatchClick(PlayerManager.LocalPlayer.ControlledEntity, Clicktype.Left);
+                    clickable.DispatchClick(PlayerManager.LocalPlayer.ControlledEntity, ClickType.Left);
                     break;
                 case Mouse.Button.Right:
-                    clickable.DispatchClick(PlayerManager.LocalPlayer.ControlledEntity, Clicktype.Right);
+                    clickable.DispatchClick(PlayerManager.LocalPlayer.ControlledEntity, ClickType.Right);
                     break;
                 case Mouse.Button.Middle:
                     OpenEntityEditWindow(entToClick);

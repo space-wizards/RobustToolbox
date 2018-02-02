@@ -29,9 +29,9 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         /// <summary>
         /// The type of mouse click. See the constants in <see cref="MouseClickType" /> for what this value means.
         /// </summary>
-        public Clicktype ClickType { get; }
+        public ClickType ClickType { get; }
 
-        public ClickEventArgs(IEntity user, IEntity source, Clicktype clickType)
+        public ClickEventArgs(IEntity user, IEntity source, ClickType clickType)
         {
             User = user;
             Source = source;

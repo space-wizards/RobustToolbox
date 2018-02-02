@@ -24,7 +24,7 @@ namespace SS14.Client.GameObjects
             return component.WasClicked(worldPos);
         }
 
-        public void DispatchClick(IEntity user, int clickType)
+        public void DispatchClick(IEntity user, ClickType clickType)
         {
             OnClick?.Invoke(this, new ClickEventArgs(user, Owner, clickType));
             Owner.SendComponentNetworkMessage(this, clickType, (int)user.Uid);

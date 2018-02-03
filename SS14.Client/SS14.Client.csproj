@@ -205,6 +205,12 @@
     <Compile Include="Interfaces\Debugging\IDebugDrawing.cs" />
     <Compile Include="Interfaces\Graphics\IDisplayManager.cs" />
     <Compile Include="Input\BoundKeyEventArgs.cs" />
+    <Compile Include="Interfaces\Graphics\ClientEye\IEyeManager.cs" />
+    <Compile Include="Interfaces\Graphics\ClientEye\IEye.cs" />
+    <Compile Include="Graphics\ClientEye\EyeManager.cs" />
+    <Compile Include="Graphics\ClientEye\Eye.cs" />
+    <Compile Include="Graphics\ClientEye\FixedEye.cs" />
+    <Compile Include="GameObjects\Components\Eye\EyeComponent.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="client_config.toml">

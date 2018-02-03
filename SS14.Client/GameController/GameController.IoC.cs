@@ -49,6 +49,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Graphics.ClientEye;
+using SS14.Client.Graphics.ClientEye;
 
 namespace SS14.Client
 {
@@ -106,6 +108,7 @@ namespace SS14.Client
             IoCManager.Register<IClientChatConsole, ClientChatConsole>();
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IDisplayManager, DisplayManager>();
+            IoCManager.Register<IEyeManager, EyeManager>();
 
             IoCManager.BuildGraph();
         }

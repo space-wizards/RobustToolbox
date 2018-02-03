@@ -86,16 +86,15 @@ namespace SS14.Client.Player
             if (!ControlledEntity.HasComponent<CollidableComponent>())
                 ControlledEntity.AddComponent(factory.GetComponent<CollidableComponent>());
 
-            var camera = new Godot.Camera2D()
+            if (!ControlledEntity.TryGetComponent<EyeComponent>(out var eye))
             {
-                DragMarginHEnabled = false,
-                DragMarginVEnabled = false,
-            };
-            camera.SetName("Camera");
-            camera.MakeCurrent();
+                eye = factory.GetComponent<EyeComponent>();
+                ControlledEntity.AddComponent(eye);
+            }
+            eye.Current = true;
+
             var transform = ControlledEntity.GetComponent<IClientTransformComponent>();
             transform.OnMove += OnPlayerMoved;
-            transform.SceneNode.AddChild(camera);
 
             EntityAttached?.Invoke(this, EventArgs.Empty);
         }
@@ -110,6 +109,7 @@ namespace SS14.Client.Player
                 ControlledEntity.RemoveComponent<KeyBindingInputComponent>();
                 ControlledEntity.RemoveComponent<PlayerInputMoverComponent>();
                 ControlledEntity.RemoveComponent<CollidableComponent>();
+                ControlledEntity.GetComponent<EyeComponent>().Current = false;
                 var transform = ControlledEntity.GetComponent<ITransformComponent>();
                 if (transform != null)
                     transform.OnMove -= OnPlayerMoved;

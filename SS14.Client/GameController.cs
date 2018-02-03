@@ -27,6 +27,7 @@ using SS14.Client.Interfaces.Graphics.Lighting;
 using SS14.Client.Interfaces.Graphics;
 using SS14.Shared.Interfaces.Timers;
 using SS14.Shared.Configuration;
+using SS14.Client.Interfaces.Graphics.ClientEye;
 
 namespace SS14.Client
 {
@@ -69,6 +70,8 @@ namespace SS14.Client
         readonly ITimerManager _timerManager;
         [Dependency]
         readonly IClientEntityManager _entityManager;
+        [Dependency]
+        readonly IEyeManager eyeManager;
 
         public override void Main(Godot.SceneTree tree)
         {
@@ -102,6 +105,7 @@ namespace SS14.Client
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
 
+            eyeManager.Initialize();
             keyBindingManager.Initialize();
             _serializer.Initialize();
             _userInterfaceManager.Initialize();

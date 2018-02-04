@@ -6,4 +6,7 @@
     <RemoveDir Directories="$(OutputPath)Resources" />
     <Copy SourceFiles="@(_ResourceFiles)" DestinationFolder="$(OutputPath)Resources\%(RecursiveDir)" />
   </Target>
+  <Target Name="CopyBsdiffWrap">
+    <Exec Command="$(Python) ../Tools/download_bsdiffwrap.py $(Platform) $(TargetOS) '$(OutputPath)'" CustomErrorRegularExpression="^Error" />
+  </Target>
 </Project>

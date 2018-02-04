@@ -381,8 +381,4 @@
       <Visible>False</Visible>
     </Resources>
   </ItemGroup>
-  <Target Name="AfterBuild">
-    <!--<RemoveDir Directories="$(OutputPath)Resources" />
-    <Copy SourceFiles="@(Resources)" DestinationFiles="$(OutputPath)Resources\%(ResourceRoot)\%(RecursiveDir)%(Filename)%(Extension)" />
-  --></Target>
 </Project>

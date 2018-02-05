@@ -56,5 +56,15 @@ namespace SS14.Shared.GameObjects.System
         {
             EntityManager.SubscribeEvent<T>(evh, s);
         }
+
+        public void UnsubscribeEvent<T>(IEntityEventSubscriber s) where T : EntityEventArgs
+        {
+            EntityManager.UnsubscribeEvent<T>(s);
+        }
+
+        public void RaiseEvent(EntityEventArgs toRaise)
+        {
+            EntityManager.RaiseEvent(this, toRaise);
+        }
     }
 }

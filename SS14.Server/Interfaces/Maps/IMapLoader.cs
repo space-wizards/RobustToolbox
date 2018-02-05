@@ -5,9 +5,7 @@ namespace SS14.Server.Interfaces.Maps
 {
     public interface IMapLoader
     {
-        void LoadGrid(IMap map, string path);
-        void SaveGrid(IMap map, GridId gridId, string yamlPath);
-
-        void LoadEntities(IMap map, string path);
+        void LoadBlueprint(IMap map, GridId newId, string path);
+        void SaveBlueprint(IMap map, GridId gridId, string yamlPath);
     }
 }

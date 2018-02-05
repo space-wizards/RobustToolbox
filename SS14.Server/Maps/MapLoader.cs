@@ -2,6 +2,7 @@
 using System.IO;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Maps;
+using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
@@ -25,9 +26,42 @@ namespace SS14.Server.Maps
 
         [Dependency]
         private IPrototypeManager _protoMan;
+        
+        /// <inheritdoc />
+        public void SaveBlueprint(IMap map, GridId gridId, string yamlPath)
+        {
+            var grid = map.GetGrid(gridId);
+
+            var root = new YamlSequenceNode();
+
+            var node = YamlGridSerializer.SerializeGrid(grid);
+            root.Add(node);
+
+            var entMan = IoCManager.Resolve<IServerEntityManager>();
+            var ents = new YamlEntitySerializer();
+            entMan.SaveGridEntities(ents, gridId);
+            root.Add(ents.GetRootNode());
+
+            var document = new YamlDocument(root);
+
+            var rootPath = _resMan.ConfigDirectory;
+            var path = Path.Combine(rootPath, yamlPath);
+            var fullPath = Path.GetFullPath(path);
+
+            var dir = Path.GetDirectoryName(fullPath);
+            Directory.CreateDirectory(dir ?? throw new InvalidOperationException("Full YamlPath was null."));
+
+            using (var writer = new StreamWriter(fullPath))
+            {
+                var stream = new YamlStream();
+
+                stream.Add(document);
+                stream.Save(writer);
+            }
+        }
 
         /// <inheritdoc />
-        public void LoadGrid(IMap map, string path)
+        public void LoadBlueprint(IMap map, GridId newId, string path)
         {
             var rootPath = _resMan.ConfigDirectory;
             var comb = Path.Combine(rootPath, path);
@@ -48,97 +82,54 @@ namespace SS14.Server.Maps
 
                 foreach (var document in stream.Documents)
                 {
-                    LoadGridDocument(map, document);
+                    LoadBpDocument(map, newId, document);
                 }
             }
         }
 
-        /// <inheritdoc />
-        public void SaveGrid(IMap map, GridId gridId, string yamlPath)
-        {
-            var grid = map.GetGrid(gridId);
-
-            var node = YamlGridSerializer.SerializeGrid(grid);
-            var document = new YamlDocument(node);
-
-            var rootPath = _resMan.ConfigDirectory;
-            var path = Path.Combine(rootPath, yamlPath);
-            var fullPath = Path.GetFullPath(path);
-
-            var dir = Path.GetDirectoryName(fullPath);
-            Directory.CreateDirectory(dir ?? throw new InvalidOperationException("Full YamlPath was null."));
-
-            using (var writer = new StreamWriter(fullPath))
-            {
-                var stream = new YamlStream();
-
-                stream.Add(document);
-
-                stream.Save(writer);
-            }
-        }
-
-        /// <inheritdoc />
-        public void LoadEntities(IMap map, string path)
-        {
-            var rootPath = _resMan.ConfigDirectory;
-            var comb = Path.Combine(rootPath, path);
-            var fullPath = Path.GetFullPath(comb);
-
-            if (!File.Exists(fullPath))
-            {
-                Logger.Error($"[MAP] Cannot load entity path: {fullPath}");
-                return;
-            }
-
-            Logger.Info($"[MAP] Loading Entities: {path}");
-
-            using (var reader = new StreamReader(fullPath))
-            {
-                var stream = new YamlStream();
-                stream.Load(reader);
-
-                foreach (var document in stream.Documents)
-                {
-                    LoadEntityDocument(document);
-                }
-            }
-        }
-
-        private static void LoadGridDocument(IMap map, YamlDocument document)
+        private void LoadBpDocument(IMap map, GridId newId, YamlDocument document)
         {
             var root = (YamlSequenceNode) document.RootNode;
 
             foreach (var yamlNode in root.Children)
             {
-                var gridNode = (YamlMappingNode) yamlNode;
-                var info = (YamlMappingNode) gridNode[new YamlScalarNode("settings")];
-                var chunk = (YamlSequenceNode) gridNode[new YamlScalarNode("chunks")];
+                var mapNode = (YamlMappingNode) yamlNode;
 
-                YamlGridSerializer.DeserializeGrid(map, new GridId(1), info, chunk);
+                if (mapNode.Children.TryGetValue("grid", out var gridNode))
+                {
+                    var gridMap = (YamlMappingNode) gridNode;
+                    LoadGridNode(map, newId, gridMap);
+                    
+                }
+                else if (mapNode.Children.TryGetValue("entities", out var entNode))
+                {
+                    LoadEntNode(map, newId, (YamlSequenceNode) entNode);
+                }
             }
         }
 
-        private void LoadEntityDocument(YamlDocument doc)
+        private static void LoadGridNode(IMap map, GridId newId, YamlMappingNode gridNode)
         {
-            // first node is always sequence
-            var root = (YamlSequenceNode) doc.RootNode;
+                var info = (YamlMappingNode)gridNode["settings"];
+                var chunk = (YamlSequenceNode)gridNode["chunks"];
 
-            // sequence always contains mappings
-            foreach (var yamlNode in root.Children)
+                YamlGridSerializer.DeserializeGrid(map, newId, info, chunk);
+        }
+
+        private void LoadEntNode(IMap map, GridId gridId, YamlSequenceNode entNode)
+        {
+            foreach (var yamlNode in entNode.Children)
             {
-                var yamlEnt = (YamlMappingNode) yamlNode;
-                LoadEntityYaml(yamlEnt);
+                var yamlEnt = (YamlMappingNode)yamlNode;
+
+                //TODO: Set new map and grid ID in transform
+
+                var protoName = yamlEnt[new YamlScalarNode("id")].ToString();
+
+                var entity = _entityMan.SpawnEntity(protoName);
+
+                _protoMan.LoadData(entity, yamlEnt);
             }
-        }
-
-        private void LoadEntityYaml(YamlMappingNode node)
-        {
-            var protoName = node[new YamlScalarNode("id")].ToString();
-
-            var entity = _entityMan.SpawnEntity(protoName);
-
-            _protoMan.LoadData(entity, node);
         }
     }
 }

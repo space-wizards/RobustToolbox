@@ -2,11 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using SS14.Shared.Interfaces;
-using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
@@ -14,19 +11,18 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects.Serialization
 {
-    public class EntityYamlSerializer : EntitySerializer
+    public class YamlEntitySerializer : EntitySerializer
     {
         private static readonly Dictionary<Type, TypeSerializer> _typeSerializers;
         private static readonly StructSerializer _structSerializer;
-
-        private readonly YamlDocument _document;
+        
         private readonly YamlSequenceNode _root;
         private YamlMappingNode _entMap;
         private YamlSequenceNode _compSeq;
 
         private YamlMappingNode _curMap;
 
-        static EntityYamlSerializer()
+        static YamlEntitySerializer()
         {
             _structSerializer = new StructSerializer();
             _typeSerializers = new Dictionary<Type, TypeSerializer>();
@@ -39,14 +35,12 @@ namespace SS14.Shared.GameObjects.Serialization
             _typeSerializers.Add(typeof(Box2), new Box2Serializer());
         }
 
-        public EntityYamlSerializer()
+        public YamlEntitySerializer()
         {
             _root = new YamlSequenceNode();
-            _document = new YamlDocument(_root);
-
         }
 
-        public EntityYamlSerializer(YamlMappingNode entMap)
+        public YamlEntitySerializer(YamlMappingNode entMap)
         {
             Reading = true;
             _curMap = entMap;
@@ -126,24 +120,11 @@ namespace SS14.Shared.GameObjects.Serialization
             }
         }
 
-        public void WriteToFile(string yamlPath)
+        public YamlMappingNode GetRootNode()
         {
-            var resMan = IoCManager.Resolve<IResourceManager>();
-            var rootPath = resMan.ConfigDirectory;
-            var path = Path.Combine(rootPath, yamlPath);
-            var fullPath = Path.GetFullPath(path);
-
-            var dir = Path.GetDirectoryName(fullPath);
-            Directory.CreateDirectory(dir);
-
-            using (var writer = new StreamWriter(fullPath))
-            {
-                var stream = new YamlStream();
-                
-                stream.Add(_document);
-                
-                stream.Save(writer);
-            }
+            var root = new YamlMappingNode();
+            root.Add("entities", _root);
+            return root;
         }
 
         internal static object NodeToType(Type type, YamlNode node)
@@ -235,7 +216,7 @@ namespace SS14.Shared.GameObjects.Serialization
 
                 if (mapNode.Children.TryGetValue(scalarNode, out var fNode))
                 {
-                    var fVal = EntityYamlSerializer.NodeToType(fType, fNode);
+                    var fVal = YamlEntitySerializer.NodeToType(fType, fNode);
                     field.SetValue(instance, fVal);
                 }
             }
@@ -257,7 +238,7 @@ namespace SS14.Shared.GameObjects.Serialization
                 var fVal = field.GetValue(obj);
 
                 // Potential recursive infinite loop?
-                var fTypeNode = EntityYamlSerializer.TypeToNode(fVal);
+                var fTypeNode = YamlEntitySerializer.TypeToNode(fVal);
                 node.Add(field.Name, fTypeNode);
             }
 

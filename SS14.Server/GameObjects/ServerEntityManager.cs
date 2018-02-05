@@ -78,17 +78,16 @@ namespace SS14.Server.GameObjects
             return stateEntities;
         }
 
-        public void SaveEntities(string path)
+        public void SaveGridEntities(EntitySerializer serializer, GridId gridId)
         {
-            var serializer = new EntityYamlSerializer();
-
             // serialize all entities to disk
             foreach (var entity in _allEntities)
             {
-                entity.ExposeData(serializer);
+                if (entity.TryGetComponent<ITransformComponent>(out var transform) && transform.GridID == gridId)
+                {
+                    entity.ExposeData(serializer);
+                }
             }
-
-            serializer.WriteToFile(path);
         }
 
         #endregion IEntityManager Members
@@ -158,28 +157,28 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float Range)
+        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float range)
         {
-            var AABB = new Box2(position.Position - new Vector2(Range / 2, Range / 2), position.Position + new Vector2(Range / 2, Range / 2));
-            return GetEntitiesIntersecting(position.MapID, AABB);
+            var aabb = new Box2(position.Position - new Vector2(range / 2, range / 2), position.Position + new Vector2(range / 2, range / 2));
+            return GetEntitiesIntersecting(position.MapID, aabb);
         }
 
-        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float Range)
+        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float range)
         {
-            var AABB = new Box2(box.Left-Range, box.Top+Range, box.Right+Range, box.Bottom-Range);
-            return GetEntitiesIntersecting(mapID, AABB);
+            var aabb = new Box2(box.Left-range, box.Top+range, box.Right+range, box.Bottom-range);
+            return GetEntitiesIntersecting(mapID, aabb);
         }
 
-        public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float Range)
+        public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range)
         {
             if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
             {
-                return GetEntitiesInRange(entity.GetComponent<ITransformComponent>().MapID, component.WorldAABB, Range);
+                return GetEntitiesInRange(entity.GetComponent<ITransformComponent>().MapID, component.WorldAABB, range);
             }
             else
             {
                 LocalCoordinates coords = entity.GetComponent<ITransformComponent>().LocalPosition;
-                return GetEntitiesInRange(coords, Range);
+                return GetEntitiesInRange(coords, range);
             }
         }
 

@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
-using System.Runtime.InteropServices;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
-using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -14,16 +12,14 @@ namespace SS14.Server.Maps
 {
     public static class YamlGridSerializer
     {
-        public static YamlNode SerializeGrid(IMapGrid grid)
+        public static YamlMappingNode SerializeGrid(IMapGrid grid)
         {
-            var root = new YamlSequenceNode();
             var gridn = new YamlMappingNode();
             var info = new YamlMappingNode();
             var chunkSeq = new YamlSequenceNode();
 
             gridn.Add("settings", info);
             gridn.Add("chunks", chunkSeq);
-            root.Add(gridn);
 
             info.Add("csz", grid.ChunkSize.ToString(CultureInfo.InvariantCulture));
             info.Add("tsz", grid.TileSize.ToString(CultureInfo.InvariantCulture));
@@ -36,6 +32,8 @@ namespace SS14.Server.Maps
                 chunkSeq.Add(chunkNode);
             }
 
+            var root = new YamlMappingNode();
+            root.Add("grid", gridn);
             return root;
         }
 

@@ -316,7 +316,7 @@ namespace SS14.Shared.GameObjects
             if (DataNode != null)
             {
                 entity.LoadData(DataNode);
-                entity.ExposeData(new EntityYamlSerializer(DataNode));
+                entity.ExposeData(new YamlEntitySerializer(DataNode));
             }
 
             foreach (KeyValuePair<string, YamlMappingNode> componentData in Components)
@@ -324,7 +324,7 @@ namespace SS14.Shared.GameObjects
                 IComponent component = componentFactory.GetComponent(componentData.Key);
                 
                 component.LoadParameters(componentData.Value);
-                component.ExposeData(new EntityYamlSerializer(componentData.Value));
+                component.ExposeData(new YamlEntitySerializer(componentData.Value));
 
                 entity.AddComponent(component);
             }

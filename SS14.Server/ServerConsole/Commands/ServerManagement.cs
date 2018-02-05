@@ -67,20 +67,7 @@ namespace SS14.Server.ServerConsole.Commands
             if(!map.GridExists(gridId))
                 return;
 
-            IoCManager.Resolve<IMapLoader>().SaveGrid(map, gridId, "./Maps/Demo/Grid.yaml");
-        }
-    }
-
-    public class SaveEnts : IConsoleCommand
-    {
-        public string Command => "save_ents";
-        public string Description => "Serialize all entities to disk.";
-        public string Help => "save_ents";
-        public void Execute(params string[] args)
-        {
-            var entMan = IoCManager.Resolve<IServerEntityManager>();
-
-            entMan.SaveEntities("./Maps/Demo/Entities.yaml");
+            IoCManager.Resolve<IMapLoader>().SaveBlueprint(map, gridId, "./Maps/Demo/FullGrid.yaml");
         }
     }
 }

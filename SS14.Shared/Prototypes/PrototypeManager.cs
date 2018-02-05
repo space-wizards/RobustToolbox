@@ -135,7 +135,7 @@ namespace SS14.Shared.Prototypes
         public void LoadData(IEntity entity, YamlMappingNode node)
         {
             var ent = entity as Entity;
-            ent.ExposeData(new EntityYamlSerializer(node));
+            ent.ExposeData(new YamlEntitySerializer(node));
         }
 
         public void Resync()

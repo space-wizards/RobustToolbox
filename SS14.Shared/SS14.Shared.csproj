@@ -125,7 +125,7 @@
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
     <Compile Include="GameObjects\Serialization\EntitySerializer.cs" />
     <Compile Include="GameObjects\EntityUid.cs" />
-    <Compile Include="GameObjects\Serialization\EntityYamlSerializer.cs" />
+    <Compile Include="GameObjects\Serialization\YamlEntitySerializer.cs" />
     <Compile Include="GameObjects\IncomingEntityComponentMessage.cs" />
     <Compile Include="GameObjects\IncomingEntityMessage.cs" />
     <Compile Include="GameObjects\NetComponent.cs" />

@@ -12,7 +12,7 @@ namespace SS14.Shared.GameObjects
 {
     public delegate void EntityShutdownEvent(IEntity e);
 
-    public sealed class Entity : IEntity
+    public class Entity : IEntity
     {
         #region Members
 

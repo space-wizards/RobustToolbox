@@ -51,5 +51,10 @@ namespace SS14.Shared.GameObjects.System
         public virtual void Update(float frameTime)
         {
         }
+
+        public void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s) where T : EntityEventArgs
+        {
+            EntityManager.SubscribeEvent<T>(evh, s);
+        }
     }
 }

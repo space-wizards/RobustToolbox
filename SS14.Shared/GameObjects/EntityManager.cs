@@ -181,7 +181,7 @@ namespace SS14.Shared.GameObjects
         /// <param name="prototypeName">name of entity template to execute</param>
         /// <param name="uid">UID to give to the new entity.</param>
         /// <returns>spawned entity</returns>
-        public IEntity SpawnEntity(string prototypeName, EntityUid? uid = null)
+        public Entity SpawnEntity(string prototypeName, EntityUid? uid = null)
         {
             if (uid == null)
             {
@@ -198,16 +198,10 @@ namespace SS14.Shared.GameObjects
             Entities[uid.Value] = entity;
             _allEntities.Add(entity);
 
-            // We batch the first set of initializations together.
-            if (Started)
-            {
-                InitializeEntity(entity);
-            }
-
             return entity;
         }
 
-        private void InitializeEntity(Entity entity)
+        public static void InitializeEntity(Entity entity)
         {
             entity.PreInitialize();
             entity.InitializeComponents();

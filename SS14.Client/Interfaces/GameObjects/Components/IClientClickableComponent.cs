@@ -24,6 +24,6 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         /// </summary>
         /// <param name="userUID">The entity owned by the player that clicked.</param>
         /// <param name="clickType">See <see cref="MouseClickType" />.</param>
-        void DispatchClick(IEntity user, int clickType);
+        void DispatchClick(IEntity user, ClickType clickType);
     }
 }

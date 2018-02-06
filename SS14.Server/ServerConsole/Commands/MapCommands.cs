@@ -38,7 +38,8 @@ namespace SS14.Server.ServerConsole.Commands
             if (!map.GridExists(gridId))
                 return;
 
-            IoCManager.Resolve<IMapLoader>().SaveBlueprint(map, gridId, "./Maps/Demo/FullGrid.yaml");
+            // TODO: Parse path
+            IoCManager.Resolve<IMapLoader>().SaveBlueprint(map, gridId, "Maps/Demo/DemoGrid.yaml");
         }
     }
 

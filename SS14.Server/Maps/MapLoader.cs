@@ -45,7 +45,7 @@ namespace SS14.Server.Maps
             var document = new YamlDocument(root);
 
             var rootPath = _resMan.ConfigDirectory;
-            var path = Path.Combine(rootPath, yamlPath);
+            var path = Path.Combine(rootPath, "./", yamlPath);
             var fullPath = Path.GetFullPath(path);
 
             var dir = Path.GetDirectoryName(fullPath);
@@ -64,26 +64,40 @@ namespace SS14.Server.Maps
         public void LoadBlueprint(IMap map, GridId newId, string path)
         {
             var rootPath = _resMan.ConfigDirectory;
-            var comb = Path.Combine(rootPath, path);
+            var comb = Path.Combine(rootPath,"./" , path);
             var fullPath = Path.GetFullPath(comb);
 
+            TextReader reader;
+
+            // try user
             if (!File.Exists(fullPath))
             {
-                Logger.Error($"[MAP] Cannot load map path: {fullPath}");
-                return;
+                Logger.Info($"[MAP] No user blueprint path: {fullPath}");
+
+                // fallback to content
+                if (_resMan.TryContentFileRead(path, out var contentReader))
+                {
+                    reader = new StreamReader(contentReader);
+                }
+                else
+                {
+                    Logger.Error($"[MAP] No blueprint found: {path}");
+                    return;
+                }
+            }
+            else
+            {
+                reader = new StreamReader(fullPath);
             }
 
             Logger.Info($"[MAP] Loading Grid: {path}");
 
-            using (var reader = new StreamReader(fullPath))
-            {
-                var stream = new YamlStream();
-                stream.Load(reader);
+            var stream = new YamlStream();
+            stream.Load(reader);
 
-                foreach (var document in stream.Documents)
-                {
-                    LoadBpDocument(map, newId, document);
-                }
+            foreach (var document in stream.Documents)
+            {
+                LoadBpDocument(map, newId, document);
             }
         }
 
@@ -121,14 +135,15 @@ namespace SS14.Server.Maps
             foreach (var yamlNode in entNode.Children)
             {
                 var yamlEnt = (YamlMappingNode)yamlNode;
-
-                //TODO: Set new map and grid ID in transform
-
-                var protoName = yamlEnt[new YamlScalarNode("id")].ToString();
-
+                
+                var protoName = yamlEnt["id"].ToString();
                 var entity = _entityMan.SpawnEntity(protoName);
 
                 _protoMan.LoadData(entity, yamlEnt);
+
+                // overwrite local position in the BP to the new map/grid ID
+                var transform = entity.GetComponent<IServerTransformComponent>();
+                transform.LocalPosition = new LocalCoordinates(transform.LocalPosition.Position, gridId, map.Index);
             }
         }
     }

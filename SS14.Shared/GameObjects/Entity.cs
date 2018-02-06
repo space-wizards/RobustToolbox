@@ -5,8 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.GameObjects.Serialization;
-using SS14.Shared.Prototypes;
-using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
 {
@@ -103,11 +101,6 @@ namespace SS14.Shared.GameObjects
             {
                 _components[i].Startup();
             }
-        }
-
-        public virtual void LoadData(YamlMappingNode parameters)
-        {
-            // Override me.
         }
 
         public virtual void ExposeData(EntitySerializer serializer)

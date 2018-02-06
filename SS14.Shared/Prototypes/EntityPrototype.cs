@@ -315,7 +315,6 @@ namespace SS14.Shared.GameObjects
 
             if (DataNode != null)
             {
-                entity.LoadData(DataNode);
                 entity.ExposeData(new YamlEntitySerializer(DataNode));
             }
 

@@ -22,7 +22,7 @@ namespace SS14.Server.GameObjects
         public IServerTransformComponent Parent
         {
             get => !_parent.IsValid() ? null : IoCManager.Resolve<IServerEntityManager>().GetEntity(_parent).GetComponent<IServerTransformComponent>();
-            private set => _parent = value.Owner.Uid;
+            private set => _parent = value?.Owner.Uid ?? EntityUid.Invalid;
         }
 
         ITransformComponent ITransformComponent.Parent => Parent;

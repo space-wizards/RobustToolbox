@@ -1,5 +1,6 @@
 ﻿using System;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Physics;
@@ -11,7 +12,8 @@ namespace SS14.Server.GameObjects
 {
     public class CollidableComponent : Component, ICollidableComponent
     {
-        private readonly bool _collisionEnabled = true;
+        private bool _collisionEnabled;
+        private bool _isHardCollidable;
 
         public event EventHandler<BumpEventArgs> OnBump;
 
@@ -38,6 +40,14 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        public override void ExposeData(EntitySerializer serializer)
+        {
+            base.ExposeData(serializer);
+
+            serializer.DataField(ref _collisionEnabled, "on", true);
+            serializer.DataField(ref _isHardCollidable, "hard", true);
+        }
+
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
@@ -51,7 +61,11 @@ namespace SS14.Server.GameObjects
         Box2 ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB;
 
         /// <inheritdoc />
-        public bool IsHardCollidable { get; set; } = true;
+        public bool IsHardCollidable
+        {
+            get => _isHardCollidable;
+            set => _isHardCollidable = value;
+        }
 
         /// <inheritdoc />
         void ICollidable.Bump(IEntity ent)

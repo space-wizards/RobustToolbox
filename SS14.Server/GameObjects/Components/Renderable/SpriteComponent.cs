@@ -3,10 +3,8 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using System.Collections.Generic;
 using System;
+using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Maths;
-using SS14.Shared.Utility;
-using YamlDotNet.RepresentationModel;
-
 
 namespace SS14.Server.GameObjects
 {
@@ -19,19 +17,29 @@ namespace SS14.Server.GameObjects
         private string _currentBaseName;
         private string _currentSpriteKey;
 
+        /// <summary>
+        ///     Offsets the sprite from the entity origin by this many meters.
+        /// </summary>
+        private Vector2 _offset;
+        private bool _visible;
+        private DrawDepth _drawDepth;
+
         public SpriteComponent()
         {
             _slaves = new List<IRenderableComponent>();
         }
 
-        /// <summary>
-        ///     Offsets the sprite from the entity origin by this many meters.
-        /// </summary>
-        public Vector2 Offset { get; set; }
-        
-        public DrawDepth DrawDepth { get; set; } = DrawDepth.FloorTiles;
+        public DrawDepth DrawDepth
+        {
+            get => _drawDepth;
+            set => _drawDepth = value;
+        }
 
-        public bool Visible { get; set; } = true;
+        public bool Visible
+        {
+            get => _visible;
+            set => _visible = value;
+        }
 
         public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
@@ -59,19 +67,20 @@ namespace SS14.Server.GameObjects
             return reply;
         }
         
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void ExposeData(EntitySerializer serializer)
         {
-            base.LoadParameters(mapping);
-            
-            if (mapping.TryGetNode("offset", out var node))
-            {
-                Offset = node.AsVector2();
-            }
+            base.ExposeData(serializer);
+
+            serializer.DataField(ref _visible, "visible", true);
+            serializer.DataField(ref _drawDepth, "depth", DrawDepth.FloorTiles);
+            serializer.DataField(ref _currentSpriteKey, "skey", String.Empty);
+            serializer.DataField(ref _currentBaseName, "sbase", String.Empty);
+            serializer.DataField(ref _offset, "offset", Vector2.Zero);
         }
 
         public override ComponentState GetComponentState()
         {
-            return new SpriteComponentState(Visible, DrawDepth, _currentSpriteKey, _currentBaseName, Offset);
+            return new SpriteComponentState(Visible, DrawDepth, _currentSpriteKey, _currentBaseName, _offset);
         }
 
         public bool IsSlaved()

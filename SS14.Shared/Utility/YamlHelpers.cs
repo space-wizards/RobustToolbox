@@ -43,7 +43,7 @@ namespace SS14.Shared.Utility
             return new Vector2(float.Parse(args[0], CultureInfo.InvariantCulture),
                                 float.Parse(args[1], CultureInfo.InvariantCulture));
         }
-
+        
         public static Vector2i AsVector2i(this YamlNode node)
         {
             string raw = AsString(node);

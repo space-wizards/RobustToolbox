@@ -28,11 +28,18 @@ namespace SS14.Client.UserInterface
         public AcceptDialog PopupControl { get; private set; }
         public DebugConsole DebugConsole { get; private set; }
         public FPSCounter FPSCounter { get; private set; }
+        private DebugCoordsPanel DebugCoordsPanel;
 
         public bool ShowFPS
         {
             get => FPSCounter.Visible;
             set => FPSCounter.Visible = value;
+        }
+
+        public bool ShowCoordDebug
+        {
+            get => DebugCoordsPanel.Visible;
+            set => DebugCoordsPanel.Visible = value;
         }
 
         public void PostInject()
@@ -79,6 +86,9 @@ namespace SS14.Client.UserInterface
 
             FPSCounter = new FPSCounter();
             RootControl.AddChild(FPSCounter);
+
+            DebugCoordsPanel = new DebugCoordsPanel();
+            RootControl.AddChild(DebugCoordsPanel);
         }
 
         public void Dispose()

@@ -28,6 +28,7 @@ namespace SS14.Client.Interfaces.UserInterface
         Control RootControl { get; }
 
         bool ShowFPS { get; set; }
+        bool ShowCoordDebug { get; set; }
 
         void Initialize();
 

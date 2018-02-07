@@ -1,4 +1,5 @@
 ﻿using System;
+using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Utility;
 using SS14.Shared.GameObjects;
@@ -212,7 +213,8 @@ namespace SS14.Client.GameObjects
             var colorFill = DebugColor.WithAlpha(0.25f).Convert();
             var aabb = Owner.GetComponent<BoundingBoxComponent>().AABB;
 
-            var rect = new Godot.Rect2(aabb.Left * 32, aabb.Top * 32, aabb.Width * 32, aabb.Height * 32);
+            const int ppm = EyeManager.PIXELSPERMETER;
+            var rect = new Godot.Rect2(aabb.Left * ppm, aabb.Top * ppm, aabb.Width * ppm, aabb.Height * ppm);
             debugNode.DrawRect(rect, colorEdge, filled: false);
             rect.Position += new Godot.Vector2(1, 1);
             rect.Size -= new Godot.Vector2(2, 2);

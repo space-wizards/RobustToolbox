@@ -18,7 +18,9 @@ namespace SS14.Client.State
         /// <summary>
         ///     Update the contents of this screen.
         /// </summary>
-        public virtual void Update(FrameEventArgs e) { }
+        public virtual void Update(ProcessFrameEventArgs e) { }
+
+        public virtual void FrameUpdate(RenderFrameEventArgs e) { }
 
         #region Events
 

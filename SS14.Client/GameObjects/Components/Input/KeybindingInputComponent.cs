@@ -39,7 +39,7 @@ namespace SS14.Client.GameObjects
         {
             base.OnAdd(owner);
 
-            var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
+            var keyBindingManager = IoCManager.Resolve<IInputManager>();
             keyBindingManager.BoundKeyDown += KeyDown;
             keyBindingManager.BoundKeyUp += KeyUp;
         }
@@ -68,7 +68,7 @@ namespace SS14.Client.GameObjects
         public override void Shutdown()
         {
             base.Shutdown();
-            var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
+            var keyBindingManager = IoCManager.Resolve<IInputManager>();
             keyBindingManager.BoundKeyDown -= KeyDown;
             keyBindingManager.BoundKeyUp -= KeyUp;
         }

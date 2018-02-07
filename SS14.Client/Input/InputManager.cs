@@ -13,13 +13,18 @@ using SS14.Shared.ContentPack;
 using SS14.Shared.Log;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Enums;
+using SS14.Client.Interfaces;
+using SS14.Client.Utility;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Input
 {
-    public class KeyBindingManager : IKeyBindingManager
+    public class InputManager : IInputManager
     {
         [Dependency]
         readonly IUserInterfaceManager userInterfaceManager;
+        [Dependency]
+        readonly ISceneTreeHolder sceneTree;
 
         private Dictionary<Keyboard.Key, BoundKeyFunctions> _boundKeys;
 
@@ -73,5 +78,7 @@ namespace SS14.Client.Input
         {
             return userInterfaceManager.Focused is LineEdit;
         }
+
+        public Vector2 MouseScreenPosition => sceneTree.SceneTree.Root.GetMousePosition().Convert();
     }
 }

@@ -7,7 +7,8 @@ namespace SS14.Client.Interfaces.State
     {
         Client.State.State CurrentState { get; }
         void RequestStateChange<T>() where T : Client.State.State, new();
-        void Update(FrameEventArgs e);
+        void Update(ProcessFrameEventArgs e);
+        void FrameUpdate(RenderFrameEventArgs e);
         void KeyDown(KeyEventArgs e);
         void KeyUp(KeyEventArgs e);
         void KeyHeld(KeyEventArgs e);

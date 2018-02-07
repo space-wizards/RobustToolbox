@@ -239,7 +239,7 @@ namespace SS14.Client.Graphics.Lighting
             }
         }
 
-        public void FrameProcess(FrameEventArgs args)
+        public void FrameUpdate(RenderFrameEventArgs args)
         {
             if (Deferred)
             {

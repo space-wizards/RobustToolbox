@@ -19,6 +19,7 @@ using System.Linq;
 using SS14.Shared.Log;
 using YamlDotNet.RepresentationModel;
 using SS14.Shared.Enums;
+using SS14.Client.Graphics.ClientEye;
 
 // Warning: Shitcode ahead!
 namespace SS14.Client.GameObjects
@@ -82,8 +83,7 @@ namespace SS14.Client.GameObjects
                     return;
                 }
 
-                // TODO: Unhardcode pixelspermeter here.
-                SceneSprite.Offset = value.Convert() * 32;
+                SceneSprite.Offset = value.Convert() * EyeManager.PIXELSPERMETER;
             }
         }
 

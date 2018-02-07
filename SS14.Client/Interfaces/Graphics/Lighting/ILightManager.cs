@@ -10,6 +10,6 @@ namespace SS14.Client.Interfaces.Graphics.Lighting
 
         ILight MakeLight();
         IOccluder MakeOccluder();
-        void FrameProcess(FrameEventArgs args);
+        void FrameUpdate(RenderFrameEventArgs args);
     }
 }

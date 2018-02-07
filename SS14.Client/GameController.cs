@@ -59,7 +59,7 @@ namespace SS14.Client
         [Dependency]
         readonly IBaseClient _client;
         [Dependency]
-        readonly IKeyBindingManager keyBindingManager;
+        readonly IInputManager inputManager;
         [Dependency]
         readonly IClientChatConsole _console;
         [Dependency]
@@ -106,7 +106,7 @@ namespace SS14.Client
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
 
             eyeManager.Initialize();
-            keyBindingManager.Initialize();
+            inputManager.Initialize();
             _serializer.Initialize();
             _userInterfaceManager.Initialize();
             _tileDefinitionManager.Initialize();
@@ -150,18 +150,21 @@ namespace SS14.Client
         public override void PhysicsProcess(float delta)
         {
             _networkManager.ProcessPackets();
-            var eventArgs = new FrameEventArgs(delta);
+            var eventArgs = new ProcessFrameEventArgs(delta);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, eventArgs.Elapsed);
             _timerManager.UpdateTimers(delta);
-            _userInterfaceManager?.Update(eventArgs);
-            _stateManager?.Update(eventArgs);
-            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, eventArgs.Elapsed);
+            _userInterfaceManager.Update(eventArgs);
+            _stateManager.Update(eventArgs);
+            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, eventArgs.Elapsed);
         }
 
         public override void FrameProcess(float delta)
         {
-            var eventArgs = new FrameEventArgs(delta);
-            lightManager.FrameProcess(eventArgs);
+            var eventArgs = new RenderFrameEventArgs(delta);
+            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePreEngine, eventArgs.Elapsed);
+            lightManager.FrameUpdate(eventArgs);
+            _stateManager.FrameUpdate(eventArgs);
+            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePostEngine, eventArgs.Elapsed);
         }
 
         //identical code for server in baseserver

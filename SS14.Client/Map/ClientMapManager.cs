@@ -5,6 +5,7 @@ using SS14.Client.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Client.Interfaces;
 using SS14.Shared.Log;
+using SS14.Client.Graphics.ClientEye;
 
 namespace SS14.Client.Map
 {
@@ -48,7 +49,7 @@ namespace SS14.Client.Map
             {
                 TileSet = tileDefinitionManager.TileSet,
                 // TODO: Unhardcode this cell size.
-                CellSize = new Godot.Vector2(32, 32),
+                CellSize = new Godot.Vector2(EyeManager.PIXELSPERMETER, EyeManager.PIXELSPERMETER),
                 ZIndex = -10,
                 // Fiddle with this some more maybe. Increases lighting performance a TON.
                 CellQuadrantSize = 4,

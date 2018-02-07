@@ -194,8 +194,8 @@
     <Compile Include="GameController\GameControllerProxy.cs" />
     <Compile Include="Interfaces\IGameControllerProxy.cs" />
     <Compile Include="Interfaces\IGameController.cs" />
-    <Compile Include="Interfaces\Input\IKeyBindingManager.cs" />
-    <Compile Include="Input\KeyBindingManager.cs" />
+    <Compile Include="Interfaces\Input\IInputManager.cs" />
+    <Compile Include="Input\InputManager.cs" />
     <Compile Include="State\States\LobbyMenu.cs" />
     <Compile Include="State\States\GameScreen.cs" />
     <Compile Include="Graphics\TextureSource.cs" />
@@ -210,6 +210,22 @@
     <Compile Include="Graphics\ClientEye\Eye.cs" />
     <Compile Include="Graphics\ClientEye\FixedEye.cs" />
     <Compile Include="GameObjects\Components\Eye\EyeComponent.cs" />
+    <Compile Include="Placement\Modes\AlignSnapgridCenter.cs" />
+    <Compile Include="Placement\Modes\AlignSnapgridBorder.cs" />
+    <Compile Include="Placement\PlacementManager.cs" />
+    <Compile Include="Placement\PlacementMode.cs" />
+    <Compile Include="Placement\Modes\PlaceFree.cs" />
+    <Compile Include="Placement\Modes\PlaceNearby.cs" />
+    <Compile Include="Placement\Modes\AlignSimilar.cs" />
+    <Compile Include="Placement\Modes\AlignTileAny.cs" />
+    <Compile Include="Placement\Modes\AlignTileEmpty.cs" />
+    <Compile Include="Placement\Modes\AlignTileNonSolid.cs" />
+    <Compile Include="Placement\Modes\AlignTileSolid.cs" />
+    <Compile Include="Placement\Modes\AlignWall.cs" />
+    <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
+    <Compile Include="UserInterface\CustomControls\EntitySpawnWindow.cs" />
+    <Compile Include="UserInterface\CustomControls\TileSpawnWindow.cs" />
+    <Compile Include="UserInterface\CustomControls\DebugCoordsPanel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="client_config.toml">

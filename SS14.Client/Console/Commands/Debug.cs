@@ -177,4 +177,32 @@ namespace SS14.Client.Console.Commands
             return false;
         }
     }
+
+    class GetRootViewportTransformCommand : IConsoleCommand
+    {
+        public string Command => "rootvptransform";
+        public string Help => "";
+        public string Description => "";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var vp = IoCManager.Resolve<ISceneTreeHolder>().SceneTree.Root;
+            console.AddLine($"canvas_transform: {vp.CanvasTransform}, global_canvas_transform: {vp.GlobalCanvasTransform}");
+            return false;
+        }
+    }
+
+    class DebugCoordsCommand : IConsoleCommand
+    {
+        public string Command => "debugcoords";
+        public string Help => "";
+        public string Description => "";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var ui = IoCManager.Resolve<IUserInterfaceManager>();
+            ui.ShowCoordDebug = !ui.ShowCoordDebug;
+            return false;
+        }
+    }
 }

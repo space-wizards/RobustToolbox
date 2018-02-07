@@ -11,9 +11,14 @@ namespace SS14.Client.State
 
         #region Updates & Statechanges
 
-        public void Update(FrameEventArgs e)
+        public void Update(ProcessFrameEventArgs e)
         {
             CurrentState?.Update(e);
+        }
+
+        public void FrameUpdate(RenderFrameEventArgs e)
+        {
+            CurrentState?.FrameUpdate(e);
         }
 
         public void FormResize()

@@ -69,11 +69,6 @@ namespace SS14.Client
         //   to the more sane methods above.
         public override void Input(InputEvent inputEvent)
         {
-            if (_stateManager == null)
-            {
-                // Would mass spam errors otherwise. pls no.
-                return;
-            }
             switch (inputEvent)
             {
                 case InputEventKey keyEvent:
@@ -123,11 +118,6 @@ namespace SS14.Client
 
         public override void PreInput(InputEvent inputEvent)
         {
-            if (_userInterfaceManager == null)
-            {
-                return;
-            }
-
             if (inputEvent is InputEventKey keyEvent)
             {
                 var keyEventArgs = (KeyEventArgs)keyEvent;

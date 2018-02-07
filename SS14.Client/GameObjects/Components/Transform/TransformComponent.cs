@@ -12,6 +12,7 @@ using SS14.Shared.Enums;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Client.Interfaces;
+using SS14.Client.Graphics.ClientEye;
 
 namespace SS14.Client.GameObjects
 {
@@ -80,8 +81,7 @@ namespace SS14.Client.GameObjects
             {
                 OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new LocalCoordinates(newState.Position, newState.GridID, newState.MapID)));
                 _position = newState.Position;
-                // TODO: Unhardcode the pixelspermeter (32) here!
-                SceneNode.Position = _position.Convert() * 32;
+                SceneNode.Position = _position.Convert() * EyeManager.PIXELSPERMETER;
                 MapID = newState.MapID;
                 GridID = newState.GridID;
             }

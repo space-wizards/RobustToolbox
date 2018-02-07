@@ -19,6 +19,7 @@ using SS14.Shared.Map;
 using SS14.Shared.Network;
 using System;
 using System.Linq;
+using SS14.Client.Interfaces.Placement;
 
 namespace SS14.Client.State.States
 {
@@ -31,7 +32,7 @@ namespace SS14.Client.State.States
         [Dependency]
         readonly IComponentManager _componentManager;
         [Dependency]
-        readonly IKeyBindingManager keyBindingManager;
+        readonly IInputManager inputManager;
         [Dependency]
         readonly IPlayerManager playerManager;
         [Dependency]
@@ -40,6 +41,8 @@ namespace SS14.Client.State.States
         readonly IMapManager mapManager;
         [Dependency]
         readonly IClientChatConsole console;
+        [Dependency]
+        readonly IPlacementManager placementManager;
 
         private EscapeMenu escapeMenu;
 
@@ -83,12 +86,16 @@ namespace SS14.Client.State.States
             }
         }
 
-        public override void Update(FrameEventArgs e)
+        public override void Update(ProcessFrameEventArgs e)
         {
             _componentManager.Update(e.Elapsed);
             _entityManager.Update(e.Elapsed);
-            //PlacementManager.Update(MousePosScreen);
             playerManager.Update(e.Elapsed);
+        }
+
+        public override void FrameUpdate(RenderFrameEventArgs e)
+        {
+            placementManager.FrameUpdate(e);
         }
 
         public override void KeyDown(KeyEventArgs e)
@@ -120,12 +127,12 @@ namespace SS14.Client.State.States
                 _gameChat.Input.GrabFocus();
             }
 
-            keyBindingManager.KeyDown(e);
+            inputManager.KeyDown(e);
         }
 
         public override void KeyUp(KeyEventArgs e)
         {
-            keyBindingManager.KeyUp(e);
+            inputManager.KeyUp(e);
         }
     }
 }

@@ -12,4 +12,14 @@ namespace SS14.Client
             Elapsed = elapsed;
         }
     }
+
+    public class ProcessFrameEventArgs : FrameEventArgs
+    {
+        public ProcessFrameEventArgs(float elapsed) : base(elapsed) { }
+    }
+
+    public class RenderFrameEventArgs : FrameEventArgs
+    {
+        public RenderFrameEventArgs(float elapsed) : base(elapsed) { }
+    }
 }

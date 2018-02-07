@@ -27,7 +27,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <summary>
         ///     Whether this entity has fully initialized.
         /// </summary>
-        bool Initialized { get; set; }
+        bool Initialized { get; }
 
         /// <summary>
         ///     True if the entity has been deleted.
@@ -37,7 +37,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <summary>
         ///     The prototype that was used to create this entity.
         /// </summary>
-        EntityPrototype Prototype { get; set; }
+        EntityPrototype Prototype { get; }
 
         /// <summary>
         ///     Fired when the entity is deleted.
@@ -80,12 +80,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="query">The query to match this entity with.</param>
         /// <returns>True if the query matched, false otherwise.</returns>
         bool Match(IEntityQuery query);
-
-        /// <summary>
-        /// A generic update method that gets called on the entity every frame.
-        /// </summary>
-        /// <param name="frameTime">The time since the last update, in seconds.</param>
-        void Update(float frameTime);
 
         /// <summary>
         ///     Public method to add a component to an entity.
@@ -206,7 +200,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <typeparam name="T">The type that components must implement.</typeparam>
         /// <returns>An enumerable over the found components.</returns>
         IEnumerable<T> GetComponents<T>();
-        void SendMessage(object sender, ComponentMessageType type, params object[] args);
 
         /// <summary>
         ///     Allows components to send messages
@@ -214,8 +207,16 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="sender">the component doing the sending</param>
         /// <param name="type">the type of message</param>
         /// <param name="args">message parameters</param>
-        void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies,
-                         params object[] args);
+        void SendMessage(object sender, ComponentMessageType type, params object[] args);
+
+        /// <summary>
+        /// Allows components to send messages
+        /// </summary>
+        /// <param name="sender">the component doing the sending</param>
+        /// <param name="type">the type of message</param>
+        /// <param name="replies"></param>
+        /// <param name="args">message parameters</param>
+        void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args);
 
         /// <summary>
         ///     Requests Description string from components and returns it. If no component answers, returns default description from template.
@@ -243,10 +244,9 @@ namespace SS14.Shared.Interfaces.GameObjects
         void Initialize();
 
         /// <summary>
-        ///     Called after the entity has loaded data and components, but before the components are initialized.
+        /// Func to handle an incoming network message
         /// </summary>
-        void PreInitialize();
-
+        /// <param name="message"></param>
         void HandleNetworkMessage(IncomingEntityMessage message);
 
         /// <summary>

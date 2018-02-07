@@ -201,9 +201,8 @@ namespace SS14.Shared.GameObjects
             return entity;
         }
 
-        public static void InitializeEntity(Entity entity)
+        protected static void InitializeEntity(Entity entity)
         {
-            entity.PreInitialize();
             entity.InitializeComponents();
             entity.Initialize();
 

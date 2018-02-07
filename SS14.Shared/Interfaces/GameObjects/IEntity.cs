@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using SS14.Shared.GameObjects;
-using YamlDotNet.RepresentationModel;
+using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Interfaces.GameObjects
@@ -65,14 +65,12 @@ namespace SS14.Shared.Interfaces.GameObjects
         void SetManagers(IEntityManager entityManager, IEntityNetworkManager networkManager);
 
         /// <summary>
-        ///     Called after the entity is construted by its prototype to load parameters
-        ///     from the prototype's <c>data</c> field.
+        ///     Called after the entity is constructed by its prototype to load serializable fields
+        ///     from the prototype's <c>data</c> field. Called any time during the Entities life to serialize
+        ///     its fields.
         /// </summary>
-        /// <remarks>
-        ///     This method does not get called in case no data field is provided.
-        /// </remarks>
-        /// <param name="parameters">The mapping representing the <c>data</c> field.</param>
-        void LoadData(YamlMappingNode parameters);
+        /// <param name="serializer">The serialization object that contains the <c>data</c> field.</param>
+        void ExposeData(EntitySerializer serializer);
 
         /// <summary>
         ///     "Matches" this entity with the provided entity query, returning whether or not the query matched.

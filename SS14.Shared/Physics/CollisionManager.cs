@@ -106,8 +106,7 @@ namespace SS14.Shared.Physics
                 new Vector2(colliderAABB.Left, colliderAABB.Bottom)
             };
 
-            var bounds =
-                points
+            var bounds = points
                     .Select(GetBucket) // Get the buckets that correspond to the collider's points.
                     .Distinct()
                     .SelectMany(b => b.GetPoints()) // Get all of the points

@@ -1318,6 +1318,8 @@ namespace SS14.Client.State.States
 
                     Vector2i mouseScreenPos = (Vector2i)Parent.MousePosScreen.Position;
                     var mousepos = CluwneLib.ScreenToCoordinates(Parent.MousePosScreen);
+                    var grid = IoCManager.Resolve<IMapManager>().GetMap(mousepos.MapID).FindGridAt(mousepos);
+                    var gridId = grid != null ? (int) grid.Index : 0;
                     Vector2 mouseWorldOffset = mousepos.ToWorld().Position;
                     Vector2 mouseTile = CluwneLib.WorldToTile(mouseWorldOffset);
 
@@ -1331,7 +1333,7 @@ Mouse Pos:
     Pixel: {mouseWorldOffset.X} / {mouseWorldOffset.Y}
     World: {mouseTile.X} / {mouseTile.Y}
     Screen: {mouseScreenPos.X} / {mouseScreenPos.Y}
-    Grid: {(int)mousepos.GridID}
+    Grid: {gridId}
     Map: {(int)mousepos.MapID}";
 
                     PositionDebugText.Draw();

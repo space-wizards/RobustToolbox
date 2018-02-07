@@ -1,4 +1,4 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SS14.Server.GameObjects.Components.Container;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.IoC;
@@ -76,8 +76,11 @@ namespace SS14.UnitTesting.Server.GameObjects
             var container2 = Container.Create("dummy", inserted);
             Assert.That(() => container2.Insert(owner), Throws.InvalidOperationException);
 
-            Assert.That(container.Remove(inserted), Is.True);
-            Assert.That(container.Remove(inserted), Is.False);
+            var success = container.Remove(inserted);
+            Assert.That(success, Is.True);
+
+            success = container.Remove(inserted);
+            Assert.That(success, Is.False);
 
             container.Insert(inserted);
             owner.Delete();

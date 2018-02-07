@@ -39,11 +39,6 @@ namespace SS14.Server.Interfaces
         string GameModeName { get; set; }
 
         /// <summary>
-        ///     Saves the current running game to disk.
-        /// </summary>
-        void SaveGame();
-
-        /// <summary>
         ///     Sets up the server, loads the game, gets ready for client connections.
         /// </summary>
         /// <returns></returns>

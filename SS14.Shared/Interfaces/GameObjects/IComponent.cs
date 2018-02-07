@@ -110,6 +110,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     Main method for updating the component. This is called from a big loop in ComponentManager.
         /// </summary>
         /// <param name="frameTime"></param>
+        [Obsolete("Components should be updated through a system.")]
         void Update(float frameTime);
 
         /// <summary>

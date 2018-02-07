@@ -79,6 +79,7 @@ namespace SS14.Shared.GameObjects
         public virtual void ExposeData(EntitySerializer serializer) { }
 
         /// <inheritdoc />
+        [Obsolete("Components should be updated through a system.")]
         public virtual void Update(float frameTime) { }
 
         /// <inheritdoc />

@@ -8,6 +8,10 @@ using SS14.Shared.GameObjects.Serialization;
 
 namespace SS14.Shared.GameObjects
 {
+    /// <summary>
+    ///     Event delegate for when an entity is shut down.
+    /// </summary>
+    /// <param name="e">Entity being shut down.</param>
     public delegate void EntityShutdownEvent(IEntity e);
 
     /// <inheritdoc />

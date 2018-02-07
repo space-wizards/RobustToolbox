@@ -195,7 +195,7 @@ namespace SS14.Client.Placement
             _pendingTileChanges.RemoveAll(c => c.Item2 < _time.RealTime);
 
             // keep placing tiles
-            if (_tileMouseDown)
+            if (_tileMouseDown && CurrentPermission.IsTile)
             {
                 HandlePlacement();
             }

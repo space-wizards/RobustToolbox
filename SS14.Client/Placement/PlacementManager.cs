@@ -194,7 +194,7 @@ namespace SS14.Client.Placement
             // purge old unapproved tile changes
             _pendingTileChanges.RemoveAll(c => c.Item2 < _time.RealTime);
 
-            // keep placing tiles
+            // continues tile placement but placement of entities only occurs on mouseup
             if (_tileMouseDown && CurrentPermission.IsTile)
             {
                 HandlePlacement();
@@ -229,7 +229,14 @@ namespace SS14.Client.Placement
                 return false;
 
             if (!_tileMouseDown)
+            {
                 return false;
+            }
+            //Places objects for nontile entities
+            else if(!CurrentPermission.IsTile)
+            {
+                HandlePlacement();
+            }
             
             _tileMouseDown = false;
             return true;

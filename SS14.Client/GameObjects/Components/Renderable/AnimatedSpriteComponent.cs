@@ -402,7 +402,7 @@ namespace SS14.Client.GameObjects
             var newState = (AnimatedSpriteComponentState)state;
             DrawDepth = newState.DrawDepth;
             visible = newState.Visible;
-            if (sprite.Name != newState.Name)
+            if (currentSprite != newState.Name)
                 SetSprite(newState.Name);
 
             if (sprite.CurrentAnimationStateKey != newState.CurrentAnimation)

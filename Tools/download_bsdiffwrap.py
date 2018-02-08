@@ -18,7 +18,8 @@ MACOS_TARGET_FILENAME = "libbsdiffwrap.dylib"
 def main():
     platform = sys.argv[1]
     target_os = sys.argv[2]
-    target_dir = sys.argv[3]
+    # Hah good luck passing something containing a space to the Exec MSBuild Task.
+    target_dir = " ".join(sys.argv[3:])
 
     if platform != "x64":
         print("Error: Unable to download bsdiffwrap for any platform outside x64. "

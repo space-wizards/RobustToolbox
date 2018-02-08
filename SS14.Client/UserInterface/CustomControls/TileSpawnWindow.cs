@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*
+using System;
 using System.Linq;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
@@ -47,18 +48,18 @@ namespace SS14.Client.UserInterface.CustomControls
             Container.AddControl(_clearLabel);
 
             BuildTileList();
-            
+
             _placementManager.PlacementCanceled += PlacementManagerPlacementCanceled;
         }
 
         protected override void OnCalcPosition()
         {
             base.OnCalcPosition();
-            
+
             _screenPos = new Vector2i((int)(CluwneLib.CurrentRenderTarget.Size.X / 2f) - (int)(ClientArea.Width / 2f),
                 (int)(CluwneLib.CurrentRenderTarget.Size.Y / 2f) - (int)(ClientArea.Height / 2f));
         }
-        
+
         public override void Destroy()
         {
             if (Disposing) return;
@@ -66,7 +67,7 @@ namespace SS14.Client.UserInterface.CustomControls
             _tileList.Destroy();
             base.Destroy();
         }
-        
+
         public override bool KeyDown(KeyEventArgs e)
         {
             if (base.KeyDown(e))
@@ -165,3 +166,4 @@ namespace SS14.Client.UserInterface.CustomControls
         }
     }
 }
+*/

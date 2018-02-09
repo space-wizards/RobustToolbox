@@ -13,7 +13,14 @@ namespace SS14.Shared.Maths
 
         public static Angle Zero { get; set; } = new Angle();
 
+        /// <summary>
+        ///     Angle in radians.
+        /// </summary>
         public readonly double Theta;
+
+        /// <summary>
+        ///     Angle in degrees.
+        /// </summary>
         public double Degrees => MathHelper.RadiansToDegrees(Theta);
 
         /// <summary>

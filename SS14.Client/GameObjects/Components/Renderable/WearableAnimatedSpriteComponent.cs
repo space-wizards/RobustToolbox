@@ -110,18 +110,29 @@ namespace SS14.Client.GameObjects
             Sprite spriteToRender = NotWornSprite;
             var bounds = spriteToRender.LocalBounds;
 
-            var renderPos = Owner.GetComponent<ITransformComponent>().WorldPosition * CluwneLib.Camera.PixelsPerMeter;
-            spriteToRender.Position = new Vector2(renderPos.X - (bounds.Width / 2),
-                                                  renderPos.Y - (bounds.Height / 2));
+            var transform = Owner.GetComponent<ITransformComponent>();
+            var worldPos = transform.WorldPosition;
+            var renderPos = worldPos * CluwneLib.Camera.PixelsPerMeter;
+            
+            spriteToRender.Position = new Vector2(renderPos.X, renderPos.Y);
 
-            if (Owner.GetComponent<ITransformComponent>().WorldPosition.X + bounds.Left + bounds.Width < topLeft.X
-                || Owner.GetComponent<ITransformComponent>().WorldPosition.X > bottomRight.X
-                || Owner.GetComponent<ITransformComponent>().WorldPosition.Y + bounds.Top + bounds.Height < topLeft.Y
-                || Owner.GetComponent<ITransformComponent>().WorldPosition.Y > bottomRight.Y)
+            if (worldPos.X + bounds.Left + bounds.Width < topLeft.X
+                || worldPos.X > bottomRight.X
+                || worldPos.Y + bounds.Top + bounds.Height < topLeft.Y
+                || worldPos.Y > bottomRight.Y)
                 return;
 
+            spriteToRender.Origin = new Vector2(spriteToRender.LocalBounds.Width/2, spriteToRender.LocalBounds.Height/2);
+            spriteToRender.Rotation = transform.Rotation + Math.PI/2; // convert our angle to sfml angle
             spriteToRender.Scale = new Vector2(HorizontalFlip ? -1 : 1, 1);
+
             spriteToRender.Draw();
+
+            //because sprites are global for whatever backwards reason... BETTER SET IT BACK TO DEFAULT ಠ_ಠ
+            spriteToRender.Position = new Vector2(0,0);
+            spriteToRender.Origin = new Vector2(0,0);
+            spriteToRender.Rotation = new Angle(0);
+            spriteToRender.Scale = new Vector2(1,1);
 
             //Render slaves above
             IEnumerable<SpriteComponent> renderablesAbove = from SpriteComponent c in slaves

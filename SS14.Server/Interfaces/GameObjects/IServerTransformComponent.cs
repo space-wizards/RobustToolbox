@@ -1,4 +1,5 @@
-﻿using SS14.Shared.Interfaces.GameObjects.Components;
+﻿using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 
@@ -18,5 +19,6 @@ namespace SS14.Server.Interfaces.GameObjects
 
         void DetachParent();
         void AttachParent(IServerTransformComponent parent);
+        void AttachParent(IEntity parent);
     }
 }

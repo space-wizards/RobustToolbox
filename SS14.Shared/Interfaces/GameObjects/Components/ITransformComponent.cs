@@ -26,6 +26,16 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         Angle Rotation { get; }
 
         /// <summary>
+        ///     Matrix for transforming points from local to world space.
+        /// </summary>
+        Matrix3 WorldMatrix { get; }
+
+        /// <summary>
+        ///     Matrix for transforming points from world to local space.
+        /// </summary>
+        Matrix3 InvWorldMatrix { get; }
+
+        /// <summary>
         ///     Event that gets invoked every time the position gets modified through properties such as <see cref="Rotation" />.
         /// </summary>
         event EventHandler<MoveEventArgs> OnMove;

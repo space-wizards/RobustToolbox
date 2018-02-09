@@ -37,8 +37,33 @@ namespace SS14.Server.GameObjects
         private Matrix3 _worldMatrix;
         private Matrix3 _invWorldMatrix;
 
-        public Matrix3 WorldMatrix => _worldMatrix;
-        public Matrix3 InvWorldMatrix => _invWorldMatrix;
+        public Matrix3 WorldMatrix
+        {
+            get
+            {
+                if (_parent.IsValid())
+                {
+                    var matP = Parent.WorldMatrix;
+                    Matrix3.Multiply(ref matP, ref _worldMatrix, out var result);
+                    return result;
+                }
+                return _worldMatrix;
+            }
+        }
+
+        public Matrix3 InvWorldMatrix
+        {
+            get
+            {
+                if (_parent.IsValid())
+                {
+                    var matP = Parent.InvWorldMatrix;
+                    Matrix3.Multiply(ref matP, ref _invWorldMatrix, out var result);
+                    return result;
+                }
+                return _invWorldMatrix;
+            }
+        }
 
         /// <inheritdoc />
         public MapId MapID
@@ -256,7 +281,7 @@ namespace SS14.Server.GameObjects
 
         private void RebuildMatrices()
         {
-            var pos = WorldPosition;
+            var pos = _position;
             var rot = _rotation.Theta;
 
             var posMat = Matrix3.CreateTranslation(pos);

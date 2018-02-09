@@ -25,8 +25,34 @@ namespace SS14.Client.GameObjects
         private Matrix3 _worldMatrix;
         private Matrix3 _invWorldMatrix;
 
-        public Matrix3 WorldMatrix => _worldMatrix;
-        public Matrix3 InvWorldMatrix => _invWorldMatrix;
+
+        public Matrix3 WorldMatrix
+        {
+            get
+            {
+                if (Parent != null)
+                {
+                    var matP = Parent.WorldMatrix;
+                    Matrix3.Multiply(ref matP, ref _worldMatrix, out var result);
+                    return result;
+                }
+                return _worldMatrix;
+            }
+        }
+
+        public Matrix3 InvWorldMatrix
+        {
+            get
+            {
+                if (Parent != null)
+                {
+                    var matP = Parent.InvWorldMatrix;
+                    Matrix3.Multiply(ref matP, ref _invWorldMatrix, out var result);
+                    return result;
+                }
+                return _invWorldMatrix;
+            }
+        }
 
         /// <inheritdoc />
         public override string Name => "Transform";
@@ -40,25 +66,7 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public event EventHandler<MoveEventArgs> OnMove;
 
-        public LocalCoordinates LocalPosition
-        {
-            get
-            {
-                if (Parent != null)
-                {
-                    // transform _position from parent coords to world coords
-                    var worldPos = MatMult(Parent.WorldMatrix, _position);
-                    var lc = new LocalCoordinates(worldPos, GridId.DefaultGrid, MapID);
-
-                    // then to parent grid coords
-                    return lc.ConvertToGrid(Parent.LocalPosition.Grid);
-                }
-                else
-                {
-                    return new LocalCoordinates(_position, GridID, MapID);
-                }
-            }
-        }
+        public LocalCoordinates LocalPosition => new LocalCoordinates(_position, GridID, MapID);
 
         public Vector2 WorldPosition
         {
@@ -66,18 +74,15 @@ namespace SS14.Client.GameObjects
             {
                 if (Parent != null)
                 {
-                    // parent coords to world coords
-                    return MatMult(Parent.WorldMatrix, _position);
+                    return _position;
                 }
-                else
-                {
+
                     var maps = IoCManager.Resolve<IMapManager>();
                     if (maps.TryGetMap(MapID, out var map) && map.GridExists(GridID))
                     {
                         return map.GetGrid(GridID).ConvertToWorld(_position);
                     }
                     return new Vector2();
-                }
             }
         }
 
@@ -86,7 +91,6 @@ namespace SS14.Client.GameObjects
         {
             var newState = (TransformComponentState)state;
             Rotation = newState.Rotation;
-            RebuildMatrices();
 
             if (_position != newState.Position || MapID != newState.MapID || GridID != newState.GridID)
             {
@@ -95,6 +99,8 @@ namespace SS14.Client.GameObjects
                 MapID = newState.MapID;
                 GridID = newState.GridID;
             }
+
+            RebuildMatrices();
 
             var newParentId = newState.ParentID;
             if (Parent?.Owner?.Uid != newParentId)
@@ -166,7 +172,7 @@ namespace SS14.Client.GameObjects
 
         private void RebuildMatrices()
         {
-            var pos = WorldPosition;
+            var pos = _position;
             var rot = Rotation.Theta;
 
             var posMat = Matrix3.CreateTranslation(pos);
@@ -176,13 +182,6 @@ namespace SS14.Client.GameObjects
 
             _worldMatrix = transMat;
             _invWorldMatrix = Matrix3.Invert(transMat);
-        }
-
-        private static Vector2 MatMult(Matrix3 mat, Vector2 vec)
-        {
-            var vecHom = new Vector3(vec.X, vec.Y, 1);
-            Matrix3.Transform(ref mat, ref vecHom);
-            return vecHom.Xy;
         }
     }
 }

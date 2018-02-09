@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Server.GameObjects;
+using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
@@ -61,18 +62,16 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
             var parentTrans = parent.GetComponent<ITransformComponent>();
             var childTrans = child.GetComponent<ITransformComponent>();
 
-            var compState = new TransformComponentState(new LocalCoordinates(1, 1, new GridId(5), new MapId(2)), new Angle(0), EntityUid.Invalid);
+            var compState = new TransformComponentState(new LocalCoordinates(5, 5, new GridId(5), new MapId(2)), new Angle(0), EntityUid.Invalid);
             parentTrans.HandleComponentState(compState);
 
-            compState = new TransformComponentState(new LocalCoordinates(5, 5, new GridId(5), new MapId(2)), new Angle(0), EntityUid.Invalid);
+            compState = new TransformComponentState(new LocalCoordinates(6, 6, new GridId(5), new MapId(2)), new Angle(0), EntityUid.Invalid);
             childTrans.HandleComponentState(compState);
 
             // Act
             var oldWpos = childTrans.WorldPosition;
-
-            compState = new TransformComponentState(new LocalCoordinates(4, 4, new GridId(5), new MapId(2)), new Angle(0), parent.Uid);
+            compState = new TransformComponentState(new LocalCoordinates(6, 6, new GridId(5), new MapId(2)), new Angle(0), parent.Uid);
             childTrans.HandleComponentState(compState);
-
             var newWpos = childTrans.WorldPosition;
 
             // Assert

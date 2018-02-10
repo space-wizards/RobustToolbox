@@ -9,7 +9,7 @@ namespace SS14.Server.Interfaces.GameObjects
     {
         // These definitions allow setting too,
         // because the client can only read the properties.
-        new Angle Rotation { get; set; }
+        new Angle LocalRotation { get; set; }
         new LocalCoordinates LocalPosition { get; set; }
         new Vector2 WorldPosition { get; set; }
 

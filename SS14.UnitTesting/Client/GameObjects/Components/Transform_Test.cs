@@ -77,5 +77,38 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
             // Assert
             Assert.That(oldWpos == newWpos);
         }
+
+        /// <summary>
+        ///     Tests that world rotation is built properly
+        /// </summary>
+        [Test]
+        public void WorldRotationTest()
+        {
+            // Arrange
+            var node1 = EntityManager.SpawnEntity("dummy");
+            var node2 = EntityManager.SpawnEntity("dummy");
+            var node3 = EntityManager.SpawnEntity("dummy");
+
+            node1.Name = "node1_dummy";
+            node2.Name = "node2_dummy";
+            node3.Name = "node3_dummy";
+
+            var node1Trans = node1.GetComponent<ITransformComponent>();
+            var node2Trans = node2.GetComponent<ITransformComponent>();
+            var node3Trans = node3.GetComponent<ITransformComponent>();
+
+            var compState = new TransformComponentState(new LocalCoordinates(6, 6, new GridId(5), new MapId(2)), Angle.FromDegrees(135), EntityUid.Invalid);
+            node1Trans.HandleComponentState(compState);
+            compState = new TransformComponentState(new LocalCoordinates(7, 7, new GridId(5), new MapId(2)), Angle.FromDegrees(45), node1.Uid);
+            node2Trans.HandleComponentState(compState);
+            compState = new TransformComponentState(new LocalCoordinates(7, 7, new GridId(5), new MapId(2)), Angle.FromDegrees(45), node2.Uid);
+            node3Trans.HandleComponentState(compState);
+
+            // Act
+            var result = node3Trans.WorldRotation;
+
+            // Assert (135 + 45 + 45 = 225)
+            Assert.That(result.EqualsApprox(Angle.FromDegrees(225)), result.Degrees.ToString);
+        }
     }
 }

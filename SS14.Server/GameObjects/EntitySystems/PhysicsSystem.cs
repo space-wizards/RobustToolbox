@@ -41,7 +41,7 @@ namespace SS14.Server.GameObjects.EntitySystems
             if (velocity.AngularVelocity > Epsilon)
                 angImpulse = velocity.AngularVelocity * frameTime;
 
-            transform.Rotation += angImpulse;
+            transform.LocalRotation += angImpulse;
 
             //"space friction"
             if (velocity.LinearVelocity.LengthSquared > Epsilon)

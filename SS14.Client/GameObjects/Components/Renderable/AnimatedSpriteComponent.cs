@@ -294,7 +294,7 @@ namespace SS14.Client.GameObjects
             if (sprite == null || IsSlaved())
                 return;
 
-            var worldRot = Owner.GetComponent<TransformComponent>().Rotation.ToVec();
+            var worldRot = Owner.GetComponent<TransformComponent>().WorldRotation.ToVec();
 
             // world2screen
             worldRot = new Vector2(worldRot.X, worldRot.Y * -1);

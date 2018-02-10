@@ -130,7 +130,7 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             childTrans.AttachParent(parentTrans);
 
             //Act
-            parentTrans.Rotation = new Angle(MathHelper.Pi / 2);
+            parentTrans.LocalRotation = new Angle(MathHelper.Pi / 2);
 
             //Assert
             var result = childTrans.WorldPosition;
@@ -154,7 +154,7 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             childTrans.AttachParent(parentTrans);
 
             //Act
-            parentTrans.Rotation = new Angle(MathHelper.Pi / 2);
+            parentTrans.LocalRotation = new Angle(MathHelper.Pi / 2);
 
             //Assert
             var result = childTrans.WorldPosition;
@@ -189,7 +189,7 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             node4Trans.AttachParent(node3Trans);
 
             //Act
-            node1Trans.Rotation = new Angle(MathHelper.Pi / 2);
+            node1Trans.LocalRotation = new Angle(MathHelper.Pi / 2);
 
             //Assert
             var result = node4Trans.WorldPosition;
@@ -264,9 +264,9 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             
             for (var i = 0; i < 100; i++)
             {
-                node1Trans.Rotation += new Angle(MathHelper.Pi);
-                node2Trans.Rotation += new Angle(MathHelper.Pi);
-                node3Trans.Rotation += new Angle(MathHelper.Pi);
+                node1Trans.LocalRotation += new Angle(MathHelper.Pi);
+                node2Trans.LocalRotation += new Angle(MathHelper.Pi);
+                node3Trans.LocalRotation += new Angle(MathHelper.Pi);
             }
 
             var newWpos = node3Trans.WorldPosition;
@@ -308,7 +308,7 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             node4Trans.AttachParent(node3Trans);
 
             //Act
-            node1Trans.Rotation = new Angle(MathHelper.Pi / 6.37);
+            node1Trans.LocalRotation = new Angle(MathHelper.Pi / 6.37);
             node1Trans.WorldPosition = new Vector2(1, 1);
 
             var worldMat = node4Trans.WorldMatrix;
@@ -324,6 +324,36 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
 
             // verify matrix == identity matrix (or very close to because float precision)
             Assert.That(Matrix3.EqualsApprox(ref leftVerifyMatrix, ref control, epsilon), leftVerifyMatrix.ToString);
+        }
+
+        /// <summary>
+        ///     Tests that world rotation is built properly
+        /// </summary>
+        [Test]
+        public void WorldRotationTest()
+        {
+            // Arrange
+            var node1 = EntityManager.SpawnEntity("dummy");
+            var node2 = EntityManager.SpawnEntity("dummy");
+            var node3 = EntityManager.SpawnEntity("dummy");
+
+            var node1Trans = node1.GetComponent<IServerTransformComponent>();
+            var node2Trans = node2.GetComponent<IServerTransformComponent>();
+            var node3Trans = node3.GetComponent<IServerTransformComponent>();
+;
+            node2Trans.AttachParent(node1Trans);
+            node3Trans.AttachParent(node2Trans);
+
+            node1Trans.LocalRotation = Angle.FromDegrees(0);
+            node2Trans.LocalRotation = Angle.FromDegrees(45);
+            node3Trans.LocalRotation = Angle.FromDegrees(45);
+
+            // Act
+            node1Trans.LocalRotation = Angle.FromDegrees(135);
+
+            // Assert (135 + 45 + 45 = 225)
+            var result = node3Trans.WorldRotation;
+            Assert.That(result.EqualsApprox(Angle.FromDegrees(225)), result.Degrees.ToString);
         }
     }
 }

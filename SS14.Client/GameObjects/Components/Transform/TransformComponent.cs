@@ -19,7 +19,7 @@ namespace SS14.Client.GameObjects
         private Vector2 _position;
         public MapId MapID { get; private set; }
         public GridId GridID { get; private set; }
-        public Angle Rotation { get; private set; }
+        public Angle LocalRotation { get; private set; }
         public ITransformComponent Parent { get; private set; }
 
         private Matrix3 _worldMatrix;
@@ -30,6 +30,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
+                RebuildMatrices();
                 if (Parent != null)
                 {
                     var matP = Parent.WorldMatrix;
@@ -44,6 +45,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
+                RebuildMatrices();
                 if (Parent != null)
                 {
                     var matP = Parent.InvWorldMatrix;
@@ -86,11 +88,25 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        public Angle WorldRotation
+        {
+            get
+            {
+                if (Parent != null)
+                {
+                    var wpRotV = Parent.WorldRotation.Theta;
+                    var wRotV = wpRotV + LocalRotation.Theta;
+                    return new Angle(wRotV);
+                }
+                return LocalRotation;
+            }
+        }
+
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState state)
         {
             var newState = (TransformComponentState)state;
-            Rotation = newState.Rotation;
+            LocalRotation = newState.Rotation;
 
             if (_position != newState.Position || MapID != newState.MapID || GridID != newState.GridID)
             {
@@ -99,8 +115,6 @@ namespace SS14.Client.GameObjects
                 MapID = newState.MapID;
                 GridID = newState.GridID;
             }
-
-            RebuildMatrices();
 
             var newParentId = newState.ParentID;
             if (Parent?.Owner?.Uid != newParentId)
@@ -173,7 +187,7 @@ namespace SS14.Client.GameObjects
         private void RebuildMatrices()
         {
             var pos = _position;
-            var rot = Rotation.Theta;
+            var rot = LocalRotation.Theta;
 
             var posMat = Matrix3.CreateTranslation(pos);
             var rotMat = Matrix3.CreateRotation((float)rot);
@@ -182,6 +196,13 @@ namespace SS14.Client.GameObjects
 
             _worldMatrix = transMat;
             _invWorldMatrix = Matrix3.Invert(transMat);
+        }
+
+        private static Vector2 MatMult(Matrix3 mat, Vector2 vec)
+        {
+            var vecHom = new Vector3(vec.X, vec.Y, 1);
+            Matrix3.Transform(ref mat, ref vecHom);
+            return vecHom.Xy;
         }
     }
 }

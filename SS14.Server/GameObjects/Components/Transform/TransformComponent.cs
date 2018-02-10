@@ -30,7 +30,7 @@ namespace SS14.Server.GameObjects
 
         private EntityUid _parent;
         private Vector2 _position; // holds offset from grid, or offset from parent
-        private Angle _rotation; // world rotation
+        private Angle _rotation; // local rotation
         private MapId _mapID;
         private GridId _gridID;
 
@@ -84,7 +84,7 @@ namespace SS14.Server.GameObjects
         /// <summary>
         ///     Current rotation offset of the entity.
         /// </summary>
-        public Angle Rotation
+        public Angle LocalRotation
         {
             get => _rotation;
             set
@@ -93,7 +93,22 @@ namespace SS14.Server.GameObjects
                 RebuildMatrices();
             }
         }
-
+        
+        public Angle WorldRotation
+        {
+            get
+            {
+                if (_parent.IsValid())
+                {
+                    var lRotV = _rotation.ToVec();
+                    var wRotV = MatMult(Parent.WorldMatrix, lRotV);
+                    var uwRotV = wRotV.Normalized;
+                    return uwRotV.ToAngle();
+                }
+                return _rotation;
+            }
+        }
+        
         /// <inheritdoc />
         public override string Name => "Transform";
 
@@ -204,7 +219,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new TransformComponentState(LocalPosition, Rotation, Parent?.Owner?.Uid);
+            return new TransformComponentState(LocalPosition, LocalRotation, Parent?.Owner?.Uid);
         }
 
         /// <summary>

@@ -247,7 +247,7 @@ namespace SS14.Client.GameObjects
 
             string dirName =
                 (currentBaseSpriteKey + "_" +
-                 transform.Rotation.GetDir().ToString()).
+                 transform.WorldRotation.GetDir()).
                     ToLowerInvariant();
 
             if (dirSprites.ContainsKey(dirName))

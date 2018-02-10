@@ -123,7 +123,7 @@ namespace SS14.Client.GameObjects
                 return;
 
             spriteToRender.Origin = new Vector2(spriteToRender.LocalBounds.Width/2, spriteToRender.LocalBounds.Height/2);
-            spriteToRender.Rotation = transform.Rotation + Math.PI/2; // convert our angle to sfml angle
+            spriteToRender.Rotation = transform.WorldRotation + Math.PI/2; // convert our angle to sfml angle
             spriteToRender.Scale = new Vector2(HorizontalFlip ? -1 : 1, 1);
 
             spriteToRender.Draw();

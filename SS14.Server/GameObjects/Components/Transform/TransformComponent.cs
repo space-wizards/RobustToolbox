@@ -37,6 +37,7 @@ namespace SS14.Server.GameObjects
         private Matrix3 _worldMatrix;
         private Matrix3 _invWorldMatrix;
 
+        /// <inheritdoc />
         public Matrix3 WorldMatrix
         {
             get
@@ -51,6 +52,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        /// <inheritdoc />
         public Matrix3 InvWorldMatrix
         {
             get
@@ -61,7 +63,6 @@ namespace SS14.Server.GameObjects
                     Matrix3.Multiply(ref matP, ref _invWorldMatrix, out var result);
                     return result;
                 }
-                RebuildMatrices();
                 return _invWorldMatrix;
             }
         }
@@ -128,9 +129,6 @@ namespace SS14.Server.GameObjects
                     // grid coords to world coords
                     var worldCoords = value.ToWorld();
 
-                    if (worldCoords.Position.Length > 50)
-                        throw new Exception("value is huge.");
-                    
                     // world coords to parent coords
                     var newPos = MatMult(Parent.InvWorldMatrix, worldCoords.Position);
 
@@ -161,12 +159,7 @@ namespace SS14.Server.GameObjects
                 if (Parent != null)
                 {
                     // parent coords to world coords
-                    var worldPosition = MatMult(Parent.WorldMatrix, _position);
-
-                    if (worldPosition.Length > 50)
-                        throw new Exception("value is huge.");
-
-                    return worldPosition;
+                    return MatMult(Parent.WorldMatrix, _position);
                 }
                 else
                 {
@@ -177,31 +170,13 @@ namespace SS14.Server.GameObjects
             {
                 if (_parent.IsValid())
                 {
-                    if(value.Length > 50)
-                        throw new Exception("value is huge.");
-
-                    //sanity check
-                    var pwmat = Parent.WorldMatrix;
-                    var pimat = Parent.InvWorldMatrix;
-                    Matrix3.Multiply(ref pwmat, ref pimat, out var verifyMatrix);
-
-                    var control = Matrix3.Identity;
-                    if(!verifyMatrix.EqualsApprox(ref control, 1.0E-2f))
-                        throw new Exception("inversion broke.");
-
                     // world coords to parent coords
                     var newPos = MatMult(Parent.InvWorldMatrix, value);
 
                     // float rounding error guard, if the offset is less than 1mm ignore it
                     if (Math.Abs(newPos.LengthSquared - _position.LengthSquared) < 10.0E-3)
                         return;
-
-                    if (_position.Length > 50)
-                        throw new Exception("value is huge.");
-
-                    if(!FloatMath.CloseTo(newPos.LengthSquared, _position.LengthSquared))
-                        throw new Exception("Drifting");
-
+                    
                     _position = newPos;
                 }
                 else

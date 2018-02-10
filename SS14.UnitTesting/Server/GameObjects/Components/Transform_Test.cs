@@ -193,7 +193,7 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
 
             //Assert
             var result = node4Trans.WorldPosition;
-            Assert.That(FloatMath.CloseTo(result.X, 2), result.ToString);
+            Assert.That(FloatMath.CloseTo(result.X, -2), result.ToString);
             Assert.That(FloatMath.CloseTo(result.Y, 0), result.ToString);
         }
 

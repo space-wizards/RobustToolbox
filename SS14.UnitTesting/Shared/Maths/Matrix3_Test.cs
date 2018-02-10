@@ -20,7 +20,7 @@ namespace SS14.UnitTesting.Shared.Maths
             Matrix3.Transform(ref matrix, ref origin);
 
             Vector2 result = origin.Xy;
-            Assert.That(control == result, Is.True);
+            Assert.That(control == result, Is.True, result.ToString);
         }
 
         private static readonly IEnumerable<(Vector2, double)> _rotationTests = new[]
@@ -62,18 +62,23 @@ namespace SS14.UnitTesting.Shared.Maths
 
             // NOTE: Matrix Product is NOT commutative. OpenTK (and this) uses pre-multiplication, OpenGL and all the tutorials
             // you will read about it use post-multiplication. So in OpenTK MVP = M*V*P; in OpenGL it is MVP = P*V*M.
-            rotateMatrix.Multiply(ref translateMatrix, out var transformMatrix);
+            // OpenGL: TransformedVector = TranslationMatrix * RotationMatrix * ScaleMatrix * OriginalVector;
+            Matrix3.Multiply(ref rotateMatrix, ref translateMatrix, out var transformMatrix);
 
             Vector3 result = startPoint;
             Matrix3.Transform(ref transformMatrix, ref result);
 
-            Assert.That(FloatMath.CloseTo(0, result.X), Is.True, result.ToString);
-            Assert.That(FloatMath.CloseTo(0, result.Y), Is.True, result.ToString);
+            // (2,0) -> (0,2) -> (0,0)
+            Assert.That(FloatMath.CloseTo(result.X, 0), Is.True, result.ToString);
+            Assert.That(FloatMath.CloseTo(result.Y, 0), Is.True, result.ToString);
         }
 
         [Test]
         public void InvertTest()
         {
+            const float epsilon = 1.0E-7f;
+            var control = Matrix3.Identity;
+
             // take our matrix
             var normalMatrix = new Matrix3(
                 3, 7, 2,
@@ -84,14 +89,59 @@ namespace SS14.UnitTesting.Shared.Maths
             // invert it (1/matrix)
             var invMatrix = Matrix3.Invert(normalMatrix);
 
-            // multiply it back together
-            invMatrix.Multiply(ref normalMatrix, out var verifyMatrix);
+            // multiply it back together 
+            Matrix3.Multiply(ref normalMatrix, ref invMatrix, out var leftVerifyMatrix);
+            Matrix3.Multiply(ref invMatrix, ref normalMatrix, out var rightVerifyMatrix);
 
-            const float epsilon = 1.0E-7f;
-            var control = Matrix3.Identity;
+            // these should be the same (A × A-1 = A-1 × A = I)
+            Assert.That(Matrix3.EqualsApprox(ref leftVerifyMatrix, ref rightVerifyMatrix, epsilon));
 
             // verify matrix == identity matrix (or very close to because float precision)
-            Assert.That(verifyMatrix.EqualsApprox(ref control, epsilon), Is.True, verifyMatrix.ToString);
+            Assert.That(Matrix3.EqualsApprox(ref leftVerifyMatrix, ref control, epsilon), leftVerifyMatrix.ToString);
+        }
+
+        [Test]
+        public void TranslateMultiplyTest()
+        {
+            // Arrange
+            var mat1 = Matrix3.CreateTranslation(new Vector2(1, 1));
+            var mat2 = Matrix3.CreateTranslation(new Vector2(-2, -2));
+            var mat3 = Matrix3.CreateTranslation(new Vector2(3, 3));
+
+            mat1.Multiply(ref mat2, out var res2);
+            res2.Multiply(ref mat3, out var res3);
+
+            // Act
+            Vector3 test = new Vector3(0, 0, 1);
+            Matrix3.Transform(ref res3, ref test);
+            var result = test.Xy;
+
+            // Assert
+            Assert.That(FloatMath.CloseTo(result.X, 2), result.ToString);
+            Assert.That(FloatMath.CloseTo(result.Y, 2), result.ToString);
+        }
+
+        [Test]
+        public void SpaceSwitchTest()
+        {
+            // Arrange
+            var startPoint = new Vector3(2, 0, 1);
+            var rotateMatrix = Matrix3.CreateRotation((float)(System.Math.PI / 6.3967));
+            var translateMatrix = Matrix3.CreateTranslation(new Vector2(5.357f, -37.53854f));
+
+            // NOTE: Matrix Product is NOT commutative. OpenTK (and this) uses pre-multiplication, OpenGL and all the tutorials
+            // you will read about it use post-multiplication. So in OpenTK MVP = M*V*P; in OpenGL it is MVP = P*V*M.
+            Matrix3.Multiply(ref rotateMatrix, ref translateMatrix, out var transformMatrix);
+
+            // Act
+            Matrix3.Transform(ref transformMatrix, ref startPoint, out var localPoint);
+
+            var invMatrix = Matrix3.Invert(transformMatrix);
+            Matrix3.Transform(ref invMatrix, ref localPoint, out var result);
+
+            // Assert
+            Assert.That(FloatMath.CloseTo(startPoint.X, result.X), Is.True, result.ToString);
+            Assert.That(FloatMath.CloseTo(startPoint.Y, result.Y), Is.True, result.ToString);
         }
     }
 }

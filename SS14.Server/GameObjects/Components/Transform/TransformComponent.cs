@@ -43,8 +43,8 @@ namespace SS14.Server.GameObjects
             {
                 if (_parent.IsValid())
                 {
-                    var matP = Parent.WorldMatrix;
-                    Matrix3.Multiply(ref matP, ref _worldMatrix, out var result);
+                    var parentMatrix = Parent.WorldMatrix;
+                    Matrix3.Multiply(ref _worldMatrix, ref parentMatrix, out var result);
                     return result;
                 }
                 return _worldMatrix;
@@ -61,6 +61,7 @@ namespace SS14.Server.GameObjects
                     Matrix3.Multiply(ref matP, ref _invWorldMatrix, out var result);
                     return result;
                 }
+                RebuildMatrices();
                 return _invWorldMatrix;
             }
         }
@@ -127,8 +128,17 @@ namespace SS14.Server.GameObjects
                     // grid coords to world coords
                     var worldCoords = value.ToWorld();
 
+                    if (worldCoords.Position.Length > 50)
+                        throw new Exception("value is huge.");
+                    
                     // world coords to parent coords
-                    _position = MatMult(Parent.InvWorldMatrix, worldCoords.Position);
+                    var newPos = MatMult(Parent.InvWorldMatrix, worldCoords.Position);
+
+                    // float rounding error guard, if the offset is less than 1mm ignore it
+                    if (Math.Abs(newPos.LengthSquared - _position.LengthSquared) < 10.0E-3)
+                        return;
+
+                    _position = newPos;
                 }
                 else
                 {
@@ -151,7 +161,12 @@ namespace SS14.Server.GameObjects
                 if (Parent != null)
                 {
                     // parent coords to world coords
-                    return MatMult(Parent.WorldMatrix, _position);
+                    var worldPosition = MatMult(Parent.WorldMatrix, _position);
+
+                    if (worldPosition.Length > 50)
+                        throw new Exception("value is huge.");
+
+                    return worldPosition;
                 }
                 else
                 {
@@ -162,8 +177,32 @@ namespace SS14.Server.GameObjects
             {
                 if (_parent.IsValid())
                 {
+                    if(value.Length > 50)
+                        throw new Exception("value is huge.");
+
+                    //sanity check
+                    var pwmat = Parent.WorldMatrix;
+                    var pimat = Parent.InvWorldMatrix;
+                    Matrix3.Multiply(ref pwmat, ref pimat, out var verifyMatrix);
+
+                    var control = Matrix3.Identity;
+                    if(!verifyMatrix.EqualsApprox(ref control, 1.0E-2f))
+                        throw new Exception("inversion broke.");
+
                     // world coords to parent coords
-                    _position = MatMult(Parent.InvWorldMatrix, value);
+                    var newPos = MatMult(Parent.InvWorldMatrix, value);
+
+                    // float rounding error guard, if the offset is less than 1mm ignore it
+                    if (Math.Abs(newPos.LengthSquared - _position.LengthSquared) < 10.0E-3)
+                        return;
+
+                    if (_position.Length > 50)
+                        throw new Exception("value is huge.");
+
+                    if(!FloatMath.CloseTo(newPos.LengthSquared, _position.LengthSquared))
+                        throw new Exception("Drifting");
+
+                    _position = newPos;
                 }
                 else
                 {
@@ -290,7 +329,13 @@ namespace SS14.Server.GameObjects
             Matrix3.Multiply(ref rotMat, ref posMat, out var transMat);
 
             _worldMatrix = transMat;
-            _invWorldMatrix = Matrix3.Invert(transMat);
+
+            var posImat = Matrix3.Invert(posMat);
+            var rotImap = Matrix3.Invert(rotMat);
+
+            Matrix3.Multiply(ref posImat, ref rotImap, out var itransMat);
+
+            _invWorldMatrix = itransMat;
         }
 
         private static Vector2 MatMult(Matrix3 mat, Vector2 vec)

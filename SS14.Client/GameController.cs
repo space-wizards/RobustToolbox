@@ -28,6 +28,7 @@ using SS14.Client.Interfaces.Graphics;
 using SS14.Shared.Interfaces.Timers;
 using SS14.Shared.Configuration;
 using SS14.Client.Interfaces.Graphics.ClientEye;
+using SS14.Client.Interfaces.Placement;
 
 namespace SS14.Client
 {
@@ -72,6 +73,10 @@ namespace SS14.Client
         readonly IClientEntityManager _entityManager;
         [Dependency]
         readonly IEyeManager eyeManager;
+        [Dependency]
+        readonly GameController.GameTiming gameTiming;
+        [Dependency]
+        readonly IPlacementManager placementManager;
 
         public override void Main(Godot.SceneTree tree)
         {
@@ -115,7 +120,7 @@ namespace SS14.Client
             _prototypeManager.LoadDirectory(@"./Prototypes/");
             _prototypeManager.Resync();
             _mapManager.Initialize();
-            //_placementManager.Initialize();
+            placementManager.Initialize();
             lightManager.Initialize();
             _entityManager.Initialize();
 
@@ -160,6 +165,8 @@ namespace SS14.Client
 
         public override void FrameProcess(float delta)
         {
+            // TODO: This is probably not great.
+            gameTiming.RealTime += TimeSpan.FromSeconds(delta);
             var eventArgs = new RenderFrameEventArgs(delta);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePreEngine, eventArgs.Elapsed);
             lightManager.FrameUpdate(eventArgs);

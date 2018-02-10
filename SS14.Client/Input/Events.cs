@@ -102,6 +102,8 @@ namespace SS14.Client.Input
                                  bool system)
             : base(alt, control, shift, system)
         {
+            ButtonMask = buttonMask;
+            Position = position;
         }
     }
 

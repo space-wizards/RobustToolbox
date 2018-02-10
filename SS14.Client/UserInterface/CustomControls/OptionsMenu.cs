@@ -19,8 +19,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         protected override Godot.Control SpawnSceneControl()
         {
-            var res = (Godot.PackedScene)Godot.ResourceLoader.Load("res://Scenes/OptionsMenu/OptionsMenu.tscn");
-            return (Godot.Control)res.Instance();
+            return LoadScene("res://Scenes/OptionsMenu/OptionsMenu.tscn");
         }
 
         protected override void Initialize()

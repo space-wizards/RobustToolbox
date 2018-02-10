@@ -95,6 +95,7 @@
     <Compile Include="GameController\FrameEventArgs.cs" />
     <Compile Include="GameController\GameController.Input.cs" />
     <Compile Include="GameController\GameController.IoC.cs" />
+    <Compile Include="GameController\GameController.GameTiming.cs" />
     <Compile Include="GameObjects\ClientComponentFactory.cs" />
     <Compile Include="GameObjects\ClientEntityManager.cs" />
     <Compile Include="GameObjects\ClientEntityNetworkManager.cs" />
@@ -186,6 +187,7 @@
     <Compile Include="UserInterface\Controls\RichTextLabel.cs" />
     <Compile Include="UserInterface\Controls\TextureButton.cs" />
     <Compile Include="UserInterface\Controls\OptionButton.cs" />
+    <Compile Include="UserInterface\Controls\TextureRect.cs" />
     <Compile Include="UserInterface\CustomControls\DebugConsole.cs" />
     <Compile Include="UserInterface\CustomControls\SS14Window.cs" />
     <Compile Include="UserInterface\CustomControls\EscapeMenu.cs" />

@@ -8,6 +8,9 @@
     sprites:
     - Objects/fire_extinguisher.png
 
+  - type: Icon
+    icon: Objects/fire_extinguisher.png
+
   placement:
     mode: AlignWall
     range: 200

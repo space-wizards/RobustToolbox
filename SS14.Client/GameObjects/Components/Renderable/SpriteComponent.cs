@@ -24,7 +24,7 @@ using SS14.Client.Graphics.ClientEye;
 // Warning: Shitcode ahead!
 namespace SS14.Client.GameObjects
 {
-    public class SpriteComponent : Component, ISpriteRenderableComponent, ISpriteComponent
+    public class SpriteComponent : Component, ISpriteRenderableComponent, ISpriteComponent, IClickTargetComponent
     {
         public override string Name => "Sprite";
         public override uint? NetID => NetIDs.SPRITE;

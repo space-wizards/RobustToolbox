@@ -24,8 +24,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         protected override Godot.Control SpawnSceneControl()
         {
-            var res = (Godot.PackedScene)Godot.ResourceLoader.Load("res://Scenes/DebugConsole/DebugConsole.tscn");
-            var node = (Godot.Control)res.Instance();
+            var node = LoadScene("res://Scenes/DebugConsole/DebugConsole.tscn");
             node.Visible = false;
             return node;
         }

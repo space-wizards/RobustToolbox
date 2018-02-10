@@ -157,7 +157,7 @@ namespace SS14.Client.Console.Commands
         {
             var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
 
-            var window = new SS14Window();
+            var window = new EntitySpawnWindow();
             window.AddToScreen();
             return false;
         }

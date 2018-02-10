@@ -65,6 +65,24 @@ namespace SS14.Client.UserInterface.Controls
             SceneControl.Select(idx);
         }
 
+        public void SelectId(int id)
+        {
+            Select(GetIdx(id));
+        }
+
+        public int GetIdx(int id)
+        {
+            for (var i = 0; i < ItemCount; i++)
+            {
+                if (id == GetItemId(i))
+                {
+                    return i;
+                }
+            }
+
+            throw new ArgumentException("ID does not exist.");
+        }
+
         public void SetItemDisabled(int idx, bool disabled)
         {
             SceneControl.SetItemDisabled(idx, disabled);

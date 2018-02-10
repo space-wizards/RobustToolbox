@@ -31,8 +31,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         protected override Godot.Control SpawnSceneControl()
         {
-            var res = (Godot.PackedScene)Godot.ResourceLoader.Load("res://Scenes/SS14Window/SS14Window.tscn");
-            return (Godot.Control)res.Instance();
+            return LoadScene("res://Scenes/SS14Window/SS14Window.tscn");
         }
 
         protected override void SetSceneControl(Godot.Control control)
@@ -49,7 +48,7 @@ namespace SS14.Client.UserInterface.CustomControls
         private const int DRAG_MARGIN_SIZE = 7;
         // TODO: Unhardcode this header size.
         private const float HEADER_SIZE_Y = 25;
-        private static readonly Vector2 MinSize = new Vector2(50, 50);
+        protected virtual Vector2 ContentsMinimumSize => new Vector2(50, 50);
 
         private DragMode CurrentDrag = DragMode.None;
         private Vector2 DragOffsetTopLeft;
@@ -180,25 +179,25 @@ namespace SS14.Client.UserInterface.CustomControls
                 var bottom = Rect.Bottom;
                 var left = Rect.Left;
                 var right = Rect.Right;
-
+                var minsize = ContentsMinimumSize + new Vector2(Contents.MarginLeft - Contents.MarginRight, Contents.MarginTop - Contents.MarginBottom);
                 if ((CurrentDrag & DragMode.Top) == DragMode.Top)
                 {
-                    var MaxY = bottom - MinSize.Y;
+                    var MaxY = bottom - minsize.Y;
                     top = Math.Min(args.GlobalPosition.Y - DragOffsetTopLeft.Y, MaxY);
                 }
                 else if ((CurrentDrag & DragMode.Bottom) == DragMode.Bottom)
                 {
-                    bottom = Math.Max(args.GlobalPosition.Y + DragOffsetBottomRight.Y, top + MinSize.Y);
+                    bottom = Math.Max(args.GlobalPosition.Y + DragOffsetBottomRight.Y, top + minsize.Y);
                 }
 
                 if ((CurrentDrag & DragMode.Left) == DragMode.Left)
                 {
-                    var MaxX = right - MinSize.X;
+                    var MaxX = right - minsize.X;
                     left = Math.Min(args.GlobalPosition.X - DragOffsetTopLeft.X, MaxX);
                 }
                 else if ((CurrentDrag & DragMode.Right) == DragMode.Right)
                 {
-                    right = Math.Max(args.GlobalPosition.X + DragOffsetBottomRight.X, left + MinSize.X);
+                    right = Math.Max(args.GlobalPosition.X + DragOffsetBottomRight.X, left + minsize.X);
                 }
 
                 Position = new Vector2(left, top);
@@ -304,6 +303,16 @@ namespace SS14.Client.UserInterface.CustomControls
             }
             Position = (Parent.Size - Size) / 2;
             Open();
+        }
+
+        public void OpenToLeft()
+        {
+            if (Parent != UserInterfaceManager.WindowRoot)
+            {
+                throw new InvalidOperationException("Window is not a child of the window root! You need to call AddToScreen first!");
+            }
+
+            Position = new Vector2(0, (Parent.Size.Y - Size.Y) / 2);
         }
 
         // Prevent window headers from getting off screen due to game window resizes.

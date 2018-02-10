@@ -21,7 +21,7 @@ namespace SS14.Client.GameObjects
             var component = Owner.GetComponent<IClickTargetComponent>();
 
             drawdepth = (int)component.DrawDepth;
-            return component.WasClicked(worldPos);
+            return true;
         }
 
         public void DispatchClick(IEntity user, ClickType clickType)

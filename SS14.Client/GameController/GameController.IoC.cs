@@ -51,6 +51,8 @@ using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Graphics.ClientEye;
+using SS14.Client.Interfaces.Placement;
+using SS14.Client.Placement;
 
 namespace SS14.Client
 {
@@ -109,6 +111,10 @@ namespace SS14.Client
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IDisplayManager, DisplayManager>();
             IoCManager.Register<IEyeManager, EyeManager>();
+            IoCManager.Register<IGameTiming, GameController.GameTiming>();
+            // Only GameController can acess this because the type is private so it's fine.
+            IoCManager.Register<GameController.GameTiming, GameController.GameTiming>();
+            IoCManager.Register<IPlacementManager, PlacementManager>();
 
             IoCManager.BuildGraph();
         }

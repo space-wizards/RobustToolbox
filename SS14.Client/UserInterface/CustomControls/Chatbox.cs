@@ -51,8 +51,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         protected override Godot.Control SpawnSceneControl()
         {
-            var res = (Godot.PackedScene)Godot.ResourceLoader.Load("res://Scenes/ChatBox/ChatBox.tscn");
-            return (Godot.Control)res.Instance();
+            return LoadScene("res://Scenes/ChatBox/ChatBox.tscn");
         }
 
         protected override void Initialize()

@@ -2,7 +2,7 @@
 
 [ext_resource path="res://Scenes/SS14Window/closewindow.png" type="Texture" id=1]
 
-[sub_resource type="StyleBoxFlat" id=2]
+[sub_resource type="StyleBoxFlat" id=1]
 
 content_margin_left = -1.0
 content_margin_right = -1.0
@@ -30,7 +30,7 @@ shadow_size = 0
 anti_aliasing = true
 anti_aliasing_size = 1
 
-[node name="SS14Window" type="Panel" index="0"]
+[node name="SS14Window" type="Panel"]
 
 anchor_left = 0.0
 anchor_top = 0.0
@@ -56,12 +56,13 @@ margin_left = 10.0
 margin_top = 40.0
 margin_right = -10.0
 margin_bottom = -10.0
+rect_min_size = Vector2( 50, 50 )
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 2
 mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
-_sections_unfolded = [ "Anchor", "Margin", "Mouse" ]
+_sections_unfolded = [ "Anchor", "Margin", "Mouse", "Rect" ]
 
 [node name="Header" type="Panel" parent="." index="1"]
 
@@ -75,7 +76,7 @@ mouse_filter = 2
 mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
-custom_styles/panel = SubResource( 2 )
+custom_styles/panel = SubResource( 1 )
 _sections_unfolded = [ "Margin", "Mouse", "custom_styles" ]
 
 [node name="Header Text" type="Label" parent="Header" index="0"]
@@ -90,7 +91,7 @@ mouse_filter = 2
 mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 4
-text = "Examplary Window Title Here"
+text = "Exemplary Window Title Here"
 align = 1
 valign = 1
 clip_text = true

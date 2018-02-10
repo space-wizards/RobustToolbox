@@ -56,6 +56,12 @@ namespace SS14.Client.UserInterface.Controls
         public bool IsHovered => SceneControl.IsHovered();
         public Draw DrawMode => (Draw)SceneControl.GetDrawMode();
 
+        public ButtonGroup ButtonGroup
+        {
+            get => new ButtonGroup(SceneControl.GetButtonGroup());
+            set => SceneControl.SetButtonGroup(value?.GodotGroup);
+        }
+
         public event Action<ButtonEventArgs> OnButtonDown;
         public event Action<ButtonEventArgs> OnButtonUp;
         public event Action<ButtonEventArgs> OnPressed;
@@ -160,6 +166,17 @@ namespace SS14.Client.UserInterface.Controls
         private void __toggledHook(object state)
         {
             OnToggled?.Invoke(new ButtonToggledEventArgs((bool)state, this));
+        }
+    }
+
+    public class ButtonGroup
+    {
+        public Godot.ButtonGroup GodotGroup { get; }
+
+        public ButtonGroup() : this(new Godot.ButtonGroup()) {}
+        public ButtonGroup(Godot.ButtonGroup group)
+        {
+            GodotGroup = group;
         }
     }
 }

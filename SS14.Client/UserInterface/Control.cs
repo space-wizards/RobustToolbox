@@ -147,10 +147,7 @@ namespace SS14.Client.UserInterface
             get => SceneControl.GetRect().Convert();
         }
 
-        public Vector2 MinimumSize
-        {
-            get => SceneControl.GetMinimumSize().Convert();
-        }
+        public Vector2 MinimumSize => SceneControl.GetMinimumSize().Convert();
 
         public Vector2 GlobalMousePosition
         {
@@ -616,6 +613,23 @@ namespace SS14.Client.UserInterface
         {
             get => (MouseFilterMode)SceneControl.MouseFilter;
             set => SceneControl.MouseFilter = (Godot.Control.MouseFilterEnum)value;
+        }
+
+        /// <summary>
+        /// Convenient helper to load a Godot scene without all the casting. Does NOT wrap the nodes (duh!).
+        /// </summary>
+        /// <param name="path">The resource path to the scene file to load.</param>
+        /// <returns>The root of the loaded scene.</returns>
+        protected static Godot.Control LoadScene(string path)
+        {
+            var res = (Godot.PackedScene)Godot.ResourceLoader.Load(path);
+            return (Godot.Control)res.Instance();
+        }
+
+        public Vector2 Scale
+        {
+            get => SceneControl.RectScale.Convert();
+            set => SceneControl.RectScale = value.Convert();
         }
     }
 }

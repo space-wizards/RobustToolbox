@@ -1,5 +1,6 @@
 ﻿using System;
 using SS14.Client.Input;
+using SS14.Client.Placement;
 using SS14.Shared;
 using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.GameObjects;
@@ -12,6 +13,8 @@ namespace SS14.Client.Interfaces.Placement
         void Initialize();
         bool IsActive { get; }
         bool Eraser { get; }
+        PlacementMode CurrentMode { get; set; }
+        PlacementInformation CurrentPermission { get; set; }
 
         event EventHandler PlacementCanceled;
 

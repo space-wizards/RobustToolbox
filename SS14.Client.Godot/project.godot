@@ -27,6 +27,7 @@ singletons=[  ]
 
 [mono]
 
+debugger_agent/port=23686
 debugger_agent/wait_timeout=10000
 
 [network]

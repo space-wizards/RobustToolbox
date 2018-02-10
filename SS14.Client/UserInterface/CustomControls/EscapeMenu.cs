@@ -18,12 +18,13 @@ namespace SS14.Client.UserInterface.CustomControls
 
         protected override Godot.Control SpawnSceneControl()
         {
-            var res = (Godot.PackedScene)Godot.ResourceLoader.Load("res://Scenes/EscapeMenu/EscapeMenu.tscn");
-            return (Godot.Control)res.Instance();
+            return LoadScene("res://Scenes/EscapeMenu/EscapeMenu.tscn");
         }
 
         private BaseButton QuitButton;
         private BaseButton OptionsButton;
+        private BaseButton SpawnEntitiesButton;
+        private BaseButton SpawnTilesButton;
         private OptionsMenu optionsMenu;
 
         protected override void Initialize()
@@ -46,6 +47,12 @@ namespace SS14.Client.UserInterface.CustomControls
 
             OptionsButton = Contents.GetChild<BaseButton>("OptionsButton");
             OptionsButton.OnPressed += OnOptionsButtonClicked;
+
+            SpawnEntitiesButton = Contents.GetChild<BaseButton>("SpawnEntitiesButton");
+            SpawnEntitiesButton.OnPressed += OnSpawnEntitiesButtonClicked;
+
+            SpawnTilesButton = Contents.GetChild<BaseButton>("SpawnTilesButton");
+            SpawnTilesButton.OnPressed += OnSpawnTilesButtonClicked;
         }
 
         private void OnQuitButtonClicked(BaseButton.ButtonEventArgs args)
@@ -58,6 +65,18 @@ namespace SS14.Client.UserInterface.CustomControls
         private void OnOptionsButtonClicked(BaseButton.ButtonEventArgs args)
         {
             optionsMenu.OpenCentered();
+        }
+
+        private void OnSpawnEntitiesButtonClicked(BaseButton.ButtonEventArgs args)
+        {
+            var window = new EntitySpawnWindow();
+            window.AddToScreen();
+            window.OpenToLeft();
+        }
+
+        private void OnSpawnTilesButtonClicked(BaseButton.ButtonEventArgs args)
+        {
+
         }
 
         protected override void Dispose(bool disposing)

@@ -6,7 +6,7 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Reflection;
 using SS14.Shared.Map;
-
+using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
@@ -25,8 +25,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         protected override Godot.Control SpawnSceneControl()
         {
-            var res = (Godot.PackedScene)Godot.ResourceLoader.Load("res://Scenes/DebugCoordsPanel/DebugCoordsPanel.tscn");
-            return (Godot.Control)res.Instance();
+            return LoadScene("res://Scenes/DebugCoordsPanel/DebugCoordsPanel.tscn");
         }
 
         protected override void Initialize()
@@ -52,7 +51,22 @@ namespace SS14.Client.UserInterface.CustomControls
             var playerScreen = eyeManager.WorldToScreen(playerWorldOffset);
 
             var mouseScreenPos = inputManager.MouseScreenPosition;
-            var mouseWorldPos = eyeManager.ScreenToWorld(new ScreenCoordinates(mouseScreenPos, entityTransform.MapID));
+            int mouseWorldMap;
+            int mouseWorldGrid;
+            Vector2 mouseWorldPos;
+            try
+            {
+                var coords = eyeManager.ScreenToWorld(new ScreenCoordinates(mouseScreenPos, entityTransform.MapID));
+                mouseWorldMap = (int)coords.MapID;
+                mouseWorldGrid = (int)coords.GridID;
+                mouseWorldPos = coords.Position;
+            }
+            catch
+            {
+                mouseWorldPos = eyeManager.ScreenToWorld(mouseScreenPos);
+                mouseWorldGrid = 0;
+                mouseWorldMap = 0;
+            }
 
             contents.Text = $@"Positioning Debug:
 Character Pos:
@@ -61,9 +75,9 @@ Character Pos:
 
 Mouse Pos:
     Screen: {mouseScreenPos}
-    World: {mouseWorldPos.Position}
-    Grid: {(int)mouseWorldPos.GridID}
-    Map: {(int)mouseWorldPos.MapID}";
+    World: {mouseWorldPos}
+    Grid: {mouseWorldGrid}
+    Map: {mouseWorldMap}";
         }
     }
 }

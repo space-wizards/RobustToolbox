@@ -94,8 +94,8 @@
     <Reference Include="CommandLine">
       <HintPath>$(SolutionDir)packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
     </Reference>
-    <Reference Include="YamlDotNet">
-      <HintPath>$(SolutionDir)packages\YamlDotNet.4.2.1\lib\net35\YamlDotNet.dll</HintPath>
+    <Reference Include="YamlDotNet, Version=4.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\YamlDotNet.4.3.0\lib\net45\YamlDotNet.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -120,10 +120,12 @@
     <Compile Include="Interfaces\Maps\IMapLoader.cs" />
     <Compile Include="Log\ServerLogManager.cs" />
     <Compile Include="Maps\MapLoader.cs" />
+    <Compile Include="Maps\YamlGridSerializer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reflection\ServerReflectionManager.cs" />
     <Compile Include="BaseServer.cs" />
+    <Compile Include="ServerConsole\Commands\MapCommands.cs" />
     <Compile Include="Signals.cs" />
     <Content Include="server_config.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -11,6 +11,8 @@ namespace SS14.Shared.GameObjects
     {
         private readonly int _uid;
 
+        public static readonly EntityUid Invalid = new EntityUid(0);
+
         /// <summary>
         ///     Creates an instance of this structure, with the given network ID.
         /// </summary>

@@ -1,5 +1,4 @@
 ﻿using SS14.Server.Interfaces.GameObjects;
-using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
@@ -8,6 +7,7 @@ using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using System;
 using SS14.Shared.Enums;
+using SS14.Shared.GameObjects.Serialization;
 
 namespace SS14.Server.GameObjects
 {
@@ -19,26 +19,46 @@ namespace SS14.Server.GameObjects
         /// <summary>
         ///     Current parent entity of this entity.
         /// </summary>
-        public IServerTransformComponent Parent { get; private set; }
+        public IServerTransformComponent Parent
+        {
+            get => !_parent.IsValid() ? null : IoCManager.Resolve<IServerEntityManager>().GetEntity(_parent).GetComponent<IServerTransformComponent>();
+            private set => _parent = value?.Owner.Uid ?? EntityUid.Invalid;
+        }
+
         ITransformComponent ITransformComponent.Parent => Parent;
 
+        private EntityUid _parent;
         private Vector2 _position;
-        public MapId MapID { get; private set; }
-        public GridId GridID { get; private set; }
+        private Angle _rotation;
+        private MapId _mapID;
+        private GridId _gridID;
+
+        /// <inheritdoc />
+        public MapId MapID
+        {
+            get => _mapID;
+            private set => _mapID = value;
+        }
+
+        /// <inheritdoc />
+        public GridId GridID
+        {
+            get => _gridID;
+            private set => _gridID = value;
+        }
 
         /// <summary>
         ///     Current rotation offset of the entity.
         /// </summary>
         public Angle Rotation
         {
-            get => rotation;
+            get => _rotation;
             set
             {
-                rotation = value;
+                _rotation = value;
                 OnRotate?.Invoke(value);
             }
         }
-        private Angle rotation;
 
         /// <inheritdoc />
         public override string Name => "Transform";
@@ -78,6 +98,17 @@ namespace SS14.Server.GameObjects
 
                 OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new LocalCoordinates(_position, GridID, MapID)));
             }
+        }
+
+        public override void ExposeData(EntitySerializer serializer)
+        {
+            base.ExposeData(serializer);
+
+            serializer.DataField(ref _parent, "parent", new EntityUid());
+            serializer.DataField(ref _mapID, "map", MapId.Nullspace);
+            serializer.DataField(ref _gridID, "grid", GridId.DefaultGrid);
+            serializer.DataField(ref _position, "pos", Vector2.Zero);
+            serializer.DataField(ref _rotation, "rot", new Angle());
         }
 
         /// <inheritdoc />

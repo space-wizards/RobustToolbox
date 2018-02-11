@@ -104,12 +104,11 @@
     <Reference Include="System.Xml.Linq">
       <Name>System.Xml.Linq</Name>
     </Reference>
-    <Reference Include="YamlDotNet">
-      <HintPath>$(PackageDir)YamlDotNet.4.2.1\lib\net35\YamlDotNet.dll</HintPath>
+    <Reference Include="System.ValueTuple">
+      <HintPath>$(SolutionDir)packages\System.ValueTuple.4.3.1\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
     </Reference>
-    <!-- See SS14.Client csproj for why there's a conditional here. -->
-    <Reference Include="System.ValueTuple" Condition="'$(Godot)' != 'Yes'">
-      <HintPath>$(PackageDir)System.ValueTuple.4.3.1\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    <Reference Include="YamlDotNet, Version=4.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\YamlDotNet.4.3.0\lib\net45\YamlDotNet.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -136,9 +135,12 @@
     <Compile Include="ContentPack\PathHelpers.cs" />
     <Compile Include="ContentPack\ResourceManager.cs" />
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
+    <Compile Include="GameObjects\Serialization\EntitySerializer.cs" />
     <Compile Include="GameObjects\EntityUid.cs" />
+    <Compile Include="GameObjects\Serialization\YamlEntitySerializer.cs" />
     <Compile Include="GameObjects\IncomingEntityComponentMessage.cs" />
     <Compile Include="GameObjects\IncomingEntityMessage.cs" />
+    <Compile Include="GameObjects\NetComponent.cs" />
     <Compile Include="Interfaces\Configuration\IConfigurationManager.cs" />
     <Compile Include="Console\ICommand.cs" />
     <Compile Include="GameObjects\EntityEvents.cs" />

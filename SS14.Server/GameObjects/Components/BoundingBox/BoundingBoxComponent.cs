@@ -1,4 +1,5 @@
 ﻿using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
@@ -12,6 +13,8 @@ namespace SS14.Server.GameObjects
     /// </summary>
     public class BoundingBoxComponent : Component
     {
+        private Box2 _aabb;
+
         /// <inheritdoc />
         public override string Name => "BoundingBox";
 
@@ -21,7 +24,11 @@ namespace SS14.Server.GameObjects
         /// <summary>
         /// Local Axis Aligned Bounding Box of the entity.
         /// </summary>
-        public Box2 AABB { get; set; } = new Box2(-0.5f, -0.5f, 0.5f, 0.5f);
+        public Box2 AABB
+        {
+            get => _aabb;
+            set => _aabb = value;
+        }
 
         /// <summary>
         /// World Axis Aligned Bounding Box of the entity.
@@ -31,46 +38,22 @@ namespace SS14.Server.GameObjects
             get
             {
                 var trans = Owner.GetComponent<ITransformComponent>();
-                var bounds = AABB;
-
-                return bounds.Translated(trans.WorldPosition);
+                return AABB.Translated(trans.WorldPosition);
             }
         }
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new BoundingBoxComponentState(AABB);
+            return new BoundingBoxComponentState(_aabb);
         }
 
         /// <inheritdoc />
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void ExposeData(EntitySerializer serializer)
         {
+            base.ExposeData(serializer);
 
-            YamlNode node;
-            if (mapping.TryGetNode("sizeX", out node))
-            {
-                var width = node.AsFloat();
-                AABB = Box2.FromDimensions(AABB.Left + (AABB.Width - width) / 2f, AABB.Top, width, AABB.Height);
-            }
-
-            if (mapping.TryGetNode("sizeY", out node))
-            {
-                var height = node.AsFloat();
-                AABB = Box2.FromDimensions(AABB.Left, AABB.Top + (AABB.Height - height) / 2f, AABB.Width, height);
-            }
-
-            if (mapping.TryGetNode("offsetX", out node))
-            {
-                var x = node.AsFloat();
-                AABB = Box2.FromDimensions(x - AABB.Width / 2f, AABB.Top, AABB.Width, AABB.Height);
-            }
-
-            if (mapping.TryGetNode("offsetY", out node))
-            {
-                var y = node.AsFloat();
-                AABB = Box2.FromDimensions(AABB.Left, y - AABB.Height / 2f, AABB.Width, AABB.Height);
-            }
+            serializer.DataField(ref _aabb, "aabb", new Box2(-0.5f, -0.5f, 0.5f, 0.5f));
         }
     }
 }

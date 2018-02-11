@@ -117,12 +117,6 @@ namespace SS14.Server
         }
 
         /// <inheritdoc />
-        public void SaveGame()
-        {
-            _mapLoader.Save(PathHelpers.ExecutableRelativeFile(Path.Combine("Resources", MapName)), _mapManager.GetMap(new MapId(1)));
-        }
-
-        /// <inheritdoc />
         public bool Start()
         {
             //Sets up the configMgr

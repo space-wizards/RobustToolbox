@@ -1,4 +1,5 @@
 ﻿using System;
+using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Reflection;
@@ -78,14 +79,14 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void LoadParameters(YamlMappingNode mapping)
-        {
-        }
+        [Obsolete("Use the ExposeData serialization system.")]
+        public virtual void LoadParameters(YamlMappingNode mapping) { }
 
         /// <inheritdoc />
-        public virtual void Update(float frameTime)
-        {
-        }
+        public virtual void ExposeData(EntitySerializer serializer) { }
+
+        /// <inheritdoc />
+        public virtual void Update(float frameTime) { }
 
         /// <inheritdoc />
         public virtual ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type, params object[] list)

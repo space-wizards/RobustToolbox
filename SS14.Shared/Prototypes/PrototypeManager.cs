@@ -8,10 +8,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
+using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Log;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
+using SS14.Shared.GameObjects.Serialization;
+using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Shared.Prototypes
 {
@@ -63,6 +66,8 @@ namespace SS14.Shared.Prototypes
         /// Syncs all inter-prototype data. Call this when operations adding new prototypes are done.
         /// </summary>
         void Resync();
+
+        void LoadData(IEntity entity, YamlMappingNode node);
     }
 
     /// <summary>
@@ -125,6 +130,12 @@ namespace SS14.Shared.Prototypes
             prototypes.Clear();
             prototypeTypes.Clear();
             indexedPrototypes.Clear();
+        }
+
+        public void LoadData(IEntity entity, YamlMappingNode node)
+        {
+            var ent = entity as Entity;
+            ent.ExposeData(new YamlEntitySerializer(node));
         }
 
         public void Resync()
@@ -243,7 +254,7 @@ namespace SS14.Shared.Prototypes
         private void LoadFromDocument(YamlDocument document)
         {
             var rootNode = (YamlSequenceNode)document.RootNode;
-            foreach (YamlMappingNode node in rootNode.Select((YamlNode n) => (YamlMappingNode)n))
+            foreach (YamlMappingNode node in rootNode.Select(n => (YamlMappingNode)n))
             {
                 var type = ((YamlScalarNode)node[new YamlScalarNode("type")]).Value;
                 if (!prototypeTypes.ContainsKey(type))

@@ -32,7 +32,7 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         /// List of all entities, used for iteration.
         /// </summary>
-        private readonly List<Entity> _allEntities = new List<Entity>();
+        protected readonly List<Entity> _allEntities = new List<Entity>();
         protected readonly Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
 
         // This MUST start > 0
@@ -224,6 +224,11 @@ namespace SS14.Shared.GameObjects
 
                 InitializeEntity(ent);
             }
+        }
+
+        public void GetEntityData()
+        {
+            
         }
 
         #endregion Entity Management

@@ -7,6 +7,7 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
@@ -19,6 +20,11 @@ namespace SS14.Shared.GameObjects
     [Prototype("entity")]
     public class EntityPrototype : IPrototype, IIndexedPrototype, ISyncingPrototype
     {
+        /// <summary>
+        /// The type string of this prototype used in files.
+        /// </summary>
+        public string TypeString { get; private set; }
+
         /// <summary>
         /// The "in code name" of the object. Must be unique.
         /// </summary>
@@ -86,7 +92,7 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
         /// </summary>
-        public Dictionary<string, YamlMappingNode> Components { get; private set; } = new Dictionary<string, YamlMappingNode>();
+        public Dictionary<string, YamlMappingNode> Components { get; } = new Dictionary<string, YamlMappingNode>();
 
         /// <summary>
         /// The mapping node inside the <c>data</c> field of the prototype. Null if no data field exists.
@@ -95,8 +101,10 @@ namespace SS14.Shared.GameObjects
 
         public void LoadFrom(YamlMappingNode mapping)
         {
+            TypeString = mapping.GetNode("type").ToString();
+
             ID = mapping.GetNode("id").AsString();
-            
+
             if (mapping.TryGetNode("name", out YamlNode node))
             {
                 Name = node.AsString();
@@ -305,17 +313,19 @@ namespace SS14.Shared.GameObjects
             entity.Name = Name;
             entity.Prototype = this;
 
+            if (DataNode != null)
+            {
+                entity.ExposeData(new YamlEntitySerializer(DataNode));
+            }
+
             foreach (KeyValuePair<string, YamlMappingNode> componentData in Components)
             {
                 IComponent component = componentFactory.GetComponent(componentData.Key);
                 component.Spawned();
                 component.LoadParameters(componentData.Value);
-                entity.AddComponent(component);
-            }
+                component.ExposeData(new YamlEntitySerializer(componentData.Value));
 
-            if (DataNode != null)
-            {
-                entity.LoadData(DataNode);
+                entity.AddComponent(component);
             }
 
             return entity;

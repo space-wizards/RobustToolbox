@@ -3,6 +3,7 @@ using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Utility;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Physics;
@@ -19,7 +20,13 @@ namespace SS14.Client.GameObjects
         // no client side collision support for now
         private bool collisionEnabled;
 
-        public Color DebugColor { get; private set; } = Color.Red;
+        private Color _debugColor;
+
+        public Color DebugColor
+        {
+            get { return _debugColor; }
+            private set { _debugColor = value; }
+        }
 
         /// <inheritdoc />
         public override string Name => "Collidable";
@@ -191,6 +198,13 @@ namespace SS14.Client.GameObjects
             collisionEnabled = false;
             var cm = IoCManager.Resolve<ICollisionManager>();
             cm.RemoveCollidable(this);
+        }
+
+        public override void ExposeData(EntitySerializer serializer)
+        {
+            base.ExposeData(serializer);
+
+            serializer.DataField(ref _debugColor, "DebugColor", Color.Red);
         }
 
         public override void LoadParameters(YamlMappingNode mapping)

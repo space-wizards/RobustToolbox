@@ -42,13 +42,13 @@ namespace SS14.Server.Player
         ///     Active sessions of connected clients to the server.
         /// </summary>
         private PlayerSession[] _sessions;
-        
+
         [Dependency]
         private readonly IServerEntityManager _entityManager;
 
         [Dependency]
         private readonly IServerNetManager _network;
-        
+
         /// <inheritdoc />
         public int PlayerCount => _sessionCount;
 
@@ -62,7 +62,7 @@ namespace SS14.Server.Player
         public void Initialize(BaseServer server, int maxPlayers)
         {
             _server = server;
-            
+
             _sessions = new PlayerSession[maxPlayers];
 
             _network.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, message => HandleClientGreet((MsgClGreet)message));

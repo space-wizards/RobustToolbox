@@ -18,7 +18,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.Console.Commands
 {
@@ -204,5 +204,20 @@ namespace SS14.Client.Console.Commands
             ui.ShowCoordDebug = !ui.ShowCoordDebug;
             return false;
         }
+    }
+
+    class DisconnectCommand : IConsoleCommand
+    {
+        public string Command => "disconnect";
+        public string Help => "";
+        public string Description => "Immediately disconnect from the server and go back to the main menu.";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            IoCManager.Resolve<IClientNetManager>().ClientDisconnect("Disconnect command used.");
+            IoCManager.Resolve<IStateManager>().RequestStateChange<MainScreen>();
+            return false;
+        }
+
     }
 }

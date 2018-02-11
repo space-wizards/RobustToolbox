@@ -52,7 +52,7 @@ namespace Sandbox.Server
             switch (args.NewLevel)
             {
                 case ServerRunLevel.PreGame:
-                    IoCManager.Resolve<IPlayerManager>().FallbackSpawnPoint = new LocalCoordinates(0, 0, GridId.DefaultGrid, new MapId(1));
+                    IoCManager.Resolve<IPlayerManager>().FallbackSpawnPoint = new LocalCoordinates(0, 0, GridId.DefaultGrid, new MapId(2));
 
                     var timing = IoCManager.Resolve<IGameTiming>();
                     var mapLoader = IoCManager.Resolve<IMapLoader>();

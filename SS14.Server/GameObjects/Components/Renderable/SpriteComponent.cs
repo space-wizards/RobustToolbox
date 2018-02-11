@@ -66,7 +66,7 @@ namespace SS14.Server.GameObjects
 
             return reply;
         }
-        
+
         public override void ExposeData(EntitySerializer serializer)
         {
             base.ExposeData(serializer);

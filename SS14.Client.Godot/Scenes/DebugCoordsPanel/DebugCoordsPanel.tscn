@@ -38,7 +38,7 @@ use_filter = true
 font_data = ExtResource( 1 )
 _sections_unfolded = [ "Extra Spacing", "Font", "Settings" ]
 
-[node name="DebugCoordsPanel" type="Panel" index="0"]
+[node name="DebugCoordsPanel" type="Panel"]
 
 anchor_left = 0.0
 anchor_top = 0.0

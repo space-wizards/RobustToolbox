@@ -1,6 +1,8 @@
 ﻿using System.IO;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.ClientEye;
 using SS14.Client.ResourceManagement;
+using SS14.Client.Utility;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
@@ -33,25 +35,20 @@ namespace SS14.Client.Placement
 
         public virtual void Render()
         {
-            /*
-            if(SpriteToDraw == null)
+            if (SpriteToDraw == null)
             {
                 SpriteToDraw = GetSprite(pManager.CurrentBaseSpriteKey);
-                SpriteToDraw = new Sprite(SpriteToDraw);
             }
 
-            var bounds = SpriteToDraw.LocalBounds;
-            SpriteToDraw.Color = pManager.ValidPosition ? ValidPlaceColor : InvalidPlaceColor;
-            SpriteToDraw.Position = new Vector2(MouseScreen.X - (bounds.Width / 2f),
-                                                MouseScreen.Y - (bounds.Height / 2f));
-            //Centering the sprite on the cursor.
-            SpriteToDraw.Draw();
-            */
+            var size = SpriteToDraw.Texture.Size;
+            var color = pManager.ValidPosition ? ValidPlaceColor : InvalidPlaceColor;
+            var pos = MouseCoords.Position * EyeManager.PIXELSPERMETER - size / 2f;
+            pManager.drawNode.DrawTexture(SpriteToDraw.Texture.Texture, pos.Convert(), color.Convert());
         }
 
         public TextureResource GetSprite(string key)
         {
-            return pManager.ResourceCache.GetResource<TextureResource>(key);
+            return pManager.ResourceCache.GetResource<TextureResource>("Textures/" + key);
         }
 
         public TextureResource GetDirectionalSprite(string baseSprite)

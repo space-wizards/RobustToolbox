@@ -44,7 +44,7 @@ namespace SS14.Client.GodotGlue
                     catch (Exception e)
                     {
                         GD.Print($"Caught exception inside Main:\n{e}");
-                        GD.Print("TO PREVENT DATA LOSS OR LOG SPAM MAKING THE FORMER A PAIN TO FIND, THIS IS A FATAL ERROR.");
+                        GD.Print("TO PREVENT LOG SPAM MAKING THE FORMER A PAIN TO FIND, THIS IS A FATAL ERROR.");
                         GetTree().Quit();
                         return;
                     }

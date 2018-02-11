@@ -1,5 +1,6 @@
 ﻿using System;
 using SS14.Client.Graphics.ClientEye;
+using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Utility;
 using SS14.Shared.GameObjects;
@@ -100,6 +101,10 @@ namespace SS14.Client.GameObjects
             debugDrawSubscriber.Connect(debugNode, "draw");
             debugDrawSubscriber.Signal += DrawDebugRect;
             transform.SceneNode.AddChild(debugNode);
+            if (IoCManager.Resolve<IDebugDrawing>().DebugColliders)
+            {
+                DebugDraw = true;
+            }
         }
 
         public override void OnRemove()

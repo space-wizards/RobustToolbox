@@ -13,9 +13,7 @@
     icon: Mob/greyshirt.png
 
   - type: BoundingBox
-    sizeX: 0.9
-    sizeY: 0.9
-    offsetY: 0.6
+    aabb: "0.15,-0.45,1.05,0.45"
 
   - type: Physics
     mass: 5

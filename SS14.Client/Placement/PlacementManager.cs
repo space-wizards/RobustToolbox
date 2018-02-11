@@ -26,10 +26,12 @@ using SS14.Shared.Maths;
 using SS14.Shared.Map;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
+using SS14.Client.Utility;
+using SS14.Client.Graphics.ClientEye;
 
 namespace SS14.Client.Placement
 {
-    public class PlacementManager : IPlacementManager
+    public class PlacementManager : IPlacementManager, IDisposable
     {
         [Dependency]
         public readonly ICollisionManager CollisionManager;
@@ -71,7 +73,8 @@ namespace SS14.Client.Placement
         public EntityPrototype CurrentPrototype { get; set; }
         public Direction Direction { get; set; } = Direction.South;
         public bool ValidPosition { get; set; }
-        public Godot.Sprite drawNode { get; set; }
+        public Godot.Node2D drawNode { get; set; }
+        private GodotGlue.GodotSignalSubscriber0 drawNodeDrawSubscriber;
 
 
         public PlacementManager()
@@ -90,10 +93,22 @@ namespace SS14.Client.Placement
             }
 
             _mapMan.TileChanged += HandleTileChanged;
-            drawNode = new Godot.Sprite()
+            drawNode = new Godot.Node2D()
             {
                 Name = "Placement Manager Sprite",
             };
+            sceneTree.WorldRoot.AddChild(drawNode);
+            drawNodeDrawSubscriber = new GodotGlue.GodotSignalSubscriber0();
+            drawNodeDrawSubscriber.Connect(drawNode, "draw");
+            drawNodeDrawSubscriber.Signal += Render;
+        }
+
+        public void Dispose()
+        {
+            drawNodeDrawSubscriber.Disconnect(drawNode, "draw");
+            drawNodeDrawSubscriber.Dispose();
+            drawNode.QueueFree();
+            drawNode.Dispose();
         }
 
         private void HandlePlacementMessage(NetMessage netMessage)
@@ -128,6 +143,8 @@ namespace SS14.Client.Placement
             _tileMouseDown = false;
             IsActive = false;
             Eraser = false;
+            // Make it draw again to remove the drawn things.
+            drawNode?.Update();
         }
 
         public void Rotate()
@@ -224,6 +241,8 @@ namespace SS14.Client.Placement
             {
                 HandlePlacement();
             }
+
+            drawNode.Update();
         }
 
         /// <inheritdoc />
@@ -269,21 +288,17 @@ namespace SS14.Client.Placement
 
         public void Render()
         {
-            if (CurrentMode != null)
+            if (CurrentMode != null && IsActive)
             {
                 CurrentMode.Render();
 
-                /*
+
                 if (CurrentPermission != null && CurrentPermission.Range > 0 && CurrentMode.rangerequired)
                 {
-                    var pos = CluwneLib.WorldToScreen(PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition);
-                    CluwneLib.drawHollowCircle((int)Math.Floor(pos.X),
-                        (int)Math.Floor(pos.Y),
-                        CurrentPermission.Range * CluwneLib.Camera.PixelsPerMeter,
-                        3f,
-                        Color.White);
+                    var pos = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
+                    const int ppm = EyeManager.PIXELSPERMETER;
+                    drawNode.DrawCircle(pos.Convert() * ppm, CurrentPermission.Range * ppm, new Godot.Color(1, 1, 1, 0.25f));
                 }
-                */
             }
         }
 
@@ -310,7 +325,7 @@ namespace SS14.Client.Placement
             //Will break if states not ordered correctly.
 
             var spriteName = spriteParam == null ? "" : spriteParam.GetValue<string>();
-            var sprite = ResourceCache.GetResource<TextureResource>(spriteName);
+            var sprite = ResourceCache.GetResource<TextureResource>("Textures/" + spriteName);
 
             CurrentBaseSprite = sprite;
             CurrentBaseSpriteKey = spriteName;

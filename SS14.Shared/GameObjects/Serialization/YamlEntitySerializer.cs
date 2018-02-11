@@ -15,18 +15,19 @@ namespace SS14.Shared.GameObjects.Serialization
     {
         private static readonly Dictionary<Type, TypeSerializer> _typeSerializers;
         private static readonly StructSerializer _structSerializer;
-        
+
         private readonly YamlSequenceNode _root;
         private YamlMappingNode _entMap;
         private YamlSequenceNode _compSeq;
 
         private YamlMappingNode _curMap;
+        private bool SetDefaults;
 
         static YamlEntitySerializer()
         {
             _structSerializer = new StructSerializer();
             _typeSerializers = new Dictionary<Type, TypeSerializer>();
-            
+
             _typeSerializers.Add(typeof(Color), new ColorSerializer());
             _typeSerializers.Add(typeof(MapId), new MapIdSerializer());
             _typeSerializers.Add(typeof(GridId), new GridIdSerializer());
@@ -40,12 +41,13 @@ namespace SS14.Shared.GameObjects.Serialization
             _root = new YamlSequenceNode();
         }
 
-        public YamlEntitySerializer(YamlMappingNode entMap)
+        public YamlEntitySerializer(YamlMappingNode entMap, bool setDefaults = true)
         {
             Reading = true;
             _curMap = entMap;
+            SetDefaults = setDefaults;
         }
-        
+
         public override void EntityHeader()
         {
             if(!Reading)
@@ -94,7 +96,7 @@ namespace SS14.Shared.GameObjects.Serialization
         {
 
         }
-        
+
         public override void DataField<T>(ref T value, string name, T defaultValue, bool alwaysWrite = false)
         {
             if (Reading) // read
@@ -103,7 +105,7 @@ namespace SS14.Shared.GameObjects.Serialization
                 {
                     value = (T)NodeToType(typeof(T), node);
                 }
-                else
+                else if (SetDefaults)
                 {
                     value = defaultValue;
                 }
@@ -171,7 +173,7 @@ namespace SS14.Shared.GameObjects.Serialization
             // other val (struct)
             if (type.IsValueType)
                 return _structSerializer.TypeToNode(obj);
-            
+
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(obj));
         }
 
@@ -256,7 +258,7 @@ namespace SS14.Shared.GameObjects.Serialization
         public override YamlNode TypeToNode(object obj)
         {
             var color = (Color)obj;
-            
+
             Int32 hexColor = 0;
             hexColor += color.RByte << 24;
             hexColor += color.GByte << 16;

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
@@ -80,6 +81,18 @@ namespace SS14.Client.UserInterface.CustomControls
             EraseButton.OnToggled += OnEraseButtonToggled;
 
             BuildEntityList();
+
+            placementManager.PlacementCanceled += OnPlacementCanceled;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
+            if (disposing)
+            {
+                placementManager.PlacementCanceled -= OnPlacementCanceled;
+            }
         }
 
         private void OnSearchBarTextChanged(LineEdit.LineEditEventArgs args)
@@ -211,6 +224,16 @@ namespace SS14.Client.UserInterface.CustomControls
 
                 ActualButton = GetChild<Button>("Button");
             }
+        }
+
+        private void OnPlacementCanceled(object sender, EventArgs e)
+        {
+            if (SelectedButton != null)
+            {
+                SelectedButton.ActualButton.Pressed = false;
+                SelectedButton = null;
+            }
+            EraseButton.Pressed = false;
         }
     }
 }

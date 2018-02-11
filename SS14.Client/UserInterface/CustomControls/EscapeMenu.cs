@@ -5,6 +5,7 @@ using SS14.Client.State.States;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Reflection;
+using SS14.Client.Console;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
@@ -15,6 +16,8 @@ namespace SS14.Client.UserInterface.CustomControls
         readonly IClientNetManager netManager;
         [Dependency]
         readonly IStateManager stateManager;
+        [Dependency]
+        readonly IClientConsole console;
 
         protected override Godot.Control SpawnSceneControl()
         {
@@ -57,8 +60,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private void OnQuitButtonClicked(BaseButton.ButtonEventArgs args)
         {
-            netManager.ClientDisconnect("Client disconnected from game.");
-            stateManager.RequestStateChange<MainScreen>();
+            console.ProcessCommand("disconnect");
             Dispose();
         }
 

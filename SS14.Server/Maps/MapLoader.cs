@@ -26,7 +26,7 @@ namespace SS14.Server.Maps
 
         [Dependency]
         private IPrototypeManager _protoMan;
-        
+
         /// <inheritdoc />
         public void SaveBlueprint(IMap map, GridId gridId, string yamlPath)
         {
@@ -113,7 +113,7 @@ namespace SS14.Server.Maps
                 {
                     var gridMap = (YamlMappingNode) gridNode;
                     LoadGridNode(map, newId, gridMap);
-                    
+
                 }
                 else if (mapNode.Children.TryGetValue("entities", out var entNode))
                 {
@@ -135,9 +135,14 @@ namespace SS14.Server.Maps
             foreach (var yamlNode in entNode.Children)
             {
                 var yamlEnt = (YamlMappingNode)yamlNode;
-                
+
                 var protoName = yamlEnt["id"].ToString();
+                if (protoName == "__engine_worktop")
+                {
+                    Logger.Debug("CATCH!");
+                }
                 var entity = _entityMan.SpawnEntity(protoName);
+
 
                 _protoMan.LoadData(entity, yamlEnt);
 

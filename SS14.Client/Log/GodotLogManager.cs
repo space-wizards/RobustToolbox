@@ -12,18 +12,9 @@ namespace SS14.Client.Log
     {
         protected override void LogInternal(string message, LogLevel level)
         {
-
             var name = LogLevelToName(level);
             var msg = $"{name}: {message}";
             GD.Print(msg);
-#if WINDOWS
-            base.LogInternal(message, level);
-#else
-            // Something about the way Godot does its thing
-            // causes color setting on the console to break on MacOS (and probably Linux).
-            // So don't do that!
-            System.Console.WriteLine(msg);
-#endif
         }
     }
 }

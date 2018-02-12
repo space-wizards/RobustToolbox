@@ -83,6 +83,7 @@ namespace SS14.Client
             InitIoC();
 
             _sceneTreeHolder.Initialize(tree);
+            tree.SetAutoAcceptQuit(false);
 
             // Load config.
             _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));

@@ -86,6 +86,16 @@ namespace SS14.Client.Placement
             return true;
             */
         }
+
+        protected Vector2 ScreenToWorld(Vector2 point)
+        {
+            return pManager.eyeManager.ScreenToWorld(point);
+        }
+
+        protected Vector2 WorldToScreen(Vector2 point)
+        {
+            return pManager.eyeManager.WorldToScreen(point);
+        }
     }
 }
 

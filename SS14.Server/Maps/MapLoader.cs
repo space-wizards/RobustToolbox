@@ -137,10 +137,6 @@ namespace SS14.Server.Maps
                 var yamlEnt = (YamlMappingNode)yamlNode;
 
                 var protoName = yamlEnt["id"].ToString();
-                if (protoName == "__engine_worktop")
-                {
-                    Logger.Debug("CATCH!");
-                }
                 var entity = _entityMan.SpawnEntity(protoName);
 
 

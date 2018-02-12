@@ -80,7 +80,7 @@ namespace SS14.Server.Placement
             // get the MapID the player is on
             var plyTransform = plyEntity.GetComponent<ITransformComponent>();
             var mapIndex = plyTransform.MapID;
-            
+
             // no building in null space!
             if(mapIndex == MapId.Nullspace)
                 return;
@@ -91,7 +91,7 @@ namespace SS14.Server.Placement
             var grid = IoCManager.Resolve<IMapManager>().GetMap(mapIndex).FindGridAt(new Vector2(xValue, yValue));
             var coordinates = new LocalCoordinates(xValue, yValue, grid.Index, mapIndex);
 
-            
+
             /* TODO: Redesign permission system, or document what this is supposed to be doing
             var permission = GetPermission(session.attachedEntity.Uid, alignRcv);
             if (permission == null)

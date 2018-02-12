@@ -76,7 +76,6 @@ namespace SS14.Client.Placement
         public Godot.Node2D drawNode { get; set; }
         private GodotGlue.GodotSignalSubscriber0 drawNodeDrawSubscriber;
 
-
         public PlacementManager()
         {
             Clear();
@@ -113,7 +112,7 @@ namespace SS14.Client.Placement
 
         private void HandlePlacementMessage(NetMessage netMessage)
         {
-            var msg = (MsgPlacement) netMessage;
+            var msg = (MsgPlacement)netMessage;
             switch (msg.PlaceType)
             {
                 case PlacementManagerMessage.StartPlacement:
@@ -277,7 +276,7 @@ namespace SS14.Client.Placement
                 return false;
             }
             //Places objects for nontile entities
-            else if(!CurrentPermission.IsTile)
+            else if (!CurrentPermission.IsTile)
             {
                 HandlePlacement();
             }
@@ -291,7 +290,6 @@ namespace SS14.Client.Placement
             if (CurrentMode != null && IsActive)
             {
                 CurrentMode.Render();
-
 
                 if (CurrentPermission != null && CurrentPermission.Range > 0 && CurrentMode.rangerequired)
                 {
@@ -339,31 +337,31 @@ namespace SS14.Client.Placement
             var tileDefs = IoCManager.Resolve<ITileDefinitionManager>();
 
             CurrentBaseSprite = ResourceCache.GetResource<TextureResource>("Textures/UserInterface/tilebuildoverlay.png");
-            CurrentBaseSpriteKey = "tilebuildoverlay";
+            CurrentBaseSpriteKey = "UserInterface/tilebuildoverlay.png";
 
             IsActive = true;
         }
 
         private void RequestPlacement()
         {
-            if(CurrentMode.MouseCoords.MapID == MapId.Nullspace) return;
+            if (CurrentMode.MouseCoords.MapID == MapId.Nullspace) return;
             if (CurrentPermission == null) return;
             if (!ValidPosition) return;
 
-            if(CurrentPermission.IsTile)
+            if (CurrentPermission.IsTile)
             {
                 var grid = _mapMan.GetMap(CurrentMode.MouseCoords.MapID).FindGridAt(new Vector2(CurrentMode.MouseCoords.X, CurrentMode.MouseCoords.Y));
                 var worldPos = CurrentMode.MouseCoords;
                 var localPos = worldPos.ConvertToGrid(grid);
 
                 // no point changing the tile to the same thing.
-                if(grid.GetTile(localPos).Tile.TileId == CurrentPermission.TileType)
+                if (grid.GetTile(localPos).Tile.TileId == CurrentPermission.TileType)
                     return;
 
                 foreach (var tileChange in _pendingTileChanges)
                 {
                     // if change already pending, ignore it
-                    if(tileChange.Item1 == localPos)
+                    if (tileChange.Item1 == localPos)
                         return;
                 }
 
@@ -406,4 +404,3 @@ namespace SS14.Client.Placement
         }
     }
 }
-

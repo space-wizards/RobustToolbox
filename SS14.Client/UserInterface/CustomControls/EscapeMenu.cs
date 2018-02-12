@@ -78,7 +78,9 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private void OnSpawnTilesButtonClicked(BaseButton.ButtonEventArgs args)
         {
-
+            var window = new TileSpawnWindow();
+            window.AddToScreen();
+            window.OpenToLeft();
         }
 
         protected override void Dispose(bool disposing)

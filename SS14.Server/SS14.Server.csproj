@@ -27,7 +27,7 @@
     <ConfigurationOverrideFile />
     <DocumentationFile />
     <FileAlignment>4096</FileAlignment>
-    <OutputPath>$(SolutionDir)bin\Server\</OutputPath>
+    <OutputPath>..\bin\Server\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>

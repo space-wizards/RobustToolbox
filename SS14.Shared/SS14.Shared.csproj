@@ -17,7 +17,7 @@
     <TargetFrameworkProfile />
     <NoWarn>0649</NoWarn>
     <AllowedReferenceRelatedFileExtensions>.pdb;.dll.config</AllowedReferenceRelatedFileExtensions>
-    <OutputPath>$(SolutionDir)bin\Shared\</OutputPath>
+    <OutputPath>..\bin\Shared\</OutputPath>
     <FileAlignment>4096</FileAlignment>
     <ConfigurationOverrideFile />
     <BaseAddress>285212672</BaseAddress>

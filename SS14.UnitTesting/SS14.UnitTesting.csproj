@@ -18,7 +18,7 @@
     <TestProjectType>UnitTest</TestProjectType>
     <TargetFrameworkProfile />
     <NoWarn>0649</NoWarn>
-    <OutputPath>$(SolutionDir)bin\UnitTesting\</OutputPath>
+    <OutputPath>..\bin\UnitTesting\</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Optimize>false</Optimize>

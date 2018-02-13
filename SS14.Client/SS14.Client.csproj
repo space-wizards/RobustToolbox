@@ -12,7 +12,7 @@
     <AssemblyName>SS14.Client</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <OutputPath>$(SolutionDir)bin\Client\</OutputPath>
+    <OutputPath>..\bin\Client\</OutputPath>
     <WarningLevel>4</WarningLevel>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>

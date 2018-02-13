@@ -291,10 +291,8 @@
     <Compile Include="GameObjects\Components\Light\PointLightComponentState.cs" />
     <Compile Include="GameObjects\Components\Particles\ParticleSystemComponentState.cs" />
     <Compile Include="GameObjects\Components\Physics\PhysicsComponentState.cs" />
-    <Compile Include="GameObjects\Components\Renderable\AnimatedSpriteComponentState.cs" />
     <Compile Include="GameObjects\Components\Renderable\RenderableComponentState.cs" />
     <Compile Include="GameObjects\Components\Renderable\SpriteComponentState.cs" />
-    <Compile Include="GameObjects\Components\Renderable\WearableAnimatedSpriteComponentState.cs" />
     <Compile Include="GameObjects\Components\Transform\TransformComponentState.cs" />
     <Compile Include="GameObjects\EntitySystemMessage\EntitySystemMessage.cs" />
     <Compile Include="GameObjects\EntitySystemMessage\InventorySystemMessages.cs" />

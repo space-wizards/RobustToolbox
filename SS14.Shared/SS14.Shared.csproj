@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
   <Import Project="..\MSBuild\SS14.Properties.targets" />
-  <Import Project="$(SolutionDir)\MSBuild\SS14.SolutionSpecific.targets" />
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
     <ProjectGuid>{0529F740-0000-0000-0000-000000000000}</ProjectGuid>
@@ -68,19 +67,19 @@
   <Import Project="..\MSBuild\SS14.DefineConstants.targets" />
   <ItemGroup>
     <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
-      <HintPath>$(PackageDir)SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
+      <HintPath>$(SolutionDir)packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp">
       <Name>Microsoft.CSharp</Name>
     </Reference>
     <Reference Include="Mono.Cecil, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>$(PackageDir)Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.dll</HintPath>
+      <HintPath>$(SolutionDir)packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="NetSerializer, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>$(PackageDir)NetSerializer.4.1.0\lib\net45\NetSerializer.dll</HintPath>
+      <HintPath>$(SolutionDir)packages\NetSerializer.4.1.0\lib\net45\NetSerializer.dll</HintPath>
     </Reference>
     <Reference Include="Nett, Version=0.7.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>$(PackageDir)Nett.0.7.0\lib\Net40\Nett.dll</HintPath>
+      <HintPath>$(SolutionDir)packages\Nett.0.7.0\lib\Net40\Nett.dll</HintPath>
     </Reference>
     <Reference Include="System">
       <Name>System</Name>

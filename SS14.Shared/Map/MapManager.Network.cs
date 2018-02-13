@@ -39,16 +39,6 @@ namespace SS14.Shared.Map
                     message.MessageType = MapMessage.SendTileMap;
                     message.MapIndex = map.Index;
                     message.GridIndex = grid.Index;
-                    // Tile definition mapping
-                    message.TileDefs = new MsgMap.TileDef[_defManager.Count];
-
-                    for (var i = 0; i < _defManager.Count; i++)
-                    {
-                        message.TileDefs[i] = new MsgMap.TileDef
-                        {
-                            Name = _defManager[i].Name
-                        };
-                    }
 
                     // Map chunks
                     var gridSize = grid.ChunkSize;
@@ -152,8 +142,6 @@ namespace SS14.Shared.Map
 
             var mapIndex = message.MapIndex;
             var gridIndex = message.GridIndex;
-
-            _defManager.RegisterServerTileMapping(message);
 
             var chunkSize = message.ChunkSize;
             var chunkCount = message.ChunkDefs.Length;

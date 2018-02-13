@@ -49,24 +49,6 @@ namespace SS14.Shared.Map
             return id;
         }
 
-        public void RegisterServerTileMapping(MsgMap message)
-        {
-            foreach (var tileDef in _tileDefs)
-                tileDef.InvalidateTileId();
-
-            _tileDefs.Clear();
-            _tileIds.Clear();
-
-            for (var i = 0; i < message.TileDefs.Length; ++i)
-            {
-                var tileName = message.TileDefs[i].Name;
-                var tileDef = this[tileName];
-
-                _tileDefs.Add(tileDef);
-                _tileIds[tileDef] = (ushort)i;
-            }
-        }
-
         public ITileDefinition this[string name] => _tileNames[name];
 
         public ITileDefinition this[int id] => _tileDefs[id];

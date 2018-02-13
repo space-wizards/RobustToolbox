@@ -35,11 +35,5 @@ namespace SS14.Shared.Interfaces.Map
         /// <param name="tileDef">THe definition to register.</param>
         /// <returns>The internal id of the registered definition.</returns>
         ushort Register(ITileDefinition tileDef);
-
-        /// <summary>
-        ///     Erases all tile definitions, and the loads all definitions inside of a net message.
-        /// </summary>
-        /// <param name="message">The message containing new tile definitions.</param>
-        void RegisterServerTileMapping(MsgMap message);
     }
 }

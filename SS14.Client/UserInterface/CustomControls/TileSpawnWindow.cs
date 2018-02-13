@@ -133,8 +133,9 @@ namespace SS14.Client.UserInterface.CustomControls
             else if (SelectedButton != null)
             {
                 SelectedButton.ActualButton.Pressed = false;
-                SelectedButton = null;
             }
+
+            SelectedButton = null;
 
             var newObjInfo = new PlacementInformation
             {
@@ -144,8 +145,8 @@ namespace SS14.Client.UserInterface.CustomControls
                 IsTile = true
             };
 
-            SelectedButton = item;
             placementManager.BeginPlacing(newObjInfo);
+            SelectedButton = item;
         }
     }
 }

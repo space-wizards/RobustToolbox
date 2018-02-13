@@ -189,11 +189,11 @@ namespace SS14.Client.UserInterface.CustomControls
             else if (SelectedButton != null)
             {
                 SelectedButton.ActualButton.Pressed = false;
-                SelectedButton = null;
             }
 
-            var overrideMode = initOpts[OverrideMenu.SelectedId];
+            SelectedButton = null;
 
+            var overrideMode = initOpts[OverrideMenu.SelectedId];
             var newObjInfo = new PlacementInformation
             {
                 PlacementOption = overrideMode.Length > 0 ? overrideMode : item.Prototype.PlacementMode,
@@ -202,9 +202,9 @@ namespace SS14.Client.UserInterface.CustomControls
                 IsTile = false
             };
 
-            SelectedButton = item;
-
             placementManager.BeginPlacing(newObjInfo);
+
+            SelectedButton = item;
         }
 
         private class EntitySpawnButton : Control

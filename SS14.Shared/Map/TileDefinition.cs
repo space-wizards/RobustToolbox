@@ -18,11 +18,6 @@ namespace SS14.Shared.Map
             }
         }
 
-        public void InvalidateTileId()
-        {
-            _tileId = ushort.MaxValue;
-        }
-
         public void Register(ITileDefinitionManager tileDefinitionManager)
         {
             _tileId = tileDefinitionManager.Register(this);

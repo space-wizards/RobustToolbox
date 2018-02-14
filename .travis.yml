@@ -24,7 +24,7 @@ before_script:
 
 script:
 - "python3.6 ./Resources/buildResourcePack.py --resources-dir ./Resources --out ./Resources/ResourcePack.zip --no-atlas --no-animations --to-stderr"
-- "msbuild /p:Configuration=Release /p:Platform=x86 /p:HEADLESS=1 /nologo /m /p:AllowMissingMacNatives=yes SpaceStation14.sln /p:Python=python3.6"
+- "msbuild /p:Configuration=Debug /p:Platform=x64 /p:HEADLESS=1 /nologo /m /p:AllowMissingMacNatives=yes SpaceStation14.sln /p:Python=python3.6"
 - "cd packages/NUnit.ConsoleRunner.3.7.0/tools"
 - "mono --debug nunit3-console.exe ../../../bin/UnitTesting/SS14.UnitTesting.dll"
 

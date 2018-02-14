@@ -19,7 +19,7 @@ before_build:
 - cmd: nuget restore SpaceStation14.sln
 - ps: if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER -And $env:APPVEYOR_REPO_BRANCH -Eq "master") { MSBuild.SonarQube.Runner.exe begin /k:"ss14" /d:"sonar.host.url=https://sonarqube.com" /d:"sonar.login=$env:sonarqubekey" /d:"sonar.organization=space-wizards" /d:"sonar.exclusions=SFML/**"}
 
-platform: x86
+platform: x64
 configuration: Debug
 
 build:

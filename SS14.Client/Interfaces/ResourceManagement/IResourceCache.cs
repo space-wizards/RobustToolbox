@@ -14,7 +14,7 @@ namespace SS14.Client.Interfaces.ResourceManagement
         void LoadLocalResources();
         void LoadBaseResources();
 
-        T GetResource<T>(string path)
+        T GetResource<T>(string path, bool useFallback=true)
             where T : BaseResource, new();
 
         bool TryGetResource<T>(string path, out T resource)

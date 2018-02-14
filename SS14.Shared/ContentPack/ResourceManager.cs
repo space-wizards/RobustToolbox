@@ -75,7 +75,6 @@ namespace SS14.Shared.ContentPack
         public void MountContentDirectory(string path, string prefix=null)
         {
             path = PathHelpers.ExecutableRelativeFile(path);
-            Logger.Debug(path);
             var pathInfo = new DirectoryInfo(path);
 
             var loader = new DirLoader(pathInfo);
@@ -104,6 +103,24 @@ namespace SS14.Shared.ContentPack
                     return file;
             }
             return null;
+        }
+
+        // TODO: Remove this when/if we can get Godot to load from not-the filesystem.
+        protected bool TryGetDiskFilePath(string path, out string diskPath)
+        {
+            // loop over each root trying to get the file
+            foreach ((var prefix, var root) in _contentRoots)
+            {
+                if (!(root is DirLoader dirLoader) || !TryHandlePrefix(path, prefix, out var tempPath))
+                {
+                    continue;
+                }
+                diskPath = dirLoader.GetPath(tempPath);
+                if (diskPath != null)
+                    return true;
+            }
+            diskPath = null;
+            return false;
         }
 
         /// <inheritdoc />

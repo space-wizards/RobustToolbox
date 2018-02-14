@@ -14,26 +14,23 @@ using SS14.Shared.Configuration;
 
 namespace SS14.Client.ResourceManagement
 {
-    public class ResourceCache : IResourceCache, IDisposable
+    public class ResourceCache : ResourceManager, IResourceCache, IDisposable
     {
-        [Dependency]
-        readonly IResourceManager _resources;
-
-        private static readonly string BaseResourceDir = PathHelpers.ExecutableRelativeFile(@"../../Resources/");
         private Dictionary<(string, Type), BaseResource> CachedResources = new Dictionary<(string, Type), BaseResource>();
 
         public void LoadBaseResources()
         {
-            _resources.Initialize();
+            Initialize();
 
-            // TODO: Right now the resource cache doesn't use the VFS,
-            //   so that we always have on-disk locations of files.
-            //   Godot doesn't make it easy to load resources without them being on-disk.
+            // TODO: Godot RIGHT NOW doesn't make it easy to load files from non-disk.
+            // AFAICT Godot has an internal system for this (PackedData/PackSource) but it's not exposed enough for us to use it at the moment.
+            // Specifically: Godot does use its pack system for exported projects, but there's no way to load new packs at runtime manually.
+            // So we wing it with file paths right now.
 #if RELEASE
-            _resources.MountContentDirectory(@"./Resources/");
+            MountContentDirectory(@"./Resources/");
 #else
-            _resources.MountContentDirectory(@"../../Resources/");
-            _resources.MountContentDirectory(@"Resources/Assemblies", "Assemblies/");
+            MountContentDirectory(@"../../Resources/");
+            MountContentDirectory(@"Resources/Assemblies", "Assemblies/");
 #endif
             //_resources.MountContentPack(@"./EngineContentPack.zip");
         }
@@ -43,7 +40,7 @@ namespace SS14.Client.ResourceManagement
             //_resources.MountDefaultContentPack();
         }
 
-        public T GetResource<T>(string path) where T : BaseResource, new()
+        public T GetResource<T>(string path, bool useFallback=true) where T : BaseResource, new()
         {
             if (CachedResources.TryGetValue((path, typeof(T)), out var cached))
             {
@@ -53,21 +50,23 @@ namespace SS14.Client.ResourceManagement
             var _resource = new T();
             try
             {
-                _resource.Load(this, Path.Combine(BaseResourceDir, path));
+                if (!TryGetDiskFilePath(path, out var diskPath))
+                {
+                    throw new FileNotFoundException(path);
+                }
+                _resource.Load(this, diskPath);
                 CachedResources[(path, typeof(T))] = _resource;
                 return _resource;
             }
             catch (Exception)
             {
-                if (_resource.Fallback != null)
+                if (useFallback && _resource.Fallback != null)
                 {
-                    // TODO: This totally infinite loops if the fallback throws an exception too.
-                    Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', resorting to fallback.");
-                    return GetResource<T>(_resource.Fallback);
+                    Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', resorting to fallback.\n{Environment.StackTrace}");
+                    return GetResource<T>(_resource.Fallback, useFallback=false);
                 }
                 else
                 {
-                    // No exception logs because of how insanely spammy it gets.
                     Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', no fallback available\n{Environment.StackTrace}");
                     return null;
                 }
@@ -84,7 +83,11 @@ namespace SS14.Client.ResourceManagement
             var _resource = new T();
             try
             {
-                _resource.Load(this, Path.Combine(BaseResourceDir, path));
+                if (!TryGetDiskFilePath(path, out var diskPath))
+                {
+                    throw new FileNotFoundException(path);
+                }
+                _resource.Load(this, diskPath);
                 resource = _resource;
                 CachedResources[(path, typeof(T))] = resource;
                 return true;

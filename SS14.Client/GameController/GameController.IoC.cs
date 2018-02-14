@@ -77,7 +77,6 @@ namespace SS14.Client
             // Shared stuff.
             IoCManager.Register<ILogManager, GodotLogManager>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
-            IoCManager.Register<IResourceManager, ResourceManager>();
             IoCManager.Register<ISS14Serializer, SS14Serializer>();
             IoCManager.Register<IPrototypeManager, PrototypeManager>();
             IoCManager.Register<ITileDefinitionManager, ClientTileDefinitionManager>();
@@ -92,6 +91,7 @@ namespace SS14.Client
 
             // Client stuff.
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();
+            IoCManager.Register<IResourceManager, ResourceCache>();
             IoCManager.Register<IResourceCache, ResourceCache>();
             IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
             IoCManager.Register<IClientTileDefinitionManager, ClientTileDefinitionManager>();

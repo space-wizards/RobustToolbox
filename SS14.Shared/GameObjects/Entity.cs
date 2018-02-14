@@ -144,6 +144,26 @@ namespace SS14.Shared.GameObjects
 
         #endregion Initialization
 
+        #region Unified Messaging
+
+        /// <inheritdoc />
+        public void SendMessage(object owner, ComponentMessage message)
+        {
+            foreach (var component in _components)
+            {
+                if(owner != component)
+                    component.HandleMessage(owner, message);
+            }
+        }
+
+        /// <inheritdoc />
+        public void SendNetworkMessage(ComponentMessage message)
+        {
+            throw new NotImplementedException();
+        }
+        
+        # endregion Unified Messaging
+
         #region Component Messaging
 
         /// <inheritdoc />

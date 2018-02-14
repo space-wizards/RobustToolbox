@@ -93,6 +93,27 @@ namespace SS14.Shared.GameObjects
             return reply;
         }
 
+        /// <summary>
+        ///     Sends a message to all other components in this entity.
+        /// </summary>
+        /// <param name="message">Message to send.</param>
+        public void SendMessage(ComponentMessage message)
+        {
+            Owner.SendMessage(this, message);
+        }
+
+        /// <summary>
+        ///     Sends a message over the network to all other components on the networked entity. This works both ways.
+        /// </summary>
+        /// <param name="message">Message to send.</param>
+        public void SendNetworkMessage(ComponentMessage message)
+        {
+            Owner.SendNetworkMessage(message);
+        }
+
+        /// <inheritdoc />
+        public virtual void HandleMessage(object owner, ComponentMessage message) { }
+
         /// <inheritdoc />
         public virtual ComponentState GetComponentState()
         {

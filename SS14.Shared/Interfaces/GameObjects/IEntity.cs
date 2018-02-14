@@ -217,7 +217,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="replies"></param>
         /// <param name="args">message parameters</param>
         void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args);
-
+        
         /// <summary>
         ///     Requests Description string from components and returns it. If no component answers, returns default description from template.
         /// </summary>
@@ -237,6 +237,19 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
         /// <param name="messageParams">Parameters</param>
         void SendDirectedComponentNetworkMessage(IComponent component, INetChannel recipient, params object[] messageParams);
+
+        /// <summary>
+        ///     Sends a message to all other components in this entity.
+        /// </summary>
+        /// <param name="owner">Object that sent the event.</param>
+        /// <param name="message">Message to send.</param>
+        void SendMessage(object owner, ComponentMessage message);
+
+        /// <summary>
+        ///     Sends a message over the network to all other components on the networked entity. This works both ways.
+        /// </summary>
+        /// <param name="message">Message to send.</param>
+        void SendNetworkMessage(ComponentMessage message);
 
         /// <summary>
         ///     Called when the entity has all components initialized.

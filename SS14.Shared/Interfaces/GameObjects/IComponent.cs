@@ -104,6 +104,11 @@ namespace SS14.Shared.Interfaces.GameObjects
         [Obsolete("Use the ExposeData serialization system.")]
         void LoadParameters(YamlMappingNode mapping);
 
+        /// <summary>
+        ///     This allows setting of the component's parameters from YAML once it is instantiated.
+        ///     This should basically be overridden by every inheriting component, as parameters will be different
+        ///     across the board.
+        /// </summary>
         void ExposeData(EntitySerializer serializer);
 
         /// <summary>
@@ -119,8 +124,17 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="sender">the component that sent the message</param>
         /// <param name="type">the message type in CGO.MessageType</param>
         /// <param name="list">parameters list</param>
-        ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
-            params object[] list);
+        ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type, params object[] list);
+
+        /// <summary>
+        ///     Handles an incoming component message.
+        /// </summary>
+        /// <param name="owner">
+        ///     Object that raised the event. If the event was sent over the network or from some unknown place,
+        ///     this will be null.
+        /// </param>
+        /// <param name="message">Message that was sent.</param>
+        void HandleMessage(object owner, ComponentMessage message);
 
         /// <summary>
         ///     Get the component's state for replicating on the client.

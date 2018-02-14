@@ -145,7 +145,7 @@ namespace SS14.Shared.Maths
                 (int)(color.G * Byte.MaxValue),
                 (int)(color.B * Byte.MaxValue));
         }
-        
+
         /// <summary>
         /// Compares whether this Color4 structure is equal to the specified object.
         /// </summary>

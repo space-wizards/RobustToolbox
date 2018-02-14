@@ -316,14 +316,7 @@ namespace SS14.Client.GameObjects
 
             if (mapping.TryGetNode("color", out node))
             {
-                try
-                {
-                    Color = System.Drawing.Color.FromName(node.ToString());
-                }
-                catch
-                {
-                    Color = node.AsHexColor();
-                }
+                Color = node.AsColor();
             }
 
             if (mapping.TryGetNode<YamlSequenceNode>("sprites", out var sequence))

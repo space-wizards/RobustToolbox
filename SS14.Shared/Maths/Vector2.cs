@@ -64,6 +64,11 @@ namespace SS14.Shared.Maths
             }
         }
 
+        public Vector2 Rounded()
+        {
+            return new Vector2((float)Math.Round(X), (float)Math.Round(Y));
+        }
+
         /// <summary>
         ///     Subtracts a vector from another, returning a new vector.
         /// </summary>
@@ -227,7 +232,7 @@ namespace SS14.Shared.Maths
         {
             return $"({X}, {Y})";
         }
-        
+
         public static bool operator ==(Vector2 a, Vector2 b)
         {
             return a.Equals(b);

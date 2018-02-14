@@ -81,7 +81,7 @@ namespace SS14.Client.GameObjects
             {
                 OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new LocalCoordinates(newState.Position, newState.GridID, newState.MapID)));
                 _position = newState.Position;
-                SceneNode.Position = _position.Convert() * EyeManager.PIXELSPERMETER;
+                SceneNode.Position = (_position * EyeManager.PIXELSPERMETER).Rounded().Convert();
                 MapID = newState.MapID;
                 GridID = newState.GridID;
             }

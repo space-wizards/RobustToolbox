@@ -11,7 +11,7 @@ pull_requests:
 
 image: Visual Studio 2017
 install:
-- ps: if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER) { cinst msbuild-sonarqube-runner }
+- ps: if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER -And $env:APPVEYOR_REPO_BRANCH -Eq "master") { cinst msbuild-sonarqube-runner }
 
 before_build:
 - cmd: py -3.5 -m pip install --user requests

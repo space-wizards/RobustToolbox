@@ -14,6 +14,8 @@ install:
 - ps: if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER) { cinst msbuild-sonarqube-runner }
 
 before_build:
+- cmd: py -3.5 -m pip install --user requests
+- cmd: py -3.5 Tools\download_godotsharp.py
 - cmd: py -3.5 RUN_THIS.py --no-prompt
 - cmd: py -3.5 Resources\buildResourcePack.py --resources-dir .\Resources --out .\Resources\ResourcePack.zip --atlas-tool .\Tools\AtlasTool.exe --no-animations --to-stderr
 - cmd: nuget restore SpaceStation14.sln

@@ -51,7 +51,19 @@ namespace SS14.Client.GameObjects
                 }
             }
         }
-        public Color Color { get; set; } = Color.White;
+        private Color color = Color.White;
+        public Color Color
+        {
+            get => color;
+            set
+            {
+                color = value;
+                if (SceneSprite != null)
+                {
+                    SceneSprite.SelfModulate = value.Convert();
+                }
+            }
+        }
         public MapId MapID { get; private set; }
 
         public override Type StateType => typeof(SpriteComponentState);
@@ -203,6 +215,7 @@ namespace SS14.Client.GameObjects
             SceneSprite = new Godot.Sprite()
             {
                 ZIndex = (int)DrawDepth,
+                SelfModulate = Color.Convert(),
                 Scale = Scale.Convert(),
             };
             SceneSprite.SetName("SpriteComponent");

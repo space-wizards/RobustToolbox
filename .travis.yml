@@ -25,9 +25,10 @@ before_install:
   - if [ $TRAVIS_OS_NAME = osx ]; then brew update && brew install python3; fi
 
 before_script:
+- "python3.6 -m pip install --user requests"
 - "nuget restore SpaceStation14.sln"
 - "python3.6 RUN_THIS.py --no-prompt"
-- "Tools/download_godotsharp.py"
+- "python3.6 Tools/download_godotsharp.py"
 
 script:
 - "python3.6 ./Resources/buildResourcePack.py --resources-dir ./Resources --out ./Resources/ResourcePack.zip --no-atlas --no-animations --to-stderr"

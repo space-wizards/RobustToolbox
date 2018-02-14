@@ -9,9 +9,11 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
+using SS14.Shared.Reflection;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
+    [Reflect(false)]
     class EntitySpawnWindow : SS14Window
     {
         [Dependency]
@@ -207,6 +209,7 @@ namespace SS14.Client.UserInterface.CustomControls
             SelectedButton = item;
         }
 
+        [Reflect(false)]
         private class EntitySpawnButton : Control
         {
             public string PrototypeID => Prototype.ID;

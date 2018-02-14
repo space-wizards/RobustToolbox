@@ -124,6 +124,7 @@
     <Compile Include="ContentPack\ResourceManager.cs" />
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
     <Compile Include="GameObjects\ComponentMessage.cs" />
+    <Compile Include="GameObjects\ComponentMessages\Messages.cs" />
     <Compile Include="GameObjects\Serialization\EntitySerializer.cs" />
     <Compile Include="GameObjects\EntityUid.cs" />
     <Compile Include="GameObjects\Serialization\YamlEntitySerializer.cs" />

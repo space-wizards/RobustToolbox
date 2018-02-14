@@ -4,8 +4,8 @@
     {
         Null,
         Empty,
-        BoundKeyChange,
-        BoundKeyRepeat,
+        BoundKeyChange, // U
+        BoundKeyRepeat, // U
         SlaveAttach,
         LeftClick,
         RightClick,
@@ -20,25 +20,25 @@
         Dropped,
         PickedUp,
         MoveDirection,
-        SpriteChanged,
+        SpriteChanged, // U
         GetSprite,
         CurrentSprite,
         ReceiveEmptyHandToLargeObjectInteraction,
         ItemUnEquipped,
         ItemEquipped,
         Die,
-        Bumped,
+        Bumped, // U
         Initialize,
         ReturnActorConnection,
         ReturnActorSession,
         GetActorConnection,
         GetActorSession,
-        EntitySaidSomething,
+        EntitySaidSomething, // U
         ContextAdd,
         ContextRemove,
         ContextGetEntries,
-        ContextMessage, //Sent when context menu option is clicked.
-        GetDescriptionString, //Sent when description is requested and when answer is sent.
+        ContextMessage, 
+        GetDescriptionString, // U
         Live,
         ClickedInHand,
         Activate,

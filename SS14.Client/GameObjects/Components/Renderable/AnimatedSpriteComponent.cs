@@ -64,8 +64,8 @@ namespace SS14.Client.GameObjects
         public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
-            //Send a spritechanged message so everything knows whassup.
-            Owner.SendMessage(this, ComponentMessageType.SpriteChanged);
+
+            SendMessage(new SpriteChangedMsg());
         }
 
         public override void Initialize()

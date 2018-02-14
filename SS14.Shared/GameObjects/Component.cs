@@ -83,6 +83,7 @@ namespace SS14.Shared.GameObjects
         public virtual void Update(float frameTime) { }
 
         /// <inheritdoc />
+        [Obsolete("Use HandleMessage")]
         public virtual ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type, params object[] list)
         {
             var reply = ComponentReplyMessage.Empty;
@@ -95,20 +96,22 @@ namespace SS14.Shared.GameObjects
 
         /// <summary>
         ///     Sends a message to all other components in this entity.
+        ///     This is an alias of 'Owner.SendMessage(this, message);'
         /// </summary>
         /// <param name="message">Message to send.</param>
-        public void SendMessage(ComponentMessage message)
+        protected void SendMessage(ComponentMessage message)
         {
             Owner.SendMessage(this, message);
         }
 
         /// <summary>
         ///     Sends a message over the network to all other components on the networked entity. This works both ways.
+        ///     This is an alias of 'Owner.SendNetworkMessage(this, message);'
         /// </summary>
         /// <param name="message">Message to send.</param>
-        public void SendNetworkMessage(ComponentMessage message)
+        protected void SendNetworkMessage(ComponentMessage message)
         {
-            Owner.SendNetworkMessage(message);
+            Owner.SendNetworkMessage(this, message);
         }
 
         /// <inheritdoc />
@@ -129,6 +132,7 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete("Use HandleMessage")]
         public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
         }

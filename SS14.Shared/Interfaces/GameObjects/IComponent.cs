@@ -124,6 +124,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="sender">the component that sent the message</param>
         /// <param name="type">the message type in CGO.MessageType</param>
         /// <param name="list">parameters list</param>
+        [Obsolete("Use HandleMessage")]
         ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type, params object[] list);
 
         /// <summary>
@@ -146,6 +147,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     Handles an incoming input message from counterpart server/client components.
         /// </summary>
         /// <param name="message"></param>
+        [Obsolete("Use HandleMessage")]
         void HandleNetworkMessage(IncomingEntityComponentMessage message);
 
         /// <summary>

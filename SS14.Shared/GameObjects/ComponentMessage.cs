@@ -18,6 +18,6 @@ namespace SS14.Shared.GameObjects
         ///     If this is a remote message, should it be sent back to where it came from?
         ///     You want to set this to true if this message is mutable and is being sent over the network.
         /// </summary>
-        public bool Reply { get; set; }
+        public bool Reply { get; protected set; }
     }
 }

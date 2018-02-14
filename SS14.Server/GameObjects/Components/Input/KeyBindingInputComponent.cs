@@ -24,7 +24,8 @@ namespace SS14.Server.GameObjects
             var boolState = keyState == BoundKeyState.Down;
             SetKeyState(keyFunction, boolState);
 
-            Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, keyFunction, keyState);
+            SendMessage(new BoundKeyChangedMsg(keyFunction, keyState));
+            
             Owner.RaiseEvent(new BoundKeyChangeEventArgs{KeyFunction = keyFunction, KeyState = keyState, Actor = Owner});
 
         }

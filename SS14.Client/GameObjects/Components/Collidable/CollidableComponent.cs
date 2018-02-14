@@ -48,9 +48,9 @@ namespace SS14.Client.GameObjects
         /// </summary>
         void ICollidable.Bump(IEntity ent)
         {
-            OnBump?.Invoke(this, new BumpEventArgs(this.Owner, ent));
+            SendMessage(new BumpedEntMsg(ent));
 
-            Owner.SendMessage(this, ComponentMessageType.Bumped, ent);
+            OnBump?.Invoke(this, new BumpEventArgs(this.Owner, ent));
         }
 
         /// <inheritdoc />
@@ -134,6 +134,7 @@ namespace SS14.Client.GameObjects
             return IoCManager.Resolve<ICollisionManager>().TryCollide(Owner, offset, bump);
         }
 
+        [Obsolete("Handle BumpEntMsg")]
         public event EventHandler<BumpEventArgs> OnBump;
 
         /// <summary>

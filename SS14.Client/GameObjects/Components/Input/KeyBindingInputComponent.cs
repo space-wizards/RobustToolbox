@@ -91,7 +91,7 @@ namespace SS14.Client.GameObjects
             foreach (var state in _keyStates.ToList())
             {
                 Owner.SendComponentNetworkMessage(this, state.Key, BoundKeyState.Up);
-                Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, state.Key, BoundKeyState.Up);
+                SendMessage(new BoundKeyChangedMsg(state.Key, BoundKeyState.Up));
                 _keyStates.Remove(state.Key);
             }
         }
@@ -103,7 +103,7 @@ namespace SS14.Client.GameObjects
 
             Owner.SendComponentNetworkMessage(this, e.Function, e.FunctionState);
             SetKeyState(e.Function, true);
-            Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, e.Function, e.FunctionState);
+            SendMessage(new BoundKeyChangedMsg(e.Function, e.FunctionState));
         }
 
         public virtual void KeyUp(object sender, BoundKeyEventArgs e)
@@ -112,7 +112,7 @@ namespace SS14.Client.GameObjects
                 return;
             Owner.SendComponentNetworkMessage(this, e.Function, e.FunctionState);
             SetKeyState(e.Function, false);
-            Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, e.Function, e.FunctionState);
+            SendMessage(new BoundKeyChangedMsg(e.Function, e.FunctionState));
         }
 
         protected void SetKeyState(BoundKeyFunctions k, bool state)
@@ -152,7 +152,7 @@ namespace SS14.Client.GameObjects
                 if (!state.Value)
                     _keyStates.Remove(state.Key);
                 else
-                    Owner.SendMessage(this, ComponentMessageType.BoundKeyRepeat, state.Key, BoundKeyState.Repeat);
+                    SendMessage(new BoundKeyRepeatMsg(state.Key, BoundKeyState.Repeat));
             }
         }
     }

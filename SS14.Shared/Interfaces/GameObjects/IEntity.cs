@@ -200,23 +200,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <typeparam name="T">The type that components must implement.</typeparam>
         /// <returns>An enumerable over the found components.</returns>
         IEnumerable<T> GetComponents<T>();
-
-        /// <summary>
-        ///     Allows components to send messages
-        /// </summary>
-        /// <param name="sender">the component doing the sending</param>
-        /// <param name="type">the type of message</param>
-        /// <param name="args">message parameters</param>
-        void SendMessage(object sender, ComponentMessageType type, params object[] args);
-
-        /// <summary>
-        /// Allows components to send messages
-        /// </summary>
-        /// <param name="sender">the component doing the sending</param>
-        /// <param name="type">the type of message</param>
-        /// <param name="replies"></param>
-        /// <param name="args">message parameters</param>
-        void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args);
         
         /// <summary>
         ///     Requests Description string from components and returns it. If no component answers, returns default description from template.
@@ -228,16 +211,9 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="component">Sending component</param>
         /// <param name="messageParams">Parameters</param>
+        [Obsolete("Use SendNetworkMessage")]
         void SendComponentNetworkMessage(IComponent component, params object[] messageParams);
-
-        /// <summary>
-        ///     Sends a message to the counterpart component on the server side
-        /// </summary>
-        /// <param name="component">Sending component</param>
-        /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
-        /// <param name="messageParams">Parameters</param>
-        void SendDirectedComponentNetworkMessage(IComponent component, INetChannel recipient, params object[] messageParams);
-
+        
         /// <summary>
         ///     Sends a message to all other components in this entity.
         /// </summary>
@@ -248,14 +224,10 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <summary>
         ///     Sends a message over the network to all other components on the networked entity. This works both ways.
         /// </summary>
+        /// <param name="owner"></param>
         /// <param name="message">Message to send.</param>
-        void SendNetworkMessage(ComponentMessage message);
-
-        /// <summary>
-        ///     Called when the entity has all components initialized.
-        /// </summary>
-        void Initialize();
-
+        void SendNetworkMessage(object owner, ComponentMessage message);
+        
         /// <summary>
         /// Func to handle an incoming network message
         /// </summary>

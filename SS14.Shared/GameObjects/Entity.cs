@@ -157,48 +157,15 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendNetworkMessage(ComponentMessage message)
+        public void SendNetworkMessage(object owner, ComponentMessage message)
         {
             throw new NotImplementedException();
         }
-        
-        # endregion Unified Messaging
+
+        #endregion Unified Messaging
 
         #region Component Messaging
-
-        /// <inheritdoc />
-        public void SendMessage(object sender, ComponentMessageType type, params object[] args)
-        {
-            foreach (var component in GetComponents())
-            {
-                //Check to see if the component is still a part of this entity --- collection may change in process.
-                if (_components.Contains(component))
-                    component.ReceiveMessage(sender, type, args);
-            }
-        }
-
-        /// <inheritdoc />
-        public void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies, params object[] args)
-        {
-            foreach (var component in GetComponents())
-            {
-                //Check to see if the component is still a part of this entity --- collection may change in process.
-                if (!_components.Contains(component))
-                    continue;
-
-                if (replies != null)
-                {
-                    var reply = component.ReceiveMessage(sender, type, args);
-                    if (reply.MessageType != ComponentMessageType.Empty)
-                        replies.Add(reply);
-                }
-                else
-                {
-                    component.ReceiveMessage(sender, type, args);
-                }
-            }
-        }
-
+        
         private void HandleComponentMessage(IncomingEntityComponentMessage message)
         {
             if (_netIDs.TryGetValue(message.NetId, out var component))
@@ -210,6 +177,7 @@ namespace SS14.Shared.GameObjects
         #region Network messaging
 
         /// <inheritdoc />
+        [Obsolete("Use SendNetworkMessage")]
         public void SendComponentNetworkMessage(IComponent component, params object[] messageParams)
         {
             if (component.NetID == null)
@@ -255,17 +223,9 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public string GetDescriptionString()
         {
-            var replies = new List<ComponentReplyMessage>();
-
-            SendMessage(this, ComponentMessageType.GetDescriptionString, replies);
-
-            if (replies.Any())
-                return
-                    (string)
-                    replies.First(x => x.MessageType == ComponentMessageType.GetDescriptionString).ParamsList[0];
-            //If you don't answer with a string then fuck you.
-
-            return null;
+            var msg = new DescriptionStringMsg();
+            SendMessage(this, msg);
+            return msg.DescriptionString;
         }
 
         #region Component Events

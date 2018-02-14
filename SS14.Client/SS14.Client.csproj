@@ -260,7 +260,6 @@
     <Compile Include="UserInterface\Controls\Button.cs" />
     <Compile Include="UserInterface\CustomControls\Chatbox.cs" />
     <Compile Include="UserInterface\Controls\Checkbox.cs" />
-    <Compile Include="UserInterface\Controls\ContextMenu.cs" />
     <Compile Include="UserInterface\CustomControls\DebugConsole.cs" />
     <Compile Include="UserInterface\CustomControls\EntitySpawnWindow.cs" />
     <Compile Include="UserInterface\CustomControls\EntitySpawnSelectButton.cs" />

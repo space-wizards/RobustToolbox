@@ -35,7 +35,9 @@ namespace SS14.Server.GameObjects
                     //TODO check who bumped us, how far away they are, etc.
                     var bumper = Owner.EntityManager.GetEntity(new EntityUid((int)message.MessageParameters[1]));
                     if (bumper != null)
-                        Owner.SendMessage(this, ComponentMessageType.Bumped, bumper);
+                    {
+                        SendMessage(new BumpedEntMsg(bumper));
+                    }
                     break;
             }
         }

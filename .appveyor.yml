@@ -24,6 +24,11 @@ before_build:
 platform: x64
 configuration: Debug
 
+cache:
+- packages -> **\packages.config
+- Dependencies
+- SS14.Client.Godot\.mono\assemblies\GodotSharp.dll
+
 build:
   project: SpaceStation14.sln
   parallel: false

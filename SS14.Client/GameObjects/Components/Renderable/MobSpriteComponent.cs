@@ -21,76 +21,7 @@ namespace SS14.Client.GameObjects
         {
             DrawDepth = DrawDepth.MobBase;
         }
-
-        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
-        {
-            ComponentReplyMessage reply = base.ReceiveMessage(sender, type, list);
-
-            if (sender == this) //Don't listen to our own messages!
-                return ComponentReplyMessage.Empty;
-
-            switch (type)
-            {
-                case ComponentMessageType.MoveDirection:
-                    switch ((Direction)list[0])
-                    {
-                        case Direction.North:
-                            SetSpriteByKey(_basename + "_back");
-                            HorizontalFlip = false;
-                            break;
-                        case Direction.South:
-                            SetSpriteByKey(_basename + "_front");
-                            HorizontalFlip = false;
-                            break;
-                        case Direction.East:
-                            SetSpriteByKey(_basename + "_side");
-                            HorizontalFlip = true;
-                            break;
-                        case Direction.West:
-                            SetSpriteByKey(_basename + "_side");
-                            HorizontalFlip = false;
-                            break;
-                        case Direction.NorthEast:
-                            SetSpriteByKey(_basename + "_back");
-                            HorizontalFlip = false;
-                            break;
-                        case Direction.NorthWest:
-                            SetSpriteByKey(_basename + "_back");
-                            HorizontalFlip = false;
-                            break;
-                        case Direction.SouthEast:
-                            SetSpriteByKey(_basename + "_front");
-                            HorizontalFlip = false;
-                            break;
-                        case Direction.SouthWest:
-                            SetSpriteByKey(_basename + "_front");
-                            HorizontalFlip = false;
-                            break;
-                    }
-                    break;
-                case ComponentMessageType.Die:
-                    SetSpriteByKey(_basename + "_incap_dead");
-                    HorizontalFlip = false;
-                    break;
-                case ComponentMessageType.EntitySaidSomething:
-                    ChatChannel channel;
-                    if (Enum.TryParse(list[0].ToString(), true, out channel))
-                    {
-                        string text = list[1].ToString();
-
-                        if (channel == ChatChannel.Local || channel == ChatChannel.Player ||
-                            channel == ChatChannel.Radio)
-                        {
-                            (_speechBubble ?? (_speechBubble = new SpeechBubble(Owner.Name + Owner.Uid))).SetText(text);
-                        }
-                    }
-                    break;
-            }
-
-            return reply;
-        }
-
+        
         public override void LoadParameters(YamlMappingNode mapping)
         {
             base.LoadParameters(mapping);

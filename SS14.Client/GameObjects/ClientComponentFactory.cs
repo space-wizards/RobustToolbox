@@ -12,7 +12,6 @@ namespace SS14.Client.GameObjects
             Register<CollidableComponent>();
             RegisterReference<CollidableComponent, ICollidableComponent>();
             Register<IconComponent>();
-            Register<ContextMenuComponent>();
             Register<KeyBindingInputComponent>();
             Register<PointLightComponent>();
             Register<PhysicsComponent>();

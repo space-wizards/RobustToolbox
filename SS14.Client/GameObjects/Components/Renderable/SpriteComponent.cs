@@ -187,48 +187,7 @@ namespace SS14.Client.GameObjects
         {
             sprites.Clear();
         }
-
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
-        {
-            switch ((ComponentMessageType)message.MessageParameters[0])
-            {
-                case ComponentMessageType.SetVisible:
-                    visible = (bool)message.MessageParameters[1];
-                    break;
-                case ComponentMessageType.SetSpriteByKey:
-                    SetSpriteByKey((string)message.MessageParameters[1]);
-                    break;
-            }
-        }
-
-        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
-        {
-            ComponentReplyMessage reply = base.ReceiveMessage(sender, type, list);
-
-            if (sender == this) //Don't listen to our own messages!
-                return ComponentReplyMessage.Empty;
-
-            switch (type)
-            {
-                case ComponentMessageType.GetSprite:
-                    reply = new ComponentReplyMessage(ComponentMessageType.CurrentSprite, GetBaseSprite());
-                    break;
-                case ComponentMessageType.SetSpriteByKey:
-                    SetSpriteByKey((string)list[0]);
-                    break;
-                case ComponentMessageType.SlaveAttach:
-                    SetMaster(Owner.EntityManager.GetEntity(new EntityUid((int)list[0])));
-                    break;
-                case ComponentMessageType.ItemUnEquipped:
-                case ComponentMessageType.Dropped:
-                    UnsetMaster();
-                    break;
-            }
-
-            return reply;
-        }
-
+        
         protected virtual Sprite GetBaseSprite()
         {
             return currentBaseSprite;

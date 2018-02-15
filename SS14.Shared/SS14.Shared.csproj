@@ -274,7 +274,7 @@
     <Compile Include="GameObjects\EntitySystemManager.cs" />
     <Compile Include="GameObjects\IEntityNetworkManager.cs" />
     <Compile Include="GameObjects\ParticleSettings.cs" />
-    <Compile Include="GameObjects\StaticConstants.cs" />
+    <Compile Include="Enums\ClickType.cs" />
     <Compile Include="GameObjects\System\EntitySystem.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponentState.cs" />
     <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponentState.cs" />

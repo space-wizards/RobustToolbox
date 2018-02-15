@@ -187,24 +187,7 @@ namespace SS14.Shared.GameObjects
             EntityNetworkManager.SendComponentNetworkMessage(this, component.NetID.Value,
                                                              messageParams);
         }
-
-        /// <inheritdoc />
-        public void SendDirectedComponentNetworkMessage(IComponent component, INetChannel recipient, params object[] messageParams)
-        {
-            if (component.NetID == null)
-            {
-                throw new ArgumentException("Component has no Net ID and cannot be used across the network.");
-            }
-
-            if (!Initialized)
-            {
-                return;
-            }
-
-            EntityNetworkManager.SendDirectedComponentNetworkMessage(this, component.NetID.Value, recipient,
-                                                                     messageParams);
-        }
-
+        
         /// <inheritdoc />
         public void HandleNetworkMessage(IncomingEntityMessage message)
         {

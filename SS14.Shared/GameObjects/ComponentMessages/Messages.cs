@@ -2,9 +2,11 @@
 using SS14.Shared.Console;
 using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Serialization;
 
 namespace SS14.Shared.GameObjects
 {
+    [Serializable, NetSerializable]
     public class SaidSomethingMsg : ComponentMessage
     {
         public ChatChannel Channel { get; }
@@ -17,8 +19,10 @@ namespace SS14.Shared.GameObjects
         }
     }
 
+    [Serializable, NetSerializable]
     public class SpriteChangedMsg : ComponentMessage { }
 
+    [Serializable, NetSerializable]
     public class BumpedEntMsg : ComponentMessage
     {
         public IEntity Entity { get; }
@@ -29,6 +33,7 @@ namespace SS14.Shared.GameObjects
         }
     }
 
+    [Serializable, NetSerializable]
     public class BoundKeyChangedMsg : ComponentMessage
     {
         public BoundKeyFunctions Function { get; }
@@ -41,6 +46,7 @@ namespace SS14.Shared.GameObjects
         }
     }
 
+    [Serializable, NetSerializable]
     public class BoundKeyRepeatMsg : ComponentMessage
     {
         public BoundKeyFunctions Function { get; }
@@ -53,6 +59,7 @@ namespace SS14.Shared.GameObjects
         }
     }
 
+    [Serializable, NetSerializable]
     public class DescriptionStringMsg : ComponentMessage
     {
         public string DescriptionString { get; set; } = String.Empty;

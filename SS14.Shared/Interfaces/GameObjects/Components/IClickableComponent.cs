@@ -1,5 +1,6 @@
 ﻿using SS14.Shared.GameObjects;
 using System;
+using SS14.Shared.Enums;
 
 namespace SS14.Shared.Interfaces.GameObjects.Components
 {

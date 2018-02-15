@@ -41,28 +41,7 @@ namespace SS14.Client.GameObjects
             keyBindingManager.BoundKeyDown += KeyDown;
             keyBindingManager.BoundKeyUp += KeyUp;
         }
-
-        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
-        {
-            ComponentReplyMessage reply = base.ReceiveMessage(sender, type, list);
-
-            if (sender == this)
-                return ComponentReplyMessage.Empty;
-
-            switch (type)
-            {
-                case ComponentMessageType.Die:
-                    Disable();
-                    break;
-                case ComponentMessageType.Live:
-                    Enable();
-                    break;
-            }
-
-            return reply;
-        }
-
+        
         public override void Shutdown()
         {
             base.Shutdown();

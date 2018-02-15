@@ -68,18 +68,6 @@ namespace SS14.Shared.GameObjects
         [Obsolete("Components should be updated through a system.")]
         public virtual void Update(float frameTime) { }
 
-        /// <inheritdoc />
-        [Obsolete("Use HandleMessage")]
-        public virtual ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type, params object[] list)
-        {
-            var reply = ComponentReplyMessage.Empty;
-
-            if (sender == this) //Don't listen to our own messages!
-                return reply;
-
-            return reply;
-        }
-
         /// <summary>
         ///     Sends a message to all other components in this entity.
         ///     This is an alias of 'Owner.SendMessage(this, message);'

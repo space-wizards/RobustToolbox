@@ -110,15 +110,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         void Update(float frameTime);
 
         /// <summary>
-        ///     Receive a message from another component within the owner entity
-        /// </summary>
-        /// <param name="sender">the component that sent the message</param>
-        /// <param name="type">the message type in CGO.MessageType</param>
-        /// <param name="list">parameters list</param>
-        [Obsolete("Use HandleMessage")]
-        ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type, params object[] list);
-
-        /// <summary>
         ///     Handles an incoming component message.
         /// </summary>
         /// <param name="owner">

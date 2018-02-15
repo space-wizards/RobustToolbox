@@ -40,22 +40,25 @@ namespace SS14.Server.GameObjects
 
             base.OnAdd();
         }
-
-        /// <inheritdoc />
-        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type, params object[] list)
+        
+        /// <summary>
+        ///     Handles an incoming component message.
+        /// </summary>
+        /// <param name="owner">
+        ///     Object that raised the event. If the event was sent over the network or from some unknown place,
+        ///     this will be null.
+        /// </param>
+        /// <param name="message">Message that was sent.</param>
+        public override void HandleMessage(object owner, ComponentMessage message)
         {
-            //Don't listen to our own messages!
-            if (sender == this)
-                return ComponentReplyMessage.Empty;
+            base.HandleMessage(owner, message);
 
-            switch (type)
+            switch (message)
             {
-                case ComponentMessageType.BoundKeyChange:
+                case BoundKeyChangedMsg msg:
                     HandleKeyChange();
                     break;
             }
-
-            return base.ReceiveMessage(sender, type, list);
         }
 
         /// <inheritdoc />

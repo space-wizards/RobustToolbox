@@ -27,7 +27,7 @@ namespace SS14.Client.ResourceManagement
             // Specifically: Godot does use its pack system for exported projects, but there's no way to load new packs at runtime manually.
             // So we wing it with file paths right now.
 #if RELEASE
-            MountContentDirectory(@"./Resources/");
+            MountContentDirectory(@"Resources/");
 #else
             MountContentDirectory(@"../../Resources/");
             MountContentDirectory(@"Resources/Assemblies", "Assemblies/");
@@ -40,7 +40,7 @@ namespace SS14.Client.ResourceManagement
             //_resources.MountDefaultContentPack();
         }
 
-        public T GetResource<T>(string path, bool useFallback=true) where T : BaseResource, new()
+        public T GetResource<T>(string path, bool useFallback = true) where T : BaseResource, new()
         {
             if (CachedResources.TryGetValue((path, typeof(T)), out var cached))
             {
@@ -63,7 +63,7 @@ namespace SS14.Client.ResourceManagement
                 if (useFallback && _resource.Fallback != null)
                 {
                     Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', resorting to fallback.\n{Environment.StackTrace}");
-                    return GetResource<T>(_resource.Fallback, useFallback=false);
+                    return GetResource<T>(_resource.Fallback, useFallback = false);
                 }
                 else
                 {

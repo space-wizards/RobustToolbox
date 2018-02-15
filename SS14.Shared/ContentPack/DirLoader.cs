@@ -40,7 +40,7 @@ namespace SS14.Shared.ContentPack
             return new MemoryStream(bytes, false);
         }
 
-        public string GetPath(string relPath)
+        internal string GetPath(string relPath)
         {
             var fullPath = Path.GetFullPath(Path.Combine(_directory.FullName, relPath));
 

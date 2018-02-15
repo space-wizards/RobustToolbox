@@ -70,19 +70,17 @@ namespace SS14.Client.Player
         {
             // Detach and cleanup first
             DetachEntity();
-
-            var factory = IoCManager.Resolve<IComponentFactory>();
-
+            
             ControlledEntity = entity;
-            ControlledEntity.AddComponent(factory.GetComponent<KeyBindingInputComponent>());
+            ControlledEntity.AddComponent<KeyBindingInputComponent>();
 
             if (ControlledEntity.HasComponent<IMoverComponent>())
                 ControlledEntity.RemoveComponent<IMoverComponent>();
-
-            ControlledEntity.AddComponent(factory.GetComponent<PlayerInputMoverComponent>());
+            
+            ControlledEntity.AddComponent<PlayerInputMoverComponent>();
 
             if (!ControlledEntity.HasComponent<CollidableComponent>())
-                ControlledEntity.AddComponent(factory.GetComponent<CollidableComponent>());
+                ControlledEntity.AddComponent<CollidableComponent>();
 
             ControlledEntity.GetComponent<ITransformComponent>().OnMove += OnPlayerMoved;
 

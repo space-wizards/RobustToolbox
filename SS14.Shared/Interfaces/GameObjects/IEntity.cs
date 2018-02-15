@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Configuration;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.Network;
@@ -8,7 +9,6 @@ namespace SS14.Shared.Interfaces.GameObjects
 {
     public interface IEntity
     {
-        IEntityNetworkManager EntityNetworkManager { get; }
         IEntityManager EntityManager { get; }
 
         /// <summary>
@@ -38,40 +38,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     The prototype that was used to create this entity.
         /// </summary>
         EntityPrototype Prototype { get; }
-
-        /// <summary>
-        ///     Fired when the entity is deleted.
-        /// </summary>
-        event EntityShutdownEvent OnShutdown;
-
-        /// <summary>
-        ///     Initialize the entity's UID. This can only be called once.
-        /// </summary>
-        /// <param name="newUid">The new UID.</param>
-        /// <exception cref="InvalidOperationException">
-        ///     Thrown if the method is called and the entity already has a UID.
-        /// </exception>
-        void SetUid(EntityUid newUid);
-
-        /// <summary>
-        ///     Sets fundamental managers after the entity has been created.
-        /// </summary>
-        /// <remarks>
-        ///     This is a separate method because C# makes constructors painful.
-        /// </remarks>
-        /// <exception cref="InvalidOperationException">
-        ///     Thrown if the method is called and the entity already has initialized managers.
-        /// </exception>
-        void SetManagers(IEntityManager entityManager, IEntityNetworkManager networkManager);
-
-        /// <summary>
-        ///     Called after the entity is constructed by its prototype to load serializable fields
-        ///     from the prototype's <c>data</c> field. Called any time during the Entities life to serialize
-        ///     its fields.
-        /// </summary>
-        /// <param name="serializer">The serialization object that contains the <c>data</c> field.</param>
-        void ExposeData(EntitySerializer serializer);
-
+        
         /// <summary>
         ///     "Matches" this entity with the provided entity query, returning whether or not the query matched.
         ///     This is effectively equivalent to calling <see cref="IEntityQuery.Match(IEntity)" /> with this entity.
@@ -85,17 +52,10 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     Public method to add a component to an entity.
         ///     Calls the component's onAdd method, which also adds it to the component manager.
         /// </summary>
-        /// <param name="component">The component to add.</param>
-        void AddComponent(IComponent component);
-
-        /// <summary>
-        ///     Public method to remove a component from an entity.
-        ///     Calls the onRemove method of the component, which handles removing it
-        ///     from the component manager and shutting down the component.
-        /// </summary>
-        /// <param name="component">The component to remove.</param>
-        void RemoveComponent(IComponent component);
-
+        /// <typeparam name="T">The component type to add.</typeparam>
+        /// <returns>The newly added component.</returns>
+        T AddComponent<T>() where T : Component, new();
+        
         /// <summary>
         ///     Removes the component with the specified reference type,
         ///     Without needing to have the component itself.

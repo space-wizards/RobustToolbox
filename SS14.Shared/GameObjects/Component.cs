@@ -23,7 +23,7 @@ namespace SS14.Shared.GameObjects
         public virtual bool NetworkSynchronizeExistence => false;
 
         /// <inheritdoc />
-        public IEntity Owner { get; private set; }
+        public IEntity Owner { get; set; }
 
         /// <inheritdoc />
         public virtual Type StateType => typeof(ComponentState);

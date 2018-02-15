@@ -8,12 +8,6 @@ using SS14.Shared.GameObjects.Serialization;
 
 namespace SS14.Shared.GameObjects
 {
-    /// <summary>
-    ///     Event delegate for when an entity is shut down.
-    /// </summary>
-    /// <param name="e">Entity being shut down.</param>
-    public delegate void EntityShutdownEvent(IEntity e);
-
     /// <inheritdoc />
     public sealed class Entity : IEntity
     {
@@ -54,14 +48,19 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public bool Deleted { get; private set; }
 
-        /// <inheritdoc />
-        public event EntityShutdownEvent OnShutdown;
-
         #endregion Members
 
         #region Initialization
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Sets fundamental managers after the entity has been created.
+        /// </summary>
+        /// <remarks>
+        ///     This is a separate method because C# makes constructors painful.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        ///     Thrown if the method is called and the entity already has initialized managers.
+        /// </exception>
         public void SetManagers(IEntityManager entityManager, IEntityNetworkManager networkManager)
         {
             if (EntityManager != null)
@@ -72,7 +71,13 @@ namespace SS14.Shared.GameObjects
             EntityNetworkManager = networkManager;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Initialize the entity's UID. This can only be called once.
+        /// </summary>
+        /// <param name="uid">The new UID.</param>
+        /// <exception cref="InvalidOperationException">
+        ///     Thrown if the method is called and the entity already has a UID.
+        /// </exception>
         public void SetUid(EntityUid uid)
         {
             if(!uid.IsValid())
@@ -110,7 +115,12 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Called after the entity is constructed by its prototype to load serializable fields
+        ///     from the prototype's <c>data</c> field. Called any time during the Entities life to serialize
+        ///     its fields.
+        /// </summary>
+        /// <param name="serializer">The serialization object that contains the <c>data</c> field.</param>
         public void ExposeData(EntitySerializer serializer)
         {
             _id = Prototype.ID;
@@ -136,7 +146,9 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Sets up the entity into a valid initial state.
+        /// </summary>
         public void Initialize()
         {
             Initialized = true;
@@ -244,15 +256,31 @@ namespace SS14.Shared.GameObjects
         {
             return query.Match(this);
         }
-        
+
         #endregion Entity Systems
 
         #region Components
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Public method to add a component to an entity.
+        ///     Calls the component's onAdd method, which also adds it to the component manager.
+        /// </summary>
+        /// <param name="component">The component to add.</param>
         public void AddComponent(IComponent component)
         {
             AddComponent(component, false);
+        }
+
+        /// <inheritdoc />
+        public T AddComponent<T>()
+            where T : Component, new()
+        {
+            var factory = IoCManager.Resolve<IComponentFactory>();
+            var newComponent = (Component)factory.GetComponent<T>();
+            
+            newComponent.Owner = this;
+
+            return (T)newComponent;
         }
 
         private void AddComponent(IComponent component, bool overwrite)
@@ -296,7 +324,12 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Public method to remove a component from an entity.
+        ///     Calls the onRemove method of the component, which handles removing it
+        ///     from the component manager and shutting down the component.
+        /// </summary>
+        /// <param name="component">The component to remove.</param>
         public void RemoveComponent(IComponent component)
         {
             if (component.Owner != this)

@@ -33,9 +33,9 @@ namespace SS14.Client.GameObjects
             //Set up keystates
         }
 
-        public override void OnAdd(IEntity owner)
+        public override void OnAdd()
         {
-            base.OnAdd(owner);
+            base.OnAdd();
 
             var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
             keyBindingManager.BoundKeyDown += KeyDown;

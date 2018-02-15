@@ -156,9 +156,9 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override void OnAdd(IEntity owner)
+        public override void OnAdd()
         {
-            base.OnAdd(owner);
+            base.OnAdd();
 
             SendMessage(new SpriteChangedMsg());
         }

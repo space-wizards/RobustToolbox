@@ -66,23 +66,14 @@ namespace SS14.Shared.Interfaces.GameObjects
 
         /// <summary>
         ///     Called when the component gets added to an entity.
-        ///     This function must be called on the base class by any children.
         /// </summary>
-        /// <param name="owner"></param>
-        void OnAdd(IEntity owner);
+        void OnAdd();
 
         /// <summary>
         ///     Called when all of the entity's other components have been added and are available,
         ///     But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.
         /// </summary>
         void Initialize();
-
-        /// <summary>
-        /// Invoked whenever the entity is shut down (removed from an entity or deleted).
-        /// </summary>
-        /// <seealso cref="OnRemove" />
-        /// <seealso cref="Shutdown" />
-        event Action<ComponentShutdownEventArgs> OnShutdown;
 
         /// <summary>
         ///     Starts up a component. This is called automatically after all components are Initialized and the entity is Initialized.

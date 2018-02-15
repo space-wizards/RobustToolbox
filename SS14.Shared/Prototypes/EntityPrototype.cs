@@ -320,8 +320,9 @@ namespace SS14.Shared.GameObjects
 
             foreach (var componentData in Components)
             {
-                var component = componentFactory.GetComponent(componentData.Key);
-                
+                var component = (Component)componentFactory.GetComponent(componentData.Key);
+
+                component.Owner = entity;
                 component.LoadParameters(componentData.Value);
                 component.ExposeData(new YamlEntitySerializer(componentData.Value));
 

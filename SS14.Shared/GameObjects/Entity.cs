@@ -266,7 +266,7 @@ namespace SS14.Shared.GameObjects
         ///     Calls the component's onAdd method, which also adds it to the component manager.
         /// </summary>
         /// <param name="component">The component to add.</param>
-        public void AddComponent(IComponent component)
+        public void AddComponent(Component component)
         {
             AddComponent(component, false);
         }
@@ -279,13 +279,14 @@ namespace SS14.Shared.GameObjects
             var newComponent = (Component)factory.GetComponent<T>();
             
             newComponent.Owner = this;
+            AddComponent(newComponent);
 
             return (T)newComponent;
         }
 
-        private void AddComponent(IComponent component, bool overwrite)
+        private void AddComponent(Component component, bool overwrite)
         {
-            if (component.Owner != null)
+            if (component.Owner != null && component.Owner != this)
             {
                 throw new ArgumentException("Component already has an owner");
             }
@@ -314,7 +315,11 @@ namespace SS14.Shared.GameObjects
                 _netIDs[component.NetID.Value] = component;
             }
 
-            component.OnAdd(this);
+            // Register the component with the ComponentManager.
+            var manager = IoCManager.Resolve<IComponentManager>();
+            manager.AddComponent(component);
+
+            component.OnAdd();
 
             if (Initialized)
             {
@@ -487,7 +492,7 @@ namespace SS14.Shared.GameObjects
                     RemoveComponent(GetComponent(t.Item1));
 
                 if (!HasComponent(t.Item1))
-                    AddComponent(IoCManager.Resolve<IComponentFactory>().GetComponent(t.Item2), true);
+                    AddComponent((Component)IoCManager.Resolve<IComponentFactory>().GetComponent(t.Item2), true);
             }
 
             foreach (var compState in state.ComponentStates)

@@ -1,15 +1,12 @@
 ﻿using System;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.IoC;
 using SS14.Shared.Reflection;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
 {
-    /// <summary>
-    ///     Base component for the ECS system.
-    /// </summary>
+    /// <inheritdoc />
     [Reflect(false)]
     public abstract class Component : IComponent
     {
@@ -29,8 +26,6 @@ namespace SS14.Shared.GameObjects
         public virtual Type StateType => typeof(ComponentState);
 
         /// <inheritdoc />
-        public event Action<ComponentShutdownEventArgs> OnShutdown;
-
         public bool Running { get; private set; }
 
         /// <inheritdoc />
@@ -45,14 +40,7 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void OnAdd(IEntity owner)
-        {
-            Owner = owner;
-
-            //Send us to the manager so it knows we're active
-            var manager = IoCManager.Resolve<IComponentManager>();
-            manager.AddComponent(this);
-        }
+        public virtual void OnAdd() { }
 
         /// <inheritdoc />
         public virtual void Initialize() { }
@@ -67,8 +55,6 @@ namespace SS14.Shared.GameObjects
         public virtual void Shutdown()
         {
             Running = false;
-            OnShutdown?.Invoke(new ComponentShutdownEventArgs(this));
-            OnShutdown = null;
         }
 
         /// <inheritdoc />

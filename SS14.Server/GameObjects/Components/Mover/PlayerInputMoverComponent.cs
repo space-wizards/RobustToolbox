@@ -28,17 +28,17 @@ namespace SS14.Server.GameObjects
         public override bool NetworkSynchronizeExistence => false;
 
         /// <inheritdoc />
-        public override void OnAdd(IEntity owner)
+        public override void OnAdd()
         {
             // This component requires that the entity has a KeyBindingInputComponent.
-            if (!owner.HasComponent<KeyBindingInputComponent>())
-                Logger.Error($"[ECS] {owner.Prototype.Name} - {nameof(PlayerInputMoverComponent)} requires {nameof(KeyBindingInputComponent)}. ");
+            if (!Owner.HasComponent<KeyBindingInputComponent>())
+                Logger.Error($"[ECS] {Owner.Prototype.Name} - {nameof(PlayerInputMoverComponent)} requires {nameof(KeyBindingInputComponent)}. ");
 
             // This component requires that the entity has a PhysicsComponent.
-            if (!owner.HasComponent<PhysicsComponent>())
-                Logger.Error($"[ECS] {owner.Prototype.Name} - {nameof(PlayerInputMoverComponent)} requires {nameof(PhysicsComponent)}. ");
+            if (!Owner.HasComponent<PhysicsComponent>())
+                Logger.Error($"[ECS] {Owner.Prototype.Name} - {nameof(PlayerInputMoverComponent)} requires {nameof(PhysicsComponent)}. ");
 
-            base.OnAdd(owner);
+            base.OnAdd();
         }
 
         /// <inheritdoc />

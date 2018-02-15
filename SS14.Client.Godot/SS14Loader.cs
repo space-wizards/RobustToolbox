@@ -30,15 +30,7 @@ namespace SS14.Client.GodotGlue
                 return;
             }
             Started = true;
-            GD.Print(string.Join(", ", OS.GetCmdlineArgs()));
-            if (System.IO.Directory.Exists("client"))
-            {
-                SS14Assembly = Assembly.LoadFrom("client/SS14.Client.dll");
-            }
-            else
-            {
-                SS14Assembly = Assembly.LoadFrom("../bin/Client/SS14.Client.dll");
-            }
+            SS14Assembly = Assembly.LoadFrom("../bin/Client/SS14.Client.dll");
             var entryType = typeof(ClientEntryPoint);
             foreach (var type in SS14Assembly.GetTypes())
             {

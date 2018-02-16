@@ -39,7 +39,9 @@ namespace SS14.Shared.GameObjects
             Deleted = true;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Called when the component gets added to an entity.
+        /// </summary>
         public virtual void OnAdd() { }
 
         /// <inheritdoc />

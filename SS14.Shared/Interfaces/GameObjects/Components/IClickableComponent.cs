@@ -9,6 +9,7 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         /// <summary>
         /// Invoked whenever this component is clicked on.
         /// </summary>
+        [Obsolete("Subscribe to ClientClick message.")]
         event EventHandler<ClickEventArgs> OnClick;
     }
 

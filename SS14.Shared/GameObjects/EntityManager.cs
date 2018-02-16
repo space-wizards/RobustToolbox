@@ -369,14 +369,14 @@ namespace SS14.Shared.GameObjects
         {
             if (!Started)
             {
-                IncomingEntityMessage incomingEntity = ProcessNetMessage(msg);
+                var incomingEntity = ProcessNetMessage(msg);
                 if (incomingEntity.Message.Type != EntityMessageType.Error)
                     MessageBuffer.Enqueue(incomingEntity);
             }
             else
             {
                 ProcessMsgBuffer();
-                IncomingEntityMessage incomingEntity = ProcessNetMessage(msg);
+                var incomingEntity = ProcessNetMessage(msg);
                 if (!Entities.ContainsKey(incomingEntity.Message.EntityUid))
                 {
                     MessageBuffer.Enqueue(incomingEntity);

@@ -159,7 +159,7 @@ namespace SS14.Shared.GameObjects
         #region Unified Messaging
 
         /// <inheritdoc />
-        public void SendMessage(object owner, ComponentMessage message)
+        public void SendMessage(IComponent owner, ComponentMessage message)
         {
             foreach (var component in _components)
             {
@@ -169,36 +169,14 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendNetworkMessage(object owner, ComponentMessage message)
+        public void SendNetworkMessage(IComponent owner, ComponentMessage message)
         {
-            throw new NotImplementedException();
+            EntityNetworkManager.SendComponentNetworkMessage(this, owner, message);
         }
 
         #endregion Unified Messaging
 
-        #region Component Messaging
-        
-        private void HandleComponentMessage(IncomingEntityComponentMessage message)
-        {
-            if (_netIDs.TryGetValue(message.NetId, out var component))
-                component.HandleNetworkMessage(message);
-        }
-
-        #endregion Component Messaging
-
         #region Network messaging
-
-        /// <inheritdoc />
-        [Obsolete("Use SendNetworkMessage")]
-        public void SendComponentNetworkMessage(IComponent component, params object[] messageParams)
-        {
-            if (component.NetID == null)
-            {
-                throw new ArgumentException("Component has no Net ID and cannot be used across the network.");
-            }
-            EntityNetworkManager.SendComponentNetworkMessage(this, component.NetID.Value,
-                                                             messageParams);
-        }
         
         /// <inheritdoc />
         public void HandleNetworkMessage(IncomingEntityMessage message)
@@ -206,7 +184,24 @@ namespace SS14.Shared.GameObjects
             switch (message.Message.Type)
             {
                 case EntityMessageType.ComponentMessage:
-                    HandleComponentMessage(new IncomingEntityComponentMessage(message.Message.NetId, message.Message.MsgChannel, message.Message.Parameters));
+                {
+                    var compMsg = message.Message.ComponentMessage;
+                    var compChannel = message.Message.MsgChannel;
+                    compMsg.Remote = true;
+
+                    if (compMsg.Directed)
+                    {
+                        if (_netIDs.TryGetValue(message.Message.NetId, out var component))
+                                component.HandleMessage(compChannel, compMsg);
+                    }
+                    else
+                    {
+                        foreach (var component in _components)
+                        {
+                            component.HandleMessage(compChannel, compMsg);
+                        }
+                    }
+                }
                     break;
             }
         }
@@ -219,7 +214,7 @@ namespace SS14.Shared.GameObjects
         public string GetDescriptionString()
         {
             var msg = new DescriptionStringMsg();
-            SendMessage(this, msg);
+            SendMessage(null, msg);
             return msg.DescriptionString;
         }
 

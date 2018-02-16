@@ -15,6 +15,7 @@ namespace SS14.Client.GameObjects
         public override string Name => "Clickable";
         public override uint? NetID => NetIDs.CLICKABLE;
 
+        [Obsolete("Subscribe to ClientClick message.")]
         public event EventHandler<ClickEventArgs> OnClick;
 
         public bool CheckClick(LocalCoordinates worldPos, out int drawdepth)
@@ -28,7 +29,10 @@ namespace SS14.Client.GameObjects
         public void DispatchClick(IEntity user, ClickType clickType)
         {
             OnClick?.Invoke(this, new ClickEventArgs(user, Owner, clickType));
-            Owner.SendComponentNetworkMessage(this, clickType, (int)user.Uid);
+
+            var message = new ClientClickMsg(user.Uid, clickType);
+            SendMessage(message);
+            SendNetworkMessage(message);
         }
     }
 }

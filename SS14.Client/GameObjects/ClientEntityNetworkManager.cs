@@ -16,7 +16,7 @@ namespace SS14.Client.GameObjects
         private readonly IClientNetManager _network;
 
         /// <summary>
-        /// Sends a message to the relevant system(s) serverside.
+        /// Sends a message to the relevant system(s) server side.
         /// </summary>
         public void SendSystemNetworkMessage(EntitySystemMessage message)
         {
@@ -26,25 +26,23 @@ namespace SS14.Client.GameObjects
             _network.ClientSendMessage(msg);
         }
 
-        public void SendDirectedComponentNetworkMessage(IEntity sendingEntity, uint netId, INetChannel recipient, params object[] messageParams)
+        /// <inheritdoc />
+        public void SendDirectedComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component, ComponentMessage message)
         {
             throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// Allows a component owned by this entity to send a message to a counterpart component on the
-        /// counterpart entities on all clients.
-        /// </summary>
-        /// <param name="sendingEntity">Entity sending the message (also entity to send to)</param>
-        /// <param name="netId"></param>
-        /// <param name="messageParams">Parameters of the message</param>
-        public void SendComponentNetworkMessage(IEntity sendingEntity, uint netId, params object[] messageParams)
+        /// <inheritdoc />
+        public void SendComponentNetworkMessage(IEntity entity, IComponent component, ComponentMessage message)
         {
+            if (!component.NetID.HasValue)
+                throw new ArgumentException($"Component {component.Name} does not have a NetID.", nameof(component));
+
             var msg = _network.CreateNetMessage<MsgEntity>();
             msg.Type = EntityMessageType.ComponentMessage;
-            msg.EntityUid = sendingEntity.Uid;
-            msg.NetId = netId;
-            msg.Parameters = messageParams.ToList();
+            msg.EntityUid = entity.Uid;
+            msg.NetId = component.NetID.Value;
+            msg.ComponentMessage = message;
             _network.ClientSendMessage(msg);
         }
 

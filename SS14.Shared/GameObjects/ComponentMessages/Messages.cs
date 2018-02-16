@@ -41,6 +41,7 @@ namespace SS14.Shared.GameObjects
 
         public BoundKeyChangedMsg(BoundKeyFunctions function, BoundKeyState state)
         {
+            Directed = true;
             Function = function;
             State = state;
         }
@@ -63,5 +64,31 @@ namespace SS14.Shared.GameObjects
     public class DescriptionStringMsg : ComponentMessage
     {
         public string DescriptionString { get; set; } = String.Empty;
+    }
+
+    [Serializable, NetSerializable]
+    public class ClientChangedHandMsg : ComponentMessage
+    {
+        public string Index { get; }
+
+        public ClientChangedHandMsg(string index)
+        {
+            Directed = true;
+            Index = index;
+        }
+    }
+
+    [Serializable, NetSerializable]
+    public class ClientClickMsg : ComponentMessage
+    {
+        public EntityUid Uid { get; }
+        public ClickType Click { get; }
+
+        public ClientClickMsg(EntityUid uid, ClickType click)
+        {
+            Directed = true;
+            Uid = uid;
+            Click = click;
+        }
     }
 }

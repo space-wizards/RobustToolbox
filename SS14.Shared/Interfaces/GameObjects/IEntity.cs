@@ -167,26 +167,18 @@ namespace SS14.Shared.Interfaces.GameObjects
         string GetDescriptionString(); //This needs to go here since it can not be bound to any single component.
 
         /// <summary>
-        ///     Sends a message to the counterpart component on the server side
-        /// </summary>
-        /// <param name="component">Sending component</param>
-        /// <param name="messageParams">Parameters</param>
-        [Obsolete("Use SendNetworkMessage")]
-        void SendComponentNetworkMessage(IComponent component, params object[] messageParams);
-        
-        /// <summary>
         ///     Sends a message to all other components in this entity.
         /// </summary>
         /// <param name="owner">Object that sent the event.</param>
         /// <param name="message">Message to send.</param>
-        void SendMessage(object owner, ComponentMessage message);
+        void SendMessage(IComponent owner, ComponentMessage message);
 
         /// <summary>
-        ///     Sends a message over the network to all other components on the networked entity. This works both ways.
+        ///     Sends a message over the network to the counterpart component. This works both ways.
         /// </summary>
         /// <param name="owner"></param>
         /// <param name="message">Message to send.</param>
-        void SendNetworkMessage(object owner, ComponentMessage message);
+        void SendNetworkMessage(IComponent owner, ComponentMessage message);
         
         /// <summary>
         /// Func to handle an incoming network message

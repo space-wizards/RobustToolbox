@@ -25,22 +25,7 @@ namespace SS14.Server.GameObjects
 
         /// <inheritdoc />
         public MapId MapID => Owner.GetComponent<ITransformComponent>().MapID;
-
-        /// <inheritdoc />
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
-        {
-            switch ((ComponentMessageType)message.MessageParameters[0])
-            {
-                case ComponentMessageType.Bumped:
-                    //TODO check who bumped us, how far away they are, etc.
-                    var bumper = Owner.EntityManager.GetEntity(new EntityUid((int)message.MessageParameters[1]));
-                    if (bumper != null)
-                    {
-                        SendMessage(new BumpedEntMsg(bumper));
-                    }
-                    break;
-            }
-        }
+        
 
         public override void ExposeData(EntitySerializer serializer)
         {

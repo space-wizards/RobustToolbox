@@ -32,34 +32,38 @@ namespace SS14.Server.GameObjects
             throw new NotImplementedException();
         }
 
+        public void SendComponentNetworkMessage(IEntity entity, IComponent component, ComponentMessage message)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion IEntityNetworkManager Members
 
         #region Sending
 
-        /// <summary>
-        /// Allows a component owned by this entity to send a message to a counterpart component on the
-        /// counterpart entities on all clients.
-        /// </summary>
-        /// <param name="sendingEntity">Entity sending the message (also entity to send to)</param>
-        /// <param name="netId"></param>
-        /// <param name="recipient">Client connection to send to. If null, send to all.</param>
-        /// <param name="messageParams">Parameters of the message</param>
-        public void SendDirectedComponentNetworkMessage(IEntity sendingEntity, uint netId, INetChannel recipient, params object[] messageParams)
+        /// <inheritdoc />
+        public void SendDirectedComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component, ComponentMessage message)
         {
-            MsgEntity message = _mNetManager.CreateNetMessage<MsgEntity>();
-            message.Type = EntityMessageType.ComponentMessage;
-            message.EntityUid = sendingEntity.Uid;
-            message.NetId = netId;
-            message.Parameters = new List<object>(messageParams);
+            if(_mNetManager.IsClient)
+                return;
+
+            if(!component.NetID.HasValue)
+                throw new ArgumentException($"Component {component.Name} does not have a NetID.", nameof(component));
+
+            var msg = _mNetManager.CreateNetMessage<MsgEntity>();
+            msg.Type = EntityMessageType.ComponentMessage;
+            msg.EntityUid = entity.Uid;
+            msg.NetId = component.NetID.Value;
+            msg.ComponentMessage = message;
 
             //Send the message
-            if (recipient == null)
+            if (channel == null)
             {
-                _mNetManager.ServerSendToAll(message);
+                _mNetManager.ServerSendToAll(msg);
             }
             else
             {
-                _mNetManager.ServerSendMessage(message, recipient);
+                _mNetManager.ServerSendMessage(msg, channel);
             }
         }
 

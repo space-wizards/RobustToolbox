@@ -65,11 +65,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         void OnRemove();
 
         /// <summary>
-        ///     Called when the component gets added to an entity.
-        /// </summary>
-        void OnAdd();
-
-        /// <summary>
         ///     Called when all of the entity's other components have been added and are available,
         ///     But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.
         /// </summary>
@@ -92,14 +87,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     This should basically be overridden by every inheriting component, as parameters will be different
         ///     across the board.
         /// </summary>
-        [Obsolete("Use the ExposeData serialization system.")]
-        void LoadParameters(YamlMappingNode mapping);
-
-        /// <summary>
-        ///     This allows setting of the component's parameters from YAML once it is instantiated.
-        ///     This should basically be overridden by every inheriting component, as parameters will be different
-        ///     across the board.
-        /// </summary>
         void ExposeData(EntitySerializer serializer);
 
         /// <summary>
@@ -113,8 +100,9 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     Handles an incoming component message.
         /// </summary>
         /// <param name="owner">
-        ///     Object that raised the event. If the event was sent over the network or from some unknown place,
-        ///     this will be null.
+        ///     Object that raised the event.
+        ///     If the message was raised locally, this contains the object that raised it.
+        ///     If the message was raised remotely, this contains the PlayerSession that sent it.
         /// </param>
         /// <param name="message">Message that was sent.</param>
         void HandleMessage(object owner, ComponentMessage message);
@@ -126,26 +114,9 @@ namespace SS14.Shared.Interfaces.GameObjects
         ComponentState GetComponentState();
 
         /// <summary>
-        ///     Handles an incoming input message from counterpart server/client components.
-        /// </summary>
-        /// <param name="message"></param>
-        [Obsolete("Use HandleMessage")]
-        void HandleNetworkMessage(IncomingEntityComponentMessage message);
-
-        /// <summary>
         ///     Handles an incoming component state from the server.
         /// </summary>
         /// <param name="state"></param>
         void HandleComponentState(ComponentState state);
-    }
-
-    public class ComponentShutdownEventArgs : EventArgs
-    {
-        public readonly IComponent Component;
-
-        public ComponentShutdownEventArgs(IComponent component)
-        {
-            Component = component;
-        }
     }
 }

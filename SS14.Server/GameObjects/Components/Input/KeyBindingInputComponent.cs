@@ -13,21 +13,24 @@ namespace SS14.Server.GameObjects
         public override string Name => "KeyBindingInput";
         public override uint? NetID => NetIDs.KEY_BINDING_INPUT;
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleMessage(object owner, ComponentMessage message)
         {
-            if(message.MessageParameters.Count != 2)
-                return;
+            base.HandleMessage(owner, message);
 
-            var keyFunction = (BoundKeyFunctions) message.MessageParameters[0];
-            var keyState = (BoundKeyState) message.MessageParameters[1];
+            switch (message)
+            {
+                case BoundKeyChangedMsg msg:
+                    if(!msg.Remote) break;
+                    var keyFunction = msg.Function;
+                    var keyState = msg.State;
 
-            var boolState = keyState == BoundKeyState.Down;
-            SetKeyState(keyFunction, boolState);
+                    var boolState = keyState == BoundKeyState.Down;
+                    SetKeyState(keyFunction, boolState);
 
-            SendMessage(new BoundKeyChangedMsg(keyFunction, keyState));
-            
-            Owner.RaiseEvent(new BoundKeyChangeEventArgs{KeyFunction = keyFunction, KeyState = keyState, Actor = Owner});
-
+                    SendMessage(new BoundKeyChangedMsg(keyFunction, keyState));
+                    Owner.RaiseEvent(new BoundKeyChangeEventArgs { KeyFunction = keyFunction, KeyState = keyState, Actor = Owner });
+                    break;
+            }
         }
 
         private readonly Dictionary<BoundKeyFunctions, bool> _keyStates = new Dictionary<BoundKeyFunctions, bool>();

@@ -69,8 +69,9 @@ namespace SS14.Client.GameObjects
             //Remove all active key states and send keyup messages for them.
             foreach (var state in _keyStates.ToList())
             {
-                Owner.SendComponentNetworkMessage(this, state.Key, BoundKeyState.Up);
-                SendMessage(new BoundKeyChangedMsg(state.Key, BoundKeyState.Up));
+                var message = new BoundKeyChangedMsg(state.Key, BoundKeyState.Up);
+                SendMessage(message);
+                SendNetworkMessage(message);
                 _keyStates.Remove(state.Key);
             }
         }
@@ -79,19 +80,22 @@ namespace SS14.Client.GameObjects
         {
             if (!_enabled || GetKeyState(e.Function))
                 return; //Don't repeat keys that are already down.
-
-            Owner.SendComponentNetworkMessage(this, e.Function, e.FunctionState);
+            
             SetKeyState(e.Function, true);
-            SendMessage(new BoundKeyChangedMsg(e.Function, e.FunctionState));
+            var message = new BoundKeyChangedMsg(e.Function, e.FunctionState);
+            SendMessage(message);
+            SendNetworkMessage(message);
         }
 
         public virtual void KeyUp(object sender, BoundKeyEventArgs e)
         {
             if (!_enabled)
                 return;
-            Owner.SendComponentNetworkMessage(this, e.Function, e.FunctionState);
+
             SetKeyState(e.Function, false);
-            SendMessage(new BoundKeyChangedMsg(e.Function, e.FunctionState));
+            var message = new BoundKeyChangedMsg(e.Function, e.FunctionState);
+            SendMessage(message);
+            SendNetworkMessage(message);
         }
 
         protected void SetKeyState(BoundKeyFunctions k, bool state)

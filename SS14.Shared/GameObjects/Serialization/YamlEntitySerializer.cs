@@ -15,11 +15,12 @@ namespace SS14.Shared.GameObjects.Serialization
     {
         private static readonly Dictionary<Type, TypeSerializer> _typeSerializers;
         private static readonly StructSerializer _structSerializer;
-        
+
+        private bool _setDefaults;
+
         private readonly YamlSequenceNode _root;
         private YamlMappingNode _entMap;
         private YamlSequenceNode _compSeq;
-
         private YamlMappingNode _curMap;
 
         static YamlEntitySerializer()
@@ -40,10 +41,11 @@ namespace SS14.Shared.GameObjects.Serialization
             _root = new YamlSequenceNode();
         }
 
-        public YamlEntitySerializer(YamlMappingNode entMap)
+        public YamlEntitySerializer(YamlMappingNode entMap, bool setDefaults = true)
         {
             Reading = true;
             _curMap = entMap;
+            _setDefaults = setDefaults;
         }
         
         public override void EntityHeader()
@@ -103,7 +105,7 @@ namespace SS14.Shared.GameObjects.Serialization
                 {
                     value = (T)NodeToType(typeof(T), node);
                 }
-                else
+                else if(_setDefaults)
                 {
                     value = defaultValue;
                 }
@@ -263,7 +265,7 @@ namespace SS14.Shared.GameObjects.Serialization
             hexColor += color.BByte << 8;
             hexColor += color.AByte;
 
-            return new YamlScalarNode(hexColor.ToString("X"));
+            return new YamlScalarNode("#" + hexColor.ToString("X"));
         }
     }
 

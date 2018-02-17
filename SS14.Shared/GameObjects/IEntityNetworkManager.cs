@@ -18,10 +18,9 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         /// Sends an arbitrary entity network message
         /// </summary>
-        /// <param name="sendingEntity">The entity the message is going from(and to, on the other end)</param>
-        /// <param name="type">Message type</param>
-        /// <param name="list">List of parameter objects</param>
-        void SendEntityNetworkMessage(IEntity sendingEntity, EntityMessageType type, params object[] list);
+        /// <param name="entity">The entity the message is going from(and to, on the other end)</param>
+        /// <param name="message">Message that should be sent.</param>
+        void SendEntityNetworkMessage(IEntity entity, EntityEventArgs message);
 
         /// <summary>
         /// Sends an Entity System Message to relevant System(s).

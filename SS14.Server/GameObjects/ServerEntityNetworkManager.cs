@@ -1,11 +1,9 @@
-﻿using SS14.Shared;
+﻿using System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Network.Messages;
-using System;
-using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects
 {
@@ -16,22 +14,12 @@ namespace SS14.Server.GameObjects
 
         #region IEntityNetworkManager Members
 
-        /// <summary>
-        /// Sends an arbitrary entity network message
-        /// </summary>
-        /// <param name="sendingEntity">The entity the message is going from(and to, on the other end)</param>
-        /// <param name="type">Message type</param>
-        /// <param name="list">List of parameter objects</param>
-        public void SendEntityNetworkMessage(IEntity sendingEntity, EntityMessageType type, params object[] list)
+        /// <inheritdoc />
+        public void SendEntityNetworkMessage(IEntity entity, EntityEventArgs message)
         {
             throw new NotImplementedException();
         }
-
-        public void SendComponentNetworkMessage(IEntity sendingEntity, uint netId, params object[] messageParams)
-        {
-            throw new NotImplementedException();
-        }
-
+        
         public void SendComponentNetworkMessage(IEntity entity, IComponent component, ComponentMessage message)
         {
             throw new NotImplementedException();
@@ -44,10 +32,10 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public void SendDirectedComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component, ComponentMessage message)
         {
-            if(_mNetManager.IsClient)
+            if (_mNetManager.IsClient)
                 return;
 
-            if(!component.NetID.HasValue)
+            if (!component.NetID.HasValue)
                 throw new ArgumentException($"Component {component.Name} does not have a NetID.", nameof(component));
 
             var msg = _mNetManager.CreateNetMessage<MsgEntity>();
@@ -80,7 +68,7 @@ namespace SS14.Server.GameObjects
         /// </summary>
         public void SendSystemNetworkMessage(EntitySystemMessage message, INetChannel targetConnection = null)
         {
-            MsgEntity newMsg = _mNetManager.CreateNetMessage<MsgEntity>();
+            var newMsg = _mNetManager.CreateNetMessage<MsgEntity>();
             newMsg.Type = EntityMessageType.SystemMessage;
             newMsg.SystemMessage = message;
 
@@ -108,6 +96,11 @@ namespace SS14.Server.GameObjects
             {
                 case EntityMessageType.ComponentMessage:
                     return new IncomingEntityMessage(message);
+
+                case EntityMessageType.EntityMessage:
+                    // TODO: Handle this.
+                    break;
+
                 case EntityMessageType.SystemMessage: //TODO: Not happy with this resolving the entmgr everytime a message comes in.
                     var manager = IoCManager.Resolve<IEntitySystemManager>();
                     manager.HandleSystemMessage(message);

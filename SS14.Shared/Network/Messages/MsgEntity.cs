@@ -21,17 +21,15 @@ namespace SS14.Shared.Network.Messages
         public EntityMessageType Type { get; set; }
 
         public EntitySystemMessage SystemMessage { get; set; }
-        public NetConnection Sender { get; set; }
+        public EntityEventArgs EntityMessage { get; set; }
+        public ComponentMessage ComponentMessage { get; set; }
 
         public EntityUid EntityUid { get; set; }
         public uint NetId { get; set; }
-        public List<object> Parameters { get; set; }
-        public ComponentMessage ComponentMessage { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
             Type = (EntityMessageType)buffer.ReadByte();
-            Sender = buffer.SenderConnection;
 
             switch (Type)
             {
@@ -42,6 +40,18 @@ namespace SS14.Shared.Network.Messages
                     using (var stream = new MemoryStream(buffer.ReadBytes(messageLength)))
                     {
                         SystemMessage = serializer.Deserialize<EntitySystemMessage>(stream);
+                    }
+                }
+                    break;
+                case EntityMessageType.EntityMessage:
+                {
+                    EntityUid = new EntityUid(buffer.ReadInt32());
+
+                    var serializer = IoCManager.Resolve<ISS14Serializer>();
+                    int messageLength = buffer.ReadInt32();
+                    using (var stream = new MemoryStream(buffer.ReadBytes(messageLength)))
+                    {
+                        EntityMessage = serializer.Deserialize<EntityEventArgs>(stream);
                     }
                 }
                     break;
@@ -73,6 +83,19 @@ namespace SS14.Shared.Network.Messages
                     using (var stream = new MemoryStream())
                     {
                         serializer.Serialize(stream, SystemMessage);
+                        buffer.Write((int)stream.Length);
+                        buffer.Write(stream.ToArray());
+                    }
+                }
+                    break;
+                case EntityMessageType.EntityMessage:
+                {
+                    buffer.Write((int)EntityUid);
+
+                    var serializer = IoCManager.Resolve<ISS14Serializer>();
+                    using (var stream = new MemoryStream())
+                    {
+                        serializer.Serialize(stream, EntityMessage);
                         buffer.Write((int)stream.Length);
                         buffer.Write(stream.ToArray());
                     }

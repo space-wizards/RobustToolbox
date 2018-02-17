@@ -1,12 +1,9 @@
-﻿using SS14.Shared;
+﻿using System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Network.Messages;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
@@ -46,18 +43,13 @@ namespace SS14.Client.GameObjects
             _network.ClientSendMessage(msg);
         }
 
-        /// <summary>
-        /// Sends an arbitrary entity network message
-        /// </summary>
-        /// <param name="sendingEntity">The entity the message is going from(and to, on the other end)</param>
-        /// <param name="type">Message type</param>
-        /// <param name="list">List of parameter objects</param>
-        public void SendEntityNetworkMessage(IEntity sendingEntity, EntityMessageType type, params object[] list)
+        /// <inheritdoc />
+        public void SendEntityNetworkMessage(IEntity entity, EntityEventArgs message)
         {
             var msg = _network.CreateNetMessage<MsgEntity>();
-            msg.Type = type;
-            msg.EntityUid = sendingEntity.Uid;
-            msg.Parameters = new List<object>(list);
+            msg.Type = EntityMessageType.EntityMessage;
+            msg.EntityUid = entity.Uid;
+            msg.EntityMessage = message;
             _network.ClientSendMessage(msg);
         }
 
@@ -72,6 +64,11 @@ namespace SS14.Client.GameObjects
             {
                 case EntityMessageType.ComponentMessage:
                     return new IncomingEntityMessage(message);
+
+                case EntityMessageType.EntityMessage:
+                    // TODO: Handle this.
+                    break;
+
                 case EntityMessageType.SystemMessage: //TODO: Not happy with this resolving the entmgr everytime a message comes in.
                     var manager = IoCManager.Resolve<IEntitySystemManager>();
                     manager.HandleSystemMessage(message);

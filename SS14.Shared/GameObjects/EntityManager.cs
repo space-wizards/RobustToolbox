@@ -414,6 +414,7 @@ namespace SS14.Shared.GameObjects
     {
         Error = 0,
         ComponentMessage,
+        EntityMessage,
         SystemMessage
     }
 }

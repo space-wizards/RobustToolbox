@@ -247,7 +247,7 @@ namespace SS14.Client.GameObjects
 
             string dirName =
                 (currentBaseSpriteKey + "_" +
-                 transform.Rotation.GetDir().ToString()).
+                 transform.WorldRotation.GetDir()).
                     ToLowerInvariant();
 
             if (dirSprites.ContainsKey(dirName))
@@ -367,19 +367,30 @@ namespace SS14.Client.GameObjects
 
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
-            var renderPos = (transform.WorldPosition + Offset) * CluwneLib.Camera.PixelsPerMeter;
+            var worldPos = transform.WorldPosition;
+            var renderPos = (worldPos + Offset) * CluwneLib.Camera.PixelsPerMeter;
             var bounds = spriteToRender.LocalBounds;
-            SetSpriteCenter(spriteToRender, renderPos);
 
-            if (transform.WorldPosition.X + bounds.Left + bounds.Width < topLeft.X
-                || transform.WorldPosition.X > bottomRight.X
-                || transform.WorldPosition.Y + bounds.Top + bounds.Height < topLeft.Y
-                || transform.WorldPosition.Y > bottomRight.Y)
+            spriteToRender.Position = new Vector2(renderPos.X, renderPos.Y);
+
+            if (worldPos.X + bounds.Left + bounds.Width < topLeft.X
+                || worldPos.X > bottomRight.X
+                || worldPos.Y + bounds.Top + bounds.Height < topLeft.Y
+                || worldPos.Y > bottomRight.Y)
                 return;
 
+            spriteToRender.Origin = new Vector2(spriteToRender.LocalBounds.Width / 2, spriteToRender.LocalBounds.Height / 2);
+            spriteToRender.Rotation = transform.WorldRotation + Math.PI / 2; // convert our angle to sfml angle
             spriteToRender.Scale = new Vector2(HorizontalFlip ? -1 : 1, 1);
             spriteToRender.Color = Color;
+
             spriteToRender.Draw();
+
+            //because sprites are global for whatever backwards reason... BETTER SET IT BACK TO DEFAULT ಠ_ಠ
+            spriteToRender.Position = new Vector2(0, 0);
+            spriteToRender.Origin = new Vector2(0, 0);
+            spriteToRender.Rotation = new Angle(0);
+            spriteToRender.Scale = new Vector2(1, 1);
             spriteToRender.Color = Color.White;
 
             //Render slaves above
@@ -395,19 +406,19 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public void SetSpriteCenter(string sprite, Vector2 center)
+        protected void SetSpriteCenter(string sprite, Vector2 center)
         {
             SetSpriteCenter(sprites[sprite], center);
         }
 
-        public void SetSpriteCenter(Sprite sprite, Vector2 center)
+        protected void SetSpriteCenter(Sprite sprite, Vector2 center)
         {
             var bounds = GetActiveDirectionalSprite().LocalBounds;
             sprite.Position = new Vector2(center.X - (bounds.Width / 2),
                                           center.Y - (bounds.Height / 2));
         }
 
-        public void SetSpriteCenter(Sprite sprite, LocalCoordinates worldPos)
+        protected void SetSpriteCenter(Sprite sprite, LocalCoordinates worldPos)
         {
             SetSpriteCenter(sprite, worldPos.Position);
         }

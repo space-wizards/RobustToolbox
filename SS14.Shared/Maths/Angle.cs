@@ -13,7 +13,14 @@ namespace SS14.Shared.Maths
 
         public static Angle Zero { get; set; } = new Angle();
 
+        /// <summary>
+        ///     Angle in radians.
+        /// </summary>
         public readonly double Theta;
+
+        /// <summary>
+        ///     Angle in degrees.
+        /// </summary>
         public double Degrees => MathHelper.RadiansToDegrees(Theta);
 
         /// <summary>
@@ -44,6 +51,44 @@ namespace SS14.Shared.Maths
                 ang += 2 * (float) Math.PI;
 
             return (Direction) (Math.Floor((ang + Offset) / Segment) % 8);
+        }
+
+        public bool EqualsApprox(Angle angle)
+        {
+            return EqualsApprox(this, angle);
+        }
+
+        private static bool EqualsApprox(Angle a, Angle b)
+        {
+            // reduce both angles
+            var aReduced = Reduce(a.Theta);
+            var bReduced = Reduce(b.Theta);
+
+            var aPositive = FlipPositive(aReduced);
+            var bPositive = FlipPositive(bReduced);
+
+            return FloatMath.CloseTo(aPositive, bPositive);
+        }
+
+        /// <summary>
+        ///     Removes revolutions from a positive or negative angle to make it as small as possible.
+        /// </summary>
+        private static double Reduce(double theta)
+        {
+            // int truncates value (round to 0)
+            var aTurns = (int)(theta / (2*Math.PI));
+            return theta - aTurns * (2 * Math.PI);
+        }
+
+        /// <summary>
+        ///     Calculates the congruent positive angle of a negative angle. Does nothing to a positive angle.
+        /// </summary>
+        private static double FlipPositive(double theta)
+        {
+            if (theta >= 0)
+                return theta;
+
+            return theta + 2 * Math.PI;
         }
 
         /// <summary>

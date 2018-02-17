@@ -121,7 +121,7 @@ namespace SS14.Server.Placement
 
                 created.GetComponent<TransformComponent>().WorldPosition = new Vector2(xValue, yValue);
                 if (created.TryGetComponent<TransformComponent>(out var component))
-                    component.Rotation = dirRcv.ToAngle();
+                    component.LocalRotation = dirRcv.ToAngle();
             }
             else
             {

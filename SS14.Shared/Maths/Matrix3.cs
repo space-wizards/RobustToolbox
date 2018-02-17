@@ -283,6 +283,34 @@ namespace SS14.Shared.Maths
             R2C2 = matrix.Row2.Z;
         }
 
+        public static Matrix3 CreateTranslation(float x, float y)
+        {
+            var result = Identity;
+            result.R0C2 = x;
+            result.R1C2 = y;
+            return result;
+        }
+
+        public static Matrix3 CreateTranslation(Vector2 vector)
+        {
+            return CreateTranslation(vector.X, vector.Y);
+        }
+
+        public static Matrix3 CreateRotation(float angle)
+        {
+            var cos = (float)Math.Cos(angle);
+            var sin = (float)Math.Sin(angle);
+
+            var result = Identity;
+
+            result.R0C0 = cos;
+            result.R1C0 = sin;
+            result.R0C1 = -sin;
+            result.R1C1 = cos;
+
+            return result;
+        }
+
         #endregion
 
         #region Equality
@@ -630,6 +658,47 @@ namespace SS14.Shared.Maths
             result.R2C0 = matrix.R0C2;
             result.R2C1 = matrix.R1C2;
             result.R2C2 = matrix.R2C2;
+        }
+
+        /// <summary>
+        /// Calculate the inverse of the given matrix
+        /// </summary>
+        /// <param name="mat">The matrix to invert</param>
+        /// <returns>The inverse of the given matrix if it has one, or the input if it is singular</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the Matrix4 is singular.</exception>
+        public static Matrix3 Invert(Matrix3 mat)
+        {
+            Matrix3 result = new Matrix3();
+            mat.Invert(ref result);
+            return result;
+        }
+
+        public void Invert(ref Matrix3 minv)
+        {
+            //Credit: https://stackoverflow.com/a/18504573
+
+            var d = Determinant;
+            if (FloatMath.CloseTo(d, 0))
+                throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
+
+            Matrix3 m = this;
+
+            // computes the inverse of a matrix m
+            double det = m.R0C0 * (m.R1C1 * m.R2C2 - m.R2C1 * m.R1C2) -
+                         m.R0C1 * (m.R1C0 * m.R2C2 - m.R1C2 * m.R2C0) +
+                         m.R0C2 * (m.R1C0 * m.R2C1 - m.R1C1 * m.R2C0);
+
+            double invdet = 1 / det;
+            
+            minv.R0C0 = (float) ((m.R1C1 * m.R2C2 - m.R2C1 * m.R1C2) * invdet);
+            minv.R0C1 = (float) ((m.R0C2 * m.R2C1 - m.R0C1 * m.R2C2) * invdet);
+            minv.R0C2 = (float) ((m.R0C1 * m.R1C2 - m.R0C2 * m.R1C1) * invdet);
+            minv.R1C0 = (float) ((m.R1C2 * m.R2C0 - m.R1C0 * m.R2C2) * invdet);
+            minv.R1C1 = (float) ((m.R0C0 * m.R2C2 - m.R0C2 * m.R2C0) * invdet);
+            minv.R1C2 = (float) ((m.R1C0 * m.R0C2 - m.R0C0 * m.R1C2) * invdet);
+            minv.R2C0 = (float) ((m.R1C0 * m.R2C1 - m.R2C0 * m.R1C1) * invdet);
+            minv.R2C1 = (float) ((m.R2C0 * m.R0C1 - m.R0C0 * m.R2C1) * invdet);
+            minv.R2C2 = (float) ((m.R0C0 * m.R1C1 - m.R1C0 * m.R0C1) * invdet);
         }
 
         #endregion

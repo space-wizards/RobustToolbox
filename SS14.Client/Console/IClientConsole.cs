@@ -4,7 +4,7 @@ using SS14.Client.Interfaces.Console;
 
 namespace SS14.Client.Console
 {
-    internal interface IClientConsole : IDisposable
+    public interface IClientConsole : IDisposable
     {
         /// <summary>
         ///     Initializes the console into a useable state.

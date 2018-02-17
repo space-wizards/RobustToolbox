@@ -19,9 +19,42 @@ namespace SS14.Client.GameObjects
         private Vector2 _position;
         public MapId MapID { get; private set; }
         public GridId GridID { get; private set; }
-        public Angle Rotation { get; private set; }
+        public Angle LocalRotation { get; private set; }
         public ITransformComponent Parent { get; private set; }
-        //TODO: Make parenting actually work.
+
+        private Matrix3 _worldMatrix;
+        private Matrix3 _invWorldMatrix;
+
+
+        public Matrix3 WorldMatrix
+        {
+            get
+            {
+                RebuildMatrices();
+                if (Parent != null)
+                {
+                    var matP = Parent.WorldMatrix;
+                    Matrix3.Multiply(ref matP, ref _worldMatrix, out var result);
+                    return result;
+                }
+                return _worldMatrix;
+            }
+        }
+
+        public Matrix3 InvWorldMatrix
+        {
+            get
+            {
+                RebuildMatrices();
+                if (Parent != null)
+                {
+                    var matP = Parent.InvWorldMatrix;
+                    Matrix3.Multiply(ref matP, ref _invWorldMatrix, out var result);
+                    return result;
+                }
+                return _invWorldMatrix;
+            }
+        }
 
         /// <inheritdoc />
         public override string Name => "Transform";
@@ -43,17 +76,29 @@ namespace SS14.Client.GameObjects
             {
                 if (Parent != null)
                 {
-                    return GetMapTransform().WorldPosition; //Search up the tree for the true map position
+                    return _position;
                 }
-                else
-                {
+
                     var maps = IoCManager.Resolve<IMapManager>();
                     if (maps.TryGetMap(MapID, out var map) && map.GridExists(GridID))
                     {
                         return map.GetGrid(GridID).ConvertToWorld(_position);
                     }
                     return new Vector2();
+            }
+        }
+
+        public Angle WorldRotation
+        {
+            get
+            {
+                if (Parent != null)
+                {
+                    var wpRotV = Parent.WorldRotation.Theta;
+                    var wRotV = wpRotV + LocalRotation.Theta;
+                    return new Angle(wRotV);
                 }
+                return LocalRotation;
             }
         }
 
@@ -61,7 +106,7 @@ namespace SS14.Client.GameObjects
         public override void HandleComponentState(ComponentState state)
         {
             var newState = (TransformComponentState)state;
-            Rotation = newState.Rotation;
+            LocalRotation = newState.Rotation;
 
             if (_position != newState.Position || MapID != newState.MapID || GridID != newState.GridID)
             {
@@ -71,14 +116,15 @@ namespace SS14.Client.GameObjects
                 GridID = newState.GridID;
             }
 
-            if (Parent?.Owner?.Uid != newState.ParentID)
+            var newParentId = newState.ParentID;
+            if (Parent?.Owner?.Uid != newParentId)
             {
                 DetachParent();
-                if (!(newState.ParentID is EntityUid parentID))
-                {
+
+                if(!newParentId.HasValue || !newParentId.Value.IsValid())
                     return;
-                }
-                var newParent = Owner.EntityManager.GetEntity(parentID);
+                
+                var newParent = Owner.EntityManager.GetEntity(newParentId.Value);
                 AttachParent(newParent.GetComponent<ITransformComponent>());
             }
         }
@@ -136,6 +182,27 @@ namespace SS14.Client.GameObjects
                 }
             }
             return false;
+        }
+
+        private void RebuildMatrices()
+        {
+            var pos = _position;
+            var rot = LocalRotation.Theta;
+
+            var posMat = Matrix3.CreateTranslation(pos);
+            var rotMat = Matrix3.CreateRotation((float)rot);
+
+            Matrix3.Multiply(ref rotMat, ref posMat, out var transMat);
+
+            _worldMatrix = transMat;
+            _invWorldMatrix = Matrix3.Invert(transMat);
+        }
+
+        private static Vector2 MatMult(Matrix3 mat, Vector2 vec)
+        {
+            var vecHom = new Vector3(vec.X, vec.Y, 1);
+            Matrix3.Transform(ref mat, ref vecHom);
+            return vecHom.Xy;
         }
     }
 }

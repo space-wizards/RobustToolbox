@@ -24,7 +24,7 @@ https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild
   <PropertyGroup>
     <ProjectGuid>{D0DA124B-5580-4345-A02B-9F051F78915F}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkMoniker>Willyoushutupomnisharp, Version=v4.6.1</TargetFrameworkMoniker>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' " />
@@ -39,5 +39,9 @@ https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild
   <Target Name="Rebuild" DependsOnTargets="Build" />
   <Target Name="Clean">
     <Message Importance="low" Text="Ignoring 'Clean' target." />
+  </Target>
+  <Target Name="Compile">
+  </Target>
+  <Target Name="CoreCompile">
   </Target>
 </Project>

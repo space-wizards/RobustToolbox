@@ -80,12 +80,12 @@ namespace SS14.Shared.GameObjects
     }
 
     [Serializable, NetSerializable]
-    public class ClientClickMsg : ComponentMessage
+    public class ClientEntityClickMsg : ComponentMessage
     {
         public EntityUid Uid { get; }
         public ClickType Click { get; }
 
-        public ClientClickMsg(EntityUid uid, ClickType click)
+        public ClientEntityClickMsg(EntityUid uid, ClickType click)
         {
             Directed = true;
             Uid = uid;

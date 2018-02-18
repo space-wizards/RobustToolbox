@@ -151,7 +151,6 @@
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\ParticleSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
-    <Compile Include="GameObjects\Events\InputEvents.cs" />
     <Compile Include="GameObjects\Exceptions\MissingImplementationException.cs" />
     <Compile Include="GameObjects\Exceptions\NoPublicConstructorException.cs" />
     <Compile Include="GameState\GameStateManager.cs" />

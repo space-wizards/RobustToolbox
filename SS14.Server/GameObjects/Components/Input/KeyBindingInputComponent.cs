@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using SS14.Server.GameObjects.Events;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Input;
 
@@ -28,7 +27,6 @@ namespace SS14.Server.GameObjects
                     SetKeyState(keyFunction, boolState);
 
                     SendMessage(new BoundKeyChangedMsg(keyFunction, keyState));
-                    Owner.RaiseEvent(new BoundKeyChangeEventArgs {KeyFunction = keyFunction, KeyState = keyState, Actor = Owner});
                     break;
             }
         }

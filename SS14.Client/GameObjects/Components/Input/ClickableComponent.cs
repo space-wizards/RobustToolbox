@@ -5,6 +5,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using System;
 using SS14.Shared.Enums;
+using SS14.Shared.Input;
 using SS14.Shared.Map;
 
 namespace SS14.Client.GameObjects

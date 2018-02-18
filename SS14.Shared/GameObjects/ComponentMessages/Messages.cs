@@ -1,6 +1,7 @@
 ﻿using System;
 using SS14.Shared.Console;
 using SS14.Shared.Enums;
+using SS14.Shared.Input;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Serialization;
 

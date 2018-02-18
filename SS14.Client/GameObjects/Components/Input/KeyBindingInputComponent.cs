@@ -1,12 +1,10 @@
-﻿using SS14.Client.Interfaces.Input;
-using SS14.Shared;
-using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.IoC;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.Input;
-using SS14.Shared.Enums;
+using SS14.Client.Interfaces.Input;
+using SS14.Shared.GameObjects;
+using SS14.Shared.Input;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
 {
@@ -41,7 +39,7 @@ namespace SS14.Client.GameObjects
             keyBindingManager.BoundKeyDown += KeyDown;
             keyBindingManager.BoundKeyUp += KeyUp;
         }
-        
+
         public override void Shutdown()
         {
             base.Shutdown();
@@ -80,7 +78,7 @@ namespace SS14.Client.GameObjects
         {
             if (!_enabled || GetKeyState(e.Function))
                 return; //Don't repeat keys that are already down.
-            
+
             SetKeyState(e.Function, true);
             var message = new BoundKeyChangedMsg(e.Function, e.FunctionState);
             SendMessage(message);
@@ -118,14 +116,14 @@ namespace SS14.Client.GameObjects
             var activeKeyHandlers =
                 from keyState in _keyStates
                 join handler in _keyHandlers on keyState.Key equals handler.Key
-                select new { evt = handler.Value, state = keyState.Value };
+                select new {evt = handler.Value, state = keyState.Value};
 
             //Execute the bastards!
             foreach (var keyHandler in activeKeyHandlers)
             {
                 //If there's even one active, we set updateRequired so that this gets hit again next update
                 //updateRequired = true; // QUICKNDIRTY
-                KeyEvent k = keyHandler.evt;
+                var k = keyHandler.evt;
                 k(keyHandler.state);
             }
 

@@ -1,6 +1,7 @@
 using System;
 using SS14.Shared;
 using SS14.Shared.Enums;
+using SS14.Shared.Input;
 
 namespace SS14.Client.Input
 {

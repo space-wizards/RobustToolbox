@@ -1,4 +1,4 @@
-﻿using SS14.Shared.Enums;
+﻿using SS14.Shared.Input;
 
 namespace SS14.Shared.GameObjects.Events
 {

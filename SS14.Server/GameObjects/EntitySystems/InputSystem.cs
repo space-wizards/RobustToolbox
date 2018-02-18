@@ -1,10 +1,9 @@
-﻿using SS14.Shared;
-using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.System;
-using SS14.Shared.IoC;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using SS14.Shared.Enums;
+using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.System;
+using SS14.Shared.Input;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
@@ -12,9 +11,9 @@ namespace SS14.Server.GameObjects.EntitySystems
     {
         public InputSystem()
         {
-            EntityQuery = new ComponentEntityQuery()
+            EntityQuery = new ComponentEntityQuery
             {
-                OneSet = new List<Type>()
+                OneSet = new List<Type>
                 {
                     typeof(KeyBindingInputComponent),
                 },

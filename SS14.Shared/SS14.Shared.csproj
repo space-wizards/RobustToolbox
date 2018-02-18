@@ -131,6 +131,7 @@
     <Compile Include="GameObjects\IncomingEntityComponentMessage.cs" />
     <Compile Include="GameObjects\IncomingEntityMessage.cs" />
     <Compile Include="GameObjects\NetComponent.cs" />
+    <Compile Include="Input\UserCmd.cs" />
     <Compile Include="Interfaces\Configuration\IConfigurationManager.cs" />
     <Compile Include="Console\ICommand.cs" />
     <Compile Include="GameObjects\EntityEvents.cs" />
@@ -233,7 +234,7 @@
     <Compile Include="Physics\CollidablePoint.cs" />
     <Compile Include="Physics\CollisionManager.cs" />
     <Compile Include="Enums\PlacementInformation.cs" />
-    <Compile Include="Enums\KeyFunctions.cs" />
+    <Compile Include="Input\KeyFunctions.cs" />
     <Compile Include="Players\PlayerIndex.cs" />
     <Compile Include="Utility\QuadTree.cs" />
     <Compile Include="Reflection\ReflectAttribute.cs" />
@@ -273,7 +274,7 @@
     <Compile Include="GameObjects\EntitySystemManager.cs" />
     <Compile Include="GameObjects\IEntityNetworkManager.cs" />
     <Compile Include="GameObjects\ParticleSettings.cs" />
-    <Compile Include="Enums\ClickType.cs" />
+    <Compile Include="Input\ClickType.cs" />
     <Compile Include="GameObjects\System\EntitySystem.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponentState.cs" />
     <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponentState.cs" />

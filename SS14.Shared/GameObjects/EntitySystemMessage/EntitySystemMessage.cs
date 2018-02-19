@@ -1,13 +1,14 @@
-﻿using SS14.Shared.Serialization;
-using System;
+﻿using System;
+using SS14.Shared.Serialization;
 
 namespace SS14.Shared.GameObjects
 {
     [Serializable, NetSerializable]
-    public class EntitySystemMessage
+    public class EntitySystemMessage : EntityEventArgs
     {
-        public EntitySystemMessage()
-        {
-        }
+        /// <summary>
+        ///     Entity this message is raised for.
+        /// </summary>
+        public EntityUid Owner { get; set; }
     }
 }

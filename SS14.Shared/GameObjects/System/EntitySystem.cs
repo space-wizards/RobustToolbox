@@ -24,45 +24,35 @@ namespace SS14.Shared.GameObjects.System
 
         protected IEnumerable<IEntity> RelevantEntities => EntityManager.GetEntities(EntityQuery);
 
-        public virtual void RegisterMessageTypes()
-        {
-        }
+        public virtual void RegisterMessageTypes() { }
 
-        public virtual void SubscribeEvents()
-        {
-        }
+        public virtual void SubscribeEvents() { }
 
         /// <inheritdoc />
-        public virtual void Initialize()
-        {
-        }
+        public virtual void Initialize() { }
 
         /// <inheritdoc />
-        public virtual void Shutdown()
-        {
-        }
+        public virtual void Shutdown() { }
 
         /// <inheritdoc />
-        public virtual void HandleNetMessage(EntitySystemMessage sysMsg)
-        {
-        }
+        public virtual void HandleNetMessage(EntitySystemMessage sysMsg) { }
 
         /// <inheritdoc />
-        public virtual void Update(float frameTime)
+        public virtual void Update(float frameTime) { }
+
+        protected void SubscribeEvent<T>(EntityEventHandler<EntitySystemMessage> evh)
+            where T : EntitySystemMessage
         {
+            EntityManager.SubscribeEvent<T>(evh, this);
+        }
+        
+        protected void UnsubscribeEvent<T>()
+            where T : EntitySystemMessage
+        {
+            EntityManager.UnsubscribeEvent<T>(this);
         }
 
-        public void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s) where T : EntityEventArgs
-        {
-            EntityManager.SubscribeEvent<T>(evh, s);
-        }
-
-        public void UnsubscribeEvent<T>(IEntityEventSubscriber s) where T : EntityEventArgs
-        {
-            EntityManager.UnsubscribeEvent<T>(s);
-        }
-
-        public void RaiseEvent(EntityEventArgs toRaise)
+        protected void RaiseEvent(EntitySystemMessage toRaise)
         {
             EntityManager.RaiseEvent(this, toRaise);
         }

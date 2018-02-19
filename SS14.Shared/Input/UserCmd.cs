@@ -4,7 +4,7 @@ using SS14.Shared.GameObjects;
 namespace SS14.Shared.Input
 {
     [Serializable]
-    class UserCmd : EntitySystemMessage
+    public class UserCmd : EntitySystemMessage
     {
         public uint Tick { get; }
 

@@ -17,8 +17,8 @@ namespace SS14.Server.GameObjects
                 case ClientEntityClickMsg msg:
                     var type = msg.Click;
                     var uid = msg.Uid;
-                    
-                    Owner.RaiseEvent(new ClickedOnEntityEventArgs { Clicked = Owner.Uid, Clicker = uid, MouseButton = type });
+
+                    Owner.RaiseEvent(new ClickedOnEntityMessage { Clicked = Owner.Uid, Owner = uid, MouseButton = type });
                     break;
             }
         }

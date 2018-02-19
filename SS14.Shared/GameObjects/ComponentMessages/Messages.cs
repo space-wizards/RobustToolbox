@@ -1,6 +1,5 @@
 ﻿using System;
 using SS14.Shared.Console;
-using SS14.Shared.Enums;
 using SS14.Shared.Input;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Serialization;
@@ -43,19 +42,6 @@ namespace SS14.Shared.GameObjects
         public BoundKeyChangedMsg(BoundKeyFunctions function, BoundKeyState state)
         {
             Directed = true;
-            Function = function;
-            State = state;
-        }
-    }
-
-    [Serializable, NetSerializable]
-    public class BoundKeyRepeatMsg : ComponentMessage
-    {
-        public BoundKeyFunctions Function { get; }
-        public BoundKeyState State { get; }
-
-        public BoundKeyRepeatMsg(BoundKeyFunctions function, BoundKeyState state)
-        {
             Function = function;
             State = state;
         }

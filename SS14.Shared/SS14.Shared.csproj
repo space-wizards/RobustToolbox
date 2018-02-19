@@ -125,7 +125,8 @@
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
     <Compile Include="GameObjects\ComponentMessage.cs" />
     <Compile Include="GameObjects\ComponentMessages\Messages.cs" />
-    <Compile Include="GameObjects\EntitySystemMessage\ClickedOnEntityMessage.cs" />
+    <Compile Include="GameObjects\EntitySystemMessages\ClickedOnEntityMessage.cs" />
+    <Compile Include="GameObjects\EntitySystemMessages\InputMessages.cs" />
     <Compile Include="GameObjects\Serialization\EntitySerializer.cs" />
     <Compile Include="GameObjects\EntityUid.cs" />
     <Compile Include="GameObjects\Serialization\YamlEntitySerializer.cs" />
@@ -287,8 +288,8 @@
     <Compile Include="GameObjects\Components\Renderable\SpriteComponentState.cs" />
     <Compile Include="GameObjects\Components\Renderable\WearableAnimatedSpriteComponentState.cs" />
     <Compile Include="GameObjects\Components\Transform\TransformComponentState.cs" />
-    <Compile Include="GameObjects\EntitySystemMessage\EntitySystemMessage.cs" />
-    <Compile Include="GameObjects\EntitySystemMessage\InventorySystemMessages.cs" />
+    <Compile Include="GameObjects\EntitySystemMessages\EntitySystemMessage.cs" />
+    <Compile Include="GameObjects\EntitySystemMessages\InventorySystemMessages.cs" />
     <Compile Include="GameObjects\ComponentEnums.cs" />
     <Compile Include="GameObjects\ComponentParameter.cs" />
     <Compile Include="GameObjects\ComponentReplyMessage.cs" />

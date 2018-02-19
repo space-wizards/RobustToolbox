@@ -285,7 +285,7 @@ namespace SS14.Shared.GameObjects
         {
             _eventQueue.Enqueue(new Tuple<object, EntityEventArgs>(sender, toRaise));
         }
-
+        
         public void RemoveSubscribedEvents(IEntityEventSubscriber subscriber)
         {
             if (_inverseEventSubscriptions.ContainsKey(subscriber))
@@ -378,6 +378,11 @@ namespace SS14.Shared.GameObjects
             {
                 ProcessMsgBuffer();
                 var incomingEntity = ProcessNetMessage(msg);
+
+                // bad message or handled by something else
+                if(incomingEntity == null)
+                    return;
+
                 if (!Entities.ContainsKey(incomingEntity.Message.EntityUid))
                 {
                     MessageBuffer.Enqueue(incomingEntity);

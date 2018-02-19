@@ -19,14 +19,12 @@ namespace SS14.Server.GameObjects
             switch (message)
             {
                 case BoundKeyChangedMsg msg:
-                    if (!msg.Remote) break;
+                    if (msg.Remote) break;
                     var keyFunction = msg.Function;
                     var keyState = msg.State;
 
                     var boolState = keyState == BoundKeyState.Down;
                     SetKeyState(keyFunction, boolState);
-
-                    SendMessage(new BoundKeyChangedMsg(keyFunction, keyState));
                     break;
             }
         }

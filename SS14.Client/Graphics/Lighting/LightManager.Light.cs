@@ -93,8 +93,8 @@ namespace SS14.Client.Graphics.Lighting
                 }
             }
 
-            private TextureSource texture;
-            public TextureSource Texture
+            private Texture texture;
+            public Texture Texture
             {
                 get => texture;
                 set

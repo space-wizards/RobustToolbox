@@ -38,7 +38,7 @@ namespace SS14.Client.UserInterface.CustomControls
             contents = GetChild<Label>("Label");
         }
 
-        protected override void Update(FrameEventArgs args)
+        protected override void Update(ProcessFrameEventArgs args)
         {
             if (playerManager.LocalPlayer?.ControlledEntity == null)
             {

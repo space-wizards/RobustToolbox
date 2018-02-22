@@ -29,14 +29,14 @@ namespace SS14.Client.GameObjects
         public override string Name => "Sprite";
         public override uint? NetID => NetIDs.SPRITE;
 
-        public TextureSource CurrentSprite { get; private set; }
-        protected TextureSource currentBaseSprite { get; private set; }
+        public Texture CurrentSprite { get; private set; }
+        protected Texture currentBaseSprite { get; private set; }
         protected string currentBaseSpriteKey;
-        protected Dictionary<string, TextureSource> dirSprites = new Dictionary<string, TextureSource>();
+        protected Dictionary<string, Texture> dirSprites = new Dictionary<string, Texture>();
         protected bool HorizontalFlip { get; set; }
         protected IRenderableComponent master;
         protected List<IRenderableComponent> slaves = new List<IRenderableComponent>();
-        protected Dictionary<string, TextureSource> sprites = new Dictionary<string, TextureSource>();
+        protected Dictionary<string, Texture> sprites = new Dictionary<string, Texture>();
         protected bool visible = true;
         private DrawDepth drawDepth;
         public DrawDepth DrawDepth
@@ -111,7 +111,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public TextureSource GetSprite(string spriteKey)
+        public Texture GetSprite(string spriteKey)
         {
             if (sprites.ContainsKey(spriteKey))
                 return sprites[spriteKey];
@@ -119,7 +119,7 @@ namespace SS14.Client.GameObjects
                 return null;
         }
 
-        public List<TextureSource> GetAllSprites()
+        public List<Texture> GetAllSprites()
         {
             return sprites.Values.ToList();
         }
@@ -161,7 +161,7 @@ namespace SS14.Client.GameObjects
             BuildDirectionalSprites();
         }
 
-        public void AddSprite(string key, TextureSource spritetoadd)
+        public void AddSprite(string key, Texture spritetoadd)
         {
             if (spritetoadd != null && !String.IsNullOrEmpty(key))
             {
@@ -253,7 +253,7 @@ namespace SS14.Client.GameObjects
             sprites.Clear();
         }
 
-        protected virtual TextureSource GetBaseSprite()
+        protected virtual Texture GetBaseSprite()
         {
             return currentBaseSprite;
         }
@@ -263,7 +263,7 @@ namespace SS14.Client.GameObjects
             DrawDepth = p;
         }
 
-        private TextureSource GetActiveDirectionalSprite()
+        private Texture GetActiveDirectionalSprite()
         {
             if (currentBaseSprite == null || transform == null) return null;
 
@@ -295,7 +295,7 @@ namespace SS14.Client.GameObjects
             CurrentSprite = GetActiveDirectionalSprite();
             if (SceneSprite != null && CurrentSprite != null)
             {
-                SceneSprite.Texture = CurrentSprite.Texture;
+                SceneSprite.Texture = CurrentSprite.GodotTexture;
             }
         }
 

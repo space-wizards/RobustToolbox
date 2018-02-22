@@ -2,27 +2,34 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics
 {
-    public abstract class TextureSource
+    /// <summary>
+    ///     Contains a texture used for drawing things.
+    /// </summary>
+    public abstract class Texture
     {
-        public abstract Godot.Texture Texture { get; }
+        internal abstract Godot.Texture GodotTexture { get; }
 
-        public int Width => Texture.GetWidth();
-        public int Height => Texture.GetHeight();
+        public int Width => GodotTexture.GetWidth();
+        public int Height => GodotTexture.GetHeight();
         public Vector2i Size => new Vector2i(Width, Height);
 
-        public static implicit operator Godot.Texture(TextureSource src)
+        public static implicit operator Godot.Texture(Texture src)
         {
-            return src.Texture;
+            return src.GodotTexture;
         }
     }
 
-    public class GodotTextureSource : TextureSource
+    /// <summary>
+    ///     Wraps a texture returned by Godot itself,
+    ///     for example when the texture was set in a GUI scene.
+    /// </summary>
+    internal class GodotTextureSource : Texture
     {
-        public override Godot.Texture Texture { get; }
+        internal override Godot.Texture GodotTexture { get; }
 
         public GodotTextureSource(Godot.Texture texture)
         {
-            Texture = texture;
+            GodotTexture = texture;
         }
     }
 }

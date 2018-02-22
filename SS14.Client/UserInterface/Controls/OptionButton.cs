@@ -14,9 +14,9 @@ namespace SS14.Client.UserInterface.Controls
             set => SceneControl.Selected = value;
         }
 
-        public void AddItem(TextureSource icon, string label, int id = 1)
+        public void AddItem(Texture icon, string label, int id = 1)
         {
-            SceneControl.AddIconItem(icon.Texture, label, id);
+            SceneControl.AddIconItem(icon.GodotTexture, label, id);
         }
 
         public void AddItem(string label, int id = 1)
@@ -88,7 +88,7 @@ namespace SS14.Client.UserInterface.Controls
             SceneControl.SetItemDisabled(idx, disabled);
         }
 
-        public void SetItemIcon(int idx, TextureSource texture)
+        public void SetItemIcon(int idx, Texture texture)
         {
             SceneControl.SetItemIcon(idx, texture);
         }

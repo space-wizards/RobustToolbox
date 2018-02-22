@@ -8,11 +8,11 @@ namespace SS14.Client.Interfaces.GameObjects
     public interface ISpriteComponent : IComponent
     {
         Box2 LocalAABB { get; }
-        TextureSource CurrentSprite { get; }
-        TextureSource GetSprite(string spriteKey);
-        List<TextureSource> GetAllSprites();
+        Texture CurrentSprite { get; }
+        Texture GetSprite(string spriteKey);
+        List<Texture> GetAllSprites();
         void SetSpriteByKey(string spriteKey);
         void AddSprite(string spriteKey);
-        void AddSprite(string key, TextureSource spritetoadd);
+        void AddSprite(string key, Texture spritetoadd);
     }
 }

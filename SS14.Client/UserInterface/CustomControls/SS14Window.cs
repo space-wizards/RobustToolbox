@@ -49,6 +49,11 @@ namespace SS14.Client.UserInterface.CustomControls
         // TODO: Unhardcode this header size.
         private const float HEADER_SIZE_Y = 25;
         protected virtual Vector2 ContentsMinimumSize => new Vector2(50, 50);
+        protected override Vector2 CalculateMinimumSize()
+        {
+            var marginSize = new Vector2(Contents.MarginLeft - Contents.MarginRight, Contents.MarginTop - Contents.MarginBottom);
+            return ContentsMinimumSize + marginSize;
+        }
 
         private DragMode CurrentDrag = DragMode.None;
         private Vector2 DragOffsetTopLeft;
@@ -179,7 +184,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 var bottom = Rect.Bottom;
                 var left = Rect.Left;
                 var right = Rect.Right;
-                var minsize = ContentsMinimumSize + new Vector2(Contents.MarginLeft - Contents.MarginRight, Contents.MarginTop - Contents.MarginBottom);
+                var minsize = CombinedMinimumSize;
                 if ((CurrentDrag & DragMode.Top) == DragMode.Top)
                 {
                     var MaxY = bottom - minsize.Y;
@@ -316,7 +321,7 @@ namespace SS14.Client.UserInterface.CustomControls
         }
 
         // Prevent window headers from getting off screen due to game window resizes.
-        protected override void Update(FrameEventArgs args)
+        protected override void Update(ProcessFrameEventArgs args)
         {
             var windowSize = Godot.OS.GetWindowSize().Convert();
             if (Position.Y > windowSize.Y)

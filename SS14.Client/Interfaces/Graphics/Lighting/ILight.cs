@@ -16,7 +16,7 @@ namespace SS14.Client.Interfaces.Graphics.Lighting
         float Energy { get; set; }
         ILightMode Mode { get; }
         LightModeClass ModeClass { get; set; }
-        TextureSource Texture { get; set; }
+        Texture Texture { get; set; }
         bool Enabled { get; set; }
 
         void ParentTo(IClientTransformComponent node);

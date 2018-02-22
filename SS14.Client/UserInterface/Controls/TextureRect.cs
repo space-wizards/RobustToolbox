@@ -14,11 +14,11 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        public TextureSource Texture
+        public Texture Texture
         {
             // TODO: Maybe store the texture passed in in case it's like a TextureResource or whatever.
             get => new GodotTextureSource(SceneControl.Texture);
-            set => SceneControl.Texture = value.Texture;
+            set => SceneControl.Texture = value.GodotTexture;
         }
 
         new private Godot.TextureRect SceneControl;

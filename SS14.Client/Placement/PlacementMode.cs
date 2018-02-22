@@ -13,7 +13,7 @@ namespace SS14.Client.Placement
     {
         public readonly PlacementManager pManager;
         public TileRef CurrentTile { get; set; }
-        public ScreenCoordinates MouseScreen { get ; set; }
+        public ScreenCoordinates MouseScreen { get; set; }
         public LocalCoordinates MouseCoords { get; set; }
         public TextureResource SpriteToDraw { get; set; }
         public Color ValidPlaceColor { get; set; } = new Color(34, 139, 34); //Default valid color is green
@@ -43,7 +43,7 @@ namespace SS14.Client.Placement
             var size = SpriteToDraw.Texture.Size;
             var color = pManager.ValidPosition ? ValidPlaceColor : InvalidPlaceColor;
             var pos = MouseCoords.Position * EyeManager.PIXELSPERMETER - size / 2f;
-            pManager.drawNode.DrawTexture(SpriteToDraw.Texture.Texture, pos.Convert(), color.Convert());
+            pManager.drawNode.DrawTexture(SpriteToDraw.Texture.GodotTexture, pos.Convert(), color.Convert());
         }
 
         public TextureResource GetSprite(string key)
@@ -67,7 +67,7 @@ namespace SS14.Client.Placement
                 return true;
             var range = pManager.CurrentPermission.Range;
             if (range > 0 && !pManager.PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.InRange(MouseCoords, range))
-                    return false;
+                return false;
             return true;
         }
 

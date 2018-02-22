@@ -28,7 +28,7 @@ namespace SS14.Client.Map
             if (!string.IsNullOrEmpty(tileDef.SpriteName))
             {
                 var texture = resourceCache.GetResource<TextureResource>($@"./Textures/Tiles/{tileDef.SpriteName}.png");
-                TileSet.TileSetTexture(ret, texture.Texture.Texture);
+                TileSet.TileSetTexture(ret, texture.Texture.GodotTexture);
                 Textures[ret] = texture;
             }
 

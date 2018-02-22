@@ -29,7 +29,7 @@ namespace SS14.Client.UserInterface.CustomControls
         private OptionButton OverrideMenu;
         private Button ClearButton;
         private Button EraseButton;
-        protected override Vector2 ContentsMinimumSize => HSplitContainer.MinimumSize;
+        protected override Vector2 ContentsMinimumSize => HSplitContainer.CombinedMinimumSize;
 
         protected override Godot.Control SpawnSceneControl()
         {

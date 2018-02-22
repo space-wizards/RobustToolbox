@@ -15,6 +15,8 @@ namespace SS14.Shared.Maths
 
         public Vector2 BottomRight => new Vector2(Right, Bottom);
         public Vector2 TopLeft => new Vector2(Left, Top);
+        public Vector2 TopRight => new Vector2(Right, Top);
+        public Vector2 BottomLeft => new Vector2(Left, Bottom);
         public float Width => Math.Abs(Right - Left);
         public float Height => Math.Abs(Top - Bottom);
         public Vector2 Size => new Vector2(Width, Height);
@@ -110,7 +112,7 @@ namespace SS14.Shared.Maths
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is Box2 && Equals((Box2) obj);
+            return obj is Box2 && Equals((Box2)obj);
         }
 
         public override int GetHashCode()

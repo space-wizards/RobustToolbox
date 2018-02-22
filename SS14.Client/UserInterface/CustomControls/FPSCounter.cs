@@ -19,7 +19,7 @@ namespace SS14.Client.UserInterface.CustomControls
             MarginTop = 2;
         }
 
-        protected override void Update(FrameEventArgs args)
+        protected override void Update(ProcessFrameEventArgs args)
         {
             if (!Visible)
             {

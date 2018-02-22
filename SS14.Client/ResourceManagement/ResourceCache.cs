@@ -68,7 +68,7 @@ namespace SS14.Client.ResourceManagement
                 else
                 {
                     Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', no fallback available\n{Environment.StackTrace}");
-                    return null;
+                    throw;
                 }
             }
         }
@@ -107,6 +107,16 @@ namespace SS14.Client.ResourceManagement
         public void CacheResource<T>(string path, T resource) where T : BaseResource, new()
         {
             CachedResources[(path, typeof(T))] = resource;
+        }
+
+        public T GetFallback<T>() where T : BaseResource, new()
+        {
+            var res = new T();
+            if (res.Fallback == null)
+            {
+                throw new InvalidOperationException($"Resource of type '{typeof(T)}' has no fallback.");
+            }
+            return GetResource<T>(res.Fallback, useFallback: false);
         }
 
         #region IDisposable Members

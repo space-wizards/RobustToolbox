@@ -96,7 +96,7 @@ namespace SS14.Client.UserInterface
             RootControl.Dispose();
         }
 
-        public void Update(FrameEventArgs args)
+        public void Update(ProcessFrameEventArgs args)
         {
             RootControl.DoUpdate(args);
         }

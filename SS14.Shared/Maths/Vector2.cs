@@ -49,7 +49,7 @@ namespace SS14.Shared.Maths
         /// <summary>
         ///     Gets the squared length of the vector.
         /// </summary>
-        public float LengthSquared => X*X + Y*Y;
+        public float LengthSquared => X * X + Y * Y;
 
         /// <summary>
         ///     Returns a new, normalized, vector.

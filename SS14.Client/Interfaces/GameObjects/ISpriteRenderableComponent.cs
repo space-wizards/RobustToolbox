@@ -5,7 +5,7 @@ namespace SS14.Client.Interfaces.GameObjects
 {
     public interface ISpriteRenderableComponent : IRenderableComponent
     {
-        TextureSource CurrentSprite { get; }
+        Texture CurrentSprite { get; }
         Color Color { get; set; }
     }
 }

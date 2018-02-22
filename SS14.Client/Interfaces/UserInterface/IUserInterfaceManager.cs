@@ -32,7 +32,7 @@ namespace SS14.Client.Interfaces.UserInterface
 
         void Initialize();
 
-        void Update(FrameEventArgs args);
+        void Update(ProcessFrameEventArgs args);
 
         void Popup(string contents, string title="Alert!");
 

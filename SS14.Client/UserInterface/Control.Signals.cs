@@ -13,6 +13,7 @@ namespace SS14.Client.UserInterface
         private GodotSignalSubscriber1 __guiInputSubscriber;
         private GodotSignalSubscriber0 __focusEnteredSubscriber;
         private GodotSignalSubscriber0 __focusExitedSubscriber;
+        private GodotSignalSubscriber0 __treeExitedSubscriber;
 
         protected virtual void SetupSignalHooks()
         {
@@ -35,6 +36,10 @@ namespace SS14.Client.UserInterface
             __focusExitedSubscriber = new GodotSignalSubscriber0();
             __focusExitedSubscriber.Connect(SceneControl, "focus_exited");
             __focusExitedSubscriber.Signal += __focusExitedHook;
+
+            __treeExitedSubscriber = new GodotSignalSubscriber0();
+            __treeExitedSubscriber.Connect(SceneControl, "tree_exited");
+            __treeExitedSubscriber.Signal += __treeExitedHook;
         }
 
         protected virtual void DisposeSignalHooks()
@@ -58,6 +63,10 @@ namespace SS14.Client.UserInterface
             __focusExitedSubscriber.Disconnect(SceneControl, "focus_exited");
             __focusExitedSubscriber.Dispose();
             __focusExitedSubscriber = null;
+
+            __treeExitedSubscriber.Disconnect(SceneControl, "tree_exited");
+            __treeExitedSubscriber.Dispose();
+            __treeExitedSubscriber = null;
         }
 
         private void __mouseEnteredHook()
@@ -82,6 +91,12 @@ namespace SS14.Client.UserInterface
 
         private void __focusExitedHook()
         {
+            FocusExited();
+        }
+
+        private void __treeExitedHook()
+        {
+            // Eh maybe make a separate event later.
             FocusExited();
         }
     }

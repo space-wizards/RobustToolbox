@@ -184,6 +184,10 @@
     <Compile Include="UserInterface\Controls\TextureButton.cs" />
     <Compile Include="UserInterface\Controls\OptionButton.cs" />
     <Compile Include="UserInterface\Controls\TextureRect.cs" />
+    <Compile Include="UserInterface\Controls\Container.cs" />
+    <Compile Include="UserInterface\Controls\BoxContainer.cs" />
+    <Compile Include="UserInterface\Controls\VBoxContainer.cs" />
+    <Compile Include="UserInterface\Controls\HBoxContainer.cs" />
     <Compile Include="UserInterface\CustomControls\DebugConsole.cs" />
     <Compile Include="UserInterface\CustomControls\SS14Window.cs" />
     <Compile Include="UserInterface\CustomControls\EscapeMenu.cs" />
@@ -224,6 +228,8 @@
     <Compile Include="UserInterface\CustomControls\EntitySpawnWindow.cs" />
     <Compile Include="UserInterface\CustomControls\TileSpawnWindow.cs" />
     <Compile Include="UserInterface\CustomControls\DebugCoordsPanel.cs" />
+    <Compile Include="Graphics\Drawing\StyleBox.cs" />
+    <Compile Include="Graphics\Drawing\DrawingHandle.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="client_config.toml">

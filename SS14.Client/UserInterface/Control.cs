@@ -9,6 +9,7 @@ using SS14.Shared.ContentPack;
 using System.Reflection;
 using SS14.Shared.Maths;
 using SS14.Client.Utility;
+using SS14.Client.Graphics.Drawing;
 
 namespace SS14.Client.UserInterface
 {
@@ -71,7 +72,9 @@ namespace SS14.Client.UserInterface
         /// <summary>
         ///     The control's representation in Godot's scene tree.
         /// </summary>
-        public Godot.Control SceneControl { get; private set; }
+        internal Godot.Control SceneControl { get; private set; }
+
+        private ControlWrap WrappedSceneControl;
 
         public const float ANCHOR_BEGIN = 0;
         public const float ANCHOR_END = 1;
@@ -147,7 +150,38 @@ namespace SS14.Client.UserInterface
             get => SceneControl.GetRect().Convert();
         }
 
-        public Vector2 MinimumSize => SceneControl.GetMinimumSize().Convert();
+        public Vector2 Scale
+        {
+            get => SceneControl.RectScale.Convert();
+            set => SceneControl.RectScale = value.Convert();
+        }
+
+        public MouseFilterMode MouseFilter
+        {
+            get => (MouseFilterMode)SceneControl.MouseFilter;
+            set => SceneControl.MouseFilter = (Godot.Control.MouseFilterEnum)value;
+        }
+
+        /// <summary>
+        ///     A combination of <see cref="CustomMinimumSize" /> and <see cref="CalculateMinimumSize" />,
+        ///     Whichever is greater.
+        ///     Use this for whenever you need the *actual* minimum size of something.
+        /// </summary>
+        public Vector2 CombinedMinimumSize
+        {
+            get => SceneControl.GetCombinedMinimumSize().Convert();
+        }
+
+        /// <summary>
+        ///     A custom minimum size. If the control-calculated size is is smaller than this, this is used instead.
+        /// </summary>
+        /// <seealso cref="CalculateMinimumSize" />
+        /// <seealso cref="CombinedMinimumSize" />
+        public Vector2 CustomMinimumSize
+        {
+            get => SceneControl.RectMinSize.Convert();
+            set => SceneControl.RectMinSize = value.Convert();
+        }
 
         public Vector2 GlobalMousePosition
         {
@@ -193,8 +227,13 @@ namespace SS14.Client.UserInterface
             SetupSignalHooks();
             //Logger.Debug($"Wrapping control {Name} ({GetType()} -> {control.GetType()})");
             Initialize();
+            InjectControlWrap();
         }
 
+        /// <summary>
+        ///     Use this to do various initialization of the control.
+        ///     Ranging from spawning children to prefetching them for later referencing.
+        /// </summary>
         protected virtual void Initialize()
         {
         }
@@ -206,17 +245,77 @@ namespace SS14.Client.UserInterface
             // Certain controls (LineEdit, WindowDialog, etc...) create sub controls automatically,
             // handle these.
             WrapChildControls();
+            InjectControlWrap();
+        }
+
+        // ASSUMING DIRECT CONTROL.
+        private void InjectControlWrap()
+        {
+            // Inject wrapper script to hook virtual functions.
+            // IMPORTANT: Because of how Scripts work in Godot,
+            // it has to effectively "replace" the type of the control.
+            // It... obviously cannot do this because this is [insert statically typed language].
+            // As such: getting an instance to the control AFTER this point will yield a control of type ControlWrap.
+            // Luckily, the old instance seems to still work flawlessy for everything, including signals!
+            var script = Godot.GD.Load("res://ControlWrap.cs");
+            SceneControl.SetScript(script);
+
+            // So... getting a new reference to ourselves is surprisingly difficult!
+            if (SceneControl.GetChildCount() > 0)
+            {
+                // Potentially easiest: if we have a child, get the parent of our child (us).
+                WrappedSceneControl = (ControlWrap)SceneControl.GetChild(0).GetParent();
+            }
+            else if (SceneControl.GetParent() != null)
+            {
+                // If not but we have a parent use that.
+                WrappedSceneControl = (ControlWrap)SceneControl.GetParent().GetChild(SceneControl.GetIndex());
+            }
+            else
+            {
+                // Ok so we're literally a lone node guess making a temporary child'll be fine.
+                var node = new Godot.Node();
+                SceneControl.AddChild(node);
+                WrappedSceneControl = (ControlWrap)node.GetParent();
+                node.QueueFree();
+            }
+
+            WrappedSceneControl.GetMinimumSizeOverride = () => CalculateMinimumSize().Convert();
+            WrappedSceneControl.HasPointOverride = (point) => HasPoint(point.Convert());
+            WrappedSceneControl.DrawOverride = DoDraw;
+        }
+
+        private void DoDraw()
+        {
+            using (var handle = new DrawingHandle(SceneControl.GetCanvasItem()))
+            {
+                Draw(handle);
+            }
+        }
+
+        protected virtual void Draw(DrawingHandle handle)
+        {
+        }
+
+        public void UpdateDraw()
+        {
+            SceneControl.Update();
         }
 
         /// <summary>
         ///     Overriden by child classes to change the Godot control type.
+        ///     ONLY spawn the control in here. Use <see cref="SetSceneControl" /> for holding references to it.
+        ///     This is to allow children to override it without breaking the setting.
         /// </summary>
-        /// <returns></returns>
         protected virtual Godot.Control SpawnSceneControl()
         {
             return new Godot.Control();
         }
 
+        /// <summary>
+        ///     override by child classes to have a reference to the Godot control for accessing.
+        /// </summary>
+        /// <param name="control"></param>
         protected virtual void SetSceneControl(Godot.Control control)
         {
             SceneControl = control;
@@ -224,6 +323,10 @@ namespace SS14.Client.UserInterface
 
         protected bool Disposed { get; private set; } = false;
 
+        /// <summary>
+        ///     Dispose this control, its own scene control, and all its children.
+        ///     Basically the big delete button.
+        /// </summary>
         public void Dispose()
         {
             if (Disposed)
@@ -251,6 +354,11 @@ namespace SS14.Client.UserInterface
             SceneControl.QueueFree();
             SceneControl.Dispose();
             SceneControl = null;
+
+            // Don't QueueFree since these are the same node.
+            // Kinda sorta mostly probably hopefully.
+            WrappedSceneControl.Dispose();
+            WrappedSceneControl = null;
         }
 
         ~Control()
@@ -258,6 +366,9 @@ namespace SS14.Client.UserInterface
             Dispose(false);
         }
 
+        /// <summary>
+        ///     Dispose all children, but leave this one intact.
+        /// </summary>
         public void DisposeAllChildren()
         {
             // Cache because the children modify the dictionary.
@@ -326,6 +437,24 @@ namespace SS14.Client.UserInterface
         /// </summary>
         protected virtual void Deparented()
         {
+        }
+
+        /// <summary>
+        ///     Override this to calculate a minimum size for this control.
+        ///     Do NOT call this directly to get the minimum size for layout purposes!
+        ///     Use <see cref="GetCombinedMinimumSize" /> for the ACTUAL minimum size.
+        /// </summary>
+        protected virtual Vector2 CalculateMinimumSize()
+        {
+            return Vector2.Zero;
+        }
+
+        protected virtual bool HasPoint(Vector2 point)
+        {
+            // This is effectively the same implementation as the default Godot one in Control.cpp.
+            // That one gets ignored because to Godot it looks like we're ALWAYS implementing a custom HasPoint.
+            var size = Size;
+            return point.X >= 0 && point.X <= size.X && point.Y >= 0 && point.Y <= size.Y;
         }
 
         public T GetChild<T>(string name) where T : Control
@@ -547,7 +676,7 @@ namespace SS14.Client.UserInterface
             SceneControl.AddConstantOverride(name, constant);
         }
 
-        public void DoUpdate(FrameEventArgs args)
+        public void DoUpdate(ProcessFrameEventArgs args)
         {
             Update(args);
             foreach (var child in Children)
@@ -556,7 +685,7 @@ namespace SS14.Client.UserInterface
             }
         }
 
-        protected virtual void Update(FrameEventArgs args)
+        protected virtual void Update(ProcessFrameEventArgs args)
         {
         }
 
@@ -609,12 +738,6 @@ namespace SS14.Client.UserInterface
             Stop = Godot.Control.MouseFilterEnum.Stop,
         }
 
-        public MouseFilterMode MouseFilter
-        {
-            get => (MouseFilterMode)SceneControl.MouseFilter;
-            set => SceneControl.MouseFilter = (Godot.Control.MouseFilterEnum)value;
-        }
-
         /// <summary>
         /// Convenient helper to load a Godot scene without all the casting. Does NOT wrap the nodes (duh!).
         /// </summary>
@@ -624,12 +747,6 @@ namespace SS14.Client.UserInterface
         {
             var res = (Godot.PackedScene)Godot.ResourceLoader.Load(path);
             return (Godot.Control)res.Instance();
-        }
-
-        public Vector2 Scale
-        {
-            get => SceneControl.RectScale.Convert();
-            set => SceneControl.RectScale = value.Convert();
         }
     }
 }

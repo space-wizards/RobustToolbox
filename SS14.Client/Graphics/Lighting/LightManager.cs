@@ -92,7 +92,7 @@ namespace SS14.Client.Graphics.Lighting
                 deferredMaskBackground = new Godot.Sprite()
                 {
                     Name = "DeferredMaskBackground",
-                    Texture = whiteTex.Texture.Texture,
+                    Texture = whiteTex.Texture.GodotTexture,
                     Centered = false,
                 };
                 deferredViewport.AddChild(deferredMaskBackground);

@@ -13,7 +13,7 @@ namespace SS14.Client.ResourceManagement
 
         public override void Load(IResourceCache cache, string diskPath)
         {
-            if (!System.IO.File.Exists(diskPath))
+            if (!File.Exists(diskPath))
             {
                 throw new FileNotFoundException(diskPath);
             }
@@ -28,7 +28,7 @@ namespace SS14.Client.ResourceManagement
             godotTexture.SetFlags(godotTexture.GetFlags() & ~(int)Godot.Texture.FlagsEnum.Filter);
             Texture = new GodotTextureSource(godotTexture);
             // Primarily for tracking down iCCP sRGB errors in the image files.
-            Logger.Debug($"Loaded texture {Path.GetFullPath(diskPath)}");
+            Logger.Debug($"Loaded texture {Path.GetFullPath(diskPath)}.");
         }
 
         public static implicit operator Texture(TextureResource res)

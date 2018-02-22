@@ -646,6 +646,11 @@ namespace SS14.Client.UserInterface
             SceneControl.SetAnchorsPreset((Godot.Control.LayoutPreset)preset, keepMargin);
         }
 
+        public void SetMarginsPreset(LayoutPreset preset, LayoutPresetMode resizeMode = LayoutPresetMode.Minsize, int margin = 0)
+        {
+            SceneControl.SetMarginsPreset((Godot.Control.LayoutPreset)preset, (Godot.Control.LayoutPresetMode)resizeMode, margin);
+        }
+
         public enum LayoutPreset : byte
         {
             TopLeft = Godot.Control.LayoutPreset.TopLeft,
@@ -664,6 +669,14 @@ namespace SS14.Client.UserInterface
             VerticalCenterWide = Godot.Control.LayoutPreset.VcenterWide,
             HorizontalCenterWide = Godot.Control.LayoutPreset.VcenterWide,
             Wide = Godot.Control.LayoutPreset.Wide,
+        }
+
+        public enum LayoutPresetMode : byte
+        {
+            Minsize = Godot.Control.LayoutPresetMode.Minsize,
+            KeepWidth = Godot.Control.LayoutPresetMode.KeepWidth,
+            KeepHeight = Godot.Control.LayoutPresetMode.KeepHeight,
+            KeepSize = Godot.Control.LayoutPresetMode.KeepSize,
         }
 
         public void AddColorOverride(string name, Color color)

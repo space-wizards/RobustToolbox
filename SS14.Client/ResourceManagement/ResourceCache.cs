@@ -58,16 +58,16 @@ namespace SS14.Client.ResourceManagement
                 CachedResources[(path, typeof(T))] = _resource;
                 return _resource;
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 if (useFallback && _resource.Fallback != null)
                 {
-                    Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', resorting to fallback.\n{Environment.StackTrace}");
+                    Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', resorting to fallback.\n{Environment.StackTrace}\n{e}");
                     return GetResource<T>(_resource.Fallback, useFallback = false);
                 }
                 else
                 {
-                    Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', no fallback available\n{Environment.StackTrace}");
+                    Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', no fallback available\n{Environment.StackTrace}\n{e}");
                     throw;
                 }
             }

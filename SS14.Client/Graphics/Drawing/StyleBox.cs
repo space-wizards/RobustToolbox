@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
 
@@ -43,18 +43,18 @@ namespace SS14.Client.Graphics.Drawing
         /// </summary>
         public StyleBoxTexture(StyleBoxTexture copy) : this()
         {
-            MarginTop = MarginTop;
-            MarginLeft = MarginLeft;
-            MarginBottom = MarginBottom;
-            MarginRight = MarginRight;
-            Texture = Texture;
-            Modulate = Modulate;
+            MarginTop = copy.MarginTop;
+            MarginLeft = copy.MarginLeft;
+            MarginBottom = copy.MarginBottom;
+            MarginRight = copy.MarginRight;
+            Texture = copy.Texture;
+            Modulate = copy.Modulate;
         }
 
         public float MarginLeft
         {
             get => stylebox.MarginLeft;
-            set => stylebox.MarginRight = value;
+            set => stylebox.MarginLeft = value;
         }
 
         public float MarginRight

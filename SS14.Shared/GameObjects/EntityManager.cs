@@ -201,9 +201,8 @@ namespace SS14.Shared.GameObjects
             return entity;
         }
 
-        public static void InitializeEntity(Entity entity)
+        protected static void InitializeEntity(Entity entity)
         {
-            entity.PreInitialize();
             entity.InitializeComponents();
             entity.Initialize();
 
@@ -370,14 +369,14 @@ namespace SS14.Shared.GameObjects
         {
             if (!Started)
             {
-                IncomingEntityMessage incomingEntity = ProcessNetMessage(msg);
+                var incomingEntity = ProcessNetMessage(msg);
                 if (incomingEntity.Message.Type != EntityMessageType.Error)
                     MessageBuffer.Enqueue(incomingEntity);
             }
             else
             {
                 ProcessMsgBuffer();
-                IncomingEntityMessage incomingEntity = ProcessNetMessage(msg);
+                var incomingEntity = ProcessNetMessage(msg);
                 if (!Entities.ContainsKey(incomingEntity.Message.EntityUid))
                 {
                     MessageBuffer.Enqueue(incomingEntity);
@@ -415,6 +414,7 @@ namespace SS14.Shared.GameObjects
     {
         Error = 0,
         ComponentMessage,
+        EntityMessage,
         SystemMessage
     }
 }

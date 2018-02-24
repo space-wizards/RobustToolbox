@@ -318,10 +318,11 @@ namespace SS14.Shared.GameObjects
                 entity.ExposeData(new YamlEntitySerializer(DataNode));
             }
 
-            foreach (KeyValuePair<string, YamlMappingNode> componentData in Components)
+            foreach (var componentData in Components)
             {
-                IComponent component = componentFactory.GetComponent(componentData.Key);
-                
+                var component = (Component)componentFactory.GetComponent(componentData.Key);
+
+                component.Owner = entity;
                 component.LoadParameters(componentData.Value);
                 component.ExposeData(new YamlEntitySerializer(componentData.Value));
 

@@ -4,6 +4,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using System;
+using SS14.Shared.Enums;
 using SS14.Shared.Map;
 
 namespace SS14.Client.GameObjects
@@ -14,6 +15,7 @@ namespace SS14.Client.GameObjects
         public override string Name => "Clickable";
         public override uint? NetID => NetIDs.CLICKABLE;
 
+        [Obsolete("Subscribe to ClientClick message.")]
         public event EventHandler<ClickEventArgs> OnClick;
 
         public bool CheckClick(LocalCoordinates worldPos, out int drawdepth)
@@ -27,7 +29,10 @@ namespace SS14.Client.GameObjects
         public void DispatchClick(IEntity user, ClickType clickType)
         {
             OnClick?.Invoke(this, new ClickEventArgs(user, Owner, clickType));
-            Owner.SendComponentNetworkMessage(this, clickType, (int)user.Uid);
+
+            var message = new ClientClickMsg(user.Uid, clickType);
+            SendMessage(message);
+            SendNetworkMessage(message);
         }
     }
 }

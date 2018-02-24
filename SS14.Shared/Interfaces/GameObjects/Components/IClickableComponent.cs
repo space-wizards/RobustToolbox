@@ -1,5 +1,6 @@
 ﻿using SS14.Shared.GameObjects;
 using System;
+using SS14.Shared.Enums;
 
 namespace SS14.Shared.Interfaces.GameObjects.Components
 {
@@ -8,6 +9,7 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         /// <summary>
         /// Invoked whenever this component is clicked on.
         /// </summary>
+        [Obsolete("Subscribe to ClientClick message.")]
         event EventHandler<ClickEventArgs> OnClick;
     }
 

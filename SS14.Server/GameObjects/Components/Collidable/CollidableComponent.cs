@@ -25,20 +25,7 @@ namespace SS14.Server.GameObjects
 
         /// <inheritdoc />
         public MapId MapID => Owner.GetComponent<ITransformComponent>().MapID;
-
-        /// <inheritdoc />
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
-        {
-            switch ((ComponentMessageType)message.MessageParameters[0])
-            {
-                case ComponentMessageType.Bumped:
-                    //TODO check who bumped us, how far away they are, etc.
-                    var bumper = Owner.EntityManager.GetEntity(new EntityUid((int)message.MessageParameters[1]));
-                    if (bumper != null)
-                        Owner.SendMessage(this, ComponentMessageType.Bumped, bumper);
-                    break;
-            }
-        }
+        
 
         public override void ExposeData(EntitySerializer serializer)
         {
@@ -76,10 +63,9 @@ namespace SS14.Server.GameObjects
         /// <summary>
         ///     Gets the AABB from the sprite component and sends it to the collision manager.
         /// </summary>
-        /// <param name="owner"></param>
-        public override void OnAdd(IEntity owner)
+        public override void OnAdd()
         {
-            base.OnAdd(owner);
+            base.OnAdd();
             var cm = IoCManager.Resolve<ICollisionManager>();
             cm.AddCollidable(this);
         }

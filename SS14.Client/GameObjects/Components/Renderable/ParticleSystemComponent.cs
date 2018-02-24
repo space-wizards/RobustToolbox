@@ -48,9 +48,9 @@ namespace SS14.Client.GameObjects
             MapID = args.NewPosition.MapID;
         }
 
-        public override void OnAdd(IEntity owner)
+        public override void OnAdd()
         {
-            base.OnAdd(owner);
+            base.OnAdd();
             var transform = Owner.GetComponent<ITransformComponent>();
             transform.OnMove += OnMove;
         }

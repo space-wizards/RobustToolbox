@@ -9,16 +9,24 @@ namespace SS14.Server.GameObjects
         public override string Name => "Clickable";
         public override uint? NetID => NetIDs.CLICKABLE;
 
+        [Obsolete("Subscribe to ClientClick message.")]
         public event EventHandler<ClickEventArgs> OnClick;
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
+        public override void HandleMessage(object owner, ComponentMessage message)
         {
-            ClickType type = (ClickType)((int)message.MessageParameters[0]); // Click type.
-            var uid = (int)message.MessageParameters[1]; // ID of the user
-            var user = Owner.EntityManager.GetEntity(new EntityUid(uid));
+            base.HandleMessage(owner, message);
 
-            OnClick?.Invoke(this, new ClickEventArgs(user, Owner, type));
-            Owner.RaiseEvent(new ClickedOnEntityEventArgs { Clicked = Owner.Uid, Clicker = new EntityUid(uid), MouseButton = type });
+            switch (message)
+            {
+                case ClientClickMsg msg:
+                    var type = msg.Click;
+                    var uid = msg.Uid;
+                    var user = Owner.EntityManager.GetEntity(uid);
+
+                    OnClick?.Invoke(this, new ClickEventArgs(user, Owner, type));
+                    Owner.RaiseEvent(new ClickedOnEntityEventArgs { Clicked = Owner.Uid, Clicker = uid, MouseButton = type });
+                    break;
+            }
         }
     }
 }

@@ -123,6 +123,8 @@
     <Compile Include="ContentPack\PathHelpers.cs" />
     <Compile Include="ContentPack\ResourceManager.cs" />
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
+    <Compile Include="GameObjects\ComponentMessage.cs" />
+    <Compile Include="GameObjects\ComponentMessages\Messages.cs" />
     <Compile Include="GameObjects\Serialization\EntitySerializer.cs" />
     <Compile Include="GameObjects\EntityUid.cs" />
     <Compile Include="GameObjects\Serialization\YamlEntitySerializer.cs" />
@@ -272,8 +274,7 @@
     <Compile Include="GameObjects\EntitySystemManager.cs" />
     <Compile Include="GameObjects\IEntityNetworkManager.cs" />
     <Compile Include="GameObjects\ParticleSettings.cs" />
-    <Compile Include="GameObjects\StaticConstants.cs" />
-    <Compile Include="GameObjects\System\EntityUpdateSystem.cs" />
+    <Compile Include="Enums\ClickType.cs" />
     <Compile Include="GameObjects\System\EntitySystem.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponentState.cs" />
     <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponentState.cs" />
@@ -288,7 +289,6 @@
     <Compile Include="GameObjects\EntitySystemMessage\EntitySystemMessage.cs" />
     <Compile Include="GameObjects\EntitySystemMessage\InventorySystemMessages.cs" />
     <Compile Include="GameObjects\Events\InputEvents.cs" />
-    <Compile Include="GameObjects\Server\ServerDelegates.cs" />
     <Compile Include="GameObjects\ComponentEnums.cs" />
     <Compile Include="GameObjects\ComponentParameter.cs" />
     <Compile Include="GameObjects\ComponentReplyMessage.cs" />

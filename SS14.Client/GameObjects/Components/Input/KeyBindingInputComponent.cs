@@ -33,36 +33,15 @@ namespace SS14.Client.GameObjects
             //Set up keystates
         }
 
-        public override void OnAdd(IEntity owner)
+        public override void OnAdd()
         {
-            base.OnAdd(owner);
+            base.OnAdd();
 
             var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
             keyBindingManager.BoundKeyDown += KeyDown;
             keyBindingManager.BoundKeyUp += KeyUp;
         }
-
-        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
-        {
-            ComponentReplyMessage reply = base.ReceiveMessage(sender, type, list);
-
-            if (sender == this)
-                return ComponentReplyMessage.Empty;
-
-            switch (type)
-            {
-                case ComponentMessageType.Die:
-                    Disable();
-                    break;
-                case ComponentMessageType.Live:
-                    Enable();
-                    break;
-            }
-
-            return reply;
-        }
-
+        
         public override void Shutdown()
         {
             base.Shutdown();
@@ -90,8 +69,9 @@ namespace SS14.Client.GameObjects
             //Remove all active key states and send keyup messages for them.
             foreach (var state in _keyStates.ToList())
             {
-                Owner.SendComponentNetworkMessage(this, state.Key, BoundKeyState.Up);
-                Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, state.Key, BoundKeyState.Up);
+                var message = new BoundKeyChangedMsg(state.Key, BoundKeyState.Up);
+                SendMessage(message);
+                SendNetworkMessage(message);
                 _keyStates.Remove(state.Key);
             }
         }
@@ -100,19 +80,22 @@ namespace SS14.Client.GameObjects
         {
             if (!_enabled || GetKeyState(e.Function))
                 return; //Don't repeat keys that are already down.
-
-            Owner.SendComponentNetworkMessage(this, e.Function, e.FunctionState);
+            
             SetKeyState(e.Function, true);
-            Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, e.Function, e.FunctionState);
+            var message = new BoundKeyChangedMsg(e.Function, e.FunctionState);
+            SendMessage(message);
+            SendNetworkMessage(message);
         }
 
         public virtual void KeyUp(object sender, BoundKeyEventArgs e)
         {
             if (!_enabled)
                 return;
-            Owner.SendComponentNetworkMessage(this, e.Function, e.FunctionState);
+
             SetKeyState(e.Function, false);
-            Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, e.Function, e.FunctionState);
+            var message = new BoundKeyChangedMsg(e.Function, e.FunctionState);
+            SendMessage(message);
+            SendNetworkMessage(message);
         }
 
         protected void SetKeyState(BoundKeyFunctions k, bool state)
@@ -152,7 +135,7 @@ namespace SS14.Client.GameObjects
                 if (!state.Value)
                     _keyStates.Remove(state.Key);
                 else
-                    Owner.SendMessage(this, ComponentMessageType.BoundKeyRepeat, state.Key, BoundKeyState.Repeat);
+                    SendMessage(new BoundKeyRepeatMsg(state.Key, BoundKeyState.Repeat));
             }
         }
     }

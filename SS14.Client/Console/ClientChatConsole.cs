@@ -135,7 +135,7 @@ namespace SS14.Client.Console
             AddLine(text, channel, GetChannelColor(channel));
 
             if (entityId.HasValue && _entityManager.TryGetEntity(entityId.Value, out var a))
-                a.SendMessage(this, ComponentMessageType.EntitySaidSomething, channel, text);
+                a.SendMessage(null, new SaidSomethingMsg(channel, text));
         }
 
         private Color GetChannelColor(ChatChannel channel)

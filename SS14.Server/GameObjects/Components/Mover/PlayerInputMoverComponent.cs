@@ -28,34 +28,37 @@ namespace SS14.Server.GameObjects
         public override bool NetworkSynchronizeExistence => false;
 
         /// <inheritdoc />
-        public override void OnAdd(IEntity owner)
+        public override void OnAdd()
         {
             // This component requires that the entity has a KeyBindingInputComponent.
-            if (!owner.HasComponent<KeyBindingInputComponent>())
-                Logger.Error($"[ECS] {owner.Prototype.Name} - {nameof(PlayerInputMoverComponent)} requires {nameof(KeyBindingInputComponent)}. ");
+            if (!Owner.HasComponent<KeyBindingInputComponent>())
+                Logger.Error($"[ECS] {Owner.Prototype.Name} - {nameof(PlayerInputMoverComponent)} requires {nameof(KeyBindingInputComponent)}. ");
 
             // This component requires that the entity has a PhysicsComponent.
-            if (!owner.HasComponent<PhysicsComponent>())
-                Logger.Error($"[ECS] {owner.Prototype.Name} - {nameof(PlayerInputMoverComponent)} requires {nameof(PhysicsComponent)}. ");
+            if (!Owner.HasComponent<PhysicsComponent>())
+                Logger.Error($"[ECS] {Owner.Prototype.Name} - {nameof(PlayerInputMoverComponent)} requires {nameof(PhysicsComponent)}. ");
 
-            base.OnAdd(owner);
+            base.OnAdd();
         }
-
-        /// <inheritdoc />
-        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type, params object[] list)
+        
+        /// <summary>
+        ///     Handles an incoming component message.
+        /// </summary>
+        /// <param name="owner">
+        ///     Object that raised the event. If the event was sent over the network or from some unknown place,
+        ///     this will be null.
+        /// </param>
+        /// <param name="message">Message that was sent.</param>
+        public override void HandleMessage(object owner, ComponentMessage message)
         {
-            //Don't listen to our own messages!
-            if (sender == this)
-                return ComponentReplyMessage.Empty;
+            base.HandleMessage(owner, message);
 
-            switch (type)
+            switch (message)
             {
-                case ComponentMessageType.BoundKeyChange:
+                case BoundKeyChangedMsg msg:
                     HandleKeyChange();
                     break;
             }
-
-            return base.ReceiveMessage(sender, type, list);
         }
 
         /// <inheritdoc />

@@ -8,6 +8,7 @@ using SS14.Shared.Maths;
 
 namespace SS14.Shared.Interfaces.GameObjects.Components
 {
+    [Obsolete("Handle BumpEntMsg")]
     public class BumpEventArgs : EventArgs
     {
         public readonly IEntity Bumper;
@@ -22,6 +23,7 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
 
     public interface ICollidableComponent : IComponent, ICollidable
     {
+        [Obsolete("Handle BumpEntMsg")]
         event EventHandler<BumpEventArgs> OnBump;
         bool TryCollision(Vector2 offset, bool bump = false);
     }

@@ -61,11 +61,11 @@ namespace SS14.Client.GameObjects
 
         #endregion ISpriteComponent Members
 
-        public override void OnAdd(IEntity owner)
+        public override void OnAdd()
         {
-            base.OnAdd(owner);
-            //Send a spritechanged message so everything knows whassup.
-            Owner.SendMessage(this, ComponentMessageType.SpriteChanged);
+            base.OnAdd();
+
+            SendMessage(new SpriteChangedMsg());
         }
 
         public override void Initialize()
@@ -107,41 +107,7 @@ namespace SS14.Client.GameObjects
             sprite.SetAnimationState(state);
             sprite.SetLoop(loop);
         }
-
-        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type, params object[] list)
-        {
-            ComponentReplyMessage reply = base.ReceiveMessage(sender, type, list);
-
-            if (sender == this) //Don't listen to our own messages!
-                return ComponentReplyMessage.Empty;
-
-            switch (type)
-            {
-                case ComponentMessageType.SlaveAttach:
-                    SetMaster(Owner.EntityManager.GetEntity(new EntityUid((int) list[0])));
-                    break;
-                case ComponentMessageType.ItemUnEquipped:
-                case ComponentMessageType.Dropped:
-                    UnsetMaster();
-                    break;
-                case ComponentMessageType.EntitySaidSomething:
-                    ChatChannel channel;
-                    if (Enum.TryParse(list[0].ToString(), true, out channel))
-                    {
-                        string text = list[1].ToString();
-
-                        if (channel == ChatChannel.Local || channel == ChatChannel.Player ||
-                            channel == ChatChannel.Radio)
-                        {
-                            (_speechBubble ?? (_speechBubble = new SpeechBubble(Owner.Name + Owner.Uid))).SetText(text);
-                        }
-                    }
-                    break;
-            }
-
-            return reply;
-        }
-
+        
         protected void SetDrawDepth(DrawDepth p)
         {
             DrawDepth = p;

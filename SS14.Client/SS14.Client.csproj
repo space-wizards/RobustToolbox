@@ -173,7 +173,6 @@
     <Compile Include="GameObjects\Components\Collidable\CollidableComponent.cs" />
     <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponent.cs" />
     <Compile Include="GameObjects\Components\Icon\IconComponent.cs" />
-    <Compile Include="GameObjects\Components\Input\ContextMenuComponent.cs" />
     <Compile Include="GameObjects\Components\Light\PointLightComponent.cs" />
     <Compile Include="GameObjects\Components\Mover\PlayerInputMoverComponent.cs" />
     <Compile Include="GameObjects\Components\Physics\PhysicsComponent.cs" />
@@ -186,7 +185,6 @@
     <Compile Include="GameObjects\Components\Renderable\MobSpriteComponent.cs" />
     <Compile Include="GameObjects\Components\Renderable\SpriteComponent.cs" />
     <Compile Include="GameObjects\Components\Transform\TransformComponent.cs" />
-    <Compile Include="GameObjects\ContextMenuEntry.cs" />
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
     <Compile Include="GameObjects\ClientEntityManager.cs" />
     <Compile Include="GameObjects\ClientEntityNetworkManager.cs" />
@@ -260,7 +258,6 @@
     <Compile Include="UserInterface\Controls\Button.cs" />
     <Compile Include="UserInterface\CustomControls\Chatbox.cs" />
     <Compile Include="UserInterface\Controls\Checkbox.cs" />
-    <Compile Include="UserInterface\Controls\ContextMenu.cs" />
     <Compile Include="UserInterface\CustomControls\DebugConsole.cs" />
     <Compile Include="UserInterface\CustomControls\EntitySpawnWindow.cs" />
     <Compile Include="UserInterface\CustomControls\EntitySpawnSelectButton.cs" />

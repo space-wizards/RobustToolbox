@@ -33,6 +33,7 @@ using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Map;
 using SS14.Server.Interfaces.Maps;
+using SS14.Server.Player;
 using SS14.Shared.Enums;
 
 namespace SS14.Server
@@ -167,12 +168,7 @@ namespace SS14.Server
             }
 
             //TODO: After the client gets migrated to new net system, hardcoded IDs will be removed, and these need to be put in their respective modules.
-            netMan.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, HandleWelcomeMessageReq);
-            netMan.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME);
-            netMan.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, HandlePlayerListReq);
-            netMan.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME);
 
-            netMan.RegisterNetMessage<MsgSession>(MsgSession.NAME);
 
             netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, message => SendMap(message.MsgChannel));
 
@@ -205,7 +201,7 @@ namespace SS14.Server
             IoCManager.Resolve<IGameStateManager>().Initialize();
             IoCManager.Resolve<IEntityManager>().Initialize();
             IoCManager.Resolve<IChatManager>().Initialize();
-            IoCManager.Resolve<IPlayerManager>().Initialize(this, MaxPlayers);
+            IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
             IoCManager.Resolve<IMapManager>().Initialize();
             IoCManager.Resolve<IPlacementManager>().Initialize();
 
@@ -274,7 +270,6 @@ namespace SS14.Server
             }
         }
         
-
         private TimeSpan _lastTick;
         private TimeSpan _lastKeepUpAnnounce;
 
@@ -452,59 +447,6 @@ namespace SS14.Server
 
         #region MessageProcessing
 
-        private void HandleWelcomeMessageReq(NetMessage message)
-        {
-            var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(message.MsgChannel);
-            session.Name = ((MsgServerInfoReq) message).PlayerName;
-
-            var net = IoCManager.Resolve<IServerNetManager>();
-            var netMsg = message.MsgChannel.CreateNetMessage<MsgServerInfo>();
-
-            netMsg.ServerName = ServerName;
-            netMsg.ServerPort = net.Port;
-            netMsg.ServerWelcomeMessage = Motd;
-            netMsg.ServerMaxPlayers = MaxPlayers;
-            netMsg.ServerMapName = MapName;
-            netMsg.GameMode = GameModeName;
-            netMsg.ServerPlayerCount = IoCManager.Resolve<IPlayerManager>().PlayerCount;
-            netMsg.PlayerIndex = session.Index;
-
-            message.MsgChannel.SendMessage(netMsg);
-        }
-
-        private void HandlePlayerListReq(NetMessage message)
-        {
-            var channel = message.MsgChannel;
-            var plyMgr = IoCManager.Resolve<IPlayerManager>();
-            var players = plyMgr.GetAllPlayers().ToArray();
-            var netMsg = channel.CreateNetMessage<MsgPlayerList>();
-
-            var list = new List<PlayerState>();
-            foreach (var client in players)
-            {
-                if(client == null)
-                    continue;
-
-                var info = new PlayerState
-                {
-                    Index = client.Index,
-                    Uuid = client.ConnectedClient.ConnectionId,
-                    Name = client.Name,
-                    Status = client.Status,
-                    Ping = client.ConnectedClient.Ping
-                };
-                list.Add(info);
-            }
-            netMsg.Plyrs = list;
-            netMsg.PlyCount = (byte) list.Count;
-
-            channel.SendMessage(netMsg);
-
-            // client session is complete
-            var session = plyMgr.GetSessionByChannel(channel);
-            session.Status = SessionStatus.Connected;
-        }
-
         //TODO: Chunk requests need to be handled in MapManager
         private void SendMap(INetChannel client)
         {
@@ -538,36 +480,17 @@ namespace SS14.Server
     }
 
     /// <summary>
-    ///     Event arguments for when something changed with the player.
-    /// </summary>
-    public class PlayerEventArgs : EventArgs
-    {
-        /// <summary>
-        ///     The session that triggered the event.
-        /// </summary>
-        public IPlayerSession Session { get; }
-
-        /// <summary>
-        ///     Constructs a new instance of the class.
-        /// </summary>
-        public PlayerEventArgs(IPlayerSession session)
-        {
-            Session = session;
-        }
-    }
-
-    /// <summary>
-    ///     Event arguments for when the RunLevel has changed in the BaseClient.
+    ///     Event arguments for when the RunLevel has changed in the BaseServer.
     /// </summary>
     public class RunLevelChangedEventArgs : EventArgs
     {
         /// <summary>
-        ///     RunLevel that the BaseClient switched from.
+        ///     RunLevel that the BaseServer switched from.
         /// </summary>
         public ServerRunLevel OldLevel { get; }
 
         /// <summary>
-        ///     RunLevel that the BaseClient switched to.
+        ///     RunLevel that the BaseServers switched to.
         /// </summary>
         public ServerRunLevel NewLevel { get; }
 

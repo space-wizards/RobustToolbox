@@ -170,7 +170,6 @@ namespace SS14.Server
             //TODO: After the client gets migrated to new net system, hardcoded IDs will be removed, and these need to be put in their respective modules.
 
 
-            netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, message => SendMap(message.MsgChannel));
 
             // Set up the VFS
             _resources.Initialize();
@@ -444,17 +443,6 @@ namespace SS14.Server
 
             _stateManager.SendGameStateUpdate();
         }
-
-        #region MessageProcessing
-
-        //TODO: Chunk requests need to be handled in MapManager
-        private void SendMap(INetChannel client)
-        {
-            // Send Tiles
-            IoCManager.Resolve<IMapManager>().SendMap(client);
-        }
-
-        #endregion MessageProcessing
     }
 
     /// <summary>

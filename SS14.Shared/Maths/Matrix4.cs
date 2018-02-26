@@ -1,4 +1,5 @@
 ﻿#region --- License ---
+
 /*
 Copyright (c) 2006 - 2008 The Open Toolkit library.
 Copyright 2013 Xamarin Inc
@@ -21,6 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
 #endregion
 
 using System;
@@ -41,14 +43,17 @@ namespace SS14.Shared.Maths
         /// Top row of the matrix
         /// </summary>
         public Vector4 Row0;
+
         /// <summary>
         /// 2nd row of the matrix
         /// </summary>
         public Vector4 Row1;
+
         /// <summary>
         /// 3rd row of the matrix
         /// </summary>
         public Vector4 Row2;
+
         /// <summary>
         /// Bottom row of the matrix
         /// </summary>
@@ -118,131 +123,176 @@ namespace SS14.Shared.Maths
         /// <summary>
         /// The determinant of this matrix
         /// </summary>
-        public float Determinant
-        {
-            get
-            {
-                return
-                    Row0.X * Row1.Y * Row2.Z * Row3.W - Row0.X * Row1.Y * Row2.W * Row3.Z + Row0.X * Row1.Z * Row2.W * Row3.Y - Row0.X * Row1.Z * Row2.Y * Row3.W
-                    + Row0.X * Row1.W * Row2.Y * Row3.Z - Row0.X * Row1.W * Row2.Z * Row3.Y - Row0.Y * Row1.Z * Row2.W * Row3.X + Row0.Y * Row1.Z * Row2.X * Row3.W
-                    - Row0.Y * Row1.W * Row2.X * Row3.Z + Row0.Y * Row1.W * Row2.Z * Row3.X - Row0.Y * Row1.X * Row2.Z * Row3.W + Row0.Y * Row1.X * Row2.W * Row3.Z
-                    + Row0.Z * Row1.W * Row2.X * Row3.Y - Row0.Z * Row1.W * Row2.Y * Row3.X + Row0.Z * Row1.X * Row2.Y * Row3.W - Row0.Z * Row1.X * Row2.W * Row3.Y
-                    + Row0.Z * Row1.Y * Row2.W * Row3.X - Row0.Z * Row1.Y * Row2.X * Row3.W - Row0.W * Row1.X * Row2.Y * Row3.Z + Row0.W * Row1.X * Row2.Z * Row3.Y
-                    - Row0.W * Row1.Y * Row2.Z * Row3.X + Row0.W * Row1.Y * Row2.X * Row3.Z - Row0.W * Row1.Z * Row2.X * Row3.Y + Row0.W * Row1.Z * Row2.Y * Row3.X;
-            }
-        }
+        public float Determinant => Row0.X * Row1.Y * Row2.Z * Row3.W - Row0.X * Row1.Y * Row2.W * Row3.Z + Row0.X * Row1.Z * Row2.W * Row3.Y - Row0.X * Row1.Z * Row2.Y * Row3.W
+                                    + Row0.X * Row1.W * Row2.Y * Row3.Z - Row0.X * Row1.W * Row2.Z * Row3.Y - Row0.Y * Row1.Z * Row2.W * Row3.X + Row0.Y * Row1.Z * Row2.X * Row3.W
+                                    - Row0.Y * Row1.W * Row2.X * Row3.Z + Row0.Y * Row1.W * Row2.Z * Row3.X - Row0.Y * Row1.X * Row2.Z * Row3.W + Row0.Y * Row1.X * Row2.W * Row3.Z
+                                    + Row0.Z * Row1.W * Row2.X * Row3.Y - Row0.Z * Row1.W * Row2.Y * Row3.X + Row0.Z * Row1.X * Row2.Y * Row3.W - Row0.Z * Row1.X * Row2.W * Row3.Y
+                                    + Row0.Z * Row1.Y * Row2.W * Row3.X - Row0.Z * Row1.Y * Row2.X * Row3.W - Row0.W * Row1.X * Row2.Y * Row3.Z + Row0.W * Row1.X * Row2.Z * Row3.Y
+                                    - Row0.W * Row1.Y * Row2.Z * Row3.X + Row0.W * Row1.Y * Row2.X * Row3.Z - Row0.W * Row1.Z * Row2.X * Row3.Y + Row0.W * Row1.Z * Row2.Y * Row3.X;
 
         /// <summary>
         /// The first column of this matrix
         /// </summary>
-        public Vector4 Column0
-        {
-            get { return new Vector4(Row0.X, Row1.X, Row2.X, Row3.X); }
-        }
+        public Vector4 Column0 => new Vector4(Row0.X, Row1.X, Row2.X, Row3.X);
 
         /// <summary>
         /// The second column of this matrix
         /// </summary>
-        public Vector4 Column1
-        {
-            get { return new Vector4(Row0.Y, Row1.Y, Row2.Y, Row3.Y); }
-        }
+        public Vector4 Column1 => new Vector4(Row0.Y, Row1.Y, Row2.Y, Row3.Y);
 
         /// <summary>
         /// The third column of this matrix
         /// </summary>
-        public Vector4 Column2
-        {
-            get { return new Vector4(Row0.Z, Row1.Z, Row2.Z, Row3.Z); }
-        }
+        public Vector4 Column2 => new Vector4(Row0.Z, Row1.Z, Row2.Z, Row3.Z);
 
         /// <summary>
         /// The fourth column of this matrix
         /// </summary>
-        public Vector4 Column3
-        {
-            get { return new Vector4(Row0.W, Row1.W, Row2.W, Row3.W); }
-        }
+        public Vector4 Column3 => new Vector4(Row0.W, Row1.W, Row2.W, Row3.W);
 
         /// <summary>
         /// Gets or sets the value at row 1, column 1 of this instance.
         /// </summary>
-        public float M11 { get { return Row0.X; } set { Row0.X = value; } }
+        public float M11
+        {
+            get => Row0.X;
+            set => Row0.X = value;
+        }
 
         /// <summary>
         /// Gets or sets the value at row 1, column 2 of this instance.
         /// </summary>
-        public float M12 { get { return Row0.Y; } set { Row0.Y = value; } }
+        public float M12
+        {
+            get => Row0.Y;
+            set => Row0.Y = value;
+        }
 
         /// <summary>
         /// Gets or sets the value at row 1, column 3 of this instance.
         /// </summary>
-        public float M13 { get { return Row0.Z; } set { Row0.Z = value; } }
+        public float M13
+        {
+            get => Row0.Z;
+            set => Row0.Z = value;
+        }
 
         /// <summary>
         /// Gets or sets the value at row 1, column 4 of this instance.
         /// </summary>
-        public float M14 { get { return Row0.W; } set { Row0.W = value; } }
+        public float M14
+        {
+            get => Row0.W;
+            set => Row0.W = value;
+        }
 
         /// <summary>
         /// Gets or sets the value at row 2, column 1 of this instance.
         /// </summary>
-        public float M21 { get { return Row1.X; } set { Row1.X = value; } }
+        public float M21
+        {
+            get => Row1.X;
+            set => Row1.X = value;
+        }
 
         /// <summary>
         /// Gets or sets the value at row 2, column 2 of this instance.
         /// </summary>
-        public float M22 { get { return Row1.Y; } set { Row1.Y = value; } }
+        public float M22
+        {
+            get => Row1.Y;
+            set => Row1.Y = value;
+        }
 
         /// <summary>
         /// Gets or sets the value at row 2, column 3 of this instance.
         /// </summary>
-        public float M23 { get { return Row1.Z; } set { Row1.Z = value; } }
+        public float M23
+        {
+            get => Row1.Z;
+            set => Row1.Z = value;
+        }
 
         /// <summary>
         /// Gets or sets the value at row 2, column 4 of this instance.
         /// </summary>
-        public float M24 { get { return Row1.W; } set { Row1.W = value; } }
+        public float M24
+        {
+            get => Row1.W;
+            set => Row1.W = value;
+        }
 
         /// <summary>
         /// Gets or sets the value at row 3, column 1 of this instance.
         /// </summary>
-        public float M31 { get { return Row2.X; } set { Row2.X = value; } }
+        public float M31
+        {
+            get => Row2.X;
+            set => Row2.X = value;
+        }
 
         /// <summary>
         /// Gets or sets the value at row 3, column 2 of this instance.
         /// </summary>
-        public float M32 { get { return Row2.Y; } set { Row2.Y = value; } }
+        public float M32
+        {
+            get => Row2.Y;
+            set => Row2.Y = value;
+        }
 
         /// <summary>
         /// Gets or sets the value at row 3, column 3 of this instance.
         /// </summary>
-        public float M33 { get { return Row2.Z; } set { Row2.Z = value; } }
+        public float M33
+        {
+            get => Row2.Z;
+            set => Row2.Z = value;
+        }
 
         /// <summary>
         /// Gets or sets the value at row 3, column 4 of this instance.
         /// </summary>
-        public float M34 { get { return Row2.W; } set { Row2.W = value; } }
+        public float M34
+        {
+            get => Row2.W;
+            set => Row2.W = value;
+        }
 
         /// <summary>
         /// Gets or sets the value at row 4, column 1 of this instance.
         /// </summary>
-        public float M41 { get { return Row3.X; } set { Row3.X = value; } }
+        public float M41
+        {
+            get => Row3.X;
+            set => Row3.X = value;
+        }
 
         /// <summary>
         /// Gets or sets the value at row 4, column 2 of this instance.
         /// </summary>
-        public float M42 { get { return Row3.Y; } set { Row3.Y = value; } }
+        public float M42
+        {
+            get => Row3.Y;
+            set => Row3.Y = value;
+        }
 
         /// <summary>
         /// Gets or sets the value at row 4, column 3 of this instance.
         /// </summary>
-        public float M43 { get { return Row3.Z; } set { Row3.Z = value; } }
+        public float M43
+        {
+            get => Row3.Z;
+            set => Row3.Z = value;
+        }
 
         /// <summary>
         /// Gets or sets the value at row 4, column 4 of this instance.
         /// </summary>
-        public float M44 { get { return Row3.W; } set { Row3.W = value; } }
+        public float M44
+        {
+            get => Row3.W;
+            set => Row3.W = value;
+        }
 
         #endregion
 
@@ -267,7 +317,7 @@ namespace SS14.Shared.Maths
         /// </summary>
         public void Transpose()
         {
-            this = Matrix4.Transpose(this);
+            this = Transpose(this);
         }
 
         #endregion
@@ -286,9 +336,9 @@ namespace SS14.Shared.Maths
         /// <param name="result">A matrix instance.</param>
         public static void CreateFromAxisAngle(Vector3 axis, float angle, out Matrix4 result)
         {
-            float cos = (float)System.Math.Cos(-angle);
-            float sin = (float)System.Math.Sin(-angle);
-            float t = 1.0f - cos;
+            var cos = (float) Math.Cos(-angle);
+            var sin = (float) Math.Sin(-angle);
+            var t = 1.0f - cos;
 
             axis.Normalize();
 
@@ -306,8 +356,7 @@ namespace SS14.Shared.Maths
         /// <returns>A matrix instance.</returns>
         public static Matrix4 CreateFromAxisAngle(Vector3 axis, float angle)
         {
-            Matrix4 result;
-            CreateFromAxisAngle(axis, angle, out result);
+            CreateFromAxisAngle(axis, angle, out var result);
             return result;
         }
 
@@ -322,8 +371,8 @@ namespace SS14.Shared.Maths
         /// <param name="result">The resulting Matrix4 instance.</param>
         public static void CreateRotationX(float angle, out Matrix4 result)
         {
-            float cos = (float)System.Math.Cos(angle);
-            float sin = (float)System.Math.Sin(angle);
+            var cos = (float) Math.Cos(angle);
+            var sin = (float) Math.Sin(angle);
 
             result.Row0 = Vector4.UnitX;
             result.Row1 = new Vector4(0.0f, cos, sin, 0.0f);
@@ -338,8 +387,7 @@ namespace SS14.Shared.Maths
         /// <returns>The resulting Matrix4 instance.</returns>
         public static Matrix4 CreateRotationX(float angle)
         {
-            Matrix4 result;
-            CreateRotationX(angle, out result);
+            CreateRotationX(angle, out var result);
             return result;
         }
 
@@ -350,8 +398,8 @@ namespace SS14.Shared.Maths
         /// <param name="result">The resulting Matrix4 instance.</param>
         public static void CreateRotationY(float angle, out Matrix4 result)
         {
-            float cos = (float)System.Math.Cos(angle);
-            float sin = (float)System.Math.Sin(angle);
+            var cos = (float) Math.Cos(angle);
+            var sin = (float) Math.Sin(angle);
 
             result.Row0 = new Vector4(cos, 0.0f, -sin, 0.0f);
             result.Row1 = Vector4.UnitY;
@@ -366,8 +414,7 @@ namespace SS14.Shared.Maths
         /// <returns>The resulting Matrix4 instance.</returns>
         public static Matrix4 CreateRotationY(float angle)
         {
-            Matrix4 result;
-            CreateRotationY(angle, out result);
+            CreateRotationY(angle, out var result);
             return result;
         }
 
@@ -378,8 +425,8 @@ namespace SS14.Shared.Maths
         /// <param name="result">The resulting Matrix4 instance.</param>
         public static void CreateRotationZ(float angle, out Matrix4 result)
         {
-            float cos = (float)System.Math.Cos(angle);
-            float sin = (float)System.Math.Sin(angle);
+            var cos = (float) Math.Cos(angle);
+            var sin = (float) Math.Sin(angle);
 
             result.Row0 = new Vector4(cos, sin, 0.0f, 0.0f);
             result.Row1 = new Vector4(-sin, cos, 0.0f, 0.0f);
@@ -394,8 +441,7 @@ namespace SS14.Shared.Maths
         /// <returns>The resulting Matrix4 instance.</returns>
         public static Matrix4 CreateRotationZ(float angle)
         {
-            Matrix4 result;
-            CreateRotationZ(angle, out result);
+            CreateRotationZ(angle, out var result);
             return result;
         }
 
@@ -436,8 +482,7 @@ namespace SS14.Shared.Maths
         /// <returns>The resulting Matrix4 instance.</returns>
         public static Matrix4 CreateTranslation(float x, float y, float z)
         {
-            Matrix4 result;
-            CreateTranslation(x, y, z, out result);
+            CreateTranslation(x, y, z, out var result);
             return result;
         }
 
@@ -448,8 +493,7 @@ namespace SS14.Shared.Maths
         /// <returns>The resulting Matrix4 instance.</returns>
         public static Matrix4 CreateTranslation(Vector3 vector)
         {
-            Matrix4 result;
-            CreateTranslation(vector.X, vector.Y, vector.Z, out result);
+            CreateTranslation(vector.X, vector.Y, vector.Z, out var result);
             return result;
         }
 
@@ -480,8 +524,7 @@ namespace SS14.Shared.Maths
         /// <rereturns>The resulting Matrix4 instance.</rereturns>
         public static Matrix4 CreateOrthographic(float width, float height, float zNear, float zFar)
         {
-            Matrix4 result;
-            CreateOrthographicOffCenter(-width / 2, width / 2, -height / 2, height / 2, zNear, zFar, out result);
+            CreateOrthographicOffCenter(-width / 2, width / 2, -height / 2, height / 2, zNear, zFar, out var result);
             return result;
         }
 
@@ -503,9 +546,9 @@ namespace SS14.Shared.Maths
         {
             result = new Matrix4();
 
-            float invRL = 1 / (right - left);
-            float invTB = 1 / (top - bottom);
-            float invFN = 1 / (zFar - zNear);
+            var invRL = 1 / (right - left);
+            var invTB = 1 / (top - bottom);
+            var invFN = 1 / (zFar - zNear);
 
             result.M11 = 2 * invRL;
             result.M22 = 2 * invTB;
@@ -529,8 +572,7 @@ namespace SS14.Shared.Maths
         /// <returns>The resulting Matrix4 instance.</returns>
         public static Matrix4 CreateOrthographicOffCenter(float left, float right, float bottom, float top, float zNear, float zFar)
         {
-            Matrix4 result;
-            CreateOrthographicOffCenter(left, right, bottom, top, zNear, zFar, out result);
+            CreateOrthographicOffCenter(left, right, bottom, top, zNear, zFar, out var result);
             return result;
         }
 
@@ -567,10 +609,10 @@ namespace SS14.Shared.Maths
             if (zFar <= 0)
                 throw new ArgumentOutOfRangeException("zFar");
 
-            float yMax = zNear * (float)System.Math.Tan(0.5f * fovy);
-            float yMin = -yMax;
-            float xMin = yMin * aspect;
-            float xMax = yMax * aspect;
+            var yMax = zNear * (float) Math.Tan(0.5f * fovy);
+            var yMin = -yMax;
+            var xMin = yMin * aspect;
+            var xMax = yMax * aspect;
 
             CreatePerspectiveOffCenter(xMin, xMax, yMin, yMax, zNear, zFar, out result);
         }
@@ -595,8 +637,7 @@ namespace SS14.Shared.Maths
         /// </exception>
         public static Matrix4 CreatePerspectiveFieldOfView(float fovy, float aspect, float zNear, float zFar)
         {
-            Matrix4 result;
-            CreatePerspectiveFieldOfView(fovy, aspect, zNear, zFar, out result);
+            CreatePerspectiveFieldOfView(fovy, aspect, zNear, zFar, out var result);
             return result;
         }
 
@@ -631,12 +672,12 @@ namespace SS14.Shared.Maths
             if (zNear >= zFar)
                 throw new ArgumentOutOfRangeException("zNear");
 
-            float x = (2.0f * zNear) / (right - left);
-            float y = (2.0f * zNear) / (top - bottom);
-            float a = (right + left) / (right - left);
-            float b = (top + bottom) / (top - bottom);
-            float c = -(zFar + zNear) / (zFar - zNear);
-            float d = -(2.0f * zFar * zNear) / (zFar - zNear);
+            var x = 2.0f * zNear / (right - left);
+            var y = 2.0f * zNear / (top - bottom);
+            var a = (right + left) / (right - left);
+            var b = (top + bottom) / (top - bottom);
+            var c = -(zFar + zNear) / (zFar - zNear);
+            var d = -(2.0f * zFar * zNear) / (zFar - zNear);
 
             result = new Matrix4(x, 0, 0, 0,
                 0, y, 0, 0,
@@ -664,44 +705,9 @@ namespace SS14.Shared.Maths
         /// </exception>
         public static Matrix4 CreatePerspectiveOffCenter(float left, float right, float bottom, float top, float zNear, float zFar)
         {
-            Matrix4 result;
-            CreatePerspectiveOffCenter(left, right, bottom, top, zNear, zFar, out result);
+            CreatePerspectiveOffCenter(left, right, bottom, top, zNear, zFar, out var result);
             return result;
         }
-
-        #endregion
-
-        #region Obsolete Functions
-
-        #region Translation Functions
-
-        /// <summary>
-        /// Builds a translation matrix.
-        /// </summary>
-        /// <param name="trans">The translation vector.</param>
-        /// <returns>A new Matrix4 instance.</returns>
-        [Obsolete("Use CreateTranslation instead.")]
-        public static Matrix4 Translation(Vector3 trans)
-        {
-            return Translation(trans.X, trans.Y, trans.Z);
-        }
-
-        /// <summary>
-        /// Build a translation matrix with the given translation
-        /// </summary>
-        /// <param name="x">X translation</param>
-        /// <param name="y">Y translation</param>
-        /// <param name="z">Z translation</param>
-        /// <returns>A Translation matrix</returns>
-        [Obsolete("Use CreateTranslation instead.")]
-        public static Matrix4 Translation(float x, float y, float z)
-        {
-            Matrix4 result = Identity;
-            result.Row3 = new Vector4(x, y, z, 1.0f);
-            return result;
-        }
-
-        #endregion
 
         #endregion
 
@@ -749,95 +755,13 @@ namespace SS14.Shared.Maths
         #region Rotation Functions
 
         /// <summary>
-        /// Build a rotation matrix that rotates about the x-axis
-        /// </summary>
-        /// <param name="angle">angle in radians to rotate counter-clockwise around the x-axis</param>
-        /// <returns>A rotation matrix</returns>
-        [Obsolete("Use CreateRotationX instead.")]
-        public static Matrix4 RotateX(float angle)
-        {
-            float cos = (float)System.Math.Cos(angle);
-            float sin = (float)System.Math.Sin(angle);
-
-            Matrix4 result;
-            result.Row0 = Vector4.UnitX;
-            result.Row1 = new Vector4(0.0f, cos, sin, 0.0f);
-            result.Row2 = new Vector4(0.0f, -sin, cos, 0.0f);
-            result.Row3 = Vector4.UnitW;
-            return result;
-        }
-
-        /// <summary>
-        /// Build a rotation matrix that rotates about the y-axis
-        /// </summary>
-        /// <param name="angle">angle in radians to rotate counter-clockwise around the y-axis</param>
-        /// <returns>A rotation matrix</returns>
-        [Obsolete("Use CreateRotationY instead.")]
-        public static Matrix4 RotateY(float angle)
-        {
-            float cos = (float)System.Math.Cos(angle);
-            float sin = (float)System.Math.Sin(angle);
-
-            Matrix4 result;
-            result.Row0 = new Vector4(cos, 0.0f, -sin, 0.0f);
-            result.Row1 = Vector4.UnitY;
-            result.Row2 = new Vector4(sin, 0.0f, cos, 0.0f);
-            result.Row3 = Vector4.UnitW;
-            return result;
-        }
-
-        /// <summary>
-        /// Build a rotation matrix that rotates about the z-axis
-        /// </summary>
-        /// <param name="angle">angle in radians to rotate counter-clockwise around the z-axis</param>
-        /// <returns>A rotation matrix</returns>
-        [Obsolete("Use CreateRotationZ instead.")]
-        public static Matrix4 RotateZ(float angle)
-        {
-            float cos = (float)System.Math.Cos(angle);
-            float sin = (float)System.Math.Sin(angle);
-
-            Matrix4 result;
-            result.Row0 = new Vector4(cos, sin, 0.0f, 0.0f);
-            result.Row1 = new Vector4(-sin, cos, 0.0f, 0.0f);
-            result.Row2 = Vector4.UnitZ;
-            result.Row3 = Vector4.UnitW;
-            return result;
-        }
-
-        /// <summary>
-        /// Build a rotation matrix to rotate about the given axis
-        /// </summary>
-        /// <param name="axis">the axis to rotate about</param>
-        /// <param name="angle">angle in radians to rotate counter-clockwise (looking in the direction of the given axis)</param>
-        /// <returns>A rotation matrix</returns>
-        [Obsolete("Use CreateFromAxisAngle instead.")]
-        public static Matrix4 Rotate(Vector3 axis, float angle)
-        {
-            float cos = (float)System.Math.Cos(-angle);
-            float sin = (float)System.Math.Sin(-angle);
-            float t = 1.0f - cos;
-
-            axis.Normalize();
-
-            Matrix4 result;
-            result.Row0 = new Vector4(t * axis.X * axis.X + cos, t * axis.X * axis.Y - sin * axis.Z, t * axis.X * axis.Z + sin * axis.Y, 0.0f);
-            result.Row1 = new Vector4(t * axis.X * axis.Y + sin * axis.Z, t * axis.Y * axis.Y + cos, t * axis.Y * axis.Z - sin * axis.X, 0.0f);
-            result.Row2 = new Vector4(t * axis.X * axis.Z - sin * axis.Y, t * axis.Y * axis.Z + sin * axis.X, t * axis.Z * axis.Z + cos, 0.0f);
-            result.Row3 = Vector4.UnitW;
-            return result;
-        }
-
-        /// <summary>
         /// Build a rotation matrix from a quaternion
         /// </summary>
         /// <param name="q">the quaternion</param>
         /// <returns>A rotation matrix</returns>
         public static Matrix4 Rotate(Quaternion q)
         {
-            Vector3 axis;
-            float angle;
-            q.ToAxisAngle(out axis, out angle);
+            q.ToAxisAngle(out var axis, out var angle);
             return CreateFromAxisAngle(axis, angle);
         }
 
@@ -854,16 +778,16 @@ namespace SS14.Shared.Maths
         /// <returns>A Matrix4 that transforms world space to camera space</returns>
         public static Matrix4 LookAt(Vector3 eye, Vector3 target, Vector3 up)
         {
-            Vector3 z = Vector3.Normalize(eye - target);
-            Vector3 x = Vector3.Normalize(Vector3.Cross(up, z));
-            Vector3 y = Vector3.Normalize(Vector3.Cross(z, x));
+            var z = Vector3.Normalize(eye - target);
+            var x = Vector3.Normalize(Vector3.Cross(up, z));
+            var y = Vector3.Normalize(Vector3.Cross(z, x));
 
-            Matrix4 rot = new Matrix4(new Vector4(x.X, y.X, z.X, 0.0f),
+            var rot = new Matrix4(new Vector4(x.X, y.X, z.X, 0.0f),
                 new Vector4(x.Y, y.Y, z.Y, 0.0f),
                 new Vector4(x.Z, y.Z, z.Z, 0.0f),
                 Vector4.UnitW);
 
-            Matrix4 trans = Matrix4.CreateTranslation(-eye);
+            var trans = CreateTranslation(-eye);
 
             return trans * rot;
         }
@@ -886,47 +810,6 @@ namespace SS14.Shared.Maths
             return LookAt(new Vector3(eyeX, eyeY, eyeZ), new Vector3(targetX, targetY, targetZ), new Vector3(upX, upY, upZ));
         }
 
-        /// <summary>
-        /// Build a projection matrix
-        /// </summary>
-        /// <param name="left">Left edge of the view frustum</param>
-        /// <param name="right">Right edge of the view frustum</param>
-        /// <param name="bottom">Bottom edge of the view frustum</param>
-        /// <param name="top">Top edge of the view frustum</param>
-        /// <param name="near">Distance to the near clip plane</param>
-        /// <param name="far">Distance to the far clip plane</param>
-        /// <returns>A projection matrix that transforms camera space to raster space</returns>
-        [Obsolete("Use CreatePerspectiveOffCenter instead.")]
-        public static Matrix4 Frustum(float left, float right, float bottom, float top, float near, float far)
-        {
-            float invRL = 1.0f / (right - left);
-            float invTB = 1.0f / (top - bottom);
-            float invFN = 1.0f / (far - near);
-            return new Matrix4(new Vector4(2.0f * near * invRL, 0.0f, 0.0f, 0.0f),
-                new Vector4(0.0f, 2.0f * near * invTB, 0.0f, 0.0f),
-                new Vector4((right + left) * invRL, (top + bottom) * invTB, -(far + near) * invFN, -1.0f),
-                new Vector4(0.0f, 0.0f, -2.0f * far * near * invFN, 0.0f));
-        }
-
-        /// <summary>
-        /// Build a projection matrix
-        /// </summary>
-        /// <param name="fovy">Angle of the field of view in the y direction (in radians)</param>
-        /// <param name="aspect">Aspect ratio of the view (width / height)</param>
-        /// <param name="near">Distance to the near clip plane</param>
-        /// <param name="far">Distance to the far clip plane</param>
-        /// <returns>A projection matrix that transforms camera space to raster space</returns>
-        [Obsolete("Use CreatePerspectiveFieldOfView instead.")]
-        public static Matrix4 Perspective(float fovy, float aspect, float near, float far)
-        {
-            float yMax = near * (float)System.Math.Tan(0.5f * fovy);
-            float yMin = -yMax;
-            float xMin = yMin * aspect;
-            float xMax = yMax * aspect;
-
-            return Frustum(xMin, xMax, yMin, yMax, near, far);
-        }
-
         #endregion
 
         #region Multiply Functions
@@ -939,8 +822,7 @@ namespace SS14.Shared.Maths
         /// <returns>A new instance that is the result of the multiplication</returns>
         public static Matrix4 Mult(Matrix4 left, Matrix4 right)
         {
-            Matrix4 result;
-            Mult(ref left, ref right, out result);
+            Mult(ref left, ref right, out var result);
             return result;
         }
 
@@ -952,31 +834,55 @@ namespace SS14.Shared.Maths
         /// <param name="result">A new instance that is the result of the multiplication</param>
         public static void Mult(ref Matrix4 left, ref Matrix4 right, out Matrix4 result)
         {
-            float lM11 = left.Row0.X, lM12 = left.Row0.Y, lM13 = left.Row0.Z, lM14 = left.Row0.W,
-                lM21 = left.Row1.X, lM22 = left.Row1.Y, lM23 = left.Row1.Z, lM24 = left.Row1.W,
-                lM31 = left.Row2.X, lM32 = left.Row2.Y, lM33 = left.Row2.Z, lM34 = left.Row2.W,
-                lM41 = left.Row3.X, lM42 = left.Row3.Y, lM43 = left.Row3.Z, lM44 = left.Row3.W,
-                rM11 = right.Row0.X, rM12 = right.Row0.Y, rM13 = right.Row0.Z, rM14 = right.Row0.W,
-                rM21 = right.Row1.X, rM22 = right.Row1.Y, rM23 = right.Row1.Z, rM24 = right.Row1.W,
-                rM31 = right.Row2.X, rM32 = right.Row2.Y, rM33 = right.Row2.Z, rM34 = right.Row2.W,
-                rM41 = right.Row3.X, rM42 = right.Row3.Y, rM43 = right.Row3.Z, rM44 = right.Row3.W;
+            float lM11 = left.Row0.X,
+                lM12 = left.Row0.Y,
+                lM13 = left.Row0.Z,
+                lM14 = left.Row0.W,
+                lM21 = left.Row1.X,
+                lM22 = left.Row1.Y,
+                lM23 = left.Row1.Z,
+                lM24 = left.Row1.W,
+                lM31 = left.Row2.X,
+                lM32 = left.Row2.Y,
+                lM33 = left.Row2.Z,
+                lM34 = left.Row2.W,
+                lM41 = left.Row3.X,
+                lM42 = left.Row3.Y,
+                lM43 = left.Row3.Z,
+                lM44 = left.Row3.W,
+                rM11 = right.Row0.X,
+                rM12 = right.Row0.Y,
+                rM13 = right.Row0.Z,
+                rM14 = right.Row0.W,
+                rM21 = right.Row1.X,
+                rM22 = right.Row1.Y,
+                rM23 = right.Row1.Z,
+                rM24 = right.Row1.W,
+                rM31 = right.Row2.X,
+                rM32 = right.Row2.Y,
+                rM33 = right.Row2.Z,
+                rM34 = right.Row2.W,
+                rM41 = right.Row3.X,
+                rM42 = right.Row3.Y,
+                rM43 = right.Row3.Z,
+                rM44 = right.Row3.W;
 
-            result.Row0.X = (((lM11 * rM11) + (lM12 * rM21)) + (lM13 * rM31)) + (lM14 * rM41);
-            result.Row0.Y = (((lM11 * rM12) + (lM12 * rM22)) + (lM13 * rM32)) + (lM14 * rM42);
-            result.Row0.Z = (((lM11 * rM13) + (lM12 * rM23)) + (lM13 * rM33)) + (lM14 * rM43);
-            result.Row0.W = (((lM11 * rM14) + (lM12 * rM24)) + (lM13 * rM34)) + (lM14 * rM44);
-            result.Row1.X = (((lM21 * rM11) + (lM22 * rM21)) + (lM23 * rM31)) + (lM24 * rM41);
-            result.Row1.Y = (((lM21 * rM12) + (lM22 * rM22)) + (lM23 * rM32)) + (lM24 * rM42);
-            result.Row1.Z = (((lM21 * rM13) + (lM22 * rM23)) + (lM23 * rM33)) + (lM24 * rM43);
-            result.Row1.W = (((lM21 * rM14) + (lM22 * rM24)) + (lM23 * rM34)) + (lM24 * rM44);
-            result.Row2.X = (((lM31 * rM11) + (lM32 * rM21)) + (lM33 * rM31)) + (lM34 * rM41);
-            result.Row2.Y = (((lM31 * rM12) + (lM32 * rM22)) + (lM33 * rM32)) + (lM34 * rM42);
-            result.Row2.Z = (((lM31 * rM13) + (lM32 * rM23)) + (lM33 * rM33)) + (lM34 * rM43);
-            result.Row2.W = (((lM31 * rM14) + (lM32 * rM24)) + (lM33 * rM34)) + (lM34 * rM44);
-            result.Row3.X = (((lM41 * rM11) + (lM42 * rM21)) + (lM43 * rM31)) + (lM44 * rM41);
-            result.Row3.Y = (((lM41 * rM12) + (lM42 * rM22)) + (lM43 * rM32)) + (lM44 * rM42);
-            result.Row3.Z = (((lM41 * rM13) + (lM42 * rM23)) + (lM43 * rM33)) + (lM44 * rM43);
-            result.Row3.W = (((lM41 * rM14) + (lM42 * rM24)) + (lM43 * rM34)) + (lM44 * rM44);
+            result.Row0.X = lM11 * rM11 + lM12 * rM21 + lM13 * rM31 + lM14 * rM41;
+            result.Row0.Y = lM11 * rM12 + lM12 * rM22 + lM13 * rM32 + lM14 * rM42;
+            result.Row0.Z = lM11 * rM13 + lM12 * rM23 + lM13 * rM33 + lM14 * rM43;
+            result.Row0.W = lM11 * rM14 + lM12 * rM24 + lM13 * rM34 + lM14 * rM44;
+            result.Row1.X = lM21 * rM11 + lM22 * rM21 + lM23 * rM31 + lM24 * rM41;
+            result.Row1.Y = lM21 * rM12 + lM22 * rM22 + lM23 * rM32 + lM24 * rM42;
+            result.Row1.Z = lM21 * rM13 + lM22 * rM23 + lM23 * rM33 + lM24 * rM43;
+            result.Row1.W = lM21 * rM14 + lM22 * rM24 + lM23 * rM34 + lM24 * rM44;
+            result.Row2.X = lM31 * rM11 + lM32 * rM21 + lM33 * rM31 + lM34 * rM41;
+            result.Row2.Y = lM31 * rM12 + lM32 * rM22 + lM33 * rM32 + lM34 * rM42;
+            result.Row2.Z = lM31 * rM13 + lM32 * rM23 + lM33 * rM33 + lM34 * rM43;
+            result.Row2.W = lM31 * rM14 + lM32 * rM24 + lM33 * rM34 + lM34 * rM44;
+            result.Row3.X = lM41 * rM11 + lM42 * rM21 + lM43 * rM31 + lM44 * rM41;
+            result.Row3.Y = lM41 * rM12 + lM42 * rM22 + lM43 * rM32 + lM44 * rM42;
+            result.Row3.Z = lM41 * rM13 + lM42 * rM23 + lM43 * rM33 + lM44 * rM43;
+            result.Row3.W = lM41 * rM14 + lM42 * rM24 + lM43 * rM34 + lM44 * rM44;
         }
 
         #endregion
@@ -991,7 +897,7 @@ namespace SS14.Shared.Maths
         /// <exception cref="InvalidOperationException">Thrown if the Matrix4 is singular.</exception>
         public static Matrix4 Invert(Matrix4 mat)
         {
-            Matrix4 result = new Matrix4();
+            var result = new Matrix4();
             mat.Invert(ref result);
             return result;
         }
@@ -1005,14 +911,23 @@ namespace SS14.Shared.Maths
                 return;
             }
 
-            float d = Determinant;
+            var d = Determinant;
             if (d == 0.0f)
                 throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
 
-            float d1 = 1 / d;
-            float m11 = Row0.X, m12 = Row0.Y, m13 = Row0.Z, m14 = Row0.W,
-                m21 = Row1.X, m22 = Row1.Y, m23 = Row1.Z, m24 = Row1.W,
-                m31 = Row2.X, m32 = Row2.Y, m33 = Row2.Z, m34 = Row2.W;
+            var d1 = 1 / d;
+            float m11 = Row0.X,
+                m12 = Row0.Y,
+                m13 = Row0.Z,
+                m14 = Row0.W,
+                m21 = Row1.X,
+                m22 = Row1.Y,
+                m23 = Row1.Z,
+                m24 = Row1.W,
+                m31 = Row2.X,
+                m32 = Row2.Y,
+                m33 = Row2.Z,
+                m34 = Row2.W;
 
             result.Row0.X = d1 * (m22 * m33 * m44 + m23 * m34 * m42 + m24 * m32 * m43 - m22 * m34 * m43 - m23 * m32 * m44 - m24 * m33 * m42);
             result.Row0.Y = d1 * (m12 * m34 * m43 + m13 * m32 * m44 + m14 * m33 * m42 - m12 * m33 * m44 - m13 * m34 * m42 - m14 * m32 * m43);
@@ -1032,19 +947,28 @@ namespace SS14.Shared.Maths
             result.Row3.W = d1 * (m11 * m22 * m33 + m12 * m23 * m31 + m13 * m21 * m32 - m11 * m23 * m32 - m12 * m21 * m33 - m13 * m22 * m31);
         }
 
-        void InvertAffine(ref Matrix4 result)
+        private void InvertAffine(ref Matrix4 result)
         {
-            float m11 = Row0.X, m12 = Row0.Y, m13 = Row0.Z, m14 = Row0.W,
-                m21 = Row1.X, m22 = Row1.Y, m23 = Row1.Z, m24 = Row1.W,
-                m31 = Row2.X, m32 = Row2.Y, m33 = Row2.Z, m34 = Row2.W;
+            float m11 = Row0.X,
+                m12 = Row0.Y,
+                m13 = Row0.Z,
+                m14 = Row0.W,
+                m21 = Row1.X,
+                m22 = Row1.Y,
+                m23 = Row1.Z,
+                m24 = Row1.W,
+                m31 = Row2.X,
+                m32 = Row2.Y,
+                m33 = Row2.Z,
+                m34 = Row2.W;
 
-            float d = m11 * m22 * m33 + m21 * m32 * m13 + m31 * m12 * m23 -
-                      m11 * m32 * m23 - m31 * m22 * m13 - m21 * m12 * m33;
+            var d = m11 * m22 * m33 + m21 * m32 * m13 + m31 * m12 * m23 -
+                    m11 * m32 * m23 - m31 * m22 * m13 - m21 * m12 * m33;
 
             if (d == 0.0f)
                 throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
 
-            float d1 = 1 / d;
+            var d1 = 1 / d;
 
             // sub 3x3 inv
             result.Row0.X = d1 * (m22 * m33 - m23 * m32);
@@ -1066,6 +990,7 @@ namespace SS14.Shared.Maths
             result.Row3.X = result.Row3.Y = result.Row3.Z = 0.0f;
             result.Row3.W = 1.0f;
         }
+
         #endregion
 
         #region Transpose
@@ -1079,7 +1004,6 @@ namespace SS14.Shared.Maths
         {
             return new Matrix4(mat.Column0, mat.Column1, mat.Column2, mat.Column3);
         }
-
 
         /// <summary>
         /// Calculate the transpose of the given matrix
@@ -1108,7 +1032,7 @@ namespace SS14.Shared.Maths
         /// <returns>A new Matrix44 which holds the result of the multiplication</returns>
         public static Matrix4 operator *(Matrix4 left, Matrix4 right)
         {
-            return Matrix4.Mult(left, right);
+            return Mult(left, right);
         }
 
         /// <summary>
@@ -1145,7 +1069,7 @@ namespace SS14.Shared.Maths
         /// <returns></returns>
         public override string ToString()
         {
-            return String.Format("{0}\n{1}\n{2}\n{3}", Row0, Row1, Row2, Row3);
+            return $"{Row0}\n{Row1}\n{Row2}\n{Row3}";
         }
 
         #endregion
@@ -1168,14 +1092,14 @@ namespace SS14.Shared.Maths
         /// <summary>
         /// Indicates whether this instance and a specified object are equal.
         /// </summary>
-        /// <param name="obj">The object to compare tresult.</param>
+        /// <param name="obj">The object to compare with this matrix.</param>
         /// <returns>True if the instances are equal; false otherwise.</returns>
         public override bool Equals(object obj)
         {
             if (!(obj is Matrix4))
                 return false;
 
-            return this.Equals((Matrix4)obj);
+            return Equals((Matrix4) obj);
         }
 
         #endregion

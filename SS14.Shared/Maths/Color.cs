@@ -1,5 +1,4 @@
 ﻿using System;
-using SystemColor = System.Drawing.Color;
 
 namespace SS14.Shared.Maths
 {
@@ -14,10 +13,10 @@ namespace SS14.Shared.Maths
         public float B => _color.B;
         public float A => _color.A;
 
-        public byte RByte => (byte)(R * byte.MaxValue);
-        public byte GByte => (byte)(G * byte.MaxValue);
-        public byte BByte => (byte)(B * byte.MaxValue);
-        public byte AByte => (byte)(A * byte.MaxValue);
+        public byte RByte => (byte) (R * byte.MaxValue);
+        public byte GByte => (byte) (G * byte.MaxValue);
+        public byte BByte => (byte) (B * byte.MaxValue);
+        public byte AByte => (byte) (A * byte.MaxValue);
 
         public Color(float r, float g, float b, float a = 1)
         {
@@ -51,7 +50,7 @@ namespace SS14.Shared.Maths
             return color._color;
         }
 
-        public static implicit operator Color(SystemColor color)
+        public static implicit operator Color(System.Drawing.Color color)
         {
             return new Color(color);
         }
@@ -78,22 +77,22 @@ namespace SS14.Shared.Maths
 
         public Color WithRed(byte newR)
         {
-            return new Color((float)newR / byte.MaxValue, G, B, A);
+            return new Color((float) newR / byte.MaxValue, G, B, A);
         }
 
         public Color WithGreen(byte newG)
         {
-            return new Color(R, (float)newG / byte.MaxValue, B, A);
+            return new Color(R, (float) newG / byte.MaxValue, B, A);
         }
 
         public Color WithBlue(byte newB)
         {
-            return new Color(R, G, (float)newB / byte.MaxValue, A);
+            return new Color(R, G, (float) newB / byte.MaxValue, A);
         }
 
         public Color WithAlpha(byte newA)
         {
-            return new Color(R, G, B, (float)newA / byte.MaxValue);
+            return new Color(R, G, B, (float) newA / byte.MaxValue);
         }
 
         /// <summary>
@@ -110,10 +109,10 @@ namespace SS14.Shared.Maths
                 throw new ArgumentOutOfRangeException(nameof(lambda));
             }
             return new Color(
-                (float)(endPoint1.R * lambda + endPoint2.R * (1 - lambda)),
-                (float)(endPoint1.G * lambda + endPoint2.G * (1 - lambda)),
-                (float)(endPoint1.B * lambda + endPoint2.B * (1 - lambda)),
-                (float)(endPoint1.A * lambda + endPoint2.A * (1 - lambda))
+                (float) (endPoint1.R * lambda + endPoint2.R * (1 - lambda)),
+                (float) (endPoint1.G * lambda + endPoint2.G * (1 - lambda)),
+                (float) (endPoint1.B * lambda + endPoint2.B * (1 - lambda)),
+                (float) (endPoint1.A * lambda + endPoint2.A * (1 - lambda))
             );
         }
 
@@ -128,29 +127,29 @@ namespace SS14.Shared.Maths
                         Convert.ToByte(hexColor.Substring(5, 2), 16),
                         Convert.ToByte(hexColor.Substring(7, 2), 16));
                 }
-                else if (hexColor.Length == 7)
+                if (hexColor.Length == 7)
                 {
                     return new Color(Convert.ToByte(hexColor.Substring(1, 2), 16),
                         Convert.ToByte(hexColor.Substring(3, 2), 16),
                         Convert.ToByte(hexColor.Substring(5, 2), 16));
                 }
-                else if (hexColor.Length == 5)
+                if (hexColor.Length == 5)
                 {
-                    string r = hexColor[1].ToString();
-                    string g = hexColor[2].ToString();
-                    string b = hexColor[3].ToString();
-                    string a = hexColor[4].ToString();
+                    var r = hexColor[1].ToString();
+                    var g = hexColor[2].ToString();
+                    var b = hexColor[3].ToString();
+                    var a = hexColor[4].ToString();
 
                     return new Color(Convert.ToByte(r + r, 16),
                         Convert.ToByte(g + g, 16),
                         Convert.ToByte(b + b, 16),
                         Convert.ToByte(a + a, 16));
                 }
-                else if (hexColor.Length == 4)
+                if (hexColor.Length == 4)
                 {
-                    string r = hexColor[1].ToString();
-                    string g = hexColor[2].ToString();
-                    string b = hexColor[3].ToString();
+                    var r = hexColor[1].ToString();
+                    var g = hexColor[2].ToString();
+                    var b = hexColor[3].ToString();
 
                     return new Color(Convert.ToByte(r + r, 16),
                         Convert.ToByte(g + g, 16),
@@ -160,8 +159,7 @@ namespace SS14.Shared.Maths
 
             if (fallback.HasValue)
                 return fallback.Value;
-            else
-                throw new ArgumentException("Invalid color code and no fallback provided.", nameof(hexColor));
+            throw new ArgumentException("Invalid color code and no fallback provided.", nameof(hexColor));
         }
 
         public static Color FromSrgb(Color color)

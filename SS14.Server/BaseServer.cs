@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using SS14.Server.GameStates;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
@@ -63,6 +64,8 @@ namespace SS14.Server
         private readonly IMapManager _mapManager;
         [Dependency]
         private readonly ITimerManager timerManager;
+        [Dependency]
+        private readonly IGameStateManager _stateManager;
 
         private bool _active;
         private ServerRunLevel _runLevel;
@@ -102,7 +105,7 @@ namespace SS14.Server
             //TODO: This needs to hard-reset all modules. The Game manager needs to control soft "round restarts".
             Logger.Info("[SRV] Soft restarting Server...");
             IoCManager.Resolve<IPlayerManager>().SendJoinLobbyToAll();
-            SendGameStateUpdate();
+            _stateManager.SendGameStateUpdate();
             DisposeForRestart();
         }
 
@@ -151,7 +154,7 @@ namespace SS14.Server
                 netMan.Initialize(true);
                 netMan.Startup();
             }
-            catch (System.Net.Sockets.SocketException e)
+            catch (System.Net.Sockets.SocketException)
             {
                 var port = netMan.Port;
                 Logger.Log($"Unable to setup networking manager. Check port {port} is not already in use!, shutting down...", LogLevel.Fatal);
@@ -172,10 +175,6 @@ namespace SS14.Server
             netMan.RegisterNetMessage<MsgSession>(MsgSession.NAME);
 
             netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, message => SendMap(message.MsgChannel));
-
-            netMan.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME);
-            netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, message => HandleStateAck((MsgStateAck)message));
-            netMan.RegisterNetMessage<MsgFullState>(MsgFullState.NAME);
 
             // Set up the VFS
             _resources.Initialize();
@@ -203,6 +202,7 @@ namespace SS14.Server
             _serializer.Initialize();
 
             // Initialize Tier 2 services
+            IoCManager.Resolve<IGameStateManager>().Initialize();
             IoCManager.Resolve<IEntityManager>().Initialize();
             IoCManager.Resolve<IChatManager>().Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(this, MaxPlayers);
@@ -447,71 +447,7 @@ namespace SS14.Server
             }
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, frameTime);
 
-            SendGameStateUpdate();
-        }
-
-        private void SendGameStateUpdate()
-        {
-            //Create a new GameState object
-            var stateManager = IoCManager.Resolve<IGameStateManager>();
-            var state = CreateGameState();
-            stateManager.Add(state.Sequence, state);
-
-            var netMan = IoCManager.Resolve<IServerNetManager>();
-            var connections = netMan.Channels;
-            if (!connections.Any())
-            {
-                //No clients -- don't send state
-                stateManager.CullAll();
-                return;
-            }
-
-            var playerMan = IoCManager.Resolve<IPlayerManager>();
-
-            foreach (var c in connections)
-            {
-                var session = playerMan.GetSessionByChannel(c);
-                if (session != null && (session.Status == SessionStatus.InGame || session.Status == SessionStatus.InLobby))
-                    SendConnectionGameStateUpdate(c, state);
-            }
-
-            stateManager.Cull();
-        }
-
-        private void SendConnectionGameStateUpdate(INetChannel c, GameState state)
-        {
-            var netMan = IoCManager.Resolve<IServerNetManager>();
-            var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(c);
-            if (session == null || session.Status != SessionStatus.InGame && session.Status != SessionStatus.InLobby)
-            {
-                return;
-            }
-
-            var stateManager = IoCManager.Resolve<IGameStateManager>();
-
-            if (stateManager.GetLastStateAcked(c) == 0)
-            {
-                MsgFullState fullStateMessage = netMan.CreateNetMessage<MsgFullState>();
-                fullStateMessage.State = state;
-
-                netMan.ServerSendMessage(fullStateMessage, c);
-            }
-            else
-            {
-                MsgStateUpdate stateUpdateMessage = netMan.CreateNetMessage<MsgStateUpdate>();
-                stateUpdateMessage.StateDelta = stateManager.GetDelta(c, _time.CurTick);
-
-                netMan.ServerSendMessage(stateUpdateMessage, c);
-            }
-        }
-
-        private GameState CreateGameState()
-        {
-            var state = new GameState(_time.CurTick);
-            if (_entities != null)
-                state.EntityStates = _entities.GetEntityStates();
-            state.PlayerStates = IoCManager.Resolve<IPlayerManager>().GetPlayerStates();
-            return state;
+            _stateManager.SendGameStateUpdate();
         }
 
         #region MessageProcessing
@@ -534,11 +470,6 @@ namespace SS14.Server
             netMsg.PlayerIndex = session.Index;
 
             message.MsgChannel.SendMessage(netMsg);
-        }
-        
-        private static void HandleErrorMessage(NetMessage msg)
-        {
-            Logger.Error($"[SRV] Unhandled NetMessage type: {msg.MsgName}");
         }
 
         private void HandlePlayerListReq(NetMessage message)
@@ -572,11 +503,6 @@ namespace SS14.Server
             // client session is complete
             var session = plyMgr.GetSessionByChannel(channel);
             session.Status = SessionStatus.Connected;
-        }
-
-        private static void HandleStateAck(MsgStateAck msg)
-        {
-            IoCManager.Resolve<IGameStateManager>().Ack(msg.MsgChannel.ConnectionId, msg.Sequence);
         }
 
         //TODO: Chunk requests need to be handled in MapManager

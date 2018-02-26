@@ -35,6 +35,7 @@ using SS14.Shared.Map;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Player;
 using SS14.Shared.Enums;
+using SS14.Shared.Reflection;
 
 namespace SS14.Server
 {
@@ -166,11 +167,7 @@ namespace SS14.Server
                 Logger.Log($"Unable to setup networking manager. Unknown exception: {e}, shutting down...", LogLevel.Fatal);
                 Environment.Exit(1);
             }
-
-            //TODO: After the client gets migrated to new net system, hardcoded IDs will be removed, and these need to be put in their respective modules.
-
-
-
+            
             // Set up the VFS
             _resources.Initialize();
 
@@ -183,12 +180,12 @@ namespace SS14.Server
             _resources.MountDefaultContentPack();
 
             //identical code in game controller for client
-            if(!TryLoadAssembly<GameShared>($"Content.Shared"))
-                if(!TryLoadAssembly<GameShared>($"Sandbox.Shared"))
+            if(!AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
+                if(!AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Sandbox.Shared"))
                     Logger.Warning($"[ENG] Could not load any Shared DLL.");
 
-            if (!TryLoadAssembly<GameServer>($"Content.Server"))
-                if (!TryLoadAssembly<GameServer>($"Sandbox.Server"))
+            if (!AssemblyLoader.TryLoadAssembly<GameServer>(_resources, $"Content.Server"))
+                if (!AssemblyLoader.TryLoadAssembly<GameServer>(_resources, $"Sandbox.Server"))
                     Logger.Warning($"[ENG] Could not load any Server DLL.");
 
             // HAS to happen after content gets loaded.
@@ -224,51 +221,6 @@ namespace SS14.Server
             return false;
         }
 
-        //identical code in gamecontroller for client
-        private bool TryLoadAssembly<T>(string name) where T : GameShared
-        {
-            // get the assembly from the file system
-            if (_resources.TryContentFileRead($@"Assemblies/{name}.dll", out MemoryStream gameDll))
-            {
-                Logger.Debug($"[SRV] Loading {name} DLL");
-
-                // see if debug info is present
-                if (_resources.TryContentFileRead($@"Assemblies/{name}.pdb", out MemoryStream gamePdb))
-                {
-                    try
-                    {
-                        // load the assembly into the process, and bootstrap the GameServer entry point.
-                        AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray(), gamePdb.ToArray());
-                        return true;
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error($"[SRV] Exception loading DLL {name}.dll: {e}");
-                        return false;
-                    }
-                }
-                else
-                {
-                    try
-                    {
-                        // load the assembly into the process, and bootstrap the GameServer entry point.
-                        AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray());
-                        return true;
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error($"[SRV] Exception loading DLL {name}.dll: {e}");
-                        return false;
-                    }
-                }
-            }
-            else
-            {
-                Logger.Warning($"[ENG] Could not load {name} DLL.");
-                return false;
-            }
-        }
-        
         private TimeSpan _lastTick;
         private TimeSpan _lastKeepUpAnnounce;
 

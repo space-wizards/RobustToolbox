@@ -193,7 +193,6 @@
     <Compile Include="Map\TileDefinitionManager.cs" />
     <Compile Include="Map\TileRef.cs" />
     <Compile Include="Maths\Color.cs" />
-    <Compile Include="Maths\Color4.cs" />
     <Compile Include="Maths\FloatMath.cs" />
     <Compile Include="Maths\Direction.cs" />
     <Compile Include="Maths\Circle.cs" />

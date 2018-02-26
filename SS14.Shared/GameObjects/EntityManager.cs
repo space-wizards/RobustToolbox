@@ -26,6 +26,8 @@ namespace SS14.Shared.GameObjects
         protected readonly IComponentFactory ComponentFactory;
         [Dependency]
         private readonly INetManager _network;
+        [Dependency]
+        private readonly IComponentManager _componentManager;
         # endregion Dependencies
 
         protected readonly Dictionary<EntityUid, IEntity> Entities = new Dictionary<EntityUid, IEntity>();
@@ -63,8 +65,7 @@ namespace SS14.Shared.GameObjects
             FlushEntities();
             EntitySystemManager.Shutdown();
             Started = false;
-            var componentmanager = IoCManager.Resolve<IComponentManager>();
-            componentmanager.Cull();
+            _componentManager.Cull();
         }
 
         public virtual void Update(float frameTime)

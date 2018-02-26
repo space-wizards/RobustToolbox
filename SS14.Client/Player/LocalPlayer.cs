@@ -6,7 +6,6 @@ using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Network;
-using SS14.Shared.IoC;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
 
@@ -17,6 +16,9 @@ namespace SS14.Client.Player
     /// </summary>
     public class LocalPlayer
     {
+        private readonly IConfigurationManager _configManager;
+        private readonly IClientNetManager _networkManager;
+
         /// <summary>
         ///     An entity has been attached to the local player.
         /// </summary>
@@ -48,7 +50,7 @@ namespace SS14.Client.Player
         /// </summary>
         public string Name
         {
-            get => IoCManager.Resolve<IConfigurationManager>().GetCVar<string>("player.name");
+            get => _configManager.GetCVar<string>("player.name");
             set => SetName(value);
         }
 
@@ -61,6 +63,17 @@ namespace SS14.Client.Player
         ///     The status of the client's session has changed.
         /// </summary>
         public event EventHandler<StatusEventArgs> StatusChanged;
+
+        /// <summary>
+        ///     Constructs an instance of this object.
+        /// </summary>
+        /// <param name="netMan"></param>
+        /// <param name="configMan"></param>
+        public LocalPlayer(IClientNetManager netMan, IConfigurationManager configMan)
+        {
+            _networkManager = netMan;
+            _configManager = configMan;
+        }
 
         /// <summary>
         ///     Attaches a client to an entity.
@@ -129,15 +142,14 @@ namespace SS14.Client.Player
             if (fixedName.Length < 3)
                 fixedName = $"Player {Session.Index}";
 
-            IoCManager.Resolve<IConfigurationManager>().SetCVar("player.name", fixedName);
+            _configManager.SetCVar("player.name", fixedName);
 
-            var network = IoCManager.Resolve<IClientNetManager>();
-            if(!network.IsConnected)
+            if (!_networkManager.IsConnected)
                 return;
 
-            var msg = network.CreateNetMessage<MsgClGreet>();
+            var msg = _networkManager.CreateNetMessage<MsgClGreet>();
             msg.PlyName = name;
-            network.ClientSendMessage(msg);
+            _networkManager.ClientSendMessage(msg);
         }
     }
 

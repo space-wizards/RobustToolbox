@@ -21,6 +21,8 @@ namespace SS14.Server.GameObjects
 
         [Dependency]
         private readonly IPrototypeManager _protoManager;
+        [Dependency]
+        private readonly IMapManager _mapManager;
 
         /// <inheritdoc />
         public bool TrySpawnEntityAt(string entityType, LocalCoordinates coordinates, out IEntity entity)
@@ -44,8 +46,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public bool TrySpawnEntityAt(string entityType, Vector2 position, MapId argMap, out IEntity entity)
         {
-            var mapManager = IoCManager.Resolve<IMapManager>();
-            var coordinates = new LocalCoordinates(position, mapManager.GetMap(argMap).FindGridAt(position));
+            var coordinates = new LocalCoordinates(position, _mapManager.GetMap(argMap).FindGridAt(position));
             return TrySpawnEntityAt(entityType, coordinates, out entity);
         }
 
@@ -64,11 +65,10 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap)
         {
-            var mapManager = IoCManager.Resolve<IMapManager>();
 
-            if (!mapManager.TryGetMap(argMap, out var map))
+            if (!_mapManager.TryGetMap(argMap, out var map))
             {
-                map = mapManager.DefaultMap;
+                map = _mapManager.DefaultMap;
             }
 
             return ForceSpawnEntityAt(entityType, new LocalCoordinates(position, map.FindGridAt(position)));

@@ -43,6 +43,12 @@ namespace SS14.Client.Placement
         private readonly IMapManager _mapMan;
         [Dependency]
         private readonly IGameTiming _time;
+        [Dependency]
+        private readonly IUserInterfaceManager _userInterfaceManager;
+        [Dependency]
+        private readonly IPrototypeManager _prototypeManager;
+        [Dependency]
+        private readonly ITileDefinitionManager _tileDefManager;
 
         /// <summary>
         ///     How long before a pending tile change is dropped.
@@ -165,7 +171,7 @@ namespace SS14.Client.Placement
         {
             Clear();
 
-            IoCManager.Resolve<IUserInterfaceManager>().DragInfo.Reset();
+            _userInterfaceManager.DragInfo.Reset();
 
             CurrentPermission = info;
 
@@ -276,8 +282,7 @@ namespace SS14.Client.Placement
 
         private void PreparePlacement(string templateName)
         {
-            EntityPrototype prototype =
-                IoCManager.Resolve<IPrototypeManager>().Index<EntityPrototype>(templateName);
+            var prototype = _prototypeManager.Index<EntityPrototype>(templateName);
 
             ComponentParameter spriteParam = prototype.GetBaseSpriteParameters().FirstOrDefault();
             //Will break if states not ordered correctly.
@@ -294,7 +299,7 @@ namespace SS14.Client.Placement
 
         private void PreparePlacementTile(Tile tileType)
         {
-            var tileDefs = IoCManager.Resolve<ITileDefinitionManager>();
+            var tileDefs = _tileDefManager;
 
             CurrentBaseSprite = ResourceCache.GetSprite("tilebuildoverlay");
             CurrentBaseSpriteKey = "tilebuildoverlay";

@@ -76,7 +76,7 @@ namespace SS14.Shared.Maths
         private static double Reduce(double theta)
         {
             // int truncates value (round to 0)
-            var aTurns = (int)(theta / (2*Math.PI));
+            var aTurns = (int) (theta / (2 * Math.PI));
             return theta - aTurns * (2 * Math.PI);
         }
 

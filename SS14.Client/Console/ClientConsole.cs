@@ -30,10 +30,12 @@ namespace SS14.Client.Console
 
     public class ClientConsole : IClientConsole, IDebugConsole
     {
-        private static readonly Color _msgColor = new Color(65, 105, 225, 255);
+        private static readonly Color _msgColor = new Color(65, 105, 225);
 
         [Dependency]
         protected readonly IClientNetManager _network;
+        [Dependency]
+        private readonly IReflectionManager _reflectionManager;
 
         private readonly Dictionary<string, IConsoleCommand> _commands = new Dictionary<string, IConsoleCommand>();
         private bool _requestedCommands;
@@ -135,7 +137,7 @@ namespace SS14.Client.Console
                 args.RemoveAt(0);
                 forward = command.Execute(this, args.ToArray());
             }
-            else if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
+            else if (!_network.IsConnected)
             {
                 AddLine("Unknown command: " + commandname, ChatChannel.Default, Color.Red);
                 return;
@@ -150,8 +152,7 @@ namespace SS14.Client.Console
         /// </summary>
         private void InitializeCommands()
         {
-            var manager = IoCManager.Resolve<IReflectionManager>();
-            foreach (var t in manager.GetAllChildren<IConsoleCommand>())
+            foreach (var t in _reflectionManager.GetAllChildren<IConsoleCommand>())
             {
                 var instance = (IConsoleCommand) Activator.CreateInstance(t, null);
                 if (_commands.ContainsKey(instance.Command))
@@ -169,13 +170,11 @@ namespace SS14.Client.Console
             if (_requestedCommands)
                 return;
 
-            var netMgr = IoCManager.Resolve<IClientNetManager>();
-            if (!netMgr.IsConnected)
+            if (!_network.IsConnected)
                 return;
 
-            var msg = netMgr.CreateNetMessage<MsgConCmdReg>();
-            // empty message to request commands
-            netMgr.ClientSendMessage(msg);
+            var msg = _network.CreateNetMessage<MsgConCmdReg>();
+            _network.ClientSendMessage(msg);
 
             _requestedCommands = true;
         }
@@ -185,14 +184,12 @@ namespace SS14.Client.Console
         /// </summary>
         private void SendServerConsoleCommand(string text)
         {
-            var netMgr = IoCManager.Resolve<IClientNetManager>();
-
-            if (netMgr == null || !netMgr.IsConnected)
+            if (_network == null || !_network.IsConnected)
                 return;
 
-            var msg = netMgr.CreateNetMessage<MsgConCmd>();
+            var msg = _network.CreateNetMessage<MsgConCmd>();
             msg.Text = text;
-            netMgr.ClientSendMessage(msg);
+            _network.ClientSendMessage(msg);
         }
     }
 

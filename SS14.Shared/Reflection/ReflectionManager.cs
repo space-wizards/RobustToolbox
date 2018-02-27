@@ -1,8 +1,11 @@
 ﻿using SS14.Shared.Interfaces.Reflection;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using SS14.Shared.ContentPack;
+using SS14.Shared.Interfaces;
 using SS14.Shared.Log;
 
 namespace SS14.Shared.Reflection

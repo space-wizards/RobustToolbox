@@ -81,6 +81,7 @@
     <Compile Include="Shared\IoC\IoCManager_Test.cs" />
     <Compile Include="Shared\Maths\Angle_Test.cs" />
     <Compile Include="Shared\Maths\Matrix3_Test.cs" />
+    <Compile Include="Shared\Maths\Ray_Test.cs" />
     <Compile Include="Shared\Maths\Vector2_Test.cs" />
     <Compile Include="Shared\Maths\Direction_Test.cs" />
     <Compile Include="Shared\Prototypes\PrototypeManager_Test.cs" />

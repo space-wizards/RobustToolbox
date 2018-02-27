@@ -198,6 +198,11 @@ namespace SS14.Shared.Physics
             b.RemovePoint(point);
         }
 
+        public IEntity IntersectRay(Ray ray, float maxLength = 50)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         ///     Gets a bucket given a point coordinate
         /// </summary>

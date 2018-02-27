@@ -51,6 +51,16 @@ namespace SS14.Shared.Maths
              cos = getCos[rot];
          }
 
+         public static float Min(float a, float b)
+         {
+             return Math.Min(a, b);
+         }
+
+         public static float Max(float a, float b)
+         {
+             return Math.Max(a, b);
+         }
+
          public const float Pi = (float) Math.PI;
 
          public static float ToDegrees(float radians)

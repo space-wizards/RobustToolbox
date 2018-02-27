@@ -29,6 +29,9 @@ namespace SS14.Server.Maps
         [Dependency]
         private IPrototypeManager _protoMan;
 
+        [Dependency]
+        private readonly IMapManager _mapManager;
+
         /// <inheritdoc />
         public void SaveBlueprint(IMap map, GridId gridId, string yamlPath)
         {
@@ -176,22 +179,21 @@ namespace SS14.Server.Maps
                 foreach (var document in stream.Documents)
                 {
                     var root = (YamlMappingNode)document.RootNode;
-                    var map = IoCManager.Resolve<IMapManager>().CreateMap(mapId);
+                    var map = _mapManager.CreateMap(mapId);
                     LoadMapNode(map, root);
                 }
             }
         }
 
-        private static YamlSequenceNode SaveBpNode(IMapGrid grid)
+        private YamlSequenceNode SaveBpNode(IMapGrid grid)
         {
             var root = new YamlSequenceNode();
 
             var node = YamlGridSerializer.SerializeGrid(grid);
             root.Add(node);
 
-            var entMan = IoCManager.Resolve<IServerEntityManager>();
             var ents = new YamlEntitySerializer();
-            entMan.SaveGridEntities(ents, grid.Index);
+            _entityMan.SaveGridEntities(ents, grid.Index);
             root.Add(ents.GetRootNode());
             return root;
         }
@@ -222,7 +224,7 @@ namespace SS14.Server.Maps
                         continue;
 
                     var gridMap = (YamlMappingNode) gridNode;
-                    LoadGridNode(map, newId, gridMap);
+                    LoadGridNode(_mapManager, map, newId, gridMap);
                 }
                 else if (mapNode.Children.TryGetValue("entities", out var entNode))
                 {
@@ -231,12 +233,12 @@ namespace SS14.Server.Maps
             }
         }
 
-        private static void LoadGridNode(IMap map, GridId newId, YamlMappingNode gridNode)
+        private static void LoadGridNode(IMapManager mapMan, IMap map, GridId newId, YamlMappingNode gridNode)
         {
             var info = (YamlMappingNode) gridNode["settings"];
             var chunk = (YamlSequenceNode) gridNode["chunks"];
 
-            YamlGridSerializer.DeserializeGrid(map, newId, info, chunk);
+            YamlGridSerializer.DeserializeGrid(mapMan, map, newId, info, chunk);
         }
 
         private void LoadEntNode(IMap map, GridId gridId, YamlSequenceNode entNode)

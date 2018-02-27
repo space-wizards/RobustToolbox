@@ -76,7 +76,7 @@ namespace SS14.Server.Maps
             return Convert.ToBase64String(barr);
         }
 
-        public static void DeserializeGrid(IMap map, GridId gridId, YamlMappingNode info, YamlSequenceNode chunks)
+        public static void DeserializeGrid(IMapManager mapMan, IMap map, GridId gridId, YamlMappingNode info, YamlSequenceNode chunks)
         {
             ushort csz = 0;
             ushort tsz = 0;
@@ -98,14 +98,12 @@ namespace SS14.Server.Maps
 
             foreach (YamlMappingNode chunkNode in chunks)
             {
-                DeserializeChunk(grid, chunkNode);
+                DeserializeChunk(mapMan, grid, chunkNode);
             }
         }
 
-        private static void DeserializeChunk(IMapGrid grid, YamlMappingNode chunk)
+        private static void DeserializeChunk(IMapManager mapMan, IMapGrid grid, YamlMappingNode chunk)
         {
-            var mapManager = IoCManager.Resolve<IMapManager>();
-
             var indNode = chunk["ind"];
             var tileNode = chunk["tiles"];
 
@@ -116,7 +114,7 @@ namespace SS14.Server.Maps
             {
                 using (var reader = new BinaryReader(stream))
                 {
-                    mapManager.SuppressOnTileChanged = true;
+                    mapMan.SuppressOnTileChanged = true;
                     
                     for(var x = 0; x < grid.ChunkSize; x++)
                     for (var y = 0; y < grid.ChunkSize; y++)
@@ -128,7 +126,7 @@ namespace SS14.Server.Maps
                         grid.SetTile(new LocalCoordinates(x + indices.X, y + indices.Y, grid.Index, grid.MapID), tile);
                     }
 
-                    mapManager.SuppressOnTileChanged = false;
+                    mapMan.SuppressOnTileChanged = false;
                 }
             }
         }

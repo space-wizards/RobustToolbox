@@ -11,6 +11,8 @@ namespace SS14.Server.GameObjects
     {
         [Dependency]
         private readonly IServerNetManager _mNetManager;
+        [Dependency]
+        private readonly IEntitySystemManager _entitySystemManager;
 
         #region IEntityNetworkManager Members
 
@@ -101,9 +103,8 @@ namespace SS14.Server.GameObjects
                     // TODO: Handle this.
                     break;
 
-                case EntityMessageType.SystemMessage: //TODO: Not happy with this resolving the entmgr everytime a message comes in.
-                    var manager = IoCManager.Resolve<IEntitySystemManager>();
-                    manager.HandleSystemMessage(message);
+                case EntityMessageType.SystemMessage:
+                    _entitySystemManager.HandleSystemMessage(message);
                     break;
             }
             return null;

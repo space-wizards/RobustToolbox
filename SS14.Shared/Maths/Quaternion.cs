@@ -1,4 +1,5 @@
 ﻿#region --- License ---
+
 /*
 Copyright (c) 2006 - 2008 The Open Toolkit library.
 Copyright 2013 Xamarin Inc
@@ -21,11 +22,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
 #endregion
 
 using System;
 using System.Runtime.InteropServices;
-using System.ComponentModel;
 using System.Xml.Serialization;
 
 namespace SS14.Shared.Maths
@@ -39,8 +40,8 @@ namespace SS14.Shared.Maths
     {
         #region Fields
 
-        Vector3 xyz;
-        float w;
+        private Vector3 xyz;
+        private float w;
 
         #endregion
 
@@ -53,7 +54,7 @@ namespace SS14.Shared.Maths
         /// <param name="w">The w part</param>
         public Quaternion(Vector3 v, float w)
         {
-            this.xyz = v;
+            xyz = v;
             this.w = w;
         }
 
@@ -65,18 +66,17 @@ namespace SS14.Shared.Maths
         /// <param name="z">The z component</param>
         /// <param name="w">The w component</param>
         public Quaternion(float x, float y, float z, float w)
-            : this(new Vector3(x, y, z), w)
-        { }
+            : this(new Vector3(x, y, z), w) { }
 
         public Quaternion(ref Matrix3 matrix)
         {
-            double scale = System.Math.Pow(matrix.Determinant, 1.0d / 3.0d);
+            var scale = Math.Pow(matrix.Determinant, 1.0d / 3.0d);
             float x, y, z;
 
-            w = (float)(System.Math.Sqrt(System.Math.Max(0, scale + matrix[0, 0] + matrix[1, 1] + matrix[2, 2])) / 2);
-            x = (float)(System.Math.Sqrt(System.Math.Max(0, scale + matrix[0, 0] - matrix[1, 1] - matrix[2, 2])) / 2);
-            y = (float)(System.Math.Sqrt(System.Math.Max(0, scale - matrix[0, 0] + matrix[1, 1] - matrix[2, 2])) / 2);
-            z = (float)(System.Math.Sqrt(System.Math.Max(0, scale - matrix[0, 0] - matrix[1, 1] + matrix[2, 2])) / 2);
+            w = (float) (Math.Sqrt(Math.Max(0, scale + matrix[0, 0] + matrix[1, 1] + matrix[2, 2])) / 2);
+            x = (float) (Math.Sqrt(Math.Max(0, scale + matrix[0, 0] - matrix[1, 1] - matrix[2, 2])) / 2);
+            y = (float) (Math.Sqrt(Math.Max(0, scale - matrix[0, 0] + matrix[1, 1] - matrix[2, 2])) / 2);
+            z = (float) (Math.Sqrt(Math.Max(0, scale - matrix[0, 0] - matrix[1, 1] + matrix[2, 2])) / 2);
 
             xyz = new Vector3(x, y, z);
 
@@ -94,39 +94,50 @@ namespace SS14.Shared.Maths
         /// <summary>
         /// Gets or sets an OpenTK.Vector3 with the X, Y and Z components of this instance.
         /// </summary>
-        [Obsolete("Use Xyz property instead.")]
-        [CLSCompliant(false)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        [XmlIgnore]
-        public Vector3 XYZ { get { return Xyz; } set { Xyz = value; } }
-
-        /// <summary>
-        /// Gets or sets an OpenTK.Vector3 with the X, Y and Z components of this instance.
-        /// </summary>
-        public Vector3 Xyz { get { return xyz; } set { xyz = value; } }
+        public Vector3 Xyz
+        {
+            get => xyz;
+            set => xyz = value;
+        }
 
         /// <summary>
         /// Gets or sets the X component of this instance.
         /// </summary>
         [XmlIgnore]
-        public float X { get { return xyz.X; } set { xyz.X = value; } }
+        public float X
+        {
+            get => xyz.X;
+            set => xyz.X = value;
+        }
 
         /// <summary>
         /// Gets or sets the Y component of this instance.
         /// </summary>
         [XmlIgnore]
-        public float Y { get { return xyz.Y; } set { xyz.Y = value; } }
+        public float Y
+        {
+            get => xyz.Y;
+            set => xyz.Y = value;
+        }
 
         /// <summary>
         /// Gets or sets the Z component of this instance.
         /// </summary>
         [XmlIgnore]
-        public float Z { get { return xyz.Z; } set { xyz.Z = value; } }
+        public float Z
+        {
+            get => xyz.Z;
+            set => xyz.Z = value;
+        }
 
         /// <summary>
         /// Gets or sets the W component of this instance.
         /// </summary>
-        public float W { get { return w; } set { w = value; } }
+        public float W
+        {
+            get => w;
+            set => w = value;
+        }
 
         #endregion
 
@@ -141,7 +152,7 @@ namespace SS14.Shared.Maths
         /// <param name="angle">The resultant angle</param>
         public void ToAxisAngle(out Vector3 axis, out float angle)
         {
-            Vector4 result = ToAxisAngle();
+            var result = ToAxisAngle();
             axis = result.Xyz;
             angle = result.W;
         }
@@ -152,14 +163,14 @@ namespace SS14.Shared.Maths
         /// <returns>A Vector4 that is the axis-angle representation of this quaternion.</returns>
         public Vector4 ToAxisAngle()
         {
-            Quaternion q = this;
+            var q = this;
             if (Math.Abs(q.W) > 1.0f)
                 q.Normalize();
 
-            Vector4 result = new Vector4();
+            var result = new Vector4();
 
-            result.W = 2.0f * (float)System.Math.Acos(q.W); // angle
-            float den = (float)System.Math.Sqrt(1.0 - q.W * q.W);
+            result.W = 2.0f * (float) Math.Acos(q.W); // angle
+            var den = (float) Math.Sqrt(1.0 - q.W * q.W);
             if (den > 0.0001f)
             {
                 result.Xyz = q.Xyz / den;
@@ -182,13 +193,7 @@ namespace SS14.Shared.Maths
         /// Gets the length (magnitude) of the quaternion.
         /// </summary>
         /// <seealso cref="LengthSquared"/>
-        public float Length
-        {
-            get
-            {
-                return (float)System.Math.Sqrt(W * W + Xyz.LengthSquared);
-            }
-        }
+        public float Length => (float) Math.Sqrt(W * W + Xyz.LengthSquared);
 
         #endregion
 
@@ -197,13 +202,7 @@ namespace SS14.Shared.Maths
         /// <summary>
         /// Gets the square of the quaternion length (magnitude).
         /// </summary>
-        public float LengthSquared
-        {
-            get
-            {
-                return W * W + Xyz.LengthSquared;
-            }
-        }
+        public float LengthSquared => W * W + Xyz.LengthSquared;
 
         #endregion
 
@@ -214,7 +213,7 @@ namespace SS14.Shared.Maths
         /// </summary>
         public void Normalize()
         {
-            float scale = 1.0f / this.Length;
+            var scale = 1.0f / Length;
             Xyz *= scale;
             W *= scale;
         }
@@ -314,38 +313,9 @@ namespace SS14.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <returns>A new instance containing the result of the calculation.</returns>
-        [Obsolete("Use Multiply instead.")]
-        public static Quaternion Mult(Quaternion left, Quaternion right)
-        {
-            return new Quaternion(
-                right.W * left.Xyz + left.W * right.Xyz + Vector3.Cross(left.Xyz, right.Xyz),
-                left.W * right.W - Vector3.Dot(left.Xyz, right.Xyz));
-        }
-
-        /// <summary>
-        /// Multiplies two instances.
-        /// </summary>
-        /// <param name="left">The first instance.</param>
-        /// <param name="right">The second instance.</param>
-        /// <param name="result">A new instance containing the result of the calculation.</param>
-        [Obsolete("Use Multiply instead.")]
-        public static void Mult(ref Quaternion left, ref Quaternion right, out Quaternion result)
-        {
-            result = new Quaternion(
-                right.W * left.Xyz + left.W * right.Xyz + Vector3.Cross(left.Xyz, right.Xyz),
-                left.W * right.W - Vector3.Dot(left.Xyz, right.Xyz));
-        }
-
-        /// <summary>
-        /// Multiplies two instances.
-        /// </summary>
-        /// <param name="left">The first instance.</param>
-        /// <param name="right">The second instance.</param>
-        /// <returns>A new instance containing the result of the calculation.</returns>
         public static Quaternion Multiply(Quaternion left, Quaternion right)
         {
-            Quaternion result;
-            Multiply(ref left, ref right, out result);
+            Multiply(ref left, ref right, out var result);
             return result;
         }
 
@@ -369,12 +339,6 @@ namespace SS14.Shared.Maths
         /// <param name="scale">The scalar.</param>
         /// <param name="result">A new instance containing the result of the calculation.</param>
         public static void Multiply(ref Quaternion quaternion, float scale, out Quaternion result)
-        {
-            result = new Quaternion(quaternion.X * scale, quaternion.Y * scale, quaternion.Z * scale, quaternion.W * scale);
-        }
-
-        [Obsolete("Use the overload without the 'ref float scale'.")]
-        public static void Multiply(ref Quaternion quaternion, ref float scale, out Quaternion result)
         {
             result = new Quaternion(quaternion.X * scale, quaternion.Y * scale, quaternion.Z * scale, quaternion.W * scale);
         }
@@ -425,8 +389,7 @@ namespace SS14.Shared.Maths
         /// <returns>The inverse of the given quaternion</returns>
         public static Quaternion Invert(Quaternion q)
         {
-            Quaternion result;
-            Invert(ref q, out result);
+            Invert(ref q, out var result);
             return result;
         }
 
@@ -437,10 +400,10 @@ namespace SS14.Shared.Maths
         /// <param name="result">The inverse of the given quaternion</param>
         public static void Invert(ref Quaternion q, out Quaternion result)
         {
-            float lengthSq = q.LengthSquared;
+            var lengthSq = q.LengthSquared;
             if (lengthSq != 0.0)
             {
-                float i = 1.0f / lengthSq;
+                var i = 1.0f / lengthSq;
                 result = new Quaternion(q.Xyz * -i, q.W * i);
             }
             else
@@ -460,8 +423,7 @@ namespace SS14.Shared.Maths
         /// <returns>The normalized quaternion</returns>
         public static Quaternion Normalize(Quaternion q)
         {
-            Quaternion result;
-            Normalize(ref q, out result);
+            Normalize(ref q, out var result);
             return result;
         }
 
@@ -472,7 +434,7 @@ namespace SS14.Shared.Maths
         /// <param name="result">The normalized quaternion</param>
         public static void Normalize(ref Quaternion q, out Quaternion result)
         {
-            float scale = 1.0f / q.Length;
+            var scale = 1.0f / q.Length;
             result = new Quaternion(q.Xyz * scale, q.W * scale);
         }
 
@@ -491,12 +453,12 @@ namespace SS14.Shared.Maths
             if (axis.LengthSquared == 0.0f)
                 return Identity;
 
-            Quaternion result = Identity;
+            var result = Identity;
 
             angle *= 0.5f;
             axis.Normalize();
-            result.Xyz = axis * (float)System.Math.Sin(angle);
-            result.W = (float)System.Math.Cos(angle);
+            result.Xyz = axis * (float) Math.Sin(angle);
+            result.W = (float) Math.Cos(angle);
 
             return Normalize(result);
         }
@@ -523,20 +485,19 @@ namespace SS14.Shared.Maths
                 }
                 return q2;
             }
-            else if (q2.LengthSquared == 0.0f)
+            if (q2.LengthSquared == 0.0f)
             {
                 return q1;
             }
 
-
-            float cosHalfAngle = q1.W * q2.W + Vector3.Dot(q1.Xyz, q2.Xyz);
+            var cosHalfAngle = q1.W * q2.W + Vector3.Dot(q1.Xyz, q2.Xyz);
 
             if (cosHalfAngle >= 1.0f || cosHalfAngle <= -1.0f)
             {
                 // angle = 0.0f, so just return one input.
                 return q1;
             }
-            else if (cosHalfAngle < 0.0f)
+            if (cosHalfAngle < 0.0f)
             {
                 q2.Xyz = -q2.Xyz;
                 q2.W = -q2.W;
@@ -548,11 +509,11 @@ namespace SS14.Shared.Maths
             if (cosHalfAngle < 0.99f)
             {
                 // do proper slerp for big angles
-                float halfAngle = (float)System.Math.Acos(cosHalfAngle);
-                float sinHalfAngle = (float)System.Math.Sin(halfAngle);
-                float oneOverSinHalfAngle = 1.0f / sinHalfAngle;
-                blendA = (float)System.Math.Sin(halfAngle * (1.0f - blend)) * oneOverSinHalfAngle;
-                blendB = (float)System.Math.Sin(halfAngle * blend) * oneOverSinHalfAngle;
+                var halfAngle = (float) Math.Acos(cosHalfAngle);
+                var sinHalfAngle = (float) Math.Sin(halfAngle);
+                var oneOverSinHalfAngle = 1.0f / sinHalfAngle;
+                blendA = (float) Math.Sin(halfAngle * (1.0f - blend)) * oneOverSinHalfAngle;
+                blendB = (float) Math.Sin(halfAngle * blend) * oneOverSinHalfAngle;
             }
             else
             {
@@ -561,11 +522,10 @@ namespace SS14.Shared.Maths
                 blendB = blend;
             }
 
-            Quaternion result = new Quaternion(blendA * q1.Xyz + blendB * q2.Xyz, blendA * q1.W + blendB * q2.W);
+            var result = new Quaternion(blendA * q1.Xyz + blendB * q2.Xyz, blendA * q1.W + blendB * q2.W);
             if (result.LengthSquared > 0.0f)
                 return Normalize(result);
-            else
-                return Identity;
+            return Identity;
         }
 
         #endregion
@@ -669,7 +629,7 @@ namespace SS14.Shared.Maths
         /// <returns></returns>
         public override string ToString()
         {
-            return String.Format("V: {0}, W: {1}", Xyz, W);
+            return $"V: {Xyz}, W: {W}";
         }
 
         #endregion
@@ -684,7 +644,7 @@ namespace SS14.Shared.Maths
         public override bool Equals(object other)
         {
             if (other is Quaternion == false) return false;
-            return this == (Quaternion)other;
+            return this == (Quaternion) other;
         }
 
         #endregion

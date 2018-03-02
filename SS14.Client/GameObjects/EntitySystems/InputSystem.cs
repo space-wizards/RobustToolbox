@@ -18,21 +18,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         private readonly Dictionary<BoundKeyFunctions, bool> _keyStates = new Dictionary<BoundKeyFunctions, bool>();
 
         private bool _enabled = true;
-
-        /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public InputSystem()
-        {
-            EntityQuery = new ComponentEntityQuery
-            {
-                OneSet = new List<Type>
-                {
-                    typeof(KeyBindingInputComponent),
-                },
-            };
-        }
-
+        
         public override void Initialize()
         {
             base.Initialize();
@@ -41,37 +27,7 @@ namespace SS14.Client.GameObjects.EntitySystems
             keyBindingManager.BoundKeyDown += KeyDown;
             keyBindingManager.BoundKeyUp += KeyUp;
         }
-
-        /// <inheritdoc />
-        public override void Update(float frameTime)
-        {
-            var entities = EntityManager.GetEntities(EntityQuery);
-            foreach (var entity in entities)
-            {
-                // update keys
-                if (_enabled)
-                    UpdateKeys(frameTime);
-
-                //Animation setting
-                if (entity.TryGetComponent<AnimatedSpriteComponent>(out var component))
-                {
-                    //Char is moving
-                    if (GetKeyState(BoundKeyFunctions.MoveRight) ||
-                        GetKeyState(BoundKeyFunctions.MoveDown) ||
-                        GetKeyState(BoundKeyFunctions.MoveLeft) ||
-                        GetKeyState(BoundKeyFunctions.MoveUp))
-                    {
-                        component.SetAnimationState(GetKeyState(BoundKeyFunctions.Run) ? "run" : "walk");
-                    }
-                    //Char is not moving
-                    else
-                    {
-                        component.SetAnimationState("idle");
-                    }
-                }
-            }
-        }
-
+        
         public override void Shutdown()
         {
             base.Shutdown();

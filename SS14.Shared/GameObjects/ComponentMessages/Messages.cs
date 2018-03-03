@@ -1,6 +1,6 @@
 ﻿using System;
 using SS14.Shared.Console;
-using SS14.Shared.Enums;
+using SS14.Shared.Input;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Serialization;
 
@@ -48,19 +48,6 @@ namespace SS14.Shared.GameObjects
     }
 
     [Serializable, NetSerializable]
-    public class BoundKeyRepeatMsg : ComponentMessage
-    {
-        public BoundKeyFunctions Function { get; }
-        public BoundKeyState State { get; }
-
-        public BoundKeyRepeatMsg(BoundKeyFunctions function, BoundKeyState state)
-        {
-            Function = function;
-            State = state;
-        }
-    }
-
-    [Serializable, NetSerializable]
     public class DescriptionStringMsg : ComponentMessage
     {
         public string DescriptionString { get; set; } = String.Empty;
@@ -79,12 +66,12 @@ namespace SS14.Shared.GameObjects
     }
 
     [Serializable, NetSerializable]
-    public class ClientClickMsg : ComponentMessage
+    public class ClientEntityClickMsg : ComponentMessage
     {
         public EntityUid Uid { get; }
         public ClickType Click { get; }
 
-        public ClientClickMsg(EntityUid uid, ClickType click)
+        public ClientEntityClickMsg(EntityUid uid, ClickType click)
         {
             Directed = true;
             Uid = uid;

@@ -85,7 +85,6 @@ namespace SS14.Client.Player
             DetachEntity();
             
             ControlledEntity = entity;
-            ControlledEntity.AddComponent<KeyBindingInputComponent>();
 
             if (ControlledEntity.HasComponent<IMoverComponent>())
                 ControlledEntity.RemoveComponent<IMoverComponent>();
@@ -107,7 +106,6 @@ namespace SS14.Client.Player
         {
             if (ControlledEntity != null && ControlledEntity.Initialized)
             {
-                ControlledEntity.RemoveComponent<KeyBindingInputComponent>();
                 ControlledEntity.RemoveComponent<PlayerInputMoverComponent>();
                 ControlledEntity.RemoveComponent<CollidableComponent>();
                 var transform = ControlledEntity.GetComponent<ITransformComponent>();

@@ -1,4 +1,4 @@
-namespace SS14.Shared.Enums
+﻿namespace SS14.Shared.Input
 {
     public enum BoundKeyState
     {

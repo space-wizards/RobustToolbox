@@ -31,6 +31,7 @@ using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Enums;
+using SS14.Shared.Input;
 
 namespace SS14.Client.State.States
 {

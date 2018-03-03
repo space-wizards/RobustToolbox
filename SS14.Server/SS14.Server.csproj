@@ -134,7 +134,6 @@
     <Compile Include="GameObjects\ServerComponentFactory.cs" />
     <Compile Include="GameObjects\ServerEntityManager.cs" />
     <Compile Include="GameObjects\ServerEntityNetworkManager.cs" />
-    <Compile Include="GameObjects\MessageEnums.cs" />
     <Compile Include="GameObjects\Components\ClickableComponent.cs" />
     <Compile Include="GameObjects\Components\Actor\BasicActorComponent.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponent.cs" />
@@ -151,9 +150,6 @@
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\ParticleSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
-    <Compile Include="GameObjects\Events\InputEvents.cs" />
-    <Compile Include="GameObjects\Exceptions\MissingImplementationException.cs" />
-    <Compile Include="GameObjects\Exceptions\NoPublicConstructorException.cs" />
     <Compile Include="GameState\GameStateManager.cs" />
     <Compile Include="Interfaces\ICommandLineArgs.cs" />
     <Compile Include="Interfaces\IBaseServer.cs" />

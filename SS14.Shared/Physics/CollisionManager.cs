@@ -207,7 +207,7 @@ namespace SS14.Shared.Physics
             // for each bucket index
             foreach (var kvIndices in _bucketIndex)
             {
-                var worldBounds = localBounds.Translated(kvIndices.Key);
+                var worldBounds = localBounds.Translated(kvIndices.Key * BucketSize);
 
                 // check if ray intersects the bucket AABB
                 if (ray.Intersects(worldBounds, out var dist, out _))

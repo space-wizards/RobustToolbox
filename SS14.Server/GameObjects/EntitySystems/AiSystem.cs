@@ -45,6 +45,8 @@ namespace SS14.Server.GameObjects.EntitySystems
                 if (aiComp.Processor == null)
                 {
                     aiComp.Processor = CreateProcessor(aiComp.LogicName);
+                    aiComp.Processor.SelfEntity = entity;
+                    aiComp.Processor.VisionRadius = aiComp.VisionRadius;
                 }
 
                 var processor = aiComp.Processor;

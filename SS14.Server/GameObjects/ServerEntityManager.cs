@@ -180,7 +180,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float range)
         {
-            var aabb = new Box2(box.Left-range, box.Top+range, box.Right+range, box.Bottom-range);
+            var aabb = new Box2(box.Left-range, box.Top-range, box.Right+range, box.Bottom+range);
             return GetEntitiesIntersecting(mapID, aabb);
         }
 

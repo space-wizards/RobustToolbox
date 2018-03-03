@@ -43,10 +43,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     Determines if this entity is still valid.
         /// </summary>
         /// <returns>True if this entity is still valid.</returns>
-        bool IsValid()
-        {
-            return !Deleted;
-        }
+        bool IsValid();
 
         /// <summary>
         ///     "Matches" this entity with the provided entity query, returning whether or not the query matched.

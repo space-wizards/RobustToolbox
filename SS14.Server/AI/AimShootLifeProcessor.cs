@@ -8,8 +8,10 @@ using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Physics;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using YamlDotNet.Serialization;
 
 namespace SS14.Server.AI
 {
@@ -22,10 +24,11 @@ namespace SS14.Server.AI
     {
         private readonly ICollisionManager _physMan;
         private readonly IServerEntityManager _entMan;
+        private readonly IGameTiming _timeMan;
 
         private List<IEntity> _workList = new List<IEntity>();
 
-        private const float ScanPeriod = 0.5f; // tweak this for performance and gameplay experience
+        private const float ScanPeriod = 1.0f; // tweak this for performance and gameplay experience
         private float _lastScan;
         
         private IEntity _curTarget;
@@ -34,6 +37,7 @@ namespace SS14.Server.AI
         {
             _physMan = IoCManager.Resolve<ICollisionManager>();
             _entMan = IoCManager.Resolve<IServerEntityManager>();
+            _timeMan = IoCManager.Resolve<IGameTiming>();
         }
 
         public override void Update(float frameTime)
@@ -41,20 +45,21 @@ namespace SS14.Server.AI
             if(SelfEntity == null)
                 return;
             
-            DoScanning(frameTime);
-            DoTracking(frameTime);
+            DoScanning();
+            DoTracking();
         }
 
-        private void DoScanning(float frameTime)
+        private void DoScanning()
         {
-            if (frameTime - _lastScan > ScanPeriod)
+            var curTime = _timeMan.CurTime.TotalSeconds;
+            if (curTime - _lastScan > ScanPeriod)
             {
-                _lastScan = frameTime;
+                _lastScan = (float) curTime;
                 _curTarget = FindBestTarget();
             }
         }
 
-        private void DoTracking(float frameTime)
+        private void DoTracking()
         {
             // not valid entity to target.
             if (_curTarget == null || !_curTarget.IsValid())
@@ -66,9 +71,9 @@ namespace SS14.Server.AI
             // point me at the target
             var tarPos = _curTarget.GetComponent<ITransformComponent>().WorldPosition;
             var myPos = SelfEntity.GetComponent<ITransformComponent>().WorldPosition;
-            var dir = (tarPos - myPos).Normalized;
+            var dir = tarPos - myPos;
 
-            SelfEntity.GetComponent<IServerTransformComponent>().LocalRotation = dir.GetDir().ToAngle();
+            SelfEntity.GetComponent<IServerTransformComponent>().LocalRotation = new Angle(dir);
 
             //TODO: shoot gun if i have it
         }
@@ -90,7 +95,7 @@ namespace SS14.Server.AI
 
                 // build the ray
                 var dir = entity.GetComponent<TransformComponent>().WorldPosition - myTransform.WorldPosition;
-                var ray = new Ray(myTransform.WorldPosition, dir);
+                var ray = new Ray(myTransform.WorldPosition, dir.Normalized);
 
                 // cast the ray
                 var result = _physMan.IntersectRay(ray, maxRayLen);
@@ -117,7 +122,7 @@ namespace SS14.Server.AI
                 var pos = ent.GetComponent<ITransformComponent>().WorldPosition;
                 var distSqrd = (pos - origin).LengthSquared;
 
-                if (distSqrd < minDistSqrd)
+                if (distSqrd > minDistSqrd)
                     continue;
 
                 closest = ent;

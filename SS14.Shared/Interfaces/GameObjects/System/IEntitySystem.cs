@@ -1,4 +1,6 @@
 ﻿using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Players;
 
 namespace SS14.Shared.Interfaces.GameObjects.System
 {
@@ -27,8 +29,9 @@ namespace SS14.Shared.Interfaces.GameObjects.System
         /// <summary>
         /// Handler for all incoming network messages.
         /// </summary>
-        /// <param name="sysMsg">Message that was sent to this system.</param>
-        void HandleNetMessage(EntitySystemMessage sysMsg);
+        /// <param name="channel"></param>
+        /// <param name="message"></param>
+        void HandleNetMessage(INetChannel channel, EntitySystemMessage message);
 
         /// <summary>
         ///     Called once per frame/tick to update the system.

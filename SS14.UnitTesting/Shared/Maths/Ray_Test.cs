@@ -7,7 +7,6 @@ namespace SS14.UnitTesting.Shared.Maths
     [TestOf(typeof(Ray))]
     class Ray_Test
     {
-
         [Test]
         public void RayIntersectsBoxTest()
         {

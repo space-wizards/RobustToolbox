@@ -96,6 +96,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AI\AiLogicProcessor.cs" />
+    <Compile Include="AI\AiLogicProcessorAttribute.cs" />
+    <Compile Include="AI\AimShootLifeProcessor.cs" />
     <Compile Include="ClientConsoleHost\Commands\ChatCommands.cs" />
     <Compile Include="ClientConsoleHost\Commands\MapCommands.cs" />
     <Compile Include="ClientConsoleHost\Commands\PlayerCommands.cs" />
@@ -103,6 +106,8 @@
     <Compile Include="ClientConsoleHost\Commands\SysCommands.cs" />
     <Compile Include="GameObjects\Components\Container\Container.cs" />
     <Compile Include="GameObjects\Components\Container\ContainerManagerComponent.cs" />
+    <Compile Include="GameObjects\Components\Mover\AiControllerComponent.cs" />
+    <Compile Include="GameObjects\EntitySystems\AiSystem.cs" />
     <Compile Include="Interfaces\GameObjects\IServerTransformComponent.cs" />
     <Compile Include="Interfaces\Log\IServerLogManager.cs" />
     <Compile Include="Interfaces\Maps\IMapLoader.cs" />

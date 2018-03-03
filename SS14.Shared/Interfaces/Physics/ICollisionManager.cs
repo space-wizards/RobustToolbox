@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Maths;
+using SS14.Shared.Physics;
 
 namespace SS14.Shared.Interfaces.Physics
 {
@@ -26,6 +27,6 @@ namespace SS14.Shared.Interfaces.Physics
         /// <param name="ray">Ray to cast in the world.</param>
         /// <param name="maxLength">Maximum length of the ray in meters.</param>
         /// <returns>Owning entity of the object that was hit, or null if nothing was hit.</returns>
-        IEntity IntersectRay(Ray ray, float maxLength = 50);
+        RayCastResults IntersectRay(Ray ray, float maxLength = 50);
     }
 }

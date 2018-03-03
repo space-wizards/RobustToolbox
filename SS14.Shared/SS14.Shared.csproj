@@ -236,6 +236,7 @@
     <Compile Include="Physics\CollisionManager.cs" />
     <Compile Include="Enums\PlacementInformation.cs" />
     <Compile Include="Enums\KeyFunctions.cs" />
+    <Compile Include="Physics\RayCastResults.cs" />
     <Compile Include="Players\PlayerIndex.cs" />
     <Compile Include="Utility\QuadTree.cs" />
     <Compile Include="Reflection\ReflectAttribute.cs" />

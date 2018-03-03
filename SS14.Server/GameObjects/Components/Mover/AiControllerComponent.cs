@@ -27,7 +27,7 @@ namespace SS14.Server.GameObjects.Components
             base.ExposeData(serializer);
 
             serializer.DataField(ref _logicName, "logic", null);
-            serializer.DataField(ref _visionRadius, "vision", 10.0f);
+            serializer.DataField(ref _visionRadius, "vision", 8.0f);
         }
     }
 }

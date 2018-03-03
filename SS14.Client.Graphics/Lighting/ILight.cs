@@ -14,6 +14,7 @@ namespace SS14.Client.Graphics.Lighting
         Color Color { get; set; }
         Texture Mask { get; set; }
         LocalCoordinates Coordinates { get; set; }
+        Angle Rotation { get; set; }
         RenderImage RenderTarget { get; }
         LightState LightState { get; set; }
         LightMode LightMode { get; set; }

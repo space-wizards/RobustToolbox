@@ -24,6 +24,7 @@ namespace SS14.Shared.Map
         public void Initialize()
         {
             _netManager.RegisterNetMessage<MsgMap>(MsgMap.NAME, message => HandleNetworkMessage((MsgMap)message));
+            _netManager.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, message => SendMap(message.MsgChannel));
         }
 
         /// <inheritdoc />

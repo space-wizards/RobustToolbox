@@ -31,6 +31,7 @@ using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Enums;
+using SS14.Shared.Input;
 
 namespace SS14.Client.State.States
 {
@@ -1031,7 +1032,7 @@ namespace SS14.Client.State.States
 
             //Draw the default grid as the background which will be drawn over
             var background = position.Map.GetDefaultGrid().GetTilesIntersecting(vision, false);
-            MapRenderer.DrawTiles(background, _floorBatch, _gasBatch);
+            MapRenderer.DrawTiles(ResourceCache, background, _floorBatch, _gasBatch);
 
             foreach (var grid in grids)
             {
@@ -1041,7 +1042,7 @@ namespace SS14.Client.State.States
 
                 //Collects all tiles from grids in vision, gathering empty tiles only from the default grid
                 var gridtiles = grid.GetTilesIntersecting(vision);
-                MapRenderer.DrawTiles(gridtiles, _floorBatch, _gasBatch);
+                MapRenderer.DrawTiles(ResourceCache, gridtiles, _floorBatch, _gasBatch);
             }
         }
 

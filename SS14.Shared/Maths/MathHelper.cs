@@ -1,4 +1,5 @@
 ﻿#region --- License ---
+
 /* Licensed under the MIT/X11 license.
  * Copyright (c) 2006-2008 the OpenTK Team.
  * This notice may not be removed from any source distribution.
@@ -6,11 +7,10 @@
  * 
  * Contributions by Andy Gill, James Talton and Georg Wächter.
  */
+
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SS14.Shared.Maths
 {
@@ -84,8 +84,8 @@ namespace SS14.Shared.Maths
         /// <returns>The next power of two.</returns>
         public static long NextPowerOfTwo(long n)
         {
-            if (n < 0) throw new ArgumentOutOfRangeException("n", "Must be positive.");
-            return (long)System.Math.Pow(2, System.Math.Ceiling(System.Math.Log((double)n, 2)));
+            if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
+            return (long) Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
         }
 
         /// <summary>
@@ -95,8 +95,8 @@ namespace SS14.Shared.Maths
         /// <returns>The next power of two.</returns>
         public static int NextPowerOfTwo(int n)
         {
-            if (n < 0) throw new ArgumentOutOfRangeException("n", "Must be positive.");
-            return (int)System.Math.Pow(2, System.Math.Ceiling(System.Math.Log((double)n, 2)));
+            if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
+            return (int) Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
         }
 
         /// <summary>
@@ -106,8 +106,8 @@ namespace SS14.Shared.Maths
         /// <returns>The next power of two.</returns>
         public static float NextPowerOfTwo(float n)
         {
-            if (n < 0) throw new ArgumentOutOfRangeException("n", "Must be positive.");
-            return (float)System.Math.Pow(2, System.Math.Ceiling(System.Math.Log((double)n, 2)));
+            if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
+            return (float) Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
         }
 
         /// <summary>
@@ -117,8 +117,8 @@ namespace SS14.Shared.Maths
         /// <returns>The next power of two.</returns>
         public static double NextPowerOfTwo(double n)
         {
-            if (n < 0) throw new ArgumentOutOfRangeException("n", "Must be positive.");
-            return System.Math.Pow(2, System.Math.Ceiling(System.Math.Log((double)n, 2)));
+            if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
+            return Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
         }
 
         #endregion
@@ -155,7 +155,7 @@ namespace SS14.Shared.Maths
         }
 
         #endregion
-        
+
         #region DegreesToRadians
 
         /// <summary>
@@ -165,7 +165,7 @@ namespace SS14.Shared.Maths
         /// <returns>The angle expressed in radians</returns>
         public static float DegreesToRadians(float degrees)
         {
-            const float degToRad = (float)System.Math.PI / 180.0f;
+            const float degToRad = (float) Math.PI / 180.0f;
             return degrees * degToRad;
         }
 
@@ -176,7 +176,7 @@ namespace SS14.Shared.Maths
         /// <returns>The angle expressed in degrees</returns>
         public static float RadiansToDegrees(float radians)
         {
-            const float radToDeg = 180.0f / (float)System.Math.PI;
+            const float radToDeg = 180.0f / (float) Math.PI;
             return radians * radToDeg;
         }
 
@@ -187,7 +187,7 @@ namespace SS14.Shared.Maths
         /// <returns>The angle expressed in radians</returns>
         public static double DegreesToRadians(double degrees)
         {
-            const double degToRad = System.Math.PI / 180.0;
+            const double degToRad = Math.PI / 180.0;
             return degrees * degToRad;
         }
 
@@ -198,7 +198,7 @@ namespace SS14.Shared.Maths
         /// <returns>The angle expressed in degrees</returns>
         public static double RadiansToDegrees(double radians)
         {
-            const double radToDeg = 180.0 / System.Math.PI;
+            const double radToDeg = 180.0 / Math.PI;
             return radians * radToDeg;
         }
 
@@ -213,7 +213,7 @@ namespace SS14.Shared.Maths
         /// <param name="b">The second value.</param>
         public static void Swap(ref double a, ref double b)
         {
-            double temp = a;
+            var temp = a;
             a = b;
             b = temp;
         }
@@ -225,7 +225,7 @@ namespace SS14.Shared.Maths
         /// <param name="b">The second value.</param>
         public static void Swap(ref float a, ref float b)
         {
-            float temp = a;
+            var temp = a;
             a = b;
             b = temp;
         }

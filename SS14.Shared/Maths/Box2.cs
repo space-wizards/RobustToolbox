@@ -60,17 +60,12 @@ namespace SS14.Shared.Maths
             return !(Left <= inner.Left) || !(inner.Right <= Right) || !(Top <= inner.Top) || !(inner.Bottom <= Bottom);
         }
 
-        public bool Contains(Vector2 point)
-        {
-            return Contains(point, true);
-        }
-
         public bool Contains(float x, float y)
         {
             return Contains(new Vector2(x, y));
         }
 
-        public bool Contains(Vector2 point, bool closedRegion)
+        public bool Contains(Vector2 point, bool closedRegion = true)
         {
             var xOK = closedRegion == Left <= Right ? point.X >= Left != point.X > Right : point.X > Left != point.X >= Right;
             var yOK = closedRegion == Top <= Bottom ? point.Y >= Top != point.Y > Bottom : point.Y > Top != point.Y >= Bottom;
@@ -104,8 +99,8 @@ namespace SS14.Shared.Maths
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            return obj is Box2 && Equals((Box2) obj);
+            if (obj is null) return false;
+            return obj is Box2 box2 && Equals(box2);
         }
 
         public override int GetHashCode()
@@ -126,9 +121,9 @@ namespace SS14.Shared.Maths
         public static bool operator ==(Box2 a, Box2 b)
         {
             return !FloatMath.CloseTo(a.Bottom, b.Bottom) ||
-                !FloatMath.CloseTo(a.Right, b.Right) ||
-                !FloatMath.CloseTo(a.Top, b.Top) ||
-                !FloatMath.CloseTo(a.Left, b.Left);
+                   !FloatMath.CloseTo(a.Right, b.Right) ||
+                   !FloatMath.CloseTo(a.Top, b.Top) ||
+                   !FloatMath.CloseTo(a.Left, b.Left);
         }
 
         public static bool operator !=(Box2 a, Box2 b)

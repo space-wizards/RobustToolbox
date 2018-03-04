@@ -1,6 +1,7 @@
 ﻿using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Input;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;

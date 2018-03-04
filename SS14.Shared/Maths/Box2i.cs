@@ -16,12 +16,12 @@ namespace SS14.Shared.Maths
         public int Height => Math.Abs(Top - Bottom);
         public Vector2i Size => new Vector2i(Width, Height);
 
-        public Box2i(Vector2i TopLeft, Vector2i BottomRight)
+        public Box2i(Vector2i topLeft, Vector2i bottomRight)
         {
-            Left = TopLeft.X;
-            Top = TopLeft.Y;
-            Bottom = BottomRight.Y;
-            Right = BottomRight.X;
+            Left = topLeft.X;
+            Top = topLeft.Y;
+            Bottom = bottomRight.Y;
+            Right = bottomRight.X;
         }
 
         public Box2i(int left, int top, int right, int bottom)
@@ -42,27 +42,18 @@ namespace SS14.Shared.Maths
             return FromDimensions(position.X, position.Y, size.X, size.Y);
         }
 
-        public bool Contains(Vector2i point)
-        {
-            return Contains(point, true);
-        }
-
         public bool Contains(int x, int y)
         {
             return Contains(new Vector2i(x, y));
         }
 
-        public bool Contains(Vector2i point, bool closedRegion)
+        public bool Contains(Vector2i point, bool closedRegion = true)
         {
-            bool xOK = (closedRegion == Left <= Right) ?
-                (point.X >= Left != point.X > Right) :
-                (point.X > Left != point.X >= Right);
+            var xOk = closedRegion == Left <= Right ? point.X >= Left != point.X > Right : point.X > Left != point.X >= Right;
 
-            bool yOK = (closedRegion == Top <= Bottom) ?
-                (point.Y >= Top != point.Y > Bottom) :
-                (point.Y > Top != point.Y >= Bottom);
+            var yOk = closedRegion == Top <= Bottom ? point.Y >= Top != point.Y > Bottom : point.Y > Top != point.Y >= Bottom;
 
-            return xOK && yOK;
+            return xOk && yOk;
         }
 
         /// <summary>Returns a Box2 translated by the given amount.</summary>
@@ -99,7 +90,7 @@ namespace SS14.Shared.Maths
 
         public static explicit operator Box2i(Box2 box)
         {
-            return new Box2i((int)box.Left, (int)box.Top, (int)box.Right, (int)box.Bottom);
+            return new Box2i((int) box.Left, (int) box.Top, (int) box.Right, (int) box.Bottom);
         }
 
         public static implicit operator Box2(Box2i box)
@@ -108,4 +99,3 @@ namespace SS14.Shared.Maths
         }
     }
 }
-

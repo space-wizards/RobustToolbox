@@ -3,7 +3,6 @@ using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Interfaces.Map;
-using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using System.Collections.Generic;
@@ -16,9 +15,8 @@ namespace SS14.Client.Map
     /// </summary>
     public static class MapRenderer
     {
-        public static void DrawTiles(IEnumerable<TileRef> tileRefs, SpriteBatch floorBatch, SpriteBatch gasBatch)
+        public static void DrawTiles(IResourceCache resCache, IEnumerable<TileRef> tileRefs, SpriteBatch floorBatch, SpriteBatch gasBatch)
         {
-            var cache = IoCManager.Resolve<IResourceCache>();
             Sprite sprite = null;
             ITileDefinition lastDef = null;
             var ppm = CluwneLib.Camera.PixelsPerMeter;
@@ -27,7 +25,7 @@ namespace SS14.Client.Map
                 if (tileReference.TileDef != lastDef)
                 {
                     lastDef = tileReference.TileDef;
-                    sprite = cache.GetSprite(lastDef.SpriteName);
+                    sprite = resCache.GetSprite(lastDef.SpriteName);
                 }
 
                 if(sprite == null)

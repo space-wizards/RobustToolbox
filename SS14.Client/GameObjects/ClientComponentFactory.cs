@@ -12,7 +12,7 @@ namespace SS14.Client.GameObjects
             Register<CollidableComponent>();
             RegisterReference<CollidableComponent, ICollidableComponent>();
             Register<IconComponent>();
-            Register<KeyBindingInputComponent>();
+            RegisterIgnore("KeyBindingInput");
             Register<PointLightComponent>();
             Register<PhysicsComponent>();
             Register<TransformComponent>();

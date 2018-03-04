@@ -1,7 +1,6 @@
-﻿using SS14.Server.GameObjects.Events;
+﻿using System.Collections.Generic;
 using SS14.Shared.GameObjects;
-using System.Collections.Generic;
-using SS14.Shared.Enums;
+using SS14.Shared.Input;
 
 namespace SS14.Server.GameObjects
 {
@@ -20,15 +19,12 @@ namespace SS14.Server.GameObjects
             switch (message)
             {
                 case BoundKeyChangedMsg msg:
-                    if(!msg.Remote) break;
+                    if (msg.Remote) break;
                     var keyFunction = msg.Function;
                     var keyState = msg.State;
 
                     var boolState = keyState == BoundKeyState.Down;
                     SetKeyState(keyFunction, boolState);
-
-                    SendMessage(new BoundKeyChangedMsg(keyFunction, keyState));
-                    Owner.RaiseEvent(new BoundKeyChangeEventArgs { KeyFunction = keyFunction, KeyState = keyState, Actor = Owner });
                     break;
             }
         }

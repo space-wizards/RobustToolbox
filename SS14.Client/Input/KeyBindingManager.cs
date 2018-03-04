@@ -11,6 +11,7 @@ using System.Linq;
 using System.Xml;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Enums;
+using SS14.Shared.Input;
 
 namespace SS14.Client.Input
 {

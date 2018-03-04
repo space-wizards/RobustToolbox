@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using SS14.Server.Player;
-using SS14.Shared;
 using SS14.Shared.Enums;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Network;
@@ -33,7 +32,7 @@ namespace SS14.Server.Interfaces.Player
         LocalCoordinates FallbackSpawnPoint { get; set; }
 
         /// <summary>
-        ///     Raised when the <see cref="SessionStatus"/> of a <see cref="IPlayerSession"/> is changed.
+        ///     Raised when the <see cref="SessionStatus" /> of a <see cref="IPlayerSession" /> is changed.
         /// </summary>
         event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
 
@@ -42,7 +41,7 @@ namespace SS14.Server.Interfaces.Player
         /// </summary>
         /// <param name="baseServer">The server that instantiated this manager.</param>
         /// <param name="maxPlayers">Maximum number of players that can connect to this server at one time.</param>
-        void Initialize(BaseServer baseServer, int maxPlayers);
+        void Initialize(int maxPlayers);
 
         IPlayerSession GetSessionById(PlayerIndex session);
 
@@ -55,10 +54,10 @@ namespace SS14.Server.Interfaces.Player
 
         //TODO: Move to IPlayerSession
         void SpawnPlayerMob(IPlayerSession session);
-        
+
         void SendJoinGameToAll();
         void SendJoinLobbyToAll();
-        
+
         void DetachAll();
         List<IPlayerSession> GetPlayersInLobby();
         List<IPlayerSession> GetPlayersInRange(LocalCoordinates worldPos, int range);

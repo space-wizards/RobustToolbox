@@ -26,6 +26,8 @@ namespace SS14.Shared.GameObjects
         protected readonly IComponentFactory ComponentFactory;
         [Dependency]
         private readonly INetManager _network;
+        [Dependency]
+        private readonly IComponentManager _componentManager;
         # endregion Dependencies
 
         protected readonly Dictionary<EntityUid, IEntity> Entities = new Dictionary<EntityUid, IEntity>();
@@ -63,8 +65,7 @@ namespace SS14.Shared.GameObjects
             FlushEntities();
             EntitySystemManager.Shutdown();
             Started = false;
-            var componentmanager = IoCManager.Resolve<IComponentManager>();
-            componentmanager.Cull();
+            _componentManager.Cull();
         }
 
         public virtual void Update(float frameTime)
@@ -284,7 +285,7 @@ namespace SS14.Shared.GameObjects
         {
             _eventQueue.Enqueue(new Tuple<object, EntityEventArgs>(sender, toRaise));
         }
-
+        
         public void RemoveSubscribedEvents(IEntityEventSubscriber subscriber)
         {
             if (_inverseEventSubscriptions.ContainsKey(subscriber))
@@ -377,6 +378,11 @@ namespace SS14.Shared.GameObjects
             {
                 ProcessMsgBuffer();
                 var incomingEntity = ProcessNetMessage(msg);
+
+                // bad message or handled by something else
+                if(incomingEntity == null)
+                    return;
+
                 if (!Entities.ContainsKey(incomingEntity.Message.EntityUid))
                 {
                     MessageBuffer.Enqueue(incomingEntity);

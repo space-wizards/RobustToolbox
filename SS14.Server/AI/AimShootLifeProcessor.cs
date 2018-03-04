@@ -76,9 +76,19 @@ namespace SS14.Server.AI
             var curDir = SelfEntity.GetComponent<IServerTransformComponent>().LocalRotation.ToVec();
             var tarDir = (tarPos - myPos).Normalized;
 
-            var da = MoveTowards(curDir, tarDir, MaxAngSpeed, frameTime);
+            var step = MaxAngSpeed * frameTime;
+            var up = Vector3.UnitZ;
 
-            SelfEntity.GetComponent<IServerTransformComponent>().LocalRotation = new Angle(da);
+            var tar3D = new Vector3(tarDir);
+            var qCur = Quaternion.LookRotation(ref tar3D, ref up);
+
+            var cur3D = new Vector3(curDir);
+            var qTar = Quaternion.LookRotation(ref cur3D, ref up);
+            var qRotation = Quaternion.RotateTowards(qCur, qTar, step);
+
+            var result = Quaternion.ToEulerRad(qRotation);
+            
+            SelfEntity.GetComponent<IServerTransformComponent>().LocalRotation = new Angle(result.X * FloatMath.DegToRad);
 
             //TODO: shoot gun if i have it
         }

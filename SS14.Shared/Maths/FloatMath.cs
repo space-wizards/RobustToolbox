@@ -5,8 +5,10 @@ namespace SS14.Shared.Maths
 {
     public static class FloatMath
      {
+         public const float RadToDeg = (float)(180.0 / Math.PI);
+         public const float DegToRad = (float)(Math.PI / 180.0);
 
-         private const int LookupSize = 1024*64; //has to be power of 2
+        private const int LookupSize = 1024*64; //has to be power of 2
          private static readonly float[] getSin, getCos;
 
          static FloatMath()

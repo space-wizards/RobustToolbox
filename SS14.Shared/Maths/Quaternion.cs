@@ -128,6 +128,23 @@ namespace SS14.Shared.Maths
         /// </summary>
         public float W { get { return w; } set { w = value; } }
 
+        public float x
+        {
+            get => xyz.X;
+            set => xyz.X = value;
+        }
+
+        public float y
+        {
+            get => xyz.Y;
+            set => xyz.Y = value;
+        }
+
+        public float z
+        {
+            get => xyz.Z;
+            set => xyz.Z = value;
+        }
         #endregion
 
         #region Instance
@@ -238,6 +255,9 @@ namespace SS14.Shared.Maths
         #region Static
 
         #region Fields
+
+        private const float RadToDeg = (float)(180.0 / Math.PI);
+        private const float DegToRad = (float)(Math.PI / 180.0);
 
         /// <summary>
         /// Defines the identity quaternion.
@@ -388,6 +408,18 @@ namespace SS14.Shared.Maths
         public static Quaternion Multiply(Quaternion quaternion, float scale)
         {
             return new Quaternion(quaternion.X * scale, quaternion.Y * scale, quaternion.Z * scale, quaternion.W * scale);
+        }
+
+        #endregion
+
+        #region Dot
+
+        /// <summary>
+        ///     Calculates the dot product between two Quaternions.
+        /// </summary>
+        public static float Dot(Quaternion a, Quaternion b)
+        {
+            return a.X * b.X + a.Y * b.Y + a.Z * b.Z + a.W * b.W;
         }
 
         #endregion
@@ -566,6 +598,145 @@ namespace SS14.Shared.Maths
                 return Normalize(result);
             else
                 return Identity;
+        }
+
+        #endregion
+
+        #region RotateTowards
+
+        public static Quaternion RotateTowards(Quaternion from, Quaternion to, float maxDegreesDelta)
+        {
+            var num = Angle(from, to);
+            if (num == 0f)
+            {
+                return to;
+            }
+            var t = Math.Min(1f, maxDegreesDelta / num);
+            return Slerp(from, to, t);
+        }
+
+        #endregion
+
+        #region Angle
+
+        public static float Angle(Quaternion a, Quaternion b)
+        {
+            var f = Dot(a, b);
+            return (float) (Math.Acos(Math.Min(Math.Abs(f), 1f)) * 2f * RadToDeg);
+        }
+
+        #endregion
+
+        #region LookRotation
+
+        // from http://answers.unity3d.com/questions/467614/what-is-the-source-code-of-quaternionlookrotation.html
+        public static Quaternion LookRotation(ref Vector3 forward, ref Vector3 up)
+        {
+            forward = Vector3.Normalize(forward);
+            Vector3 right = Vector3.Normalize(Vector3.Cross(up, forward));
+            up = Vector3.Cross(forward, right);
+            var m00 = right.X;
+            var m01 = right.Y;
+            var m02 = right.Z;
+            var m10 = up.X;
+            var m11 = up.Y;
+            var m12 = up.Z;
+            var m20 = forward.X;
+            var m21 = forward.Y;
+            var m22 = forward.Z;
+
+            var num8 = (m00 + m11) + m22;
+            var quaternion = new Quaternion();
+            if (num8 > 0f)
+            {
+                var num = (float)System.Math.Sqrt(num8 + 1f);
+                quaternion.w = num * 0.5f;
+                num = 0.5f / num;
+                quaternion.X = (m12 - m21) * num;
+                quaternion.Y = (m20 - m02) * num;
+                quaternion.Z = (m01 - m10) * num;
+                return quaternion;
+            }
+            if ((m00 >= m11) && (m00 >= m22))
+            {
+                var num7 = (float)System.Math.Sqrt(((1f + m00) - m11) - m22);
+                var num4 = 0.5f / num7;
+                quaternion.X = 0.5f * num7;
+                quaternion.Y = (m01 + m10) * num4;
+                quaternion.Z = (m02 + m20) * num4;
+                quaternion.W = (m12 - m21) * num4;
+                return quaternion;
+            }
+            if (m11 > m22)
+            {
+                var num6 = (float)System.Math.Sqrt(((1f + m11) - m00) - m22);
+                var num3 = 0.5f / num6;
+                quaternion.X = (m10 + m01) * num3;
+                quaternion.Y = 0.5f * num6;
+                quaternion.Z = (m21 + m12) * num3;
+                quaternion.W = (m20 - m02) * num3;
+                return quaternion;
+            }
+            var num5 = (float)System.Math.Sqrt(((1f + m22) - m00) - m11);
+            var num2 = 0.5f / num5;
+            quaternion.X = (m20 + m02) * num2;
+            quaternion.Y = (m21 + m12) * num2;
+            quaternion.Z = 0.5f * num5;
+            quaternion.W = (m01 - m10) * num2;
+            return quaternion;
+        }
+
+        #endregion
+
+        #region Euler Angles
+
+        // from http://stackoverflow.com/questions/12088610/conversion-between-euler-quaternion-like-in-unity3d-engine
+        public static Vector3 ToEulerRad(Quaternion rotation)
+        {
+            float sqw = rotation.w * rotation.w;
+            float sqx = rotation.x * rotation.x;
+            float sqy = rotation.y * rotation.y;
+            float sqz = rotation.z * rotation.z;
+            float unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
+            float test = rotation.x * rotation.w - rotation.y * rotation.z;
+            Vector3 v;
+
+            if (test > 0.4995f * unit)
+            { // singularity at north pole
+                v.Y = (float) (2f * Math.Atan2(rotation.y, rotation.x));
+                v.X = (float) (Math.PI / 2);
+                v.Z = 0;
+                return NormalizeAngles(v * RadToDeg);
+            }
+            if (test < -0.4995f * unit)
+            { // singularity at south pole
+                v.Y = (float) (-2f * Math.Atan2(rotation.y, rotation.x));
+                v.X = (float) (-Math.PI / 2);
+                v.Z = 0;
+                return NormalizeAngles(v * RadToDeg);
+            }
+            Quaternion q = new Quaternion(rotation.w, rotation.z, rotation.x, rotation.y);
+            v.Y = (float)System.Math.Atan2(2f * q.x * q.w + 2f * q.y * q.z, 1 - 2f * (q.z * q.z + q.w * q.w));     // Yaw
+            v.X = (float)System.Math.Asin(2f * (q.x * q.z - q.w * q.y));                             // Pitch
+            v.Z = (float)System.Math.Atan2(2f * q.x * q.y + 2f * q.z * q.w, 1 - 2f * (q.y * q.y + q.z * q.z));      // Roll
+            return NormalizeAngles(v * RadToDeg);
+        }
+
+        private static Vector3 NormalizeAngles(Vector3 angles)
+        {
+            angles.X = NormalizeAngle(angles.X);
+            angles.Y = NormalizeAngle(angles.Y);
+            angles.Z = NormalizeAngle(angles.Z);
+            return angles;
+        }
+
+        private static float NormalizeAngle(float angle)
+        {
+            while (angle > 360)
+                angle -= 360;
+            while (angle < 0)
+                angle += 360;
+            return angle;
         }
 
         #endregion

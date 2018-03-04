@@ -28,6 +28,7 @@ namespace SS14.Server.AI
 
         private List<IEntity> _workList = new List<IEntity>();
 
+        private const float MaxAngSpeed = (float) (Math.PI / 2);
         private const float ScanPeriod = 1.0f; // tweak this for performance and gameplay experience
         private float _lastScan;
         
@@ -46,7 +47,7 @@ namespace SS14.Server.AI
                 return;
             
             DoScanning();
-            DoTracking();
+            DoTracking(frameTime);
         }
 
         private void DoScanning()
@@ -59,7 +60,7 @@ namespace SS14.Server.AI
             }
         }
 
-        private void DoTracking()
+        private void DoTracking(float frameTime)
         {
             // not valid entity to target.
             if (_curTarget == null || !_curTarget.IsValid())
@@ -71,9 +72,12 @@ namespace SS14.Server.AI
             // point me at the target
             var tarPos = _curTarget.GetComponent<ITransformComponent>().WorldPosition;
             var myPos = SelfEntity.GetComponent<ITransformComponent>().WorldPosition;
-            var dir = tarPos - myPos;
 
-            SelfEntity.GetComponent<IServerTransformComponent>().LocalRotation = new Angle(dir);
+            var tarAng = (tarPos - myPos).Normalized.ToAngle();
+            var curAng = SelfEntity.GetComponent<IServerTransformComponent>().LocalRotation;
+
+            var da = MoveTowards((float) curAng.Theta, (float) tarAng.Theta, MaxAngSpeed, frameTime);
+            SelfEntity.GetComponent<IServerTransformComponent>().LocalRotation = new Angle(da);
 
             //TODO: shoot gun if i have it
         }
@@ -130,6 +134,17 @@ namespace SS14.Server.AI
             }
 
             return closest;
+        }
+
+        private float MoveTowards(float current, float target, float speed, float delta)
+        {
+            float maxDeltaDist = speed * delta;
+            float toGo = target - current;
+
+            if (maxDeltaDist > Math.Abs(toGo))
+                return target;
+
+            return current + Math.Sign(toGo) * maxDeltaDist;
         }
     }
 }

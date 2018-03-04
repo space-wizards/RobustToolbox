@@ -28,7 +28,7 @@ namespace SS14.Server.AI
 
         private List<IEntity> _workList = new List<IEntity>();
 
-        private const float MaxAngSpeed = (float) (Math.PI / 2);
+        private const float MaxAngSpeed = (float) (Math.PI / 2); // how fast our turret can rotate
         private const float ScanPeriod = 1.0f; // tweak this for performance and gameplay experience
         private float _lastScan;
         
@@ -76,21 +76,27 @@ namespace SS14.Server.AI
             var curDir = SelfEntity.GetComponent<IServerTransformComponent>().LocalRotation.ToVec();
             var tarDir = (tarPos - myPos).Normalized;
 
-            var step = MaxAngSpeed * frameTime;
-            var up = Vector3.UnitZ;
+            var fwdAng = Vector2.Dot(curDir, tarDir);
 
-            var tar3D = new Vector3(tarDir);
-            var qCur = Quaternion.LookRotation(ref tar3D, ref up);
+            Vector2 newDir;
+            if (fwdAng < 0) // target behind turret, just rotate in a direction to get target in front
+            {
+                var curRight = new Vector2(-curDir.Y, curDir.X); // right handed coord system
+                var rightAngle = Vector2.Dot(curDir, new Vector2(-tarDir.Y, tarDir.X)); // right handed coord system
+                var rotateSign = -Math.Sign(rightAngle);
+                newDir = curDir + (curRight * rotateSign * MaxAngSpeed * frameTime);
+            }
+            else // target in front, adjust to aim at him
+            {
+                newDir = MoveTowards(curDir, tarDir, MaxAngSpeed, frameTime);
+            }
 
-            var cur3D = new Vector3(curDir);
-            var qTar = Quaternion.LookRotation(ref cur3D, ref up);
-            var qRotation = Quaternion.RotateTowards(qCur, qTar, step);
+            SelfEntity.GetComponent<IServerTransformComponent>().LocalRotation = new Angle(newDir);
 
-            var result = Quaternion.ToEulerRad(qRotation);
-            
-            SelfEntity.GetComponent<IServerTransformComponent>().LocalRotation = new Angle(result.X * FloatMath.DegToRad);
-
-            //TODO: shoot gun if i have it
+            if (fwdAng > -0.9999)
+            {
+                // TODO: shoot gun, prob need aimbot because entity rotation lags behind moving target
+            }
         }
 
         private IEntity FindBestTarget()
@@ -146,18 +152,7 @@ namespace SS14.Server.AI
 
             return closest;
         }
-
-        private static float MoveTowards(float current, float target, float speed, float delta)
-        {
-            var maxDeltaDist = speed * delta;
-            var toGo = target - current;
-
-            if (maxDeltaDist > Math.Abs(toGo))
-                return target;
-
-            return current + Math.Sign(toGo) * maxDeltaDist;
-        }
-
+        
         private static Vector2 MoveTowards(Vector2 current, Vector2 target, float speed, float delta)
         {
             var maxDeltaDist = speed * delta;

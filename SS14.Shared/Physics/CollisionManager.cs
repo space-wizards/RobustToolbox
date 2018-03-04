@@ -241,7 +241,7 @@ namespace SS14.Shared.Physics
             var hitPosition = Vector2.Zero;
             var minDist = float.PositiveInfinity;
 
-            foreach (var collidablePoint in bucket.GetPoints())
+            foreach (var collidablePoint in bucket.GetPoints()) // *goes to kitchen to freshen up his drink...*
             {
                 var worldAABB = collidablePoint.ParentAABB.Collidable.WorldAABB;
 

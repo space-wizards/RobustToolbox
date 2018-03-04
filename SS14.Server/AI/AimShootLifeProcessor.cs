@@ -72,11 +72,12 @@ namespace SS14.Server.AI
             // point me at the target
             var tarPos = _curTarget.GetComponent<ITransformComponent>().WorldPosition;
             var myPos = SelfEntity.GetComponent<ITransformComponent>().WorldPosition;
+            
+            var curDir = SelfEntity.GetComponent<IServerTransformComponent>().LocalRotation.ToVec();
+            var tarDir = (tarPos - myPos).Normalized;
 
-            var tarAng = (tarPos - myPos).Normalized.ToAngle();
-            var curAng = SelfEntity.GetComponent<IServerTransformComponent>().LocalRotation;
+            var da = MoveTowards(curDir, tarDir, MaxAngSpeed, frameTime);
 
-            var da = MoveTowards((float) curAng.Theta, (float) tarAng.Theta, MaxAngSpeed, frameTime);
             SelfEntity.GetComponent<IServerTransformComponent>().LocalRotation = new Angle(da);
 
             //TODO: shoot gun if i have it
@@ -136,15 +137,27 @@ namespace SS14.Server.AI
             return closest;
         }
 
-        private float MoveTowards(float current, float target, float speed, float delta)
+        private static float MoveTowards(float current, float target, float speed, float delta)
         {
-            float maxDeltaDist = speed * delta;
-            float toGo = target - current;
+            var maxDeltaDist = speed * delta;
+            var toGo = target - current;
 
             if (maxDeltaDist > Math.Abs(toGo))
                 return target;
 
             return current + Math.Sign(toGo) * maxDeltaDist;
+        }
+
+        private static Vector2 MoveTowards(Vector2 current, Vector2 target, float speed, float delta)
+        {
+            var maxDeltaDist = speed * delta;
+            var a = target - current;
+            var magnitude = a.Length;
+            if (magnitude <= maxDeltaDist)
+            {
+                return target;
+            }
+            return current + a / magnitude * maxDeltaDist;
         }
     }
 }

@@ -71,7 +71,16 @@ namespace SS14.Client.Placement
         {
             if (baseSprite == null) pManager.ResourceCache.DefaultSprite();
 
-            return GetSprite((baseSprite + "_" + pManager.Direction.ToString()).ToLowerInvariant());
+            var directionalspritename = (baseSprite + "_" + pManager.Direction.ToString()).ToLowerInvariant();
+
+            if(pManager.ResourceCache.SpriteExists(directionalspritename))
+            {
+                return pManager.ResourceCache.GetSprite(directionalspritename);
+            }
+            else
+            {
+                return GetSprite(baseSprite);
+            }
         }
 
         public bool RangeCheck()

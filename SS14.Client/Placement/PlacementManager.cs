@@ -139,6 +139,11 @@ namespace SS14.Client.Placement
                     Direction = Direction.North;
                     break;
             }
+
+            if (CurrentMode != null)
+            {
+                CurrentMode.SetSprite();
+            }
         }
 
         public void HandlePlacement()

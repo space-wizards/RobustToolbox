@@ -38,8 +38,7 @@ namespace SS14.Client.Placement
         {
             if(SpriteToDraw == null)
             {
-                SpriteToDraw = GetSprite(pManager.CurrentBaseSpriteKey);
-                SpriteToDraw = new Sprite(SpriteToDraw);
+                SetSprite();
             }
 
             var bounds = SpriteToDraw.LocalBounds;
@@ -48,6 +47,12 @@ namespace SS14.Client.Placement
                                                 MouseScreen.Y - (bounds.Height / 2f));
             //Centering the sprite on the cursor.
             SpriteToDraw.Draw();
+        }
+
+        public void SetSprite()
+        {
+            SpriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
+            SpriteToDraw = new Sprite(SpriteToDraw);
         }
 
         public Sprite GetSprite(string key)

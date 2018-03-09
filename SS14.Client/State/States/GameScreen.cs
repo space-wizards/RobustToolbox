@@ -32,6 +32,7 @@ using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Enums;
 using SS14.Shared.Input;
+using SS14.Client.GameObjects.EntitySystems;
 
 namespace SS14.Client.State.States
 {
@@ -610,41 +611,67 @@ namespace SS14.Client.State.States
                 }
             }
 
-            if (!clickedEntities.Any())
+            IEntity entToClick;
+
+            if (clickedEntities.Any())
             {
-                return;
+                entToClick = (from cd in clickedEntities
+                              orderby cd.Drawdepth ascending,
+                                  cd.Clicked.GetComponent<ITransformComponent>().LocalPosition
+                                  .Y ascending
+                              select cd.Clicked).Last();
+            }
+            else
+            {
+                entToClick = null;
             }
 
-            //Sort them by which we should click
-            IEntity entToClick = (from cd in clickedEntities
-                                  orderby cd.Drawdepth ascending,
-                                      cd.Clicked.GetComponent<ITransformComponent>().LocalPosition
-                                      .Y ascending
-                                  select cd.Clicked).Last();
-
-            if (PlacementManager.Eraser && PlacementManager.IsActive)
+            //First possible exit point for click, acceptable due to being clientside
+            if (entToClick != null && PlacementManager.Eraser && PlacementManager.IsActive)
             {
                 PlacementManager.HandleDeletion(entToClick);
                 return;
             }
 
-            // Check whether click is outside our 1.5 meter range
-            float checkDistance = 1.5f;
-            if (!PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.InRange(entToClick.GetComponent<ITransformComponent>().LocalPosition, checkDistance))
-                return;
-
-            var clickable = entToClick.GetComponent<IClientClickableComponent>();
-            switch (e.Button)
+            //Dispatches clicks to relevant clickable components, another single exit point for UI
+            if(entToClick != null)
             {
-                case Mouse.Button.Left:
-                    clickable.DispatchClick(PlayerManager.LocalPlayer.ControlledEntity, ClickType.Left);
-                    break;
-                case Mouse.Button.Right:
-                    clickable.DispatchClick(PlayerManager.LocalPlayer.ControlledEntity, ClickType.Right);
-                    break;
-                case Mouse.Button.Middle:
-                    OpenEntityEditWindow(entToClick);
-                    return;
+                var clickable = entToClick.GetComponent<IClientClickableComponent>();
+                switch (e.Button)
+                {
+                    case Mouse.Button.Left:
+                        clickable.DispatchClick(PlayerManager.LocalPlayer.ControlledEntity, ClickType.Left);
+                        break;
+                    case Mouse.Button.Right:
+                        clickable.DispatchClick(PlayerManager.LocalPlayer.ControlledEntity, ClickType.Right);
+                        break;
+                    //Acceptable click exit due to being a UI behavior
+                    case Mouse.Button.Middle:
+                        OpenEntityEditWindow(entToClick);
+                        return;
+                }
+            }
+
+            //Assemble information to send to server about click
+            if(e.Button == Mouse.Button.Left || e.Button == Mouse.Button.Right)
+            {
+                ClickType click = ClickType.None;
+                switch(e.Button)
+                {
+                    case Mouse.Button.Left:
+                        click = ClickType.Left;
+                        break;
+                    case Mouse.Button.Right:
+                        click = ClickType.Right;
+                        break;
+                }
+
+                var UID = EntityUid.Invalid;
+                if (entToClick != null)
+                    UID = entToClick.Uid;
+
+                ClickEventMessage message = new ClickEventMessage(UID, click, MousePosWorld);
+                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<InputSystem>().RaiseClick(message);
             }
 
             #endregion Object clicking

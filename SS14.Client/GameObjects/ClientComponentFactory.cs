@@ -54,6 +54,8 @@ namespace SS14.Client.GameObjects
             RegisterReference<ClickableComponent, IClickableComponent>();
 
             Register<OccluderComponent>();
+
+            RegisterIgnore("AiController");
         }
     }
 }

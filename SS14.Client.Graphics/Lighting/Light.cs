@@ -43,7 +43,9 @@ namespace SS14.Client.Graphics.Lighting
                 Calculated = false;
             }
         }
-        
+
+        public Angle Rotation { get; set; }
+
         public LightMode LightMode { get; set; }
 
         public LightState LightState

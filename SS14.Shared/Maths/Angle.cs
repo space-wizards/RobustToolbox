@@ -33,6 +33,16 @@ namespace SS14.Shared.Maths
         }
 
         /// <summary>
+        ///     Constructs an instance of an angle from an (un)normalized direction vector.
+        /// </summary>
+        /// <param name="dir"></param>
+        public Angle(Vector2 dir)
+        {
+            dir = dir.Normalized;
+            Theta = Math.Atan2(dir.Y, dir.X);
+        }
+
+        /// <summary>
         ///     Converts this angle to a unit direction vector.
         /// </summary>
         /// <returns>Unit Direction Vector</returns>

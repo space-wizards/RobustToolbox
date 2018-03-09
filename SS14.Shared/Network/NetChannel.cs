@@ -25,6 +25,11 @@ namespace SS14.Shared.Network
         public string RemoteAddress => _connection.RemoteEndPoint.Address.ToString();
 
         /// <summary>
+        ///     Exposes the lidgren connection.
+        /// </summary>
+        public NetConnection Connection => _connection;
+
+        /// <summary>
         ///     Creates a new instance of a NetChannel.
         /// </summary>
         /// <param name="manager">The server this channel belongs to.</param>

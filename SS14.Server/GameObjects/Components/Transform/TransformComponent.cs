@@ -93,7 +93,8 @@ namespace SS14.Server.GameObjects
                 RebuildMatrices();
             }
         }
-        
+
+        /// <inheritdoc />
         public Angle WorldRotation
         {
             get

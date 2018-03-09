@@ -19,12 +19,12 @@ namespace SS14.Shared.Maths
         public float Height => Math.Abs(Top - Bottom);
         public Vector2 Size => new Vector2(Width, Height);
 
-        public Box2(Vector2 topLeft, Vector2 bottomRight)
+        public Box2(Vector2 leftTop, Vector2 rightBottom)
         {
-            Left = topLeft.X;
-            Top = topLeft.Y;
-            Bottom = bottomRight.Y;
-            Right = bottomRight.X;
+            Left = leftTop.X;
+            Top = leftTop.Y;
+            Right = rightBottom.X;
+            Bottom = rightBottom.Y;
         }
 
         public Box2(float left, float top, float right, float bottom)
@@ -57,10 +57,7 @@ namespace SS14.Shared.Maths
 
         public bool Encloses(Box2 inner)
         {
-            return Left <= inner.Left
-                   && inner.Right <= Right
-                   && Top <= inner.Top
-                   && inner.Bottom <= Bottom;
+            return !(Left <= inner.Left) || !(inner.Right <= Right) || !(Top <= inner.Top) || !(inner.Bottom <= Bottom);
         }
 
         public bool Contains(float x, float y)
@@ -71,9 +68,7 @@ namespace SS14.Shared.Maths
         public bool Contains(Vector2 point, bool closedRegion = true)
         {
             var xOK = closedRegion == Left <= Right ? point.X >= Left != point.X > Right : point.X > Left != point.X >= Right;
-
             var yOK = closedRegion == Top <= Bottom ? point.Y >= Top != point.Y > Bottom : point.Y > Top != point.Y >= Bottom;
-
             return xOK && yOK;
         }
 

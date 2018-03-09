@@ -38,6 +38,20 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        /// <summary>
+        ///     Determines if the light mask should automatically rotate with the entity. (like a flashlight)
+        /// </summary>
+        public bool MaskAutoRotate { get; set; }
+
+        /// <summary>
+        ///     Local rotation of the light mask around the center origin
+        /// </summary>
+        public Angle Rotation
+        {
+            get => Light.Rotation;
+            set => Light.Rotation = value;
+        }
+
         public int Radius
         {
             get => Light.Radius;
@@ -111,6 +125,11 @@ namespace SS14.Client.GameObjects
             {
                 ModeClass = LightModeClass.Constant;
             }
+
+            if (mapping.TryGetNode("autoRot", out node))
+            {
+                MaskAutoRotate = node.AsBool();
+            }
         }
 
         /// <inheritdoc />
@@ -153,6 +172,14 @@ namespace SS14.Client.GameObjects
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
+
+            var worldRotation = Owner.GetComponent<TransformComponent>().WorldRotation;
+            if (MaskAutoRotate && Light.Rotation != worldRotation)
+            {
+                Light.Rotation = worldRotation;
+                Light.Calculated = false;
+            }
+
             Light.Update(frameTime);
         }
 

@@ -98,7 +98,6 @@
   <ItemGroup>
     <Compile Include="AI\AiLogicProcessor.cs" />
     <Compile Include="AI\AiLogicProcessorAttribute.cs" />
-    <Compile Include="AI\AimShootLifeProcessor.cs" />
     <Compile Include="ClientConsoleHost\Commands\ChatCommands.cs" />
     <Compile Include="ClientConsoleHost\Commands\MapCommands.cs" />
     <Compile Include="ClientConsoleHost\Commands\PlayerCommands.cs" />

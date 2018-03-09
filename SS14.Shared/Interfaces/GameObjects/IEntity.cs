@@ -38,7 +38,13 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     The prototype that was used to create this entity.
         /// </summary>
         EntityPrototype Prototype { get; }
-        
+
+        /// <summary>
+        ///     Determines if this entity is still valid.
+        /// </summary>
+        /// <returns>True if this entity is still valid.</returns>
+        bool IsValid();
+
         /// <summary>
         ///     "Matches" this entity with the provided entity query, returning whether or not the query matched.
         ///     This is effectively equivalent to calling <see cref="IEntityQuery.Match(IEntity)" /> with this entity.

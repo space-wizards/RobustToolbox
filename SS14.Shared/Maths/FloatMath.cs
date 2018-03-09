@@ -6,6 +6,8 @@ namespace SS14.Shared.Maths
     {
         private const int LookupSize = 1024 * 64; //has to be power of 2
         private static readonly float[] getSin, getCos;
+         public const float RadToDeg = (float)(180.0 / Math.PI);
+         public const float DegToRad = (float)(Math.PI / 180.0);
 
         static FloatMath()
         {
@@ -50,7 +52,17 @@ namespace SS14.Shared.Maths
             cos = getCos[rot];
         }
 
-        public const float Pi = (float) Math.PI;
+         public static float Min(float a, float b)
+         {
+             return Math.Min(a, b);
+         }
+
+         public static float Max(float a, float b)
+         {
+             return Math.Max(a, b);
+         }
+
+         public const float Pi = (float) Math.PI;
 
         public static float ToDegrees(float radians)
         {

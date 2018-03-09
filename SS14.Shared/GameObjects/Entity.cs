@@ -71,6 +71,12 @@ namespace SS14.Shared.GameObjects
             EntityNetworkManager = networkManager;
         }
 
+        /// <inheritdoc />
+        public bool IsValid()
+        {
+            return !Deleted;
+        }
+
         /// <summary>
         ///     Initialize the entity's UID. This can only be called once.
         /// </summary>

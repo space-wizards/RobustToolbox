@@ -93,6 +93,9 @@ namespace SS14.Client.Graphics.Lighting
                 // draw light mask onto lightRT
                 var sprite = new Sprite(lightMask);
                 sprite.Scale = new Vector2((float)lightRt.Width / maskSize.X, (float)lightRt.Height / maskSize.Y);
+                sprite.Origin = new Vector2(sprite.LocalBounds.Width / 2, sprite.LocalBounds.Height / 2);
+                sprite.Position = sprite.Origin * sprite.Scale;
+                sprite.Rotation = -light.Rotation + Math.PI / 2; // convert our angle to sfml angle (negative may be because light mask tex is flipped);
                 lightRt.Draw(sprite);
             }
             lightRt.EndDrawing();

@@ -62,6 +62,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                 return; //Don't repeat keys that are already down.
 
             SetKeyState(e.Function, true);
+
             var message = new BoundKeyChangedMessage(e.Function, e.FunctionState);
             RaiseEvent(message);
             RaiseNetworkEvent(message);
@@ -116,6 +117,12 @@ namespace SS14.Client.GameObjects.EntitySystems
                 if (!state.Value)
                     _keyStates.Remove(state.Key);
             }
+        }
+
+        public virtual void RaiseClick(ClickEventMessage message)
+        {
+            //TODO: Check modifiers here and modify the click type of the message?
+            RaiseNetworkEvent(message);
         }
     }
 }

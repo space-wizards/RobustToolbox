@@ -5,7 +5,7 @@ sudo: false
 
 os:
 - linux
-- osx
+#- osx
 
 addons:
   apt:
@@ -15,8 +15,8 @@ addons:
     packages:
     - python3.6
 
-before_install:
-  - if [ $TRAVIS_OS_NAME = osx ]; then brew update && brew install python3; fi
+#before_install:
+#  - if [ $TRAVIS_OS_NAME = osx ]; then brew update && brew upgrade python; fi
 
 before_script:
 - "nuget restore SpaceStation14.sln"

@@ -199,12 +199,12 @@ namespace SS14.Client.GameObjects
             return false;
         }
 
-        public override void OnAdd(IEntity owner)
+        public override void OnAdd()
         {
-            base.OnAdd(owner);
+            base.OnAdd();
             var holder = IoCManager.Resolve<ISceneTreeHolder>();
             SceneNode = new Godot.Node2D();
-            SceneNode.SetName($"Transform {owner.Uid} ({owner.Name})");
+            SceneNode.SetName($"Transform {Owner.Uid} ({Owner.Name})");
             holder.WorldRoot.AddChild(SceneNode);
         }
 

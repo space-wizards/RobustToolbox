@@ -42,12 +42,6 @@ namespace SS14.Server.Player
         /// </summary>
         private PlayerSession[] _sessions;
 
-        [Dependency]
-        private readonly IServerEntityManager _entityManager;
-
-        [Dependency]
-        private readonly IServerNetManager _network;
-
         public string PlayerPrototypeName { get; set; } = "__engine_human";
 
         public LocalCoordinates FallbackSpawnPoint { get; set; }

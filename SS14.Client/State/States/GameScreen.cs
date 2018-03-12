@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.Console;
+using SS14.Client.GameObjects.EntitySystems;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
@@ -171,10 +172,10 @@ namespace SS14.Client.State.States
             if (clickedEntities.Any())
             {
                 entToClick = (from cd in clickedEntities
-                              orderby cd.Drawdepth ascending,
-                                  cd.Clicked.GetComponent<ITransformComponent>().LocalPosition
+                              orderby cd.drawDepth ascending,
+                                  cd.clicked.GetComponent<ITransformComponent>().LocalPosition
                                   .Y ascending
-                              select cd.Clicked).Last();
+                              select cd.clicked).Last();
             }
             else
             {
@@ -182,9 +183,9 @@ namespace SS14.Client.State.States
             }
 
             //First possible exit point for click, acceptable due to being clientside
-            if (entToClick != null && PlacementManager.Eraser && PlacementManager.IsActive)
+            if (entToClick != null && placementManager.Eraser && placementManager.IsActive)
             {
-                PlacementManager.HandleDeletion(entToClick);
+                placementManager.HandleDeletion(entToClick);
                 return;
             }
 
@@ -195,15 +196,17 @@ namespace SS14.Client.State.States
                 switch (e.Button)
                 {
                     case Mouse.Button.Left:
-                        clickable.DispatchClick(PlayerManager.LocalPlayer.ControlledEntity, ClickType.Left);
+                        clickable.DispatchClick(playerManager.LocalPlayer.ControlledEntity, ClickType.Left);
                         break;
                     case Mouse.Button.Right:
-                        clickable.DispatchClick(PlayerManager.LocalPlayer.ControlledEntity, ClickType.Right);
+                        clickable.DispatchClick(playerManager.LocalPlayer.ControlledEntity, ClickType.Right);
                         break;
+                        /*
                     //Acceptable click exit due to being a UI behavior
                     case Mouse.Button.Middle:
                         OpenEntityEditWindow(entToClick);
                         return;
+                        */
                 }
             }
 
@@ -225,7 +228,7 @@ namespace SS14.Client.State.States
                 if (entToClick != null)
                     UID = entToClick.Uid;
 
-                ClickEventMessage message = new ClickEventMessage(UID, click, MousePosWorld);
+                ClickEventMessage message = new ClickEventMessage(UID, click, mousePosWorld);
                 IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<InputSystem>().RaiseClick(message);
             }
         }

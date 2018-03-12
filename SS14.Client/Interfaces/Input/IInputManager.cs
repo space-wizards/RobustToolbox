@@ -1,7 +1,6 @@
 using SS14.Shared;
 using SS14.Shared.IoC;
 using System;
-using SS14.Client.Graphics.Input;
 using SS14.Client.Input;
 using SS14.Shared.Maths;
 

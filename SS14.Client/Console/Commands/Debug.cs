@@ -71,7 +71,7 @@ namespace SS14.Client.Console.Commands
         {
             if (args.Length < 1)
             {
-                console.AddLine($"Not enough arguments.", Color4.Red);
+                console.AddLine($"Not enough arguments.", Color.Red);
                 return false;
             }
             var componentFactory = IoCManager.Resolve<IComponentFactory>();

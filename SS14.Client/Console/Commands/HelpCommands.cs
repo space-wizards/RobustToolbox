@@ -39,7 +39,7 @@ namespace SS14.Client.Console.Commands
                     break;
 
                 default:
-                    console.AddLine("Invalid amount of arguments.", Color4.Red);
+                    console.AddLine("Invalid amount of arguments.", Color.Red);
                     break;
             }
             return false;

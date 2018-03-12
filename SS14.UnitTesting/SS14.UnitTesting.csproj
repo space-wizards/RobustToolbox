@@ -74,8 +74,8 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
-    <Compile Include="Server\GameObjects\Container_Test.cs" />
     <Compile Include="Client\GameObjects\Components\Transform_Test.cs" />
+    <Compile Include="Server\GameObjects\Components\Container_Test.cs" />
     <Compile Include="Server\GameObjects\Components\Transform_Test.cs" />
     <Compile Include="Shared\IoC\IoCManager_Test.cs" />
     <Compile Include="Shared\Maths\Angle_Test.cs" />
@@ -101,6 +101,10 @@
     <ProjectReference Include="..\SS14.Shared\SS14.Shared.csproj">
       <Project>{0529f740-0000-0000-0000-000000000000}</Project>
       <Name>SS14.Shared</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SS14.Client\SS14.Client.csproj">
+      <Project>{0c31dfdf-0000-0000-0000-000000000000}</Project>
+      <Name>SS14.Client</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

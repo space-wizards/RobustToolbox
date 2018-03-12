@@ -18,21 +18,21 @@ namespace SS14.Client.GameObjects.EntitySystems
         private readonly Dictionary<BoundKeyFunctions, bool> _keyStates = new Dictionary<BoundKeyFunctions, bool>();
 
         private bool _enabled = true;
-        
+
         public override void Initialize()
         {
             base.Initialize();
 
-            var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
+            var keyBindingManager = IoCManager.Resolve<IInputManager>();
             keyBindingManager.BoundKeyDown += KeyDown;
             keyBindingManager.BoundKeyUp += KeyUp;
         }
-        
+
         public override void Shutdown()
         {
             base.Shutdown();
 
-            var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
+            var keyBindingManager = IoCManager.Resolve<IInputManager>();
             keyBindingManager.BoundKeyDown -= KeyDown;
             keyBindingManager.BoundKeyUp -= KeyUp;
         }
@@ -100,7 +100,7 @@ namespace SS14.Client.GameObjects.EntitySystems
             var activeKeyHandlers =
                 from keyState in _keyStates
                 join handler in _keyHandlers on keyState.Key equals handler.Key
-                select new {evt = handler.Value, state = keyState.Value};
+                select new { evt = handler.Value, state = keyState.Value };
 
             //Execute the bastards!
             foreach (var keyHandler in activeKeyHandlers)

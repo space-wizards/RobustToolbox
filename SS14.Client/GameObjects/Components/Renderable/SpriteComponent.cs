@@ -273,7 +273,7 @@ namespace SS14.Client.GameObjects
             var withoutExt = Path.ChangeExtension(currentBaseSpriteKey, null);
             Direction dir;
             // Oh hey look Y is STILL FLIPPED.
-            var angle = new Angle(-transform.Rotation);
+            var angle = new Angle(-transform.WorldRotation);
             if (Cardinal)
             {
                 dir = angle.GetCardinalDir();

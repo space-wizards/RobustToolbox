@@ -64,7 +64,7 @@ namespace SS14.Client.GameObjects
             set => Light.Rotation = value;
         }
 
-        public int Energy
+        public float Energy
         {
             get => Light.Energy;
             set => Light.Energy = value;
@@ -143,26 +143,6 @@ namespace SS14.Client.GameObjects
             Light = null;
 
             base.OnRemove();
-        }
-
-        protected void UpdateLightPosition()
-        {
-            var transform = Owner.GetComponent<ITransformComponent>();
-            UpdateLightPosition(transform.LocalPosition);
-        }
-
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-
-            var worldRotation = Owner.GetComponent<TransformComponent>().WorldRotation;
-            if (MaskAutoRotate && Light.Rotation != worldRotation)
-            {
-                Light.Rotation = worldRotation;
-                Light.Calculated = false;
-            }
-
-            Light.Update(frameTime);
         }
 
         /// <inheritdoc />

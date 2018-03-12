@@ -85,12 +85,12 @@ namespace SS14.Client.Player
         {
             // Detach and cleanup first
             DetachEntity();
-            
+
             ControlledEntity = entity;
 
             if (ControlledEntity.HasComponent<IMoverComponent>())
                 ControlledEntity.RemoveComponent<IMoverComponent>();
-            
+
             ControlledEntity.AddComponent<PlayerInputMoverComponent>();
 
             if (!ControlledEntity.HasComponent<CollidableComponent>())
@@ -98,8 +98,7 @@ namespace SS14.Client.Player
 
             if (!ControlledEntity.TryGetComponent<EyeComponent>(out var eye))
             {
-                eye = factory.GetComponent<EyeComponent>();
-                ControlledEntity.AddComponent(eye);
+                eye = ControlledEntity.AddComponent<EyeComponent>();
             }
             eye.Current = true;
 

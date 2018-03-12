@@ -62,6 +62,7 @@ namespace SS14.Client
         {
             RegisterIoC();
             RegisterComponents();
+            IoCManager.Resolve<IEntitySystemManager>().Initialize();
 
             var controller = IoCManager.Resolve<IGameController>();
             controller.Run();

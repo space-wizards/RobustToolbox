@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using SS14.Shared.Interfaces.Timing;
 
@@ -14,7 +13,7 @@ namespace SS14.Shared.Timing
         // number of sample frames to store for profiling
         private const int NumFrames = 50;
 
-        private static readonly Stopwatch _realTimer = new Stopwatch();
+        private static readonly IStopwatch _realTimer = new Stopwatch();
         private readonly List<long> _realFrameTimes = new List<long>(NumFrames);
         private TimeSpan _lastRealTime;
 
@@ -32,7 +31,7 @@ namespace SS14.Shared.Timing
         }
 
         /// <summary>
-        /// Is program execution inside of the simulation, or rendering?
+        /// Is program execution inside of the simulation update, or rendering?
         /// </summary>
         public bool InSimulation { get; set; }
 
@@ -45,8 +44,7 @@ namespace SS14.Shared.Timing
         ///     How fast time passes in the simulation compared to RealTime. 1.0 = 100%, 0.25 = 25% (slow mo).
         /// </summary>
         public double TimeScale { get; set; }
-
-        //TODO: Figure out how to actually relate CurTime to RealTime
+        
         /// <summary>
         ///     The current synchronized uptime of the simulation. Use this for in-game timing. This can be rewound for
         ///     prediction, and is affected by Paused and TimeScale.
@@ -57,8 +55,7 @@ namespace SS14.Shared.Timing
         ///     The current real uptime of the simulation. Use this for UI and out of game timing.
         /// </summary>
         public TimeSpan RealTime => _realTimer.Elapsed;
-
-        //TODO: Figure out how to actually relate FrameTime to RealFrameTime
+        
         /// <summary>
         ///     The simulated time it took to render the last frame.
         /// </summary>
@@ -97,7 +94,7 @@ namespace SS14.Shared.Timing
         /// <summary>
         ///     The length of a tick at the current TickRate. 1/TickRate.
         /// </summary>
-        public TimeSpan TickPeriod => new TimeSpan((long) (1.0 / TickRate * TimeSpan.TicksPerSecond));
+        public TimeSpan TickPeriod => TimeSpan.FromTicks((long)(1.0 / TickRate * TimeSpan.TicksPerSecond));
 
         /// <summary>
         /// The remaining time left over after the last tick was ran.
@@ -122,16 +119,12 @@ namespace SS14.Shared.Timing
             // calculate simulation FrameTime
             if (InSimulation)
             {
-                FrameTime = TimeSpan.FromTicks((long)(RealFrameTime.Ticks * TimeScale));
+                FrameTime = TimeSpan.FromTicks((long)(TickPeriod.Ticks * TimeScale));
             }
             else
             {
-                if (Paused)
-                    FrameTime = TimeSpan.Zero;
-                else
-                    FrameTime = RealFrameTime;
+                FrameTime = Paused ? TimeSpan.Zero : RealFrameTime;
             }
-            
 
             // calculate simulation CurTime
             CurTime = TimeSpan.FromTicks(TickPeriod.Ticks * CurTick);
@@ -148,7 +141,7 @@ namespace SS14.Shared.Timing
             _realTimer.Restart();
             _lastRealTime = TimeSpan.Zero;
         }
-
+        
         /// <summary>
         ///     Calculates the average FPS of the last 50 real frame times.
         /// </summary>

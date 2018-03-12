@@ -65,7 +65,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DataStructures, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\ConcurrentDataStructures.0.2.0\lib\net45\DataStructures.dll</HintPath>
+      <HintPath>$(SolutionDir)packages\ConcurrentDataStructures.0.2.0\lib\net45\DataStructures.dll</HintPath>
     </Reference>
     <Reference Include="System">
       <Name>System</Name>

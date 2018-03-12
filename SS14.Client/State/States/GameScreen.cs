@@ -422,6 +422,8 @@ namespace SS14.Client.State.States
 
             //Render the placement manager shit
             PlacementManager.Render();
+
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<EffectSystem>().Render(map);
         }
 
         private void RenderTiles()

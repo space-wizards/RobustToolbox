@@ -41,32 +41,6 @@ namespace SS14.Server.GameObjects
             set => _visible = value;
         }
 
-        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
-        {
-            ComponentReplyMessage reply = base.ReceiveMessage(sender, type, list);
-
-            if (sender == this)
-                return ComponentReplyMessage.Empty;
-
-            switch (type)
-            {
-                case ComponentMessageType.SetSpriteByKey:
-                    if (Owner != null)
-                        _currentSpriteKey = (string)list[0];
-                    break;
-                case ComponentMessageType.SetBaseName:
-                    if (Owner != null)
-                        _currentBaseName = (string)list[0];
-                    break;
-                case ComponentMessageType.SetVisible:
-                    Visible = (bool)list[0];
-                    break;
-            }
-
-            return reply;
-        }
-
         public override void ExposeData(EntitySerializer serializer)
         {
             base.ExposeData(serializer);

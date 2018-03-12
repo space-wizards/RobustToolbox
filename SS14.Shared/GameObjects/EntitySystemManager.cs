@@ -112,7 +112,7 @@ namespace SS14.Shared.GameObjects
         {
             foreach (var current in SystemMessageTypes.Where(x => x.Key == sysMsg.SystemMessage.GetType()))
             {
-                current.Value.HandleNetMessage(sysMsg.SystemMessage);
+                current.Value.HandleNetMessage(sysMsg.MsgChannel, sysMsg.SystemMessage);
             }
         }
 

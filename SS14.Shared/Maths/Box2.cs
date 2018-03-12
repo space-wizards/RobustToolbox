@@ -21,12 +21,12 @@ namespace SS14.Shared.Maths
         public float Height => Math.Abs(Top - Bottom);
         public Vector2 Size => new Vector2(Width, Height);
 
-        public Box2(Vector2 topLeft, Vector2 bottomRight)
+        public Box2(Vector2 leftTop, Vector2 rightBottom)
         {
-            Left = topLeft.X;
-            Top = topLeft.Y;
-            Bottom = bottomRight.Y;
-            Right = bottomRight.X;
+            Left = leftTop.X;
+            Top = leftTop.Y;
+            Right = rightBottom.X;
+            Bottom = rightBottom.Y;
         }
 
         public Box2(float left, float top, float right, float bottom)
@@ -59,15 +59,7 @@ namespace SS14.Shared.Maths
 
         public bool Encloses(Box2 inner)
         {
-            return Left <= inner.Left
-                   && inner.Right <= Right
-                   && Top <= inner.Top
-                   && inner.Bottom <= Bottom;
-        }
-
-        public bool Contains(Vector2 point)
-        {
-            return Contains(point, true);
+            return !(Left <= inner.Left) || !(inner.Right <= Right) || !(Top <= inner.Top) || !(inner.Bottom <= Bottom);
         }
 
         public bool Contains(float x, float y)
@@ -75,12 +67,10 @@ namespace SS14.Shared.Maths
             return Contains(new Vector2(x, y));
         }
 
-        public bool Contains(Vector2 point, bool closedRegion)
+        public bool Contains(Vector2 point, bool closedRegion = true)
         {
             var xOK = closedRegion == Left <= Right ? point.X >= Left != point.X > Right : point.X > Left != point.X >= Right;
-
             var yOK = closedRegion == Top <= Bottom ? point.Y >= Top != point.Y > Bottom : point.Y > Top != point.Y >= Bottom;
-
             return xOK && yOK;
         }
 
@@ -111,8 +101,8 @@ namespace SS14.Shared.Maths
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            return obj is Box2 && Equals((Box2)obj);
+            if (obj is null) return false;
+            return obj is Box2 box2 && Equals(box2);
         }
 
         public override int GetHashCode()
@@ -133,9 +123,9 @@ namespace SS14.Shared.Maths
         public static bool operator ==(Box2 a, Box2 b)
         {
             return !FloatMath.CloseTo(a.Bottom, b.Bottom) ||
-                !FloatMath.CloseTo(a.Right, b.Right) ||
-                !FloatMath.CloseTo(a.Top, b.Top) ||
-                !FloatMath.CloseTo(a.Left, b.Left);
+                   !FloatMath.CloseTo(a.Right, b.Right) ||
+                   !FloatMath.CloseTo(a.Top, b.Top) ||
+                   !FloatMath.CloseTo(a.Left, b.Left);
         }
 
         public static bool operator !=(Box2 a, Box2 b)

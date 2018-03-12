@@ -21,6 +21,8 @@ namespace SS14.Server.GameObjects
 
         [Dependency]
         private readonly IPrototypeManager _protoManager;
+        [Dependency]
+        private readonly IMapManager _mapManager;
 
         /// <inheritdoc />
         public bool TrySpawnEntityAt(string entityType, LocalCoordinates coordinates, out IEntity entity)
@@ -44,8 +46,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public bool TrySpawnEntityAt(string entityType, Vector2 position, MapId argMap, out IEntity entity)
         {
-            var mapManager = IoCManager.Resolve<IMapManager>();
-            var coordinates = new LocalCoordinates(position, mapManager.GetMap(argMap).FindGridAt(position));
+            var coordinates = new LocalCoordinates(position, _mapManager.GetMap(argMap).FindGridAt(position));
             return TrySpawnEntityAt(entityType, coordinates, out entity);
         }
 
@@ -64,16 +65,16 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap)
         {
-            var mapManager = IoCManager.Resolve<IMapManager>();
 
-            if (!mapManager.TryGetMap(argMap, out var map))
+            if (!_mapManager.TryGetMap(argMap, out var map))
             {
-                map = mapManager.DefaultMap;
+                map = _mapManager.DefaultMap;
             }
 
             return ForceSpawnEntityAt(entityType, new LocalCoordinates(position, map.FindGridAt(position)));
         }
 
+        /// <inheritdoc />
         public List<EntityState> GetEntityStates()
         {
             var stateEntities = new List<EntityState>();
@@ -85,6 +86,7 @@ namespace SS14.Server.GameObjects
             return stateEntities;
         }
 
+        /// <inheritdoc />
         public void SaveGridEntities(EntitySerializer serializer, GridId gridId)
         {
             // serialize all entities to disk
@@ -101,6 +103,7 @@ namespace SS14.Server.GameObjects
 
         #region EntityGetters
 
+        /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position)
         {
             foreach (var entity in GetEntities())
@@ -124,6 +127,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position)
         {
             foreach (var entity in GetEntities())
@@ -147,11 +151,13 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(LocalCoordinates position)
         {
             return GetEntitiesIntersecting(position.MapID, position.ToWorld().Position);
         }
 
+        /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity)
         {
             if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
@@ -164,18 +170,21 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float range)
         {
             var aabb = new Box2(position.Position - new Vector2(range / 2, range / 2), position.Position + new Vector2(range / 2, range / 2));
             return GetEntitiesIntersecting(position.MapID, aabb);
         }
 
+        /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float range)
         {
-            var aabb = new Box2(box.Left-range, box.Top+range, box.Right+range, box.Bottom-range);
+            var aabb = new Box2(box.Left-range, box.Top-range, box.Right+range, box.Bottom+range);
             return GetEntitiesIntersecting(mapID, aabb);
         }
 
+        /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range)
         {
             if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
@@ -191,6 +200,7 @@ namespace SS14.Server.GameObjects
 
         #endregion LocationGetters
 
+        /// <inheritdoc />
         public override void Startup()
         {
             base.Startup();

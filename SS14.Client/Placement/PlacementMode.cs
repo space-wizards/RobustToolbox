@@ -37,7 +37,7 @@ namespace SS14.Client.Placement
         {
             if (SpriteToDraw == null)
             {
-                SpriteToDraw = GetSprite(pManager.CurrentBaseSpriteKey);
+                SetSprite();
             }
 
             var size = SpriteToDraw.Texture.Size;
@@ -51,14 +51,28 @@ namespace SS14.Client.Placement
             return pManager.ResourceCache.GetResource<TextureResource>("Textures/" + key);
         }
 
+        public bool TryGetSprite(string key, out TextureResource sprite)
+        {
+            return pManager.ResourceCache.TryGetResource<TextureResource>("Textures/" + key, out sprite);
+        }
+
+        public void SetSprite()
+        {
+            SpriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
+        }
+
         public TextureResource GetDirectionalSprite(string baseSprite)
         {
-            //if (baseSprite == null) pManager.ResourceCache.GetResource();
-
             var ext = Path.GetExtension(baseSprite);
             var withoutExt = Path.ChangeExtension(baseSprite, null);
             var name = $"{withoutExt}_{pManager.Direction.ToString().ToLowerInvariant()}{ext}";
-            return GetSprite(name);
+
+            if (TryGetSprite(name, out var sprite))
+            {
+                return sprite;
+            }
+
+            return GetSprite(baseSprite);
         }
 
         public bool RangeCheck()

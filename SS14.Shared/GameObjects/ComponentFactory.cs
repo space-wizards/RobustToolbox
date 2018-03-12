@@ -1,6 +1,4 @@
 ﻿using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.Reflection;
-using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;

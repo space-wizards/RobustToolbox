@@ -18,6 +18,8 @@ namespace SS14.Server.Maps
     /// </summary>
     public class MapLoader : IMapLoader
     {
+        private const int MapFormatVersion = 1;
+
         [Dependency]
         private IResourceManager _resMan;
 
@@ -27,20 +29,15 @@ namespace SS14.Server.Maps
         [Dependency]
         private IPrototypeManager _protoMan;
 
+        [Dependency]
+        private readonly IMapManager _mapManager;
+
         /// <inheritdoc />
         public void SaveBlueprint(IMap map, GridId gridId, string yamlPath)
         {
             var grid = map.GetGrid(gridId);
 
-            var root = new YamlSequenceNode();
-
-            var node = YamlGridSerializer.SerializeGrid(grid);
-            root.Add(node);
-
-            var entMan = IoCManager.Resolve<IServerEntityManager>();
-            var ents = new YamlEntitySerializer();
-            entMan.SaveGridEntities(ents, gridId);
-            root.Add(ents.GetRootNode());
+            var root = SaveBpNode(grid);
 
             var document = new YamlDocument(root);
 
@@ -64,7 +61,7 @@ namespace SS14.Server.Maps
         public void LoadBlueprint(IMap map, GridId newId, string path)
         {
             var rootPath = _resMan.ConfigDirectory;
-            var comb = Path.Combine(rootPath,"./" , path);
+            var comb = Path.Combine(rootPath, "./", path);
             var fullPath = Path.GetFullPath(comb);
 
             TextReader reader;
@@ -90,44 +87,158 @@ namespace SS14.Server.Maps
                 reader = new StreamReader(fullPath);
             }
 
-            Logger.Info($"[MAP] Loading Grid: {path}");
-
-            var stream = new YamlStream();
-            stream.Load(reader);
-
-            foreach (var document in stream.Documents)
+            using (reader)
             {
-                LoadBpDocument(map, newId, document);
+                Logger.Info($"[MAP] Loading Grid: {path}");
+
+                var stream = new YamlStream();
+                stream.Load(reader);
+
+                foreach (var document in stream.Documents)
+                {
+                    var root = (YamlSequenceNode)document.RootNode;
+                    LoadBpNode(map, newId, root);
+                }
             }
         }
 
-        private void LoadBpDocument(IMap map, GridId newId, YamlDocument document)
+        /// <inheritdoc />
+        public void SaveMap(IMap map, string yamlPath)
         {
-            var root = (YamlSequenceNode) document.RootNode;
+            var root = new YamlMappingNode();
 
+            root.Add("format", MapFormatVersion.ToString());
+            root.Add("name", "DemoStation");
+            root.Add("author", "Space-Wizards");
+
+            // save grids
+            var gridMap = new YamlMappingNode();
+            root.Add("grids", gridMap);
+
+            foreach (var grid in map.GetAllGrids())
+            {
+                var gridBpNode = SaveBpNode(grid);
+                gridMap.Add(grid.Index.ToString(), gridBpNode);
+            }
+
+            var document = new YamlDocument(root);
+
+            var rootPath = _resMan.ConfigDirectory;
+            var path = Path.Combine(rootPath, "./", yamlPath);
+            var fullPath = Path.GetFullPath(path);
+
+            var dir = Path.GetDirectoryName(fullPath);
+            Directory.CreateDirectory(dir ?? throw new InvalidOperationException("Full YamlPath was null."));
+
+            using (var writer = new StreamWriter(fullPath))
+            {
+                var stream = new YamlStream();
+
+                stream.Add(document);
+                stream.Save(writer);
+            }
+        }
+
+        /// <inheritdoc />
+        public void LoadMap(MapId mapId, string path)
+        {
+            var rootPath = _resMan.ConfigDirectory;
+            var comb = Path.Combine(rootPath, "./", path);
+            var fullPath = Path.GetFullPath(comb);
+
+            TextReader reader;
+
+            // try user
+            if (!File.Exists(fullPath))
+            {
+                Logger.Info($"[MAP] No user blueprint found: {fullPath}");
+
+                // fallback to content
+                if (_resMan.TryContentFileRead(path, out var contentReader))
+                {
+                    reader = new StreamReader(contentReader);
+                }
+                else
+                {
+                    Logger.Error($"[MAP] No blueprint found: {path}");
+                    return;
+                }
+            }
+            else
+            {
+                reader = new StreamReader(fullPath);
+            }
+
+            using (reader)
+            {
+                Logger.Info($"[MAP] Loading Map: {path}");
+
+                var stream = new YamlStream();
+                stream.Load(reader);
+
+                foreach (var document in stream.Documents)
+                {
+                    var root = (YamlMappingNode)document.RootNode;
+                    var map = _mapManager.CreateMap(mapId);
+                    LoadMapNode(map, root);
+                }
+            }
+        }
+
+        private YamlSequenceNode SaveBpNode(IMapGrid grid)
+        {
+            var root = new YamlSequenceNode();
+
+            var node = YamlGridSerializer.SerializeGrid(grid);
+            root.Add(node);
+
+            var ents = new YamlEntitySerializer();
+            _entityMan.SaveGridEntities(ents, grid.Index);
+            root.Add(ents.GetRootNode());
+            return root;
+        }
+
+        private void LoadMapNode(IMap map, YamlMappingNode rootNode)
+        {
+            var gridSeq = (YamlMappingNode)rootNode["grids"];
+
+            foreach (var kvGrid in gridSeq)
+            {
+                var gridId = int.Parse(kvGrid.Key.ToString());
+                var gridNode = (YamlSequenceNode)kvGrid.Value;
+
+                LoadBpNode(map, new GridId(gridId), gridNode);
+            }
+        }
+
+        private void LoadBpNode(IMap map, GridId newId, YamlSequenceNode root)
+        {
             foreach (var yamlNode in root.Children)
             {
-                var mapNode = (YamlMappingNode) yamlNode;
+                var mapNode = (YamlMappingNode)yamlNode;
 
                 if (mapNode.Children.TryGetValue("grid", out var gridNode))
                 {
-                    var gridMap = (YamlMappingNode) gridNode;
-                    LoadGridNode(map, newId, gridMap);
+                    // default grid always exists, and cannot be modified, no point loading it
+                    if (newId == GridId.DefaultGrid)
+                        continue;
 
+                    var gridMap = (YamlMappingNode)gridNode;
+                    LoadGridNode(_mapManager, map, newId, gridMap);
                 }
                 else if (mapNode.Children.TryGetValue("entities", out var entNode))
                 {
-                    LoadEntNode(map, newId, (YamlSequenceNode) entNode);
+                    LoadEntNode(map, newId, (YamlSequenceNode)entNode);
                 }
             }
         }
 
-        private static void LoadGridNode(IMap map, GridId newId, YamlMappingNode gridNode)
+        private static void LoadGridNode(IMapManager mapMan, IMap map, GridId newId, YamlMappingNode gridNode)
         {
-                var info = (YamlMappingNode)gridNode["settings"];
-                var chunk = (YamlSequenceNode)gridNode["chunks"];
+            var info = (YamlMappingNode)gridNode["settings"];
+            var chunk = (YamlSequenceNode)gridNode["chunks"];
 
-                YamlGridSerializer.DeserializeGrid(map, newId, info, chunk);
+            YamlGridSerializer.DeserializeGrid(mapMan, map, newId, info, chunk);
         }
 
         private void LoadEntNode(IMap map, GridId gridId, YamlSequenceNode entNode)

@@ -95,17 +95,13 @@ namespace SS14.Client
             _resourceCache.LoadBaseResources();
             _resourceCache.LoadLocalResources();
 
-            // load the content dlls into the game
-            _configurationManager.RegisterCVar("content.dllprefix", "Sandbox", CVar.ARCHIVE);
-            var prefix = _configurationManager.GetCVar<string>("content.dllprefix");
-
             //identical code for server in baseserver
-            if (!TryLoadAssembly<GameShared>($"Content.Shared"))
-                if (!TryLoadAssembly<GameShared>($"Sandbox.Shared"))
+            if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))
+                if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Sandbox.Shared"))
                     Logger.Warning($"[ENG] Could not load any Shared DLL.");
 
-            if (!TryLoadAssembly<GameClient>($"Content.Client"))
-                if (!TryLoadAssembly<GameClient>($"Sandbox.Client"))
+            if (!AssemblyLoader.TryLoadAssembly<GameClient>(_resourceManager, $"Content.Client"))
+                if (!AssemblyLoader.TryLoadAssembly<GameClient>(_resourceManager, $"Sandbox.Client"))
                     Logger.Warning($"[ENG] Could not load any Client DLL.");
 
             // Call Init in game assemblies.
@@ -173,51 +169,6 @@ namespace SS14.Client
             lightManager.FrameUpdate(eventArgs);
             _stateManager.FrameUpdate(eventArgs);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePostEngine, eventArgs.Elapsed);
-        }
-
-        //identical code for server in baseserver
-        private bool TryLoadAssembly<T>(string name) where T : GameShared
-        {
-            // get the assembly from the file system
-            if (_resourceManager.TryContentFileRead($@"Assemblies/{name}.dll", out MemoryStream gameDll))
-            {
-                Logger.Debug($"[SRV] Loading {name} DLL");
-
-                // see if debug info is present
-                if (_resourceManager.TryContentFileRead($@"Assemblies/{name}.pdb", out MemoryStream gamePdb))
-                {
-                    try
-                    {
-                        // load the assembly into the process, and bootstrap the GameServer entry point.
-                        AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray(), gamePdb.ToArray());
-                        return true;
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error($"[SRV] Exception loading DLL {name}.dll: {e}");
-                        return false;
-                    }
-                }
-                else
-                {
-                    try
-                    {
-                        // load the assembly into the process, and bootstrap the GameServer entry point.
-                        AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray());
-                        return true;
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error($"[SRV] Exception loading DLL {name}.dll: {e}");
-                        return false;
-                    }
-                }
-            }
-            else
-            {
-                Logger.Warning($"[ENG] Could not load {name} DLL.");
-                return false;
-            }
         }
     }
 }

@@ -50,7 +50,21 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public float Energy
+        /// <summary>
+        ///     Determines if the light mask should automatically rotate with the entity. (like a flashlight)
+        /// </summary>
+        public bool MaskAutoRotate { get; set; }
+
+        /// <summary>
+        ///     Local rotation of the light mask around the center origin
+        /// </summary>
+        public Angle Rotation
+        {
+            get => Light.Rotation;
+            set => Light.Rotation = value;
+        }
+
+        public int Energy
         {
             get => Light.Energy;
             set => Light.Energy = value;
@@ -116,6 +130,11 @@ namespace SS14.Client.GameObjects
             {
                 Energy = node.AsFloat();
             }
+
+            if (mapping.TryGetNode("autoRot", out node))
+            {
+                MaskAutoRotate = node.AsBool();
+            }
         }
 
         public override void OnRemove()
@@ -124,6 +143,26 @@ namespace SS14.Client.GameObjects
             Light = null;
 
             base.OnRemove();
+        }
+
+        protected void UpdateLightPosition()
+        {
+            var transform = Owner.GetComponent<ITransformComponent>();
+            UpdateLightPosition(transform.LocalPosition);
+        }
+
+        public override void Update(float frameTime)
+        {
+            base.Update(frameTime);
+
+            var worldRotation = Owner.GetComponent<TransformComponent>().WorldRotation;
+            if (MaskAutoRotate && Light.Rotation != worldRotation)
+            {
+                Light.Rotation = worldRotation;
+                Light.Calculated = false;
+            }
+
+            Light.Update(frameTime);
         }
 
         /// <inheritdoc />

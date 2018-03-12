@@ -1,15 +1,12 @@
 ﻿using System;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.IoC;
 using SS14.Shared.Reflection;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
 {
-    /// <summary>
-    ///     Base component for the ECS system.
-    /// </summary>
+    /// <inheritdoc />
     [Reflect(false)]
     public abstract class Component : IComponent
     {
@@ -23,14 +20,12 @@ namespace SS14.Shared.GameObjects
         public virtual bool NetworkSynchronizeExistence => false;
 
         /// <inheritdoc />
-        public IEntity Owner { get; private set; }
+        public IEntity Owner { get; set; }
 
         /// <inheritdoc />
         public virtual Type StateType => typeof(ComponentState);
 
         /// <inheritdoc />
-        public event Action<ComponentShutdownEventArgs> OnShutdown;
-
         public bool Running { get; private set; }
 
         /// <inheritdoc />
@@ -44,15 +39,10 @@ namespace SS14.Shared.GameObjects
             Deleted = true;
         }
 
-        /// <inheritdoc />
-        public virtual void OnAdd(IEntity owner)
-        {
-            Owner = owner;
-
-            //Send us to the manager so it knows we're active
-            var manager = IoCManager.Resolve<IComponentManager>();
-            manager.AddComponent(this);
-        }
+        /// <summary>
+        ///     Called when the component gets added to an entity.
+        /// </summary>
+        public virtual void OnAdd() { }
 
         /// <inheritdoc />
         public virtual void Spawned()
@@ -74,8 +64,6 @@ namespace SS14.Shared.GameObjects
         public virtual void Shutdown()
         {
             Running = false;
-            OnShutdown?.Invoke(new ComponentShutdownEventArgs(this));
-            OnShutdown = null;
         }
 
         /// <inheritdoc />
@@ -86,18 +74,31 @@ namespace SS14.Shared.GameObjects
         public virtual void ExposeData(EntitySerializer serializer) { }
 
         /// <inheritdoc />
+        [Obsolete("Components should be updated through a system.")]
         public virtual void Update(float frameTime) { }
 
-        /// <inheritdoc />
-        public virtual ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type, params object[] list)
+        /// <summary>
+        ///     Sends a message to all other components in this entity.
+        ///     This is an alias of 'Owner.SendMessage(this, message);'
+        /// </summary>
+        /// <param name="message">Message to send.</param>
+        protected void SendMessage(ComponentMessage message)
         {
-            var reply = ComponentReplyMessage.Empty;
-
-            if (sender == this) //Don't listen to our own messages!
-                return reply;
-
-            return reply;
+            Owner.SendMessage(this, message);
         }
+
+        /// <summary>
+        ///     Sends a message over the network to all other components on the networked entity. This works both ways.
+        ///     This is an alias of 'Owner.SendNetworkMessage(this, message);'
+        /// </summary>
+        /// <param name="message">Message to send.</param>
+        protected void SendNetworkMessage(ComponentMessage message)
+        {
+            Owner.SendNetworkMessage(this, message);
+        }
+
+        /// <inheritdoc />
+        public virtual void HandleMessage(object owner, ComponentMessage message) { }
 
         /// <inheritdoc />
         public virtual ComponentState GetComponentState()
@@ -114,6 +115,7 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete("Use HandleMessage")]
         public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
         }

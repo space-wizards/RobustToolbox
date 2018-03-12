@@ -74,7 +74,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         void UnsubscribeEvent(Type eventType, Delegate evh, IEntityEventSubscriber s);
 
         void RaiseEvent(object sender, EntityEventArgs toRaise);
-
+        
         void RemoveSubscribedEvents(IEntityEventSubscriber subscriber);
 
         #endregion ComponentEvents

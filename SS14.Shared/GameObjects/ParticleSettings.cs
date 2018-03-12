@@ -33,7 +33,7 @@ namespace SS14.Shared.GameObjects
         private float _tangentialVelocityVariance = 0;
         private float _tangentialVelocity = 0;
         private float _radialAccelerationVariance = 0;
-        private Range<Color> _colorRange = new Range<Color>(Color4.Black, new Color(0, 0, 0, 0));
+        private Range<Color> _colorRange = new Range<Color>(Color.Black, new Color(0, 0, 0, 0));
         private string _sprite = "star1";
 
         public ParticleSettings()

@@ -42,9 +42,7 @@ namespace SS14.Server.GameObjects.Components.Container
         {
             if (!entity.TryGetComponent<IContainerManager>(out var containermanager))
             {
-                var factory = IoCManager.Resolve<IComponentFactory>();
-                containermanager = factory.GetComponent<ContainerManagerComponent>();
-                entity.AddComponent(containermanager);
+                containermanager = entity.AddComponent<ContainerManagerComponent>();
             }
 
             return containermanager.MakeContainer<Container>(id);

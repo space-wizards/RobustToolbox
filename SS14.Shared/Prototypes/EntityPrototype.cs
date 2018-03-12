@@ -115,7 +115,7 @@ namespace SS14.Shared.GameObjects
                 var manager = IoCManager.Resolve<IReflectionManager>();
                 ClassType = manager.GetType(node.AsString());
 
-                if(ClassType == null)
+                if (ClassType == null)
                     Logger.Error($"[ENG] Prototype \"{ID}\" - Cannot find class type \"{node.AsString()}\"!");
             }
 
@@ -318,10 +318,11 @@ namespace SS14.Shared.GameObjects
                 entity.ExposeData(new YamlEntitySerializer(DataNode));
             }
 
-            foreach (KeyValuePair<string, YamlMappingNode> componentData in Components)
+            foreach (var componentData in Components)
             {
-                IComponent component = componentFactory.GetComponent(componentData.Key);
-                component.Spawned();
+                var component = (Component)componentFactory.GetComponent(componentData.Key);
+
+                component.Owner = entity;
                 component.LoadParameters(componentData.Value);
                 component.ExposeData(new YamlEntitySerializer(componentData.Value));
 
@@ -352,7 +353,7 @@ namespace SS14.Shared.GameObjects
             if (Components.TryGetValue("Icon", out var ಠ_ಠ) &&
                 ಠ_ಠ.TryGetNode("icon", out var ಥ_ಥ))
             {
-                return new[] {new ComponentParameter("icon", ಥ_ಥ.AsString())};
+                return new[] { new ComponentParameter("icon", ಥ_ಥ.AsString()) };
             }
 
             return new ComponentParameter[0];

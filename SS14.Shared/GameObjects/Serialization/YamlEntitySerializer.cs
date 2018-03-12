@@ -16,12 +16,12 @@ namespace SS14.Shared.GameObjects.Serialization
         private static readonly Dictionary<Type, TypeSerializer> _typeSerializers;
         private static readonly StructSerializer _structSerializer;
 
+        private bool _setDefaults;
+
         private readonly YamlSequenceNode _root;
         private YamlMappingNode _entMap;
         private YamlSequenceNode _compSeq;
-
         private YamlMappingNode _curMap;
-        private bool SetDefaults;
 
         static YamlEntitySerializer()
         {
@@ -45,12 +45,12 @@ namespace SS14.Shared.GameObjects.Serialization
         {
             Reading = true;
             _curMap = entMap;
-            SetDefaults = setDefaults;
+            _setDefaults = setDefaults;
         }
 
         public override void EntityHeader()
         {
-            if(!Reading)
+            if (!Reading)
             {
                 _entMap = new YamlMappingNode();
                 _root.Children.Add(_entMap);
@@ -66,7 +66,7 @@ namespace SS14.Shared.GameObjects.Serialization
         {
             if (Reading)
             {
-                _compSeq = (YamlSequenceNode) _curMap.Children["components"];
+                _compSeq = (YamlSequenceNode)_curMap.Children["components"];
                 _curMap = null;
             }
             else
@@ -105,7 +105,7 @@ namespace SS14.Shared.GameObjects.Serialization
                 {
                     value = (T)NodeToType(typeof(T), node);
                 }
-                else if (SetDefaults)
+                else if (_setDefaults)
                 {
                     value = defaultValue;
                 }
@@ -149,7 +149,7 @@ namespace SS14.Shared.GameObjects.Serialization
 
             // other val (struct)
             if (type.IsValueType)
-                return _structSerializer.NodeToType(type, (YamlMappingNode) node);
+                return _structSerializer.NodeToType(type, (YamlMappingNode)node);
 
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(type));
         }
@@ -157,7 +157,7 @@ namespace SS14.Shared.GameObjects.Serialization
         internal static YamlNode TypeToNode(object obj)
         {
             // special snowflake string
-            if(obj is string s)
+            if (obj is string s)
                 return s;
 
             var type = obj.GetType();
@@ -185,7 +185,7 @@ namespace SS14.Shared.GameObjects.Serialization
 
         internal static void RegisterTypeSerializer(Type type, TypeSerializer serializer)
         {
-            if(!_typeSerializers.ContainsKey(type))
+            if (!_typeSerializers.ContainsKey(type))
                 _typeSerializers.Add(type, serializer);
         }
     }
@@ -265,7 +265,7 @@ namespace SS14.Shared.GameObjects.Serialization
             hexColor += color.BByte << 8;
             hexColor += color.AByte;
 
-            return new YamlScalarNode(hexColor.ToString("X"));
+            return new YamlScalarNode("#" + hexColor.ToString("X"));
         }
     }
 
@@ -279,7 +279,7 @@ namespace SS14.Shared.GameObjects.Serialization
 
         public override YamlNode TypeToNode(object obj)
         {
-            var val = (int)(MapId) obj;
+            var val = (int)(MapId)obj;
             return new YamlScalarNode(val.ToString());
         }
     }
@@ -313,7 +313,7 @@ namespace SS14.Shared.GameObjects.Serialization
 
         public override YamlNode TypeToNode(object obj)
         {
-            var vec = (Vector2) obj;
+            var vec = (Vector2)obj;
             return new YamlScalarNode($"{vec.X},{vec.Y}");
         }
     }

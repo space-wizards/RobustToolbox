@@ -24,6 +24,9 @@ namespace SS14.Client
         [Dependency]
         private readonly IPlayerManager _playMan;
 
+        [Dependency]
+        private readonly IStateManager _stateManager;
+
         /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;
 
@@ -149,7 +152,7 @@ namespace SS14.Client
 
             PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer.Session));
 
-            IoCManager.Resolve<IStateManager>().RequestStateChange<MainScreen>();
+            _stateManager.RequestStateChange<MainScreen>();
 
             _playMan.Shutdown();
             Reset();
@@ -186,16 +189,15 @@ namespace SS14.Client
             if (eventArgs.OldStatus == SessionStatus.Connecting)
                 OnPlayerJoinedServer(_playMan.LocalPlayer.Session);
 
-            var stateMan = IoCManager.Resolve<IStateManager>();
             if (eventArgs.NewStatus == SessionStatus.InLobby)
             {
-                stateMan.RequestStateChange<Lobby>();
+                _stateManager.RequestStateChange<Lobby>();
                 OnPlayerJoinedLobby(_playMan.LocalPlayer.Session);
             }
 
             else if (eventArgs.NewStatus == SessionStatus.InGame)
             {
-                stateMan.RequestStateChange<GameScreen>();
+                _stateManager.RequestStateChange<GameScreen>();
 
                 OnPlayerJoinedGame(_playMan.LocalPlayer.Session);
 

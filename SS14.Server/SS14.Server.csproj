@@ -108,6 +108,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClientConsoleHost\Commands\SpawnCommand.cs" />
+    <Compile Include="AI\AiLogicProcessor.cs" />
+    <Compile Include="AI\AiLogicProcessorAttribute.cs" />
     <Compile Include="ClientConsoleHost\Commands\ChatCommands.cs" />
     <Compile Include="ClientConsoleHost\Commands\MapCommands.cs" />
     <Compile Include="ClientConsoleHost\Commands\PlayerCommands.cs" />
@@ -115,6 +117,8 @@
     <Compile Include="ClientConsoleHost\Commands\SysCommands.cs" />
     <Compile Include="GameObjects\Components\Container\Container.cs" />
     <Compile Include="GameObjects\Components\Container\ContainerManagerComponent.cs" />
+    <Compile Include="GameObjects\Components\Mover\AiControllerComponent.cs" />
+    <Compile Include="GameObjects\EntitySystems\AiSystem.cs" />
     <Compile Include="Interfaces\GameObjects\IServerTransformComponent.cs" />
     <Compile Include="Interfaces\Log\IServerLogManager.cs" />
     <Compile Include="Interfaces\Maps\IMapLoader.cs" />
@@ -140,7 +144,6 @@
     <Compile Include="GameObjects\ServerComponentFactory.cs" />
     <Compile Include="GameObjects\ServerEntityManager.cs" />
     <Compile Include="GameObjects\ServerEntityNetworkManager.cs" />
-    <Compile Include="GameObjects\MessageEnums.cs" />
     <Compile Include="GameObjects\Components\ClickableComponent.cs" />
     <Compile Include="GameObjects\Components\Actor\BasicActorComponent.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponent.cs" />
@@ -154,9 +157,6 @@
     <Compile Include="GameObjects\Components\Transform\TransformComponent.cs" />
     <Compile Include="GameObjects\EntitySystems\ParticleSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
-    <Compile Include="GameObjects\Events\InputEvents.cs" />
-    <Compile Include="GameObjects\Exceptions\MissingImplementationException.cs" />
-    <Compile Include="GameObjects\Exceptions\NoPublicConstructorException.cs" />
     <Compile Include="GameState\GameStateManager.cs" />
     <Compile Include="Interfaces\ICommandLineArgs.cs" />
     <Compile Include="Interfaces\IBaseServer.cs" />

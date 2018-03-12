@@ -349,13 +349,13 @@ namespace SS14.Shared.Network
 
         private void DispatchNetMessage(NetIncomingMessage msg)
         {
-            if(_netPeer.Status == NetPeerStatus.ShutdownRequested)
+            if (_netPeer.Status == NetPeerStatus.ShutdownRequested)
                 return;
 
-            if(_netPeer.Status == NetPeerStatus.NotRunning)
+            if (_netPeer.Status == NetPeerStatus.NotRunning)
                 return;
 
-            if(!IsConnected)
+            if (!IsConnected)
                 return;
 
             if (msg.LengthBytes < 1)
@@ -436,7 +436,7 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void ServerSendToAll(NetMessage message)
         {
-            if(_netPeer == null || _netPeer.ConnectionsCount == 0)
+            if (_netPeer == null || _netPeer.ConnectionsCount == 0)
                 return;
 
             var packet = BuildMessage(message);
@@ -450,14 +450,11 @@ namespace SS14.Shared.Network
             if (_netPeer == null)
                 return;
 
-            var packet = BuildMessage(message);
-            var connection = ChanToCon(recipient);
-            _netPeer.SendMessage(packet, connection, NetDeliveryMethod.ReliableOrdered);
-        }
+            if (!(recipient is NetChannel channel))
+                throw new ArgumentException($"Not of type {typeof(NetChannel).FullName}", nameof(recipient));
 
-        private NetConnection ChanToCon(INetChannel channel)
-        {
-            return _channels.FirstOrDefault(x => x.Value == channel).Key;
+            var packet = BuildMessage(message);
+            _netPeer.SendMessage(packet, channel.Connection, NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <inheritdoc />

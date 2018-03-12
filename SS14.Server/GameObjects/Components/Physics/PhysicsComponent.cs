@@ -3,8 +3,6 @@ using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
-using SS14.Shared.Utility;
-using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
@@ -16,7 +14,8 @@ namespace SS14.Server.GameObjects
     public class PhysicsComponent : Component
     {
         private float _mass;
-        private Vector2 _velocity;
+        private Vector2 _linVelocity;
+        private float _angVelocity;
 
         /// <inheritdoc />
         public override string Name => "Physics";
@@ -25,7 +24,7 @@ namespace SS14.Server.GameObjects
         public override uint? NetID => NetIDs.PHYSICS;
 
         /// <summary>
-        ///     Current mass of the entity.
+        ///     Current mass of the entity in kilograms.
         /// </summary>
         public float Mass
         {
@@ -34,22 +33,31 @@ namespace SS14.Server.GameObjects
         }
 
         /// <summary>
-        ///     Current velocity of the entity.
+        ///     Current linear velocity of the entity in meters per second.
         /// </summary>
-        public Vector2 Velocity
+        public Vector2 LinearVelocity
         {
-            get => _velocity;
-            set => _velocity = value;
+            get => _linVelocity;
+            set => _linVelocity = value;
+        }
+
+        /// <summary>
+        ///     Current angular velocity of the entity in radians per sec.
+        /// </summary>
+        public float AngularVelocity
+        {
+            get => _angVelocity;
+            set => _angVelocity = value;
         }
 
         /// <inheritdoc />
-        public override void OnAdd(IEntity owner)
+        public override void OnAdd()
         {
             // This component requires that the entity has an AABB.
-            if (!owner.HasComponent<BoundingBoxComponent>())
-                Logger.Error($"[ECS] {owner.Prototype.Name} - {nameof(PhysicsComponent)} requires {nameof(BoundingBoxComponent)}. ");
+            if (!Owner.HasComponent<BoundingBoxComponent>())
+                Logger.Error($"[ECS] {Owner.Prototype.Name} - {nameof(PhysicsComponent)} requires {nameof(BoundingBoxComponent)}. ");
 
-            base.OnAdd(owner);
+            base.OnAdd();
         }
 
         /// <inheritdoc />
@@ -58,13 +66,14 @@ namespace SS14.Server.GameObjects
             base.ExposeData(serializer);
 
             serializer.DataField(ref _mass, "mass", 1);
-            serializer.DataField(ref _velocity, "vel", Vector2.Zero);
+            serializer.DataField(ref _linVelocity, "vel", Vector2.Zero);
+            serializer.DataField(ref _angVelocity, "avel", 0.0f);
         }
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new PhysicsComponentState(_mass, _velocity);
+            return new PhysicsComponentState(_mass, _linVelocity);
         }
     }
 }

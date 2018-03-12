@@ -26,6 +26,10 @@ namespace SS14.Server.ServerConsole.Commands
             var mapID = new MapId(intMapId);
             var gridId = new GridId(intGridId);
 
+            // no saving null space
+            if(mapID == MapId.Nullspace)
+                return;
+
             // no saving default grid
             if (gridId == GridId.DefaultGrid)
                 return;
@@ -48,9 +52,68 @@ namespace SS14.Server.ServerConsole.Commands
         public string Command => "loadbp";
         public string Description => "Loads a blueprint from disk into the game.";
         public string Help => "loadbp <MapID> <GridID> <Path>";
+
         public void Execute(params string[] args)
         {
             //TODO: Make me work after placement can create new grids.
+        }
+    }
+
+    public class SaveMap : IConsoleCommand
+    {
+        public string Command => "savemap";
+        public string Description => "Serializes a map to disk.";
+        public string Help => "savemap <MapID> <Path>";
+
+        public void Execute(params string[] args)
+        {
+            if (args.Length < 1)
+                return;
+
+            if (!int.TryParse(args[0], out var intMapId))
+                return;
+
+            var mapID = new MapId(intMapId);
+
+            // no saving null space
+            if (mapID == MapId.Nullspace)
+                return;
+
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            if (!mapManager.TryGetMap(mapID, out var map))
+                return;
+
+            // TODO: Parse path
+            IoCManager.Resolve<IMapLoader>().SaveMap(map, "Maps/Demo/DemoMap.yaml");
+        }
+    }
+
+    public class LoadMap : IConsoleCommand
+    {
+        public string Command => "loadmap";
+        public string Description => "Loads a map from disk into the game.";
+        public string Help => "loadmap <MapID> <Path>";
+
+        public void Execute(params string[] args)
+        {
+            if (args.Length < 1)
+                return;
+
+            if (!int.TryParse(args[0], out var intMapId))
+                return;
+
+            var mapID = new MapId(intMapId);
+
+            // no loading null space
+            if (mapID == MapId.Nullspace)
+                return;
+
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            if(mapManager.MapExists(mapID))
+                return;
+
+            // TODO: Parse path
+            IoCManager.Resolve<IMapLoader>().LoadMap(mapID, "Maps/Demo/DemoMap.yaml");
         }
     }
 }

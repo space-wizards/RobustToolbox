@@ -72,9 +72,9 @@ namespace SS14.Client.GameObjects
         /// </summary>
         void ICollidable.Bump(IEntity ent)
         {
-            OnBump?.Invoke(this, new BumpEventArgs(this.Owner, ent));
+            SendMessage(new BumpedEntMsg(ent));
 
-            Owner.SendMessage(this, ComponentMessageType.Bumped, ent);
+            OnBump?.Invoke(this, new BumpEventArgs(this.Owner, ent));
         }
 
         /// <inheritdoc />
@@ -135,23 +135,20 @@ namespace SS14.Client.GameObjects
         }
 
         /// <summary>
-        ///     SpriteChanged means the spritecomponent changed the current sprite.
+        ///     Handles an incoming component message.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="type"></param>
-        /// <param name="reply"></param>
-        /// <param name="list"></param>
-        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
-            params object[] list)
+        /// <param name="owner">
+        ///     Object that raised the event. If the event was sent over the network or from some unknown place,
+        ///     this will be null.
+        /// </param>
+        /// <param name="message">Message that was sent.</param>
+        public override void HandleMessage(object owner, ComponentMessage message)
         {
-            var reply = base.ReceiveMessage(sender, type, list);
+            base.HandleMessage(owner, message);
 
-            if (sender == this) //Don't listen to our own messages!
-                return ComponentReplyMessage.Empty;
-
-            switch (type)
+            switch (message)
             {
-                case ComponentMessageType.SpriteChanged:
+                case SpriteChangedMsg msg:
                     if (collisionEnabled)
                     {
                         var cm = IoCManager.Resolve<ICollisionManager>();
@@ -159,8 +156,6 @@ namespace SS14.Client.GameObjects
                     }
                     break;
             }
-
-            return reply;
         }
 
         /// <inheritdoc />
@@ -183,6 +178,7 @@ namespace SS14.Client.GameObjects
             return IoCManager.Resolve<ICollisionManager>().TryCollide(Owner, offset, bump);
         }
 
+        [Obsolete("Handle BumpEntMsg")]
         public event EventHandler<BumpEventArgs> OnBump;
 
         /// <summary>

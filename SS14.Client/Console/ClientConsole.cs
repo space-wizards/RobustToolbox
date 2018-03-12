@@ -34,6 +34,8 @@ namespace SS14.Client.Console
 
         [Dependency]
         protected readonly IClientNetManager _network;
+        [Dependency]
+        private readonly IReflectionManager _reflectionManager;
 
         private readonly Dictionary<string, IConsoleCommand> _commands = new Dictionary<string, IConsoleCommand>();
         private bool _requestedCommands;
@@ -145,7 +147,7 @@ namespace SS14.Client.Console
                 args.RemoveAt(0);
                 forward = command.Execute(this, args.ToArray());
             }
-            else if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
+            else if (!_network.IsConnected)
             {
                 AddLine("Unknown command: " + commandname, ChatChannel.Default, Color.Red);
                 return;
@@ -160,8 +162,7 @@ namespace SS14.Client.Console
         /// </summary>
         private void InitializeCommands()
         {
-            var manager = IoCManager.Resolve<IReflectionManager>();
-            foreach (var t in manager.GetAllChildren<IConsoleCommand>())
+            foreach (var t in _reflectionManager.GetAllChildren<IConsoleCommand>())
             {
                 var instance = (IConsoleCommand)Activator.CreateInstance(t, null);
                 if (_commands.ContainsKey(instance.Command))
@@ -183,7 +184,6 @@ namespace SS14.Client.Console
                 return;
 
             var msg = _network.CreateNetMessage<MsgConCmdReg>();
-            // empty message to request commands
             _network.ClientSendMessage(msg);
 
             _requestedCommands = true;
@@ -194,10 +194,8 @@ namespace SS14.Client.Console
         /// </summary>
         private void SendServerConsoleCommand(string text)
         {
-            if (!_network.IsConnected)
+            if (_network == null || !_network.IsConnected)
                 return;
-
-            Logger.Debug($"Sending! {text}");
 
             var msg = _network.CreateNetMessage<MsgConCmd>();
             msg.Text = text;

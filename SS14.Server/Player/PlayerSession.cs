@@ -92,17 +92,16 @@ namespace SS14.Server.Player
             DetachFromEntity();
 
             //Add input component.
-            var factory = IoCManager.Resolve<IComponentFactory>();
-            a.AddComponent(factory.GetComponent<KeyBindingInputComponent>());
+            a.AddComponent<KeyBindingInputComponent>();
+
             if (a.HasComponent<IMoverComponent>())
             {
                 a.RemoveComponent<IMoverComponent>();
             }
-            a.AddComponent(factory.GetComponent<PlayerInputMoverComponent>());
+            a.AddComponent<PlayerInputMoverComponent>();
 
-            BasicActorComponent actorComponent = factory.GetComponent<BasicActorComponent>();
+            var actorComponent = a.AddComponent<BasicActorComponent>();
             actorComponent.playerSession = this;
-            a.AddComponent(actorComponent);
 
             AttachedEntity = a;
             SendAttachMessage();

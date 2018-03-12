@@ -89,12 +89,6 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override void Spawned()
-        {
-            lightManager = IoCManager.Resolve<ILightManager>();
-            Light = lightManager.MakeLight();
-        }
-
         public override void Initialize()
         {
             base.Initialize();
@@ -105,6 +99,13 @@ namespace SS14.Client.GameObjects
 
         public override void LoadParameters(YamlMappingNode mapping)
         {
+            if (lightManager == null)
+            {
+                // First in the init stack so...
+                lightManager = IoCManager.Resolve<ILightManager>();
+                Light = lightManager.MakeLight();
+            }
+
             YamlNode node;
             if (mapping.TryGetNode("offset", out node))
             {

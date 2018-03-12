@@ -59,6 +59,13 @@ namespace SS14.Client
     // Partial of GameController to initialize IoC and some other low-level systems like it.
     public sealed partial class GameController
     {
+        // Aaaaaah init order hurts.
+        private void PreInitIoC()
+        {
+            IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
+            IoCManager.BuildGraph();
+        }
+
         private void InitIoC()
         {
             RegisterIoC();
@@ -93,7 +100,6 @@ namespace SS14.Client
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();
             IoCManager.Register<IResourceManager, ResourceCache>();
             IoCManager.Register<IResourceCache, ResourceCache>();
-            IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
             IoCManager.Register<IClientTileDefinitionManager, ClientTileDefinitionManager>();
             IoCManager.Register<IClientNetManager, NetManager>();
             IoCManager.Register<IClientEntityManager, ClientEntityManager>();

@@ -80,9 +80,10 @@ namespace SS14.Client
 
         public override void Main(Godot.SceneTree tree)
         {
+            PreInitIoC();
+            IoCManager.Resolve<ISceneTreeHolder>().Initialize(tree);
             InitIoC();
 
-            _sceneTreeHolder.Initialize(tree);
             tree.SetAutoAcceptQuit(false);
 
             // Load config.

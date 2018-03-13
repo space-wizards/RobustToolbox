@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Log;
 
@@ -18,15 +19,36 @@ namespace SS14.Shared.Timing
         public event EventHandler<FrameEventArgs> Update;
         public event EventHandler<FrameEventArgs> Render;
 
+        /// <summary>
+        ///     Enables single step mode. If this is enabled, after every tick the GameTime will pause.
+        ///     Unpausing GameTime will run another single tick.
+        /// </summary>
         public bool SingleStep { get; set; } = false;
+
+        /// <summary>
+        ///     Setting this to false will stop the loop after it has started running.
+        /// </summary>
         public bool Running { get; set; }
+
+        /// <summary>
+        ///     How many ticks behind the simulation can get before it starts to slow down.
+        /// </summary>
         public int MaxQueuedTicks { get; set; } = 5;
+
+        /// <summary>
+        ///     The method currently being used to limit the Update rate.
+        /// </summary>
+        public SleepMode SleepMode { get; set; } = SleepMode.Yield;
 
         public GameLoop(IGameTiming timing)
         {
             _timing = timing;
         }
 
+        /// <summary>
+        ///     Start running the loop. This function will block for as long as the loop is Running.
+        ///     Set Running to false to exit the loop and return from this function.
+        /// </summary>
         public void Run()
         {
             if(_timing.TickRate <= 0)
@@ -103,7 +125,37 @@ namespace SS14.Shared.Timing
 
                 // render the simulation
                 Render?.Invoke(this, realFrameEvent);
+
+                // Set sleep to 1 if you want to be nice and give the rest of the timeslice up to the os scheduler.
+                // Set sleep to 0 if you want to use 100% cpu, but still cooperate with the scheduler.
+                // do not call sleep if you want to be 'that thread' and hog 100% cpu.
+                if(SleepMode != SleepMode.None)
+                    Thread.Sleep((int)SleepMode);
             }
         }
+    }
+
+    /// <summary>
+    ///     Methods the GameLoop can use to limit the Update rate.
+    /// </summary>
+    public enum SleepMode
+    {
+        /// <summary>
+        ///     Thread will not yield to the scheduler or sleep, and consume 100% cpu. Use this if you are
+        ///     limiting the rate by other means (rendering FPS with vsync), otherwise your computer will turn into a heater.
+        /// </summary>
+        None = -1,
+
+        /// <summary>
+        ///     Same as None, except you are yielding the rest of your timeslice to other OS threads at the end of each update.
+        ///     This will run at 100% CPU if another thread does not hog all the CPU time, and your OS scheduler will be happier.
+        /// </summary>
+        Yield = 0,
+
+        /// <summary>
+        ///     Adds ~1ms thread sleep after every update. Use this to limit the Update rate of the loop, conserve power and
+        ///     have low CPU usage. You should use this on a dedicated server.
+        /// </summary>
+        Delay = 1,
     }
 }

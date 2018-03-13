@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -83,7 +85,7 @@ namespace SS14.Shared.ContentPack
         }
 
         /// <summary>
-        ///     Loads and assembly into the current AppDomain.
+        ///     Loads an assembly into the current AppDomain.
         /// </summary>
         /// <typeparam name="T">The type of the entry point to search for.</typeparam>
         /// <param name="assembly">Byte array of the assembly.</param>
@@ -163,6 +165,57 @@ namespace SS14.Shared.ContentPack
 
             public Assembly GameAssembly { get; set; }
             public List<GameShared> EntryPoints { get; }
+        }
+
+        /// <summary>
+        ///     Tries to load an assembly from a resource manager into the current appdomain.
+        /// </summary>
+        /// <typeparam name="T">The type of the entry point to search for.</typeparam>
+        /// <param name="resMan">The assembly will be located inside of this resource manager.</param>
+        /// <param name="assemblyName">File name of the assembly inside of the ./Assemblies folder in the resource manager.</param>
+        /// <returns>If the assembly was successfully located and loaded.</returns>
+        public static bool TryLoadAssembly<T>(IResourceManager resMan, string assemblyName) where T : GameShared
+        {
+            // get the assembly from the file system
+            if (resMan.TryContentFileRead($@"Assemblies/{assemblyName}.dll", out MemoryStream gameDll))
+            {
+                Logger.Debug($"[SRV] Loading {assemblyName} DLL");
+
+                // see if debug info is present
+                if (resMan.TryContentFileRead($@"Assemblies/{assemblyName}.pdb", out MemoryStream gamePdb))
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray(), gamePdb.ToArray());
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error($"[SRV] Exception loading DLL {assemblyName}.dll: {e}");
+                        return false;
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray());
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error($"[SRV] Exception loading DLL {assemblyName}.dll: {e}");
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                Logger.Warning($"[ENG] Could not load {assemblyName} DLL.");
+                return false;
+            }
         }
     }
 }

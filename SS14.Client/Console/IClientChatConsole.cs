@@ -6,7 +6,7 @@ namespace SS14.Client.Console
     /// <summary>
     ///     Interface for a chat compatible console.
     /// </summary>
-    internal interface IClientChatConsole : IClientConsole
+    public interface IClientChatConsole : IClientConsole
     {
         /// <summary>
         ///     Parses a raw chat message the player has submitted.

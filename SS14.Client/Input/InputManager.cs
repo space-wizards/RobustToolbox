@@ -16,6 +16,7 @@ using SS14.Shared.Enums;
 using SS14.Client.Interfaces;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
+using SS14.Shared.Input;
 
 namespace SS14.Client.Input
 {

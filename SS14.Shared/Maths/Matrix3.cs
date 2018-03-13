@@ -1,4 +1,5 @@
 ﻿#region --- License ---
+
 /*
 Copyright (c) 2006 - 2008 The Open Toolkit library.
 
@@ -20,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
 #endregion
 
 using System;
@@ -107,27 +109,45 @@ namespace SS14.Shared.Maths
                     case 0:
                         switch (column)
                         {
-                            case 0: R0C0 = value; return;
-                            case 1: R0C1 = value; return;
-                            case 2: R0C2 = value; return;
+                            case 0:
+                                R0C0 = value;
+                                return;
+                            case 1:
+                                R0C1 = value;
+                                return;
+                            case 2:
+                                R0C2 = value;
+                                return;
                         }
                         break;
 
                     case 1:
                         switch (column)
                         {
-                            case 0: R1C0 = value; return;
-                            case 1: R1C1 = value; return;
-                            case 2: R1C2 = value; return;
+                            case 0:
+                                R1C0 = value;
+                                return;
+                            case 1:
+                                R1C1 = value;
+                                return;
+                            case 2:
+                                R1C2 = value;
+                                return;
                         }
                         break;
 
                     case 2:
                         switch (column)
                         {
-                            case 0: R2C0 = value; return;
-                            case 1: R2C1 = value; return;
-                            case 2: R2C2 = value; return;
+                            case 0:
+                                R2C0 = value;
+                                return;
+                            case 1:
+                                R2C1 = value;
+                                return;
+                            case 2:
+                                R2C2 = value;
+                                return;
                         }
                         break;
                 }
@@ -161,15 +181,33 @@ namespace SS14.Shared.Maths
             {
                 switch (index)
                 {
-                    case 0: R0C0 = value; return;
-                    case 1: R0C1 = value; return;
-                    case 2: R0C2 = value; return;
-                    case 3: R1C0 = value; return;
-                    case 4: R1C1 = value; return;
-                    case 5: R1C2 = value; return;
-                    case 6: R2C0 = value; return;
-                    case 7: R2C1 = value; return;
-                    case 8: R2C2 = value; return;
+                    case 0:
+                        R0C0 = value;
+                        return;
+                    case 1:
+                        R0C1 = value;
+                        return;
+                    case 2:
+                        R0C2 = value;
+                        return;
+                    case 3:
+                        R1C0 = value;
+                        return;
+                    case 4:
+                        R1C1 = value;
+                        return;
+                    case 5:
+                        R1C2 = value;
+                        return;
+                    case 6:
+                        R2C0 = value;
+                        return;
+                    case 7:
+                        R2C1 = value;
+                        return;
+                    case 8:
+                        R2C2 = value;
+                        return;
                     default: throw new IndexOutOfRangeException();
                 }
             }
@@ -178,9 +216,9 @@ namespace SS14.Shared.Maths
         /// <summary>Converts the matrix into an array of floats.</summary>
         /// <param name="matrix">The matrix to convert.</param>
         /// <returns>An array of floats for the matrix.</returns>
-        public static explicit operator float[] (Matrix3 matrix)
+        public static explicit operator float[](Matrix3 matrix)
         {
-            return new float[9]
+            return new[]
             {
                 matrix.R0C0,
                 matrix.R0C1,
@@ -199,18 +237,18 @@ namespace SS14.Shared.Maths
         #region Constructors
 
         /// <summary>Constructs left matrix with the same components as the given matrix.</summary>
-        /// <param name="vector">The matrix whose components to copy.</param>
+        /// <param name="matrix">The matrix whose components to copy.</param>
         public Matrix3(ref Matrix3 matrix)
         {
-            this.R0C0 = matrix.R0C0;
-            this.R0C1 = matrix.R0C1;
-            this.R0C2 = matrix.R0C2;
-            this.R1C0 = matrix.R1C0;
-            this.R1C1 = matrix.R1C1;
-            this.R1C2 = matrix.R1C2;
-            this.R2C0 = matrix.R2C0;
-            this.R2C1 = matrix.R2C1;
-            this.R2C2 = matrix.R2C2;
+            R0C0 = matrix.R0C0;
+            R0C1 = matrix.R0C1;
+            R0C2 = matrix.R0C2;
+            R1C0 = matrix.R1C0;
+            R1C1 = matrix.R1C1;
+            R1C2 = matrix.R1C2;
+            R2C0 = matrix.R2C0;
+            R2C1 = matrix.R2C1;
+            R2C2 = matrix.R2C2;
         }
 
         /// <summary>Constructs left matrix with the given values.</summary>
@@ -236,15 +274,15 @@ namespace SS14.Shared.Maths
             float r2c2
         )
         {
-            this.R0C0 = r0c0;
-            this.R0C1 = r0c1;
-            this.R0C2 = r0c2;
-            this.R1C0 = r1c0;
-            this.R1C1 = r1c1;
-            this.R1C2 = r1c2;
-            this.R2C0 = r2c0;
-            this.R2C1 = r2c1;
-            this.R2C2 = r2c2;
+            R0C0 = r0c0;
+            R0C1 = r0c1;
+            R0C2 = r0c2;
+            R1C0 = r1c0;
+            R1C1 = r1c1;
+            R1C2 = r1c2;
+            R2C0 = r2c0;
+            R2C1 = r2c1;
+            R2C2 = r2c2;
         }
 
         /// <summary>Constructs left matrix from the given array of float-precision floating-point numbers.</summary>
@@ -253,15 +291,15 @@ namespace SS14.Shared.Maths
         {
             if (floatArray == null || floatArray.GetLength(0) < 9) throw new MissingFieldException();
 
-            this.R0C0 = floatArray[0];
-            this.R0C1 = floatArray[1];
-            this.R0C2 = floatArray[2];
-            this.R1C0 = floatArray[3];
-            this.R1C1 = floatArray[4];
-            this.R1C2 = floatArray[5];
-            this.R2C0 = floatArray[6];
-            this.R2C1 = floatArray[7];
-            this.R2C2 = floatArray[8];
+            R0C0 = floatArray[0];
+            R0C1 = floatArray[1];
+            R0C2 = floatArray[2];
+            R1C0 = floatArray[3];
+            R1C1 = floatArray[4];
+            R1C2 = floatArray[5];
+            R2C0 = floatArray[6];
+            R2C1 = floatArray[7];
+            R2C2 = floatArray[8];
         }
 
         /// <summary>
@@ -281,6 +319,34 @@ namespace SS14.Shared.Maths
             R2C0 = matrix.Row2.X;
             R2C1 = matrix.Row2.Y;
             R2C2 = matrix.Row2.Z;
+        }
+
+        public static Matrix3 CreateTranslation(float x, float y)
+        {
+            var result = Identity;
+            result.R0C2 = x;
+            result.R1C2 = y;
+            return result;
+        }
+
+        public static Matrix3 CreateTranslation(Vector2 vector)
+        {
+            return CreateTranslation(vector.X, vector.Y);
+        }
+
+        public static Matrix3 CreateRotation(float angle)
+        {
+            var cos = (float) Math.Cos(angle);
+            var sin = (float) Math.Sin(angle);
+
+            var result = Identity;
+
+            result.R0C0 = cos;
+            result.R1C0 = sin;
+            result.R0C1 = -sin;
+            result.R1C1 = cos;
+
+            return result;
         }
 
         #endregion
@@ -346,15 +412,15 @@ namespace SS14.Shared.Maths
         public bool EqualsApprox(ref Matrix3 matrix, float tolerance)
         {
             return
-                System.Math.Abs(R0C0 - matrix.R0C0) <= tolerance &&
-                System.Math.Abs(R0C1 - matrix.R0C1) <= tolerance &&
-                System.Math.Abs(R0C2 - matrix.R0C2) <= tolerance &&
-                System.Math.Abs(R1C0 - matrix.R1C0) <= tolerance &&
-                System.Math.Abs(R1C1 - matrix.R1C1) <= tolerance &&
-                System.Math.Abs(R1C2 - matrix.R1C2) <= tolerance &&
-                System.Math.Abs(R2C0 - matrix.R2C0) <= tolerance &&
-                System.Math.Abs(R2C1 - matrix.R2C1) <= tolerance &&
-                System.Math.Abs(R2C2 - matrix.R2C2) <= tolerance;
+                Math.Abs(R0C0 - matrix.R0C0) <= tolerance &&
+                Math.Abs(R0C1 - matrix.R0C1) <= tolerance &&
+                Math.Abs(R0C2 - matrix.R0C2) <= tolerance &&
+                Math.Abs(R1C0 - matrix.R1C0) <= tolerance &&
+                Math.Abs(R1C1 - matrix.R1C1) <= tolerance &&
+                Math.Abs(R1C2 - matrix.R1C2) <= tolerance &&
+                Math.Abs(R2C0 - matrix.R2C0) <= tolerance &&
+                Math.Abs(R2C1 - matrix.R2C1) <= tolerance &&
+                Math.Abs(R2C2 - matrix.R2C2) <= tolerance;
         }
 
         /// <summary>Indicates whether the current matrix is approximately equal to another matrix.</summary>
@@ -365,21 +431,20 @@ namespace SS14.Shared.Maths
         public static bool EqualsApprox(ref Matrix3 left, ref Matrix3 right, float tolerance)
         {
             return
-                System.Math.Abs(left.R0C0 - right.R0C0) <= tolerance &&
-                System.Math.Abs(left.R0C1 - right.R0C1) <= tolerance &&
-                System.Math.Abs(left.R0C2 - right.R0C2) <= tolerance &&
-                System.Math.Abs(left.R1C0 - right.R1C0) <= tolerance &&
-                System.Math.Abs(left.R1C1 - right.R1C1) <= tolerance &&
-                System.Math.Abs(left.R1C2 - right.R1C2) <= tolerance &&
-                System.Math.Abs(left.R2C0 - right.R2C0) <= tolerance &&
-                System.Math.Abs(left.R2C1 - right.R2C1) <= tolerance &&
-                System.Math.Abs(left.R2C2 - right.R2C2) <= tolerance;
+                Math.Abs(left.R0C0 - right.R0C0) <= tolerance &&
+                Math.Abs(left.R0C1 - right.R0C1) <= tolerance &&
+                Math.Abs(left.R0C2 - right.R0C2) <= tolerance &&
+                Math.Abs(left.R1C0 - right.R1C0) <= tolerance &&
+                Math.Abs(left.R1C1 - right.R1C1) <= tolerance &&
+                Math.Abs(left.R1C2 - right.R1C2) <= tolerance &&
+                Math.Abs(left.R2C0 - right.R2C0) <= tolerance &&
+                Math.Abs(left.R2C1 - right.R2C1) <= tolerance &&
+                Math.Abs(left.R2C2 - right.R2C2) <= tolerance;
         }
 
         #endregion
 
         #region Arithmetic Operators
-
 
         /// <summary>Add left matrix to this matrix.</summary>
         /// <param name="matrix">The matrix to add.</param>
@@ -429,7 +494,6 @@ namespace SS14.Shared.Maths
             result.R2C2 = left.R2C2 + right.R2C2;
         }
 
-
         /// <summary>Subtract matrix from this matrix.</summary>
         /// <param name="matrix">The matrix to subtract.</param>
         public void Subtract(ref Matrix3 matrix)
@@ -462,7 +526,7 @@ namespace SS14.Shared.Maths
         }
 
         /// <summary>Subtract right matrix from left matrix.</summary>
-        /// <param name="matrix">The matrix on the matrix side of the equation.</param>
+        /// <param name="left">The matrix on the matrix side of the equation.</param>
         /// <param name="right">The matrix on the right side of the equation</param>
         /// <param name="result">The resulting matrix of the subtraction.</param>
         public static void Subtract(ref Matrix3 left, ref Matrix3 right, out Matrix3 result)
@@ -478,23 +542,21 @@ namespace SS14.Shared.Maths
             result.R2C2 = left.R2C2 - right.R2C2;
         }
 
-
-        /// <summary>Multiply left martix times this matrix.</summary>
+        /// <summary>Multiply left matrix times this matrix.</summary>
         /// <param name="matrix">The matrix to multiply.</param>
         public void Multiply(ref Matrix3 matrix)
         {
-            float r0c0 = matrix.R0C0 * R0C0 + matrix.R0C1 * R1C0 + matrix.R0C2 * R2C0;
-            float r0c1 = matrix.R0C0 * R0C1 + matrix.R0C1 * R1C1 + matrix.R0C2 * R2C1;
-            float r0c2 = matrix.R0C0 * R0C2 + matrix.R0C1 * R1C2 + matrix.R0C2 * R2C2;
+            var r0c0 = matrix.R0C0 * R0C0 + matrix.R0C1 * R1C0 + matrix.R0C2 * R2C0;
+            var r0c1 = matrix.R0C0 * R0C1 + matrix.R0C1 * R1C1 + matrix.R0C2 * R2C1;
+            var r0c2 = matrix.R0C0 * R0C2 + matrix.R0C1 * R1C2 + matrix.R0C2 * R2C2;
 
-            float r1c0 = matrix.R1C0 * R0C0 + matrix.R1C1 * R1C0 + matrix.R1C2 * R2C0;
-            float r1c1 = matrix.R1C0 * R0C1 + matrix.R1C1 * R1C1 + matrix.R1C2 * R2C1;
-            float r1c2 = matrix.R1C0 * R0C2 + matrix.R1C1 * R1C2 + matrix.R1C2 * R2C2;
+            var r1c0 = matrix.R1C0 * R0C0 + matrix.R1C1 * R1C0 + matrix.R1C2 * R2C0;
+            var r1c1 = matrix.R1C0 * R0C1 + matrix.R1C1 * R1C1 + matrix.R1C2 * R2C1;
+            var r1c2 = matrix.R1C0 * R0C2 + matrix.R1C1 * R1C2 + matrix.R1C2 * R2C2;
 
             R2C0 = matrix.R2C0 * R0C0 + matrix.R2C1 * R1C0 + matrix.R2C2 * R2C0;
             R2C1 = matrix.R2C0 * R0C1 + matrix.R2C1 * R1C1 + matrix.R2C2 * R2C1;
             R2C2 = matrix.R2C0 * R0C2 + matrix.R2C1 * R1C2 + matrix.R2C2 * R2C2;
-
 
             R0C0 = r0c0;
             R0C1 = r0c1;
@@ -522,7 +584,7 @@ namespace SS14.Shared.Maths
         }
 
         /// <summary>Multiply left matrix times left matrix.</summary>
-        /// <param name="matrix">The matrix on the matrix side of the equation.</param>
+        /// <param name="left">The matrix on the matrix side of the equation.</param>
         /// <param name="right">The matrix on the right side of the equation</param>
         /// <param name="result">The resulting matrix of the multiplication.</param>
         public static void Multiply(ref Matrix3 left, ref Matrix3 right, out Matrix3 result)
@@ -538,9 +600,8 @@ namespace SS14.Shared.Maths
             result.R2C2 = right.R2C0 * left.R0C2 + right.R2C1 * left.R1C2 + right.R2C2 * left.R2C2;
         }
 
-
-        /// <summary>Multiply matrix times this matrix.</summary>
-        /// <param name="matrix">The matrix to multiply.</param>
+        /// <summary>Multiply matrix times this scalar.</summary>
+        /// <param name="scalar">The scalar to multiply.</param>
         public void Multiply(float scalar)
         {
             R0C0 = scalar * R0C0;
@@ -555,7 +616,7 @@ namespace SS14.Shared.Maths
         }
 
         /// <summary>Multiply matrix times this matrix.</summary>
-        /// <param name="matrix">The matrix to multiply.</param>
+        /// <param name="scalar">The scalar to multiply.</param>
         /// <param name="result">The resulting matrix of the multiplication.</param>
         public void Multiply(float scalar, out Matrix3 result)
         {
@@ -572,7 +633,7 @@ namespace SS14.Shared.Maths
 
         /// <summary>Multiply left matrix times left matrix.</summary>
         /// <param name="matrix">The matrix on the matrix side of the equation.</param>
-        /// <param name="right">The matrix on the right side of the equation</param>
+        /// <param name="scalar">The scalar on the right side of the equation</param>
         /// <param name="result">The resulting matrix of the multiplication.</param>
         public static void Multiply(ref Matrix3 matrix, float scalar, out Matrix3 result)
         {
@@ -587,18 +648,11 @@ namespace SS14.Shared.Maths
             result.R2C2 = scalar * matrix.R2C2;
         }
 
-
         #endregion
 
         #region Functions
 
-        public float Determinant
-        {
-            get
-            {
-                return R0C0 * R1C1 * R2C2 - R0C0 * R1C2 * R2C1 - R0C1 * R1C0 * R2C2 + R0C2 * R1C0 * R2C1 + R0C1 * R1C2 * R2C0 - R0C2 * R1C1 * R2C0;
-            }
-        }
+        public float Determinant => R0C0 * R1C1 * R2C2 - R0C0 * R1C2 * R2C1 - R0C1 * R1C0 * R2C2 + R0C2 * R1C0 * R2C1 + R0C1 * R1C2 * R2C0 - R0C2 * R1C1 * R2C0;
 
         public void Transpose()
         {
@@ -606,6 +660,7 @@ namespace SS14.Shared.Maths
             MathHelper.Swap(ref R0C2, ref R2C0);
             MathHelper.Swap(ref R1C2, ref R2C1);
         }
+
         public void Transpose(out Matrix3 result)
         {
             result.R0C0 = R0C0;
@@ -618,6 +673,7 @@ namespace SS14.Shared.Maths
             result.R2C1 = R1C2;
             result.R2C2 = R2C2;
         }
+
         public static void Transpose(ref Matrix3 matrix, out Matrix3 result)
         {
             result.R0C0 = matrix.R0C0;
@@ -631,32 +687,76 @@ namespace SS14.Shared.Maths
             result.R2C2 = matrix.R2C2;
         }
 
+        /// <summary>
+        /// Calculate the inverse of the given matrix
+        /// </summary>
+        /// <param name="mat">The matrix to invert</param>
+        /// <returns>The inverse of the given matrix if it has one, or the input if it is singular</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the Matrix4 is singular.</exception>
+        public static Matrix3 Invert(Matrix3 mat)
+        {
+            var result = new Matrix3();
+            mat.Invert(ref result);
+            return result;
+        }
+
+        public void Invert(ref Matrix3 minv)
+        {
+            //Credit: https://stackoverflow.com/a/18504573
+
+            var d = Determinant;
+            if (FloatMath.CloseTo(d, 0))
+                throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
+
+            var m = this;
+
+            // computes the inverse of a matrix m
+            double det = m.R0C0 * (m.R1C1 * m.R2C2 - m.R2C1 * m.R1C2) -
+                         m.R0C1 * (m.R1C0 * m.R2C2 - m.R1C2 * m.R2C0) +
+                         m.R0C2 * (m.R1C0 * m.R2C1 - m.R1C1 * m.R2C0);
+
+            var invdet = 1 / det;
+
+            minv.R0C0 = (float) ((m.R1C1 * m.R2C2 - m.R2C1 * m.R1C2) * invdet);
+            minv.R0C1 = (float) ((m.R0C2 * m.R2C1 - m.R0C1 * m.R2C2) * invdet);
+            minv.R0C2 = (float) ((m.R0C1 * m.R1C2 - m.R0C2 * m.R1C1) * invdet);
+            minv.R1C0 = (float) ((m.R1C2 * m.R2C0 - m.R1C0 * m.R2C2) * invdet);
+            minv.R1C1 = (float) ((m.R0C0 * m.R2C2 - m.R0C2 * m.R2C0) * invdet);
+            minv.R1C2 = (float) ((m.R1C0 * m.R0C2 - m.R0C0 * m.R1C2) * invdet);
+            minv.R2C0 = (float) ((m.R1C0 * m.R2C1 - m.R2C0 * m.R1C1) * invdet);
+            minv.R2C1 = (float) ((m.R2C0 * m.R0C1 - m.R0C0 * m.R2C1) * invdet);
+            minv.R2C2 = (float) ((m.R0C0 * m.R1C1 - m.R1C0 * m.R0C1) * invdet);
+        }
+
         #endregion
 
         #region Transformation Functions
 
         public void Transform(ref Vector3 vector)
         {
-            float x = R0C0 * vector.X + R0C1 * vector.Y + R0C2 * vector.Z;
-            float y = R1C0 * vector.X + R1C1 * vector.Y + R1C2 * vector.Z;
+            var x = R0C0 * vector.X + R0C1 * vector.Y + R0C2 * vector.Z;
+            var y = R1C0 * vector.X + R1C1 * vector.Y + R1C2 * vector.Z;
             vector.Z = R2C0 * vector.X + R2C1 * vector.Y + R2C2 * vector.Z;
             vector.X = x;
             vector.Y = y;
         }
+
         public static void Transform(ref Matrix3 matrix, ref Vector3 vector)
         {
-            float x = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2 * vector.Z;
-            float y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2 * vector.Z;
+            var x = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2 * vector.Z;
+            var y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2 * vector.Z;
             vector.Z = matrix.R2C0 * vector.X + matrix.R2C1 * vector.Y + matrix.R2C2 * vector.Z;
             vector.X = x;
             vector.Y = y;
         }
+
         public void Transform(ref Vector3 vector, out Vector3 result)
         {
             result.X = R0C0 * vector.X + R0C1 * vector.Y + R0C2 * vector.Z;
             result.Y = R1C0 * vector.X + R1C1 * vector.Y + R1C2 * vector.Z;
             result.Z = R2C0 * vector.X + R2C1 * vector.Y + R2C2 * vector.Z;
         }
+
         public static void Transform(ref Matrix3 matrix, ref Vector3 vector, out Vector3 result)
         {
             result.X = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2 * vector.Z;
@@ -666,13 +766,13 @@ namespace SS14.Shared.Maths
 
         public void Rotate(float angle)
         {
-            float angleRadians = MathHelper.DegreesToRadians(angle);
-            float sin = (float)System.Math.Sin(angleRadians);
-            float cos = (float)System.Math.Cos(angleRadians);
+            var angleRadians = MathHelper.DegreesToRadians(angle);
+            var sin = (float) Math.Sin(angleRadians);
+            var cos = (float) Math.Cos(angleRadians);
 
-            float r0c0 = cos * R0C0 + sin * R1C0;
-            float r0c1 = cos * R0C1 + sin * R1C1;
-            float r0c2 = cos * R0C2 + sin * R1C2;
+            var r0c0 = cos * R0C0 + sin * R1C0;
+            var r0c1 = cos * R0C1 + sin * R1C1;
+            var r0c2 = cos * R0C2 + sin * R1C2;
 
             R1C0 = cos * R1C0 - sin * R0C0;
             R1C1 = cos * R1C1 - sin * R0C1;
@@ -682,11 +782,12 @@ namespace SS14.Shared.Maths
             R0C1 = r0c1;
             R0C2 = r0c2;
         }
+
         public void Rotate(float angle, out Matrix3 result)
         {
-            float angleRadians = MathHelper.DegreesToRadians(angle);
-            float sin = (float)System.Math.Sin(angleRadians);
-            float cos = (float)System.Math.Cos(angleRadians);
+            var angleRadians = MathHelper.DegreesToRadians(angle);
+            var sin = (float) Math.Sin(angleRadians);
+            var cos = (float) Math.Cos(angleRadians);
 
             result.R0C0 = cos * R0C0 + sin * R1C0;
             result.R0C1 = cos * R0C1 + sin * R1C1;
@@ -698,11 +799,12 @@ namespace SS14.Shared.Maths
             result.R2C1 = R2C1;
             result.R2C2 = R2C2;
         }
+
         public static void Rotate(ref Matrix3 matrix, float angle, out Matrix3 result)
         {
-            float angleRadians = MathHelper.DegreesToRadians(angle);
-            float sin = (float)System.Math.Sin(angleRadians);
-            float cos = (float)System.Math.Cos(angleRadians);
+            var angleRadians = MathHelper.DegreesToRadians(angle);
+            var sin = (float) Math.Sin(angleRadians);
+            var cos = (float) Math.Cos(angleRadians);
 
             result.R0C0 = cos * matrix.R0C0 + sin * matrix.R1C0;
             result.R0C1 = cos * matrix.R0C1 + sin * matrix.R1C1;
@@ -714,11 +816,12 @@ namespace SS14.Shared.Maths
             result.R2C1 = matrix.R2C1;
             result.R2C2 = matrix.R2C2;
         }
+
         public static void RotateMatrix(float angle, out Matrix3 result)
         {
-            float angleRadians = MathHelper.DegreesToRadians(angle);
-            float sin = (float)System.Math.Sin(angleRadians);
-            float cos = (float)System.Math.Cos(angleRadians);
+            var angleRadians = MathHelper.DegreesToRadians(angle);
+            var sin = (float) Math.Sin(angleRadians);
+            var cos = (float) Math.Cos(angleRadians);
 
             result.R0C0 = cos;
             result.R0C1 = sin;
@@ -773,13 +876,9 @@ namespace SS14.Shared.Maths
         /// <returns>A System.String containing left fully qualified type name.</returns>
         public override string ToString()
         {
-            return String.Format(
-                "|{00}, {01}, {02}|\n" +
-                "|{03}, {04}, {05}|\n" +
-                "|{06}, {07}, {08}|\n",
-                R0C0, R0C1, R0C2,
-                R1C0, R1C1, R1C2,
-                R2C0, R2C1, R2C2);
+            return $"|{R0C0}, {R0C1}, {R0C2}|\n"
+                 + $"|{R1C0}, {R1C1}, {R1C2}|\n"
+                 + $"|{R2C0}, {R2C1}, {R2C2}|\n";
         }
 
         #endregion

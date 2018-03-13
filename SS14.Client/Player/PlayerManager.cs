@@ -36,11 +36,14 @@ namespace SS14.Client.Player
         [Dependency]
         private readonly IConfigurationManager _config;
 
+        [Dependency]
+        private readonly IEntityManager _entityManager;
+
         /// <summary>
         ///     Active sessions of connected clients to the server.
         /// </summary>
         private Dictionary<int, PlayerSession> _sessions;
-
+        
         /// <inheritdoc />
         public int PlayerCount => _sessions.Values.Count;
 
@@ -78,7 +81,7 @@ namespace SS14.Client.Player
         /// <inheritdoc />
         public void Startup(INetChannel channel)
         {
-            LocalPlayer = new LocalPlayer();
+            LocalPlayer = new LocalPlayer(_network, _config);
 
             var msgList = _network.CreateNetMessage<MsgPlayerListReq>();
             // message is empty
@@ -171,7 +174,7 @@ namespace SS14.Client.Player
                 (LocalPlayer.ControlledEntity == null ||
                  LocalPlayer.ControlledEntity != null && entity != LocalPlayer.ControlledEntity.Uid))
                 LocalPlayer.AttachEntity(
-                    IoCManager.Resolve<IEntityManager>().GetEntity(entity.Value));
+                    _entityManager.GetEntity(entity.Value));
         }
 
         /// <summary>

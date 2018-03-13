@@ -33,13 +33,13 @@ namespace SS14.Client.GameObjects
         public Vector2 Velocity { get; private set; }
 
         /// <inheritdoc />
-        public override void OnAdd(IEntity owner)
+        public override void OnAdd()
         {
             // This component requires that the entity has an AABB.
-            if (!owner.HasComponent<BoundingBoxComponent>())
-                Logger.Error($"[ECS] {owner.Prototype.Name} - {nameof(PhysicsComponent)} requires {nameof(BoundingBoxComponent)}. ");
+            if (!Owner.HasComponent<BoundingBoxComponent>())
+                Logger.Error($"[ECS] {Owner.Prototype.Name} - {nameof(PhysicsComponent)} requires {nameof(BoundingBoxComponent)}. ");
 
-            base.OnAdd(owner);
+            base.OnAdd();
         }
 
         /// <inheritdoc />

@@ -50,6 +50,20 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        /// <summary>
+        ///     Determines if the light mask should automatically rotate with the entity. (like a flashlight)
+        /// </summary>
+        public bool MaskAutoRotate { get; set; }
+
+        /// <summary>
+        ///     Local rotation of the light mask around the center origin
+        /// </summary>
+        public Angle Rotation
+        {
+            get => Light.Rotation;
+            set => Light.Rotation = value;
+        }
+
         public float Energy
         {
             get => Light.Energy;
@@ -75,12 +89,6 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override void Spawned()
-        {
-            lightManager = IoCManager.Resolve<ILightManager>();
-            Light = lightManager.MakeLight();
-        }
-
         public override void Initialize()
         {
             base.Initialize();
@@ -91,6 +99,13 @@ namespace SS14.Client.GameObjects
 
         public override void LoadParameters(YamlMappingNode mapping)
         {
+            if (lightManager == null)
+            {
+                // First in the init stack so...
+                lightManager = IoCManager.Resolve<ILightManager>();
+                Light = lightManager.MakeLight();
+            }
+
             YamlNode node;
             if (mapping.TryGetNode("offset", out node))
             {
@@ -115,6 +130,11 @@ namespace SS14.Client.GameObjects
             if (mapping.TryGetNode("energy", out node))
             {
                 Energy = node.AsFloat();
+            }
+
+            if (mapping.TryGetNode("autoRot", out node))
+            {
+                MaskAutoRotate = node.AsBool();
             }
         }
 

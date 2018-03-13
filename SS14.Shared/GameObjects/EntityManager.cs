@@ -26,6 +26,8 @@ namespace SS14.Shared.GameObjects
         protected readonly IComponentFactory ComponentFactory;
         [Dependency]
         private readonly INetManager _network;
+        [Dependency]
+        private readonly IComponentManager _componentManager;
         # endregion Dependencies
 
         protected readonly Dictionary<EntityUid, IEntity> Entities = new Dictionary<EntityUid, IEntity>();
@@ -63,8 +65,7 @@ namespace SS14.Shared.GameObjects
             FlushEntities();
             EntitySystemManager.Shutdown();
             Started = false;
-            var componentmanager = IoCManager.Resolve<IComponentManager>();
-            componentmanager.Cull();
+            _componentManager.Cull();
         }
 
         public virtual void Update(float frameTime)
@@ -201,9 +202,8 @@ namespace SS14.Shared.GameObjects
             return entity;
         }
 
-        public static void InitializeEntity(Entity entity)
+        protected static void InitializeEntity(Entity entity)
         {
-            entity.PreInitialize();
             entity.InitializeComponents();
             entity.Initialize();
 
@@ -219,7 +219,7 @@ namespace SS14.Shared.GameObjects
             {
                 var ent = _allEntities[i];
 
-                if(ent.Deleted || ent.Initialized)
+                if (ent.Deleted || ent.Initialized)
                     continue;
 
                 InitializeEntity(ent);
@@ -228,7 +228,7 @@ namespace SS14.Shared.GameObjects
 
         public void GetEntityData()
         {
-            
+
         }
 
         #endregion Entity Management
@@ -370,14 +370,19 @@ namespace SS14.Shared.GameObjects
         {
             if (!Started)
             {
-                IncomingEntityMessage incomingEntity = ProcessNetMessage(msg);
+                var incomingEntity = ProcessNetMessage(msg);
                 if (incomingEntity.Message.Type != EntityMessageType.Error)
                     MessageBuffer.Enqueue(incomingEntity);
             }
             else
             {
                 ProcessMsgBuffer();
-                IncomingEntityMessage incomingEntity = ProcessNetMessage(msg);
+                var incomingEntity = ProcessNetMessage(msg);
+
+                // bad message or handled by something else
+                if (incomingEntity == null)
+                    return;
+
                 if (!Entities.ContainsKey(incomingEntity.Message.EntityUid))
                 {
                     MessageBuffer.Enqueue(incomingEntity);
@@ -415,6 +420,7 @@ namespace SS14.Shared.GameObjects
     {
         Error = 0,
         ComponentMessage,
+        EntityMessage,
         SystemMessage
     }
 }

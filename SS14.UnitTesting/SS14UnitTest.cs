@@ -1,4 +1,16 @@
 ﻿using NUnit.Framework;
+using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
+using SS14.Client.Input;
+using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.Input;
+using SS14.Client.Interfaces.State;
+using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.Interfaces.Utility;
+using SS14.Client.State;
+using SS14.Client.Reflection;
+using SS14.Client.UserInterface;
+using SS14.Client.Utility;
 using SS14.Server;
 using SS14.Server.Chat;
 using SS14.Server.GameObjects;
@@ -181,14 +193,16 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IClientEntityManager, ClientEntityManager>();
                     IoCManager.Register<IClientNetManager, NetManager>();
                     IoCManager.Register<IReflectionManager, ClientReflectionManager>();
-                    IoCManager.Register<IPlacementManager, PlacementManager>();
+                    IoCManager.Register<SS14.Client.Interfaces.Placement.IPlacementManager, SS14.Client.Placement.PlacementManager>();
                     IoCManager.Register<ILightManager, LightManager>();
                     IoCManager.Register<IResourceCache, ResourceCache>();
                     IoCManager.Register<IMapManager, MapManager>();
                     IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
-                    IoCManager.Register<IPlayerManager, PlayerManager>();
-                    IoCManager.Register<IGameController, GameController>();
+                    IoCManager.Register<SS14.Client.Interfaces.Player.IPlayerManager, SS14.Client.Player.PlayerManager>();
+                    IoCManager.Register<SS14.Client.Interfaces.IGameController, SS14.Client.GameController>();
+                    IoCManager.Register<SS14.Client.Interfaces.IBaseClient, SS14.Client.BaseClient>();
                     IoCManager.Register<IComponentFactory, ClientComponentFactory>();
+                    IoCManager.Register<SS14.Client.Console.IClientChatConsole, SS14.Client.Console.ClientChatConsole>();
                     */
                     break;
 
@@ -200,7 +214,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IChatManager, ChatManager>();
                     IoCManager.Register<IServerNetManager, NetManager>();
                     IoCManager.Register<IMapManager, MapManager>();
-                    IoCManager.Register<IPlacementManager, PlacementManager>();
+                    IoCManager.Register<SS14.Server.Interfaces.Placement.IPlacementManager, SS14.Server.Placement.PlacementManager>();
                     IoCManager.Register<IConsoleManager, ConsoleManager>();
                     IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
                     IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();
@@ -208,7 +222,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IGameStateManager, GameStateManager>();
                     IoCManager.Register<IReflectionManager, ServerReflectionManager>();
                     IoCManager.Register<IClientConsoleHost, SS14.Server.ClientConsoleHost.ClientConsoleHost>();
-                    IoCManager.Register<IPlayerManager, PlayerManager>();
+                    IoCManager.Register<IPlayerManager, SS14.Server.Player.PlayerManager>();
                     IoCManager.Register<IComponentFactory, ServerComponentFactory>();
                     IoCManager.Register<IBaseServer, BaseServer>();
                     IoCManager.Register<IMapLoader, MapLoader>();

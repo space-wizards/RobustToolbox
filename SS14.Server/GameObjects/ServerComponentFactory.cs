@@ -1,4 +1,5 @@
-﻿using SS14.Server.GameObjects.Components.Container;
+﻿using SS14.Server.GameObjects.Components;
+using SS14.Server.GameObjects.Components.Container;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
@@ -37,6 +38,8 @@ namespace SS14.Server.GameObjects
 
             Register<ContainerManagerComponent>();
             RegisterReference<ContainerManagerComponent, IContainerManager>();
+
+            Register<AiControllerComponent>();
         }
     }
 }

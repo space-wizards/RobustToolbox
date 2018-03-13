@@ -31,6 +31,16 @@ namespace SS14.Shared.Maths
         public static readonly Vector2 One = new Vector2(1, 1);
 
         /// <summary>
+        ///     A unit vector pointing in the +X direction.
+        /// </summary>
+        public static readonly Vector2 UnitX = new Vector2(1, 0);
+
+        /// <summary>
+        ///     A unit vector pointing in the +Y direction.
+        /// </summary>
+        public static readonly Vector2 UnitY = new Vector2(0, 1);
+
+        /// <summary>
         ///     Construct a vector from its coordinates.
         /// </summary>
         /// <param name="x">X coordinate</param>

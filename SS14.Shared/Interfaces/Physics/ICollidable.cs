@@ -7,6 +7,11 @@ namespace SS14.Shared.Interfaces.Physics
     public interface ICollidable
     {
         /// <summary>
+        ///     Entity that this collidable represents.
+        /// </summary>
+        IEntity Owner { get; }
+
+        /// <summary>
         ///     AABB of this entity in world space.
         /// </summary>
         Box2 WorldAABB { get; }

@@ -198,6 +198,71 @@ namespace SS14.Shared.Physics
             b.RemovePoint(point);
         }
 
+        public RayCastResults IntersectRay(Ray ray, float maxLength = 50)
+        {
+            var closestResults = new RayCastResults(float.PositiveInfinity, Vector2.Zero, null);
+            var minDist = float.PositiveInfinity;
+            var localBounds = new Box2(0, BucketSize, BucketSize, 0);
+
+            // for each bucket index
+            foreach (var kvIndices in _bucketIndex)
+            {
+                var worldBounds = localBounds.Translated(kvIndices.Key * BucketSize);
+
+                // check if ray intersects the bucket AABB
+                if (ray.Intersects(worldBounds, out var dist, out _))
+                {
+                    // bucket is too far away
+                    if(dist > maxLength)
+                        continue;
+
+                    // get the object it intersected in the bucket
+                    var bucket = _buckets[kvIndices.Value];
+                    if (TryGetClosestIntersect(ray, bucket, out var results))
+                    {
+                        if (results.Distance < minDist)
+                        {
+                            minDist = results.Distance;
+                            closestResults = results;
+                        }
+                    }
+                }
+            }
+            
+            return closestResults;
+        }
+
+        /// <summary>
+        ///     Return the closest object, inside a bucket, to the ray origin that was intersected (if any).
+        /// </summary>
+        private static bool TryGetClosestIntersect(Ray ray, CollidableBucket bucket, out RayCastResults results)
+        {
+            IEntity entity = null;
+            var hitPosition = Vector2.Zero;
+            var minDist = float.PositiveInfinity;
+
+            foreach (var collidablePoint in bucket.GetPoints()) // *goes to kitchen to freshen up his drink...*
+            {
+                var worldAABB = collidablePoint.ParentAABB.Collidable.WorldAABB;
+
+                if (ray.Intersects(worldAABB, out var dist, out var hitPos) && !(dist > minDist))
+                {
+                    minDist = dist;
+                    hitPosition = hitPos;
+                    entity = collidablePoint.ParentAABB.Collidable.Owner;
+                }
+            }
+
+            if (minDist < float.PositiveInfinity)
+            {
+                results = new RayCastResults(minDist, hitPosition, entity);
+                return true;
+            }
+
+            results = default(RayCastResults);
+            return false;
+        }
+
         /// <summary>
         ///     Gets a bucket given a point coordinate
         /// </summary>

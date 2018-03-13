@@ -42,15 +42,25 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Castle.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\Castle.Core.4.2.1\lib\net45\Castle.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Moq, Version=4.8.0.0, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\Moq.4.8.2\lib\net45\Moq.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(SolutionDir)packages\NUnit.3.7.1\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.ValueTuple">
-      <HintPath>$(SolutionDir)packages\System.ValueTuple.4.3.1\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\System.Threading.Tasks.Extensions.4.3.0\lib\portable-net45+win8+wp8+wpa81\System.Threading.Tasks.Extensions.dll</HintPath>
     </Reference>
+    <Reference Include="System.ValueTuple, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="YamlDotNet, Version=4.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\YamlDotNet.4.3.0\lib\net45\YamlDotNet.dll</HintPath>
     </Reference>
@@ -64,11 +74,16 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
-    <Compile Include="Server\GameObjects\Container_Test.cs" />
+    <Compile Include="Client\GameObjects\Components\Transform_Test.cs" />
+    <Compile Include="Server\GameObjects\Components\Container_Test.cs" />
+    <Compile Include="Server\GameObjects\Components\Transform_Test.cs" />
     <Compile Include="Shared\IoC\IoCManager_Test.cs" />
     <Compile Include="Shared\Maths\Angle_Test.cs" />
+    <Compile Include="Shared\Maths\Matrix3_Test.cs" />
+    <Compile Include="Shared\Maths\Ray_Test.cs" />
     <Compile Include="Shared\Maths\Vector2_Test.cs" />
     <Compile Include="Shared\Maths\Direction_Test.cs" />
+    <Compile Include="Shared\Physics\CollisionManager_Test.cs" />
     <Compile Include="Shared\Prototypes\PrototypeManager_Test.cs" />
     <Compile Include="Shared\Reflection\ReflectionManager_Test.cs" />
     <Compile Include="Shared\Serialization\NetSerializableAttribute_Test.cs" />
@@ -86,6 +101,10 @@
     <ProjectReference Include="..\SS14.Shared\SS14.Shared.csproj">
       <Project>{0529f740-0000-0000-0000-000000000000}</Project>
       <Name>SS14.Shared</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SS14.Client\SS14.Client.csproj">
+      <Project>{0c31dfdf-0000-0000-0000-000000000000}</Project>
+      <Name>SS14.Client</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

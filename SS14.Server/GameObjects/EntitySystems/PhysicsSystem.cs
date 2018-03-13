@@ -16,10 +16,9 @@ namespace SS14.Server.GameObjects.EntitySystems
         {
             EntityQuery = new ComponentEntityQuery
             {
-                AllSet = new List<Type>
+                OneSet = new List<Type>
                 {
                     typeof(PhysicsComponent),
-                    typeof(CollidableComponent)
                 }
             };
         }
@@ -37,13 +36,20 @@ namespace SS14.Server.GameObjects.EntitySystems
             var transform = entity.GetComponent<TransformComponent>();
             var velocity = entity.GetComponent<PhysicsComponent>();
 
-            //"space friction"
-            if (velocity.Velocity.LengthSquared > Epsilon)
-                velocity.Velocity -= velocity.Velocity * (frameTime * GlobalFriction);
-            else
-                velocity.Velocity = Vector2.Zero;
+            //rotate entity
+            float angImpulse = 0;
+            if (velocity.AngularVelocity > Epsilon)
+                angImpulse = velocity.AngularVelocity * frameTime;
 
-            var movement = velocity.Velocity * frameTime;
+            transform.LocalRotation += angImpulse;
+
+            //"space friction"
+            if (velocity.LinearVelocity.LengthSquared > Epsilon)
+                velocity.LinearVelocity -= velocity.LinearVelocity * (frameTime * GlobalFriction);
+            else
+                velocity.LinearVelocity = Vector2.Zero;
+
+            var movement = velocity.LinearVelocity * frameTime;
 
             //Check for collision
             if (movement.LengthSquared > Epsilon && entity.TryGetComponent(out CollidableComponent collider))
@@ -53,9 +59,9 @@ namespace SS14.Server.GameObjects.EntitySystems
                 {
                     var xBlocked = collider.TryCollision(new Vector2(movement.X, 0), true);
                     var yBlocked = collider.TryCollision(new Vector2(0, movement.Y), true);
-                    var v = velocity.Velocity;
-                    velocity.Velocity = new Vector2(xBlocked ? 0 : v.X, yBlocked ? 0 : v.Y);
-                    movement = velocity.Velocity * frameTime;
+                    var v = velocity.LinearVelocity;
+                    velocity.LinearVelocity = new Vector2(xBlocked ? 0 : v.X, yBlocked ? 0 : v.Y);
+                    movement = velocity.LinearVelocity * frameTime;
                 }
             }
 

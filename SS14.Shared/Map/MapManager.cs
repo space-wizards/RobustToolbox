@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
@@ -10,16 +11,21 @@ using SS14.Shared.Network.Messages;
 namespace SS14.Shared.Map
 {
     /// <inheritdoc />
-    public partial class MapManager : IMapManager
+    public partial class MapManager : IMapManager, IPostInjectInit
     {
         /// <inheritdoc />
         public IMap DefaultMap => GetMap(MapId.Nullspace);
+
+        public void PostInject()
+        {
+            CreateMap(MapId.Nullspace);
+        }
 
         /// <inheritdoc />
         public void Initialize()
         {
             _netManager.RegisterNetMessage<MsgMap>(MsgMap.NAME, message => HandleNetworkMessage((MsgMap)message));
-            CreateMap(MapId.Nullspace);
+            _netManager.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, message => SendMap(message.MsgChannel));
         }
 
         /// <inheritdoc />

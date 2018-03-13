@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Configuration;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.Network;
@@ -8,7 +9,6 @@ namespace SS14.Shared.Interfaces.GameObjects
 {
     public interface IEntity
     {
-        IEntityNetworkManager EntityNetworkManager { get; }
         IEntityManager EntityManager { get; }
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <summary>
         ///     Whether this entity has fully initialized.
         /// </summary>
-        bool Initialized { get; set; }
+        bool Initialized { get; }
 
         /// <summary>
         ///     True if the entity has been deleted.
@@ -37,40 +37,13 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <summary>
         ///     The prototype that was used to create this entity.
         /// </summary>
-        EntityPrototype Prototype { get; set; }
+        EntityPrototype Prototype { get; }
 
         /// <summary>
-        ///     Fired when the entity is deleted.
+        ///     Determines if this entity is still valid.
         /// </summary>
-        event EntityShutdownEvent OnShutdown;
-
-        /// <summary>
-        ///     Initialize the entity's UID. This can only be called once.
-        /// </summary>
-        /// <param name="newUid">The new UID.</param>
-        /// <exception cref="InvalidOperationException">
-        ///     Thrown if the method is called and the entity already has a UID.
-        /// </exception>
-        void SetUid(EntityUid newUid);
-
-        /// <summary>
-        ///     Sets fundamental managers after the entity has been created.
-        /// </summary>
-        /// <remarks>
-        ///     This is a separate method because C# makes constructors painful.
-        /// </remarks>
-        /// <exception cref="InvalidOperationException">
-        ///     Thrown if the method is called and the entity already has initialized managers.
-        /// </exception>
-        void SetManagers(IEntityManager entityManager, IEntityNetworkManager networkManager);
-
-        /// <summary>
-        ///     Called after the entity is constructed by its prototype to load serializable fields
-        ///     from the prototype's <c>data</c> field. Called any time during the Entities life to serialize
-        ///     its fields.
-        /// </summary>
-        /// <param name="serializer">The serialization object that contains the <c>data</c> field.</param>
-        void ExposeData(EntitySerializer serializer);
+        /// <returns>True if this entity is still valid.</returns>
+        bool IsValid();
 
         /// <summary>
         ///     "Matches" this entity with the provided entity query, returning whether or not the query matched.
@@ -82,25 +55,12 @@ namespace SS14.Shared.Interfaces.GameObjects
         bool Match(IEntityQuery query);
 
         /// <summary>
-        /// A generic update method that gets called on the entity every frame.
-        /// </summary>
-        /// <param name="frameTime">The time since the last update, in seconds.</param>
-        void Update(float frameTime);
-
-        /// <summary>
         ///     Public method to add a component to an entity.
         ///     Calls the component's onAdd method, which also adds it to the component manager.
         /// </summary>
-        /// <param name="component">The component to add.</param>
-        void AddComponent(IComponent component);
-
-        /// <summary>
-        ///     Public method to remove a component from an entity.
-        ///     Calls the onRemove method of the component, which handles removing it
-        ///     from the component manager and shutting down the component.
-        /// </summary>
-        /// <param name="component">The component to remove.</param>
-        void RemoveComponent(IComponent component);
+        /// <typeparam name="T">The component type to add.</typeparam>
+        /// <returns>The newly added component.</returns>
+        T AddComponent<T>() where T : Component, new();
 
         /// <summary>
         ///     Removes the component with the specified reference type,
@@ -206,16 +166,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <typeparam name="T">The type that components must implement.</typeparam>
         /// <returns>An enumerable over the found components.</returns>
         IEnumerable<T> GetComponents<T>();
-        void SendMessage(object sender, ComponentMessageType type, params object[] args);
-
-        /// <summary>
-        ///     Allows components to send messages
-        /// </summary>
-        /// <param name="sender">the component doing the sending</param>
-        /// <param name="type">the type of message</param>
-        /// <param name="args">message parameters</param>
-        void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies,
-                         params object[] args);
 
         /// <summary>
         ///     Requests Description string from components and returns it. If no component answers, returns default description from template.
@@ -223,30 +173,23 @@ namespace SS14.Shared.Interfaces.GameObjects
         string GetDescriptionString(); //This needs to go here since it can not be bound to any single component.
 
         /// <summary>
-        ///     Sends a message to the counterpart component on the server side
+        ///     Sends a message to all other components in this entity.
         /// </summary>
-        /// <param name="component">Sending component</param>
-        /// <param name="messageParams">Parameters</param>
-        void SendComponentNetworkMessage(IComponent component, params object[] messageParams);
+        /// <param name="owner">Object that sent the event.</param>
+        /// <param name="message">Message to send.</param>
+        void SendMessage(IComponent owner, ComponentMessage message);
 
         /// <summary>
-        ///     Sends a message to the counterpart component on the server side
+        ///     Sends a message over the network to the counterpart component. This works both ways.
         /// </summary>
-        /// <param name="component">Sending component</param>
-        /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
-        /// <param name="messageParams">Parameters</param>
-        void SendDirectedComponentNetworkMessage(IComponent component, INetChannel recipient, params object[] messageParams);
+        /// <param name="owner"></param>
+        /// <param name="message">Message to send.</param>
+        void SendNetworkMessage(IComponent owner, ComponentMessage message);
 
         /// <summary>
-        ///     Called when the entity has all components initialized.
+        /// Func to handle an incoming network message
         /// </summary>
-        void Initialize();
-
-        /// <summary>
-        ///     Called after the entity has loaded data and components, but before the components are initialized.
-        /// </summary>
-        void PreInitialize();
-
+        /// <param name="message"></param>
         void HandleNetworkMessage(IncomingEntityMessage message);
 
         /// <summary>

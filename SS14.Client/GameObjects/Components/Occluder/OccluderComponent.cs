@@ -33,12 +33,6 @@ namespace SS14.Client.GameObjects
             occluder.ParentTo(transform);
         }
 
-        public override void Spawned()
-        {
-            lightManager = IoCManager.Resolve<ILightManager>();
-            occluder = lightManager.MakeOccluder();
-        }
-
         public override void OnRemove()
         {
             occluder.Dispose();
@@ -49,6 +43,13 @@ namespace SS14.Client.GameObjects
 
         public override void LoadParameters(YamlMappingNode mapping)
         {
+            if (lightManager == null)
+            {
+                // First in the init stack so...
+                lightManager = IoCManager.Resolve<ILightManager>();
+                occluder = lightManager.MakeOccluder();
+            }
+
             base.LoadParameters(mapping);
 
             YamlNode node;

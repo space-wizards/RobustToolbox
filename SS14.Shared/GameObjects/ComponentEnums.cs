@@ -4,46 +4,12 @@
     {
         Null,
         Empty,
-        BoundKeyChange,
-        BoundKeyRepeat,
-        SlaveAttach,
-        LeftClick,
-        RightClick,
-        AltLeftClick,
-        AltRightClick,
-        ShiftLeftClick,
-        ShiftRightClick,
-        CtrlLeftClick,
-        CtrlRightClick,
-        SetSpriteByKey,
-        SetVisible,
-        Dropped,
-        PickedUp,
-        MoveDirection,
-        SpriteChanged,
-        GetSprite,
-        CurrentSprite,
-        ReceiveEmptyHandToLargeObjectInteraction,
-        ItemUnEquipped,
-        ItemEquipped,
-        Die,
-        Bumped,
-        Initialize,
-        ReturnActorConnection,
-        ReturnActorSession,
-        GetActorConnection,
-        GetActorSession,
-        EntitySaidSomething,
-        ContextAdd,
-        ContextRemove,
-        ContextGetEntries,
-        ContextMessage, //Sent when context menu option is clicked.
-        GetDescriptionString, //Sent when description is requested and when answer is sent.
-        Live,
-        ClickedInHand,
-        Activate,
-        SetBaseName,
-        PhysicsMove,
+        BoundKeyChange, // U
+        BoundKeyRepeat, // U
+        SpriteChanged, // U
+        Bumped, // U
+        EntitySaidSomething, // U
+        GetDescriptionString, // U
     }
 
     public enum DrawDepth

@@ -53,6 +53,12 @@ namespace SS14.Client.Placement
         public readonly ISceneTreeHolder sceneTree;
         [Dependency]
         readonly public IInputManager inputManager;
+        [Dependency]
+        private readonly IUserInterfaceManager _userInterfaceManager;
+        [Dependency]
+        private readonly IPrototypeManager _prototypeManager;
+        [Dependency]
+        private readonly ITileDefinitionManager _tileDefManager;
 
         /// <summary>
         ///     How long before a pending tile change is dropped.
@@ -162,6 +168,11 @@ namespace SS14.Client.Placement
                 case Direction.West:
                     Direction = Direction.North;
                     break;
+            }
+
+            if (CurrentMode != null)
+            {
+                CurrentMode.SetSprite();
             }
         }
 
@@ -316,8 +327,7 @@ namespace SS14.Client.Placement
 
         private void PreparePlacement(string templateName)
         {
-            EntityPrototype prototype =
-                IoCManager.Resolve<IPrototypeManager>().Index<EntityPrototype>(templateName);
+            var prototype = _prototypeManager.Index<EntityPrototype>(templateName);
 
             ComponentParameter spriteParam = prototype.GetBaseSpriteParameters().FirstOrDefault();
             //Will break if states not ordered correctly.
@@ -334,7 +344,7 @@ namespace SS14.Client.Placement
 
         private void PreparePlacementTile(Tile tileType)
         {
-            var tileDefs = IoCManager.Resolve<ITileDefinitionManager>();
+            var tileDefs = _tileDefManager;
 
             CurrentBaseSprite = ResourceCache.GetResource<TextureResource>("Textures/UserInterface/tilebuildoverlay.png");
             CurrentBaseSpriteKey = "UserInterface/tilebuildoverlay.png";

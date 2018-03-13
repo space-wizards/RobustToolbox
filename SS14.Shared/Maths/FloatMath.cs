@@ -1,13 +1,13 @@
 ﻿using System;
 
-
 namespace SS14.Shared.Maths
 {
     public static class FloatMath
     {
-
         private const int LookupSize = 1024 * 64; //has to be power of 2
         private static readonly float[] getSin, getCos;
+        public const float RadToDeg = (float)(180.0 / Math.PI);
+        public const float DegToRad = (float)(Math.PI / 180.0);
 
         static FloatMath()
         {
@@ -22,7 +22,7 @@ namespace SS14.Shared.Maths
         }
 
         /// <summary>
-        /// Fast innacurate sinus
+        /// Fast inaccurate sinus
         /// </summary>
         public static float Sin(float degrees)
         {
@@ -31,7 +31,7 @@ namespace SS14.Shared.Maths
         }
 
         /// <summary>
-        /// Fast innacurate cosinus
+        /// Fast inaccurate cosinus
         /// </summary>
         public static float Cos(float degrees)
         {
@@ -39,16 +39,27 @@ namespace SS14.Shared.Maths
             return getCos[rot];
         }
 
-        static int GetIndex(float degrees)
+        public static int GetIndex(float degrees)
         {
             return (int)(degrees * (LookupSize / 360f) + 0.5f) & (LookupSize - 1);
         }
+
         public static void SinCos(float degrees, out float sin, out float cos)
         {
             var rot = GetIndex(degrees);
 
             sin = getSin[rot];
             cos = getCos[rot];
+        }
+
+        public static float Min(float a, float b)
+        {
+            return Math.Min(a, b);
+        }
+
+        public static float Max(float a, float b)
+        {
+            return Math.Max(a, b);
         }
 
         public const float Pi = (float)Math.PI;
@@ -62,36 +73,36 @@ namespace SS14.Shared.Maths
             return degrees / 180 * Pi;
         }
 
-        public static T Clamp<T>(this T val, T min, T max) where T : IComparable<T>
+        public static T Clamp<T>(this T val, T min, T max)
+            where T : IComparable<T>
         {
             if (val.CompareTo(min) < 0) return min;
-            else if (val.CompareTo(max) > 0) return max;
-            else return val;
+            if (val.CompareTo(max) > 0) return max;
+            return val;
         }
 
-        public static bool CloseTo(float A, float B)
+        public static bool CloseTo(float a, float b)
         {
-            var epsilon = Math.Max(Math.Max(Math.Abs(A), Math.Abs(B)) * 0.00001, .00001); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
-            return Math.Abs(A - B) <= epsilon;
+            var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * 0.00001, .00001); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            return Math.Abs(a - b) <= epsilon;
         }
 
-        public static bool CloseTo(float A, double B)
+        public static bool CloseTo(float a, double b)
         {
-            var epsilon = Math.Max(Math.Max(Math.Abs(A), Math.Abs(B)) * 0.00001, .00001); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
-            return Math.Abs(A - B) <= epsilon;
+            var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * 0.00001, .00001); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            return Math.Abs(a - b) <= epsilon;
         }
 
-        public static bool CloseTo(double A, float B)
+        public static bool CloseTo(double a, float b)
         {
-            var epsilon = Math.Max(Math.Max(Math.Abs(A), Math.Abs(B)) * 0.00001, .00001); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
-            return Math.Abs(A - B) <= epsilon;
+            var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * 0.00001, .00001); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            return Math.Abs(a - b) <= epsilon;
         }
 
-        public static bool CloseTo(double A, double B)
+        public static bool CloseTo(double a, double b)
         {
-            var epsilon = Math.Max(Math.Max(Math.Abs(A), Math.Abs(B)) * 0.00001, .00001); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
-            return Math.Abs(A - B) <= epsilon;
+            var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * 0.00001, .00001); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            return Math.Abs(a - b) <= epsilon;
         }
     }
 }
-

@@ -3,7 +3,6 @@ using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
-using SS14.Shared;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
@@ -21,6 +20,17 @@ namespace SS14.Server.Placement
 {
     public class PlacementManager : IPlacementManager
     {
+        [Dependency]
+        private readonly ITileDefinitionManager _tileDefinitionManager;
+        [Dependency]
+        private readonly IServerNetManager _networkManager;
+        [Dependency]
+        private readonly IPlayerManager _playerManager;
+        [Dependency]
+        private readonly IServerEntityManager _entityManager;
+        [Dependency]
+        private readonly IMapManager _mapManager;
+
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).
         public List<PlacementInformation> BuildPermissions { get; set; } = new List<PlacementInformation>();
@@ -31,8 +41,7 @@ namespace SS14.Server.Placement
 
         public void Initialize()
         {
-            var netMan = IoCManager.Resolve<IServerNetManager>();
-            netMan.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, message => HandleNetMessage((MsgPlacement)message));
+            _networkManager.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, message => HandleNetMessage((MsgPlacement)message));
         }
 
         /// <summary>
@@ -70,7 +79,7 @@ namespace SS14.Server.Placement
             var yValue = msg.YValue;
             var dirRcv = msg.DirRcv;
 
-            var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.MsgChannel);
+            var session = _playerManager.GetSessionByChannel(msg.MsgChannel);
             var plyEntity = session.AttachedEntity;
 
             // Don't have an entity, don't get to place.
@@ -88,7 +97,7 @@ namespace SS14.Server.Placement
             //TODO: Distance check, so you can't place things off of screen.
 
             // get the grid under the worldCoords.
-            var grid = IoCManager.Resolve<IMapManager>().GetMap(mapIndex).FindGridAt(new Vector2(xValue, yValue));
+            var grid = _mapManager.GetMap(mapIndex).FindGridAt(new Vector2(xValue, yValue));
             var coordinates = new LocalCoordinates(xValue, yValue, grid.Index, mapIndex);
 
 
@@ -115,13 +124,13 @@ namespace SS14.Server.Placement
             */
             if (!isTile)
             {
-                var manager = IoCManager.Resolve<IServerEntityManager>();
-                if (!manager.TrySpawnEntityAt(entityTemplateName, coordinates, out IEntity created))
+                if (!_entityManager.TrySpawnEntityAt(entityTemplateName, coordinates, out IEntity created))
                     return;
 
-                created.GetComponent<TransformComponent>().WorldPosition = new Vector2(xValue, yValue);
+                var transform = created.GetComponent<TransformComponent>();
+                transform.WorldPosition = new Vector2(xValue, yValue);
                 if (created.TryGetComponent<TransformComponent>(out var component))
-                    component.Rotation = dirRcv.ToAngle();
+                    component.LocalRotation = dirRcv.ToAngle();
             }
             else
             {
@@ -129,12 +138,11 @@ namespace SS14.Server.Placement
             }
         }
 
-        private static void HandleEntRemoveReq(EntityUid entityUid)
+        private void HandleEntRemoveReq(EntityUid entityUid)
         {
             //TODO: Some form of admin check
-            var entities = IoCManager.Resolve<IServerEntityManager>();
-            if(entities.TryGetEntity(entityUid, out var entity))
-                entities.DeleteEntity(entity);
+            if (_entityManager.TryGetEntity(entityUid, out var entity))
+                _entityManager.DeleteEntity(entity);
         }
 
         /// <summary>
@@ -149,14 +157,13 @@ namespace SS14.Server.Placement
             if (playerConnection == null)
                 return;
 
-            var net = IoCManager.Resolve<IServerNetManager>();
-            var message = net.CreateNetMessage<MsgPlacement>();
+            var message = _networkManager.CreateNetMessage<MsgPlacement>();
             message.PlaceType = PlacementManagerMessage.StartPlacement;
             message.Range = range;
             message.IsTile = false;
             message.ObjType = objectType;
             message.AlignOption = alignOption;
-            net.ServerSendMessage(message, playerConnection);
+            _networkManager.ServerSendMessage(message, playerConnection);
         }
 
         /// <summary>
@@ -171,16 +178,13 @@ namespace SS14.Server.Placement
             if (playerConnection == null)
                 return;
 
-            var net = IoCManager.Resolve<IServerNetManager>();
-            var message = net.CreateNetMessage<MsgPlacement>();
-
+            var message = _networkManager.CreateNetMessage<MsgPlacement>();
             message.PlaceType = PlacementManagerMessage.StartPlacement;
             message.Range = range;
             message.IsTile = true;
             message.ObjType = tileType;
             message.AlignOption = alignOption;
-
-            net.ServerSendMessage(message, playerConnection);
+            _networkManager.ServerSendMessage(message, playerConnection);
         }
 
         /// <summary>
@@ -195,10 +199,9 @@ namespace SS14.Server.Placement
             if (playerConnection == null)
                 return;
 
-            var net = IoCManager.Resolve<IServerNetManager>();
-            var message = net.CreateNetMessage<MsgPlacement>();
+            var message = _networkManager.CreateNetMessage<MsgPlacement>();
             message.PlaceType = PlacementManagerMessage.CancelPlacement;
-            net.ServerSendMessage(message, playerConnection);
+            _networkManager.ServerSendMessage(message, playerConnection);
         }
 
         /// <summary>
@@ -267,7 +270,7 @@ namespace SS14.Server.Placement
                 MobUid = mob.Uid,
                 Range = range,
                 IsTile = true,
-                TileType = IoCManager.Resolve<ITileDefinitionManager>()[tileType].TileId,
+                TileType = _tileDefinitionManager[tileType].TileId,
                 PlacementOption = alignOption
             };
 

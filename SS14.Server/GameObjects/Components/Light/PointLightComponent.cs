@@ -2,8 +2,6 @@
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Maths;
-using SS14.Shared.Utility;
-using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
@@ -54,7 +52,7 @@ namespace SS14.Server.GameObjects
             base.ExposeData(serializer);
 
             serializer.DataField(ref _state, "state", LightState.On);
-            serializer.DataField(ref _color, "color", new Color4(200, 200, 200, 255));
+            serializer.DataField(ref _color, "color", new Color(200, 200, 200));
             serializer.DataField(ref _mode, "mode", LightModeClass.Constant);
             serializer.DataField(ref _radius, "radius", 512);
             serializer.DataField(ref _offset, "offset", Vector2.Zero);

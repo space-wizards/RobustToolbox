@@ -17,8 +17,7 @@ namespace SS14.Client.GameObjects
             Register<CollidableComponent>();
             RegisterReference<CollidableComponent, ICollidableComponent>();
             Register<IconComponent>();
-            Register<ContextMenuComponent>();
-            Register<KeyBindingInputComponent>();
+            RegisterIgnore("KeyBindingInput");
             Register<PointLightComponent>();
             Register<PhysicsComponent>();
             Register<TransformComponent>();
@@ -42,6 +41,7 @@ namespace SS14.Client.GameObjects
             Register<OccluderComponent>();
 
             Register<EyeComponent>();
+            RegisterIgnore("AiController");
         }
     }
 }

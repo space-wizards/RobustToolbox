@@ -134,12 +134,17 @@
     <Compile Include="ContentPack\PathHelpers.cs" />
     <Compile Include="ContentPack\ResourceManager.cs" />
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
+    <Compile Include="GameObjects\ComponentMessage.cs" />
+    <Compile Include="GameObjects\ComponentMessages\Messages.cs" />
+    <Compile Include="GameObjects\EntitySystemMessages\ClickedOnEntityMessage.cs" />
+    <Compile Include="GameObjects\EntitySystemMessages\InputMessages.cs" />
     <Compile Include="GameObjects\Serialization\EntitySerializer.cs" />
     <Compile Include="GameObjects\EntityUid.cs" />
     <Compile Include="GameObjects\Serialization\YamlEntitySerializer.cs" />
     <Compile Include="GameObjects\IncomingEntityComponentMessage.cs" />
     <Compile Include="GameObjects\IncomingEntityMessage.cs" />
     <Compile Include="GameObjects\NetComponent.cs" />
+    <Compile Include="Input\UserCmd.cs" />
     <Compile Include="Interfaces\Configuration\IConfigurationManager.cs" />
     <Compile Include="Console\ICommand.cs" />
     <Compile Include="GameObjects\EntityEvents.cs" />
@@ -202,7 +207,6 @@
     <Compile Include="Map\TileDefinitionManager.cs" />
     <Compile Include="Map\TileRef.cs" />
     <Compile Include="Maths\Color.cs" />
-    <Compile Include="Maths\Color4.cs" />
     <Compile Include="Maths\FloatMath.cs" />
     <Compile Include="Maths\Direction.cs" />
     <Compile Include="Maths\Circle.cs" />
@@ -210,6 +214,7 @@
     <Compile Include="Maths\Matrix3.cs" />
     <Compile Include="Maths\Matrix4.cs" />
     <Compile Include="Maths\Quaternion.cs" />
+    <Compile Include="Maths\Ray.cs" />
     <Compile Include="Maths\Vector2.cs" />
     <Compile Include="Maths\Vector2i.cs" />
     <Compile Include="Maths\Vector2u.cs" />
@@ -243,7 +248,8 @@
     <Compile Include="Physics\CollidablePoint.cs" />
     <Compile Include="Physics\CollisionManager.cs" />
     <Compile Include="Enums\PlacementInformation.cs" />
-    <Compile Include="Enums\KeyFunctions.cs" />
+    <Compile Include="Input\KeyFunctions.cs" />
+    <Compile Include="Physics\RayCastResults.cs" />
     <Compile Include="Players\PlayerIndex.cs" />
     <Compile Include="Utility\QuadTree.cs" />
     <Compile Include="Reflection\ReflectAttribute.cs" />
@@ -283,8 +289,7 @@
     <Compile Include="GameObjects\EntitySystemManager.cs" />
     <Compile Include="GameObjects\IEntityNetworkManager.cs" />
     <Compile Include="GameObjects\ParticleSettings.cs" />
-    <Compile Include="GameObjects\StaticConstants.cs" />
-    <Compile Include="GameObjects\System\EntityUpdateSystem.cs" />
+    <Compile Include="Input\ClickType.cs" />
     <Compile Include="GameObjects\System\EntitySystem.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponentState.cs" />
     <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponentState.cs" />
@@ -294,10 +299,8 @@
     <Compile Include="GameObjects\Components\Renderable\RenderableComponentState.cs" />
     <Compile Include="GameObjects\Components\Renderable\SpriteComponentState.cs" />
     <Compile Include="GameObjects\Components\Transform\TransformComponentState.cs" />
-    <Compile Include="GameObjects\EntitySystemMessage\EntitySystemMessage.cs" />
-    <Compile Include="GameObjects\EntitySystemMessage\InventorySystemMessages.cs" />
-    <Compile Include="GameObjects\Events\InputEvents.cs" />
-    <Compile Include="GameObjects\Server\ServerDelegates.cs" />
+    <Compile Include="GameObjects\EntitySystemMessages\EntitySystemMessage.cs" />
+    <Compile Include="GameObjects\EntitySystemMessages\InventorySystemMessages.cs" />
     <Compile Include="GameObjects\ComponentEnums.cs" />
     <Compile Include="GameObjects\ComponentParameter.cs" />
     <Compile Include="GameObjects\ComponentReplyMessage.cs" />

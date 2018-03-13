@@ -18,7 +18,7 @@ namespace SS14.Shared.Interfaces.GameObjects
     /// <item>
     /// <description>
     /// Relaying <see cref="EntitySystemData"/> messages from the network through
-    /// <see cref="IEntitySystem.HandleNetMessage(EntitySystemMessage)"/>.
+    /// <see cref="IEntitySystem.HandleNetMessage"/>.
     /// </description>
     /// </item>
     /// </list>
@@ -59,7 +59,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="sysMsg">The message to route.</param>
         /// <seealso cref="RegisterMessageType{T}(IEntitySystem)"/>
-        /// <seealso cref="IEntitySystem.HandleNetMessage(EntitySystemMessage)"/>
+        /// <seealso cref="IEntitySystem.HandleNetMessage"/>
         void HandleSystemMessage(MsgEntity sysMsg);
 
         /// <summary>

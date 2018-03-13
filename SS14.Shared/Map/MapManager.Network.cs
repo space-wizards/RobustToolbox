@@ -24,6 +24,9 @@ namespace SS14.Shared.Map
 
         public void SendMap(INetChannel channel)
         {
+            if(_netManager.IsClient)
+                return;
+
             Debug.Assert(_netManager.IsServer, "Why is the client calling this?");
 
             Logger.Log(channel.RemoteAddress + ": Sending map");

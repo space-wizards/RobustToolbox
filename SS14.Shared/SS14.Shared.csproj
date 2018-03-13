@@ -240,6 +240,8 @@
     <Compile Include="Input\KeyFunctions.cs" />
     <Compile Include="Physics\RayCastResults.cs" />
     <Compile Include="Players\PlayerIndex.cs" />
+    <Compile Include="Timing\FrameEventArgs.cs" />
+    <Compile Include="Timing\GameLoop.cs" />
     <Compile Include="Timing\IStopwatch.cs" />
     <Compile Include="Timing\Stopwatch.cs" />
     <Compile Include="Utility\QuadTree.cs" />

@@ -199,12 +199,12 @@ namespace SS14.UnitTesting.Shared.Timing
             Assert.That(result, Is.EqualTo(TimeSpan.Zero)); // But simulation time never increases.
         }
 
-        private IGameTiming GameTimingFactory(IStopwatch stopwatch)
+        private static IGameTiming GameTimingFactory(IStopwatch stopwatch)
         {
             var timing = new GameTiming();
 
             var field = typeof(GameTiming).GetField("_realTimer", BindingFlags.Static | BindingFlags.NonPublic);
-            field.SetValue(this, stopwatch);
+            field.SetValue(null, stopwatch);
 
             return timing;
         }

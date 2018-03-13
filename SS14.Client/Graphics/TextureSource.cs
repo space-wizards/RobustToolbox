@@ -15,7 +15,7 @@ namespace SS14.Client.Graphics
 
         public static implicit operator Godot.Texture(Texture src)
         {
-            return src.GodotTexture;
+            return src?.GodotTexture;
         }
     }
 

@@ -57,11 +57,12 @@ namespace SS14.Shared.Timing
             Running = true;
 
             // maximum number of ticks to queue before the loop slows down.
-            _timing.ResetRealTime();
             var maxTime = TimeSpan.FromTicks(_timing.TickPeriod.Ticks * MaxQueuedTicks);
 
             var realFrameEvent = new MutableFrameEventArgs(0);
             var simFrameEvent = new MutableFrameEventArgs(0);
+
+            _timing.ResetRealTime();
 
             while (Running)
             {

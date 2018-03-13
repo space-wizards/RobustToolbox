@@ -38,22 +38,22 @@ namespace SS14.Shared.Timing
         ///     Is the simulation currently paused?
         /// </summary>
         public bool Paused { get; set; }
-        
+
         /// <summary>
         ///     The current synchronized uptime of the simulation. Use this for in-game timing. This can be rewound for
         ///     prediction, and is affected by Paused and TimeScale.
         /// </summary>
-        public TimeSpan CurTime { get; private set; }
+        public TimeSpan CurTime => CalcCurTime();
 
         /// <summary>
         ///     The current real uptime of the simulation. Use this for UI and out of game timing.
         /// </summary>
         public TimeSpan RealTime => _realTimer.Elapsed;
-        
+
         /// <summary>
         ///     The simulated time it took to render the last frame.
         /// </summary>
-        public TimeSpan FrameTime { get; private set; }
+        public TimeSpan FrameTime => CalcFrameTime();
 
         /// <summary>
         ///     The real time it took to render the last frame.
@@ -109,22 +109,29 @@ namespace SS14.Shared.Timing
             if (_realFrameTimes.Count >= NumFrames)
                 _realFrameTimes.RemoveAt(0);
             _realFrameTimes.Add(RealFrameTime.Ticks);
+        }
 
+        private TimeSpan CalcFrameTime()
+        {
             // calculate simulation FrameTime
             if (InSimulation)
             {
-                FrameTime = TimeSpan.FromTicks(TickPeriod.Ticks);
+                return TimeSpan.FromTicks(TickPeriod.Ticks);
             }
             else
             {
-                FrameTime = Paused ? TimeSpan.Zero : RealFrameTime;
+                return Paused ? TimeSpan.Zero : RealFrameTime;
             }
+        }
 
+        private TimeSpan CalcCurTime()
+        {
             // calculate simulation CurTime
-            CurTime = TimeSpan.FromTicks(TickPeriod.Ticks * CurTick);
+            var time = TimeSpan.FromTicks(TickPeriod.Ticks * CurTick);
 
             if (!InSimulation) // rendering can draw frames between ticks
-                CurTime = CurTime + TickRemainder;
+                return time + TickRemainder;
+            return time;
         }
 
         /// <summary>

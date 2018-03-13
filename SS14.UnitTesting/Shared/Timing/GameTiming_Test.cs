@@ -15,7 +15,7 @@ namespace SS14.UnitTesting.Shared.Timing
         ///     Checks that IGameTiming.RealTime returns the real(wall) uptime since the stopwatch was started.
         /// </summary>
         /// <remarks>
-        ///     This is unaffected by pausing or timescale, and has nothing to do with the simulation. This should be used for
+        ///     This is unaffected by pausing, and has nothing to do with the simulation. This should be used for
         ///     out-of-simulation timing, for example sound timing, UI timing, input timing, etc.
         /// </remarks>
         [Test]
@@ -28,6 +28,7 @@ namespace SS14.UnitTesting.Shared.Timing
             var gameTiming = GameTimingFactory(newStopwatch.Object);
 
             // Act
+            gameTiming.StartFrame();
             var result = gameTiming.RealTime;
 
             // Assert
@@ -39,7 +40,7 @@ namespace SS14.UnitTesting.Shared.Timing
         ///     IGameTiming.StartFrame().
         /// </summary>
         /// <remarks>
-        ///     This is unaffected by pausing or timescale, and has nothing to do with the simulation. This value is used
+        ///     This is unaffected by pausing, and has nothing to do with the simulation. This value is used
         ///     by the profiling functions.
         /// </remarks>
         [Test]
@@ -65,7 +66,7 @@ namespace SS14.UnitTesting.Shared.Timing
         ///     Checks that IGameTiming.CurTime returns the current simulation uptime when inside the simulation.
         /// </summary>
         /// <remarks>
-        ///     This value is affected by pausing and timescale. This value is derived from CurTick and TickRate, and is unaffected
+        ///     This value is affected by pausing. This value is derived from CurTick and TickRate, and is unaffected
         ///     by RealTime. All simulation code should be using this value to measure uptime.
         /// </remarks>
         [Test]
@@ -122,8 +123,8 @@ namespace SS14.UnitTesting.Shared.Timing
         ///     Checks that IGameTiming.FrameTime returns the simulated delta time between the two most recent calls to IGameTiming.StartFrame().
         /// </summary>
         /// <remarks>
-        ///     This value is not affected by pausing. This value is derived from TimeScale and TickRate, and is unaffected
-        ///     by RealTime. There is no lag or jitter inside the simulation. The FrameTime is always exactly TickPeriod * TimeScale.
+        ///     This value is not affected by pausing. This value is derived from TickRate, and is unaffected
+        ///     by RealTime. There is no lag or jitter inside the simulation. The FrameTime is always exactly TickPeriod.
         /// </remarks>
         [Test]
         public void InSimFrameTimeTest()
@@ -132,15 +133,16 @@ namespace SS14.UnitTesting.Shared.Timing
             var newStopwatch = new Mock<IStopwatch>();
             var gameTiming = GameTimingFactory(newStopwatch.Object);
             gameTiming.InSimulation = true;
-            gameTiming.TickRate = 20; // simulation still runs at 20tps
-            gameTiming.TimeScale = 0.5; // but the passage of time is half of RealTime.
+            gameTiming.TickRate = 20;
 
             // Act
+            gameTiming.StartFrame();
+            gameTiming.CurTick++;
             gameTiming.StartFrame();
             var result = gameTiming.FrameTime;
 
             // Assert
-            var expected = TimeSpan.FromTicks((long)(TimeSpan.TicksPerSecond * (1/20.0) * 0.5));
+            var expected = TimeSpan.FromTicks((long)(TimeSpan.TicksPerSecond * (1/20.0)));
             Assert.That(result, Is.EqualTo(expected));
         }
 
@@ -198,7 +200,7 @@ namespace SS14.UnitTesting.Shared.Timing
             // Assert
             Assert.That(result, Is.EqualTo(TimeSpan.Zero)); // But simulation time never increases.
         }
-
+        
         private static IGameTiming GameTimingFactory(IStopwatch stopwatch)
         {
             var timing = new GameTiming();

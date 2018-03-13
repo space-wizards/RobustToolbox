@@ -26,7 +26,6 @@ namespace SS14.Shared.Timing
             _realTimer.Start();
 
             Paused = false;
-            TimeScale = 1.0f;
             TickRate = NumFrames;
         }
 
@@ -39,11 +38,6 @@ namespace SS14.Shared.Timing
         ///     Is the simulation currently paused?
         /// </summary>
         public bool Paused { get; set; }
-
-        /// <summary>
-        ///     How fast time passes in the simulation compared to RealTime. 1.0 = 100%, 0.25 = 25% (slow mo).
-        /// </summary>
-        public double TimeScale { get; set; }
         
         /// <summary>
         ///     The current synchronized uptime of the simulation. Use this for in-game timing. This can be rewound for
@@ -119,7 +113,7 @@ namespace SS14.Shared.Timing
             // calculate simulation FrameTime
             if (InSimulation)
             {
-                FrameTime = TimeSpan.FromTicks((long)(TickPeriod.Ticks * TimeScale));
+                FrameTime = TimeSpan.FromTicks(TickPeriod.Ticks);
             }
             else
             {

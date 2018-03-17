@@ -224,7 +224,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new TransformComponentState(LocalPosition, LocalRotation, Parent?.Owner?.Uid);
+            return new TransformComponentState(_position, GridID, MapID, LocalRotation, Parent?.Owner?.Uid);
         }
 
         /// <summary>

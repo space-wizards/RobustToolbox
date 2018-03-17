@@ -27,7 +27,8 @@ namespace SS14.Client.GameObjects
         public MapId MapID { get; private set; }
         public GridId GridID { get; private set; }
         public Angle LocalRotation { get; private set; }
-        public ITransformComponent Parent { get; private set; }
+        ITransformComponent ITransformComponent.Parent => Parent;
+        public IClientTransformComponent Parent { get; private set; }
 
         private Matrix3 _worldMatrix;
         private Matrix3 _invWorldMatrix;
@@ -78,7 +79,8 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public event Action<Angle> OnRotate;
 
-        public LocalCoordinates LocalPosition => new LocalCoordinates(_position, GridID, MapID);
+        //=> new LocalCoordinates(_position, GridID, MapID);
+        public LocalCoordinates LocalPosition => LocalCoordinatesFor(_position, MapID, GridID);
 
         public Vector2 WorldPosition
         {
@@ -122,10 +124,13 @@ namespace SS14.Client.GameObjects
                 OnRotate?.Invoke(newState.Rotation);
             }
 
-            if (_position != newState.Position || MapID != newState.MapID || GridID != newState.GridID)
+            if (_position != newState.LocalPosition || MapID != newState.MapID || GridID != newState.GridID)
             {
-                OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new LocalCoordinates(newState.Position, newState.GridID, newState.MapID)));
-                _position = newState.Position;
+                var oldPos = LocalPosition;
+                // TODO: this is horribly broken if the parent changes too, because the coordinates are all messed up.
+                // Help.
+                OnMove?.Invoke(this, new MoveEventArgs(oldPos, LocalCoordinatesFor(newState.LocalPosition, newState.MapID, newState.GridID)));
+                _position = newState.LocalPosition;
                 SceneNode.Position = (_position * EyeManager.PIXELSPERMETER).Rounded().Convert();
                 MapID = newState.MapID;
                 GridID = newState.GridID;
@@ -140,7 +145,7 @@ namespace SS14.Client.GameObjects
                     return;
 
                 var newParent = Owner.EntityManager.GetEntity(newParentId.Value);
-                AttachParent(newParent.GetComponent<ITransformComponent>());
+                AttachParent(newParent.GetComponent<IClientTransformComponent>());
             }
         }
 
@@ -153,20 +158,32 @@ namespace SS14.Client.GameObjects
             if (Parent == null)
                 return;
 
+            Parent.SceneNode.RemoveChild(SceneNode);
             Parent = null;
+            var holder = IoCManager.Resolve<ISceneTreeHolder>();
+            holder.WorldRoot.AddChild(SceneNode);
+            UpdateSceneVisibility();
         }
 
         /// <summary>
         /// Sets another entity as the parent entity.
         /// </summary>
         /// <param name="parent"></param>
-        private void AttachParent(ITransformComponent parent)
+        private void AttachParent(IClientTransformComponent parent)
         {
             // nothing to attach to.
             if (parent == null)
                 return;
 
             Parent = parent;
+            SceneNode.GetParent().RemoveChild(SceneNode);
+            parent.SceneNode.AddChild(SceneNode);
+            UpdateSceneVisibility();
+        }
+
+        private void UpdateSceneVisibility()
+        {
+            SceneNode.Visible = IsMapTransform;
         }
 
         public ITransformComponent GetMapTransform()
@@ -236,6 +253,26 @@ namespace SS14.Client.GameObjects
             var vecHom = new Vector3(vec.X, vec.Y, 1);
             Matrix3.Transform(ref mat, ref vecHom);
             return vecHom.Xy;
+        }
+
+        /// <summary>
+        ///     Calculate our LocalCoordinates as if the location relative to our parent is equal to <paramref name="localPosition" />.
+        /// </summary>
+        private LocalCoordinates LocalCoordinatesFor(Vector2 localPosition, MapId mapId, GridId gridId)
+        {
+            if (Parent != null)
+            {
+                // transform localPosition from parent coords to world coords
+                var worldPos = MatMult(Parent.WorldMatrix, localPosition);
+                var lc = new LocalCoordinates(worldPos, GridId.DefaultGrid, mapId);
+
+                // then to parent grid coords
+                return lc.ConvertToGrid(Parent.LocalPosition.Grid);
+            }
+            else
+            {
+                return new LocalCoordinates(localPosition, gridId, mapId);
+            }
         }
     }
 }

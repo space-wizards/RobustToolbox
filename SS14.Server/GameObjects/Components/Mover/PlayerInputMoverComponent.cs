@@ -70,7 +70,10 @@ namespace SS14.Server.GameObjects
             var physics = Owner.GetComponent<PhysicsComponent>();
 
             physics.LinearVelocity = _moveDir * (_run ? FastMoveSpeed : BaseMoveSpeed);
-            transform.LocalRotation = (float)(_moveDir.LengthSquared > 0.001 ? _moveDir.GetDir() : Direction.South).ToAngle();
+            if (_moveDir.LengthSquared > 0.001)
+            {
+                transform.LocalRotation = _moveDir.GetDir().ToAngle();
+            }
 
             base.Update(frameTime);
         }

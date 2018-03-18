@@ -122,6 +122,37 @@ namespace SS14.Shared.GameObjects.Serialization
             }
         }
 
+        public override void DataSetFunction<T>(string name, T defaultValue, SetFunctionDelegate<T> func)
+        {
+            if (!Reading) return;
+
+            if (_curMap.TryGetNode(name, out var node))
+            {
+                var value = (T)NodeToType(typeof(T), node);
+                func.Invoke(value);
+            }
+            else if (_setDefaults)
+            {
+                var value = defaultValue;
+                func.Invoke(value);
+            }
+        }
+
+        public override void DataGetFunction<T>(string name, T defaultValue, GetFunctionDelegate<T> func, bool alwaysWrite = false)
+        {
+            if (Reading) return;
+
+            var value = func.Invoke();
+
+            // don't write if value is null or default
+            if (!alwaysWrite && (value != null || defaultValue == null) && (value == null || value.Equals(defaultValue)))
+                return;
+
+            var key = name;
+            var val = value == null ? TypeToNode(defaultValue) : TypeToNode(value);
+            _curMap.Add(key, val);
+        }
+
         public YamlMappingNode GetRootNode()
         {
             var root = new YamlMappingNode();

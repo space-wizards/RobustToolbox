@@ -45,7 +45,7 @@ namespace SS14.UnitTesting.Shared.GameObjects.Serialization
                 Assert.That(data[i], Is.EqualTo(SerializableList[i]));
         }
 
-        private readonly string SerializedListYaml = "entities:\r\n- datalist:\r\n  - 1\r\n  - 2\r\n  - 3\r\n...\r\n";
+        private readonly string SerializedListYaml = "entities:\n- datalist:\n  - 1\n  - 2\n  - 3\n...\n";
         private readonly List<int> SerializableList = new List<int> {1, 2, 3};
 
         [Test]
@@ -82,7 +82,7 @@ namespace SS14.UnitTesting.Shared.GameObjects.Serialization
                 Assert.That(data[kvEntry.Key], Is.EqualTo(kvEntry.Value));
         }
 
-        private readonly string SerializedDictYaml = "entities:\r\n- datadict:\r\n    val1: 1\r\n    val2: 2\r\n...\r\n";
+        private readonly string SerializedDictYaml = "entities:\n- datadict:\n    val1: 1\n    val2: 2\n...\n";
         private readonly Dictionary<string, int> SerializableDict = new Dictionary<string, int> { {"val1", 1}, {"val2", 2} };
 
         // serializes a node tree into text
@@ -94,7 +94,9 @@ namespace SS14.UnitTesting.Shared.GameObjects.Serialization
             {
                 using (var writer = new StreamWriter(stream))
                 {
-                    new YamlStream(document).Save(writer);
+                    writer.NewLine = "\n";
+                    var yamlStream = new YamlStream(document);
+                    yamlStream.Save(writer);
                     writer.Flush();
                     return System.Text.Encoding.UTF8.GetString(stream.ToArray());
                 }

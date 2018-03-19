@@ -178,13 +178,33 @@ namespace SS14.Shared.GameObjects.Serialization
             // List<T>
             if (TryGenericListType(type, out var listType))
             {
-                throw new NotImplementedException();
+                var listNode = (YamlSequenceNode) node;
+                var newList = (IList)Activator.CreateInstance(type);
+
+                foreach (var entryNode in listNode)
+                {
+                    var value = NodeToType(listType, entryNode);
+                    newList.Add(value);
+                }
+
+                return newList;
             }
 
             // Dictionary<K,V>
             if (TryGenericDictType(type, out var keyType, out var valType))
             {
-                throw new NotImplementedException();
+                var dictNode = (YamlMappingNode)node;
+                var newDict = (IDictionary) Activator.CreateInstance(type);
+
+                foreach (var kvEntry in dictNode.Children)
+                {
+                    var keyValue = NodeToType(keyType, kvEntry.Key);
+                    var valValue = NodeToType(valType, kvEntry.Value);
+
+                    newDict.Add(keyValue, valValue);
+                }
+
+                return newDict;
             }
 
             // custom TypeSerializer
@@ -195,6 +215,7 @@ namespace SS14.Shared.GameObjects.Serialization
             if (type.IsValueType)
                 return _structSerializer.NodeToType(type, (YamlMappingNode) node);
 
+            // ref type that isn't a custom TypeSerializer
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(type));
         }
 
@@ -229,14 +250,14 @@ namespace SS14.Shared.GameObjects.Serialization
             {
                 var node = new YamlMappingNode();
 
-                foreach (KeyValuePair<object, object> kvEntry in (IEnumerable)obj)
+                foreach (DictionaryEntry entry in (IDictionary)obj)
                 {
-                    var keyNode = TypeToNode(kvEntry.Key);
-                    var valNode = TypeToNode(kvEntry.Value);
+                    var keyNode = TypeToNode(entry.Key);
+                    var valNode = TypeToNode(entry.Value);
 
                     node.Add(keyNode, valNode);
                 }
-
+                
                 return node;
             }
 
@@ -247,7 +268,8 @@ namespace SS14.Shared.GameObjects.Serialization
             // other val (struct)
             if (type.IsValueType)
                 return _structSerializer.TypeToNode(obj);
-            
+
+            // ref type that isn't a custom TypeSerializer
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(obj));
         }
 

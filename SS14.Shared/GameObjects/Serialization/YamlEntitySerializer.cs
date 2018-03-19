@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -174,6 +175,18 @@ namespace SS14.Shared.GameObjects.Serialization
             if (type.IsEnum)
                 return Enum.Parse(type, node.ToString());
 
+            // List<T>
+            if (TryGenericListType(type, out var listType))
+            {
+                throw new NotImplementedException();
+            }
+
+            // Dictionary<K,V>
+            if (TryGenericDictType(type, out var keyType, out var valType))
+            {
+                throw new NotImplementedException();
+            }
+
             // custom TypeSerializer
             if (_typeSerializers.TryGetValue(type, out var serializer))
                 return serializer.NodeToType(type, node);
@@ -197,6 +210,36 @@ namespace SS14.Shared.GameObjects.Serialization
             if (type.IsPrimitive || type == typeof(Enum))
                 return obj.ToString();
 
+            // List<T>
+            if (TryGenericListType(type, out var listType))
+            {
+                var node = new YamlSequenceNode();
+
+                foreach (var entry in (IEnumerable)obj)
+                {
+                    var entryNode = TypeToNode(entry);
+                    node.Add(entryNode);
+                }
+
+                return node;
+            }
+
+            // Dictionary<K,V>
+            if (TryGenericDictType(type, out var keyType, out var valType))
+            {
+                var node = new YamlMappingNode();
+
+                foreach (KeyValuePair<object, object> kvEntry in (IEnumerable)obj)
+                {
+                    var keyNode = TypeToNode(kvEntry.Key);
+                    var valNode = TypeToNode(kvEntry.Value);
+
+                    node.Add(keyNode, valNode);
+                }
+
+                return node;
+            }
+
             // custom TypeSerializer
             if (_typeSerializers.TryGetValue(type, out var serializer))
                 return serializer.TypeToNode(obj);
@@ -218,6 +261,37 @@ namespace SS14.Shared.GameObjects.Serialization
         {
             if(!_typeSerializers.ContainsKey(type))
                 _typeSerializers.Add(type, serializer);
+        }
+
+        private static bool TryGenericListType(Type type, out Type listType)
+        {
+            var isList = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
+
+            if (isList)
+            {
+                listType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            listType = default(Type);
+            return false;
+        }
+
+        private static bool TryGenericDictType(Type type, out Type keyType, out Type valType)
+        {
+            var isDict = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
+
+            if (isDict)
+            {
+                var genArgs = type.GetGenericArguments();
+                keyType = genArgs[0];
+                valType = genArgs[1];
+                return true;
+            }
+
+            keyType = default(Type);
+            valType = default(Type);
+            return false;
         }
     }
 

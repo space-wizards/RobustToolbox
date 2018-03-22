@@ -63,9 +63,6 @@ namespace SS14.Server.ClientConsoleHost.Commands
 
             foreach (IPlayerSession p in players)
             {
-                if(p == null)
-                    continue;
-
                 sb.Append($"  {p.Index,3}");
                 sb.Append($"  {p.Name,20}");
                 sb.AppendLine(string.Format("  {0,16}{1,12}{2,14}{3,9}",

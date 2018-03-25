@@ -1,4 +1,5 @@
-using System.Reflection;
+﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
@@ -37,3 +38,7 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyVersion("0.1.*")]
 [assembly: AssemblyFileVersion("0.1")]
+
+// The following allows another friend assembly access to the types marked as internal.
+[assembly: InternalsVisibleTo("SS14.UnitTesting")] // Gives access to Unit test project
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")] // Gives access to Castle(Moq)

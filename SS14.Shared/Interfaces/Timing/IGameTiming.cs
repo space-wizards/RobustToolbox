@@ -16,13 +16,7 @@ namespace SS14.Shared.Interfaces.Timing
         ///     Is the simulation currently paused?
         /// </summary>
         bool Paused { get; set; }
-
-        /// <summary>
-        ///     How fast time passes in the simulation compared to RealTime. 1.0 = 100%, 0.25 = 25% (slow mo).
-        ///     Minimum timescale is 0.1, max is 2.0.
-        /// </summary>
-        double TimeScale { get; set; }
-
+        
         /// <summary>
         ///     The current synchronized uptime of the simulation. Use this for in-game timing. This can be rewound for
         ///     prediction, and is affected by Paused and TimeScale.

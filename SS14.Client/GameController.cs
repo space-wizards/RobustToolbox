@@ -30,6 +30,8 @@ using SS14.Client.Interfaces.GameStates;
 using SS14.Shared.Maths;
 using SS14.Client.Graphics.Lighting;
 using SS14.Client.Interfaces.Placement;
+using SS14.Shared.Timing;
+using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 
 namespace SS14.Client
 {
@@ -76,9 +78,8 @@ namespace SS14.Client
 
         #region Constructors
 
-        private TimeSpan _lastTick;
-        private TimeSpan _lastKeepUpAnnounce;
-
+        private GameLoop _mainLoop;
+        
         public void Run()
         {
             Logger.Debug("Initializing GameController.");
@@ -132,72 +133,14 @@ namespace SS14.Client
 
             _stateManager.RequestStateChange<MainScreen>();
 
-            #region GameLoop
+            _mainLoop = new GameLoop(_time);
+            _mainLoop.SleepMode = SleepMode.None;
 
-            // maximum number of ticks to queue before the loop slows down.
-            const int maxTicks = 5;
+            _mainLoop.Input += (sender, args) => Process(new FrameEventArgs(args.DeltaSeconds));
+            _mainLoop.Tick += (sender, args) => Update(new FrameEventArgs(args.DeltaSeconds));
+            _mainLoop.Render += (sender, args) => Render(new FrameEventArgs(args.DeltaSeconds));
 
-            _time.ResetRealTime();
-            var maxTime = TimeSpan.FromTicks(_time.TickPeriod.Ticks * maxTicks);
-
-            while (CluwneLib.IsRunning)
-            {
-                var accumulator = _time.RealTime - _lastTick;
-
-                // If the game can't keep up, limit time.
-                if (accumulator > maxTime)
-                {
-                    // limit accumulator to max time.
-                    accumulator = maxTime;
-
-                    // pull lastTick up to the current realTime
-                    // This will slow down the simulation, but if we are behind from a
-                    // lag spike hopefully it will be able to catch up.
-                    _lastTick = _time.RealTime - maxTime;
-
-                    // announce we are falling behind
-                    if ((_time.RealTime - _lastKeepUpAnnounce).TotalSeconds >= 15.0)
-                    {
-                        Logger.Warning("[ENG] MainLoop: Cannot keep up!");
-                        _lastKeepUpAnnounce = _time.RealTime;
-                    }
-                }
-
-                _time.StartFrame();
-
-                var realFrameEvent = new FrameEventArgs((float)_time.RealFrameTime.TotalSeconds);
-
-                // process Net/KB/Mouse input
-                Process(realFrameEvent);
-
-                _time.InSimulation = true;
-                // run the simulation for every accumulated tick
-                while (accumulator >= _time.TickPeriod)
-                {
-                    accumulator -= _time.TickPeriod;
-                    _lastTick += _time.TickPeriod;
-
-                    // only run the sim if unpaused, but still use up the accumulated time
-                    if (!_time.Paused)
-                    {
-                        // update the simulation
-                        var simFrameEvent = new FrameEventArgs((float)_time.FrameTime.TotalSeconds);
-                        Update(simFrameEvent);
-                        _time.CurTick++;
-                    }
-                }
-
-                // if not paused, save how close to the next tick we are so interpolation works
-                if (!_time.Paused)
-                    _time.TickRemainder = accumulator;
-
-                _time.InSimulation = false;
-
-                // render the simulation
-                Render(realFrameEvent);
-            }
-
-            #endregion GameLoop
+            _mainLoop.Run();
 
             _networkManager.ClientDisconnect("Client disconnected from game.");
             CluwneLib.Terminate();
@@ -211,7 +154,6 @@ namespace SS14.Client
         /// </summary>
         private void Process(FrameEventArgs e)
         {
-            //TODO: Keyboard/Mouse input needs to be processed here.
         }
 
         /// <summary>
@@ -226,6 +168,9 @@ namespace SS14.Client
             _timerManager.UpdateTimers(e.Elapsed);
             _stateManager.Update(e);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, e.Elapsed);
+
+            if (!CluwneLib.IsRunning)
+                _mainLoop.Running = false;
         }
 
         /// <summary>

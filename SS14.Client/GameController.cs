@@ -83,6 +83,7 @@ namespace SS14.Client
             PreInitIoC();
             IoCManager.Resolve<ISceneTreeHolder>().Initialize(tree);
             InitIoC();
+            Godot.OS.SetWindowTitle("Space Station 14");
 
             tree.SetAutoAcceptQuit(false);
 

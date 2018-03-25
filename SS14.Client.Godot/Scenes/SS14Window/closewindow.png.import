@@ -7,10 +7,7 @@ path="res://.import/closewindow.png-7b2f9cb6cf73c832ec12a5ebfba82490.stex"
 [deps]
 
 source_file="res://Scenes/SS14Window/closewindow.png"
-source_md5="c8b11fdaeeb241794306ac449085ab50"
-
 dest_files=[ "res://.import/closewindow.png-7b2f9cb6cf73c832ec12a5ebfba82490.stex" ]
-dest_md5="d2aa4721cd05066720a72eb11b224011"
 
 [params]
 

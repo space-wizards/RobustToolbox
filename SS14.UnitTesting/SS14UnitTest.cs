@@ -62,6 +62,7 @@ using SS14.Shared.Timers;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Maps;
 using SS14.Shared.Maths;
+using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 
 namespace SS14.UnitTesting
 {

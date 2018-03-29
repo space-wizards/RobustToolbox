@@ -248,14 +248,21 @@ namespace SS14.Server.Maps
                 var yamlEnt = (YamlMappingNode)yamlNode;
 
                 var protoName = yamlEnt["id"].ToString();
-                var entity = _entityMan.SpawnEntity(protoName);
 
+                try
+                {
+                    var entity = _entityMan.SpawnEntity(protoName);
 
-                _protoMan.LoadData(entity, yamlEnt);
+                    _protoMan.LoadData(entity, yamlEnt);
 
-                // overwrite local position in the BP to the new map/grid ID
-                var transform = entity.GetComponent<IServerTransformComponent>();
-                transform.LocalPosition = new LocalCoordinates(transform.LocalPosition.Position, gridId, map.Index);
+                    // overwrite local position in the BP to the new map/grid ID
+                    var transform = entity.GetComponent<IServerTransformComponent>();
+                    transform.LocalPosition = new LocalCoordinates(transform.LocalPosition.Position, gridId, map.Index);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error($"[MAP] Error creating entity \"{protoName}\": {e.Message}");
+                }
             }
         }
     }

@@ -36,6 +36,7 @@ using SS14.Server.Interfaces.Maps;
 using SS14.Server.Player;
 using SS14.Shared.Enums;
 using SS14.Shared.Reflection;
+using SS14.Shared.Timing;
 
 namespace SS14.Server
 {
@@ -69,7 +70,7 @@ namespace SS14.Server
         [Dependency]
         private readonly IGameStateManager _stateManager;
 
-        private bool _active;
+        private GameLoop _mainLoop;
         private ServerRunLevel _runLevel;
 
         private TimeSpan _lastTitleUpdate;
@@ -118,7 +119,8 @@ namespace SS14.Server
                 Logger.Log("[SRV] Shutting down...");
             else
                 Logger.Log($"[SRV] {reason}, shutting down...");
-            _active = false;
+
+            _mainLoop.Running = false;
         }
 
         /// <inheritdoc />
@@ -226,7 +228,6 @@ namespace SS14.Server
 
             OnRunLevelChanged(ServerRunLevel.PreGame);
 
-            _active = true;
             return false;
         }
 
@@ -236,80 +237,33 @@ namespace SS14.Server
         /// <inheritdoc />
         public void MainLoop()
         {
-            // maximum number of ticks to queue before the loop slows down.
-            const int maxTicks = 5;
+            _mainLoop = new GameLoop(_time);
+            _mainLoop.SleepMode = SleepMode.Delay;
 
-            _time.ResetRealTime();
-            var maxTime = TimeSpan.FromTicks(_time.TickPeriod.Ticks * maxTicks);
+            _mainLoop.Tick += (sender, args) => Update(args.DeltaSeconds);
 
-            while (_active)
-            {
-                var accumulator = _time.RealTime - _lastTick;
-
-                // If the game can't keep up, limit time.
-                if (accumulator > maxTime)
-                {
-                    // limit accumulator to max time.
-                    accumulator = maxTime;
-
-                    // pull lastTick up to the current realTime
-                    // This will slow down the simulation, but if we are behind from a
-                    // lag spike hopefully it will be able to catch up.
-                    _lastTick = _time.RealTime - maxTime;
-
-                    // announce we are falling behind
-                    if ((_time.RealTime - _lastKeepUpAnnounce).TotalSeconds >= 15.0)
-                    {
-                        Logger.Warning("[SRV] MainLoop: Cannot keep up!");
-                        _lastKeepUpAnnounce = _time.RealTime;
-                    }
-                }
-
-                // process the CLI console of the program
-                IoCManager.Resolve<IConsoleManager>().Update();
-
-                _time.InSimulation = true;
-
-                // run the simulation for every accumulated tick
-                while (accumulator >= _time.TickPeriod)
-                {
-                    accumulator -= _time.TickPeriod;
-                    _lastTick += _time.TickPeriod;
-                    _time.StartFrame();
-
-                    // only run the sim if unpaused, but still use up the accumulated time
-                    if (!_time.Paused)
-                    {
-                        Update((float)_time.FrameTime.TotalSeconds);
-                        _time.CurTick++;
-                    }
-                }
-
-                // if not paused, save how far between ticks we are so interpolation works
-                if (!_time.Paused)
-                    _time.TickRemainder = accumulator;
-
-                _time.InSimulation = false;
-
-                // every 1 second update stats in the console window title
-                if ((_time.RealTime - _lastTitleUpdate).TotalSeconds > 1.0)
-                {
-                    var netStats = UpdateBps();
-                    Console.Title = string.Format("FPS: {0:N2} SD:{1:N2}ms | Net: ({2}) | Memory: {3:N0} KiB",
-                        Math.Round(_time.FramesPerSecondAvg, 2),
-                        _time.RealFrameTimeStdDev.TotalMilliseconds,
-                        netStats,
-                        Process.GetCurrentProcess().PrivateMemorySize64 >> 10);
-                    _lastTitleUpdate = _time.RealTime;
-                }
-
-                // Set this to 1 if you want to be nice and give the rest of the timeslice up to the os scheduler.
-                // Set this to 0 if you want to use 100% cpu, but still cooperate with the scheduler.
-                // comment this out if you want to be 'that thread' and hog 100% cpu.
-                Thread.Sleep(1);
-            }
+            // set GameLoop.Running to false to return from this function.
+            _mainLoop.Run();
 
             Cleanup();
+        }
+
+        /// <summary>
+        ///     Updates the console window title with performance statistics.
+        /// </summary>
+        private void UpdateTitle()
+        {
+            // every 1 second update stats in the console window title
+            if ((_time.RealTime - _lastTitleUpdate).TotalSeconds < 1.0)
+                return;
+
+            var netStats = UpdateBps();
+            Console.Title = string.Format("FPS: {0:N2} SD: {1:N2}ms | Net: ({2}) | Memory: {3:N0} KiB",
+                Math.Round(_time.FramesPerSecondAvg, 2),
+                _time.RealFrameTimeStdDev.TotalMilliseconds,
+                netStats,
+                Process.GetCurrentProcess().PrivateMemorySize64 >> 10);
+            _lastTitleUpdate = _time.RealTime;
         }
 
         /// <summary>
@@ -391,6 +345,8 @@ namespace SS14.Server
 
         private void Update(float frameTime)
         {
+            UpdateTitle();
+
             IoCManager.Resolve<IServerNetManager>().ProcessPackets();
 
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, frameTime);

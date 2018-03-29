@@ -168,7 +168,7 @@ namespace SS14.Server.Player
         /// <returns></returns>
         public List<IPlayerSession> GetAllPlayers()
         {
-            return _sessions.Cast<IPlayerSession>().ToList();
+            return _sessions.Where(x => x!= null).Cast<IPlayerSession>().ToList();
         }
 
         /// <summary>

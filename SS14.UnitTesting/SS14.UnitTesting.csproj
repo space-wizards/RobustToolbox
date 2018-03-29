@@ -77,6 +77,7 @@
     <Compile Include="Client\GameObjects\Components\Transform_Test.cs" />
     <Compile Include="Server\GameObjects\Components\Container_Test.cs" />
     <Compile Include="Server\GameObjects\Components\Transform_Test.cs" />
+    <Compile Include="Shared\GameObjects\Serialization\YamlEntitySerializer_Test.cs" />
     <Compile Include="Shared\IoC\IoCManager_Test.cs" />
     <Compile Include="Shared\Maths\Angle_Test.cs" />
     <Compile Include="Shared\Maths\Matrix3_Test.cs" />
@@ -87,6 +88,8 @@
     <Compile Include="Shared\Prototypes\PrototypeManager_Test.cs" />
     <Compile Include="Shared\Reflection\ReflectionManager_Test.cs" />
     <Compile Include="Shared\Serialization\NetSerializableAttribute_Test.cs" />
+    <Compile Include="Shared\Timing\GameLoop_Test.cs" />
+    <Compile Include="Shared\Timing\GameTiming_Test.cs" />
     <Compile Include="Shared\Utility\CollectionExtensions_Test.cs" />
     <Compile Include="Shared\Utility\YamlHelpers_Test.cs" />
     <Compile Include="Shared\ColorUtils_Test.cs" />

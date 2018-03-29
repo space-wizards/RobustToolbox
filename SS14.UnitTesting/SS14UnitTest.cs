@@ -59,6 +59,7 @@ using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Physics;
 using SS14.Shared.Timers;
 using SS14.Shared.Maths;
+using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 
 namespace SS14.UnitTesting
 {

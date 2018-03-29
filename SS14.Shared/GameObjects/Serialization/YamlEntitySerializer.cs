@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -122,6 +123,37 @@ namespace SS14.Shared.GameObjects.Serialization
             }
         }
 
+        public override void DataSetFunction<T>(string name, T defaultValue, SetFunctionDelegate<T> func)
+        {
+            if (!Reading) return;
+
+            if (_curMap.TryGetNode(name, out var node))
+            {
+                var value = (T)NodeToType(typeof(T), node);
+                func.Invoke(value);
+            }
+            else if (_setDefaults)
+            {
+                var value = defaultValue;
+                func.Invoke(value);
+            }
+        }
+
+        public override void DataGetFunction<T>(string name, T defaultValue, GetFunctionDelegate<T> func, bool alwaysWrite = false)
+        {
+            if (Reading) return;
+
+            var value = func.Invoke();
+
+            // don't write if value is null or default
+            if (!alwaysWrite && (value != null || defaultValue == null) && (value == null || value.Equals(defaultValue)))
+                return;
+
+            var key = name;
+            var val = value == null ? TypeToNode(defaultValue) : TypeToNode(value);
+            _curMap.Add(key, val);
+        }
+
         public YamlMappingNode GetRootNode()
         {
             var root = new YamlMappingNode();
@@ -143,6 +175,38 @@ namespace SS14.Shared.GameObjects.Serialization
             if (type.IsEnum)
                 return Enum.Parse(type, node.ToString());
 
+            // List<T>
+            if (TryGenericListType(type, out var listType))
+            {
+                var listNode = (YamlSequenceNode) node;
+                var newList = (IList)Activator.CreateInstance(type);
+
+                foreach (var entryNode in listNode)
+                {
+                    var value = NodeToType(listType, entryNode);
+                    newList.Add(value);
+                }
+
+                return newList;
+            }
+
+            // Dictionary<K,V>
+            if (TryGenericDictType(type, out var keyType, out var valType))
+            {
+                var dictNode = (YamlMappingNode)node;
+                var newDict = (IDictionary) Activator.CreateInstance(type);
+
+                foreach (var kvEntry in dictNode.Children)
+                {
+                    var keyValue = NodeToType(keyType, kvEntry.Key);
+                    var valValue = NodeToType(valType, kvEntry.Value);
+
+                    newDict.Add(keyValue, valValue);
+                }
+
+                return newDict;
+            }
+
             // custom TypeSerializer
             if (_typeSerializers.TryGetValue(type, out var serializer))
                 return serializer.NodeToType(type, node);
@@ -151,6 +215,7 @@ namespace SS14.Shared.GameObjects.Serialization
             if (type.IsValueType)
                 return _structSerializer.NodeToType(type, (YamlMappingNode)node);
 
+            // ref type that isn't a custom TypeSerializer
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(type));
         }
 
@@ -166,6 +231,36 @@ namespace SS14.Shared.GameObjects.Serialization
             if (type.IsPrimitive || type == typeof(Enum))
                 return obj.ToString();
 
+            // List<T>
+            if (TryGenericListType(type, out var listType))
+            {
+                var node = new YamlSequenceNode();
+
+                foreach (var entry in (IEnumerable)obj)
+                {
+                    var entryNode = TypeToNode(entry);
+                    node.Add(entryNode);
+                }
+
+                return node;
+            }
+
+            // Dictionary<K,V>
+            if (TryGenericDictType(type, out var keyType, out var valType))
+            {
+                var node = new YamlMappingNode();
+
+                foreach (DictionaryEntry entry in (IDictionary)obj)
+                {
+                    var keyNode = TypeToNode(entry.Key);
+                    var valNode = TypeToNode(entry.Value);
+
+                    node.Add(keyNode, valNode);
+                }
+
+                return node;
+            }
+
             // custom TypeSerializer
             if (_typeSerializers.TryGetValue(type, out var serializer))
                 return serializer.TypeToNode(obj);
@@ -174,6 +269,7 @@ namespace SS14.Shared.GameObjects.Serialization
             if (type.IsValueType)
                 return _structSerializer.TypeToNode(obj);
 
+            // ref type that isn't a custom TypeSerializer
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(obj));
         }
 
@@ -187,6 +283,37 @@ namespace SS14.Shared.GameObjects.Serialization
         {
             if (!_typeSerializers.ContainsKey(type))
                 _typeSerializers.Add(type, serializer);
+        }
+
+        private static bool TryGenericListType(Type type, out Type listType)
+        {
+            var isList = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
+
+            if (isList)
+            {
+                listType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            listType = default(Type);
+            return false;
+        }
+
+        private static bool TryGenericDictType(Type type, out Type keyType, out Type valType)
+        {
+            var isDict = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
+
+            if (isDict)
+            {
+                var genArgs = type.GetGenericArguments();
+                keyType = genArgs[0];
+                valType = genArgs[1];
+                return true;
+            }
+
+            keyType = default(Type);
+            valType = default(Type);
+            return false;
         }
     }
 

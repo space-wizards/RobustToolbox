@@ -63,7 +63,7 @@ namespace SS14.Shared.Timing
         /// <summary>
         ///     Average real frame time over the last 50 frames.
         /// </summary>
-        public TimeSpan RealFrameTimeAvg => TimeSpan.FromTicks((long) _realFrameTimes.Average());
+        public TimeSpan RealFrameTimeAvg => TimeSpan.FromTicks((long)_realFrameTimes.Average());
 
         /// <summary>
         ///     Standard Deviation of the real frame time over the last 50 frames.
@@ -142,7 +142,7 @@ namespace SS14.Shared.Timing
             _realTimer.Restart();
             _lastRealTime = TimeSpan.Zero;
         }
-        
+
         /// <summary>
         ///     Calculates the average FPS of the last 50 real frame times.
         /// </summary>
@@ -163,7 +163,7 @@ namespace SS14.Shared.Timing
         {
             var sum = _realFrameTimes.Sum();
             var count = _realFrameTimes.Count;
-            var avg = sum / (double) count;
+            var avg = sum / (double)count;
             double devSquared = 0.0f;
             for (var i = 0; i < count; ++i)
             {
@@ -178,7 +178,7 @@ namespace SS14.Shared.Timing
             }
 
             var variance = devSquared / (count - 1);
-            return TimeSpan.FromTicks((long) Math.Sqrt(variance));
+            return TimeSpan.FromTicks((long)Math.Sqrt(variance));
         }
     }
 }

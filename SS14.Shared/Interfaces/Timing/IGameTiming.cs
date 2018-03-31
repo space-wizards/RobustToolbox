@@ -16,7 +16,7 @@ namespace SS14.Shared.Interfaces.Timing
         ///     Is the simulation currently paused?
         /// </summary>
         bool Paused { get; set; }
-        
+
         /// <summary>
         ///     The current synchronized uptime of the simulation. Use this for in-game timing. This can be rewound for
         ///     prediction, and is affected by Paused and TimeScale.

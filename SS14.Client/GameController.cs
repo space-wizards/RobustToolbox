@@ -149,19 +149,35 @@ namespace SS14.Client
 
         public override void PhysicsProcess(float delta)
         {
-            _networkManager.ProcessPackets();
-            var eventArgs = new ProcessFrameEventArgs(delta);
-            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, eventArgs.Elapsed);
-            _timerManager.UpdateTimers(delta);
-            _userInterfaceManager.Update(eventArgs);
-            _stateManager.Update(eventArgs);
-            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, eventArgs.Elapsed);
+            // Can't be too certain.
+            gameTiming.InSimulation = true;
+            gameTiming._tickRemainderTimer.Restart();
+            try
+            {
+                if (!gameTiming.Paused)
+                {
+                    gameTiming.CurTick++;
+                    _networkManager.ProcessPackets();
+                    var eventArgs = new ProcessFrameEventArgs(delta);
+                    AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, eventArgs.Elapsed);
+                    _timerManager.UpdateTimers(delta);
+                    _userInterfaceManager.Update(eventArgs);
+                    _stateManager.Update(eventArgs);
+                    AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, eventArgs.Elapsed);
+                }
+            }
+            finally
+            {
+                gameTiming.InSimulation = false;
+            }
         }
 
         public override void FrameProcess(float delta)
         {
-            // TODO: This is probably not great.
-            gameTiming.RealTime += TimeSpan.FromSeconds(delta);
+            gameTiming.InSimulation = false; // Better safe than sorry.
+            gameTiming.RealFrameTime = TimeSpan.FromSeconds(delta);
+            gameTiming.TickRemainder = gameTiming._tickRemainderTimer.Elapsed;
+
             var eventArgs = new RenderFrameEventArgs(delta);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePreEngine, eventArgs.Elapsed);
             lightManager.FrameUpdate(eventArgs);

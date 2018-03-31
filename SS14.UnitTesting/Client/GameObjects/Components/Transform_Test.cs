@@ -1,9 +1,11 @@
 ﻿using System.IO;
 using NUnit.Framework;
+using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Server.GameObjects;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
@@ -33,6 +35,10 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
         [OneTimeSetUp]
         public void Setup()
         {
+            var factory = IoCManager.Resolve<IComponentFactory>();
+            factory.Register<ClientTransformComponent>();
+            factory.RegisterReference<ClientTransformComponent, ITransformComponent>();
+
             EntityManager = (EntityManager)IoCManager.Resolve<IClientEntityManager>();
             MapManager = IoCManager.Resolve<IMapManager>();
 
@@ -52,6 +58,11 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
 
         /// <summary>
         ///     Make sure that a child entity does not move when attaching to a parent.
+        ///
+        ///     NOTE: Looking over it after making messages work differently, I'm pretty sure this test's fucked and doesn't work like it's described.
+        ///     Problem is that now the messages carry relative position, which seems to be what this test was testing,
+        ///         so it's pretty much testing its own input data (if that makes any sense).
+        ///     Gonna leave it in since it might detect some position calculation shenanigans, but you're warned.
         /// </summary>
         [Test]
         public void ParentAttachMoveTest()
@@ -67,15 +78,16 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
 
             compState = new TransformComponentState(new Vector2(6, 6), new GridId(5), new MapId(2), new Angle(0), EntityUid.Invalid);
             childTrans.HandleComponentState(compState);
+            // World pos should be 6, 6 now.
 
             // Act
             var oldWpos = childTrans.WorldPosition;
-            compState = new TransformComponentState(Vector2.Zero, new GridId(5), new MapId(2), new Angle(0), parent.Uid);
+            compState = new TransformComponentState(Vector2.One, new GridId(5), new MapId(2), new Angle(0), parent.Uid);
             childTrans.HandleComponentState(compState);
             var newWpos = childTrans.WorldPosition;
 
             // Assert
-            Assert.That(oldWpos == newWpos);
+            Assert.That(newWpos, Is.EqualTo(oldWpos));
         }
 
         /// <summary>

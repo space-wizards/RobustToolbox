@@ -90,7 +90,7 @@ namespace SS14.Client
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
-            IoCManager.Register<IComponentFactory, ClientComponentFactory>();
+            IoCManager.Register<IComponentFactory, GodotComponentFactory>();
             IoCManager.Register<IComponentManager, ComponentManager>();
             IoCManager.Register<IMapManager, ClientMapManager>();
             IoCManager.Register<ICollisionManager, CollisionManager>();

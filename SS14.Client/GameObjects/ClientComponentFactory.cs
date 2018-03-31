@@ -20,9 +20,8 @@ namespace SS14.Client.GameObjects
             RegisterIgnore("KeyBindingInput");
             Register<PointLightComponent>();
             Register<PhysicsComponent>();
-            Register<TransformComponent>();
-            RegisterReference<TransformComponent, ITransformComponent>();
-            RegisterReference<TransformComponent, IClientTransformComponent>();
+            Register<ClientTransformComponent>();
+            RegisterReference<ClientTransformComponent, ITransformComponent>();
 
             Register<PlayerInputMoverComponent>();
             RegisterReference<PlayerInputMoverComponent, IMoverComponent>();

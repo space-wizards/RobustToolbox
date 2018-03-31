@@ -24,8 +24,6 @@ namespace SS14.Client.Input
     {
         [Dependency]
         readonly IUserInterfaceManager userInterfaceManager;
-        [Dependency]
-        readonly ISceneTreeHolder sceneTree;
 
         private Dictionary<Keyboard.Key, BoundKeyFunctions> _boundKeys;
 
@@ -73,6 +71,7 @@ namespace SS14.Client.Input
 
         // Don't take input if we're focused on a LineEdit.
         // LineEdits don't intercept keydowns when typing properly.
+        // NOTE: macOS specific!
         // https://github.com/godotengine/godot/issues/15071
         // So if we didn't do this, the DebugConsole wouldn't block movement (for example).
         private bool UIBlocked()
@@ -80,6 +79,6 @@ namespace SS14.Client.Input
             return userInterfaceManager.Focused is LineEdit;
         }
 
-        public Vector2 MouseScreenPosition => sceneTree.SceneTree.Root.GetMousePosition().Convert();
+        public virtual Vector2 MouseScreenPosition => Vector2.Zero;
     }
 }

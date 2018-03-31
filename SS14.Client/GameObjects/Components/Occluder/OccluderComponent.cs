@@ -28,7 +28,7 @@ namespace SS14.Client.GameObjects
         {
             base.Initialize();
             lightManager = IoCManager.Resolve<ILightManager>();
-            var transform = Owner.GetComponent<IClientTransformComponent>();
+            var transform = Owner.GetComponent<IGodotTransformComponent>();
 
             occluder.ParentTo(transform);
         }

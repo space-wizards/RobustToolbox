@@ -28,7 +28,7 @@ namespace SS14.Client.Graphics.Lighting
             private Godot.LightOccluder2D occluder;
 
             private bool Deferred => Manager.Deferred;
-            private IClientTransformComponent parentTransform;
+            private IGodotTransformComponent parentTransform;
             private Godot.Vector2 CurrentPos;
 
             public Occluder(LightManager manager)
@@ -94,7 +94,7 @@ namespace SS14.Client.Graphics.Lighting
                 UpdateEnabled();
             }
 
-            public void ParentTo(IClientTransformComponent node)
+            public void ParentTo(IGodotTransformComponent node)
             {
                 if (!Deferred)
                 {

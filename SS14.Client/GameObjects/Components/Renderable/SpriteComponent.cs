@@ -68,7 +68,7 @@ namespace SS14.Client.GameObjects
 
         public override Type StateType => typeof(SpriteComponentState);
 
-        private IClientTransformComponent transform;
+        private IGodotTransformComponent transform;
         private Godot.Sprite SceneSprite;
 
         public float Bottom
@@ -207,7 +207,7 @@ namespace SS14.Client.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            transform = Owner.GetComponent<IClientTransformComponent>();
+            transform = Owner.GetComponent<IGodotTransformComponent>();
             transform.OnMove += OnMove;
             transform.OnRotate += OnRotate;
             MapID = transform.MapID;

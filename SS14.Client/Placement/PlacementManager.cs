@@ -229,7 +229,7 @@ namespace SS14.Client.Placement
             // Try to get current map.
             var map = MapId.Nullspace;
             var ent = PlayerManager.LocalPlayer.ControlledEntity;
-            if (ent != null && ent.TryGetComponent<IClientTransformComponent>(out var component))
+            if (ent != null && ent.TryGetComponent<IGodotTransformComponent>(out var component))
             {
                 map = component.MapID;
             }

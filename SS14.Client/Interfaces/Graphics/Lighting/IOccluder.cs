@@ -4,14 +4,14 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Graphics.Lighting
 {
-    interface IOccluder : IDisposable
+    public interface IOccluder : IDisposable
     {
         bool Enabled { get; set; }
 
         void SetPolygon(Vector2[] polygon);
         void SetGodotPolygon(Godot.Vector2[] polygon);
 
-        void ParentTo(IClientTransformComponent node);
+        void ParentTo(IGodotTransformComponent node);
         void DeParent();
     }
 }

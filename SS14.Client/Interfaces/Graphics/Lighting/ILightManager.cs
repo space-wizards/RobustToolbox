@@ -2,7 +2,7 @@
 
 namespace SS14.Client.Interfaces.Graphics.Lighting
 {
-    interface ILightManager
+    public interface ILightManager
     {
         void Initialize();
 

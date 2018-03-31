@@ -19,7 +19,7 @@ namespace SS14.Client.Interfaces.Graphics.Lighting
         Texture Texture { get; set; }
         bool Enabled { get; set; }
 
-        void ParentTo(IClientTransformComponent node);
+        void ParentTo(IGodotTransformComponent node);
         void DeParent();
     }
 }

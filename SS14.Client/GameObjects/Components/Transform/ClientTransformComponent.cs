@@ -19,16 +19,15 @@ namespace SS14.Client.GameObjects
     /// <summary>
     ///     Stores the position and orientation of the entity.
     /// </summary>
-    public class TransformComponent : Component, IClientTransformComponent
+    public class ClientTransformComponent : Component, ITransformComponent
     {
-        public Godot.Node2D SceneNode { get; private set; }
+
 
         private Vector2 _position;
         public MapId MapID { get; private set; }
         public GridId GridID { get; private set; }
         public Angle LocalRotation { get; private set; }
-        ITransformComponent ITransformComponent.Parent => Parent;
-        public IClientTransformComponent Parent { get; private set; }
+        public virtual ITransformComponent Parent { get; private set; }
 
         private Matrix3 _worldMatrix;
         private Matrix3 _invWorldMatrix;
@@ -88,7 +87,7 @@ namespace SS14.Client.GameObjects
             {
                 if (Parent != null)
                 {
-                    return _position;
+                    return MatMult(Parent.WorldMatrix, _position);
                 }
 
                 var maps = IoCManager.Resolve<IMapManager>();
@@ -96,7 +95,7 @@ namespace SS14.Client.GameObjects
                 {
                     return map.GetGrid(GridID).ConvertToWorld(_position);
                 }
-                return new Vector2();
+                return _position;
             }
         }
 
@@ -130,8 +129,7 @@ namespace SS14.Client.GameObjects
                 // TODO: this is horribly broken if the parent changes too, because the coordinates are all messed up.
                 // Help.
                 OnMove?.Invoke(this, new MoveEventArgs(oldPos, LocalCoordinatesFor(newState.LocalPosition, newState.MapID, newState.GridID)));
-                _position = newState.LocalPosition;
-                SceneNode.Position = (_position * EyeManager.PIXELSPERMETER).Rounded().Convert();
+                SetPosition(newState.LocalPosition);
                 MapID = newState.MapID;
                 GridID = newState.GridID;
             }
@@ -145,45 +143,33 @@ namespace SS14.Client.GameObjects
                     return;
 
                 var newParent = Owner.EntityManager.GetEntity(newParentId.Value);
-                AttachParent(newParent.GetComponent<IClientTransformComponent>());
+                AttachParent(newParent.GetComponent<ITransformComponent>());
             }
         }
 
         /// <summary>
         /// Detaches this entity from its parent.
         /// </summary>
-        private void DetachParent()
+        protected virtual void DetachParent()
         {
             // nothing to do
             if (Parent == null)
                 return;
 
-            Parent.SceneNode.RemoveChild(SceneNode);
             Parent = null;
-            var holder = IoCManager.Resolve<ISceneTreeHolder>();
-            holder.WorldRoot.AddChild(SceneNode);
-            UpdateSceneVisibility();
         }
 
         /// <summary>
         /// Sets another entity as the parent entity.
         /// </summary>
         /// <param name="parent"></param>
-        private void AttachParent(IClientTransformComponent parent)
+        protected virtual void AttachParent(ITransformComponent parent)
         {
             // nothing to attach to.
             if (parent == null)
                 return;
 
             Parent = parent;
-            SceneNode.GetParent().RemoveChild(SceneNode);
-            parent.SceneNode.AddChild(SceneNode);
-            UpdateSceneVisibility();
-        }
-
-        private void UpdateSceneVisibility()
-        {
-            SceneNode.Visible = IsMapTransform;
         }
 
         public ITransformComponent GetMapTransform()
@@ -214,24 +200,6 @@ namespace SS14.Client.GameObjects
                 }
             }
             return false;
-        }
-
-        public override void OnAdd()
-        {
-            base.OnAdd();
-            var holder = IoCManager.Resolve<ISceneTreeHolder>();
-            SceneNode = new Godot.Node2D();
-            SceneNode.SetName($"Transform {Owner.Uid} ({Owner.Name})");
-            holder.WorldRoot.AddChild(SceneNode);
-        }
-
-        public override void OnRemove()
-        {
-            base.OnRemove();
-
-            SceneNode.QueueFree();
-            SceneNode.Dispose();
-            SceneNode = null;
         }
 
         private void RebuildMatrices()
@@ -273,6 +241,12 @@ namespace SS14.Client.GameObjects
             {
                 return new LocalCoordinates(localPosition, gridId, mapId);
             }
+        }
+
+        // Hooks for GodotTransformComponent go here.
+        protected virtual void SetPosition(Vector2 position)
+        {
+            _position = position;
         }
     }
 }

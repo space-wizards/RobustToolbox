@@ -29,7 +29,7 @@ namespace SS14.Client.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            var transform = Owner.GetComponent<IClientTransformComponent>();
+            var transform = Owner.GetComponent<IGodotTransformComponent>();
             eye = new Eye();
             transform.SceneNode.AddChild(eye.GodotCamera);
             eye.Current = setCurrentOnInitialize;

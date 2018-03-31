@@ -9,7 +9,7 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics
 {
-    enum WindowMode
+    public enum WindowMode
     {
         Windowed = 0,
         Fullscreen = 1,
@@ -19,7 +19,7 @@ namespace SS14.Client.Graphics
     /// <summary>
     ///     Manages the game window, resolutions, fullscreen mode, vsync, etc...
     /// </summary>
-    class DisplayManager : IDisplayManager, IPostInjectInit
+    public class DisplayManager : IDisplayManager, IPostInjectInit
     {
         [Dependency]
         readonly IConfigurationManager configurationManager;

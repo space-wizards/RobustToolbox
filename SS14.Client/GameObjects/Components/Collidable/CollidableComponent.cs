@@ -47,25 +47,12 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public MapId MapID => Owner.GetComponent<ITransformComponent>().MapID;
 
-        private bool _debugDraw = false;
-        public bool DebugDraw
+        protected bool _debugDraw = false;
+        public virtual bool DebugDraw
         {
             get => _debugDraw;
-            set
-            {
-                if (value == _debugDraw)
-                {
-                    return;
-                }
-
-                _debugDraw = value;
-                debugNode.Update();
-            }
+            set => _debugDraw = value;
         }
-
-        private Godot.Node2D debugNode;
-        private IClientTransformComponent transform;
-        private GodotGlue.GodotSignalSubscriber0 debugDrawSubscriber;
 
         /// <summary>
         ///     Called when the collidable is bumped into by someone/something
@@ -94,30 +81,10 @@ namespace SS14.Client.GameObjects
                 cm.AddCollidable(this);
             }
 
-            transform = Owner.GetComponent<IClientTransformComponent>();
-            debugNode = new Godot.Node2D();
-            debugNode.SetName("Collidable debug");
-            debugDrawSubscriber = new GodotGlue.GodotSignalSubscriber0();
-            debugDrawSubscriber.Connect(debugNode, "draw");
-            debugDrawSubscriber.Signal += DrawDebugRect;
-            transform.SceneNode.AddChild(debugNode);
             if (IoCManager.Resolve<IDebugDrawing>().DebugColliders)
             {
                 DebugDraw = true;
             }
-        }
-
-        public override void OnRemove()
-        {
-            base.OnRemove();
-
-            debugDrawSubscriber.Disconnect(debugNode, "draw");
-            debugDrawSubscriber.Dispose();
-            debugDrawSubscriber = null;
-
-            debugNode.QueueFree();
-            debugNode.Dispose();
-            debugNode = null;
         }
 
         /// <summary>
@@ -216,24 +183,6 @@ namespace SS14.Client.GameObjects
             {
                 DebugColor = node.AsHexColor();
             }
-        }
-
-        private void DrawDebugRect()
-        {
-            if (!DebugDraw)
-            {
-                return;
-            }
-            var colorEdge = DebugColor.WithAlpha(0.50f).Convert();
-            var colorFill = DebugColor.WithAlpha(0.25f).Convert();
-            var aabb = Owner.GetComponent<BoundingBoxComponent>().AABB;
-
-            const int ppm = EyeManager.PIXELSPERMETER;
-            var rect = new Godot.Rect2(aabb.Left * ppm, aabb.Top * ppm, aabb.Width * ppm, aabb.Height * ppm);
-            debugNode.DrawRect(rect, colorEdge, filled: false);
-            rect.Position += new Godot.Vector2(1, 1);
-            rect.Size -= new Godot.Vector2(2, 2);
-            debugNode.DrawRect(rect, colorFill, filled: true);
         }
     }
 }

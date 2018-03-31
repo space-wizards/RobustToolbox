@@ -93,7 +93,7 @@ namespace SS14.Client.GameObjects
         {
             base.Initialize();
 
-            var transform = Owner.GetComponent<IClientTransformComponent>();
+            var transform = Owner.GetComponent<IGodotTransformComponent>();
             Light.ParentTo(transform);
         }
 

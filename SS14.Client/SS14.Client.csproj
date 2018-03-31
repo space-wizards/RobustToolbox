@@ -92,10 +92,12 @@
     <Compile Include="GameController\GameController.Input.cs" />
     <Compile Include="GameController\GameController.IoC.cs" />
     <Compile Include="GameController\GameController.GameTiming.cs" />
+    <Compile Include="GameObjects\GodotComponentFactory.cs" />
     <Compile Include="GameObjects\ClientComponentFactory.cs" />
     <Compile Include="GameObjects\ClientEntityManager.cs" />
     <Compile Include="GameObjects\ClientEntityNetworkManager.cs" />
     <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponent.cs" />
+    <Compile Include="GameObjects\Components\Collidable\GodotCollidableComponent.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponent.cs" />
     <Compile Include="GameObjects\Components\Icon\IconComponent.cs" />
     <Compile Include="GameObjects\Components\Input\ClickableComponent.cs" />
@@ -104,7 +106,8 @@
     <Compile Include="GameObjects\Components\Mover\PlayerInputMoverComponent.cs" />
     <Compile Include="GameObjects\Components\Occluder\OccluderComponent.cs" />
     <Compile Include="GameObjects\Components\Physics\PhysicsComponent.cs" />
-    <Compile Include="GameObjects\Components\Transform\TransformComponent.cs" />
+    <Compile Include="GameObjects\Components\Transform\GodotTransformComponent.cs" />
+    <Compile Include="GameObjects\Components\Transform\ClientTransformComponent.cs" />
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
     <Compile Include="GameObjects\Components\Renderable\Speechbubble.cs" />
     <Compile Include="GameObjects\Components\Renderable\SpriteComponent.cs" />
@@ -121,7 +124,7 @@
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
     <Compile Include="Interfaces\Console\IDebugConsole.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClientClickableComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\Components\IClientTransformComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\Components\IGodotTransformComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IClickTargetComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IClientEntityManager.cs" />
     <Compile Include="Interfaces\GameObjects\IMoverComponent.cs" />
@@ -196,6 +199,7 @@
     <Compile Include="Interfaces\IGameController.cs" />
     <Compile Include="Interfaces\Input\IInputManager.cs" />
     <Compile Include="Input\InputManager.cs" />
+    <Compile Include="Input\GodotInputManager.cs" />
     <Compile Include="State\States\LobbyMenu.cs" />
     <Compile Include="State\States\GameScreen.cs" />
     <Compile Include="Graphics\TextureSource.cs" />

@@ -59,7 +59,22 @@ using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Physics;
 using SS14.Shared.Timers;
 using SS14.Shared.Maths;
-//using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
+using SS14.Client.Log;
+using SS14.Client.Map;
+using SS14.Client.ResourceManagement;
+using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Client.Interfaces.Map;
+using SS14.Client.Interfaces;
+using SS14.Client;
+using SS14.UnitTesting.Client;
+using SS14.Client.Interfaces.Debugging;
+using SS14.Client.Debugging;
+using SS14.Client.Console;
+using SS14.Client.Interfaces.Graphics.ClientEye;
+using SS14.Client.Graphics.ClientEye;
+using SS14.Client.Interfaces.Graphics.Lighting;
+using SS14.Client.Interfaces.Graphics;
+using SS14.Client.Graphics.Lighting;
 
 namespace SS14.UnitTesting
 {
@@ -126,20 +141,19 @@ namespace SS14.UnitTesting
             RegisterIoC();
 
             var Assemblies = new List<Assembly>(4);
-            string AssemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
             switch (Project)
             {
                 case UnitTestProject.Client:
-                    Assemblies.Add(Assembly.LoadFrom(Path.Combine(AssemblyDir, "SS14.Client.exe")));
+                    Assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Client"));
                     break;
                 case UnitTestProject.Server:
-                    Assemblies.Add(Assembly.LoadFrom(Path.Combine(AssemblyDir, "SS14.Server.exe")));
+                    Assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Server"));
                     break;
                 default:
                     throw new NotSupportedException($"Unknown testing project: {Project}");
             }
 
-            Assemblies.Add(Assembly.LoadFrom(Path.Combine(AssemblyDir, "SS14.Shared.dll")));
+            Assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"));
             Assemblies.Add(Assembly.GetExecutingAssembly());
 
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(Assemblies);
@@ -174,40 +188,42 @@ namespace SS14.UnitTesting
             IoCManager.Register<ISS14Serializer, SS14Serializer>();
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IGameTiming, GameTiming>();
-            IoCManager.Register<IResourceManager, ResourceManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
 
             switch (Project)
             {
                 case UnitTestProject.Client:
-                    /*
-                    IoCManager.Register<ILogManager, LogManager>();
-
-                    IoCManager.Register<IRand, Rand>();
-                    IoCManager.Register<IStateManager, StateManager>();
-                    IoCManager.Register<INetworkGrapher, NetworkGrapher>();
-                    IoCManager.Register<IKeyBindingManager, KeyBindingManager>();
-                    IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
+                    IoCManager.Register<ILogManager, GodotLogManager>();
                     IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
-                    IoCManager.Register<ICollisionManager, CollisionManager>();
                     IoCManager.Register<IEntityManager, ClientEntityManager>();
-                    IoCManager.Register<IClientEntityManager, ClientEntityManager>();
-                    IoCManager.Register<IClientNetManager, NetManager>();
-                    IoCManager.Register<IReflectionManager, ClientReflectionManager>();
-                    IoCManager.Register<SS14.Client.Interfaces.Placement.IPlacementManager, SS14.Client.Placement.PlacementManager>();
-                    IoCManager.Register<ILightManager, LightManager>();
-                    IoCManager.Register<IResourceCache, ResourceCache>();
+                    IoCManager.Register<IComponentFactory, ComponentFactory>();
                     IoCManager.Register<IMapManager, MapManager>();
+                    IoCManager.Register<ICollisionManager, CollisionManager>();
+
+                    // Client stuff.
+                    IoCManager.Register<IReflectionManager, ClientReflectionManager>();
+                    IoCManager.Register<IResourceManager, ResourceCache>();
+                    IoCManager.Register<IResourceCache, ResourceCache>();
+                    IoCManager.Register<IClientNetManager, NetManager>();
+                    IoCManager.Register<IClientEntityManager, ClientEntityManager>();
                     IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
+                    IoCManager.Register<SS14.Client.Interfaces.GameStates.IGameStateManager, SS14.Client.GameStates.GameStateManager>();
+                    IoCManager.Register<IBaseClient, BaseClient>();
                     IoCManager.Register<SS14.Client.Interfaces.Player.IPlayerManager, SS14.Client.Player.PlayerManager>();
-                    IoCManager.Register<SS14.Client.Interfaces.IGameController, SS14.Client.GameController>();
-                    IoCManager.Register<SS14.Client.Interfaces.IBaseClient, SS14.Client.BaseClient>();
-                    IoCManager.Register<IComponentFactory, ClientComponentFactory>();
-                    IoCManager.Register<SS14.Client.Console.IClientChatConsole, SS14.Client.Console.ClientChatConsole>();
-                    */
+                    IoCManager.Register<IStateManager, StateManager>();
+                    IoCManager.Register<IUserInterfaceManager, DummyUserInterfaceManager>();
+                    IoCManager.Register<IGameControllerProxy, GameControllerProxyDummy>();
+                    IoCManager.Register<IInputManager, InputManager>();
+                    IoCManager.Register<IDebugDrawing, DebugDrawing>();
+                    IoCManager.Register<IClientConsole, ClientChatConsole>();
+                    IoCManager.Register<IClientChatConsole, ClientChatConsole>();
+                    //IoCManager.Register<ILightManager, LightManager>();
+                    IoCManager.Register<IDisplayManager, DisplayManager>();
+                    //IoCManager.Register<IEyeManager, EyeManager>();
                     break;
 
                 case UnitTestProject.Server:
+                    IoCManager.Register<IResourceManager, ResourceManager>();
                     IoCManager.Register<IEntityManager, ServerEntityManager>();
                     IoCManager.Register<IServerEntityManager, ServerEntityManager>();
                     IoCManager.Register<ILogManager, ServerLogManager>();
@@ -245,63 +261,6 @@ namespace SS14.UnitTesting
         protected virtual void OverrideIoC()
         {
         }
-        /*
-        public void InitializeResources()
-        {
-            GetResourceCache.LoadBaseResources();
-            GetResourceCache.LoadLocalResources();
-        }
-
-        public void InitializeCluwneLib()
-        {
-            GetClock = new Clock();
-
-            CluwneLib.Video.SetWindowSize(1280, 720);
-            CluwneLib.Video.SetFullScreen(false);
-            CluwneLib.Video.SetRefreshRate(60);
-
-            CluwneLib.Initialize();
-            CluwneLib.Window.Graphics.BackgroundColor = Color.Black;
-            CluwneLib.Window.Closed += MainWindowRequestClose;
-
-            CluwneLib.Go();
-        }
-
-        public void InitializeCluwneLib(uint width, uint height, bool fullscreen, uint refreshrate)
-        {
-            GetClock = new Clock();
-
-            CluwneLib.Video.SetWindowSize(width, height);
-            CluwneLib.Video.SetFullScreen(fullscreen);
-            CluwneLib.Video.SetRefreshRate(refreshrate);
-
-            CluwneLib.Initialize();
-            CluwneLib.Window.Graphics.BackgroundColor = Color.Black;
-            CluwneLib.Window.Closed += MainWindowRequestClose;
-
-            CluwneLib.Go();
-        }
-
-        public void StartCluwneLibLoop()
-        {
-            while (CluwneLib.IsRunning)
-            {
-                var lastFrameTime = GetClock.ElapsedTimeAsSeconds();
-                GetClock.Restart();
-                frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(Color.Black);
-                CluwneLib.Window.DispatchEvents();
-                InjectedMethod();
-                CluwneLib.Window.Graphics.Display();
-            }
-        }
-
-        private void MainWindowRequestClose(object sender, EventArgs e)
-        {
-            CluwneLib.Stop();
-            Application.Exit();
-        }
-        */
 
         #endregion Setup
     }

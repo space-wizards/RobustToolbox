@@ -21,7 +21,7 @@ using SS14.Shared.Maths;
 // This performs better because we forgo the O(nlights + 1) drawing complexity of canvas items.
 namespace SS14.Client.Graphics.Lighting
 {
-    partial class LightManager : ILightManager, IDisposable, IPostInjectInit
+    public partial class LightManager : ILightManager, IDisposable, IPostInjectInit
     {
         [Dependency]
         readonly ISceneTreeHolder sceneTreeHolder;

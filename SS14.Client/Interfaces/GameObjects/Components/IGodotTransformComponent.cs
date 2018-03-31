@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace SS14.Client.Interfaces.GameObjects.Components
 {
-    public interface IClientTransformComponent : ITransformComponent
+    public interface IGodotTransformComponent : ITransformComponent
     {
-        new IClientTransformComponent Parent { get; }
+        new IGodotTransformComponent Parent { get; }
         Godot.Node2D SceneNode { get; }
     }
 }

@@ -70,7 +70,7 @@ namespace SS14.Client
         [Dependency]
         readonly IEyeManager eyeManager;
         [Dependency]
-        readonly GameController.GameTiming gameTiming;
+        readonly GameTiming gameTiming;
         [Dependency]
         readonly IPlacementManager placementManager;
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using SS14.Shared.Interfaces.Timing;
 
 namespace SS14.Client
@@ -10,7 +10,6 @@ namespace SS14.Client
         {
             public bool InSimulation { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
             public bool Paused { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public double TimeScale { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
             public TimeSpan CurTime => throw new NotImplementedException();
 

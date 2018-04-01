@@ -68,7 +68,6 @@
     <Reference Include="System.Drawing" />
     <Reference Include="GodotSharp">
       <HintPath>..\SS14.Client.Godot\.mono\assemblies\GodotSharp.dll</HintPath>
-      <Private>False</Private>
     </Reference>
     <Reference Include="System.ValueTuple">
       <HintPath>$(SolutionDir)packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>

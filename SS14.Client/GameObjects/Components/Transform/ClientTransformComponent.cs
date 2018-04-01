@@ -21,8 +21,6 @@ namespace SS14.Client.GameObjects
     /// </summary>
     public class ClientTransformComponent : Component, ITransformComponent
     {
-
-
         private Vector2 _position;
         public MapId MapID { get; private set; }
         public GridId GridID { get; private set; }

@@ -75,6 +75,7 @@ using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Interfaces.Graphics.Lighting;
 using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Graphics.Lighting;
+using SS14.Shared.Log;
 
 namespace SS14.UnitTesting
 {
@@ -193,7 +194,7 @@ namespace SS14.UnitTesting
             switch (Project)
             {
                 case UnitTestProject.Client:
-                    IoCManager.Register<ILogManager, GodotLogManager>();
+                    IoCManager.Register<ILogManager, LogManager>();
                     IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
                     IoCManager.Register<IEntityManager, ClientEntityManager>();
                     IoCManager.Register<IComponentFactory, ComponentFactory>();

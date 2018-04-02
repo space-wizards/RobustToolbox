@@ -30,6 +30,7 @@ using SS14.Client.Interfaces.GameStates;
 using SS14.Shared.Maths;
 using SS14.Client.Graphics.Lighting;
 using SS14.Client.Interfaces.Placement;
+using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Client
 {
@@ -105,6 +106,8 @@ namespace SS14.Client
 
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
+
+            IoCManager.Resolve<IEntitySystemManager>().Initialize();
 
             //Setup Cluwne first, as the rest depends on it.
             SetupCluwne();

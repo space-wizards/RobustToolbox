@@ -7,6 +7,8 @@ using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SS14.Server.GameObjects
 {
@@ -55,9 +57,20 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        void ICollidable.Bump(IEntity ent)
+        void ICollidable.Bumped(IEntity bumpedby)
         {
-            OnBump?.Invoke(this, new BumpEventArgs(Owner, ent));
+            OnBump?.Invoke(this, new BumpEventArgs(Owner, bumpedby));
+        }
+
+        /// <inheritdoc />
+        void ICollidable.Bump(List<IEntity> bumpedinto)
+        {
+            List<ICollideBehavior> collidecomponents = Owner.GetComponents<ICollideBehavior>().ToList();
+
+            for (var i = 0; i < collidecomponents.Count; i++)
+            {
+                collidecomponents[i].CollideWith(bumpedinto);
+            }
         }
 
         /// <summary>

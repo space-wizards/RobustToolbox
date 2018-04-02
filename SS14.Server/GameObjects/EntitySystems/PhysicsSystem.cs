@@ -4,6 +4,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Maths;
+using SS14.Shared.Interfaces.Physics;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
@@ -54,13 +55,25 @@ namespace SS14.Server.GameObjects.EntitySystems
             //Check for collision
             if (movement.LengthSquared > Epsilon && entity.TryGetComponent(out CollidableComponent collider))
             {
-                var collided = collider.TryCollision(movement);
+                var collided = collider.TryCollision(movement, true);
+
                 if (collided)
                 {
-                    var xBlocked = collider.TryCollision(new Vector2(movement.X, 0), true);
-                    var yBlocked = collider.TryCollision(new Vector2(0, movement.Y), true);
-                    var v = velocity.LinearVelocity;
-                    velocity.LinearVelocity = new Vector2(xBlocked ? 0 : v.X, yBlocked ? 0 : v.Y);
+                    if(velocity.EdgeSlide)
+                    {
+                        //Slide along the blockage in the non-blocked direction
+                        var xBlocked = collider.TryCollision(new Vector2(movement.X, 0));
+                        var yBlocked = collider.TryCollision(new Vector2(0, movement.Y));
+
+                        var v = velocity.LinearVelocity;
+                        velocity.LinearVelocity = new Vector2(xBlocked ? 0 : v.X, yBlocked ? 0 : v.Y);
+                    }
+                    else
+                    {
+                        //Stop movement entirely at first blockage
+                        velocity.LinearVelocity = new Vector2(0, 0);
+                    }
+
                     movement = velocity.LinearVelocity * frameTime;
                 }
             }

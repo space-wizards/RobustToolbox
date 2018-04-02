@@ -87,9 +87,10 @@ namespace SS14.Shared.Physics
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <returns></returns>
-        public bool TryCollide(IEntity entity, Vector2 offset, bool bump = true)
+        public bool TryCollide(IEntity mover, Vector2 offset, bool bump = true)
         {
-            var collider = entity.GetComponent<ICollidableComponent>();
+            if (mover == null) return false;
+            var collider = mover.GetComponent<ICollidableComponent>();
             if (collider == null) return false;
 
             var colliderAABB = collider.WorldAABB;
@@ -116,15 +117,36 @@ namespace SS14.Shared.Physics
                            aabb.Collidable.WorldAABB.Intersects(colliderAABB) &&
                            aabb.Collidable.MapID == collider.MapID); //try all of the AABBs against the target rect.
 
+            //See if our collision will be overriden by a component
+            List<ICollideSpecial> collisionmodifiers = mover.GetComponents<ICollideSpecial>().ToList();
+            List<IEntity> collidedwith = new List<IEntity>();
+
             //try all of the AABBs against the target rect.
             var collided = false;
             foreach (var aabb in bounds)
             {
-                if (aabb.Collidable.IsHardCollidable) //If the collider is supposed to prevent movement
+                //Provides component level overrides for collision behavior based on the entity we are trying to collide with
+                var preventcollision = false;
+                for (var i = 0; i < collisionmodifiers.Count; i++)
+                {
+                    preventcollision |= collisionmodifiers[i].PreventCollide(aabb.Collidable);
+                }
+                if (preventcollision) //We were prevented, bail
+                    continue;
+
+                if (aabb.Collidable.IsHardCollidable) //If the collider is meant to be collidable at the moment
+                {
                     collided = true;
 
-                if (bump) aabb.Collidable.Bump(entity);
+                    if (bump)
+                    {
+                        aabb.Collidable.Bumped(mover);
+                        collidedwith.Add(aabb.Collidable.Owner);
+                    }
+                }
             }
+
+            collider.Bump(collidedwith);
 
             //TODO: This needs multi-grid support.
             return collided;

@@ -198,6 +198,19 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetEntitiesInArc(LocalCoordinates coordinates, float range, Angle direction, float arcwidth)
+        {
+            var entities = GetEntitiesInRange(coordinates, range);
+            
+            foreach(var entity in entities)
+            {
+                var angle = new Angle(entity.GetComponent<TransformComponent>().WorldPosition - coordinates.ToWorld().Position);
+                if (angle.Degrees < direction.Degrees + arcwidth / 2 && angle.Degrees > direction.Degrees - arcwidth / 2)
+                    yield return entity;
+            }
+        }
+
         #endregion LocationGetters
 
         /// <inheritdoc />

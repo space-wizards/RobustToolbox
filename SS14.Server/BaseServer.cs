@@ -69,6 +69,8 @@ namespace SS14.Server
         private readonly ITimerManager timerManager;
         [Dependency]
         private readonly IGameStateManager _stateManager;
+        [Dependency]
+        private readonly IServerNetManager _network;
 
         private GameLoop _mainLoop;
         private ServerRunLevel _runLevel;
@@ -105,11 +107,10 @@ namespace SS14.Server
         /// <inheritdoc />
         public void Restart()
         {
-            //TODO: This needs to hard-reset all modules. The Game manager needs to control soft "round restarts".
-            Logger.Info("[SRV] Soft restarting Server...");
-            IoCManager.Resolve<IPlayerManager>().SendJoinLobbyToAll();
-            _stateManager.SendGameStateUpdate();
-            DisposeForRestart();
+            Logger.Info("[SRV] Restarting Server...");
+
+            Cleanup();
+            Start();
         }
 
         /// <inheritdoc />
@@ -312,23 +313,25 @@ namespace SS14.Server
             }
         }
 
-        private void DisposeForRestart()
+        // called right before main loop returns, do all saving/cleanup in here
+        private void Cleanup()
         {
-            IoCManager.Resolve<IPlayerManager>().DetachAll();
-            if (_runLevel == ServerRunLevel.Game)
+            // shut down networking, kicking all players.
+            _network.Shutdown("Server Shutdown");
+
+            // shutdown entities
+            _entities.Shutdown();
+
+            //TODO: This should prob shutdown all managers in a loop.
+
+            // remove all maps
+            if(_runLevel == ServerRunLevel.Game)
             {
                 var mapMgr = IoCManager.Resolve<IMapManager>();
 
                 // TODO: Unregister all maps.
                 mapMgr.DeleteMap(new MapId(1));
             }
-            _entities.Shutdown();
-            GC.Collect();
-        }
-
-        private static void Cleanup()
-        {
-            Console.Title = "";
         }
 
         private string UpdateBps()

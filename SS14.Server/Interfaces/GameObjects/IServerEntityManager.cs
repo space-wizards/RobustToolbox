@@ -94,6 +94,16 @@ namespace SS14.Server.Interfaces.GameObjects
         /// <param name="Range"></param>
         IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float Range);
 
+        /// <summary>
+        /// Get entities with bounding box in range of this whose center is within a certain directional arc, angle specifies center bisector of arc
+        /// </summary>
+        /// <param name="coordinates"></param>
+        /// <param name="range"></param>
+        /// <param name="direction"></param>
+        /// <param name="arcwidth"></param>
+        /// <returns></returns>
+        IEnumerable<IEntity> GetEntitiesInArc(LocalCoordinates coordinates, float range, Angle direction, float arcwidth);
+
         List<EntityState> GetEntityStates();
 
         /// <summary>

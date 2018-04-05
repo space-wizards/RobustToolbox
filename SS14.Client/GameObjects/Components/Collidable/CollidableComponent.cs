@@ -13,6 +13,8 @@ using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace SS14.Client.GameObjects
 {
@@ -54,14 +56,23 @@ namespace SS14.Client.GameObjects
             set => _debugDraw = value;
         }
 
-        /// <summary>
-        ///     Called when the collidable is bumped into by someone/something
-        /// </summary>
-        void ICollidable.Bump(IEntity ent)
+        /// <inheritdoc />
+        void ICollidable.Bumped(IEntity bumpedby)
         {
-            SendMessage(new BumpedEntMsg(ent));
+            SendMessage(new BumpedEntMsg(bumpedby));
 
-            OnBump?.Invoke(this, new BumpEventArgs(this.Owner, ent));
+            OnBump?.Invoke(this, new BumpEventArgs(this.Owner, bumpedby));
+        }
+
+        /// <inheritdoc />
+        void ICollidable.Bump(List<IEntity> bumpedinto)
+        {
+            List<ICollideBehavior> collidecomponents = Owner.GetComponents<ICollideBehavior>().ToList();
+
+            for (var i = 0; i < collidecomponents.Count; i++)
+            {
+                collidecomponents[i].CollideWith(bumpedinto);
+            }
         }
 
         /// <inheritdoc />

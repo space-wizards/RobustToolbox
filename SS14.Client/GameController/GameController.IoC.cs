@@ -110,7 +110,7 @@ namespace SS14.Client
             IoCManager.Register<IStateManager, StateManager>();
             IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
             IoCManager.Register<IGameControllerProxy, GameControllerProxy>();
-            IoCManager.Register<IInputManager, InputManager>();
+            IoCManager.Register<IInputManager, GodotInputManager>();
             IoCManager.Register<IDebugDrawing, DebugDrawing>();
             IoCManager.Register<IClientConsole, ClientChatConsole>();
             IoCManager.Register<IClientChatConsole, ClientChatConsole>();

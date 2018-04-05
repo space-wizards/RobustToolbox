@@ -27,4 +27,14 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         event EventHandler<BumpEventArgs> OnBump;
         bool TryCollision(Vector2 offset, bool bump = false);
     }
+
+    public interface ICollideSpecial
+    {
+        bool PreventCollide(ICollidable collidedwith);
+    }
+
+    public interface ICollideBehavior
+    {
+        void CollideWith(List<IEntity> collidedwith);
+    }
 }

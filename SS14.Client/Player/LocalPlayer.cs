@@ -93,8 +93,8 @@ namespace SS14.Client.Player
 
             ControlledEntity.AddComponent<PlayerInputMoverComponent>();
 
-            if (!ControlledEntity.HasComponent<CollidableComponent>())
-                ControlledEntity.AddComponent<CollidableComponent>();
+            if (!ControlledEntity.HasComponent<ICollidableComponent>())
+                ControlledEntity.AddComponent<GodotCollidableComponent>();
 
             if (!ControlledEntity.TryGetComponent<EyeComponent>(out var eye))
             {
@@ -116,7 +116,7 @@ namespace SS14.Client.Player
             if (ControlledEntity != null && ControlledEntity.Initialized)
             {
                 ControlledEntity.RemoveComponent<PlayerInputMoverComponent>();
-                ControlledEntity.RemoveComponent<CollidableComponent>();
+                ControlledEntity.RemoveComponent<ICollidableComponent>();
                 ControlledEntity.GetComponent<EyeComponent>().Current = false;
                 var transform = ControlledEntity.GetComponent<ITransformComponent>();
                 if (transform != null)

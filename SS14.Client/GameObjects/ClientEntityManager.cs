@@ -100,7 +100,6 @@ namespace SS14.Client.GameObjects
                 throw new InvalidOperationException("InitializeEntities() called multiple times");
             }
             InitializeEntities();
-            EntitySystemManager.Initialize();
             Started = true;
         }
 

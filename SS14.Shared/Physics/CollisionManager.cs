@@ -198,7 +198,7 @@ namespace SS14.Shared.Physics
             b.RemovePoint(point);
         }
 
-        public RayCastResults IntersectRay(Ray ray, float maxLength = 50)
+        public RayCastResults IntersectRay(Ray ray, float maxLength = 50, IEntity entityignore = null)
         {
             var closestResults = new RayCastResults(float.PositiveInfinity, Vector2.Zero, null);
             var minDist = float.PositiveInfinity;
@@ -218,7 +218,7 @@ namespace SS14.Shared.Physics
 
                     // get the object it intersected in the bucket
                     var bucket = _buckets[kvIndices.Value];
-                    if (TryGetClosestIntersect(ray, bucket, out var results))
+                    if (TryGetClosestIntersect(ray, bucket, out var results, entityignore))
                     {
                         if (results.Distance < minDist)
                         {
@@ -235,7 +235,7 @@ namespace SS14.Shared.Physics
         /// <summary>
         ///     Return the closest object, inside a bucket, to the ray origin that was intersected (if any).
         /// </summary>
-        private static bool TryGetClosestIntersect(Ray ray, CollidableBucket bucket, out RayCastResults results)
+        private static bool TryGetClosestIntersect(Ray ray, CollidableBucket bucket, out RayCastResults results, IEntity entityignore = null)
         {
             IEntity entity = null;
             var hitPosition = Vector2.Zero;
@@ -247,9 +247,14 @@ namespace SS14.Shared.Physics
 
                 if (ray.Intersects(worldAABB, out var dist, out var hitPos) && !(dist > minDist))
                 {
+                    if (entityignore != null && entityignore == collidablePoint.ParentAABB.Collidable.Owner)
+                    {
+                        continue;
+                    }
+
+                    entity = collidablePoint.ParentAABB.Collidable.Owner;
                     minDist = dist;
                     hitPosition = hitPos;
-                    entity = collidablePoint.ParentAABB.Collidable.Owner;
                 }
             }
 

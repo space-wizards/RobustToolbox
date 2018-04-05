@@ -107,6 +107,7 @@
     <Compile Include="GameObjects\Components\Physics\PhysicsComponent.cs" />
     <Compile Include="GameObjects\Components\Transform\GodotTransformComponent.cs" />
     <Compile Include="GameObjects\Components\Transform\ClientTransformComponent.cs" />
+    <Compile Include="GameObjects\EntitySystems\EffectSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
     <Compile Include="GameObjects\Components\Renderable\Speechbubble.cs" />
     <Compile Include="GameObjects\Components\Renderable\SpriteComponent.cs" />

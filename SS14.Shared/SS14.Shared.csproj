@@ -136,6 +136,7 @@
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
     <Compile Include="GameObjects\ComponentMessage.cs" />
     <Compile Include="GameObjects\ComponentMessages\Messages.cs" />
+    <Compile Include="GameObjects\EntitySystemMessages\EffectMessage.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\ClickedOnEntityMessage.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\InputMessages.cs" />
     <Compile Include="GameObjects\Serialization\EntitySerializer.cs" />

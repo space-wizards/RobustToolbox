@@ -16,6 +16,7 @@ using SS14.Client.State.States;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Serialization;
@@ -104,6 +105,8 @@ namespace SS14.Client
 
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
+
+            IoCManager.Resolve<IEntitySystemManager>().Initialize();
 
             eyeManager.Initialize();
             inputManager.Initialize();

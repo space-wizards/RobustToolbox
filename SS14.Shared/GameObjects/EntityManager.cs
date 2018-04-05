@@ -153,10 +153,6 @@ namespace SS14.Shared.GameObjects
             {
                 DeleteEntity(entity);
             }
-            else
-            {
-                throw new ArgumentException(string.Format("No entity with ID {0} exists.", uid));
-            }
         }
 
         public bool EntityExists(EntityUid uid)

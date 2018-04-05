@@ -75,6 +75,9 @@
     <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DataStructures, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\ConcurrentDataStructures.0.2.0\lib\net45\DataStructures.dll</HintPath>
+    </Reference>
     <Reference Include="System">
       <Name>System</Name>
       <Private>False</Private>
@@ -155,7 +158,7 @@
     <Compile Include="GameObjects\Components\Physics\PhysicsComponent.cs" />
     <Compile Include="GameObjects\Components\Renderable\SpriteComponent.cs" />
     <Compile Include="GameObjects\Components\Transform\TransformComponent.cs" />
-    <Compile Include="GameObjects\EntitySystems\ParticleSystem.cs" />
+    <Compile Include="GameObjects\EntitySystems\EffectSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
     <Compile Include="GameState\GameStateManager.cs" />

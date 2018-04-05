@@ -1,3 +1,5 @@
+﻿using SS14.Shared.Map;
+
 namespace SS14.Client.Interfaces.Graphics.ClientEye
 {
     /// <summary>
@@ -7,6 +9,8 @@ namespace SS14.Client.Interfaces.Graphics.ClientEye
     public interface IEye
     {
         Godot.Camera2D GodotCamera { get; }
+
+        MapId MapId { get; }
 
         /// <summary>
         ///     Whether this is the current eye. If true, this one will be used.

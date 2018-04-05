@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Utility;
@@ -43,6 +43,8 @@ namespace SS14.Client.Graphics.ClientEye
                 currentEye.GodotCamera.Current = true;
             }
         }
+
+        public MapId CurrentMap => currentEye.MapId;
 
         public void Initialize()
         {

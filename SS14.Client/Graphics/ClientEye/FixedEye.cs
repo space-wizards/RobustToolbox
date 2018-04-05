@@ -1,4 +1,4 @@
-using SS14.Client.Interfaces;
+﻿using SS14.Client.Interfaces;
 using SS14.Client.Utility;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
@@ -6,7 +6,7 @@ using SS14.Shared.Maths;
 namespace SS14.Client.Graphics.ClientEye
 {
     /// <summary>
-    ///     A fixed eye is an eye which is fixed to one point, it's position.
+    ///     A fixed eye is an eye which is fixed to one point, its position.
     /// </summary>
     public class FixedEye : Eye
     {

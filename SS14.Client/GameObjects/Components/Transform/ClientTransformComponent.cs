@@ -30,7 +30,6 @@ namespace SS14.Client.GameObjects
         private Matrix3 _worldMatrix;
         private Matrix3 _invWorldMatrix;
 
-
         public Matrix3 WorldMatrix
         {
             get

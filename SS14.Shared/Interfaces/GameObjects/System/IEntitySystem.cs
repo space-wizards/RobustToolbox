@@ -38,5 +38,6 @@ namespace SS14.Shared.Interfaces.GameObjects.System
         /// </summary>
         /// <param name="frameTime">Delta time since Update() was last called.</param>
         void Update(float frameTime);
+        void FrameUpdate(float frameTime);
     }
 }

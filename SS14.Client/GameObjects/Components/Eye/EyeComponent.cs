@@ -1,4 +1,4 @@
-using SS14.Client.Graphics.ClientEye;
+﻿using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
 
@@ -26,19 +26,30 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        IGodotTransformComponent transform;
+
         public override void Initialize()
         {
             base.Initialize();
-            var transform = Owner.GetComponent<IGodotTransformComponent>();
-            eye = new Eye();
+            transform = Owner.GetComponent<IGodotTransformComponent>();
+            eye = new Eye
+            {
+                Current = setCurrentOnInitialize
+            };
             transform.SceneNode.AddChild(eye.GodotCamera);
-            eye.Current = setCurrentOnInitialize;
+            transform.OnMove += Transform_OnMove;
         }
 
         public override void OnRemove()
         {
             base.OnRemove();
+            transform.OnMove -= Transform_OnMove;
             eye.Dispose();
+        }
+
+        private void Transform_OnMove(object sender, Shared.Enums.MoveEventArgs e)
+        {
+            eye.MapId = e.NewPosition.MapID;
         }
     }
 }

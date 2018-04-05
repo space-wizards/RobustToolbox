@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Shared.IoC;
+using SS14.Shared.Map;
 
 namespace SS14.Client.Graphics.ClientEye
 {
@@ -29,6 +30,8 @@ namespace SS14.Client.Graphics.ClientEye
                 }
             }
         }
+
+        public MapId MapId { get; set; } = MapId.Nullspace;
 
         public Eye()
         {

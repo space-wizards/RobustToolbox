@@ -105,6 +105,7 @@ namespace SS14.Client.State.States
         public override void FrameUpdate(RenderFrameEventArgs e)
         {
             placementManager.FrameUpdate(e);
+            _entityManager.FrameUpdate(e.Elapsed);
         }
 
         public override void KeyDown(KeyEventArgs e)

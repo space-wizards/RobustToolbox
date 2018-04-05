@@ -64,6 +64,9 @@
     <Reference Include="YamlDotNet, Version=4.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\YamlDotNet.4.3.0\lib\net45\YamlDotNet.dll</HintPath>
     </Reference>
+    <Reference Include="GodotSharp">
+      <HintPath>..\SS14.Client.Godot\.mono\assemblies\GodotSharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Choose>
     <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">
@@ -77,6 +80,7 @@
     <Compile Include="Client\GameObjects\Components\Transform_Test.cs" />
     <Compile Include="Client\DummyUserInterfaceManager.cs" />
     <Compile Include="Client\GameControllerProxyDummy.cs" />
+    <Compile Include="Client\Utility\GodotConversionsTest.cs" />
     <Compile Include="Server\GameObjects\Components\Container_Test.cs" />
     <Compile Include="Server\GameObjects\Components\Transform_Test.cs" />
     <Compile Include="Shared\GameObjects\Serialization\YamlEntitySerializer_Test.cs" />

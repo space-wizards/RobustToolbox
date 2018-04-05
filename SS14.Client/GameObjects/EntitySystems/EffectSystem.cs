@@ -1,6 +1,9 @@
 ﻿using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprites;
-using SS14.Client.Interfaces.Resource;
+using SS14.Client.Graphics.Drawing;
+using SS14.Client.Interfaces;
+using SS14.Client.Interfaces.Graphics.ClientEye;
+using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Client.ResourceManagement;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.EntitySystemMessages;
 using SS14.Shared.GameObjects.System;
@@ -17,8 +20,48 @@ namespace SS14.Client.GameObjects
 {
     public class EffectSystem : EntitySystem
     {
+        [Dependency]
+        IGameTiming gameTiming;
+
+        [Dependency]
+        IResourceCache resourceCache;
+
+        [Dependency]
+        ISceneTreeHolder sceneTree;
+
+        [Dependency]
+        IEyeManager eyeManager;
+
         private List<Effect> _Effects = new List<Effect>();
         private TimeSpan lasttimeprocessed = TimeSpan.Zero;
+
+        private Godot.Node2D DrawingNode;
+        private GodotGlue.GodotSignalSubscriber0 DrawSubscriber;
+
+        public override void Initialize()
+        {
+            base.Initialize();
+            IoCManager.InjectDependencies(this);
+            DrawingNode = new Godot.Node2D()
+            {
+                Name = "EffectSystem",
+            };
+            sceneTree.WorldRoot.AddChild(DrawingNode);
+            DrawSubscriber = new GodotGlue.GodotSignalSubscriber0();
+            DrawSubscriber.Connect(DrawingNode, "draw");
+            DrawSubscriber.Signal += Redraw;
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+            DrawSubscriber.Disconnect(DrawingNode, "draw");
+            DrawSubscriber.Dispose();
+            DrawSubscriber = null;
+            DrawingNode.QueueFree();
+            DrawingNode.Dispose();
+            DrawingNode = null;
+        }
 
         public override void RegisterMessageTypes()
         {
@@ -41,7 +84,7 @@ namespace SS14.Client.GameObjects
 
         public void CreateEffect(EffectSystemMessage message)
         {
-            var gametime = IoCManager.Resolve<IGameTiming>().CurTime;
+            var gametime = gameTiming.CurTime;
             if (gametime > message.DeathTime) //Did we already die in transit? That's pretty troubling isn't it
             {
                 Logger.Warning(string.Format("Effect using sprite {0} died in transit to the client", message.EffectSprite), message);
@@ -49,8 +92,7 @@ namespace SS14.Client.GameObjects
             }
 
             //Create effect from creation message
-            var effect = new Effect(message);
-
+            var effect = new Effect(message, resourceCache);
 
             //Remove this
             effect.Age = gametime;
@@ -62,7 +104,7 @@ namespace SS14.Client.GameObjects
             _Effects.Add(effect);
         }
 
-        public override void Update(float frameTime)
+        public override void FrameUpdate(float frameTime)
         {
             lasttimeprocessed = IoCManager.Resolve<IGameTiming>().CurTime;
 
@@ -74,34 +116,35 @@ namespace SS14.Client.GameObjects
                 effect.Update(frameTime);
 
                 //These effects have died
-                if(effect.Age > effect.Deathtime)
+                if (effect.Age > effect.Deathtime)
                 {
                     //Remove from the effects list and decrement the iterator
                     _Effects.Remove(effect);
                     i--;
                 }
             }
+
+            DrawingNode.Update();
         }
 
-        public void Render(MapId map)
+        private void Redraw()
         {
-            foreach (var effect in _Effects)
+            var map = eyeManager.CurrentMap;
+            using (var handle = new DrawingHandle(DrawingNode.GetCanvasItem()))
             {
-                if(effect.Coordinates.MapID == map)
+                foreach (var effect in _Effects)
                 {
-                    Sprite effectsprite = effect.EffectSprite;
-                    effectsprite.Color = ToColor(effect.Color);
-                    effectsprite.Position = CluwneLib.WorldToScreen(effect.Coordinates.ToWorld().Position);
-                    effectsprite.Rotation = effect.Rotation;
-                    effectsprite.Scale = effect.Size;
-                    //You will come in search of this line of code to fix a 'bug' some day, 
-                    //but you'll have a better idea about your use case to fix it for by then
-                    effectsprite.Origin = new Vector2(0f, effectsprite.TextureRect.Height / 2);
-                    effectsprite.Draw();
+                    if (effect.Coordinates.MapID != map)
+                    {
+                        continue;
+                    }
+
+                    handle.SetTransform(effect.Coordinates.ToWorld().Position, new Angle(effect.Rotation), effect.Size);
+                    Texture effectsprite = effect.EffectSprite;
+                    handle.DrawTexture(effectsprite, -((Vector2)effectsprite.Size) / 2, ToColor(effect.Color));
                 }
             }
         }
-
 
         private class Effect
         {
@@ -109,7 +152,7 @@ namespace SS14.Client.GameObjects
             /// Effect Sprite
             /// This is the sprite that will be drawn as the "effect".
             /// </summary>
-            public Sprite EffectSprite { get; set; }
+            public Texture EffectSprite { get; set; }
 
             /// <summary>
             /// Effect position relative to the emit position
@@ -174,7 +217,7 @@ namespace SS14.Client.GameObjects
             /// <summary>
             /// Effect's current color
             /// </summary>
-            public Vector4 Color = new Vector4(255,255,255,255);
+            public Vector4 Color = new Vector4(255, 255, 255, 255);
 
             /// <summary>
             /// Rate of change of effect's color
@@ -190,11 +233,10 @@ namespace SS14.Client.GameObjects
             /// Time after which the effect will "die"
             /// </summary>
             public TimeSpan Deathtime = TimeSpan.FromSeconds(1);
-            
 
-            public Effect(EffectSystemMessage effectcreation)
+            public Effect(EffectSystemMessage effectcreation, IResourceCache resourceCache)
             {
-                EffectSprite = new Sprite(IoCManager.Resolve<IResourceCache>().GetSprite(effectcreation.EffectSprite));
+                EffectSprite = resourceCache.GetResource<TextureResource>(effectcreation.EffectSprite).Texture;
                 Coordinates = effectcreation.Coordinates;
                 EmitterCoordinates = effectcreation.EmitterCoordinates;
                 Velocity = effectcreation.Velocity;
@@ -219,14 +261,14 @@ namespace SS14.Client.GameObjects
                 if (Age >= Deathtime)
                     return;
 
-                Velocity += Acceleration*frameTime;
-                RadialVelocity += RadialAcceleration*frameTime;
-                TangentialVelocity += TangentialAcceleration*frameTime;
-                
+                Velocity += Acceleration * frameTime;
+                RadialVelocity += RadialAcceleration * frameTime;
+                TangentialVelocity += TangentialAcceleration * frameTime;
+
                 var deltaPosition = new Vector2(0f, 0f);
 
                 //If we have an emitter we can do special effects around that emitter position
-                if(EmitterCoordinates != null)
+                if (EmitterCoordinates != null)
                 {
                     //Calculate delta p due to radial velocity
                     var positionRelativeToEmitter = Coordinates.ToWorld().Position - EmitterCoordinates.ToWorld().Position;
@@ -245,13 +287,13 @@ namespace SS14.Client.GameObjects
                 }
 
                 //Calculate new position from our velocity as well as possible rotation/movement around emitter
-                deltaPosition += Velocity*frameTime;
+                deltaPosition += Velocity * frameTime;
                 Coordinates = new LocalCoordinates(Coordinates.Position + deltaPosition, Coordinates.Grid);
 
                 //Finish calculating new rotation, size, color
-                Rotation += RotationRate*frameTime;
-                Size += SizeDelta*frameTime;
-                Color += ColorDelta*frameTime;
+                Rotation += RotationRate * frameTime;
+                Size += SizeDelta * frameTime;
+                Color += ColorDelta * frameTime;
             }
         }
 

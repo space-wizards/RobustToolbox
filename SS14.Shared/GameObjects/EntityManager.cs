@@ -58,7 +58,9 @@ namespace SS14.Shared.GameObjects
             _network.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, message => HandleEntityNetworkMessage((MsgEntity)message));
         }
 
-        public virtual void Startup() { }
+        public virtual void Startup()
+        {
+        }
 
         public virtual void Shutdown()
         {
@@ -73,6 +75,11 @@ namespace SS14.Shared.GameObjects
             EntitySystemManager.Update(frameTime);
             ProcessEventQueue();
             CullDeletedEntities();
+        }
+
+        public virtual void FrameUpdate(float frameTime)
+        {
+            EntitySystemManager.FrameUpdate(frameTime);
         }
 
         /// <summary>
@@ -224,7 +231,6 @@ namespace SS14.Shared.GameObjects
 
         public void GetEntityData()
         {
-
         }
 
         #endregion Entity Management

@@ -33,5 +33,15 @@ namespace SS14.Client.Utility
         {
             return new Box2(rect.Position.x, rect.Position.y, rect.End.x, rect.End.y);
         }
+
+        public static Godot.Transform2D Convert(this Matrix3 matrix)
+        {
+            return new Godot.Transform2D
+            {
+                o = new Godot.Vector2(matrix.R0C2, matrix.R1C2),
+                x = new Godot.Vector2(matrix.R0C0, matrix.R0C1),
+                y = new Godot.Vector2(matrix.R1C0, matrix.R1C1),
+            };
+        }
     }
 }

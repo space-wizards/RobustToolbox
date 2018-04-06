@@ -30,6 +30,7 @@
     <DebugSymbols>True</DebugSymbols>
     <Optimize>False</Optimize>
     <PlatformTarget>x86</PlatformTarget>
+    <DebugType>portable</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DefineConstants>TRACE;RELEASE</DefineConstants>
@@ -43,6 +44,7 @@
     <DebugSymbols>True</DebugSymbols>
     <Optimize>False</Optimize>
     <PlatformTarget>x64</PlatformTarget>
+    <DebugType>portable</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <DefineConstants>TRACE;RELEASE</DefineConstants>
@@ -56,6 +58,7 @@
     <DebugSymbols>True</DebugSymbols>
     <Optimize>false</Optimize>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>portable</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DefineConstants>TRACE;RELEASE</DefineConstants>

@@ -19,7 +19,7 @@
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\bin\Sandbox.Client\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
+    <DebugType>portable</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
@@ -35,7 +35,7 @@
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\bin\Sandbox.Client\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
+    <DebugType>portable</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>

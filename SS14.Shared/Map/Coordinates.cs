@@ -20,7 +20,6 @@ namespace SS14.Shared.Map
 
         public IMapGrid Grid => IoCManager.Resolve<IMapManager>().GetMap(MapID).GetGrid(GridID);
 
-
         public LocalCoordinates(Vector2 argPosition, IMapGrid argGrid)
         {
             Position = argPosition;
@@ -81,6 +80,11 @@ namespace SS14.Shared.Map
             return InRange(localpos, (float)range);
         }
 
+        public LocalCoordinates Translated(Vector2 offset)
+        {
+            return new LocalCoordinates(Position + offset, GridID, MapID);
+        }
+
         public override string ToString()
         {
             return $"Map={MapID}, Grid={Grid.Index}, X={Position.X:N2}, Y={Position.Y:N2}";
@@ -94,7 +98,7 @@ namespace SS14.Shared.Map
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is LocalCoordinates && Equals((LocalCoordinates) obj);
+            return obj is LocalCoordinates && Equals((LocalCoordinates)obj);
         }
 
         public override int GetHashCode()

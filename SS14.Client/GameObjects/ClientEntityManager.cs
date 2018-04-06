@@ -49,7 +49,7 @@ namespace SS14.Client.GameObjects
             foreach (var entity in GetEntities())
             {
                 var transform = entity.GetComponent<ITransformComponent>();
-                if(transform.MapID != mapId)
+                if (transform.MapID != mapId)
                     continue;
 
                 if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
@@ -100,6 +100,7 @@ namespace SS14.Client.GameObjects
                 throw new InvalidOperationException("InitializeEntities() called multiple times");
             }
             InitializeEntities();
+            EntitySystemManager.Initialize();
             Started = true;
         }
 

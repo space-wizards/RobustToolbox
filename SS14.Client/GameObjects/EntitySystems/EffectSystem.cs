@@ -1,4 +1,5 @@
 ﻿using SS14.Client.Graphics;
+using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Graphics.ClientEye;
@@ -15,6 +16,7 @@ using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
+using VS = Godot.VisualServer;
 
 namespace SS14.Client.GameObjects
 {
@@ -36,7 +38,10 @@ namespace SS14.Client.GameObjects
         private TimeSpan lasttimeprocessed = TimeSpan.Zero;
 
         private Godot.Node2D DrawingNode;
-        private GodotGlue.GodotSignalSubscriber0 DrawSubscriber;
+        private Godot.RID ShadedCanvasItem;
+        private Godot.RID UnshadedCanvasItem;
+        private Godot.CanvasItemMaterial UnshadedMaterial;
+        private Godot.CanvasItemMaterial ShadedMaterial;
 
         public override void Initialize()
         {
@@ -47,20 +52,32 @@ namespace SS14.Client.GameObjects
                 Name = "EffectSystem",
             };
             sceneTree.WorldRoot.AddChild(DrawingNode);
-            DrawSubscriber = new GodotGlue.GodotSignalSubscriber0();
-            DrawSubscriber.Connect(DrawingNode, "draw");
-            DrawSubscriber.Signal += Redraw;
+
+            UnshadedMaterial = new Godot.CanvasItemMaterial()
+            {
+                LightMode = Godot.CanvasItemMaterial.LightModeEnum.Unshaded
+            };
+
+            ShadedMaterial = new Godot.CanvasItemMaterial();
+
+            ShadedCanvasItem = VS.CanvasItemCreate();
+            VS.CanvasItemSetParent(ShadedCanvasItem, DrawingNode.GetCanvasItem());
+            VS.CanvasItemSetMaterial(ShadedCanvasItem, ShadedMaterial.GetRid());
+
+            UnshadedCanvasItem = VS.CanvasItemCreate();
+            VS.CanvasItemSetParent(UnshadedCanvasItem, DrawingNode.GetCanvasItem());
+            VS.CanvasItemSetMaterial(UnshadedCanvasItem, UnshadedMaterial.GetRid());
         }
 
         public override void Shutdown()
         {
             base.Shutdown();
-            DrawSubscriber.Disconnect(DrawingNode, "draw");
-            DrawSubscriber.Dispose();
-            DrawSubscriber = null;
+            VS.FreeRid(ShadedCanvasItem);
+            VS.FreeRid(UnshadedCanvasItem);
+            UnshadedMaterial.Dispose();
+            ShadedMaterial.Dispose();
             DrawingNode.QueueFree();
             DrawingNode.Dispose();
-            DrawingNode = null;
         }
 
         public override void RegisterMessageTypes()
@@ -124,13 +141,17 @@ namespace SS14.Client.GameObjects
                 }
             }
 
-            DrawingNode.Update();
+            Redraw();
         }
 
         private void Redraw()
         {
             var map = eyeManager.CurrentMap;
-            using (var handle = new DrawingHandle(DrawingNode.GetCanvasItem()))
+
+            VS.CanvasItemClear(ShadedCanvasItem);
+            VS.CanvasItemClear(UnshadedCanvasItem);
+            using (var shadedhandle = new DrawingHandle(ShadedCanvasItem))
+            using (var unshadedhandle = new DrawingHandle(UnshadedCanvasItem))
             {
                 foreach (var effect in _Effects)
                 {
@@ -139,7 +160,12 @@ namespace SS14.Client.GameObjects
                         continue;
                     }
 
-                    handle.SetTransform(effect.Coordinates.ToWorld().Position, new Angle(effect.Rotation), effect.Size);
+                    // NOTE TO FUTURE READERS:
+                    // Yes, due to how this is implemented, unshaded is always on top of shaded.
+                    // If you want to rework it to be properly defined, be my guest.
+                    var handle = effect.Shaded ? shadedhandle : unshadedhandle;
+
+                    handle.SetTransform(effect.Coordinates.ToWorld().Position * EyeManager.PIXELSPERMETER, new Angle(effect.Rotation), effect.Size);
                     Texture effectsprite = effect.EffectSprite;
                     handle.DrawTexture(effectsprite, -((Vector2)effectsprite.Size) / 2, ToColor(effect.Color));
                 }
@@ -225,6 +251,11 @@ namespace SS14.Client.GameObjects
             public Vector4 ColorDelta = new Vector4(0, 0, 0, 0);
 
             /// <summary>
+            ///     True if the effect is affected by lighting.
+            /// </summary>
+            public bool Shaded = true;
+
+            /// <summary>
             /// Effect's age -- from 0f
             /// </summary>
             public TimeSpan Age = TimeSpan.Zero;
@@ -236,7 +267,7 @@ namespace SS14.Client.GameObjects
 
             public Effect(EffectSystemMessage effectcreation, IResourceCache resourceCache)
             {
-                EffectSprite = resourceCache.GetResource<TextureResource>(effectcreation.EffectSprite).Texture;
+                EffectSprite = resourceCache.GetResource<TextureResource>("Textures/" + effectcreation.EffectSprite).Texture;
                 Coordinates = effectcreation.Coordinates;
                 EmitterCoordinates = effectcreation.EmitterCoordinates;
                 Velocity = effectcreation.Velocity;
@@ -253,6 +284,7 @@ namespace SS14.Client.GameObjects
                 SizeDelta = effectcreation.SizeDelta;
                 Color = effectcreation.Color;
                 ColorDelta = effectcreation.ColorDelta;
+                Shaded = effectcreation.Shaded;
             }
 
             public void Update(float frameTime)

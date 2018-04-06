@@ -106,8 +106,6 @@ namespace SS14.Client
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
 
-            IoCManager.Resolve<IEntitySystemManager>().Initialize();
-
             eyeManager.Initialize();
             inputManager.Initialize();
             _serializer.Initialize();

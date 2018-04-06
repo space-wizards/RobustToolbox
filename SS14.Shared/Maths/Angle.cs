@@ -36,7 +36,7 @@ namespace SS14.Shared.Maths
         public Angle(Vector2 dir)
         {
             dir = dir.Normalized;
-            Theta = Math.Atan2(dir.Y, dir.X);
+            Theta = Math.Atan2(-dir.Y, dir.X);
         }
 
         /// <summary>
@@ -46,8 +46,8 @@ namespace SS14.Shared.Maths
         public Vector2 ToVec()
         {
             var x = Math.Cos(Theta);
-            var y = Math.Sin(Theta);
-            return new Vector2((float) x, (float) y);
+            var y = -Math.Sin(Theta);
+            return new Vector2((float)x, (float)y);
         }
 
         private const double Segment = 2 * Math.PI / 8.0; // Cut the circle into 8 pieces
@@ -58,7 +58,7 @@ namespace SS14.Shared.Maths
             var ang = Theta % (2 * Math.PI);
 
             if (ang < 0.0f) // convert -PI > PI to 0 > 2PI
-                ang += 2 * (float) Math.PI;
+                ang += 2 * (float)Math.PI;
 
             return (Direction)(Math.Floor((ang + Offset) / Segment) % 8);
         }
@@ -71,7 +71,7 @@ namespace SS14.Shared.Maths
             var ang = Theta % (2 * Math.PI);
 
             if (ang < 0.0f) // convert -PI > PI to 0 > 2PI
-                ang += 2 * (float) Math.PI;
+                ang += 2 * (float)Math.PI;
 
             return (Direction)((Math.Floor((ang + CardinalOffset) / CardinalSegment) * 2) % 8);
         }
@@ -99,7 +99,7 @@ namespace SS14.Shared.Maths
         private static double Reduce(double theta)
         {
             // int truncates value (round to 0)
-            var aTurns = (int) (theta / (2 * Math.PI));
+            var aTurns = (int)(theta / (2 * Math.PI));
             return theta - aTurns * (2 * Math.PI);
         }
 

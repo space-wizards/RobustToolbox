@@ -36,7 +36,7 @@ namespace SS14.Shared.Maths
         public Angle(Vector2 dir)
         {
             dir = dir.Normalized;
-            Theta = Math.Atan2(-dir.Y, dir.X);
+            Theta = Math.Atan2(dir.Y, dir.X);
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace SS14.Shared.Maths
         public Vector2 ToVec()
         {
             var x = Math.Cos(Theta);
-            var y = -Math.Sin(Theta);
+            var y = Math.Sin(Theta);
             return new Vector2((float)x, (float)y);
         }
 

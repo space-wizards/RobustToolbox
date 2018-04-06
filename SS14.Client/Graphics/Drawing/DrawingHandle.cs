@@ -74,7 +74,7 @@ namespace SS14.Client.Graphics.Drawing
         {
             CheckDisposed();
             var transform = Godot.Transform2D.Identity.Rotated((float)rotation.Theta).Scaled(scale.Convert());
-            SetTransform2DRotationAndScale(ref transform, -rotation.Theta, scale);
+            SetTransform2DRotationAndScale(ref transform, rotation.Theta, scale);
             transform.o = position.Convert();
             VS.CanvasItemAddSetTransform(Item, transform);
         }

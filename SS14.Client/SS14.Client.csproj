@@ -57,8 +57,16 @@
   </PropertyGroup>
   <Import Project="..\MSBuild\SS14.DefineConstants.targets" />
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NJsonSchema, Version=9.10.42.0, Culture=neutral, PublicKeyToken=c2f9c3bdfae56102, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\NJsonSchema.9.10.42\lib\net45\NJsonSchema.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -151,7 +159,13 @@
     <Compile Include="Interfaces\ResourceManagement\IResourceCache.cs" />
     <Compile Include="ResourceManagement\BaseResource.cs" />
     <Compile Include="ResourceManagement\ResourceCache.cs" />
+    <Compile Include="ResourceManagement\ResourceLoadMetadata.cs" />
+    <Compile Include="ResourceManagement\ResourceTypes\BinaryResource.cs" />
     <Compile Include="ResourceManagement\ResourceTypes\FontResource.cs" />
+    <Compile Include="ResourceManagement\ResourceTypes\JsonResource.cs" />
+    <Compile Include="ResourceManagement\ResourceTypes\RSI\RSI.cs" />
+    <Compile Include="ResourceManagement\ResourceTypes\RSI\RSIState.cs" />
+    <Compile Include="ResourceManagement\ResourceTypes\TextResource.cs" />
     <Compile Include="ResourceManagement\ResourceTypes\TextureResource.cs" />
     <Compile Include="SceneTreeHolder.cs" />
     <Compile Include="UserInterface\Controls\BaseButton.cs" />
@@ -254,6 +268,11 @@
       <Project>{0529f740-0000-0000-0000-000000000000}</Project>
       <Name>SS14.Shared</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <EmbeddedResource Include="ResourceManagement\ResourceTypes\RSI\RSISchema.json" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\MSBuild\SS14.Engine.targets" />

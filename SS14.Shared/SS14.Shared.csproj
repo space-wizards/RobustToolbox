@@ -87,9 +87,6 @@
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="NJsonSchema, Version=9.10.42.0, Culture=neutral, PublicKeyToken=c2f9c3bdfae56102, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\NJsonSchema.9.10.42\lib\net45\NJsonSchema.dll</HintPath>
-    </Reference>
     <Reference Include="System">
       <Name>System</Name>
     </Reference>
@@ -269,8 +266,6 @@
     <Compile Include="Timing\Stopwatch.cs" />
     <Compile Include="Utility\QuadTree.cs" />
     <Compile Include="Reflection\ReflectAttribute.cs" />
-    <Compile Include="Resources\RSI.cs" />
-    <Compile Include="Resources\RSIState.cs" />
     <Compile Include="Serialization\NetSerializableAttribute.cs" />
     <Compile Include="Serialization\SS14Serializer.cs" />
     <Compile Include="Timers\Timer.cs" />
@@ -336,7 +331,6 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
-    <EmbeddedResource Include="Resources\RSISchema.json" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

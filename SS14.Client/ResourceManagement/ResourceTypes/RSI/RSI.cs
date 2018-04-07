@@ -9,13 +9,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Collections;
+using SS14.Client.Interfaces.ResourceManagement;
 
-namespace SS14.Shared.Resources
+namespace SS14.Client.ResourceManagement
 {
     /// <summary>
     ///     Type to load Robust Station Image (RSI) files.
     /// </summary>
-    public sealed partial class RSI : IEnumerable<RSI.State>
+    public sealed partial class RSI : BaseResource, IEnumerable<RSI.State>
     {
         /// <summary>
         ///     The minimum version of RSI we can load.
@@ -58,6 +59,11 @@ namespace SS14.Shared.Resources
             Size = size;
         }
 
+        public override void Load(IResourceCache cache, string path)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         ///     Loads an RSI from disk, returning the loaded RSI.
         /// </summary>
@@ -82,12 +88,12 @@ namespace SS14.Shared.Resources
             {
                 manifestContents = reader.ReadToEnd();
             }
-            
+
             var errors = RSISchema.Validate(manifestContents);
             if (errors.Count != 0)
             {
                 Logger.Error($"Unable to load RSI from '{filePath}', {errors.Count} errors:");
-                
+
                 foreach (var error in errors)
                 {
                     Logger.Error(error.ToString());
@@ -126,7 +132,7 @@ namespace SS14.Shared.Resources
 
                 // We can ignore selectors and flags for now,
                 // because they're not used yet!
-                
+
                 // Get the lists of delays.
                 float[][] delays;
                 if (stateObject.TryGetValue("delays", out var delayToken))
@@ -178,7 +184,7 @@ namespace SS14.Shared.Resources
                         {
                             var sheetPosX = counter % sheetWidth;
                             var sheetPosY = counter / sheetWidth;
-                            var rect = new Rectangle((int)(sheetPosX & size.X), 
+                            var rect = new Rectangle((int)(sheetPosX & size.X),
                                                      (int)(sheetPosY * size.Y),
                                                      (int)size.X, (int)size.Y);
 
@@ -279,16 +285,20 @@ namespace SS14.Shared.Resources
         }
     }
 
-
     [Serializable]
     public class RSILoadException : Exception
     {
-        public RSILoadException() { }
-        public RSILoadException(string message) : base(message) { }
-        public RSILoadException(string message, Exception inner) : base(message, inner) { }
+        public RSILoadException()
+        {
+        }
+        public RSILoadException(string message) : base(message)
+        {
+        }
+        public RSILoadException(string message, Exception inner) : base(message, inner)
+        {
+        }
         protected RSILoadException(
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 }
-    

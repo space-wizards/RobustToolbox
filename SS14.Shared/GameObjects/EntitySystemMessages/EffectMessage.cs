@@ -91,5 +91,10 @@ namespace SS14.Shared.GameObjects.EntitySystemMessages
         /// Rate of change of effect's color
         /// </summary>
         public Vector4 ColorDelta = new Vector4(-1, 0, 0, 0);
+
+        /// <summary>
+        ///     True if the effect is affected by lighting.
+        /// </summary>
+        public bool Shaded = true;
     }
 }

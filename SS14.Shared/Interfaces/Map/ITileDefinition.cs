@@ -52,11 +52,6 @@ namespace SS14.Shared.Interfaces.Map
         string SpriteName { get; }
 
         /// <summary>
-        ///     Turns this definition invalid.
-        /// </summary>
-        void InvalidateTileId();
-
-        /// <summary>
         ///     Constructor.
         /// </summary>
         /// <param name="data">Optional data to add to this tile.</param>

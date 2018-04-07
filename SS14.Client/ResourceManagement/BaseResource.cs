@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using SS14.Client.Interfaces.Resource;
+using SS14.Client.Interfaces.ResourceManagement;
 
 namespace SS14.Client.ResourceManagement
 {
@@ -26,7 +26,6 @@ namespace SS14.Client.ResourceManagement
         /// </summary>
         /// <param name="cache">ResourceCache this resource is being loaded into.</param>
         /// <param name="path">Path of the resource relative to the root of the ResourceCache.</param>
-        /// <param name="stream">Stream of the resource that was opened.</param>
-        public abstract void Load(IResourceCache cache, string path, Stream stream);
+        public abstract void Load(IResourceCache cache, string path);
     }
 }

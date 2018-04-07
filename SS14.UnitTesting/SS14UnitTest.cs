@@ -4,12 +4,9 @@ using SS14.Client.Graphics;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Input;
-using SS14.Client.Interfaces.Network;
-using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Interfaces.Utility;
-using SS14.Client.Network;
 using SS14.Client.State;
 using SS14.Client.Reflection;
 using SS14.Client.UserInterface;
@@ -24,45 +21,61 @@ using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Log;
+using SS14.Server.Interfaces.Maps;
+using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Log;
+using SS14.Server.Maps;
+using SS14.Server.Placement;
+using SS14.Server.Player;
 using SS14.Server.Reflection;
 using SS14.Server.ServerConsole;
 using SS14.Shared.Configuration;
+using SS14.Shared.ContentPack;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Interfaces.Timers;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
 using SS14.Shared.Map;
+using SS14.Shared.Network;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Serialization;
+using SS14.Shared.Timing;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
-using SS14.Client.Graphics.Lighting;
-using SS14.Client.Resources;
-using SS14.Shared.ContentPack;
-using SS14.Shared.Interfaces;
-using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.Interfaces.Timing;
-using SS14.Shared.Network;
 using SS14.Shared.Physics;
-using SS14.Shared.Timing;
 using SS14.Shared.Timers;
-using SS14.Server.Interfaces.Maps;
-using SS14.Server.Maps;
 using SS14.Shared.Maths;
-using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
+using SS14.Client.Log;
+using SS14.Client.Map;
+using SS14.Client.ResourceManagement;
+using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Client.Interfaces.Map;
+using SS14.Client.Interfaces;
+using SS14.Client;
+using SS14.UnitTesting.Client;
+using SS14.Client.Interfaces.Debugging;
+using SS14.Client.Debugging;
+using SS14.Client.Console;
+using SS14.Client.Interfaces.Graphics.ClientEye;
+using SS14.Client.Graphics.ClientEye;
+using SS14.Client.Interfaces.Graphics.Lighting;
+using SS14.Client.Interfaces.Graphics;
+using SS14.Client.Graphics.Lighting;
+using SS14.Shared.Log;
 
 namespace SS14.UnitTesting
 {
@@ -74,7 +87,6 @@ namespace SS14.UnitTesting
 
     public abstract class SS14UnitTest
     {
-        private FrameEventArgs frameEvent;
         public delegate void EventHandler();
         public static event EventHandler InjectedMethod;
 
@@ -112,18 +124,6 @@ namespace SS14.UnitTesting
             private set;
         }
 
-        public IResourceCache GetResourceCache
-        {
-            get;
-            private set;
-        }
-
-        public Clock GetClock
-        {
-            get;
-            set;
-        }
-
         #endregion Accessors
 
         [OneTimeSetUp]
@@ -142,20 +142,19 @@ namespace SS14.UnitTesting
             RegisterIoC();
 
             var Assemblies = new List<Assembly>(4);
-            string AssemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
             switch (Project)
             {
                 case UnitTestProject.Client:
-                    Assemblies.Add(Assembly.LoadFrom(Path.Combine(AssemblyDir, "SS14.Client.exe")));
+                    Assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Client"));
                     break;
                 case UnitTestProject.Server:
-                    Assemblies.Add(Assembly.LoadFrom(Path.Combine(AssemblyDir, "SS14.Server.exe")));
+                    Assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Server"));
                     break;
                 default:
                     throw new NotSupportedException($"Unknown testing project: {Project}");
             }
 
-            Assemblies.Add(Assembly.LoadFrom(Path.Combine(AssemblyDir, "SS14.Shared.dll")));
+            Assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"));
             Assemblies.Add(Assembly.GetExecutingAssembly());
 
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(Assemblies);
@@ -166,12 +165,13 @@ namespace SS14.UnitTesting
                 GetConfigurationManager = IoCManager.Resolve<IConfigurationManager>();
                 GetConfigurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("./client_config.toml"));
             }
-
+            /*
             if (NeedsResourcePack)
             {
                 GetResourceCache = IoCManager.Resolve<IResourceCache>();
                 InitializeResources();
             }
+            */
         }
 
         #region Setup
@@ -189,38 +189,42 @@ namespace SS14.UnitTesting
             IoCManager.Register<ISS14Serializer, SS14Serializer>();
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IGameTiming, GameTiming>();
-            IoCManager.Register<IResourceManager, ResourceManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
 
             switch (Project)
             {
                 case UnitTestProject.Client:
                     IoCManager.Register<ILogManager, LogManager>();
-
-                    IoCManager.Register<IRand, Rand>();
-                    IoCManager.Register<IStateManager, StateManager>();
-                    IoCManager.Register<INetworkGrapher, NetworkGrapher>();
-                    IoCManager.Register<IKeyBindingManager, KeyBindingManager>();
-                    IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
                     IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
-                    IoCManager.Register<ICollisionManager, CollisionManager>();
                     IoCManager.Register<IEntityManager, ClientEntityManager>();
-                    IoCManager.Register<IClientEntityManager, ClientEntityManager>();
-                    IoCManager.Register<IClientNetManager, NetManager>();
-                    IoCManager.Register<IReflectionManager, ClientReflectionManager>();
-                    IoCManager.Register<SS14.Client.Interfaces.Placement.IPlacementManager, SS14.Client.Placement.PlacementManager>();
-                    IoCManager.Register<ILightManager, LightManager>();
-                    IoCManager.Register<IResourceCache, ResourceCache>();
+                    IoCManager.Register<IComponentFactory, ComponentFactory>();
                     IoCManager.Register<IMapManager, MapManager>();
+                    IoCManager.Register<ICollisionManager, CollisionManager>();
+
+                    // Client stuff.
+                    IoCManager.Register<IReflectionManager, ClientReflectionManager>();
+                    IoCManager.Register<IResourceManager, ResourceCache>();
+                    IoCManager.Register<IResourceCache, ResourceCache>();
+                    IoCManager.Register<IClientNetManager, NetManager>();
+                    IoCManager.Register<IClientEntityManager, ClientEntityManager>();
                     IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
+                    IoCManager.Register<SS14.Client.Interfaces.GameStates.IGameStateManager, SS14.Client.GameStates.GameStateManager>();
+                    IoCManager.Register<IBaseClient, BaseClient>();
                     IoCManager.Register<SS14.Client.Interfaces.Player.IPlayerManager, SS14.Client.Player.PlayerManager>();
-                    IoCManager.Register<SS14.Client.Interfaces.IGameController, SS14.Client.GameController>();
-                    IoCManager.Register<SS14.Client.Interfaces.IBaseClient, SS14.Client.BaseClient>();
-                    IoCManager.Register<IComponentFactory, ClientComponentFactory>();
-                    IoCManager.Register<SS14.Client.Console.IClientChatConsole, SS14.Client.Console.ClientChatConsole>();
+                    IoCManager.Register<IStateManager, StateManager>();
+                    IoCManager.Register<IUserInterfaceManager, DummyUserInterfaceManager>();
+                    IoCManager.Register<IGameControllerProxy, GameControllerProxyDummy>();
+                    IoCManager.Register<IInputManager, InputManager>();
+                    IoCManager.Register<IDebugDrawing, DebugDrawing>();
+                    IoCManager.Register<IClientConsole, ClientChatConsole>();
+                    IoCManager.Register<IClientChatConsole, ClientChatConsole>();
+                    //IoCManager.Register<ILightManager, LightManager>();
+                    IoCManager.Register<IDisplayManager, DisplayManager>();
+                    //IoCManager.Register<IEyeManager, EyeManager>();
                     break;
 
                 case UnitTestProject.Server:
+                    IoCManager.Register<IResourceManager, ResourceManager>();
                     IoCManager.Register<IEntityManager, ServerEntityManager>();
                     IoCManager.Register<IServerEntityManager, ServerEntityManager>();
                     IoCManager.Register<ILogManager, ServerLogManager>();
@@ -257,62 +261,6 @@ namespace SS14.UnitTesting
         /// </summary>
         protected virtual void OverrideIoC()
         {
-        }
-
-        public void InitializeResources()
-        {
-            GetResourceCache.LoadBaseResources();
-            GetResourceCache.LoadLocalResources();
-        }
-
-        public void InitializeCluwneLib()
-        {
-            GetClock = new Clock();
-
-            CluwneLib.Video.SetWindowSize(1280, 720);
-            CluwneLib.Video.SetFullScreen(false);
-            CluwneLib.Video.SetRefreshRate(60);
-
-            CluwneLib.Initialize();
-            CluwneLib.Window.Graphics.BackgroundColor = Color.Black;
-            CluwneLib.Window.Closed += MainWindowRequestClose;
-
-            CluwneLib.Go();
-        }
-
-        public void InitializeCluwneLib(uint width, uint height, bool fullscreen, uint refreshrate)
-        {
-            GetClock = new Clock();
-
-            CluwneLib.Video.SetWindowSize(width, height);
-            CluwneLib.Video.SetFullScreen(fullscreen);
-            CluwneLib.Video.SetRefreshRate(refreshrate);
-
-            CluwneLib.Initialize();
-            CluwneLib.Window.Graphics.BackgroundColor = Color.Black;
-            CluwneLib.Window.Closed += MainWindowRequestClose;
-
-            CluwneLib.Go();
-        }
-
-        public void StartCluwneLibLoop()
-        {
-            while (CluwneLib.IsRunning)
-            {
-                var lastFrameTime = GetClock.ElapsedTimeAsSeconds();
-                GetClock.Restart();
-                frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(Color.Black);
-                CluwneLib.Window.DispatchEvents();
-                InjectedMethod();
-                CluwneLib.Window.Graphics.Display();
-            }
-        }
-
-        private void MainWindowRequestClose(object sender, EventArgs e)
-        {
-            CluwneLib.Stop();
-            Application.Exit();
         }
 
         #endregion Setup

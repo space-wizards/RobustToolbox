@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using SS14.Client.Graphics;
-using SS14.Client.Graphics.Input;
+using SS14.Client.Input;
 using SS14.Client.Interfaces;
+using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface;
-using SS14.Client.UserInterface.Controls;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Log;
+using SS14.Client.Interfaces.State;
+using SS14.Client.UserInterface.Controls;
+using SS14.Client.UserInterface.CustomControls;
 
 namespace SS14.Client.State.States
 {
@@ -18,154 +21,40 @@ namespace SS14.Client.State.States
     // Instantiated dynamically through the StateManager.
     public class MainScreen : State
     {
-        private IBaseClient _client;
-        private Screen _uiScreen;
+        [Dependency]
+        readonly IBaseClient _client;
+        [Dependency]
+        readonly IUserInterfaceManager userInterfaceManager;
+        [Dependency]
+        readonly IStateManager stateManager;
 
-        /// <summary>
-        ///     Constructs an instance of this object.
-        /// </summary>
-        /// <param name="managers">A dictionary of common managers from the IOC system, so you don't have to resolve them yourself.</param>
-        public MainScreen(IDictionary<Type, object> managers) : base(managers) { }
+        private Control MainMenuControl;
 
-        /// <inheritdoc />
-        public override void InitializeGUI()
-        {
-            _client = IoCManager.Resolve<IBaseClient>();
-
-            _uiScreen = new Screen();
-            _uiScreen.BackgroundImage = ResourceCache.GetSprite("ss14_logo_background");
-            // UI screen is added in startup
-
-            var imgTitle = new SimpleImage();
-            imgTitle.Sprite = "ss14_logo";
-            imgTitle.Alignment = ControlAlignments.Right;
-            imgTitle.LocalPosition = new Vector2i(-550, 100);
-            _uiScreen.AddControl(imgTitle);
-
-            var txtConnect = new Textbox(100);
-            txtConnect.Text = ConfigurationManager.GetCVar<string>("net.server");
-            txtConnect.Alignment = ControlAlignments.Left | ControlAlignments.Bottom;
-            txtConnect.LocalPosition = new Vector2i(10, 50);
-            txtConnect.OnSubmit += (sender, text) =>
-            {
-                if (_client.RunLevel == ClientRunLevel.Initialize)
-                    if (TryParseAddress(text, out var ip, out var port))
-                        _client.ConnectToServer(ip, port);
-                //TODO: Else notify user that textbox address is not valid
-            };
-            imgTitle.AddControl(txtConnect);
-
-            var btnConnect = new ImageButton();
-            btnConnect.ImageNormal = "connect_norm";
-            btnConnect.ImageHover = "connect_hover";
-            btnConnect.Alignment = ControlAlignments.Left | ControlAlignments.Bottom;
-            btnConnect.LocalPosition = new Vector2i(0, 20);
-            btnConnect.Clicked += sender =>
-            {
-                if (_client.RunLevel == ClientRunLevel.Initialize)
-                    if (TryParseAddress(txtConnect.Text, out var ip, out var port))
-                        _client.ConnectToServer(ip, port);
-            };
-            txtConnect.AddControl(btnConnect);
-
-            var btnOptions = new ImageButton();
-            btnOptions.ImageNormal = "options_norm";
-            btnOptions.ImageHover = "options_hover";
-            btnOptions.Alignment = ControlAlignments.Left | ControlAlignments.Bottom;
-            btnOptions.LocalPosition = new Vector2i(0, 20);
-            btnOptions.Clicked += sender =>
-            {
-                if (_client.RunLevel <= ClientRunLevel.Initialize)
-                    StateManager.RequestStateChange<OptionsMenu>();
-            };
-            btnConnect.AddControl(btnOptions);
-
-            var btnExit = new ImageButton();
-            btnExit.ImageNormal = "exit_norm";
-            btnExit.ImageHover = "exit_hover";
-            btnExit.Alignment = ControlAlignments.Left | ControlAlignments.Bottom;
-            btnExit.LocalPosition = new Vector2i(0, 20);
-            btnExit.Clicked += sender => CluwneLib.Stop();
-            btnOptions.AddControl(btnExit);
-
-            var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
-            var lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI");
-            lblVersion.ForegroundColor = new Color(245, 245, 245);
-            lblVersion.Alignment = ControlAlignments.Right | ControlAlignments.Bottom;
-            lblVersion.Resize += (sender, args) => { lblVersion.LocalPosition = new Vector2i(-3 + -lblVersion.ClientArea.Width, -3 + -lblVersion.ClientArea.Height); };
-            _uiScreen.AddControl(lblVersion);
-        }
-
-        /// <inheritdoc />
-        public override void FormResize()
-        {
-            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
-            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
-
-            UserInterfaceManager.ResizeComponents();
-        }
-
-        /// <inheritdoc />
-        public override void KeyDown(KeyEventArgs e)
-        {
-            UserInterfaceManager.KeyDown(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseUp(MouseButtonEventArgs e)
-        {
-            UserInterfaceManager.MouseUp(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseDown(MouseButtonEventArgs e)
-        {
-            UserInterfaceManager.MouseDown(e);
-        }
-
-        /// <inheritdoc />
-        public override void MousePressed(MouseButtonEventArgs e)
-        {
-            UserInterfaceManager.MouseDown(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseMove(MouseMoveEventArgs e)
-        {
-            UserInterfaceManager.MouseMove(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseWheelMove(MouseWheelScrollEventArgs e)
-        {
-            UserInterfaceManager.MouseWheelMove(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseEntered(EventArgs e)
-        {
-            UserInterfaceManager.MouseEntered(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseLeft(EventArgs e)
-        {
-            UserInterfaceManager.MouseLeft(e);
-        }
-
-        /// <inheritdoc />
-        public override void TextEntered(TextEventArgs e)
-        {
-            UserInterfaceManager.TextEntered(e);
-        }
+        private OptionsMenu OptionsMenu;
 
         /// <inheritdoc />
         public override void Startup()
         {
+            IoCManager.InjectDependencies(this);
+
+            var scene = (Godot.PackedScene)Godot.ResourceLoader.Load("res://Scenes/MainMenu/MainMenu.tscn");
+            MainMenuControl = Control.InstanceScene(scene);
+
+            userInterfaceManager.StateRoot.AddChild(MainMenuControl);
+
+            var VBox = MainMenuControl.GetChild("VBoxContainer");
+            VBox.GetChild<Button>("ExitButton").OnPressed += ExitButtonPressed;
+            VBox.GetChild<Button>("OptionsButton").OnPressed += OptionsButtonPressed;
+            VBox.GetChild<Button>("ConnectButton").OnPressed += ConnectButtonPressed;
+            VBox.GetChild<LineEdit>("IPBox").OnTextEntered += IPBoxEntered;
+
             _client.RunLevelChanged += RunLevelChanged;
 
-            UserInterfaceManager.AddComponent(_uiScreen);
-            FormResize();
+            OptionsMenu = new OptionsMenu()
+            {
+                Visible = false,
+            };
+            OptionsMenu.AddToScreen();
         }
 
         /// <inheritdoc />
@@ -173,38 +62,72 @@ namespace SS14.Client.State.States
         {
             _client.RunLevelChanged -= RunLevelChanged;
 
-            UserInterfaceManager.RemoveComponent(_uiScreen);
+            MainMenuControl.Dispose();
+            OptionsMenu.Dispose();
+        }
 
-            // There is no way to actually destroy a screen.
-            //_uiScreen.Destroy();
-            //_uiScreen = null;
+        private void ExitButtonPressed(BaseButton.ButtonEventArgs args)
+        {
+            IoCManager.Resolve<IGameControllerProxy>().GameController.Shutdown();
+        }
+
+        private void OptionsButtonPressed(BaseButton.ButtonEventArgs args)
+        {
+            OptionsMenu.OpenCentered();
+        }
+
+        private void ConnectButtonPressed(BaseButton.ButtonEventArgs args)
+        {
+            var input = MainMenuControl.GetChild("VBoxContainer").GetChild<LineEdit>("IPBox");
+            TryConnect(input.Text);
+        }
+
+        private void IPBoxEntered(LineEdit.LineEditEventArgs args)
+        {
+            TryConnect(args.Text);
+        }
+
+        private void TryConnect(string address)
+        {
+            try
+            {
+                ParseAddress(address, out var ip, out var port);
+                _client.ConnectToServer(ip, port);
+            }
+            catch (ArgumentException e)
+            {
+                userInterfaceManager.Popup($"Unable to resolve address: {e.Message}", "Invalid IP");
+            }
         }
 
         private void RunLevelChanged(object obj, RunLevelChangedEventArgs args)
         {
             if (args.NewLevel == ClientRunLevel.Lobby)
-                StateManager.RequestStateChange<Lobby>();
+            {
+                stateManager.RequestStateChange<Lobby>();
+            }
         }
 
-        private bool TryParseAddress(string address, out string ip, out ushort port)
+        private void ParseAddress(string address, out string ip, out ushort port)
         {
             // See if the IP includes a port.
             var split = address.Split(':');
             ip = address;
             port = _client.DefaultPort;
             if (split.Length > 2)
-                return false;
-            //throw new InvalidOperationException("Not a valid Address.");
+            {
+                throw new ArgumentException("Not a valid Address.");
+            }
 
             // IP:port format.
             if (split.Length == 2)
             {
                 ip = split[0];
                 if (!ushort.TryParse(split[1], out port))
-                    return false;
-                //throw new InvalidOperationException("Not a valid port.");
+                {
+                    throw new ArgumentException("Not a valid port.");
+                }
             }
-            return true;
         }
     }
 }

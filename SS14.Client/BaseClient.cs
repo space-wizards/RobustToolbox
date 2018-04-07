@@ -35,7 +35,7 @@ namespace SS14.Client
 
         /// <inheritdoc />
         public ServerInfo GameInfo { get; private set; }
-        
+
         /// <inheritdoc />
         public void Initialize()
         {
@@ -163,7 +163,7 @@ namespace SS14.Client
             if (GameInfo == null)
                 GameInfo = new ServerInfo();
 
-            var msg = (MsgServerInfo) message;
+            var msg = (MsgServerInfo)message;
             var info = GameInfo;
 
             info.ServerName = msg.ServerName;

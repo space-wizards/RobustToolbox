@@ -189,7 +189,7 @@ namespace SS14.Shared.Maths
         /// Gets the length (magnitude) of the vector.
         /// </summary>
         /// <seealso cref="LengthSquared"/>
-        public float Length => (float) Math.Sqrt(X * X + Y * Y + Z * Z + W * W);
+        public float Length => (float)Math.Sqrt(X * X + Y * Y + Z * Z + W * W);
 
         #endregion
 
@@ -862,7 +862,7 @@ namespace SS14.Shared.Maths
             if (!(obj is Vector4))
                 return false;
 
-            return Equals((Vector4) obj);
+            return Equals((Vector4)obj);
         }
 
         #endregion

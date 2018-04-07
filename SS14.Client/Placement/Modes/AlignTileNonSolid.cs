@@ -9,12 +9,12 @@ namespace SS14.Client.Placement.Modes
         {
         }
 
-        public override bool Update(ScreenCoordinates mouseS)
+        public override bool FrameUpdate(RenderFrameEventArgs e, ScreenCoordinates mouseS)
         {
             if (mouseS.MapID == MapId.Nullspace) return false;
 
             MouseScreen = mouseS;
-            MouseCoords = CluwneLib.ScreenToCoordinates(MouseScreen);
+            MouseCoords = pManager.eyeManager.ScreenToWorld(MouseScreen);
 
             CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
             var tilesize = MouseCoords.Grid.TileSize;
@@ -27,18 +27,18 @@ namespace SS14.Client.Placement.Modes
                 MouseCoords = new LocalCoordinates(CurrentTile.X + tilesize/2,
                                                  CurrentTile.Y + tilesize/2,
                                                  MouseCoords.Grid);
-                MouseScreen = CluwneLib.WorldToScreen(MouseCoords);
             }
             else
             {
                 MouseCoords = new LocalCoordinates(CurrentTile.X + tilesize/2 + pManager.CurrentPrototype.PlacementOffset.X,
                                                   CurrentTile.Y + tilesize/2 + pManager.CurrentPrototype.PlacementOffset.Y,
                                                   MouseCoords.Grid);
-                MouseScreen = CluwneLib.WorldToScreen(MouseCoords);
 
 //                if (CheckCollision())
 //                    return false;
             }
+
+            MouseScreen = pManager.eyeManager.WorldToScreen(MouseCoords);
 
             return true;
         }

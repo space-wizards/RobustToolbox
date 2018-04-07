@@ -1,4 +1,8 @@
 ﻿using System;
+using SS14.Client.Graphics.ClientEye;
+using SS14.Client.Interfaces.Debugging;
+using SS14.Client.Interfaces.GameObjects.Components;
+using SS14.Client.Utility;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
@@ -45,6 +49,13 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public MapId MapID => Owner.GetComponent<ITransformComponent>().MapID;
 
+        protected bool _debugDraw = false;
+        public virtual bool DebugDraw
+        {
+            get => _debugDraw;
+            set => _debugDraw = value;
+        }
+
         /// <inheritdoc />
         void ICollidable.Bumped(IEntity bumpedby)
         {
@@ -79,6 +90,11 @@ namespace SS14.Client.GameObjects
             {
                 var cm = IoCManager.Resolve<ICollisionManager>();
                 cm.AddCollidable(this);
+            }
+
+            if (IoCManager.Resolve<IDebugDrawing>().DebugColliders)
+            {
+                DebugDraw = true;
             }
         }
 

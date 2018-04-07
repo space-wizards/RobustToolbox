@@ -1,0 +1,19 @@
+﻿- type: entity
+  id: __engine_worktop
+  name: "[engine] worktop"
+  components:
+  - type: Transform
+  - type: Clickable
+  - type: Sprite
+    sprites:
+    - Objects/worktop_single.png
+    drawdepth: Tables
+
+  - type: Icon
+    icon: Objects/worktop_single.png
+
+  - type: BoundingBox
+    aabb: "-0.45,-1,0.95,1"
+
+  - type: Collidable
+    DebugColor: "#0000FF"

@@ -5,13 +5,16 @@ using System.Collections.Generic;
 namespace SS14.Client.Reflection
 {
     /// <summary>
-    /// Implementation of <see cref="ReflectionManager"/>
-    /// that defines <code>SS14.Client</code> and <code>SS14.Shared</code>
-    /// as valid prefixes for <see cref="ReflectionManager.GetType(string)"/>
+    ///     Implementation of <see cref="ReflectionManager"/>
+    ///     that defines <c>SS14.Client.</c> and <c>SS14.Shared.</c>
+    ///     as valid prefixes for <see cref="ReflectionManager.GetType(string)"/>
     /// </summary>
     public sealed class ClientReflectionManager : ReflectionManager
     {
-        protected override IEnumerable<string> TypePrefixes => new[]
+        protected override IEnumerable<string> TypePrefixes => _typePrefixes;
+
+        // Cache these so that we only need to allocate the array ONCE.
+        private static readonly string[] _typePrefixes = new[]
         {
             "",
             "SS14.Client.",

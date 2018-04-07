@@ -1,6 +1,6 @@
-﻿using SS14.Client.Graphics.Sprites;
-using SS14.Shared.Interfaces.GameObjects;
 using System.Collections.Generic;
+using SS14.Client.Graphics;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.GameObjects
@@ -8,11 +8,11 @@ namespace SS14.Client.Interfaces.GameObjects
     public interface ISpriteComponent : IComponent
     {
         Box2 LocalAABB { get; }
-        Sprite GetCurrentSprite();
-        Sprite GetSprite(string spriteKey);
-        List<Sprite> GetAllSprites();
+        Texture CurrentSprite { get; }
+        Texture GetSprite(string spriteKey);
+        List<Texture> GetAllSprites();
         void SetSpriteByKey(string spriteKey);
         void AddSprite(string spriteKey);
-        void AddSprite(string key, Sprite spritetoadd);
+        void AddSprite(string key, Texture spritetoadd);
     }
 }

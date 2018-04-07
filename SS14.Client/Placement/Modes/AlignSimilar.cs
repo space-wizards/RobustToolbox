@@ -14,12 +14,12 @@ namespace SS14.Client.Placement.Modes
 
         public AlignSimilar(PlacementManager pMan) : base(pMan) { }
 
-        public override bool Update(ScreenCoordinates mouseS)
+        public override bool FrameUpdate(RenderFrameEventArgs e, ScreenCoordinates mouseS)
         {
             if (mouseS.MapID == MapId.Nullspace) return false;
 
             MouseScreen = mouseS;
-            MouseCoords = CluwneLib.ScreenToCoordinates(MouseScreen);
+            MouseCoords = pManager.eyeManager.ScreenToWorld(MouseScreen);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;
@@ -41,28 +41,28 @@ namespace SS14.Client.Placement.Modes
                 var closestEntity = snapToEntities.First();
                 if (closestEntity.TryGetComponent<ISpriteRenderableComponent>(out var component))
                 {
-                    var closestSprite = component.GetCurrentSprite();
-                    var closestBounds = closestSprite.LocalBounds;
+                    var closestSprite = component.CurrentSprite;
+                    var closestBounds = closestSprite.Size;
 
                     var closestRect =
                         Box2.FromDimensions(
-                            closestEntity.GetComponent<ITransformComponent>().WorldPosition.X - closestBounds.Width / 2f,
-                            closestEntity.GetComponent<ITransformComponent>().WorldPosition.Y - closestBounds.Height / 2f,
-                            closestBounds.Width, closestBounds.Height);
+                            closestEntity.GetComponent<ITransformComponent>().WorldPosition.X - closestBounds.X / 2f,
+                            closestEntity.GetComponent<ITransformComponent>().WorldPosition.Y - closestBounds.Y / 2f,
+                            closestBounds.X, closestBounds.Y);
 
                     var sides = new[]
                     {
-                        new Vector2(closestRect.Left + closestRect.Width / 2f, closestRect.Top - closestBounds.Height / 2f),
-                        new Vector2(closestRect.Left + closestRect.Width / 2f, closestRect.Bottom + closestBounds.Height / 2f),
-                        new Vector2(closestRect.Left - closestBounds.Width / 2f, closestRect.Top + closestRect.Height / 2f),
-                        new Vector2(closestRect.Right + closestBounds.Width / 2f, closestRect.Top + closestRect.Height / 2f)
+                        new Vector2(closestRect.Left + closestRect.Width / 2f, closestRect.Top - closestBounds.Y / 2f),
+                        new Vector2(closestRect.Left + closestRect.Width / 2f, closestRect.Bottom + closestBounds.Y / 2f),
+                        new Vector2(closestRect.Left - closestBounds.X / 2f, closestRect.Top + closestRect.Height / 2f),
+                        new Vector2(closestRect.Right + closestBounds.X / 2f, closestRect.Top + closestRect.Height / 2f)
                     };
 
                     var closestSide =
                         (from Vector2 side in sides orderby (side - MouseCoords.Position).LengthSquared select side).First();
 
                     MouseCoords = new LocalCoordinates(closestSide, MouseCoords.Grid);
-                    MouseScreen = CluwneLib.WorldToScreen(MouseCoords);
+                    MouseScreen = pManager.eyeManager.WorldToScreen(MouseCoords);
                 }
             }
 

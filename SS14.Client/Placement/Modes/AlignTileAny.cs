@@ -7,12 +7,12 @@ namespace SS14.Client.Placement.Modes
     {
         public AlignTileAny(PlacementManager pMan) : base(pMan) { }
 
-        public override bool Update(ScreenCoordinates mouseS)
+        public override bool FrameUpdate(RenderFrameEventArgs e, ScreenCoordinates mouseS)
         {
             if (mouseS.MapID == MapId.Nullspace) return false;
 
             MouseScreen = mouseS;
-            MouseCoords = CluwneLib.ScreenToCoordinates(MouseScreen);
+            MouseCoords = pManager.eyeManager.ScreenToWorld(MouseScreen);
 
             CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
             var tileSize = MouseCoords.Grid.TileSize;
@@ -25,15 +25,14 @@ namespace SS14.Client.Placement.Modes
                 MouseCoords = new LocalCoordinates(CurrentTile.X + tileSize / 2,
                     CurrentTile.Y + tileSize / 2,
                     MouseCoords.Grid);
-                MouseScreen = CluwneLib.WorldToScreen(MouseCoords);
             }
             else
             {
                 MouseCoords = new LocalCoordinates(CurrentTile.X + tileSize / 2 + pManager.CurrentPrototype.PlacementOffset.X,
                     CurrentTile.Y + tileSize / 2 + pManager.CurrentPrototype.PlacementOffset.Y,
                     MouseCoords.Grid);
-                MouseScreen = CluwneLib.WorldToScreen(MouseCoords);
             }
+            MouseScreen = pManager.eyeManager.WorldToScreen(MouseCoords);
 
             return true;
         }

@@ -1,20 +1,20 @@
-﻿using SS14.Shared.Maths;
-
-namespace SS14.Client.UserInterface.Controls
+﻿namespace SS14.Client.UserInterface.Controls
 {
-    /// <summary>
-    ///     A container for other controls.
-    /// </summary>
     public class Panel : Control
     {
-        public Panel()
+        public Panel(string name) : base(name)
         {
-            DrawBackground = true;
+        }
+        public Panel() : base()
+        {
+        }
+        public Panel(Godot.Panel panel) : base(panel)
+        {
         }
 
-        protected override void OnCalcRect()
+        protected override Godot.Control SpawnSceneControl()
         {
-            _clientArea = Box2i.FromDimensions(0, 0, Width, Height);
+            return new Godot.Panel();
         }
     }
 }

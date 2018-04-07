@@ -1,0 +1,22 @@
+- type: entity
+  id: __engine_wall_light
+  name: "[engine] Wall Light"
+  components:
+  - type: Transform
+  - type: Clickable
+  - type: Sprite
+    sprites:
+    - Objects/wall_light.png
+
+  - type: Icon
+    icon: Objects/wall_light.png
+
+  - type: PointLight
+    radius: 8
+    energy: 1.2
+    offset: "0, -16"
+    color: "#DCDCC6"
+
+  placement:
+    snap:
+    - Wallmount

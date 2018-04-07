@@ -73,10 +73,10 @@ namespace SS14.Shared.Maths
             var scale = Math.Pow(matrix.Determinant, 1.0d / 3.0d);
             float x, y, z;
 
-            w = (float) (Math.Sqrt(Math.Max(0, scale + matrix[0, 0] + matrix[1, 1] + matrix[2, 2])) / 2);
-            x = (float) (Math.Sqrt(Math.Max(0, scale + matrix[0, 0] - matrix[1, 1] - matrix[2, 2])) / 2);
-            y = (float) (Math.Sqrt(Math.Max(0, scale - matrix[0, 0] + matrix[1, 1] - matrix[2, 2])) / 2);
-            z = (float) (Math.Sqrt(Math.Max(0, scale - matrix[0, 0] - matrix[1, 1] + matrix[2, 2])) / 2);
+            w = (float)(Math.Sqrt(Math.Max(0, scale + matrix[0, 0] + matrix[1, 1] + matrix[2, 2])) / 2);
+            x = (float)(Math.Sqrt(Math.Max(0, scale + matrix[0, 0] - matrix[1, 1] - matrix[2, 2])) / 2);
+            y = (float)(Math.Sqrt(Math.Max(0, scale - matrix[0, 0] + matrix[1, 1] - matrix[2, 2])) / 2);
+            z = (float)(Math.Sqrt(Math.Max(0, scale - matrix[0, 0] - matrix[1, 1] + matrix[2, 2])) / 2);
 
             xyz = new Vector3(x, y, z);
 
@@ -186,15 +186,15 @@ namespace SS14.Shared.Maths
 
             var result = new Vector4();
 
-            result.W = 2.0f * (float) Math.Acos(q.W); // angle
-            var den = (float) Math.Sqrt(1.0 - q.W * q.W);
+            result.W = 2.0f * (float)Math.Acos(q.W); // angle
+            var den = (float)Math.Sqrt(1.0 - q.W * q.W);
             if (den > 0.0001f)
             {
                 result.Xyz = q.Xyz / den;
             }
             else
             {
-                // This occurs when the angle is zero. 
+                // This occurs when the angle is zero.
                 // Not a problem: just set an arbitrary normalized axis.
                 result.Xyz = Vector3.UnitX;
             }
@@ -210,7 +210,7 @@ namespace SS14.Shared.Maths
         /// Gets the length (magnitude) of the quaternion.
         /// </summary>
         /// <seealso cref="LengthSquared"/>
-        public float Length => (float) Math.Sqrt(W * W + Xyz.LengthSquared);
+        public float Length => (float)Math.Sqrt(W * W + Xyz.LengthSquared);
 
         #endregion
 
@@ -489,8 +489,8 @@ namespace SS14.Shared.Maths
 
             angle *= 0.5f;
             axis.Normalize();
-            result.Xyz = axis * (float) Math.Sin(angle);
-            result.W = (float) Math.Cos(angle);
+            result.Xyz = axis * (float)Math.Sin(angle);
+            result.W = (float)Math.Cos(angle);
 
             return Normalize(result);
         }
@@ -500,7 +500,7 @@ namespace SS14.Shared.Maths
         #region Slerp
 
         /// <summary>
-        /// Do Spherical linear interpolation between two quaternions 
+        /// Do Spherical linear interpolation between two quaternions
         /// </summary>
         /// <param name="q1">The first quaternion</param>
         /// <param name="q2">The second quaternion</param>
@@ -541,11 +541,11 @@ namespace SS14.Shared.Maths
             if (cosHalfAngle < 0.99f)
             {
                 // do proper slerp for big angles
-                var halfAngle = (float) Math.Acos(cosHalfAngle);
-                var sinHalfAngle = (float) Math.Sin(halfAngle);
+                var halfAngle = (float)Math.Acos(cosHalfAngle);
+                var sinHalfAngle = (float)Math.Sin(halfAngle);
                 var oneOverSinHalfAngle = 1.0f / sinHalfAngle;
-                blendA = (float) Math.Sin(halfAngle * (1.0f - blend)) * oneOverSinHalfAngle;
-                blendB = (float) Math.Sin(halfAngle * blend) * oneOverSinHalfAngle;
+                blendA = (float)Math.Sin(halfAngle * (1.0f - blend)) * oneOverSinHalfAngle;
+                blendB = (float)Math.Sin(halfAngle * blend) * oneOverSinHalfAngle;
             }
             else
             {
@@ -582,7 +582,7 @@ namespace SS14.Shared.Maths
         public static float Angle(Quaternion a, Quaternion b)
         {
             var f = Dot(a, b);
-            return (float) (Math.Acos(Math.Min(Math.Abs(f), 1f)) * 2f * RadToDeg);
+            return (float)(Math.Acos(Math.Min(Math.Abs(f), 1f)) * 2f * RadToDeg);
         }
 
         #endregion
@@ -663,15 +663,15 @@ namespace SS14.Shared.Maths
 
             if (test > 0.4995f * unit)
             { // singularity at north pole
-                v.Y = (float) (2f * Math.Atan2(rotation.y, rotation.x));
-                v.X = (float) (Math.PI / 2);
+                v.Y = (float)(2f * Math.Atan2(rotation.y, rotation.x));
+                v.X = (float)(Math.PI / 2);
                 v.Z = 0;
                 return NormalizeAngles(v * RadToDeg);
             }
             if (test < -0.4995f * unit)
             { // singularity at south pole
-                v.Y = (float) (-2f * Math.Atan2(rotation.y, rotation.x));
-                v.X = (float) (-Math.PI / 2);
+                v.Y = (float)(-2f * Math.Atan2(rotation.y, rotation.x));
+                v.X = (float)(-Math.PI / 2);
                 v.Z = 0;
                 return NormalizeAngles(v * RadToDeg);
             }
@@ -808,14 +808,14 @@ namespace SS14.Shared.Maths
         #region public override bool Equals (object o)
 
         /// <summary>
-        /// Compares this object instance to another object for equality. 
+        /// Compares this object instance to another object for equality.
         /// </summary>
         /// <param name="other">The other object to be used in the comparison.</param>
         /// <returns>True if both objects are Quaternions of equal value. Otherwise it returns false.</returns>
         public override bool Equals(object other)
         {
             if (other is Quaternion == false) return false;
-            return this == (Quaternion) other;
+            return this == (Quaternion)other;
         }
 
         #endregion
@@ -823,7 +823,7 @@ namespace SS14.Shared.Maths
         #region public override int GetHashCode ()
 
         /// <summary>
-        /// Provides the hash code for this object. 
+        /// Provides the hash code for this object.
         /// </summary>
         /// <returns>A hash code formed from the bitwise XOR of this objects members.</returns>
         public override int GetHashCode()
@@ -840,7 +840,7 @@ namespace SS14.Shared.Maths
         #region IEquatable<Quaternion> Members
 
         /// <summary>
-        /// Compares this Quaternion instance to another Quaternion for equality. 
+        /// Compares this Quaternion instance to another Quaternion for equality.
         /// </summary>
         /// <param name="other">The other Quaternion to be used in the comparison.</param>
         /// <returns>True if both instances are equal; false otherwise.</returns>

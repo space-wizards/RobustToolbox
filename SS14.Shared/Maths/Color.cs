@@ -1,4 +1,4 @@
-﻿//
+//
 // The Open Toolkit Library License
 //
 // Copyright (c) 2006 - 2008 the Open Toolkit library, except where noted.
@@ -24,6 +24,7 @@
 //
 
 using System;
+using System.Collections.Generic;
 using SysColor = System.Drawing.Color;
 
 namespace SS14.Shared.Maths
@@ -54,10 +55,10 @@ namespace SS14.Shared.Maths
         /// </summary>
         public readonly float A;
 
-        public byte RByte => (byte) (R * byte.MaxValue);
-        public byte GByte => (byte) (G * byte.MaxValue);
-        public byte BByte => (byte) (B * byte.MaxValue);
-        public byte AByte => (byte) (A * byte.MaxValue);
+        public byte RByte => (byte)(R * byte.MaxValue);
+        public byte GByte => (byte)(G * byte.MaxValue);
+        public byte BByte => (byte)(B * byte.MaxValue);
+        public byte AByte => (byte)(A * byte.MaxValue);
 
         /// <summary>
         ///     Constructs a new Color4 structure from the specified components.
@@ -83,10 +84,10 @@ namespace SS14.Shared.Maths
         /// <param name="a">The alpha component of the new Color4 structure.</param>
         public Color(byte r, byte g, byte b, byte a = 255)
         {
-            R = r / (float) byte.MaxValue;
-            G = g / (float) byte.MaxValue;
-            B = b / (float) byte.MaxValue;
-            A = a / (float) byte.MaxValue;
+            R = r / (float)byte.MaxValue;
+            G = g / (float)byte.MaxValue;
+            B = b / (float)byte.MaxValue;
+            A = a / (float)byte.MaxValue;
         }
 
         /// <summary>
@@ -100,12 +101,12 @@ namespace SS14.Shared.Maths
         public int ToArgb()
         {
             var value =
-                ((uint) (A * byte.MaxValue) << 24) |
-                ((uint) (R * byte.MaxValue) << 16) |
-                ((uint) (G * byte.MaxValue) << 8) |
-                (uint) (B * byte.MaxValue);
+                ((uint)(A * byte.MaxValue) << 24) |
+                ((uint)(R * byte.MaxValue) << 16) |
+                ((uint)(G * byte.MaxValue) << 8) |
+                (uint)(B * byte.MaxValue);
 
-            return unchecked((int) value);
+            return unchecked((int)value);
         }
 
         /// <summary>
@@ -148,10 +149,20 @@ namespace SS14.Shared.Maths
         public static explicit operator SysColor(Color color)
         {
             return SysColor.FromArgb(
-                (int) (color.A * byte.MaxValue),
-                (int) (color.R * byte.MaxValue),
-                (int) (color.G * byte.MaxValue),
-                (int) (color.B * byte.MaxValue));
+                (int)(color.A * byte.MaxValue),
+                (int)(color.R * byte.MaxValue),
+                (int)(color.G * byte.MaxValue),
+                (int)(color.B * byte.MaxValue));
+        }
+
+        public static Color FromName(string colorname)
+        {
+            return DefaultColors[colorname.ToLower()];
+        }
+
+        public static IEnumerable<KeyValuePair<string, Color>> GetAllDefaultColors()
+        {
+            return DefaultColors;
         }
 
         /// <summary>
@@ -164,7 +175,7 @@ namespace SS14.Shared.Maths
             if (!(obj is Color))
                 return false;
 
-            return Equals((Color) obj);
+            return Equals((Color)obj);
         }
 
         /// <summary>
@@ -183,6 +194,576 @@ namespace SS14.Shared.Maths
         public override string ToString()
         {
             return $"{{(R, G, B, A) = ({R}, {G}, {B}, {A})}}";
+        }
+
+        public Color WithRed(float newR)
+        {
+            return new Color(newR, G, B, A);
+        }
+
+        public Color WithGreen(float newG)
+        {
+            return new Color(R, newG, B, A);
+        }
+
+        public Color WithBlue(float newB)
+        {
+            return new Color(R, G, newB, A);
+        }
+
+        public Color WithAlpha(float newA)
+        {
+            return new Color(R, G, B, newA);
+        }
+
+        public Color WithRed(byte newR)
+        {
+            return new Color((float)newR / byte.MaxValue, G, B, A);
+        }
+
+        public Color WithGreen(byte newG)
+        {
+            return new Color(R, (float)newG / byte.MaxValue, B, A);
+        }
+
+        public Color WithBlue(byte newB)
+        {
+            return new Color(R, G, (float)newB / byte.MaxValue, A);
+        }
+
+        public Color WithAlpha(byte newA)
+        {
+            return new Color(R, G, B, (float)newA / byte.MaxValue);
+        }
+
+        /// <summary>
+        ///     Converts sRGB color values to RGB color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value.
+        /// </returns>
+        /// <param name="srgb">
+        ///     Color value to convert in sRGB.
+        /// </param>
+        public static Color FromSrgb(Color srgb)
+        {
+            float r, g, b;
+
+            if (srgb.R <= 0.04045f)
+                r = srgb.R / 12.92f;
+            else
+                r = (float)Math.Pow((srgb.R + 0.055f) / (1.0f + 0.055f), 2.4f);
+
+            if (srgb.G <= 0.04045f)
+                g = srgb.G / 12.92f;
+            else
+                g = (float)Math.Pow((srgb.G + 0.055f) / (1.0f + 0.055f), 2.4f);
+
+            if (srgb.B <= 0.04045f)
+                b = srgb.B / 12.92f;
+            else
+                b = (float)Math.Pow((srgb.B + 0.055f) / (1.0f + 0.055f), 2.4f);
+
+            return new Color(r, g, b, srgb.A);
+        }
+
+        /// <summary>
+        ///     Converts RGB color values to sRGB color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value.
+        /// </returns>
+        /// <param name="rgb">Color value to convert.</param>
+        public static Color ToSrgb(Color rgb)
+        {
+            float r, g, b;
+
+            if (rgb.R <= 0.0031308)
+                r = 12.92f * rgb.R;
+            else
+                r = (1.0f + 0.055f) * (float)Math.Pow(rgb.R, 1.0f / 2.4f) - 0.055f;
+
+            if (rgb.G <= 0.0031308)
+                g = 12.92f * rgb.G;
+            else
+                g = (1.0f + 0.055f) * (float)Math.Pow(rgb.G, 1.0f / 2.4f) - 0.055f;
+
+            if (rgb.B <= 0.0031308)
+                b = 12.92f * rgb.B;
+            else
+                b = (1.0f + 0.055f) * (float)Math.Pow(rgb.B, 1.0f / 2.4f) - 0.055f;
+
+            return new Color(r, g, b, rgb.A);
+        }
+
+        /// <summary>
+        ///     Converts HSL color values to RGB color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value.
+        /// </returns>
+        /// <param name="hsl">
+        ///     Color value to convert in hue, saturation, lightness (HSL).
+        ///     The X element is Hue (H), the Y element is Saturation (S), the Z element is Lightness (L), and the W element is
+        ///     Alpha (which is copied to the output's Alpha value).
+        ///     Each has a range of 0.0 to 1.0.
+        /// </param>
+        public static Color FromHsl(Vector4 hsl)
+        {
+            var hue = hsl.X * 360.0f;
+            var saturation = hsl.Y;
+            var lightness = hsl.Z;
+
+            var c = (1.0f - Math.Abs(2.0f * lightness - 1.0f)) * saturation;
+
+            var h = hue / 60.0f;
+            var X = c * (1.0f - Math.Abs(h % 2.0f - 1.0f));
+
+            float r, g, b;
+            if (0.0f <= h && h < 1.0f)
+            {
+                r = c;
+                g = X;
+                b = 0.0f;
+            }
+            else if (1.0f <= h && h < 2.0f)
+            {
+                r = X;
+                g = c;
+                b = 0.0f;
+            }
+            else if (2.0f <= h && h < 3.0f)
+            {
+                r = 0.0f;
+                g = c;
+                b = X;
+            }
+            else if (3.0f <= h && h < 4.0f)
+            {
+                r = 0.0f;
+                g = X;
+                b = c;
+            }
+            else if (4.0f <= h && h < 5.0f)
+            {
+                r = X;
+                g = 0.0f;
+                b = c;
+            }
+            else if (5.0f <= h && h < 6.0f)
+            {
+                r = c;
+                g = 0.0f;
+                b = X;
+            }
+            else
+            {
+                r = 0.0f;
+                g = 0.0f;
+                b = 0.0f;
+            }
+
+            var m = lightness - c / 2.0f;
+            return new Color(r + m, g + m, b + m, hsl.W);
+        }
+
+        /// <summary>
+        ///     Converts RGB color values to HSL color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value.
+        ///     The X element is Hue (H), the Y element is Saturation (S), the Z element is Lightness (L), and the W element is
+        ///     Alpha (a copy of the input's Alpha value).
+        ///     Each has a range of 0.0 to 1.0.
+        /// </returns>
+        /// <param name="rgb">Color value to convert.</param>
+        public static Vector4 ToHsl(Color rgb)
+        {
+            var max = Math.Max(rgb.R, Math.Max(rgb.G, rgb.B));
+            var min = Math.Min(rgb.R, Math.Min(rgb.G, rgb.B));
+            var c = max - min;
+
+            var h = 0.0f;
+            if (max == rgb.R)
+                h = (rgb.G - rgb.B) / c;
+            else if (max == rgb.G)
+                h = (rgb.B - rgb.R) / c + 2.0f;
+            else if (max == rgb.B)
+                h = (rgb.R - rgb.G) / c + 4.0f;
+
+            var hue = h / 6.0f;
+            if (hue < 0.0f)
+                hue += 1.0f;
+
+            var lightness = (max + min) / 2.0f;
+
+            var saturation = 0.0f;
+            if (0.0f != lightness && lightness != 1.0f)
+                saturation = c / (1.0f - Math.Abs(2.0f * lightness - 1.0f));
+
+            return new Vector4(hue, saturation, lightness, rgb.A);
+        }
+
+        /// <summary>
+        ///     Converts HSV color values to RGB color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value.
+        /// </returns>
+        /// <param name="hsv">
+        ///     Color value to convert in hue, saturation, value (HSV).
+        ///     The X element is Hue (H), the Y element is Saturation (S), the Z element is Value (V), and the W element is Alpha
+        ///     (which is copied to the output's Alpha value).
+        ///     Each has a range of 0.0 to 1.0.
+        /// </param>
+        public static Color FromHsv(Vector4 hsv)
+        {
+            var hue = hsv.X * 360.0f;
+            var saturation = hsv.Y;
+            var value = hsv.Z;
+
+            var c = value * saturation;
+
+            var h = hue / 60.0f;
+            var x = c * (1.0f - Math.Abs(h % 2.0f - 1.0f));
+
+            float r, g, b;
+            if (0.0f <= h && h < 1.0f)
+            {
+                r = c;
+                g = x;
+                b = 0.0f;
+            }
+            else if (1.0f <= h && h < 2.0f)
+            {
+                r = x;
+                g = c;
+                b = 0.0f;
+            }
+            else if (2.0f <= h && h < 3.0f)
+            {
+                r = 0.0f;
+                g = c;
+                b = x;
+            }
+            else if (3.0f <= h && h < 4.0f)
+            {
+                r = 0.0f;
+                g = x;
+                b = c;
+            }
+            else if (4.0f <= h && h < 5.0f)
+            {
+                r = x;
+                g = 0.0f;
+                b = c;
+            }
+            else if (5.0f <= h && h < 6.0f)
+            {
+                r = c;
+                g = 0.0f;
+                b = x;
+            }
+            else
+            {
+                r = 0.0f;
+                g = 0.0f;
+                b = 0.0f;
+            }
+
+            var m = value - c;
+            return new Color(r + m, g + m, b + m, hsv.W);
+        }
+
+        /// <summary>
+        ///     Converts RGB color values to HSV color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value.
+        ///     The X element is Hue (H), the Y element is Saturation (S), the Z element is Value (V), and the W element is Alpha
+        ///     (a copy of the input's Alpha value).
+        ///     Each has a range of 0.0 to 1.0.
+        /// </returns>
+        /// <param name="rgb">Color value to convert.</param>
+        public static Vector4 ToHsv(Color rgb)
+        {
+            var max = Math.Max(rgb.R, Math.Max(rgb.G, rgb.B));
+            var min = Math.Min(rgb.R, Math.Min(rgb.G, rgb.B));
+            var c = max - min;
+
+            var h = 0.0f;
+            if (max == rgb.R)
+                h = (rgb.G - rgb.B) / c % 6.0f;
+            else if (max == rgb.G)
+                h = (rgb.B - rgb.R) / c + 2.0f;
+            else if (max == rgb.B)
+                h = (rgb.R - rgb.G) / c + 4.0f;
+
+            var hue = h * 60.0f / 360.0f;
+
+            var saturation = 0.0f;
+            if (0.0f != max)
+                saturation = c / max;
+
+            return new Vector4(hue, saturation, max, rgb.A);
+        }
+
+        /// <summary>
+        ///     Converts XYZ color values to RGB color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value.
+        /// </returns>
+        /// <param name="xyz">
+        ///     Color value to convert with the trisimulus values of X, Y, and Z in the corresponding element, and the W element
+        ///     with Alpha (which is copied to the output's Alpha value).
+        ///     Each has a range of 0.0 to 1.0.
+        /// </param>
+        /// <remarks>Uses the CIE XYZ colorspace.</remarks>
+        public static Color FromXyz(Vector4 xyz)
+        {
+            var r = 0.41847f * xyz.X + -0.15866f * xyz.Y + -0.082835f * xyz.Z;
+            var g = -0.091169f * xyz.X + 0.25243f * xyz.Y + 0.015708f * xyz.Z;
+            var b = 0.00092090f * xyz.X + -0.0025498f * xyz.Y + 0.17860f * xyz.Z;
+            return new Color(r, g, b, xyz.W);
+        }
+
+        /// <summary>
+        ///     Converts RGB color values to XYZ color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value with the trisimulus values of X, Y, and Z in the corresponding element, and the W
+        ///     element with Alpha (a copy of the input's Alpha value).
+        ///     Each has a range of 0.0 to 1.0.
+        /// </returns>
+        /// <param name="rgb">Color value to convert.</param>
+        /// <remarks>Uses the CIE XYZ colorspace.</remarks>
+        public static Vector4 ToXyz(Color rgb)
+        {
+            var x = (0.49f * rgb.R + 0.31f * rgb.G + 0.20f * rgb.B) / 0.17697f;
+            var y = (0.17697f * rgb.R + 0.81240f * rgb.G + 0.01063f * rgb.B) / 0.17697f;
+            var z = (0.00f * rgb.R + 0.01f * rgb.G + 0.99f * rgb.B) / 0.17697f;
+            return new Vector4(x, y, z, rgb.A);
+        }
+
+        /// <summary>
+        ///     Converts YCbCr color values to RGB color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value.
+        /// </returns>
+        /// <param name="ycbcr">
+        ///     Color value to convert in Luma-Chrominance (YCbCr) aka YUV.
+        ///     The X element contains Luma (Y, 0.0 to 1.0), the Y element contains Blue-difference chroma (U, -0.5 to 0.5), the Z
+        ///     element contains the Red-difference chroma (V, -0.5 to 0.5), and the W element contains the Alpha (which is copied
+        ///     to the output's Alpha value).
+        /// </param>
+        /// <remarks>Converts using ITU-R BT.601/CCIR 601 W(r) = 0.299 W(b) = 0.114 U(max) = 0.436 V(max) = 0.615.</remarks>
+        public static Color FromYcbcr(Vector4 ycbcr)
+        {
+            var r = 1.0f * ycbcr.X + 0.0f * ycbcr.Y + 1.402f * ycbcr.Z;
+            var g = 1.0f * ycbcr.X + -0.344136f * ycbcr.Y + -0.714136f * ycbcr.Z;
+            var b = 1.0f * ycbcr.X + 1.772f * ycbcr.Y + 0.0f * ycbcr.Z;
+            return new Color(r, g, b, ycbcr.W);
+        }
+
+        /// <summary>
+        ///     Converts RGB color values to YUV color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value in Luma-Chrominance (YCbCr) aka YUV.
+        ///     The X element contains Luma (Y, 0.0 to 1.0), the Y element contains Blue-difference chroma (U, -0.5 to 0.5), the Z
+        ///     element contains the Red-difference chroma (V, -0.5 to 0.5), and the W element contains the Alpha (a copy of the
+        ///     input's Alpha value).
+        ///     Each has a range of 0.0 to 1.0.
+        /// </returns>
+        /// <param name="rgb">Color value to convert.</param>
+        /// <remarks>Converts using ITU-R BT.601/CCIR 601 W(r) = 0.299 W(b) = 0.114 U(max) = 0.436 V(max) = 0.615.</remarks>
+        public static Vector4 ToYcbcr(Color rgb)
+        {
+            var y = 0.299f * rgb.R + 0.587f * rgb.G + 0.114f * rgb.B;
+            var u = -0.168736f * rgb.R + -0.331264f * rgb.G + 0.5f * rgb.B;
+            var v = 0.5f * rgb.R + -0.418688f * rgb.G + -0.081312f * rgb.B;
+            return new Vector4(y, u, v, rgb.A);
+        }
+
+        /// <summary>
+        ///     Converts HCY color values to RGB color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value.
+        /// </returns>
+        /// <param name="hcy">
+        ///     Color value to convert in hue, chroma, luminance (HCY).
+        ///     The X element is Hue (H), the Y element is Chroma (C), the Z element is luminance (Y), and the W element is Alpha
+        ///     (which is copied to the output's Alpha value).
+        ///     Each has a range of 0.0 to 1.0.
+        /// </param>
+        public static Color FromHcy(Vector4 hcy)
+        {
+            var hue = hcy.X * 360.0f;
+            var c = hcy.Y;
+            var luminance = hcy.Z;
+
+            var h = hue / 60.0f;
+            var x = c * (1.0f - Math.Abs(h % 2.0f - 1.0f));
+
+            float r, g, b;
+            if (0.0f <= h && h < 1.0f)
+            {
+                r = c;
+                g = x;
+                b = 0.0f;
+            }
+            else if (1.0f <= h && h < 2.0f)
+            {
+                r = x;
+                g = c;
+                b = 0.0f;
+            }
+            else if (2.0f <= h && h < 3.0f)
+            {
+                r = 0.0f;
+                g = c;
+                b = x;
+            }
+            else if (3.0f <= h && h < 4.0f)
+            {
+                r = 0.0f;
+                g = x;
+                b = c;
+            }
+            else if (4.0f <= h && h < 5.0f)
+            {
+                r = x;
+                g = 0.0f;
+                b = c;
+            }
+            else if (5.0f <= h && h < 6.0f)
+            {
+                r = c;
+                g = 0.0f;
+                b = x;
+            }
+            else
+            {
+                r = 0.0f;
+                g = 0.0f;
+                b = 0.0f;
+            }
+
+            var m = luminance - (0.30f * r + 0.59f * g + 0.11f * b);
+            return new Color(r + m, g + m, b + m, hcy.W);
+        }
+
+        /// <summary>
+        ///     Converts RGB color values to HCY color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value.
+        ///     The X element is Hue (H), the Y element is Chroma (C), the Z element is luminance (Y), and the W element is Alpha
+        ///     (a copy of the input's Alpha value).
+        ///     Each has a range of 0.0 to 1.0.
+        /// </returns>
+        /// <param name="rgb">Color value to convert.</param>
+        public static Vector4 ToHcy(Color rgb)
+        {
+            var max = Math.Max(rgb.R, Math.Max(rgb.G, rgb.B));
+            var min = Math.Min(rgb.R, Math.Min(rgb.G, rgb.B));
+            var c = max - min;
+
+            var h = 0.0f;
+            if (max == rgb.R)
+                h = (rgb.G - rgb.B) / c % 6.0f;
+            else if (max == rgb.G)
+                h = (rgb.B - rgb.R) / c + 2.0f;
+            else if (max == rgb.B)
+                h = (rgb.R - rgb.G) / c + 4.0f;
+
+            var hue = h * 60.0f / 360.0f;
+
+            var luminance = 0.30f * rgb.R + 0.59f * rgb.G + 0.11f * rgb.B;
+
+            return new Vector4(hue, c, luminance, rgb.A);
+        }
+
+        /// <summary>
+        ///     Interpolate two colors with a lambda, AKA returning the two colors combined with a ratio of
+        ///     <paramref name="lambda" />.
+        /// </summary>
+        /// <param name="endPoint1"></param>
+        /// <param name="endPoint2"></param>
+        /// <param name="lambda">
+        ///     A value ranging from 0-1. The higher the value the more is taken from <paramref name="endPoint1" />,
+        ///     with 0.5 being 50% of both colors, 0.25 being 25% of <paramref name="endPoint1" /> and 75%
+        ///     <paramref name="endPoint2" />.
+        /// </param>
+        public static Color InterpolateBetween(Color endPoint1, Color endPoint2, double lambda)
+        {
+            if (lambda < 0 || lambda > 1)
+                throw new ArgumentOutOfRangeException(nameof(lambda));
+            return new Color(
+                (float)(endPoint1.R * lambda + endPoint2.R * (1 - lambda)),
+                (float)(endPoint1.G * lambda + endPoint2.G * (1 - lambda)),
+                (float)(endPoint1.B * lambda + endPoint2.B * (1 - lambda)),
+                (float)(endPoint1.A * lambda + endPoint2.A * (1 - lambda))
+            );
+        }
+
+        public static Color FromHex(string hexColor, Color? fallback = null)
+        {
+            if (hexColor[0] == '#')
+            {
+                if (hexColor.Length == 9)
+                    return new Color(Convert.ToByte(hexColor.Substring(1, 2), 16),
+                        Convert.ToByte(hexColor.Substring(3, 2), 16),
+                        Convert.ToByte(hexColor.Substring(5, 2), 16),
+                        Convert.ToByte(hexColor.Substring(7, 2), 16));
+                if (hexColor.Length == 7)
+                    return new Color(Convert.ToByte(hexColor.Substring(1, 2), 16),
+                        Convert.ToByte(hexColor.Substring(3, 2), 16),
+                        Convert.ToByte(hexColor.Substring(5, 2), 16));
+                if (hexColor.Length == 5)
+                {
+                    var r = hexColor[1].ToString();
+                    var g = hexColor[2].ToString();
+                    var b = hexColor[3].ToString();
+                    var a = hexColor[4].ToString();
+
+                    return new Color(Convert.ToByte(r + r, 16),
+                        Convert.ToByte(g + g, 16),
+                        Convert.ToByte(b + b, 16),
+                        Convert.ToByte(a + a, 16));
+                }
+                if (hexColor.Length == 4)
+                {
+                    var r = hexColor[1].ToString();
+                    var g = hexColor[2].ToString();
+                    var b = hexColor[3].ToString();
+
+                    return new Color(Convert.ToByte(r + r, 16),
+                        Convert.ToByte(g + g, 16),
+                        Convert.ToByte(b + b, 16));
+                }
+            }
+
+            if (fallback.HasValue)
+                return fallback.Value;
+            throw new ArgumentException("Invalid color code and no fallback provided.", nameof(hexColor));
+        }
+
+        /// <summary>
+        ///     Compares whether this Color4 structure is equal to the specified Color4.
+        /// </summary>
+        /// <param name="other">The Color4 structure to compare to.</param>
+        /// <returns>True if both Color4 structures contain the same components; false otherwise.</returns>
+        public bool Equals(Color other)
+        {
+            return
+                R == other.R &&
+                G == other.G &&
+                B == other.B &&
+                A == other.A;
         }
 
         #region Static Colors
@@ -892,576 +1473,150 @@ namespace SS14.Shared.Maths
         /// </summary>
         public static Color YellowGreen => new Color(154, 205, 50, 255);
 
+        private static readonly Dictionary<string, Color> DefaultColors = new Dictionary<string, Color>()
+        {
+            ["transparent"] = Transparent,
+            ["aliceblue"] = AliceBlue,
+            ["antiquewhite"] = AntiqueWhite,
+            ["aqua"] = Aqua,
+            ["aquamarine"] = Aquamarine,
+            ["azure"] = Azure,
+            ["beige"] = Beige,
+            ["bisque"] = Bisque,
+            ["black"] = Black,
+            ["blanchedalmond"] = BlanchedAlmond,
+            ["blue"] = Blue,
+            ["blueviolet"] = BlueViolet,
+            ["brown"] = Brown,
+            ["burlywood"] = BurlyWood,
+            ["cadetblue"] = CadetBlue,
+            ["chartreuse"] = Chartreuse,
+            ["chocolate"] = Chocolate,
+            ["coral"] = Coral,
+            ["cornflowerblue"] = CornflowerBlue,
+            ["cornsilk"] = Cornsilk,
+            ["crimson"] = Crimson,
+            ["cyan"] = Cyan,
+            ["darkblue"] = DarkBlue,
+            ["darkcyan"] = DarkCyan,
+            ["darkgoldenrod"] = DarkGoldenrod,
+            ["darkgray"] = DarkGray,
+            ["darkgreen"] = DarkGreen,
+            ["darkkhaki"] = DarkKhaki,
+            ["darkmagenta"] = DarkMagenta,
+            ["darkolivegreen"] = DarkOliveGreen,
+            ["darkorange"] = DarkOrange,
+            ["darkorchid"] = DarkOrchid,
+            ["darkred"] = DarkRed,
+            ["darksalmon"] = DarkSalmon,
+            ["darkseagreen"] = DarkSeaGreen,
+            ["darkslateblue"] = DarkSlateBlue,
+            ["darkslategray"] = DarkSlateGray,
+            ["darkturquoise"] = DarkTurquoise,
+            ["darkviolet"] = DarkViolet,
+            ["deeppink"] = DeepPink,
+            ["deepskyblue"] = DeepSkyBlue,
+            ["dimgray"] = DimGray,
+            ["dodgerblue"] = DodgerBlue,
+            ["firebrick"] = Firebrick,
+            ["floralwhite"] = FloralWhite,
+            ["forestgreen"] = ForestGreen,
+            ["fuchsia"] = Fuchsia,
+            ["gainsboro"] = Gainsboro,
+            ["ghostwhite"] = GhostWhite,
+            ["gold"] = Gold,
+            ["goldenrod"] = Goldenrod,
+            ["gray"] = Gray,
+            ["green"] = Green,
+            ["greenyellow"] = GreenYellow,
+            ["honeydew"] = Honeydew,
+            ["hotpink"] = HotPink,
+            ["indianred"] = IndianRed,
+            ["indigo"] = Indigo,
+            ["ivory"] = Ivory,
+            ["khaki"] = Khaki,
+            ["lavender"] = Lavender,
+            ["lavenderblush"] = LavenderBlush,
+            ["lawngreen"] = LawnGreen,
+            ["lemonchiffon"] = LemonChiffon,
+            ["lightblue"] = LightBlue,
+            ["lightcoral"] = LightCoral,
+            ["lightcyan"] = LightCyan,
+            ["lightgoldenrodyellow"] = LightGoldenrodYellow,
+            ["lightgreen"] = LightGreen,
+            ["lightgray"] = LightGray,
+            ["lightpink"] = LightPink,
+            ["lightsalmon"] = LightSalmon,
+            ["lightseagreen"] = LightSeaGreen,
+            ["lightskyblue"] = LightSkyBlue,
+            ["lightslategray"] = LightSlateGray,
+            ["lightsteelblue"] = LightSteelBlue,
+            ["lightyellow"] = LightYellow,
+            ["lime"] = Lime,
+            ["limegreen"] = LimeGreen,
+            ["linen"] = Linen,
+            ["magenta"] = Magenta,
+            ["maroon"] = Maroon,
+            ["mediumaquamarine"] = MediumAquamarine,
+            ["mediumblue"] = MediumBlue,
+            ["mediumorchid"] = MediumOrchid,
+            ["mediumpurple"] = MediumPurple,
+            ["mediumseagreen"] = MediumSeaGreen,
+            ["mediumslateblue"] = MediumSlateBlue,
+            ["mediumspringgreen"] = MediumSpringGreen,
+            ["mediumturquoise"] = MediumTurquoise,
+            ["mediumvioletred"] = MediumVioletRed,
+            ["midnightblue"] = MidnightBlue,
+            ["mintcream"] = MintCream,
+            ["mistyrose"] = MistyRose,
+            ["moccasin"] = Moccasin,
+            ["navajowhite"] = NavajoWhite,
+            ["navy"] = Navy,
+            ["oldlace"] = OldLace,
+            ["olive"] = Olive,
+            ["olivedrab"] = OliveDrab,
+            ["orange"] = Orange,
+            ["orangered"] = OrangeRed,
+            ["orchid"] = Orchid,
+            ["palegoldenrod"] = PaleGoldenrod,
+            ["palegreen"] = PaleGreen,
+            ["paleturquoise"] = PaleTurquoise,
+            ["palevioletred"] = PaleVioletRed,
+            ["papayawhip"] = PapayaWhip,
+            ["peachpuff"] = PeachPuff,
+            ["peru"] = Peru,
+            ["pink"] = Pink,
+            ["plum"] = Plum,
+            ["powderblue"] = PowderBlue,
+            ["purple"] = Purple,
+            ["red"] = Red,
+            ["rosybrown"] = RosyBrown,
+            ["royalblue"] = RoyalBlue,
+            ["saddlebrown"] = SaddleBrown,
+            ["salmon"] = Salmon,
+            ["sandybrown"] = SandyBrown,
+            ["seagreen"] = SeaGreen,
+            ["seashell"] = SeaShell,
+            ["sienna"] = Sienna,
+            ["silver"] = Silver,
+            ["skyblue"] = SkyBlue,
+            ["slateblue"] = SlateBlue,
+            ["slategray"] = SlateGray,
+            ["snow"] = Snow,
+            ["springgreen"] = SpringGreen,
+            ["steelblue"] = SteelBlue,
+            ["tan"] = Tan,
+            ["teal"] = Teal,
+            ["thistle"] = Thistle,
+            ["tomato"] = Tomato,
+            ["turquoise"] = Turquoise,
+            ["violet"] = Violet,
+            ["wheat"] = Wheat,
+            ["white"] = White,
+            ["whitesmoke"] = WhiteSmoke,
+            ["yellow"] = Yellow,
+            ["yellowgreen"] = YellowGreen,
+        };
         #endregion
-
-        public Color WithRed(float newR)
-        {
-            return new Color(newR, G, B, A);
-        }
-
-        public Color WithGreen(float newG)
-        {
-            return new Color(R, newG, B, A);
-        }
-
-        public Color WithBlue(float newB)
-        {
-            return new Color(R, G, newB, A);
-        }
-
-        public Color WithAlpha(float newA)
-        {
-            return new Color(R, G, B, newA);
-        }
-
-        public Color WithRed(byte newR)
-        {
-            return new Color((float) newR / byte.MaxValue, G, B, A);
-        }
-
-        public Color WithGreen(byte newG)
-        {
-            return new Color(R, (float) newG / byte.MaxValue, B, A);
-        }
-
-        public Color WithBlue(byte newB)
-        {
-            return new Color(R, G, (float) newB / byte.MaxValue, A);
-        }
-
-        public Color WithAlpha(byte newA)
-        {
-            return new Color(R, G, B, (float) newA / byte.MaxValue);
-        }
-
-        /// <summary>
-        ///     Converts sRGB color values to RGB color values.
-        /// </summary>
-        /// <returns>
-        ///     Returns the converted color value.
-        /// </returns>
-        /// <param name="srgb">
-        ///     Color value to convert in sRGB.
-        /// </param>
-        public static Color FromSrgb(Color srgb)
-        {
-            float r, g, b;
-
-            if (srgb.R <= 0.04045f)
-                r = srgb.R / 12.92f;
-            else
-                r = (float) Math.Pow((srgb.R + 0.055f) / (1.0f + 0.055f), 2.4f);
-
-            if (srgb.G <= 0.04045f)
-                g = srgb.G / 12.92f;
-            else
-                g = (float) Math.Pow((srgb.G + 0.055f) / (1.0f + 0.055f), 2.4f);
-
-            if (srgb.B <= 0.04045f)
-                b = srgb.B / 12.92f;
-            else
-                b = (float) Math.Pow((srgb.B + 0.055f) / (1.0f + 0.055f), 2.4f);
-
-            return new Color(r, g, b, srgb.A);
-        }
-
-        /// <summary>
-        ///     Converts RGB color values to sRGB color values.
-        /// </summary>
-        /// <returns>
-        ///     Returns the converted color value.
-        /// </returns>
-        /// <param name="rgb">Color value to convert.</param>
-        public static Color ToSrgb(Color rgb)
-        {
-            float r, g, b;
-
-            if (rgb.R <= 0.0031308)
-                r = 12.92f * rgb.R;
-            else
-                r = (1.0f + 0.055f) * (float) Math.Pow(rgb.R, 1.0f / 2.4f) - 0.055f;
-
-            if (rgb.G <= 0.0031308)
-                g = 12.92f * rgb.G;
-            else
-                g = (1.0f + 0.055f) * (float) Math.Pow(rgb.G, 1.0f / 2.4f) - 0.055f;
-
-            if (rgb.B <= 0.0031308)
-                b = 12.92f * rgb.B;
-            else
-                b = (1.0f + 0.055f) * (float) Math.Pow(rgb.B, 1.0f / 2.4f) - 0.055f;
-
-            return new Color(r, g, b, rgb.A);
-        }
-
-        /// <summary>
-        ///     Converts HSL color values to RGB color values.
-        /// </summary>
-        /// <returns>
-        ///     Returns the converted color value.
-        /// </returns>
-        /// <param name="hsl">
-        ///     Color value to convert in hue, saturation, lightness (HSL).
-        ///     The X element is Hue (H), the Y element is Saturation (S), the Z element is Lightness (L), and the W element is
-        ///     Alpha (which is copied to the output's Alpha value).
-        ///     Each has a range of 0.0 to 1.0.
-        /// </param>
-        public static Color FromHsl(Vector4 hsl)
-        {
-            var hue = hsl.X * 360.0f;
-            var saturation = hsl.Y;
-            var lightness = hsl.Z;
-
-            var c = (1.0f - Math.Abs(2.0f * lightness - 1.0f)) * saturation;
-
-            var h = hue / 60.0f;
-            var X = c * (1.0f - Math.Abs(h % 2.0f - 1.0f));
-
-            float r, g, b;
-            if (0.0f <= h && h < 1.0f)
-            {
-                r = c;
-                g = X;
-                b = 0.0f;
-            }
-            else if (1.0f <= h && h < 2.0f)
-            {
-                r = X;
-                g = c;
-                b = 0.0f;
-            }
-            else if (2.0f <= h && h < 3.0f)
-            {
-                r = 0.0f;
-                g = c;
-                b = X;
-            }
-            else if (3.0f <= h && h < 4.0f)
-            {
-                r = 0.0f;
-                g = X;
-                b = c;
-            }
-            else if (4.0f <= h && h < 5.0f)
-            {
-                r = X;
-                g = 0.0f;
-                b = c;
-            }
-            else if (5.0f <= h && h < 6.0f)
-            {
-                r = c;
-                g = 0.0f;
-                b = X;
-            }
-            else
-            {
-                r = 0.0f;
-                g = 0.0f;
-                b = 0.0f;
-            }
-
-            var m = lightness - c / 2.0f;
-            return new Color(r + m, g + m, b + m, hsl.W);
-        }
-
-        /// <summary>
-        ///     Converts RGB color values to HSL color values.
-        /// </summary>
-        /// <returns>
-        ///     Returns the converted color value.
-        ///     The X element is Hue (H), the Y element is Saturation (S), the Z element is Lightness (L), and the W element is
-        ///     Alpha (a copy of the input's Alpha value).
-        ///     Each has a range of 0.0 to 1.0.
-        /// </returns>
-        /// <param name="rgb">Color value to convert.</param>
-        public static Vector4 ToHsl(Color rgb)
-        {
-            var max = Math.Max(rgb.R, Math.Max(rgb.G, rgb.B));
-            var min = Math.Min(rgb.R, Math.Min(rgb.G, rgb.B));
-            var c = max - min;
-
-            var h = 0.0f;
-            if (max == rgb.R)
-                h = (rgb.G - rgb.B) / c;
-            else if (max == rgb.G)
-                h = (rgb.B - rgb.R) / c + 2.0f;
-            else if (max == rgb.B)
-                h = (rgb.R - rgb.G) / c + 4.0f;
-
-            var hue = h / 6.0f;
-            if (hue < 0.0f)
-                hue += 1.0f;
-
-            var lightness = (max + min) / 2.0f;
-
-            var saturation = 0.0f;
-            if (0.0f != lightness && lightness != 1.0f)
-                saturation = c / (1.0f - Math.Abs(2.0f * lightness - 1.0f));
-
-            return new Vector4(hue, saturation, lightness, rgb.A);
-        }
-
-        /// <summary>
-        ///     Converts HSV color values to RGB color values.
-        /// </summary>
-        /// <returns>
-        ///     Returns the converted color value.
-        /// </returns>
-        /// <param name="hsv">
-        ///     Color value to convert in hue, saturation, value (HSV).
-        ///     The X element is Hue (H), the Y element is Saturation (S), the Z element is Value (V), and the W element is Alpha
-        ///     (which is copied to the output's Alpha value).
-        ///     Each has a range of 0.0 to 1.0.
-        /// </param>
-        public static Color FromHsv(Vector4 hsv)
-        {
-            var hue = hsv.X * 360.0f;
-            var saturation = hsv.Y;
-            var value = hsv.Z;
-
-            var c = value * saturation;
-
-            var h = hue / 60.0f;
-            var x = c * (1.0f - Math.Abs(h % 2.0f - 1.0f));
-
-            float r, g, b;
-            if (0.0f <= h && h < 1.0f)
-            {
-                r = c;
-                g = x;
-                b = 0.0f;
-            }
-            else if (1.0f <= h && h < 2.0f)
-            {
-                r = x;
-                g = c;
-                b = 0.0f;
-            }
-            else if (2.0f <= h && h < 3.0f)
-            {
-                r = 0.0f;
-                g = c;
-                b = x;
-            }
-            else if (3.0f <= h && h < 4.0f)
-            {
-                r = 0.0f;
-                g = x;
-                b = c;
-            }
-            else if (4.0f <= h && h < 5.0f)
-            {
-                r = x;
-                g = 0.0f;
-                b = c;
-            }
-            else if (5.0f <= h && h < 6.0f)
-            {
-                r = c;
-                g = 0.0f;
-                b = x;
-            }
-            else
-            {
-                r = 0.0f;
-                g = 0.0f;
-                b = 0.0f;
-            }
-
-            var m = value - c;
-            return new Color(r + m, g + m, b + m, hsv.W);
-        }
-
-        /// <summary>
-        ///     Converts RGB color values to HSV color values.
-        /// </summary>
-        /// <returns>
-        ///     Returns the converted color value.
-        ///     The X element is Hue (H), the Y element is Saturation (S), the Z element is Value (V), and the W element is Alpha
-        ///     (a copy of the input's Alpha value).
-        ///     Each has a range of 0.0 to 1.0.
-        /// </returns>
-        /// <param name="rgb">Color value to convert.</param>
-        public static Vector4 ToHsv(Color rgb)
-        {
-            var max = Math.Max(rgb.R, Math.Max(rgb.G, rgb.B));
-            var min = Math.Min(rgb.R, Math.Min(rgb.G, rgb.B));
-            var c = max - min;
-
-            var h = 0.0f;
-            if (max == rgb.R)
-                h = (rgb.G - rgb.B) / c % 6.0f;
-            else if (max == rgb.G)
-                h = (rgb.B - rgb.R) / c + 2.0f;
-            else if (max == rgb.B)
-                h = (rgb.R - rgb.G) / c + 4.0f;
-
-            var hue = h * 60.0f / 360.0f;
-
-            var saturation = 0.0f;
-            if (0.0f != max)
-                saturation = c / max;
-
-            return new Vector4(hue, saturation, max, rgb.A);
-        }
-
-        /// <summary>
-        ///     Converts XYZ color values to RGB color values.
-        /// </summary>
-        /// <returns>
-        ///     Returns the converted color value.
-        /// </returns>
-        /// <param name="xyz">
-        ///     Color value to convert with the trisimulus values of X, Y, and Z in the corresponding element, and the W element
-        ///     with Alpha (which is copied to the output's Alpha value).
-        ///     Each has a range of 0.0 to 1.0.
-        /// </param>
-        /// <remarks>Uses the CIE XYZ colorspace.</remarks>
-        public static Color FromXyz(Vector4 xyz)
-        {
-            var r = 0.41847f * xyz.X + -0.15866f * xyz.Y + -0.082835f * xyz.Z;
-            var g = -0.091169f * xyz.X + 0.25243f * xyz.Y + 0.015708f * xyz.Z;
-            var b = 0.00092090f * xyz.X + -0.0025498f * xyz.Y + 0.17860f * xyz.Z;
-            return new Color(r, g, b, xyz.W);
-        }
-
-        /// <summary>
-        ///     Converts RGB color values to XYZ color values.
-        /// </summary>
-        /// <returns>
-        ///     Returns the converted color value with the trisimulus values of X, Y, and Z in the corresponding element, and the W
-        ///     element with Alpha (a copy of the input's Alpha value).
-        ///     Each has a range of 0.0 to 1.0.
-        /// </returns>
-        /// <param name="rgb">Color value to convert.</param>
-        /// <remarks>Uses the CIE XYZ colorspace.</remarks>
-        public static Vector4 ToXyz(Color rgb)
-        {
-            var x = (0.49f * rgb.R + 0.31f * rgb.G + 0.20f * rgb.B) / 0.17697f;
-            var y = (0.17697f * rgb.R + 0.81240f * rgb.G + 0.01063f * rgb.B) / 0.17697f;
-            var z = (0.00f * rgb.R + 0.01f * rgb.G + 0.99f * rgb.B) / 0.17697f;
-            return new Vector4(x, y, z, rgb.A);
-        }
-
-        /// <summary>
-        ///     Converts YCbCr color values to RGB color values.
-        /// </summary>
-        /// <returns>
-        ///     Returns the converted color value.
-        /// </returns>
-        /// <param name="ycbcr">
-        ///     Color value to convert in Luma-Chrominance (YCbCr) aka YUV.
-        ///     The X element contains Luma (Y, 0.0 to 1.0), the Y element contains Blue-difference chroma (U, -0.5 to 0.5), the Z
-        ///     element contains the Red-difference chroma (V, -0.5 to 0.5), and the W element contains the Alpha (which is copied
-        ///     to the output's Alpha value).
-        /// </param>
-        /// <remarks>Converts using ITU-R BT.601/CCIR 601 W(r) = 0.299 W(b) = 0.114 U(max) = 0.436 V(max) = 0.615.</remarks>
-        public static Color FromYcbcr(Vector4 ycbcr)
-        {
-            var r = 1.0f * ycbcr.X + 0.0f * ycbcr.Y + 1.402f * ycbcr.Z;
-            var g = 1.0f * ycbcr.X + -0.344136f * ycbcr.Y + -0.714136f * ycbcr.Z;
-            var b = 1.0f * ycbcr.X + 1.772f * ycbcr.Y + 0.0f * ycbcr.Z;
-            return new Color(r, g, b, ycbcr.W);
-        }
-
-        /// <summary>
-        ///     Converts RGB color values to YUV color values.
-        /// </summary>
-        /// <returns>
-        ///     Returns the converted color value in Luma-Chrominance (YCbCr) aka YUV.
-        ///     The X element contains Luma (Y, 0.0 to 1.0), the Y element contains Blue-difference chroma (U, -0.5 to 0.5), the Z
-        ///     element contains the Red-difference chroma (V, -0.5 to 0.5), and the W element contains the Alpha (a copy of the
-        ///     input's Alpha value).
-        ///     Each has a range of 0.0 to 1.0.
-        /// </returns>
-        /// <param name="rgb">Color value to convert.</param>
-        /// <remarks>Converts using ITU-R BT.601/CCIR 601 W(r) = 0.299 W(b) = 0.114 U(max) = 0.436 V(max) = 0.615.</remarks>
-        public static Vector4 ToYcbcr(Color rgb)
-        {
-            var y = 0.299f * rgb.R + 0.587f * rgb.G + 0.114f * rgb.B;
-            var u = -0.168736f * rgb.R + -0.331264f * rgb.G + 0.5f * rgb.B;
-            var v = 0.5f * rgb.R + -0.418688f * rgb.G + -0.081312f * rgb.B;
-            return new Vector4(y, u, v, rgb.A);
-        }
-
-        /// <summary>
-        ///     Converts HCY color values to RGB color values.
-        /// </summary>
-        /// <returns>
-        ///     Returns the converted color value.
-        /// </returns>
-        /// <param name="hcy">
-        ///     Color value to convert in hue, chroma, luminance (HCY).
-        ///     The X element is Hue (H), the Y element is Chroma (C), the Z element is luminance (Y), and the W element is Alpha
-        ///     (which is copied to the output's Alpha value).
-        ///     Each has a range of 0.0 to 1.0.
-        /// </param>
-        public static Color FromHcy(Vector4 hcy)
-        {
-            var hue = hcy.X * 360.0f;
-            var c = hcy.Y;
-            var luminance = hcy.Z;
-
-            var h = hue / 60.0f;
-            var x = c * (1.0f - Math.Abs(h % 2.0f - 1.0f));
-
-            float r, g, b;
-            if (0.0f <= h && h < 1.0f)
-            {
-                r = c;
-                g = x;
-                b = 0.0f;
-            }
-            else if (1.0f <= h && h < 2.0f)
-            {
-                r = x;
-                g = c;
-                b = 0.0f;
-            }
-            else if (2.0f <= h && h < 3.0f)
-            {
-                r = 0.0f;
-                g = c;
-                b = x;
-            }
-            else if (3.0f <= h && h < 4.0f)
-            {
-                r = 0.0f;
-                g = x;
-                b = c;
-            }
-            else if (4.0f <= h && h < 5.0f)
-            {
-                r = x;
-                g = 0.0f;
-                b = c;
-            }
-            else if (5.0f <= h && h < 6.0f)
-            {
-                r = c;
-                g = 0.0f;
-                b = x;
-            }
-            else
-            {
-                r = 0.0f;
-                g = 0.0f;
-                b = 0.0f;
-            }
-
-            var m = luminance - (0.30f * r + 0.59f * g + 0.11f * b);
-            return new Color(r + m, g + m, b + m, hcy.W);
-        }
-
-        /// <summary>
-        ///     Converts RGB color values to HCY color values.
-        /// </summary>
-        /// <returns>
-        ///     Returns the converted color value.
-        ///     The X element is Hue (H), the Y element is Chroma (C), the Z element is luminance (Y), and the W element is Alpha
-        ///     (a copy of the input's Alpha value).
-        ///     Each has a range of 0.0 to 1.0.
-        /// </returns>
-        /// <param name="rgb">Color value to convert.</param>
-        public static Vector4 ToHcy(Color rgb)
-        {
-            var max = Math.Max(rgb.R, Math.Max(rgb.G, rgb.B));
-            var min = Math.Min(rgb.R, Math.Min(rgb.G, rgb.B));
-            var c = max - min;
-
-            var h = 0.0f;
-            if (max == rgb.R)
-                h = (rgb.G - rgb.B) / c % 6.0f;
-            else if (max == rgb.G)
-                h = (rgb.B - rgb.R) / c + 2.0f;
-            else if (max == rgb.B)
-                h = (rgb.R - rgb.G) / c + 4.0f;
-
-            var hue = h * 60.0f / 360.0f;
-
-            var luminance = 0.30f * rgb.R + 0.59f * rgb.G + 0.11f * rgb.B;
-
-            return new Vector4(hue, c, luminance, rgb.A);
-        }
-
-        /// <summary>
-        ///     Interpolate two colors with a lambda, AKA returning the two colors combined with a ratio of
-        ///     <paramref name="lambda" />.
-        /// </summary>
-        /// <param name="endPoint1"></param>
-        /// <param name="endPoint2"></param>
-        /// <param name="lambda">
-        ///     A value ranging from 0-1. The higher the value the more is taken from <paramref name="endPoint1" />,
-        ///     with 0.5 being 50% of both colors, 0.25 being 25% of <paramref name="endPoint1" /> and 75%
-        ///     <paramref name="endPoint2" />.
-        /// </param>
-        public static Color InterpolateBetween(Color endPoint1, Color endPoint2, double lambda)
-        {
-            if (lambda < 0 || lambda > 1)
-                throw new ArgumentOutOfRangeException(nameof(lambda));
-            return new Color(
-                (float) (endPoint1.R * lambda + endPoint2.R * (1 - lambda)),
-                (float) (endPoint1.G * lambda + endPoint2.G * (1 - lambda)),
-                (float) (endPoint1.B * lambda + endPoint2.B * (1 - lambda)),
-                (float) (endPoint1.A * lambda + endPoint2.A * (1 - lambda))
-            );
-        }
-
-        public static Color FromHex(string hexColor, Color? fallback = null)
-        {
-            if (hexColor[0] == '#')
-            {
-                if (hexColor.Length == 9)
-                    return new Color(Convert.ToByte(hexColor.Substring(1, 2), 16),
-                        Convert.ToByte(hexColor.Substring(3, 2), 16),
-                        Convert.ToByte(hexColor.Substring(5, 2), 16),
-                        Convert.ToByte(hexColor.Substring(7, 2), 16));
-                if (hexColor.Length == 7)
-                    return new Color(Convert.ToByte(hexColor.Substring(1, 2), 16),
-                        Convert.ToByte(hexColor.Substring(3, 2), 16),
-                        Convert.ToByte(hexColor.Substring(5, 2), 16));
-                if (hexColor.Length == 5)
-                {
-                    var r = hexColor[1].ToString();
-                    var g = hexColor[2].ToString();
-                    var b = hexColor[3].ToString();
-                    var a = hexColor[4].ToString();
-
-                    return new Color(Convert.ToByte(r + r, 16),
-                        Convert.ToByte(g + g, 16),
-                        Convert.ToByte(b + b, 16),
-                        Convert.ToByte(a + a, 16));
-                }
-                if (hexColor.Length == 4)
-                {
-                    var r = hexColor[1].ToString();
-                    var g = hexColor[2].ToString();
-                    var b = hexColor[3].ToString();
-
-                    return new Color(Convert.ToByte(r + r, 16),
-                        Convert.ToByte(g + g, 16),
-                        Convert.ToByte(b + b, 16));
-                }
-            }
-
-            if (fallback.HasValue)
-                return fallback.Value;
-            throw new ArgumentException("Invalid color code and no fallback provided.", nameof(hexColor));
-        }
-
-        /// <summary>
-        ///     Compares whether this Color4 structure is equal to the specified Color4.
-        /// </summary>
-        /// <param name="other">The Color4 structure to compare to.</param>
-        /// <returns>True if both Color4 structures contain the same components; false otherwise.</returns>
-        public bool Equals(Color other)
-        {
-            return
-                R == other.R &&
-                G == other.G &&
-                B == other.B &&
-                A == other.A;
-        }
     }
 }

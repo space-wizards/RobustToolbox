@@ -68,7 +68,7 @@ namespace SS14.Shared.Map
         /// </summary>
         public void Dispose()
         {
-            throw new NotImplementedException();
+            // Nothing for now.
         }
 
         /// <inheritdoc />
@@ -122,10 +122,10 @@ namespace SS14.Shared.Map
 
         public bool OnSnapBorder(Vector2 position)
         {
-            return (FloatMath.CloseTo(position.X % SnapSize, SnapSize/2) && FloatMath.CloseTo(position.Y % SnapSize, SnapSize/2));
+            return (FloatMath.CloseTo(position.X % SnapSize, SnapSize / 2) && FloatMath.CloseTo(position.Y % SnapSize, SnapSize / 2));
         }
 
-        #region  TileAccess
+        #region TileAccess
 
         /// <inheritdoc />
         public TileRef GetTile(LocalCoordinates worldPos)
@@ -149,7 +149,7 @@ namespace SS14.Shared.Map
             {
                 foreach (var tileRef in kvChunk.Value)
                 {
-                    if(!tileRef.Tile.IsEmpty)
+                    if (!tileRef.Tile.IsEmpty)
                         yield return tileRef;
                 }
             }
@@ -169,7 +169,7 @@ namespace SS14.Shared.Map
             var gridChunkIndices = GridTileToGridChunk(gridTileIndices);
             var chunk = GetChunk(gridChunkIndices);
             var chunkTileIndices = chunk.GridTileToChunkTile(gridTileIndices);
-            chunk.SetTile((ushort) chunkTileIndices.X, (ushort) chunkTileIndices.Y, tile);
+            chunk.SetTile((ushort)chunkTileIndices.X, (ushort)chunkTileIndices.Y, tile);
         }
 
         /// <inheritdoc />
@@ -196,19 +196,17 @@ namespace SS14.Shared.Map
                     if (_chunks.TryGetValue(gridChunk, out chunk))
                     {
                         var chunkTile = chunk.GridTileToChunkTile(new Indices(x, y));
-                        var tile = chunk.GetTile((ushort) chunkTile.X, (ushort) chunkTile.Y);
+                        var tile = chunk.GetTile((ushort)chunkTile.X, (ushort)chunkTile.Y);
 
-                        if(ignoreEmpty && tile.Tile.IsEmpty)
+                        if (ignoreEmpty && tile.Tile.IsEmpty)
                             continue;
-
-
 
                         if (predicate == null || predicate(tile))
                         {
                             tiles.Add(tile);
                         }
                     }
-                    else if(!ignoreEmpty)
+                    else if (!ignoreEmpty)
                     {
                         var tile = new TileRef(MapID, Index, x, y, new Tile());
 
@@ -217,15 +215,14 @@ namespace SS14.Shared.Map
                             tiles.Add(tile);
                         }
                     }
-
                 }
             }
             return tiles;
         }
 
-#endregion
+        #endregion TileAccess
 
-#region ChunkAccess
+        #region ChunkAccess
 
         /// <summary>
         /// The total number of allocated chunks in the grid.
@@ -257,9 +254,9 @@ namespace SS14.Shared.Map
             }
         }
 
-#endregion
+        #endregion ChunkAccess
 
-#region Transforms
+        #region Transforms
 
         /// <inheritdoc />
         public Vector2 WorldToLocal(Vector2 posWorld)
@@ -300,7 +297,7 @@ namespace SS14.Shared.Map
             var local = posWorld.ConvertToGrid(this);
             var x = (int)Math.Floor(local.X / (TileSize * ChunkSize));
             var y = (int)Math.Floor(local.Y / (TileSize * ChunkSize));
-            return new Indices(x,y);
+            return new Indices(x, y);
         }
 
         /// <summary>
@@ -336,6 +333,6 @@ namespace SS14.Shared.Map
             return true;
         }
 
-        #endregion
+        #endregion Transforms
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Log;
+using SS14.Shared.Enums;
 using SS14.Shared.Input;
 
 namespace SS14.Server.GameObjects

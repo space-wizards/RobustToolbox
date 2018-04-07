@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using SS14.Shared.Log;
+using System.Collections.Generic;
 using System.IO;
 
 namespace SS14.Shared.ContentPack
@@ -29,13 +30,24 @@ namespace SS14.Shared.ContentPack
         /// <inheritdoc />
         public MemoryStream GetFile(string relPath)
         {
+            var path = GetPath(relPath);
+            if (path == null)
+            {
+                return null;
+            }
+
+            var bytes = File.ReadAllBytes(path);
+            return new MemoryStream(bytes, false);
+        }
+
+        internal string GetPath(string relPath)
+        {
             var fullPath = Path.GetFullPath(Path.Combine(_directory.FullName, relPath));
 
             if (!File.Exists(fullPath))
                 return null;
 
-            var bytes = File.ReadAllBytes(fullPath);
-            return new MemoryStream(bytes, false);
+            return fullPath;
         }
 
         /// <inheritdoc />

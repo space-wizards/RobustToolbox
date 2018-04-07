@@ -103,7 +103,7 @@ namespace SS14.Server
 
         /// <inheritdoc />
         public event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
-        
+
         /// <inheritdoc />
         public void Restart()
         {
@@ -139,13 +139,13 @@ namespace SS14.Server
             var logFormat = _config.GetCVar<string>("log.format");
             var logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyyMMdd")).Replace("%(time)s", DateTime.Now.ToString("hhmmss"));
             var fullPath = Path.Combine(logPath, logFilename);
-            
+
             if (!Path.IsPathRooted(fullPath))
                 logPath = PathHelpers.ExecutableRelativeFile(fullPath);
 
             // Create log directory if it does not exist yet.
             Directory.CreateDirectory(Path.GetDirectoryName(logPath));
-            
+
             _log.CurrentLevel = _config.GetCVar<LogLevel>("log.level");
             _log.LogPath = logPath;
 
@@ -170,21 +170,28 @@ namespace SS14.Server
                 Logger.Log($"Unable to setup networking manager. Unknown exception: {e}, shutting down...", LogLevel.Fatal);
                 Environment.Exit(1);
             }
-            
+
             // Set up the VFS
             _resources.Initialize();
 
+#if RELEASE
             _resources.MountContentDirectory(@"./Resources/");
+#else
+            // Load from the resources dir in the repo root instead.
+            // It's a debug build so this is fine.
+            _resources.MountContentDirectory(@"../../Resources/");
+            _resources.MountContentDirectory(@"Resources/Assemblies", "Assemblies/");
+#endif
 
-            // mount the engine content pack
-            _resources.MountContentPack(@"EngineContentPack.zip");
+            //mount the engine content pack
+            // _resources.MountContentPack(@"EngineContentPack.zip");
 
-            // mount the default game ContentPack defined in config
-            _resources.MountDefaultContentPack();
+            //mount the default game ContentPack defined in config
+            // _resources.MountDefaultContentPack();
 
             //identical code in game controller for client
-            if(!AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
-                if(!AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Sandbox.Shared"))
+            if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
+                if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Sandbox.Shared"))
                     Logger.Warning($"[ENG] Could not load any Shared DLL.");
 
             if (!AssemblyLoader.TryLoadAssembly<GameServer>(_resources, $"Content.Server"))
@@ -207,6 +214,8 @@ namespace SS14.Server
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
 
+            IoCManager.Resolve<ITileDefinitionManager>().Initialize();
+
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
@@ -219,7 +228,7 @@ namespace SS14.Server
             consoleManager.Initialize();
 
             OnRunLevelChanged(ServerRunLevel.PreGame);
-            
+
             return false;
         }
 
@@ -296,7 +305,8 @@ namespace SS14.Server
             RunLevelChanged?.Invoke(this, args);
 
             // positive edge triggers
-            switch (level) {
+            switch (level)
+            {
                 case ServerRunLevel.PreGame:
                     _entities.Startup();
                     break;
@@ -308,7 +318,7 @@ namespace SS14.Server
         {
             // shut down networking, kicking all players.
             _network.Shutdown("Server Shutdown");
-            
+
             // shutdown entities
             _entities.Shutdown();
 
@@ -318,7 +328,7 @@ namespace SS14.Server
             if(_runLevel == ServerRunLevel.Game)
             {
                 var mapMgr = IoCManager.Resolve<IMapManager>();
-                
+
                 // TODO: Unregister all maps.
                 mapMgr.DeleteMap(new MapId(1));
             }

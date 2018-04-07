@@ -19,7 +19,6 @@ namespace SS14.Shared.Network.Messages
 
         public Turf SingleTurf { get; set; }
 
-        public TileDef[] TileDefs { get; set; }
         public ChunkDef[] ChunkDefs { get; set; }
 
         public ushort ChunkSize { get; set; }
@@ -31,12 +30,6 @@ namespace SS14.Shared.Network.Messages
         {
             public int X { get; set; }
             public int Y { get; set; }
-            public uint Tile { get; set; }
-        }
-
-        public class TileDef
-        {
-            public string Name { get; set; }
             public uint Tile { get; set; }
         }
 
@@ -65,18 +58,6 @@ namespace SS14.Shared.Network.Messages
                 case MapMessage.SendTileMap:
                     GridIndex = new GridId(buffer.ReadInt32());
                     MapIndex = new MapId(buffer.ReadInt32());
-
-                    //tile defs
-                    var numTileDefs = buffer.ReadInt32();
-                    var tileDefs = new TileDef[numTileDefs];
-                    for (var i = 0; i < numTileDefs; i++)
-                    {
-                        tileDefs[i] = new TileDef()
-                        {
-                            Name = buffer.ReadString()
-                        };
-                    }
-                    TileDefs = tileDefs;
 
                     // map chunks
                     ChunkSize = buffer.ReadUInt16();
@@ -126,11 +107,6 @@ namespace SS14.Shared.Network.Messages
                 case MapMessage.SendTileMap:
                     buffer.Write((int)GridIndex);
                     buffer.Write((int)MapIndex);
-
-                    // Tile defs, ordered list
-                    buffer.Write(TileDefs.Length);
-                    foreach (TileDef tileId in TileDefs)
-                        buffer.Write(tileId.Name);
 
                     // Map chunks
                     buffer.Write(ChunkSize);

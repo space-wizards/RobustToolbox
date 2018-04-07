@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Player;
-using SS14.Client.Player.PostProcessing;
 using SS14.Shared;
 using SS14.Shared.Configuration;
 using SS14.Shared.Enums;
@@ -27,7 +25,7 @@ namespace SS14.Client.Player
     /// </summary>
     public class PlayerManager : IPlayerManager
     {
-        private readonly List<PostProcessingEffect> _effects = new List<PostProcessingEffect>();
+        //private readonly List<PostProcessingEffect> _effects = new List<PostProcessingEffect>();
 
         [Dependency]
         private readonly IClientNetManager _network;
@@ -68,7 +66,7 @@ namespace SS14.Client.Player
         public void Initialize()
         {
             _sessions = new Dictionary<int, PlayerSession>();
-            
+
             _config.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
 
             _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME);
@@ -76,7 +74,7 @@ namespace SS14.Client.Player
             _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, HandlePlayerList);
 
             _network.RegisterNetMessage<MsgSession>(MsgSession.NAME, HandleSessionMessage);
-            
+
             _network.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME);
         }
 
@@ -93,10 +91,10 @@ namespace SS14.Client.Player
         /// <inheritdoc />
         public void Update(float frameTime)
         {
-            foreach (var e in _effects.ToArray())
-            {
-                e.Update(frameTime);
-            }
+            //foreach (var e in _effects.ToArray())
+            //{
+            //    e.Update(frameTime);
+            //}
         }
 
         /// <inheritdoc />
@@ -109,6 +107,7 @@ namespace SS14.Client.Player
         /// <inheritdoc />
         public void Destroy() { }
 
+        /*
         /// <inheritdoc />
         public void ApplyEffects(RenderImage image)
         {
@@ -117,6 +116,7 @@ namespace SS14.Client.Player
                 e.ProcessImage(image);
             }
         }
+        */
 
         /// <inheritdoc />
         public void ApplyPlayerStates(List<PlayerState> list)
@@ -135,13 +135,13 @@ namespace SS14.Client.Player
 
             UpdatePlayerList(list);
         }
-        
+
         /// <summary>
         ///     Handles an incoming session NetMsg from the server.
         /// </summary>
         private void HandleSessionMessage(NetMessage netMessage)
         {
-            var msg = (MsgSession) netMessage;
+            var msg = (MsgSession)netMessage;
 
             switch (msg.MsgType)
             {
@@ -150,7 +150,7 @@ namespace SS14.Client.Player
                 case PlayerSessionMessage.JoinLobby:
                     break;
                 case PlayerSessionMessage.AddPostProcessingEffect:
-                    AddEffect(msg.PpType, msg.PpDuration);
+                    //AddEffect(msg.PpType, msg.PpDuration);
                     break;
             }
         }
@@ -183,7 +183,7 @@ namespace SS14.Client.Player
         private void HandlePlayerList(NetMessage netMessage)
         {
             //update sessions with player info
-            var msg = (MsgPlayerList) netMessage;
+            var msg = (MsgPlayerList)netMessage;
 
             UpdatePlayerList(msg.Plyrs);
         }
@@ -261,7 +261,7 @@ namespace SS14.Client.Player
             if (dirty)
                 PlayerListUpdated?.Invoke(this, EventArgs.Empty);
         }
-
+        /*
         private void AddEffect(PostProcessingEffectType type, float duration)
         {
             PostProcessingEffect e;
@@ -286,5 +286,6 @@ namespace SS14.Client.Player
             if (_effects.Contains(effect))
                 _effects.Remove(effect);
         }
+        */
     }
 }

@@ -59,7 +59,7 @@ namespace SS14.Shared.Maths
         /// <summary>
         ///     Gets the squared length of the vector.
         /// </summary>
-        public float LengthSquared => X*X + Y*Y;
+        public float LengthSquared => X * X + Y * Y;
 
         /// <summary>
         ///     Returns a new, normalized, vector.
@@ -72,6 +72,11 @@ namespace SS14.Shared.Maths
                 var length = Length;
                 return new Vector2(X / length, Y / length);
             }
+        }
+
+        public Vector2 Rounded()
+        {
+            return new Vector2((float)Math.Round(X), (float)Math.Round(Y));
         }
 
         /// <summary>
@@ -237,7 +242,7 @@ namespace SS14.Shared.Maths
         {
             return $"({X}, {Y})";
         }
-        
+
         public static bool operator ==(Vector2 a, Vector2 b)
         {
             return a.Equals(b);

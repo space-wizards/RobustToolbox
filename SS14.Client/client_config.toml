@@ -1,4 +1,4 @@
-﻿
+
 [key]
 
 [key.keyboard]
@@ -10,9 +10,9 @@ pack = "./ResourcePack.zip"
 [display]
 width = 1280
 height = 720
-fullscreen = false
-refresh = 60
-vsync = false
+windowmode = 0
+vsync = true
+deferred_lighting = false
 
 [net]
 server = "127.0.0.1"

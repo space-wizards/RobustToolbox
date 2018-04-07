@@ -29,6 +29,7 @@ namespace SS14.Shared.Map
         {
             var newGrid = new MapGrid(_mapManager, gridId, chunkSize, snapSize, Index);
             _grids.Add(gridId, newGrid);
+            _mapManager.RaiseOnGridCreated(Index, gridId);
             return newGrid;
         }
 
@@ -49,8 +50,7 @@ namespace SS14.Shared.Map
         /// <returns></returns>
         public IMapGrid GetGrid(GridId gridId)
         {
-            MapGrid output;
-            _grids.TryGetValue(gridId, out output);
+            _grids.TryGetValue(gridId, out var output);
             return output;
         }
 
@@ -77,12 +77,12 @@ namespace SS14.Shared.Map
         /// <param name="gridId">The grid to remove.</param>
         public void RemoveGrid(GridId gridId)
         {
-            MapGrid output;
-            if (!_grids.TryGetValue(gridId, out output))
+            if (!_grids.TryGetValue(gridId, out var output))
                 return;
 
             output.Dispose();
             _grids.Remove(gridId);
+            _mapManager.RaiseOnGridRemoved(Index, gridId);
         }
 
         /// <inheritdoc />

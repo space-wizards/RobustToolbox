@@ -91,6 +91,7 @@ namespace SS14.Server.GameObjects
             {
                 _rotation = value;
                 RebuildMatrices();
+                OnRotate?.Invoke(value);
             }
         }
 
@@ -109,7 +110,7 @@ namespace SS14.Server.GameObjects
                 return _rotation;
             }
         }
-        
+
         /// <inheritdoc />
         public override string Name => "Transform";
 
@@ -118,6 +119,9 @@ namespace SS14.Server.GameObjects
 
         /// <inheritdoc />
         public event EventHandler<MoveEventArgs> OnMove;
+
+        /// <inheritdoc />
+        public event Action<Angle> OnRotate;
 
         /// <inheritdoc />
         public LocalCoordinates LocalPosition
@@ -192,7 +196,7 @@ namespace SS14.Server.GameObjects
                     // float rounding error guard, if the offset is less than 1mm ignore it
                     if (Math.Abs(newPos.LengthSquared - _position.LengthSquared) < 10.0E-3)
                         return;
-                    
+
                     _position = newPos;
                 }
                 else
@@ -220,7 +224,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new TransformComponentState(LocalPosition, LocalRotation, Parent?.Owner?.Uid);
+            return new TransformComponentState(_position, GridID, MapID, LocalRotation, Parent?.Owner?.Uid);
         }
 
         /// <summary>
@@ -315,7 +319,7 @@ namespace SS14.Server.GameObjects
             var rot = _rotation.Theta;
 
             var posMat = Matrix3.CreateTranslation(pos);
-            var rotMat = Matrix3.CreateRotation((float) rot);
+            var rotMat = Matrix3.CreateRotation((float)rot);
 
             Matrix3.Multiply(ref rotMat, ref posMat, out var transMat);
 

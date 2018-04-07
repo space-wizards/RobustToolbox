@@ -96,7 +96,7 @@ namespace SS14.Server.Maps
 
                 foreach (var document in stream.Documents)
                 {
-                    var root = (YamlSequenceNode) document.RootNode;
+                    var root = (YamlSequenceNode)document.RootNode;
                     LoadBpNode(map, newId, root);
                 }
             }
@@ -215,28 +215,28 @@ namespace SS14.Server.Maps
         {
             foreach (var yamlNode in root.Children)
             {
-                var mapNode = (YamlMappingNode) yamlNode;
+                var mapNode = (YamlMappingNode)yamlNode;
 
                 if (mapNode.Children.TryGetValue("grid", out var gridNode))
                 {
                     // default grid always exists, and cannot be modified, no point loading it
-                    if(newId == GridId.DefaultGrid)
+                    if (newId == GridId.DefaultGrid)
                         continue;
 
-                    var gridMap = (YamlMappingNode) gridNode;
+                    var gridMap = (YamlMappingNode)gridNode;
                     LoadGridNode(_mapManager, map, newId, gridMap);
                 }
                 else if (mapNode.Children.TryGetValue("entities", out var entNode))
                 {
-                    LoadEntNode(map, newId, (YamlSequenceNode) entNode);
+                    LoadEntNode(map, newId, (YamlSequenceNode)entNode);
                 }
             }
         }
 
         private static void LoadGridNode(IMapManager mapMan, IMap map, GridId newId, YamlMappingNode gridNode)
         {
-            var info = (YamlMappingNode) gridNode["settings"];
-            var chunk = (YamlSequenceNode) gridNode["chunks"];
+            var info = (YamlMappingNode)gridNode["settings"];
+            var chunk = (YamlSequenceNode)gridNode["chunks"];
 
             YamlGridSerializer.DeserializeGrid(mapMan, map, newId, info, chunk);
         }
@@ -245,7 +245,7 @@ namespace SS14.Server.Maps
         {
             foreach (var yamlNode in entNode.Children)
             {
-                var yamlEnt = (YamlMappingNode) yamlNode;
+                var yamlEnt = (YamlMappingNode)yamlNode;
 
                 var protoName = yamlEnt["id"].ToString();
 

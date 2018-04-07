@@ -51,8 +51,8 @@ namespace SS14.Shared.Prototypes
         /// Thrown if the ID does not exist or the type of prototype is not registered.
         /// </exception>
         IIndexedPrototype Index(Type type, string id);
-        bool HasIndex<T>(string id) where T: IIndexedPrototype;
-        bool TryIndex<T>(string id, out T prototype) where T: IIndexedPrototype;
+        bool HasIndex<T>(string id) where T : IIndexedPrototype;
+        bool TryIndex<T>(string id, out T prototype) where T : IIndexedPrototype;
         /// <summary>
         /// Load prototypes from files in a directory, recursively.
         /// </summary>
@@ -135,7 +135,7 @@ namespace SS14.Shared.Prototypes
         public void LoadData(IEntity entity, YamlMappingNode node)
         {
             var ent = entity as Entity;
-            ent.ExposeData(new YamlEntitySerializer(node, false));
+            ent.ExposeData(new YamlEntitySerializer(node, setDefaults: false));
         }
 
         public void Resync()
@@ -194,7 +194,7 @@ namespace SS14.Shared.Prototypes
                     catch (Exception e)
                         when (e is YamlException || e is PrototypeLoadException)
                     {
-                        Logger.Error($"[ENG] Exception whilst loading prototypes from {filePath}: {e.Message}");
+                        Logger.Error($"[ENG] Exception whilst loading prototypes from {filePath}: {e}");
                     }
                 }
             }

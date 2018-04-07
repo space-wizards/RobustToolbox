@@ -1,0 +1,15 @@
+- type: entity
+  id: __engine_mop
+  name: "[engine] mop"
+  components:
+  - type: Transform
+  - type: Clickable
+  - type: Sprite
+    sprite: mop
+
+  - type: Icon
+    icon: Items/mop.png
+
+  - type: BoundingBox
+  - type: Physics
+  - type: Clickable

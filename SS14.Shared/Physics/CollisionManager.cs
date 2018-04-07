@@ -305,8 +305,8 @@ namespace SS14.Shared.Physics
 
         private static Vector2i GetBucketCoordinate(Vector2 coordinate)
         {
-            var x = (int) Math.Floor(coordinate.X / BucketSize);
-            var y = (int) Math.Floor(coordinate.Y / BucketSize);
+            var x = (int)Math.Floor(coordinate.X / BucketSize);
+            var y = (int)Math.Floor(coordinate.Y / BucketSize);
             return new Vector2i(x, y);
         }
 

@@ -159,7 +159,7 @@ namespace SS14.Server.Player
 
             net.ServerSendMessage(message, ConnectedClient);
         }
-        
+
         private void SendAttachMessage()
         {
             if (AttachedEntity == null)

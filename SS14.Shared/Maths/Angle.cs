@@ -8,9 +8,6 @@ namespace SS14.Shared.Maths
     [Serializable]
     public struct Angle
     {
-        private const double Segment = 2 * Math.PI / 8.0; // Cut the circle into 8 pieces
-        private const double Offset = Segment / 2.0; // offset the pieces by 1/2 their size
-
         public static Angle Zero { get; set; } = new Angle();
 
         /// <summary>
@@ -50,17 +47,33 @@ namespace SS14.Shared.Maths
         {
             var x = Math.Cos(Theta);
             var y = Math.Sin(Theta);
-            return new Vector2((float) x, (float) y);
+            return new Vector2((float)x, (float)y);
         }
+
+        private const double Segment = 2 * Math.PI / 8.0; // Cut the circle into 8 pieces
+        private const double Offset = Segment / 2.0; // offset the pieces by 1/2 their size
 
         public Direction GetDir()
         {
             var ang = Theta % (2 * Math.PI);
 
             if (ang < 0.0f) // convert -PI > PI to 0 > 2PI
-                ang += 2 * (float) Math.PI;
+                ang += 2 * (float)Math.PI;
 
-            return (Direction) (Math.Floor((ang + Offset) / Segment) % 8);
+            return (Direction)(Math.Floor((ang + Offset) / Segment) % 8);
+        }
+
+        private const double CardinalSegment = 2 * Math.PI / 4.0; // Cut the circle into 4 pieces
+        private const double CardinalOffset = CardinalSegment / 2.0; // offset the pieces by 1/2 their size
+
+        public Direction GetCardinalDir()
+        {
+            var ang = Theta % (2 * Math.PI);
+
+            if (ang < 0.0f) // convert -PI > PI to 0 > 2PI
+                ang += 2 * (float)Math.PI;
+
+            return (Direction)((Math.Floor((ang + CardinalOffset) / CardinalSegment) * 2) % 8);
         }
 
         public bool EqualsApprox(Angle angle)
@@ -86,7 +99,7 @@ namespace SS14.Shared.Maths
         private static double Reduce(double theta)
         {
             // int truncates value (round to 0)
-            var aTurns = (int) (theta / (2 * Math.PI));
+            var aTurns = (int)(theta / (2 * Math.PI));
             return theta - aTurns * (2 * Math.PI);
         }
 

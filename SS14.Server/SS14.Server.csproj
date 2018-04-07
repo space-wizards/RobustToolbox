@@ -1,12 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <Import Project="..\MSBuild\SS14.Properties.targets" />
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
     <ProductVersion>12.0.31101.0</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{B04AAE71-0000-0000-0000-000000000000}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon />
     <AssemblyKeyContainerName />
     <AssemblyName>SS14.Server</AssemblyName>
@@ -26,27 +27,26 @@
     <ConfigurationOverrideFile />
     <DocumentationFile />
     <FileAlignment>4096</FileAlignment>
-    <OutputPath>$(SolutionDir)bin\Server\</OutputPath>
+    <OutputPath>..\bin\Server\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <NoStdLib>False</NoStdLib>
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <DebugSymbols>True</DebugSymbols>
     <Optimize>False</Optimize>
     <PlatformTarget>x86</PlatformTarget>
-    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DefineConstants>TRACE;RELEASE</DefineConstants>
     <DebugSymbols>False</DebugSymbols>
     <Optimize>True</Optimize>
     <PlatformTarget>x86</PlatformTarget>
-    <Prefer32Bit>true</Prefer32Bit>
     <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
@@ -54,13 +54,24 @@
     <DebugSymbols>True</DebugSymbols>
     <Optimize>False</Optimize>
     <PlatformTarget>x64</PlatformTarget>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <DefineConstants>TRACE;RELEASE</DefineConstants>
     <Optimize>True</Optimize>
     <PlatformTarget>x64</PlatformTarget>
-    <Prefer32Bit>false</Prefer32Bit>
+    <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <DefineConstants>TRACE;RELEASE</DefineConstants>
+    <DebugSymbols>False</DebugSymbols>
+    <Optimize>true</Optimize>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <ItemGroup>
@@ -99,6 +110,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClientConsoleHost\Commands\SpawnCommand.cs" />
     <Compile Include="AI\AiLogicProcessor.cs" />
     <Compile Include="AI\AiLogicProcessorAttribute.cs" />
     <Compile Include="ClientConsoleHost\Commands\ChatCommands.cs" />
@@ -126,12 +138,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="app.config" />
-    <Content Include="..\Resources\EngineContentPack.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Resources\ResourcePack.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="packages.config" />
     <Compile Include="CommandLineArgs.cs" />
     <Compile Include="Chat\ChatManager.cs" />
@@ -150,13 +156,11 @@
     <Compile Include="GameObjects\Components\Mover\PlayerInputMoverComponent.cs" />
     <Compile Include="GameObjects\Components\Particles\ParticleSystemComponent.cs" />
     <Compile Include="GameObjects\Components\Physics\PhysicsComponent.cs" />
-    <Compile Include="GameObjects\Components\Renderable\AnimatedSpriteComponent.cs" />
     <Compile Include="GameObjects\Components\Renderable\SpriteComponent.cs" />
-    <Compile Include="GameObjects\Components\Renderable\WearableAnimatedSpriteComponent.cs" />
     <Compile Include="GameObjects\Components\Transform\TransformComponent.cs" />
-    <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\EffectSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
+    <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
     <Compile Include="GameState\GameStateManager.cs" />
     <Compile Include="Interfaces\ICommandLineArgs.cs" />
     <Compile Include="Interfaces\IBaseServer.cs" />
@@ -197,5 +201,5 @@
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
-  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" />
+  <Target Name="AfterBuild" DependsOnTargets="CopyBsdiffWrap" />
 </Project>

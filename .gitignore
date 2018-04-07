@@ -82,6 +82,10 @@ Third-Party/extlibs/Mac/
 # Or the automatically-fetched Windows natives, for that matter.
 Third-Party/extlibs/Windows/
 
+# Actually I'll make this folder because SS14.Shared.Bsdiff isn't third-party is it?
+Dependencies/
+
 # Python stuff
 __pycache__
 .mypy_cache
+

@@ -40,7 +40,7 @@ namespace SS14.Server.GameObjects
             get => _visible;
             set => _visible = value;
         }
-        
+
         public override void ExposeData(EntitySerializer serializer)
         {
             base.ExposeData(serializer);

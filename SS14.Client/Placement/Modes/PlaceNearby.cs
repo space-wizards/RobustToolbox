@@ -11,12 +11,12 @@ namespace SS14.Client.Placement.Modes
 
         public override bool rangerequired => true;
 
-        public override bool Update(ScreenCoordinates mouseS)
+        public override bool FrameUpdate(RenderFrameEventArgs e, ScreenCoordinates mouseS)
         {
             if (mouseS.MapID == MapId.Nullspace) return false;
 
             MouseScreen = mouseS;
-            MouseCoords = CluwneLib.ScreenToCoordinates(MouseScreen);
+            MouseCoords = pManager.eyeManager.ScreenToWorld(MouseScreen);
             CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
 
             if (pManager.CurrentPermission.IsTile)

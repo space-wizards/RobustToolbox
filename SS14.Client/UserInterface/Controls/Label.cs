@@ -1,101 +1,45 @@
-﻿using System;
-using SS14.Client.Graphics;
-using SS14.Client.Graphics.Input;
-using SS14.Client.Graphics.Sprites;
-using SS14.Client.ResourceManagement;
-using SS14.Shared.Maths;
+﻿using Godot;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    internal class Label : Control
+    /// <summary>
+    ///     A label is a GUI control that displays simple text.
+    /// </summary>
+    public class Label : Control
     {
-        public delegate void LabelPressHandler(Label sender, MouseButtonEventArgs e);
-
-        private const uint DefaultFontSize = 14;
-        private TextSprite _text;
-
-        public int FixedHeight { get; set; } = -1;
-        public int FixedWidth { get; set; } = -1;
-        public Color HighlightColor { get; set; } = Color.Gray;
-
-        public uint FontSize
+        public Label(string name) : base(name)
         {
-            get => _text.FontSize;
-            set => _text.FontSize = value;
+        }
+        public Label() : base()
+        {
+        }
+        public Label(Godot.Label control) : base(control)
+        {
         }
 
         public string Text
         {
-            get => _text.Text;
-            set => _text.Text = value;
+            get => SceneControl.Text;
+            set => SceneControl.Text = value;
         }
 
-        public override Color ForegroundColor
+        public bool AutoWrap
         {
-            get => _text.FillColor;
-            set => _text.FillColor = value;
+            get => SceneControl.Autowrap;
+            set => SceneControl.Autowrap = value;
         }
 
-        public bool DrawTextHighlight { get; set; }
+        new private Godot.Label SceneControl;
 
-        public Label(string text, string font, uint size = DefaultFontSize)
+        protected override Godot.Control SpawnSceneControl()
         {
-            _text = new TextSprite(text, _resourceCache.GetResource<FontResource>($"Fonts/{font}.TTF"), size)
-            {
-                FillColor = base.ForegroundColor
-            };
+            return new Godot.Label();
         }
 
-        /// <inheritdoc />
-        protected override void OnCalcRect()
+        protected override void SetSceneControl(Godot.Control control)
         {
-            _clientArea = Box2i.FromDimensions(new Vector2i(), new Vector2i(
-                FixedWidth == -1 ? _text.Width : FixedWidth,
-                FixedHeight == -1 ? _text.Height : FixedHeight));
+            base.SetSceneControl(control);
+            SceneControl = (Godot.Label)control;
         }
-
-        /// <inheritdoc />
-        protected override void OnCalcPosition()
-        {
-            base.OnCalcPosition();
-
-            _text.Position = _screenPos;
-        }
-
-        /// <inheritdoc />
-        protected override void DrawContents()
-        {
-            if (DrawTextHighlight)
-                CluwneLib.drawRectangle(_text.Position.X + 3, _text.Position.Y + 4, _text.Width, _text.Height - 9, BackgroundColor);
-
-            _text.Draw();
-
-            base.DrawContents();
-        }
-
-        /// <inheritdoc />
-        public override void Destroy()
-        {
-            _text = null;
-            Clicked = null;
-            base.Destroy();
-            GC.SuppressFinalize(this);
-        }
-
-        /// <inheritdoc />
-        public override bool MouseDown(MouseButtonEventArgs e)
-        {
-            if (base.MouseDown(e))
-                return true;
-
-            if (ClientArea.Translated(Position).Contains(e.X, e.Y))
-            {
-                Clicked?.Invoke(this, e);
-                return true;
-            }
-            return false;
-        }
-
-        public event LabelPressHandler Clicked;
     }
 }

@@ -31,39 +31,6 @@ namespace SS14.Server.GameObjects.EntitySystems
         }
 
         /// <inheritdoc />
-        public override void Update(float frameTime)
-        {
-            var entities = EntityManager.GetEntities(EntityQuery);
-            foreach (var entity in entities)
-            {
-                var inputs = entity.GetComponent<KeyBindingInputComponent>();
-
-                //Animation setting
-                if (entity.TryGetComponent<AnimatedSpriteComponent>(out var animation))
-                {
-                    if (inputs.GetKeyState(BoundKeyFunctions.MoveRight) ||
-                        inputs.GetKeyState(BoundKeyFunctions.MoveDown) ||
-                        inputs.GetKeyState(BoundKeyFunctions.MoveLeft) ||
-                        inputs.GetKeyState(BoundKeyFunctions.MoveUp))
-                    {
-                        if (inputs.GetKeyState(BoundKeyFunctions.Run))
-                        {
-                            animation.SetAnimationState("run");
-                        }
-                        else
-                        {
-                            animation.SetAnimationState("walk");
-                        }
-                    }
-                    else
-                    {
-                        animation.SetAnimationState("idle");
-                    }
-                }
-            }
-        }
-
-        /// <inheritdoc />
         public override void HandleNetMessage(INetChannel channel, EntitySystemMessage message)
         {
             base.HandleNetMessage(channel, message);

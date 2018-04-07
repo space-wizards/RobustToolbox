@@ -68,5 +68,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="frameTime">Time since the last frame was rendered.</param>
         /// <seealso cref="IEntitySystem.Update(float)"/>
         void Update(float frameTime);
+        void FrameUpdate(float frameTime);
     }
 }

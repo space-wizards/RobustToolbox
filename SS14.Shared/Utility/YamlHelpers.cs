@@ -43,7 +43,7 @@ namespace SS14.Shared.Utility
             return new Vector2(float.Parse(args[0], CultureInfo.InvariantCulture),
                                 float.Parse(args[1], CultureInfo.InvariantCulture));
         }
-        
+
         public static Vector2i AsVector2i(this YamlNode node)
         {
             string raw = AsString(node);
@@ -94,6 +94,18 @@ namespace SS14.Shared.Utility
         public static Color AsHexColor(this YamlNode node, Color? fallback = null)
         {
             return Color.FromHex(node.AsString(), fallback);
+        }
+
+        public static Color AsColor(this YamlNode node, Color? fallback = null)
+        {
+            try
+            {
+                return Color.FromName(node.ToString());
+            }
+            catch
+            {
+                return node.AsHexColor(fallback);
+            }
         }
 
         // Mapping specific helpers.

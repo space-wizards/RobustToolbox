@@ -1,5 +1,4 @@
 ﻿using SS14.Client.Interfaces.Utility;
-using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.Utility
@@ -40,6 +39,6 @@ namespace SS14.Client.Utility
             return rand.NextDouble();
         }
 
-        #endregion
+        #endregion IRand Members
     }
 }

@@ -27,15 +27,22 @@ namespace SS14.Shared.GameObjects.System
             EntityNetworkManager = IoCManager.Resolve<IEntityNetworkManager>();
         }
 
-        public virtual void RegisterMessageTypes() { }
+        public virtual void RegisterMessageTypes()
+        {
+        }
 
-        public virtual void SubscribeEvents() { }
+        public virtual void SubscribeEvents()
+        {
+        }
 
         /// <inheritdoc />
         public virtual void Initialize() { }
 
         /// <inheritdoc />
         public virtual void Update(float frameTime) { }
+
+        /// <inheritdoc />
+        public virtual void FrameUpdate(float frameTime) { }
 
         /// <inheritdoc />
         public virtual void Shutdown() { }

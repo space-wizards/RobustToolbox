@@ -31,9 +31,8 @@ namespace SS14.Shared.Network.Messages
         {
             buffer.Write(StateDelta.Sequence);
             buffer.Write(StateDelta.FromSequence);
-            byte[] bytes = StateDelta.deltaBytes.ToArray();
-            buffer.Write(bytes.Length);
-            buffer.Write(bytes);
+            buffer.Write(StateDelta.deltaBytes.Length);
+            buffer.Write(StateDelta.deltaBytes);
         }
     }
 }

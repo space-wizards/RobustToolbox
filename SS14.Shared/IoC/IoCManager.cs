@@ -84,7 +84,15 @@ namespace SS14.Shared.IoC
         {
             foreach (var service in Services.Values.OfType<IDisposable>().Distinct())
             {
-                service.Dispose();
+                try
+                {
+                    service.Dispose();
+                }
+                catch (Exception e)
+                {
+                    // DON'T use the logger since it might be dead already.
+                    System.Console.WriteLine($"Caught exception inside {service.GetType()} dispose! {e}");
+                }
             }
             Services.Clear();
             ResolveTypes.Clear();
@@ -118,6 +126,7 @@ namespace SS14.Shared.IoC
         /// <summary>
         /// Initializes the object graph by building every object and resolving all dependencies.
         /// </summary>
+        /// <seealso cref="InjectDependencies(object)"/>
         public static void BuildGraph()
         {
             // List of all objects we need to inject dependencies into.
@@ -131,7 +140,6 @@ namespace SS14.Shared.IoC
                 // Can't catch ourselves because we're not instantiated.
                 // Ones that aren't yet instantiated are about to be and'll find us instead.
                 KeyValuePair<Type, Type> DupeType = ResolveTypes.FirstOrDefault(p => Services.ContainsKey(p.Key) && p.Value == currentType.Value);
-
 
                 // Interface key can't be null so since KeyValuePair<> is a struct,
                 // this effectively checks whether we found something.
@@ -157,23 +165,40 @@ namespace SS14.Shared.IoC
             // Graph built, go over ones that need injection.
             foreach (var Implementation in InjectList)
             {
-                foreach (FieldInfo field in GetAllFields(Implementation.GetType())
-                                            .Where(p => Attribute.GetCustomAttribute(p, typeof(DependencyAttribute)) != null))
-                {
-                    // Not using Resolve<T>() because we're literally building it right now.
-                    if (!Services.ContainsKey(field.FieldType))
-                    {
-                        throw new UnregisteredDependencyException(Implementation.GetType(), field.FieldType, field.Name);
-                    }
-
-                    // Quick note: this DOES work with readonly fields, though it may be a CLR implementation detail.
-                    field.SetValue(Implementation, Services[field.FieldType]);
-                }
+                InjectDependencies(Implementation);
             }
 
             foreach (IPostInjectInit InjectedItem in InjectList.OfType<IPostInjectInit>())
             {
                 InjectedItem.PostInject();
+            }
+        }
+
+        /// <summary>
+        ///     Injects dependencies into all fields with <see cref="DependencyAttribute"/> on the provided object.
+        ///     This is useful for objects that are not IoC created, and want to avoid tons of IoC.Resolve() calls.
+        /// </summary>
+        /// <remarks>
+        ///     This does NOT initialize IPostInjectInit objects!
+        /// </remarks>
+        /// <param name="obj">The object to inject into.</param>
+        /// <exception cref="UnregisteredDependencyException">
+        ///     Thrown if a dependency field on the object is not registered.
+        /// </exception>
+        /// <seealso cref="BuildGraph"/>
+        public static void InjectDependencies(object obj)
+        {
+            foreach (FieldInfo field in GetAllFields(obj.GetType())
+                            .Where(p => Attribute.GetCustomAttribute(p, typeof(DependencyAttribute)) != null))
+            {
+                // Not using Resolve<T>() because we're literally building it right now.
+                if (!Services.ContainsKey(field.FieldType))
+                {
+                    throw new UnregisteredDependencyException(obj.GetType(), field.FieldType, field.Name);
+                }
+
+                // Quick note: this DOES work with readonly fields, though it may be a CLR implementation detail.
+                field.SetValue(obj, Services[field.FieldType]);
             }
         }
 

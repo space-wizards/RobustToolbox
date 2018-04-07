@@ -1,10 +1,12 @@
-﻿using SS14.Shared.GameObjects;
+﻿using System;
+using SS14.Client.Interfaces.GameObjects.Components;
+using SS14.Client.Interfaces.Graphics.Lighting;
+using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 using SS14.Client.Graphics.Lighting;
-using SS14.Shared.Enums;
-using SS14.Shared.IoC;
-using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
@@ -12,67 +14,42 @@ namespace SS14.Client.GameObjects
     public class OccluderComponent : Component
     {
         public override string Name => "Occluder";
-
         public Box2 BoundingBox { get; private set; } = new Box2(-16, -16, 16, 16);
-        private bool enabled = true;
         public bool Enabled
         {
-            get => enabled;
-            set
-            {
-                if (value == enabled)
-                {
-                    return;
-                }
-
-                enabled = value;
-                RedrawRelevantLights();
-            }
+            get => occluder.Enabled;
+            set => occluder.Enabled = value;
         }
 
-        private ITransformComponent transform;
+        private IOccluder occluder;
+        private ILightManager lightManager;
 
         public override void Initialize()
         {
             base.Initialize();
-            transform = Owner.GetComponent<ITransformComponent>();
-            transform.OnMove += Transform_OnMove;
-        }
+            lightManager = IoCManager.Resolve<ILightManager>();
+            var transform = Owner.GetComponent<IGodotTransformComponent>();
 
-        private void Transform_OnMove(object sender, MoveEventArgs e)
-        {
-            // if the old or new positions are invalid, then lights will be updated by map changes later
-            if (e.OldPosition.IsValidLocation())
-            {
-                var oldpos = e.OldPosition.Grid.ConvertToWorld(e.OldPosition.Position);
-                RedrawRelevantLights(oldpos);
-            }
-
-            if (e.NewPosition.IsValidLocation())
-            {
-                var newpos = e.NewPosition.Grid.ConvertToWorld(e.NewPosition.Position);
-                RedrawRelevantLights(newpos);
-            }
+            occluder.ParentTo(transform);
         }
 
         public override void OnRemove()
         {
-            base.OnRemove();
-            // Tell lights to update for our deletion.
-            Enabled = false;
-            transform.OnMove -= Transform_OnMove;
-            transform = null;
-        }
+            occluder.Dispose();
+            occluder = null;
 
-        private void RedrawRelevantLights() => RedrawRelevantLights(transform.WorldPosition);
-        private void RedrawRelevantLights(Vector2 position)
-        {
-            var mgr = IoCManager.Resolve<ILightManager>();
-            mgr.RecalculateLightsInView(transform.MapID, BoundingBox.Translated(position));
+            base.OnRemove();
         }
 
         public override void LoadParameters(YamlMappingNode mapping)
         {
+            if (lightManager == null)
+            {
+                // First in the init stack so...
+                lightManager = IoCManager.Resolve<ILightManager>();
+                occluder = lightManager.MakeOccluder();
+            }
+
             base.LoadParameters(mapping);
 
             YamlNode node;
@@ -102,8 +79,18 @@ namespace SS14.Client.GameObjects
 
             if (mapping.TryGetNode("enabled", out node))
             {
-                enabled = node.AsBool();
+                Enabled = node.AsBool();
             }
+
+            var poly = new Godot.Vector2[4]
+            {
+                new Godot.Vector2(BoundingBox.Left, BoundingBox.Top),
+                new Godot.Vector2(BoundingBox.Right, BoundingBox.Top),
+                new Godot.Vector2(BoundingBox.Right, BoundingBox.Bottom),
+                new Godot.Vector2(BoundingBox.Left, BoundingBox.Bottom),
+            };
+
+            occluder.SetGodotPolygon(poly);
         }
     }
 }

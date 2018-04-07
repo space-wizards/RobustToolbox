@@ -91,7 +91,7 @@ namespace SS14.Shared.GameObjects
 
             if(Uid.IsValid())
                 throw new InvalidOperationException("Entity already has a UID.");
-            
+
             Uid = uid;
         }
         
@@ -131,9 +131,9 @@ namespace SS14.Shared.GameObjects
         {
             _id = Prototype.ID;
             _type = Prototype.TypeString;
-            
+
             serializer.EntityHeader();
-            
+
             serializer.DataField(ref _type, "type", "entity", true);
             serializer.DataField(ref _id, "id", String.Empty, true);
             serializer.DataField(ref _name, "name", String.Empty, true);

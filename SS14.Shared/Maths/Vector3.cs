@@ -131,7 +131,7 @@ namespace SS14.Shared.Maths
         /// Gets the length (magnitude) of the vector.
         /// </summary>
         /// <seealso cref="LengthSquared"/>
-        public float Length => (float) Math.Sqrt(X * X + Y * Y + Z * Z);
+        public float Length => (float)Math.Sqrt(X * X + Y * Y + Z * Z);
 
         #endregion
 
@@ -880,7 +880,7 @@ namespace SS14.Shared.Maths
         /// <remarks>Note that the returned angle is never bigger than the constant Pi.</remarks>
         public static float CalculateAngle(Vector3 first, Vector3 second)
         {
-            return (float) Math.Acos(Dot(first, second) / (first.Length * second.Length));
+            return (float)Math.Acos(Dot(first, second) / (first.Length * second.Length));
         }
 
         /// <summary>Calculates the angle (in radians) between two vectors.</summary>
@@ -891,7 +891,7 @@ namespace SS14.Shared.Maths
         public static void CalculateAngle(ref Vector3 first, ref Vector3 second, out float result)
         {
             Dot(ref first, ref second, out var temp);
-            result = (float) Math.Acos(temp / (first.Length * second.Length));
+            result = (float)Math.Acos(temp / (first.Length * second.Length));
         }
 
         #endregion
@@ -1066,7 +1066,7 @@ namespace SS14.Shared.Maths
             if (!(obj is Vector3))
                 return false;
 
-            return Equals((Vector3) obj);
+            return Equals((Vector3)obj);
         }
 
         #endregion

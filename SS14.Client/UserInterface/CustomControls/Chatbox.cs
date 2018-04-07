@@ -1,14 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using SS14.Client.Console;
-using SS14.Client.Graphics.Input;
+using SS14.Client.Input;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Console;
 using SS14.Shared.Maths;
+using SS14.Shared.Reflection;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
+    [Reflect(false)]
     public class Chatbox : Panel
     {
         public delegate void TextSubmitHandler(Chatbox chatbox, string text);
@@ -17,14 +18,9 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private readonly IList<string> _inputHistory = new List<string>();
 
-        private readonly Textbox _input;
-        private readonly ScrollableContainer _historyBox;
-        private readonly ListPanel _chatHistoryList;
-
-        /// <summary>
-        ///     To prevent the TextEntered from the key toggling chat being registered.
-        /// </summary>
-        private bool _ignoreFirstText;
+        private bool firstLine = true;
+        public LineEdit Input { get; private set; }
+        private RichTextLabel contents;
 
         /// <summary>
         ///     Index while cycling through the input history. -1 means not going through history.
@@ -44,274 +40,140 @@ namespace SS14.Client.UserInterface.CustomControls
         /// <summary>
         ///     Blacklists channels from being displayed.
         /// </summary>
-        public List<ChatChannel> ChannelBlacklist { get; set; }
-
-        public override bool Focus
+        public List<ChatChannel> ChannelBlacklist { get; set; } = new List<ChatChannel>()
         {
-            get => _input.Focus;
-            set => _input.Focus = value;
+            ChatChannel.Default,
+        };
+
+        public Chatbox() : base()
+        {
         }
 
-        public Chatbox(Vector2i size)
+        protected override Godot.Control SpawnSceneControl()
         {
-            BackgroundColor = new Color(128, 128, 128, 128);
-            BorderColor = new Color(0, 0, 0, 128);
-            DrawBackground = true;
-            DrawBorder = true;
-
-            Size = size;
-
-            _historyBox = new ScrollableContainer(size);
-            AddControl(_historyBox);
-
-            _chatHistoryList = new ListPanel();
-            _historyBox.Container.AddControl(_chatHistoryList);
-
-            _input = new Textbox(Size.X)
-            {
-                BackgroundColor = new Color(128, 128, 128, 128),
-                ForegroundColor = new Color(255, 250, 240, 255)
-            };
-            _input.OnSubmit += (sender, text) => input_OnSubmit(sender, text);
-
-            ChannelBlacklist = new List<ChatChannel>()
-            {
-                ChatChannel.Default,
-            };
+            return LoadScene("res://Scenes/ChatBox/ChatBox.tscn");
         }
 
-        public override bool MouseDown(MouseButtonEventArgs e)
+        protected override void Initialize()
         {
-            if (base.MouseDown(e))
-                return true;
+            base.Initialize();
 
-            return _input.MouseDown(e);
+            Input = GetChild<LineEdit>("Input");
+            Input.OnKeyDown += InputKeyDown;
+            Input.OnTextEntered += Input_OnTextEntered;
+            contents = GetChild<RichTextLabel>("Contents");
         }
 
-        public override bool KeyDown(KeyEventArgs e)
+        protected override void MouseDown(GUIMouseButtonEventArgs e)
         {
-            if (e.Key == Keyboard.Key.T && !Focus && UiManager.HasFocus(null))
-            {
-                Focus = true;
-                _ignoreFirstText = true;
-                return true;
-            }
+            base.MouseDown(e);
 
-            if (!Focus)
-                return false;
+            Input.GrabFocus();
+        }
 
+        private void InputKeyDown(GUIKeyEventArgs e)
+        {
             if (e.Key == Keyboard.Key.Escape)
             {
-                Focus = false;
-                return true;
+                Input.ReleaseFocus();
+                e.Handle();
+                return;
             }
 
             if (e.Key == Keyboard.Key.Up)
             {
-                if (_inputIndex == -1 && _inputHistory.Any())
+                if (_inputIndex == -1 && _inputHistory.Count != 0)
                 {
-                    _inputTemp = _input.Text;
+                    _inputTemp = Input.Text;
                     _inputIndex++;
                 }
-                else if (_inputIndex + 1 < _inputHistory.Count())
+                else if (_inputIndex + 1 < _inputHistory.Count)
                 {
                     _inputIndex++;
                 }
 
                 if (_inputIndex != -1)
-                    _input.Text = _inputHistory[_inputIndex];
+                {
+                    Input.Text = _inputHistory[_inputIndex];
+                }
 
-                return true;
+                e.Handle();
+                return;
             }
 
             if (e.Key == Keyboard.Key.Down)
             {
                 if (_inputIndex == 0)
                 {
-                    _input.Text = _inputTemp;
+                    Input.Text = _inputTemp;
                     _inputTemp = "";
                     _inputIndex--;
                 }
                 else if (_inputIndex != -1)
                 {
                     _inputIndex--;
-                    _input.Text = _inputHistory[_inputIndex];
+                    Input.Text = _inputHistory[_inputIndex];
                 }
 
-                return true;
+                e.Handle();
+                return;
             }
-
-            return _input.KeyDown(e);
         }
 
-        public override bool TextEntered(TextEventArgs e)
+        protected override void Dispose(bool disposing)
         {
-            if (!Focus)
-                return false;
+            base.Dispose(disposing);
 
-            if (_ignoreFirstText)
+            if (disposing)
             {
-                _ignoreFirstText = false;
-                return false;
+                TextSubmitted = null;
+                Input = null;
+                contents = null;
             }
-            return _input.TextEntered(e);
-        }
-
-        public override void Destroy()
-        {
-            base.Destroy();
-
-            TextSubmitted = null;
-            _input.Destroy();
-        }
-
-        public override void DoLayout()
-        {
-            base.DoLayout();
-            _input.Width = ClientArea.Width;
-            _input.DoLayout();
-        }
-
-        protected override void OnCalcPosition()
-        {
-            base.OnCalcPosition();
-
-            if (_input != null)
-                _input.LocalPosition = Position + new Vector2i(ClientArea.Left, ClientArea.Bottom + 1);
-        }
-
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-            _input.Update(frameTime);
-        }
-
-        public override void Draw()
-        {
-            if (Destroyed || !Visible) return;
-            base.Draw();
-            _input.Draw();
         }
 
         public event TextSubmitHandler TextSubmitted;
 
-        private IEnumerable<string> CheckInboundMessage(string message)
-        {
-            var lineList = new List<string>();
-
-            var text = _input;
-            if (text.MeasureLine(message) < MaxLinePixelLength)
-            {
-                lineList.Add(message);
-                return lineList;
-            }
-
-            var match = Regex.Match(message, @"^\[.+\]\s.+\:\s", RegexOptions.Singleline);
-            var header = match.ToString();
-            message = message.Substring(match.Length);
-
-            var stringChunks = message.Split(' ', '-').ToList();
-            var totalChunks = stringChunks.Count();
-            var i = 0;
-
-            lineList.Add(header);
-
-            while (text.MeasureLine(lineList[i]) < MaxLinePixelLength)
-            {
-                if (!stringChunks.Any()) break;
-
-                if (text.MeasureLine(lineList[i] + stringChunks.First()) < MaxLinePixelLength)
-                {
-                    lineList[i] += stringChunks.First() + " ";
-                    stringChunks.RemoveAt(0);
-                }
-                else if (i == 0 && totalChunks == stringChunks.Count() ||
-                         lineList[i] == " " &&
-                         text.MeasureLine(stringChunks.First() + " ") > MaxLinePixelLength ||
-                         text.MeasureLine(lineList[i]) < MaxLinePixelLength &&
-                         text.MeasureLine(stringChunks.First() + " ") > MaxLinePixelLength)
-                {
-                    var largeWordChars = stringChunks.First().ToList();
-                    stringChunks.RemoveAt(0);
-
-                    while (text.MeasureLine(lineList[i] + largeWordChars.First() + "-") <
-                           MaxLinePixelLength)
-                    {
-                        lineList[i] += largeWordChars.First();
-                        largeWordChars.RemoveAt(0);
-                    }
-
-                    lineList[i] += "-";
-                    lineList.Add(" " + new string(largeWordChars.ToArray()) + " ");
-                    i++;
-                }
-                else
-                {
-                    lineList.Add(" ");
-                    i++;
-                }
-            }
-
-            return lineList;
-        }
-
         public void AddLine(string message, ChatChannel channel, Color color)
         {
-            if (Destroyed) return;
+            if (Disposed)
+            {
+                return;
+            }
 
-            if(ChannelBlacklist.Contains(channel))
+            if (ChannelBlacklist.Contains(channel))
                 return;
 
-            //TODO: LineHeight should be from the Font, not hard coded.
-            const int lineHeight = 12;
-
-            var scrollbarV = _historyBox.ScrollbarV;
-            var atBottom = scrollbarV.Value >= scrollbarV.Max;
-
-            foreach (var content in CheckInboundMessage(message))
+            if (!firstLine)
             {
-                _chatHistoryList.AddControl(new Label(content, "CALIBRI")
-                {
-                    Size = new Vector2i(ClientArea.Width - 10, lineHeight),
-                    ForegroundColor = color,
-                });
+                contents.NewLine();
             }
-
-            // always layout the control after changing things
-            _historyBox.DoLayout();
-
-            if (atBottom)
-            {
-                Update(0);
-                scrollbarV.Value = scrollbarV.Max;
-            }
-        }
-
-        private void CheckAndSetLine(string line)
-        {
-            var text = _input;
-
-            // TODO: Refactor to use dynamic input box size.
-            // Magic number is pixel width of chatbox input rectangle at
-            // current resolution. Will need to modify once handling
-            // different resolutions and scaling.
-            if (text.MeasureLine(line) > MaxLinePixelLength)
-                CheckAndSetLine(line.Substring(1));
             else
-                text.Text = line;
+            {
+                firstLine = false;
+            }
+            contents.PushColor(color);
+            contents.AddText(message);
+            contents.Pop(); // Pop the color off.
         }
 
-        private void input_OnSubmit(Textbox sender, string text)
+        public void AddLine(string text, Color color)
         {
-            if (!string.IsNullOrWhiteSpace(text))
+            AddLine(text, ChatChannel.Default, color);
+        }
+
+        private void Input_OnTextEntered(LineEdit.LineEditEventArgs args)
+        {
+            if (!string.IsNullOrWhiteSpace(args.Text))
             {
-                TextSubmitted?.Invoke(this, text);
-                _inputHistory.Insert(0, text);
+                TextSubmitted?.Invoke(this, args.Text);
+                _inputHistory.Insert(0, args.Text);
             }
 
             _inputIndex = -1;
 
-            Focus = false;
+            Input.Clear();
+            Input.ReleaseFocus();
         }
 
         public void AddLine(object sender, AddStringArgs e)

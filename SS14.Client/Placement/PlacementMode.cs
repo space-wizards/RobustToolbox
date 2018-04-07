@@ -1,5 +1,8 @@
-﻿using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprites;
+﻿using System.IO;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.ClientEye;
+using SS14.Client.ResourceManagement;
+using SS14.Client.Utility;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
@@ -10,12 +13,12 @@ namespace SS14.Client.Placement
     {
         public readonly PlacementManager pManager;
         public TileRef CurrentTile { get; set; }
-        public ScreenCoordinates MouseScreen { get ; set; }
+        public ScreenCoordinates MouseScreen { get; set; }
         public LocalCoordinates MouseCoords { get; set; }
-        public Sprite SpriteToDraw { get; set; }
+        public TextureResource SpriteToDraw { get; set; }
         public Color ValidPlaceColor { get; set; } = new Color(34, 139, 34); //Default valid color is green
         public Color InvalidPlaceColor { get; set; } = new Color(34, 34, 139); //Default invalid placement is red
-        
+
         public virtual bool rangerequired => false;
 
         public PlacementMode(PlacementManager pMan)
@@ -23,64 +26,53 @@ namespace SS14.Client.Placement
             pManager = pMan;
         }
 
-        public virtual string ModeName
-        {
-            get { return GetType().Name; }
-        }
+        public virtual string ModeName => GetType().Name;
 
-
-        public virtual bool Update(ScreenCoordinates mouseScreen)
+        public virtual bool FrameUpdate(RenderFrameEventArgs e, ScreenCoordinates mouseScreen)
         {
             return false;
         }
 
         public virtual void Render()
         {
-            if(SpriteToDraw == null)
+            if (SpriteToDraw == null)
             {
                 SetSprite();
             }
 
-            var bounds = SpriteToDraw.LocalBounds;
-            SpriteToDraw.Color = pManager.ValidPosition ? ValidPlaceColor : InvalidPlaceColor;
-            SpriteToDraw.Position = new Vector2(MouseScreen.X - (bounds.Width / 2f),
-                                                MouseScreen.Y - (bounds.Height / 2f));
-            //Centering the sprite on the cursor.
-            SpriteToDraw.Draw();
+            var size = SpriteToDraw.Texture.Size;
+            var color = pManager.ValidPosition ? ValidPlaceColor : InvalidPlaceColor;
+            var pos = MouseCoords.Position * EyeManager.PIXELSPERMETER - size / 2f;
+            pManager.drawNode.DrawTexture(SpriteToDraw.Texture.GodotTexture, pos.Convert(), color.Convert());
+        }
+
+        public TextureResource GetSprite(string key)
+        {
+            return pManager.ResourceCache.GetResource<TextureResource>("Textures/" + key);
+        }
+
+        public bool TryGetSprite(string key, out TextureResource sprite)
+        {
+            return pManager.ResourceCache.TryGetResource<TextureResource>("Textures/" + key, out sprite);
         }
 
         public void SetSprite()
         {
             SpriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
-            SpriteToDraw = new Sprite(SpriteToDraw);
         }
 
-        public Sprite GetSprite(string key)
+        public TextureResource GetDirectionalSprite(string baseSprite)
         {
-            if (key == null || !pManager.ResourceCache.SpriteExists(key))
-            {
-                return pManager.ResourceCache.DefaultSprite();
-            }
-            else
-            {
-                return pManager.ResourceCache.GetSprite(key);
-            }
-        }
+            var ext = Path.GetExtension(baseSprite);
+            var withoutExt = Path.ChangeExtension(baseSprite, null);
+            var name = $"{withoutExt}_{pManager.Direction.ToString().ToLowerInvariant()}{ext}";
 
-        public Sprite GetDirectionalSprite(string baseSprite)
-        {
-            if (baseSprite == null) pManager.ResourceCache.DefaultSprite();
-
-            var directionalspritename = (baseSprite + "_" + pManager.Direction.ToString()).ToLowerInvariant();
-
-            if(pManager.ResourceCache.SpriteExists(directionalspritename))
+            if (TryGetSprite(name, out var sprite))
             {
-                return pManager.ResourceCache.GetSprite(directionalspritename);
+                return sprite;
             }
-            else
-            {
-                return GetSprite(baseSprite);
-            }
+
+            return GetSprite(baseSprite);
         }
 
         public bool RangeCheck()
@@ -89,12 +81,14 @@ namespace SS14.Client.Placement
                 return true;
             var range = pManager.CurrentPermission.Range;
             if (range > 0 && !pManager.PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.InRange(MouseCoords, range))
-                    return false;
+                return false;
             return true;
         }
 
         public bool CheckCollision()
         {
+            return true;
+            /*
             var drawsprite = GetSprite(pManager.CurrentBaseSpriteKey);
             var bounds = drawsprite.LocalBounds;
             var spriteSize = CluwneLib.PixelToTile(new Vector2(bounds.Width, bounds.Height));
@@ -104,6 +98,18 @@ namespace SS14.Client.Placement
             if (pManager.CollisionManager.IsColliding(spriteRectWorld))
                 return false;
             return true;
+            */
+        }
+
+        protected Vector2 ScreenToWorld(Vector2 point)
+        {
+            return pManager.eyeManager.ScreenToWorld(point);
+        }
+
+        protected Vector2 WorldToScreen(Vector2 point)
+        {
+            return pManager.eyeManager.WorldToScreen(point);
         }
     }
 }
+

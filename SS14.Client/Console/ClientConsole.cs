@@ -30,7 +30,7 @@ namespace SS14.Client.Console
 
     public class ClientConsole : IClientConsole, IDebugConsole
     {
-        private static readonly Color _msgColor = new Color(65, 105, 225);
+        private static readonly Color MsgColor = new Color(65, 105, 225);
 
         [Dependency]
         protected readonly IClientNetManager _network;
@@ -76,6 +76,16 @@ namespace SS14.Client.Console
             AddString?.Invoke(this, new AddStringArgs(text, color, channel));
         }
 
+        public void AddLine(string text, Color color)
+        {
+            AddLine(text, ChatChannel.Default, color);
+        }
+
+        public void AddLine(string text)
+        {
+            AddLine(text, ChatChannel.Default, Color.White);
+        }
+
         public void Clear()
         {
             ClearText?.Invoke(this, EventArgs.Empty);
@@ -86,14 +96,14 @@ namespace SS14.Client.Console
 
         private void HandleConCmdAck(NetMessage message)
         {
-            var msg = (MsgConCmdAck) message;
+            var msg = (MsgConCmdAck)message;
 
-            AddLine("< " + msg.Text, ChatChannel.Default, _msgColor);
+            AddLine("< " + msg.Text, ChatChannel.Default, MsgColor);
         }
 
         private void HandleConCmdReg(NetMessage message)
         {
-            var msg = (MsgConCmdReg) message;
+            var msg = (MsgConCmdReg)message;
 
             foreach (var cmd in msg.Commands)
             {
@@ -117,11 +127,11 @@ namespace SS14.Client.Console
         /// <param name="text">input text</param>
         public void ProcessCommand(string text)
         {
-            if(string.IsNullOrWhiteSpace(text))
+            if (string.IsNullOrWhiteSpace(text))
                 return;
 
             // echo the command locally
-            AddLine("> " + text, ChatChannel.Default, new Color(255, 250, 240, 255));
+            AddLine("> " + text, ChatChannel.Default, new Color(255, 250, 240));
 
             //Commands are processed locally and then sent to the server to be processed there again.
             var args = new List<string>();
@@ -154,7 +164,7 @@ namespace SS14.Client.Console
         {
             foreach (var t in _reflectionManager.GetAllChildren<IConsoleCommand>())
             {
-                var instance = (IConsoleCommand) Activator.CreateInstance(t, null);
+                var instance = (IConsoleCommand)Activator.CreateInstance(t, null);
                 if (_commands.ContainsKey(instance.Command))
                     throw new Exception($"Command already registered: {instance.Command}");
 

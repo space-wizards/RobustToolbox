@@ -1,4 +1,6 @@
-﻿using SS14.Client.Graphics.Sprites;
+﻿/*
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
@@ -141,3 +143,4 @@ namespace SS14.Client.GameObjects
         #endregion
     }
 }
+*/

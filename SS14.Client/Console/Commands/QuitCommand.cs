@@ -1,5 +1,5 @@
-﻿using System;
 using SS14.Client.Interfaces.Console;
+using System;
 
 namespace SS14.Client.Console.Commands
 {

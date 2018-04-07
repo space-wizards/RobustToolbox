@@ -5,7 +5,7 @@ using SS14.Shared.Network.Messages;
 
 namespace SS14.Shared.Map
 {
-    public sealed class TileDefinitionManager : ITileDefinitionManager
+    public class TileDefinitionManager : ITileDefinitionManager
     {
         //[Dependency]
         //private readonly IResourceManager resourceManager;
@@ -21,54 +21,32 @@ namespace SS14.Shared.Map
             _tileDefs = new List<ITileDefinition>();
             _tileNames = new Dictionary<string, ITileDefinition>();
             _tileIds = new Dictionary<ITileDefinition, ushort>();
+        }
 
-            Register(new SpaceTileDefinition());
-            Register(new FloorTileDefinition());
-        }
-        
-        public void InitializeResources()
+        public void Initialize()
         {
-            /*
-            foreach (var item in tileDefs)
+            new SpaceTileDefinition().Register(this);
+            new FloorTileDefinition().Register(this);
+        }
+
+        public virtual ushort Register(ITileDefinition tileDef)
+        {
+            if (_tileIds.TryGetValue(tileDef, out ushort id))
             {
-                item.InitializeResources(resourceCache);
+                throw new InvalidOperationException($"TileDefinition is already registered: {tileDef.GetType()}, id: {id}");
             }
-            */
-        }
-        
-        public ushort Register(ITileDefinition tileDef)
-        {
-            ushort id;
-            if (_tileIds.TryGetValue(tileDef, out id))
-                return id;
 
             string name = tileDef.Name;
             if (_tileNames.ContainsKey(name))
+            {
                 throw new ArgumentException("Another tile definition with the same name has already been registered.", nameof(tileDef));
+            }
 
             id = checked((ushort)_tileDefs.Count);
             _tileDefs.Add(tileDef);
             _tileNames[name] = tileDef;
             _tileIds[tileDef] = id;
             return id;
-        }
-
-        public void RegisterServerTileMapping(MsgMap message)
-        {
-            foreach (var tileDef in _tileDefs)
-                tileDef.InvalidateTileId();
-
-            _tileDefs.Clear();
-            _tileIds.Clear();
-
-            for (var i = 0; i < message.TileDefs.Length; ++i)
-            {
-                var tileName = message.TileDefs[i].Name;
-                var tileDef = this[tileName];
-
-                _tileDefs.Add(tileDef);
-                _tileIds[tileDef] = (ushort)i;
-            }
         }
 
         public ITileDefinition this[string name] => _tileNames[name];

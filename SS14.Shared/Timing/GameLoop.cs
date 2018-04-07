@@ -51,7 +51,7 @@ namespace SS14.Shared.Timing
         /// </summary>
         public void Run()
         {
-            if(_timing.TickRate <= 0)
+            if (_timing.TickRate <= 0)
                 throw new InvalidOperationException("TickRate must be greater than 0.");
 
             Running = true;
@@ -87,7 +87,7 @@ namespace SS14.Shared.Timing
                     }
                 }
                 _timing.StartFrame();
-                
+
                 realFrameEvent.SetDeltaSeconds((float)_timing.RealFrameTime.TotalSeconds);
 
                 // process Net/KB/Mouse input
@@ -130,7 +130,7 @@ namespace SS14.Shared.Timing
                 // Set sleep to 1 if you want to be nice and give the rest of the timeslice up to the os scheduler.
                 // Set sleep to 0 if you want to use 100% cpu, but still cooperate with the scheduler.
                 // do not call sleep if you want to be 'that thread' and hog 100% cpu.
-                if(SleepMode != SleepMode.None)
+                if (SleepMode != SleepMode.None)
                     Thread.Sleep((int)SleepMode);
             }
         }

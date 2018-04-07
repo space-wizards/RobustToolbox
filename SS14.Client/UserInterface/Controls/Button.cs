@@ -1,123 +1,66 @@
 ﻿using System;
-using SS14.Client.Graphics.Input;
-using SS14.Client.Graphics.Sprites;
-using SS14.Client.ResourceManagement;
-using SS14.Shared.Maths;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Godot;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    internal class Button : Control
+    public class Button : BaseButton
     {
-        public delegate void ButtonPressHandler(Button sender);
-
-        public Color MouseOverColor = Color.White;
-
-        private Sprite _buttonLeft;
-        private Sprite _buttonMain;
-        private Sprite _buttonRight;
-
-        private Box2i _clientAreaLeft;
-        private Box2i _clientAreaMain;
-        private Box2i _clientAreaRight;
-
-        private Color _drawColor = Color.White;
-
-        public TextSprite Label { get; private set; }
-
-        public Button(string buttonText)
+        public Button() : base()
         {
-            _buttonLeft = _resourceCache.GetSprite("button_left");
-            _buttonMain = _resourceCache.GetSprite("button_middle");
-            _buttonRight = _resourceCache.GetSprite("button_right");
-
-            Label = new TextSprite(buttonText, _resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font)
-            {
-                FillColor = Color.Black
-            };
+        }
+        public Button(string name) : base(name)
+        {
+        }
+        public Button(Godot.Button button) : base(button)
+        {
         }
 
-        /// <inheritdoc />
-        protected override void OnCalcRect()
+        new private Godot.Button SceneControl;
+
+        protected override Godot.Control SpawnSceneControl()
         {
-            var boundsLeft = _buttonLeft.LocalBounds;
-            var boundsMain = _buttonMain.LocalBounds;
-            var boundsRight = _buttonRight.LocalBounds;
-
-            _clientAreaLeft = Box2i.FromDimensions(new Vector2i(), new Vector2i((int) boundsLeft.Width, (int) boundsLeft.Height));
-            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, Label.Width, (int) boundsMain.Height);
-            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, 0, (int) boundsRight.Width, (int) boundsRight.Height);
-
-            _clientArea = Box2i.FromDimensions(new Vector2i(),
-                new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
-                    Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height), _clientAreaMain.Height)));
+            return new Godot.Button();
         }
 
-        /// <inheritdoc />
-        protected override void OnCalcPosition()
+        protected override void SetSceneControl(Godot.Control control)
         {
-            base.OnCalcPosition();
-
-            Label.Position = Position + new Vector2i(_clientAreaLeft.Right, (int) (_clientArea.Height / 2f) - (int) (Label.Height / 2f));
+            base.SetSceneControl(control);
+            SceneControl = (Godot.Button)control;
         }
 
-        /// <inheritdoc />
-        protected override void DrawContents()
+        public AlignMode TextAlign
         {
-            _buttonLeft.Color = _drawColor;
-            _buttonMain.Color = _drawColor;
-            _buttonRight.Color = _drawColor;
-
-            _buttonLeft.SetTransformToRect(_clientAreaLeft.Translated(Position));
-            _buttonMain.SetTransformToRect(_clientAreaMain.Translated(Position));
-            _buttonRight.SetTransformToRect(_clientAreaRight.Translated(Position));
-            _buttonLeft.Draw();
-            _buttonMain.Draw();
-            _buttonRight.Draw();
-
-            _buttonLeft.Color = Color.White;
-            _buttonMain.Color = Color.White;
-            _buttonRight.Color = Color.White;
-
-            Label.Draw();
+            get => (AlignMode)SceneControl.Align;
+            set => SceneControl.Align = (Godot.Button.TextAlign)value;
         }
 
-        /// <inheritdoc />
-        public override void Destroy()
+        public bool ClipText
         {
-            Label = null;
-            _buttonLeft = null;
-            _buttonMain = null;
-            _buttonRight = null;
-            Clicked = null;
-            base.Destroy();
-            GC.SuppressFinalize(this);
+            get => SceneControl.ClipText;
+            set => SceneControl.ClipText = value;
         }
 
-        /// <inheritdoc />
-        public override void MouseMove(MouseMoveEventArgs e)
+        public bool Flat
         {
-            base.MouseMove(e);
-
-            if (MouseOverColor == Color.White)
-                return;
-
-            _drawColor = ClientArea.Translated(Position).Contains(new Vector2i(e.X, e.Y)) ? MouseOverColor : Color.White;
+            get => SceneControl.Flat;
+            set => SceneControl.Flat = value;
         }
 
-        /// <inheritdoc />
-        public override bool MouseDown(MouseButtonEventArgs e)
+        public string Text
         {
-            if (base.MouseDown(e))
-                return true;
-
-            if (ClientArea.Translated(Position).Contains(new Vector2i(e.X, e.Y)))
-            {
-                Clicked?.Invoke(this);
-                return true;
-            }
-            return false;
+            get => SceneControl.Text;
+            set => SceneControl.Text = value;
         }
 
-        public event ButtonPressHandler Clicked;
+        public enum AlignMode
+        {
+            Left = Godot.Button.TextAlign.Left,
+            Center = Godot.Button.TextAlign.Center,
+            Right = Godot.Button.TextAlign.Right,
+        }
     }
 }

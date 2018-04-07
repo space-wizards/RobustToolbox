@@ -1,50 +1,55 @@
-﻿using System;
+using SS14.Client.Input;
+using SS14.Client.UserInterface;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Input;
 using SS14.Client.UserInterface.Controls;
+using System;
 using System.Collections.Generic;
 
 namespace SS14.Client.Interfaces.UserInterface
 {
     public interface IUserInterfaceManager
     {
-        IDragDropInfo DragInfo { get; }
-        
-        void Initialize();
-
-        void AddComponent(Control component);
-        void RemoveComponent(Control component);
+        /// <summary>
+        ///     Clears and disposes of all UI components.
+        ///     Highly destructive!
+        /// </summary>
         void DisposeAllComponents();
-        void DisposeAllComponents<T>();
-        void ResizeComponents();
-        IEnumerable<T> GetAllComponents<T>() where T: Control;
-        IEnumerable<Control> GetAllComponents(Type type);
-        T GetSingleComponents<T>() where T : Control;
-        Control GetSingleComponent(Type type);
-        bool TryGetSingleComponent<T>(out T control) where T : Control;
-        bool TryGetSingleComponent(Type type, out Control control);
 
-        void SetFocus(Control newFocus);
-        void RemoveFocus();
-        bool HasFocus(Control control);
+        Control Focused { get; }
+
+        Control StateRoot { get; }
+
+        Control WindowRoot { get; }
 
         /// <summary>
-        ///     Remove focus, but only if the target is currently focused.
+        ///     The "root" control to which all other controls are parented,
+        ///     potentially indirectly.
         /// </summary>
-        void RemoveFocus(Control target);
+        Control RootControl { get; }
 
-        void Update(FrameEventArgs e);
-        void Render(FrameEventArgs e);
+        bool ShowFPS { get; set; }
+        bool ShowCoordDebug { get; set; }
 
-        void ToggleMoveMode();
+        void Initialize();
 
-        bool KeyDown(KeyEventArgs e);
-        void MouseWheelMove(MouseWheelScrollEventArgs e);
-        void MouseMove(MouseMoveEventArgs e);
-        bool MouseUp(MouseButtonEventArgs e);
-        bool MouseDown(MouseButtonEventArgs e);
-        void MouseEntered(EventArgs e);
-        void MouseLeft(EventArgs e);
-        bool TextEntered(TextEventArgs e);
+        void Update(ProcessFrameEventArgs args);
+
+        void Popup(string contents, string title="Alert!");
+
+        void UnhandledKeyDown(KeyEventArgs args);
+
+        void UnhandledKeyUp(KeyEventArgs args);
+
+        void UnhandledMouseDown(MouseButtonEventArgs args);
+
+        void UnhandledMouseUp(MouseButtonEventArgs args);
+
+        void FocusEntered(Control control);
+
+        void FocusExited(Control control);
+
+        void PreKeyDown(KeyEventArgs args);
+
+        void PreKeyUp(KeyEventArgs args);
     }
 }

@@ -16,8 +16,8 @@ namespace SS14.Client.GameStates
     {
         public Dictionary<uint, GameState> GameStates { get; set; }
 
-        [Dependency]
-        private readonly IGameTiming timing;
+        //[Dependency]
+        //private readonly IGameTiming timing;
         [Dependency]
         private readonly IClientNetManager networkManager;
         [Dependency]
@@ -26,7 +26,7 @@ namespace SS14.Client.GameStates
         private readonly IPlayerManager playerManager;
 
         public GameState CurrentState { get; private set; }
-        
+
         public GameStateManager()
         {
             GameStates = new Dictionary<uint, GameState>();
@@ -36,11 +36,11 @@ namespace SS14.Client.GameStates
 
         public void HandleFullStateMessage(MsgFullState message)
         {
-            if (!GameStates.Keys.Contains(message.State.Sequence))
+            if (!GameStates.ContainsKey(message.State.Sequence))
             {
                 AckGameState(message.State.Sequence);
 
-                message.State.GameTime = (float)timing.CurTime.TotalSeconds;
+                message.State.GameTime = 0;//(float)timing.CurTime.TotalSeconds;
                 ApplyGameState(message.State);
             }
         }
@@ -55,7 +55,7 @@ namespace SS14.Client.GameStates
 
                 GameState fromState = GameStates[delta.FromSequence];
                 GameState newState = fromState + delta;
-                newState.GameTime = (float)timing.CurTime.TotalSeconds;
+                newState.GameTime = 0;//(float)timing.CurTime.TotalSeconds;
                 ApplyGameState(newState);
 
                 CullOldStates(delta.FromSequence);

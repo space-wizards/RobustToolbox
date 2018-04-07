@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.GameObjects;
@@ -20,7 +21,7 @@ namespace SS14.Shared.Map
 
         private int _gridsToReceive = -1;
         private int _gridsReceived;
-        
+
         public void SendMap(INetChannel channel)
         {
             if(_netManager.IsClient)
@@ -41,16 +42,6 @@ namespace SS14.Shared.Map
                     message.MessageType = MapMessage.SendTileMap;
                     message.MapIndex = map.Index;
                     message.GridIndex = grid.Index;
-                    // Tile definition mapping
-                    message.TileDefs = new MsgMap.TileDef[_defManager.Count];
-
-                    for (var i = 0; i < _defManager.Count; i++)
-                    {
-                        message.TileDefs[i] = new MsgMap.TileDef
-                        {
-                            Name = _defManager[i].Name
-                        };
-                    }
 
                     // Map chunks
                     var gridSize = grid.ChunkSize;
@@ -115,12 +106,10 @@ namespace SS14.Shared.Map
         private void HandleTurfClick(MsgMap message)
         {
             /*
-
             // Who clicked and on what tile.
             Atom.Atom clicker = SS13Server.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom;
             short x = message.ReadInt16();
             short y = message.ReadInt16();
-
             if (Vector2.Distance(clicker.position, new Vector2(x * tileSpacing + (tileSpacing / 2), y * tileSpacing + (tileSpacing / 2))) > 96)
             {
                 return; // They were too far away to click us!
@@ -141,7 +130,6 @@ namespace SS14.Shared.Map
                     NetworkUpdateTile(x, y);
                 }
             }
-
             */
         }
 
@@ -158,8 +146,6 @@ namespace SS14.Shared.Map
             var mapIndex = message.MapIndex;
             var gridIndex = message.GridIndex;
 
-            _defManager.RegisterServerTileMapping(message);
-
             var chunkSize = message.ChunkSize;
             var chunkCount = message.ChunkDefs.Length;
 
@@ -172,6 +158,7 @@ namespace SS14.Shared.Map
             var grid = GetMap(mapIndex).GetGrid(gridIndex);
 
             SuppressOnTileChanged = true;
+            var modified = new List<(int x, int y, Tile tile)>();
 
             for (var i = 0; i < chunkCount; ++i)
             {
@@ -183,14 +170,22 @@ namespace SS14.Shared.Map
                 {
                     for (ushort y = 0; y < chunk.ChunkSize; y++)
                     {
-                        chunk.SetTile(x, y, (Tile) message.ChunkDefs[i].Tiles[counter]);
+                        var tile = (Tile) message.ChunkDefs[i].Tiles[counter];
+                        if (chunk.GetTile(x, y).Tile != tile)
+                        {
+                            chunk.SetTile(x, y, tile);
+                            modified.Add((x + chunk.X * chunk.ChunkSize, y + chunk.Y * chunk.ChunkSize, tile));
+                        }
                         counter++;
                     }
                 }
             }
 
             SuppressOnTileChanged = false;
-            GridChanged?.Invoke(this, new GridChangedEventArgs(grid));
+            if (modified.Count != 0)
+            {
+                GridChanged?.Invoke(this, new GridChangedEventArgs(grid, modified));
+            }
 
             if (_gridsReceived == _gridsToReceive)
                 IoCManager.Resolve<IEntityManager>().MapsInitialized = true;

@@ -5,7 +5,7 @@
     <ProjectType>Local</ProjectType>
     <ProjectGuid>{0529F740-0000-0000-0000-000000000000}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <AssemblyKeyContainerName />
     <AssemblyName>SS14.Shared</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
@@ -17,27 +17,26 @@
     <TargetFrameworkProfile />
     <NoWarn>0649</NoWarn>
     <AllowedReferenceRelatedFileExtensions>.pdb;.dll.config</AllowedReferenceRelatedFileExtensions>
-    <OutputPath>$(SolutionDir)bin\Shared\</OutputPath>
+    <OutputPath>..\bin\Shared\</OutputPath>
     <FileAlignment>4096</FileAlignment>
     <ConfigurationOverrideFile />
     <BaseAddress>285212672</BaseAddress>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <DebugSymbols>True</DebugSymbols>
     <Optimize>False</Optimize>
-    <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
-    <Prefer32Bit>true</Prefer32Bit>
+    <DebugType>portable</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DefineConstants>TRACE;RELEASE</DefineConstants>
     <Optimize>True</Optimize>
-    <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
-    <Prefer32Bit>true</Prefer32Bit>
+    <DebugSymbols>False</DebugSymbols>
     <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
@@ -45,20 +44,31 @@
     <DebugSymbols>True</DebugSymbols>
     <Optimize>False</Optimize>
     <PlatformTarget>x64</PlatformTarget>
-    <Prefer32Bit>false</Prefer32Bit>
+    <DebugType>portable</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <DefineConstants>TRACE;RELEASE</DefineConstants>
     <Optimize>True</Optimize>
     <PlatformTarget>x64</PlatformTarget>
-    <Prefer32Bit>false</Prefer32Bit>
+    <DebugSymbols>False</DebugSymbols>
     <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DebugSymbols>True</DebugSymbols>
+    <Optimize>false</Optimize>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DefineConstants>TRACE;RELEASE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugSymbols>False</DebugSymbols>
+    <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <Import Project="..\MSBuild\SS14.DefineConstants.targets" />
   <ItemGroup>
-    <Reference Include="BsDiffLib">
-      <Name>BsDiffLib</Name>
-      <HintPath>..\Third-Party\BsDiffLib.dll</HintPath>
-    </Reference>
     <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
@@ -97,7 +107,7 @@
       <Name>System.Xml.Linq</Name>
     </Reference>
     <Reference Include="System.ValueTuple">
-      <HintPath>$(SolutionDir)packages\System.ValueTuple.4.3.1\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+      <HintPath>$(SolutionDir)packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
     </Reference>
     <Reference Include="YamlDotNet, Version=4.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\YamlDotNet.4.3.0\lib\net45\YamlDotNet.dll</HintPath>
@@ -108,6 +118,10 @@
       <Name>Lidgren.Network</Name>
       <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
       <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\SS14.Shared.Bsdiff\SS14.Shared.Bsdiff\SS14.Shared.Bsdiff.csproj">
+      <Project>{0e0723e8-d785-4f61-81f4-182a12bcaa52}</Project>
+      <Name>SS14.Shared.Bsdiff</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -290,10 +304,8 @@
     <Compile Include="GameObjects\Components\Light\PointLightComponentState.cs" />
     <Compile Include="GameObjects\Components\Particles\ParticleSystemComponentState.cs" />
     <Compile Include="GameObjects\Components\Physics\PhysicsComponentState.cs" />
-    <Compile Include="GameObjects\Components\Renderable\AnimatedSpriteComponentState.cs" />
     <Compile Include="GameObjects\Components\Renderable\RenderableComponentState.cs" />
     <Compile Include="GameObjects\Components\Renderable\SpriteComponentState.cs" />
-    <Compile Include="GameObjects\Components\Renderable\WearableAnimatedSpriteComponentState.cs" />
     <Compile Include="GameObjects\Components\Transform\TransformComponentState.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\EntitySystemMessage.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\InventorySystemMessages.cs" />
@@ -379,8 +391,4 @@
       <Visible>False</Visible>
     </Resources>
   </ItemGroup>
-  <Target Name="AfterBuild">
-    <RemoveDir Directories="$(OutputPath)Resources" />
-    <Copy SourceFiles="@(Resources)" DestinationFiles="$(OutputPath)Resources\%(ResourceRoot)\%(RecursiveDir)%(Filename)%(Extension)" />
-  </Target>
 </Project>

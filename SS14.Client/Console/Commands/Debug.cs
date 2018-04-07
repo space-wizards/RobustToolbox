@@ -1,21 +1,24 @@
-﻿using System;
+﻿using SS14.Client.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Console;
+using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.UserInterface.CustomControls;
 using SS14.Client.Interfaces.State;
 using SS14.Client.State.States;
 using SS14.Shared.Console;
-using SS14.Shared.ContentPack;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.Console.Commands
 {
@@ -48,13 +51,11 @@ namespace SS14.Client.Console.Commands
         {
             var componentManager = IoCManager.Resolve<IComponentManager>();
 
-            IEnumerable<IComponent> components = componentManager.GetComponents<ISpriteRenderableComponent>()
-                                          .Cast<IComponent>()
-                                          .Union(componentManager.GetComponents<ParticleSystemComponent>());
+            IEnumerable<IComponent> components = componentManager.GetComponents<ISpriteRenderableComponent>();
 
             foreach (var component in components)
             {
-                console.AddLine($"{component.Owner.Uid}: {component.GetType()}", ChatChannel.Default, Color.White);
+                console.AddLine($"{component.Owner.Uid}: {component.GetType()}", Color.White);
             }
             return false;
         }
@@ -70,7 +71,7 @@ namespace SS14.Client.Console.Commands
         {
             if (args.Length < 1)
             {
-                console.AddLine($"Not enough arguments.", ChatChannel.Default, Color.Red);
+                console.AddLine($"Not enough arguments.", Color.Red);
                 return false;
             }
             var componentFactory = IoCManager.Resolve<IComponentFactory>();
@@ -90,16 +91,16 @@ namespace SS14.Client.Console.Commands
                 }
                 message.Append($", NSE: {registration.NetworkSynchronizeExistence}, references:");
 
-                console.AddLine(message.ToString(), ChatChannel.Default, Color.White);
+                console.AddLine(message.ToString(), Color.White);
 
                 foreach (Type type in registration.References)
                 {
-                    console.AddLine($"  {type}", ChatChannel.Default, Color.White);
+                    console.AddLine($"  {type}", Color.White);
                 }
             }
             catch (UnknownComponentException)
             {
-                console.AddLine($"No registration found for '{args[0]}'", ChatChannel.Default, Color.Red);
+                console.AddLine($"No registration found for '{args[0]}'", Color.Red);
             }
 
             return false;
@@ -110,106 +111,113 @@ namespace SS14.Client.Console.Commands
     {
         public string Command => "fps";
         public string Help => "Toggles showing FPS.";
+        public string Description => "Toggles the FPS counter.";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var mgr = IoCManager.Resolve<IUserInterfaceManager>();
+            mgr.ShowFPS = !mgr.ShowFPS;
+            return false;
+        }
+    }
+
+    class ExceptionCommand : IConsoleCommand
+    {
+        public string Command => "fuck";
+        public string Help => "Throws an exception";
+        public string Description => "Throws an exception";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            throw new InvalidOperationException("Fuck");
+        }
+    }
+
+    class DebugCollidersCommand : IConsoleCommand
+    {
+        public string Command => "debugcolliders";
+        public string Help => "";
+        public string Description => "Enables debug drawing over all collidables in the game.";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var mgr = IoCManager.Resolve<IDebugDrawing>();
+            mgr.DebugColliders = !mgr.DebugColliders;
+            return false;
+        }
+    }
+
+    class SpawnWindowCommand : IConsoleCommand
+    {
+        public string Command => "spawnwindow";
+        public string Help => "";
         public string Description => "";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            CluwneLib.Debug.ToggleFPSDebug();
+            var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
+
+            var window = new EntitySpawnWindow();
+            window.AddToScreen();
             return false;
         }
     }
 
-    class GetRenderImageDumpCommand : IConsoleCommand
+    class DumpDeferredLightingCommand : IConsoleCommand
     {
-        public string Command => "dumprt";
-        public string Description => "Dump RenderTarget";
-        public string Help => @"usage: dumprt <key>
-Dumps the specified render target used in the drawing process by key.
-The file gets dumped besides the executable.
-List of valid keys: playerocclusion, occluderdebug, light, lightintermediate, composedscene, overlay, scene, tiles, screenshadows, shadowblendintermediate, shadowintermediate.";
-
-        public bool Execute(IDebugConsole console, params string[] args)
-        {
-            if (args.Length == 0)
-            {
-                console.AddLine("No key specified.", ChatChannel.Default, Color.Red);
-                return false;
-            }
-            if (args.Length > 1)
-            {
-                console.AddLine("This command only takes one argument.", ChatChannel.Default, Color.Red);
-                return false;
-            }
-            var statemgr = IoCManager.Resolve<IStateManager>();
-            if (!(statemgr.CurrentState is GameScreen screen))
-            {
-                console.AddLine("Wrong game state active. Must be GameScreen", ChatChannel.Default, Color.Red);
-                return false;
-            }
-            RenderImage target;
-            var key = args[0];
-            switch (key) {
-                case "playerocclusion":
-                    target = screen.PlayerOcclusionTarget;
-                    break;
-                case "occluderdebug":
-                    target = screen.OccluderDebugTarget;
-                    break;
-                case "light":
-                    target = screen.LightTarget;
-                    break;
-                case "lightintermediate":
-                    target = screen.LightTargetIntermediate;
-                    break;
-                case "composedscene":
-                    target = screen.ComposedSceneTarget;
-                    break;
-                case "overlay":
-                    target = screen.OverlayTarget;
-                    break;
-                case "scene":
-                    target = screen.SceneTarget;
-                    break;
-                case "tiles":
-                    target = screen.TilesTarget;
-                    break;
-                case "screenshadows":
-                    target = screen.ScreenShadows;
-                    break;
-                case "shadowblendintermediate":
-                    target = screen.ShadowBlendIntermediate;
-                    break;
-                case "shadowintermediate":
-                    target = screen.ShadowIntermediate;
-                    break;
-                default:
-                    console.AddLine("Unknown key", ChatChannel.Default, Color.Red);
-                    return false;
-            }
-
-            using (var image = target.Texture.CopyToImage())
-            {
-                var timestamp = DateTime.Now.ToString("yyyyMMddTHHmmsszzz");
-                var filename = Path.GetFullPath(PathHelpers.ExecutableRelativeFile($"dumprt-{key}-{timestamp}.png"));
-                image.SaveToFile(filename);
-                console.AddLine($"Saved dump to {filename}!", ChatChannel.Default, Color.Green);
-            }
-
-            return false;
-        }
-    }
-
-    class ReRenderCommand : IConsoleCommand
-    {
-        public string Command => "rerender";
-        public string Description => "Forces the current GameState to re-render everything.";
+        public string Command => "dumpdeferredlighting";
         public string Help => "";
+        public string Description => "";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            var screen = IoCManager.Resolve<IStateManager>().CurrentState;
-            screen.FormResize();
+            var viewport = IoCManager.Resolve<ISceneTreeHolder>().SceneTree.Root.GetNode("LightingViewport") as Godot.Viewport;
+            var tex = viewport.GetTexture().GetData();
+            tex.SavePng("res://deferredlightingdump.png");
             return false;
         }
+    }
+
+    class GetRootViewportTransformCommand : IConsoleCommand
+    {
+        public string Command => "rootvptransform";
+        public string Help => "";
+        public string Description => "";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var vp = IoCManager.Resolve<ISceneTreeHolder>().SceneTree.Root;
+            console.AddLine($"canvas_transform: {vp.CanvasTransform}, global_canvas_transform: {vp.GlobalCanvasTransform}");
+            return false;
+        }
+    }
+
+    class DebugCoordsCommand : IConsoleCommand
+    {
+        public string Command => "debugcoords";
+        public string Help => "";
+        public string Description => "";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var ui = IoCManager.Resolve<IUserInterfaceManager>();
+            ui.ShowCoordDebug = !ui.ShowCoordDebug;
+            return false;
+        }
+    }
+
+    class DisconnectCommand : IConsoleCommand
+    {
+        public string Command => "disconnect";
+        public string Help => "";
+        public string Description => "Immediately disconnect from the server and go back to the main menu.";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            IoCManager.Resolve<IClientNetManager>().ClientDisconnect("Disconnect command used.");
+            IoCManager.Resolve<IStateManager>().RequestStateChange<MainScreen>();
+            return false;
+        }
+
     }
 }

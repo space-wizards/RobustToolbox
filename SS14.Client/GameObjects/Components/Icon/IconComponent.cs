@@ -1,9 +1,8 @@
-﻿using SS14.Client.Graphics.Sprites;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Client.ResourceManagement;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
-using System.Collections.Generic;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
@@ -11,8 +10,7 @@ namespace SS14.Client.GameObjects
     public class IconComponent : Component
     {
         public override string Name => "Icon";
-
-        public Sprite Icon { get; set; }
+        public TextureResource Icon { get; private set; }
 
         public override void LoadParameters(YamlMappingNode mapping)
         {
@@ -24,7 +22,7 @@ namespace SS14.Client.GameObjects
 
         public void SetIcon(string name)
         {
-            Icon = IoCManager.Resolve<IResourceCache>().GetSprite(name);
+            Icon = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>($@"./Textures/{name}");
         }
     }
 }

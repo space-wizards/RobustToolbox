@@ -61,7 +61,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <typeparam name="T">The component type to add.</typeparam>
         /// <returns>The newly added component.</returns>
         T AddComponent<T>() where T : Component, new();
-        
+
         /// <summary>
         ///     Removes the component with the specified reference type,
         ///     Without needing to have the component itself.
@@ -166,7 +166,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <typeparam name="T">The type that components must implement.</typeparam>
         /// <returns>An enumerable over the found components.</returns>
         IEnumerable<T> GetComponents<T>();
-        
+
         /// <summary>
         ///     Requests Description string from components and returns it. If no component answers, returns default description from template.
         /// </summary>
@@ -185,7 +185,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="owner"></param>
         /// <param name="message">Message to send.</param>
         void SendNetworkMessage(IComponent owner, ComponentMessage message);
-        
+
         /// <summary>
         /// Func to handle an incoming network message
         /// </summary>

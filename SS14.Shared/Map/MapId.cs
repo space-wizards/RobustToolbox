@@ -8,7 +8,7 @@ namespace SS14.Shared.Map
         public static readonly MapId Nullspace = new MapId(0);
 
         private readonly int _value;
-        
+
         public MapId(int value)
         {
             _value = value;
@@ -32,7 +32,7 @@ namespace SS14.Shared.Map
         {
             return _value;
         }
-        
+
         public static bool operator ==(MapId a, MapId b)
         {
             return a._value == b._value;

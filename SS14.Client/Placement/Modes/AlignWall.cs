@@ -12,12 +12,12 @@ namespace SS14.Client.Placement.Modes
         {
         }
 
-        public override bool Update(ScreenCoordinates mouseS)
+        public override bool FrameUpdate(RenderFrameEventArgs e, ScreenCoordinates mouseS)
         {
             if (mouseS.MapID == MapId.Nullspace) return false;
 
             MouseScreen = mouseS;
-            MouseCoords = CluwneLib.ScreenToCoordinates(MouseScreen);
+            MouseCoords = pManager.eyeManager.ScreenToWorld(MouseScreen);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;
@@ -49,7 +49,7 @@ namespace SS14.Client.Placement.Modes
             MouseCoords = new LocalCoordinates(closestNode + new Vector2(pManager.CurrentPrototype.PlacementOffset.X,
                                                                          pManager.CurrentPrototype.PlacementOffset.Y),
                                                MouseCoords.Grid);
-            MouseScreen = CluwneLib.WorldToScreen(MouseCoords);
+            MouseScreen = pManager.eyeManager.WorldToScreen(MouseCoords);
 
             return true;
         }

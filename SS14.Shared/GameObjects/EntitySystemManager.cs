@@ -123,6 +123,14 @@ namespace SS14.Shared.GameObjects
                 system.Update(frameTime);
             }
         }
+
+        public void FrameUpdate(float frameTime)
+        {
+            foreach (IEntitySystem system in Systems.Values)
+            {
+                system.FrameUpdate(frameTime);
+            }
+        }
     }
 
     public class InvalidEntitySystemException : Exception

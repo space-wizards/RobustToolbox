@@ -58,7 +58,9 @@ namespace SS14.Shared.GameObjects
             _network.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, message => HandleEntityNetworkMessage((MsgEntity)message));
         }
 
-        public virtual void Startup() { }
+        public virtual void Startup()
+        {
+        }
 
         public virtual void Shutdown()
         {
@@ -73,6 +75,11 @@ namespace SS14.Shared.GameObjects
             EntitySystemManager.Update(frameTime);
             ProcessEventQueue();
             CullDeletedEntities();
+        }
+
+        public virtual void FrameUpdate(float frameTime)
+        {
+            EntitySystemManager.FrameUpdate(frameTime);
         }
 
         /// <summary>
@@ -169,7 +176,7 @@ namespace SS14.Shared.GameObjects
             {
                 e.Shutdown();
             }
-            Entities.Clear();
+            CullDeletedEntities();
         }
 
         /// <summary>
@@ -215,7 +222,7 @@ namespace SS14.Shared.GameObjects
             {
                 var ent = _allEntities[i];
 
-                if(ent.Deleted || ent.Initialized)
+                if (ent.Deleted || ent.Initialized)
                     continue;
 
                 InitializeEntity(ent);
@@ -224,7 +231,6 @@ namespace SS14.Shared.GameObjects
 
         public void GetEntityData()
         {
-            
         }
 
         #endregion Entity Management
@@ -281,7 +287,7 @@ namespace SS14.Shared.GameObjects
         {
             _eventQueue.Enqueue(new Tuple<object, EntityEventArgs>(sender, toRaise));
         }
-        
+
         public void RemoveSubscribedEvents(IEntityEventSubscriber subscriber)
         {
             if (_inverseEventSubscriptions.ContainsKey(subscriber))
@@ -376,7 +382,7 @@ namespace SS14.Shared.GameObjects
                 var incomingEntity = ProcessNetMessage(msg);
 
                 // bad message or handled by something else
-                if(incomingEntity == null)
+                if (incomingEntity == null)
                     return;
 
                 if (!Entities.ContainsKey(incomingEntity.Message.EntityUid))

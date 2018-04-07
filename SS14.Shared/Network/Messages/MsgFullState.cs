@@ -1,10 +1,10 @@
-﻿using Lidgren.Network;
+﻿using ICSharpCode.SharpZipLib.GZip;
+using Lidgren.Network;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using System.IO;
-using System.IO.Compression;
 
 namespace SS14.Shared.Network.Messages
 {
@@ -32,7 +32,7 @@ namespace SS14.Shared.Network.Messages
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
             byte[] stateData = Compress(State.GetSerializedDataBuffer());
-            
+
             buffer.Write(stateData.Length);
             buffer.Write(stateData);
         }
@@ -48,7 +48,7 @@ namespace SS14.Shared.Network.Messages
         {
             using (var compressedDataStream = new MemoryStream())
             {
-                using (var gzip = new GZipStream(compressedDataStream, CompressionMode.Compress, true))
+                using (var gzip = new GZipOutputStream(compressedDataStream))
                 {
                     gzip.Write(stateData, 0, stateData.Length);
                 }
@@ -66,7 +66,7 @@ namespace SS14.Shared.Network.Messages
             // Create a GZIP stream with decompression mode.
             // ... Then create a buffer and write into while reading from the GZIP stream.
             using (var compressedStream = new MemoryStream(compressedStateData))
-            using (var stream = new GZipStream(compressedStream, CompressionMode.Decompress))
+            using (var stream = new GZipInputStream(compressedStream))
             {
                 const int size = 2048;
                 var buffer = new byte[size];

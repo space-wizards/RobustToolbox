@@ -11,8 +11,11 @@ namespace SS14.Shared.Interfaces.GameObjects
         void Startup();
         void Shutdown();
         void Update(float frameTime);
+        /// <summary>
+        ///     Client-specific per-render frame updating.
+        /// </summary>
+        void FrameUpdate(float frameTime);
         bool MapsInitialized { get; set; }
-
 
         #region Entity Management
 
@@ -74,7 +77,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         void UnsubscribeEvent(Type eventType, Delegate evh, IEntityEventSubscriber s);
 
         void RaiseEvent(object sender, EntityEventArgs toRaise);
-        
+
         void RemoveSubscribedEvents(IEntityEventSubscriber subscriber);
 
         #endregion ComponentEvents

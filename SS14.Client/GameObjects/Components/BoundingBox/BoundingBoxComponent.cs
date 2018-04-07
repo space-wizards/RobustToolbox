@@ -46,7 +46,7 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState state)
         {
-            AABB = ((BoundingBoxComponentState) state).AABB;
+            AABB = ((BoundingBoxComponentState)state).AABB;
         }
     }
 }

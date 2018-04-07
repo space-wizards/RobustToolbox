@@ -7,6 +7,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Log;
 
 namespace SS14.Client.Console
 {
@@ -36,10 +37,10 @@ namespace SS14.Client.Console
             {
                 [ChatChannel.Default] = Color.Gray,
                 [ChatChannel.Damage] = Color.Red,
-                [ChatChannel.Radio] = new Color(0, 100, 0, 255),
+                [ChatChannel.Radio] = new Color(0, 100, 0),
                 [ChatChannel.Server] = Color.Blue,
-                [ChatChannel.Player] = new Color(0, 128, 0, 255),
-                [ChatChannel.Local] = new Color(0, 200, 0, 255),
+                [ChatChannel.Player] = new Color(0, 128, 0),
+                [ChatChannel.Local] = new Color(0, 200, 0),
                 [ChatChannel.OOC] = Color.White,
                 [ChatChannel.Emote] = Color.Cyan,
                 [ChatChannel.Visual] = Color.Yellow,
@@ -71,35 +72,37 @@ namespace SS14.Client.Console
             switch (text[0])
             {
                 case ConCmdSlash:
-                {
-                    // run locally
-                    var conInput = text.Substring(1);
-                    ProcessCommand(conInput);
-                    break;
-                }
+                    {
+                        // run locally
+                        var conInput = text.Substring(1);
+                        ProcessCommand(conInput);
+                        break;
+                    }
                 case OocAlias:
-                {
-                    var conInput = text.Substring(2);
-                    ProcessCommand($"ooc \"{conInput}\"");
-                    break;
-                }
+                    {
+                        var conInput = text.Substring(2);
+                        ProcessCommand($"ooc \"{conInput}\"");
+                        break;
+                    }
                 case MeAlias:
-                {
-                    var conInput = text.Substring(2);
-                    ProcessCommand($"me \"{conInput}\"");
-                    break;
-                }
+                    {
+                        var conInput = text.Substring(2);
+                        ProcessCommand($"me \"{conInput}\"");
+                        break;
+                    }
                 default:
-                {
-                    var conInput = defaultFormat != null ? string.Format(defaultFormat, text) : text;
-                    ProcessCommand(conInput);
-                    break;
-                }
+                    {
+                        var conInput = defaultFormat != null ? string.Format(defaultFormat, text) : text;
+                        Logger.Debug(conInput);
+                        ProcessCommand(conInput);
+                        break;
+                    }
             }
         }
 
         private void HandleChatMsg(MsgChat msg)
         {
+            Logger.Debug($"Got it! {msg.Text}");
             var channel = msg.Channel;
             var text = msg.Text;
             var index = msg.Index;
@@ -111,25 +114,25 @@ namespace SS14.Client.Console
                 case ChatChannel.Server:
                 case ChatChannel.OOC:
                 case ChatChannel.Radio:
-                {
-                    string name;
-                    if (index.HasValue && _players.SessionsDict.TryGetValue(index.Value, out var session))
                     {
-                        name = session.Name;
-                    }
-                    else if (entityId.HasValue)
-                    {
-                        var ent = _entityManager.GetEntity(entityId.Value);
-                        name = ent.Name ?? ent.ToString();
-                    }
-                    else
-                    {
-                        name = "<TERU-SAMA>";
-                    }
+                        string name;
+                        if (index.HasValue && _players.SessionsDict.TryGetValue(index.Value, out var session))
+                        {
+                            name = session.Name;
+                        }
+                        else if (entityId.HasValue)
+                        {
+                            var ent = _entityManager.GetEntity(entityId.Value);
+                            name = ent.Name ?? ent.ToString();
+                        }
+                        else
+                        {
+                            name = "<TERU-SAMA>";
+                        }
 
-                    text = $"[{channel}] {name}: {text}";
-                    break;
-                }
+                        text = $"[{channel}] {name}: {text}";
+                        break;
+                    }
             }
 
             AddLine(text, channel, GetChannelColor(channel));

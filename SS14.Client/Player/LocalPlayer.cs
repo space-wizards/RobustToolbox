@@ -1,6 +1,8 @@
 ﻿using System;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.GameObjects.Components;
+using SS14.Shared;
 using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
@@ -83,18 +85,25 @@ namespace SS14.Client.Player
         {
             // Detach and cleanup first
             DetachEntity();
-            
+
             ControlledEntity = entity;
 
             if (ControlledEntity.HasComponent<IMoverComponent>())
                 ControlledEntity.RemoveComponent<IMoverComponent>();
-            
+
             ControlledEntity.AddComponent<PlayerInputMoverComponent>();
 
-            if (!ControlledEntity.HasComponent<CollidableComponent>())
-                ControlledEntity.AddComponent<CollidableComponent>();
+            if (!ControlledEntity.HasComponent<ICollidableComponent>())
+                ControlledEntity.AddComponent<GodotCollidableComponent>();
 
-            ControlledEntity.GetComponent<ITransformComponent>().OnMove += OnPlayerMoved;
+            if (!ControlledEntity.TryGetComponent<EyeComponent>(out var eye))
+            {
+                eye = ControlledEntity.AddComponent<EyeComponent>();
+            }
+            eye.Current = true;
+
+            var transform = ControlledEntity.GetComponent<IGodotTransformComponent>();
+            transform.OnMove += OnPlayerMoved;
 
             EntityAttached?.Invoke(this, EventArgs.Empty);
         }
@@ -107,7 +116,8 @@ namespace SS14.Client.Player
             if (ControlledEntity != null && ControlledEntity.Initialized)
             {
                 ControlledEntity.RemoveComponent<PlayerInputMoverComponent>();
-                ControlledEntity.RemoveComponent<CollidableComponent>();
+                ControlledEntity.RemoveComponent<ICollidableComponent>();
+                ControlledEntity.GetComponent<EyeComponent>().Current = false;
                 var transform = ControlledEntity.GetComponent<ITransformComponent>();
                 if (transform != null)
                     transform.OnMove -= OnPlayerMoved;

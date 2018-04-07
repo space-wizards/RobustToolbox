@@ -16,6 +16,7 @@ namespace SS14.Server.GameObjects
         private const float BaseMoveSpeed = 4.0f;
         private const float FastMoveSpeed = 10.0f;
 
+        private Direction LastDir = Direction.South;
         private Vector2 _moveDir;
         private bool _run;
 
@@ -41,7 +42,7 @@ namespace SS14.Server.GameObjects
 
             base.OnAdd();
         }
-        
+
         /// <summary>
         ///     Handles an incoming component message.
         /// </summary>
@@ -69,7 +70,10 @@ namespace SS14.Server.GameObjects
             var physics = Owner.GetComponent<PhysicsComponent>();
 
             physics.LinearVelocity = _moveDir * (_run ? FastMoveSpeed : BaseMoveSpeed);
-            transform.LocalRotation = (float)(_moveDir.LengthSquared > 0.001 ? _moveDir.GetDir() : Direction.South).ToAngle();
+            if (_moveDir.LengthSquared > 0.001)
+            {
+                transform.LocalRotation = _moveDir.GetDir().ToAngle();
+            }
 
             base.Update(frameTime);
         }
@@ -95,6 +99,11 @@ namespace SS14.Server.GameObjects
             // can't normalize zero length vector
             if (_moveDir.LengthSquared > 1.0e-6)
                 _moveDir = _moveDir.Normalized;
+
+            if (_moveDir.LengthSquared > 0.001)
+            {
+                LastDir = _moveDir.GetDir();
+            }
 
             // players can run or walk
             _run = input.GetKeyState(BoundKeyFunctions.Run);

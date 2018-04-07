@@ -5,6 +5,7 @@ using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
 
 namespace SS14.Shared.Map
@@ -30,8 +31,16 @@ namespace SS14.Shared.Map
         /// <inheritdoc />
         public event EventHandler<TileChangedEventArgs> TileChanged;
 
+        public event GridEventHandler OnGridCreated;
+
+        public event GridEventHandler OnGridRemoved;
+
+        /// <summary>
+        ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
+        ///     so that you don't spam an event for each of the million station tiles.
+        /// </summary>
         /// <inheritdoc />
-        public event EventHandler<GridChangedEventArgs> GridChanged; 
+        public event EventHandler<GridChangedEventArgs> GridChanged;
 
         /// <inheritdoc />
         public event EventHandler<MapEventArgs> MapCreated;
@@ -70,6 +79,16 @@ namespace SS14.Shared.Map
             message.MapIndex = tileRef.LocalPos.MapID;
 
             _netManager.ServerSendToAll(message);
+        }
+
+        public void RaiseOnGridCreated(MapId mapId, GridId gridId)
+        {
+            OnGridCreated?.Invoke(mapId, gridId);
+        }
+
+        public void RaiseOnGridRemoved(MapId mapId, GridId gridId)
+        {
+            OnGridRemoved?.Invoke(mapId, gridId);
         }
 
         /// <summary>
@@ -150,9 +169,9 @@ namespace SS14.Shared.Map
             return false;
         }
 
-        private IEnumerable<IMap> GetAllMaps()
+        public IEnumerable<IMap> GetAllMaps()
         {
-            return _maps.Select(kvMap => kvMap.Value);
+            return _maps.Values;
         }
     }
 
@@ -210,12 +229,15 @@ namespace SS14.Shared.Map
         /// </summary>
         public IMapGrid Grid { get; }
 
+        public IReadOnlyCollection<(int x, int y, Tile tile)> Modified { get; }
+
         /// <summary>
         ///     Creates a new instance of this class.
         /// </summary>
-        public GridChangedEventArgs(IMapGrid grid)
+        public GridChangedEventArgs(IMapGrid grid, IReadOnlyCollection<(int x, int y, Tile tile)> modified)
         {
             Grid = grid;
+            Modified = modified;
         }
     }
 }

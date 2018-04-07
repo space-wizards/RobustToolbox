@@ -1,0 +1,63 @@
+- type: entity
+  id: __engine_extinguisher
+  name: "[engine] Extinguisher Cabinet"
+  components:
+  - type: Transform
+  - type: Clickable
+  - type: Sprite
+    sprites:
+    - Objects/fire_extinguisher.png
+
+  - type: Icon
+    icon: Objects/fire_extinguisher.png
+
+  placement:
+    mode: AlignWall
+    range: 200
+    nodes:
+    - 18
+    - 26
+    - 32
+    snap:
+    - Wallmount
+
+- type: entity
+  id: __engine_fire_alarm
+  name: "[engine] Fire Alarm"
+  components:
+  - type: Transform
+  - type: Clickable
+  - type: Sprite
+    sprites:
+    - Objects/fire_alarm_off.png
+
+  - type: Icon
+    icon: Objects/fire_alarm_off.png
+
+  placement:
+    mode: AlignWall
+    range: 180
+    nodes:
+    - 5
+    - 10
+    - 15
+    snap:
+    - Wallmount
+
+- type: entity
+  id: __engine_med_cabinet
+  name: "[engine] Medical Cabinet"
+  components:
+  - type: Transform
+  - type: Clickable
+  - type: Sprite
+    sprites:
+    - Objects/med_cabinet.png
+
+  - type: Icon
+    icon: Objects/med_cabinet.png
+
+  placement:
+    mode: AlignWall
+    snap:
+    - Wallmount

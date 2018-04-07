@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using SS14.Client.Graphics.Render;
 using SS14.Client.Player;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Network;
@@ -23,8 +22,8 @@ namespace SS14.Client.Interfaces.Player
         void Update(float frameTime);
         void Shutdown();
         void Destroy();
-        
-        void ApplyEffects(RenderImage image);
+
+        //void ApplyEffects(RenderImage image);
         void ApplyPlayerStates(List<PlayerState> list);
     }
 }

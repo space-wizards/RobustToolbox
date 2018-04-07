@@ -1,4 +1,4 @@
-using SS14.Shared.Interfaces.GameObjects;
+﻿using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Client.Interfaces.GameObjects
 {
@@ -6,6 +6,5 @@ namespace SS14.Client.Interfaces.GameObjects
     // There can only be one.
     public interface IMoverComponent : IComponent
     {
-
     }
 }

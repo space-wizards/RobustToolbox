@@ -45,7 +45,9 @@ namespace SS14.Shared.GameObjects
         public virtual void OnAdd() { }
 
         /// <inheritdoc />
-        public virtual void Initialize() { }
+        public virtual void Initialize()
+        {
+        }
 
         /// <inheritdoc />
         public virtual void Startup()

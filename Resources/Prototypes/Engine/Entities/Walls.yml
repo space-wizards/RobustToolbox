@@ -1,0 +1,23 @@
+- type: entity
+  id: __engine_wall
+  name: "[engine] Wall"
+  components:
+  - type: Transform
+  - type: Clickable
+  - type: Sprite
+    drawdepth: FloorPlaceable
+    sprites:
+    - Tiles/wall_texture.png
+
+  - type: Icon
+    icon: Tiles/wall_texture.png
+
+  - type: BoundingBox
+  - type: Collidable
+  - type: Occluder
+    sizeX: 32
+    sizeY: 32
+
+  placement:
+    snap:
+    - Wall

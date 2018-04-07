@@ -1,6 +1,4 @@
-﻿using SS14.Shared.IoC;
-
-namespace SS14.Client.Interfaces.Utility
+﻿namespace SS14.Client.Interfaces.Utility
 {
     public interface IRand
     {

@@ -1,242 +1,242 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using SS14.Client.Graphics;
-using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Placement;
-using SS14.Client.Placement;
+using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Client.ResourceManagement;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
+using SS14.Shared.Reflection;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
-    internal class EntitySpawnWindow : Window
+    [Reflect(false)]
+    class EntitySpawnWindow : SS14Window
     {
-        private readonly Label _clearLabel;
-        private readonly ScrollableContainer _entityList;
-        private readonly ImageButton _eraserButton;
-        private readonly Listbox _lstOverride;
-        private readonly IPlacementManager _placementManager;
+        [Dependency]
+        private readonly IPlacementManager placementManager;
+        [Dependency]
+        private readonly IPrototypeManager prototypeManager;
+        [Dependency]
+        private readonly IResourceCache resourceCache;
 
-        public EntitySpawnWindow(Vector2i size)
-            : base("Entity Spawn Panel", size)
+        private Control HSplitContainer;
+        private Control PrototypeList;
+        private LineEdit SearchBar;
+        private OptionButton OverrideMenu;
+        private Button ClearButton;
+        private Button EraseButton;
+        protected override Vector2 ContentsMinimumSize => HSplitContainer.CombinedMinimumSize;
+
+        protected override Godot.Control SpawnSceneControl()
         {
-            _placementManager = IoCManager.Resolve<IPlacementManager>();
+            return LoadScene("res://Scenes/Placement/EntitySpawnPanel.tscn");
+        }
 
-            _entityList = new ScrollableContainer(new Vector2i(200, 400));
-            _entityList.LocalPosition = new Vector2i(5, 5);
-            Container.AddControl(_entityList);
+        private static readonly string[] initOpts = new string[]
+        {
+            "PlaceFree",
+            "PlaceNearby",
+            "SnapgridCenter",
+            "SnapgridBorder",
+            "AlignSimilar",
+            "AlignTileAny",
+            "AlignTileEmpty",
+            "AlignTileNonSolid",
+            "AlignTileSolid",
+            "AlignWall",
+        };
 
-            var searchLabel = new Label("Entity Search:", "CALIBRI");
-            searchLabel.LocalPosition = new Vector2i(210, 0);
-            Container.AddControl(searchLabel);
+        private const int TARGET_ICON_HEIGHT = 32;
 
-            var entSearchTextbox = new Textbox(125);
-            entSearchTextbox.LocalPosition = new Vector2i(210, 20);
-            entSearchTextbox.OnSubmit += entSearchTextbox_OnSubmit;
-            Container.AddControl(entSearchTextbox);
+        private EntitySpawnButton SelectedButton;
 
-            _clearLabel = new Label("[Clear Filter]", "CALIBRI");
-            _clearLabel.DrawBackground = true;
-            _clearLabel.DrawBorder = true;
-            _clearLabel.LocalPosition = new Vector2i(210, 55);
-            _clearLabel.Clicked += ClearLabelClicked;
-            _clearLabel.BackgroundColor = Color.Gray;
-            Container.AddControl(_clearLabel);
+        protected override void Initialize()
+        {
+            base.Initialize();
 
-            var overLabel = new Label("Override Placement:", "CALIBRI");
-            overLabel.LocalPosition = new Vector2i(0, 15);
-            overLabel.Alignment = ControlAlignments.Bottom;
-            _clearLabel.AddControl(overLabel);
+            IoCManager.InjectDependencies(this);
 
-            var initOpts = new List<string>();
-            initOpts.AddRange(new[]
+            // Get all the controls.
+            HSplitContainer = Contents.GetChild("HSplitContainer");
+            PrototypeList = HSplitContainer.GetChild("PrototypeListScrollContainer").GetChild("PrototypeList");
+            var options = HSplitContainer.GetChild("Options");
+            SearchBar = options.GetChild<LineEdit>("SearchBar");
+            SearchBar.OnTextChanged += OnSearchBarTextChanged;
+
+            OverrideMenu = options.GetChild<OptionButton>("OverrideMenu");
+            OverrideMenu.OnItemSelected += OnOverrideMenuItemSelected;
+
+            for (var i = 0; i < initOpts.Length; i++)
             {
-                "PlaceFree",
-                "PlaceNearby",
-                "SnapgridCenter",
-                "SnapgridBorder",
-                "AlignSimilar",
-                "AlignTileAny",
-                "AlignTileEmpty",
-                "AlignTileNonSolid",
-                "AlignTileSolid",
-                "AlignWall",
-            });
+                OverrideMenu.AddItem(initOpts[i], i);
+            }
 
-            _lstOverride = new Listbox(140, 125, initOpts);
-            _lstOverride.ItemSelected += _lstOverride_ItemSelected;
-            _lstOverride.SelectItem("PlaceFree");
-            _lstOverride.LocalPosition = new Vector2i(0, 0);
-            _lstOverride.Alignment = ControlAlignments.Bottom;
-            overLabel.AddControl(_lstOverride);
+            var buttons = options.GetChild("Buttons!");
+            ClearButton = buttons.GetChild<Button>("ClearButton");
+            ClearButton.OnPressed += OnClearButtonPressed;
 
-            _eraserButton = new ImageButton();
-            _eraserButton.ImageNormal = "erasericon";
-            _eraserButton.LocalPosition = new Vector2i(5, 0);
-            _eraserButton.Alignment = ControlAlignments.Right;
-            _clearLabel.AddControl(_eraserButton);
-            _eraserButton.Clicked += EraserButtonClicked;
+            EraseButton = buttons.GetChild<Button>("EraseButton");
+            EraseButton.OnToggled += OnEraseButtonToggled;
 
             BuildEntityList();
 
-            _placementManager.PlacementCanceled += PlacementManagerPlacementCanceled;
+            placementManager.PlacementCanceled += OnPlacementCanceled;
         }
 
-        protected override void OnCalcPosition()
+        protected override void Dispose(bool disposing)
         {
-            base.OnCalcPosition();
+            base.Dispose(disposing);
 
-            _screenPos = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X / 2f) - (int) (ClientArea.Width / 2f),
-                (int) (CluwneLib.CurrentRenderTarget.Size.Y / 2f) - (int) (ClientArea.Height / 2f));
-        }
-
-        public override void Draw()
-        {
-            if (Disposing || !Visible) return;
-            _eraserButton.ForegroundColor = _placementManager.Eraser ? new Color(255, 99, 71) : Color.White;
-            base.Draw();
-        }
-
-        public override void Destroy()
-        {
-            if (Disposing) return;
-            _placementManager.PlacementCanceled -= PlacementManagerPlacementCanceled;
-            _entityList.Destroy();
-            base.Destroy();
-        }
-
-        public override bool KeyDown(KeyEventArgs e)
-        {
-            if (base.KeyDown(e))
-                return true;
-
-            if (e.Key == Keyboard.Key.Escape)
+            if (disposing)
             {
-                Destroy();
-                return true;
+                placementManager.PlacementCanceled -= OnPlacementCanceled;
             }
-            return false;
         }
 
-        private void _lstOverride_ItemSelected(Label item, Listbox sender)
+        private void OnSearchBarTextChanged(LineEdit.LineEditEventArgs args)
         {
-            var pMan = (PlacementManager) _placementManager;
+            BuildEntityList(args.Text);
+            ClearButton.Disabled = string.IsNullOrEmpty(args.Text);
+        }
 
-            if (pMan.CurrentMode != null)
+        private void OnOverrideMenuItemSelected(OptionButton.ItemSelectedEventArgs args)
+        {
+            OverrideMenu.SelectId(args.Id);
+
+            if (placementManager.CurrentMode != null)
             {
                 var newObjInfo = new PlacementInformation
                 {
-                    PlacementOption = item.Text,
-                    EntityType = pMan.CurrentPermission.EntityType,
+                    PlacementOption = initOpts[args.Id],
+                    EntityType = placementManager.CurrentPermission.EntityType,
                     Range = 2,
-                    IsTile = pMan.CurrentPermission.IsTile
+                    IsTile = placementManager.CurrentPermission.IsTile
                 };
 
-                _placementManager.Clear();
-                _placementManager.BeginPlacing(newObjInfo);
+                placementManager.Clear();
+                placementManager.BeginPlacing(newObjInfo);
             }
         }
 
-        private void EraserButtonClicked(ImageButton sender)
+        private void OnClearButtonPressed(BaseButton.ButtonEventArgs args)
         {
-            _placementManager.ToggleEraser();
+            SearchBar.Clear();
         }
 
-        private void ClearLabelClicked(Label sender, MouseButtonEventArgs e)
+        private void OnEraseButtonToggled(BaseButton.ButtonToggledEventArgs args)
         {
-            _clearLabel.BackgroundColor = Color.Gray;
-            BuildEntityList();
-        }
-
-        private void entSearchTextbox_OnSubmit(Textbox sender, string text)
-        {
-            BuildEntityList(text);
-        }
-
-        private void PlacementManagerPlacementCanceled(object sender, EventArgs e)
-        {
-            foreach (
-                var curr in
-                _entityList.Components.Where(curr => curr.GetType() == typeof(EntitySpawnSelectButton)))
-            {
-                ((EntitySpawnSelectButton) curr).Selected = false;
-            }
+            placementManager.ToggleEraser();
         }
 
         private void BuildEntityList(string searchStr = null)
         {
-            _entityList.Container.DisposeAllChildren();
-            _entityList.ResetScrollbars();
-
-            var manager = IoCManager.Resolve<IPrototypeManager>();
-            IEnumerable<KeyValuePair<string, EntityPrototype>> templates;
-            if (searchStr == null)
+            PrototypeList.DisposeAllChildren();
+            SelectedButton = null;
+            if (searchStr != null)
             {
-                templates = manager.EnumeratePrototypes<EntityPrototype>()
-                    .Select(p => new KeyValuePair<string, EntityPrototype>(p.ID, p));
-            }
-            else
-            {
-                var searchStrLower = searchStr.ToLower();
-                templates = manager.EnumeratePrototypes<EntityPrototype>()
-                    .Where(p => p.ID.ToLower().Contains(searchStrLower))
-                    .Select(p => new KeyValuePair<string, EntityPrototype>(p.ID, p));
+                searchStr = searchStr.ToLower();
             }
 
-            if (searchStr != null) _clearLabel.BackgroundColor = new Color(211, 211, 211, 255);
-
-            var maxWidth = 0;
-            Control lastControl = _entityList.Container;
-            foreach (var newButton in templates.Select(entry => new EntitySpawnSelectButton(entry.Value, entry.Key)))
+            foreach (var prototype in prototypeManager.EnumeratePrototypes<EntityPrototype>())
             {
-                lastControl.AddControl(newButton);
-                lastControl = newButton;
-                newButton.FixedWidth = _entityList.Width;
-                newButton.Alignment = ControlAlignments.Bottom;
-                newButton.DoLayout();
-                newButton.Clicked += NewButtonClicked;
+                if (searchStr != null && !prototype.ID.ToLower().Contains(searchStr))
+                {
+                    continue;
+                }
 
-                if (newButton.ClientArea.Width > maxWidth)
-                    maxWidth = newButton.ClientArea.Width;
+                var button = new EntitySpawnButton()
+                {
+                    Prototype = prototype,
+                };
+                var container = button.GetChild("HBoxContainer");
+                button.ActualButton.OnToggled += OnItemButtonToggled;
+                container.GetChild<Label>("Label").Text = prototype.Name;
+
+                var spriteNameParam = prototype.GetBaseSpriteParameters().FirstOrDefault();
+                var spriteName = "";
+                if (spriteNameParam != null)
+                    spriteName = spriteNameParam.GetValue<string>();
+
+                var tex = resourceCache.GetResource<TextureResource>("Textures/" + spriteName);
+                var rect = container.GetChild("TextureWrap").GetChild<TextureRect>("TextureRect");
+                if (tex != null)
+                {
+                    rect.Texture = tex.Texture;
+                    // Ok I can't find a way to make this TextureRect scale down sanely so let's do this.
+                    var scale = (float)TARGET_ICON_HEIGHT / tex.Texture.Height;
+                    rect.Scale = new Vector2(scale, scale);
+                }
+                else
+                {
+                    rect.Dispose();
+                }
+
+                PrototypeList.AddChild(button);
             }
         }
 
-        private void NewButtonClicked(EntitySpawnSelectButton sender, EntityPrototype template, string templateName)
+        private void OnItemButtonToggled(BaseButton.ButtonToggledEventArgs args)
         {
-            if (sender.Selected)
+            var item = (EntitySpawnButton)args.Button.Parent;
+            if (SelectedButton == item)
             {
-                sender.Selected = false;
-                _placementManager.Clear();
+                SelectedButton = null;
+                placementManager.Clear();
                 return;
             }
-
-            foreach (
-                var curr in
-                _entityList.Components.Where(curr => curr.GetType() == typeof(EntitySpawnSelectButton)))
+            else if (SelectedButton != null)
             {
-                ((EntitySpawnSelectButton) curr).Selected = false;
+                SelectedButton.ActualButton.Pressed = false;
             }
 
-            var overrideMode = "PlaceFree";
-            if (_lstOverride.CurrentlySelected != null)
-                overrideMode = _lstOverride.CurrentlySelected.Text;
+            SelectedButton = null;
 
+            var overrideMode = initOpts[OverrideMenu.SelectedId];
             var newObjInfo = new PlacementInformation
             {
-                PlacementOption = overrideMode.Length > 0 ? overrideMode : template.PlacementMode,
-                EntityType = templateName,
+                PlacementOption = overrideMode.Length > 0 ? overrideMode : item.Prototype.PlacementMode,
+                EntityType = item.PrototypeID,
                 Range = 2,
                 IsTile = false
             };
 
-            _placementManager.BeginPlacing(newObjInfo);
+            placementManager.BeginPlacing(newObjInfo);
 
-            sender.Selected = true; //This needs to be last.
+            SelectedButton = item;
+        }
+
+        [Reflect(false)]
+        private class EntitySpawnButton : Control
+        {
+            public string PrototypeID => Prototype.ID;
+            public EntityPrototype Prototype { get; set; }
+            public Button ActualButton { get; private set; }
+
+            protected override Godot.Control SpawnSceneControl()
+            {
+                return LoadScene("res://Scenes/Placement/EntitySpawnItem.tscn");
+            }
+
+            protected override void Initialize()
+            {
+                base.Initialize();
+
+                ActualButton = GetChild<Button>("Button");
+            }
+        }
+
+        private void OnPlacementCanceled(object sender, EventArgs e)
+        {
+            if (SelectedButton != null)
+            {
+                SelectedButton.ActualButton.Pressed = false;
+                SelectedButton = null;
+            }
+            EraseButton.Pressed = false;
         }
     }
 }

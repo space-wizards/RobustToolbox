@@ -17,7 +17,7 @@ namespace SS14.Client.Console.Commands
             switch (args.Length)
             {
                 case 0:
-                    console.AddLine("To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'.", ChatChannel.Default, Color.White);
+                    console.AddLine("To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'.");
                     break;
 
                 case 1:
@@ -27,19 +27,19 @@ namespace SS14.Client.Console.Commands
                         if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
                         {
                             // No server so nothing to respond with unknown command.
-                            console.AddLine("Unknown command: " + commandname, ChatChannel.Default, Color.Red);
+                            console.AddLine("Unknown command: " + commandname, Color.Red);
                             return false;
                         }
                         // TODO: Maybe have a server side help?
                         return false;
                     }
                     IConsoleCommand command = console.Commands[commandname];
-                    console.AddLine(string.Format("{0} - {1}", command.Command, command.Description), ChatChannel.Default, Color.White);
-                    console.AddLine(command.Help, ChatChannel.Default, Color.White);
+                    console.AddLine(string.Format("{0} - {1}", command.Command, command.Description));
+                    console.AddLine(command.Help);
                     break;
 
                 default:
-                    console.AddLine("Invalid amount of arguments.", ChatChannel.Default, Color.Red);
+                    console.AddLine("Invalid amount of arguments.", Color.Red);
                     break;
             }
             return false;
@@ -56,7 +56,7 @@ namespace SS14.Client.Console.Commands
         {
             foreach (IConsoleCommand command in console.Commands.Values)
             {
-                console.AddLine(command.Command + ": " + command.Description, ChatChannel.Default, Color.White);
+                console.AddLine(command.Command + ": " + command.Description);
             }
 
             return false;

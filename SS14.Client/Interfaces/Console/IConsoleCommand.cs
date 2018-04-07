@@ -1,4 +1,4 @@
-﻿using SS14.Shared.Console;
+using SS14.Shared.Console;
 
 namespace SS14.Client.Interfaces.Console
 {

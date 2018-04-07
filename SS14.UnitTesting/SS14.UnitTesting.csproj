@@ -88,6 +88,7 @@
     <Compile Include="Shared\Maths\Angle_Test.cs" />
     <Compile Include="Shared\Maths\Matrix3_Test.cs" />
     <Compile Include="Shared\Maths\Ray_Test.cs" />
+    <Compile Include="Shared\Maths\Vector2u_Test.cs" />
     <Compile Include="Shared\Maths\Vector2_Test.cs" />
     <Compile Include="Shared\Maths\Direction_Test.cs" />
     <Compile Include="Shared\Physics\CollisionManager_Test.cs" />

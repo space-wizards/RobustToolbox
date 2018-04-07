@@ -97,6 +97,8 @@
       <Name>System.Data.DataSetExtensions</Name>
     </Reference>
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms">
       <Name>System.Windows.Forms</Name>
     </Reference>
@@ -261,6 +263,8 @@
     <Compile Include="Timing\Stopwatch.cs" />
     <Compile Include="Utility\QuadTree.cs" />
     <Compile Include="Reflection\ReflectAttribute.cs" />
+    <Compile Include="Resources\RSI.cs" />
+    <Compile Include="Resources\RSIState.cs" />
     <Compile Include="Serialization\NetSerializableAttribute.cs" />
     <Compile Include="Serialization\SS14Serializer.cs" />
     <Compile Include="Timers\Timer.cs" />
@@ -326,6 +330,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+    <EmbeddedResource Include="Resources\RSISchema.json" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

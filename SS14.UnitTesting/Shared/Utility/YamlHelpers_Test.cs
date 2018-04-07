@@ -1,4 +1,4 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SS14.Shared.Utility;
 using System;
 using System.Globalization;
@@ -6,6 +6,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.UnitTesting.Shared.Utility
 {
+    [Parallelizable]
     [TestFixture]
     public class YamlHelpers_Test : SS14UnitTest
     {

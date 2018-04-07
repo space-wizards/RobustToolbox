@@ -4,7 +4,9 @@ using SS14.Shared.Maths;
 
 namespace SS14.UnitTesting.Client.Utility
 {
+    [Parallelizable]
     [TestFixture]
+    [TestOf(typeof(GodotConversions))]
     class GodotConversionsTest
     {
         [Test]

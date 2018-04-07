@@ -6,7 +6,7 @@ namespace SS14.Shared.Maths
     ///     A representation of an angle, in radians.
     /// </summary>
     [Serializable]
-    public struct Angle
+    public struct Angle : IApproxEquatable<Angle>
     {
         public static Angle Zero { get; set; } = new Angle();
 
@@ -76,6 +76,11 @@ namespace SS14.Shared.Maths
             return (Direction)((Math.Floor((ang + CardinalOffset) / CardinalSegment) * 2) % 8);
         }
 
+        public bool EqualsApprox(Angle angle, double tolerance)
+        {
+            return EqualsApprox(this, angle, tolerance);
+        }
+
         public bool EqualsApprox(Angle angle)
         {
             return EqualsApprox(this, angle);
@@ -91,6 +96,18 @@ namespace SS14.Shared.Maths
             var bPositive = FlipPositive(bReduced);
 
             return FloatMath.CloseTo(aPositive, bPositive);
+        }
+
+        private static bool EqualsApprox(Angle a, Angle b, double tolerance)
+        {
+            // reduce both angles
+            var aReduced = Reduce(a.Theta);
+            var bReduced = Reduce(b.Theta);
+
+            var aPositive = FlipPositive(aReduced);
+            var bPositive = FlipPositive(bReduced);
+
+            return FloatMath.CloseTo(aPositive, bPositive, tolerance);
         }
 
         /// <summary>

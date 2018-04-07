@@ -41,8 +41,8 @@ namespace SS14.UnitTesting.Shared.Maths
         {
             var angle = testCase.Item2;
 
-            var matrix = Matrix3.CreateRotation((float) angle);
-            
+            var matrix = Matrix3.CreateRotation((float)angle);
+
             Vector3 test = new Vector3(1, 0, 1);
             Matrix3.Transform(ref matrix, ref test);
 
@@ -57,7 +57,7 @@ namespace SS14.UnitTesting.Shared.Maths
         public void MultiplyTest()
         {
             var startPoint = new Vector3(2, 0, 1);
-            var rotateMatrix = Matrix3.CreateRotation((float) (System.Math.PI / 2.0)); // 1. rotate 90 degrees upward
+            var rotateMatrix = Matrix3.CreateRotation((float)(System.Math.PI / 2.0)); // 1. rotate 90 degrees upward
             var translateMatrix = Matrix3.CreateTranslation(new Vector2(0, -2)); // 2. translate 0, -2 downwards.
 
             // NOTE: Matrix Product is NOT commutative. OpenTK (and this) uses pre-multiplication, OpenGL and all the tutorials
@@ -89,15 +89,15 @@ namespace SS14.UnitTesting.Shared.Maths
             // invert it (1/matrix)
             var invMatrix = Matrix3.Invert(normalMatrix);
 
-            // multiply it back together 
+            // multiply it back together
             Matrix3.Multiply(ref normalMatrix, ref invMatrix, out var leftVerifyMatrix);
             Matrix3.Multiply(ref invMatrix, ref normalMatrix, out var rightVerifyMatrix);
 
             // these should be the same (A × A-1 = A-1 × A = I)
-            Assert.That(Matrix3.EqualsApprox(ref leftVerifyMatrix, ref rightVerifyMatrix, epsilon));
+            Assert.That(leftVerifyMatrix, new ApproxEqualityConstraint(rightVerifyMatrix, epsilon));
 
             // verify matrix == identity matrix (or very close to because float precision)
-            Assert.That(Matrix3.EqualsApprox(ref leftVerifyMatrix, ref control, epsilon), leftVerifyMatrix.ToString);
+            Assert.That(leftVerifyMatrix, new ApproxEqualityConstraint(control, epsilon));
         }
 
         [Test]

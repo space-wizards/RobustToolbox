@@ -4,6 +4,7 @@ using SS14.Shared.Maths;
 
 namespace SS14.UnitTesting.Shared.Maths
 {
+    [Parallelizable]
     [TestFixture]
     internal class Direction_Test
     {

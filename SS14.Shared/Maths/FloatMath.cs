@@ -81,27 +81,27 @@ namespace SS14.Shared.Maths
             return val;
         }
 
-        public static bool CloseTo(float a, float b)
+        public static bool CloseTo(float a, float b, double tolerance = .00001)
         {
-            var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * 0.00001, .00001); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
             return Math.Abs(a - b) <= epsilon;
         }
 
-        public static bool CloseTo(float a, double b)
+        public static bool CloseTo(float a, double b, double tolerance = .00001)
         {
-            var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * 0.00001, .00001); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
             return Math.Abs(a - b) <= epsilon;
         }
 
-        public static bool CloseTo(double a, float b)
+        public static bool CloseTo(double a, float b, double tolerance = .00001)
         {
-            var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * 0.00001, .00001); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
             return Math.Abs(a - b) <= epsilon;
         }
 
-        public static bool CloseTo(double a, double b)
+        public static bool CloseTo(double a, double b, double tolerance = .00001)
         {
-            var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * 0.00001, .00001); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
             return Math.Abs(a - b) <= epsilon;
         }
     }

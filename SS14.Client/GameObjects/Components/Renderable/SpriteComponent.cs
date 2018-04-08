@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.ClientEye;
@@ -20,6 +19,7 @@ using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
+using Path = System.IO.Path;
 
 // Warning: Shitcode ahead!
 namespace SS14.Client.GameObjects

@@ -101,6 +101,7 @@
     <Compile Include="Shared\Timing\GameLoop_Test.cs" />
     <Compile Include="Shared\Timing\GameTiming_Test.cs" />
     <Compile Include="Shared\Utility\CollectionExtensions_Test.cs" />
+    <Compile Include="Shared\Utility\Path_Test.cs" />
     <Compile Include="Shared\Utility\YamlHelpers_Test.cs" />
     <Compile Include="Shared\ColorUtils_Test.cs" />
     <Compile Include="SS14UnitTest.cs" />

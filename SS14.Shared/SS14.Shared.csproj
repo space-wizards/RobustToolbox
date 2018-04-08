@@ -264,6 +264,7 @@
     <Compile Include="Timing\GameLoop.cs" />
     <Compile Include="Timing\IStopwatch.cs" />
     <Compile Include="Timing\Stopwatch.cs" />
+    <Compile Include="Utility\Path.cs" />
     <Compile Include="Utility\QuadTree.cs" />
     <Compile Include="Reflection\ReflectAttribute.cs" />
     <Compile Include="Serialization\NetSerializableAttribute.cs" />

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 // Because System.IO.Path sucks.
 namespace SS14.Shared.Utility
@@ -20,12 +19,12 @@ namespace SS14.Shared.Utility
 #endif
 
         /// <summary>
-        ///     "." as a static.
+        ///     "." as a static. Separator used is <c>/</c>.
         /// </summary>
         public static readonly ResourcePath Self = new ResourcePath(".");
 
         /// <summary>
-        ///     "/" as a static.
+        ///     "/" (root) as a static. Separator used is <c>/</c>.
         /// </summary>
         public static readonly ResourcePath Root = new ResourcePath("/");
 
@@ -36,9 +35,19 @@ namespace SS14.Shared.Utility
         /// </summary>
         private readonly string[] Segments;
 
+        /// <summary>
+        ///     The separator between "segments"/"directories" for this path.
+        /// </summary>
         public string Separator { get; }
 
-        public ResourcePath(string path, string separator="/")
+        /// <summary>
+        ///     Create a new path from a string, splitting it by the separator provided.
+        /// </summary>
+        /// <param name="path">The string path to turn into a resource path.</param>
+        /// <param name="separator">The separator for the resource path.</param>
+        /// <exception cref="ArgumentException">Thrown if you try to use "." as separator.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if either argument is null.</exception>
+        public ResourcePath(string path, string separator = "/")
         {
             if (separator == ".")
             {
@@ -50,6 +59,10 @@ namespace SS14.Shared.Utility
             {
                 throw new ArgumentNullException(nameof(path));
             }
+            if (separator == null)
+            {
+                throw new ArgumentNullException(nameof(separator));
+            }
             if (path == "")
             {
                 Segments = new string[] { "." };
@@ -57,7 +70,7 @@ namespace SS14.Shared.Utility
             }
 
             var segments = new List<string>();
-            var splitsegments = path.Split(new string[] {separator}, StringSplitOptions.None);
+            var splitsegments = path.Split(new string[] { separator }, StringSplitOptions.None);
             var i = 0;
             if (splitsegments[0] == "")
             {
@@ -67,7 +80,7 @@ namespace SS14.Shared.Utility
             for (; i < splitsegments.Length; i++)
             {
                 var segment = splitsegments[i];
-                if (segment == "" || (segment == "." && segment.Length != 0))
+                if (segment == "" || (segment == "." && segments.Count != 0))
                 {
                     continue;
                 }
@@ -89,6 +102,7 @@ namespace SS14.Shared.Utility
             Separator = separator;
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             var builder = new StringBuilder();
@@ -101,7 +115,7 @@ namespace SS14.Shared.Utility
             for (; i < Segments.Length; i++)
             {
                 builder.Append(Segments[i]);
-                if (i+1 < Segments.Length)
+                if (i + 1 < Segments.Length)
                 {
                     builder.Append(Separator);
                 }
@@ -113,12 +127,14 @@ namespace SS14.Shared.Utility
         ///     Returns true if the path is rooted (starts with the separator).
         /// </summary>
         /// <seealso cref="IsRelative" />
+        /// <seealso cref="ToRootedPath"/>
         public bool IsRooted => Segments[0] == Separator;
 
         /// <summary>
         ///     Returns true if the path is not rooted.
         /// </summary>
         /// <seealso cref="IsRooted" />
+        /// <seealso cref="ToRelativePath"/>
         public bool IsRelative => !IsRooted;
 
         /// <summary>
@@ -141,7 +157,7 @@ namespace SS14.Shared.Utility
                     return "";
                 }
                 var index = filename.LastIndexOf('.');
-                if (index == 0 || index == -1 || index == filename.Length-1)
+                if (index == 0 || index == -1 || index == filename.Length - 1)
                 {
                     // The path is a dotfile (like .bashrc),
                     // or there's no period at all,
@@ -149,7 +165,7 @@ namespace SS14.Shared.Utility
                     // Non of these cases are truly an extension.
                     return "";
                 }
-                return filename.Substring(index+1);
+                return filename.Substring(index + 1);
             }
         }
 
@@ -165,7 +181,7 @@ namespace SS14.Shared.Utility
                     return "";
                 }
 
-                return Segments[Segments.Length-1];
+                return Segments[Segments.Length - 1];
             }
         }
 
@@ -182,7 +198,7 @@ namespace SS14.Shared.Utility
                     return filename;
                 }
                 var index = filename.LastIndexOf('.');
-                if (index == 0 || index == -1 || index == filename.Length-1)
+                if (index == 0 || index == -1 || index == filename.Length - 1)
                 {
                     return filename;
                 }
@@ -204,7 +220,9 @@ namespace SS14.Shared.Utility
 
         /// <summary>
         ///     Joins two resource paths together, with separator in between.
+        ///     If the second path is absolute, the first path is completely ignored.
         /// </summary>
+        /// <exception cref="ArgumentException">Thrown if the separators of the two paths do not match.</exception>
         // "Why use / instead of +" you may think:
         // * It's clever, although I got the idea from Python's pathlib.
         // * It avoids confusing operator precedence causing you to join two strings,
@@ -235,16 +253,15 @@ namespace SS14.Shared.Utility
         /// </summary>
         public static ResourcePath operator /(ResourcePath path, string b)
         {
-            return path/new ResourcePath(b, path.Separator);
+            return path / new ResourcePath(b, path.Separator);
         }
 
         /// <summary>
         ///     "Cleans" the resource path, removing any empty segments and resolving . and ..
         /// </summary>
         /// <remarks>
-        ///     If .. appears at root level, it is ignored.
+        ///     If .. appears at the base of a path, it is left alone. If it appears at roo level (like /..) it is removed entirely.
         /// </remarks>
-        /// <returns></returns>
         public ResourcePath Clean()
         {
             var segments = new List<string>();
@@ -260,7 +277,7 @@ namespace SS14.Shared.Utility
                         continue;
                     }
 
-                    segments.RemoveAt(segments.Count-1);
+                    segments.RemoveAt(segments.Count - 1);
                 }
                 else
                 {
@@ -268,14 +285,15 @@ namespace SS14.Shared.Utility
                 }
             }
 
-            if (IsRooted)
-            {
-                segments.Insert(0, "");
-            }
-
             return new ResourcePath(segments.ToArray(), Separator);
         }
 
+        /// <summary>
+        ///     Turns the path into a rooted path by prepending it with the separator.
+        ///     Does nothing if the path is already rooted.
+        /// </summary>
+        /// <seealso cref="IsRooted" />
+        /// <seealso cref="ToRelativePath" />
         public ResourcePath ToRootedPath()
         {
             if (IsRooted)
@@ -283,12 +301,18 @@ namespace SS14.Shared.Utility
                 return this;
             }
 
-            var segments = new string[Segments.Length+1];
+            var segments = new string[Segments.Length + 1];
             Segments.CopyTo(segments, 1);
             segments[0] = Separator;
             return new ResourcePath(segments, Separator);
         }
 
+        /// <summary>
+        ///     Turns the path into a relative path by removing the root separator, if any.
+        ///     Does nothing if the path is already relative.
+        /// </summary>
+        /// <seealso cref="IsRelative"/>
+        /// <seealso cref="ToRootedPath" />
         public ResourcePath ToRelativePath()
         {
             if (IsRelative)
@@ -296,8 +320,8 @@ namespace SS14.Shared.Utility
                 return this;
             }
 
-            var segments = new string[Segments.Length-1];
-            Array.Copy(Segments, 1, segments, 0, Segments.Length-1);
+            var segments = new string[Segments.Length - 1];
+            Array.Copy(Segments, 1, segments, 0, Segments.Length - 1);
             return new ResourcePath(segments, Separator);
         }
 
@@ -310,6 +334,18 @@ namespace SS14.Shared.Utility
             return ChangeSeparator(SYSTEM_SEPARATOR).ToRelativePath().ToString();
         }
 
+        /// <summary>
+        ///     Returns the path of how this instance is "relative" to <paramref name="basePath"/>,
+        ///     such that <c>basePath/result == this</c>.
+        /// </summary>
+        /// <example>
+        ///     <code>
+        ///     var path1 = new ResourcePath("/a/b/c");
+        ///     var path2 = new ResourcePath("/a");
+        ///     Console.WriteLine(path1.RelativeTo(path2)); // prints "b/c".
+        ///     </code>
+        /// </example>
+        /// <exception cref="ArgumentException">Thrown if we are not relative to the base path.</exception>
         public ResourcePath RelativeTo(ResourcePath basePath)
         {
             if (basePath.Separator != Separator)
@@ -324,7 +360,7 @@ namespace SS14.Shared.Utility
             {
                 if (this == basePath)
                 {
-                    return new ResourcePath(".  ", Separator);
+                    return new ResourcePath(".", Separator);
                 }
                 else
                 {
@@ -340,11 +376,23 @@ namespace SS14.Shared.Utility
                 }
             }
 
-            var segments = new string[Segments.Length-basePath.Segments.Length];
-            Segments.CopyTo(segments, basePath.Segments.Length);
+            var segments = new string[Segments.Length - basePath.Segments.Length];
+            Array.Copy(Segments, basePath.Segments.Length, segments, 0, segments.Length);
             return new ResourcePath(segments, Separator);
         }
 
+        /// <summary>
+        ///     Gets the common base of two paths.
+        /// </summary>
+        /// <example>
+        ///     <code>
+        ///     var path1 = new ResourcePath("/a/b/c");
+        ///     var path2 = new ResourcePath("/a/e/d");
+        ///     Console.WriteLine(path1.RelativeTo(path2)); // prints "/a".
+        ///     </code>
+        /// </example>
+        /// <param name="other">The other path.</param>
+        /// <exception cref="ArgumentException">Thrown if there is no common base between the two paths.</exception>
         public ResourcePath CommonBase(ResourcePath other)
         {
             if (other.Separator != Separator)
@@ -369,16 +417,25 @@ namespace SS14.Shared.Utility
             return new ResourcePath(segments, Separator);
         }
 
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             return Segments.GetHashCode() | Separator.GetHashCode();
         }
 
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             return obj is ResourcePath path && Equals(path);
         }
 
+        /// <summary>
+        ///     Checks that we are equal with <paramref name="path"/>.
+        ///     This method does NOT clean the paths beforehand, so paths that point to the same location may fail if they are not cleaned beforehand.
+        ///     Paths are never equal if they do not have the same separator.
+        /// </summary>
+        /// <param name="path">The path to check equality with.</param>
+        /// <returns>True if the paths are equal, false otherwise.</returns>
         public bool Equals(ResourcePath path)
         {
             return path.Separator == Separator && Segments.SequenceEqual(path.Segments);

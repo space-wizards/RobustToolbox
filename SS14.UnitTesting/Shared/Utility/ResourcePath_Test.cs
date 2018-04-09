@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace SS14.UnitTesting.Shared.Utility
 {
     [TestFixture]
-    [Parallelizable]
+    [Parallelizable(ParallelScope.Fixtures)]
     [TestOf(typeof(ResourcePath))]
     public class ResourcePath_Test
     {
@@ -52,7 +52,6 @@ namespace SS14.UnitTesting.Shared.Utility
             ("x.y.z", "z")
         };
 
-        [Sequential]
         [Test]
         public void Extension_Test([ValueSource(nameof(Extension_Values))] (string path, string expected) data)
         {
@@ -66,10 +65,9 @@ namespace SS14.UnitTesting.Shared.Utility
             ("foo.png", "foo.png"),
             ("x/y/z", "z"),
             ("/bar", "bar"),
-            ("foo/", "foo")
+            ("foo/", "foo") // Trailing / gets trimmed.
         };
 
-        [Sequential]
         [Test]
         public void Filename_Test([ValueSource(nameof(Filename_Values))] (string path, string expected) data)
         {
@@ -87,7 +85,6 @@ namespace SS14.UnitTesting.Shared.Utility
             ("x.y.z", "x.y")
         };
 
-        [Sequential]
         [Test]
         public void FilenameWithoutExtension_Test([ValueSource(nameof(FilenameWithoutExtension_Values))] (string path, string expected) data)
         {
@@ -107,8 +104,8 @@ namespace SS14.UnitTesting.Shared.Utility
         {
             var path1 = new ResourcePath("/a/b");
             var path2 = new ResourcePath("c/d.png");
-            Assert.That((path1/path2).ToString(), Is.EqualTo("/a/b/c/d.png"));
-            Assert.That((path1/"z").ToString(), Is.EqualTo("/a/b/z"));
+            Assert.That((path1 / path2).ToString(), Is.EqualTo("/a/b/c/d.png"));
+            Assert.That((path1 / "z").ToString(), Is.EqualTo("/a/b/z"));
         }
 
         [Test]
@@ -116,8 +113,6 @@ namespace SS14.UnitTesting.Shared.Utility
         {
             var path = new ResourcePath("//a/b/../c/./ss14.png");
             Assert.That(path.Clean(), Is.EqualTo(new ResourcePath("/a/c/ss14.png")));
-            Assert.That(path.IsClean(), Is.False);
-            Assert.That(new ResourcePath("/a/c/ss14.png").IsClean(), Is.True);
         }
 
         [Test]
@@ -133,6 +128,64 @@ namespace SS14.UnitTesting.Shared.Utility
 
             Assert.That(relative.ToRelativePath(), Is.EqualTo(relative));
             Assert.That(relative.ToRootedPath(), Is.EqualTo(path));
+        }
+
+        public static List<(string, string, string)> RelativeTo_Values = new List<(string, string, string)>
+        {
+            ("/a/b", "/a", "b"),
+            ("/a", "/", "a"),
+            ("/a/b/c", "/", "a/b/c"),
+            ("/a", "/a", "."),
+            ("a/b", "a", "b"),
+            ("/Textures/Weapons/laser.png", "/Textures/", "Weapons/laser.png")
+        };
+
+        [Test]
+        public void RelativeTo_Test([ValueSource(nameof(RelativeTo_Values))] (string source, string basePath, string expected) value)
+        {
+            var path = new ResourcePath(value.source);
+            var basePath = new ResourcePath(value.basePath);
+            Assert.That(path.RelativeTo(basePath), Is.EqualTo(new ResourcePath(value.expected)));
+        }
+
+        public static List<(string, string)> RelativeToFail_Values = new List<(string, string)>
+        {
+            ("/a/b", "/b"),
+            ("/a", "/c/d"),
+            ("/a/b", "/a/d"),
+            (".", "/"),
+            ("/", ".")
+        };
+
+        [Test]
+        public void RelativeToFail_Test([ValueSource(nameof(RelativeToFail_Values))] (string source, string basePath) value)
+        {
+            var path = new ResourcePath(value.source);
+            var basePath = new ResourcePath(value.basePath);
+            Assert.That(() => path.RelativeTo(basePath), Throws.ArgumentException);
+        }
+
+        public static List<(string, string, string)> CommonBase_Values = new List<(string, string, string)>
+        {
+            ("/a/b", "/a/c", "/a"),
+            ("a/b", "a/c", "a"),
+            ("/usr", "/bin", "/")
+        };
+
+        [Test]
+        public void CommonBase_Test([ValueSource(nameof(CommonBase_Values))] (string a, string b, string expected) value)
+        {
+            var path = new ResourcePath(value.a);
+            var basePath = new ResourcePath(value.b);
+            Assert.That(path.CommonBase(basePath), Is.EqualTo(new ResourcePath(value.expected)));
+        }
+
+        [Test]
+        public void CommonBaseFail_Test()
+        {
+            var path = new ResourcePath("a/b");
+            var basePath = new ResourcePath("b/a");
+            Assert.That(() => path.CommonBase(basePath), Throws.ArgumentException);
         }
     }
 }

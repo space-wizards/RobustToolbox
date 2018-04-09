@@ -7,7 +7,7 @@ namespace SS14.Shared.ContentPack
     public partial class ResourceManager
     {
         /// <summary>
-        ///     Common interface for mounting various things in the VFS
+        ///     Common interface for mounting various things in the VFS.
         /// </summary>
         protected interface IContentRoot
         {
@@ -18,11 +18,18 @@ namespace SS14.Shared.ContentPack
             void Mount();
 
             /// <summary>
+            ///     Returns true if this content root has either a directory or file available at
+            /// </summary>
+            /// <param name="relPath"></param>
+            /// <returns></returns>
+            bool HasNode(ResourcePath relPath);
+
+            /// <summary>
             ///     Gets a file from the content root using the relative path.
             /// </summary>
             /// <param name="relPath">Relative path from the root directory.</param>
             /// <returns>A stream of the file loaded into memory.</returns>
-            MemoryStream GetFile(ResourcePath relPath);
+            bool TryGetFile(ResourcePath relPath, out MemoryStream stream);
 
             /// <summary>
             ///     Recursively finds all files in a directory and all sub directories.

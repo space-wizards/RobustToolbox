@@ -8,7 +8,7 @@ using System.IO;
 
 namespace SS14.Client.ResourceManagement
 {
-    public class ResourceCache : ResourceManager, IResourceCache, IDisposable
+    public partial class ResourceCache : ResourceManager, IResourceCache, IDisposable
     {
         private Dictionary<(ResourcePath, Type), BaseResource> CachedResources = new Dictionary<(ResourcePath, Type), BaseResource>();
 

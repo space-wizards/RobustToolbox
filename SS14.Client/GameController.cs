@@ -25,6 +25,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
+using SS14.Shared.Utility;
 using System;
 
 namespace SS14.Client
@@ -117,7 +118,7 @@ namespace SS14.Client
             _tileDefinitionManager.Initialize();
             _networkManager.Initialize(false);
             _console.Initialize();
-            _prototypeManager.LoadDirectory(@"./Prototypes/");
+            _prototypeManager.LoadDirectory(new ResourcePath(@"./Prototypes/"));
             _prototypeManager.Resync();
             _mapManager.Initialize();
             placementManager.Initialize();

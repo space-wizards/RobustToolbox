@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace SS14.UnitTesting.Shared.Utility
 {
     [TestFixture]
-    [Parallelizable(ParallelScope.Fixtures)]
+    [Parallelizable(ParallelScope.Fixtures | ParallelScope.All)]
     [TestOf(typeof(ResourcePath))]
     public class ResourcePath_Test
     {
@@ -108,11 +108,31 @@ namespace SS14.UnitTesting.Shared.Utility
             Assert.That((path1 / "z").ToString(), Is.EqualTo("/a/b/z"));
         }
 
-        [Test]
-        public void Clean_Test()
+        public static List<(string, string)> Clean_Values = new List<(string, string)>
         {
-            var path = new ResourcePath("//a/b/../c/./ss14.png");
-            Assert.That(path.Clean(), Is.EqualTo(new ResourcePath("/a/c/ss14.png")));
+            ("//a/b/../c/./ss14.png", "/a/c/ss14.png"),
+            ("../a", "../a"),
+            ("../a/..", ".."),
+            ("../..", "../.."),
+            ("a/..", "."),
+            ("/../a", "/a"),
+            ("/..", "/"),
+        };
+
+        [Test]
+        public void Clean_Test([ValueSource(nameof(Clean_Values))] (string path, string expected) data)
+        {
+            var path = new ResourcePath(data.path);
+            var cleaned = path.Clean();
+            Assert.Multiple(() =>
+            {
+                if (path == cleaned)
+                {
+                    Assert.That(path.IsClean());
+                }
+                Assert.That(path.Clean(), Is.EqualTo(new ResourcePath(data.expected)));
+                Assert.That(cleaned.IsClean());
+            });
         }
 
         [Test]

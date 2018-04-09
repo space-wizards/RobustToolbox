@@ -1,31 +1,35 @@
-﻿using System.Collections.Generic;
+﻿using SS14.Shared.Utility;
+using System.Collections.Generic;
 using System.IO;
 
 namespace SS14.Shared.ContentPack
 {
-    /// <summary>
-    ///     Common interface for mounting various things in the VFS
-    /// </summary>
-    internal interface IContentRoot
+    public partial class ResourceManager
     {
         /// <summary>
-        ///     Initializes the content root.
+        ///     Common interface for mounting various things in the VFS
         /// </summary>
-        /// <returns>If the content was mounted properly.</returns>
-        bool Mount();
+        protected interface IContentRoot
+        {
+            /// <summary>
+            ///     Initializes the content root.
+            ///     Throws an exception if the content root failed to mount.
+            /// </summary>
+            void Mount();
 
-        /// <summary>
-        ///     Gets a file from the content root using the relative path.
-        /// </summary>
-        /// <param name="relPath">Relative path from the root directory.</param>
-        /// <returns>A stream of the file loaded into memory.</returns>
-        MemoryStream GetFile(string relPath);
+            /// <summary>
+            ///     Gets a file from the content root using the relative path.
+            /// </summary>
+            /// <param name="relPath">Relative path from the root directory.</param>
+            /// <returns>A stream of the file loaded into memory.</returns>
+            MemoryStream GetFile(ResourcePath relPath);
 
-        /// <summary>
-        ///     Recursively finds all files in a directory and all sub directories.
-        /// </summary>
-        /// <param name="path">Directory to search inside of.</param>
-        /// <returns>Enumeration of all relative file paths of the files found.</returns>
-        IEnumerable<string> FindFiles(string path);
+            /// <summary>
+            ///     Recursively finds all files in a directory and all sub directories.
+            /// </summary>
+            /// <param name="path">Directory to search inside of.</param>
+            /// <returns>Enumeration of all relative file paths of the files found.</returns>
+            IEnumerable<ResourcePath> FindFiles(ResourcePath path);
+        }
     }
 }

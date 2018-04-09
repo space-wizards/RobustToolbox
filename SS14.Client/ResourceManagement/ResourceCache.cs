@@ -1,16 +1,10 @@
 ﻿using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Shared.ContentPack;
-using SS14.Shared.Interfaces;
-using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using SS14.Client.ResourceManagement;
-using SS14.Shared.Configuration;
 
 namespace SS14.Client.ResourceManagement
 {
@@ -30,7 +24,7 @@ namespace SS14.Client.ResourceManagement
             MountContentDirectory(@"Resources/");
 #else
             MountContentDirectory(@"../../Resources/");
-            MountContentDirectory(@"Resources/Assemblies", "Assemblies/");
+            MountContentDirectory(@"Resources/Assemblies", new ResourcePath("/Assemblies/"));
 #endif
             //_resources.MountContentPack(@"./EngineContentPack.zip");
         }
@@ -50,7 +44,7 @@ namespace SS14.Client.ResourceManagement
             var _resource = new T();
             try
             {
-                if (!TryGetDiskFilePath(path, out var diskPath))
+                if (!TryGetDiskFilePath(new ResourcePath(path), out var diskPath))
                 {
                     throw new FileNotFoundException(path);
                 }
@@ -83,7 +77,7 @@ namespace SS14.Client.ResourceManagement
             var _resource = new T();
             try
             {
-                if (!TryGetDiskFilePath(path, out var diskPath))
+                if (!TryGetDiskFilePath(new ResourcePath(path), out var diskPath))
                 {
                     throw new FileNotFoundException(path);
                 }

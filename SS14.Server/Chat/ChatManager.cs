@@ -87,11 +87,11 @@ namespace SS14.Server.Chat
 
         private void LoadEmotes()
         {
-            if (!_resources.TryContentFileRead(@"emotes.xml", out var emoteFileStream))
+            if (!_resources.TryContentFileRead(@"/emotes.xml", out var emoteFileStream))
                 return;
 
             var serializer = new XmlSerializer(typeof(List<Emote>));
-            var emotes = (List<Emote>) serializer.Deserialize(emoteFileStream);
+            var emotes = (List<Emote>)serializer.Deserialize(emoteFileStream);
             emoteFileStream.Close();
 
             foreach (var emote in emotes)

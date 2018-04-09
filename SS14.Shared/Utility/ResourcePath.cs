@@ -1,9 +1,9 @@
-﻿using System;
+﻿// Because System.IO.Path sucks.
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-// Because System.IO.Path sucks.
 namespace SS14.Shared.Utility
 {
     /// <summary>
@@ -214,8 +214,18 @@ namespace SS14.Shared.Utility
         ///     Returns a new instance with a different separator set.
         /// </summary>
         /// <param name="newSeparator">The new separator to use.</param>
+        /// <exception cref="ArgumentException">Thrown if the new separator is "."</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="newSeparator"/> is null.</exception>
         public ResourcePath ChangeSeparator(string newSeparator)
         {
+            if (newSeparator == ".")
+            {
+                throw new ArgumentException("Yeah no.", nameof(newSeparator));
+            }
+            if (newSeparator == null)
+            {
+                throw new ArgumentNullException(nameof(newSeparator));
+            }
             // Convert the segments into a string path, then re-parse it.
             // Solves the edge case of the segments containing the new separator.
             var path = new ResourcePath(Segments, newSeparator).ToString();
@@ -253,7 +263,7 @@ namespace SS14.Shared.Utility
         }
 
         /// <summary>
-        ///     Adds a new segments to the path as string.
+        ///     Adds a new segment to the path as string.
         /// </summary>
         public static ResourcePath operator /(ResourcePath path, string b)
         {
@@ -261,10 +271,10 @@ namespace SS14.Shared.Utility
         }
 
         /// <summary>
-        ///     "Cleans" the resource path, removing any empty segments and resolving . and ..
+        ///     "Cleans" the resource path, removing <c>..</c>.
         /// </summary>
         /// <remarks>
-        ///     If .. appears at the base of a path, it is left alone. If it appears at roo level (like /..) it is removed entirely.
+        ///     If .. appears at the base of a path, it is left alone. If it appears at root level (like /..) it is removed entirely.
         /// </remarks>
         public ResourcePath Clean()
         {
@@ -273,7 +283,7 @@ namespace SS14.Shared.Utility
             foreach (var segment in Segments)
             {
                 // If you have ".." cleaning that up doesn't remove that.
-                if (segment == ".." && segment.Length != 0)
+                if (segment == ".." && segments.Count != 0)
                 {
                     // Trying to do /.. results in /
                     if (segments.Count == 1 && segments[0] == Separator)
@@ -281,15 +291,47 @@ namespace SS14.Shared.Utility
                         continue;
                     }
 
-                    segments.RemoveAt(segments.Count - 1);
+                    var pos = segments.Count - 1;
+                    if (segments[pos] != "..")
+                    {
+                        segments.RemoveAt(pos);
+                        continue;
+                    }
                 }
-                else
-                {
-                    segments.Add(segment);
-                }
+
+                segments.Add(segment);
+            }
+
+            if (segments.Count == 0)
+            {
+                return new ResourcePath(".", Separator);
             }
 
             return new ResourcePath(segments.ToArray(), Separator);
+        }
+
+        /// <summary>
+        ///     Check whether a path is clean, i.e. <see cref="Clean"/> would not modify it.
+        /// </summary>
+        /// <returns></returns>
+        public bool IsClean()
+        {
+            for (var i = 0; i < Segments.Length; i++)
+            {
+                if (Segments[i] == "..")
+                {
+                    if (IsRooted)
+                    {
+                        return false;
+                    }
+
+                    if (i > 0 && Segments[i - 1] != "..")
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         /// <summary>
@@ -339,6 +381,15 @@ namespace SS14.Shared.Utility
         }
 
         /// <summary>
+        ///     Converts a relative disk path back into a resource path.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if either argument is null.</exception>
+        public static ResourcePath FromRelativeSystemPath(string path, string newseparator = "/")
+        {
+            return new ResourcePath(path, SYSTEM_SEPARATOR).ChangeSeparator(newseparator);
+        }
+
+        /// <summary>
         ///     Returns the path of how this instance is "relative" to <paramref name="basePath"/>,
         ///     such that <c>basePath/result == this</c>.
         /// </summary>
@@ -349,8 +400,24 @@ namespace SS14.Shared.Utility
         ///     Console.WriteLine(path1.RelativeTo(path2)); // prints "b/c".
         ///     </code>
         /// </example>
-        /// <exception cref="ArgumentException">Thrown if we are not relative to the base path.</exception>
+        /// <exception cref="ArgumentException">Thrown if we are not relative to the base path or the separators are not the same.</exception>
         public ResourcePath RelativeTo(ResourcePath basePath)
+        {
+            if (TryRelativeTo(basePath, out var relative))
+            {
+                return relative;
+            }
+
+            throw new ArgumentException($"{this} does not start with {basePath}.");
+        }
+
+        /// <summary>
+        ///     Try pattern version of <see cref="RelativeTo(ResourcePath)"/>
+        /// </summary>
+        /// <param name="relative">The path of how we are relative to <paramref name="basePath"/>, if at all.</param>
+        /// <returns>True if we are relative to <paramref name="basePath"/>, false otherwise.</returns>
+        /// <exception cref="ArgumentException">Thrown if the separators are not the same.</exception>
+        public bool TryRelativeTo(ResourcePath basePath, out ResourcePath relative)
         {
             if (basePath.Separator != Separator)
             {
@@ -358,17 +425,20 @@ namespace SS14.Shared.Utility
             }
             if (Segments.Length < basePath.Segments.Length)
             {
-                throw new ArgumentException($"{this} does not start with {basePath}.");
+                relative = null;
+                return false;
             }
             if (Segments.Length == basePath.Segments.Length)
             {
                 if (this == basePath)
                 {
-                    return new ResourcePath(".", Separator);
+                    relative = new ResourcePath(".", Separator);
+                    return true;
                 }
                 else
                 {
-                    throw new ArgumentException($"{this} does not start with {basePath}.");
+                    relative = null;
+                    return false;
                 }
             }
             var i = 0;
@@ -376,13 +446,15 @@ namespace SS14.Shared.Utility
             {
                 if (Segments[i] != basePath.Segments[i])
                 {
-                    throw new ArgumentException($"{this} does not start with {basePath}.");
+                    relative = null;
+                    return false;
                 }
             }
 
             var segments = new string[Segments.Length - basePath.Segments.Length];
             Array.Copy(Segments, basePath.Segments.Length, segments, 0, segments.Length);
-            return new ResourcePath(segments, Separator);
+            relative = new ResourcePath(segments, Separator);
+            return true;
         }
 
         /// <summary>
@@ -442,17 +514,25 @@ namespace SS14.Shared.Utility
         /// <returns>True if the paths are equal, false otherwise.</returns>
         public bool Equals(ResourcePath path)
         {
+            if (path == null)
+            {
+                return false;
+            }
             return path.Separator == Separator && Segments.SequenceEqual(path.Segments);
         }
 
         public static bool operator ==(ResourcePath a, ResourcePath b)
         {
+            if ((object)a == null)
+            {
+                return (object)b == null;
+            }
             return a.Equals(b);
         }
 
         public static bool operator !=(ResourcePath a, ResourcePath b)
         {
-            return !a.Equals(b);
+            return !(a == b);
         }
     }
 }

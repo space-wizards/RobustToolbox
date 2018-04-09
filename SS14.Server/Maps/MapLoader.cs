@@ -10,6 +10,7 @@ using SS14.Shared.Log;
 using SS14.Shared.Map;
 using SS14.Shared.Prototypes;
 using YamlDotNet.RepresentationModel;
+using SS14.Shared.Utility;
 
 namespace SS14.Server.Maps
 {
@@ -42,7 +43,7 @@ namespace SS14.Server.Maps
             var document = new YamlDocument(root);
 
             var rootPath = _resMan.ConfigDirectory;
-            var path = Path.Combine(rootPath, "./", yamlPath);
+            var path = Path.Combine(rootPath.ToString(), "./", yamlPath);
             var fullPath = Path.GetFullPath(path);
 
             var dir = Path.GetDirectoryName(fullPath);
@@ -72,7 +73,7 @@ namespace SS14.Server.Maps
                 Logger.Info($"[MAP] No user blueprint path: {fullPath}");
 
                 // fallback to content
-                if (_resMan.TryContentFileRead(path, out var contentReader))
+                if (_resMan.TryContentFileRead(ResourcePath.Root / path, out var contentReader))
                 {
                     reader = new StreamReader(contentReader);
                 }

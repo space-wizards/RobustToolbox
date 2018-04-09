@@ -77,6 +77,10 @@ namespace SS14.Client
 
         public override void Main(Godot.SceneTree tree)
         {
+#if !X64
+            throw new InvalidOperationException("The client cannot start outside x64.");
+#endif
+
             PreInitIoC();
             IoCManager.Resolve<ISceneTreeHolder>().Initialize(tree);
             InitIoC();

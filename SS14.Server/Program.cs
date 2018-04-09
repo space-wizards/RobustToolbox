@@ -50,6 +50,9 @@ namespace SS14.Server
     {
         private static void Main(string[] args)
         {
+#if !X64
+            throw new InvalidOperationException("The server cannot start outside x64.");
+#endif
             //Register minidump dumper only if the app isn't being debugged. No use filling up hard drives with shite
             RegisterIoC();
             LoadContentAssemblies();

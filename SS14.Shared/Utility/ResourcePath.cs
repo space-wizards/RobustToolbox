@@ -12,6 +12,10 @@ namespace SS14.Shared.Utility
     /// </summary>
     public class ResourcePath
     {
+        /// <summary>
+        ///     The separator for the file system of the system we are compiling to.
+        ///     Backslash on Windows, forward slash on sane systems.
+        /// </summary>
 #if WINDOWS
         public const string SYSTEM_SEPARATOR = "\\";
 #else

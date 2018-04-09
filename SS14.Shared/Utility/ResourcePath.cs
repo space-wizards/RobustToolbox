@@ -496,7 +496,12 @@ namespace SS14.Shared.Utility
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return Segments.GetHashCode() | Separator.GetHashCode();
+            var code = Separator.GetHashCode();
+            foreach (var segment in Segments)
+            {
+                code |= segment.GetHashCode();
+            }
+            return code;
         }
 
         /// <inheritdoc />

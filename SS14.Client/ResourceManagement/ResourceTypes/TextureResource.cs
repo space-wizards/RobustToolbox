@@ -7,7 +7,7 @@ namespace SS14.Client.ResourceManagement
 {
     public class TextureResource : BaseResource
     {
-        public override string Fallback => "Textures/noSprite.png";
+        public override string Fallback => "/Textures/noSprite.png";
         public Texture Texture { get; private set; }
         private Godot.ImageTexture godotTexture;
 

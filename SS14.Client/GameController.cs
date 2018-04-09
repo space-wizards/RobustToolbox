@@ -118,7 +118,7 @@ namespace SS14.Client
             _tileDefinitionManager.Initialize();
             _networkManager.Initialize(false);
             _console.Initialize();
-            _prototypeManager.LoadDirectory(new ResourcePath(@"./Prototypes/"));
+            _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
             _prototypeManager.Resync();
             _mapManager.Initialize();
             placementManager.Initialize();

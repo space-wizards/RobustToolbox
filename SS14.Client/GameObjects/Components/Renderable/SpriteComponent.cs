@@ -147,7 +147,7 @@ namespace SS14.Client.GameObjects
             }
 
             var manager = IoCManager.Resolve<IResourceCache>();
-            if (manager.TryGetResource<TextureResource>($@"./Textures/{spriteKey}", out var sprite))
+            if (manager.TryGetResource<TextureResource>($@"/Textures/{spriteKey}", out var sprite))
             {
                 AddSprite(spriteKey, sprite.Texture);
             }
@@ -189,7 +189,7 @@ namespace SS14.Client.GameObjects
                     var ext = Path.GetExtension(curr.Key);
                     var withoutExt = Path.ChangeExtension(curr.Key, null);
                     string name = $"{withoutExt}_{dir.ToLowerInvariant()}{ext}";
-                    if (resMgr.TryGetResource<TextureResource>(@"./Textures/" + name, out var res))
+                    if (resMgr.TryGetResource<TextureResource>(@"/Textures/" + name, out var res))
                         dirSprites.Add(name, res.Texture);
                 }
             }

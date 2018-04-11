@@ -35,24 +35,27 @@ namespace SS14.Shared.ContentPack
             }
 
             /// <inheritdoc />
-            public MemoryStream GetFile(ResourcePath relPath)
+            public bool TryGetFile(ResourcePath relPath, out MemoryStream fileStream)
             {
                 var entry = _zip.GetEntry(relPath.ToRootedPath().ToString());
 
                 if (entry == null)
-                    return null;
+                {
+                    fileStream = null;
+                    return false;
+                }
 
                 // this caches the deflated entry stream in memory
                 // this way people can read the stream however many times they want to,
                 // without the performance hit of deflating it every time.
-                var memStream = new MemoryStream();
+                fileStream = new MemoryStream();
                 using (var zipStream = _zip.GetInputStream(entry))
                 {
-                    zipStream.CopyTo(memStream);
-                    memStream.Position = 0;
+                    zipStream.CopyTo(fileStream);
+                    fileStream.Position = 0;
                 }
 
-                return memStream;
+                return true;
             }
 
             /// <inheritdoc />

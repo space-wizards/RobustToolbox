@@ -18,13 +18,6 @@ namespace SS14.Shared.ContentPack
             void Mount();
 
             /// <summary>
-            ///     Returns true if this content root has either a directory or file available at
-            /// </summary>
-            /// <param name="relPath"></param>
-            /// <returns></returns>
-            bool HasNode(ResourcePath relPath);
-
-            /// <summary>
             ///     Gets a file from the content root using the relative path.
             /// </summary>
             /// <param name="relPath">Relative path from the root directory.</param>

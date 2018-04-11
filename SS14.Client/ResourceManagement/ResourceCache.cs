@@ -49,11 +49,7 @@ namespace SS14.Client.ResourceManagement
             var _resource = new T();
             try
             {
-                if (!TryGetDiskFilePath(path, out var diskPath))
-                {
-                    throw new FileNotFoundException(path.ToString());
-                }
-                _resource.Load(this, diskPath);
+                _resource.Load(this, path);
                 CachedResources[(path, typeof(T))] = _resource;
                 return _resource;
             }
@@ -87,11 +83,7 @@ namespace SS14.Client.ResourceManagement
             var _resource = new T();
             try
             {
-                if (!TryGetDiskFilePath(path, out var diskPath))
-                {
-                    throw new FileNotFoundException(path.ToString());
-                }
-                _resource.Load(this, diskPath);
+                _resource.Load(this, path);
                 resource = _resource;
                 CachedResources[(path, typeof(T))] = resource;
                 return true;

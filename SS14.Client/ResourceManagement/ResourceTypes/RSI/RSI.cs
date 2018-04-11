@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Collections;
 using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.ResourceManagement
 {
@@ -59,7 +60,7 @@ namespace SS14.Client.ResourceManagement
             Size = size;
         }
 
-        public override void Load(IResourceCache cache, string path)
+        public override void Load(IResourceCache cache, ResourcePath path)
         {
             throw new NotImplementedException();
         }

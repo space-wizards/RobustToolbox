@@ -143,7 +143,7 @@ namespace SS14.Shared.ContentPack
                 {
                     continue;
                 }
-                if ((fileStream = root.GetFile(relative)) != null)
+                if (root.TryGetFile(relative, out fileStream))
                 {
                     return true;
                 }
@@ -202,7 +202,7 @@ namespace SS14.Shared.ContentPack
         }
 
         // TODO: Remove this when/if we can get Godot to load from not-the-filesystem.
-        protected bool TryGetDiskFilePath(ResourcePath path, out string diskPath)
+        public bool TryGetDiskFilePath(ResourcePath path, out string diskPath)
         {
             // loop over each root trying to get the file
             foreach ((var prefix, var root) in _contentRoots)

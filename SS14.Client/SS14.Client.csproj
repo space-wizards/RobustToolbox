@@ -159,7 +159,6 @@
     <Compile Include="Interfaces\ResourceManagement\IResourceCache.cs" />
     <Compile Include="ResourceManagement\BaseResource.cs" />
     <Compile Include="ResourceManagement\ResourceCache.cs" />
-    <Compile Include="ResourceManagement\ResourceLoadMetadata.cs" />
     <Compile Include="ResourceManagement\ResourceTypes\BinaryResource.cs" />
     <Compile Include="ResourceManagement\ResourceTypes\FontResource.cs" />
     <Compile Include="ResourceManagement\ResourceTypes\JsonResource.cs" />

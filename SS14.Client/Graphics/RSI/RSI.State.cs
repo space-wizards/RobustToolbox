@@ -2,11 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace SS14.Client.ResourceManagement
+namespace SS14.Client.Graphics
 {
     public sealed partial class RSI
     {
@@ -35,9 +32,9 @@ namespace SS14.Client.ResourceManagement
                     }
                 }
             }
-            private (Bitmap icon, float delay)[][] Icons;
+            private (Texture icon, float delay)[][] Icons;
 
-            public State(Vector2u size, StateId stateId, DirectionType direction, (Bitmap icon, float delay)[][] icons)
+            public State(Vector2u size, StateId stateId, DirectionType direction, (Texture icon, float delay)[][] icons)
             {
                 Size = size;
                 StateId = stateId;
@@ -52,12 +49,12 @@ namespace SS14.Client.ResourceManagement
                 Dir8,
             }
 
-            public (Bitmap icon, float delay) GetFrame(int direction, int frame)
+            public (Texture icon, float delay) GetFrame(int direction, int frame)
             {
                 return Icons[direction][frame];
             }
 
-            public IReadOnlyCollection<(Bitmap icon, float delay)> GetDirectionFrames(int direction)
+            public IReadOnlyCollection<(Texture icon, float delay)> GetDirectionFrames(int direction)
             {
                 return Icons[direction];
             }

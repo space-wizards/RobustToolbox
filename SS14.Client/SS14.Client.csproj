@@ -159,12 +159,10 @@
     <Compile Include="Interfaces\ResourceManagement\IResourceCache.cs" />
     <Compile Include="ResourceManagement\BaseResource.cs" />
     <Compile Include="ResourceManagement\ResourceCache.cs" />
-    <Compile Include="ResourceManagement\ResourceTypes\BinaryResource.cs" />
     <Compile Include="ResourceManagement\ResourceTypes\FontResource.cs" />
-    <Compile Include="ResourceManagement\ResourceTypes\JsonResource.cs" />
-    <Compile Include="ResourceManagement\ResourceTypes\RSI\RSI.cs" />
-    <Compile Include="ResourceManagement\ResourceTypes\RSI\RSIState.cs" />
-    <Compile Include="ResourceManagement\ResourceTypes\TextResource.cs" />
+    <Compile Include="Graphics\RSI\RSI.cs" />
+    <Compile Include="Graphics\RSI\RSI.State.cs" />
+    <Compile Include="ResourceManagement\ResourceTypes\RSIResource.cs" />
     <Compile Include="ResourceManagement\ResourceTypes\TextureResource.cs" />
     <Compile Include="SceneTreeHolder.cs" />
     <Compile Include="UserInterface\Controls\BaseButton.cs" />
@@ -270,7 +268,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <EmbeddedResource Include="ResourceManagement\ResourceTypes\RSI\RSISchema.json" />
+    <EmbeddedResource Include="Graphics\RSI\RSISchema.json" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

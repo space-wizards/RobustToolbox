@@ -77,6 +77,7 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
+    <Compile Include="ApproxEqualityConstraint.cs" />
     <Compile Include="Client\GameObjects\Components\Transform_Test.cs" />
     <Compile Include="Client\DummyUserInterfaceManager.cs" />
     <Compile Include="Client\GameControllerProxyDummy.cs" />

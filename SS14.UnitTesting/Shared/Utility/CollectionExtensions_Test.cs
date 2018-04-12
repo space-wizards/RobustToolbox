@@ -1,9 +1,10 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SS14.Shared.Utility;
 using System.Collections.Generic;
 
 namespace SS14.UnitTesting.Shared.Utility
 {
+    [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     public class CollectionExtensions_Test
     {

@@ -120,7 +120,7 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
             var result = node3Trans.WorldRotation;
 
             // Assert (135 + 45 + 45 = 225)
-            Assert.That(result.EqualsApprox(Angle.FromDegrees(225)), result.Degrees.ToString);
+            Assert.That(result, new ApproxEqualityConstraint(Angle.FromDegrees(225)));
         }
     }
 }

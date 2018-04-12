@@ -9,6 +9,7 @@ using System;
 namespace SS14.UnitTesting.Shared.IoC
 {
     [TestFixture]
+    [TestOf(typeof(IoCManager))]
     public class IoCManager_Test : SS14UnitTest
     {
         [OneTimeSetUp]

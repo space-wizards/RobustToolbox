@@ -104,7 +104,7 @@ namespace SS14.Shared.Configuration
                         value = cVar.DefaultValue;
                     }
 
-                    if(value == null)
+                    if (value == null)
                     {
                         Logger.Error($"[CFG] CVar {name} has no value or default value, was the default value registered as null?");
                         continue;
@@ -119,8 +119,9 @@ namespace SS14.Shared.Configuration
                     foreach (var curTblName in tblPath)
                     {
                         if (!table.TryGetValue(curTblName, out TomlObject tblObject))
-                            tblObject = table.AddTable(curTblName);
-
+                        {
+                            tblObject = table.Add(curTblName, new Dictionary<string, TomlObject>());
+                        }
                         table = tblObject as TomlTable ?? throw new InvalidConfigurationException($"[CFG] Object {curTblName} is being used like a table, but it is a {tblObject}. Are your CVar names formed properly?");
                     }
 
@@ -128,25 +129,25 @@ namespace SS14.Shared.Configuration
                     switch (value)
                     {
                         case Enum val:
-                            table.AddValue(keyName, (int) (object) val); // asserts Enum value != (ulong || long)
+                            table.Add(keyName, (int)(object)val); // asserts Enum value != (ulong || long)
                             break;
                         case int val:
-                            table.AddValue(keyName, val);
+                            table.Add(keyName, val);
                             break;
                         case long val:
-                            table.AddValue(keyName, val);
+                            table.Add(keyName, val);
                             break;
                         case bool val:
-                            table.AddValue(keyName, val);
+                            table.Add(keyName, val);
                             break;
                         case string val:
-                            table.AddValue(keyName, val);
+                            table.Add(keyName, val);
                             break;
                         case float val:
-                            table.AddValue(keyName, val);
+                            table.Add(keyName, val);
                             break;
                         case double val:
-                            table.AddValue(keyName, val);
+                            table.Add(keyName, val);
                             break;
                         default:
                             Logger.Warning($"[CFG] Cannot serialize '{name}', unsupported type.");
@@ -177,7 +178,7 @@ namespace SS14.Shared.Configuration
                 return;
             }
 
-            _configVars.Add(name, new ConfigVar(name, defaultValue, flags) {Registered = true, Value = defaultValue});
+            _configVars.Add(name, new ConfigVar(name, defaultValue, flags) { Registered = true, Value = defaultValue });
         }
 
         /// <inheritdoc />
@@ -201,7 +202,7 @@ namespace SS14.Shared.Configuration
         {
             if (_configVars.TryGetValue(name, out ConfigVar cVar) && cVar.Registered)
                 //TODO: Make flags work, required non-derpy net system.
-                return (T) (cVar.Value ?? cVar.DefaultValue);
+                return (T)(cVar.Value ?? cVar.DefaultValue);
 
             throw new InvalidConfigurationException($"[CVar] Trying to get unregistered variable '{name}'");
         }
@@ -283,11 +284,17 @@ namespace SS14.Shared.Configuration
     [System.Serializable]
     public class InvalidConfigurationException : System.Exception
     {
-        public InvalidConfigurationException() { }
-        public InvalidConfigurationException( string message ) : base( message ) { }
-        public InvalidConfigurationException( string message, System.Exception inner ) : base( message, inner ) { }
+        public InvalidConfigurationException()
+        {
+        }
+        public InvalidConfigurationException(string message) : base(message)
+        {
+        }
+        public InvalidConfigurationException(string message, System.Exception inner) : base(message, inner)
+        {
+        }
         protected InvalidConfigurationException(
             System.Runtime.Serialization.SerializationInfo info,
-            System.Runtime.Serialization.StreamingContext context ) : base( info, context ) { }
+            System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 }

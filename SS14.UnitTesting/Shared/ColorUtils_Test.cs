@@ -4,6 +4,7 @@ using System;
 
 namespace SS14.UnitTesting.Shared
 {
+    [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     public class ColorUtils_Test
     {

@@ -214,6 +214,7 @@
     <Compile Include="Maths\FloatMath.cs" />
     <Compile Include="Maths\Direction.cs" />
     <Compile Include="Maths\Circle.cs" />
+    <Compile Include="Maths\IApproxEquatable.cs" />
     <Compile Include="Maths\MathHelper.cs" />
     <Compile Include="Maths\Matrix3.cs" />
     <Compile Include="Maths\Matrix4.cs" />

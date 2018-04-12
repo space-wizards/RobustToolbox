@@ -67,8 +67,6 @@ namespace SS14.UnitTesting.Server.GameObjects
             var inserted = EntityManager.SpawnEntity("dummy");
             var transform = inserted.GetComponent<IServerTransformComponent>();
 
-            System.Console.WriteLine(owner.GetComponents());
-
             var container = Container.Create("dummy", owner);
             Assert.That(container.Insert(inserted), Is.True);
             Assert.That(transform.Parent.Owner, Is.EqualTo(owner));

@@ -81,6 +81,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Audio\AudioStream.cs" />
     <Compile Include="BaseClient.cs" />
     <Compile Include="Console\ClientChatConsole.cs" />
     <Compile Include="Console\ClientConsole.cs" />
@@ -91,6 +92,7 @@
     <Compile Include="GameController\GameController.Input.cs" />
     <Compile Include="GameController\GameController.IoC.cs" />
     <Compile Include="GameController\GameController.GameTiming.cs" />
+    <Compile Include="GameObjects\EntitySystems\AudioSystem.cs" />
     <Compile Include="GameObjects\GodotComponentFactory.cs" />
     <Compile Include="GameObjects\ClientComponentFactory.cs" />
     <Compile Include="GameObjects\ClientEntityManager.cs" />
@@ -151,6 +153,7 @@
     <Compile Include="Interfaces\ResourceManagement\IResourceCache.cs" />
     <Compile Include="ResourceManagement\BaseResource.cs" />
     <Compile Include="ResourceManagement\ResourceCache.cs" />
+    <Compile Include="ResourceManagement\ResourceTypes\AudioResource.cs" />
     <Compile Include="ResourceManagement\ResourceTypes\FontResource.cs" />
     <Compile Include="ResourceManagement\ResourceTypes\TextureResource.cs" />
     <Compile Include="SceneTreeHolder.cs" />

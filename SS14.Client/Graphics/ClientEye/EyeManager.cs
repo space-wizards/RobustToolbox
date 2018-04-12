@@ -11,6 +11,8 @@ namespace SS14.Client.Graphics.ClientEye
 {
     public class EyeManager : IEyeManager, IDisposable
     {
+        // If you modify this make sure to edit the value in the SS14.Shared.Audio.AudioParams struct default too!
+        // No I can't be bothered to make this a shared constant.
         public const int PIXELSPERMETER = 32;
 
         [Dependency]

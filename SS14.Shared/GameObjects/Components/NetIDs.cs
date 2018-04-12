@@ -21,5 +21,6 @@
         public const uint ITEM_SPRITE = 18;
         public const uint WEARABLE_ANIMATED_SPRITE = 19;
         public const uint TRIGGERABLE = 20;
+        public const uint AUDIO_PLAYER = 21;
     }
 }

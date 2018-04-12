@@ -4,7 +4,7 @@ using SS14.Shared.Maths;
 
 namespace SS14.UnitTesting.Shared.Maths
 {
-    [Parallelizable]
+    [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     [TestOf(typeof(Angle))]
     public class Angle_Test

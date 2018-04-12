@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace SS14.UnitTesting.Shared.Utility
 {
-    [Parallelizable]
+    [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     public class CollectionExtensions_Test
     {

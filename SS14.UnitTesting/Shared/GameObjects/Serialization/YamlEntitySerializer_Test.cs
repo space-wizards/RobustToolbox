@@ -6,7 +6,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.UnitTesting.Shared.GameObjects.Serialization
 {
-    [Parallelizable]
+    [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     [TestOf(typeof(YamlEntitySerializer))]
     class YamlEntitySerializer_Test

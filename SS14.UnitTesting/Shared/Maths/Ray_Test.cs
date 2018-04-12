@@ -4,7 +4,7 @@ using SS14.Shared.Maths;
 namespace SS14.UnitTesting.Shared.Maths
 {
     [TestFixture]
-    [Parallelizable]
+    [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestOf(typeof(Ray))]
     class Ray_Test
     {

@@ -6,7 +6,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.UnitTesting.Shared.Utility
 {
-    [Parallelizable]
+    [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     public class YamlHelpers_Test : SS14UnitTest
     {

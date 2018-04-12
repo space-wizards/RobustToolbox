@@ -7,13 +7,14 @@ using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Utility;
 
 namespace SS14.Shared.ContentPack
 {
     /// <summary>
     ///     Virtual file system for all disk resources.
     /// </summary>
-    public class ResourceManager : IResourceManager
+    public partial class ResourceManager : IResourceManager
     {
         private const string DataFolderName = "Space Station 14";
 
@@ -21,7 +22,7 @@ namespace SS14.Shared.ContentPack
         private readonly IConfigurationManager _config;
 
         private DirectoryInfo _configRoot;
-        private readonly List<(string prefix, IContentRoot root)> _contentRoots = new List<(string, IContentRoot)>();
+        private readonly List<(ResourcePath prefix, IContentRoot root)> _contentRoots = new List<(ResourcePath, IContentRoot)>();
 
         /// <inheritdoc />
         public string ConfigDirectory => _configRoot.FullName;
@@ -55,107 +56,142 @@ namespace SS14.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public void MountContentPack(string pack, string prefix=null)
+        public void MountContentPack(string pack, ResourcePath prefix = null)
         {
+            if (prefix == null)
+            {
+                prefix = ResourcePath.Root;
+            }
+            if (!prefix.IsRooted)
+            {
+                throw new ArgumentException("Prefix must be rooted.", nameof(prefix));
+            }
             pack = PathHelpers.ExecutableRelativeFile(pack);
 
             var packInfo = new FileInfo(pack);
 
             if (!packInfo.Exists)
+            {
                 throw new FileNotFoundException("Specified ContentPack does not exist: " + packInfo.FullName);
+            }
 
             //create new PackLoader
             var loader = new PackLoader(packInfo);
-
-            if (loader.Mount())
-                _contentRoots.Add((prefix, loader));
+            loader.Mount();
+            _contentRoots.Add((prefix, loader));
         }
 
         /// <inheritdoc />
-        public void MountContentDirectory(string path, string prefix=null)
+        public void MountContentDirectory(string path, ResourcePath prefix = null)
         {
+            if (prefix == null)
+            {
+                prefix = ResourcePath.Root;
+            }
+            if (!prefix.IsRooted)
+            {
+                throw new ArgumentException("Prefix must be rooted.", nameof(prefix));
+            }
             path = PathHelpers.ExecutableRelativeFile(path);
             var pathInfo = new DirectoryInfo(path);
+            if (!pathInfo.Exists)
+            {
+                throw new DirectoryNotFoundException("Specified directory does not exist: " + pathInfo.FullName);
+            }
 
             var loader = new DirLoader(pathInfo);
-            if (loader.Mount())
-            {
-                _contentRoots.Add((prefix, loader));
-            }
-            else
-            {
-                Logger.Error($"Unable to mount content directory: {path}");
-            }
+            loader.Mount();
+            _contentRoots.Add((prefix, loader));
         }
 
         /// <inheritdoc />
         public MemoryStream ContentFileRead(string path)
         {
-            // loop over each root trying to get the file
-            foreach ((var prefix, var root) in _contentRoots)
-            {
-                if (!TryHandlePrefix(path, prefix, out var tempPath))
-                {
-                    continue;
-                }
-                var file = root.GetFile(tempPath);
-                if (file != null)
-                    return file;
-            }
-            return null;
+            return ContentFileRead(new ResourcePath(path));
         }
 
-        // TODO: Remove this when/if we can get Godot to load from not-the filesystem.
-        protected bool TryGetDiskFilePath(string path, out string diskPath)
+        /// <inheritdoc />
+        public MemoryStream ContentFileRead(ResourcePath path)
         {
-            // loop over each root trying to get the file
-            foreach ((var prefix, var root) in _contentRoots)
+            if (TryContentFileRead(path, out var fileStream))
             {
-                if (!(root is DirLoader dirLoader) || !TryHandlePrefix(path, prefix, out var tempPath))
-                {
-                    continue;
-                }
-                diskPath = dirLoader.GetPath(tempPath);
-                if (diskPath != null)
-                    return true;
+                return fileStream;
             }
-            diskPath = null;
-            return false;
+            throw new FileNotFoundException($"Path does not exist in the VFS: '{path}'");
         }
 
         /// <inheritdoc />
         public bool TryContentFileRead(string path, out MemoryStream fileStream)
         {
-            var file = ContentFileRead(path);
-            if (file != null)
+            return TryContentFileRead(new ResourcePath(path), out fileStream);
+        }
+
+        /// <inheritdoc />
+        public bool TryContentFileRead(ResourcePath path, out MemoryStream fileStream)
+        {
+            if (path == null)
             {
-                fileStream = file;
-                return true;
+                throw new ArgumentNullException(nameof(path));
             }
-            fileStream = default(MemoryStream);
+            if (!path.IsRooted)
+            {
+                throw new ArgumentException("Path must be rooted", nameof(path));
+            }
+            foreach ((var prefix, var root) in _contentRoots)
+            {
+                if (!path.TryRelativeTo(prefix, out var relative))
+                {
+                    continue;
+                }
+                if (root.TryGetFile(relative, out fileStream))
+                {
+                    return true;
+                }
+            }
+            fileStream = null;
             return false;
         }
 
         /// <inheritdoc />
         public bool ContentFileExists(string path)
         {
-            throw new NotImplementedException();
+            return ContentFileExists(new ResourcePath(path));
         }
 
         /// <inheritdoc />
-        public IEnumerable<string> ContentFindFiles(string path)
+        public bool ContentFileExists(ResourcePath path)
         {
-            var alreadyReturnedFiles = new HashSet<string>();
+            return TryContentFileRead(path, out var _);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<ResourcePath> ContentFindFiles(string path)
+        {
+            return ContentFindFiles(new ResourcePath(path));
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<ResourcePath> ContentFindFiles(ResourcePath path)
+        {
+            if (path == null)
+            {
+                throw new ArgumentNullException(nameof(path));
+            }
+            if (!path.IsRooted)
+            {
+                throw new ArgumentException("Path is not rooted", nameof(path));
+            }
+            var alreadyReturnedFiles = new HashSet<ResourcePath>();
             foreach ((var prefix, var root) in _contentRoots)
             {
-                if (!TryHandlePrefix(path, prefix, out var tempPath))
+                if (!path.TryRelativeTo(prefix, out var relative))
                 {
                     continue;
                 }
 
-                foreach (var filename in root.FindFiles(tempPath))
+                foreach (var filename in root.FindFiles(relative))
                 {
-                    var newpath = prefix + filename;
+                    var newpath = prefix / filename;
                     if (!alreadyReturnedFiles.Contains(newpath))
                     {
                         alreadyReturnedFiles.Add(newpath);
@@ -165,24 +201,22 @@ namespace SS14.Shared.ContentPack
             }
         }
 
-        private bool TryHandlePrefix(string path, string prefix, out string actualPath)
+        // TODO: Remove this when/if we can get Godot to load from not-the-filesystem.
+        public bool TryGetDiskFilePath(ResourcePath path, out string diskPath)
         {
-            if (string.IsNullOrWhiteSpace(prefix))
+            // loop over each root trying to get the file
+            foreach ((var prefix, var root) in _contentRoots)
             {
-                actualPath = path;
-                return true;
+                if (!(root is DirLoader dirLoader) || !path.TryRelativeTo(prefix, out var tempPath))
+                {
+                    continue;
+                }
+                diskPath = dirLoader.GetPath(tempPath);
+                if (File.Exists(diskPath))
+                    return true;
             }
-
-            if (path.StartsWith(prefix))
-            {
-                actualPath = path.Substring(prefix.Length);
-                return true;
-            }
-            else
-            {
-                actualPath = null;
-                return false;
-            }
+            diskPath = null;
+            return false;
         }
     }
 }

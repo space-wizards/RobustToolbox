@@ -1,22 +1,16 @@
 ﻿using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Shared.ContentPack;
-using SS14.Shared.Interfaces;
-using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using SS14.Client.ResourceManagement;
-using SS14.Shared.Configuration;
 
 namespace SS14.Client.ResourceManagement
 {
-    public class ResourceCache : ResourceManager, IResourceCache, IDisposable
+    public partial class ResourceCache : ResourceManager, IResourceCache, IDisposable
     {
-        private Dictionary<(string, Type), BaseResource> CachedResources = new Dictionary<(string, Type), BaseResource>();
+        private Dictionary<(ResourcePath, Type), BaseResource> CachedResources = new Dictionary<(ResourcePath, Type), BaseResource>();
 
         public void LoadBaseResources()
         {
@@ -30,7 +24,7 @@ namespace SS14.Client.ResourceManagement
             MountContentDirectory(@"Resources/");
 #else
             MountContentDirectory(@"../../Resources/");
-            MountContentDirectory(@"Resources/Assemblies", "Assemblies/");
+            MountContentDirectory(@"Resources/Assemblies", new ResourcePath("/Assemblies/"));
 #endif
             //_resources.MountContentPack(@"./EngineContentPack.zip");
         }
@@ -42,6 +36,11 @@ namespace SS14.Client.ResourceManagement
 
         public T GetResource<T>(string path, bool useFallback = true) where T : BaseResource, new()
         {
+            return GetResource<T>(new ResourcePath(path), useFallback);
+        }
+
+        public T GetResource<T>(ResourcePath path, bool useFallback = true) where T : BaseResource, new()
+        {
             if (CachedResources.TryGetValue((path, typeof(T)), out var cached))
             {
                 return (T)cached;
@@ -50,11 +49,7 @@ namespace SS14.Client.ResourceManagement
             var _resource = new T();
             try
             {
-                if (!TryGetDiskFilePath(path, out var diskPath))
-                {
-                    throw new FileNotFoundException(path);
-                }
-                _resource.Load(this, diskPath);
+                _resource.Load(this, path);
                 CachedResources[(path, typeof(T))] = _resource;
                 return _resource;
             }
@@ -75,6 +70,11 @@ namespace SS14.Client.ResourceManagement
 
         public bool TryGetResource<T>(string path, out T resource) where T : BaseResource, new()
         {
+            return TryGetResource(new ResourcePath(path), out resource);
+        }
+
+        public bool TryGetResource<T>(ResourcePath path, out T resource) where T : BaseResource, new()
+        {
             if (CachedResources.TryGetValue((path, typeof(T)), out var cached))
             {
                 resource = (T)cached;
@@ -83,11 +83,7 @@ namespace SS14.Client.ResourceManagement
             var _resource = new T();
             try
             {
-                if (!TryGetDiskFilePath(path, out var diskPath))
-                {
-                    throw new FileNotFoundException(path);
-                }
-                _resource.Load(this, diskPath);
+                _resource.Load(this, path);
                 resource = _resource;
                 CachedResources[(path, typeof(T))] = resource;
                 return true;
@@ -101,10 +97,20 @@ namespace SS14.Client.ResourceManagement
 
         public bool HasResource<T>(string path) where T : BaseResource, new()
         {
+            return HasResource<T>(new ResourcePath(path));
+        }
+
+        public bool HasResource<T>(ResourcePath path) where T : BaseResource, new()
+        {
             return TryGetResource<T>(path, out var _);
         }
 
         public void CacheResource<T>(string path, T resource) where T : BaseResource, new()
+        {
+            CacheResource(new ResourcePath(path), resource);
+        }
+
+        public void CacheResource<T>(ResourcePath path, T resource) where T : BaseResource, new()
         {
             CachedResources[(path, typeof(T))] = resource;
         }

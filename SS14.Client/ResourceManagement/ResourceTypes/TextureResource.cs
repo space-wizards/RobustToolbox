@@ -1,21 +1,27 @@
 ﻿using SS14.Client.Graphics;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Shared.Log;
+using SS14.Shared.Utility;
+using System;
 using System.IO;
 
 namespace SS14.Client.ResourceManagement
 {
     public class TextureResource : BaseResource
     {
-        public override string Fallback => "Textures/noSprite.png";
+        public override string Fallback => "/Textures/noSprite.png";
         public Texture Texture { get; private set; }
         private Godot.ImageTexture godotTexture;
 
-        public override void Load(IResourceCache cache, string diskPath)
+        public override void Load(IResourceCache cache, ResourcePath path)
         {
-            if (!File.Exists(diskPath))
+            if (!cache.ContentFileExists(path))
             {
-                throw new FileNotFoundException(diskPath);
+                throw new FileNotFoundException("Content file does not exist for texture");
+            }
+            if (!cache.TryGetDiskFilePath(path, out string diskPath))
+            {
+                throw new InvalidOperationException("Textures can only be loaded from disk.");
             }
             godotTexture = new Godot.ImageTexture();
             godotTexture.Load(diskPath);

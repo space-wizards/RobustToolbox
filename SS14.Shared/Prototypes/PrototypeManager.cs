@@ -56,7 +56,7 @@ namespace SS14.Shared.Prototypes
         /// <summary>
         /// Load prototypes from files in a directory, recursively.
         /// </summary>
-        void LoadDirectory(string path);
+        void LoadDirectory(ResourcePath path);
         void LoadFromStream(TextReader stream);
         /// <summary>
         /// Clear out all prototypes and reset to a blank slate.
@@ -181,7 +181,7 @@ namespace SS14.Shared.Prototypes
         }
 
         /// <inheritdoc />
-        public void LoadDirectory(string path)
+        public void LoadDirectory(ResourcePath path)
         {
             foreach (var filePath in _resources.ContentFindFiles(path))
             {

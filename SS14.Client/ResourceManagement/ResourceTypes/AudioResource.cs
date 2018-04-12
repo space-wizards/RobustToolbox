@@ -1,5 +1,7 @@
 ﻿using SS14.Client.Audio;
 using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Shared.Utility;
+using System;
 using System.IO;
 
 namespace SS14.Client.ResourceManagement
@@ -8,24 +10,26 @@ namespace SS14.Client.ResourceManagement
     {
         public AudioStream AudioStream { get; private set; }
 
-        public override void Load(IResourceCache cache, string diskPath)
+        public override void Load(IResourceCache cache, ResourcePath path)
         {
-            if (!File.Exists(diskPath))
+            if (!cache.ContentFileExists(path))
             {
-                throw new FileNotFoundException(diskPath);
+                throw new FileNotFoundException("Content file does not exist for audio sample.");
             }
 
-            var data = File.ReadAllBytes(diskPath);
-            var stream = new Godot.AudioStreamOGGVorbis()
+            using (var fileStream = cache.ContentFileRead(path))
             {
-                Data = data
-            };
-            if (stream.GetLength() == 0)
-            {
-                throw new InvalidDataException();
+                var stream = new Godot.AudioStreamOGGVorbis()
+                {
+                    Data = fileStream.ToArray(),
+                };
+                if (stream.GetLength() == 0)
+                {
+                    throw new InvalidDataException();
+                }
+                AudioStream = new GodotAudioStreamSource(stream);
+                Shared.Log.Logger.Debug($"{stream.GetLength()}");
             }
-            AudioStream = new GodotAudioStreamSource(stream);
-            Shared.Log.Logger.Debug($"{stream.GetLength()}");
         }
 
         public static implicit operator AudioStream(AudioResource res)

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SS14.Client.Interfaces.ResourceManagement;
 using System.IO;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.ResourceManagement
 {
@@ -14,14 +15,18 @@ namespace SS14.Client.ResourceManagement
         public DynamicFont Font { get; private set; }
         public DynamicFontData FontData { get; private set; }
 
-        public override void Load(IResourceCache cache, string path)
+        public override void Load(IResourceCache cache, ResourcePath path)
         {
-            if (!System.IO.File.Exists(path))
+            if (!cache.ContentFileExists(path))
             {
-                throw new FileNotFoundException(path);
+                throw new FileNotFoundException("Content file does not exist for texture");
+            }
+            if (!cache.TryGetDiskFilePath(path, out string diskPath))
+            {
+                throw new InvalidOperationException("Textures can only be loaded from disk.");
             }
 
-            var res = ResourceLoader.Load(path);
+            var res = ResourceLoader.Load(diskPath);
             if (!(res is DynamicFontData fontData))
             {
                 throw new InvalidDataException("Path does not point to a font.");

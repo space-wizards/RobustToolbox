@@ -161,7 +161,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 if (spriteNameParam != null)
                     spriteName = spriteNameParam.GetValue<string>();
 
-                var tex = resourceCache.GetResource<TextureResource>("Textures/" + spriteName);
+                var tex = resourceCache.GetResource<TextureResource>("/Textures/" + spriteName);
                 var rect = container.GetChild("TextureWrap").GetChild<TextureRect>("TextureRect");
                 if (tex != null)
                 {

@@ -1,65 +1,71 @@
 ﻿using SS14.Shared.Log;
+using SS14.Shared.Utility;
 using System.Collections.Generic;
 using System.IO;
 
 namespace SS14.Shared.ContentPack
 {
-    /// <summary>
-    ///     Holds info about a directory that is mounted in the VFS.
-    /// </summary>
-    internal class DirLoader : IContentRoot
+    public partial class ResourceManager
     {
-        private readonly DirectoryInfo _directory;
-
         /// <summary>
-        ///     Constructor.
+        ///     Holds info about a directory that is mounted in the VFS.
         /// </summary>
-        /// <param name="directory">Directory to mount.</param>
-        public DirLoader(DirectoryInfo directory)
+        class DirLoader : IContentRoot
         {
-            _directory = directory;
-        }
+            private readonly DirectoryInfo _directory;
 
-        /// <inheritdoc />
-        public bool Mount()
-        {
-            // Exists returns false if it actually exists, but no perms to read it
-            return _directory.Exists;
-        }
-
-        /// <inheritdoc />
-        public MemoryStream GetFile(string relPath)
-        {
-            var path = GetPath(relPath);
-            if (path == null)
+            /// <summary>
+            ///     Constructor.
+            /// </summary>
+            /// <param name="directory">Directory to mount.</param>
+            public DirLoader(DirectoryInfo directory)
             {
-                return null;
+                _directory = directory;
             }
 
-            var bytes = File.ReadAllBytes(path);
-            return new MemoryStream(bytes, false);
-        }
-
-        internal string GetPath(string relPath)
-        {
-            var fullPath = Path.GetFullPath(Path.Combine(_directory.FullName, relPath));
-
-            if (!File.Exists(fullPath))
-                return null;
-
-            return fullPath;
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<string> FindFiles(string path)
-        {
-            var fullPath = Path.GetFullPath(Path.Combine(_directory.FullName, path));
-            var paths = PathHelpers.GetFiles(fullPath);
-
-            // GetFiles returns full paths, we want them relative to root
-            foreach (var filePath in paths)
+            /// <inheritdoc />
+            public void Mount()
             {
-                yield return filePath.Substring(_directory.FullName.Length);
+                // Looks good to me
+                // Nothing to check here since the ResourceManager handles checking permissions.
+            }
+
+            /// <inheritdoc />
+            public bool TryGetFile(ResourcePath relPath, out MemoryStream fileStream)
+            {
+                var path = GetPath(relPath);
+                if (!File.Exists(path))
+                {
+                    fileStream = null;
+                    return false;
+                }
+
+                var bytes = File.ReadAllBytes(path);
+                fileStream = new MemoryStream(bytes, false);
+                return true;
+            }
+
+            internal string GetPath(ResourcePath relPath)
+            {
+                return Path.GetFullPath(Path.Combine(_directory.FullName, relPath.ToRelativeSystemPath()));
+            }
+
+            /// <inheritdoc />
+            public IEnumerable<ResourcePath> FindFiles(ResourcePath path)
+            {
+                var fullPath = GetPath(path);
+                if (!Directory.Exists(fullPath))
+                {
+                    yield break;
+                }
+                var paths = PathHelpers.GetFiles(fullPath);
+
+                // GetFiles returns full paths, we want them relative to root
+                foreach (var filePath in paths)
+                {
+                    var relpath = filePath.Substring(_directory.FullName.Length);
+                    yield return ResourcePath.FromRelativeSystemPath(relpath);
+                }
             }
         }
     }

@@ -162,7 +162,8 @@ namespace SS14.Client.State.States
             foreach (IEntity entity in entities)
             {
                 if (entity.TryGetComponent<IClientClickableComponent>(out var component)
-                 && component.CheckClick(mousePosWorld, out int drawdepthofclicked))
+                && entity.GetComponent<ITransformComponent>().IsMapTransform
+                && component.CheckClick(mousePosWorld, out int drawdepthofclicked))
                 {
                     clickedEntities.Add((entity, drawdepthofclicked));
                 }

@@ -58,10 +58,10 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             // that are not on the same map
             parentTrans.LocalPosition = new LocalCoordinates(5, 5, new GridId(4), new MapId(1));
             childTrans.LocalPosition = new LocalCoordinates(4, 4, new GridId(5), new MapId(2));
-            
+
             // if they are parented, the child keeps its world position, but moves to the parents map
             childTrans.AttachParent(parentTrans);
-            
+
             Assert.That(childTrans.MapID == parentTrans.MapID);
             Assert.That(childTrans.GridID == parentTrans.GridID);
             Assert.That(childTrans.LocalPosition == new LocalCoordinates(4, 4, new GridId(4), new MapId(1)), childTrans.LocalPosition.ToString);
@@ -78,8 +78,8 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             // move the parent, and the child should move with it
             childTrans.WorldPosition = new Vector2(6, 6);
             parentTrans.WorldPosition += new Vector2(-7, -7);
-            
-            Assert.That(childTrans.WorldPosition == new Vector2(-1,-1), childTrans.WorldPosition.ToString);
+
+            Assert.That(childTrans.WorldPosition == new Vector2(-1, -1), childTrans.WorldPosition.ToString);
 
             // if we detach parent, the child should be left where it was, still relative to parents grid
             var oldLpos = childTrans.LocalPosition;
@@ -102,8 +102,8 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             var child = EntityManager.SpawnEntity("dummy");
             var parentTrans = parent.GetComponent<IServerTransformComponent>();
             var childTrans = child.GetComponent<IServerTransformComponent>();
-            parentTrans.WorldPosition = new Vector2(5,5);
-            childTrans.WorldPosition = new Vector2(6,6);
+            parentTrans.WorldPosition = new Vector2(5, 5);
+            childTrans.WorldPosition = new Vector2(6, 6);
 
             // Act
             var oldWpos = childTrans.WorldPosition;
@@ -261,7 +261,7 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
 
             // Act
             var oldWpos = node3Trans.WorldPosition;
-            
+
             for (var i = 0; i < 100; i++)
             {
                 node1Trans.LocalRotation += new Angle(MathHelper.Pi);
@@ -285,7 +285,6 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
         public void TreeComposeWorldMatricesTest()
         {
             // Arrange
-            const float epsilon = 1.0E-6f;
             var control = Matrix3.Identity;
 
             var node1 = EntityManager.SpawnEntity("dummy");
@@ -313,17 +312,16 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
 
             var worldMat = node4Trans.WorldMatrix;
             var invWorldMat = node4Trans.InvWorldMatrix;
-            
+
             Matrix3.Multiply(ref worldMat, ref invWorldMat, out var leftVerifyMatrix);
             Matrix3.Multiply(ref invWorldMat, ref worldMat, out var rightVerifyMatrix);
 
             //Assert
-
             // these should be the same (A × A-1 = A-1 × A = I)
-            Assert.That(Matrix3.EqualsApprox(ref leftVerifyMatrix, ref rightVerifyMatrix, epsilon));
+            Assert.That(leftVerifyMatrix, new ApproxEqualityConstraint(rightVerifyMatrix));
 
             // verify matrix == identity matrix (or very close to because float precision)
-            Assert.That(Matrix3.EqualsApprox(ref leftVerifyMatrix, ref control, epsilon), leftVerifyMatrix.ToString);
+            Assert.That(leftVerifyMatrix, new ApproxEqualityConstraint(control));
         }
 
         /// <summary>
@@ -340,7 +338,7 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             var node1Trans = node1.GetComponent<IServerTransformComponent>();
             var node2Trans = node2.GetComponent<IServerTransformComponent>();
             var node3Trans = node3.GetComponent<IServerTransformComponent>();
-;
+            ;
             node2Trans.AttachParent(node1Trans);
             node3Trans.AttachParent(node2Trans);
 
@@ -353,7 +351,7 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
 
             // Assert (135 + 45 + 45 = 225)
             var result = node3Trans.WorldRotation;
-            Assert.That(result.EqualsApprox(Angle.FromDegrees(225)), result.Degrees.ToString);
+            Assert.That(result, new ApproxEqualityConstraint(Angle.FromDegrees(225)));
         }
     }
 }

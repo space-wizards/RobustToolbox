@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-#endregion
+#endregion --- License ---
 
 using System;
 using System.Runtime.InteropServices;
@@ -31,7 +31,7 @@ namespace SS14.Shared.Maths
 {
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Matrix3 : IEquatable<Matrix3>
+    public struct Matrix3 : IEquatable<Matrix3>, IApproxEquatable<Matrix3>
     {
         #region Fields & Access
 
@@ -216,7 +216,7 @@ namespace SS14.Shared.Maths
         /// <summary>Converts the matrix into an array of floats.</summary>
         /// <param name="matrix">The matrix to convert.</param>
         /// <returns>An array of floats for the matrix.</returns>
-        public static explicit operator float[](Matrix3 matrix)
+        public static explicit operator float[] (Matrix3 matrix)
         {
             return new[]
             {
@@ -232,7 +232,7 @@ namespace SS14.Shared.Maths
             };
         }
 
-        #endregion
+        #endregion Fields & Access
 
         #region Constructors
 
@@ -336,8 +336,8 @@ namespace SS14.Shared.Maths
 
         public static Matrix3 CreateRotation(float angle)
         {
-            var cos = (float) Math.Cos(angle);
-            var sin = (float) Math.Sin(angle);
+            var cos = (float)Math.Cos(angle);
+            var sin = (float)Math.Sin(angle);
 
             var result = Identity;
 
@@ -349,7 +349,7 @@ namespace SS14.Shared.Maths
             return result;
         }
 
-        #endregion
+        #endregion Constructors
 
         #region Equality
 
@@ -405,6 +405,16 @@ namespace SS14.Shared.Maths
                 left.R2C2 == right.R2C2;
         }
 
+        public bool EqualsApprox(Matrix3 other)
+        {
+            return EqualsApprox(ref other, 1.0E-6f);
+        }
+
+        public bool EqualsApprox(Matrix3 other, double tolerance)
+        {
+            return EqualsApprox(ref other, (float)tolerance);
+        }
+
         /// <summary>Indicates whether the current matrix is approximately equal to another matrix.</summary>
         /// <param name="matrix">The Matrix3 structure to compare with.</param>
         /// <param name="tolerance">The limit below which the matrices are considered equal.</param>
@@ -442,7 +452,7 @@ namespace SS14.Shared.Maths
                 Math.Abs(left.R2C2 - right.R2C2) <= tolerance;
         }
 
-        #endregion
+        #endregion Equality
 
         #region Arithmetic Operators
 
@@ -648,7 +658,7 @@ namespace SS14.Shared.Maths
             result.R2C2 = scalar * matrix.R2C2;
         }
 
-        #endregion
+        #endregion Arithmetic Operators
 
         #region Functions
 
@@ -717,18 +727,18 @@ namespace SS14.Shared.Maths
 
             var invdet = 1 / det;
 
-            minv.R0C0 = (float) ((m.R1C1 * m.R2C2 - m.R2C1 * m.R1C2) * invdet);
-            minv.R0C1 = (float) ((m.R0C2 * m.R2C1 - m.R0C1 * m.R2C2) * invdet);
-            minv.R0C2 = (float) ((m.R0C1 * m.R1C2 - m.R0C2 * m.R1C1) * invdet);
-            minv.R1C0 = (float) ((m.R1C2 * m.R2C0 - m.R1C0 * m.R2C2) * invdet);
-            minv.R1C1 = (float) ((m.R0C0 * m.R2C2 - m.R0C2 * m.R2C0) * invdet);
-            minv.R1C2 = (float) ((m.R1C0 * m.R0C2 - m.R0C0 * m.R1C2) * invdet);
-            minv.R2C0 = (float) ((m.R1C0 * m.R2C1 - m.R2C0 * m.R1C1) * invdet);
-            minv.R2C1 = (float) ((m.R2C0 * m.R0C1 - m.R0C0 * m.R2C1) * invdet);
-            minv.R2C2 = (float) ((m.R0C0 * m.R1C1 - m.R1C0 * m.R0C1) * invdet);
+            minv.R0C0 = (float)((m.R1C1 * m.R2C2 - m.R2C1 * m.R1C2) * invdet);
+            minv.R0C1 = (float)((m.R0C2 * m.R2C1 - m.R0C1 * m.R2C2) * invdet);
+            minv.R0C2 = (float)((m.R0C1 * m.R1C2 - m.R0C2 * m.R1C1) * invdet);
+            minv.R1C0 = (float)((m.R1C2 * m.R2C0 - m.R1C0 * m.R2C2) * invdet);
+            minv.R1C1 = (float)((m.R0C0 * m.R2C2 - m.R0C2 * m.R2C0) * invdet);
+            minv.R1C2 = (float)((m.R1C0 * m.R0C2 - m.R0C0 * m.R1C2) * invdet);
+            minv.R2C0 = (float)((m.R1C0 * m.R2C1 - m.R2C0 * m.R1C1) * invdet);
+            minv.R2C1 = (float)((m.R2C0 * m.R0C1 - m.R0C0 * m.R2C1) * invdet);
+            minv.R2C2 = (float)((m.R0C0 * m.R1C1 - m.R1C0 * m.R0C1) * invdet);
         }
 
-        #endregion
+        #endregion Functions
 
         #region Transformation Functions
 
@@ -767,8 +777,8 @@ namespace SS14.Shared.Maths
         public void Rotate(float angle)
         {
             var angleRadians = MathHelper.DegreesToRadians(angle);
-            var sin = (float) Math.Sin(angleRadians);
-            var cos = (float) Math.Cos(angleRadians);
+            var sin = (float)Math.Sin(angleRadians);
+            var cos = (float)Math.Cos(angleRadians);
 
             var r0c0 = cos * R0C0 + sin * R1C0;
             var r0c1 = cos * R0C1 + sin * R1C1;
@@ -786,8 +796,8 @@ namespace SS14.Shared.Maths
         public void Rotate(float angle, out Matrix3 result)
         {
             var angleRadians = MathHelper.DegreesToRadians(angle);
-            var sin = (float) Math.Sin(angleRadians);
-            var cos = (float) Math.Cos(angleRadians);
+            var sin = (float)Math.Sin(angleRadians);
+            var cos = (float)Math.Cos(angleRadians);
 
             result.R0C0 = cos * R0C0 + sin * R1C0;
             result.R0C1 = cos * R0C1 + sin * R1C1;
@@ -803,8 +813,8 @@ namespace SS14.Shared.Maths
         public static void Rotate(ref Matrix3 matrix, float angle, out Matrix3 result)
         {
             var angleRadians = MathHelper.DegreesToRadians(angle);
-            var sin = (float) Math.Sin(angleRadians);
-            var cos = (float) Math.Cos(angleRadians);
+            var sin = (float)Math.Sin(angleRadians);
+            var cos = (float)Math.Cos(angleRadians);
 
             result.R0C0 = cos * matrix.R0C0 + sin * matrix.R1C0;
             result.R0C1 = cos * matrix.R0C1 + sin * matrix.R1C1;
@@ -820,8 +830,8 @@ namespace SS14.Shared.Maths
         public static void RotateMatrix(float angle, out Matrix3 result)
         {
             var angleRadians = MathHelper.DegreesToRadians(angle);
-            var sin = (float) Math.Sin(angleRadians);
-            var cos = (float) Math.Cos(angleRadians);
+            var sin = (float)Math.Sin(angleRadians);
+            var cos = (float)Math.Cos(angleRadians);
 
             result.R0C0 = cos;
             result.R0C1 = sin;
@@ -834,7 +844,7 @@ namespace SS14.Shared.Maths
             result.R2C2 = 1;
         }
 
-        #endregion
+        #endregion Transformation Functions
 
         #region Constants
 
@@ -854,7 +864,7 @@ namespace SS14.Shared.Maths
             0, 0, 0
         );
 
-        #endregion
+        #endregion Constants
 
         #region HashCode
 
@@ -868,7 +878,7 @@ namespace SS14.Shared.Maths
                 R2C0.GetHashCode() ^ R2C1.GetHashCode() ^ R2C2.GetHashCode();
         }
 
-        #endregion
+        #endregion HashCode
 
         #region String
 
@@ -881,7 +891,7 @@ namespace SS14.Shared.Maths
                  + $"|{R2C0}, {R2C1}, {R2C2}|\n";
         }
 
-        #endregion
+        #endregion String
     }
 #pragma warning restore 3019
 }

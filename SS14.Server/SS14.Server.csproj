@@ -122,6 +122,7 @@
     <Compile Include="GameObjects\Components\Container\ContainerManagerComponent.cs" />
     <Compile Include="GameObjects\Components\Mover\AiControllerComponent.cs" />
     <Compile Include="GameObjects\EntitySystems\AiSystem.cs" />
+    <Compile Include="GameObjects\EntitySystems\AudioSystem.cs" />
     <Compile Include="Interfaces\GameObjects\IServerTransformComponent.cs" />
     <Compile Include="Interfaces\Log\IServerLogManager.cs" />
     <Compile Include="Interfaces\Maps\IMapLoader.cs" />

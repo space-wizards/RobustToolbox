@@ -6,6 +6,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.UnitTesting.Shared.GameObjects.Serialization
 {
+    [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     [TestOf(typeof(YamlEntitySerializer))]
     class YamlEntitySerializer_Test
@@ -46,7 +47,7 @@ namespace SS14.UnitTesting.Shared.GameObjects.Serialization
         }
 
         private readonly string SerializedListYaml = "entities:\n- datalist:\n  - 1\n  - 2\n  - 3\n...\n";
-        private readonly List<int> SerializableList = new List<int> {1, 2, 3};
+        private readonly List<int> SerializableList = new List<int> { 1, 2, 3 };
 
         [Test]
         public void SerializeDictTest()
@@ -83,7 +84,7 @@ namespace SS14.UnitTesting.Shared.GameObjects.Serialization
         }
 
         private readonly string SerializedDictYaml = "entities:\n- datadict:\n    val1: 1\n    val2: 2\n...\n";
-        private readonly Dictionary<string, int> SerializableDict = new Dictionary<string, int> { {"val1", 1}, {"val2", 2} };
+        private readonly Dictionary<string, int> SerializableDict = new Dictionary<string, int> { { "val1", 1 }, { "val2", 2 } };
 
         // serializes a node tree into text
         private static string NodeToYamlText(YamlNode root)
@@ -123,10 +124,10 @@ namespace SS14.UnitTesting.Shared.GameObjects.Serialization
                 var firstDoc = yamlStream.Documents[0];
 
                 // get entities sequence
-                var entMap = (YamlMappingNode) firstDoc.RootNode;
-                var entSeq = (YamlSequenceNode) entMap.Children["entities"];
+                var entMap = (YamlMappingNode)firstDoc.RootNode;
+                var entSeq = (YamlSequenceNode)entMap.Children["entities"];
 
-                var firstEnt = (YamlMappingNode) entSeq.Children[0];
+                var firstEnt = (YamlMappingNode)entSeq.Children[0];
 
                 return firstEnt;
             }

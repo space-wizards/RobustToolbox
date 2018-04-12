@@ -4,7 +4,9 @@ using SS14.Shared.Maths;
 
 namespace SS14.UnitTesting.Shared.Maths
 {
+    [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
+    [TestOf(typeof(Angle))]
     public class Angle_Test
     {
         private const double Epsilon = 1.0e-8;

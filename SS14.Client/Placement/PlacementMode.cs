@@ -48,12 +48,12 @@ namespace SS14.Client.Placement
 
         public TextureResource GetSprite(string key)
         {
-            return pManager.ResourceCache.GetResource<TextureResource>("Textures/" + key);
+            return pManager.ResourceCache.GetResource<TextureResource>("/Textures/" + key);
         }
 
         public bool TryGetSprite(string key, out TextureResource sprite)
         {
-            return pManager.ResourceCache.TryGetResource<TextureResource>("Textures/" + key, out sprite);
+            return pManager.ResourceCache.TryGetResource<TextureResource>("/Textures/" + key, out sprite);
         }
 
         public void SetSprite()
@@ -112,4 +112,3 @@ namespace SS14.Client.Placement
         }
     }
 }
-

@@ -1,6 +1,6 @@
 ﻿using System;
-using System.IO;
 using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.ResourceManagement
 {
@@ -25,7 +25,7 @@ namespace SS14.Client.ResourceManagement
         ///     Deserializes the resource from the VFS.
         /// </summary>
         /// <param name="cache">ResourceCache this resource is being loaded into.</param>
-        /// <param name="path">Path of the resource relative to the root of the ResourceCache.</param>
-        public abstract void Load(IResourceCache cache, string path);
+        /// <param name="path">Path of the resource requested on the VFS.</param>
+        public abstract void Load(IResourceCache cache, ResourcePath path);
     }
 }

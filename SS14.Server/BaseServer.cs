@@ -37,6 +37,7 @@ using SS14.Server.Player;
 using SS14.Shared.Enums;
 using SS14.Shared.Reflection;
 using SS14.Shared.Timing;
+using SS14.Shared.Utility;
 
 namespace SS14.Server
 {
@@ -180,7 +181,7 @@ namespace SS14.Server
             // Load from the resources dir in the repo root instead.
             // It's a debug build so this is fine.
             _resources.MountContentDirectory(@"../../Resources/");
-            _resources.MountContentDirectory(@"Resources/Assemblies", "Assemblies/");
+            _resources.MountContentDirectory(@"Resources/Assemblies", new ResourcePath("/Assemblies/"));
 #endif
 
             //mount the engine content pack
@@ -219,7 +220,7 @@ namespace SS14.Server
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            prototypeManager.LoadDirectory(@"Prototypes");
+            prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes"));
             prototypeManager.Resync();
 
             var clientConsole = IoCManager.Resolve<IClientConsoleHost>();
@@ -325,7 +326,7 @@ namespace SS14.Server
             //TODO: This should prob shutdown all managers in a loop.
 
             // remove all maps
-            if(_runLevel == ServerRunLevel.Game)
+            if (_runLevel == ServerRunLevel.Game)
             {
                 var mapMgr = IoCManager.Resolve<IMapManager>();
 

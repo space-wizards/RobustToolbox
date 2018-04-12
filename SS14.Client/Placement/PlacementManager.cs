@@ -333,7 +333,7 @@ namespace SS14.Client.Placement
             //Will break if states not ordered correctly.
 
             var spriteName = spriteParam == null ? "" : spriteParam.GetValue<string>();
-            var sprite = ResourceCache.GetResource<TextureResource>("Textures/" + spriteName);
+            var sprite = ResourceCache.GetResource<TextureResource>("/Textures/" + spriteName);
 
             CurrentBaseSprite = sprite;
             CurrentBaseSpriteKey = spriteName;
@@ -346,7 +346,7 @@ namespace SS14.Client.Placement
         {
             var tileDefs = _tileDefManager;
 
-            CurrentBaseSprite = ResourceCache.GetResource<TextureResource>("Textures/UserInterface/tilebuildoverlay.png");
+            CurrentBaseSprite = ResourceCache.GetResource<TextureResource>("/Textures/UserInterface/tilebuildoverlay.png");
             CurrentBaseSpriteKey = "UserInterface/tilebuildoverlay.png";
 
             IsActive = true;

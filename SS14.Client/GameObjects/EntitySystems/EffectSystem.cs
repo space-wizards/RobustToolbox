@@ -267,7 +267,7 @@ namespace SS14.Client.GameObjects
 
             public Effect(EffectSystemMessage effectcreation, IResourceCache resourceCache)
             {
-                EffectSprite = resourceCache.GetResource<TextureResource>("Textures/" + effectcreation.EffectSprite).Texture;
+                EffectSprite = resourceCache.GetResource<TextureResource>("/Textures/" + effectcreation.EffectSprite).Texture;
                 Coordinates = effectcreation.Coordinates;
                 EmitterCoordinates = effectcreation.EmitterCoordinates;
                 Velocity = effectcreation.Velocity;

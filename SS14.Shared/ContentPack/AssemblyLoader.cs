@@ -177,17 +177,17 @@ namespace SS14.Shared.ContentPack
         public static bool TryLoadAssembly<T>(IResourceManager resMan, string assemblyName) where T : GameShared
         {
             // get the assembly from the file system
-            if (resMan.TryContentFileRead($@"Assemblies/{assemblyName}.dll", out MemoryStream gameDll))
+            if (resMan.TryContentFileRead($@"/Assemblies/{assemblyName}.dll", out MemoryStream gameDll))
             {
                 Logger.Debug($"[SRV] Loading {assemblyName} DLL");
 
                 // see if debug info is present
-                if (resMan.TryContentFileRead($@"Assemblies/{assemblyName}.pdb", out MemoryStream gamePdb))
+                if (resMan.TryContentFileRead($@"/Assemblies/{assemblyName}.pdb", out MemoryStream gamePdb))
                 {
                     try
                     {
                         // load the assembly into the process, and bootstrap the GameServer entry point.
-                        AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray(), gamePdb.ToArray());
+                        LoadGameAssembly<T>(gameDll.ToArray(), gamePdb.ToArray());
                         return true;
                     }
                     catch (Exception e)
@@ -201,7 +201,7 @@ namespace SS14.Shared.ContentPack
                     try
                     {
                         // load the assembly into the process, and bootstrap the GameServer entry point.
-                        AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray());
+                        LoadGameAssembly<T>(gameDll.ToArray());
                         return true;
                     }
                     catch (Exception e)

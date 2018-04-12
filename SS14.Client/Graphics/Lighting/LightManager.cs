@@ -88,7 +88,7 @@ namespace SS14.Client.Graphics.Lighting
                 deferredViewport.AddChild(canvasModulate);
                 rootViewport.AddChild(deferredViewport);
 
-                var whiteTex = resourceCache.GetResource<TextureResource>(@"./Textures/Effects/Light/white.png");
+                var whiteTex = resourceCache.GetResource<TextureResource>(@"/Textures/Effects/Light/white.png");
                 deferredMaskBackground = new Godot.Sprite()
                 {
                     Name = "DeferredMaskBackground",

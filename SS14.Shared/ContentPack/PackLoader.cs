@@ -2,65 +2,70 @@
 using System.IO;
 using ICSharpCode.SharpZipLib.Zip;
 using SS14.Shared.Log;
+using SS14.Shared.Utility;
 
 namespace SS14.Shared.ContentPack
 {
-    /// <summary>
-    ///     Loads a zipped content pack into the VFS.
-    /// </summary>
-    internal class PackLoader : IContentRoot
+    public partial class ResourceManager
     {
-        private readonly FileInfo _pack;
-        private ZipFile _zip;
-
         /// <summary>
-        ///     Constructor.
+        ///     Loads a zipped content pack into the VFS.
         /// </summary>
-        /// <param name="pack">The zip file to mount in the VFS.</param>
-        public PackLoader(FileInfo pack)
+        class PackLoader : IContentRoot
         {
-            _pack = pack;
-        }
+            private readonly FileInfo _pack;
+            private ZipFile _zip;
 
-        /// <inheritdoc />
-        public bool Mount()
-        {
-            Logger.Info($"[RES] Loading ContentPack: {_pack.FullName}...");
-
-            var zipFileStream = File.OpenRead(_pack.FullName);
-            _zip = new ZipFile(zipFileStream);
-
-            return true;
-        }
-
-        /// <inheritdoc />
-        public MemoryStream GetFile(string relPath)
-        {
-            var entry = _zip.GetEntry(relPath);
-
-            if (entry == null)
-                return null;
-
-            // this caches the deflated entry stream in memory
-            // this way people can read the stream however many times they want to,
-            // without the performance hit of deflating it every time.
-            var memStream = new MemoryStream();
-            using (var zipStream = _zip.GetInputStream(entry))
+            /// <summary>
+            ///     Constructor.
+            /// </summary>
+            /// <param name="pack">The zip file to mount in the VFS.</param>
+            public PackLoader(FileInfo pack)
             {
-                zipStream.CopyTo(memStream);
-                memStream.Position = 0;
+                _pack = pack;
             }
 
-            return memStream;
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<string> FindFiles(string path)
-        {
-            foreach (ZipEntry zipEntry in _zip)
+            /// <inheritdoc />
+            public void Mount()
             {
-                if (zipEntry.IsFile && zipEntry.Name.StartsWith(path))
-                    yield return zipEntry.Name;
+                Logger.Info($"[RES] Loading ContentPack: {_pack.FullName}...");
+
+                var zipFileStream = File.OpenRead(_pack.FullName);
+                _zip = new ZipFile(zipFileStream);
+            }
+
+            /// <inheritdoc />
+            public bool TryGetFile(ResourcePath relPath, out MemoryStream fileStream)
+            {
+                var entry = _zip.GetEntry(relPath.ToRootedPath().ToString());
+
+                if (entry == null)
+                {
+                    fileStream = null;
+                    return false;
+                }
+
+                // this caches the deflated entry stream in memory
+                // this way people can read the stream however many times they want to,
+                // without the performance hit of deflating it every time.
+                fileStream = new MemoryStream();
+                using (var zipStream = _zip.GetInputStream(entry))
+                {
+                    zipStream.CopyTo(fileStream);
+                    fileStream.Position = 0;
+                }
+
+                return true;
+            }
+
+            /// <inheritdoc />
+            public IEnumerable<ResourcePath> FindFiles(ResourcePath path)
+            {
+                foreach (ZipEntry zipEntry in _zip)
+                {
+                    if (zipEntry.IsFile && zipEntry.Name.StartsWith(path.ToRootedPath().ToString()))
+                        yield return new ResourcePath(zipEntry.Name).ToRelativePath();
+                }
             }
         }
     }

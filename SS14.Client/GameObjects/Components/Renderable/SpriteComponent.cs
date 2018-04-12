@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.ClientEye;
@@ -20,6 +19,7 @@ using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
+using Path = System.IO.Path;
 
 // Warning: Shitcode ahead!
 namespace SS14.Client.GameObjects
@@ -147,7 +147,7 @@ namespace SS14.Client.GameObjects
             }
 
             var manager = IoCManager.Resolve<IResourceCache>();
-            if (manager.TryGetResource<TextureResource>($@"./Textures/{spriteKey}", out var sprite))
+            if (manager.TryGetResource<TextureResource>($@"/Textures/{spriteKey}", out var sprite))
             {
                 AddSprite(spriteKey, sprite.Texture);
             }
@@ -189,7 +189,7 @@ namespace SS14.Client.GameObjects
                     var ext = Path.GetExtension(curr.Key);
                     var withoutExt = Path.ChangeExtension(curr.Key, null);
                     string name = $"{withoutExt}_{dir.ToLowerInvariant()}{ext}";
-                    if (resMgr.TryGetResource<TextureResource>(@"./Textures/" + name, out var res))
+                    if (resMgr.TryGetResource<TextureResource>(@"/Textures/" + name, out var res))
                         dirSprites.Add(name, res.Texture);
                 }
             }

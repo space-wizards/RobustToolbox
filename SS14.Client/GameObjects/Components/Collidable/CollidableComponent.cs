@@ -15,6 +15,7 @@ using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 using System.Linq;
 using System.Collections.Generic;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.GameObjects
 {
@@ -120,9 +121,9 @@ namespace SS14.Client.GameObjects
         ///     this will be null.
         /// </param>
         /// <param name="message">Message that was sent.</param>
-        public override void HandleMessage(object owner, ComponentMessage message)
+        public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null, IComponent component = null)
         {
-            base.HandleMessage(owner, message);
+            base.HandleMessage(message, netChannel, component);
 
             switch (message)
             {

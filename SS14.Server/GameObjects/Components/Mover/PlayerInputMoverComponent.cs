@@ -3,6 +3,7 @@ using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Input;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 
@@ -51,9 +52,9 @@ namespace SS14.Server.GameObjects
         ///     this will be null.
         /// </param>
         /// <param name="message">Message that was sent.</param>
-        public override void HandleMessage(object owner, ComponentMessage message)
+        public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null, IComponent component = null)
         {
-            base.HandleMessage(owner, message);
+            base.HandleMessage(message, netChannel, component);
 
             switch (message)
             {

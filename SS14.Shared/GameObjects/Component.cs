@@ -1,6 +1,7 @@
 ﻿using System;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Reflection;
 using YamlDotNet.RepresentationModel;
 
@@ -93,7 +94,7 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void HandleMessage(object owner, ComponentMessage message) { }
+        public virtual void HandleMessage(ComponentMessage message, INetChannel netChannel = null, IComponent component = null) { }
 
         /// <inheritdoc />
         public virtual ComponentState GetComponentState()

@@ -1,6 +1,7 @@
 ﻿using System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Serialization;
+using SS14.Shared.Interfaces.Network;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Interfaces.GameObjects
@@ -105,7 +106,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     If the message was raised remotely, this contains the PlayerSession that sent it.
         /// </param>
         /// <param name="message">Message that was sent.</param>
-        void HandleMessage(object owner, ComponentMessage message);
+        void HandleMessage(ComponentMessage message, INetChannel netChannel = null, IComponent component = null);
 
         /// <summary>
         ///     Get the component's state for replicating on the client.

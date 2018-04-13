@@ -170,14 +170,21 @@ namespace SS14.Shared.GameObjects
             foreach (var component in _components)
             {
                 if(owner != component)
-                    component.HandleMessage(owner, message);
+                    component.HandleMessage(message, component: owner);
             }
         }
 
         /// <inheritdoc />
         public void SendNetworkMessage(IComponent owner, ComponentMessage message)
         {
-            EntityNetworkManager.SendComponentNetworkMessage(this, owner, message);
+            if(message.Directed)
+            {
+                EntityNetworkManager.SendDirectedComponentNetworkMessage(null, this, owner, message);
+            }
+            else
+            {
+                EntityNetworkManager.SendComponentNetworkMessage(this, owner, message);
+            }
         }
 
         #endregion Unified Messaging
@@ -198,13 +205,13 @@ namespace SS14.Shared.GameObjects
                     if (compMsg.Directed)
                     {
                         if (_netIDs.TryGetValue(message.Message.NetId, out var component))
-                                component.HandleMessage(compChannel, compMsg);
+                                component.HandleMessage(compMsg, netChannel: compChannel);
                     }
                     else
                     {
                         foreach (var component in _components)
                         {
-                            component.HandleMessage(compChannel, compMsg);
+                            component.HandleMessage(compMsg, netChannel: compChannel);
                         }
                     }
                 }

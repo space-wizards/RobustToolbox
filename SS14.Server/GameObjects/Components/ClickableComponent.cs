@@ -1,5 +1,7 @@
 ﻿using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Server.GameObjects
 {
@@ -8,9 +10,9 @@ namespace SS14.Server.GameObjects
         public override string Name => "Clickable";
         public override uint? NetID => NetIDs.CLICKABLE;
 
-        public override void HandleMessage(object owner, ComponentMessage message)
+        public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null, IComponent component = null)
         {
-            base.HandleMessage(owner, message);
+            base.HandleMessage(message, netChannel, component);
 
             switch (message)
             {

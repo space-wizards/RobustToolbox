@@ -29,6 +29,8 @@ namespace SS14.Server.GameObjects.Components.Container
 
         private List<IEntity> ContainerList = new List<IEntity>();
 
+        public IReadOnlyCollection<IEntity> ContainedEntities => ContainerList.AsReadOnly();
+
         /// <summary>
         /// Shortcut method to make creation of containers easier.
         /// Creates a new container on the entity and gives it back to you.
@@ -38,7 +40,7 @@ namespace SS14.Server.GameObjects.Components.Container
         /// <returns>The new container.</returns>
         /// <exception cref="ArgumentException">Thrown if there already is a container with the specified ID.</exception>
         /// <seealso cref="IContainerManager.MakeContainer{T}(string)" />
-        public static IContainer Create(string id, IEntity entity)
+        public static Container Create(string id, IEntity entity)
         {
             if (!entity.TryGetComponent<IContainerManager>(out var containermanager))
             {

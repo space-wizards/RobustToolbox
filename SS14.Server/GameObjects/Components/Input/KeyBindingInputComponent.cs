@@ -3,6 +3,8 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Log;
 using SS14.Shared.Enums;
 using SS14.Shared.Input;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Server.GameObjects
 {
@@ -14,9 +16,9 @@ namespace SS14.Server.GameObjects
         public override string Name => "KeyBindingInput";
         public override uint? NetID => NetIDs.KEY_BINDING_INPUT;
 
-        public override void HandleMessage(object owner, ComponentMessage message)
+        public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null, IComponent component = null)
         {
-            base.HandleMessage(owner, message);
+            base.HandleMessage(message, netChannel, component);
 
             switch (message)
             {

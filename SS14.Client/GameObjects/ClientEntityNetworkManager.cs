@@ -26,7 +26,7 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public void SendDirectedComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component, ComponentMessage message)
         {
-            throw new NotImplementedException();
+            SendComponentNetworkMessage(entity, component, message);
         }
 
         /// <inheritdoc />

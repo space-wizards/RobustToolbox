@@ -134,7 +134,7 @@ namespace SS14.Server
             //Sets up Logging
             _config.RegisterCVar("log.path", "logs", CVar.ARCHIVE);
             _config.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVar.ARCHIVE);
-            _config.RegisterCVar("log.level", LogLevel.Information, CVar.ARCHIVE);
+            _config.RegisterCVar("log.level", LogLevel.Info, CVar.ARCHIVE);
 
             var logPath = _config.GetCVar<string>("log.path");
             var logFormat = _config.GetCVar<string>("log.format");

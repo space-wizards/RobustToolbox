@@ -70,7 +70,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                 var val = audioParams.Value;
                 player.Bus = val.BusName;
                 player.VolumeDb = val.Volume;
-                player.PitchScale = val.PitchScale;
+                //player.PitchScale = val.PitchScale;
                 player.MixTarget = (Godot.AudioStreamPlayer.MixTargetEnum)val.MixTarget;
             }
             sceneTree.WorldRoot.AddChild(player);
@@ -105,7 +105,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                 var val = audioParams.Value;
                 player.Bus = val.BusName;
                 player.VolumeDb = val.Volume;
-                player.PitchScale = val.PitchScale;
+                //player.PitchScale = val.PitchScale;
                 player.Attenuation = val.Attenuation;
                 player.MaxDistance = EyeManager.PIXELSPERMETER * val.MaxDistance;
             }
@@ -142,7 +142,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                 var val = audioParams.Value;
                 player.Bus = audioParams.Value.BusName;
                 player.VolumeDb = val.Volume;
-                player.PitchScale = val.PitchScale;
+                //player.PitchScale = val.PitchScale;
                 player.Attenuation = val.Attenuation;
                 player.MaxDistance = EyeManager.PIXELSPERMETER * val.MaxDistance;
             }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace SS14.Shared.Log
 {
@@ -15,26 +15,9 @@ namespace SS14.Shared.Log
             SawmillName = sawmillName;
         }
 
-        public static ConsoleColor LogLevelToConsoleColor(LogLevel level)
+        public string LogLevelToName()
         {
-            switch (level)
-            {
-                case LogLevel.Debug:
-                    return ConsoleColor.DarkBlue;
-
-                case LogLevel.Info:
-                    return ConsoleColor.Cyan;
-
-                case LogLevel.Warning:
-                    return ConsoleColor.Yellow;
-
-                case LogLevel.Error:
-                case LogLevel.Fatal:
-                    return ConsoleColor.Red;
-
-                default:
-                    return ConsoleColor.White;
-            }
+            return LogLevelToName(Level);
         }
 
         public static string LogLevelToName(LogLevel level)

@@ -24,12 +24,12 @@ namespace SS14.Shared.Map
 
         public void SendMap(INetChannel channel)
         {
-            if(_netManager.IsClient)
+            if (_netManager.IsClient)
                 return;
 
             Debug.Assert(_netManager.IsServer, "Why is the client calling this?");
 
-            Logger.Log(channel.RemoteAddress + ": Sending map");
+            Logger.Info(channel.RemoteAddress + ": Sending map");
 
             var quantityGridsSent = 0;
 
@@ -60,7 +60,7 @@ namespace SS14.Shared.Map
                         var counter = 0;
                         foreach (var tile in chunk)
                         {
-                            newChunk.Tiles[counter] = (uint) tile.Tile;
+                            newChunk.Tiles[counter] = (uint)tile.Tile;
                             counter++;
                         }
 
@@ -170,7 +170,7 @@ namespace SS14.Shared.Map
                 {
                     for (ushort y = 0; y < chunk.ChunkSize; y++)
                     {
-                        var tile = (Tile) message.ChunkDefs[i].Tiles[counter];
+                        var tile = (Tile)message.ChunkDefs[i].Tiles[counter];
                         if (chunk.GetTile(x, y).Tile != tile)
                         {
                             chunk.SetTile(x, y, tile);
@@ -201,7 +201,7 @@ namespace SS14.Shared.Map
 
             var x = message.SingleTurf.X;
             var y = message.SingleTurf.Y;
-            var tile = (Tile) message.SingleTurf.Tile;
+            var tile = (Tile)message.SingleTurf.Tile;
 
             var pos = new LocalCoordinates(x, y, message.GridIndex, message.MapIndex);
             pos.Grid.SetTile(pos, tile);

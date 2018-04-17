@@ -51,9 +51,9 @@ namespace SS14.Server.Player
         public string Name
         {
             get => _name;
-            set 
+            set
             {
-                if(string.IsNullOrWhiteSpace(value))
+                if (string.IsNullOrWhiteSpace(value))
                     return;
                 _name = value;
             }
@@ -77,7 +77,7 @@ namespace SS14.Server.Player
 
         private void OnPlayerStatusChanged(SessionStatus oldStatus, SessionStatus newStatus)
         {
-            if(oldStatus == newStatus)
+            if (oldStatus == newStatus)
                 return;
 
             _status = newStatus;
@@ -120,12 +120,12 @@ namespace SS14.Server.Player
             AttachedEntity = null;
             UpdatePlayerState();
         }
-        
+
         /// <inheritdoc />
         public void SetName(string name)
         {
             Name = name;
-            Logger.Log($"[SRV] {ConnectedClient.RemoteAddress}: Player set name: {Name}");
+            Logger.Info($"[SRV] {ConnectedClient.RemoteAddress}: Player set name: {Name}");
             SetAttachedEntityName();
             UpdatePlayerState();
         }
@@ -173,7 +173,7 @@ namespace SS14.Server.Player
 
             net.ServerSendMessage(message, ConnectedClient);
         }
-        
+
         private void SetAttachedEntityName()
         {
             if (Name != null && AttachedEntity != null)
@@ -199,11 +199,11 @@ namespace SS14.Server.Player
 
             if (ConnectedClient == null || Status == SessionStatus.InGame || baseServer.RunLevel != ServerRunLevel.Game)
                 return;
-            
+
             Status = SessionStatus.InGame;
             UpdatePlayerState();
         }
-        
+
         private void UpdatePlayerState()
         {
             PlayerState.Status = Status;

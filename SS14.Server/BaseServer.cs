@@ -10,7 +10,6 @@ using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
-using SS14.Server.Interfaces.Log;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.ServerConsole;
@@ -38,6 +37,7 @@ using SS14.Shared.Enums;
 using SS14.Shared.Reflection;
 using SS14.Shared.Timing;
 using SS14.Shared.Utility;
+using SS14.Shared.Interfaces.Log;
 
 namespace SS14.Server
 {
@@ -55,7 +55,7 @@ namespace SS14.Server
         [Dependency]
         private readonly IServerEntityManager _entities;
         [Dependency]
-        private readonly IServerLogManager _log;
+        private readonly ILogManager _log;
         [Dependency]
         private readonly ISS14Serializer _serializer;
         [Dependency]
@@ -118,9 +118,9 @@ namespace SS14.Server
         public void Shutdown(string reason = null)
         {
             if (string.IsNullOrWhiteSpace(reason))
-                Logger.Log("[SRV] Shutting down...");
+                Logger.Info("[SRV] Shutting down...");
             else
-                Logger.Log($"[SRV] {reason}, shutting down...");
+                Logger.Info($"[SRV] {reason}, shutting down...");
 
             _mainLoop.Running = false;
         }
@@ -147,8 +147,7 @@ namespace SS14.Server
             // Create log directory if it does not exist yet.
             Directory.CreateDirectory(Path.GetDirectoryName(logPath));
 
-            _log.CurrentLevel = _config.GetCVar<LogLevel>("log.level");
-            _log.LogPath = logPath;
+            _log.RootSawmill.Level = _config.GetCVar<LogLevel>("log.level");
 
             OnRunLevelChanged(ServerRunLevel.Init);
 

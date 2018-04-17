@@ -90,7 +90,7 @@
       <Name>System.Core</Name>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.ValueTuple, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+    <Reference Include="System.ValueTuple">
       <HintPath>$(SolutionDir)packages\packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml">
@@ -128,9 +128,7 @@
     <Compile Include="GameObjects\EntitySystems\AiSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\AudioSystem.cs" />
     <Compile Include="Interfaces\GameObjects\IServerTransformComponent.cs" />
-    <Compile Include="Interfaces\Log\IServerLogManager.cs" />
     <Compile Include="Interfaces\Maps\IMapLoader.cs" />
-    <Compile Include="Log\ServerLogManager.cs" />
     <Compile Include="Maps\MapLoader.cs" />
     <Compile Include="Maps\YamlGridSerializer.cs" />
     <Compile Include="Program.cs" />

@@ -209,6 +209,7 @@
     <Compile Include="GameStates\PlayerState.cs" />
     <Compile Include="IoC\Exceptions\ImplementationConstructorException.cs" />
     <Compile Include="Enums\Lighting.cs" />
+    <Compile Include="Log\ConsoleLogHandler.cs" />
     <Compile Include="Log\LogLevel.cs" />
     <Compile Include="Log\Logger.cs" />
     <Compile Include="Log\LogMessage.cs" />

@@ -1,4 +1,4 @@
-using SS14.Shared.Interfaces.Log;
+﻿using SS14.Shared.Interfaces.Log;
 using System;
 using System.Collections.Generic;
 
@@ -19,6 +19,7 @@ namespace SS14.Shared.Log
             public Sawmill(Sawmill parent, string name)
             {
                 Parent = parent;
+                Name = name;
             }
 
             public void AddHandler(ILogHandler handler)
@@ -34,6 +35,7 @@ namespace SS14.Shared.Log
             public void Log(string message, LogLevel level, params object[] args)
             {
                 var msg = new LogMessage(string.Format(message, args), level, Name);
+                LogInternal(ref msg);
             }
 
             private void LogInternal(ref LogMessage message)

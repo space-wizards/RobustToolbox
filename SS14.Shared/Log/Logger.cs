@@ -27,40 +27,78 @@ namespace SS14.Shared.Log
         /// <summary>
         /// Log a message, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
-        public static void Log(string sawmillname, string message, LogLevel logLevel, params object[] args)
+        public static void LogS(string sawmillname, string message, LogLevel logLevel, params object[] args)
         {
             var sawmill = LogManagerSingleton.GetSawmill(sawmillname);
             sawmill.Log(message, logLevel, args);
         }
 
         /// <summary>
+        /// Log a message, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
+        /// </summary>
+        public static void Log(string message, LogLevel logLevel, params object[] args)
+        {
+            LogManagerSingleton.RootSawmill.Log(message, logLevel, args);
+        }
+
+        /// <summary>
         /// Log a message as debug, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
-        public static void Debug(string sawmill, string message, params object[] args) => Log(sawmill, message, LogLevel.Debug, args);
+        public static void DebugS(string sawmill, string message, params object[] args) => LogS(sawmill, message, LogLevel.Debug, args);
+
+        /// <summary>
+        /// Log a message as debug, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
+        /// </summary>
+        /// <seealso cref="Log" />
+        public static void Debug(string message, params object[] args) => Log(message, LogLevel.Debug, args);
 
         /// <summary>
         /// Log a message as info, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
-        public static void Info(string sawmill, string message, params object[] args) => Log(sawmill, message, LogLevel.Info, args);
+        public static void InfoS(string sawmill, string message, params object[] args) => LogS(sawmill, message, LogLevel.Info, args);
+
+        /// <summary>
+        /// Log a message as info, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
+        /// </summary>
+        /// <seealso cref="Log" />
+        public static void Info(string message, params object[] args) => Log(message, LogLevel.Info, args);
 
         /// <summary>
         /// Log a message as warning, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
-        public static void Warning(string sawmill, string message, params object[] args) => Log(sawmill, message, LogLevel.Warning, args);
+        public static void WarningS(string sawmill, string message, params object[] args) => LogS(sawmill, message, LogLevel.Warning, args);
+
+        /// <summary>
+        /// Log a message as warning, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
+        /// </summary>
+        /// <seealso cref="Log" />
+        public static void Warning(string message, params object[] args) => Log(message, LogLevel.Warning, args);
 
         /// <summary>
         /// Log a message as error, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
-        public static void Error(string sawmill, string message, params object[] args) => Log(sawmill, message, LogLevel.Error, args);
+        public static void ErrorS(string sawmill, string message, params object[] args) => LogS(sawmill, message, LogLevel.Error, args);
+
+        /// <summary>
+        /// Log a message as error, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
+        /// </summary>
+        /// <seealso cref="Log" />
+        public static void Error(string message, params object[] args) => Log(message, LogLevel.Error, args);
 
         /// <summary>
         /// Log a message as fatal, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
-        public static void Fatal(string sawmill, string message, params object[] args) => Log(sawmill, message, LogLevel.Fatal, args);
+        public static void FatalS(string sawmill, string message, params object[] args) => LogS(sawmill, message, LogLevel.Fatal, args);
+
+        /// <summary>
+        /// Log a message as fatal, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
+        /// </summary>
+        /// <seealso cref="Log" />
+        public static void Fatal(string message, params object[] args) => Log(message, LogLevel.Fatal, args);
     }
 }

@@ -44,20 +44,5 @@ namespace SS14.Shared.Log
             };
             sawmills[ROOT] = rootSawmill;
         }
-
-        /// <summary>
-        /// Actual method used to log the formatted message somewhere.
-        /// To disk, console, etc...
-        /// </summary>
-        protected virtual void LogInternal(string message, LogLevel level)
-        {
-            string name = LogLevelToName(level);
-            ConsoleColor color = LogLevelToConsoleColor(level);
-
-            System.Console.ForegroundColor = color;
-            System.Console.Write(name);
-            System.Console.ResetColor();
-            System.Console.WriteLine(": {0}", message);
-        }
     }
 }

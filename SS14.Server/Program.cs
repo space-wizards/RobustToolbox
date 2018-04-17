@@ -147,6 +147,7 @@ namespace SS14.Server
             var mgr = IoCManager.Resolve<ILogManager>();
             var handler = new ConsoleLogHandler();
             mgr.RootSawmill.AddHandler(handler);
+            mgr.GetSawmill("res.typecheck").Level = LogLevel.Info;
         }
     }
 }

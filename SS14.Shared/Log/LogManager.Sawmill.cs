@@ -49,6 +49,8 @@ namespace SS14.Shared.Log
                 {
                     handler.Log(message);
                 }
+
+                Parent?.LogInternal(ref message);
             }
 
             private LogLevel GetPracticalLevel()

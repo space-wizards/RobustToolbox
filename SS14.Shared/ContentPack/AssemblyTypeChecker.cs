@@ -227,7 +227,7 @@ namespace SS14.Shared.ContentPack
                     if (safe)
                         continue;
 
-                    Logger.Error($"[RES] Cannot load {asmDef.MainModule.Name}, {typeRef.FullName} is not whitelisted.");
+                    Logger.ErrorS("res.typecheck", $"Cannot load {asmDef.MainModule.Name}, {typeRef.FullName} is not whitelisted.");
                     return false;
                 }
             }
@@ -261,7 +261,7 @@ namespace SS14.Shared.ContentPack
                     result = 'B';
                     break;
                 }
-                Logger.Debug($"[RES] RefType: [{result}] {typeRef.FullName}");
+                Logger.DebugS("res.typecheck", $"RefType: [{result}] {typeRef.FullName}");
             }
         }
     }

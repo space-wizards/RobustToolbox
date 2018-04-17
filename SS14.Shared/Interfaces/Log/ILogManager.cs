@@ -4,11 +4,14 @@ using SS14.Shared.Log;
 namespace SS14.Shared.Interfaces.Log
 {
     /// <summary>
-    /// Handles logging of messages on specific warning levels.
-    /// Output method is dependent on implementation.
+    ///     Manages logging sawmills.
     /// </summary>
+    /// <seealso cref="ISawmill"/>
     public interface ILogManager
     {
+        /// <summary>
+        ///     The "root" sawmill every other sawmill is parented to.
+        /// </summary>
         ISawmill RootSawmill { get; }
 
         /// <summary>

@@ -1,12 +1,11 @@
 ﻿using SS14.Shared.Interfaces.Log;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SS14.Shared.Log
 {
+    /// <summary>
+    ///     Log handler that prints to console.
+    /// </summary>
     public sealed class ConsoleLogHandler : ILogHandler
     {
         public void Log(LogMessage message)

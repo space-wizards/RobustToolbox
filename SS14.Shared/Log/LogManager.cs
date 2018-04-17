@@ -1,9 +1,9 @@
 ﻿using SS14.Shared.Interfaces.Log;
-using System;
 using System.Collections.Generic;
 
 namespace SS14.Shared.Log
 {
+    // Sealed. New functionality should be added with handlers.
     public partial class LogManager : ILogManager
     {
         public const string ROOT = "root";
@@ -40,7 +40,7 @@ namespace SS14.Shared.Log
         {
             rootSawmill = new Sawmill(null, ROOT)
             {
-                Level = LogLevel.Warning,
+                Level = LogLevel.Info,
             };
             sawmills[ROOT] = rootSawmill;
         }

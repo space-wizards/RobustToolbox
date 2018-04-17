@@ -12,7 +12,7 @@ namespace SS14.Shared.Log
 
             public Sawmill Parent { get; }
 
-            public LogLevel? Level { get; set; }
+            public LogLevel? Level { get; set; } = null;
 
             private List<ILogHandler> handlers = new List<ILogHandler>();
 

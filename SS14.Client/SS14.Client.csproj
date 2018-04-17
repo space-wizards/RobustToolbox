@@ -153,6 +153,7 @@
     <Compile Include="Interfaces\Player\IPlayerManager.cs" />
     <Compile Include="Interfaces\State\IStateManager.cs" />
     <Compile Include="Interfaces\Utility\IRand.cs" />
+    <Compile Include="Log\DebugConsoleLogHandler.cs" />
     <Compile Include="Log\GodotLogHandler.cs" />
     <Compile Include="Map\ClientTileDefinitionManager.cs" />
     <Compile Include="Map\ClientMapManager.cs" />

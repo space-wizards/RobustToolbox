@@ -10,17 +10,16 @@ namespace SS14.Client.Log
 {
     class DebugConsoleLogHandler : ILogHandler
     {
-        [Dependency]
-        IClientConsole console;
+        IDebugConsole Console;
 
-        public DebugConsoleLogHandler()
+        public DebugConsoleLogHandler(IDebugConsole console)
         {
-            IoCManager.InjectDependencies(this);
+            Console = console;
         }
 
         public void Log(LogMessage message)
         {
-            ((IDebugConsole)console).AddLine($"[{message.LogLevelToName()}] {message.SawmillName}: {message.Message}");
+            Console.AddLine($"[{message.LogLevelToName()}] {message.SawmillName}: {message.Message}");
         }
     }
 }

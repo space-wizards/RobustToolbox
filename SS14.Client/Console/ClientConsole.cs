@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using SS14.Client.Interfaces.Console;
+using SS14.Client.Log;
 using SS14.Shared.Console;
+using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
@@ -36,6 +38,8 @@ namespace SS14.Client.Console
         protected readonly IClientNetManager _network;
         [Dependency]
         private readonly IReflectionManager _reflectionManager;
+        [Dependency]
+        private readonly ILogManager logManager;
 
         private readonly Dictionary<string, IConsoleCommand> _commands = new Dictionary<string, IConsoleCommand>();
         private bool _requestedCommands;
@@ -48,6 +52,7 @@ namespace SS14.Client.Console
             _network.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME);
 
             Reset();
+            logManager.RootSawmill.AddHandler(new DebugConsoleLogHandler(this));
         }
 
         /// <inheritdoc />

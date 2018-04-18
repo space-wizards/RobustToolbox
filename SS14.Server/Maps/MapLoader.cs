@@ -70,7 +70,7 @@ namespace SS14.Server.Maps
             // try user
             if (!File.Exists(fullPath))
             {
-                Logger.Info($"[MAP] No user blueprint path: {fullPath}");
+                Logger.InfoS("map", $"No user blueprint path: {fullPath}");
 
                 // fallback to content
                 if (_resMan.TryContentFileRead(ResourcePath.Root / path, out var contentReader))
@@ -79,7 +79,7 @@ namespace SS14.Server.Maps
                 }
                 else
                 {
-                    Logger.Error($"[MAP] No blueprint found: {path}");
+                    Logger.ErrorS("map", $"No blueprint found: {path}");
                     return;
                 }
             }
@@ -90,7 +90,7 @@ namespace SS14.Server.Maps
 
             using (reader)
             {
-                Logger.Info($"[MAP] Loading Grid: {path}");
+                Logger.InfoS("map", $"Loading Grid: {path}");
 
                 var stream = new YamlStream();
                 stream.Load(reader);
@@ -152,7 +152,7 @@ namespace SS14.Server.Maps
             // try user
             if (!File.Exists(fullPath))
             {
-                Logger.Info($"[MAP] No user blueprint found: {fullPath}");
+                Logger.InfoS("map", $"No user blueprint found: {fullPath}");
 
                 // fallback to content
                 if (_resMan.TryContentFileRead(path, out var contentReader))
@@ -161,7 +161,7 @@ namespace SS14.Server.Maps
                 }
                 else
                 {
-                    Logger.Error($"[MAP] No blueprint found: {path}");
+                    Logger.ErrorS("map", $"No blueprint found: {path}");
                     return;
                 }
             }
@@ -172,7 +172,7 @@ namespace SS14.Server.Maps
 
             using (reader)
             {
-                Logger.Info($"[MAP] Loading Map: {path}");
+                Logger.InfoS("map", $"Loading Map: {path}");
 
                 var stream = new YamlStream();
                 stream.Load(reader);
@@ -262,7 +262,7 @@ namespace SS14.Server.Maps
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"[MAP] Error creating entity \"{protoName}\": {e.Message}");
+                    Logger.ErrorS("map", $"Error creating entity \"{protoName}\": {e.Message}");
                 }
             }
         }

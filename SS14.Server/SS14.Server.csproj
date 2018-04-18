@@ -135,6 +135,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reflection\ServerReflectionManager.cs" />
     <Compile Include="BaseServer.cs" />
+    <Compile Include="ServerConsole\Commands\LogCommands.cs" />
     <Compile Include="ServerConsole\Commands\MapCommands.cs" />
     <Compile Include="Signals.cs" />
     <Content Include="server_config.toml">

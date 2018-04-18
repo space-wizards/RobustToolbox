@@ -72,6 +72,8 @@ namespace SS14.Server
         private readonly IGameStateManager _stateManager;
         [Dependency]
         private readonly IServerNetManager _network;
+        [Dependency]
+        private readonly IConsoleManager consoleManager;
 
         private FileLogHandler fileLogHandler;
         private GameLoop _mainLoop;
@@ -226,7 +228,6 @@ namespace SS14.Server
 
             var clientConsole = IoCManager.Resolve<IClientConsoleHost>();
             clientConsole.Initialize();
-            var consoleManager = IoCManager.Resolve<IConsoleManager>();
             consoleManager.Initialize();
 
             OnRunLevelChanged(ServerRunLevel.PreGame);
@@ -286,11 +287,11 @@ namespace SS14.Server
 
             _time.TickRate = _config.GetCVar<int>("net.tickrate");
 
-            Logger.Info($"[SRV] Name: {ServerName}");
-            Logger.Info($"[SRV] TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
-            Logger.Info($"[SRV] Map: {MapName}");
-            Logger.Info($"[SRV] Max players: {MaxPlayers}");
-            Logger.Info($"[SRV] Welcome message: {Motd}");
+            Logger.InfoS("srv", $"Name: {ServerName}");
+            Logger.InfoS("srv", $"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
+            Logger.InfoS("srv", $"Map: {MapName}");
+            Logger.InfoS("srv", $"Max players: {MaxPlayers}");
+            Logger.InfoS("srv", $"Welcome message: {Motd}");
         }
 
         /// <summary>
@@ -351,6 +352,7 @@ namespace SS14.Server
         private void Update(float frameTime)
         {
             UpdateTitle();
+            consoleManager.Update();
 
             IoCManager.Resolve<IServerNetManager>().ProcessPackets();
 

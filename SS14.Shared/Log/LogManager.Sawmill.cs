@@ -12,7 +12,19 @@ namespace SS14.Shared.Log
 
             public Sawmill Parent { get; }
 
-            public LogLevel? Level { get; set; } = null;
+            public LogLevel? Level
+            {
+                get => _level;
+                set
+                {
+                    if (Name == "root" && value == null)
+                    {
+                        throw new ArgumentException("Cannot set root sawmill level to null.");
+                    }
+                    _level = value;
+                }
+            }
+            private LogLevel? _level = null;
 
             private List<ILogHandler> handlers = new List<ILogHandler>();
 

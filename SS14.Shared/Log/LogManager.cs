@@ -40,7 +40,7 @@ namespace SS14.Shared.Log
         {
             rootSawmill = new Sawmill(null, ROOT)
             {
-                Level = LogLevel.Info,
+                Level = LogLevel.Debug,
             };
             sawmills[ROOT] = rootSawmill;
         }

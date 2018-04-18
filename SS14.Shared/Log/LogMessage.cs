@@ -1,11 +1,20 @@
-﻿using System;
-
-namespace SS14.Shared.Log
+﻿namespace SS14.Shared.Log
 {
     public struct LogMessage
     {
+        /// <summary>
+        ///     The actual log message given.
+        /// </summary>
         public readonly string Message;
+
+        /// <summary>
+        ///     The log level of the message.
+        /// </summary>
         public readonly LogLevel Level;
+
+        /// <summary>
+        ///     The name of the sawmill that sent the message.
+        /// </summary>
         public readonly string SawmillName;
 
         public LogMessage(string message, LogLevel level, string sawmillName)

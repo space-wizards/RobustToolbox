@@ -73,6 +73,7 @@ namespace SS14.Server
         [Dependency]
         private readonly IServerNetManager _network;
 
+        private FileLogHandler fileLogHandler;
         private GameLoop _mainLoop;
         private ServerRunLevel _runLevel;
 
@@ -142,12 +143,13 @@ namespace SS14.Server
             var fullPath = Path.Combine(logPath, logFilename);
 
             if (!Path.IsPathRooted(fullPath))
+            {
                 logPath = PathHelpers.ExecutableRelativeFile(fullPath);
+            }
 
-            // Create log directory if it does not exist yet.
-            Directory.CreateDirectory(Path.GetDirectoryName(logPath));
-
+            fileLogHandler = new FileLogHandler(logPath);
             _log.RootSawmill.Level = _config.GetCVar<LogLevel>("log.level");
+            _log.RootSawmill.AddHandler(fileLogHandler);
 
             OnRunLevelChanged(ServerRunLevel.Init);
 

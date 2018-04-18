@@ -1,13 +1,12 @@
-﻿using SS14.Client.Console;
-using SS14.Client.Interfaces.Console;
-using SS14.Client.Interfaces.UserInterface;
+﻿using SS14.Client.Interfaces.Console;
 using SS14.Shared.Interfaces.Log;
-using SS14.Shared.IoC;
 using SS14.Shared.Log;
-using System;
 
 namespace SS14.Client.Log
 {
+    /// <summary>
+    ///     Writes logs to the in-game debug console.
+    /// </summary>
     class DebugConsoleLogHandler : ILogHandler
     {
         IDebugConsole Console;

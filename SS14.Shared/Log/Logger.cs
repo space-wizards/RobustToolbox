@@ -4,28 +4,36 @@ using SS14.Shared.IoC;
 namespace SS14.Shared.Log
 {
     /// <summary>
-    /// Static logging API front end. This is here as a convenience to prevent the need to resolve the manager manually.
+    ///     Static logging API front end.
+    ///     This is here as a convenience to prevent the need to resolve the manager manually.
     /// </summary>
     /// <remarks>
-    /// This type is simply a proxy to an IoC based <see cref="ILogManager"/>.
-    /// As such, no methods or properties will work if IoC has not been initialized yet.
+    ///     This type is simply a proxy to an IoC based <see cref="ILogManager"/> and its sawmills.
+    ///     As such, no methods or properties will work if IoC has not been initialized yet.
     /// </remarks>
     /// <seealso cref="ILogManager"/>
-    /// <seealso cref="LogManager"/>
+    /// <seealso cref="ISawmill"/>
     public static class Logger
     {
         /// <summary>
-        /// The instance we're using. As it's a direct proxy to IoC this will not work if IoC is not functional.
+        ///     The instance we're using.
+        ///     As it's a direct proxy to IoC this will not work if IoC is not functional.
         /// </summary>
+        // TODO: Maybe cache this to improve performance.
         private static ILogManager LogManagerSingleton => IoCManager.Resolve<ILogManager>();
 
+        /// <summary>
+        ///     Gets a sawmill by name. Equivalent to <see cref="ILogManager.GetSawmill(string)"/>.
+        /// </summary>
+        /// <param name="name">The name of the sawmill to get.</param>
+        /// <returns>The sawmill with specified name. Creates a new one if it does not exist.</returns>
         public static ISawmill GetSawmill(string name)
         {
             return LogManagerSingleton.GetSawmill(name);
         }
 
         /// <summary>
-        /// Log a message, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
+        ///     Log a message, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         public static void LogS(string sawmillname, string message, LogLevel logLevel, params object[] args)
         {

@@ -4,6 +4,9 @@ using SS14.Shared.Log;
 
 namespace SS14.Client.Log
 {
+    /// <summary>
+    ///     Handles logs using Godot's <see cref="GD.Print(object[])"/>.
+    /// </summary>
     class GodotLogHandler : ILogHandler
     {
         public void Log(LogMessage message)

@@ -14,6 +14,12 @@ namespace SS14.Client.UserInterface.Controls
             return new Godot.GridContainer();
         }
 
+        protected override void SetSceneControl(Godot.Control control)
+        {
+            base.SetSceneControl(control);
+            SceneControl = (Godot.GridContainer)control;
+        }
+
         public int Columns
         {
             get => SceneControl.GetColumns();

@@ -193,7 +193,6 @@ namespace SS14.UnitTesting
             switch (Project)
             {
                 case UnitTestProject.Client:
-                    IoCManager.Register<ILogManager, LogManager>();
                     IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
                     IoCManager.Register<IEntityManager, ClientEntityManager>();
                     IoCManager.Register<IComponentFactory, ComponentFactory>();

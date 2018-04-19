@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.ClientEye;
+using SS14.Client.Graphics.Shaders;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.ResourceManagement;
@@ -17,6 +18,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
+using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 using Path = System.IO.Path;
@@ -108,6 +110,20 @@ namespace SS14.Client.GameObjects
             get
             {
                 return Box2.FromDimensions(0, 0, CurrentSprite.Width, CurrentSprite.Height);
+            }
+        }
+
+        private Shader _shader;
+        public Shader Shader
+        {
+            get => _shader;
+            set
+            {
+                if (SceneSprite != null)
+                {
+                    SceneSprite.Material = value.GodotMaterial;
+                }
+                _shader = value;
             }
         }
 
@@ -217,6 +233,7 @@ namespace SS14.Client.GameObjects
                 ZIndex = (int)DrawDepth,
                 SelfModulate = Color.Convert(),
                 Scale = Scale.Convert(),
+                Material = _shader?.GodotMaterial,
             };
             SceneSprite.SetName("SpriteComponent");
 
@@ -340,6 +357,11 @@ namespace SS14.Client.GameObjects
             if (mapping.TryGetNode("scale", out node))
             {
                 Scale = node.AsVector2();
+            }
+
+            if (mapping.TryGetNode("shader", out node))
+            {
+                Shader = IoCManager.Resolve<IPrototypeManager>().Index<ShaderPrototype>(node.AsString()).Instance();
             }
         }
 

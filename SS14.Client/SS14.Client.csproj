@@ -132,6 +132,8 @@
     <Compile Include="Graphics\Lighting\LightManager.Occluder.cs" />
     <Compile Include="Graphics\Lighting\LightManager.cs" />
     <Compile Include="Graphics\Lighting\LightMode\LightModeConstant.cs" />
+    <Compile Include="Graphics\Shaders\ShaderPrototype.cs" />
+    <Compile Include="Graphics\Shaders\Shader.cs" />
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
     <Compile Include="Interfaces\Console\IDebugConsole.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClientClickableComponent.cs" />
@@ -164,6 +166,7 @@
     <Compile Include="ResourceManagement\BaseResource.cs" />
     <Compile Include="ResourceManagement\ResourceCache.cs" />
     <Compile Include="ResourceManagement\ResourceTypes\AudioResource.cs" />
+    <Compile Include="ResourceManagement\ResourceTypes\ShaderSourceResource.cs" />
     <Compile Include="ResourceManagement\ResourceTypes\FontResource.cs" />
     <Compile Include="Graphics\RSI\RSI.cs" />
     <Compile Include="Graphics\RSI\RSI.State.cs" />

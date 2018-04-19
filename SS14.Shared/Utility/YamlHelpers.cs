@@ -108,6 +108,11 @@ namespace SS14.Shared.Utility
             }
         }
 
+        public static ResourcePath AsResourcePath(this YamlNode node)
+        {
+            return new ResourcePath(node.ToString());
+        }
+
         // Mapping specific helpers.
 
         /// <summary>

@@ -6,8 +6,7 @@
   - type: Clickable
   - type: Sprite
     drawdepth: FloorPlaceable
-    sprites:
-    - Tiles/wall_texture.png
+    sprite: Tiles/wall_texture.png
 
   - type: Icon
     icon: Tiles/wall_texture.png

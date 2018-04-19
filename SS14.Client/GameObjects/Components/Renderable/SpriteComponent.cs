@@ -1,382 +1,139 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Shaders;
-using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
-using SS14.Client.Utility;
-using SS14.Shared;
-using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
-using SS14.Shared.Map;
-using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
-using Path = System.IO.Path;
+using VS = Godot.VisualServer;
 
-// Warning: Shitcode ahead!
 namespace SS14.Client.GameObjects
 {
-    public class SpriteComponent : Component, ISpriteRenderableComponent, ISpriteComponent, IClickTargetComponent
+    public sealed class SpriteComponent : Component
     {
         public override string Name => "Sprite";
         public override uint? NetID => NetIDs.SPRITE;
-
-        public Texture CurrentSprite { get; private set; }
-        protected Texture currentBaseSprite { get; private set; }
-        protected string currentBaseSpriteKey;
-        protected Dictionary<string, Texture> dirSprites = new Dictionary<string, Texture>();
-        protected bool HorizontalFlip { get; set; }
-        protected IRenderableComponent master;
-        protected List<IRenderableComponent> slaves = new List<IRenderableComponent>();
-        protected Dictionary<string, Texture> sprites = new Dictionary<string, Texture>();
-        protected bool visible = true;
-        private DrawDepth drawDepth;
-        public DrawDepth DrawDepth
-        {
-            get => drawDepth;
-            set
-            {
-                drawDepth = value;
-                if (SceneSprite != null)
-                {
-                    SceneSprite.ZIndex = (int)value;
-                }
-            }
-        }
-        private Color color = Color.White;
-        public Color Color
-        {
-            get => color;
-            set
-            {
-                color = value;
-                if (SceneSprite != null)
-                {
-                    SceneSprite.SelfModulate = value.Convert();
-                }
-            }
-        }
-        public MapId MapID { get; private set; }
-
         public override Type StateType => typeof(SpriteComponentState);
 
-        private IGodotTransformComponent transform;
-        private Godot.Sprite SceneSprite;
+        public static readonly ResourcePath TextureRoot = new ResourcePath("/Textures");
 
-        public float Bottom
-        {
-            get
-            {
-                return transform.WorldPosition.Y +
-                       (CurrentSprite.Height / 2);
-            }
-        }
+        private List<Layer> Layers = new List<Layer>();
+        private List<Godot.RID> CanvasItems = new List<Godot.RID>();
 
-        public bool Cardinal { get; private set; } = true;
-
-        public Vector2 Scale { get; private set; } = Vector2.One;
-
-        private Vector2 offset = Vector2.Zero;
-        public Vector2 Offset
-        {
-            get => offset;
-            set
-            {
-                if (value == offset)
-                {
-                    return;
-                }
-
-                SceneSprite.Offset = value.Convert() * EyeManager.PIXELSPERMETER;
-            }
-        }
-
-        #region ISpriteComponent Members
-
-        public Box2 AverageAABB => LocalAABB;
-
-        public Box2 LocalAABB
-        {
-            get
-            {
-                return Box2.FromDimensions(0, 0, CurrentSprite.Width, CurrentSprite.Height);
-            }
-        }
-
-        private Shader _shader;
-        public Shader Shader
-        {
-            get => _shader;
-            set
-            {
-                if (SceneSprite != null)
-                {
-                    SceneSprite.Material = value.GodotMaterial;
-                }
-                _shader = value;
-            }
-        }
-
-        public Texture GetSprite(string spriteKey)
-        {
-            if (sprites.ContainsKey(spriteKey))
-                return sprites[spriteKey];
-            else
-                return null;
-        }
-
-        public List<Texture> GetAllSprites()
-        {
-            return sprites.Values.ToList();
-        }
-
-        public void SetSpriteByKey(string spriteKey)
-        {
-            if (sprites.ContainsKey(spriteKey))
-            {
-                currentBaseSprite = sprites[spriteKey];
-                currentBaseSpriteKey = spriteKey;
-
-                SendMessage(new SpriteChangedMsg());
-            }
-            else
-                throw new Exception("Whoops. That sprite isn't in the dictionary.");
-
-            UpdateCurrentSprite();
-        }
-
-        public void AddSprite(string spriteKey)
-        {
-            if (sprites.ContainsKey(spriteKey))
-            {
-                throw new InvalidOperationException("That sprite is already added.");
-            }
-
-            var manager = IoCManager.Resolve<IResourceCache>();
-            if (manager.TryGetResource<TextureResource>($@"/Textures/{spriteKey}", out var sprite))
-            {
-                AddSprite(spriteKey, sprite.Texture);
-            }
-
-            //If there's only one sprite, and the current sprite is explicitly not set, then lets go ahead and set our sprite.
-            if (sprites.Count == 1)
-            {
-                SetSpriteByKey(sprites.Keys.First());
-            }
-
-            BuildDirectionalSprites();
-        }
-
-        public void AddSprite(string key, Texture spritetoadd)
-        {
-            if (spritetoadd != null && !String.IsNullOrEmpty(key))
-            {
-                sprites.Add(key, spritetoadd);
-            }
-            BuildDirectionalSprites();
-        }
-
-        public bool HasSprite(string key)
-        {
-            return sprites.ContainsKey(key);
-        }
-
-        #endregion ISpriteComponent Members
-
-        private void BuildDirectionalSprites()
-        {
-            dirSprites.Clear();
-            var resMgr = IoCManager.Resolve<IResourceCache>();
-
-            foreach (var curr in sprites)
-            {
-                foreach (string dir in Enum.GetNames(typeof(Direction)))
-                {
-                    var ext = Path.GetExtension(curr.Key);
-                    var withoutExt = Path.ChangeExtension(curr.Key, null);
-                    string name = $"{withoutExt}_{dir.ToLowerInvariant()}{ext}";
-                    if (resMgr.TryGetResource<TextureResource>(@"/Textures/" + name, out var res))
-                        dirSprites.Add(name, res.Texture);
-                }
-            }
-
-            UpdateCurrentSprite();
-        }
+        private Godot.Node2D SceneNode;
+        private IGodotTransformComponent TransformComponent;
 
         public override void OnAdd()
         {
             base.OnAdd();
+            SceneNode = new Godot.Node2D()
+            {
+                Name = "Sprite"
+            };
+        }
 
-            SendMessage(new SpriteChangedMsg());
+        public override void OnRemove()
+        {
+            base.OnRemove();
+
+            ClearDraw();
+            SceneNode.QueueFree();
         }
 
         public override void Initialize()
         {
             base.Initialize();
-            transform = Owner.GetComponent<IGodotTransformComponent>();
-            transform.OnMove += OnMove;
-            transform.OnRotate += OnRotate;
-            MapID = transform.MapID;
 
-            SceneSprite = new Godot.Sprite()
+            TransformComponent = Owner.GetComponent<IGodotTransformComponent>();
+            TransformComponent.SceneNode.AddChild(SceneNode);
+            Redraw();
+        }
+
+        private void ClearDraw()
+        {
+            foreach (var item in CanvasItems)
             {
-                ZIndex = (int)DrawDepth,
-                SelfModulate = Color.Convert(),
-                Scale = Scale.Convert(),
-                Material = _shader?.GodotMaterial,
-            };
-            SceneSprite.SetName("SpriteComponent");
-
-            transform.SceneNode.AddChild(SceneSprite);
-
-            UpdateCurrentSprite();
-        }
-
-        public override void Shutdown()
-        {
-            transform.OnRotate -= OnRotate;
-            transform.OnMove -= OnMove;
-            transform = null;
-
-            SceneSprite.QueueFree();
-            SceneSprite.Dispose();
-            SceneSprite = null;
-
-            base.Shutdown();
-        }
-
-        public void OnMove(object sender, MoveEventArgs args)
-        {
-            MapID = args.NewPosition.MapID;
-        }
-
-        private void OnRotate(Angle newAngle)
-        {
-            UpdateCurrentSprite();
-        }
-
-        public void ClearSprites()
-        {
-            sprites.Clear();
-        }
-
-        protected virtual Texture GetBaseSprite()
-        {
-            return currentBaseSprite;
-        }
-
-        protected void SetDrawDepth(DrawDepth p)
-        {
-            DrawDepth = p;
-        }
-
-        private Texture GetActiveDirectionalSprite()
-        {
-            if (currentBaseSprite == null || transform == null) return null;
-
-            var sprite = currentBaseSprite;
-
-            var ext = Path.GetExtension(currentBaseSpriteKey);
-            var withoutExt = Path.ChangeExtension(currentBaseSpriteKey, null);
-            Direction dir;
-            // Oh hey look Y is STILL FLIPPED.
-            var angle = new Angle(-transform.WorldRotation);
-            if (Cardinal)
-            {
-                dir = angle.GetCardinalDir();
+                VS.FreeRid(item);
             }
-            else
-            {
-                dir = angle.GetDir();
-            }
-            string name = $"{withoutExt}_{dir.ToString().ToLowerInvariant()}{ext}";
-
-            if (dirSprites.ContainsKey(name))
-                sprite = dirSprites[name];
-
-            return sprite;
+            CanvasItems.Clear();
         }
 
-        public void UpdateCurrentSprite()
+        private void Redraw()
         {
-            CurrentSprite = GetActiveDirectionalSprite();
-            if (SceneSprite != null && CurrentSprite != null)
-            {
-                SceneSprite.Texture = CurrentSprite.GodotTexture;
-            }
-        }
+            ClearDraw();
 
-        public bool SpriteExists(string key)
-        {
-            if (sprites.ContainsKey(key))
-                return true;
-            return false;
+            Shader prevShader = null;
+            Godot.RID currentItem = null;
+            foreach (var layer in Layers)
+            {
+                var shader = layer.Shader;
+                var texture = layer.Texture;
+                if (currentItem == null || prevShader != shader)
+                {
+                    currentItem = VS.CanvasItemCreate();
+                    VS.CanvasItemSetParent(currentItem, SceneNode.GetCanvasItem());
+                    CanvasItems.Add(currentItem);
+                    if (shader != null)
+                    {
+                        VS.CanvasItemSetMaterial(currentItem, shader.GodotMaterial.GetRid());
+                    }
+                    prevShader = shader;
+                }
+
+                texture.GodotTexture.Draw(currentItem, -texture.GodotTexture.GetSize() / 2);
+            }
         }
 
         public override void LoadParameters(YamlMappingNode mapping)
         {
+            base.LoadParameters(mapping);
+
+            var resc = IoCManager.Resolve<IResourceCache>();
+
             YamlNode node;
-            if (mapping.TryGetNode("drawdepth", out node))
-            {
-                SetDrawDepth(node.AsEnum<DrawDepth>());
-            }
-
-            if (mapping.TryGetNode("color", out node))
-            {
-                Color = node.AsColor();
-            }
-
-            if (mapping.TryGetNode<YamlSequenceNode>("sprites", out var sequence))
-            {
-                foreach (YamlNode spriteNode in sequence)
-                {
-                    AddSprite(spriteNode.AsString());
-                }
-            }
-
             if (mapping.TryGetNode("sprite", out node))
             {
-                AddSprite(node.AsString());
+                var path = node.AsResourcePath();
+                var tex = resc.GetResource<TextureResource>(TextureRoot / path);
+                var layer = new Layer
+                {
+                    Texture = tex
+                };
+                Layers.Add(layer);
             }
 
-            if (mapping.TryGetNode("cardinal", out node))
+            if (mapping.TryGetNode("layers", out YamlSequenceNode layers))
             {
-                Cardinal = node.AsBool();
-            }
-
-            if (mapping.TryGetNode("scale", out node))
-            {
-                Scale = node.AsVector2();
-            }
-
-            if (mapping.TryGetNode("shader", out node))
-            {
-                Shader = IoCManager.Resolve<IPrototypeManager>().Index<ShaderPrototype>(node.AsString()).Instance();
+                foreach (var layernode in layers.Cast<YamlMappingNode>())
+                {
+                    var path = layernode.GetNode("sprite").AsResourcePath();
+                    var tex = resc.GetResource<TextureResource>(TextureRoot / path);
+                    Shader shader = null;
+                    if (layernode.TryGetNode("shader", out node))
+                    {
+                        shader = IoCManager.Resolve<IPrototypeManager>().Index<ShaderPrototype>(node.AsString()).Instance();
+                    }
+                    var layer = new Layer
+                    {
+                        Texture = tex,
+                        Shader = shader,
+                    };
+                    Layers.Add(layer);
+                }
             }
         }
 
-        /// <inheritdoc />
-        public override void HandleComponentState(ComponentState state)
+        private struct Layer
         {
-            var newState = (SpriteComponentState)state;
-            DrawDepth = newState.DrawDepth;
-            Offset = newState.Offset;
-
-            if (newState.SpriteKey != null && sprites.ContainsKey(newState.SpriteKey) &&
-                currentBaseSprite != sprites[newState.SpriteKey])
-                SetSpriteByKey(newState.SpriteKey);
-
-            visible = newState.Visible;
+            public Texture Texture;
+            public Shader Shader;
         }
     }
 }

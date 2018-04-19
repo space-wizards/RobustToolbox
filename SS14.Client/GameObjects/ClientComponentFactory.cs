@@ -24,9 +24,9 @@ namespace SS14.Client.GameObjects
             Register<BoundingBoxComponent>();
 
             Register<SpriteComponent>();
-            RegisterReference<SpriteComponent, ISpriteComponent>();
-            RegisterReference<SpriteComponent, ISpriteRenderableComponent>();
-            RegisterReference<SpriteComponent, IClickTargetComponent>();
+            //RegisterReference<SpriteComponent, ISpriteComponent>();
+            //RegisterReference<SpriteComponent, ISpriteRenderableComponent>();
+            //RegisterReference<SpriteComponent, IClickTargetComponent>();
 
             Register<ClickableComponent>();
             RegisterReference<ClickableComponent, IClientClickableComponent>();

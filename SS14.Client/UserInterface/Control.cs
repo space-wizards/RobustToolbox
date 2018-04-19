@@ -10,6 +10,9 @@ using System.Reflection;
 using SS14.Shared.Maths;
 using SS14.Client.Utility;
 using SS14.Client.Graphics.Drawing;
+using SS14.Shared.Utility;
+using SS14.Client.Interfaces.ResourceManagement;
+using System.IO;
 
 namespace SS14.Client.UserInterface
 {
@@ -73,6 +76,13 @@ namespace SS14.Client.UserInterface
         ///     The control's representation in Godot's scene tree.
         /// </summary>
         internal Godot.Control SceneControl { get; private set; }
+
+        /// <summary>
+        ///     Path to the .tscn file for this scene in the VFS.
+        ///     This is mainly intended for content loading tscn files.
+        ///     Don't use it from the engine.
+        /// </summary>
+        protected virtual ResourcePath ScenePath => null;
 
         private ControlWrap WrappedSceneControl;
 
@@ -240,7 +250,23 @@ namespace SS14.Client.UserInterface
 
         private void SetupSceneControl()
         {
-            SetSceneControl(SpawnSceneControl());
+            Godot.Control newSceneControl;
+            if (ScenePath == null)
+            {
+                newSceneControl = SpawnSceneControl();
+            }
+            else
+            {
+                // Get disk path with VFS.
+                var cache = IoCManager.Resolve<IResourceCache>();
+                if (!cache.TryGetDiskFilePath(ScenePath, out var diskPath))
+                {
+                    throw new FileNotFoundException("Scene path must exist on disk.");
+                }
+                var scene = (Godot.PackedScene)Godot.GD.Load(diskPath);
+                newSceneControl = (Godot.Control)scene.Instance();
+            }
+            SetSceneControl(newSceneControl);
             SetupSignalHooks();
             // Certain controls (LineEdit, WindowDialog, etc...) create sub controls automatically,
             // handle these.
@@ -524,7 +550,7 @@ namespace SS14.Client.UserInterface
             SceneControl?.ReleaseFocus();
         }
 
-        public static Control InstanceScene(string resourcePath)
+        internal static Control InstanceScene(string resourcePath)
         {
             var res = (Godot.PackedScene)Godot.ResourceLoader.Load(resourcePath);
             return InstanceScene(res);
@@ -540,7 +566,7 @@ namespace SS14.Client.UserInterface
         // TODO: Handle instances inside the provided scene in some way.
         //       Shouldn't need more than support for populating the GodotTranslationCache
         //         from SS14.Client.Godot I *think*?
-        public static Control InstanceScene(Godot.PackedScene scene)
+        internal static Control InstanceScene(Godot.PackedScene scene)
         {
             var root = (Godot.Control)scene.Instance();
             return WrapGodotControl(null, root);

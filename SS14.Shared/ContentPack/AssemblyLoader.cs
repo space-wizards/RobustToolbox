@@ -112,7 +112,7 @@ namespace SS14.Shared.ContentPack
             var entryPoints = mod.GameAssembly.GetTypes().Where(t => typeof(T).IsAssignableFrom(t)).ToArray();
 
             if (entryPoints.Length == 0)
-                Logger.Warning($"[RES] Assembly has no entry points: {mod.GameAssembly.FullName}");
+                Logger.WarningS("res", $"Assembly has no entry points: {mod.GameAssembly.FullName}");
 
             foreach (var entryPoint in entryPoints)
             {
@@ -138,7 +138,7 @@ namespace SS14.Shared.ContentPack
                             entry.Init();
                             break;
                         default:
-                            Logger.Error($"[RES] Unknown RunLevel: {level}");
+                            Logger.ErrorS("res", $"Unknown RunLevel: {level}");
                             break;
                     }
                 }
@@ -179,7 +179,7 @@ namespace SS14.Shared.ContentPack
             // get the assembly from the file system
             if (resMan.TryContentFileRead($@"/Assemblies/{assemblyName}.dll", out MemoryStream gameDll))
             {
-                Logger.Debug($"[SRV] Loading {assemblyName} DLL");
+                Logger.DebugS("srv", $"Loading {assemblyName} DLL");
 
                 // see if debug info is present
                 if (resMan.TryContentFileRead($@"/Assemblies/{assemblyName}.pdb", out MemoryStream gamePdb))
@@ -192,7 +192,7 @@ namespace SS14.Shared.ContentPack
                     }
                     catch (Exception e)
                     {
-                        Logger.Error($"[SRV] Exception loading DLL {assemblyName}.dll: {e}");
+                        Logger.Error("srv", $"Exception loading DLL {assemblyName}.dll: {e}");
                         return false;
                     }
                 }
@@ -206,14 +206,14 @@ namespace SS14.Shared.ContentPack
                     }
                     catch (Exception e)
                     {
-                        Logger.Error($"[SRV] Exception loading DLL {assemblyName}.dll: {e}");
+                        Logger.Error("srv", $"Exception loading DLL {assemblyName}.dll: {e}");
                         return false;
                     }
                 }
             }
             else
             {
-                Logger.Warning($"[ENG] Could not load {assemblyName} DLL.");
+                Logger.Warning("eng", $"Could not load {assemblyName} DLL.");
                 return false;
             }
         }

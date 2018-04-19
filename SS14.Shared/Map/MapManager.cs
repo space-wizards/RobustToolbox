@@ -63,7 +63,7 @@ namespace SS14.Shared.Map
 
             TileChanged?.Invoke(this, new TileChangedEventArgs(tileRef, oldTile));
 
-            if(_netManager.IsClient)
+            if (_netManager.IsClient)
                 return;
 
             var message = _netManager.CreateNetMessage<MsgMap>();
@@ -101,14 +101,14 @@ namespace SS14.Shared.Map
         {
             if (!_maps.ContainsKey(mapID))
             {
-                Logger.Warning("[MAP] Attempted to delete nonexistent map.");
+                Logger.WarningS("map", "Attempted to delete nonexistent map.");
                 return;
             }
 
             MapDestroyed?.Invoke(this, new MapEventArgs(_maps[mapID]));
             _maps.Remove(mapID);
 
-            if(_netManager.IsClient)
+            if (_netManager.IsClient)
                 return;
 
             var msg = _netManager.CreateNetMessage<MsgMap>();
@@ -122,9 +122,9 @@ namespace SS14.Shared.Map
         /// <inheritdoc />
         public IMap CreateMap(MapId mapID, bool overwrite = false)
         {
-            if(!overwrite && _maps.ContainsKey(mapID))
+            if (!overwrite && _maps.ContainsKey(mapID))
             {
-                Logger.Warning("[MAP] Attempted to overwrite existing map.");
+                Logger.WarningS("map", "Attempted to overwrite existing map.");
                 return null;
             }
 

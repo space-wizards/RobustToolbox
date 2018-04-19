@@ -6,12 +6,10 @@ using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
-using SS14.Server.Interfaces.Log;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.ServerConsole;
-using SS14.Server.Log;
 using SS14.Server.Maps;
 using SS14.Server.Placement;
 using SS14.Server.Player;
@@ -55,12 +53,13 @@ namespace SS14.Server
 #endif
             //Register minidump dumper only if the app isn't being debugged. No use filling up hard drives with shite
             RegisterIoC();
-            LoadContentAssemblies();
+            SetupLogging();
+            InitReflectionManager();
             HandleCommandLineArgs();
 
             var server = IoCManager.Resolve<IBaseServer>();
 
-            Logger.Log("Server -> Starting");
+            Logger.Info("Server -> Starting");
 
             if (server.Start())
             {
@@ -70,7 +69,7 @@ namespace SS14.Server
             }
 
             string strVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            Logger.Log("Server Version " + strVersion + " -> Ready");
+            Logger.Info("Server Version " + strVersion + " -> Ready");
 
             // TODO: Move this to an interface.
             SignalHander.InstallSignals();
@@ -108,12 +107,11 @@ namespace SS14.Server
             IoCManager.Register<IResourceManager, ResourceManager>();
             IoCManager.Register<ICollisionManager, CollisionManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
+            IoCManager.Register<ILogManager, LogManager>();
 
             // Server stuff.
             IoCManager.Register<IEntityManager, ServerEntityManager>();
             IoCManager.Register<IServerEntityManager, ServerEntityManager>();
-            IoCManager.Register<ILogManager, ServerLogManager>();
-            IoCManager.Register<IServerLogManager, ServerLogManager>();
             IoCManager.Register<IChatManager, ChatManager>();
             IoCManager.Register<IServerNetManager, NetManager>();
             IoCManager.Register<IMapManager, MapManager>();
@@ -134,7 +132,7 @@ namespace SS14.Server
             IoCManager.BuildGraph();
         }
 
-        private static void LoadContentAssemblies()
+        private static void InitReflectionManager()
         {
             // gets a handle to the shared and the current (server) dll.
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(new List<Assembly>(2)
@@ -142,6 +140,14 @@ namespace SS14.Server
                 AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"),
                 Assembly.GetExecutingAssembly()
             });
+        }
+
+        private static void SetupLogging()
+        {
+            var mgr = IoCManager.Resolve<ILogManager>();
+            var handler = new ConsoleLogHandler();
+            mgr.RootSawmill.AddHandler(handler);
+            mgr.GetSawmill("res.typecheck").Level = LogLevel.Info;
         }
     }
 }

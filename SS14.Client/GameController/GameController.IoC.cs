@@ -82,7 +82,7 @@ namespace SS14.Client
         private static void RegisterIoC()
         {
             // Shared stuff.
-            IoCManager.Register<ILogManager, GodotLogManager>();
+            IoCManager.Register<ILogManager, LogManager>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
             IoCManager.Register<ISS14Serializer, SS14Serializer>();
             IoCManager.Register<IPrototypeManager, PrototypeManager>();

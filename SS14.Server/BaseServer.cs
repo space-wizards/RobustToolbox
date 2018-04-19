@@ -10,7 +10,6 @@ using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
-using SS14.Server.Interfaces.Log;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.ServerConsole;
@@ -38,6 +37,7 @@ using SS14.Shared.Enums;
 using SS14.Shared.Reflection;
 using SS14.Shared.Timing;
 using SS14.Shared.Utility;
+using SS14.Shared.Interfaces.Log;
 
 namespace SS14.Server
 {
@@ -55,7 +55,7 @@ namespace SS14.Server
         [Dependency]
         private readonly IServerEntityManager _entities;
         [Dependency]
-        private readonly IServerLogManager _log;
+        private readonly ILogManager _log;
         [Dependency]
         private readonly ISS14Serializer _serializer;
         [Dependency]
@@ -72,7 +72,10 @@ namespace SS14.Server
         private readonly IGameStateManager _stateManager;
         [Dependency]
         private readonly IServerNetManager _network;
+        [Dependency]
+        private readonly IConsoleManager consoleManager;
 
+        private FileLogHandler fileLogHandler;
         private GameLoop _mainLoop;
         private ServerRunLevel _runLevel;
 
@@ -118,9 +121,9 @@ namespace SS14.Server
         public void Shutdown(string reason = null)
         {
             if (string.IsNullOrWhiteSpace(reason))
-                Logger.Log("[SRV] Shutting down...");
+                Logger.Info("[SRV] Shutting down...");
             else
-                Logger.Log($"[SRV] {reason}, shutting down...");
+                Logger.Info($"[SRV] {reason}, shutting down...");
 
             _mainLoop.Running = false;
         }
@@ -134,7 +137,7 @@ namespace SS14.Server
             //Sets up Logging
             _config.RegisterCVar("log.path", "logs", CVar.ARCHIVE);
             _config.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVar.ARCHIVE);
-            _config.RegisterCVar("log.level", LogLevel.Information, CVar.ARCHIVE);
+            _config.RegisterCVar("log.level", LogLevel.Info, CVar.ARCHIVE);
 
             var logPath = _config.GetCVar<string>("log.path");
             var logFormat = _config.GetCVar<string>("log.format");
@@ -142,13 +145,13 @@ namespace SS14.Server
             var fullPath = Path.Combine(logPath, logFilename);
 
             if (!Path.IsPathRooted(fullPath))
+            {
                 logPath = PathHelpers.ExecutableRelativeFile(fullPath);
+            }
 
-            // Create log directory if it does not exist yet.
-            Directory.CreateDirectory(Path.GetDirectoryName(logPath));
-
-            _log.CurrentLevel = _config.GetCVar<LogLevel>("log.level");
-            _log.LogPath = logPath;
+            fileLogHandler = new FileLogHandler(logPath);
+            _log.RootSawmill.Level = _config.GetCVar<LogLevel>("log.level");
+            _log.RootSawmill.AddHandler(fileLogHandler);
 
             OnRunLevelChanged(ServerRunLevel.Init);
 
@@ -225,7 +228,6 @@ namespace SS14.Server
 
             var clientConsole = IoCManager.Resolve<IClientConsoleHost>();
             clientConsole.Initialize();
-            var consoleManager = IoCManager.Resolve<IConsoleManager>();
             consoleManager.Initialize();
 
             OnRunLevelChanged(ServerRunLevel.PreGame);
@@ -285,11 +287,11 @@ namespace SS14.Server
 
             _time.TickRate = _config.GetCVar<int>("net.tickrate");
 
-            Logger.Info($"[SRV] Name: {ServerName}");
-            Logger.Info($"[SRV] TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
-            Logger.Info($"[SRV] Map: {MapName}");
-            Logger.Info($"[SRV] Max players: {MaxPlayers}");
-            Logger.Info($"[SRV] Welcome message: {Motd}");
+            Logger.InfoS("srv", $"Name: {ServerName}");
+            Logger.InfoS("srv", $"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
+            Logger.InfoS("srv", $"Map: {MapName}");
+            Logger.InfoS("srv", $"Max players: {MaxPlayers}");
+            Logger.InfoS("srv", $"Welcome message: {Motd}");
         }
 
         /// <summary>
@@ -350,6 +352,7 @@ namespace SS14.Server
         private void Update(float frameTime)
         {
             UpdateTitle();
+            consoleManager.Update();
 
             IoCManager.Resolve<IServerNetManager>().ProcessPackets();
 

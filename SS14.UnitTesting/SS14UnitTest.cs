@@ -20,12 +20,10 @@ using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
-using SS14.Server.Interfaces.Log;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.ServerConsole;
-using SS14.Server.Log;
 using SS14.Server.Maps;
 using SS14.Server.Placement;
 using SS14.Server.Player;
@@ -190,11 +188,11 @@ namespace SS14.UnitTesting
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IGameTiming, GameTiming>();
             IoCManager.Register<ITimerManager, TimerManager>();
+            IoCManager.Register<ILogManager, LogManager>();
 
             switch (Project)
             {
                 case UnitTestProject.Client:
-                    IoCManager.Register<ILogManager, LogManager>();
                     IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
                     IoCManager.Register<IEntityManager, ClientEntityManager>();
                     IoCManager.Register<IComponentFactory, ComponentFactory>();
@@ -227,8 +225,6 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IResourceManager, ResourceManager>();
                     IoCManager.Register<IEntityManager, ServerEntityManager>();
                     IoCManager.Register<IServerEntityManager, ServerEntityManager>();
-                    IoCManager.Register<ILogManager, ServerLogManager>();
-                    IoCManager.Register<IServerLogManager, ServerLogManager>();
                     IoCManager.Register<IChatManager, ChatManager>();
                     IoCManager.Register<IServerNetManager, NetManager>();
                     IoCManager.Register<IMapManager, MapManager>();

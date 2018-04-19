@@ -12,11 +12,13 @@ using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.Log;
 using SS14.Client.State.States;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Serialization;
@@ -86,6 +88,7 @@ namespace SS14.Client
             IoCManager.Resolve<ISceneTreeHolder>().Initialize(tree);
             InitIoC();
             Godot.OS.SetWindowTitle("Space Station 14");
+            SetupLogging();
 
             tree.SetAutoAcceptQuit(false);
 
@@ -189,6 +192,13 @@ namespace SS14.Client
             lightManager.FrameUpdate(eventArgs);
             _stateManager.FrameUpdate(eventArgs);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePostEngine, eventArgs.Elapsed);
+        }
+
+        private void SetupLogging()
+        {
+            var mgr = IoCManager.Resolve<ILogManager>();
+            mgr.RootSawmill.AddHandler(new GodotLogHandler());
+            mgr.GetSawmill("res.typecheck").Level = LogLevel.Info;
         }
     }
 }

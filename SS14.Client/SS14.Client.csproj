@@ -93,6 +93,7 @@
     <Compile Include="BaseClient.cs" />
     <Compile Include="Console\ClientChatConsole.cs" />
     <Compile Include="Console\ClientConsole.cs" />
+    <Compile Include="Console\Commands\LogCommands.cs" />
     <Compile Include="Console\IClientChatConsole.cs" />
     <Compile Include="Console\IClientConsole.cs" />
     <Compile Include="GameController.cs" />
@@ -153,7 +154,8 @@
     <Compile Include="Interfaces\Player\IPlayerManager.cs" />
     <Compile Include="Interfaces\State\IStateManager.cs" />
     <Compile Include="Interfaces\Utility\IRand.cs" />
-    <Compile Include="Log\GodotLogManager.cs" />
+    <Compile Include="Log\DebugConsoleLogHandler.cs" />
+    <Compile Include="Log\GodotLogHandler.cs" />
     <Compile Include="Map\ClientTileDefinitionManager.cs" />
     <Compile Include="Map\ClientMapManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

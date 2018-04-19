@@ -5,7 +5,7 @@
     <ProjectType>Local</ProjectType>
     <ProjectGuid>{0529F740-0000-0000-0000-000000000000}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <AssemblyKeyContainerName />
     <AssemblyName>SS14.Shared</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>

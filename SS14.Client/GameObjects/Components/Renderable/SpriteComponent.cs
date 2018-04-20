@@ -267,6 +267,16 @@ namespace SS14.Client.GameObjects
                 layer.Texture = BaseRSI[state].GetFrame(0, 0).icon;
             }
 
+            if (mapping.TryGetNode("texture", out node))
+            {
+                if (layer.RSI != null)
+                {
+                    throw new InvalidOperationException("Cannot have both a texture and an RSI specified in layer!");
+                }
+                var path = node.AsResourcePath();
+                layer.Texture = resourceCache.GetResource<TextureResource>(TextureRoot / path);
+            }
+
             if (mapping.TryGetNode("shader", out node))
             {
                 layer.Shader = IoCManager.Resolve<IPrototypeManager>().Index<ShaderPrototype>(node.AsString()).Instance();

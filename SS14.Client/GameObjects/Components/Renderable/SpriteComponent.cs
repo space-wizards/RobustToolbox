@@ -5,6 +5,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Shaders;
 using SS14.Client.Interfaces;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
@@ -19,7 +20,7 @@ using VS = Godot.VisualServer;
 
 namespace SS14.Client.GameObjects
 {
-    public sealed class SpriteComponent : Component
+    public sealed class SpriteComponent : Component, ISpriteComponent, IClickTargetComponent
     {
         public override string Name => "Sprite";
         public override uint? NetID => NetIDs.SPRITE;
@@ -267,7 +268,7 @@ namespace SS14.Client.GameObjects
 
                 var state = new RSI.StateId(node.AsString(), RSI.Selectors.None);
                 layer.State = state;
-                layer.Texture = rsi[state].GetFrame(0, 0).icon;
+                layer.Texture = rsi[state].GetFrame(RSI.State.Direction.South, 0).icon;
             }
 
             if (mapping.TryGetNode("texture", out node))
@@ -295,6 +296,36 @@ namespace SS14.Client.GameObjects
             }
 
             Layers.Add(layer);
+        }
+
+        public void FrameUpdate(float delta)
+        {
+            bool doRedraw = false;
+
+            for (var i = 0; i < Layers.Count; i++)
+            {
+                var layer = Layers[i];
+                if (!layer.State.IsValid)
+                {
+                    continue;
+                }
+
+                var dir = GetDir();
+                layer.Texture = (layer.RSI ?? BaseRSI)[layer.State].GetFrame(dir, 0).icon;
+                doRedraw = true;
+                Layers[i] = layer;
+            }
+
+            if (doRedraw)
+            {
+                Redraw();
+            }
+        }
+
+        private RSI.State.Direction GetDir()
+        {
+            var angle = new Angle(-TransformComponent.WorldRotation);
+            return angle.GetDir().Convert();
         }
 
         private struct Layer

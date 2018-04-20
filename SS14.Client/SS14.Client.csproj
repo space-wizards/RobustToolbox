@@ -102,6 +102,7 @@
     <Compile Include="GameController\GameController.IoC.cs" />
     <Compile Include="GameController\GameController.GameTiming.cs" />
     <Compile Include="GameObjects\EntitySystems\AudioSystem.cs" />
+    <Compile Include="GameObjects\EntitySystems\SpriteSystem.cs" />
     <Compile Include="GameObjects\GodotComponentFactory.cs" />
     <Compile Include="GameObjects\ClientComponentFactory.cs" />
     <Compile Include="GameObjects\ClientEntityManager.cs" />
@@ -138,13 +139,12 @@
     <Compile Include="Interfaces\Console\IDebugConsole.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClientClickableComponent.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IGodotTransformComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\Components\ISpriteComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IClickTargetComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IClientEntityManager.cs" />
     <Compile Include="Interfaces\GameObjects\IMoverComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IRenderableComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\ISpriteComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\ISpriteRenderableComponent.cs" />
     <Compile Include="Interfaces\GameStates\IGameStateManager.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILight.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILightManager.cs" />
@@ -179,6 +179,7 @@
     <Compile Include="UserInterface\Controls\ScrollBar.cs" />
     <Compile Include="UserInterface\Controls\VScrollBar.cs" />
     <Compile Include="UserInterface\CustomControls\Chatbox.cs" />
+    <Compile Include="Utility\DirExt.cs" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Utility\GodotConversions.cs" />
     <Compile Include="State\State.cs" />

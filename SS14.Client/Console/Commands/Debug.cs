@@ -41,26 +41,6 @@ namespace SS14.Client.Console.Commands
         }
     }
 
-    class DumpRenderables : IConsoleCommand
-    {
-        public string Command => "dumprenderables";
-        public string Help => "Dump renderables list";
-        public string Description => "Dumps renderables list with component type.";
-
-        public bool Execute(IDebugConsole console, params string[] args)
-        {
-            var componentManager = IoCManager.Resolve<IComponentManager>();
-
-            IEnumerable<IComponent> components = componentManager.GetComponents<ISpriteRenderableComponent>();
-
-            foreach (var component in components)
-            {
-                console.AddLine($"{component.Owner.Uid}: {component.GetType()}", Color.White);
-            }
-            return false;
-        }
-    }
-
     class GetComponentRegistrationCommand : IConsoleCommand
     {
         public string Command => "getcomponentregistration";

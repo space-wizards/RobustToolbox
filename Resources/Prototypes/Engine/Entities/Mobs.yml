@@ -6,7 +6,8 @@
   - type: Transform
   - type: Clickable
   - type: Sprite
-    texture: Mob/greyshirt.png
+    sprite: Mob/greyshirt.rsi
+    state: greyshirt
     scale: 2, 2
     drawdepth: MobBase
 

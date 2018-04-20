@@ -80,6 +80,8 @@ namespace SS14.Client.Graphics
                 Selectors = selectors;
             }
 
+            public bool IsValid => Name != null;
+
             public override string ToString()
             {
                 return Name;

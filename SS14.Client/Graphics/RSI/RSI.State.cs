@@ -15,26 +15,9 @@ namespace SS14.Client.Graphics
             public Vector2u Size { get; }
             public StateId StateId { get; }
             public DirectionType Directions { get; }
-            public int DirectionsCount
-            {
-                get
-                {
-                    switch (Directions)
-                    {
-                        case DirectionType.Dir1:
-                            return 1;
-                        case DirectionType.Dir4:
-                            return 4;
-                        case DirectionType.Dir8:
-                            return 8;
-                        default:
-                            throw new InvalidOperationException("Unknown direction");
-                    }
-                }
-            }
             private (Texture icon, float delay)[][] Icons;
 
-            public State(Vector2u size, StateId stateId, DirectionType direction, (Texture icon, float delay)[][] icons)
+            internal State(Vector2u size, StateId stateId, DirectionType direction, (Texture icon, float delay)[][] icons)
             {
                 Size = size;
                 StateId = stateId;
@@ -46,12 +29,19 @@ namespace SS14.Client.Graphics
             {
                 Dir1,
                 Dir4,
-                Dir8,
             }
 
-            public (Texture icon, float delay) GetFrame(int direction, int frame)
+            public enum Direction : byte
             {
-                return Icons[direction][frame];
+                South = 0,
+                North = 1,
+                East = 2,
+                West = 3,
+            }
+
+            public (Texture icon, float delay) GetFrame(Direction direction, int frame)
+            {
+                return Icons[(int)direction][frame];
             }
 
             public IReadOnlyCollection<(Texture icon, float delay)> GetDirectionFrames(int direction)

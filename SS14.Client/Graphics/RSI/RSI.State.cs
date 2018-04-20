@@ -44,9 +44,14 @@ namespace SS14.Client.Graphics
                 return Icons[(int)direction][frame];
             }
 
-            public IReadOnlyCollection<(Texture icon, float delay)> GetDirectionFrames(int direction)
+            public IReadOnlyCollection<(Texture icon, float delay)> GetDirectionFrames(Direction direction)
             {
-                return Icons[direction];
+                return Icons[(int)direction];
+            }
+
+            public int DelayCount(Direction direction)
+            {
+                return Icons[(int)direction].Length;
             }
         }
     }

@@ -310,9 +310,46 @@ namespace SS14.Client.GameObjects
                     continue;
                 }
 
-                var dir = GetDir();
-                layer.Texture = (layer.RSI ?? BaseRSI)[layer.State].GetFrame(dir, 0).icon;
-                doRedraw = true;
+                // For simplicity, turning causes the animation to reset FOR NOW.
+                // This might be changed.
+                var state = (layer.RSI ?? BaseRSI)[layer.State];
+                RSI.State.Direction dir;
+                if (state.Directions == RSI.State.DirectionType.Dir1)
+                {
+                    dir = RSI.State.Direction.South;
+                }
+                else
+                {
+                    dir = GetDir();
+                }
+                if (dir == layer.CurrentDir)
+                {
+                    var delayCount = state.DelayCount(dir);
+                    if (delayCount < 2)
+                    {
+                        // Don't bother animating this.
+                        // There's no animation frames!
+                        continue;
+                    }
+                    layer.AnimationTimeLeft -= delta;
+                    while (layer.AnimationTimeLeft < 0)
+                    {
+                        if (++layer.AnimationFrame >= delayCount)
+                        {
+                            layer.AnimationFrame = 0;
+                        }
+                        layer.AnimationTimeLeft += state.GetFrame(dir, layer.AnimationFrame).delay;
+                    }
+                    layer.Texture = state.GetFrame(dir, layer.AnimationFrame).icon;
+                    doRedraw = true;
+                }
+                else
+                {
+                    layer.CurrentDir = dir;
+                    layer.AnimationFrame = 0;
+                    (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(dir, 0);
+                    doRedraw = true;
+                }
                 Layers[i] = layer;
             }
 
@@ -335,6 +372,9 @@ namespace SS14.Client.GameObjects
 
             public RSI RSI;
             public RSI.StateId State;
+            public RSI.State.Direction CurrentDir;
+            public float AnimationTimeLeft;
+            public int AnimationFrame;
             public Godot.Transform2D Transform;
         }
     }

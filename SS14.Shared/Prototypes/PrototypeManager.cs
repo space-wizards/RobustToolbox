@@ -98,6 +98,8 @@ namespace SS14.Shared.Prototypes
         private readonly Dictionary<Type, List<IPrototype>> prototypes = new Dictionary<Type, List<IPrototype>>();
         private readonly Dictionary<Type, Dictionary<string, IIndexedPrototype>> indexedPrototypes = new Dictionary<Type, Dictionary<string, IIndexedPrototype>>();
 
+        protected readonly HashSet<string> IgnoredPrototypeTypes = new HashSet<string>();
+
         public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
         {
             return prototypes[typeof(T)].Select((IPrototype p) => (T)p);
@@ -254,11 +256,15 @@ namespace SS14.Shared.Prototypes
         private void LoadFromDocument(YamlDocument document)
         {
             var rootNode = (YamlSequenceNode)document.RootNode;
-            foreach (YamlMappingNode node in rootNode.Select(n => (YamlMappingNode)n))
+            foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
             {
-                var type = ((YamlScalarNode)node[new YamlScalarNode("type")]).Value;
+                var type = node.GetNode("type").AsString();
                 if (!prototypeTypes.ContainsKey(type))
                 {
+                    if (IgnoredPrototypeTypes.Contains(type))
+                    {
+                        continue;
+                    }
                     throw new PrototypeLoadException(string.Format("Unknown prototype type: '{0}'", type));
                 }
 

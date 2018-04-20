@@ -165,6 +165,7 @@ namespace SS14.Client.GameObjects
                     prevShader = shader;
                 }
 
+                VS.CanvasItemAddSetTransform(currentItem, layer.Transform);
                 texture.GodotTexture.Draw(currentItem, -texture.GodotTexture.GetSize() / 2);
             }
         }
@@ -195,6 +196,7 @@ namespace SS14.Client.GameObjects
                 {
                     State = state,
                     Texture = BaseRSI[state].GetFrame(0, 0).icon,
+                    Transform = Godot.Transform2D.Identity,
                 };
                 Layers.Add(layer);
             }
@@ -209,7 +211,8 @@ namespace SS14.Client.GameObjects
                 var tex = resc.GetResource<TextureResource>(TextureRoot / path);
                 var layer = new Layer
                 {
-                    Texture = tex
+                    Texture = tex,
+                    Transform = Godot.Transform2D.Identity,
                 };
                 Layers.Add(layer);
             }
@@ -264,7 +267,7 @@ namespace SS14.Client.GameObjects
 
                 var state = new RSI.StateId(node.AsString(), RSI.Selectors.None);
                 layer.State = state;
-                layer.Texture = BaseRSI[state].GetFrame(0, 0).icon;
+                layer.Texture = rsi[state].GetFrame(0, 0).icon;
             }
 
             if (mapping.TryGetNode("texture", out node))
@@ -282,6 +285,15 @@ namespace SS14.Client.GameObjects
                 layer.Shader = IoCManager.Resolve<IPrototypeManager>().Index<ShaderPrototype>(node.AsString()).Instance();
             }
 
+            if (mapping.TryGetNode("scale", out node))
+            {
+                layer.Transform = Godot.Transform2D.Identity.Scaled(node.AsVector2().Convert());
+            }
+            else
+            {
+                layer.Transform = Godot.Transform2D.Identity;
+            }
+
             Layers.Add(layer);
         }
 
@@ -292,6 +304,7 @@ namespace SS14.Client.GameObjects
 
             public RSI RSI;
             public RSI.StateId State;
+            public Godot.Transform2D Transform;
         }
     }
 }

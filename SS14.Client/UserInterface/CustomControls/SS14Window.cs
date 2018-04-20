@@ -287,6 +287,10 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public void AddToScreen()
         {
+            if(Parent != null)
+            {
+                Parent.RemoveChild(this);
+            }
             UserInterfaceManager.WindowRoot.AddChild(this);
         }
 

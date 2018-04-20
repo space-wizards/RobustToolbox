@@ -6,9 +6,7 @@
   - type: Clickable
   - type: Sprite
     drawdepth: FloorPlaceable
-    sprites:
-    - Objects/door_ew.png
-    - Objects/door_ewo.png
+    texture: Objects/door_ew.png
 
   - type: Icon
     icon: Objects/door_ew.png

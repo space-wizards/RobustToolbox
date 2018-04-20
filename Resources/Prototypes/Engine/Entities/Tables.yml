@@ -5,8 +5,7 @@
   - type: Transform
   - type: Clickable
   - type: Sprite
-    sprites:
-    - Objects/worktop_single.png
+    texture: Objects/worktop_single.png
     drawdepth: Tables
 
   - type: Icon

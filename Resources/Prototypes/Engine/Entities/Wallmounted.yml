@@ -5,8 +5,7 @@
   - type: Transform
   - type: Clickable
   - type: Sprite
-    sprites:
-    - Objects/fire_extinguisher.png
+    texture: Objects/fire_extinguisher.png
 
   - type: Icon
     icon: Objects/fire_extinguisher.png
@@ -28,8 +27,7 @@
   - type: Transform
   - type: Clickable
   - type: Sprite
-    sprites:
-    - Objects/fire_alarm_off.png
+    texture: Objects/fire_alarm_off.png
 
   - type: Icon
     icon: Objects/fire_alarm_off.png
@@ -51,8 +49,7 @@
   - type: Transform
   - type: Clickable
   - type: Sprite
-    sprites:
-    - Objects/med_cabinet.png
+    texture: Objects/med_cabinet.png
 
   - type: Icon
     icon: Objects/med_cabinet.png

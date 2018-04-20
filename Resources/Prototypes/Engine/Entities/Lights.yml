@@ -5,8 +5,7 @@
   - type: Transform
   - type: Clickable
   - type: Sprite
-    sprites:
-    - Objects/wall_light.png
+    texture: Objects/wall_light.png
 
   - type: Icon
     icon: Objects/wall_light.png

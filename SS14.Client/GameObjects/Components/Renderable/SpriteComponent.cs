@@ -2,13 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Shaders;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
+using SS14.Client.Utility;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
@@ -22,7 +25,78 @@ namespace SS14.Client.GameObjects
         public override uint? NetID => NetIDs.SPRITE;
         public override Type StateType => typeof(SpriteComponentState);
 
+        /// <summary>
+        ///     The resource path from which all texture paths are relative to.
+        /// </summary>
         public static readonly ResourcePath TextureRoot = new ResourcePath("/Textures");
+
+        private DrawDepth drawDepth;
+
+        /// <summary>
+        ///     Z-index for drawing.
+        /// </summary>
+        public DrawDepth DrawDepth
+        {
+            get => drawDepth;
+            set
+            {
+                drawDepth = value;
+                if (SceneNode != null)
+                {
+                    SceneNode.ZIndex = (int)value;
+                }
+            }
+        }
+
+        /// <summary>
+        ///     A scale applied to all layers.
+        /// </summary>
+        private Vector2 scale = Vector2.One;
+        public Vector2 Scale
+        {
+            get => scale;
+            set
+            {
+                scale = value;
+                if (SceneNode != null)
+                {
+                    SceneNode.Scale = value.Convert();
+                }
+            }
+        }
+
+        private Vector2 offset = Vector2.Zero;
+        /// <summary>
+        ///     Offset applied to all layers.
+        /// </summary>
+        public Vector2 Offset
+        {
+            get => offset;
+            set
+            {
+                offset = value;
+                if (SceneNode != null)
+                {
+                    SceneNode.Position = value.Convert() * EyeManager.PIXELSPERMETER;
+                }
+            }
+        }
+
+        private Color color = Color.White;
+        public Color Color
+        {
+            get => color;
+            set
+            {
+                color = value;
+                if (SceneNode != null)
+                {
+                    SceneNode.Modulate = value.Convert();
+                }
+            }
+        }
+
+        private RSI BaseRSI;
 
         private List<Layer> Layers = new List<Layer>();
         private List<Godot.RID> CanvasItems = new List<Godot.RID>();
@@ -35,7 +109,11 @@ namespace SS14.Client.GameObjects
             base.OnAdd();
             SceneNode = new Godot.Node2D()
             {
-                Name = "Sprite"
+                Name = "Sprite",
+                ZIndex = (int)drawDepth,
+                Scale = scale.Convert(),
+                Position = offset.Convert(),
+                Modulate = color.Convert(),
             };
         }
 
@@ -96,10 +174,37 @@ namespace SS14.Client.GameObjects
             base.LoadParameters(mapping);
 
             var resc = IoCManager.Resolve<IResourceCache>();
+            var prototypes = IoCManager.Resolve<IPrototypeManager>();
 
             YamlNode node;
             if (mapping.TryGetNode("sprite", out node))
             {
+                var path = node.AsResourcePath();
+                var rsi = resc.GetResource<RSIResource>(TextureRoot / path);
+                BaseRSI = rsi.RSI;
+            }
+
+            if (mapping.TryGetNode("state", out node))
+            {
+                if (BaseRSI == null)
+                {
+                    throw new InvalidOperationException("Must have an RSI set to use states.");
+                }
+                var state = new RSI.StateId(node.AsString(), RSI.Selectors.None);
+                var layer = new Layer
+                {
+                    State = state,
+                    Texture = BaseRSI[state].GetFrame(0, 0).icon,
+                };
+                Layers.Add(layer);
+            }
+
+            if (mapping.TryGetNode("texture", out node))
+            {
+                if (BaseRSI != null)
+                {
+                    throw new InvalidOperationException("Cannot have both a texture and an RSI specified in prototype!");
+                }
                 var path = node.AsResourcePath();
                 var tex = resc.GetResource<TextureResource>(TextureRoot / path);
                 var layer = new Layer
@@ -109,31 +214,74 @@ namespace SS14.Client.GameObjects
                 Layers.Add(layer);
             }
 
+            if (mapping.TryGetNode("scale", out node))
+            {
+                Scale = node.AsVector2();
+            }
+
+            if (mapping.TryGetNode("offset", out node))
+            {
+                Offset = node.AsVector2();
+            }
+
+            if (mapping.TryGetNode("drawdepth", out node))
+            {
+                DrawDepth = node.AsEnum<DrawDepth>();
+            }
+
+            if (mapping.TryGetNode("color", out node))
+            {
+                Color = node.AsColor();
+            }
+
             if (mapping.TryGetNode("layers", out YamlSequenceNode layers))
             {
                 foreach (var layernode in layers.Cast<YamlMappingNode>())
                 {
-                    var path = layernode.GetNode("sprite").AsResourcePath();
-                    var tex = resc.GetResource<TextureResource>(TextureRoot / path);
-                    Shader shader = null;
-                    if (layernode.TryGetNode("shader", out node))
-                    {
-                        shader = IoCManager.Resolve<IPrototypeManager>().Index<ShaderPrototype>(node.AsString()).Instance();
-                    }
-                    var layer = new Layer
-                    {
-                        Texture = tex,
-                        Shader = shader,
-                    };
-                    Layers.Add(layer);
+                    LoadLayerFrom(layernode, resc, prototypes);
                 }
             }
         }
 
+        private void LoadLayerFrom(YamlMappingNode mapping, IResourceCache resourceCache, IPrototypeManager prototypeManager)
+        {
+            var layer = new Layer();
+
+            if (mapping.TryGetNode("sprite", out var node))
+            {
+                var path = node.AsResourcePath();
+                var rsi = resourceCache.GetResource<RSIResource>(TextureRoot / path);
+                layer.RSI = rsi.RSI;
+            }
+
+            if (mapping.TryGetNode("state", out node))
+            {
+                var rsi = layer.RSI ?? BaseRSI;
+                if (rsi == null)
+                {
+                    throw new InvalidOperationException("Must have an RSI to pull states from");
+                }
+
+                var state = new RSI.StateId(node.AsString(), RSI.Selectors.None);
+                layer.State = state;
+                layer.Texture = BaseRSI[state].GetFrame(0, 0).icon;
+            }
+
+            if (mapping.TryGetNode("shader", out node))
+            {
+                layer.Shader = IoCManager.Resolve<IPrototypeManager>().Index<ShaderPrototype>(node.AsString()).Instance();
+            }
+
+            Layers.Add(layer);
+        }
+
         private struct Layer
         {
-            public Texture Texture;
             public Shader Shader;
+            public Texture Texture;
+
+            public RSI RSI;
+            public RSI.StateId State;
         }
     }
 }

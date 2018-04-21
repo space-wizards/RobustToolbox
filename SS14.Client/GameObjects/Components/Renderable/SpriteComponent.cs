@@ -97,6 +97,26 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        /// <summary>
+        ///     Controls whether we use RSI directions to rotate, or just get angular rotation applied.
+        ///     If true, all rotation to this sprite component is negated (that is rotation from say the owner being rotated).
+        ///     Rotation transformations on individual layers still apply.
+        ///     If false, all layers get locked to south and rotation is a transformation.
+        /// </summary>
+        public bool Directional
+        {
+            get => _directional;
+            set
+            {
+                _directional = value;
+                RedrawQueued = true;
+            }
+        }
+
+        public bool RedrawQueued { get; set; } = true;
+
+        private bool _directional = true;
+
         private RSI BaseRSI;
 
         private List<Layer> Layers = new List<Layer>();
@@ -167,6 +187,8 @@ namespace SS14.Client.GameObjects
                 }
 
                 VS.CanvasItemAddSetTransform(currentItem, layer.Transform);
+                // Not instantiating a DrawingHandle here because those are ref types,
+                // and I really don't want the extra allocation.
                 texture.GodotTexture.Draw(currentItem, -texture.GodotTexture.GetSize() / 2);
             }
         }
@@ -238,6 +260,11 @@ namespace SS14.Client.GameObjects
                 Color = node.AsColor();
             }
 
+            if (mapping.TryGetNode("directional", out node))
+            {
+                Directional = node.AsBool();
+            }
+
             if (mapping.TryGetNode("layers", out YamlSequenceNode layers))
             {
                 foreach (var layernode in layers.Cast<YamlMappingNode>())
@@ -300,21 +327,23 @@ namespace SS14.Client.GameObjects
 
         public void FrameUpdate(float delta)
         {
-            bool doRedraw = false;
+            if (Directional)
+            {
+                SceneNode.Rotation = (float)(-TransformComponent.WorldRotation + MathHelper.PiOver2);
+            }
 
             for (var i = 0; i < Layers.Count; i++)
             {
                 var layer = Layers[i];
+                // Since State is a struct, we can't null-check it directly.
                 if (!layer.State.IsValid)
                 {
                     continue;
                 }
 
-                // For simplicity, turning causes the animation to reset FOR NOW.
-                // This might be changed.
                 var state = (layer.RSI ?? BaseRSI)[layer.State];
                 RSI.State.Direction dir;
-                if (state.Directions == RSI.State.DirectionType.Dir1)
+                if (!Directional || state.Directions == RSI.State.DirectionType.Dir1)
                 {
                     dir = RSI.State.Direction.South;
                 }
@@ -341,21 +370,25 @@ namespace SS14.Client.GameObjects
                         layer.AnimationTimeLeft += state.GetFrame(dir, layer.AnimationFrame).delay;
                     }
                     layer.Texture = state.GetFrame(dir, layer.AnimationFrame).icon;
-                    doRedraw = true;
+                    RedrawQueued = true;
                 }
                 else
                 {
+                    // For simplicity, turning causes the animation to reset FOR NOW.
+                    // This might be changed.
+                    // Not sure how you'd go about it.
                     layer.CurrentDir = dir;
                     layer.AnimationFrame = 0;
                     (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(dir, 0);
-                    doRedraw = true;
+                    RedrawQueued = true;
                 }
                 Layers[i] = layer;
             }
 
-            if (doRedraw)
+            if (RedrawQueued)
             {
                 Redraw();
+                RedrawQueued = false;
             }
         }
 

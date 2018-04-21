@@ -116,7 +116,7 @@ namespace SS14.Client.GameObjects
             var newState = (TransformComponentState)state;
             if (LocalRotation != newState.Rotation)
             {
-                LocalRotation = newState.Rotation;
+                SetRotation(newState.Rotation);
                 OnRotate?.Invoke(newState.Rotation);
             }
 
@@ -244,6 +244,11 @@ namespace SS14.Client.GameObjects
         protected virtual void SetPosition(Vector2 position)
         {
             _position = position;
+        }
+
+        protected virtual void SetRotation(Angle rotation)
+        {
+            LocalRotation = rotation;
         }
     }
 }

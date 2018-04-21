@@ -21,6 +21,12 @@ namespace SS14.Client.GameObjects
             SceneNode.Position = (position * EyeManager.PIXELSPERMETER).Rounded().Convert();
         }
 
+        protected override void SetRotation(Angle rotation)
+        {
+            base.SetRotation(rotation);
+            SceneNode.Rotation = (float)rotation - MathHelper.PiOver2;
+        }
+
         private void UpdateSceneVisibility()
         {
             SceneNode.Visible = IsMapTransform;

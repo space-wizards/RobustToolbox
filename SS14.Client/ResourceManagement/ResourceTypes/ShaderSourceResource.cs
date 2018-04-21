@@ -18,7 +18,6 @@ namespace SS14.Client.ResourceManagement.ResourceTypes
             using (var reader = new StreamReader(stream, Encoding.UTF8))
             {
                 var code = reader.ReadToEnd();
-                Shared.Log.Logger.Debug("{0}", code);
                 GodotShader = new Godot.Shader
                 {
                     Code = code,

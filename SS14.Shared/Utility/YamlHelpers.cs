@@ -189,6 +189,11 @@ namespace SS14.Shared.Utility
             return mapping.Children.TryGetValue(new YamlScalarNode(key), out returnNode);
         }
 
+        public static bool HasNode(this YamlMappingNode mapping, string key)
+        {
+            return mapping.TryGetNode(key, out var _);
+        }
+
         /// <summary>
         /// Copies a <see cref="YamlMappingNode" /> to a dictionary by using scalar values as keys for the dictionary.
         /// </summary>

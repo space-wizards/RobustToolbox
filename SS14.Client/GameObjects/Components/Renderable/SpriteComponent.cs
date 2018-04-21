@@ -12,6 +12,7 @@ using SS14.Client.ResourceManagement;
 using SS14.Client.Utility;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
@@ -49,10 +50,10 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        private Vector2 scale = Vector2.One;
         /// <summary>
         ///     A scale applied to all layers.
         /// </summary>
-        private Vector2 scale = Vector2.One;
         public Vector2 Scale
         {
             get => scale;
@@ -113,9 +114,11 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public bool RedrawQueued { get; set; } = true;
+        RSI ISpriteComponent.BaseRSI { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         private bool _directional = true;
+
+        private bool RedrawQueued = true;
 
         private RSI BaseRSI;
 
@@ -124,6 +127,46 @@ namespace SS14.Client.GameObjects
 
         private Godot.Node2D SceneNode;
         private IGodotTransformComponent TransformComponent;
+
+        private IResourceCache resourceCache = IoCManager.Resolve<IResourceCache>();
+
+
+        public int AddLayer(Texture texture)
+        {
+            var layer = Layer.New();
+            layer.Texture = texture;
+            Layers.Add(layer);
+            return Layers.Count - 1;
+        }
+
+        public int AddLayer(RSI.StateId stateId, RSI rsi = null)
+        {
+        }
+
+        public void RemoveLayer(int layer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void LayerSetShader(int layer, Shader shader)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void LayerSetTexture(int layer, Texture texture)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void LayerSetState(int layer, RSI.StateId stateId, RSI rsi = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void LayerSetRSI(int layer, RSI rsi)
+        {
+            throw new NotImplementedException();
+        }
 
         public override void OnAdd()
         {
@@ -173,7 +216,7 @@ namespace SS14.Client.GameObjects
             foreach (var layer in Layers)
             {
                 var shader = layer.Shader;
-                var texture = layer.Texture;
+                var texture = layer.Texture ?? resourceCache.GetFallback<TextureResource>();
                 if (currentItem == null || prevShader != shader)
                 {
                     currentItem = VS.CanvasItemCreate();
@@ -197,47 +240,69 @@ namespace SS14.Client.GameObjects
         {
             base.LoadParameters(mapping);
 
-            var resc = IoCManager.Resolve<IResourceCache>();
             var prototypes = IoCManager.Resolve<IPrototypeManager>();
 
             YamlNode node;
             if (mapping.TryGetNode("sprite", out node))
             {
-                var path = node.AsResourcePath();
-                var rsi = resc.GetResource<RSIResource>(TextureRoot / path);
-                BaseRSI = rsi.RSI;
+                var path = TextureRoot / node.AsResourcePath();
+                try
+                {
+                    BaseRSI = resourceCache.GetResource<RSIResource>(path).RSI;
+                }
+                catch
+                {
+                    Logger.ErrorS("go.comp.sprite", "Unable to load RSI '{0}'. Prototype: '{1}'", path, Owner.Prototype.ID);
+                }
             }
 
             if (mapping.TryGetNode("state", out node))
             {
                 if (BaseRSI == null)
                 {
-                    throw new InvalidOperationException("Must have an RSI set to use states.");
+                    Logger.ErrorS("go.comp.sprite",
+                                  "No base RSI set to load states from: "
+                                  + "cannot use 'state' property. Prototype: '{0}'", Owner.Prototype.ID);
                 }
-                var state = new RSI.StateId(node.AsString(), RSI.Selectors.None);
-                var layer = new Layer
+                else
                 {
-                    State = state,
-                    Texture = BaseRSI[state].GetFrame(0, 0).icon,
-                    Transform = Godot.Transform2D.Identity,
-                };
-                Layers.Add(layer);
+                    var stateid = new RSI.StateId(node.AsString(), RSI.Selectors.None);
+                    var layer = new Layer
+                    {
+                        State = stateid,
+                        Transform = Godot.Transform2D.Identity,
+                    };
+
+                    if (BaseRSI.TryGetState(stateid, out var state))
+                    {
+                        layer.Texture = state.GetFrame(RSI.State.Direction.South, 0).icon;
+                    }
+                    else
+                    {
+                        Logger.ErrorS("go.comp.sprite",
+                                      "State not found in RSI: '{0}'. Prototype: '{1}'",
+                                      stateid, Owner.Prototype.ID);
+                    }
+
+                    Layers.Add(layer);
+                }
             }
 
             if (mapping.TryGetNode("texture", out node))
             {
-                if (BaseRSI != null)
+                if (mapping.HasNode("state"))
                 {
-                    throw new InvalidOperationException("Cannot have both a texture and an RSI specified in prototype!");
+                    Logger.ErrorS("go.comp.sprite",
+                                  "Cannot use 'texture' if an RSI state is provided. Prototype: '{0}'",
+                                  Owner.Prototype.ID);
                 }
-                var path = node.AsResourcePath();
-                var tex = resc.GetResource<TextureResource>(TextureRoot / path);
-                var layer = new Layer
+                else
                 {
-                    Texture = tex,
-                    Transform = Godot.Transform2D.Identity,
-                };
-                Layers.Add(layer);
+                    var path = node.AsResourcePath();
+                    var layer = Layer.New();
+                    layer.Texture = resourceCache.GetResource<TextureResource>(TextureRoot / path);
+                    Layers.Add(layer);
+                }
             }
 
             if (mapping.TryGetNode("scale", out node))
@@ -269,20 +334,26 @@ namespace SS14.Client.GameObjects
             {
                 foreach (var layernode in layers.Cast<YamlMappingNode>())
                 {
-                    LoadLayerFrom(layernode, resc, prototypes);
+                    LoadLayerFrom(layernode, prototypes);
                 }
             }
         }
 
-        private void LoadLayerFrom(YamlMappingNode mapping, IResourceCache resourceCache, IPrototypeManager prototypeManager)
+        private void LoadLayerFrom(YamlMappingNode mapping, IPrototypeManager prototypeManager)
         {
-            var layer = new Layer();
+            var layer = Layer.New();
 
             if (mapping.TryGetNode("sprite", out var node))
             {
-                var path = node.AsResourcePath();
-                var rsi = resourceCache.GetResource<RSIResource>(TextureRoot / path);
-                layer.RSI = rsi.RSI;
+                var path = TextureRoot / node.AsResourcePath();
+                try
+                {
+                    layer.RSI = resourceCache.GetResource<RSIResource>(path).RSI;
+                }
+                catch
+                {
+                    Logger.ErrorS("go.comp.sprite", "Unable to load layer RSI '{0}'. Prototype: '{1}'", path, Owner.Prototype.ID);
+                }
             }
 
             if (mapping.TryGetNode("state", out node))
@@ -290,36 +361,59 @@ namespace SS14.Client.GameObjects
                 var rsi = layer.RSI ?? BaseRSI;
                 if (rsi == null)
                 {
-                    throw new InvalidOperationException("Must have an RSI to pull states from");
+                    Logger.ErrorS("go.comp.sprite",
+                                  "Layer has no RSI to load states from."
+                                  + "cannot use 'state' property. Prototype: '{0}'", Owner.Prototype.ID);
                 }
-
-                var state = new RSI.StateId(node.AsString(), RSI.Selectors.None);
-                layer.State = state;
-                layer.Texture = rsi[state].GetFrame(RSI.State.Direction.South, 0).icon;
+                else
+                {
+                    var stateid = new RSI.StateId(node.AsString(), RSI.Selectors.None);
+                    layer.State = stateid;
+                    if (BaseRSI.TryGetState(stateid, out var state))
+                    {
+                        layer.Texture = state.GetFrame(RSI.State.Direction.South, 0).icon;
+                    }
+                    else
+                    {
+                        Logger.ErrorS("go.comp.sprite",
+                                      "State not found in layer RSI: '{0}'. Prototype: '{1}'",
+                                      stateid, Owner.Prototype.ID);
+                    }
+                }
             }
 
             if (mapping.TryGetNode("texture", out node))
             {
-                if (layer.RSI != null)
+                if (layer.State != null)
                 {
-                    throw new InvalidOperationException("Cannot have both a texture and an RSI specified in layer!");
+                    Logger.ErrorS("go.comp.sprite",
+                                  "Cannot specify 'texture' on a layer if it has an RSI state specified. Prototype: '{0}'",
+                                  Owner.Prototype.ID);
                 }
-                var path = node.AsResourcePath();
-                layer.Texture = resourceCache.GetResource<TextureResource>(TextureRoot / path);
+                else
+                {
+                    var path = node.AsResourcePath();
+                    layer.Texture = resourceCache.GetResource<TextureResource>(TextureRoot / path);
+                }
             }
 
             if (mapping.TryGetNode("shader", out node))
             {
-                layer.Shader = IoCManager.Resolve<IPrototypeManager>().Index<ShaderPrototype>(node.AsString()).Instance();
+                if (prototypeManager.TryIndex<ShaderPrototype>(node.AsString(), out var prototype))
+                {
+                    layer.Shader = prototype.Instance();
+                }
+                else
+                {
+                    Logger.ErrorS("go.comp.sprite",
+                                  "Shader prototype '{0}' does not exist. Prototype: '{1}'",
+                                  node.AsString(), Owner.Prototype.ID);
+                }
             }
 
             if (mapping.TryGetNode("scale", out node))
             {
                 layer.Transform = Godot.Transform2D.Identity.Scaled(node.AsVector2().Convert());
-            }
-            else
-            {
-                layer.Transform = Godot.Transform2D.Identity;
             }
 
             Layers.Add(layer);
@@ -409,6 +503,14 @@ namespace SS14.Client.GameObjects
             public float AnimationTimeLeft;
             public int AnimationFrame;
             public Godot.Transform2D Transform;
+
+            public static Layer New()
+            {
+                return new Layer()
+                {
+                    Transform = Godot.Transform2D.Identity,
+                };
+            }
         }
     }
 }

@@ -80,6 +80,10 @@ namespace SS14.Client.Graphics
                 Selectors = selectors;
             }
 
+            /// <summary>
+            ///     Effectively the "null" of <c>StateId</c>, because you can't have a null for structs.
+            /// </summary>
+            public static readonly StateId Invalid = new StateId(null, Selectors.None);
             public bool IsValid => Name != null;
 
             public override string ToString()

@@ -48,6 +48,11 @@ namespace SS14.Server.Interfaces.GameObjects
         bool Deleted { get; }
 
         /// <summary>
+        /// Readonly collection of all the entities contained within this specific container
+        /// </summary>
+        IReadOnlyCollection<IEntity> ContainedEntities { get; }
+
+        /// <summary>
         /// Checks if the entity can be inserted into this container.
         /// </summary>
         /// <param name="toinsert">The entity to attempt to insert.</param>

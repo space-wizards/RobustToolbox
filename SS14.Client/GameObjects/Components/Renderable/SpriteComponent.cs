@@ -136,16 +136,49 @@ namespace SS14.Client.GameObjects
             var layer = Layer.New();
             layer.Texture = texture;
             Layers.Add(layer);
+            RedrawQueued = true;
             return Layers.Count - 1;
         }
 
-        public int AddLayer(RSI.StateId stateId, RSI rsi = null)
+        public int AddLayer(RSI.StateId stateId)
         {
+            var layer = Layer.New();
+            layer.State = stateId;
+            if (BaseRSI.TryGetState(stateId, out var state))
+            {
+                (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(layer.CurrentDir, 0);
+            }
+            else
+            {
+                Logger.ErrorS("go.comp.sprite", "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId, Environment.StackTrace);
+            }
+            Layers.Add(layer);
+            RedrawQueued = true;
+            return Layers.Count - 1;
+        }
+
+        public int AddLayer(RSI.StateId stateId, RSI rsi)
+        {
+            var layer = Layer.New();
+            layer.State = stateId;
+            layer.RSI = rsi;
+            if (rsi.TryGetState(stateId, out var state))
+            {
+                (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(layer.CurrentDir, 0);
+            }
+            else
+            {
+                Logger.ErrorS("go.comp.sprite", "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId, Environment.StackTrace);
+            }
+            Layers.Add(layer);
+            RedrawQueued = true;
+            return Layers.Count - 1;
         }
 
         public void RemoveLayer(int layer)
         {
-            throw new NotImplementedException();
+            Layers.RemoveAt(layer);
+            RedrawQueued = true;
         }
 
         public void LayerSetShader(int layer, Shader shader)
@@ -267,15 +300,12 @@ namespace SS14.Client.GameObjects
                 else
                 {
                     var stateid = new RSI.StateId(node.AsString(), RSI.Selectors.None);
-                    var layer = new Layer
-                    {
-                        State = stateid,
-                        Transform = Godot.Transform2D.Identity,
-                    };
+                    var layer = Layer.New();
+                    layer.State = stateid;
 
                     if (BaseRSI.TryGetState(stateid, out var state))
                     {
-                        layer.Texture = state.GetFrame(RSI.State.Direction.South, 0).icon;
+                        layer.Texture = state.GetFrame(layer.CurrentDir, 0).icon;
                     }
                     else
                     {
@@ -371,7 +401,7 @@ namespace SS14.Client.GameObjects
                     layer.State = stateid;
                     if (BaseRSI.TryGetState(stateid, out var state))
                     {
-                        layer.Texture = state.GetFrame(RSI.State.Direction.South, 0).icon;
+                        layer.Texture = state.GetFrame(layer.CurrentDir, 0).icon;
                     }
                     else
                     {
@@ -509,6 +539,7 @@ namespace SS14.Client.GameObjects
                 return new Layer()
                 {
                     Transform = Godot.Transform2D.Identity,
+                    CurrentDir = RSI.State.Direction.South
                 };
             }
         }

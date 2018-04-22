@@ -9,4 +9,5 @@
   <Binding Key="Tab" Function="SwitchHands" />
   <Binding Key="Shift" Function="Run" />
   <Binding Key="F" Function="ActivateItemInHand" />
+  <Binding Key="C" Function="OpenCharacterMenu" />
 </KeyBindings>

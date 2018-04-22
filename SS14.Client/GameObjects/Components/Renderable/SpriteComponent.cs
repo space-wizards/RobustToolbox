@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.Graphics;
@@ -128,8 +128,7 @@ namespace SS14.Client.GameObjects
         private Godot.Node2D SceneNode;
         private IGodotTransformComponent TransformComponent;
 
-        private IResourceCache resourceCache = IoCManager.Resolve<IResourceCache>();
-
+        private IResourceCache resourceCache;
 
         public int AddLayer(Texture texture)
         {
@@ -274,6 +273,7 @@ namespace SS14.Client.GameObjects
             base.LoadParameters(mapping);
 
             var prototypes = IoCManager.Resolve<IPrototypeManager>();
+            resourceCache = IoCManager.Resolve<IResourceCache>();
 
             YamlNode node;
             if (mapping.TryGetNode("sprite", out node))

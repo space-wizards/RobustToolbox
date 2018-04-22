@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.ClientEye;
+using SS14.Client.Graphics.Drawing;
 using SS14.Client.Graphics.Shaders;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
@@ -651,10 +652,19 @@ namespace SS14.Client.GameObjects
                 }
             }
 
+            var scale = Vector2.One;
+            var rot = Angle.Zero;
             if (mapping.TryGetNode("scale", out node))
             {
-                layer.Transform = Godot.Transform2D.Identity.Scaled(node.AsVector2().Convert());
+                scale = node.AsVector2();
             }
+
+            if (mapping.TryGetNode("rotation", out node))
+            {
+                rot = Angle.FromDegrees(node.AsFloat());
+            }
+
+            DrawingHandle.SetTransform2DRotationAndScale(ref layer.Transform, rot, scale);
 
             Layers.Add(layer);
         }

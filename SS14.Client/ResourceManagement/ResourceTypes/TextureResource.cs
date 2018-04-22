@@ -39,7 +39,7 @@ namespace SS14.Client.ResourceManagement
 
         public static implicit operator Texture(TextureResource res)
         {
-            return res.Texture;
+            return res?.Texture;
         }
 
         public override void Dispose()

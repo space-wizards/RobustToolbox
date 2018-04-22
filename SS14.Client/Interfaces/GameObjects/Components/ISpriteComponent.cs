@@ -1,8 +1,9 @@
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Graphics.Shaders;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.Interfaces.GameObjects.Components
 {
@@ -38,6 +39,9 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         /// </summary>
         bool Directional { get; set; }
 
+        // NOTE: The below are ALL designed to NOT throw exceptions ever,
+        // instead making a bunch of noisy error logs.
+
         /// <summary>
         ///     The RSI that is currently used as "base".
         ///     Layers will fall back to this RSI if they do not have their own RSI set.
@@ -50,8 +54,16 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         void RemoveLayer(int layer);
 
         void LayerSetShader(int layer, Shader shader);
+        void LayerSetShader(int layer, string shaderName);
         void LayerSetTexture(int layer, Texture texture);
-        void LayerSetState(int layer, RSI.StateId stateId, RSI rsi = null);
+        void LayerSetTexture(int layer, string texturePath);
+        void LayerSetTexture(int layer, ResourcePath texturePath);
+        void LayerSetState(int layer, RSI.StateId stateId);
+        void LayerSetState(int layer, RSI.StateId stateId, RSI rsi);
+        void LayerSetState(int layer, RSI.StateId stateId, string rsiPath);
+        void LayerSetState(int layer, RSI.StateId stateId, ResourcePath rsiPath);
         void LayerSetRSI(int layer, RSI rsi);
+        void LayerSetRSI(int layer, string rsiPath);
+        void LayerSetRSI(int layer, ResourcePath rsiPath);
     }
 }

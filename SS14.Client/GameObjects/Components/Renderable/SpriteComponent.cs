@@ -114,13 +114,40 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        RSI ISpriteComponent.BaseRSI { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
         private bool _directional = true;
 
         private bool RedrawQueued = true;
 
-        private RSI BaseRSI;
+        private RSI _baseRsi;
+        public RSI BaseRSI
+        {
+            get => _baseRsi;
+            set
+            {
+                _baseRsi = value;
+                for (var i = 0; i < Layers.Count; i++)
+                {
+                    var layer = Layers[i];
+                    if (!layer.State.IsValid || layer.RSI != null)
+                    {
+                        continue;
+                    }
+
+                    if (value.TryGetState(layer.State, out var state))
+                    {
+                        (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(0, 0);
+                        layer.CurrentDir = RSI.State.Direction.South;
+                    }
+                    else
+                    {
+                        Logger.ErrorS("go.comp.sprite",
+                                      "Layer '{0}'no longer has state '{1}' due to base RSI change. Trace:\n{2}",
+                                      i, layer.State, Environment.StackTrace);
+                        layer.Texture = null;
+                    }
+                }
+            }
+        }
 
         private List<Layer> Layers = new List<Layer>();
         private List<Godot.RID> CanvasItems = new List<Godot.RID>();
@@ -129,6 +156,7 @@ namespace SS14.Client.GameObjects
         private IGodotTransformComponent TransformComponent;
 
         private IResourceCache resourceCache;
+        private IPrototypeManager prototypes;
 
         public int AddLayer(Texture texture)
         {
@@ -176,28 +204,210 @@ namespace SS14.Client.GameObjects
 
         public void RemoveLayer(int layer)
         {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot remove! Trace:\n{1}", layer, Environment.StackTrace);
+                return;
+            }
             Layers.RemoveAt(layer);
             RedrawQueued = true;
         }
 
         public void LayerSetShader(int layer, Shader shader)
         {
-            throw new NotImplementedException();
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set shader! Trace:\n{1}", layer, Environment.StackTrace);
+                return;
+            }
+            var thelayer = Layers[layer];
+            thelayer.Shader = shader;
+            Layers[layer] = thelayer;
+            RedrawQueued = true;
+        }
+
+        public void LayerSetShader(int layer, string shaderName)
+        {
+            if (!prototypes.TryIndex<ShaderPrototype>(shaderName, out var prototype))
+            {
+                Logger.ErrorS("go.comp.sprite", "Shader prototype '{0}' does not exist. Trace:\n{1}", shaderName, Environment.StackTrace);
+            }
+
+            // This will set the shader to null if it does not exist.
+            LayerSetShader(layer, prototype?.Instance());
         }
 
         public void LayerSetTexture(int layer, Texture texture)
         {
-            throw new NotImplementedException();
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set texture! Trace:\n{1}", layer, Environment.StackTrace);
+                return;
+            }
+            var thelayer = Layers[layer];
+            if (thelayer.State.IsValid)
+            {
+                Logger.ErrorS("go.comp.sprite", "Cannot change texture of a layer with an RSI State. Trace:\n{0}", Environment.StackTrace);
+                return;
+            }
+            thelayer.Texture = texture;
+            Layers[layer] = thelayer;
+            RedrawQueued = true;
         }
 
-        public void LayerSetState(int layer, RSI.StateId stateId, RSI rsi = null)
+        public void LayerSetTexture(int layer, string texturePath)
         {
-            throw new NotImplementedException();
+            LayerSetTexture(layer, new ResourcePath(texturePath));
+        }
+
+        public void LayerSetTexture(int layer, ResourcePath texturePath)
+        {
+            if (!resourceCache.TryGetResource<TextureResource>(TextureRoot / texturePath, out var texture))
+            {
+                Logger.ErrorS("go.comp.sprite", "Unable to load texture '{0}'. Trace:\n{1}", texturePath, Environment.StackTrace);
+            }
+
+            LayerSetTexture(layer, texture);
+        }
+
+        public void LayerSetState(int layer, RSI.StateId stateId)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set state! Trace:\n{1}", layer, Environment.StackTrace);
+                return;
+            }
+
+            var thelayer = Layers[layer];
+            thelayer.State = stateId;
+            var rsi = thelayer.RSI ?? BaseRSI;
+            if (rsi == null)
+            {
+                Logger.ErrorS("go.comp.sprite", "No RSI to pull new state from! Trace:\n{1}", Environment.StackTrace);
+                thelayer.Texture = null;
+            }
+            else
+            {
+                if (rsi.TryGetState(stateId, out var state))
+                {
+                    (thelayer.Texture, thelayer.AnimationTimeLeft) = state.GetFrame(0, 0);
+                    thelayer.CurrentDir = RSI.State.Direction.South;
+                }
+                else
+                {
+                    Logger.ErrorS("go.comp.sprite", "State '{0}' does not exist in RSI. Trace:\n{1}", stateId, Environment.StackTrace);
+                    thelayer.Texture = null;
+                }
+            }
+
+            Layers[layer] = thelayer;
+            RedrawQueued = true;
+        }
+
+        public void LayerSetState(int layer, RSI.StateId stateId, RSI rsi)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set state! Trace:\n{1}", layer, Environment.StackTrace);
+                return;
+            }
+
+            var thelayer = Layers[layer];
+            thelayer.State = stateId;
+            thelayer.RSI = rsi;
+            var actualrsi = thelayer.RSI ?? BaseRSI;
+            if (actualrsi == null)
+            {
+                Logger.ErrorS("go.comp.sprite", "No RSI to pull new state from! Trace:\n{1}", layer, Environment.StackTrace);
+                thelayer.Texture = null;
+            }
+            else
+            {
+                if (actualrsi.TryGetState(stateId, out var state))
+                {
+                    (thelayer.Texture, thelayer.AnimationTimeLeft) = state.GetFrame(0, 0);
+                    thelayer.CurrentDir = RSI.State.Direction.South;
+                }
+                else
+                {
+                    Logger.ErrorS("go.comp.sprite", "State '{0}' does not exist in RSI. Trace:\n{1}", stateId, Environment.StackTrace);
+                    thelayer.Texture = null;
+                }
+            }
+
+            Layers[layer] = thelayer;
+            RedrawQueued = true;
+        }
+
+        public void LayerSetState(int layer, RSI.StateId stateId, string rsiPath)
+        {
+            LayerSetState(layer, stateId, new ResourcePath(rsiPath));
+        }
+
+        public void LayerSetState(int layer, RSI.StateId stateId, ResourcePath rsiPath)
+        {
+            if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
+            {
+                Logger.ErrorS("go.comp.sprite", "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
+            }
+
+            LayerSetState(layer, stateId, res?.RSI);
         }
 
         public void LayerSetRSI(int layer, RSI rsi)
         {
-            throw new NotImplementedException();
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set RSI! Trace:\n{1}", layer, Environment.StackTrace);
+                return;
+            }
+
+            var thelayer = Layers[layer];
+            thelayer.RSI = rsi;
+            if (!thelayer.State.IsValid)
+            {
+                Layers[layer] = thelayer;
+                return;
+            }
+
+            // Gotta do this because somebody might use null as argument (totally valid).
+            var actualRsi = thelayer.RSI ?? BaseRSI;
+            if (actualRsi == null)
+            {
+                Logger.ErrorS("go.comp.sprite", "No RSI to pull new state from! Trace:\n{1}", layer, Environment.StackTrace);
+                thelayer.Texture = null;
+            }
+            else
+            {
+                if (rsi.TryGetState(thelayer.State, out var state))
+                {
+                    (thelayer.Texture, thelayer.AnimationTimeLeft) = state.GetFrame(0, 0);
+                    thelayer.CurrentDir = RSI.State.Direction.South;
+                }
+                else
+                {
+                    Logger.ErrorS("go.comp.sprite", "State '{0}' does not exist in set RSI. Trace:\n{1}", thelayer.State, Environment.StackTrace);
+                    thelayer.Texture = null;
+                }
+            }
+
+            Layers[layer] = thelayer;
+            RedrawQueued = true;
+        }
+
+        public void LayerSetRSI(int layer, string rsiPath)
+        {
+            LayerSetRSI(layer, new ResourcePath(rsiPath));
+        }
+
+        public void LayerSetRSI(int layer, ResourcePath rsiPath)
+        {
+            if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
+            {
+                Logger.ErrorS("go.comp.sprite", "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
+            }
+
+            LayerSetRSI(layer, res?.RSI);
         }
 
         public override void OnAdd()
@@ -272,7 +482,7 @@ namespace SS14.Client.GameObjects
         {
             base.LoadParameters(mapping);
 
-            var prototypes = IoCManager.Resolve<IPrototypeManager>();
+            prototypes = IoCManager.Resolve<IPrototypeManager>();
             resourceCache = IoCManager.Resolve<IResourceCache>();
 
             YamlNode node;

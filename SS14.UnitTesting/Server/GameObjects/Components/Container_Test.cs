@@ -28,7 +28,7 @@ namespace SS14.UnitTesting.Server.GameObjects
         {
             var entity = EntityManager.SpawnEntity("dummy");
 
-            var container = Container.Create("dummy", entity);
+            var container = ContainerManagerComponent.Create<Container>("dummy", entity);
 
             Assert.That(container.ID, Is.EqualTo("dummy"));
             Assert.That(container.Owner, Is.EqualTo(entity));
@@ -36,10 +36,10 @@ namespace SS14.UnitTesting.Server.GameObjects
             var manager = entity.GetComponent<IContainerManager>();
 
             Assert.That(container.Manager, Is.EqualTo(manager));
-            Assert.That(() => Container.Create("dummy", entity), Throws.ArgumentException);
+            Assert.That(() => ContainerManagerComponent.Create<Container>("dummy", entity), Throws.ArgumentException);
 
             Assert.That(manager.HasContainer("dummy2"), Is.False);
-            var container2 = Container.Create("dummy2", entity);
+            var container2 = ContainerManagerComponent.Create<Container>("dummy2", entity);
 
             Assert.That(container2.Manager, Is.EqualTo(manager));
             Assert.That(container2.Owner, Is.EqualTo(entity));
@@ -67,11 +67,11 @@ namespace SS14.UnitTesting.Server.GameObjects
             var inserted = EntityManager.SpawnEntity("dummy");
             var transform = inserted.GetComponent<IServerTransformComponent>();
 
-            var container = Container.Create("dummy", owner);
+            var container = ContainerManagerComponent.Create<Container>("dummy", owner);
             Assert.That(container.Insert(inserted), Is.True);
             Assert.That(transform.Parent.Owner, Is.EqualTo(owner));
 
-            var container2 = Container.Create("dummy", inserted);
+            var container2 = ContainerManagerComponent.Create<Container>("dummy", inserted);
             Assert.That(() => container2.Insert(owner), Throws.InvalidOperationException);
 
             var success = container.Remove(inserted);

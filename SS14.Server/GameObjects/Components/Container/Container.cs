@@ -13,62 +13,77 @@ namespace SS14.Server.GameObjects.Components.Container
     /// this logic should go on the systems that are holding this container.
     /// For example, inventory containers should be modified only through an inventory component.
     /// </summary>
-    public sealed class Container : IContainer
+    public sealed class Container : BaseContainer
     {
-        /// <inheritdoc />
-        public string ID { get; }
+        /// <summary>
+        /// The generic container class uses a list of entities
+        /// </summary>
+        private List<IEntity> ContainerList = new List<IEntity>();
 
         /// <inheritdoc />
-        public IContainerManager Manager { get; private set; }
+        public Container(string id, IContainerManager manager) : base(id, manager)
+        {
+        }
+
+        /// <inheritdoc />
+        public override IReadOnlyCollection<IEntity> ContainedEntities => ContainerList.AsReadOnly();
+
+        /// <inheritdoc />
+        protected override void InternalInsert(IEntity toinsert)
+        {
+            ContainerList.Add(toinsert);
+        }
+
+        /// <inheritdoc />
+        protected override void InternalRemove(IEntity toremove)
+        {
+            ContainerList.Remove(toremove);
+        }
+
+        /// <inheritdoc />
+        public override bool Contains(IEntity contained)
+        {
+            return ContainerList.Contains(contained);
+        }
+
+        /// <inheritdoc />
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            foreach (var entity in ContainerList)
+            {
+                var transform = entity.GetComponent<IServerTransformComponent>();
+                transform.DetachParent();
+            }
+        }
+    }
+
+    public abstract class BaseContainer : IContainer
+    {
+        /// <inheritdoc />
+        public IContainerManager Manager { get; protected set; }
+
+        /// <inheritdoc />
+        public string ID { get; }
 
         /// <inheritdoc />
         public IEntity Owner => Manager.Owner;
 
         /// <inheritdoc />
-        public bool Deleted { get; private set; } = false;
+        public bool Deleted { get; protected set; } = false;
 
-        private List<IEntity> ContainerList = new List<IEntity>();
-
-        public IReadOnlyCollection<IEntity> ContainedEntities => ContainerList.AsReadOnly();
-
-        /// <summary>
-        /// Shortcut method to make creation of containers easier.
-        /// Creates a new container on the entity and gives it back to you.
-        /// </summary>
-        /// <param name="id">The ID of the new container.</param>
-        /// <param name="entity">The entity to create the container for.</param>
-        /// <returns>The new container.</returns>
-        /// <exception cref="ArgumentException">Thrown if there already is a container with the specified ID.</exception>
-        /// <seealso cref="IContainerManager.MakeContainer{T}(string)" />
-        public static Container Create(string id, IEntity entity)
-        {
-            if (!entity.TryGetComponent<IContainerManager>(out var containermanager))
-            {
-                containermanager = entity.AddComponent<ContainerManagerComponent>();
-            }
-
-            return containermanager.MakeContainer<Container>(id);
-        }
+        /// <inheritdoc />
+        public abstract IReadOnlyCollection<IEntity> ContainedEntities { get; }
 
         /// <summary>
         /// DO NOT CALL THIS METHOD DIRECTLY!
         /// You want <see cref="IContainerManager.MakeContainer{T}(string)" /> or <see cref="Create" /> instead.
         /// </summary>
-        public Container(string id, IContainerManager manager)
+        public BaseContainer(string id, IContainerManager manager)
         {
             ID = id;
             Manager = manager;
-        }
-
-        /// <inheritdoc />
-        public bool CanInsert(IEntity toinsert)
-        {
-            // Crucial, prevent circular insertion.
-            if (toinsert.GetComponent<ITransformComponent>().ContainsEntity(Owner.GetComponent<ITransformComponent>()))
-            {
-                throw new InvalidOperationException("Attempt to insert entity into one of its children.");
-            }
-            return true;
         }
 
         /// <inheritdoc />
@@ -82,18 +97,28 @@ namespace SS14.Server.GameObjects.Components.Container
                     // Can't detach the entity from its parent, can't insert.
                     return false;
                 }
-                ContainerList.Add(toinsert);
+                InternalInsert(toinsert);
                 transform.AttachParent(Owner.GetComponent<IServerTransformComponent>());
-                //OnInsert(); If necessary a component may add eventhandlers for this and delegate some functions to it
                 return true;
             }
             return false;
         }
 
+        /// <summary>
+        /// Implement to store the reference in whatever form you want
+        /// </summary>
+        /// <param name="toinsert"></param>
+        protected abstract void InternalInsert(IEntity toinsert);
+
         /// <inheritdoc />
-        public bool CanRemove(IEntity toremove)
+        public virtual bool CanInsert(IEntity toinsert)
         {
-            return Contains(toremove);
+            // Crucial, prevent circular insertion.
+            if (toinsert.GetComponent<ITransformComponent>().ContainsEntity(Owner.GetComponent<ITransformComponent>()))
+            {
+                throw new InvalidOperationException("Attempt to insert entity into one of its children.");
+            }
+            return true;
         }
 
         /// <inheritdoc />
@@ -103,28 +128,31 @@ namespace SS14.Server.GameObjects.Components.Container
             {
                 return false;
             }
-            ContainerList.Remove(toremove);
+            InternalRemove(toremove);
             toremove.GetComponent<IServerTransformComponent>().DetachParent();
-            //OnRemoval(toremove); If necessary a component may add eventhandlers for this and delegate some functions to it
             return true;
         }
 
+        /// <summary>
+        /// Implement to remove the reference you used to store the entity
+        /// </summary>
+        /// <param name="toinsert"></param>
+        protected abstract void InternalRemove(IEntity toinsert);
+
         /// <inheritdoc />
-        public bool Contains(IEntity contained)
+        public virtual bool CanRemove(IEntity toremove)
         {
-            return ContainerList.Contains(contained);
+            return Contains(toremove);
         }
 
         /// <inheritdoc />
-        public void Shutdown()
+        public abstract bool Contains(IEntity contained);
+
+        /// <inheritdoc />
+        public virtual void Shutdown()
         {
             Deleted = true;
             Manager = null;
-            foreach (var entity in ContainerList)
-            {
-                var transform = entity.GetComponent<IServerTransformComponent>();
-                transform.DetachParent();
-            }
         }
     }
 }

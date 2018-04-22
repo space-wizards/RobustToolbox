@@ -12,6 +12,25 @@ namespace SS14.Server.GameObjects.Components.Container
 
         private readonly Dictionary<string, IContainer> EntityContainers = new Dictionary<string, IContainer>();
 
+        /// <summary>
+        /// Shortcut method to make creation of containers easier.
+        /// Creates a new container on the entity and gives it back to you.
+        /// </summary>
+        /// <param name="id">The ID of the new container.</param>
+        /// <param name="entity">The entity to create the container for.</param>
+        /// <returns>The new container.</returns>
+        /// <exception cref="ArgumentException">Thrown if there already is a container with the specified ID.</exception>
+        /// <seealso cref="IContainerManager.MakeContainer{T}(string)" />
+        public static T Create<T>(string id, IEntity entity) where T : IContainer
+        {
+            if (!entity.TryGetComponent<IContainerManager>(out var containermanager))
+            {
+                containermanager = entity.AddComponent<ContainerManagerComponent>();
+            }
+
+            return containermanager.MakeContainer<T>(id);
+        }
+
         /// <inheritdoc />
         public T MakeContainer<T>(string id) where T: IContainer
         {

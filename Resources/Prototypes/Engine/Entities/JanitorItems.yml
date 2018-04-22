@@ -8,7 +8,7 @@
     texture: Items/mop.png
 
   - type: Icon
-    icon: Items/mop.png
+    texture: Items/mop.png
 
   - type: BoundingBox
   - type: Physics

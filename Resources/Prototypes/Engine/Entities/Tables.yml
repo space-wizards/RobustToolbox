@@ -9,7 +9,7 @@
     drawdepth: Tables
 
   - type: Icon
-    icon: Objects/worktop_single.png
+    texture: Objects/worktop_single.png
 
   - type: BoundingBox
     aabb: "-0.45,-1,0.95,1"

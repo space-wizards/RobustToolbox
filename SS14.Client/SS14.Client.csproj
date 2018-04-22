@@ -129,6 +129,7 @@
     <Compile Include="Console\Commands\Debug.cs" />
     <Compile Include="GameStates\GameStateManager.cs" />
     <Compile Include="Graphics\CanvasLayers.cs" />
+    <Compile Include="Graphics\IDirectionalTextureProvider.cs" />
     <Compile Include="Graphics\Lighting\LightManager.Light.cs" />
     <Compile Include="Graphics\Lighting\LightManager.Occluder.cs" />
     <Compile Include="Graphics\Lighting\LightManager.cs" />
@@ -222,7 +223,7 @@
     <Compile Include="Input\GodotInputManager.cs" />
     <Compile Include="State\States\LobbyMenu.cs" />
     <Compile Include="State\States\GameScreen.cs" />
-    <Compile Include="Graphics\TextureSource.cs" />
+    <Compile Include="Graphics\Texture.cs" />
     <Compile Include="Graphics\DisplayManager.cs" />
     <Compile Include="Debugging\DebugDrawing.cs" />
     <Compile Include="Interfaces\Debugging\IDebugDrawing.cs" />

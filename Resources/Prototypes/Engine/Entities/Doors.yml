@@ -9,7 +9,7 @@
     texture: Objects/door_ew.png
 
   - type: Icon
-    icon: Objects/door_ew.png
+    texture: Objects/door_ew.png
 
   - type: BoundingBox
   - type: Collidable

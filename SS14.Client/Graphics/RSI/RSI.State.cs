@@ -1,7 +1,6 @@
 ﻿using SS14.Shared.Maths;
-using System;
+using SS14.Client.Utility;
 using System.Collections.Generic;
-using System.Drawing;
 
 namespace SS14.Client.Graphics
 {
@@ -10,7 +9,7 @@ namespace SS14.Client.Graphics
         /// <summary>
         ///     Represents a single icon state inside an RSI.
         /// </summary>
-        public sealed class State
+        public sealed class State : IDirectionalTextureProvider
         {
             public Vector2u Size { get; }
             public StateId StateId { get; }
@@ -52,6 +51,17 @@ namespace SS14.Client.Graphics
             public int DelayCount(Direction direction)
             {
                 return Icons[(int)direction].Length;
+            }
+
+            Texture IDirectionalTextureProvider.Default => GetFrame(Direction.South, 0).icon;
+
+            Texture IDirectionalTextureProvider.TextureFor(Shared.Maths.Direction dir)
+            {
+                if (Directions == DirectionType.Dir1)
+                {
+                    return GetFrame(Direction.South, 0).icon;
+                }
+                return GetFrame(dir.Convert(), 0).icon;
             }
         }
     }

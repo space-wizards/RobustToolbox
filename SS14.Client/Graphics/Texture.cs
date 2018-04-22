@@ -1,11 +1,11 @@
-using SS14.Shared.Maths;
+﻿using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics
 {
     /// <summary>
     ///     Contains a texture used for drawing things.
     /// </summary>
-    public abstract class Texture
+    public abstract class Texture : IDirectionalTextureProvider
     {
         internal abstract Godot.Texture GodotTexture { get; }
 
@@ -16,6 +16,13 @@ namespace SS14.Client.Graphics
         public static implicit operator Godot.Texture(Texture src)
         {
             return src?.GodotTexture;
+        }
+
+        Texture IDirectionalTextureProvider.Default => this;
+
+        Texture IDirectionalTextureProvider.TextureFor(Direction dir)
+        {
+            return this;
         }
     }
 

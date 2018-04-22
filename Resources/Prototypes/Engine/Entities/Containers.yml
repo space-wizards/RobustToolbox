@@ -8,7 +8,7 @@
     texture: Items/toolbox_r.png
 
   - type: Icon
-    icon: Items/toolbox_r.png
+    texture: Items/toolbox_r.png
 
   - type: BoundingBox
   - type: Physics

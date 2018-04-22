@@ -28,6 +28,8 @@ using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Client.Utility;
 using SS14.Client.Graphics.ClientEye;
+using SS14.Client.Graphics;
+using SS14.Client.GameObjects;
 
 namespace SS14.Client.Placement
 {
@@ -72,8 +74,7 @@ namespace SS14.Client.Placement
 
         public bool IsActive { get; private set; }
         public bool Eraser { get; private set; }
-        public TextureResource CurrentBaseSprite { get; set; }
-        public string CurrentBaseSpriteKey { get; set; } = "";
+        public IDirectionalTextureProvider CurrentBaseSprite { get; set; }
         public PlacementMode CurrentMode { get; set; }
         public PlacementInformation CurrentPermission { get; set; }
         public EntityPrototype CurrentPrototype { get; set; }
@@ -329,14 +330,7 @@ namespace SS14.Client.Placement
         {
             var prototype = _prototypeManager.Index<EntityPrototype>(templateName);
 
-            ComponentParameter spriteParam = prototype.GetBaseSpriteParameters().FirstOrDefault();
-            //Will break if states not ordered correctly.
-
-            var spriteName = spriteParam == null ? "" : spriteParam.GetValue<string>();
-            var sprite = ResourceCache.GetResource<TextureResource>("/Textures/" + spriteName);
-
-            CurrentBaseSprite = sprite;
-            CurrentBaseSpriteKey = spriteName;
+            CurrentBaseSprite = IconComponent.GetPrototypeIcon(prototype);
             CurrentPrototype = prototype;
 
             IsActive = true;
@@ -346,8 +340,7 @@ namespace SS14.Client.Placement
         {
             var tileDefs = _tileDefManager;
 
-            CurrentBaseSprite = ResourceCache.GetResource<TextureResource>("/Textures/UserInterface/tilebuildoverlay.png");
-            CurrentBaseSpriteKey = "UserInterface/tilebuildoverlay.png";
+            CurrentBaseSprite = ResourceCache.GetResource<TextureResource>("/Textures/UserInterface/tilebuildoverlay.png").Texture;
 
             IsActive = true;
         }
@@ -397,20 +390,6 @@ namespace SS14.Client.Placement
             message.DirRcv = Direction;
 
             NetworkManager.ClientSendMessage(message);
-        }
-
-        public TextureResource GetDirectionalSprite()
-        {
-            var spriteToUse = CurrentBaseSprite;
-
-            if (CurrentBaseSprite == null) return null;
-
-            string dirName = (CurrentBaseSpriteKey + "_" + Direction).ToLowerInvariant();
-
-            if (ResourceCache.TryGetResource<TextureResource>(dirName, out var spriteRes))
-                return spriteRes;
-
-            return spriteToUse;
         }
     }
 }

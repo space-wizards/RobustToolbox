@@ -22,5 +22,6 @@
         Drop,
         Run,
         ActivateItemInHand,
+        OpenCharacterMenu
     }
 }

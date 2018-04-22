@@ -1,4 +1,4 @@
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
 
 namespace SS14.Client.UserInterface.Controls
 {
@@ -18,7 +18,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             // TODO: Maybe store the texture passed in in case it's like a TextureResource or whatever.
             get => new GodotTextureSource(SceneControl.Texture);
-            set => SceneControl.Texture = value.GodotTexture;
+            set => SceneControl.Texture = value?.GodotTexture;
         }
 
         new private Godot.TextureRect SceneControl;

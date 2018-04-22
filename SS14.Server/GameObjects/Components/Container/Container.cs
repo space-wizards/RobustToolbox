@@ -37,7 +37,7 @@ namespace SS14.Server.GameObjects.Components.Container
         /// <inheritdoc />
         protected override void InternalRemove(IEntity toremove)
         {
-            ContainerList.Add(toremove);
+            ContainerList.Remove(toremove);
         }
 
         /// <inheritdoc />

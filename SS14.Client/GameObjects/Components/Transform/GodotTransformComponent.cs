@@ -1,11 +1,10 @@
-using SS14.Client.Graphics.ClientEye;
+﻿using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Utility;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-
 
 namespace SS14.Client.GameObjects
 {
@@ -63,8 +62,11 @@ namespace SS14.Client.GameObjects
         {
             base.OnAdd();
             var holder = IoCManager.Resolve<ISceneTreeHolder>();
-            SceneNode = new Godot.Node2D();
-            SceneNode.SetName($"Transform {Owner.Uid} ({Owner.Name})");
+            SceneNode = new Godot.Node2D
+            {
+                Name = $"Transform {Owner.Uid} ({Owner.Name})",
+                Rotation = -MathHelper.PiOver2
+            };
             holder.WorldRoot.AddChild(SceneNode);
         }
 

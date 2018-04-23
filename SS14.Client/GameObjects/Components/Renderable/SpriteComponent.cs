@@ -808,6 +808,11 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        public override void HandleComponentState(ComponentState state)
+        {
+            var spriteState = (SpriteComponentState)state;
+        }
+
         private RSI.State.Direction GetDir()
         {
             var angle = new Angle(-TransformComponent.WorldRotation);

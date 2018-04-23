@@ -328,7 +328,6 @@
     <Compile Include="GameObjects\Components\Light\PointLightComponentState.cs" />
     <Compile Include="GameObjects\Components\Particles\ParticleSystemComponentState.cs" />
     <Compile Include="GameObjects\Components\Physics\PhysicsComponentState.cs" />
-    <Compile Include="GameObjects\Components\Renderable\RenderableComponentState.cs" />
     <Compile Include="GameObjects\Components\Renderable\SpriteComponentState.cs" />
     <Compile Include="GameObjects\Components\Transform\TransformComponentState.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\EntitySystemMessage.cs" />

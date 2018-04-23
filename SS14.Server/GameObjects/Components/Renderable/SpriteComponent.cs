@@ -1,10 +1,9 @@
 ﻿using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.GameObjects;
-using System.Collections.Generic;
-using System;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
@@ -12,22 +11,14 @@ namespace SS14.Server.GameObjects
     {
         public override string Name => "Sprite";
         public override uint? NetID => NetIDs.SPRITE;
-        private IRenderableComponent _master;
-        private readonly List<IRenderableComponent> _slaves;
-        private string _currentBaseName;
-        private string _currentSpriteKey;
 
-        /// <summary>
-        ///     Offsets the sprite from the entity origin by this many meters.
-        /// </summary>
-        private Vector2 _offset;
         private bool _visible;
         private DrawDepth _drawDepth;
-
-        public SpriteComponent()
-        {
-            _slaves = new List<IRenderableComponent>();
-        }
+        private Vector2 _scale;
+        private Vector2 _offset;
+        private Color _color;
+        private bool _directional;
+        private string _baseRSIPath;
 
         public DrawDepth DrawDepth
         {
@@ -41,57 +32,44 @@ namespace SS14.Server.GameObjects
             set => _visible = value;
         }
 
+        public Vector2 Scale { get => _scale; set => _scale = value; }
+
+        public Angle Rotation { get; set; }
+
+        public Vector2 Offset { get => _offset; set => _offset = value; }
+
+        public Color Color { get => _color; set => _color = value; }
+
+        public bool Directional { get => _directional; set => _directional = value; }
+
+        public string BaseRSIPath { get => _baseRSIPath; set => _baseRSIPath = value; }
+
         public override void ExposeData(EntitySerializer serializer)
         {
             base.ExposeData(serializer);
 
             serializer.DataField(ref _visible, "visible", true);
             serializer.DataField(ref _drawDepth, "depth", DrawDepth.FloorTiles);
-            serializer.DataField(ref _currentSpriteKey, "skey", String.Empty);
-            serializer.DataField(ref _currentBaseName, "sbase", String.Empty);
             serializer.DataField(ref _offset, "offset", Vector2.Zero);
+            serializer.DataField(ref _scale, "scale", Vector2.One);
+            serializer.DataField(ref _color, "color", Color.White);
+            serializer.DataField(ref _directional, "directional", true);
+            serializer.DataField(ref _baseRSIPath, "sprite", null);
+        }
+
+        public override void LoadParameters(YamlMappingNode mapping)
+        {
+            base.LoadParameters(mapping);
+
+            if (mapping.TryGetNode("rotation", out var node))
+            {
+                Rotation = Angle.FromDegrees(node.AsFloat());
+            }
         }
 
         public override ComponentState GetComponentState()
         {
-            return new SpriteComponentState(Visible, DrawDepth, _currentSpriteKey, _currentBaseName, _offset);
-        }
-
-        public bool IsSlaved()
-        {
-            return _master != null;
-        }
-
-        public void SetMaster(IEntity m)
-        {
-            if (!m.HasComponent<ISpriteRenderableComponent>())
-                return;
-            var mastercompo = m.GetComponent<ISpriteRenderableComponent>();
-            //If there's no sprite component, then FUCK IT
-            if (mastercompo == null)
-                return;
-
-            mastercompo.AddSlave(this);
-            _master = mastercompo;
-        }
-
-        public void UnsetMaster()
-        {
-            if (_master == null)
-                return;
-            _master.RemoveSlave(this);
-            _master = null;
-        }
-
-        public void AddSlave(IRenderableComponent slavecompo)
-        {
-            _slaves.Add(slavecompo);
-        }
-
-        public void RemoveSlave(IRenderableComponent slavecompo)
-        {
-            if (_slaves.Contains(slavecompo))
-                _slaves.Remove(slavecompo);
+            return new SpriteComponentState(Visible, DrawDepth, Scale, Rotation, Offset, Color, Directional, BaseRSIPath, null);
         }
     }
 }

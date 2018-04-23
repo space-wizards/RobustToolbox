@@ -190,6 +190,8 @@ namespace SS14.Client.GameObjects
         private IResourceCache resourceCache;
         private IPrototypeManager prototypes;
 
+        private int generation;
+
         public int AddLayer(Texture texture)
         {
             var layer = Layer.New();
@@ -277,11 +279,7 @@ namespace SS14.Client.GameObjects
                 return;
             }
             var thelayer = Layers[layer];
-            if (thelayer.State.IsValid)
-            {
-                Logger.ErrorS("go.comp.sprite", "Cannot change texture of a layer with an RSI State. Trace:\n{0}", Environment.StackTrace);
-                return;
-            }
+            thelayer.State = null;
             thelayer.Texture = texture;
             Layers[layer] = thelayer;
             RedrawQueued = true;
@@ -701,7 +699,7 @@ namespace SS14.Client.GameObjects
 
             if (mapping.TryGetNode("texture", out node))
             {
-                if (layer.State != null)
+                if (layer.State.IsValid)
                 {
                     Logger.ErrorS("go.comp.sprite",
                                   "Cannot specify 'texture' on a layer if it has an RSI state specified. Prototype: '{0}'",
@@ -745,7 +743,7 @@ namespace SS14.Client.GameObjects
         {
             if (Directional)
             {
-                SceneNode.Rotation = (float)(-TransformComponent.WorldRotation + MathHelper.PiOver2);
+                SceneNode.Rotation = (float)(-TransformComponent.WorldRotation + Rotation) + MathHelper.PiOver2;
             }
 
             for (var i = 0; i < Layers.Count; i++)
@@ -808,9 +806,37 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override void HandleComponentState(ComponentState state)
+        public override void HandleComponentState(ComponentState notthestate)
         {
-            var spriteState = (SpriteComponentState)state;
+            var state = (SpriteComponentState)notthestate;
+            if (state.Generation <= generation)
+            {
+                return;
+            }
+            generation = state.Generation;
+
+            Visible = state.Visible;
+            DrawDepth = state.DrawDepth;
+            Scale = state.Scale;
+            Rotation = state.Rotation;
+            Offset = state.Offset;
+            Color = state.Color;
+            Directional = state.Directional;
+
+            if (state.BaseRsiPath != null && BaseRSI != null)
+            {
+                if (resourceCache.TryGetResource<RSIResource>(state.BaseRsiPath, out var res))
+                {
+                    if (BaseRSI != res.RSI)
+                    {
+                        BaseRSI = res.RSI;
+                    }
+                }
+                else
+                {
+                    Logger.ErrorS("go.comp.sprite", "Hey server, RSI '{0}' doesn't exist.", state.BaseRsiPath);
+                }
+            }
         }
 
         private RSI.State.Direction GetDir()

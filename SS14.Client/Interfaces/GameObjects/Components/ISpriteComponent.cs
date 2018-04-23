@@ -56,8 +56,12 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         RSI BaseRSI { get; set; }
 
         int AddLayer(Texture texture);
+        int AddLayer(string texturePath);
+        int AddLayer(ResourcePath texturePath);
         int AddLayer(RSI.StateId stateId);
         int AddLayer(RSI.StateId stateId, RSI rsi);
+        int AddLayer(RSI.StateId stateId, string rsiPath);
+        int AddLayer(RSI.StateId stateId, ResourcePath rsiPath);
         void RemoveLayer(int layer);
 
         void LayerSetShader(int layer, Shader shader);

@@ -7,6 +7,7 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public class SpriteComponentState : ComponentState
     {
+        public readonly int Generation;
         public readonly bool Visible;
         public readonly DrawDepth DrawDepth;
         public readonly Vector2 Scale;
@@ -18,6 +19,7 @@ namespace SS14.Shared.GameObjects
         public readonly List<Layer> Layers;
 
         public SpriteComponentState(
+            int generation,
             bool visible,
             DrawDepth drawDepth,
             Vector2 scale,
@@ -29,6 +31,7 @@ namespace SS14.Shared.GameObjects
             List<Layer> layers)
             : base(NetIDs.SPRITE)
         {
+            Generation = generation;
             Visible = visible;
             DrawDepth = drawDepth;
             Scale = scale;
@@ -43,6 +46,22 @@ namespace SS14.Shared.GameObjects
         [Serializable]
         public struct Layer
         {
+            public readonly string Shader;
+            public readonly string TexturePath;
+            public readonly string RsiPath;
+            public readonly string State;
+            public readonly Vector2 Scale;
+            public readonly Angle Rotation;
+
+            public Layer(string shader, string texturePath, string rsiPath, string state, Vector2 scale, Angle rotation)
+            {
+                Shader = shader;
+                TexturePath = texturePath;
+                RsiPath = rsiPath;
+                State = state;
+                Scale = scale;
+                Rotation = rotation;
+            }
         }
     }
 }

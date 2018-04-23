@@ -68,6 +68,20 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        private Angle rotation;
+        public Angle Rotation
+        {
+            get => rotation;
+            set
+            {
+                rotation = value;
+                if (SceneNode != null)
+                {
+                    SceneNode.Rotation = (float)value;
+                }
+            }
+        }
+
         private Vector2 offset = Vector2.Zero;
         /// <summary>
         ///     Offset applied to all layers.
@@ -411,6 +425,34 @@ namespace SS14.Client.GameObjects
             LayerSetRSI(layer, res?.RSI);
         }
 
+        public void LayerSetScale(int layer, Vector2 scale)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set scale! Trace:\n{1}", layer, Environment.StackTrace);
+                return;
+            }
+
+            var thelayer = Layers[layer];
+            thelayer.Scale = scale;
+            Layers[layer] = thelayer;
+            RedrawQueued = true;
+        }
+
+        public void LayerSetRotation(int layer, Angle rotation)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set rotation! Trace:\n{1}", layer, Environment.StackTrace);
+                return;
+            }
+
+            var thelayer = Layers[layer];
+            thelayer.Rotation = rotation;
+            Layers[layer] = thelayer;
+            RedrawQueued = true;
+        }
+
         public override void OnAdd()
         {
             base.OnAdd();
@@ -421,6 +463,7 @@ namespace SS14.Client.GameObjects
                 Scale = scale.Convert(),
                 Position = offset.Convert(),
                 Modulate = color.Convert(),
+                Rotation = (float)rotation,
             };
         }
 
@@ -472,7 +515,9 @@ namespace SS14.Client.GameObjects
                     prevShader = shader;
                 }
 
-                VS.CanvasItemAddSetTransform(currentItem, layer.Transform);
+                var transform = Godot.Transform2D.Identity;
+                DrawingHandle.SetTransform2DRotationAndScale(ref transform, layer.Rotation, layer.Scale);
+                VS.CanvasItemAddSetTransform(currentItem, transform);
                 // Not instantiating a DrawingHandle here because those are ref types,
                 // and I really don't want the extra allocation.
                 texture.GodotTexture.Draw(currentItem, -texture.GodotTexture.GetSize() / 2);
@@ -549,6 +594,11 @@ namespace SS14.Client.GameObjects
             if (mapping.TryGetNode("scale", out node))
             {
                 Scale = node.AsVector2();
+            }
+
+            if (mapping.TryGetNode("rotation", out node))
+            {
+                Rotation = Angle.FromDegrees(node.AsFloat());
             }
 
             if (mapping.TryGetNode("offset", out node))
@@ -652,19 +702,15 @@ namespace SS14.Client.GameObjects
                 }
             }
 
-            var scale = Vector2.One;
-            var rot = Angle.Zero;
             if (mapping.TryGetNode("scale", out node))
             {
-                scale = node.AsVector2();
+                layer.Scale = node.AsVector2();
             }
 
             if (mapping.TryGetNode("rotation", out node))
             {
-                rot = Angle.FromDegrees(node.AsFloat());
+                layer.Rotation = Angle.FromDegrees(node.AsFloat());
             }
-
-            DrawingHandle.SetTransform2DRotationAndScale(ref layer.Transform, rot, scale);
 
             Layers.Add(layer);
         }
@@ -752,14 +798,15 @@ namespace SS14.Client.GameObjects
             public RSI.State.Direction CurrentDir;
             public float AnimationTimeLeft;
             public int AnimationFrame;
-            public Godot.Transform2D Transform;
+            public Vector2 Scale;
+            public Angle Rotation;
 
             public static Layer New()
             {
                 return new Layer()
                 {
-                    Transform = Godot.Transform2D.Identity,
-                    CurrentDir = RSI.State.Direction.South
+                    CurrentDir = RSI.State.Direction.South,
+                    Scale = Vector2.One,
                 };
             }
         }

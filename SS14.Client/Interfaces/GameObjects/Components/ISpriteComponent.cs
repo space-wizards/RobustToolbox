@@ -22,6 +22,11 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         Vector2 Scale { get; set; }
 
         /// <summary>
+        ///     A rotation applied to all layers.
+        /// </summary>
+        Angle Rotation { get; set; }
+
+        /// <summary>
         ///     Offset applied to all layers.
         /// </summary>
         Vector2 Offset { get; set; }
@@ -55,15 +60,21 @@ namespace SS14.Client.Interfaces.GameObjects.Components
 
         void LayerSetShader(int layer, Shader shader);
         void LayerSetShader(int layer, string shaderName);
+
         void LayerSetTexture(int layer, Texture texture);
         void LayerSetTexture(int layer, string texturePath);
         void LayerSetTexture(int layer, ResourcePath texturePath);
+
         void LayerSetState(int layer, RSI.StateId stateId);
         void LayerSetState(int layer, RSI.StateId stateId, RSI rsi);
         void LayerSetState(int layer, RSI.StateId stateId, string rsiPath);
         void LayerSetState(int layer, RSI.StateId stateId, ResourcePath rsiPath);
+
         void LayerSetRSI(int layer, RSI rsi);
         void LayerSetRSI(int layer, string rsiPath);
         void LayerSetRSI(int layer, ResourcePath rsiPath);
+
+        void LayerSetScale(int layer, Vector2 scale);
+        void LayerSetRotation(int layer, Angle rotation);
     }
 }

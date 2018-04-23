@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Graphics.Shaders;
-using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.ResourceManagement;
@@ -17,6 +13,9 @@ using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using YamlDotNet.RepresentationModel;
 using VS = Godot.VisualServer;
 
@@ -32,6 +31,24 @@ namespace SS14.Client.GameObjects
         ///     The resource path from which all texture paths are relative to.
         /// </summary>
         public static readonly ResourcePath TextureRoot = new ResourcePath("/Textures");
+
+        private bool _visible = true;
+        public bool Visible
+        {
+            get => _visible;
+            set
+            {
+                value = _visible;
+                if (value)
+                {
+                    RedrawQueued = true;
+                }
+                else
+                {
+                    ClearDraw();
+                }
+            }
+        }
 
         private DrawDepth drawDepth;
 
@@ -497,6 +514,11 @@ namespace SS14.Client.GameObjects
         {
             ClearDraw();
 
+            if (!Visible)
+            {
+                return;
+            }
+
             Shader prevShader = null;
             Godot.RID currentItem = null;
             foreach (var layer in Layers)
@@ -531,8 +553,7 @@ namespace SS14.Client.GameObjects
             prototypes = IoCManager.Resolve<IPrototypeManager>();
             resourceCache = IoCManager.Resolve<IResourceCache>();
 
-            YamlNode node;
-            if (mapping.TryGetNode("sprite", out node))
+            if (mapping.TryGetNode("sprite", out YamlNode node))
             {
                 var path = TextureRoot / node.AsResourcePath();
                 try
@@ -619,6 +640,11 @@ namespace SS14.Client.GameObjects
             if (mapping.TryGetNode("directional", out node))
             {
                 Directional = node.AsBool();
+            }
+
+            if (mapping.TryGetNode("visible", out node))
+            {
+                Visible = node.AsBool();
             }
 
             if (mapping.TryGetNode("layers", out YamlSequenceNode layers))

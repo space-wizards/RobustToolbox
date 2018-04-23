@@ -11,6 +11,8 @@ namespace SS14.Client.Interfaces.GameObjects.Components
     {
         void FrameUpdate(float delta);
 
+        bool Visible { get; set; }
+
         /// <summary>
         ///     Z-index for drawing.
         /// </summary>

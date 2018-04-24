@@ -117,7 +117,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        int AddLayerWithTexture(string texture)
+        public int AddLayerWithTexture(string texture)
         {
             var layer = Layer.New();
             layer.TexturePath = texture;
@@ -126,12 +126,12 @@ namespace SS14.Server.GameObjects
             return Layers.Count - 1;
         }
 
-        int AddLayerWithTexture(ResourcePath texture)
+        public int AddLayerWithTexture(ResourcePath texture)
         {
             return AddLayerWithTexture(texture.ToString());
         }
 
-        int AddLayerWithState(string stateId)
+        public int AddLayerWithState(string stateId)
         {
             var layer = Layer.New();
             layer.State = stateId;
@@ -140,7 +140,7 @@ namespace SS14.Server.GameObjects
             return Layers.Count - 1;
         }
 
-        int AddLayerWithState(string stateId, string rsiPath)
+        public int AddLayerWithState(string stateId, string rsiPath)
         {
             var layer = Layer.New();
             layer.State = stateId;
@@ -150,7 +150,7 @@ namespace SS14.Server.GameObjects
             return Layers.Count - 1;
 
         }
-        int AddLayerWithState(string stateId, ResourcePath rsiPath)
+        public int AddLayerWithState(string stateId, ResourcePath rsiPath)
         {
             return AddLayerWithState(stateId, rsiPath.ToString());
         }
@@ -166,7 +166,7 @@ namespace SS14.Server.GameObjects
             generation++;
         }
 
-        void LayerSetShader(int layer, string shaderName)
+        public void LayerSetShader(int layer, string shaderName)
         {
             if (Layers.Count <= layer)
             {
@@ -179,7 +179,7 @@ namespace SS14.Server.GameObjects
             generation++;
         }
 
-        void LayerSetTexture(int layer, string texturePath)
+        public void LayerSetTexture(int layer, string texturePath)
         {
             if (Layers.Count <= layer)
             {
@@ -192,12 +192,12 @@ namespace SS14.Server.GameObjects
             Layers[layer] = thelayer;
             generation++;
         }
-        void LayerSetTexture(int layer, ResourcePath texturePath)
+        public void LayerSetTexture(int layer, ResourcePath texturePath)
         {
             LayerSetTexture(layer, texturePath.ToString());
         }
 
-        void LayerSetState(int layer, string stateId)
+        public void LayerSetState(int layer, string stateId)
         {
             if (Layers.Count <= layer)
             {
@@ -211,7 +211,7 @@ namespace SS14.Server.GameObjects
             generation++;
         }
 
-        void LayerSetState(int layer, string stateId, string rsiPath)
+        public void LayerSetState(int layer, string stateId, string rsiPath)
         {
             if (Layers.Count <= layer)
             {
@@ -226,12 +226,12 @@ namespace SS14.Server.GameObjects
             generation++;
         }
 
-        void LayerSetState(int layer, string stateId, ResourcePath rsiPath)
+        public void LayerSetState(int layer, string stateId, ResourcePath rsiPath)
         {
             LayerSetState(layer, stateId, rsiPath.ToString());
         }
 
-        void LayerSetRSI(int layer, string rsiPath)
+        public void LayerSetRSI(int layer, string rsiPath)
         {
             if (Layers.Count <= layer)
             {
@@ -245,12 +245,12 @@ namespace SS14.Server.GameObjects
             generation++;
         }
 
-        void LayerSetRSI(int layer, ResourcePath rsiPath)
+        public void LayerSetRSI(int layer, ResourcePath rsiPath)
         {
             LayerSetRSI(layer, rsiPath.ToString());
         }
 
-        void LayerSetScale(int layer, Vector2 scale)
+        public void LayerSetScale(int layer, Vector2 scale)
         {
             if (Layers.Count <= layer)
             {
@@ -264,7 +264,7 @@ namespace SS14.Server.GameObjects
             generation++;
         }
 
-        void LayerSetRotation(int layer, Angle rotation)
+        public void LayerSetRotation(int layer, Angle rotation)
         {
             if (Layers.Count <= layer)
             {
@@ -274,6 +274,20 @@ namespace SS14.Server.GameObjects
 
             var thelayer = Layers[layer];
             thelayer.Rotation = rotation;
+            Layers[layer] = thelayer;
+            generation++;
+        }
+
+        public void LayerSetVisible(int layer, bool visible)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set visibility! Trace:\n{1}", layer, Environment.StackTrace);
+                return;
+            }
+
+            var thelayer = Layers[layer];
+            thelayer.Visible = visible;
             Layers[layer] = thelayer;
             generation++;
         }
@@ -298,6 +312,43 @@ namespace SS14.Server.GameObjects
             if (mapping.TryGetNode("rotation", out var node))
             {
                 Rotation = Angle.FromDegrees(node.AsFloat());
+            }
+
+            if (mapping.TryGetNode("sprite", out node))
+            {
+                BaseRSIPath = node.AsString();
+            }
+
+            if (mapping.TryGetNode("texture", out node))
+            {
+                if (mapping.HasNode("state"))
+                {
+                    Logger.ErrorS("go.comp.sprite",
+                                  "Cannot use 'texture' if an RSI state is provided. Prototype: '{0}'",
+                                  Owner.Prototype.ID);
+                }
+                else
+                {
+                    var layer = Layer.New();
+                    layer.TexturePath = node.AsString();
+                    Layers.Add(layer);
+                }
+            }
+
+            if (mapping.TryGetNode("state", out node))
+            {
+                if (BaseRSIPath == null)
+                {
+                    Logger.ErrorS("go.comp.sprite",
+                                  "No base RSI set to load states from: "
+                                  + "cannot use 'state' property. Prototype: '{0}'", Owner.Prototype.ID);
+                }
+                else
+                {
+                    var layer = Layer.New();
+                    layer.State = node.AsString();
+                    Layers.Add(layer);
+                }
             }
 
             if (mapping.TryGetNode("layers", out YamlSequenceNode layers))
@@ -352,14 +403,20 @@ namespace SS14.Server.GameObjects
                 layer.Rotation = node.AsFloat();
             }
 
+            if (mapping.TryGetNode("visible", out node))
+            {
+                layer.Visible = node.AsBool();
+            }
+
             Layers.Add(layer);
         }
 
         public override ComponentState GetComponentState()
         {
-            return new SpriteComponentState(generation, Visible, DrawDepth, Scale, Rotation, Offset, Color, Directional, BaseRSIPath, null);
-        }
+            var list = Layers.Select((l) => l.ToStateLayer()).ToList();
+            return new SpriteComponentState(generation, Visible, DrawDepth, Scale, Rotation, Offset, Color, Directional, BaseRSIPath, list);
 
+        }
         private struct Layer
         {
             public string Shader;
@@ -368,13 +425,20 @@ namespace SS14.Server.GameObjects
             public string State;
             public Vector2 Scale;
             public Angle Rotation;
+            public bool Visible;
 
             public static Layer New()
             {
                 return new Layer
                 {
-                    Scale = Vector2.One
+                    Scale = Vector2.One,
+                    Visible = true,
                 };
+            }
+
+            public SpriteComponentState.Layer ToStateLayer()
+            {
+                return new SpriteComponentState.Layer(Shader, TexturePath, RsiPath, State, Scale, Rotation, Visible);
             }
         }
     }

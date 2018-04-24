@@ -82,5 +82,6 @@ namespace SS14.Client.Interfaces.GameObjects.Components
 
         void LayerSetScale(int layer, Vector2 scale);
         void LayerSetRotation(int layer, Angle rotation);
+        void LayerSetVisible(int layer, bool visible);
     }
 }

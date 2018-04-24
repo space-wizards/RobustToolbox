@@ -181,6 +181,14 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        // To a future Clusterfack:
+        // REALLY BIG OPTIMIZATION POTENTIAL:
+        // Layer is god damn huge. Copying it is expensive.
+        // To be fair making it a class might be a good idea, making the following moot.
+        // List<T> doesn't allow ref indexers because... reasons. Array does.
+        // It may be a good idea to re-implement this list to use Layer[],
+        // use ref locals EVERYWHERE, and handle the resizing ourselves.
+        // This may be worth the overhead of basically reimplementing List<T>.
         private List<Layer> Layers = new List<Layer>();
         private List<Godot.RID> CanvasItems = new List<Godot.RID>();
 
@@ -191,6 +199,21 @@ namespace SS14.Client.GameObjects
         private IPrototypeManager prototypes;
 
         private int generation;
+
+        public int AddLayer(string texturePath)
+        {
+            return AddLayer(new ResourcePath(texturePath));
+        }
+
+        public int AddLayer(ResourcePath texturePath)
+        {
+            if (!resourceCache.TryGetResource<TextureResource>(TextureRoot / texturePath, out var texture))
+            {
+                Logger.ErrorS("go.comp.sprite", "Unable to load texture '{0}'. Trace:\n{1}", texturePath, Environment.StackTrace);
+            }
+
+            return AddLayer(texture);
+        }
 
         public int AddLayer(Texture texture)
         {
@@ -216,6 +239,21 @@ namespace SS14.Client.GameObjects
             Layers.Add(layer);
             RedrawQueued = true;
             return Layers.Count - 1;
+        }
+
+        public int AddLayer(RSI.StateId stateId, string rsiPath)
+        {
+            return AddLayer(stateId, new ResourcePath(rsiPath));
+        }
+
+        public int AddLayer(RSI.StateId stateId, ResourcePath rsiPath)
+        {
+            if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
+            {
+                Logger.ErrorS("go.comp.sprite", "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
+            }
+
+            return AddLayer(stateId, res?.RSI);
         }
 
         public int AddLayer(RSI.StateId stateId, RSI rsi)
@@ -468,6 +506,20 @@ namespace SS14.Client.GameObjects
             RedrawQueued = true;
         }
 
+        public void LayerSetVisible(int layer, bool visible)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set visibility! Trace:\n{1}", layer, Environment.StackTrace);
+                return;
+            }
+
+            var thelayer = Layers[layer];
+            thelayer.Visible = visible;
+            Layers[layer] = thelayer;
+            RedrawQueued = true;
+        }
+
         public override void OnAdd()
         {
             base.OnAdd();
@@ -521,6 +573,10 @@ namespace SS14.Client.GameObjects
             Godot.RID currentItem = null;
             foreach (var layer in Layers)
             {
+                if (!layer.Visible)
+                {
+                    continue;
+                }
                 var shader = layer.Shader;
                 var texture = layer.Texture ?? resourceCache.GetFallback<TextureResource>();
                 if (currentItem == null || prevShader != shader)
@@ -551,7 +607,7 @@ namespace SS14.Client.GameObjects
             prototypes = IoCManager.Resolve<IPrototypeManager>();
             resourceCache = IoCManager.Resolve<IResourceCache>();
 
-            if (mapping.TryGetNode("sprite", out YamlNode node))
+            if (mapping.TryGetNode("sprite", out var node))
             {
                 var path = TextureRoot / node.AsResourcePath();
                 try
@@ -736,6 +792,11 @@ namespace SS14.Client.GameObjects
                 layer.Rotation = Angle.FromDegrees(node.AsFloat());
             }
 
+            if (mapping.TryGetNode("visible", out node))
+            {
+                layer.Visible = node.AsBool();
+            }
+
             Layers.Add(layer);
         }
 
@@ -750,7 +811,7 @@ namespace SS14.Client.GameObjects
             {
                 var layer = Layers[i];
                 // Since State is a struct, we can't null-check it directly.
-                if (!layer.State.IsValid)
+                if (!layer.State.IsValid || !layer.Visible)
                 {
                     continue;
                 }
@@ -825,7 +886,7 @@ namespace SS14.Client.GameObjects
 
             if (state.BaseRsiPath != null && BaseRSI != null)
             {
-                if (resourceCache.TryGetResource<RSIResource>(state.BaseRsiPath, out var res))
+                if (resourceCache.TryGetResource<RSIResource>(TextureRoot / state.BaseRsiPath, out var res))
                 {
                     if (BaseRSI != res.RSI)
                     {
@@ -835,6 +896,44 @@ namespace SS14.Client.GameObjects
                 else
                 {
                     Logger.ErrorS("go.comp.sprite", "Hey server, RSI '{0}' doesn't exist.", state.BaseRsiPath);
+                }
+            }
+
+            // Maybe optimize this to NOT full clear.
+            // At least we're not doing extra allocations,
+            // because the list doesn't reallocate.
+            Layers.Clear();
+            for (var i = 0; i < state.Layers.Count; i++)
+            {
+                var netlayer = state.Layers[i];
+                var layer = Layer.New();
+                // These are easy so do them here.
+                layer.Scale = netlayer.Scale;
+                layer.Rotation = netlayer.Rotation;
+                layer.Visible = netlayer.Visible;
+                Layers.Add(layer);
+
+                // Using the public API to handle errors.
+                // Probably slow as crap.
+                // Who am I kidding, DEFINITELY.
+                if (netlayer.Shader != null)
+                {
+                    LayerSetShader(i, netlayer.Shader);
+                }
+
+                if (netlayer.RsiPath != null)
+                {
+                    LayerSetRSI(i, netlayer.RsiPath);
+                }
+
+                if (netlayer.TexturePath != null)
+                {
+                    LayerSetTexture(i, netlayer.TexturePath);
+                }
+
+                else if (netlayer.State != null)
+                {
+                    LayerSetState(i, netlayer.State);
                 }
             }
         }
@@ -857,6 +956,7 @@ namespace SS14.Client.GameObjects
             public int AnimationFrame;
             public Vector2 Scale;
             public Angle Rotation;
+            public bool Visible;
 
             public static Layer New()
             {
@@ -864,6 +964,7 @@ namespace SS14.Client.GameObjects
                 {
                     CurrentDir = RSI.State.Direction.South,
                     Scale = Vector2.One,
+                    Visible = true,
                 };
             }
         }

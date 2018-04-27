@@ -1,6 +1,7 @@
 ﻿using System;
 using SS14.Client.Interfaces;
 using SS14.Client.Utility;
+using SS14.Shared.Input;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
@@ -119,6 +120,37 @@ namespace SS14.Client.Input
         ///     Can't be true if this was a release event.
         /// </summary>
         public bool DoubleClick { get; }
+
+        public ClickType ClickType
+        {
+            get
+            {
+                ClickType type = ClickType.None;
+                switch(Button)
+                {
+                    case Mouse.Button.Left:
+                        type = ClickType.Left;
+                        break;
+                    case Mouse.Button.Right:
+                        type = ClickType.Right;
+                        break;
+                    case Mouse.Button.Middle:
+                        type = ClickType.Middle;
+                        break;
+                    default:
+                        return type;
+                }
+                if (Alt)
+                    type |= ClickType.Alt;
+                if (Control)
+                    type |= ClickType.Cntrl;
+                if (Shift)
+                    type |= ClickType.Shift;
+                if (System)
+                    type |= ClickType.System;
+                return type;
+            }
+        }
 
         // ALL the parameters!
         public MouseButtonEventArgs(Mouse.Button button,

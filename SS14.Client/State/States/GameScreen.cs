@@ -145,13 +145,13 @@ namespace SS14.Client.State.States
             inputManager.KeyUp(e);
         }
 
-        public override void MouseDown(MouseButtonEventArgs e)
+        public override void MouseDown(MouseButtonEventArgs eventargs)
         {
-            if (playerManager.LocalPlayer == null || placementManager.MouseDown(e))
+            if (playerManager.LocalPlayer == null || placementManager.MouseDown(eventargs))
                 return;
 
             var map = playerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().MapID;
-            var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(e.Position, map));
+            var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(eventargs.Position, map));
 
             // Find all the entities intersecting our click
             var entities =
@@ -169,11 +169,11 @@ namespace SS14.Client.State.States
                 }
             }
 
-            IEntity entToClick;
+            IEntity entityToClick;
 
             if (clickedEntities.Any())
             {
-                entToClick = (from cd in clickedEntities
+                entityToClick = (from cd in clickedEntities
                               orderby cd.drawDepth ascending,
                                   cd.clicked.GetComponent<ITransformComponent>().LocalPosition
                                   .Y ascending
@@ -181,26 +181,27 @@ namespace SS14.Client.State.States
             }
             else
             {
-                entToClick = null;
+                entityToClick = null;
             }
 
             //First possible exit point for click, acceptable due to being clientside
-            if (entToClick != null && placementManager.Eraser && placementManager.IsActive)
+            if (entityToClick != null && placementManager.Eraser && placementManager.IsActive)
             {
-                placementManager.HandleDeletion(entToClick);
+                placementManager.HandleDeletion(entityToClick);
                 return;
             }
 
+            ClickType clicktype = eventargs.ClickType;
             //Dispatches clicks to relevant clickable components, another single exit point for UI
-            if (entToClick != null)
+            if (entityToClick != null)
             {
-                var clickable = entToClick.GetComponent<IClientClickableComponent>();
-                switch (e.Button)
+                var clickable = entityToClick.GetComponent<IClientClickableComponent>();
+                switch (eventargs.ClickType)
                 {
-                    case Mouse.Button.Left:
+                    case ClickType.Left:
                         clickable.DispatchClick(playerManager.LocalPlayer.ControlledEntity, ClickType.Left);
                         break;
-                    case Mouse.Button.Right:
+                    case ClickType.Right:
                         clickable.DispatchClick(playerManager.LocalPlayer.ControlledEntity, ClickType.Right);
                         break;
                         /*
@@ -213,24 +214,13 @@ namespace SS14.Client.State.States
             }
 
             //Assemble information to send to server about click
-            if (e.Button == Mouse.Button.Left || e.Button == Mouse.Button.Right)
+            if (clicktype != ClickType.None)
             {
-                ClickType click = ClickType.None;
-                switch (e.Button)
-                {
-                    case Mouse.Button.Left:
-                        click = ClickType.Left;
-                        break;
-                    case Mouse.Button.Right:
-                        click = ClickType.Right;
-                        break;
-                }
-
                 var UID = EntityUid.Invalid;
-                if (entToClick != null)
-                    UID = entToClick.Uid;
+                if (entityToClick != null)
+                    UID = entityToClick.Uid;
 
-                ClickEventMessage message = new ClickEventMessage(UID, click, mousePosWorld);
+                ClickEventMessage message = new ClickEventMessage(UID, clicktype, mousePosWorld);
                 IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<InputSystem>().RaiseClick(message);
             }
         }

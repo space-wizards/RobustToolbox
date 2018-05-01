@@ -40,6 +40,11 @@ namespace SS14.Shared.Interfaces.GameObjects
         EntityPrototype Prototype { get; }
 
         /// <summary>
+        /// The string that describes this entity via examine
+        /// </summary>
+        string Description { get; }
+
+        /// <summary>
         ///     Determines if this entity is still valid.
         /// </summary>
         /// <returns>True if this entity is still valid.</returns>
@@ -166,11 +171,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <typeparam name="T">The type that components must implement.</typeparam>
         /// <returns>An enumerable over the found components.</returns>
         IEnumerable<T> GetComponents<T>();
-
-        /// <summary>
-        ///     Requests Description string from components and returns it. If no component answers, returns default description from template.
-        /// </summary>
-        string GetDescriptionString(); //This needs to go here since it can not be bound to any single component.
 
         /// <summary>
         ///     Sends a message to all other components in this entity.

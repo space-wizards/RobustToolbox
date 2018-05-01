@@ -9,7 +9,6 @@
         SpriteChanged, // U
         Bumped, // U
         EntitySaidSomething, // U
-        GetDescriptionString, // U
     }
 
     public enum DrawDepth

@@ -36,6 +36,11 @@ namespace SS14.Shared.GameObjects
         public string Name { get; private set; }
 
         /// <summary>
+        /// The description of the object that shows upon using examine
+        /// </summary>
+        public string Description { get; private set; }
+
+        /// <summary>
         /// The type of entity instantiated when a new entity is created from this template.
         /// </summary>
         public Type ClassType { get; private set; }
@@ -122,6 +127,12 @@ namespace SS14.Shared.GameObjects
             if (mapping.TryGetNode("parent", out node))
             {
                 parentTemp = node.AsString();
+            }
+
+            // DESCRIPTION
+            if (mapping.TryGetNode<YamlMappingNode>("description", out var description))
+            {
+                Description = node.AsString();
             }
 
             // COMPONENTS

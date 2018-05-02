@@ -36,6 +36,23 @@ namespace SS14.Shared.GameObjects
         public EntityPrototype Prototype { get; set; }
 
         /// <inheritdoc />
+        public string Description
+        {
+            get
+            {
+                if (_description == null)
+                    return Prototype.Description;
+                return _description;
+            }
+            set => _description = value;
+        }
+
+        /// <summary>
+        /// Private value which can override the prototype value for the description
+        /// </summary>
+        private string _description;
+
+        /// <inheritdoc />
         public string Name
         {
             get => _name;
@@ -222,14 +239,6 @@ namespace SS14.Shared.GameObjects
         #endregion Network messaging
 
         #region IEntity Members
-
-        /// <inheritdoc />
-        public string GetDescriptionString()
-        {
-            var msg = new DescriptionStringMsg();
-            SendMessage(null, msg);
-            return msg.DescriptionString;
-        }
 
         #region Component Events
 

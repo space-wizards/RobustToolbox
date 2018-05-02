@@ -48,12 +48,6 @@ namespace SS14.Shared.GameObjects
     }
 
     [Serializable, NetSerializable]
-    public class DescriptionStringMsg : ComponentMessage
-    {
-        public string DescriptionString { get; set; } = String.Empty;
-    }
-
-    [Serializable, NetSerializable]
     public class ClientChangedHandMsg : ComponentMessage
     {
         public string Index { get; }

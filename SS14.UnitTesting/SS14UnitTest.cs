@@ -74,6 +74,7 @@ using SS14.Client.Interfaces.Graphics.Lighting;
 using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Graphics.Lighting;
 using SS14.Shared.Log;
+using SS14.Server.Prototypes;
 
 namespace SS14.UnitTesting
 {
@@ -181,7 +182,6 @@ namespace SS14.UnitTesting
         {
             // Shared stuff.
             IoCManager.Register<IComponentManager, ComponentManager>();
-            IoCManager.Register<IPrototypeManager, PrototypeManager>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
             IoCManager.Register<ISS14Serializer, SS14Serializer>();
@@ -219,6 +219,7 @@ namespace SS14.UnitTesting
                     //IoCManager.Register<ILightManager, LightManager>();
                     IoCManager.Register<IDisplayManager, DisplayManager>();
                     //IoCManager.Register<IEyeManager, EyeManager>();
+                    IoCManager.Register<IPrototypeManager, PrototypeManager>();
                     break;
 
                 case UnitTestProject.Server:
@@ -240,6 +241,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IComponentFactory, ServerComponentFactory>();
                     IoCManager.Register<IBaseServer, BaseServer>();
                     IoCManager.Register<IMapLoader, MapLoader>();
+                    IoCManager.Register<IPrototypeManager, ServerPrototypeManager>();
                     break;
 
                 default:

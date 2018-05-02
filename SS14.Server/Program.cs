@@ -13,6 +13,7 @@ using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Maps;
 using SS14.Server.Placement;
 using SS14.Server.Player;
+using SS14.Server.Prototypes;
 using SS14.Server.Reflection;
 using SS14.Server.ServerConsole;
 using SS14.Shared.Configuration;
@@ -99,7 +100,6 @@ namespace SS14.Server
         {
             // Shared stuff.
             IoCManager.Register<IComponentManager, ComponentManager>();
-            IoCManager.Register<IPrototypeManager, PrototypeManager>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
             IoCManager.Register<INetManager, NetManager>();
@@ -128,6 +128,7 @@ namespace SS14.Server
             IoCManager.Register<IPlayerManager, PlayerManager>();
             IoCManager.Register<IComponentFactory, ServerComponentFactory>();
             IoCManager.Register<IMapLoader, MapLoader>();
+            IoCManager.Register<IPrototypeManager, ServerPrototypeManager>();
 
             IoCManager.BuildGraph();
         }

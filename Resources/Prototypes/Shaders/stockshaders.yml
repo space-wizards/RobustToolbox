@@ -1,0 +1,5 @@
+# Generic canvas shader without light shading.
+- type: shader
+  id: unshaded
+  kind: canvas
+  light_mode: unshaded

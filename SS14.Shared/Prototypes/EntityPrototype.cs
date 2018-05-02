@@ -357,19 +357,6 @@ namespace SS14.Shared.GameObjects
             return !entities.SelectMany(e => e.Prototype._snapFlags).Any(f => _snapFlags.Contains(f));
         }
 
-        // 100% completely refined & distilled cancer.
-        public IEnumerable<ComponentParameter> GetBaseSpriteParameters()
-        {
-            // Emotional programming.
-            if (Components.TryGetValue("Icon", out var ಠ_ಠ) &&
-                ಠ_ಠ.TryGetNode("icon", out var ಥ_ಥ))
-            {
-                return new[] { new ComponentParameter("icon", ಥ_ಥ.AsString()) };
-            }
-
-            return new ComponentParameter[0];
-        }
-
         private void ReadComponent(YamlMappingNode mapping)
         {
             var factory = IoCManager.Resolve<IComponentFactory>();

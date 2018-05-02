@@ -6,12 +6,14 @@
   - type: Transform
   - type: Clickable
   - type: Sprite
-    sprite: Mob/greyshirt.png
+    sprite: Mob/greyshirt.rsi
+    state: greyshirt
     scale: 2, 2
     drawdepth: MobBase
 
   - type: Icon
-    icon: Mob/greyshirt.png
+    sprite: Mob/greyshirt.rsi
+    state: greyshirt
 
   - type: BoundingBox
     aabb: "0.15,-0.45,1.05,0.45"

@@ -1,23 +1,69 @@
 ﻿using System;
+using System.Collections.Generic;
 using SS14.Shared.Maths;
 
 namespace SS14.Shared.GameObjects
 {
     [Serializable]
-    public class SpriteComponentState : RenderableComponentState
+    public class SpriteComponentState : ComponentState
     {
-        public readonly string BaseName;
-        public readonly string SpriteKey;
+        public readonly int Generation;
         public readonly bool Visible;
+        public readonly DrawDepth DrawDepth;
+        public readonly Vector2 Scale;
+        public readonly Angle Rotation;
         public readonly Vector2 Offset;
+        public readonly Color Color;
+        public readonly bool Directional;
+        public readonly string BaseRsiPath;
+        public readonly List<Layer> Layers;
 
-        public SpriteComponentState(bool visible, DrawDepth drawDepth, string spriteKey, string baseName, Vector2 offset)
-            : base(drawDepth, null, NetIDs.SPRITE)
+        public SpriteComponentState(
+            int generation,
+            bool visible,
+            DrawDepth drawDepth,
+            Vector2 scale,
+            Angle rotation,
+            Vector2 offset,
+            Color color,
+            bool directional,
+            string baseRsiPath,
+            List<Layer> layers)
+            : base(NetIDs.SPRITE)
         {
+            Generation = generation;
             Visible = visible;
-            SpriteKey = spriteKey;
-            BaseName = baseName;
+            DrawDepth = drawDepth;
+            Scale = scale;
+            Rotation = rotation;
             Offset = offset;
+            Color = color;
+            Directional = directional;
+            BaseRsiPath = baseRsiPath;
+            Layers = layers;
+        }
+
+        [Serializable]
+        public struct Layer
+        {
+            public readonly string Shader;
+            public readonly string TexturePath;
+            public readonly string RsiPath;
+            public readonly string State;
+            public readonly Vector2 Scale;
+            public readonly Angle Rotation;
+            public readonly bool Visible;
+
+            public Layer(string shader, string texturePath, string rsiPath, string state, Vector2 scale, Angle rotation, bool visible)
+            {
+                Shader = shader;
+                TexturePath = texturePath;
+                RsiPath = rsiPath;
+                State = state;
+                Scale = scale;
+                Rotation = rotation;
+                Visible = visible;
+            }
         }
     }
 }

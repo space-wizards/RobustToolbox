@@ -5,10 +5,10 @@
   - type: Transform
   - type: Clickable
   - type: Sprite
-    sprite: Items/janitorsuit.png
+    texture: Items/janitorsuit.png
 
   - type: Icon
-    icon: Items/janitorsuit.png
+    texture: Items/janitorsuit.png
 
   - type: BoundingBox
   - type: Physics
@@ -21,10 +21,10 @@
   - type: Transform
   - type: Clickable
   - type: Sprite
-    sprite: Items/janitorsuit.png
+    texture: Items/janitorsuit.png
 
   - type: Icon
-    icon: Items/shoes.png
+    texture: Items/shoes.png
 
   - type: BoundingBox
   - type: Physics

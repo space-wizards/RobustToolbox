@@ -48,7 +48,7 @@ namespace SS14.Client.ResourceManagement
 
                 foreach (var error in errors)
                 {
-                    Logger.Error(error.ToString());
+                    Logger.Error("{0}", error.ToString());
                 }
 
                 throw new RSILoadException($"{errors.Count} errors while loading RSI. See console.");
@@ -74,9 +74,6 @@ namespace SS14.Client.ResourceManagement
                         break;
                     case 4:
                         directions = RSI.State.DirectionType.Dir4;
-                        break;
-                    case 8:
-                        directions = RSI.State.DirectionType.Dir8;
                         break;
                     default:
                         throw new RSILoadException($"Invalid direction: {dirValue}");

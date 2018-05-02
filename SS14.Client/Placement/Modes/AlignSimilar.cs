@@ -35,7 +35,7 @@ namespace SS14.Client.Placement.Modes
                 .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.GetComponent<ITransformComponent>().MapID == MouseCoords.MapID)
                 .OrderBy(entity => (entity.GetComponent<ITransformComponent>().WorldPosition - MouseCoords.ToWorld().Position).LengthSquared)
                 .ToList();
-
+            /*
             if (snapToEntities.Any())
             {
                 var closestEntity = snapToEntities.First();
@@ -65,6 +65,7 @@ namespace SS14.Client.Placement.Modes
                     MouseScreen = pManager.eyeManager.WorldToScreen(MouseCoords);
                 }
             }
+            */
 
             if (CheckCollision())
                 return false;

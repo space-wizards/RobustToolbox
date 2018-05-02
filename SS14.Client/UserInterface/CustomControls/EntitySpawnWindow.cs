@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
@@ -156,18 +158,13 @@ namespace SS14.Client.UserInterface.CustomControls
                 button.ActualButton.OnToggled += OnItemButtonToggled;
                 container.GetChild<Label>("Label").Text = prototype.Name;
 
-                var spriteNameParam = prototype.GetBaseSpriteParameters().FirstOrDefault();
-                var spriteName = "";
-                if (spriteNameParam != null)
-                    spriteName = spriteNameParam.GetValue<string>();
-
-                var tex = resourceCache.GetResource<TextureResource>("/Textures/" + spriteName);
+                var tex = IconComponent.GetPrototypeIcon(prototype);
                 var rect = container.GetChild("TextureWrap").GetChild<TextureRect>("TextureRect");
                 if (tex != null)
                 {
-                    rect.Texture = tex.Texture;
+                    rect.Texture = tex.Default;
                     // Ok I can't find a way to make this TextureRect scale down sanely so let's do this.
-                    var scale = (float)TARGET_ICON_HEIGHT / tex.Texture.Height;
+                    var scale = (float)TARGET_ICON_HEIGHT / tex.Default.Height;
                     rect.Scale = new Vector2(scale, scale);
                 }
                 else

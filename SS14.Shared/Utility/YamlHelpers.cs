@@ -108,6 +108,11 @@ namespace SS14.Shared.Utility
             }
         }
 
+        public static ResourcePath AsResourcePath(this YamlNode node)
+        {
+            return new ResourcePath(node.ToString());
+        }
+
         // Mapping specific helpers.
 
         /// <summary>
@@ -182,6 +187,11 @@ namespace SS14.Shared.Utility
         public static bool TryGetNode(this YamlMappingNode mapping, string key, out YamlNode returnNode)
         {
             return mapping.Children.TryGetValue(new YamlScalarNode(key), out returnNode);
+        }
+
+        public static bool HasNode(this YamlMappingNode mapping, string key)
+        {
+            return mapping.TryGetNode(key, out var _);
         }
 
         /// <summary>

@@ -15,7 +15,7 @@ namespace SS14.Client.Placement
         public TileRef CurrentTile { get; set; }
         public ScreenCoordinates MouseScreen { get; set; }
         public LocalCoordinates MouseCoords { get; set; }
-        public TextureResource SpriteToDraw { get; set; }
+        public Texture SpriteToDraw { get; set; }
         public Color ValidPlaceColor { get; set; } = new Color(34, 139, 34); //Default valid color is green
         public Color InvalidPlaceColor { get; set; } = new Color(34, 34, 139); //Default invalid placement is red
 
@@ -40,10 +40,10 @@ namespace SS14.Client.Placement
                 SetSprite();
             }
 
-            var size = SpriteToDraw.Texture.Size;
+            var size = SpriteToDraw.Size;
             var color = pManager.ValidPosition ? ValidPlaceColor : InvalidPlaceColor;
             var pos = MouseCoords.Position * EyeManager.PIXELSPERMETER - size / 2f;
-            pManager.drawNode.DrawTexture(SpriteToDraw.Texture.GodotTexture, pos.Convert(), color.Convert());
+            pManager.drawNode.DrawTexture(SpriteToDraw.GodotTexture, pos.Convert(), color.Convert());
         }
 
         public TextureResource GetSprite(string key)
@@ -53,26 +53,12 @@ namespace SS14.Client.Placement
 
         public bool TryGetSprite(string key, out TextureResource sprite)
         {
-            return pManager.ResourceCache.TryGetResource<TextureResource>("/Textures/" + key, out sprite);
+            return pManager.ResourceCache.TryGetResource("/Textures/" + key, out sprite);
         }
 
         public void SetSprite()
         {
-            SpriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
-        }
-
-        public TextureResource GetDirectionalSprite(string baseSprite)
-        {
-            var ext = Path.GetExtension(baseSprite);
-            var withoutExt = Path.ChangeExtension(baseSprite, null);
-            var name = $"{withoutExt}_{pManager.Direction.ToString().ToLowerInvariant()}{ext}";
-
-            if (TryGetSprite(name, out var sprite))
-            {
-                return sprite;
-            }
-
-            return GetSprite(baseSprite);
+            SpriteToDraw = pManager.CurrentBaseSprite.TextureFor(pManager.Direction);
         }
 
         public bool RangeCheck()

@@ -1,22 +1,19 @@
-﻿using SS14.Client.Graphics;
-using SS14.Shared.Map;
+﻿using SS14.Shared.Map;
 
 namespace SS14.Client.Placement.Modes
 {
     public class PlaceFree : PlacementMode
     {
-        public PlaceFree(PlacementManager pMan) : base(pMan)
+        public PlaceFree(PlacementManager pMan) : base(pMan) { }
+
+        public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
+            MouseCoords = pManager.eyeManager.ScreenToWorld(mouseScreen);
+            CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
         }
 
-        public override bool FrameUpdate(RenderFrameEventArgs e, ScreenCoordinates mouseS)
+        public override bool IsValidPosition(LocalCoordinates position)
         {
-            if (mouseS.MapID == MapId.Nullspace) return false;
-
-            MouseScreen = mouseS;
-            MouseCoords = pManager.eyeManager.ScreenToWorld(MouseScreen);
-            CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
-
             return true;
         }
     }

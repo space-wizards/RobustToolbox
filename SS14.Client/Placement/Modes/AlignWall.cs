@@ -1,5 +1,4 @@
-﻿using SS14.Client.Graphics;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
@@ -8,24 +7,17 @@ namespace SS14.Client.Placement.Modes
 {
     public class AlignWall : PlacementMode
     {
-        public AlignWall(PlacementManager pMan) : base(pMan)
+        public AlignWall(PlacementManager pMan) : base(pMan) { }
+
+        public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
-        }
-
-        public override bool FrameUpdate(RenderFrameEventArgs e, ScreenCoordinates mouseS)
-        {
-            if (mouseS.MapID == MapId.Nullspace) return false;
-
-            MouseScreen = mouseS;
-            MouseCoords = pManager.eyeManager.ScreenToWorld(MouseScreen);
-
-            if (pManager.CurrentPermission.IsTile)
-                return false;
-
+            MouseCoords = pManager.eyeManager.ScreenToWorld(mouseScreen);
             CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
 
-            if (!RangeCheck())
-                return false;
+            if (pManager.CurrentPermission.IsTile)
+            {
+                return;
+            }
 
             var nodes = new List<Vector2>();
 
@@ -49,7 +41,18 @@ namespace SS14.Client.Placement.Modes
             MouseCoords = new LocalCoordinates(closestNode + new Vector2(pManager.CurrentPrototype.PlacementOffset.X,
                                                                          pManager.CurrentPrototype.PlacementOffset.Y),
                                                MouseCoords.Grid);
-            MouseScreen = pManager.eyeManager.WorldToScreen(MouseCoords);
+        }
+
+        public override bool IsValidPosition(LocalCoordinates position)
+        {
+            if (pManager.CurrentPermission.IsTile)
+            {
+                return false;
+            }
+            else if (!RangeCheck(position))
+            {
+                return false;
+            }
 
             return true;
         }

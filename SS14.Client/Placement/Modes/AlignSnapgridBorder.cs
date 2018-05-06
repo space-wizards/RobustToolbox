@@ -1,5 +1,4 @@
 ﻿using System;
-using SS14.Client.Graphics;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Utility;
 using SS14.Shared.Map;
@@ -11,6 +10,9 @@ namespace SS14.Client.Placement.Modes
     {
         private bool onGrid;
         private float snapSize;
+
+        public override bool HasLineMode => true;
+        public override bool HasGridMode => true;
 
         public SnapgridBorder(PlacementManager pMan) : base(pMan) { }
 
@@ -44,18 +46,12 @@ namespace SS14.Client.Placement.Modes
             base.Render();
         }
 
-        public override bool FrameUpdate(RenderFrameEventArgs e, ScreenCoordinates mouseS)
+        public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
-            if (mouseS.MapID == MapId.Nullspace)
-            {
-                onGrid = false;
-                return false;
-            }
-
-            MouseScreen = mouseS;
-            MouseCoords = pManager.eyeManager.ScreenToWorld(MouseScreen);
+            MouseCoords = pManager.eyeManager.ScreenToWorld(mouseScreen);
 
             snapSize = MouseCoords.Grid.SnapSize; //Find snap size.
+            GridDistancing = snapSize;
             onGrid = true;
 
             var mouselocal = new Vector2( //Round local coordinates onto the snap grid
@@ -64,10 +60,14 @@ namespace SS14.Client.Placement.Modes
 
             //Convert back to original world and screen coordinates after applying offset
             MouseCoords = new LocalCoordinates(mouselocal + new Vector2(pManager.CurrentPrototype.PlacementOffset.X, pManager.CurrentPrototype.PlacementOffset.Y), MouseCoords.Grid);
-            MouseScreen = pManager.eyeManager.WorldToScreen(MouseCoords);
+        }
 
-            if (!RangeCheck())
+        public override bool IsValidPosition(LocalCoordinates position)
+        {
+            if (!RangeCheck(position))
+            {
                 return false;
+            }
 
             return true;
         }

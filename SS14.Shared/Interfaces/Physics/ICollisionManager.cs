@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Physics;
 
@@ -12,8 +13,9 @@ namespace SS14.Shared.Interfaces.Physics
         /// Also fires the OnCollide event of the first managed collidable to intersect with the collider.
         /// </summary>
         /// <param name="collider">Collision rectangle to check</param>
+        /// <param name="map">Map to check on</param>
         /// <returns>true if collides, false if not</returns>
-        bool IsColliding(Box2 collider);
+        bool IsColliding(Box2 collider, MapId map);
 
         bool TryCollide(IEntity collider);
         bool TryCollide(IEntity collider, Vector2 offset, bool bump = true);

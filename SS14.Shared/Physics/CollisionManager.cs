@@ -4,6 +4,7 @@ using System.Linq;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Physics;
+using SS14.Shared.Map;
 using SS14.Shared.Maths;
 
 namespace SS14.Shared.Physics
@@ -41,7 +42,7 @@ namespace SS14.Shared.Physics
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <returns></returns>
-        public bool IsColliding(Box2 collider)
+        public bool IsColliding(Box2 collider, MapId map)
         {
             Vector2[] points =
             {
@@ -54,22 +55,22 @@ namespace SS14.Shared.Physics
             //Get the buckets that correspond to the collider's points.
             var buckets = points.Select(GetBucket).Distinct().ToList();
 
-            //Get all of the points
-            var cPoints = new List<CollidablePoint>();
-            foreach (var bucket in buckets)
-                cPoints.AddRange(bucket.GetPoints());
+            var colliders = points.Select(GetBucket) // Get the buckets that correspond to the collider's points.
+                        .Distinct()
+                        .SelectMany(b => b.GetPoints()) // Get all of the points
+                        .Select(p => p.ParentAABB) // Expand points to distinct AABBs
+                        .Distinct();
 
-            //Expand points to distinct AABBs
-            var aabBs = cPoints.Select(cp => cp.ParentAABB).Distinct().ToList();
-
-            //try all of the AABBs against the target rect.
-            var collided = false;
-            foreach (var aabb in aabBs.Where(aabb => aabb.Collidable.AABB.Intersects(collider)))
-                if (aabb.Collidable.IsHardCollidable) //If the collider is supposed to prevent movement
-                    collided = true;
-
-            //TODO: This needs multi-grid support.
-            return collided;
+            foreach(var aabb in colliders)
+            {
+                if(aabb.Collidable.MapID == map
+                    && aabb.Collidable.WorldAABB.Intersects(collider)
+                    && aabb.Collidable.IsHardCollidable)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>

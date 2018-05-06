@@ -47,8 +47,8 @@ namespace SS14.Client.UserInterface.CustomControls
             "AlignSimilar",
             "AlignTileAny",
             "AlignTileEmpty",
-            "AlignTileNonSolid",
-            "AlignTileSolid",
+            "AlignTileNonDense",
+            "AlignTileDense",
             "AlignWall",
         };
 

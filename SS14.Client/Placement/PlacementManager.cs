@@ -30,6 +30,7 @@ using SS14.Client.Utility;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics;
 using SS14.Client.GameObjects;
+using SS14.Shared.GameObjects.Serialization;
 
 namespace SS14.Client.Placement
 {
@@ -67,19 +68,86 @@ namespace SS14.Client.Placement
         /// </summary>
         private static readonly TimeSpan _pendingTileTimeout = TimeSpan.FromSeconds(2.0);
 
+        /// <summary>
+        /// Dictionary of all placement mode types
+        /// </summary>
         private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
         private readonly List<Tuple<LocalCoordinates, TimeSpan>> _pendingTileChanges = new List<Tuple<LocalCoordinates, TimeSpan>>();
 
-        private bool _tileMouseDown;
+        /// <summary>
+        /// Tells this system to try to handle placement of an entity during the next frame
+        /// </summary>
+        private bool _placenextframe;
 
+        /// <summary>
+        /// Allows various types of placement as singular, line, or grid placement where placement mode allows this type of placement
+        /// </summary>
+        public PlacementType _placementType;
+
+        /// <summary>
+        /// Holds the anchor that we can try to spawn in a line or a grid from
+        /// </summary>
+        public LocalCoordinates StartPoint;
+
+        /// <summary>
+        /// Whether the placement manager is currently in a mode where it accepts actions
+        /// </summary>
         public bool IsActive { get; private set; }
+
+        /// <summary>
+        /// Determines whether we are using the mode to delete an entity on click
+        /// </summary>
         public bool Eraser { get; private set; }
+
+        /// <summary>
+        /// The texture we use to show from our placement manager to represent the entity to place
+        /// </summary>
         public IDirectionalTextureProvider CurrentBaseSprite { get; set; }
+
+        /// <summary>
+        /// Which of the placement orientations we are trying to place with
+        /// </summary>
         public PlacementMode CurrentMode { get; set; }
+        
         public PlacementInformation CurrentPermission { get; set; }
-        public EntityPrototype CurrentPrototype { get; set; }
+
+        private EntityPrototype _currentPrototype;
+
+        /// <summary>
+        /// The prototype of the entity we are going to spawn on click
+        /// </summary>
+        public EntityPrototype CurrentPrototype
+        {
+            get => _currentPrototype;
+            set
+            {
+                _currentPrototype = value;
+                //var name = BoundingBoxComponent.BoundingBoxName;
+                if (value != null
+                    && value.Components.ContainsKey("BoundingBox")
+                    && value.Components.ContainsKey("Collidable"))
+                {
+                    var map = value.Components["BoundingBox"];
+                    var serializer = new YamlEntitySerializer(map);
+                    serializer.DataField(ref ColliderAABB, "aabb", new Box2(0f, 0f, 0f, 0f));
+                }
+                else
+                {
+                    ColliderAABB = new Box2(0f, 0f, 0f, 0f);
+                }
+            }
+        }
+
+        /// <summary>
+        /// The box which certain placement modes collision checks will be done against
+        /// </summary>
+        public Box2 ColliderAABB = new Box2(0f, 0f, 0f, 0f);
+
+        /// <summary>
+        /// The directional to spawn the entity in
+        /// </summary>
         public Direction Direction { get; set; } = Direction.South;
-        public bool ValidPosition { get; set; }
+        
         public Godot.Node2D drawNode { get; set; }
         private GodotGlue.GodotSignalSubscriber0 drawNodeDrawSubscriber;
 
@@ -99,9 +167,17 @@ namespace SS14.Client.Placement
             }
 
             _mapMan.TileChanged += HandleTileChanged;
+
+            var UnshadedMaterial = new Godot.CanvasItemMaterial()
+            {
+                LightMode = Godot.CanvasItemMaterial.LightModeEnum.Unshaded
+            };
+
             drawNode = new Godot.Node2D()
             {
                 Name = "Placement Manager Sprite",
+                ZIndex = 100,
+                Material = UnshadedMaterial
             };
             sceneTree.WorldRoot.AddChild(drawNode);
             drawNodeDrawSubscriber = new GodotGlue.GodotSignalSubscriber0();
@@ -145,8 +221,9 @@ namespace SS14.Client.Placement
             CurrentPrototype = null;
             CurrentPermission = null;
             CurrentMode = null;
+            DeactivateSpecialPlacement();
             if (PlacementCanceled != null && IsActive && !Eraser) PlacementCanceled(this, null);
-            _tileMouseDown = false;
+            _placenextframe = false;
             IsActive = false;
             Eraser = false;
             // Make it draw again to remove the drawn things.
@@ -180,7 +257,28 @@ namespace SS14.Client.Placement
         public void HandlePlacement()
         {
             if (IsActive && !Eraser)
-                RequestPlacement();
+            {
+                switch (_placementType)
+                {
+                    case PlacementType.None:
+                        RequestPlacement(CurrentMode.MouseCoords);
+                        break;
+                    case PlacementType.Line:
+                        foreach (var coordinate in CurrentMode.LineCoordinates())
+                        {
+                            RequestPlacement(coordinate);
+                        }
+                        DeactivateSpecialPlacement();
+                        break;
+                    case PlacementType.Grid:
+                        foreach (var coordinate in CurrentMode.GridCoordinates())
+                        {
+                            RequestPlacement(coordinate);
+                        }
+                        DeactivateSpecialPlacement();
+                        break;
+                }
+            }
         }
 
         public void HandleDeletion(IEntity entity)
@@ -224,8 +322,7 @@ namespace SS14.Client.Placement
                 PreparePlacement(info.EntityType);
         }
 
-        /// <inheritdoc />
-        public void FrameUpdate(RenderFrameEventArgs e)
+        public bool CurrentMousePosition(out ScreenCoordinates coordinates)
         {
             // Try to get current map.
             var map = MapId.Nullspace;
@@ -237,18 +334,35 @@ namespace SS14.Client.Placement
 
             if (map == MapId.Nullspace || CurrentPermission == null || CurrentMode == null)
             {
+                coordinates = new ScreenCoordinates(Vector2.Zero, MapId.Nullspace);
+                return false;
+            }
+
+            coordinates = new ScreenCoordinates(inputManager.MouseScreenPosition, map);
+            return true;
+        }
+
+        /// <inheritdoc />
+        public void FrameUpdate(RenderFrameEventArgs e)
+        {
+            if(!CurrentMousePosition(out ScreenCoordinates mouseScreen))
+            {
                 return;
             }
 
-            var mouseScreen = new ScreenCoordinates(inputManager.MouseScreenPosition, map);
+            if(mouseScreen.MapID == MapId.Nullspace)
+            {
+                _placenextframe = false;
+                return;
+            }
 
-            ValidPosition = CurrentMode.FrameUpdate(e, mouseScreen);
+            CurrentMode.AlignPlacementMode(mouseScreen);
 
             // purge old unapproved tile changes
             _pendingTileChanges.RemoveAll(c => c.Item2 < _time.RealTime);
 
             // continues tile placement but placement of entities only occurs on mouseup
-            if (_tileMouseDown && CurrentPermission.IsTile)
+            if (_placenextframe && CurrentPermission.IsTile)
             {
                 HandlePlacement();
             }
@@ -265,9 +379,16 @@ namespace SS14.Client.Placement
             switch (e.Button)
             {
                 case Mouse.Button.Left:
-                    _tileMouseDown = true;
+                    if (e.Shift)
+                        ActivateLineMode(e);
+                    else if (e.Control)
+                        ActivateGridMode(e);
+                    else
+                        _placenextframe = true;
                     return true;
                 case Mouse.Button.Right:
+                    if (DeactivateSpecialPlacement())
+                        return true;
                     Clear();
                     return true;
                 case Mouse.Button.Middle:
@@ -278,12 +399,52 @@ namespace SS14.Client.Placement
             return false;
         }
 
+        private void ActivateLineMode(MouseButtonEventArgs e)
+        {
+            if(CurrentMode.HasLineMode)
+            {
+                if (!CurrentMousePosition(out ScreenCoordinates mouseScreen))
+                {
+                    return;
+                }
+
+                CurrentMode.AlignPlacementMode(mouseScreen);
+                StartPoint = CurrentMode.MouseCoords;
+                _placementType = PlacementType.Line;
+            }
+        }
+
+        private void ActivateGridMode(MouseButtonEventArgs e)
+        {
+            if (CurrentMode.HasGridMode)
+            {
+                if (!CurrentMousePosition(out ScreenCoordinates mouseScreen))
+                {
+                    return;
+                }
+
+                CurrentMode.AlignPlacementMode(mouseScreen);
+                StartPoint = CurrentMode.MouseCoords;
+                _placementType = PlacementType.Grid;
+            }
+        }
+
+        private bool DeactivateSpecialPlacement()
+        {
+            if(_placementType != PlacementType.None)
+            {
+                _placementType = PlacementType.None;
+                return true;
+            }
+            return false;
+        }
+
         public bool MouseUp(MouseButtonEventArgs e)
         {
             if (!IsActive || Eraser)
                 return false;
 
-            if (!_tileMouseDown)
+            if (!_placenextframe)
             {
                 return false;
             }
@@ -293,7 +454,7 @@ namespace SS14.Client.Placement
                 HandlePlacement();
             }
 
-            _tileMouseDown = false;
+            _placenextframe = false;
             return true;
         }
 
@@ -303,7 +464,7 @@ namespace SS14.Client.Placement
             {
                 CurrentMode.Render();
 
-                if (CurrentPermission != null && CurrentPermission.Range > 0 && CurrentMode.rangerequired)
+                if (CurrentPermission != null && CurrentPermission.Range > 0 && CurrentMode.RangeRequired)
                 {
                     var pos = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
                     const int ppm = EyeManager.PIXELSPERMETER;
@@ -345,16 +506,16 @@ namespace SS14.Client.Placement
             IsActive = true;
         }
 
-        private void RequestPlacement()
+        private void RequestPlacement(LocalCoordinates coordinates)
         {
-            if (CurrentMode.MouseCoords.MapID == MapId.Nullspace) return;
+            if (coordinates.MapID == MapId.Nullspace) return;
             if (CurrentPermission == null) return;
-            if (!ValidPosition) return;
+            if (!CurrentMode.IsValidPosition(coordinates)) return;
 
             if (CurrentPermission.IsTile)
             {
-                var grid = _mapMan.GetMap(CurrentMode.MouseCoords.MapID).FindGridAt(new Vector2(CurrentMode.MouseCoords.X, CurrentMode.MouseCoords.Y));
-                var worldPos = CurrentMode.MouseCoords;
+                var grid = _mapMan.GetMap(coordinates.MapID).FindGridAt(new Vector2(coordinates.X, coordinates.Y));
+                var worldPos = coordinates.ToWorld();
                 var localPos = worldPos.ConvertToGrid(grid);
 
                 // no point changing the tile to the same thing.
@@ -384,12 +545,19 @@ namespace SS14.Client.Placement
                 message.EntityTemplateName = CurrentPermission.EntityType;
 
             // world x and y
-            message.XValue = CurrentMode.MouseCoords.X;
-            message.YValue = CurrentMode.MouseCoords.Y;
+            message.XValue = coordinates.X;
+            message.YValue = coordinates.Y;
 
             message.DirRcv = Direction;
 
             NetworkManager.ClientSendMessage(message);
+        }
+
+        public enum PlacementType
+        {
+            None = 0,
+            Line = 1,
+            Grid = 2
         }
     }
 }

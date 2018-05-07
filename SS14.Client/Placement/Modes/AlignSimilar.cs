@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
@@ -35,34 +36,34 @@ namespace SS14.Client.Placement.Modes
                 .OrderBy(entity => (entity.GetComponent<ITransformComponent>().WorldPosition - MouseCoords.ToWorld().Position).LengthSquared)
                 .ToList();
 
-            //if (snapToEntities.Any())
-            //{
-            //    var closestEntity = snapToEntities.First();
-            //    if (closestEntity.TryGetComponent<ISpriteRenderableComponent>(out var component))
-            //    {
-            //        var closestSprite = component.CurrentSprite;
-            //        var closestBounds = closestSprite.Size;
+            if (snapToEntities.Any())
+            {
+                var closestEntity = snapToEntities.First();
+                if (closestEntity.TryGetComponent<ISpriteComponent>(out var component))
+                {
+                    var closestBounds = component.BaseRSI.Size;
 
-            //        var closestRect =
-            //            Box2.FromDimensions(
-            //                closestEntity.GetComponent<ITransformComponent>().WorldPosition.X - closestBounds.X / 2f,
-            //                closestEntity.GetComponent<ITransformComponent>().WorldPosition.Y - closestBounds.Y / 2f,
-            //                closestBounds.X, closestBounds.Y);
+                    var closestRect =
+                        Box2.FromDimensions(
+                            closestEntity.GetComponent<ITransformComponent>().WorldPosition.X - closestBounds.X / 2f,
+                            closestEntity.GetComponent<ITransformComponent>().WorldPosition.Y - closestBounds.Y / 2f,
+                            closestBounds.X, closestBounds.Y);
 
-            //        var sides = new[]
-            //        {
-            //            new Vector2(closestRect.Left + closestRect.Width / 2f, closestRect.Top - closestBounds.Y / 2f),
-            //            new Vector2(closestRect.Left + closestRect.Width / 2f, closestRect.Bottom + closestBounds.Y / 2f),
-            //            new Vector2(closestRect.Left - closestBounds.X / 2f, closestRect.Top + closestRect.Height / 2f),
-            //            new Vector2(closestRect.Right + closestBounds.X / 2f, closestRect.Top + closestRect.Height / 2f)
-            //        };
+                    var sides = new[]
+                    {
+                        new Vector2(closestRect.Left + closestRect.Width / 2f, closestRect.Top - closestBounds.Y / 2f),
+                        new Vector2(closestRect.Left + closestRect.Width / 2f, closestRect.Bottom + closestBounds.Y / 2f),
+                        new Vector2(closestRect.Left - closestBounds.X / 2f, closestRect.Top + closestRect.Height / 2f),
+                        new Vector2(closestRect.Right + closestBounds.X / 2f, closestRect.Top + closestRect.Height / 2f)
+                    };
 
-            //        var closestSide =
-            //            (from Vector2 side in sides orderby (side - MouseCoords.Position).LengthSquared select side).First();
+                    var closestSide =
+                        (from Vector2 side in sides orderby (side - MouseCoords.Position).LengthSquared select side).First();
 
-            //        MouseCoords = new LocalCoordinates(closestSide, MouseCoords.Grid);
-            //    }
+                    MouseCoords = new LocalCoordinates(closestSide, MouseCoords.Grid);
+                }
             }
+        }
 
         public override bool IsValidPosition(LocalCoordinates position)
         {

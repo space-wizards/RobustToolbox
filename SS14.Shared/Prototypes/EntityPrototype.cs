@@ -130,7 +130,7 @@ namespace SS14.Shared.GameObjects
             }
 
             // DESCRIPTION
-            if (mapping.TryGetNode<YamlMappingNode>("description", out var description))
+            if (mapping.TryGetNode("description", out node))
             {
                 Description = node.AsString();
             }

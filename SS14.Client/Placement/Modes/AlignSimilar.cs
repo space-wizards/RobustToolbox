@@ -1,6 +1,6 @@
 ﻿using System.Linq;
-using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
@@ -14,20 +14,20 @@ namespace SS14.Client.Placement.Modes
 
         public AlignSimilar(PlacementManager pMan) : base(pMan) { }
 
-        public override bool FrameUpdate(RenderFrameEventArgs e, ScreenCoordinates mouseS)
+        public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
-            if (mouseS.MapID == MapId.Nullspace) return false;
-
-            MouseScreen = mouseS;
-            MouseCoords = pManager.eyeManager.ScreenToWorld(MouseScreen);
-
-            if (pManager.CurrentPermission.IsTile)
-                return false;
-
+            MouseCoords = pManager.eyeManager.ScreenToWorld(mouseScreen);
             CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
 
-            if (!RangeCheck())
-                return false;
+            if (pManager.CurrentPermission.IsTile)
+            {
+                return;
+            }
+
+            if (!RangeCheck(MouseCoords))
+            {
+                return;
+            }
 
             var manager = IoCManager.Resolve<IClientEntityManager>();
 
@@ -35,14 +35,13 @@ namespace SS14.Client.Placement.Modes
                 .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.GetComponent<ITransformComponent>().MapID == MouseCoords.MapID)
                 .OrderBy(entity => (entity.GetComponent<ITransformComponent>().WorldPosition - MouseCoords.ToWorld().Position).LengthSquared)
                 .ToList();
-            /*
+
             if (snapToEntities.Any())
             {
                 var closestEntity = snapToEntities.First();
-                if (closestEntity.TryGetComponent<ISpriteRenderableComponent>(out var component))
+                if (closestEntity.TryGetComponent<ISpriteComponent>(out var component))
                 {
-                    var closestSprite = component.CurrentSprite;
-                    var closestBounds = closestSprite.Size;
+                    var closestBounds = component.BaseRSI.Size;
 
                     var closestRect =
                         Box2.FromDimensions(
@@ -62,13 +61,25 @@ namespace SS14.Client.Placement.Modes
                         (from Vector2 side in sides orderby (side - MouseCoords.Position).LengthSquared select side).First();
 
                     MouseCoords = new LocalCoordinates(closestSide, MouseCoords.Grid);
-                    MouseScreen = pManager.eyeManager.WorldToScreen(MouseCoords);
                 }
             }
-            */
+        }
 
-            if (CheckCollision())
+        public override bool IsValidPosition(LocalCoordinates position)
+        {
+            if (pManager.CurrentPermission.IsTile)
+            {
                 return false;
+            }
+            else if (!RangeCheck(position))
+            {
+                return false;
+            }
+            else if (IsColliding(position))
+            {
+                return false;
+            }
+
             return true;
         }
     }

@@ -1,16 +1,13 @@
-﻿using SS14.Shared.IoC;
-using SS14.Client.Interfaces.GameObjects;
-using SS14.Shared.Map;
-using SS14.Shared.Maths;
+﻿using SS14.Shared.Map;
 
 namespace SS14.Client.Placement.Modes
 {
-    public class AlignTileEmpty : PlacementMode
+    public class AlignTileDense : PlacementMode
     {
         public override bool HasLineMode => true;
         public override bool HasGridMode => true;
 
-        public AlignTileEmpty(PlacementManager pMan) : base(pMan) { }
+        public AlignTileDense(PlacementManager pMan) : base(pMan) { }
 
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
@@ -19,17 +16,17 @@ namespace SS14.Client.Placement.Modes
             CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
             float tileSize = MouseCoords.Grid.TileSize; //convert from ushort to float
             GridDistancing = tileSize;
-            
+
             if (pManager.CurrentPermission.IsTile)
             {
-                MouseCoords = new LocalCoordinates(CurrentTile.X + tileSize/2,
-                                                  CurrentTile.Y + tileSize/2,
+                MouseCoords = new LocalCoordinates(CurrentTile.X + tileSize / 2,
+                                                  CurrentTile.Y + tileSize / 2,
                                                   MouseCoords.Grid);
             }
             else
             {
-                MouseCoords = new LocalCoordinates(CurrentTile.X + tileSize/2 + pManager.CurrentPrototype.PlacementOffset.X,
-                                                  CurrentTile.Y + tileSize/2 + pManager.CurrentPrototype.PlacementOffset.Y,
+                MouseCoords = new LocalCoordinates(CurrentTile.X + tileSize / 2 + pManager.CurrentPrototype.PlacementOffset.X,
+                                                  CurrentTile.Y + tileSize / 2 + pManager.CurrentPrototype.PlacementOffset.Y,
                                                   MouseCoords.Grid);
             }
         }
@@ -40,10 +37,12 @@ namespace SS14.Client.Placement.Modes
             {
                 return false;
             }
+            if(!pManager.CurrentPermission.IsTile && !IsColliding(position))
+            {
+                return false;
+            }
 
-            var entitymanager = IoCManager.Resolve<IClientEntityManager>();
-            return !(entitymanager.AnyEntitiesIntersecting(MouseCoords.MapID,
-                new Box2(new Vector2(CurrentTile.X, CurrentTile.Y), new Vector2(CurrentTile.X + 0.99f, CurrentTile.Y + 0.99f))));
+            return true;
         }
     }
 }

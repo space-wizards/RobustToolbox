@@ -1,5 +1,4 @@
 ﻿using System;
-using SS14.Client.Graphics;
 using SS14.Client.Utility;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
@@ -12,9 +11,10 @@ namespace SS14.Client.Placement.Modes
         bool onGrid;
         float snapSize;
 
-        public SnapgridCenter(PlacementManager pMan) : base(pMan)
-        {
-        }
+        public override bool HasLineMode => true;
+        public override bool HasGridMode => true;
+
+        public SnapgridCenter(PlacementManager pMan) : base(pMan) { }
 
         public override void Render()
         {
@@ -44,18 +44,12 @@ namespace SS14.Client.Placement.Modes
             base.Render();
         }
 
-        public override bool FrameUpdate(RenderFrameEventArgs e, ScreenCoordinates mouseS)
+        public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
-            if (mouseS.MapID == MapId.Nullspace)
-            {
-                onGrid = false;
-                return false;
-            }
-
-            MouseScreen = mouseS;
-            MouseCoords = pManager.eyeManager.ScreenToWorld(MouseScreen);
+            MouseCoords = pManager.eyeManager.ScreenToWorld(mouseScreen);
 
             snapSize = MouseCoords.Grid.SnapSize; //Find snap size.
+            GridDistancing = snapSize;
             onGrid = true;
 
             var mouseLocal = new Vector2( //Round local coordinates onto the snap grid
@@ -64,10 +58,14 @@ namespace SS14.Client.Placement.Modes
 
             //Adjust mouseCoords to new calculated position
             MouseCoords = new LocalCoordinates(mouseLocal + new Vector2(pManager.CurrentPrototype.PlacementOffset.X, pManager.CurrentPrototype.PlacementOffset.Y), MouseCoords.Grid);
-            MouseScreen = pManager.eyeManager.WorldToScreen(MouseCoords);
+        }
 
-            if (!RangeCheck())
+        public override bool IsValidPosition(LocalCoordinates position)
+        {
+            if (!RangeCheck(position))
+            {
                 return false;
+            }
 
             return true;
         }

@@ -377,14 +377,17 @@ namespace SS14.Client.UserInterface
 
             DisposeSignalHooks();
 
-            SceneControl.QueueFree();
-            SceneControl.Dispose();
-            SceneControl = null;
+            if (!GameController.ShuttingDownHard)
+            {
+                SceneControl.QueueFree();
+                SceneControl.Dispose();
+                SceneControl = null;
 
-            // Don't QueueFree since these are the same node.
-            // Kinda sorta mostly probably hopefully.
-            WrappedSceneControl.Dispose();
-            WrappedSceneControl = null;
+                // Don't QueueFree since these are the same node.
+                // Kinda sorta mostly probably hopefully.
+                WrappedSceneControl.Dispose();
+                WrappedSceneControl = null;
+            }
         }
 
         ~Control()

@@ -35,6 +35,12 @@ namespace SS14.Client
     // Gets automatically ran by SS14.Client.Godot.
     public sealed partial class GameController : ClientEntryPoint, IGameController
     {
+        /// <summary>
+        ///     QueueFreeing a Godot node during finalization can cause segfaults.
+        ///     As such, this var is set as soon as we tell Godot to shut down proper.
+        /// </summary>
+        public static bool ShuttingDownHard { get; private set; } = false;
+
         [Dependency]
         readonly IConfigurationManager _configurationManager;
         [Dependency]
@@ -153,6 +159,7 @@ namespace SS14.Client
             }
             Logger.Debug("Goodbye");
             IoCManager.Clear();
+            ShuttingDownHard = true;
             _sceneTreeHolder.SceneTree.Quit();
         }
 

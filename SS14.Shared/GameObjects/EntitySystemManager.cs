@@ -106,6 +106,7 @@ namespace SS14.Shared.GameObjects
             {
                 RemoveSystem(system);
             }
+            SystemMessageTypes.Clear();
         }
 
         public void HandleSystemMessage(MsgEntity sysMsg)

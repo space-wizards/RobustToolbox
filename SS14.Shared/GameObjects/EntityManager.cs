@@ -290,12 +290,14 @@ namespace SS14.Shared.GameObjects
 
         public void RemoveSubscribedEvents(IEntityEventSubscriber subscriber)
         {
-            if (_inverseEventSubscriptions.ContainsKey(subscriber))
+            if (!_inverseEventSubscriptions.TryGetValue(subscriber, out var val))
             {
-                foreach (KeyValuePair<Type, Delegate> keyValuePair in _inverseEventSubscriptions[subscriber])
-                {
-                    UnsubscribeEvent(keyValuePair.Key, keyValuePair.Value, subscriber);
-                }
+                return;
+            }
+
+            foreach (var keyValuePair in val.ToList())
+            {
+                UnsubscribeEvent(keyValuePair.Key, keyValuePair.Value, subscriber);
             }
         }
 

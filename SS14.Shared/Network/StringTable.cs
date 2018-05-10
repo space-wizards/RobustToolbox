@@ -55,9 +55,7 @@ namespace SS14.Shared.Network
                 if (_network.IsServer) // Server does not receive entries from clients.
                     return;
 
-                var msg = (MsgStringTableEntries)message;
-
-                foreach (var entry in msg.Entries)
+                foreach (var entry in message.Entries)
                 {
                     var id = entry.Id;
                     var str = string.IsNullOrEmpty(entry.String) ? null : entry.String;
@@ -70,7 +68,7 @@ namespace SS14.Shared.Network
                     {
                         if (TryFindStringId(str, out int oldId))
                         {
-                            if(oldId == id)
+                            if (oldId == id)
                                 continue;
 
                             _strings.Remove(oldId);
@@ -211,7 +209,7 @@ namespace SS14.Shared.Network
             if (_network.IsClient)
                 return;
 
-            if(!_network.IsRunning)
+            if (!_network.IsRunning)
                 return;
 
             var message = _network.CreateNetMessage<MsgStringTableEntries>();
@@ -260,7 +258,7 @@ namespace SS14.Shared.Network
         public static readonly string NAME = nameof(MsgStringTableEntries);
         public MsgStringTableEntries(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
-        
+
         public Entry[] Entries { get; set; }
 
         /// <summary>
@@ -295,7 +293,7 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
-            if(Entries == null)
+            if (Entries == null)
                 throw new InvalidOperationException("Entries is null!");
 
             buffer.Write(Entries.Length);

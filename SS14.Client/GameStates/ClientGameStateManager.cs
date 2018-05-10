@@ -4,6 +4,7 @@ using SS14.Client.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Network.Messages;
@@ -12,27 +13,26 @@ using System.Linq;
 
 namespace SS14.Client.GameStates
 {
-    public class GameStateManager : IGameStateManager
+    public class ClientGameStateManager : IClientGameStateManager
     {
-        public Dictionary<uint, GameState> GameStates { get; set; }
+        private Dictionary<uint, GameState> GameStates = new Dictionary<uint, GameState>();
 
-        //[Dependency]
-        //private readonly IGameTiming timing;
         [Dependency]
         private readonly IClientNetManager networkManager;
         [Dependency]
         private readonly IClientEntityManager entityManager;
         [Dependency]
         private readonly IPlayerManager playerManager;
+        [Dependency]
+        private readonly ISS14Serializer serializer;
+        [Dependency]
+        private readonly IClientNetManager netManager;
 
-        public GameState CurrentState { get; private set; }
-
-        public GameStateManager()
+        public void Initialize()
         {
-            GameStates = new Dictionary<uint, GameState>();
+            netManager.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, HandleFullStateMessage);
+            netManager.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, HandleStateUpdateMessage);
         }
-
-        #region Network
 
         public void HandleFullStateMessage(MsgFullState message)
         {
@@ -60,14 +60,6 @@ namespace SS14.Client.GameStates
 
                 CullOldStates(delta.FromSequence);
             }
-        }
-
-        #endregion Network
-
-        private void CullOldStates(uint sequence)
-        {
-            foreach (uint v in GameStates.Keys.Where(v => v <= sequence).ToList())
-                GameStates.Remove(v);
         }
 
         private void AckGameState(uint sequence)

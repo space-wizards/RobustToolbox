@@ -43,7 +43,7 @@ namespace SS14.Client.Player
         ///     Active sessions of connected clients to the server.
         /// </summary>
         private Dictionary<int, PlayerSession> _sessions;
-        
+
         /// <inheritdoc />
         public int PlayerCount => _sessions.Values.Count;
 
@@ -139,10 +139,8 @@ namespace SS14.Client.Player
         /// <summary>
         ///     Handles an incoming session NetMsg from the server.
         /// </summary>
-        private void HandleSessionMessage(NetMessage netMessage)
+        private void HandleSessionMessage(MsgSession msg)
         {
-            var msg = (MsgSession)netMessage;
-
             switch (msg.MsgType)
             {
                 case PlayerSessionMessage.AttachToEntity:
@@ -180,11 +178,8 @@ namespace SS14.Client.Player
         /// <summary>
         ///     Handles the incoming PlayerList message from the server.
         /// </summary>
-        private void HandlePlayerList(NetMessage netMessage)
+        private void HandlePlayerList(MsgPlayerList msg)
         {
-            //update sessions with player info
-            var msg = (MsgPlayerList)netMessage;
-
             UpdatePlayerList(msg.Plyrs);
         }
 

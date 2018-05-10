@@ -31,7 +31,7 @@ namespace SS14.Server.GameStates
         public void Initialize()
         {
             _networkManager.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME);
-            _networkManager.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, message => HandleStateAck((MsgStateAck) message));
+            _networkManager.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, HandleStateAck);
             _networkManager.RegisterNetMessage<MsgFullState>(MsgFullState.NAME);
         }
 
@@ -120,7 +120,7 @@ namespace SS14.Server.GameStates
 
         private void SendConnectionGameStateUpdate(INetChannel c, GameState state, uint curTick)
         {
-            if (((IGameStateManager) this).GetLastStateAcked(c) == 0)
+            if (((IGameStateManager)this).GetLastStateAcked(c) == 0)
             {
                 var fullStateMessage = _networkManager.CreateNetMessage<MsgFullState>();
                 fullStateMessage.State = state;
@@ -129,7 +129,7 @@ namespace SS14.Server.GameStates
             else
             {
                 var stateUpdateMessage = _networkManager.CreateNetMessage<MsgStateUpdate>();
-                stateUpdateMessage.StateDelta = ((IGameStateManager) this).GetDelta(c, curTick);
+                stateUpdateMessage.StateDelta = ((IGameStateManager)this).GetDelta(c, curTick);
                 _networkManager.ServerSendMessage(stateUpdateMessage, c);
             }
         }

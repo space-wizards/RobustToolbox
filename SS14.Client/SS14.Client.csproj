@@ -127,7 +127,7 @@
     <Compile Include="Console\Commands\HelpCommands.cs" />
     <Compile Include="Console\Commands\QuitCommand.cs" />
     <Compile Include="Console\Commands\Debug.cs" />
-    <Compile Include="GameStates\GameStateManager.cs" />
+    <Compile Include="GameStates\ClientGameStateManager.cs" />
     <Compile Include="Graphics\CanvasLayers.cs" />
     <Compile Include="Graphics\IDirectionalTextureProvider.cs" />
     <Compile Include="Graphics\Lighting\LightManager.Light.cs" />
@@ -146,7 +146,7 @@
     <Compile Include="Interfaces\GameObjects\IMoverComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IRenderableComponent.cs" />
-    <Compile Include="Interfaces\GameStates\IGameStateManager.cs" />
+    <Compile Include="Interfaces\GameStates\IClientGameStateManager.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILight.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILightManager.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILightMode.cs" />

@@ -61,7 +61,7 @@ namespace SS14.Server.Player
             _sessions = new PlayerSession[maxPlayers];
 
             _network.RegisterNetMessage<MsgSession>(MsgSession.NAME);
-            _network.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, message => HandleClientGreet((MsgClGreet)message));
+            _network.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, HandleClientGreet);
             _network.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, HandleWelcomeMessageReq);
             _network.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME);
             _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, HandlePlayerListReq);
@@ -168,7 +168,7 @@ namespace SS14.Server.Player
         /// <returns></returns>
         public List<IPlayerSession> GetAllPlayers()
         {
-            return _sessions.Where(x => x!= null).Cast<IPlayerSession>().ToList();
+            return _sessions.Where(x => x != null).Cast<IPlayerSession>().ToList();
         }
 
         /// <summary>
@@ -261,10 +261,10 @@ namespace SS14.Server.Player
             p.SetName(fixedName);
         }
 
-        private void HandleWelcomeMessageReq(NetMessage message)
+        private void HandleWelcomeMessageReq(MsgServerInfoReq message)
         {
             var session = GetSessionByChannel(message.MsgChannel);
-            session.Name = ((MsgServerInfoReq)message).PlayerName;
+            session.Name = message.PlayerName;
 
             var netMsg = message.MsgChannel.CreateNetMessage<MsgServerInfo>();
 
@@ -280,7 +280,7 @@ namespace SS14.Server.Player
             message.MsgChannel.SendMessage(netMsg);
         }
 
-        private void HandlePlayerListReq(NetMessage message)
+        private void HandlePlayerListReq(MsgPlayerListReq message)
         {
             var channel = message.MsgChannel;
             var players = GetAllPlayers().ToArray();

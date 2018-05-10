@@ -204,7 +204,6 @@
     <Compile Include="Interfaces\Map\ITileDefinitionManager.cs" />
     <Compile Include="Interfaces\Timers\ITimerManager.cs" />
     <Compile Include="Interfaces\Timing\IGameTiming.cs" />
-    <Compile Include="GameStates\GameStateDelta.cs" />
     <Compile Include="GameStates\GameState.cs" />
     <Compile Include="GameStates\PlayerState.cs" />
     <Compile Include="IoC\Exceptions\ImplementationConstructorException.cs" />

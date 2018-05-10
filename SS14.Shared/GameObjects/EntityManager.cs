@@ -55,7 +55,7 @@ namespace SS14.Shared.GameObjects
 
         public virtual void Initialize()
         {
-            _network.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, message => HandleEntityNetworkMessage((MsgEntity)message));
+            _network.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
         }
 
         public virtual void Startup()

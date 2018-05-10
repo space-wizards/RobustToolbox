@@ -18,6 +18,12 @@ namespace SS14.Shared.Network
     public delegate void ProcessMessage(NetMessage message);
 
     /// <summary>
+    ///     Callback for registered NetMessages.
+    /// </summary>
+    /// <param name="message">The message received.</param>
+    public delegate void ProcessMessage<T>(T message) where T : NetMessage;
+
+    /// <summary>
     ///     Manages all network connections and packet IO.
     /// </summary>
     public class NetManager : IClientNetManager, IServerNetManager, IDisposable
@@ -403,7 +409,7 @@ namespace SS14.Shared.Network
         #region NetMessages
 
         /// <inheritdoc />
-        public void RegisterNetMessage<T>(string name, ProcessMessage rxCallback = null)
+        public void RegisterNetMessage<T>(string name, ProcessMessage<T> rxCallback = null)
             where T : NetMessage
         {
             _strings.AddString(name);
@@ -411,7 +417,7 @@ namespace SS14.Shared.Network
             _messages.Add(name, typeof(T));
 
             if (rxCallback != null)
-                _callbacks.Add(typeof(T), rxCallback);
+                _callbacks.Add(typeof(T), msg => rxCallback((T)msg));
         }
 
         /// <inheritdoc />

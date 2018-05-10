@@ -15,8 +15,7 @@ namespace SS14.UnitTesting.Client
 
         public Control RootControl => throw new System.NotImplementedException();
 
-        public bool ShowFPS { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-        public bool ShowCoordDebug { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        public IDebugMonitors DebugMonitors => throw new System.NotImplementedException();
 
         public void DisposeAllComponents()
         {

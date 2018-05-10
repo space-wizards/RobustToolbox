@@ -13,9 +13,15 @@ using SS14.Client.Graphics.Drawing;
 using SS14.Shared.Utility;
 using SS14.Client.Interfaces.ResourceManagement;
 using System.IO;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.UserInterface
 {
+    /// <summary>
+    ///     A node in the GUI system.
+    ///     NOTE: For docs, most of these are direct proxies to Godot's Control.
+    ///     See the official docs for more help: https://godot.readthedocs.io/en/3.0/classes/class_control.html
+    /// </summary>
     public partial class Control : IDisposable
     {
         /// <summary>
@@ -170,6 +176,24 @@ namespace SS14.Client.UserInterface
         {
             get => (MouseFilterMode)SceneControl.MouseFilter;
             set => SceneControl.MouseFilter = (Godot.Control.MouseFilterEnum)value;
+        }
+
+        public SizeFlags SizeFlagsHorizontal
+        {
+            get => (SizeFlags)SceneControl.SizeFlagsHorizontal;
+            set => SceneControl.SizeFlagsHorizontal = (int)value;
+        }
+
+        public float SizeFlagsStretchRatio
+        {
+            get => SceneControl.SizeFlagsStretchRatio;
+            set => SceneControl.SizeFlagsStretchRatio = value;
+        }
+
+        public SizeFlags SizeFlagsVertical
+        {
+            get => (SizeFlags)SceneControl.SizeFlagsVertical;
+            set => SceneControl.SizeFlagsVertical = (int)value;
         }
 
         /// <summary>
@@ -475,6 +499,15 @@ namespace SS14.Client.UserInterface
             return Vector2.Zero;
         }
 
+        /// <summary>
+        ///     Tells the GUI system that the minimum size of this control may have changed,
+        ///     so that say containers will re-sort it.
+        /// </summary>
+        public void MinimumSizeChanged()
+        {
+            SceneControl.MinimumSizeChanged();
+        }
+
         protected virtual bool HasPoint(Vector2 point)
         {
             // This is effectively the same implementation as the default Godot one in Control.cpp.
@@ -705,6 +738,42 @@ namespace SS14.Client.UserInterface
             KeepSize = Godot.Control.LayoutPresetMode.KeepSize,
         }
 
+        /// <summary>
+        ///     Controls how a control changes size when inside a container.
+        /// </summary>
+        public enum SizeFlags : byte
+        {
+            /// <summary>
+            ///     Do not resize inside containers.
+            /// </summary>
+            None = 0,
+
+            /// <summary>
+            ///     Fill as much space as possible in a container, without pushing others.
+            /// </summary>
+            Fill = 1,
+            /// <summary>
+            ///     Fill as much space as possible in a container, pushing other nodes.
+            ///     The ratio of pushing if there's multiple set to expand is depenent on <see cref="SizeFlagsStretchRatio" />
+            /// </summary>
+            Expand = 2,
+
+            /// <summary>
+            ///     Combination of <see cref="Fill" /> and <see cref="Expand" />.
+            /// </summary>
+            FillExpand = 3,
+
+            /// <summary>
+            ///     Shrink inside a container, aligning to the center.
+            /// </summary>
+            ShrinkCenter = 4,
+
+            /// <summary>
+            ///     Shrink inside a container, aligning to the end.
+            /// </summary>
+            ShrinkEnd = 8,
+        }
+
         public void AddColorOverride(string name, Color color)
         {
             SceneControl.AddColorOverride(name, color.Convert());
@@ -713,6 +782,16 @@ namespace SS14.Client.UserInterface
         public void AddConstantOverride(string name, int constant)
         {
             SceneControl.AddConstantOverride(name, constant);
+        }
+
+        public void AddStyleBoxOverride(string name, StyleBox styleBox)
+        {
+            SceneControl.AddStyleboxOverride(name, styleBox.GodotStyleBox);
+        }
+
+        public void AddFontOverride(string name, Font font)
+        {
+            SceneControl.AddFontOverride(name, font);
         }
 
         public void DoUpdate(ProcessFrameEventArgs args)

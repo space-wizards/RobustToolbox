@@ -7,11 +7,14 @@ using SS14.Shared.IoC;
 using SS14.Shared.Reflection;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
+using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Client.ResourceManagement;
+using SS14.Client.Graphics.Drawing;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
     [Reflect(false)]
-    class DebugCoordsPanel : Control
+    class DebugCoordsPanel : Panel
     {
         [Dependency]
         readonly IPlayerManager playerManager;
@@ -20,26 +23,39 @@ namespace SS14.Client.UserInterface.CustomControls
         readonly IEyeManager eyeManager;
         [Dependency]
         readonly IInputManager inputManager;
+        [Dependency]
+        readonly IResourceCache resourceCache;
 
         private Label contents;
-
-        protected override Godot.Control SpawnSceneControl()
-        {
-            return LoadScene("res://Scenes/DebugCoordsPanel/DebugCoordsPanel.tscn");
-        }
 
         protected override void Initialize()
         {
             base.Initialize();
-
-            Visible = false;
-
             IoCManager.InjectDependencies(this);
-            contents = GetChild<Label>("Label");
+
+            SizeFlagsHorizontal = SizeFlags.None;
+
+            contents = new Label();
+            AddChild(contents);
+            contents.AddFontOverride("font", resourceCache.GetResource<FontResource>("/Fonts/CALIBRI.TTF").MakeDefault());
+            contents.AddColorOverride("font_color_shadow", Color.Black);
+            contents.MarginLeft = contents.MarginTop = 5;
+
+            var bg = new StyleBoxFlat
+            {
+                BackgroundColor = new Color(67, 105, 255, 138),
+            };
+            AddStyleBoxOverride("panel", bg);
+
+            MouseFilter = contents.MouseFilter = MouseFilterMode.Ignore;
         }
 
         protected override void Update(ProcessFrameEventArgs args)
         {
+            if (!Visible)
+            {
+                return;
+            }
             if (playerManager.LocalPlayer?.ControlledEntity == null)
             {
                 contents.Text = "No attached entity.";
@@ -78,6 +94,13 @@ Mouse Pos:
     World: {mouseWorldPos}
     Grid: {mouseWorldGrid}
     Map: {mouseWorldMap}";
+
+            MinimumSizeChanged();
+        }
+
+        protected override Vector2 CalculateMinimumSize()
+        {
+            return new Vector2(175, contents.CombinedMinimumSize.Y + 10);
         }
     }
 }

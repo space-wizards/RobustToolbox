@@ -9,14 +9,13 @@ namespace SS14.Client.UserInterface.CustomControls
     {
         protected override void Initialize()
         {
-            Visible = false;
+            base.Initialize();
 
             AddColorOverride("font_color_shadow", Color.Black);
             AddConstantOverride("shadow_offset_x", 1);
             AddConstantOverride("shadow_offset_y", 1);
 
-            MarginLeft = 2;
-            MarginTop = 2;
+            MouseFilter = MouseFilterMode.Ignore;
         }
 
         protected override void Update(ProcessFrameEventArgs args)

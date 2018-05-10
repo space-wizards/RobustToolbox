@@ -27,14 +27,13 @@ namespace SS14.Client.Interfaces.UserInterface
         /// </summary>
         Control RootControl { get; }
 
-        bool ShowFPS { get; set; }
-        bool ShowCoordDebug { get; set; }
+        IDebugMonitors DebugMonitors { get; }
 
         void Initialize();
 
         void Update(ProcessFrameEventArgs args);
 
-        void Popup(string contents, string title="Alert!");
+        void Popup(string contents, string title = "Alert!");
 
         void UnhandledKeyDown(KeyEventArgs args);
 

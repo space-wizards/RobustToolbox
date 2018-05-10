@@ -31,11 +31,11 @@ namespace SS14.Client.Graphics.Drawing
     {
         private Godot.StyleBoxTexture stylebox;
 
-        internal override Godot.StyleBox GodotStyleBox { get; }
+        internal override Godot.StyleBox GodotStyleBox => stylebox;
 
         public StyleBoxTexture()
         {
-            GodotStyleBox = stylebox = new Godot.StyleBoxTexture();
+            stylebox = new Godot.StyleBoxTexture();
         }
 
         /// <summary>
@@ -116,6 +116,24 @@ namespace SS14.Client.Graphics.Drawing
             {
                 MarginLeft = value;
             }
+        }
+    }
+
+    public class StyleBoxFlat : StyleBox
+    {
+        public Color BackgroundColor
+        {
+            get => stylebox.BgColor.Convert();
+            set => stylebox.BgColor = value.Convert();
+        }
+
+        private Godot.StyleBoxFlat stylebox;
+
+        internal override Godot.StyleBox GodotStyleBox => stylebox;
+
+        public StyleBoxFlat()
+        {
+            stylebox = new Godot.StyleBoxFlat();
         }
     }
 }

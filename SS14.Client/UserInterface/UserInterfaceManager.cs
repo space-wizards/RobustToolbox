@@ -27,20 +27,8 @@ namespace SS14.Client.UserInterface
         public Control WindowRoot { get; private set; }
         public AcceptDialog PopupControl { get; private set; }
         public DebugConsole DebugConsole { get; private set; }
-        public FPSCounter FPSCounter { get; private set; }
-        private DebugCoordsPanel DebugCoordsPanel;
-
-        public bool ShowFPS
-        {
-            get => FPSCounter.Visible;
-            set => FPSCounter.Visible = value;
-        }
-
-        public bool ShowCoordDebug
-        {
-            get => DebugCoordsPanel.Visible;
-            set => DebugCoordsPanel.Visible = value;
-        }
+        public IDebugMonitors DebugMonitors => _debugMonitors;
+        private DebugMonitors _debugMonitors;
 
         public void PostInject()
         {
@@ -84,11 +72,8 @@ namespace SS14.Client.UserInterface
             DebugConsole = new DebugConsole();
             RootControl.AddChild(DebugConsole);
 
-            FPSCounter = new FPSCounter();
-            RootControl.AddChild(FPSCounter);
-
-            DebugCoordsPanel = new DebugCoordsPanel();
-            RootControl.AddChild(DebugCoordsPanel);
+            _debugMonitors = new DebugMonitors();
+            RootControl.AddChild(_debugMonitors);
         }
 
         public void Dispose()
@@ -118,7 +103,13 @@ namespace SS14.Client.UserInterface
             if (args.Key == Keyboard.Key.Quote)
             {
                 DebugConsole.Toggle();
-                _sceneTreeHolder.SceneTree.SetInputAsHandled();
+                args.Handle();
+            }
+
+            if (args.Key == Keyboard.Key.F3)
+            {
+                DebugMonitors.Visible = !DebugMonitors.Visible;
+                args.Handle();
             }
         }
 

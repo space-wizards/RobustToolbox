@@ -192,6 +192,7 @@
     <Compile Include="Player\LocalPlayer.cs" />
     <Compile Include="Player\PlayerManager.cs" />
     <Compile Include="Player\PlayerSession.cs" />
+    <Compile Include="Interfaces\UserInterface\IDebugMonitors.cs" />
     <Compile Include="Interfaces\UserInterface\IUserInterfaceManager.cs" />
     <Compile Include="UserInterface\Control.cs" />
     <Compile Include="UserInterface\Control.Signals.cs" />
@@ -215,6 +216,7 @@
     <Compile Include="UserInterface\CustomControls\SS14Window.cs" />
     <Compile Include="UserInterface\CustomControls\EscapeMenu.cs" />
     <Compile Include="UserInterface\CustomControls\FPSCounter.cs" />
+    <Compile Include="UserInterface\CustomControls\NetDebugPanel.cs" />
     <Compile Include="UserInterface\CustomControls\OptionsMenu.cs" />
     <Compile Include="GameController\GameControllerProxy.cs" />
     <Compile Include="Interfaces\IGameControllerProxy.cs" />
@@ -225,6 +227,7 @@
     <Compile Include="State\States\LobbyMenu.cs" />
     <Compile Include="State\States\GameScreen.cs" />
     <Compile Include="Graphics\Texture.cs" />
+    <Compile Include="Graphics\Font.cs" />
     <Compile Include="Graphics\DisplayManager.cs" />
     <Compile Include="Debugging\DebugDrawing.cs" />
     <Compile Include="Interfaces\Debugging\IDebugDrawing.cs" />
@@ -251,6 +254,7 @@
     <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
     <Compile Include="UserInterface\CustomControls\EntitySpawnWindow.cs" />
     <Compile Include="UserInterface\CustomControls\TileSpawnWindow.cs" />
+    <Compile Include="UserInterface\CustomControls\DebugMonitors.cs" />
     <Compile Include="UserInterface\CustomControls\DebugCoordsPanel.cs" />
     <Compile Include="Graphics\Drawing\StyleBox.cs" />
     <Compile Include="Graphics\Drawing\DrawingHandle.cs" />

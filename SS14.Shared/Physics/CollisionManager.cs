@@ -61,9 +61,9 @@ namespace SS14.Shared.Physics
                         .Select(p => p.ParentAABB) // Expand points to distinct AABBs
                         .Distinct();
 
-            foreach(var aabb in colliders)
+            foreach (var aabb in colliders)
             {
-                if(aabb.Collidable.MapID == map
+                if (aabb.Collidable.MapID == map
                     && aabb.Collidable.WorldAABB.Intersects(collider)
                     && aabb.Collidable.IsHardCollidable)
                 {
@@ -119,7 +119,7 @@ namespace SS14.Shared.Physics
                            aabb.Collidable.MapID == collider.MapID); //try all of the AABBs against the target rect.
 
             //See if our collision will be overriden by a component
-            List<ICollideSpecial> collisionmodifiers = mover.GetComponents<ICollideSpecial>().ToList();
+            List<ICollideSpecial> collisionmodifiers = mover.GetAllComponents<ICollideSpecial>().ToList();
             List<IEntity> collidedwith = new List<IEntity>();
 
             //try all of the AABBs against the target rect.
@@ -236,7 +236,7 @@ namespace SS14.Shared.Physics
                 if (ray.Intersects(worldBounds, out var dist, out _))
                 {
                     // bucket is too far away
-                    if(dist > maxLength)
+                    if (dist > maxLength)
                         continue;
 
                     // get the object it intersected in the bucket
@@ -251,7 +251,7 @@ namespace SS14.Shared.Physics
                     }
                 }
             }
-            
+
             return closestResults;
         }
 

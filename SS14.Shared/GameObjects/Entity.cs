@@ -483,15 +483,15 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IComponent> GetComponents()
+        public IEnumerable<IComponent> GetAllComponents()
         {
             return _components.Where(component => !component.Deleted);
         }
 
         /// <inheritdoc />
-        public IEnumerable<T> GetComponents<T>()
+        public IEnumerable<T> GetAllComponents<T>()
         {
-            return _components.OfType<T>();
+            return GetAllComponents().OfType<T>();
         }
 
         #endregion Components
@@ -550,7 +550,7 @@ namespace SS14.Shared.GameObjects
         /// <returns></returns>
         private List<ComponentState> GetComponentStates()
         {
-            return GetComponents()
+            return GetAllComponents()
                 .Where(c => c.NetID != null)
                 .Select(component => component.GetComponentState())
                 .ToList();

@@ -7,7 +7,6 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public class SpriteComponentState : ComponentState
     {
-        public readonly int Generation;
         public readonly bool Visible;
         public readonly DrawDepth DrawDepth;
         public readonly Vector2 Scale;
@@ -19,7 +18,6 @@ namespace SS14.Shared.GameObjects
         public readonly List<Layer> Layers;
 
         public SpriteComponentState(
-            int generation,
             bool visible,
             DrawDepth drawDepth,
             Vector2 scale,
@@ -31,7 +29,6 @@ namespace SS14.Shared.GameObjects
             List<Layer> layers)
             : base(NetIDs.SPRITE)
         {
-            Generation = generation;
             Visible = visible;
             DrawDepth = drawDepth;
             Scale = scale;

@@ -28,7 +28,11 @@ namespace SS14.Server.GameObjects
         public Box2 AABB
         {
             get => _aabb;
-            set => _aabb = value;
+            set
+            {
+                _aabb = value;
+                Dirty();
+            }
         }
 
         /// <summary>

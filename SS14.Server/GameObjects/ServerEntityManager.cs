@@ -84,7 +84,7 @@ namespace SS14.Server.GameObjects
                 {
                     continue;
                 }
-                EntityState entityState = entity.GetEntityState();
+                EntityState entityState = entity.GetEntityState(fromTick);
                 stateEntities.Add(entityState);
             }
             return stateEntities;

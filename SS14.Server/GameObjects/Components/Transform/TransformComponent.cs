@@ -92,6 +92,7 @@ namespace SS14.Server.GameObjects
                 _rotation = value;
                 RebuildMatrices();
                 OnRotate?.Invoke(value);
+                Dirty();
             }
         }
 
@@ -166,7 +167,7 @@ namespace SS14.Server.GameObjects
                     GridID = value.GridID;
                 }
 
-                Owner.Dirty();
+                Dirty();
 
                 RebuildMatrices();
                 OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, value));
@@ -207,7 +208,7 @@ namespace SS14.Server.GameObjects
                     GridID = IoCManager.Resolve<IMapManager>().GetMap(MapID).FindGridAt(_position).Index;
                 }
 
-                Owner.Dirty();
+                Dirty();
 
                 RebuildMatrices();
                 OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new LocalCoordinates(_position, GridID, MapID)));
@@ -252,6 +253,8 @@ namespace SS14.Server.GameObjects
 
             // switch position back to grid coords
             LocalPosition = lc;
+
+            Dirty();
         }
 
         /// <summary>
@@ -273,6 +276,7 @@ namespace SS14.Server.GameObjects
             // offset position from world to parent
             _position = MatMult(parent.InvWorldMatrix, _position);
             RebuildMatrices();
+            Dirty();
         }
 
         public void AttachParent(IEntity entity)

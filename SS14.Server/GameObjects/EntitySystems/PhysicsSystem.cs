@@ -37,6 +37,11 @@ namespace SS14.Server.GameObjects.EntitySystems
             var transform = entity.GetComponent<TransformComponent>();
             var velocity = entity.GetComponent<PhysicsComponent>();
 
+            if (velocity.AngularVelocity == 0 && velocity.LinearVelocity == Vector2.Zero)
+            {
+                return;
+            }
+
             //rotate entity
             float angImpulse = 0;
             if (velocity.AngularVelocity > Epsilon)

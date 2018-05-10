@@ -166,7 +166,7 @@
     <Compile Include="GameObjects\EntitySystems\EffectSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
-    <Compile Include="GameState\GameStateManager.cs" />
+    <Compile Include="GameStates\GameStateManager.cs" />
     <Compile Include="Interfaces\ICommandLineArgs.cs" />
     <Compile Include="Interfaces\IBaseServer.cs" />
     <Compile Include="Interfaces\Chat\IChatCommand.cs" />

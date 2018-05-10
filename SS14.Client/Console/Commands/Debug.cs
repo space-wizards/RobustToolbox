@@ -87,16 +87,33 @@ namespace SS14.Client.Console.Commands
         }
     }
 
-    class ShowFPSCommand : IConsoleCommand
+    class ToggleMonitorCommand : IConsoleCommand
     {
-        public string Command => "fps";
-        public string Help => "Toggles showing FPS.";
-        public string Description => "Toggles the FPS counter.";
+        public string Command => "monitor";
+        public string Help => "Usage: monitor <name>\nPossible monitors are: fps, net, coord";
+        public string Description => "Toggles a debug monitor in the F3 menu.";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            var mgr = IoCManager.Resolve<IUserInterfaceManager>();
-            mgr.ShowFPS = !mgr.ShowFPS;
+            if (args.Length != 1)
+            {
+                throw new InvalidOperationException("Must have exactly 1 argument.");
+            }
+            var monitor = IoCManager.Resolve<IUserInterfaceManager>().DebugMonitors;
+
+            switch (args[0])
+            {
+                case "fps":
+                    monitor.ShowFPS = !monitor.ShowFPS;
+                    break;
+                case "net":
+                    monitor.ShowNet = !monitor.ShowNet;
+                    break;
+                case "coord":
+                    monitor.ShowCoords = !monitor.ShowCoords;
+                    break;
+            }
+
             return false;
         }
     }
@@ -168,20 +185,6 @@ namespace SS14.Client.Console.Commands
         {
             var vp = IoCManager.Resolve<ISceneTreeHolder>().SceneTree.Root;
             console.AddLine($"canvas_transform: {vp.CanvasTransform}, global_canvas_transform: {vp.GlobalCanvasTransform}");
-            return false;
-        }
-    }
-
-    class DebugCoordsCommand : IConsoleCommand
-    {
-        public string Command => "debugcoords";
-        public string Help => "";
-        public string Description => "";
-
-        public bool Execute(IDebugConsole console, params string[] args)
-        {
-            var ui = IoCManager.Resolve<IUserInterfaceManager>();
-            ui.ShowCoordDebug = !ui.ShowCoordDebug;
             return false;
         }
     }

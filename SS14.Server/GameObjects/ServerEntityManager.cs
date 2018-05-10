@@ -75,11 +75,15 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public List<EntityState> GetEntityStates()
+        public List<EntityState> GetEntityStates(uint fromTick)
         {
             var stateEntities = new List<EntityState>();
             foreach (IEntity entity in GetEntities())
             {
+                if (entity.LastModifiedTick < fromTick)
+                {
+                    continue;
+                }
                 EntityState entityState = entity.GetEntityState();
                 stateEntities.Add(entityState);
             }
@@ -180,7 +184,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float range)
         {
-            var aabb = new Box2(box.Left-range, box.Top-range, box.Right+range, box.Bottom+range);
+            var aabb = new Box2(box.Left - range, box.Top - range, box.Right + range, box.Bottom + range);
             return GetEntitiesIntersecting(mapID, aabb);
         }
 
@@ -202,8 +206,8 @@ namespace SS14.Server.GameObjects
         public IEnumerable<IEntity> GetEntitiesInArc(LocalCoordinates coordinates, float range, Angle direction, float arcwidth)
         {
             var entities = GetEntitiesInRange(coordinates, range);
-            
-            foreach(var entity in entities)
+
+            foreach (var entity in entities)
             {
                 var angle = new Angle(entity.GetComponent<TransformComponent>().WorldPosition - coordinates.ToWorld().Position);
                 if (angle.Degrees < direction.Degrees + arcwidth / 2 && angle.Degrees > direction.Degrees - arcwidth / 2)

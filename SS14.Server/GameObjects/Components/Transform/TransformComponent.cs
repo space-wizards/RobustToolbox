@@ -166,6 +166,8 @@ namespace SS14.Server.GameObjects
                     GridID = value.GridID;
                 }
 
+                Owner.Dirty();
+
                 RebuildMatrices();
                 OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, value));
             }
@@ -204,6 +206,8 @@ namespace SS14.Server.GameObjects
                     _position = value;
                     GridID = IoCManager.Resolve<IMapManager>().GetMap(MapID).FindGridAt(_position).Index;
                 }
+
+                Owner.Dirty();
 
                 RebuildMatrices();
                 OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new LocalCoordinates(_position, GridID, MapID)));

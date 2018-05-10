@@ -34,7 +34,7 @@ namespace SS14.Shared.GameStates
         public readonly uint FromSequence;
         public readonly uint ToSequence;
 
-        public readonly IReadOnlyList<EntityState> EntityStates;
-        public readonly IReadOnlyList<PlayerState> PlayerStates;
+        public readonly List<EntityState> EntityStates;
+        public readonly List<PlayerState> PlayerStates;
     }
 }

@@ -9,6 +9,8 @@ namespace SS14.Shared.Interfaces.GameObjects
 {
     public interface IEntity
     {
+        uint LastModifiedTick { get; }
+
         IEntityManager EntityManager { get; }
 
         /// <summary>
@@ -207,5 +209,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s) where T : EntityEventArgs;
         void UnsubscribeEvent<T>(IEntityEventSubscriber s) where T : EntityEventArgs;
         void RaiseEvent(EntityEventArgs toRaise);
+
+        void Dirty();
     }
 }

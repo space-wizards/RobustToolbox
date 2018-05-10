@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Interfaces.Network;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Shared.Interfaces.Timing;
 
 namespace SS14.Shared.GameObjects
 {
@@ -28,7 +29,12 @@ namespace SS14.Shared.GameObjects
         private readonly INetManager _network;
         [Dependency]
         private readonly IComponentManager _componentManager;
-        # endregion Dependencies
+        [Dependency]
+        private readonly IGameTiming _gameTiming;
+
+        #endregion Dependencies
+
+        public uint CurrentTick => _gameTiming.CurTick;
 
         protected readonly Dictionary<EntityUid, IEntity> Entities = new Dictionary<EntityUid, IEntity>();
         /// <summary>

@@ -7,6 +7,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +16,7 @@ namespace SS14.Client.GameStates
 {
     public class ClientGameStateManager : IClientGameStateManager
     {
-        private Dictionary<uint, GameState> GameStates = new Dictionary<uint, GameState>();
+        private uint GameSequence;
 
         [Dependency]
         private readonly IClientNetManager networkManager;
@@ -24,42 +25,30 @@ namespace SS14.Client.GameStates
         [Dependency]
         private readonly IPlayerManager playerManager;
         [Dependency]
-        private readonly ISS14Serializer serializer;
-        [Dependency]
         private readonly IClientNetManager netManager;
 
         public void Initialize()
         {
-            netManager.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, HandleFullStateMessage);
-            netManager.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, HandleStateUpdateMessage);
+            netManager.RegisterNetMessage<MsgState>(MsgState.NAME, HandleStateMessage);
+            netManager.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME);
         }
 
-        public void HandleFullStateMessage(MsgFullState message)
+        public void HandleStateMessage(MsgState message)
         {
-            if (!GameStates.ContainsKey(message.State.Sequence))
+            var state = message.State;
+            if (GameSequence < message.State.FromSequence)
             {
-                AckGameState(message.State.Sequence);
-
-                message.State.GameTime = 0;//(float)timing.CurTime.TotalSeconds;
-                ApplyGameState(message.State);
+                Logger.ErrorS("net.state", "Got a game state that's too new to handle!");
             }
-        }
-
-        public void HandleStateUpdateMessage(MsgStateUpdate message)
-        {
-            GameStateDelta delta = message.StateDelta;
-
-            if (GameStates.ContainsKey(delta.FromSequence))
+            if (GameSequence > message.State.ToSequence)
             {
-                AckGameState(delta.Sequence);
-
-                GameState fromState = GameStates[delta.FromSequence];
-                GameState newState = fromState + delta;
-                newState.GameTime = 0;//(float)timing.CurTime.TotalSeconds;
-                ApplyGameState(newState);
-
-                CullOldStates(delta.FromSequence);
+                Logger.WarningS("net.state", "Got a game state that's too old to handle!");
             }
+            AckGameState(message.State.ToSequence);
+
+            message.State.GameTime = 0;//(float)timing.CurTime.TotalSeconds;
+            ApplyGameState(message.State);
+
         }
 
         private void AckGameState(uint sequence)
@@ -67,15 +56,13 @@ namespace SS14.Client.GameStates
             var msg = networkManager.CreateNetMessage<MsgStateAck>();
             msg.Sequence = sequence;
             networkManager.ClientSendMessage(msg);
+            GameSequence = sequence;
         }
 
         private void ApplyGameState(GameState gameState)
         {
-            GameStates[gameState.Sequence] = gameState;
-            CurrentState = gameState;
-
-            entityManager.ApplyEntityStates(CurrentState.EntityStates, CurrentState.GameTime);
-            playerManager.ApplyPlayerStates(CurrentState.PlayerStates);
+            entityManager.ApplyEntityStates(gameState.EntityStates, gameState.GameTime);
+            playerManager.ApplyPlayerStates(gameState.PlayerStates);
         }
     }
 }

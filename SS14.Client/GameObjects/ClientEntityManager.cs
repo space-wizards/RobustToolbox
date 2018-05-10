@@ -129,12 +129,13 @@ namespace SS14.Client.GameObjects
                 }
             }
 
+            // TODO: DELETION.
             //Delete entities that exist here but don't exist in the entity states
-            var toDelete = Entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
-            foreach (var k in toDelete)
-            {
-                DeleteEntity(k);
-            }
+            //var toDelete = Entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
+            //foreach (var k in toDelete)
+            //{
+            //    DeleteEntity(k);
+            //}
 
             // After the first set of states comes in we do the startup.
             if (!Started && MapsInitialized)

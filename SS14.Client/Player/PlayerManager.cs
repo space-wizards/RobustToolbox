@@ -119,7 +119,7 @@ namespace SS14.Client.Player
         */
 
         /// <inheritdoc />
-        public void ApplyPlayerStates(List<PlayerState> list)
+        public void ApplyPlayerStates(IEnumerable<PlayerState> list)
         {
             Debug.Assert(_network.IsConnected, "Received player state without being connected?");
             Debug.Assert(LocalPlayer != null, "Call Startup()");
@@ -186,7 +186,7 @@ namespace SS14.Client.Player
         /// <summary>
         ///     Compares the server player list to the client one, and updates if needed.
         /// </summary>
-        private void UpdatePlayerList(List<PlayerState> remotePlayers)
+        private void UpdatePlayerList(IEnumerable<PlayerState> remotePlayers)
         {
             var dirty = false;
 

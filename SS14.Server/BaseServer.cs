@@ -69,7 +69,7 @@ namespace SS14.Server
         [Dependency]
         private readonly ITimerManager timerManager;
         [Dependency]
-        private readonly IGameStateManager _stateManager;
+        private readonly IServerGameStateManager _stateManager;
         [Dependency]
         private readonly IServerNetManager _network;
         [Dependency]
@@ -208,11 +208,11 @@ namespace SS14.Server
             _serializer.Initialize();
 
             // Initialize Tier 2 services
-            IoCManager.Resolve<IGameStateManager>().Initialize();
-            IoCManager.Resolve<IEntityManager>().Initialize();
+            _stateManager.Initialize();
+            _entities.Initialize();
             IoCManager.Resolve<IChatManager>().Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
-            IoCManager.Resolve<IMapManager>().Initialize();
+            _mapManager.Initialize();
             IoCManager.Resolve<IPlacementManager>().Initialize();
 
             // Call Init in game assemblies.

@@ -59,7 +59,7 @@ namespace SS14.Server.GameObjects.EntitySystems
 
                 if (collided)
                 {
-                    if(velocity.EdgeSlide)
+                    if (velocity.EdgeSlide)
                     {
                         //Slide along the blockage in the non-blocked direction
                         var xBlocked = collider.TryCollision(new Vector2(movement.X, 0));

@@ -166,7 +166,7 @@
     <Compile Include="GameObjects\EntitySystems\EffectSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
-    <Compile Include="GameStates\GameStateManager.cs" />
+    <Compile Include="GameStates\ServerGameStateManager.cs" />
     <Compile Include="Interfaces\ICommandLineArgs.cs" />
     <Compile Include="Interfaces\IBaseServer.cs" />
     <Compile Include="Interfaces\Chat\IChatCommand.cs" />
@@ -179,7 +179,7 @@
     <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IRenderableComponent.cs" />
     <Compile Include="Interfaces\GameObjects\ISpriteRenderableComponent.cs" />
-    <Compile Include="Interfaces\GameState\IGameStateManager.cs" />
+    <Compile Include="Interfaces\GameState\IServerGameStateManager.cs" />
     <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerSession.cs" />

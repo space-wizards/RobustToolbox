@@ -10,7 +10,7 @@ namespace SS14.Server.Interfaces.GameObjects
     public interface IServerEntityManager : IEntityManager
     {
         Entity SpawnEntity(string template, EntityUid? uid = null);
-        
+
         /// <summary>
         /// Spawns an entity at a specific position
         /// </summary>
@@ -104,7 +104,10 @@ namespace SS14.Server.Interfaces.GameObjects
         /// <returns></returns>
         IEnumerable<IEntity> GetEntitiesInArc(LocalCoordinates coordinates, float range, Angle direction, float arcwidth);
 
-        List<EntityState> GetEntityStates();
+        /// <summary>
+        ///     Gets all entity states that have been modified after and including the provided tick.
+        /// </summary>
+        List<EntityState> GetEntityStates(uint fromTick);
 
         /// <summary>
         ///     Serializes all entities on a grid.

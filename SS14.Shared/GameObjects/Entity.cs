@@ -52,6 +52,8 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         private string _description;
 
+        public uint LastModifiedTick { get; private set; }
+
         /// <inheritdoc />
         public string Name
         {
@@ -554,6 +556,11 @@ namespace SS14.Shared.GameObjects
                 .Where(c => c.NetID != null)
                 .Select(component => component.GetComponentState())
                 .ToList();
+        }
+
+        public void Dirty()
+        {
+            LastModifiedTick = EntityManager.CurrentTick;
         }
 
         #endregion GameState Stuff

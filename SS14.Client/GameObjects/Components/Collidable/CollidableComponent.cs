@@ -68,7 +68,7 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         void ICollidable.Bump(List<IEntity> bumpedinto)
         {
-            List<ICollideBehavior> collidecomponents = Owner.GetComponents<ICollideBehavior>().ToList();
+            List<ICollideBehavior> collidecomponents = Owner.GetAllComponents<ICollideBehavior>().ToList();
 
             for (var i = 0; i < collidecomponents.Count; i++)
             {

@@ -27,7 +27,7 @@ namespace SS14.Server.GameObjects
 
         /// <inheritdoc />
         public MapId MapID => Owner.GetComponent<ITransformComponent>().MapID;
-        
+
 
         public override void ExposeData(EntitySerializer serializer)
         {
@@ -65,7 +65,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         void ICollidable.Bump(List<IEntity> bumpedinto)
         {
-            List<ICollideBehavior> collidecomponents = Owner.GetComponents<ICollideBehavior>().ToList();
+            List<ICollideBehavior> collidecomponents = Owner.GetAllComponents<ICollideBehavior>().ToList();
 
             for (var i = 0; i < collidecomponents.Count; i++)
             {

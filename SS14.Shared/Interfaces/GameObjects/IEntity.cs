@@ -162,7 +162,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     Returns all components on the entity.
         /// </summary>
         /// <returns>An enumerable of components on the entity.</returns>
-        IEnumerable<IComponent> GetComponents();
+        IEnumerable<IComponent> GetAllComponents();
 
         /// <summary>
         ///     Returns all components that are assignable to <typeparamref name="T"/>.
@@ -170,7 +170,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         /// <typeparam name="T">The type that components must implement.</typeparam>
         /// <returns>An enumerable over the found components.</returns>
-        IEnumerable<T> GetComponents<T>();
+        IEnumerable<T> GetAllComponents<T>();
 
         /// <summary>
         ///     Sends a message to all other components in this entity.

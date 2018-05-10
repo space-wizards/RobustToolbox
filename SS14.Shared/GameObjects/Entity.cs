@@ -103,15 +103,15 @@ namespace SS14.Shared.GameObjects
         /// </exception>
         public void SetUid(EntityUid uid)
         {
-            if(!uid.IsValid())
+            if (!uid.IsValid())
                 throw new ArgumentException("Uid is not valid.", nameof(uid));
 
-            if(Uid.IsValid())
+            if (Uid.IsValid())
                 throw new InvalidOperationException("Entity already has a UID.");
 
             Uid = uid;
         }
-        
+
         /// <summary>
         ///     Calls Initialize() on all registered components.
         /// </summary>
@@ -186,7 +186,7 @@ namespace SS14.Shared.GameObjects
         {
             foreach (var component in _components)
             {
-                if(owner != component)
+                if (owner != component)
                     component.HandleMessage(message, component: owner);
             }
         }
@@ -194,7 +194,7 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public void SendNetworkMessage(IComponent owner, ComponentMessage message)
         {
-            if(message.Directed)
+            if (message.Directed)
             {
                 EntityNetworkManager.SendDirectedComponentNetworkMessage(null, this, owner, message);
             }
@@ -207,31 +207,31 @@ namespace SS14.Shared.GameObjects
         #endregion Unified Messaging
 
         #region Network messaging
-        
+
         /// <inheritdoc />
         public void HandleNetworkMessage(IncomingEntityMessage message)
         {
             switch (message.Message.Type)
             {
                 case EntityMessageType.ComponentMessage:
-                {
-                    var compMsg = message.Message.ComponentMessage;
-                    var compChannel = message.Message.MsgChannel;
-                    compMsg.Remote = true;
+                    {
+                        var compMsg = message.Message.ComponentMessage;
+                        var compChannel = message.Message.MsgChannel;
+                        compMsg.Remote = true;
 
-                    if (compMsg.Directed)
-                    {
-                        if (_netIDs.TryGetValue(message.Message.NetId, out var component))
-                                component.HandleMessage(compMsg, netChannel: compChannel);
-                    }
-                    else
-                    {
-                        foreach (var component in _components)
+                        if (compMsg.Directed)
                         {
-                            component.HandleMessage(compMsg, netChannel: compChannel);
+                            if (_netIDs.TryGetValue(message.Message.NetId, out var component))
+                                component.HandleMessage(compMsg, netChannel: compChannel);
+                        }
+                        else
+                        {
+                            foreach (var component in _components)
+                            {
+                                component.HandleMessage(compMsg, netChannel: compChannel);
+                            }
                         }
                     }
-                }
                     break;
             }
         }
@@ -294,7 +294,7 @@ namespace SS14.Shared.GameObjects
         {
             var factory = IoCManager.Resolve<IComponentFactory>();
             var newComponent = (Component)factory.GetComponent<T>();
-            
+
             newComponent.Owner = this;
             AddComponent(newComponent);
 
@@ -439,7 +439,7 @@ namespace SS14.Shared.GameObjects
                 component = null;
                 return false;
             }
-            component = (T) _componentReferences[typeof(T)];
+            component = (T)_componentReferences[typeof(T)];
             return true;
         }
 
@@ -483,15 +483,15 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IComponent> GetComponents()
+        public IEnumerable<IComponent> GetAllComponents()
         {
             return _components.Where(component => !component.Deleted);
         }
 
         /// <inheritdoc />
-        public IEnumerable<T> GetComponents<T>()
+        public IEnumerable<T> GetAllComponents<T>()
         {
-            return _components.OfType<T>();
+            return GetAllComponents().OfType<T>();
         }
 
         #endregion Components
@@ -550,7 +550,7 @@ namespace SS14.Shared.GameObjects
         /// <returns></returns>
         private List<ComponentState> GetComponentStates()
         {
-            return GetComponents()
+            return GetAllComponents()
                 .Where(c => c.NetID != null)
                 .Select(component => component.GetComponentState())
                 .ToList();

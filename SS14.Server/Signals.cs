@@ -14,7 +14,7 @@ namespace SS14.Server
 
         public static void InstallSignals()
         {
-            bool runningOnMono = Type.GetType ("Mono.Runtime") != null;
+            bool runningOnMono = Type.GetType("Mono.Runtime") != null;
             if (!runningOnMono)
             {
                 return;
@@ -23,7 +23,7 @@ namespace SS14.Server
             {
                 // Reflection is fun.
                 var assembly = FindMonoPosix();
-                Logger.Log("Successfully loaded Mono.Posix. Registering signal handlers...", LogLevel.Debug);
+                Logger.Debug("Successfully loaded Mono.Posix. Registering signal handlers...");
 
                 Type signalType = assembly.GetType("Mono.Unix.UnixSignal");
                 // Mono.Unix.UnixSignal[]
@@ -71,7 +71,7 @@ namespace SS14.Server
             }
             catch (Exception e)
             {
-                Logger.Log(string.Format("Running on mono but couldn't register signal handlers: {0}", e), LogLevel.Error);
+                Logger.Error("Running on mono but couldn't register signal handlers: {0}", e);
             }
         }
 

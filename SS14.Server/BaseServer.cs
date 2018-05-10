@@ -166,12 +166,12 @@ namespace SS14.Server
             catch (System.Net.Sockets.SocketException)
             {
                 var port = netMan.Port;
-                Logger.Log($"Unable to setup networking manager. Check port {port} is not already in use!, shutting down...", LogLevel.Fatal);
+                Logger.Fatal($"Unable to setup networking manager. Check port {port} is not already in use!, shutting down...");
                 Environment.Exit(1);
             }
             catch (Exception e)
             {
-                Logger.Log($"Unable to setup networking manager. Unknown exception: {e}, shutting down...", LogLevel.Fatal);
+                Logger.Fatal($"Unable to setup networking manager. Unknown exception: {e}, shutting down...");
                 Environment.Exit(1);
             }
 

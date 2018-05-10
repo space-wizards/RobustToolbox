@@ -64,7 +64,7 @@ namespace SS14.Server
 
             if (server.Start())
             {
-                Logger.Log("Server -> Can not start server", LogLevel.Fatal);
+                Logger.Fatal("Server -> Can not start server");
                 //Not like you'd see this, haha. Perhaps later for logging.
                 Environment.Exit(0);
             }

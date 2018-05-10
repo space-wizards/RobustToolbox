@@ -60,7 +60,7 @@ namespace SS14.Client.Console.Commands
             var message = args[2]; // yes this doesn't support spaces idgaf.
             var level = (LogLevel)Enum.Parse(typeof(LogLevel), levelname);
 
-            Logger.LogS(name, message, level);
+            Logger.LogS(level, name, message);
             return false;
         }
     }

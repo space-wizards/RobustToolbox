@@ -44,9 +44,14 @@ namespace SS14.Shared.Log
                 handlers.Remove(handler);
             }
 
-            public void Log(string message, LogLevel level, params object[] args)
+            public void Log(LogLevel level, string message, params object[] args)
             {
-                var msg = new LogMessage(string.Format(message, args), level, Name);
+                Log(level, string.Format(message, args));
+            }
+
+            public void Log(LogLevel level, string message)
+            {
+                var msg = new LogMessage(message, level, Name);
                 LogInternal(ref msg);
             }
 
@@ -76,27 +81,52 @@ namespace SS14.Shared.Log
 
             public void Debug(string message, params object[] args)
             {
-                Log(message, LogLevel.Debug, args);
+                Log(LogLevel.Debug, message, args);
+            }
+
+            public void Debug(string message)
+            {
+                Log(LogLevel.Debug, message);
             }
 
             public void Info(string message, params object[] args)
             {
-                Log(message, LogLevel.Info, args);
+                Log(LogLevel.Info, message, args);
+            }
+
+            public void Info(string message)
+            {
+                Log(LogLevel.Info, message);
             }
 
             public void Warning(string message, params object[] args)
             {
-                Log(message, LogLevel.Warning, args);
+                Log(LogLevel.Warning, message, args);
+            }
+
+            public void Warning(string message)
+            {
+                Log(LogLevel.Warning, message);
             }
 
             public void Error(string message, params object[] args)
             {
-                Log(message, LogLevel.Error, args);
+                Log(LogLevel.Error, message, args);
+            }
+
+            public void Error(string message)
+            {
+                Log(LogLevel.Error, message);
             }
 
             public void Fatal(string message, params object[] args)
             {
-                Log(message, LogLevel.Fatal, args);
+                Log(LogLevel.Fatal, message, args);
+            }
+
+            public void Fatal(string message)
+            {
+                Log(LogLevel.Fatal, message);
             }
         }
     }

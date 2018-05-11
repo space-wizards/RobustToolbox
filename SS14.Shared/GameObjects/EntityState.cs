@@ -23,7 +23,7 @@ namespace SS14.Shared.GameObjects
             SetStateData(new EntityStateData(uid, templateName, name, synchedComponentTypes));
             ComponentStates = componentStates;
         }
-        
+
         public void SetStateData(EntityStateData data)
         {
             StateData = data;

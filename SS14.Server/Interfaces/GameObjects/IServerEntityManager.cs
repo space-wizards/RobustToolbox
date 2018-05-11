@@ -109,6 +109,18 @@ namespace SS14.Server.Interfaces.GameObjects
         /// </summary>
         List<EntityState> GetEntityStates(uint fromTick);
 
+        // Keep track of deleted entities so we can sync deletions with the client.
+        /// <summary>
+        ///     Gets a list of all entity UIDs that were deleted between <paramref name="fromTick" /> and now.
+        /// </summary>
+        List<EntityUid> GetDeletedEntities(uint fromTick);
+
+        /// <summary>
+        ///     Remove deletion history.
+        /// </summary>
+        /// <param name="toTick">The last tick to delete the history for. Inclusive.</param>
+        void CullDeletionHistory(uint toTick);
+
         /// <summary>
         ///     Serializes all entities on a grid.
         /// </summary>

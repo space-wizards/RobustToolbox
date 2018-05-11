@@ -155,7 +155,7 @@ namespace SS14.Shared.GameObjects
         /// Shuts-down and removes given Entity. This is also broadcast to all clients.
         /// </summary>
         /// <param name="e">Entity to remove</param>
-        public void DeleteEntity(IEntity e)
+        public virtual void DeleteEntity(IEntity e)
         {
             e.Shutdown();
         }

@@ -58,7 +58,11 @@ namespace SS14.Shared.GameObjects
         public string Name
         {
             get => _name;
-            set => _name = value;
+            set
+            {
+                _name = value;
+                Dirty();
+            }
         }
 
         /// <inheritdoc />
@@ -332,6 +336,7 @@ namespace SS14.Shared.GameObjects
             if (component.NetID != null)
             {
                 _netIDs[component.NetID.Value] = component;
+                component.Dirty();
             }
 
             // Register the component with the ComponentManager.
@@ -394,7 +399,10 @@ namespace SS14.Shared.GameObjects
             }
 
             if (component.NetID != null)
+            {
                 _netIDs.Remove(component.NetID.Value);
+                Dirty();
+            }
         }
 
         /// <inheritdoc />

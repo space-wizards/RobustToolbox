@@ -24,6 +24,8 @@ namespace SS14.Server.GameObjects
         [Dependency]
         private readonly IMapManager _mapManager;
 
+        private List<(uint tick, EntityUid uid)> DeletionHistory = new List<(uint, EntityUid)>();
+
         /// <inheritdoc />
         public bool TrySpawnEntityAt(string entityType, LocalCoordinates coordinates, out IEntity entity)
         {
@@ -88,6 +90,32 @@ namespace SS14.Server.GameObjects
                 stateEntities.Add(entityState);
             }
             return stateEntities;
+        }
+
+        public override void DeleteEntity(IEntity e)
+        {
+            base.DeleteEntity(e);
+
+            DeletionHistory.Add((CurrentTick, e.Uid));
+        }
+
+        public List<EntityUid> GetDeletedEntities(uint fromTick)
+        {
+            List<EntityUid> list = new List<EntityUid>();
+            foreach ((var tick, var id) in DeletionHistory)
+            {
+                if (tick >= fromTick)
+                {
+                    list.Add(id);
+                }
+            }
+
+            return list;
+        }
+
+        public void CullDeletionHistory(uint toTick)
+        {
+            DeletionHistory.RemoveAll(hist => hist.tick <= toTick);
         }
 
         /// <inheritdoc />

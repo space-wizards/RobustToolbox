@@ -174,10 +174,10 @@ namespace SS14.Client.State.States
             if (clickedEntities.Any())
             {
                 entityToClick = (from cd in clickedEntities
-                              orderby cd.drawDepth ascending,
-                                  cd.clicked.GetComponent<ITransformComponent>().LocalPosition
-                                  .Y ascending
-                              select cd.clicked).Last();
+                                 orderby cd.drawDepth ascending,
+                                     cd.clicked.GetComponent<ITransformComponent>().LocalPosition
+                                     .Y ascending
+                                 select cd.clicked).Last();
             }
             else
             {

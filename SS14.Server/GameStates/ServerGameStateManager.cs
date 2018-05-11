@@ -17,6 +17,7 @@ namespace SS14.Server.GameStates
         // Mapping of net UID of clients -> last known acked state.
         private readonly Dictionary<long, uint> ackedStates = new Dictionary<long, uint>();
 
+        private uint lastOldestAck = 0;
 
         [Dependency]
         private IServerEntityManager _entityManager;
@@ -46,6 +47,8 @@ namespace SS14.Server.GameStates
             var connections = _networkManager.Channels;
             if (!connections.Any())
             {
+                // Prevent deletions piling up if we have no clients.
+                _entityManager.CullDeletionHistory(uint.MaxValue);
                 return;
             }
 
@@ -62,10 +65,17 @@ namespace SS14.Server.GameStates
                 }
             }
 
+            if (oldestAck > lastOldestAck)
+            {
+                lastOldestAck = oldestAck;
+                _entityManager.CullDeletionHistory(oldestAck);
+            }
+
             var entities = _entityManager.GetEntityStates(oldestAck);
             var players = _playerManager.GetPlayerStates();
+            var deletions = _entityManager.GetDeletedEntities(oldestAck);
 
-            var state = new GameState(oldestAck, _gameTiming.CurTick, entities, players);
+            var state = new GameState(oldestAck, _gameTiming.CurTick, entities, players, deletions);
 
             foreach (var c in connections)
             {

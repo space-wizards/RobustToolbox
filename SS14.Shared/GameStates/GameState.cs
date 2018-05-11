@@ -23,12 +23,13 @@ namespace SS14.Shared.GameStates
         /// Constructor!
         /// </summary>
         /// <param name="sequence"></param>
-        public GameState(uint fromSequence, uint toSequence, List<EntityState> entities, List<PlayerState> players)
+        public GameState(uint fromSequence, uint toSequence, List<EntityState> entities, List<PlayerState> players, List<EntityUid> deletions)
         {
             FromSequence = fromSequence;
             ToSequence = toSequence;
             EntityStates = entities;
             PlayerStates = players;
+            EntityDeletions = deletions;
         }
 
         public readonly uint FromSequence;
@@ -36,5 +37,6 @@ namespace SS14.Shared.GameStates
 
         public readonly List<EntityState> EntityStates;
         public readonly List<PlayerState> PlayerStates;
+        public readonly List<EntityUid> EntityDeletions;
     }
 }

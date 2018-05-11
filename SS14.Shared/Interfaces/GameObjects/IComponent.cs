@@ -58,6 +58,8 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         bool Deleted { get; }
 
+        void Dirty();
+
         uint LastModifiedTick { get; }
 
         /// <summary>

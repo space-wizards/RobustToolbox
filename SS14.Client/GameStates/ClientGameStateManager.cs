@@ -61,7 +61,7 @@ namespace SS14.Client.GameStates
 
         private void ApplyGameState(GameState gameState)
         {
-            entityManager.ApplyEntityStates(gameState.EntityStates, gameState.GameTime);
+            entityManager.ApplyEntityStates(gameState.EntityStates, gameState.EntityDeletions, gameState.GameTime);
             playerManager.ApplyPlayerStates(gameState.PlayerStates);
         }
     }

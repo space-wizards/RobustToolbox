@@ -206,5 +206,4 @@
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
-  <Target Name="AfterBuild" DependsOnTargets="CopyBsdiffWrap" />
 </Project>

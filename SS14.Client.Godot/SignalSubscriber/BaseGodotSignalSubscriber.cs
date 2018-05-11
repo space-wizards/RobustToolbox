@@ -4,7 +4,7 @@
 // It's not clean but do you have a better idea?
 namespace SS14.Client.GodotGlue
 {
-    public abstract class BaseGodotSignalSubscriber : Godot.Object
+    public abstract class BaseGodotSignalSubscriber : Godot.Reference
     {
         public void Connect(Godot.Object obj, string signal)
         {

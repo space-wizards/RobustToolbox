@@ -78,8 +78,11 @@ namespace SS14.Shared.GameObjects
 
         public void Dirty()
         {
-            Owner.Dirty();
-            LastModifiedTick = Owner.EntityManager.CurrentTick;
+            if (Owner != null)
+            {
+                Owner.Dirty();
+                LastModifiedTick = Owner.EntityManager.CurrentTick;
+            }
         }
 
         /// <summary>

@@ -4,9 +4,8 @@ using System.Collections.Generic;
 
 namespace SS14.Client.Interfaces.GameStates
 {
-    public interface IGameStateManager
+    public interface IClientGameStateManager
     {
-        void HandleFullStateMessage(MsgFullState message);
-        void HandleStateUpdateMessage(MsgStateUpdate message);
+        void Initialize();
     }
 }

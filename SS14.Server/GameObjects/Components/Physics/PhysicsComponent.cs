@@ -29,7 +29,11 @@ namespace SS14.Server.GameObjects
         public float Mass
         {
             get => _mass;
-            set => _mass = value;
+            set
+            {
+                _mass = value;
+                Dirty();
+            }
         }
 
         /// <summary>
@@ -38,7 +42,11 @@ namespace SS14.Server.GameObjects
         public Vector2 LinearVelocity
         {
             get => _linVelocity;
-            set => _linVelocity = value;
+            set
+            {
+                _linVelocity = value;
+                Dirty();
+            }
         }
 
         /// <summary>

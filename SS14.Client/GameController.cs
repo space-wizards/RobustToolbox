@@ -83,6 +83,8 @@ namespace SS14.Client
         readonly GameTiming gameTiming;
         [Dependency]
         readonly IPlacementManager placementManager;
+        [Dependency]
+        readonly IClientGameStateManager gameStateManager;
 
         public override void Main(Godot.SceneTree tree)
         {
@@ -133,9 +135,7 @@ namespace SS14.Client
             placementManager.Initialize();
             lightManager.Initialize();
             _entityManager.Initialize();
-
-            _networkManager.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, message => IoCManager.Resolve<IGameStateManager>().HandleFullStateMessage((MsgFullState)message));
-            _networkManager.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, message => IoCManager.Resolve<IGameStateManager>().HandleStateUpdateMessage((MsgStateUpdate)message));
+            gameStateManager.Initialize();
 
             _client.Initialize();
 

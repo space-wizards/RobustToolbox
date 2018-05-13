@@ -198,8 +198,6 @@ namespace SS14.Client.GameObjects
         private IResourceCache resourceCache;
         private IPrototypeManager prototypes;
 
-        private int generation;
-
         public int AddLayer(string texturePath)
         {
             return AddLayer(new ResourcePath(texturePath));
@@ -870,11 +868,6 @@ namespace SS14.Client.GameObjects
         public override void HandleComponentState(ComponentState notthestate)
         {
             var state = (SpriteComponentState)notthestate;
-            if (state.Generation <= generation)
-            {
-                return;
-            }
-            generation = state.Generation;
 
             Visible = state.Visible;
             DrawDepth = state.DrawDepth;

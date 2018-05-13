@@ -58,6 +58,10 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         bool Deleted { get; }
 
+        void Dirty();
+
+        uint LastModifiedTick { get; }
+
         /// <summary>
         ///     Called when the component is removed from an entity.
         ///     Shuts down the component.

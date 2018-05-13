@@ -104,14 +104,12 @@ namespace SS14.Client.GameObjects
             Started = true;
         }
 
-        public void ApplyEntityStates(IEnumerable<EntityState> entityStates, float serverTime)
+        public void ApplyEntityStates(IEnumerable<EntityState> entityStates, IEnumerable<EntityUid> deletions, float serverTime)
         {
-            var entityKeys = new HashSet<EntityUid>();
             foreach (EntityState es in entityStates)
             {
                 //Todo defer component state result processing until all entities are loaded and initialized...
                 es.ReceivedTime = serverTime;
-                entityKeys.Add(es.StateData.Uid);
                 //Known entities
                 if (Entities.TryGetValue(es.StateData.Uid, out var entity))
                 {
@@ -129,11 +127,9 @@ namespace SS14.Client.GameObjects
                 }
             }
 
-            //Delete entities that exist here but don't exist in the entity states
-            var toDelete = Entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
-            foreach (var k in toDelete)
+            foreach (var id in deletions)
             {
-                DeleteEntity(k);
+                DeleteEntity(id);
             }
 
             // After the first set of states comes in we do the startup.

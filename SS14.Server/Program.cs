@@ -122,7 +122,7 @@ namespace SS14.Server
             IoCManager.Register<ISS14Serializer, SS14Serializer>();
             IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();
             IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
-            IoCManager.Register<IGameStateManager, GameStateManager>();
+            IoCManager.Register<IServerGameStateManager, ServerGameStateManager>();
             IoCManager.Register<IReflectionManager, ServerReflectionManager>();
             IoCManager.Register<IClientConsoleHost, ClientConsoleHost.ClientConsoleHost>();
             IoCManager.Register<IPlayerManager, PlayerManager>();

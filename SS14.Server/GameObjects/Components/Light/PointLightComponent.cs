@@ -19,31 +19,51 @@ namespace SS14.Server.GameObjects
         public Color Color
         {
             get => _color;
-            set => _color = value;
+            set
+            {
+                _color = value;
+                Dirty();
+            }
         }
 
         public LightModeClass Mode
         {
             get => _mode;
-            set => _mode = value;
+            set
+            {
+                _mode = value;
+                Dirty();
+            }
         }
 
         public LightState State
         {
             get => _state;
-            set => _state = value;
+            set
+            {
+                _state = value;
+                Dirty();
+            }
         }
 
         public int Radius
         {
             get => _radius;
-            set => _radius = value;
+            set
+            {
+                _radius = value;
+                Dirty();
+            }
         }
 
         public Vector2 Offset
         {
             get => _offset;
-            set => _offset = value;
+            set
+            {
+                _offset = value;
+                Dirty();
+            }
         }
 
         /// <inheritdoc />

@@ -158,12 +158,11 @@ namespace SS14.Client
             Reset();
         }
 
-        private void HandleServerInfo(NetMessage message)
+        private void HandleServerInfo(MsgServerInfo msg)
         {
             if (GameInfo == null)
                 GameInfo = new ServerInfo();
 
-            var msg = (MsgServerInfo)message;
             var info = GameInfo;
 
             info.ServerName = msg.ServerName;

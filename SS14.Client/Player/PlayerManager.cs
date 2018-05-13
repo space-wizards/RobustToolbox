@@ -43,7 +43,7 @@ namespace SS14.Client.Player
         ///     Active sessions of connected clients to the server.
         /// </summary>
         private Dictionary<int, PlayerSession> _sessions;
-        
+
         /// <inheritdoc />
         public int PlayerCount => _sessions.Values.Count;
 
@@ -119,8 +119,13 @@ namespace SS14.Client.Player
         */
 
         /// <inheritdoc />
-        public void ApplyPlayerStates(List<PlayerState> list)
+        public void ApplyPlayerStates(IEnumerable<PlayerState> list)
         {
+            if (list == null)
+            {
+                // This happens when the server says "nothing changed!"
+                return;
+            }
             Debug.Assert(_network.IsConnected, "Received player state without being connected?");
             Debug.Assert(LocalPlayer != null, "Call Startup()");
             Debug.Assert(LocalPlayer.Session != null, "Received player state before Session finished setup.");
@@ -139,10 +144,8 @@ namespace SS14.Client.Player
         /// <summary>
         ///     Handles an incoming session NetMsg from the server.
         /// </summary>
-        private void HandleSessionMessage(NetMessage netMessage)
+        private void HandleSessionMessage(MsgSession msg)
         {
-            var msg = (MsgSession)netMessage;
-
             switch (msg.MsgType)
             {
                 case PlayerSessionMessage.AttachToEntity:
@@ -180,18 +183,15 @@ namespace SS14.Client.Player
         /// <summary>
         ///     Handles the incoming PlayerList message from the server.
         /// </summary>
-        private void HandlePlayerList(NetMessage netMessage)
+        private void HandlePlayerList(MsgPlayerList msg)
         {
-            //update sessions with player info
-            var msg = (MsgPlayerList)netMessage;
-
             UpdatePlayerList(msg.Plyrs);
         }
 
         /// <summary>
         ///     Compares the server player list to the client one, and updates if needed.
         /// </summary>
-        private void UpdatePlayerList(List<PlayerState> remotePlayers)
+        private void UpdatePlayerList(IEnumerable<PlayerState> remotePlayers)
         {
             var dirty = false;
 

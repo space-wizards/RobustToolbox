@@ -7,6 +7,8 @@ namespace SS14.Shared.Interfaces.GameObjects
 {
     public interface IEntityManager
     {
+        uint CurrentTick { get; }
+
         void Initialize();
         void Startup();
         void Shutdown();

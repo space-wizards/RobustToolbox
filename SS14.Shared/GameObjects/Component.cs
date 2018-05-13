@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
@@ -31,6 +32,8 @@ namespace SS14.Shared.GameObjects
 
         /// <inheritdoc />
         public bool Deleted { get; private set; }
+
+        public uint LastModifiedTick { get; private set; }
 
         /// <inheritdoc />
         public virtual void OnRemove()
@@ -72,6 +75,15 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         [Obsolete("Components should be updated through a system.")]
         public virtual void Update(float frameTime) { }
+
+        public void Dirty()
+        {
+            if (Owner != null)
+            {
+                Owner.Dirty();
+                LastModifiedTick = Owner.EntityManager.CurrentTick;
+            }
+        }
 
         /// <summary>
         ///     Sends a message to all other components in this entity.

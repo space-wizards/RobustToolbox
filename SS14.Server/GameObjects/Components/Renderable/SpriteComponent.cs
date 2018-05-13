@@ -16,16 +16,6 @@ namespace SS14.Server.GameObjects
         public override string Name => "Sprite";
         public override uint? NetID => NetIDs.SPRITE;
 
-        // So because the game state system is HOT GARBAGE we can't just spam states at the client.
-        // This kills the client.
-        // So we basically pre-implement a dirty system.
-        // We increase this gen for every change.
-        // If it's different the client actually gives a shit about our component state.
-        // Else it just ignores it and mourns due to the lost CPU time from bsdiff.
-        // NOTE: Generation is NOT updated by initial data load. Everything's from the prototype. That's fine.
-        // This means the client ignores us until there's a *difference*.
-        private int generation = 0;
-
         private List<Layer> Layers = new List<Layer>();
 
         private bool _visible;
@@ -43,7 +33,7 @@ namespace SS14.Server.GameObjects
             set
             {
                 _drawDepth = value;
-                generation++;
+                Dirty();
             }
         }
 
@@ -53,7 +43,7 @@ namespace SS14.Server.GameObjects
             set
             {
                 _visible = value;
-                generation++;
+                Dirty();
             }
         }
 
@@ -63,7 +53,7 @@ namespace SS14.Server.GameObjects
             set
             {
                 _scale = value;
-                generation++;
+                Dirty();
             }
         }
 
@@ -73,7 +63,7 @@ namespace SS14.Server.GameObjects
             set
             {
                 _rotation = value;
-                generation++;
+                Dirty();
             }
         }
 
@@ -83,7 +73,7 @@ namespace SS14.Server.GameObjects
             set
             {
                 _offset = value;
-                generation++;
+                Dirty();
             }
         }
 
@@ -93,7 +83,7 @@ namespace SS14.Server.GameObjects
             set
             {
                 _color = value;
-                generation++;
+                Dirty();
             }
         }
 
@@ -103,7 +93,7 @@ namespace SS14.Server.GameObjects
             set
             {
                 _directional = value;
-                generation++;
+                Dirty();
             }
         }
 
@@ -113,7 +103,7 @@ namespace SS14.Server.GameObjects
             set
             {
                 _baseRSIPath = value;
-                generation++;
+                Dirty();
             }
         }
 
@@ -122,7 +112,7 @@ namespace SS14.Server.GameObjects
             var layer = Layer.New();
             layer.TexturePath = texture;
             Layers.Add(layer);
-            generation++;
+            Dirty();
             return Layers.Count - 1;
         }
 
@@ -136,7 +126,7 @@ namespace SS14.Server.GameObjects
             var layer = Layer.New();
             layer.State = stateId;
             Layers.Add(layer);
-            generation++;
+            Dirty();
             return Layers.Count - 1;
         }
 
@@ -146,7 +136,7 @@ namespace SS14.Server.GameObjects
             layer.State = stateId;
             layer.RsiPath = rsiPath;
             Layers.Add(layer);
-            generation++;
+            Dirty();
             return Layers.Count - 1;
 
         }
@@ -163,7 +153,7 @@ namespace SS14.Server.GameObjects
                 return;
             }
             Layers.RemoveAt(layer);
-            generation++;
+            Dirty();
         }
 
         public void LayerSetShader(int layer, string shaderName)
@@ -176,7 +166,7 @@ namespace SS14.Server.GameObjects
             var thelayer = Layers[layer];
             thelayer.Shader = shaderName;
             Layers[layer] = thelayer;
-            generation++;
+            Dirty();
         }
 
         public void LayerSetTexture(int layer, string texturePath)
@@ -190,7 +180,7 @@ namespace SS14.Server.GameObjects
             thelayer.State = null;
             thelayer.TexturePath = texturePath;
             Layers[layer] = thelayer;
-            generation++;
+            Dirty();
         }
         public void LayerSetTexture(int layer, ResourcePath texturePath)
         {
@@ -208,7 +198,7 @@ namespace SS14.Server.GameObjects
             thelayer.State = stateId;
             thelayer.TexturePath = null;
             Layers[layer] = thelayer;
-            generation++;
+            Dirty();
         }
 
         public void LayerSetState(int layer, string stateId, string rsiPath)
@@ -223,7 +213,7 @@ namespace SS14.Server.GameObjects
             thelayer.State = stateId;
             thelayer.TexturePath = null;
             Layers[layer] = thelayer;
-            generation++;
+            Dirty();
         }
 
         public void LayerSetState(int layer, string stateId, ResourcePath rsiPath)
@@ -242,7 +232,7 @@ namespace SS14.Server.GameObjects
             var thelayer = Layers[layer];
             thelayer.RsiPath = rsiPath;
             Layers[layer] = thelayer;
-            generation++;
+            Dirty();
         }
 
         public void LayerSetRSI(int layer, ResourcePath rsiPath)
@@ -261,7 +251,7 @@ namespace SS14.Server.GameObjects
             var thelayer = Layers[layer];
             thelayer.Scale = scale;
             Layers[layer] = thelayer;
-            generation++;
+            Dirty();
         }
 
         public void LayerSetRotation(int layer, Angle rotation)
@@ -275,7 +265,7 @@ namespace SS14.Server.GameObjects
             var thelayer = Layers[layer];
             thelayer.Rotation = rotation;
             Layers[layer] = thelayer;
-            generation++;
+            Dirty();
         }
 
         public void LayerSetVisible(int layer, bool visible)
@@ -289,7 +279,7 @@ namespace SS14.Server.GameObjects
             var thelayer = Layers[layer];
             thelayer.Visible = visible;
             Layers[layer] = thelayer;
-            generation++;
+            Dirty();
         }
 
         public override void ExposeData(EntitySerializer serializer)
@@ -414,7 +404,7 @@ namespace SS14.Server.GameObjects
         public override ComponentState GetComponentState()
         {
             var list = Layers.Select((l) => l.ToStateLayer()).ToList();
-            return new SpriteComponentState(generation, Visible, DrawDepth, Scale, Rotation, Offset, Color, Directional, BaseRSIPath, list);
+            return new SpriteComponentState(Visible, DrawDepth, Scale, Rotation, Offset, Color, Directional, BaseRSIPath, list);
 
         }
         private struct Layer

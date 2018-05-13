@@ -133,10 +133,6 @@
       <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="..\SS14.Shared.Bsdiff\SS14.Shared.Bsdiff\SS14.Shared.Bsdiff.csproj">
-      <Project>{0e0723e8-d785-4f61-81f4-182a12bcaa52}</Project>
-      <Name>SS14.Shared.Bsdiff</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Audio\AudioParams.cs" />
@@ -204,7 +200,6 @@
     <Compile Include="Interfaces\Map\ITileDefinitionManager.cs" />
     <Compile Include="Interfaces\Timers\ITimerManager.cs" />
     <Compile Include="Interfaces\Timing\IGameTiming.cs" />
-    <Compile Include="GameStates\GameStateDelta.cs" />
     <Compile Include="GameStates\GameState.cs" />
     <Compile Include="GameStates\PlayerState.cs" />
     <Compile Include="IoC\Exceptions\ImplementationConstructorException.cs" />
@@ -247,8 +242,7 @@
     <Compile Include="Maths\Vector2u.cs" />
     <Compile Include="Maths\Vector3.cs" />
     <Compile Include="Maths\Vector4.cs" />
-    <Compile Include="Network\Messages\MsgFullState.cs" />
-    <Compile Include="Network\Messages\MsgStateUpdate.cs" />
+    <Compile Include="Network\Messages\MsgState.cs" />
     <Compile Include="Network\NetChannelArgs.cs" />
     <Compile Include="Network\NetMessageArgs.cs" />
     <Compile Include="Network\Messages\MsgChat.cs" />

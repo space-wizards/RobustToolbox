@@ -212,6 +212,8 @@ namespace SS14.Server.Player
                 PlayerState.ControlledEntity = null;
             else
                 PlayerState.ControlledEntity = AttachedEntity.Uid;
+
+            _playerManager.Dirty();
         }
 
         /// <inheritdoc />

@@ -108,7 +108,7 @@ namespace SS14.Client.Placement
         /// Which of the placement orientations we are trying to place with
         /// </summary>
         public PlacementMode CurrentMode { get; set; }
-        
+
         public PlacementInformation CurrentPermission { get; set; }
 
         private EntityPrototype _currentPrototype;
@@ -147,7 +147,7 @@ namespace SS14.Client.Placement
         /// The directional to spawn the entity in
         /// </summary>
         public Direction Direction { get; set; } = Direction.South;
-        
+
         public Godot.Node2D drawNode { get; set; }
         private GodotGlue.GodotSignalSubscriber0 drawNodeDrawSubscriber;
 
@@ -193,9 +193,8 @@ namespace SS14.Client.Placement
             drawNode.Dispose();
         }
 
-        private void HandlePlacementMessage(NetMessage netMessage)
+        private void HandlePlacementMessage(MsgPlacement msg)
         {
-            var msg = (MsgPlacement)netMessage;
             switch (msg.PlaceType)
             {
                 case PlacementManagerMessage.StartPlacement:
@@ -345,12 +344,12 @@ namespace SS14.Client.Placement
         /// <inheritdoc />
         public void FrameUpdate(RenderFrameEventArgs e)
         {
-            if(!CurrentMousePosition(out ScreenCoordinates mouseScreen))
+            if (!CurrentMousePosition(out ScreenCoordinates mouseScreen))
             {
                 return;
             }
 
-            if(mouseScreen.MapID == MapId.Nullspace)
+            if (mouseScreen.MapID == MapId.Nullspace)
             {
                 _placenextframe = false;
                 return;
@@ -401,7 +400,7 @@ namespace SS14.Client.Placement
 
         private void ActivateLineMode(MouseButtonEventArgs e)
         {
-            if(CurrentMode.HasLineMode)
+            if (CurrentMode.HasLineMode)
             {
                 if (!CurrentMousePosition(out ScreenCoordinates mouseScreen))
                 {
@@ -431,7 +430,7 @@ namespace SS14.Client.Placement
 
         private bool DeactivateSpecialPlacement()
         {
-            if(_placementType != PlacementType.None)
+            if (_placementType != PlacementType.None)
             {
                 _placementType = PlacementType.None;
                 return true;

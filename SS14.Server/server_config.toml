@@ -6,7 +6,7 @@ level = 1
 enabled = false
 
 [net]
-tickrate = 66
+tickrate = 60
 port = 1212
 allowdupeip = true
 

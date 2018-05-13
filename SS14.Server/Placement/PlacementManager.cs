@@ -41,7 +41,7 @@ namespace SS14.Server.Placement
 
         public void Initialize()
         {
-            _networkManager.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, message => HandleNetMessage((MsgPlacement)message));
+            _networkManager.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, HandleNetMessage);
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace SS14.Server.Placement
             var mapIndex = plyTransform.MapID;
 
             // no building in null space!
-            if(mapIndex == MapId.Nullspace)
+            if (mapIndex == MapId.Nullspace)
                 return;
 
             //TODO: Distance check, so you can't place things off of screen.

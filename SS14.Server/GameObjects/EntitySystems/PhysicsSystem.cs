@@ -37,6 +37,11 @@ namespace SS14.Server.GameObjects.EntitySystems
             var transform = entity.GetComponent<TransformComponent>();
             var velocity = entity.GetComponent<PhysicsComponent>();
 
+            if (velocity.AngularVelocity == 0 && velocity.LinearVelocity == Vector2.Zero)
+            {
+                return;
+            }
+
             //rotate entity
             float angImpulse = 0;
             if (velocity.AngularVelocity > Epsilon)
@@ -59,7 +64,7 @@ namespace SS14.Server.GameObjects.EntitySystems
 
                 if (collided)
                 {
-                    if(velocity.EdgeSlide)
+                    if (velocity.EdgeSlide)
                     {
                         //Slide along the blockage in the non-blocked direction
                         var xBlocked = collider.TryCollision(new Vector2(movement.X, 0));

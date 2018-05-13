@@ -99,17 +99,13 @@ namespace SS14.Client.Console
         public event EventHandler<AddStringArgs> AddString;
         public event EventHandler ClearText;
 
-        private void HandleConCmdAck(NetMessage message)
+        private void HandleConCmdAck(MsgConCmdAck msg)
         {
-            var msg = (MsgConCmdAck)message;
-
             AddLine("< " + msg.Text, ChatChannel.Default, MsgColor);
         }
 
-        private void HandleConCmdReg(NetMessage message)
+        private void HandleConCmdReg(MsgConCmdReg msg)
         {
-            var msg = (MsgConCmdReg)message;
-
             foreach (var cmd in msg.Commands)
             {
                 var commandName = cmd.Name;

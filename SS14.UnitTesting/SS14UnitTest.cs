@@ -75,6 +75,8 @@ using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Graphics.Lighting;
 using SS14.Shared.Log;
 using SS14.Server.Prototypes;
+using SS14.Client.Interfaces.GameStates;
+using SS14.Client.GameStates;
 
 namespace SS14.UnitTesting
 {
@@ -206,7 +208,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IClientNetManager, NetManager>();
                     IoCManager.Register<IClientEntityManager, ClientEntityManager>();
                     IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
-                    IoCManager.Register<SS14.Client.Interfaces.GameStates.IGameStateManager, SS14.Client.GameStates.GameStateManager>();
+                    IoCManager.Register<IClientGameStateManager, ClientGameStateManager>();
                     IoCManager.Register<IBaseClient, BaseClient>();
                     IoCManager.Register<SS14.Client.Interfaces.Player.IPlayerManager, SS14.Client.Player.PlayerManager>();
                     IoCManager.Register<IStateManager, StateManager>();
@@ -234,7 +236,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
                     IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();
                     IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
-                    IoCManager.Register<IGameStateManager, GameStateManager>();
+                    IoCManager.Register<IServerGameStateManager, ServerGameStateManager>();
                     IoCManager.Register<IReflectionManager, ServerReflectionManager>();
                     IoCManager.Register<IClientConsoleHost, SS14.Server.ClientConsoleHost.ClientConsoleHost>();
                     IoCManager.Register<IPlayerManager, SS14.Server.Player.PlayerManager>();

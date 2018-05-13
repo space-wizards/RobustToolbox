@@ -104,7 +104,7 @@ namespace SS14.Client
             IoCManager.Register<IClientNetManager, NetManager>();
             IoCManager.Register<IClientEntityManager, ClientEntityManager>();
             IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
-            IoCManager.Register<IGameStateManager, GameStateManager>();
+            IoCManager.Register<IClientGameStateManager, ClientGameStateManager>();
             IoCManager.Register<IBaseClient, BaseClient>();
             IoCManager.Register<IPlayerManager, PlayerManager>();
             IoCManager.Register<IStateManager, StateManager>();

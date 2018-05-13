@@ -24,6 +24,6 @@ namespace SS14.Client.Interfaces.Player
         void Destroy();
 
         //void ApplyEffects(RenderImage image);
-        void ApplyPlayerStates(List<PlayerState> list);
+        void ApplyPlayerStates(IEnumerable<PlayerState> list);
     }
 }

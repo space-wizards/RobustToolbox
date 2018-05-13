@@ -52,11 +52,17 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         private string _description;
 
+        public uint LastModifiedTick { get; private set; }
+
         /// <inheritdoc />
         public string Name
         {
             get => _name;
-            set => _name = value;
+            set
+            {
+                _name = value;
+                Dirty();
+            }
         }
 
         /// <inheritdoc />
@@ -330,6 +336,7 @@ namespace SS14.Shared.GameObjects
             if (component.NetID != null)
             {
                 _netIDs[component.NetID.Value] = component;
+                component.Dirty();
             }
 
             // Register the component with the ComponentManager.
@@ -392,7 +399,10 @@ namespace SS14.Shared.GameObjects
             }
 
             if (component.NetID != null)
+            {
                 _netIDs.Remove(component.NetID.Value);
+                Dirty();
+            }
         }
 
         /// <inheritdoc />
@@ -527,9 +537,9 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public EntityState GetEntityState()
+        public EntityState GetEntityState(uint fromTick)
         {
-            var compStates = GetComponentStates();
+            var compStates = GetComponentStates(fromTick);
             var synchedComponentTypes = _netIDs
                 .Where(t => t.Value.NetworkSynchronizeExistence)
                 .Select(t => new Tuple<uint, string>(t.Key, t.Value.Name))
@@ -548,12 +558,17 @@ namespace SS14.Shared.GameObjects
         ///     Server-side method to get the state of all our components
         /// </summary>
         /// <returns></returns>
-        private List<ComponentState> GetComponentStates()
+        private List<ComponentState> GetComponentStates(uint fromTick)
         {
             return GetAllComponents()
-                .Where(c => c.NetID != null)
+                .Where(c => c.NetID != null && c.LastModifiedTick >= fromTick)
                 .Select(component => component.GetComponentState())
                 .ToList();
+        }
+
+        public void Dirty()
+        {
+            LastModifiedTick = EntityManager.CurrentTick;
         }
 
         #endregion GameState Stuff

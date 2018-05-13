@@ -24,6 +24,8 @@ namespace SS14.Server.GameObjects
         [Dependency]
         private readonly IMapManager _mapManager;
 
+        private List<(uint tick, EntityUid uid)> DeletionHistory = new List<(uint, EntityUid)>();
+
         /// <inheritdoc />
         public bool TrySpawnEntityAt(string entityType, LocalCoordinates coordinates, out IEntity entity)
         {
@@ -75,15 +77,45 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public List<EntityState> GetEntityStates()
+        public List<EntityState> GetEntityStates(uint fromTick)
         {
             var stateEntities = new List<EntityState>();
             foreach (IEntity entity in GetEntities())
             {
-                EntityState entityState = entity.GetEntityState();
+                if (entity.LastModifiedTick < fromTick)
+                {
+                    continue;
+                }
+                EntityState entityState = entity.GetEntityState(fromTick);
                 stateEntities.Add(entityState);
             }
             return stateEntities;
+        }
+
+        public override void DeleteEntity(IEntity e)
+        {
+            base.DeleteEntity(e);
+
+            DeletionHistory.Add((CurrentTick, e.Uid));
+        }
+
+        public List<EntityUid> GetDeletedEntities(uint fromTick)
+        {
+            List<EntityUid> list = new List<EntityUid>();
+            foreach ((var tick, var id) in DeletionHistory)
+            {
+                if (tick >= fromTick)
+                {
+                    list.Add(id);
+                }
+            }
+
+            return list;
+        }
+
+        public void CullDeletionHistory(uint toTick)
+        {
+            DeletionHistory.RemoveAll(hist => hist.tick <= toTick);
         }
 
         /// <inheritdoc />
@@ -180,7 +212,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float range)
         {
-            var aabb = new Box2(box.Left-range, box.Top-range, box.Right+range, box.Bottom+range);
+            var aabb = new Box2(box.Left - range, box.Top - range, box.Right + range, box.Bottom + range);
             return GetEntitiesIntersecting(mapID, aabb);
         }
 
@@ -202,8 +234,8 @@ namespace SS14.Server.GameObjects
         public IEnumerable<IEntity> GetEntitiesInArc(LocalCoordinates coordinates, float range, Angle direction, float arcwidth)
         {
             var entities = GetEntitiesInRange(coordinates, range);
-            
-            foreach(var entity in entities)
+
+            foreach (var entity in entities)
             {
                 var angle = new Angle(entity.GetComponent<TransformComponent>().WorldPosition - coordinates.ToWorld().Position);
                 if (angle.Degrees < direction.Degrees + arcwidth / 2 && angle.Degrees > direction.Degrees - arcwidth / 2)

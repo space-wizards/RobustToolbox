@@ -9,6 +9,8 @@ namespace SS14.Shared.Interfaces.GameObjects
 {
     public interface IEntity
     {
+        uint LastModifiedTick { get; }
+
         IEntityManager EntityManager { get; }
 
         /// <summary>
@@ -202,10 +204,12 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     Serverside method to prepare an entity state object
         /// </summary>
         /// <returns></returns>
-        EntityState GetEntityState();
+        EntityState GetEntityState(uint fromTick);
 
         void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s) where T : EntityEventArgs;
         void UnsubscribeEvent<T>(IEntityEventSubscriber s) where T : EntityEventArgs;
         void RaiseEvent(EntityEventArgs toRaise);
+
+        void Dirty();
     }
 }

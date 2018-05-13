@@ -72,6 +72,10 @@ namespace SS14.Server.GameObjects
 
             if (_moveDir.LengthSquared < 0.001)
             {
+                if (physics.LinearVelocity != Vector2.Zero)
+                {
+                    physics.LinearVelocity = Vector2.Zero;
+                }
                 return;
             }
             physics.LinearVelocity = _moveDir * (_run ? FastMoveSpeed : BaseMoveSpeed);

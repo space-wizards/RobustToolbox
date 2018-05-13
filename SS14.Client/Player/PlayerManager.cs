@@ -121,6 +121,11 @@ namespace SS14.Client.Player
         /// <inheritdoc />
         public void ApplyPlayerStates(IEnumerable<PlayerState> list)
         {
+            if (list == null)
+            {
+                // This happens when the server says "nothing changed!"
+                return;
+            }
             Debug.Assert(_network.IsConnected, "Received player state without being connected?");
             Debug.Assert(LocalPlayer != null, "Call Startup()");
             Debug.Assert(LocalPlayer.Session != null, "Received player state before Session finished setup.");

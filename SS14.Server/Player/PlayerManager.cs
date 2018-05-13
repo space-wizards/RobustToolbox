@@ -31,6 +31,8 @@ namespace SS14.Server.Player
         [Dependency]
         private readonly IServerNetManager _network;
 
+        private bool NeedsStateUpdate = false;
+
         /// <summary>
         ///     Number of active sessions.
         ///     This is the cached value of _sessions.Count(s => s != null);
@@ -177,6 +179,11 @@ namespace SS14.Server.Player
         /// <returns></returns>
         public List<PlayerState> GetPlayerStates()
         {
+            if (!NeedsStateUpdate)
+            {
+                return null;
+            }
+            NeedsStateUpdate = false;
             return _sessions
                 .Where(s => s != null)
                 .Select(s => s.PlayerState)
@@ -310,6 +317,11 @@ namespace SS14.Server.Player
             // client session is complete
             var session = GetSessionByChannel(channel);
             session.Status = SessionStatus.Connected;
+        }
+
+        public void Dirty()
+        {
+            NeedsStateUpdate = true;
         }
     }
 

@@ -21,7 +21,7 @@ namespace SS14.Shared.Network
     ///     Callback for registered NetMessages.
     /// </summary>
     /// <param name="message">The message received.</param>
-    public delegate void ProcessMessage<T>(T message) where T : NetMessage;
+    public delegate void ProcessMessage<in T>(T message) where T : NetMessage;
 
     /// <summary>
     ///     Manages all network connections and packet IO.
@@ -70,7 +70,7 @@ namespace SS14.Shared.Network
         public NetworkStats Statistics => new NetworkStats(_netPeer.Statistics);
 
         /// <inheritdoc />
-        public List<INetChannel> Channels => _channels.Values.Cast<INetChannel>().ToList();
+        public IEnumerable<INetChannel> Channels => _channels.Values;
 
         /// <inheritdoc />
         public int ChannelCount => _channels.Count;

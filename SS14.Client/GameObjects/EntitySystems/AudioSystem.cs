@@ -27,7 +27,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         IResourceCache resourceCache;
 
         private uint LastPlayKey = 0;
-        private Dictionary<uint, PlayingStream> PlayingStreams = new Dictionary<uint, PlayingStream>();
+        private readonly Dictionary<uint, PlayingStream> PlayingStreams = new Dictionary<uint, PlayingStream>();
 
         public override void Initialize()
         {

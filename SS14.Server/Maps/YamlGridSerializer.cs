@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
@@ -96,7 +97,7 @@ namespace SS14.Server.Maps
 
             var grid = map.CreateGrid(gridId, csz, sgsz);
 
-            foreach (YamlMappingNode chunkNode in chunks)
+            foreach (YamlMappingNode chunkNode in chunks.Cast<YamlMappingNode>())
             {
                 DeserializeChunk(mapMan, grid, chunkNode);
             }
@@ -115,16 +116,16 @@ namespace SS14.Server.Maps
                 using (var reader = new BinaryReader(stream))
                 {
                     mapMan.SuppressOnTileChanged = true;
-                    
-                    for(var x = 0; x < grid.ChunkSize; x++)
-                    for (var y = 0; y < grid.ChunkSize; y++)
-                    {
-                        var id = reader.ReadUInt16();
-                        var data = reader.ReadUInt16();
 
-                        var tile = new Tile(id, data);
-                        grid.SetTile(new LocalCoordinates(x + indices.X, y + indices.Y, grid.Index, grid.MapID), tile);
-                    }
+                    for (var x = 0; x < grid.ChunkSize; x++)
+                        for (var y = 0; y < grid.ChunkSize; y++)
+                        {
+                            var id = reader.ReadUInt16();
+                            var data = reader.ReadUInt16();
+
+                            var tile = new Tile(id, data);
+                            grid.SetTile(new LocalCoordinates(x + indices.X, y + indices.Y, grid.Index, grid.MapID), tile);
+                        }
 
                     mapMan.SuppressOnTileChanged = false;
                 }

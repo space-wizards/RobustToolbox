@@ -75,7 +75,6 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public event Action<Angle> OnRotate;
 
-        //=> new LocalCoordinates(_position, GridID, MapID);
         public LocalCoordinates LocalPosition => LocalCoordinatesFor(_position, MapID, GridID);
 
         public Vector2 WorldPosition
@@ -183,17 +182,17 @@ namespace SS14.Client.GameObjects
         /// <summary>
         ///     Does this entity contain the entity in the argument
         /// </summary>
-        public bool ContainsEntity(ITransformComponent transform)
+        public bool ContainsEntity(ITransformComponent entityTransform)
         {
-            if (transform.IsMapTransform) //Is the entity on the map
+            if (entityTransform.IsMapTransform) //Is the entity on the map
             {
-                if (this == transform.Parent) //Is this the direct container of the entity
+                if (this == entityTransform.Parent) //Is this the direct container of the entity
                 {
                     return true;
                 }
                 else
                 {
-                    return ContainsEntity(transform.Parent); //Recursively search up the entitys containers for this object
+                    return ContainsEntity(entityTransform.Parent); //Recursively search up the entitys containers for this object
                 }
             }
             return false;

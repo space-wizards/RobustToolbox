@@ -218,15 +218,15 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        public IComponentRegistration GetRegistration(Type type)
+        public IComponentRegistration GetRegistration(Type reference)
         {
             try
             {
-                return types[type];
+                return types[reference];
             }
             catch (KeyNotFoundException)
             {
-                throw new UnknownComponentException($"Unknown type: {type}");
+                throw new UnknownComponentException($"Unknown type: {reference}");
             }
         }
 

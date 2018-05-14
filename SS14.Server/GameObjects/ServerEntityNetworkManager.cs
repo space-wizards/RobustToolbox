@@ -21,7 +21,7 @@ namespace SS14.Server.GameObjects
         {
             throw new NotImplementedException();
         }
-        
+
         public void SendComponentNetworkMessage(IEntity entity, IComponent component, ComponentMessage message)
         {
             throw new NotImplementedException();
@@ -60,7 +60,7 @@ namespace SS14.Server.GameObjects
         /// <summary>
         /// Sends a message to the relevant system(s) on all clients.
         /// </summary>
-        public void SendSystemNetworkMessage(EntitySystemMessage message)
+        void IEntityNetworkManager.SendSystemNetworkMessage(EntitySystemMessage message)
         {
             SendSystemNetworkMessage(message, null);
         }

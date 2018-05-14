@@ -15,8 +15,19 @@ namespace SS14.Shared.ContentPack
         {
         }
 
-        public virtual void Dispose()
+        public void Dispose()
         {
+            Dispose(true);
+            GC.SuppressFinalize(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+        }
+
+        ~GameShared()
+        {
+            Dispose(false);
         }
     }
 }

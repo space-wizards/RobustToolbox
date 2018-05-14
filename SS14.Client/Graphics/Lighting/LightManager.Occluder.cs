@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Graphics.Lighting;
@@ -9,7 +9,7 @@ namespace SS14.Client.Graphics.Lighting
 {
     partial class LightManager
     {
-        class Occluder : IOccluder
+        sealed class Occluder : IOccluder
         {
             private bool visible = true;
             public bool Enabled

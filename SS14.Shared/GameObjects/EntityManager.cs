@@ -235,10 +235,6 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        public void GetEntityData()
-        {
-        }
-
         #endregion Entity Management
 
         #region ComponentEvents

@@ -11,7 +11,7 @@ namespace SS14.Server.GameObjects.EntitySystems
 {
     internal class AiSystem : EntitySystem
     {
-        private Dictionary<string, Type> _processorTypes = new Dictionary<string, Type>();
+        private readonly Dictionary<string, Type> _processorTypes = new Dictionary<string, Type>();
 
         public AiSystem()
         {
@@ -59,7 +59,7 @@ namespace SS14.Server.GameObjects.EntitySystems
         {
             if (_processorTypes.TryGetValue(name, out var type))
             {
-                return (AiLogicProcessor) Activator.CreateInstance(type);
+                return (AiLogicProcessor)Activator.CreateInstance(type);
             }
 
             // processor needs to inherit AiLogicProcessor, and needs an AiLogicProcessorAttribute to define the YAML name

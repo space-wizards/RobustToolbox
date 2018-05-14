@@ -43,7 +43,12 @@ namespace SS14.Server.Interfaces.Player
         /// <param name="maxPlayers">Maximum number of players that can connect to this server at one time.</param>
         void Initialize(int maxPlayers);
 
-        IPlayerSession GetSessionById(PlayerIndex session);
+        /// <summary>
+        ///     Returns the client session of the networkId.
+        /// </summary>
+        /// <param name="index">The id of the client.</param>
+        /// <returns></returns>
+        IPlayerSession GetSessionById(PlayerIndex index);
 
         IPlayerSession GetSessionByChannel(INetChannel channel);
 

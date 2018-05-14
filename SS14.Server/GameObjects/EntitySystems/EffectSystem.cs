@@ -17,23 +17,23 @@ namespace SS14.Server.GameObjects.EntitySystems
         /// <summary>
         /// Priority queue sorted by how soon the effect will die, we remove messages from the front of the queue during update until caught up
         /// </summary>
-        private PriorityQueue<EffectSystemMessage> _CurrentEffects = new PriorityQueue<EffectSystemMessage>(new EffectMessageComparer());
+        private readonly PriorityQueue<EffectSystemMessage> _CurrentEffects = new PriorityQueue<EffectSystemMessage>(new EffectMessageComparer());
 
         public void CreateParticle(EffectSystemMessage effect)
         {
             _CurrentEffects.Add(effect);
-            
+
             //For now we will use this which sends to ALL clients
             //TODO: Client bubbling
             RaiseNetworkEvent(effect);
         }
 
-        public override void Update(float frametime)
+        public override void Update(float frameTime)
         {
             var gametime = IoCManager.Resolve<IGameTiming>().CurTime;
 
             //Take elements from front of priority queue until they are old
-            while(_CurrentEffects.Count != 0 && _CurrentEffects.Peek().DeathTime < gametime)
+            while (_CurrentEffects.Count != 0 && _CurrentEffects.Peek().DeathTime < gametime)
             {
                 _CurrentEffects.Take();
             }

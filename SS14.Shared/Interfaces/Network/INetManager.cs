@@ -37,7 +37,7 @@ namespace SS14.Shared.Interfaces.Network
         /// <summary>
         ///     All of the current connected NetChannels on this peer.
         /// </summary>
-        List<INetChannel> Channels { get; }
+        IEnumerable<INetChannel> Channels { get; }
 
         /// <summary>
         ///     The number of connected NetChannels on this peer.
@@ -130,6 +130,6 @@ namespace SS14.Shared.Interfaces.Network
         /// <returns>Instance of the NetMessage.</returns>
         T CreateNetMessage<T>() where T : NetMessage;
 
-        #endregion
+        #endregion StringTable
     }
 }

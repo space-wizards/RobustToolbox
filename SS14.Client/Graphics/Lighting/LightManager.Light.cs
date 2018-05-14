@@ -10,7 +10,7 @@ namespace SS14.Client.Graphics.Lighting
 {
     partial class LightManager
     {
-        class Light : ILight
+        sealed class Light : ILight
         {
             public Vector2 Offset
             {

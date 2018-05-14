@@ -51,15 +51,6 @@ namespace SS14.Client
         }
 
         /// <inheritdoc />
-        public void Update() { }
-
-        /// <inheritdoc />
-        public void Tick() { }
-
-        /// <inheritdoc />
-        public void Dispose() { }
-
-        /// <inheritdoc />
         public void ConnectToServer(string ip, ushort port)
         {
             Debug.Assert(RunLevel < ClientRunLevel.Connecting);
@@ -193,7 +184,6 @@ namespace SS14.Client
                 _stateManager.RequestStateChange<Lobby>();
                 OnPlayerJoinedLobby(_playMan.LocalPlayer.Session);
             }
-
             else if (eventArgs.NewStatus == SessionStatus.InGame)
             {
                 _stateManager.RequestStateChange<GameScreen>();

@@ -38,7 +38,7 @@ namespace SS14.Client.GameObjects
             get => _visible;
             set
             {
-                value = _visible;
+                _visible = value;
                 if (value)
                 {
                     RedrawQueued = true;
@@ -189,8 +189,8 @@ namespace SS14.Client.GameObjects
         // It may be a good idea to re-implement this list to use Layer[],
         // use ref locals EVERYWHERE, and handle the resizing ourselves.
         // This may be worth the overhead of basically reimplementing List<T>.
-        private List<Layer> Layers = new List<Layer>();
-        private List<Godot.RID> CanvasItems = new List<Godot.RID>();
+        private readonly List<Layer> Layers = new List<Layer>();
+        private readonly List<Godot.RID> CanvasItems = new List<Godot.RID>();
 
         private Godot.Node2D SceneNode;
         private IGodotTransformComponent TransformComponent;
@@ -865,21 +865,21 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override void HandleComponentState(ComponentState notthestate)
+        public override void HandleComponentState(ComponentState state)
         {
-            var state = (SpriteComponentState)notthestate;
+            var thestate = (SpriteComponentState)state;
 
-            Visible = state.Visible;
-            DrawDepth = state.DrawDepth;
-            Scale = state.Scale;
-            Rotation = state.Rotation;
-            Offset = state.Offset;
-            Color = state.Color;
-            Directional = state.Directional;
+            Visible = thestate.Visible;
+            DrawDepth = thestate.DrawDepth;
+            Scale = thestate.Scale;
+            Rotation = thestate.Rotation;
+            Offset = thestate.Offset;
+            Color = thestate.Color;
+            Directional = thestate.Directional;
 
-            if (state.BaseRsiPath != null && BaseRSI != null)
+            if (thestate.BaseRsiPath != null && BaseRSI != null)
             {
-                if (resourceCache.TryGetResource<RSIResource>(TextureRoot / state.BaseRsiPath, out var res))
+                if (resourceCache.TryGetResource<RSIResource>(TextureRoot / thestate.BaseRsiPath, out var res))
                 {
                     if (BaseRSI != res.RSI)
                     {
@@ -888,7 +888,7 @@ namespace SS14.Client.GameObjects
                 }
                 else
                 {
-                    Logger.ErrorS("go.comp.sprite", "Hey server, RSI '{0}' doesn't exist.", state.BaseRsiPath);
+                    Logger.ErrorS("go.comp.sprite", "Hey server, RSI '{0}' doesn't exist.", thestate.BaseRsiPath);
                 }
             }
 
@@ -896,9 +896,9 @@ namespace SS14.Client.GameObjects
             // At least we're not doing extra allocations,
             // because the list doesn't reallocate.
             Layers.Clear();
-            for (var i = 0; i < state.Layers.Count; i++)
+            for (var i = 0; i < thestate.Layers.Count; i++)
             {
-                var netlayer = state.Layers[i];
+                var netlayer = thestate.Layers[i];
                 var layer = Layer.New();
                 // These are easy so do them here.
                 layer.Scale = netlayer.Scale;
@@ -923,7 +923,6 @@ namespace SS14.Client.GameObjects
                 {
                     LayerSetTexture(i, netlayer.TexturePath);
                 }
-
                 else if (netlayer.State != null)
                 {
                     LayerSetState(i, netlayer.State);

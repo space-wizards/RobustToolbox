@@ -187,6 +187,7 @@
     <Compile Include="State\State.cs" />
     <Compile Include="State\StateManager.cs" />
     <Compile Include="State\States\MainMenu.cs" />
+    <Compile Include="Input\KeyParsing.cs" />
     <Compile Include="Input\Events.cs" />
     <Compile Include="Input\InputDevices.cs" />
     <Compile Include="Player\LocalPlayer.cs" />

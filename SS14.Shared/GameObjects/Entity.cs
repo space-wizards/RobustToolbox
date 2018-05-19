@@ -341,7 +341,7 @@ namespace SS14.Shared.GameObjects
 
             // Register the component with the ComponentManager.
             var manager = IoCManager.Resolve<IComponentManager>();
-            manager.AddComponent(component);
+            manager.AddComponentOld(component);
 
             component.OnAdd();
 

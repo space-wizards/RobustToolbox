@@ -15,19 +15,17 @@ namespace SS14.UnitTesting.Shared.GameObjects
     class ComponentManager_Test
     {
         [Test]
-        public void AddComponentTest()
+        public void AddComponentOldTest()
         {
             // Arrange
             var manager = ManagerFactory();
-
-            var mockComponent = new Mock<IComponent>();
-            var component = mockComponent.Object;
+            var component = new DummyComponent();
 
             // Act
-            manager.AddComponent(component);
+            manager.AddComponentOld(component);
 
             // Assert
-            var result = manager.GetComponents<IComponent>().ToList();
+            var result = manager.GetComponents<DummyComponent>().ToList();
             Assert.That(result.Count, Is.EqualTo(1));
             Assert.That(result[0], Is.EqualTo(component));
         }
@@ -41,7 +39,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
             var mockComponent = new Mock<IComponent>();
             mockComponent.SetupGet(c => c.Deleted).Returns(true); // mark comp for deletion
             var component = mockComponent.Object;
-            manager.AddComponent(component);
+            manager.AddComponentOld(component);
 
             // Act
             manager.Update(0); // update removes components marked for deletion
@@ -59,7 +57,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
 
             var mockComponent = new Mock<IComponent>();
             var component = mockComponent.Object;
-            manager.AddComponent(component);
+            manager.AddComponentOld(component);
 
             // Act
             manager.Cull(); // deletes all components, regardless of Delete flag.
@@ -77,7 +75,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
 
             var mockComponent = new Mock<IComponent>();
             var component = mockComponent.Object;
-            manager.AddComponent(component);
+            manager.AddComponentOld(component);
 
             // Act
             manager.Update(0.1f);
@@ -86,6 +84,79 @@ namespace SS14.UnitTesting.Shared.GameObjects
             mockComponent.Verify(x => x.Update(It.IsIn(0.1f)), Times.Once);
         }
 
+        #region Component Management
+
+        [Test]
+        public void AddComponentTest()
+        {
+            // Arrange
+            var manager = ManagerFactory();
+
+            var entity = EntityFactory();
+            var component = new DummyComponent();
+
+            // Act
+            manager.AddComponent(entity, component);
+
+            // Assert
+            var result = manager.GetComponent<DummyComponent>(entity.Uid);
+            Assert.That(result, Is.EqualTo(component));
+        }
+
+        [Test]
+        public void HasComponent()
+        {
+            // Arrange
+            var manager = ManagerFactory();
+
+            var entity = EntityFactory();
+            var component = new DummyComponent();
+            manager.AddComponent(entity, component);
+
+            // Act
+            var result = manager.HasComponent<DummyComponent>(entity.Uid);
+
+            // Assert
+            Assert.That(result, Is.True);
+        }
+
+        [Test]
+        public void TryGetComponentTest()
+        {
+            // Arrange
+            var manager = ManagerFactory();
+
+            var entity = EntityFactory();
+            var component = new DummyComponent();
+            manager.AddComponent(entity, component);
+
+            // Act
+            var result = manager.TryGetComponent<DummyComponent>(entity.Uid, out var comp);
+
+            // Assert
+            Assert.That(result, Is.True);
+            Assert.That(comp, Is.EqualTo(component));
+        }
+
+        [Test]
+        public void RemoveComponentTest()
+        {
+            // Arrange
+            var manager = ManagerFactory();
+
+            var entity = EntityFactory();
+            var component = new DummyComponent();
+            manager.AddComponent(entity, component);
+
+            // Act
+            manager.RemoveComponent<DummyComponent>(entity.Uid);
+
+            // Assert
+            Assert.That(manager.HasComponent(entity.Uid, component.GetType()), Is.False);
+        }
+
+        #endregion
+
         // mimics the IoC system.
         private static IComponentManager ManagerFactory()
         {
@@ -93,20 +164,28 @@ namespace SS14.UnitTesting.Shared.GameObjects
 
             // set up the registration
             var mockRegistration = new Mock<IComponentRegistration>();
-            mockRegistration.SetupGet(x => x.References).Returns(new List<Type> { typeof(IComponent) });
+            mockRegistration.SetupGet(x => x.References).Returns(new List<Type> { typeof(DummyComponent) });
 
             // setup the comp factory
             var mockFactory = new Mock<IComponentFactory>();
             mockFactory.Setup(x => x.GetRegistration(It.IsAny<IComponent>())).Returns(mockRegistration.Object);
+            mockFactory.Setup(x => x.GetRegistration(It.IsAny<Type>())).Returns(mockRegistration.Object);
+            mockFactory.Setup(x => x.GetComponent<DummyComponent>()).Returns(new DummyComponent());
+
+            // set up the entity manager
+            var mockEntMan = new Mock<IEntityManager>();
 
             // Inject the dependency into manager
             foreach (var field in GetDepFields(typeof(ComponentManager)))
             {
-                if (!field.FieldType.IsAssignableFrom(typeof(IComponentFactory)))
-                    continue;
-
-                field.SetValue(manager, mockFactory.Object);
-                break;
+                if (field.FieldType.IsAssignableFrom(typeof(IComponentFactory)))
+                {
+                    field.SetValue(manager, mockFactory.Object);
+                }
+                else if (field.FieldType.IsAssignableFrom(typeof(IEntityManager)))
+                {
+                    field.SetValue(manager, mockEntMan.Object);
+                }
             }
 
             // call PostInject on manager
@@ -119,6 +198,18 @@ namespace SS14.UnitTesting.Shared.GameObjects
         {
             return targetType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                 .Where(p => Attribute.GetCustomAttribute(p, typeof(DependencyAttribute)) != null);
+        }
+
+        private class DummyComponent : Component
+        {
+            public override string Name => "";
+        }
+
+        private static IEntity EntityFactory()
+        {
+            var mockEnt = new Mock<IEntity>();
+            mockEnt.SetupGet(x => x.Uid).Returns(new EntityUid(7));
+            return mockEnt.Object;
         }
     }
 }

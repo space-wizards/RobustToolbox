@@ -21,7 +21,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// Add a component to the master component list.
         /// </summary>
         /// <param name="component">The component to add.</param>
-        void AddComponent(IComponent component);
+        void AddComponentOld(IComponent component);
 
         /// <summary>
         /// Clear the master component list
@@ -33,5 +33,31 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="frameTime">Time since the last frame was rendered.</param>
         void Update(float frameTime);
+
+        #region Component Management
+
+        T AddComponent<T>(IEntity entity) where T : Component, new();
+        void AddComponent(IEntity entity, Component component);
+
+        void RemoveComponent<T>(EntityUid uid);
+        void RemoveComponent(EntityUid uid, Type type);
+        void RemoveComponent(EntityUid uid, uint netID);
+
+        bool HasComponent<T>(EntityUid uid);
+        bool HasComponent(EntityUid uid, Type type);
+        bool HasComponent(EntityUid uid, uint netID);
+
+        T GetComponent<T>(EntityUid uid) where T : Component;
+        IComponent GetComponent(EntityUid uid, Type type);
+        IComponent GetComponent(EntityUid uid, uint netID);
+
+        bool TryGetComponent<T>(EntityUid uid, out T component) where T : Component;
+        bool TryGetComponent(EntityUid uid, Type type, out IComponent component);
+        bool TryGetComponent(EntityUid uid, uint netID, out IComponent component);
+
+        IEnumerable<IComponent> GetComponents(EntityUid uid);
+        IEnumerable<T> GetComponents<T>(EntityUid uid);
+
+        #endregion
     }
 }

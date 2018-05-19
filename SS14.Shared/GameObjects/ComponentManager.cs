@@ -211,7 +211,8 @@ namespace SS14.Shared.GameObjects
 
         public void RemoveComponent(EntityUid uid, uint netID)
         {
-            throw new NotImplementedException();
+            var comp = GetComponent(uid, netID);
+            RemoveComponent(uid, comp.GetType());
         }
 
         public bool HasComponent<T>(EntityUid uid)
@@ -229,7 +230,10 @@ namespace SS14.Shared.GameObjects
 
         public bool HasComponent(EntityUid uid, uint netID)
         {
-            throw new NotImplementedException();
+            if (!_netComponents.TryGetValue(uid, out var comp))
+                return false;
+
+            return comp.ContainsKey(netID);
         }
 
         public T GetComponent<T>(EntityUid uid)
@@ -246,7 +250,8 @@ namespace SS14.Shared.GameObjects
 
         public IComponent GetComponent(EntityUid uid, uint netID)
         {
-            throw new NotImplementedException();
+            var netDict = _netComponents[uid];
+            return netDict[netID];
         }
 
         public bool TryGetComponent<T>(EntityUid uid, out T component)
@@ -279,7 +284,17 @@ namespace SS14.Shared.GameObjects
 
         public bool TryGetComponent(EntityUid uid, uint netID, out IComponent component)
         {
-            throw new NotImplementedException();
+            if (_netComponents.TryGetValue(uid, out var netDict))
+            {
+                if (netDict != null && netDict.TryGetValue(netID, out var comp))
+                {
+                    component = comp;
+                    return true;
+                }
+            }
+
+            component = null;
+            return false;
         }
 
         public IEnumerable<IComponent> GetComponents(EntityUid uid)

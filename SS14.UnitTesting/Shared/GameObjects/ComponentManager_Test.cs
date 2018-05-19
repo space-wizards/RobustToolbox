@@ -14,8 +14,10 @@ namespace SS14.UnitTesting.Shared.GameObjects
     [TestOf(typeof(ComponentManager))]
     class ComponentManager_Test
     {
+        private const uint CompNetId = 3;
+
         [Test]
-        public void AddComponentOldTest()
+        public void ObsAddComponentOldTest()
         {
             // Arrange
             var manager = ManagerFactory();
@@ -31,7 +33,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
         }
 
         [Test]
-        public void DeleteComponentTest()
+        public void ObsDeleteComponentTest()
         {
             // Arrange
             var manager = ManagerFactory();
@@ -50,7 +52,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
         }
 
         [Test]
-        public void CullTest()
+        public void ObsCullTest()
         {
             // Arrange
             var manager = ManagerFactory();
@@ -68,7 +70,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
         }
 
         [Test]
-        public void UpdateTest()
+        public void ObsUpdateTest()
         {
             // Arrange
             var manager = ManagerFactory();
@@ -94,6 +96,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
 
             var entity = EntityFactory();
             var component = new DummyComponent();
+            component.Owner = entity;
 
             // Act
             manager.AddComponent(entity, component);
@@ -104,13 +107,14 @@ namespace SS14.UnitTesting.Shared.GameObjects
         }
 
         [Test]
-        public void HasComponent()
+        public void HasComponentTest()
         {
             // Arrange
             var manager = ManagerFactory();
 
             var entity = EntityFactory();
             var component = new DummyComponent();
+            component.Owner = entity;
             manager.AddComponent(entity, component);
 
             // Act
@@ -121,6 +125,42 @@ namespace SS14.UnitTesting.Shared.GameObjects
         }
 
         [Test]
+        public void HasNetComponentTest()
+        {
+            // Arrange
+            var manager = ManagerFactory();
+
+            var entity = EntityFactory();
+            var component = new DummyComponent();
+            component.Owner = entity;
+            manager.AddComponent(entity, component);
+
+            // Act
+            var result = manager.HasComponent(entity.Uid, CompNetId);
+
+            // Assert
+            Assert.That(result, Is.True);
+        }
+
+        [Test]
+        public void GetNetComponentTest()
+        {
+            // Arrange
+            var manager = ManagerFactory();
+
+            var entity = EntityFactory();
+            var component = new DummyComponent();
+            component.Owner = entity;
+            manager.AddComponent(entity, component);
+
+            // Act
+            var result = manager.GetComponent(entity.Uid, CompNetId);
+
+            // Assert
+            Assert.That(result, Is.EqualTo(component));
+        }
+
+        [Test]
         public void TryGetComponentTest()
         {
             // Arrange
@@ -128,10 +168,30 @@ namespace SS14.UnitTesting.Shared.GameObjects
 
             var entity = EntityFactory();
             var component = new DummyComponent();
+            component.Owner = entity;
             manager.AddComponent(entity, component);
 
             // Act
             var result = manager.TryGetComponent<DummyComponent>(entity.Uid, out var comp);
+
+            // Assert
+            Assert.That(result, Is.True);
+            Assert.That(comp, Is.EqualTo(component));
+        }
+
+        [Test]
+        public void TryGetNetComponentTest()
+        {
+            // Arrange
+            var manager = ManagerFactory();
+
+            var entity = EntityFactory();
+            var component = new DummyComponent();
+            component.Owner = entity;
+            manager.AddComponent(entity, component);
+
+            // Act
+            var result = manager.TryGetComponent(entity.Uid, CompNetId, out var comp);
 
             // Assert
             Assert.That(result, Is.True);
@@ -146,6 +206,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
 
             var entity = EntityFactory();
             var component = new DummyComponent();
+            component.Owner = entity;
             manager.AddComponent(entity, component);
 
             // Act
@@ -153,6 +214,44 @@ namespace SS14.UnitTesting.Shared.GameObjects
 
             // Assert
             Assert.That(manager.HasComponent(entity.Uid, component.GetType()), Is.False);
+        }
+
+        [Test]
+        public void RemoveNetComponentTest()
+        {
+            // Arrange
+            var manager = ManagerFactory();
+
+            var entity = EntityFactory();
+            var component = new DummyComponent();
+            component.Owner = entity;
+            manager.AddComponent(entity, component);
+
+            // Act
+            manager.RemoveComponent(entity.Uid, CompNetId);
+
+            // Assert
+            Assert.That(manager.HasComponent(entity.Uid, component.GetType()), Is.False);
+        }
+
+        [Test]
+        public void GetComponentsTest()
+        {
+            // Arrange
+            var manager = ManagerFactory();
+
+            var entity = EntityFactory();
+            var component = new DummyComponent();
+            component.Owner = entity;
+            manager.AddComponent(entity, component);
+
+            // Act
+            var result = manager.GetComponents<DummyComponent>(entity.Uid);
+
+            // Assert
+            var list = result.ToList();
+            Assert.That(list.Count, Is.EqualTo(1));
+            Assert.That(list[0], Is.EqualTo(component));
         }
 
         #endregion
@@ -202,13 +301,15 @@ namespace SS14.UnitTesting.Shared.GameObjects
 
         private class DummyComponent : Component
         {
-            public override string Name => "";
+            public override string Name => null;
+            public override uint? NetID => CompNetId;
         }
 
         private static IEntity EntityFactory()
         {
             var mockEnt = new Mock<IEntity>();
             mockEnt.SetupGet(x => x.Uid).Returns(new EntityUid(7));
+            mockEnt.Setup(x => x.IsValid()).Returns(true);
             return mockEnt.Object;
         }
     }

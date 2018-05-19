@@ -130,6 +130,15 @@ namespace SS14.Shared.GameObjects
 
         public void AddComponent(IEntity entity, Component component)
         {
+            if (entity == null || !entity.IsValid())
+                throw new ArgumentException("Entity is not valid.", nameof(entity));
+
+            if (component == null)
+                throw new ArgumentNullException(nameof(component));
+
+            if (component.Owner != entity)
+                throw new InvalidOperationException("Component is not owned by entity.");
+
             // get interface aliases for mapping
             var reg = ComponentFactory.GetRegistration(component);
 
@@ -275,12 +284,16 @@ namespace SS14.Shared.GameObjects
 
         public IEnumerable<IComponent> GetComponents(EntityUid uid)
         {
-            throw new NotImplementedException();
+            foreach (var kvTypeDict in _dictComponents.Values)
+            {
+                if (kvTypeDict.TryGetValue(uid, out var comp))
+                    yield return comp;
+            }
         }
 
         public IEnumerable<T> GetComponents<T>(EntityUid uid)
         {
-            throw new NotImplementedException();
+            return GetComponents(uid).OfType<T>();
         }
 
         #endregion

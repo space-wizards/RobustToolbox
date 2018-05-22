@@ -184,7 +184,11 @@ namespace SS14.Shared.GameObjects
                 }
 
                 netDict.Add(component.NetID.Value, component);
+
+                // mark the component as dirty for networking
+                component.Dirty();
             }
+
             component.OnAdd();
 
             if (entity.Initialized)
@@ -254,6 +258,9 @@ namespace SS14.Shared.GameObjects
             {
                 var netDict = _netComponents[entityUid];
                 netDict.Remove(component.NetID.Value);
+
+                // mark the owning entity as dirty for networking
+                component.Owner.Dirty();
             }
         }
 

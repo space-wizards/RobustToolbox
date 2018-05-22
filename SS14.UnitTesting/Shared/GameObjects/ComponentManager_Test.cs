@@ -20,7 +20,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
         public void ObsAddComponentOldTest()
         {
             // Arrange
-            var manager = ManagerFactory();
+            var manager = ManagerFactory(out _);
             var component = new DummyComponent();
 
             // Act
@@ -36,7 +36,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
         public void ObsDeleteComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory();
+            var manager = ManagerFactory(out _);
 
             var mockComponent = new Mock<IComponent>();
             mockComponent.SetupGet(c => c.Deleted).Returns(true); // mark comp for deletion
@@ -55,7 +55,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
         public void ObsCullTest()
         {
             // Arrange
-            var manager = ManagerFactory();
+            var manager = ManagerFactory(out _);
 
             var mockComponent = new Mock<IComponent>();
             var component = mockComponent.Object;
@@ -73,7 +73,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
         public void ObsUpdateTest()
         {
             // Arrange
-            var manager = ManagerFactory();
+            var manager = ManagerFactory(out _);
 
             var mockComponent = new Mock<IComponent>();
             var component = mockComponent.Object;
@@ -92,9 +92,8 @@ namespace SS14.UnitTesting.Shared.GameObjects
         public void AddComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory();
-
-            var entity = EntityFactory();
+            var manager = ManagerFactory(out var entityManager);
+            var entity = EntityFactory(entityManager);
             var component = new DummyComponent();
             component.Owner = entity;
 
@@ -110,9 +109,8 @@ namespace SS14.UnitTesting.Shared.GameObjects
         public void AddComponentOverwriteTest()
         {
             // Arrange
-            var manager = ManagerFactory();
-
-            var entity = EntityFactory();
+            var manager = ManagerFactory(out var entityManager);
+            var entity = EntityFactory(entityManager);
             var component = new DummyComponent();
             component.Owner = entity;
             manager.AddComponent(entity, new DummyComponent
@@ -132,9 +130,8 @@ namespace SS14.UnitTesting.Shared.GameObjects
         public void HasComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory();
-
-            var entity = EntityFactory();
+            var manager = ManagerFactory(out var entityManager);
+            var entity = EntityFactory(entityManager);
             var component = new DummyComponent();
             component.Owner = entity;
             manager.AddComponent(entity, component);
@@ -150,9 +147,8 @@ namespace SS14.UnitTesting.Shared.GameObjects
         public void HasNetComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory();
-
-            var entity = EntityFactory();
+            var manager = ManagerFactory(out var entityManager);
+            var entity = EntityFactory(entityManager);
             var component = new DummyComponent();
             component.Owner = entity;
             manager.AddComponent(entity, component);
@@ -168,9 +164,8 @@ namespace SS14.UnitTesting.Shared.GameObjects
         public void GetNetComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory();
-
-            var entity = EntityFactory();
+            var manager = ManagerFactory(out var entityManager);
+            var entity = EntityFactory(entityManager);
             var component = new DummyComponent();
             component.Owner = entity;
             manager.AddComponent(entity, component);
@@ -186,9 +181,8 @@ namespace SS14.UnitTesting.Shared.GameObjects
         public void TryGetComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory();
-
-            var entity = EntityFactory();
+            var manager = ManagerFactory(out var entityManager);
+            var entity = EntityFactory(entityManager);
             var component = new DummyComponent();
             component.Owner = entity;
             manager.AddComponent(entity, component);
@@ -205,9 +199,8 @@ namespace SS14.UnitTesting.Shared.GameObjects
         public void TryGetNetComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory();
-
-            var entity = EntityFactory();
+            var manager = ManagerFactory(out var entityManager);
+            var entity = EntityFactory(entityManager);
             var component = new DummyComponent();
             component.Owner = entity;
             manager.AddComponent(entity, component);
@@ -224,9 +217,8 @@ namespace SS14.UnitTesting.Shared.GameObjects
         public void RemoveComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory();
-
-            var entity = EntityFactory();
+            var manager = ManagerFactory(out var entityManager);
+            var entity = EntityFactory(entityManager);
             var component = new DummyComponent();
             component.Owner = entity;
             manager.AddComponent(entity, component);
@@ -243,9 +235,8 @@ namespace SS14.UnitTesting.Shared.GameObjects
         public void RemoveNetComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory();
-
-            var entity = EntityFactory();
+            var manager = ManagerFactory(out var entityManager);
+            var entity = EntityFactory(entityManager);
             var component = new DummyComponent();
             component.Owner = entity;
             manager.AddComponent(entity, component);
@@ -262,9 +253,8 @@ namespace SS14.UnitTesting.Shared.GameObjects
         public void GetComponentsTest()
         {
             // Arrange
-            var manager = ManagerFactory();
-
-            var entity = EntityFactory();
+            var manager = ManagerFactory(out var entityManager);
+            var entity = EntityFactory(entityManager);
             var component = new DummyComponent();
             component.Owner = entity;
             manager.AddComponent(entity, component);
@@ -281,7 +271,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
         #endregion
 
         // mimics the IoC system.
-        private static IComponentManager ManagerFactory()
+        private static IComponentManager ManagerFactory(out IEntityManager entityManager)
         {
             var manager = new ComponentManager();
 
@@ -314,6 +304,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
             // call PostInject on manager
             ((IPostInjectInit)manager).PostInject();
 
+            entityManager = mockEntMan.Object;
             return manager;
         }
 
@@ -329,9 +320,10 @@ namespace SS14.UnitTesting.Shared.GameObjects
             public override uint? NetID => CompNetId;
         }
 
-        private static IEntity EntityFactory()
+        private static IEntity EntityFactory(IEntityManager entityManager)
         {
             var mockEnt = new Mock<IEntity>();
+            mockEnt.SetupGet(x => x.EntityManager).Returns(entityManager);
             mockEnt.SetupGet(x => x.Uid).Returns(new EntityUid(7));
             mockEnt.Setup(x => x.IsValid()).Returns(true);
             return mockEnt.Object;

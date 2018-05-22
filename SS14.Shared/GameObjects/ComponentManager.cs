@@ -207,15 +207,25 @@ namespace SS14.Shared.GameObjects
             if(component == null)
                 throw new ArgumentNullException(nameof(component));
 
-            if (!_deleteList.Contains(component))
+            if (component.Deleted)
+                throw new ArgumentException("Component has already been deleted.", nameof(component));
+            
+            _deleteList.Add(component);
+
+            if(component.Running)
+                component.Shutdown();
+
+            component.OnRemove();
+        }
+
+        public void CullDeletedComponents()
+        {
+            foreach (var component in _deleteList)
             {
-                _deleteList.Add(component);
-
-                if(component.Running)
-                    component.Shutdown();
-
-                component.OnRemove();
+                DeleteComponent(component);
             }
+
+            _deleteList.Clear();
         }
 
         private void DeleteComponent(Component component)
@@ -333,14 +343,6 @@ namespace SS14.Shared.GameObjects
         public IEnumerable<T> GetComponents<T>(EntityUid uid)
         {
             return GetComponents(uid).OfType<T>();
-        }
-
-        public void CullDeletedComponents()
-        {
-            foreach (var component in _deleteList)
-            {
-                DeleteComponent(component);
-            }
         }
         
         #endregion

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
@@ -46,7 +45,7 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public virtual void OnRemove()
         {
-            // Component manager will cull us because we've set ourselves to deleted.
+            // We have been marked for deletion by the Component Manager.
             Deleted = true;
         }
 
@@ -129,12 +128,6 @@ namespace SS14.Shared.GameObjects
 
         /// <inheritdoc />
         public virtual void HandleComponentState(ComponentState state)
-        {
-        }
-
-        /// <inheritdoc />
-        [Obsolete("Use HandleMessage")]
-        public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
         }
     }

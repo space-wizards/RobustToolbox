@@ -107,6 +107,28 @@ namespace SS14.UnitTesting.Shared.GameObjects
         }
 
         [Test]
+        public void AddComponentOverwriteTest()
+        {
+            // Arrange
+            var manager = ManagerFactory();
+
+            var entity = EntityFactory();
+            var component = new DummyComponent();
+            component.Owner = entity;
+            manager.AddComponent(entity, new DummyComponent
+            {
+                Owner = entity
+            });
+
+            // Act
+            manager.AddComponent(entity, component, true);
+
+            // Assert
+            var result = manager.GetComponent<DummyComponent>(entity.Uid);
+            Assert.That(result, Is.EqualTo(component));
+        }
+
+        [Test]
         public void HasComponentTest()
         {
             // Arrange

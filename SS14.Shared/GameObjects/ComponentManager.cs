@@ -130,7 +130,7 @@ namespace SS14.Shared.GameObjects
             return (T)newComponent;
         }
 
-        public void AddComponent(IEntity entity, Component component)
+        public void AddComponent(IEntity entity, Component component, bool overwrite = false)
         {
             if (entity == null || !entity.IsValid())
                 throw new ArgumentException("Entity is not valid.", nameof(entity));
@@ -150,7 +150,15 @@ namespace SS14.Shared.GameObjects
                 if (!TryGetComponent(entity.Uid, type, out var duplicate))
                     continue;
 
-                throw new InvalidOperationException($"Component reference type {type} already occupied by {duplicate}");
+                if(!overwrite)
+                    throw new InvalidOperationException($"Component reference type {type} already occupied by {duplicate}");
+
+                if (component.Running)
+                    component.Shutdown();
+
+                component.OnRemove();
+
+                DeleteComponent(component);
             }
 
             // add the component to the grid

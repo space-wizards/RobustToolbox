@@ -37,7 +37,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         #region Component Management
 
         T AddComponent<T>(IEntity entity) where T : Component, new();
-        void AddComponent(IEntity entity, Component component);
+        void AddComponent(IEntity entity, Component component, bool overwrite = false);
 
         void RemoveComponent<T>(EntityUid uid);
         void RemoveComponent(EntityUid uid, Type type);

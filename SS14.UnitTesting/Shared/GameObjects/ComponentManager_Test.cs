@@ -211,6 +211,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
 
             // Act
             manager.RemoveComponent<DummyComponent>(entity.Uid);
+            manager.CullDeletedComponents();
 
             // Assert
             Assert.That(manager.HasComponent(entity.Uid, component.GetType()), Is.False);
@@ -229,6 +230,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
 
             // Act
             manager.RemoveComponent(entity.Uid, CompNetId);
+            manager.CullDeletedComponents();
 
             // Assert
             Assert.That(manager.HasComponent(entity.Uid, component.GetType()), Is.False);

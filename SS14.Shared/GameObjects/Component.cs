@@ -46,7 +46,6 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public virtual void OnRemove()
         {
-            Owner = null;
             // Component manager will cull us because we've set ourselves to deleted.
             Deleted = true;
         }

@@ -58,6 +58,8 @@ namespace SS14.Shared.Interfaces.GameObjects
         IEnumerable<IComponent> GetComponents(EntityUid uid);
         IEnumerable<T> GetComponents<T>(EntityUid uid);
 
+        void CullDeletedComponents();
+
         #endregion
     }
 }

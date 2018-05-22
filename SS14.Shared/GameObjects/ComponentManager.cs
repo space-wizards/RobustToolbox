@@ -27,6 +27,8 @@ namespace SS14.Shared.GameObjects
         private readonly Dictionary<EntityUid, Dictionary<uint, Component>> _netComponents
             = new Dictionary<EntityUid, Dictionary<uint, Component>>(EntityCapacity);
 
+        private readonly List<Component> _deleteList = new List<Component>();
+
         [Dependency]
         private readonly IComponentFactory ComponentFactory;
 
@@ -191,28 +193,50 @@ namespace SS14.Shared.GameObjects
         public void RemoveComponent(EntityUid uid, Type type)
         {
             var component = GetComponent(uid, type);
-            var reg = ComponentFactory.GetRegistration(type);
-
-            EntityManager.RemoveSubscribedEvents(component);
-            component.OnRemove();
-
-            foreach (var refType in reg.References)
-            {
-                var typeDict = _dictComponents[refType];
-                typeDict.Remove(uid);
-            }
-
-            if (component.NetID != null)
-            {
-                var netDict = _netComponents[uid];
-                netDict.Remove(component.NetID.Value);
-            }
+            RemoveComponent(component as Component);
         }
 
         public void RemoveComponent(EntityUid uid, uint netID)
         {
             var comp = GetComponent(uid, netID);
-            RemoveComponent(uid, comp.GetType());
+            RemoveComponent(comp as Component);
+        }
+
+        private void RemoveComponent(Component component)
+        {
+            if(component == null)
+                throw new ArgumentNullException(nameof(component));
+
+            if (!_deleteList.Contains(component))
+            {
+                _deleteList.Add(component);
+
+                if(component.Running)
+                    component.Shutdown();
+
+                component.OnRemove();
+            }
+        }
+
+        private void DeleteComponent(Component component)
+        {
+            var reg = ComponentFactory.GetRegistration(component.GetType());
+
+            EntityManager.RemoveSubscribedEvents(component);
+
+            var entityUid = component.Owner.Uid;
+
+            foreach (var refType in reg.References)
+            {
+                var typeDict = _dictComponents[refType];
+                typeDict.Remove(entityUid);
+            }
+
+            if (component.NetID != null)
+            {
+                var netDict = _netComponents[entityUid];
+                netDict.Remove(component.NetID.Value);
+            }
         }
 
         public bool HasComponent<T>(EntityUid uid)
@@ -311,6 +335,14 @@ namespace SS14.Shared.GameObjects
             return GetComponents(uid).OfType<T>();
         }
 
+        public void CullDeletedComponents()
+        {
+            foreach (var component in _deleteList)
+            {
+                DeleteComponent(component);
+            }
+        }
+        
         #endregion
     }
 }

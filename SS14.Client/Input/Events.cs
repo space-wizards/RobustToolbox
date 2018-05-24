@@ -73,7 +73,7 @@ namespace SS14.Client.Input
 
         public static explicit operator KeyEventArgs(Godot.InputEventKey args)
         {
-            return new KeyEventArgs((Keyboard.Key)args.Scancode,
+            return new KeyEventArgs(Keyboard.GonvertGodotKey(args.Scancode),
                                     (UInt32)args.Unicode,
                                     args.Alt,
                                     args.Control,
@@ -126,7 +126,7 @@ namespace SS14.Client.Input
             get
             {
                 ClickType type = ClickType.None;
-                switch(Button)
+                switch (Button)
                 {
                     case Mouse.Button.Left:
                         type = ClickType.Left;

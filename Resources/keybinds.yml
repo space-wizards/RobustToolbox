@@ -1,0 +1,5 @@
+version: 1 # Not used right now, whatever.
+binds:
+- function: "ShowDebugMonitors"
+  key: F3
+  type: Toggle

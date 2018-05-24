@@ -15,6 +15,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Log;
 using SS14.Client.State.States;
 using SS14.Shared.ContentPack;
+using SS14.Shared.Input;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;

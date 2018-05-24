@@ -35,10 +35,6 @@ namespace SS14.Client.Interfaces.UserInterface
 
         void Popup(string contents, string title = "Alert!");
 
-        void UnhandledKeyDown(KeyEventArgs args);
-
-        void UnhandledKeyUp(KeyEventArgs args);
-
         void UnhandledMouseDown(MouseButtonEventArgs args);
 
         void UnhandledMouseUp(MouseButtonEventArgs args);

@@ -7,10 +7,10 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public class BoundKeyChangedMessage : EntitySystemMessage
     {
-        public BoundKeyFunctions Function { get; }
+        public BoundKeyFunction Function { get; }
         public BoundKeyState State { get; }
 
-        public BoundKeyChangedMessage(BoundKeyFunctions function, BoundKeyState state)
+        public BoundKeyChangedMessage(BoundKeyFunction function, BoundKeyState state)
         {
             Function = function;
             State = state;

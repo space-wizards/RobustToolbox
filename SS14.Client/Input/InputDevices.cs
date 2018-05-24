@@ -63,7 +63,8 @@ namespace SS14.Client.Input
         /// <summary>
         ///     Represents a key on the keyboard.
         /// </summary>
-        public enum Key : int
+        // This enum HAS to be a byte for the input system bitflag fuckery to work.
+        public enum Key : byte
         {
             Unknown = 0,
             A,
@@ -174,11 +175,12 @@ namespace SS14.Client.Input
         public static Key GonvertGodotKey(int key)
         {
             // As far as I can tell, Godot's KeyList has complete arbitrary ordering. Seriously.
-            // They don't even prevent overlap if you remove the SPKEY flag.
+            // They don't even prevent overlap if you remove the SPKEY flag (they totally could too...).
             // The macOS, X11 and Windows platform layers *all* have scancode translation tables so it literally can't be "oh they took them from X11!"
             // Also there are dumb scan codes like YACCUTE which *literally don't get fired ever*.
             switch ((Godot.KeyList)key)
             {
+                // Dear mother of .NET optimize this nicely for me.
                 case Godot.KeyList.A:
                     return Key.A;
                 case Godot.KeyList.B:

@@ -54,21 +54,6 @@ namespace SS14.Client.State
         #endregion Updates & Statechanges
         #region Input
 
-        public void KeyDown(KeyEventArgs e)
-        {
-            CurrentState?.KeyDown(e);
-        }
-
-        public void KeyUp(KeyEventArgs e)
-        {
-            CurrentState?.KeyUp(e);
-        }
-
-        public void KeyHeld(KeyEventArgs e)
-        {
-            CurrentState?.KeyHeld(e);
-        }
-
         public void MouseUp(MouseButtonEventArgs e)
         {
             CurrentState?.MouseUp(e);

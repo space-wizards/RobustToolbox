@@ -67,6 +67,30 @@ namespace SS14.Client.State.States
             };
             escapeMenu.AddToScreen();
 
+            var escapeMenuCommand = InputCommand.FromDelegate(() =>
+            {
+                if (escapeMenu.Visible)
+                {
+                    if (escapeMenu.IsAtFront())
+                    {
+                        escapeMenu.Visible = false;
+                    }
+                    else
+                    {
+                        escapeMenu.MoveToFront();
+                    }
+                }
+                else
+                {
+                    escapeMenu.OpenCentered();
+                }
+            });
+            inputManager.SetInputCommand(EngineKeyFunctions.EscapeMenu, escapeMenuCommand);
+            inputManager.SetInputCommand(EngineKeyFunctions.FocusChat, InputCommand.FromDelegate(() =>
+            {
+                _gameChat.Input.GrabFocus();
+            }));
+
             _gameChat = new Chatbox();
             userInterfaceManager.StateRoot.AddChild(_gameChat);
             _gameChat.TextSubmitted += console.ParseChatMessage;
@@ -93,6 +117,9 @@ namespace SS14.Client.State.States
                     mapManager.DeleteMap(map.Index);
                 }
             }
+
+            inputManager.SetInputCommand(EngineKeyFunctions.EscapeMenu, null);
+            inputManager.SetInputCommand(EngineKeyFunctions.FocusChat, null);
         }
 
         public override void Update(ProcessFrameEventArgs e)
@@ -106,43 +133,6 @@ namespace SS14.Client.State.States
         {
             placementManager.FrameUpdate(e);
             _entityManager.FrameUpdate(e.Elapsed);
-        }
-
-        public override void KeyDown(KeyEventArgs e)
-        {
-            if (e.Key == Keyboard.Key.Escape)
-            {
-                if (escapeMenu.Visible)
-                {
-                    if (escapeMenu.IsAtFront())
-                    {
-                        escapeMenu.Visible = false;
-                    }
-                    else
-                    {
-                        escapeMenu.MoveToFront();
-                    }
-                }
-                else
-                {
-                    escapeMenu.OpenCentered();
-                }
-
-                e.Handle();
-                return;
-            }
-
-            if (e.Key == Keyboard.Key.T && !_gameChat.Input.HasFocus() && !(userInterfaceManager.Focused is LineEdit))
-            {
-                _gameChat.Input.GrabFocus();
-            }
-
-            inputManager.KeyDown(e);
-        }
-
-        public override void KeyUp(KeyEventArgs e)
-        {
-            inputManager.KeyUp(e);
         }
 
         public override void MouseDown(MouseButtonEventArgs eventargs)
@@ -221,7 +211,8 @@ namespace SS14.Client.State.States
                     UID = entityToClick.Uid;
 
                 ClickEventMessage message = new ClickEventMessage(UID, clicktype, mousePosWorld);
-                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<InputSystem>().RaiseClick(message);
+                //IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<InputSystem>().RaiseClick(message);
+                // TODO: CLICKING
             }
         }
 

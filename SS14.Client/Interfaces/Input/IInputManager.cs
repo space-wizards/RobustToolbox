@@ -3,9 +3,13 @@ using SS14.Shared.IoC;
 using System;
 using SS14.Client.Input;
 using SS14.Shared.Maths;
+using SS14.Shared.Input;
 
 namespace SS14.Client.Interfaces.Input
 {
+    /// <summary>
+    ///     Manages key bindings, input commands and other misc. input systems.
+    /// </summary>
     public interface IInputManager
     {
         bool Enabled { get; set; }
@@ -17,7 +21,26 @@ namespace SS14.Client.Interfaces.Input
         void KeyDown(KeyEventArgs e);
         void KeyUp(KeyEventArgs e);
 
-        event EventHandler<BoundKeyEventArgs> BoundKeyDown;
-        event EventHandler<BoundKeyEventArgs> BoundKeyUp;
+        /// <summary>
+        ///     Gets a key binding according to the function it is bound to.
+        /// </summary>
+        /// <param name="function">The function the key binding is bound to.</param>
+        /// <returns>The key binding.</returns>
+        IKeyBinding GetKeyBinding(BoundKeyFunction function);
+        bool TryGetKeyBinding(BoundKeyFunction function, out IKeyBinding binding);
+
+        /// <summary>
+        ///     Returns the input command bound to a key function.
+        /// </summary>
+        /// <param name="function">The key function to find the bound input command for.</param>
+        /// <returns>An input command, if any. Null if no command is set.</returns>
+        InputCommand GetInputCommand(BoundKeyFunction function);
+
+        void SetInputCommand(BoundKeyFunction function, InputCommand command);
+
+
+        event Action<BoundKeyFunction> OnKeyBindDown;
+        event Action<BoundKeyFunction> OnKeyBindUp;
+        event Action<BoundKeyEventArgs> OnKeyBindStateChanged;
     }
 }

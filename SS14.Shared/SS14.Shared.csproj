@@ -269,7 +269,10 @@
     <Compile Include="Physics\CollidablePoint.cs" />
     <Compile Include="Physics\CollisionManager.cs" />
     <Compile Include="Enums\PlacementInformation.cs" />
+    <Compile Include="Input\InputCommand.cs" />
     <Compile Include="Input\KeyFunctions.cs" />
+    <Compile Include="Input\SharedInputManager.cs" />
+    <Compile Include="Input\BoundKeyEventArgs.cs" />
     <Compile Include="Physics\RayCastResults.cs" />
     <Compile Include="Players\PlayerIndex.cs" />
     <Compile Include="Timing\FrameEventArgs.cs" />

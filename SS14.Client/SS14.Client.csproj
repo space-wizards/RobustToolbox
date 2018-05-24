@@ -112,7 +112,6 @@
     <Compile Include="GameObjects\Components\Collidable\CollidableComponent.cs" />
     <Compile Include="GameObjects\Components\Icon\IconComponent.cs" />
     <Compile Include="GameObjects\Components\Input\ClickableComponent.cs" />
-    <Compile Include="GameObjects\Components\Input\KeybindingInputComponent.cs" />
     <Compile Include="GameObjects\Components\Light\PointLightComponent.cs" />
     <Compile Include="GameObjects\Components\Mover\PlayerInputMoverComponent.cs" />
     <Compile Include="GameObjects\Components\Occluder\OccluderComponent.cs" />
@@ -120,7 +119,6 @@
     <Compile Include="GameObjects\Components\Transform\GodotTransformComponent.cs" />
     <Compile Include="GameObjects\Components\Transform\ClientTransformComponent.cs" />
     <Compile Include="GameObjects\EntitySystems\EffectSystem.cs" />
-    <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
     <Compile Include="GameObjects\Components\Renderable\Speechbubble.cs" />
     <Compile Include="GameObjects\Components\Renderable\SpriteComponent.cs" />
     <Compile Include="Console\Commands\ConsoleCommands.cs" />
@@ -187,7 +185,6 @@
     <Compile Include="State\State.cs" />
     <Compile Include="State\StateManager.cs" />
     <Compile Include="State\States\MainMenu.cs" />
-    <Compile Include="Input\KeyParsing.cs" />
     <Compile Include="Input\Events.cs" />
     <Compile Include="Input\InputDevices.cs" />
     <Compile Include="Player\LocalPlayer.cs" />
@@ -223,6 +220,7 @@
     <Compile Include="Interfaces\IGameControllerProxy.cs" />
     <Compile Include="Interfaces\IGameController.cs" />
     <Compile Include="Interfaces\Input\IInputManager.cs" />
+    <Compile Include="Interfaces\Input\IKeyBinding.cs" />
     <Compile Include="Input\InputManager.cs" />
     <Compile Include="Input\GodotInputManager.cs" />
     <Compile Include="State\States\LobbyMenu.cs" />
@@ -233,7 +231,6 @@
     <Compile Include="Debugging\DebugDrawing.cs" />
     <Compile Include="Interfaces\Debugging\IDebugDrawing.cs" />
     <Compile Include="Interfaces\Graphics\IDisplayManager.cs" />
-    <Compile Include="Input\BoundKeyEventArgs.cs" />
     <Compile Include="Interfaces\Graphics\ClientEye\IEyeManager.cs" />
     <Compile Include="Interfaces\Graphics\ClientEye\IEye.cs" />
     <Compile Include="Graphics\ClientEye\EyeManager.cs" />

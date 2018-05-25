@@ -3,10 +3,10 @@ using SS14.Shared.Serialization;
 
 namespace SS14.Shared.Input
 {
-    public enum BoundKeyState
+    public enum BoundKeyState : byte
     {
-        Up,
-        Down,
+        Up = 0,
+        Down = 1,
     }
 
     [KeyFunctions]
@@ -35,6 +35,11 @@ namespace SS14.Shared.Input
         public static implicit operator BoundKeyFunction(string name)
         {
             return new BoundKeyFunction(name);
+        }
+
+        public override string ToString()
+        {
+            return $"KeyFunction({FunctionName})";
         }
 
         #region Code for easy equality and sorting.
@@ -79,7 +84,6 @@ namespace SS14.Shared.Input
     /// <summary>
     ///     Makes all constant strings on this static class be added as input functions.
     /// </summary>
-    /// <seealso cref="SharedInputManager" />
     [AttributeUsage(AttributeTargets.Class)]
     public class KeyFunctionsAttribute : Attribute
     {

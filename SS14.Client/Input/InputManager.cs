@@ -2,29 +2,39 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface.Controls;
-using SS14.Shared.Interfaces;
 using SS14.Shared.Input;
+using SS14.Shared.Interfaces;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using SS14.Shared.Maths;
+using SS14.Shared.Network.Messages;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
-using System.Text;
 
 namespace SS14.Client.Input
 {
-    public class InputManager : SharedInputManager, IInputManager
+    public class InputManager : IInputManager
     {
         public bool Enabled { get; set; } = true;
 
         public virtual Vector2 MouseScreenPosition => Vector2.Zero;
 
         [Dependency]
-        private readonly IUserInterfaceManager userInterfaceManager;
+        readonly IUserInterfaceManager userInterfaceManager;
         [Dependency]
-        private readonly IResourceManager _resourceMan;
+        readonly IResourceManager _resourceMan;
+        [Dependency]
+        readonly IClientNetManager _netManager;
+        [Dependency]
+        readonly IReflectionManager _reflectionManager;
+
+        private BoundKeyMap keyMap;
 
         private readonly Dictionary<BoundKeyFunction, InputCommand> _commands = new Dictionary<BoundKeyFunction, InputCommand>();
         private readonly List<KeyBinding> _bindings = new List<KeyBinding>();
@@ -36,13 +46,17 @@ namespace SS14.Client.Input
 
         public void Initialize()
         {
-            PopulateKeyFunctionsMap();
+            keyMap = new BoundKeyMap(_reflectionManager);
+            keyMap.PopulateKeyFunctionsMap();
+
             LoadKeyFile(new ResourcePath("/keybinds.yml"));
             var path = new ResourcePath("/keybinds_content.yml");
             if (_resourceMan.ContentFileExists(path))
             {
                 LoadKeyFile(path);
             }
+
+            _netManager.RegisterNetMessage<MsgKeyFunctionStateChange>(MsgKeyFunctionStateChange.NAME);
         }
 
         public void KeyDown(KeyEventArgs args)
@@ -98,14 +112,11 @@ namespace SS14.Client.Input
 
         private void DownBind(KeyBinding binding)
         {
-            var cmd = GetInputCommand(binding.Function);
             if (binding.State == BoundKeyState.Down)
             {
                 if (binding.BindingType == KeyBindingType.Toggle)
                 {
-                    binding.State = BoundKeyState.Up;
-                    OnKeyBindUp?.Invoke(binding.Function);
-                    cmd?.Disabled();
+                    SetBindState(binding, BoundKeyState.Up);
                 }
                 else
                 {
@@ -114,12 +125,8 @@ namespace SS14.Client.Input
             }
             else
             {
-                binding.State = BoundKeyState.Down;
-                OnKeyBindDown?.Invoke(binding.Function);
-                cmd?.Enabled();
+                SetBindState(binding, BoundKeyState.Down);
             }
-
-            OnKeyBindStateChanged?.Invoke(new BoundKeyEventArgs(binding.Function, binding.State));
         }
 
         private void UpBind(KeyBinding binding)
@@ -129,12 +136,29 @@ namespace SS14.Client.Input
                 return;
             }
 
-            binding.State = BoundKeyState.Up;
-            OnKeyBindUp?.Invoke(binding.Function);
-            OnKeyBindStateChanged?.Invoke(new BoundKeyEventArgs(binding.Function, BoundKeyState.Up));
+            SetBindState(binding, BoundKeyState.Up);
+        }
 
+        private void SetBindState(KeyBinding binding, BoundKeyState state)
+        {
+            binding.State = state;
             var cmd = GetInputCommand(binding.Function);
-            cmd?.Disabled();
+            OnKeyBindStateChanged?.Invoke(new BoundKeyEventArgs(binding.Function, binding.State));
+            if (state == BoundKeyState.Up)
+            {
+                OnKeyBindUp?.Invoke(binding.Function);
+                cmd?.Disabled();
+            }
+            else
+            {
+                OnKeyBindDown?.Invoke(binding.Function);
+                cmd?.Enabled();
+            }
+
+            var msg = _netManager.CreateNetMessage<MsgKeyFunctionStateChange>();
+            msg.KeyFunction = keyMap.KeyFunctionID(binding.Function);
+            msg.NewState = state;
+            _netManager.ClientSendMessage(msg);
         }
 
         private bool PackedMatchesPressedState(int packedKeyCombo)
@@ -220,6 +244,11 @@ namespace SS14.Client.Input
             foreach (var keyMapping in mapping.GetNode<YamlSequenceNode>("binds").Cast<YamlMappingNode>())
             {
                 var function = keyMapping.GetNode("function").AsString();
+                if (!keyMap.FunctionExists(function))
+                {
+                    Logger.ErrorS("input", "Key function in {0} does not exist: '{1}'", yamlFile, function);
+                    continue;
+                }
                 var key = keyMapping.GetNode("key").AsEnum<Keyboard.Key>();
                 var type = keyMapping.GetNode("type").AsEnum<KeyBindingType>();
 

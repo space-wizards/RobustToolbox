@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using SS14.Shared.Maths;
+using SS14.Shared.Serialization;
 
 namespace SS14.Shared.GameObjects
 {
-    [Serializable]
+    [Serializable, NetSerializable]
     public class SpriteComponentState : ComponentState
     {
         public readonly bool Visible;

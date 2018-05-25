@@ -124,11 +124,11 @@ namespace SS14.Client
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
 
             eyeManager.Initialize();
-            inputManager.Initialize();
             _serializer.Initialize();
             _userInterfaceManager.Initialize();
             _tileDefinitionManager.Initialize();
             _networkManager.Initialize(false);
+            inputManager.Initialize();
             _console.Initialize();
             _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
             _prototypeManager.Resync();

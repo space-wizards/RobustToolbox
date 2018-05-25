@@ -19,6 +19,8 @@ namespace SS14.Server.Interfaces.Player
 
         PlayerIndex Index { get; }
 
+        IPlayerInput Input { get; }
+
         event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
 
         void JoinLobby();
@@ -27,7 +29,7 @@ namespace SS14.Server.Interfaces.Player
         void SetName(string name);
 
         void AttachToEntity(IEntity a);
-        
+
         void DetachFromEntity();
         void OnConnect();
         void OnDisconnect();

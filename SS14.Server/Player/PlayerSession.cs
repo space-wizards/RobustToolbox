@@ -36,6 +36,8 @@ namespace SS14.Server.Player
 
             ConnectedClient = client;
 
+            Input = new PlayerInput();
+
             UpdatePlayerState();
         }
 
@@ -72,6 +74,9 @@ namespace SS14.Server.Player
         /// <inheritdoc />
         public PlayerIndex Index { get; }
 
+        public PlayerInput Input { get; }
+        IPlayerInput IPlayerSession.Input => Input;
+
         /// <inheritdoc />
         public event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
 
@@ -91,19 +96,17 @@ namespace SS14.Server.Player
         {
             DetachFromEntity();
 
-            //Add input component.
-            a.AddComponent<KeyBindingInputComponent>();
-
+            var actorComponent = a.AddComponent<BasicActorComponent>();
             if (a.HasComponent<IMoverComponent>())
             {
                 a.RemoveComponent<IMoverComponent>();
             }
             a.AddComponent<PlayerInputMoverComponent>();
 
-            var actorComponent = a.AddComponent<BasicActorComponent>();
             actorComponent.playerSession = this;
 
             AttachedEntity = a;
+            a.SendMessage(actorComponent, new PlayerAttachedMsg(this));
             SendAttachMessage();
             SetAttachedEntityName();
             UpdatePlayerState();
@@ -112,9 +115,12 @@ namespace SS14.Server.Player
         /// <inheritdoc />
         public void DetachFromEntity()
         {
-            if (AttachedEntity == null) return;
+            if (AttachedEntity == null)
+            {
+                return;
+            }
 
-            AttachedEntity.RemoveComponent<KeyBindingInputComponent>();
+            AttachedEntity.SendMessage(AttachedEntity.GetComponent<BasicActorComponent>(), new PlayerDetachedMsg(this));
             AttachedEntity.RemoveComponent<PlayerInputMoverComponent>();
             AttachedEntity.RemoveComponent<BasicActorComponent>();
             AttachedEntity = null;

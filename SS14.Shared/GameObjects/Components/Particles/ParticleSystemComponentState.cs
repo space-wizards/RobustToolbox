@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using SS14.Shared.Serialization;
 
 namespace SS14.Shared.GameObjects
 {
-    [Serializable]
+    [Serializable, NetSerializable]
     public class ParticleSystemComponentState : ComponentState
     {
         private readonly Dictionary<string, bool> _emitters;

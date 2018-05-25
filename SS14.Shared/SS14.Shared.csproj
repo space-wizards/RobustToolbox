@@ -271,7 +271,6 @@
     <Compile Include="Enums\PlacementInformation.cs" />
     <Compile Include="Input\InputCommand.cs" />
     <Compile Include="Input\KeyFunctions.cs" />
-    <Compile Include="Input\SharedInputManager.cs" />
     <Compile Include="Input\BoundKeyEventArgs.cs" />
     <Compile Include="Physics\RayCastResults.cs" />
     <Compile Include="Players\PlayerIndex.cs" />
@@ -341,6 +340,8 @@
     <Compile Include="IoC\Exceptions\UnregisteredDependencyException.cs" />
     <Compile Include="IoC\Exceptions\UnregisteredTypeException.cs" />
     <Compile Include="GameObjects\Components\NetIDs.cs" />
+    <Compile Include="Network\Messages\MsgKeyFunctionChangeState.cs" />
+    <Compile Include="Input\BoundKeyMap.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

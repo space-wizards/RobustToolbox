@@ -211,8 +211,7 @@ namespace SS14.Client.State.States
                     UID = entityToClick.Uid;
 
                 ClickEventMessage message = new ClickEventMessage(UID, clicktype, mousePosWorld);
-                //IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<InputSystem>().RaiseClick(message);
-                // TODO: CLICKING
+                IoCManager.Resolve<IEntityNetworkManager>().SendSystemNetworkMessage(message);
             }
         }
 

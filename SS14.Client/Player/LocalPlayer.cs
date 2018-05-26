@@ -106,6 +106,7 @@ namespace SS14.Client.Player
             transform.OnMove += OnPlayerMoved;
 
             EntityAttached?.Invoke(this, EventArgs.Empty);
+            entity.SendMessage(null, new PlayerAttachedMsg());
         }
 
         /// <summary>
@@ -121,6 +122,7 @@ namespace SS14.Client.Player
                 var transform = ControlledEntity.GetComponent<ITransformComponent>();
                 if (transform != null)
                     transform.OnMove -= OnPlayerMoved;
+                ControlledEntity.SendMessage(null, new PlayerDetachedMsg());
             }
             ControlledEntity = null;
 

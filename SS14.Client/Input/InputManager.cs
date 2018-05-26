@@ -77,7 +77,7 @@ namespace SS14.Client.Input
                 if (PackedMatchesPressedState(binding.PackedKeyCombo))
                 {
                     // this statement *should* always be true first
-                    if (PackedContainsKey(binding.PackedKeyCombo, internalKey)) // first key match becomes pressed
+                    if (matchedCombo == 0 && PackedContainsKey(binding.PackedKeyCombo, internalKey)) // first key match becomes pressed
                     {
                         matchedCombo = binding.PackedKeyCombo;
 
@@ -195,31 +195,29 @@ namespace SS14.Client.Input
             return false;
         }
 
+        private static int PackedModifierCount(int packedCombo)
+        {
+            if ((packedCombo & 0x0000FF00) == 0x00000000) return 0;
+            if ((packedCombo & 0x00FF0000) == 0x00000000) return 1;
+            if ((packedCombo & 0xFF000000) == 0x00000000) return 2;
+            return 3;
+        }
+
         private static bool PackedIsSubPattern(int packedCombo, int subPackedCombo)
         {
-            // TODO: this code is completely incapable of handling subpatterns where the modifiers are in a different order.
-            // If one pattern is a-ctrl-shift, and one is a-ctrl-alt-shift, this won't return true.
-            if (packedCombo == subPackedCombo)
-                return true;
-
-            if ((subPackedCombo & 0x00FFFFFF) == subPackedCombo)
-                return true;
-
-            if ((subPackedCombo & 0x0000FFFF) == subPackedCombo)
-                return true;
-
-            if ((subPackedCombo & 0x000000FF) == subPackedCombo)
-                return true;
-
-            return false;
+            for (var i = 0; i < 32; i += 8)
+            {
+                byte key = (byte)(subPackedCombo >> i);
+                if (!PackedContainsKey(packedCombo, key))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         internal static byte KeyToInternal(Keyboard.Key key)
         {
-            if (key == Keyboard.Key.Unknown)
-            {
-                throw new InvalidOperationException("Cannot handle unknown keys.");
-            }
             return (byte)key;
         }
 
@@ -355,12 +353,22 @@ namespace SS14.Client.Input
                 var combo = 0x00000000;
                 combo |= InputManager.KeyToInternal(baseKey);
 
-                if (mod1 != Keyboard.Key.Unknown)
-                    combo |= InputManager.KeyToInternal(mod1) << 8;
-                if (mod2 != Keyboard.Key.Unknown)
-                    combo |= InputManager.KeyToInternal(mod2) << 16;
-                if (mod3 != Keyboard.Key.Unknown)
-                    combo |= InputManager.KeyToInternal(mod3) << 24;
+                // Modifiers are sorted so that the higher key values are lower in the integer bytes.
+                // Unknown is zero so at the very "top".
+                // More modifiers thus takes precedent with that sort in register,
+                // and order only matters for amount of modifiers, not the modifiers themselves,
+                var int1 = InputManager.KeyToInternal(mod1);
+                var int2 = InputManager.KeyToInternal(mod2);
+                var int3 = InputManager.KeyToInternal(mod3);
+
+                // Use a simplistic bubble sort to sort the key modifiers.
+                if (int1 < int2) (int1, int2) = (int2, int1);
+                if (int2 < int3) (int2, int3) = (int3, int2);
+                if (int1 < int2) (int1, int2) = (int2, int1);
+
+                combo |= int1 << 8;
+                combo |= int2 << 16;
+                combo |= int3 << 24;
 
                 return combo;
             }

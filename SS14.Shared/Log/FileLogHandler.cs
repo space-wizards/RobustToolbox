@@ -7,7 +7,7 @@ namespace SS14.Shared.Log
 {
     public sealed class FileLogHandler : ILogHandler, IDisposable
     {
-        private StreamWriter writer;
+        private readonly StreamWriter writer;
 
         public FileLogHandler(string path)
         {
@@ -23,7 +23,7 @@ namespace SS14.Shared.Log
         public void Log(LogMessage message)
         {
             var name = message.LogLevelToName();
-            writer.WriteLine("{0 }[{1}] {2}: {3}", DateTime.Now.ToString("o"), name, message.SawmillName, message.Message);
+            writer.WriteLine("{0} [{1}] {2}: {3}", DateTime.Now.ToString("o"), name, message.SawmillName, message.Message);
 
             // This probably isn't the best idea.
             // Remove this flush if it becomes a problem (say performance).

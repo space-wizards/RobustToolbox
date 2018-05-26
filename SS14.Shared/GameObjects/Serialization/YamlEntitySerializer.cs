@@ -17,7 +17,7 @@ namespace SS14.Shared.GameObjects.Serialization
         private static readonly Dictionary<Type, TypeSerializer> _typeSerializers;
         private static readonly StructSerializer _structSerializer;
 
-        private bool _setDefaults;
+        private readonly bool _setDefaults;
 
         private readonly YamlSequenceNode _root;
         private YamlMappingNode _entMap;
@@ -27,14 +27,15 @@ namespace SS14.Shared.GameObjects.Serialization
         static YamlEntitySerializer()
         {
             _structSerializer = new StructSerializer();
-            _typeSerializers = new Dictionary<Type, TypeSerializer>();
-
-            _typeSerializers.Add(typeof(Color), new ColorSerializer());
-            _typeSerializers.Add(typeof(MapId), new MapIdSerializer());
-            _typeSerializers.Add(typeof(GridId), new GridIdSerializer());
-            _typeSerializers.Add(typeof(Vector2), new Vector2Serializer());
-            _typeSerializers.Add(typeof(Angle), new AngleSerializer());
-            _typeSerializers.Add(typeof(Box2), new Box2Serializer());
+            _typeSerializers = new Dictionary<Type, TypeSerializer>
+            {
+                { typeof(Color), new ColorSerializer() },
+                { typeof(MapId), new MapIdSerializer() },
+                { typeof(GridId), new GridIdSerializer() },
+                { typeof(Vector2), new Vector2Serializer() },
+                { typeof(Angle), new AngleSerializer() },
+                { typeof(Box2), new Box2Serializer() }
+            };
         }
 
         public YamlEntitySerializer()
@@ -95,7 +96,6 @@ namespace SS14.Shared.GameObjects.Serialization
 
         public override void CompFooter()
         {
-
         }
 
         public override void DataField<T>(ref T value, string name, T defaultValue, bool alwaysWrite = false)
@@ -178,7 +178,7 @@ namespace SS14.Shared.GameObjects.Serialization
             // List<T>
             if (TryGenericListType(type, out var listType))
             {
-                var listNode = (YamlSequenceNode) node;
+                var listNode = (YamlSequenceNode)node;
                 var newList = (IList)Activator.CreateInstance(type);
 
                 foreach (var entryNode in listNode)
@@ -194,7 +194,7 @@ namespace SS14.Shared.GameObjects.Serialization
             if (TryGenericDictType(type, out var keyType, out var valType))
             {
                 var dictNode = (YamlMappingNode)node;
-                var newDict = (IDictionary) Activator.CreateInstance(type);
+                var newDict = (IDictionary)Activator.CreateInstance(type);
 
                 foreach (var kvEntry in dictNode.Children)
                 {

@@ -72,7 +72,10 @@ namespace SS14.Client.Console
         }
 
         /// <inheritdoc />
-        public void Dispose() { }
+        public void Dispose()
+        {
+            // We don't have anything to dispose.
+        }
 
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => _commands;
 
@@ -167,7 +170,7 @@ namespace SS14.Client.Console
             {
                 var instance = (IConsoleCommand)Activator.CreateInstance(t, null);
                 if (_commands.ContainsKey(instance.Command))
-                    throw new Exception($"Command already registered: {instance.Command}");
+                    throw new InvalidOperationException($"Command already registered: {instance.Command}");
 
                 _commands[instance.Command] = instance;
             }

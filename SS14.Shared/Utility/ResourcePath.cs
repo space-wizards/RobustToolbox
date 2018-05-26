@@ -10,7 +10,7 @@ namespace SS14.Shared.Utility
     ///     Provides object-oriented path manipulation for resource paths.
     ///     ResourcePaths are immutable.
     /// </summary>
-    public class ResourcePath
+    public class ResourcePath : IEquatable<ResourcePath>
     {
         /// <summary>
         ///     The separator for the file system of the system we are compiling to.

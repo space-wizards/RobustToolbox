@@ -88,7 +88,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="t">The component reference type to check.</param>
         /// <returns></returns>
-        bool HasComponent(Type t);
+        bool HasComponent(Type type);
 
         /// <summary>
         ///     Retrieves the component of the specified type.

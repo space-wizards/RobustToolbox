@@ -9,7 +9,7 @@ namespace SS14.Client.Log
     /// </summary>
     class DebugConsoleLogHandler : ILogHandler
     {
-        IDebugConsole Console;
+        readonly IDebugConsole Console;
 
         public DebugConsoleLogHandler(IDebugConsole console)
         {

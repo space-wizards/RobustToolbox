@@ -21,7 +21,6 @@ namespace SS14.Client.Interfaces.Player
         void Startup(INetChannel channel);
         void Update(float frameTime);
         void Shutdown();
-        void Destroy();
 
         //void ApplyEffects(RenderImage image);
         void ApplyPlayerStates(IEnumerable<PlayerState> list);

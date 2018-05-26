@@ -265,9 +265,9 @@ namespace SS14.Shared.Map
         }
 
         /// <inheritdoc />
-        public LocalCoordinates LocalToWorld(LocalCoordinates local)
+        public LocalCoordinates LocalToWorld(LocalCoordinates posLocal)
         {
-            return new LocalCoordinates(local.Position + WorldPosition, GridId.DefaultGrid, local.MapID);
+            return new LocalCoordinates(posLocal.Position + WorldPosition, GridId.DefaultGrid, posLocal.MapID);
         }
 
         public Vector2 ConvertToWorld(Vector2 localpos)

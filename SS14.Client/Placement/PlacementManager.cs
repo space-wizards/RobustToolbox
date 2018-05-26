@@ -82,12 +82,12 @@ namespace SS14.Client.Placement
         /// <summary>
         /// Allows various types of placement as singular, line, or grid placement where placement mode allows this type of placement
         /// </summary>
-        public PlacementType _placementType;
+        public PlacementTypes PlacementType { get; set; }
 
         /// <summary>
         /// Holds the anchor that we can try to spawn in a line or a grid from
         /// </summary>
-        public LocalCoordinates StartPoint;
+        public LocalCoordinates StartPoint { get; set; }
 
         /// <summary>
         /// Whether the placement manager is currently in a mode where it accepts actions
@@ -129,19 +129,21 @@ namespace SS14.Client.Placement
                 {
                     var map = value.Components["BoundingBox"];
                     var serializer = new YamlEntitySerializer(map);
-                    serializer.DataField(ref ColliderAABB, "aabb", new Box2(0f, 0f, 0f, 0f));
+                    serializer.DataField(ref _colliderAABB, "aabb", new Box2(0f, 0f, 0f, 0f));
                 }
                 else
                 {
-                    ColliderAABB = new Box2(0f, 0f, 0f, 0f);
+                    _colliderAABB = new Box2(0f, 0f, 0f, 0f);
                 }
             }
         }
 
+        private Box2 _colliderAABB = new Box2(0f, 0f, 0f, 0f);
+
         /// <summary>
         /// The box which certain placement modes collision checks will be done against
         /// </summary>
-        public Box2 ColliderAABB = new Box2(0f, 0f, 0f, 0f);
+        public Box2 ColliderAABB => _colliderAABB;
 
         /// <summary>
         /// The directional to spawn the entity in
@@ -257,19 +259,19 @@ namespace SS14.Client.Placement
         {
             if (IsActive && !Eraser)
             {
-                switch (_placementType)
+                switch (PlacementType)
                 {
-                    case PlacementType.None:
+                    case PlacementTypes.None:
                         RequestPlacement(CurrentMode.MouseCoords);
                         break;
-                    case PlacementType.Line:
+                    case PlacementTypes.Line:
                         foreach (var coordinate in CurrentMode.LineCoordinates())
                         {
                             RequestPlacement(coordinate);
                         }
                         DeactivateSpecialPlacement();
                         break;
-                    case PlacementType.Grid:
+                    case PlacementTypes.Grid:
                         foreach (var coordinate in CurrentMode.GridCoordinates())
                         {
                             RequestPlacement(coordinate);
@@ -409,7 +411,7 @@ namespace SS14.Client.Placement
 
                 CurrentMode.AlignPlacementMode(mouseScreen);
                 StartPoint = CurrentMode.MouseCoords;
-                _placementType = PlacementType.Line;
+                PlacementType = PlacementTypes.Line;
             }
         }
 
@@ -424,15 +426,15 @@ namespace SS14.Client.Placement
 
                 CurrentMode.AlignPlacementMode(mouseScreen);
                 StartPoint = CurrentMode.MouseCoords;
-                _placementType = PlacementType.Grid;
+                PlacementType = PlacementTypes.Grid;
             }
         }
 
         private bool DeactivateSpecialPlacement()
         {
-            if (_placementType != PlacementType.None)
+            if (PlacementType != PlacementTypes.None)
             {
-                _placementType = PlacementType.None;
+                PlacementType = PlacementTypes.None;
                 return true;
             }
             return false;
@@ -552,7 +554,7 @@ namespace SS14.Client.Placement
             NetworkManager.ClientSendMessage(message);
         }
 
-        public enum PlacementType
+        public enum PlacementTypes
         {
             None = 0,
             Line = 1,

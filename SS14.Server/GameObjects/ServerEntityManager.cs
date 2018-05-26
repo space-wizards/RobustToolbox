@@ -24,7 +24,7 @@ namespace SS14.Server.GameObjects
         [Dependency]
         private readonly IMapManager _mapManager;
 
-        private List<(uint tick, EntityUid uid)> DeletionHistory = new List<(uint, EntityUid)>();
+        private readonly List<(uint tick, EntityUid uid)> DeletionHistory = new List<(uint, EntityUid)>();
 
         /// <inheritdoc />
         public bool TrySpawnEntityAt(string entityType, LocalCoordinates coordinates, out IEntity entity)
@@ -67,7 +67,6 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap)
         {
-
             if (!_mapManager.TryGetMap(argMap, out var map))
             {
                 map = _mapManager.DefaultMap;
@@ -243,7 +242,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        #endregion LocationGetters
+        #endregion EntityGetters
 
         /// <inheritdoc />
         public override void Startup()

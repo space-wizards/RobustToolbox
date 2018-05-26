@@ -8,7 +8,6 @@ namespace SS14.Server.GameObjects.Components
     public class AiControllerComponent : Component, IMoverComponent
     {
         private string _logicName;
-        private AiLogicProcessor processor;
         private float _visionRadius;
 
         public override string Name => "AiController";

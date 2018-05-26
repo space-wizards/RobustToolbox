@@ -126,6 +126,8 @@ namespace SS14.Server
                 Logger.Info($"[SRV] {reason}, shutting down...");
 
             _mainLoop.Running = false;
+            _log.RootSawmill.RemoveHandler(fileLogHandler);
+            fileLogHandler.Dispose();
         }
 
         /// <inheritdoc />
@@ -194,13 +196,17 @@ namespace SS14.Server
             // _resources.MountDefaultContentPack();
 
             //identical code in game controller for client
-            if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
-                if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Sandbox.Shared"))
-                    Logger.Warning($"[ENG] Could not load any Shared DLL.");
+            if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared")
+                && !AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Sandbox.Shared"))
+            {
+                Logger.Warning($"[ENG] Could not load any Shared DLL.");
+            }
 
-            if (!AssemblyLoader.TryLoadAssembly<GameServer>(_resources, $"Content.Server"))
-                if (!AssemblyLoader.TryLoadAssembly<GameServer>(_resources, $"Sandbox.Server"))
-                    Logger.Warning($"[ENG] Could not load any Server DLL.");
+            if (!AssemblyLoader.TryLoadAssembly<GameServer>(_resources, $"Content.Server")
+                && !AssemblyLoader.TryLoadAssembly<GameServer>(_resources, $"Sandbox.Server"))
+            {
+                Logger.Warning($"[ENG] Could not load any Server DLL.");
+            }
 
             // HAS to happen after content gets loaded.
             // Else the content types won't be included.
@@ -235,14 +241,13 @@ namespace SS14.Server
             return false;
         }
 
-        private TimeSpan _lastTick;
-        private TimeSpan _lastKeepUpAnnounce;
-
         /// <inheritdoc />
         public void MainLoop()
         {
-            _mainLoop = new GameLoop(_time);
-            _mainLoop.SleepMode = SleepMode.Delay;
+            _mainLoop = new GameLoop(_time)
+            {
+                SleepMode = SleepMode.Delay
+            };
 
             _mainLoop.Tick += (sender, args) => Update(args.DeltaSeconds);
 

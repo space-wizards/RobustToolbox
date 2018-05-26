@@ -62,7 +62,7 @@ namespace SS14.Client.Graphics.ClientEye
         {
             if (disposed)
             {
-                throw new ObjectDisposedException(nameof(Eye));
+                return;
             }
             Dispose(true);
             GC.SuppressFinalize(this);

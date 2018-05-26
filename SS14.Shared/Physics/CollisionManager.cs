@@ -52,9 +52,6 @@ namespace SS14.Shared.Physics
                 new Vector2(collider.Left, collider.Bottom)
             };
 
-            //Get the buckets that correspond to the collider's points.
-            var buckets = points.Select(GetBucket).Distinct().ToList();
-
             var colliders = points.Select(GetBucket) // Get the buckets that correspond to the collider's points.
                         .Distinct()
                         .SelectMany(b => b.GetPoints()) // Get all of the points
@@ -78,9 +75,9 @@ namespace SS14.Shared.Physics
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <returns></returns>
-        public bool TryCollide(IEntity entity)
+        public bool TryCollide(IEntity collider)
         {
-            return TryCollide(entity, new Vector2());
+            return TryCollide(collider, new Vector2());
         }
 
         /// <summary>
@@ -88,13 +85,13 @@ namespace SS14.Shared.Physics
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <returns></returns>
-        public bool TryCollide(IEntity mover, Vector2 offset, bool bump = true)
+        public bool TryCollide(IEntity collider, Vector2 offset, bool bump = true)
         {
-            if (mover == null) return false;
-            var collider = mover.GetComponent<ICollidableComponent>();
             if (collider == null) return false;
+            var colliderComponent = collider.GetComponent<ICollidableComponent>();
+            if (colliderComponent == null) return false;
 
-            var colliderAABB = collider.WorldAABB;
+            var colliderAABB = colliderComponent.WorldAABB;
             if (offset.LengthSquared > 0)
             {
                 colliderAABB = colliderAABB.Translated(offset);
@@ -114,12 +111,12 @@ namespace SS14.Shared.Physics
                     .SelectMany(b => b.GetPoints()) // Get all of the points
                     .Select(p => p.ParentAABB) // Expand points to distinct AABBs
                     .Distinct()
-                    .Where(aabb => aabb.Collidable != collider &&
+                    .Where(aabb => aabb.Collidable != colliderComponent &&
                            aabb.Collidable.WorldAABB.Intersects(colliderAABB) &&
-                           aabb.Collidable.MapID == collider.MapID); //try all of the AABBs against the target rect.
+                           aabb.Collidable.MapID == colliderComponent.MapID); //try all of the AABBs against the target rect.
 
             //See if our collision will be overriden by a component
-            List<ICollideSpecial> collisionmodifiers = mover.GetAllComponents<ICollideSpecial>().ToList();
+            List<ICollideSpecial> collisionmodifiers = collider.GetAllComponents<ICollideSpecial>().ToList();
             List<IEntity> collidedwith = new List<IEntity>();
 
             //try all of the AABBs against the target rect.
@@ -141,13 +138,13 @@ namespace SS14.Shared.Physics
 
                     if (bump)
                     {
-                        aabb.Collidable.Bumped(mover);
+                        aabb.Collidable.Bumped(collider);
                         collidedwith.Add(aabb.Collidable.Owner);
                     }
                 }
             }
 
-            collider.Bump(collidedwith);
+            colliderComponent.Bump(collidedwith);
 
             //TODO: This needs multi-grid support.
             return collided;

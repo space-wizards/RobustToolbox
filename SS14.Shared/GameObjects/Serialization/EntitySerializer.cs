@@ -1,7 +1,7 @@
 ﻿namespace SS14.Shared.GameObjects.Serialization
 {
-    public delegate void SetFunctionDelegate<T>(T value);
-    public delegate T GetFunctionDelegate<T>();
+    public delegate void SetFunctionDelegate<in T>(T value);
+    public delegate T GetFunctionDelegate<out T>();
 
     public abstract class EntitySerializer
     {

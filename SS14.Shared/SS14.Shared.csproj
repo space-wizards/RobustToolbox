@@ -332,7 +332,6 @@
     <Compile Include="GameObjects\ComponentReplyMessage.cs" />
     <Compile Include="GameObjects\ComponentState.cs" />
     <Compile Include="GameObjects\EntityState.cs" />
-    <Compile Include="GameObjects\ItemFlags.cs" />
     <Compile Include="Prototypes\IPrototype.cs" />
     <Compile Include="Prototypes\PrototypeManager.cs" />
     <Compile Include="Prototypes\EntityPrototype.cs" />

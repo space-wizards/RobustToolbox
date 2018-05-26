@@ -18,7 +18,7 @@ namespace SS14.Server.GameObjects.Components.Container
         /// <summary>
         /// The generic container class uses a list of entities
         /// </summary>
-        private List<IEntity> ContainerList = new List<IEntity>();
+        private readonly List<IEntity> ContainerList = new List<IEntity>();
 
         /// <inheritdoc />
         public Container(string id, IContainerManager manager) : base(id, manager)
@@ -80,7 +80,7 @@ namespace SS14.Server.GameObjects.Components.Container
         /// DO NOT CALL THIS METHOD DIRECTLY!
         /// You want <see cref="IContainerManager.MakeContainer{T}(string)" /> or <see cref="Create" /> instead.
         /// </summary>
-        public BaseContainer(string id, IContainerManager manager)
+        protected BaseContainer(string id, IContainerManager manager)
         {
             ID = id;
             Manager = manager;
@@ -137,7 +137,7 @@ namespace SS14.Server.GameObjects.Components.Container
         /// Implement to remove the reference you used to store the entity
         /// </summary>
         /// <param name="toinsert"></param>
-        protected abstract void InternalRemove(IEntity toinsert);
+        protected abstract void InternalRemove(IEntity toremove);
 
         /// <inheritdoc />
         public virtual bool CanRemove(IEntity toremove)

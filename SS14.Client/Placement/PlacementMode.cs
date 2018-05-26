@@ -40,7 +40,7 @@ namespace SS14.Client.Placement
         public Color InvalidPlaceColor { get; set; } = new Color(180, 20, 20); //Default invalid placement is red
 
         /// <summary>
-        /// Used for line and grid placement to determine how spaced apart the entities should be 
+        /// Used for line and grid placement to determine how spaced apart the entities should be
         /// </summary>
         protected float GridDistancing = 1f;
 
@@ -59,7 +59,7 @@ namespace SS14.Client.Placement
         /// </summary>
         public virtual bool HasGridMode => false;
 
-        public PlacementMode(PlacementManager pMan)
+        protected PlacementMode(PlacementManager pMan)
         {
             pManager = pMan;
         }
@@ -90,15 +90,15 @@ namespace SS14.Client.Placement
             var size = SpriteToDraw.Size;
 
             IEnumerable<LocalCoordinates> locationcollection;
-            switch(pManager._placementType)
+            switch (pManager.PlacementType)
             {
-                case PlacementManager.PlacementType.None:
+                case PlacementManager.PlacementTypes.None:
                     locationcollection = SingleCoordinate();
                     break;
-                case PlacementManager.PlacementType.Line:
+                case PlacementManager.PlacementTypes.Line:
                     locationcollection = LineCoordinates();
                     break;
-                case PlacementManager.PlacementType.Grid:
+                case PlacementManager.PlacementTypes.Grid:
                     locationcollection = GridCoordinates();
                     break;
                 default:
@@ -106,14 +106,13 @@ namespace SS14.Client.Placement
                     break;
             }
 
-            foreach(var coordinate in locationcollection)
+            foreach (var coordinate in locationcollection)
             {
                 var pos = coordinate.Position * EyeManager.PIXELSPERMETER - size / 2f;
                 var color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
                 pManager.drawNode.DrawTexture(SpriteToDraw.GodotTexture, pos.Convert(), color.Convert());
             }
         }
-        
 
         public IEnumerable<LocalCoordinates> SingleCoordinate()
         {
@@ -125,7 +124,7 @@ namespace SS14.Client.Placement
             var placementdiff = MouseCoords.ToWorld().Position - pManager.StartPoint.ToWorld().Position;
             var iterations = 0f;
             Vector2 distance;
-            if(Math.Abs(placementdiff.X) > Math.Abs(placementdiff.Y))
+            if (Math.Abs(placementdiff.X) > Math.Abs(placementdiff.Y))
             {
                 iterations = Math.Abs(placementdiff.X / GridDistancing);
                 distance = new Vector2(placementdiff.X > 0 ? 1 : -1, 0) * GridDistancing;
@@ -136,11 +135,10 @@ namespace SS14.Client.Placement
                 distance = new Vector2(0, placementdiff.Y > 0 ? 1 : -1) * GridDistancing;
             }
 
-            for(var i = 0; i <= iterations; i++)
+            for (var i = 0; i <= iterations; i++)
             {
                 yield return new LocalCoordinates(pManager.StartPoint.Position + distance * i, pManager.StartPoint.Grid);
             }
-
         }
 
         public IEnumerable<LocalCoordinates> GridCoordinates()
@@ -154,13 +152,12 @@ namespace SS14.Client.Placement
 
             for (var x = 0; x <= iterationsX; x++)
             {
-                for(var y = 0; y <= iterationsY; y++)
+                for (var y = 0; y <= iterationsY; y++)
                 {
                     yield return new LocalCoordinates(pManager.StartPoint.Position + distanceX * x + distanceY * y, pManager.StartPoint.Grid);
                 }
             }
         }
-
 
         public TextureResource GetSprite(string key)
         {

@@ -38,7 +38,6 @@ namespace SS14.Server.ServerConsole.Commands
                 level = (LogLevel)Enum.Parse(typeof(LogLevel), levelname);
             }
             Logger.GetSawmill(name).Level = level;
-            return;
         }
     }
 
@@ -64,7 +63,6 @@ namespace SS14.Server.ServerConsole.Commands
             var level = (LogLevel)Enum.Parse(typeof(LogLevel), levelname);
 
             Logger.LogS(level, name, message, level);
-            return;
         }
     }
 }

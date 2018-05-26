@@ -356,18 +356,18 @@ namespace SS14.Shared.Maths
         /// <summary>Indicates whether the current matrix is equal to another matrix.</summary>
         /// <param name="matrix">The Matrix3 structure to compare with.</param>
         /// <returns>true if the current matrix is equal to the matrix parameter; otherwise, false.</returns>
-        public bool Equals(Matrix3 matrix)
+        public bool Equals(Matrix3 other)
         {
             return
-                R0C0 == matrix.R0C0 &&
-                R0C1 == matrix.R0C1 &&
-                R0C2 == matrix.R0C2 &&
-                R1C0 == matrix.R1C0 &&
-                R1C1 == matrix.R1C1 &&
-                R1C2 == matrix.R1C2 &&
-                R2C0 == matrix.R2C0 &&
-                R2C1 == matrix.R2C1 &&
-                R2C2 == matrix.R2C2;
+                R0C0 == other.R0C0 &&
+                R0C1 == other.R0C1 &&
+                R0C2 == other.R0C2 &&
+                R1C0 == other.R1C0 &&
+                R1C1 == other.R1C1 &&
+                R1C2 == other.R1C2 &&
+                R2C0 == other.R2C0 &&
+                R2C1 == other.R2C1 &&
+                R2C2 == other.R2C2;
         }
 
         /// <summary>Indicates whether the current matrix is equal to another matrix.</summary>

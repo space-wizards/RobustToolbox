@@ -11,10 +11,5 @@ namespace SS14.Shared.Enums
         public int Range { get; set; }
         public ushort TileType { get; set; }
         public int Uses { get; set; } = 1;
-
-        private ushort tileType; //Tile Type if tile.
-        private int uses = 1; //How many objects of this type may be placed.
-
-       
     }
 }

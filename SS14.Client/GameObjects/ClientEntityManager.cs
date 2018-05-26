@@ -13,7 +13,7 @@ namespace SS14.Client.GameObjects
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    public class ClientEntityManager : EntityManager, IClientEntityManager, IDisposable
+    public sealed class ClientEntityManager : EntityManager, IClientEntityManager, IDisposable
     {
         public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float Range)
         {

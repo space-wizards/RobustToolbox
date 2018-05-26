@@ -16,7 +16,7 @@ namespace SS14.Shared.GameObjects
         public readonly Color Color;
         public readonly bool Directional;
         public readonly string BaseRsiPath;
-        public readonly List<Layer> Layers;
+        public readonly IReadOnlyList<Layer> Layers;
 
         public SpriteComponentState(
             bool visible,

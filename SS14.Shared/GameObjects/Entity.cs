@@ -435,9 +435,9 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IComponent GetComponent(uint netId)
+        public IComponent GetComponent(uint netID)
         {
-            return _netIDs[netId];
+            return _netIDs[netID];
         }
 
         /// <inheritdoc />
@@ -460,9 +460,9 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent(uint netId, out IComponent component)
+        public bool TryGetComponent(uint netID, out IComponent component)
         {
-            return _netIDs.TryGetValue(netId, out component);
+            return _netIDs.TryGetValue(netID, out component);
         }
 
         /// <inheritdoc />
@@ -571,6 +571,6 @@ namespace SS14.Shared.GameObjects
             LastModifiedTick = EntityManager.CurrentTick;
         }
 
-        #endregion GameState Stuff
+        #endregion GameState
     }
 }

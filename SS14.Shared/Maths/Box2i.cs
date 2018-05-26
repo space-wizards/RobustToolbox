@@ -73,9 +73,9 @@ namespace SS14.Shared.Maths
             return false;
         }
 
-        public bool Equals(Box2i box)
+        public bool Equals(Box2i other)
         {
-            return box.Left == Left && box.Right == Right && box.Bottom == Bottom && box.Top == Top;
+            return other.Left == Left && other.Right == Right && other.Bottom == Bottom && other.Top == Top;
         }
 
         // override object.GetHashCode
@@ -90,7 +90,7 @@ namespace SS14.Shared.Maths
 
         public static explicit operator Box2i(Box2 box)
         {
-            return new Box2i((int) box.Left, (int) box.Top, (int) box.Right, (int) box.Bottom);
+            return new Box2i((int)box.Left, (int)box.Top, (int)box.Right, (int)box.Bottom);
         }
 
         public static implicit operator Box2(Box2i box)

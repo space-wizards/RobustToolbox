@@ -70,7 +70,6 @@ namespace SS14.Client.GameObjects
             set => Light.Energy = value;
         }
 
-        //private float texRadius;
         private float radius = 5;
         /// <summary>
         ///     Radius, in meters.

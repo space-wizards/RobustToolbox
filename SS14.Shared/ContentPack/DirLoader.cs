@@ -31,17 +31,17 @@ namespace SS14.Shared.ContentPack
             }
 
             /// <inheritdoc />
-            public bool TryGetFile(ResourcePath relPath, out MemoryStream fileStream)
+            public bool TryGetFile(ResourcePath relPath, out MemoryStream stream)
             {
                 var path = GetPath(relPath);
                 if (!File.Exists(path))
                 {
-                    fileStream = null;
+                    stream = null;
                     return false;
                 }
 
                 var bytes = File.ReadAllBytes(path);
-                fileStream = new MemoryStream(bytes, false);
+                stream = new MemoryStream(bytes, false);
                 return true;
             }
 

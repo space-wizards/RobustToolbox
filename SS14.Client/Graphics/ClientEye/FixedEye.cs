@@ -21,7 +21,7 @@ namespace SS14.Client.Graphics.ClientEye
             }
         }
 
-        private ISceneTreeHolder sceneTree;
+        private readonly ISceneTreeHolder sceneTree;
 
         public FixedEye()
         {

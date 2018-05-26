@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-#endregion
+#endregion --- License ---
 
 using System;
 using System.Runtime.InteropServices;
@@ -43,7 +43,7 @@ namespace SS14.Shared.Maths
         private Vector3 xyz;
         private float w;
 
-        #endregion
+        #endregion Fields
 
         #region Constructors
 
@@ -85,7 +85,7 @@ namespace SS14.Shared.Maths
             if (matrix[1, 0] - matrix[0, 1] < 0) Z = -Z;
         }
 
-        #endregion
+        #endregion Constructors
 
         #region Public Members
 
@@ -156,7 +156,7 @@ namespace SS14.Shared.Maths
             get => xyz.Z;
             set => xyz.Z = value;
         }
-        #endregion
+        #endregion Properties
 
         #region Instance
 
@@ -202,7 +202,7 @@ namespace SS14.Shared.Maths
             return result;
         }
 
-        #endregion
+        #endregion ToAxisAngle
 
         #region public float Length
 
@@ -212,7 +212,7 @@ namespace SS14.Shared.Maths
         /// <seealso cref="LengthSquared"/>
         public float Length => (float)Math.Sqrt(W * W + Xyz.LengthSquared);
 
-        #endregion
+        #endregion public float Length
 
         #region public float LengthSquared
 
@@ -221,7 +221,7 @@ namespace SS14.Shared.Maths
         /// </summary>
         public float LengthSquared => W * W + Xyz.LengthSquared;
 
-        #endregion
+        #endregion public float LengthSquared
 
         #region public void Normalize()
 
@@ -235,7 +235,7 @@ namespace SS14.Shared.Maths
             W *= scale;
         }
 
-        #endregion
+        #endregion public void Normalize()
 
         #region public void Conjugate()
 
@@ -247,9 +247,9 @@ namespace SS14.Shared.Maths
             Xyz = -Xyz;
         }
 
-        #endregion
+        #endregion public void Conjugate()
 
-        #endregion
+        #endregion Instance
 
         #region Static
 
@@ -261,9 +261,9 @@ namespace SS14.Shared.Maths
         /// <summary>
         /// Defines the identity quaternion.
         /// </summary>
-        public static Quaternion Identity = new Quaternion(0, 0, 0, 1);
+        public static readonly Quaternion Identity = new Quaternion(0, 0, 0, 1);
 
-        #endregion
+        #endregion Fields
 
         #region Add
 
@@ -293,7 +293,7 @@ namespace SS14.Shared.Maths
                 left.W + right.W);
         }
 
-        #endregion
+        #endregion Add
 
         #region Sub
 
@@ -323,7 +323,7 @@ namespace SS14.Shared.Maths
                 left.W - right.W);
         }
 
-        #endregion
+        #endregion Sub
 
         #region Mult
 
@@ -374,7 +374,7 @@ namespace SS14.Shared.Maths
             return new Quaternion(quaternion.X * scale, quaternion.Y * scale, quaternion.Z * scale, quaternion.W * scale);
         }
 
-        #endregion
+        #endregion Mult
 
         #region Dot
 
@@ -386,7 +386,7 @@ namespace SS14.Shared.Maths
             return a.X * b.X + a.Y * b.Y + a.Z * b.Z + a.W * b.W;
         }
 
-        #endregion
+        #endregion Dot
 
         #region Conjugate
 
@@ -410,7 +410,7 @@ namespace SS14.Shared.Maths
             result = new Quaternion(-q.Xyz, q.W);
         }
 
-        #endregion
+        #endregion Conjugate
 
         #region Invert
 
@@ -444,7 +444,7 @@ namespace SS14.Shared.Maths
             }
         }
 
-        #endregion
+        #endregion Invert
 
         #region Normalize
 
@@ -470,7 +470,7 @@ namespace SS14.Shared.Maths
             result = new Quaternion(q.Xyz * scale, q.W * scale);
         }
 
-        #endregion
+        #endregion Normalize
 
         #region FromAxisAngle
 
@@ -495,7 +495,7 @@ namespace SS14.Shared.Maths
             return Normalize(result);
         }
 
-        #endregion
+        #endregion FromAxisAngle
 
         #region Slerp
 
@@ -560,7 +560,7 @@ namespace SS14.Shared.Maths
             return Identity;
         }
 
-        #endregion
+        #endregion Slerp
 
         #region RotateTowards
 
@@ -575,7 +575,7 @@ namespace SS14.Shared.Maths
             return Slerp(from, to, t);
         }
 
-        #endregion
+        #endregion RotateTowards
 
         #region Angle
 
@@ -585,7 +585,7 @@ namespace SS14.Shared.Maths
             return (float)(Math.Acos(Math.Min(Math.Abs(f), 1f)) * 2f * RadToDeg);
         }
 
-        #endregion
+        #endregion Angle
 
         #region LookRotation
 
@@ -646,7 +646,7 @@ namespace SS14.Shared.Maths
             return quaternion;
         }
 
-        #endregion
+        #endregion LookRotation
 
         #region Euler Angles
 
@@ -699,9 +699,9 @@ namespace SS14.Shared.Maths
             return angle;
         }
 
-        #endregion
+        #endregion Euler Angles
 
-        #endregion
+        #endregion Static
 
         #region Operators
 
@@ -788,7 +788,7 @@ namespace SS14.Shared.Maths
             return !left.Equals(right);
         }
 
-        #endregion
+        #endregion Operators
 
         #region Overrides
 
@@ -803,7 +803,7 @@ namespace SS14.Shared.Maths
             return $"V: {Xyz}, W: {W}";
         }
 
-        #endregion
+        #endregion public override string ToString()
 
         #region public override bool Equals (object o)
 
@@ -812,13 +812,13 @@ namespace SS14.Shared.Maths
         /// </summary>
         /// <param name="other">The other object to be used in the comparison.</param>
         /// <returns>True if both objects are Quaternions of equal value. Otherwise it returns false.</returns>
-        public override bool Equals(object other)
+        public override bool Equals(object obj)
         {
-            if (other is Quaternion == false) return false;
-            return this == (Quaternion)other;
+            if (obj is Quaternion == false) return false;
+            return this == (Quaternion)obj;
         }
 
-        #endregion
+        #endregion public override bool Equals (object o)
 
         #region public override int GetHashCode ()
 
@@ -831,11 +831,11 @@ namespace SS14.Shared.Maths
             return Xyz.GetHashCode() ^ W.GetHashCode();
         }
 
-        #endregion
+        #endregion public override int GetHashCode ()
 
-        #endregion
+        #endregion Overrides
 
-        #endregion
+        #endregion Public Members
 
         #region IEquatable<Quaternion> Members
 
@@ -849,6 +849,6 @@ namespace SS14.Shared.Maths
             return Xyz == other.Xyz && W == other.W;
         }
 
-        #endregion
+        #endregion IEquatable<Quaternion> Members
     }
 }

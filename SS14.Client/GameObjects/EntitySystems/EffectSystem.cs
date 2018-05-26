@@ -34,7 +34,7 @@ namespace SS14.Client.GameObjects
         [Dependency]
         IEyeManager eyeManager;
 
-        private List<Effect> _Effects = new List<Effect>();
+        private readonly List<Effect> _Effects = new List<Effect>();
         private TimeSpan lasttimeprocessed = TimeSpan.Zero;
 
         private Godot.Node2D DrawingNode;
@@ -300,7 +300,7 @@ namespace SS14.Client.GameObjects
                 var deltaPosition = new Vector2(0f, 0f);
 
                 //If we have an emitter we can do special effects around that emitter position
-                if (EmitterCoordinates != null)
+                if (EmitterCoordinates.IsValidLocation())
                 {
                     //Calculate delta p due to radial velocity
                     var positionRelativeToEmitter = Coordinates.ToWorld().Position - EmitterCoordinates.ToWorld().Position;

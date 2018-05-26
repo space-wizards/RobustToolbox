@@ -58,7 +58,8 @@ namespace SS14.Server.GameObjects
             set => _angVelocity = value;
         }
 
-        public bool EdgeSlide = true;
+        public bool EdgeSlide { get => edgeSlide; set => edgeSlide = value; }
+        private bool edgeSlide = true;
 
         /// <inheritdoc />
         public override void OnAdd()
@@ -78,7 +79,7 @@ namespace SS14.Server.GameObjects
             serializer.DataField(ref _mass, "mass", 1);
             serializer.DataField(ref _linVelocity, "vel", Vector2.Zero);
             serializer.DataField(ref _angVelocity, "avel", 0.0f);
-            serializer.DataField(ref EdgeSlide, "edgeslide", true);
+            serializer.DataField(ref edgeSlide, "edgeslide", true);
         }
 
         /// <inheritdoc />

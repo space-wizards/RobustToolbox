@@ -14,37 +14,37 @@ namespace SS14.Server.Interfaces.GameObjects
         /// <summary>
         /// Spawns an entity at a specific position
         /// </summary>
-        /// <param name="EntityType"></param>
+        /// <param name="entityType"></param>
         /// <param name="position"></param>
         /// <param name="argMap"></param>
         /// <param name="entity"></param>
         /// <returns></returns>
-        bool TrySpawnEntityAt(string EntityType, Vector2 position, MapId argMap, out IEntity entity);
+        bool TrySpawnEntityAt(string entityType, Vector2 position, MapId argMap, out IEntity entity);
 
         /// <summary>
         /// Spawns an entity at a specific position
         /// </summary>
-        /// <param name="EntityType"></param>
+        /// <param name="entityType"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
-        IEntity ForceSpawnEntityAt(string EntityType, LocalCoordinates coordinates);
+        IEntity ForceSpawnEntityAt(string entityType, LocalCoordinates coordinates);
 
         /// <summary>
         /// Spawns an entity at a specific position
         /// </summary>
-        /// <param name="EntityType"></param>
+        /// <param name="entityType"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
-        bool TrySpawnEntityAt(string EntityType, LocalCoordinates coordinates, out IEntity entity);
+        bool TrySpawnEntityAt(string entityType, LocalCoordinates coordinates, out IEntity entity);
 
         /// <summary>
         /// Spawns an entity at a specific position
         /// </summary>
-        /// <param name="EntityType"></param>
+        /// <param name="entityType"></param>
         /// <param name="position"></param>
         /// <param name="argMap"></param>
         /// <returns></returns>
-        IEntity ForceSpawnEntityAt(string EntityType, Vector2 position, MapId argMap);
+        IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap);
 
         /// <summary>
         /// Gets entities with a bounding box that intersects this box
@@ -76,23 +76,23 @@ namespace SS14.Server.Interfaces.GameObjects
         /// Gets entities within a certain *square* range of this local coordinate
         /// </summary>
         /// <param name="position"></param>
-        /// <param name="Range"></param>
-        IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float Range);
+        /// <param name="range"></param>
+        IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float range);
 
         /// <summary>
         /// Gets entities within a certain *square* range of this entity
         /// </summary>
         /// <param name="entity"></param>
-        /// <param name="Range"></param>
-        IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float Range);
+        /// <param name="range"></param>
+        IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range);
 
         /// <summary>
         /// Gets entities within a certain *square* range of this bounding box
         /// </summary>
         /// <param name="mapID"></param>
         /// <param name="box"></param>
-        /// <param name="Range"></param>
-        IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float Range);
+        /// <param name="range"></param>
+        IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float range);
 
         /// <summary>
         /// Get entities with bounding box in range of this whose center is within a certain directional arc, angle specifies center bisector of arc

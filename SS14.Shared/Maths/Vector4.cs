@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-#endregion
+#endregion --- License ---
 
 using System;
 using System.Runtime.InteropServices;
@@ -63,27 +63,27 @@ namespace SS14.Shared.Maths
         /// <summary>
         /// Defines a unit-length Vector4 that points towards the X-axis.
         /// </summary>
-        public static Vector4 UnitX = new Vector4(1, 0, 0, 0);
+        public static readonly Vector4 UnitX = new Vector4(1, 0, 0, 0);
 
         /// <summary>
         /// Defines a unit-length Vector4 that points towards the Y-axis.
         /// </summary>
-        public static Vector4 UnitY = new Vector4(0, 1, 0, 0);
+        public static readonly Vector4 UnitY = new Vector4(0, 1, 0, 0);
 
         /// <summary>
         /// Defines a unit-length Vector4 that points towards the Z-axis.
         /// </summary>
-        public static Vector4 UnitZ = new Vector4(0, 0, 1, 0);
+        public static readonly Vector4 UnitZ = new Vector4(0, 0, 1, 0);
 
         /// <summary>
         /// Defines a unit-length Vector4 that points towards the W-axis.
         /// </summary>
-        public static Vector4 UnitW = new Vector4(0, 0, 0, 1);
+        public static readonly Vector4 UnitW = new Vector4(0, 0, 0, 1);
 
         /// <summary>
         /// Defines a zero-length Vector4.
         /// </summary>
-        public static Vector4 Zero = new Vector4(0, 0, 0, 0);
+        public static readonly Vector4 Zero = new Vector4(0, 0, 0, 0);
 
         /// <summary>
         /// Defines an instance with all components set to 1.
@@ -95,7 +95,7 @@ namespace SS14.Shared.Maths
         /// </summary>
         public static readonly int SizeInBytes = Marshal.SizeOf(new Vector4());
 
-        #endregion
+        #endregion Fields
 
         #region Constructors
 
@@ -177,7 +177,7 @@ namespace SS14.Shared.Maths
             W = v.W;
         }
 
-        #endregion
+        #endregion Constructors
 
         #region Public Members
 
@@ -191,7 +191,7 @@ namespace SS14.Shared.Maths
         /// <seealso cref="LengthSquared"/>
         public float Length => (float)Math.Sqrt(X * X + Y * Y + Z * Z + W * W);
 
-        #endregion
+        #endregion public float Length
 
         #region public float LengthSquared
 
@@ -205,7 +205,7 @@ namespace SS14.Shared.Maths
         /// <see cref="Length"/>
         public float LengthSquared => X * X + Y * Y + Z * Z + W * W;
 
-        #endregion
+        #endregion public float LengthSquared
 
         #region public void Normalize()
 
@@ -221,9 +221,9 @@ namespace SS14.Shared.Maths
             W *= scale;
         }
 
-        #endregion
+        #endregion public void Normalize()
 
-        #endregion
+        #endregion Instance
 
         #region Static
 
@@ -252,7 +252,7 @@ namespace SS14.Shared.Maths
             result = new Vector4(a.X + b.X, a.Y + b.Y, a.Z + b.Z, a.W + b.W);
         }
 
-        #endregion
+        #endregion Add
 
         #region Subtract
 
@@ -279,7 +279,7 @@ namespace SS14.Shared.Maths
             result = new Vector4(a.X - b.X, a.Y - b.Y, a.Z - b.Z, a.W - b.W);
         }
 
-        #endregion
+        #endregion Subtract
 
         #region Multiply
 
@@ -329,7 +329,7 @@ namespace SS14.Shared.Maths
             result = new Vector4(vector.X * scale.X, vector.Y * scale.Y, vector.Z * scale.Z, vector.W * scale.W);
         }
 
-        #endregion
+        #endregion Multiply
 
         #region Divide
 
@@ -379,7 +379,7 @@ namespace SS14.Shared.Maths
             result = new Vector4(vector.X / scale.X, vector.Y / scale.Y, vector.Z / scale.Z, vector.W / scale.W);
         }
 
-        #endregion
+        #endregion Divide
 
         #region Min
 
@@ -412,7 +412,7 @@ namespace SS14.Shared.Maths
             result.W = a.W < b.W ? a.W : b.W;
         }
 
-        #endregion
+        #endregion Min
 
         #region Max
 
@@ -445,7 +445,7 @@ namespace SS14.Shared.Maths
             result.W = a.W > b.W ? a.W : b.W;
         }
 
-        #endregion
+        #endregion Max
 
         #region Clamp
 
@@ -480,7 +480,7 @@ namespace SS14.Shared.Maths
             result.W = vec.Y < min.W ? min.W : vec.W > max.W ? max.W : vec.W;
         }
 
-        #endregion
+        #endregion Clamp
 
         #region Normalize
 
@@ -513,7 +513,7 @@ namespace SS14.Shared.Maths
             result.W = vec.W * scale;
         }
 
-        #endregion
+        #endregion Normalize
 
         #region Dot
 
@@ -539,7 +539,7 @@ namespace SS14.Shared.Maths
             result = left.X * right.X + left.Y * right.Y + left.Z * right.Z + left.W * right.W;
         }
 
-        #endregion
+        #endregion Dot
 
         #region Lerp
 
@@ -574,7 +574,7 @@ namespace SS14.Shared.Maths
             result.W = blend * (b.W - a.W) + a.W;
         }
 
-        #endregion
+        #endregion Lerp
 
         #region Barycentric
 
@@ -614,7 +614,7 @@ namespace SS14.Shared.Maths
             Add(ref result, ref temp, out result);
         }
 
-        #endregion
+        #endregion Barycentric
 
         #region Transform
 
@@ -669,9 +669,9 @@ namespace SS14.Shared.Maths
             result = new Vector4(v.X, v.Y, v.Z, v.W);
         }
 
-        #endregion
+        #endregion Transform
 
-        #endregion
+        #endregion Static
 
         #region Swizzle
 
@@ -704,7 +704,7 @@ namespace SS14.Shared.Maths
             }
         }
 
-        #endregion
+        #endregion Swizzle
 
         #region Operators
 
@@ -820,7 +820,7 @@ namespace SS14.Shared.Maths
             return !left.Equals(right);
         }
 
-        #endregion
+        #endregion Operators
 
         #region Overrides
 
@@ -835,7 +835,7 @@ namespace SS14.Shared.Maths
             return $"({X}, {Y}, {Z}, {W})";
         }
 
-        #endregion
+        #endregion public override string ToString()
 
         #region public override int GetHashCode()
 
@@ -848,7 +848,7 @@ namespace SS14.Shared.Maths
             return X.GetHashCode() ^ Y.GetHashCode() ^ Z.GetHashCode() ^ W.GetHashCode();
         }
 
-        #endregion
+        #endregion public override int GetHashCode()
 
         #region public override bool Equals(object obj)
 
@@ -865,11 +865,11 @@ namespace SS14.Shared.Maths
             return Equals((Vector4)obj);
         }
 
-        #endregion
+        #endregion public override bool Equals(object obj)
 
-        #endregion
+        #endregion Overrides
 
-        #endregion
+        #endregion Public Members
 
         #region IEquatable<Vector4> Members
 
@@ -885,6 +885,6 @@ namespace SS14.Shared.Maths
                 W == other.W;
         }
 
-        #endregion
+        #endregion IEquatable<Vector4> Members
     }
 }

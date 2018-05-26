@@ -20,7 +20,7 @@ namespace SS14.Shared.GameObjects.System
 
         protected IEnumerable<IEntity> RelevantEntities => EntityManager.GetEntities(EntityQuery);
 
-        public EntitySystem()
+        protected EntitySystem()
         {
             EntityManager = IoCManager.Resolve<IEntityManager>();
             EntitySystemManager = IoCManager.Resolve<IEntitySystemManager>();

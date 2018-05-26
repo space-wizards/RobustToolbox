@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using SS14.Client.Graphics;
 using SS14.Shared.Maths;
 using RSIDirection = SS14.Client.Graphics.RSI.State.Direction;
@@ -24,7 +24,7 @@ namespace SS14.Client.Utility
                     return Direction.West;
             }
 
-            throw new ArgumentException();
+            throw new ArgumentException($"Unknown RSI dir: {dir}.", nameof(dir));
         }
 
         public static RSIDirection Convert(this Direction dir)
@@ -48,7 +48,7 @@ namespace SS14.Client.Utility
                     return RSIDirection.West;
             }
 
-            throw new ArgumentException();
+            throw new ArgumentException($"Unknown dir: {dir}.", nameof(dir));
         }
     }
 }

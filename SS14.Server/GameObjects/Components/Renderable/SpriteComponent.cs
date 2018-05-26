@@ -138,14 +138,13 @@ namespace SS14.Server.GameObjects
             Layers.Add(layer);
             Dirty();
             return Layers.Count - 1;
-
         }
         public int AddLayerWithState(string stateId, ResourcePath rsiPath)
         {
             return AddLayerWithState(stateId, rsiPath.ToString());
         }
 
-        void RemoveLayer(int layer)
+        public void RemoveLayer(int layer)
         {
             if (Layers.Count <= layer)
             {
@@ -405,7 +404,6 @@ namespace SS14.Server.GameObjects
         {
             var list = Layers.Select((l) => l.ToStateLayer()).ToList();
             return new SpriteComponentState(Visible, DrawDepth, Scale, Rotation, Offset, Color, Directional, BaseRSIPath, list);
-
         }
         private struct Layer
         {

@@ -1,4 +1,4 @@
-using Godot;
+﻿using Godot;
 using System;
 
 namespace SS14.Client.GodotGlue
@@ -8,9 +8,9 @@ namespace SS14.Client.GodotGlue
     /// </summary>
     public class ControlWrap : Godot.Control
     {
-        public Func<Vector2> GetMinimumSizeOverride;
-        public Func<Vector2, bool> HasPointOverride;
-        public Action DrawOverride;
+        public Func<Vector2> GetMinimumSizeOverride { get; set; }
+        public Func<Vector2, bool> HasPointOverride { get; set; }
+        public Action DrawOverride { get; set; }
 
         public override Vector2 _GetMinimumSize()
         {
@@ -35,6 +35,5 @@ namespace SS14.Client.GodotGlue
             HasPointOverride = null;
             DrawOverride = null;
         }
-
     }
 }

@@ -76,14 +76,14 @@ namespace SS14.Shared.Maths
             return (Direction)((Math.Floor((ang + CardinalOffset) / CardinalSegment) * 2) % 8);
         }
 
-        public bool EqualsApprox(Angle angle, double tolerance)
+        public bool EqualsApprox(Angle other, double tolerance)
         {
-            return EqualsApprox(this, angle, tolerance);
+            return EqualsApprox(this, other, tolerance);
         }
 
-        public bool EqualsApprox(Angle angle)
+        public bool EqualsApprox(Angle other)
         {
-            return EqualsApprox(this, angle);
+            return EqualsApprox(this, other);
         }
 
         private static bool EqualsApprox(Angle a, Angle b)

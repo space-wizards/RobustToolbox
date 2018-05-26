@@ -5,7 +5,7 @@ namespace SS14.Client.Interfaces
     /// <summary>
     ///     Top level class that controls the game logic of the client.
     /// </summary>
-    public interface IBaseClient : IDisposable
+    public interface IBaseClient
     {
         /// <summary>
         ///     Default port that the client tries to connect to if no other port is specified.
@@ -52,16 +52,6 @@ namespace SS14.Client.Interfaces
         ///     Call this after BaseClient has been created. This sets up the object to its initial state. Only call this once.
         /// </summary>
         void Initialize();
-
-        /// <summary>
-        ///     Called every frame outside the simulation. DO NOT update the simulation from this function.
-        /// </summary>
-        void Update();
-
-        /// <summary>
-        ///     Called every tick inside the simulation. See IGameTiming for more info about the tick.
-        /// </summary>
-        void Tick();
 
         /// <summary>
         ///     Connects the Initialized BaseClient to a remote server.

@@ -111,13 +111,17 @@ namespace SS14.Client
             _resourceCache.LoadLocalResources();
 
             //identical code for server in baseserver
-            if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))
-                if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Sandbox.Shared"))
-                    Logger.Warning($"[ENG] Could not load any Shared DLL.");
+            if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared")
+                && !AssemblyLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Sandbox.Shared"))
+            {
+                Logger.Warning($"[ENG] Could not load any Shared DLL.");
+            }
 
-            if (!AssemblyLoader.TryLoadAssembly<GameClient>(_resourceManager, $"Content.Client"))
-                if (!AssemblyLoader.TryLoadAssembly<GameClient>(_resourceManager, $"Sandbox.Client"))
-                    Logger.Warning($"[ENG] Could not load any Client DLL.");
+            if (!AssemblyLoader.TryLoadAssembly<GameClient>(_resourceManager, $"Content.Client")
+                && !AssemblyLoader.TryLoadAssembly<GameClient>(_resourceManager, $"Sandbox.Client"))
+            {
+                Logger.Warning($"[ENG] Could not load any Client DLL.");
+            }
 
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);

@@ -39,12 +39,15 @@ namespace Sandbox.Server
         }
 
         /// <inheritdoc />
-        public override void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            _server.RunLevelChanged -= HandleRunLevelChanged;
-            _players.PlayerStatusChanged -= HandlePlayerStatusChanged;
+            if (disposing)
+            {
+                _server.RunLevelChanged -= HandleRunLevelChanged;
+                _players.PlayerStatusChanged -= HandlePlayerStatusChanged;
+            }
 
-            base.Dispose();
+            base.Dispose(disposing);
         }
 
         private void HandleRunLevelChanged(object sender, RunLevelChangedEventArgs args)

@@ -22,9 +22,9 @@ namespace SS14.Shared.Interfaces.Network
         ///     Attempts to connect to the remote server. This does not Restart() the client networking. Make sure
         ///     to Initialize(true) networking before calling this.
         /// </summary>
-        /// <param name="ipAddress">The IP address of the remote server.</param>
+        /// <param name="host">The IP address of the remote server.</param>
         /// <param name="port">The port the server is listening on.</param>
-        void ClientConnect(string ipAddress, int port);
+        void ClientConnect(string host, int port);
 
         /// <summary>
         ///     Disconnects from the server. This does not Restart() the client networking. Make sure

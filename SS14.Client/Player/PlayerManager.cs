@@ -104,9 +104,6 @@ namespace SS14.Client.Player
             _sessions.Clear();
         }
 
-        /// <inheritdoc />
-        public void Destroy() { }
-
         /*
         /// <inheritdoc />
         public void ApplyEffects(RenderImage image)

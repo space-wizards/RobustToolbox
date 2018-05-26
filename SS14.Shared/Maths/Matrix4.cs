@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-#endregion
+#endregion --- License ---
 
 using System;
 using System.Runtime.InteropServices;
@@ -62,9 +62,9 @@ namespace SS14.Shared.Maths
         /// <summary>
         /// The identity matrix
         /// </summary>
-        public static Matrix4 Identity = new Matrix4(Vector4.UnitX, Vector4.UnitY, Vector4.UnitZ, Vector4.UnitW);
+        public static readonly Matrix4 Identity = new Matrix4(Vector4.UnitX, Vector4.UnitY, Vector4.UnitZ, Vector4.UnitW);
 
-        #endregion
+        #endregion Fields
 
         #region Constructors
 
@@ -114,7 +114,7 @@ namespace SS14.Shared.Maths
             Row3 = new Vector4(m30, m31, m32, m33);
         }
 
-        #endregion
+        #endregion Constructors
 
         #region Public Members
 
@@ -294,7 +294,7 @@ namespace SS14.Shared.Maths
             set => Row3.W = value;
         }
 
-        #endregion
+        #endregion Properties
 
         #region Instance
 
@@ -308,7 +308,7 @@ namespace SS14.Shared.Maths
             Invert(ref this);
         }
 
-        #endregion
+        #endregion public void Invert()
 
         #region public void Transpose()
 
@@ -320,9 +320,9 @@ namespace SS14.Shared.Maths
             this = Transpose(this);
         }
 
-        #endregion
+        #endregion public void Transpose()
 
-        #endregion
+        #endregion Instance
 
         #region Static
 
@@ -336,8 +336,8 @@ namespace SS14.Shared.Maths
         /// <param name="result">A matrix instance.</param>
         public static void CreateFromAxisAngle(Vector3 axis, float angle, out Matrix4 result)
         {
-            var cos = (float) Math.Cos(-angle);
-            var sin = (float) Math.Sin(-angle);
+            var cos = (float)Math.Cos(-angle);
+            var sin = (float)Math.Sin(-angle);
             var t = 1.0f - cos;
 
             axis.Normalize();
@@ -360,7 +360,7 @@ namespace SS14.Shared.Maths
             return result;
         }
 
-        #endregion
+        #endregion CreateFromAxisAngle
 
         #region CreateRotation[XYZ]
 
@@ -371,8 +371,8 @@ namespace SS14.Shared.Maths
         /// <param name="result">The resulting Matrix4 instance.</param>
         public static void CreateRotationX(float angle, out Matrix4 result)
         {
-            var cos = (float) Math.Cos(angle);
-            var sin = (float) Math.Sin(angle);
+            var cos = (float)Math.Cos(angle);
+            var sin = (float)Math.Sin(angle);
 
             result.Row0 = Vector4.UnitX;
             result.Row1 = new Vector4(0.0f, cos, sin, 0.0f);
@@ -398,8 +398,8 @@ namespace SS14.Shared.Maths
         /// <param name="result">The resulting Matrix4 instance.</param>
         public static void CreateRotationY(float angle, out Matrix4 result)
         {
-            var cos = (float) Math.Cos(angle);
-            var sin = (float) Math.Sin(angle);
+            var cos = (float)Math.Cos(angle);
+            var sin = (float)Math.Sin(angle);
 
             result.Row0 = new Vector4(cos, 0.0f, -sin, 0.0f);
             result.Row1 = Vector4.UnitY;
@@ -425,8 +425,8 @@ namespace SS14.Shared.Maths
         /// <param name="result">The resulting Matrix4 instance.</param>
         public static void CreateRotationZ(float angle, out Matrix4 result)
         {
-            var cos = (float) Math.Cos(angle);
-            var sin = (float) Math.Sin(angle);
+            var cos = (float)Math.Cos(angle);
+            var sin = (float)Math.Sin(angle);
 
             result.Row0 = new Vector4(cos, sin, 0.0f, 0.0f);
             result.Row1 = new Vector4(-sin, cos, 0.0f, 0.0f);
@@ -445,7 +445,7 @@ namespace SS14.Shared.Maths
             return result;
         }
 
-        #endregion
+        #endregion CreateRotation[XYZ]
 
         #region CreateTranslation
 
@@ -497,7 +497,7 @@ namespace SS14.Shared.Maths
             return result;
         }
 
-        #endregion
+        #endregion CreateTranslation
 
         #region CreateOrthographic
 
@@ -528,7 +528,7 @@ namespace SS14.Shared.Maths
             return result;
         }
 
-        #endregion
+        #endregion CreateOrthographic
 
         #region CreateOrthographicOffCenter
 
@@ -576,7 +576,7 @@ namespace SS14.Shared.Maths
             return result;
         }
 
-        #endregion
+        #endregion CreateOrthographicOffCenter
 
         #region CreatePerspectiveFieldOfView
 
@@ -609,7 +609,7 @@ namespace SS14.Shared.Maths
             if (zFar <= 0)
                 throw new ArgumentOutOfRangeException("zFar");
 
-            var yMax = zNear * (float) Math.Tan(0.5f * fovy);
+            var yMax = zNear * (float)Math.Tan(0.5f * fovy);
             var yMin = -yMax;
             var xMin = yMin * aspect;
             var xMax = yMax * aspect;
@@ -641,7 +641,7 @@ namespace SS14.Shared.Maths
             return result;
         }
 
-        #endregion
+        #endregion CreatePerspectiveFieldOfView
 
         #region CreatePerspectiveOffCenter
 
@@ -709,7 +709,7 @@ namespace SS14.Shared.Maths
             return result;
         }
 
-        #endregion
+        #endregion CreatePerspectiveOffCenter
 
         #region Scale Functions
 
@@ -750,7 +750,7 @@ namespace SS14.Shared.Maths
             return result;
         }
 
-        #endregion
+        #endregion Scale Functions
 
         #region Rotation Functions
 
@@ -765,7 +765,7 @@ namespace SS14.Shared.Maths
             return CreateFromAxisAngle(axis, angle);
         }
 
-        #endregion
+        #endregion Rotation Functions
 
         #region Camera Helper Functions
 
@@ -810,7 +810,7 @@ namespace SS14.Shared.Maths
             return LookAt(new Vector3(eyeX, eyeY, eyeZ), new Vector3(targetX, targetY, targetZ), new Vector3(upX, upY, upZ));
         }
 
-        #endregion
+        #endregion Camera Helper Functions
 
         #region Multiply Functions
 
@@ -885,7 +885,7 @@ namespace SS14.Shared.Maths
             result.Row3.W = lM41 * rM14 + lM42 * rM24 + lM43 * rM34 + lM44 * rM44;
         }
 
-        #endregion
+        #endregion Multiply Functions
 
         #region Invert Functions
 
@@ -991,7 +991,7 @@ namespace SS14.Shared.Maths
             result.Row3.W = 1.0f;
         }
 
-        #endregion
+        #endregion Invert Functions
 
         #region Transpose
 
@@ -1018,9 +1018,9 @@ namespace SS14.Shared.Maths
             result.Row3 = mat.Column3;
         }
 
-        #endregion
+        #endregion Transpose
 
-        #endregion
+        #endregion Static
 
         #region Operators
 
@@ -1057,7 +1057,7 @@ namespace SS14.Shared.Maths
             return !left.Equals(right);
         }
 
-        #endregion
+        #endregion Operators
 
         #region Overrides
 
@@ -1072,7 +1072,7 @@ namespace SS14.Shared.Maths
             return $"{Row0}\n{Row1}\n{Row2}\n{Row3}";
         }
 
-        #endregion
+        #endregion public override string ToString()
 
         #region public override int GetHashCode()
 
@@ -1085,7 +1085,7 @@ namespace SS14.Shared.Maths
             return Row0.GetHashCode() ^ Row1.GetHashCode() ^ Row2.GetHashCode() ^ Row3.GetHashCode();
         }
 
-        #endregion
+        #endregion public override int GetHashCode()
 
         #region public override bool Equals(object obj)
 
@@ -1099,14 +1099,14 @@ namespace SS14.Shared.Maths
             if (!(obj is Matrix4))
                 return false;
 
-            return Equals((Matrix4) obj);
+            return Equals((Matrix4)obj);
         }
 
-        #endregion
+        #endregion public override bool Equals(object obj)
 
-        #endregion
+        #endregion Overrides
 
-        #endregion
+        #endregion Public Members
 
         #region IEquatable<Matrix4> Members
 
@@ -1122,6 +1122,6 @@ namespace SS14.Shared.Maths
                 Row3 == other.Row3;
         }
 
-        #endregion
+        #endregion IEquatable<Matrix4> Members
     }
 }

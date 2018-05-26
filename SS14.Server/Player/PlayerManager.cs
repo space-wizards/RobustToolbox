@@ -84,17 +84,13 @@ namespace SS14.Server.Player
             session.AttachToEntity(entity);
         }
 
-        public IPlayerSession GetSessionByChannel(INetChannel client)
+        public IPlayerSession GetSessionByChannel(INetChannel channel)
         {
             // Should only be one session per client. Returns that session, in theory.
-            return _sessions.FirstOrDefault(s => s?.ConnectedClient == client);
+            return _sessions.FirstOrDefault(s => s?.ConnectedClient == channel);
         }
 
-        /// <summary>
-        ///     Returns the client session of the networkId.
-        /// </summary>
-        /// <param name="index">The id of the client.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public IPlayerSession GetSessionById(PlayerIndex index)
         {
             Debug.Assert(0 <= index && index <= MaxPlayers);
@@ -139,13 +135,13 @@ namespace SS14.Server.Player
         /// <param name="position">Position of the circle in world-space.</param>
         /// <param name="range">Radius of the circle in world units.</param>
         /// <returns></returns>
-        public List<IPlayerSession> GetPlayersInRange(LocalCoordinates position, int range)
+        public List<IPlayerSession> GetPlayersInRange(LocalCoordinates worldPos, int range)
         {
             //TODO: This needs to be moved to the PVS system.
             return
                 _sessions.Where(x => x != null &&
                                      x.AttachedEntity != null &&
-                                     position.InRange(x.AttachedEntity.GetComponent<ITransformComponent>().LocalPosition, range))
+                                     worldPos.InRange(x.AttachedEntity.GetComponent<ITransformComponent>().LocalPosition, range))
                     .Cast<IPlayerSession>()
                     .ToList();
         }

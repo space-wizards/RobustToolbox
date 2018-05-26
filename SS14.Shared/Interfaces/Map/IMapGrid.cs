@@ -59,7 +59,7 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="worldPos">The location of the tile in coordinates.</param>
         /// <returns>The tile at the world coordinates.</returns>
-        TileRef GetTile(LocalCoordinates posWorld);
+        TileRef GetTile(LocalCoordinates worldPos);
 
         /// <summary>
         ///     Returns all tiles in the grid, in row-major order [xTileIndex, yTileIndex].
@@ -70,19 +70,17 @@ namespace SS14.Shared.Interfaces.Map
         /// <summary>
         ///     Replaces a single tile inside of the grid.
         /// </summary>
-        /// <param name="xIndex">The local x tile index inside of the grid.</param>
-        /// <param name="yIndex">The local y tile index inside of the grid.</param>
+        /// <param name="worldPos"></param>
         /// <param name="tile">The tile to insert at the coordinates.</param>
-        void SetTile(LocalCoordinates posWorld, Tile tile);
+        void SetTile(LocalCoordinates worldPos, Tile tile);
 
         /// <summary>
         ///     Modifies a single tile inside of the chunk.
         /// </summary>
-        /// <param name="xWorld">The X coordinate of the tile in the world.</param>
-        /// <param name="yWorld">The Y coordinate of the tile in the world.</param>
+        /// <param name="worldPos"></param>
         /// <param name="tileId">The new internal ID of the tile.</param>
         /// <param name="tileData">The new data of the tile.</param>
-        void SetTile(LocalCoordinates posWorld, ushort tileId, ushort tileData = 0);
+        void SetTile(LocalCoordinates worldPos, ushort tileId, ushort tileData = 0);
 
         /// <summary>
         ///     Returns all tiles inside the area that match the predicate.
@@ -93,7 +91,7 @@ namespace SS14.Shared.Interfaces.Map
         /// <returns></returns>
         IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null);
 
-        #endregion
+        #endregion TileAccess
 
         #region ChunkAccess
 
@@ -125,7 +123,7 @@ namespace SS14.Shared.Interfaces.Map
         /// <returns>All chunks in the grid.</returns>
         IEnumerable<IMapChunk> GetMapChunks();
 
-        #endregion
+        #endregion ChunkAccess
 
         #region Transforms
 
@@ -146,7 +144,7 @@ namespace SS14.Shared.Interfaces.Map
         /// <summary>
         ///     Transforms local vectors into world space vectors
         /// </summary>
-        /// <param name="posLocal">The local vector with this grid as origin.</param>
+        /// <param name="localpos">The local vector with this grid as origin.</param>
         /// <returns>The world-space vector with global origin.</returns>
         Vector2 ConvertToWorld(Vector2 localpos);
 
@@ -164,6 +162,6 @@ namespace SS14.Shared.Interfaces.Map
         /// <returns></returns>
         bool IndicesToTile(MapGrid.Indices indices, out TileRef tile);
 
-        #endregion
+        #endregion Transforms
     }
 }

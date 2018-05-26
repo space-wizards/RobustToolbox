@@ -36,19 +36,19 @@ namespace SS14.Client.GameStates
         public void HandleStateMessage(MsgState message)
         {
             var state = message.State;
-            if (GameSequence < message.State.FromSequence)
+            if (GameSequence < state.FromSequence)
             {
                 Logger.ErrorS("net.state", "Got a game state that's too new to handle!");
             }
-            if (GameSequence > message.State.ToSequence)
+            if (GameSequence > state.ToSequence)
             {
                 Logger.WarningS("net.state", "Got a game state that's too old to handle!");
+                return;
             }
-            AckGameState(message.State.ToSequence);
+            AckGameState(state.ToSequence);
 
-            message.State.GameTime = 0;//(float)timing.CurTime.TotalSeconds;
-            ApplyGameState(message.State);
-
+            state.GameTime = 0;//(float)timing.CurTime.TotalSeconds;
+            ApplyGameState(state);
         }
 
         private void AckGameState(uint sequence)

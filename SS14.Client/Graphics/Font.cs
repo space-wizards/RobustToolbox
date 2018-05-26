@@ -1,4 +1,4 @@
-using SS14.Client.ResourceManagement;
+﻿using SS14.Client.ResourceManagement;
 
 namespace SS14.Client.Graphics
 {
@@ -9,7 +9,6 @@ namespace SS14.Client.Graphics
     public abstract class Font
     {
         internal abstract Godot.Font GodotFont { get; }
-
 
         public static implicit operator Godot.Font(Font font)
         {
@@ -32,9 +31,11 @@ namespace SS14.Client.Graphics
         public bool UseMipmaps { get => _font.UseMipmaps; set => _font.UseMipmaps = value; }
 
         internal override Godot.Font GodotFont => _font;
-        private Godot.DynamicFont _font;
+        private readonly Godot.DynamicFont _font;
 
-        public VectorFont(FontResource res) : this(res.FontData) { }
+        public VectorFont(FontResource res) : this(res.FontData)
+        {
+        }
 
         internal VectorFont(Godot.DynamicFontData data)
         {

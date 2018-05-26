@@ -29,7 +29,7 @@ namespace SS14.Client.Graphics.Drawing
     /// </summary>
     public class StyleBoxTexture : StyleBox
     {
-        private Godot.StyleBoxTexture stylebox;
+        private readonly Godot.StyleBoxTexture stylebox;
 
         internal override Godot.StyleBox GodotStyleBox => stylebox;
 
@@ -86,7 +86,7 @@ namespace SS14.Client.Graphics.Drawing
         {
             get
             {
-                return cachedTexture ?? new GodotTextureSource((Godot.Texture)stylebox.Texture);
+                return cachedTexture ?? new GodotTextureSource(stylebox.Texture);
             }
             // Woo implicit casts.
             set => stylebox.Texture = cachedTexture = value;
@@ -127,7 +127,7 @@ namespace SS14.Client.Graphics.Drawing
             set => stylebox.BgColor = value.Convert();
         }
 
-        private Godot.StyleBoxFlat stylebox;
+        private readonly Godot.StyleBoxFlat stylebox;
 
         internal override Godot.StyleBox GodotStyleBox => stylebox;
 

@@ -2,10 +2,12 @@
 using SS14.Client.Graphics;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
+using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Configuration;
+using SS14.Shared.Input;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -18,6 +20,8 @@ namespace SS14.Client.UserInterface
         readonly IConfigurationManager _config;
         [Dependency]
         readonly ISceneTreeHolder _sceneTreeHolder;
+        [Dependency]
+        readonly IInputManager _inputManager;
 
         public Control Focused { get; private set; }
 
@@ -74,6 +78,14 @@ namespace SS14.Client.UserInterface
 
             _debugMonitors = new DebugMonitors();
             RootControl.AddChild(_debugMonitors);
+
+            _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugMonitors, InputCommand.FromDelegate(enabled: () =>
+            {
+                DebugMonitors.Visible = true;
+            }, disabled: () =>
+            {
+                DebugMonitors.Visible = false;
+            }));
         }
 
         public void Dispose()
@@ -105,26 +117,10 @@ namespace SS14.Client.UserInterface
                 DebugConsole.Toggle();
                 args.Handle();
             }
-
-            if (args.Key == Keyboard.Key.F3)
-            {
-                DebugMonitors.Visible = !DebugMonitors.Visible;
-                args.Handle();
-            }
         }
 
         public void PreKeyUp(KeyEventArgs args)
         {
-        }
-
-        public void UnhandledKeyDown(KeyEventArgs args)
-        {
-            // Nothing
-        }
-
-        public void UnhandledKeyUp(KeyEventArgs args)
-        {
-            // Nothing
         }
 
         public void UnhandledMouseDown(MouseButtonEventArgs args)

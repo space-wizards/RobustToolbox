@@ -1,10 +1,11 @@
 ﻿using System;
 using SS14.Shared.Enums;
 using SS14.Shared.Maths;
+using SS14.Shared.Serialization;
 
 namespace SS14.Shared.GameObjects
 {
-    [Serializable]
+    [Serializable, NetSerializable]
     public class PointLightComponentState : ComponentState
     {
         public readonly Color Color;

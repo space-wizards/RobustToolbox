@@ -25,21 +25,6 @@ namespace SS14.Client.State
         #region Events
 
         /// <summary>
-        ///     Key was pressed.
-        /// </summary>
-        public virtual void KeyDown(KeyEventArgs e) { }
-
-        /// <summary>
-        ///     Key was released.
-        /// </summary>
-        public virtual void KeyUp(KeyEventArgs e) { }
-
-        /// <summary>
-        ///     Key was is STILL held.
-        /// </summary>
-        public virtual void KeyHeld(KeyEventArgs e) { }
-
-        /// <summary>
         ///     Mouse button was pressed.
         /// </summary>
         public virtual void MousePressed(MouseButtonEventArgs e) { }

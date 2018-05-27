@@ -15,6 +15,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Log;
 using SS14.Client.State.States;
 using SS14.Shared.ContentPack;
+using SS14.Shared.Input;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
@@ -127,11 +128,11 @@ namespace SS14.Client
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
 
             eyeManager.Initialize();
-            inputManager.Initialize();
             _serializer.Initialize();
             _userInterfaceManager.Initialize();
             _tileDefinitionManager.Initialize();
             _networkManager.Initialize(false);
+            inputManager.Initialize();
             _console.Initialize();
             _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
             _prototypeManager.Resync();

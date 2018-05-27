@@ -9,9 +9,6 @@ namespace SS14.Client.Interfaces.State
         void RequestStateChange<T>() where T : Client.State.State, new();
         void Update(ProcessFrameEventArgs e);
         void FrameUpdate(RenderFrameEventArgs e);
-        void KeyDown(KeyEventArgs e);
-        void KeyUp(KeyEventArgs e);
-        void KeyHeld(KeyEventArgs e);
         void MouseUp(MouseButtonEventArgs e);
         void MouseDown(MouseButtonEventArgs e);
         void MouseMove(MouseMoveEventArgs e);

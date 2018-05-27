@@ -1,23 +1,11 @@
 ﻿using System;
 using SS14.Shared.Input;
 using SS14.Shared.Map;
+using SS14.Shared.Serialization;
 
 namespace SS14.Shared.GameObjects
 {
-    [Serializable]
-    public class BoundKeyChangedMessage : EntitySystemMessage
-    {
-        public BoundKeyFunctions Function { get; }
-        public BoundKeyState State { get; }
-
-        public BoundKeyChangedMessage(BoundKeyFunctions function, BoundKeyState state)
-        {
-            Function = function;
-            State = state;
-        }
-    }
-
-    [Serializable]
+    [Serializable, NetSerializable]
     public class ClickEventMessage : EntitySystemMessage
     {
         public EntityUid Uid { get; }

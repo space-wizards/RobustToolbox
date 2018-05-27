@@ -10,8 +10,7 @@ namespace SS14.Client
         /// </summary>
         private void KeyDown(KeyEventArgs keyEvent)
         {
-            _userInterfaceManager.UnhandledKeyDown(keyEvent);
-            _stateManager.KeyDown(keyEvent);
+            inputManager.KeyDown(keyEvent);
         }
 
         /// <summary>
@@ -19,16 +18,7 @@ namespace SS14.Client
         /// </summary>
         private void KeyUp(KeyEventArgs keyEvent)
         {
-            _userInterfaceManager.UnhandledKeyUp(keyEvent);
-            _stateManager.KeyUp(keyEvent);
-        }
-
-        /// <summary>
-        ///     Invoked repeatedly while a key on the keyboard is held.
-        /// </summary>
-        private void KeyHeld(KeyEventArgs keyEvent)
-        {
-            _stateManager.KeyHeld(keyEvent);
+            inputManager.KeyUp(keyEvent);
         }
 
         /// <summary>
@@ -75,7 +65,7 @@ namespace SS14.Client
                     var keyEventArgs = (KeyEventArgs)keyEvent;
                     if (keyEvent.Echo)
                     {
-                        KeyHeld(keyEventArgs);
+                        return;
                     }
                     else if (keyEvent.Pressed)
                     {
@@ -127,6 +117,8 @@ namespace SS14.Client
                 }
                 else if (keyEvent.Pressed)
                 {
+                    // TODO: these hacks are in right now for toggling the debug console.
+                    // Somehow find a way to make the console use the key binds system?
                     _userInterfaceManager.PreKeyDown(keyEventArgs);
                 }
                 else

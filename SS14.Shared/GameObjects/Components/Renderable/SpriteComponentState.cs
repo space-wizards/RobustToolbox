@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using SS14.Shared.Maths;
+using SS14.Shared.Serialization;
 
 namespace SS14.Shared.GameObjects
 {
-    [Serializable]
+    [Serializable, NetSerializable]
     public class SpriteComponentState : ComponentState
     {
         public readonly bool Visible;
@@ -15,7 +16,7 @@ namespace SS14.Shared.GameObjects
         public readonly Color Color;
         public readonly bool Directional;
         public readonly string BaseRsiPath;
-        public readonly IReadOnlyList<Layer> Layers;
+        public readonly List<Layer> Layers;
 
         public SpriteComponentState(
             bool visible,

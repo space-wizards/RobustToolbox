@@ -269,7 +269,9 @@
     <Compile Include="Physics\CollidablePoint.cs" />
     <Compile Include="Physics\CollisionManager.cs" />
     <Compile Include="Enums\PlacementInformation.cs" />
+    <Compile Include="Input\InputCommand.cs" />
     <Compile Include="Input\KeyFunctions.cs" />
+    <Compile Include="Input\BoundKeyEventArgs.cs" />
     <Compile Include="Physics\RayCastResults.cs" />
     <Compile Include="Players\PlayerIndex.cs" />
     <Compile Include="Timing\FrameEventArgs.cs" />
@@ -325,7 +327,6 @@
     <Compile Include="GameObjects\Components\Renderable\SpriteComponentState.cs" />
     <Compile Include="GameObjects\Components\Transform\TransformComponentState.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\EntitySystemMessage.cs" />
-    <Compile Include="GameObjects\EntitySystemMessages\InventorySystemMessages.cs" />
     <Compile Include="GameObjects\ComponentEnums.cs" />
     <Compile Include="GameObjects\ComponentReplyMessage.cs" />
     <Compile Include="GameObjects\ComponentState.cs" />
@@ -337,6 +338,8 @@
     <Compile Include="IoC\Exceptions\UnregisteredDependencyException.cs" />
     <Compile Include="IoC\Exceptions\UnregisteredTypeException.cs" />
     <Compile Include="GameObjects\Components\NetIDs.cs" />
+    <Compile Include="Network\Messages\MsgKeyFunctionChangeState.cs" />
+    <Compile Include="Input\BoundKeyMap.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

@@ -1,12 +1,13 @@
 ﻿using System;
 using SS14.Shared.Maths;
+using SS14.Shared.Serialization;
 
 namespace SS14.Shared.GameObjects
 {
     /// <summary>
     ///     Serialized state of a PhysicsComponent.
     /// </summary>
-    [Serializable]
+    [Serializable, NetSerializable]
     public class PhysicsComponentState : ComponentState
     {
         /// <summary>

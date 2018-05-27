@@ -1,4 +1,5 @@
 ﻿using SS14.Server.Interfaces.GameObjects;
+using SS14.Server.Interfaces.Player;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Input;
@@ -19,7 +20,18 @@ namespace SS14.Server.GameObjects
 
         private Direction LastDir = Direction.South;
         private Vector2 _moveDir;
+        private bool _movingUp;
+        private bool _movingDown;
+        private bool _movingLeft;
+        private bool _movingRight;
         private bool _run;
+
+        private InputCommand MoveUpCommand;
+        private InputCommand MoveDownCommand;
+        private InputCommand MoveLeftCommand;
+        private InputCommand MoveRightCommand;
+        private InputCommand RunCommand;
+
 
         /// <inheritdoc />
         public override string Name => "PlayerInputMover";
@@ -34,8 +46,8 @@ namespace SS14.Server.GameObjects
         public override void OnAdd()
         {
             // This component requires that the entity has a KeyBindingInputComponent.
-            if (!Owner.HasComponent<KeyBindingInputComponent>())
-                Logger.Error($"[ECS] {Owner.Prototype.Name} - {nameof(PlayerInputMoverComponent)} requires {nameof(KeyBindingInputComponent)}. ");
+            if (!Owner.HasComponent<IActorComponent>())
+                Logger.Error($"[ECS] {Owner.Prototype.Name} - {nameof(PlayerInputMoverComponent)} requires {nameof(IActorComponent)}. ");
 
             // This component requires that the entity has a PhysicsComponent.
             if (!Owner.HasComponent<PhysicsComponent>())
@@ -44,22 +56,30 @@ namespace SS14.Server.GameObjects
             base.OnAdd();
         }
 
-        /// <summary>
-        ///     Handles an incoming component message.
-        /// </summary>
-        /// <param name="owner">
-        ///     Object that raised the event. If the event was sent over the network or from some unknown place,
-        ///     this will be null.
-        /// </param>
-        /// <param name="message">Message that was sent.</param>
         public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null, IComponent component = null)
         {
             base.HandleMessage(message, netChannel, component);
 
+            IPlayerInput input;
             switch (message)
             {
-                case BoundKeyChangedMsg msg:
-                    HandleKeyChange();
+                case PlayerAttachedMsg msg:
+                    InitInputCommands();
+                    input = msg.NewPlayer.Input;
+                    input.SetCommand(EngineKeyFunctions.MoveUp, MoveUpCommand);
+                    input.SetCommand(EngineKeyFunctions.MoveLeft, MoveLeftCommand);
+                    input.SetCommand(EngineKeyFunctions.MoveRight, MoveRightCommand);
+                    input.SetCommand(EngineKeyFunctions.MoveDown, MoveDownCommand);
+                    input.SetCommand(EngineKeyFunctions.Run, RunCommand);
+                    break;
+
+                case PlayerDetachedMsg msg:
+                    input = msg.OldPlayer.Input;
+                    input.SetCommand(EngineKeyFunctions.MoveUp, null);
+                    input.SetCommand(EngineKeyFunctions.MoveLeft, null);
+                    input.SetCommand(EngineKeyFunctions.MoveRight, null);
+                    input.SetCommand(EngineKeyFunctions.MoveDown, null);
+                    input.SetCommand(EngineKeyFunctions.Run, null);
                     break;
             }
         }
@@ -86,19 +106,17 @@ namespace SS14.Server.GameObjects
 
         private void HandleKeyChange()
         {
-            var input = Owner.GetComponent<KeyBindingInputComponent>();
-
             // key directions are in screen coordinates
             // _moveDir is in world coordinates
             // if the camera is moved, this needs to be changed
 
             var x = 0;
-            x -= input.GetKeyState(BoundKeyFunctions.MoveLeft) ? 1 : 0;
-            x += input.GetKeyState(BoundKeyFunctions.MoveRight) ? 1 : 0;
+            x -= _movingLeft ? 1 : 0;
+            x += _movingRight ? 1 : 0;
 
             var y = 0;
-            y += input.GetKeyState(BoundKeyFunctions.MoveDown) ? 1 : 0;
-            y -= input.GetKeyState(BoundKeyFunctions.MoveUp) ? 1 : 0;
+            y += _movingDown ? 1 : 0;
+            y -= _movingUp ? 1 : 0;
 
             _moveDir = new Vector2(x, y);
 
@@ -110,9 +128,25 @@ namespace SS14.Server.GameObjects
             {
                 LastDir = _moveDir.GetDir();
             }
+        }
 
-            // players can run or walk
-            _run = input.GetKeyState(BoundKeyFunctions.Run);
+        private void InitInputCommands()
+        {
+            if (MoveUpCommand != null)
+            {
+                return;
+            }
+
+            MoveUpCommand = InputCommand.FromDelegate(() => { _movingUp = true; HandleKeyChange(); },
+                                                      () => { _movingUp = false; HandleKeyChange(); });
+            MoveLeftCommand = InputCommand.FromDelegate(() => { _movingLeft = true; HandleKeyChange(); },
+                                                        () => { _movingLeft = false; HandleKeyChange(); });
+            MoveRightCommand = InputCommand.FromDelegate(() => { _movingRight = true; HandleKeyChange(); },
+                                                         () => { _movingRight = false; HandleKeyChange(); });
+            MoveDownCommand = InputCommand.FromDelegate(() => { _movingDown = true; HandleKeyChange(); },
+                                                        () => { _movingDown = false; HandleKeyChange(); });
+            RunCommand = InputCommand.FromDelegate(() => _run = true,
+                                                   () => _run = false);
         }
     }
 }

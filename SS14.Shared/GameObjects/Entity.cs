@@ -198,11 +198,11 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendNetworkMessage(IComponent owner, ComponentMessage message)
+        public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel channel = null)
         {
             if (message.Directed)
             {
-                EntityNetworkManager.SendDirectedComponentNetworkMessage(null, this, owner, message);
+                EntityNetworkManager.SendDirectedComponentNetworkMessage(channel, this, owner, message);
             }
             else
             {

@@ -100,9 +100,9 @@ namespace SS14.Shared.GameObjects
         ///     This is an alias of 'Owner.SendNetworkMessage(this, message);'
         /// </summary>
         /// <param name="message">Message to send.</param>
-        protected void SendNetworkMessage(ComponentMessage message)
+        protected void SendNetworkMessage(ComponentMessage message, INetChannel channel = null)
         {
-            Owner.SendNetworkMessage(this, message);
+            Owner.SendNetworkMessage(this, message, channel);
         }
 
         /// <inheritdoc />

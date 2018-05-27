@@ -379,7 +379,14 @@ namespace SS14.Shared.GameObjects.Serialization
     {
         public override object NodeToType(Type type, YamlNode node)
         {
-            return Color.FromHex(node.AsString());
+            try
+            {
+                return Color.FromName(node.ToString());
+            }
+            catch
+            {
+                return node.AsHexColor();
+            }
         }
 
         public override YamlNode TypeToNode(object obj)

@@ -327,7 +327,6 @@
     <Compile Include="GameObjects\Components\Renderable\SpriteComponentState.cs" />
     <Compile Include="GameObjects\Components\Transform\TransformComponentState.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\EntitySystemMessage.cs" />
-    <Compile Include="GameObjects\EntitySystemMessages\InventorySystemMessages.cs" />
     <Compile Include="GameObjects\ComponentEnums.cs" />
     <Compile Include="GameObjects\ComponentReplyMessage.cs" />
     <Compile Include="GameObjects\ComponentState.cs" />

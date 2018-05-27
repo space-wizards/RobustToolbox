@@ -336,7 +336,6 @@ namespace SS14.Server.Player
         {
             var function = keyMap.KeyFunctionName(message.KeyFunction);
             var player = GetSessionByChannel(message.MsgChannel);
-            Logger.Debug($"{function}: {message.NewState}");
             player.Input.SetFunctionState(function, message.NewState);
         }
     }

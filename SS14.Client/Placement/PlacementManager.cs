@@ -515,7 +515,7 @@ namespace SS14.Client.Placement
 
             if (CurrentPermission.IsTile)
             {
-                var grid = _mapMan.GetMap(coordinates.MapID).FindGridAt(new Vector2(coordinates.X, coordinates.Y));
+                var grid = _mapMan.GetMap(coordinates.MapID).GetGrid(coordinates.GridID);
                 var worldPos = coordinates.ToWorld();
                 var localPos = worldPos.ConvertToGrid(grid);
 

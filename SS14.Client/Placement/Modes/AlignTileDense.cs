@@ -11,7 +11,7 @@ namespace SS14.Client.Placement.Modes
 
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
-            MouseCoords = pManager.eyeManager.ScreenToWorld(mouseScreen);
+            MouseCoords = ScreenToPlayerGrid(mouseScreen);
 
             CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
             float tileSize = MouseCoords.Grid.TileSize; //convert from ushort to float
@@ -37,7 +37,7 @@ namespace SS14.Client.Placement.Modes
             {
                 return false;
             }
-            if(!pManager.CurrentPermission.IsTile && !IsColliding(position))
+            if (!pManager.CurrentPermission.IsTile && !IsColliding(position))
             {
                 return false;
             }

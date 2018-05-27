@@ -88,6 +88,8 @@ namespace SS14.Client.UserInterface.CustomControls
 Character Pos:
     World: {playerWorldOffset}
     Screen: {playerScreen}
+    Grid: {entityTransform.GridID}
+    Map: {entityTransform.MapID}
 
 Mouse Pos:
     Screen: {mouseScreenPos}

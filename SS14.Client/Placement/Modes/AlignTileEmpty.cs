@@ -14,22 +14,22 @@ namespace SS14.Client.Placement.Modes
 
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
-            MouseCoords = pManager.eyeManager.ScreenToWorld(mouseScreen);
+            MouseCoords = ScreenToPlayerGrid(mouseScreen);
 
             CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
             float tileSize = MouseCoords.Grid.TileSize; //convert from ushort to float
             GridDistancing = tileSize;
-            
+
             if (pManager.CurrentPermission.IsTile)
             {
-                MouseCoords = new LocalCoordinates(CurrentTile.X + tileSize/2,
-                                                  CurrentTile.Y + tileSize/2,
+                MouseCoords = new LocalCoordinates(CurrentTile.X + tileSize / 2,
+                                                  CurrentTile.Y + tileSize / 2,
                                                   MouseCoords.Grid);
             }
             else
             {
-                MouseCoords = new LocalCoordinates(CurrentTile.X + tileSize/2 + pManager.CurrentPrototype.PlacementOffset.X,
-                                                  CurrentTile.Y + tileSize/2 + pManager.CurrentPrototype.PlacementOffset.Y,
+                MouseCoords = new LocalCoordinates(CurrentTile.X + tileSize / 2 + pManager.CurrentPrototype.PlacementOffset.X,
+                                                  CurrentTile.Y + tileSize / 2 + pManager.CurrentPrototype.PlacementOffset.Y,
                                                   MouseCoords.Grid);
             }
         }

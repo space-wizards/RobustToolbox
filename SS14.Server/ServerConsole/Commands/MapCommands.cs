@@ -27,7 +27,7 @@ namespace SS14.Server.ServerConsole.Commands
             var gridId = new GridId(intGridId);
 
             // no saving null space
-            if(mapID == MapId.Nullspace)
+            if (mapID == MapId.Nullspace)
                 return;
 
             // no saving default grid
@@ -109,7 +109,7 @@ namespace SS14.Server.ServerConsole.Commands
                 return;
 
             var mapManager = IoCManager.Resolve<IMapManager>();
-            if(mapManager.MapExists(mapID))
+            if (mapManager.MapExists(mapID))
                 return;
 
             // TODO: Parse path

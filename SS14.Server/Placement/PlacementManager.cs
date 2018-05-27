@@ -97,7 +97,8 @@ namespace SS14.Server.Placement
             //TODO: Distance check, so you can't place things off of screen.
 
             // get the grid under the worldCoords.
-            var grid = _mapManager.GetMap(mapIndex).FindGridAt(new Vector2(xValue, yValue));
+
+            var grid = _mapManager.GetMap(mapIndex).GetGrid(plyTransform.GridID);
             var coordinates = new LocalCoordinates(xValue, yValue, grid.Index, mapIndex);
 
 

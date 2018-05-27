@@ -123,7 +123,7 @@ namespace SS14.Server.GameObjects
             // serialize all entities to disk
             foreach (var entity in _allEntities)
             {
-                if (entity.TryGetComponent<ITransformComponent>(out var transform) && transform.GridID == gridId)
+                if (entity.TryGetComponent<ITransformComponent>(out var transform) && transform.GridID == gridId && entity.Prototype.MapSavable)
                 {
                     entity.ExposeData(serializer);
                 }

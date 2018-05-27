@@ -8,7 +8,7 @@ namespace SS14.Client.Placement.Modes
 
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
-            MouseCoords = pManager.eyeManager.ScreenToWorld(mouseScreen);
+            MouseCoords = ScreenToPlayerGrid(mouseScreen);
             CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
         }
 

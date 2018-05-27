@@ -15,8 +15,8 @@ namespace SS14.Client.Placement.Modes
             {
                 return;
             }
-            
-            MouseCoords = pManager.eyeManager.ScreenToWorld(mouseScreen);
+
+            MouseCoords = ScreenToPlayerGrid(mouseScreen);
 
             CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
             float tileSize = MouseCoords.Grid.TileSize; //convert from ushort to float

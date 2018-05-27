@@ -5,6 +5,8 @@ using SS14.Client.Graphics.ClientEye;
 using SS14.Client.ResourceManagement;
 using SS14.Client.Utility;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Interfaces.Map;
+using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 
@@ -213,6 +215,14 @@ namespace SS14.Client.Placement
         protected Vector2 WorldToScreen(Vector2 point)
         {
             return pManager.eyeManager.WorldToScreen(point);
+        }
+
+        protected LocalCoordinates ScreenToPlayerGrid(ScreenCoordinates coords)
+        {
+            var worldPos = pManager.eyeManager.ScreenToWorld(coords.Position);
+            var mapMgr = IoCManager.Resolve<IMapManager>();
+            var entityGrid = pManager.PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().GridID;
+            return new LocalCoordinates(worldPos, mapMgr.GetMap(coords.MapID).GetGrid(entityGrid));
         }
     }
 }

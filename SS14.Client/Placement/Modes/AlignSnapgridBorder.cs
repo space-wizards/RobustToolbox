@@ -23,8 +23,8 @@ namespace SS14.Client.Placement.Modes
                 const int ppm = EyeManager.PIXELSPERMETER;
                 var viewportSize = pManager.sceneTree.SceneTree.Root.Size.Convert();
                 var position = pManager.eyeManager.ScreenToWorld(Vector2.Zero);
-                var gridstartx = (float) Math.Round(position.X / snapSize, MidpointRounding.AwayFromZero) * snapSize;
-                var gridstarty = (float) Math.Round(position.Y / snapSize, MidpointRounding.AwayFromZero) * snapSize;
+                var gridstartx = (float)Math.Round(position.X / snapSize, MidpointRounding.AwayFromZero) * snapSize;
+                var gridstarty = (float)Math.Round(position.Y / snapSize, MidpointRounding.AwayFromZero) * snapSize;
                 var gridstart = pManager.eyeManager.WorldToScreen(new Vector2( //Find snap grid closest to screen origin and convert back to screen coords
                     gridstartx,
                     gridstarty));
@@ -48,15 +48,15 @@ namespace SS14.Client.Placement.Modes
 
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
-            MouseCoords = pManager.eyeManager.ScreenToWorld(mouseScreen);
+            MouseCoords = ScreenToPlayerGrid(mouseScreen);
 
             snapSize = MouseCoords.Grid.SnapSize; //Find snap size.
             GridDistancing = snapSize;
             onGrid = true;
 
             var mouselocal = new Vector2( //Round local coordinates onto the snap grid
-                (float) Math.Round(MouseCoords.X / (double) snapSize, MidpointRounding.AwayFromZero) * snapSize,
-                (float) Math.Round(MouseCoords.Y / (double) snapSize, MidpointRounding.AwayFromZero) * snapSize);
+                (float)Math.Round(MouseCoords.X / (double)snapSize, MidpointRounding.AwayFromZero) * snapSize,
+                (float)Math.Round(MouseCoords.Y / (double)snapSize, MidpointRounding.AwayFromZero) * snapSize);
 
             //Convert back to original world and screen coordinates after applying offset
             MouseCoords = new LocalCoordinates(mouselocal + new Vector2(pManager.CurrentPrototype.PlacementOffset.X, pManager.CurrentPrototype.PlacementOffset.Y), MouseCoords.Grid);

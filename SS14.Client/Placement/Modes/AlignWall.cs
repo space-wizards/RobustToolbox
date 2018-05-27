@@ -11,7 +11,7 @@ namespace SS14.Client.Placement.Modes
 
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
-            MouseCoords = pManager.eyeManager.ScreenToWorld(mouseScreen);
+            MouseCoords = ScreenToPlayerGrid(mouseScreen);
             CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
 
             if (pManager.CurrentPermission.IsTile)
@@ -35,8 +35,8 @@ namespace SS14.Client.Placement.Modes
             }
 
             Vector2 closestNode = (from Vector2 node in nodes
-                                    orderby (node - MouseCoords.Position).LengthSquared ascending
-                                    select node).First();
+                                   orderby (node - MouseCoords.Position).LengthSquared ascending
+                                   select node).First();
 
             MouseCoords = new LocalCoordinates(closestNode + new Vector2(pManager.CurrentPrototype.PlacementOffset.X,
                                                                          pManager.CurrentPrototype.PlacementOffset.Y),

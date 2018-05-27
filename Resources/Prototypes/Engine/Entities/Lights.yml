@@ -10,6 +10,8 @@
   - type: Icon
     texture: Objects/wall_light.png
 
+  - type: BoundingBox
+
   - type: PointLight
     radius: 8
     energy: 1.2

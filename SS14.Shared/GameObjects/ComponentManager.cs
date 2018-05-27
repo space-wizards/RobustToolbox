@@ -1,10 +1,9 @@
-﻿using SS14.Shared.GameObjects;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace SS14.Shared.GameObjects
 {
@@ -52,7 +51,8 @@ namespace SS14.Shared.GameObjects
             return Enumerable.Empty<IComponent>();
         }
 
-        public IEnumerable<T> GetComponents<T>() where T : IComponent
+        public IEnumerable<T> GetComponents<T>()
+            where T : IComponent
         {
             return GetComponents(typeof(T)).Cast<T>();
         }
@@ -71,6 +71,7 @@ namespace SS14.Shared.GameObjects
                 {
                     _listComponents[type] = new List<IComponent>();
                 }
+
                 _listComponents[type].Add(component);
             }
 
@@ -122,12 +123,12 @@ namespace SS14.Shared.GameObjects
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            var newComponent = (Component)ComponentFactory.GetComponent<T>();
+            var newComponent = (Component) ComponentFactory.GetComponent<T>();
 
             newComponent.Owner = entity;
             AddComponent(entity, newComponent);
 
-            return (T)newComponent;
+            return (T) newComponent;
         }
 
         public void AddComponent(IEntity entity, Component component, bool overwrite = false)
@@ -150,7 +151,7 @@ namespace SS14.Shared.GameObjects
                 if (!TryGetComponent(entity.Uid, type, out var duplicate))
                     continue;
 
-                if(!overwrite)
+                if (!overwrite)
                     throw new InvalidOperationException($"Component reference type {type} already occupied by {duplicate}");
 
                 if (component.Running)
@@ -214,20 +215,58 @@ namespace SS14.Shared.GameObjects
             RemoveComponent(comp as Component);
         }
 
+        public void RemoveComponent(EntityUid uid, IComponent component)
+        {
+            if (component == null)
+                throw new ArgumentNullException(nameof(component));
+
+            if (component.Owner == null || component.Owner.Uid != uid)
+                throw new InvalidOperationException("Component is not owned by entity.");
+
+            RemoveComponent(component as Component);
+        }
+
+        public void RemoveComponents(EntityUid uid)
+        {
+            foreach (var kvTypeDict in _dictComponents.Values)
+            {
+                if (kvTypeDict.TryGetValue(uid, out var comp))
+                {
+                    RemoveComponent(comp);
+                }
+            }
+        }
+
         private void RemoveComponent(Component component)
         {
-            if(component == null)
+            if (component == null)
                 throw new ArgumentNullException(nameof(component));
 
             if (component.Deleted)
                 throw new ArgumentException("Component has already been deleted.", nameof(component));
-            
+
             _deleteList.Add(component);
 
-            if(component.Running)
+            if (component.Running)
                 component.Shutdown();
 
             component.OnRemove();
+        }
+
+        private void RemoveComponentImmediate(Component component)
+        {
+            if (component == null)
+                throw new ArgumentNullException(nameof(component));
+
+            if (component.Deleted)
+                throw new ArgumentException("Component has already been deleted.", nameof(component));
+
+            if (component.Running)
+                component.Shutdown();
+
+            component.OnRemove();
+
+            DeleteComponent(component);
         }
 
         public void CullDeletedComponents()
@@ -288,7 +327,7 @@ namespace SS14.Shared.GameObjects
         public T GetComponent<T>(EntityUid uid)
             where T : Component
         {
-            return (T)GetComponent(uid, typeof(T));
+            return (T) GetComponent(uid, typeof(T));
         }
 
         public IComponent GetComponent(EntityUid uid, Type type)
@@ -304,11 +343,11 @@ namespace SS14.Shared.GameObjects
         }
 
         public bool TryGetComponent<T>(EntityUid uid, out T component)
-            where T : Component
+            where T : class
         {
             if (TryGetComponent(uid, typeof(T), out var comp))
             {
-                component = (T)comp;
+                component = (T) comp;
                 return true;
             }
 
@@ -359,7 +398,16 @@ namespace SS14.Shared.GameObjects
         {
             return GetComponents(uid).OfType<T>();
         }
-        
+
+        public IEnumerable<IComponent> GetNetComponents(EntityUid uid)
+        {
+            foreach (var kvNetComp in _netComponents[uid])
+            {
+                if (!kvNetComp.Value.Deleted)
+                    yield return kvNetComp.Value;
+            }
+        }
+
         #endregion
     }
 }

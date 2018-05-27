@@ -1,12 +1,11 @@
-﻿using SS14.Client.Interfaces.GameObjects;
+﻿using System;
+using System.Collections.Generic;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.Maths;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using SS14.Shared.Map;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -88,6 +87,7 @@ namespace SS14.Client.GameObjects
                     }
                 }
             }
+
             return false;
         }
 
@@ -99,6 +99,7 @@ namespace SS14.Client.GameObjects
             {
                 throw new InvalidOperationException("InitializeEntities() called multiple times");
             }
+
             InitializeEntities();
             EntitySystemManager.Initialize();
             Started = true;
@@ -122,6 +123,7 @@ namespace SS14.Client.GameObjects
                     {
                         InitializeEntity(newEntity);
                     }
+
                     newEntity.Name = es.StateData.Name;
                     newEntity.HandleEntityState(es);
                 }

@@ -1,34 +1,40 @@
-﻿using SS14.Shared.Interfaces.GameObjects;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using SS14.Shared.Interfaces.Network;
-using Vector2 = SS14.Shared.Maths.Vector2;
-using SS14.Shared.Interfaces.Timing;
 
 namespace SS14.Shared.GameObjects
 {
     public class EntityManager : IEntityManager
     {
         #region Dependencies
+
         [Dependency]
         protected readonly IEntityNetworkManager EntityNetworkManager;
+
         [Dependency]
         protected readonly IPrototypeManager PrototypeManager;
+
         [Dependency]
         protected readonly IEntitySystemManager EntitySystemManager;
+
         [Dependency]
         protected readonly IComponentFactory ComponentFactory;
+
         [Dependency]
         private readonly INetManager _network;
+
         [Dependency]
         private readonly IComponentManager _componentManager;
+
         [Dependency]
         private readonly IGameTiming _gameTiming;
 
@@ -36,11 +42,16 @@ namespace SS14.Shared.GameObjects
 
         public uint CurrentTick => _gameTiming.CurTick;
 
+        public IComponentManager ComponentManager => _componentManager;
+        public IEntityNetworkManager EntityNetManager => EntityNetworkManager;
+
         protected readonly Dictionary<EntityUid, IEntity> Entities = new Dictionary<EntityUid, IEntity>();
+
         /// <summary>
         /// List of all entities, used for iteration.
         /// </summary>
         protected readonly List<Entity> _allEntities = new List<Entity>();
+
         protected readonly Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
 
         // This MUST start > 0
@@ -48,6 +59,7 @@ namespace SS14.Shared.GameObjects
 
         private readonly Dictionary<Type, List<Delegate>> _eventSubscriptions
             = new Dictionary<Type, List<Delegate>>();
+
         private readonly Dictionary<IEntityEventSubscriber, Dictionary<Type, Delegate>> _inverseEventSubscriptions
             = new Dictionary<IEntityEventSubscriber, Dictionary<Type, Delegate>>();
 
@@ -64,9 +76,7 @@ namespace SS14.Shared.GameObjects
             _network.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
         }
 
-        public virtual void Startup()
-        {
-        }
+        public virtual void Startup() { }
 
         public virtual void Shutdown()
         {
@@ -182,6 +192,7 @@ namespace SS14.Shared.GameObjects
             {
                 e.Shutdown();
             }
+
             CullDeletedEntities();
         }
 
@@ -239,17 +250,19 @@ namespace SS14.Shared.GameObjects
 
         #region ComponentEvents
 
-        public void SubscribeEvent<T>(Delegate eventHandler, IEntityEventSubscriber s) where T : EntityEventArgs
+        public void SubscribeEvent<T>(Delegate eventHandler, IEntityEventSubscriber s)
+            where T : EntityEventArgs
         {
             Type eventType = typeof(T);
             if (!_eventSubscriptions.ContainsKey(eventType))
             {
-                _eventSubscriptions.Add(eventType, new List<Delegate> { eventHandler });
+                _eventSubscriptions.Add(eventType, new List<Delegate> {eventHandler});
             }
             else if (!_eventSubscriptions[eventType].Contains(eventHandler))
             {
                 _eventSubscriptions[eventType].Add(eventHandler);
             }
+
             if (!_inverseEventSubscriptions.ContainsKey(s))
             {
                 _inverseEventSubscriptions.Add(
@@ -257,13 +270,15 @@ namespace SS14.Shared.GameObjects
                     new Dictionary<Type, Delegate>()
                 );
             }
+
             if (!_inverseEventSubscriptions[s].ContainsKey(eventType))
             {
                 _inverseEventSubscriptions[s].Add(eventType, eventHandler);
             }
         }
 
-        public void UnsubscribeEvent<T>(IEntityEventSubscriber s) where T : EntityEventArgs
+        public void UnsubscribeEvent<T>(IEntityEventSubscriber s)
+            where T : EntityEventArgs
         {
             Type eventType = typeof(T);
 
@@ -279,6 +294,7 @@ namespace SS14.Shared.GameObjects
             {
                 _eventSubscriptions[eventType].Remove(evh);
             }
+
             if (_inverseEventSubscriptions.ContainsKey(s) && _inverseEventSubscriptions[s].ContainsKey(eventType))
             {
                 _inverseEventSubscriptions[s].Remove(eventType);

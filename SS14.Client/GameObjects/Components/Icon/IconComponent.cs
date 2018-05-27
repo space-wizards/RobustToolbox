@@ -53,7 +53,7 @@ namespace SS14.Client.GameObjects
             {
                 if (rsi.TryGetState(node.AsString(), out var state))
                 {
-                    return state.GetFrame(0, 0).icon;
+                    return state;
                 }
                 else
                 {

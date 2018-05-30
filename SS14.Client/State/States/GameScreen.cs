@@ -227,7 +227,7 @@ namespace SS14.Client.State.States
         {
             public int Compare((IEntity clicked, int depth) x, (IEntity clicked, int depth) y)
             {
-                var val = x.depth.CompareTo(y);
+                var val = x.depth.CompareTo(y.depth);
                 if (val != 0)
                 {
                     return val;

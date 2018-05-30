@@ -67,6 +67,14 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public bool Resizable { get; set; } = true;
 
+        private Label TitleLabel => GetChild("Header").GetChild<Label>("Header Text");
+
+        public string Title
+        {
+            get => TitleLabel.Text;
+            set => TitleLabel.Text = value;
+        }
+
         // Drag resizing and moving code is mostly taken from Godot's WindowDialog.
 
         protected override void Initialize()

@@ -7,7 +7,7 @@ namespace SS14.Shared.GameObjects
     ///     This can be used by the EntityManager to reference an IEntity.
     /// </summary>
     [Serializable]
-    public struct EntityUid : IEquatable<EntityUid>
+    public struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>
     {
         private readonly int _uid;
 
@@ -73,11 +73,16 @@ namespace SS14.Shared.GameObjects
         {
             return self._uid;
         }
-        
+
         /// <inheritdoc />
         public override string ToString()
         {
             return _uid.ToString();
+        }
+
+        public int CompareTo(EntityUid other)
+        {
+            return _uid.CompareTo(other._uid);
         }
     }
 }

@@ -5,7 +5,7 @@
   - type: Transform
   - type: Clickable
   - type: Sprite
-    drawdepth: FloorPlaceable
+    drawdepth: Objects
     texture: Objects/door_ew.png
 
   - type: Icon

@@ -13,22 +13,24 @@
 
     public enum DrawDepth
     {
-        FloorTiles = 0,
-        FloorObjects = 1,
-        ItemsOnFloor = 2,
-        MobBase = 3,
-        MobUnderClothingLayer = 4,
-        MobUnderAccessoryLayer = 5,
-        MobOverClothingLayer = 6,
-        MobOverAccessoryLayer = 7,
-        HeldItems = 8,
-        Tables = 9,
-        ItemsOnTables = 10,
-        FloorPlaceable = 11,
-        Doors = 12,
-        Walls = 13,
-        WallMountedItems = 14,
-        WallTops = 15,
-        LightOverlay = 16
+        /// <summary>
+        ///     Floors that are low and below wires, such as plating without floor tiles.
+        /// </summary>
+        LowFloors = 0,
+        /// <summary>
+        ///     Things that are beneath regular floors, such as wires.
+        /// </summary>
+        BelowFloor = 1,
+        FloorTiles = 2,
+        /// <summary>
+        ///     Things that are actually right on the floor, like vents.
+        /// </summary>
+        FloorObjects = 3,
+        Objects = 4,
+        Items = 5,
+        Mobs = 6,
+        Walls = 7,
+        WallMountedItems = 8,
+        WallTops = 9,
     }
 }

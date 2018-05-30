@@ -9,7 +9,7 @@
     sprite: Mob/greyshirt.rsi
     state: greyshirt
     scale: 2, 2
-    drawdepth: MobBase
+    drawdepth: Mobs
 
   - type: Icon
     sprite: Mob/greyshirt.rsi

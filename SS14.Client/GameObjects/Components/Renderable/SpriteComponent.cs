@@ -50,7 +50,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        private DrawDepth drawDepth;
+        private DrawDepth drawDepth = DrawDepth.Objects;
 
         /// <summary>
         ///     Z-index for drawing.

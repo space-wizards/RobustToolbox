@@ -6,7 +6,6 @@
   - type: Clickable
   - type: Sprite
     texture: Objects/worktop_single.png
-    drawdepth: Tables
 
   - type: Icon
     texture: Objects/worktop_single.png

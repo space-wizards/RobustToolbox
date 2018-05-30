@@ -19,7 +19,7 @@ namespace SS14.Server.GameObjects
         private List<Layer> Layers = new List<Layer>();
 
         private bool _visible;
-        private DrawDepth _drawDepth;
+        private DrawDepth _drawDepth = DrawDepth.Objects;
         private Vector2 _scale;
         private Vector2 _offset;
         private Color _color;
@@ -286,7 +286,7 @@ namespace SS14.Server.GameObjects
             base.ExposeData(serializer);
 
             serializer.DataField(ref _visible, "visible", true);
-            serializer.DataField(ref _drawDepth, "depth", DrawDepth.FloorTiles);
+            serializer.DataField(ref _drawDepth, "drawdepth", DrawDepth.Objects);
             serializer.DataField(ref _offset, "offset", Vector2.Zero);
             serializer.DataField(ref _scale, "scale", Vector2.One);
             serializer.DataField(ref _color, "color", Color.White);

@@ -5,7 +5,7 @@
   - type: Transform
   - type: Clickable
   - type: Sprite
-    drawdepth: FloorPlaceable
+    drawdepth: Walls
     texture: Tiles/wall_texture.png
 
   - type: Icon

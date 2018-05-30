@@ -1,4 +1,4 @@
-namespace SS14.Client.Graphics.Shaders
+﻿namespace SS14.Client.Graphics.Shaders
 {
     public enum ShaderParamType
     {
@@ -9,13 +9,13 @@ namespace SS14.Client.Graphics.Shaders
         BVec3,
         BVec4,
         UInt,
-        UVec2,
-        UVec3,
-        UVec4,
+        /// <summary>
+        ///     While Godot supports all (u)int vectors,
+        ///     It doesn't specify which is used from get params.
+        ///     So ivec2, ivec3, ivec4... are all this guy.
+        /// </summary>
+        IntVec,
         Int,
-        IVec2,
-        IVec3,
-        IVec4,
         Float,
         Vec2,
         Vec3,
@@ -23,11 +23,11 @@ namespace SS14.Client.Graphics.Shaders
         Mat2,
         Mat3,
         Mat4,
+        /// <summary>
+        ///     Godot supports u, i and b samplers too,
+        ///     but we can't tell in code.
+        /// </summary>
         Sampler2D,
-        ISampler2D,
-        USampler2D,
-        BSampler2D,
         SamplerCube
-
     }
 }

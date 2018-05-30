@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using SS14.Client.Graphics.Shaders;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Shared.Utility;
 
@@ -11,6 +13,8 @@ namespace SS14.Client.ResourceManagement.ResourceTypes
     public class ShaderSourceResource : BaseResource
     {
         internal Godot.Shader GodotShader { get; private set; }
+
+        private Dictionary<string, ShaderParamType> Parameters = new Dictionary<string, ShaderParamType>();
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {

@@ -1,0 +1,4 @@
+- type: shader
+  id: outline
+  kind: source
+  path: "/outline.gdsl"

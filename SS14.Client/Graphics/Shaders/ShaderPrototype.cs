@@ -182,8 +182,16 @@ namespace SS14.Client.Graphics.Shaders
                 case ShaderParamType.Vec3:
                     return node.AsVector3().Convert();
                 case ShaderParamType.Vec4:
-                    var vec4 = node.AsVector4();
-                    return new Godot.Quat(vec4.X, vec4.Y, vec4.Z, vec4.W);
+                    try
+                    {
+                        return node.AsColor().Convert();
+                    }
+                    catch
+                    {
+                        var vec4 = node.AsVector4();
+                        return new Godot.Quat(vec4.X, vec4.Y, vec4.Z, vec4.W);
+                    }
+
                 case ShaderParamType.Sampler2D:
                     var path = node.AsResourcePath();
                     var resc = IoCManager.Resolve<IResourceCache>();

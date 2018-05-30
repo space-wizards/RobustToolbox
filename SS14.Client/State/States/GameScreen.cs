@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using SS14.Client.Console;
-using SS14.Client.GameObjects.EntitySystems;
+﻿using SS14.Client.Console;
+using SS14.Client.Graphics.Shaders;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
@@ -11,22 +8,16 @@ using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.UserInterface;
-using SS14.Client.UserInterface;
-using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
-using SS14.Shared;
-using SS14.Shared.Configuration;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Input;
-using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
-using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
 using SS14.Shared.Map;
-using SS14.Shared.Network;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SS14.Client.State.States
 {
@@ -129,10 +120,23 @@ namespace SS14.Client.State.States
             playerManager.Update(e.Elapsed);
         }
 
+        private IEntity lastEntity;
+
         public override void FrameUpdate(RenderFrameEventArgs e)
         {
             placementManager.FrameUpdate(e);
             _entityManager.FrameUpdate(e.Elapsed);
+
+            var map = playerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().MapID;
+            IEntity entityToClick = GetEntityUnderPosition(new ScreenCoordinates(inputManager.MouseScreenPosition, map));
+            if (entityToClick == lastEntity)
+            {
+                return;
+            }
+
+            lastEntity?.GetComponent<ISpriteComponent>()?.LayerSetShader(0, (Shader)null);
+            lastEntity = entityToClick;
+            entityToClick?.GetComponent<ISpriteComponent>()?.LayerSetShader(0, "selection_outline");
         }
 
         public override void MouseDown(MouseButtonEventArgs eventargs)
@@ -141,38 +145,9 @@ namespace SS14.Client.State.States
                 return;
 
             var map = playerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().MapID;
-            var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(eventargs.Position, map));
-
-            // Find all the entities intersecting our click
-            var entities =
-                _entityManager.GetEntitiesIntersecting(mousePosWorld.MapID, mousePosWorld.Position);
-
-            // Check the entities against whether or not we can click them
-            var clickedEntities = new List<(IEntity clicked, int drawDepth)>();
-            foreach (IEntity entity in entities)
-            {
-                if (entity.TryGetComponent<IClientClickableComponent>(out var component)
-                && entity.GetComponent<ITransformComponent>().IsMapTransform
-                && component.CheckClick(mousePosWorld, out int drawdepthofclicked))
-                {
-                    clickedEntities.Add((entity, drawdepthofclicked));
-                }
-            }
-
-            IEntity entityToClick;
-
-            if (clickedEntities.Any())
-            {
-                entityToClick = (from cd in clickedEntities
-                                 orderby cd.drawDepth ascending,
-                                     cd.clicked.GetComponent<ITransformComponent>().LocalPosition
-                                     .Y ascending
-                                 select cd.clicked).Last();
-            }
-            else
-            {
-                entityToClick = null;
-            }
+            var screencoords = new ScreenCoordinates(eventargs.Position, map);
+            IEntity entityToClick = GetEntityUnderPosition(screencoords);
+            var mousePosWorld = eyeManager.ScreenToWorld(screencoords);
 
             //First possible exit point for click, acceptable due to being clientside
             if (entityToClick != null && placementManager.Eraser && placementManager.IsActive)
@@ -215,9 +190,52 @@ namespace SS14.Client.State.States
             }
         }
 
+        private IEntity GetEntityUnderPosition(ScreenCoordinates coordinates)
+        {
+            var mousePosWorld = eyeManager.ScreenToWorld(coordinates);
+
+            // Find all the entities intersecting our click
+            var entities =
+                _entityManager.GetEntitiesIntersecting(mousePosWorld.MapID, mousePosWorld.Position);
+
+            // Check the entities against whether or not we can click them
+            var foundEntities = new List<(IEntity clicked, int drawDepth)>();
+            foreach (IEntity entity in entities)
+            {
+                if (entity.TryGetComponent<IClientClickableComponent>(out var component)
+                && entity.GetComponent<ITransformComponent>().IsMapTransform
+                && component.CheckClick(mousePosWorld, out int drawdepthofclicked))
+                {
+                    foundEntities.Add((entity, drawdepthofclicked));
+                }
+            }
+
+            if (foundEntities.Count != 0)
+            {
+                foundEntities.Sort(new ClickableEntityComparer());
+                return foundEntities[foundEntities.Count - 1].clicked;
+            }
+            return null;
+        }
+
         public override void MouseUp(MouseButtonEventArgs e)
         {
             placementManager.MouseUp(e);
+        }
+
+        internal class ClickableEntityComparer : IComparer<(IEntity clicked, int depth)>
+        {
+            public int Compare((IEntity clicked, int depth) x, (IEntity clicked, int depth) y)
+            {
+                var val = x.depth.CompareTo(y);
+                if (val != 0)
+                {
+                    return val;
+                }
+                var transx = x.clicked.GetComponent<ITransformComponent>();
+                var transy = y.clicked.GetComponent<ITransformComponent>();
+                return transx.LocalPosition.Y.CompareTo(transy.LocalPosition.Y);
+            }
         }
     }
 }

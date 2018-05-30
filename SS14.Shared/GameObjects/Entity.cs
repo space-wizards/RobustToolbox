@@ -572,5 +572,10 @@ namespace SS14.Shared.GameObjects
         }
 
         #endregion GameState
+
+        public override string ToString()
+        {
+            return $"{Name} ({Uid}, {Prototype.Name})";
+        }
     }
 }

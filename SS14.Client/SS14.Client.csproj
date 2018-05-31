@@ -108,7 +108,6 @@
     <Compile Include="GameObjects\ClientEntityManager.cs" />
     <Compile Include="GameObjects\ClientEntityNetworkManager.cs" />
     <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponent.cs" />
-    <Compile Include="GameObjects\Components\Collidable\GodotCollidableComponent.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponent.cs" />
     <Compile Include="GameObjects\Components\Icon\IconComponent.cs" />
     <Compile Include="GameObjects\Components\Input\ClickableComponent.cs" />
@@ -132,6 +131,8 @@
     <Compile Include="Graphics\Lighting\LightManager.Occluder.cs" />
     <Compile Include="Graphics\Lighting\LightManager.cs" />
     <Compile Include="Graphics\Lighting\LightMode\LightModeConstant.cs" />
+    <Compile Include="Graphics\Overlays\Overlay.cs" />
+    <Compile Include="Graphics\Overlays\OverlayManager.cs" />
     <Compile Include="Graphics\Shaders\ShaderPrototype.cs" />
     <Compile Include="Graphics\Shaders\Shader.cs" />
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
@@ -149,6 +150,8 @@
     <Compile Include="Interfaces\Graphics\Lighting\ILightManager.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILightMode.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\IOccluder.cs" />
+    <Compile Include="Interfaces\Graphics\Overlays\IOverlay.cs" />
+    <Compile Include="Interfaces\Graphics\Overlays\IOverlayManager.cs" />
     <Compile Include="Interfaces\IBaseClient.cs" />
     <Compile Include="Interfaces\ISceneTreeHolder.cs" />
     <Compile Include="Interfaces\Map\IClientTileDefinitionManager.cs" />

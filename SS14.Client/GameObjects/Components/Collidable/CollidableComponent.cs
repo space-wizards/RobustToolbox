@@ -24,14 +24,6 @@ namespace SS14.Client.GameObjects
         // no client side collision support for now
         private bool collisionEnabled;
 
-        private Color _debugColor;
-
-        public Color DebugColor
-        {
-            get { return _debugColor; }
-            private set { _debugColor = value; }
-        }
-
         /// <inheritdoc />
         public override string Name => "Collidable";
 
@@ -49,13 +41,6 @@ namespace SS14.Client.GameObjects
 
         /// <inheritdoc />
         public MapId MapID => Owner.GetComponent<ITransformComponent>().MapID;
-
-        protected bool _debugDraw = false;
-        public virtual bool DebugDraw
-        {
-            get => _debugDraw;
-            set => _debugDraw = value;
-        }
 
         /// <inheritdoc />
         void ICollidable.Bumped(IEntity bumpedby)
@@ -91,11 +76,6 @@ namespace SS14.Client.GameObjects
             {
                 var cm = IoCManager.Resolve<ICollisionManager>();
                 cm.AddCollidable(this);
-            }
-
-            if (IoCManager.Resolve<IDebugDrawing>().DebugColliders)
-            {
-                DebugDraw = true;
             }
         }
 
@@ -178,23 +158,6 @@ namespace SS14.Client.GameObjects
             collisionEnabled = false;
             var cm = IoCManager.Resolve<ICollisionManager>();
             cm.RemoveCollidable(this);
-        }
-
-        public override void ExposeData(EntitySerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataField(ref _debugColor, "DebugColor", Color.Red);
-        }
-
-        public override void LoadParameters(YamlMappingNode mapping)
-        {
-            base.LoadParameters(mapping);
-
-            if (mapping.TryGetNode("DebugColor", out var node))
-            {
-                DebugColor = node.AsHexColor();
-            }
         }
     }
 }

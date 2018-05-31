@@ -48,6 +48,8 @@ namespace SS14.Client.State.States
 
         private Chatbox _gameChat;
 
+        private IEntity lastHoveredEntity;
+
         public override void Startup()
         {
             IoCManager.InjectDependencies(this);
@@ -120,23 +122,30 @@ namespace SS14.Client.State.States
             playerManager.Update(e.Elapsed);
         }
 
-        private IEntity lastEntity;
-
         public override void FrameUpdate(RenderFrameEventArgs e)
         {
             placementManager.FrameUpdate(e);
             _entityManager.FrameUpdate(e.Elapsed);
 
             var map = playerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().MapID;
-            IEntity entityToClick = GetEntityUnderPosition(new ScreenCoordinates(inputManager.MouseScreenPosition, map));
-            if (entityToClick == lastEntity)
+            var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(inputManager.MouseScreenPosition, map));
+            IEntity entityToClick = GetEntityUnderPosition(mousePosWorld);
+            if (entityToClick == lastHoveredEntity)
             {
                 return;
             }
 
-            lastEntity?.GetComponent<ISpriteComponent>()?.LayerSetShader(0, (Shader)null);
-            lastEntity = entityToClick;
-            entityToClick?.GetComponent<ISpriteComponent>()?.LayerSetShader(0, "selection_outline");
+            if (lastHoveredEntity != null)
+            {
+                lastHoveredEntity.GetComponent<IClientClickableComponent>().OnMouseLeave();
+            }
+
+            lastHoveredEntity = entityToClick;
+
+            if (lastHoveredEntity != null)
+            {
+                lastHoveredEntity.GetComponent<IClientClickableComponent>().OnMouseEnter();
+            }
         }
 
         public override void MouseDown(MouseButtonEventArgs eventargs)
@@ -145,9 +154,8 @@ namespace SS14.Client.State.States
                 return;
 
             var map = playerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().MapID;
-            var screencoords = new ScreenCoordinates(eventargs.Position, map);
-            IEntity entityToClick = GetEntityUnderPosition(screencoords);
-            var mousePosWorld = eyeManager.ScreenToWorld(screencoords);
+            var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(eventargs.Position, map));
+            IEntity entityToClick = GetEntityUnderPosition(mousePosWorld);
 
             //First possible exit point for click, acceptable due to being clientside
             if (entityToClick != null && placementManager.Eraser && placementManager.IsActive)
@@ -190,13 +198,11 @@ namespace SS14.Client.State.States
             }
         }
 
-        private IEntity GetEntityUnderPosition(ScreenCoordinates coordinates)
+        private IEntity GetEntityUnderPosition(LocalCoordinates coordinates)
         {
-            var mousePosWorld = eyeManager.ScreenToWorld(coordinates);
-
             // Find all the entities intersecting our click
             var entities =
-                _entityManager.GetEntitiesIntersecting(mousePosWorld.MapID, mousePosWorld.Position);
+                _entityManager.GetEntitiesIntersecting(coordinates.MapID, coordinates.Position);
 
             // Check the entities against whether or not we can click them
             var foundEntities = new List<(IEntity clicked, int drawDepth)>();
@@ -204,7 +210,7 @@ namespace SS14.Client.State.States
             {
                 if (entity.TryGetComponent<IClientClickableComponent>(out var component)
                 && entity.GetComponent<ITransformComponent>().IsMapTransform
-                && component.CheckClick(mousePosWorld, out int drawdepthofclicked))
+                && component.CheckClick(coordinates, out int drawdepthofclicked))
                 {
                     foundEntities.Add((entity, drawdepthofclicked));
                 }

@@ -48,6 +48,23 @@ namespace SS14.Client.Graphics.ClientEye
 
         public MapId CurrentMap => currentEye.MapId;
 
+        public Box2 GetWorldViewport()
+        {
+            var vpSize = sceneTree.SceneTree.Root.Size.Convert();
+
+            var topLeft = ScreenToWorld(Vector2.Zero);
+            var topRight = ScreenToWorld(new Vector2(vpSize.X, 0));
+            var bottomRight = ScreenToWorld(vpSize);
+            var bottomLeft = ScreenToWorld(new Vector2(0, vpSize.Y));
+
+            var left = MathHelper.Min(topLeft.X, topRight.X, bottomRight.X, bottomLeft.X);
+            var top = MathHelper.Min(topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y);
+            var right = MathHelper.Max(topLeft.X, topRight.X, bottomRight.X, bottomLeft.X);
+            var bottom = MathHelper.Max(topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y);
+
+            return new Box2(left, top, right, bottom);
+        }
+
         public void Initialize()
         {
             defaultEye = new FixedEye();

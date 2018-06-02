@@ -2,6 +2,7 @@
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Graphics.Overlays;
+using SS14.Client.Graphics.Shaders;
 using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Graphics.Overlays;
@@ -10,6 +11,7 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
+using SS14.Shared.Prototypes;
 
 namespace SS14.Client.Debugging
 {
@@ -47,12 +49,15 @@ namespace SS14.Client.Debugging
             readonly IComponentManager componentManager;
             [Dependency]
             readonly IEyeManager eyeManager;
+            [Dependency]
+            readonly IPrototypeManager prototypeManager;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
             public CollidableOverlay() : base(nameof(CollidableOverlay))
             {
                 IoCManager.InjectDependencies(this);
+                Shader = prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
             }
 
             protected override void Draw(DrawingHandle handle)

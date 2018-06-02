@@ -1,5 +1,5 @@
-﻿using Godot;
-using SS14.Client.Graphics.Drawing;
+﻿using SS14.Client.Graphics.Drawing;
+using SS14.Client.Graphics.Shaders;
 using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Shared.IoC;
 using System;
@@ -21,6 +21,22 @@ namespace SS14.Client.Graphics.Overlays
         public bool Drawing { get; private set; } = false;
 
         public virtual OverlaySpace Space => OverlaySpace.ScreenSpace;
+
+        private Shader _shader;
+        public Shader Shader
+        {
+            get => _shader;
+            set
+            {
+                _shader = value;
+                if (MainCanvasItem != null)
+                {
+                    VS.CanvasItemSetMaterial(MainCanvasItem, value?.GodotMaterial?.GetRid());
+                }
+            }
+        }
+
+        public virtual bool SubHandlesUseMainShader { get; } = true;
 
         private bool _isDirty = true;
 
@@ -60,7 +76,7 @@ namespace SS14.Client.Graphics.Overlays
 
         protected abstract void Draw(DrawingHandle handle);
 
-        protected DrawingHandle NewHandle()
+        protected DrawingHandle NewHandle(Shader shader = null)
         {
             if (!Drawing)
             {
@@ -70,6 +86,14 @@ namespace SS14.Client.Graphics.Overlays
             var item = VS.CanvasItemCreate();
             VS.CanvasItemSetParent(item, MainCanvasItem);
             CanvasItems.Add(item);
+            if (shader != null)
+            {
+                VS.CanvasItemSetMaterial(item, shader.GodotMaterial.GetRid());
+            }
+            else
+            {
+                VS.CanvasItemSetUseParentMaterial(item, SubHandlesUseMainShader);
+            }
 
             var handle = new DrawingHandle(item);
             TempHandles.Add(handle);
@@ -106,9 +130,13 @@ namespace SS14.Client.Graphics.Overlays
             }
         }
 
-        public void AssignCanvasItem(RID canvasItem)
+        public void AssignCanvasItem(Godot.RID canvasItem)
         {
             MainCanvasItem = canvasItem;
+            if (Shader != null)
+            {
+                VS.CanvasItemSetMaterial(MainCanvasItem, Shader.GodotMaterial.GetRid());
+            }
         }
 
         public void ClearCanvasItem()

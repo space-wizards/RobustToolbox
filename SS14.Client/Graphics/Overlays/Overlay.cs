@@ -42,7 +42,7 @@ namespace SS14.Client.Graphics.Overlays
             get => _zIndex;
             set
             {
-                if (_zIndex > VS.CanvasItemZMax || _zIndex > VS.CanvasItemZMax)
+                if (value != null && (_zIndex > VS.CanvasItemZMax || _zIndex < VS.CanvasItemZMin))
                 {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }

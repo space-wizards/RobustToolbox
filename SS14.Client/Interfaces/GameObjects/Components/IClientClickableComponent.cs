@@ -27,5 +27,15 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         /// <param name="userUID">The entity owned by the player that clicked.</param>
         /// <param name="clickType">See <see cref="MouseClickType" />.</param>
         void DispatchClick(IEntity user, ClickType clickType);
+
+        /// <summary>
+        ///     Invoked whenever the mouse hovers over this entity.
+        /// </summary>
+        void OnMouseEnter();
+
+        /// <summary>
+        ///     Invoked whenever the mouse stops hovering over this entity.
+        /// </summary>
+        void OnMouseLeave();
     }
 }

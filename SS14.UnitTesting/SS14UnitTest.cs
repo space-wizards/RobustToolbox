@@ -77,6 +77,8 @@ using SS14.Shared.Log;
 using SS14.Server.Prototypes;
 using SS14.Client.Interfaces.GameStates;
 using SS14.Client.GameStates;
+using SS14.Client.Interfaces.Graphics.Overlays;
+using SS14.Client.Graphics.Overlays;
 
 namespace SS14.UnitTesting
 {
@@ -222,6 +224,8 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IDisplayManager, DisplayManager>();
                     //IoCManager.Register<IEyeManager, EyeManager>();
                     IoCManager.Register<IPrototypeManager, PrototypeManager>();
+                    IoCManager.Register<IOverlayManager, OverlayManager>();
+                    IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
                     break;
 
                 case UnitTestProject.Server:

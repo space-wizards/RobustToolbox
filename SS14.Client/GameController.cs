@@ -6,6 +6,7 @@ using SS14.Client.Interfaces.GameStates;
 using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Graphics.Lighting;
+using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Placement;
@@ -86,6 +87,8 @@ namespace SS14.Client
         readonly IPlacementManager placementManager;
         [Dependency]
         readonly IClientGameStateManager gameStateManager;
+        [Dependency]
+        readonly IOverlayManager overlayManager;
 
         public override void Main(Godot.SceneTree tree)
         {
@@ -141,6 +144,7 @@ namespace SS14.Client
             lightManager.Initialize();
             _entityManager.Initialize();
             gameStateManager.Initialize();
+            overlayManager.Initialize();
 
             _client.Initialize();
 
@@ -203,6 +207,7 @@ namespace SS14.Client
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePreEngine, eventArgs.Elapsed);
             lightManager.FrameUpdate(eventArgs);
             _stateManager.FrameUpdate(eventArgs);
+            overlayManager.FrameUpdate(eventArgs);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePostEngine, eventArgs.Elapsed);
         }
 

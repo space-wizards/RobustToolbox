@@ -1,4 +1,5 @@
-﻿using SS14.Client.Interfaces.GameObjects;
+﻿using SS14.Client.Graphics.Shaders;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Input;
@@ -26,6 +27,18 @@ namespace SS14.Client.GameObjects
             var message = new ClientEntityClickMsg(user.Uid, clickType);
             SendMessage(message);
             SendNetworkMessage(message);
+        }
+
+        public void OnMouseEnter()
+        {
+            var sprite = Owner.GetComponent<ISpriteComponent>();
+            sprite.LayerSetShader(0, "selection_outline");
+        }
+
+        public void OnMouseLeave()
+        {
+            var sprite = Owner.GetComponent<ISpriteComponent>();
+            sprite.LayerSetShader(0, (Shader)null);
         }
     }
 }

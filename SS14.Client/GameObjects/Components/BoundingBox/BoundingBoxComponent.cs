@@ -1,5 +1,6 @@
 ﻿using System;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 
@@ -16,6 +17,14 @@ namespace SS14.Client.GameObjects
 
         /// <inheritdoc />
         public override uint? NetID => NetIDs.BOUNDING_BOX;
+
+        private Color _debugColor;
+
+        public Color DebugColor
+        {
+            get => _debugColor;
+            private set => _debugColor = value;
+        }
 
         /// <summary>
         ///     Local Axis Aligned Bounding Box of the entity.
@@ -47,6 +56,13 @@ namespace SS14.Client.GameObjects
         public override void HandleComponentState(ComponentState state)
         {
             AABB = ((BoundingBoxComponentState)state).AABB;
+        }
+
+        public override void ExposeData(EntitySerializer serializer)
+        {
+            base.ExposeData(serializer);
+
+            serializer.DataField(ref _debugColor, "DebugColor", Color.Red);
         }
     }
 }

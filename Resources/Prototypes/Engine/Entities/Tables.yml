@@ -12,6 +12,7 @@
 
   - type: BoundingBox
     aabb: "-0.45,-1,0.95,1"
+    DebugColor: "#0000FF"
 
   - type: Collidable
-    DebugColor: "#0000FF"
+

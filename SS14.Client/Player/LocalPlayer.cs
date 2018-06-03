@@ -94,7 +94,7 @@ namespace SS14.Client.Player
             ControlledEntity.AddComponent<PlayerInputMoverComponent>();
 
             if (!ControlledEntity.HasComponent<ICollidableComponent>())
-                ControlledEntity.AddComponent<GodotCollidableComponent>();
+                ControlledEntity.AddComponent<CollidableComponent>();
 
             if (!ControlledEntity.TryGetComponent<EyeComponent>(out var eye))
             {

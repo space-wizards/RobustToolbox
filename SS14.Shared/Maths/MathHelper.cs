@@ -4,11 +4,11 @@
  * Copyright (c) 2006-2008 the OpenTK Team.
  * This notice may not be removed from any source distribution.
  * See license.txt for licensing detailed licensing details.
- * 
+ *
  * Contributions by Andy Gill, James Talton and Georg Wächter.
  */
 
-#endregion
+#endregion --- License ---
 
 using System;
 
@@ -71,7 +71,7 @@ namespace SS14.Shared.Maths
         /// </summary>
         public const float Log2E = 1.442695041f;
 
-        #endregion
+        #endregion Fields
 
         #region Public Members
 
@@ -85,7 +85,7 @@ namespace SS14.Shared.Maths
         public static long NextPowerOfTwo(long n)
         {
             if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (long) Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
+            return (long)Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace SS14.Shared.Maths
         public static int NextPowerOfTwo(int n)
         {
             if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (int) Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
+            return (int)Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace SS14.Shared.Maths
         public static float NextPowerOfTwo(float n)
         {
             if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (float) Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
+            return (float)Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace SS14.Shared.Maths
             return Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
         }
 
-        #endregion
+        #endregion NextPowerOfTwo
 
         #region Factorial
 
@@ -139,7 +139,7 @@ namespace SS14.Shared.Maths
             return result;
         }
 
-        #endregion
+        #endregion Factorial
 
         #region BinomialCoefficient
 
@@ -154,7 +154,7 @@ namespace SS14.Shared.Maths
             return Factorial(n) / (Factorial(k) * Factorial(n - k));
         }
 
-        #endregion
+        #endregion BinomialCoefficient
 
         #region DegreesToRadians
 
@@ -165,7 +165,7 @@ namespace SS14.Shared.Maths
         /// <returns>The angle expressed in radians</returns>
         public static float DegreesToRadians(float degrees)
         {
-            const float degToRad = (float) Math.PI / 180.0f;
+            const float degToRad = (float)Math.PI / 180.0f;
             return degrees * degToRad;
         }
 
@@ -176,7 +176,7 @@ namespace SS14.Shared.Maths
         /// <returns>The angle expressed in degrees</returns>
         public static float RadiansToDegrees(float radians)
         {
-            const float radToDeg = 180.0f / (float) Math.PI;
+            const float radToDeg = 180.0f / (float)Math.PI;
             return radians * radToDeg;
         }
 
@@ -202,7 +202,7 @@ namespace SS14.Shared.Maths
             return radians * radToDeg;
         }
 
-        #endregion
+        #endregion DegreesToRadians
 
         #region Swap
 
@@ -230,8 +230,22 @@ namespace SS14.Shared.Maths
             b = temp;
         }
 
-        #endregion
+        #endregion Swap
 
-        #endregion
+        #region MinMax
+
+        public static float Min(float a, float b, float c, float d)
+        {
+            return Math.Min(a, Math.Min(b, Math.Min(c, d)));
+        }
+
+        public static float Max(float a, float b, float c, float d)
+        {
+            return Math.Max(a, Math.Max(b, Math.Max(c, d)));
+        }
+
+        #endregion MinMax
+
+        #endregion Public Members
     }
 }

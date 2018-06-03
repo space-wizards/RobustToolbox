@@ -104,6 +104,8 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         public YamlMappingNode DataNode { get; set; }
 
+        private readonly HashSet<Type> ReferenceTypes = new HashSet<Type>();
+
         public void LoadFrom(YamlMappingNode mapping)
         {
             TypeString = mapping.GetNode("type").ToString();
@@ -138,9 +140,24 @@ namespace SS14.Shared.GameObjects
             // COMPONENTS
             if (mapping.TryGetNode<YamlSequenceNode>("components", out var componentsequence))
             {
+                var factory = IoCManager.Resolve<IComponentFactory>();
                 foreach (var componentMapping in componentsequence.Cast<YamlMappingNode>())
                 {
-                    ReadComponent(componentMapping);
+                    ReadComponent(componentMapping, factory);
+                }
+
+                // Assert that there are no conflicting component references.
+                foreach (var componentName in Components.Keys)
+                {
+                    var registration = factory.GetRegistration(componentName);
+                    foreach (var type in registration.References)
+                    {
+                        if (ReferenceTypes.Contains(type))
+                        {
+                            throw new InvalidOperationException($"Duplicate component reference in prototype: '{type}'");
+                        }
+                        ReferenceTypes.Add(type);
+                    }
                 }
             }
 
@@ -240,6 +257,7 @@ namespace SS14.Shared.GameObjects
 
         private static void PushInheritance(EntityPrototype source, EntityPrototype target)
         {
+            // Copy component data over.
             foreach (KeyValuePair<string, YamlMappingNode> component in source.Components)
             {
                 if (target.Components.TryGetValue(component.Key, out YamlMappingNode targetComponent))
@@ -256,10 +274,22 @@ namespace SS14.Shared.GameObjects
                 else
                 {
                     // Copy component into the target, since it doesn't have it yet.
+                    // Unless it'd cause a conflict.
+                    var factory = IoCManager.Resolve<IComponentFactory>();
+                    foreach (var refType in factory.GetRegistration(component.Key).References)
+                    {
+                        if (target.ReferenceTypes.Contains(refType))
+                        {
+                            // yeah nope the child's got it!! NEXT!!
+                            goto next;
+                        }
+                    }
                     target.Components[component.Key] = new YamlMappingNode(component.Value.AsEnumerable());
                 }
+                next:;
             }
 
+            // Copy all simple data over.
             if (!target._placementOverriden)
             {
                 target.PlacementMode = source.PlacementMode;
@@ -357,9 +387,8 @@ namespace SS14.Shared.GameObjects
             return !entities.SelectMany(e => e.Prototype._snapFlags).Any(f => _snapFlags.Contains(f));
         }
 
-        private void ReadComponent(YamlMappingNode mapping)
+        private void ReadComponent(YamlMappingNode mapping, IComponentFactory factory)
         {
-            var factory = IoCManager.Resolve<IComponentFactory>();
             string type = mapping.GetNode("type").AsString();
             // See if type exists to detect errors.
             switch (factory.GetComponentAvailability(type))

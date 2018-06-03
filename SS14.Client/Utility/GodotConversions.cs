@@ -14,6 +14,16 @@ namespace SS14.Client.Utility
             return new Godot.Vector2(vector2.X, vector2.Y);
         }
 
+        public static Vector3 Convert(this Godot.Vector3 vector3)
+        {
+            return new Vector3(vector3.x, vector3.y, vector3.z);
+        }
+
+        public static Godot.Vector3 Convert(this Vector3 vector3)
+        {
+            return new Godot.Vector3(vector3.X, vector3.Y, vector3.Z);
+        }
+
         public static Color Convert(this Godot.Color color)
         {
             return new Color(color.r, color.g, color.b, color.a);

@@ -53,6 +53,8 @@ using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Placement;
+using SS14.Client.Interfaces.Graphics.Overlays;
+using SS14.Client.Graphics.Overlays;
 
 namespace SS14.Client
 {
@@ -121,6 +123,7 @@ namespace SS14.Client
             // Only GameController can acess this because the type is private so it's fine.
             IoCManager.Register<GameController.GameTiming, GameController.GameTiming>();
             IoCManager.Register<IPlacementManager, PlacementManager>();
+            IoCManager.Register<IOverlayManager, OverlayManager>();
 
             IoCManager.BuildGraph();
         }

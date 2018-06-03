@@ -130,11 +130,11 @@ namespace SS14.Client.Console.Commands
         }
     }
 
-    class DebugCollidersCommand : IConsoleCommand
+    class ShowBoundingBoxesCommand : IConsoleCommand
     {
-        public string Command => "debugcolliders";
+        public string Command => "showbb";
         public string Help => "";
-        public string Description => "Enables debug drawing over all collidables in the game.";
+        public string Description => "Enables debug drawing over all bounding boxes in the game, showing their size.";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
@@ -201,6 +201,5 @@ namespace SS14.Client.Console.Commands
             IoCManager.Resolve<IStateManager>().RequestStateChange<MainScreen>();
             return false;
         }
-
     }
 }

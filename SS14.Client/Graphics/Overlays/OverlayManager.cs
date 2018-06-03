@@ -1,6 +1,7 @@
 ﻿using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Interfaces.UserInterface;
+using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,7 @@ namespace SS14.Client.Graphics.Overlays
         {
             RootNodeWorld = new Godot.Node2D { Name = "OverlayRoot" };
             sceneTreeHolder.WorldRoot.AddChild(RootNodeWorld);
+            RootNodeWorld.ZIndex = (int)DrawDepth.Overlays;
 
             RootNodeScreen = new Godot.Node2D { Name = "OverlayRoot" };
             sceneTreeHolder.SceneTree.Root.GetNode("UILayer").AddChild(RootNodeScreen);

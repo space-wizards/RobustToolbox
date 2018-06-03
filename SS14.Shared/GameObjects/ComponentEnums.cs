@@ -32,5 +32,6 @@
         Walls = 7,
         WallMountedItems = 8,
         WallTops = 9,
+        Overlays = 10,
     }
 }

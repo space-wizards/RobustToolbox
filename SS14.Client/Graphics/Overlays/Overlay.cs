@@ -36,6 +36,21 @@ namespace SS14.Client.Graphics.Overlays
             }
         }
 
+        private int? _zIndex;
+        public int? ZIndex
+        {
+            get => _zIndex;
+            set
+            {
+                if (_zIndex > VS.CanvasItemZMax || _zIndex > VS.CanvasItemZMax)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value));
+                }
+                _zIndex = value;
+                UpdateZIndex();
+            }
+        }
+
         public virtual bool SubHandlesUseMainShader { get; } = true;
 
         private bool _isDirty = true;
@@ -51,6 +66,16 @@ namespace SS14.Client.Graphics.Overlays
         {
             OverlayManager = IoCManager.Resolve<IOverlayManager>();
             ID = id;
+        }
+
+        public void AssignCanvasItem(Godot.RID canvasItem)
+        {
+            MainCanvasItem = canvasItem;
+            if (Shader != null)
+            {
+                Shader.ApplyToCanvasItem(MainCanvasItem);
+            }
+            UpdateZIndex();
         }
 
         public void Dispose()
@@ -88,7 +113,7 @@ namespace SS14.Client.Graphics.Overlays
             CanvasItems.Add(item);
             if (shader != null)
             {
-                VS.CanvasItemSetMaterial(item, shader.GodotMaterial.GetRid());
+                shader.ApplyToCanvasItem(item);
             }
             else
             {
@@ -130,15 +155,6 @@ namespace SS14.Client.Graphics.Overlays
             }
         }
 
-        public void AssignCanvasItem(Godot.RID canvasItem)
-        {
-            MainCanvasItem = canvasItem;
-            if (Shader != null)
-            {
-                VS.CanvasItemSetMaterial(MainCanvasItem, Shader.GodotMaterial.GetRid());
-            }
-        }
-
         public void ClearCanvasItem()
         {
             ClearDraw();
@@ -155,6 +171,25 @@ namespace SS14.Client.Graphics.Overlays
             VS.CanvasItemClear(MainCanvasItem);
 
             CanvasItems.Clear();
+        }
+
+        private void UpdateZIndex()
+        {
+            if (MainCanvasItem == null)
+            {
+                return;
+            }
+
+            if (Space != OverlaySpace.WorldSpace || ZIndex == null)
+            {
+                VS.CanvasItemSetZIndex(MainCanvasItem, 0);
+                VS.CanvasItemSetZAsRelativeToParent(MainCanvasItem, true);
+            }
+            else
+            {
+                VS.CanvasItemSetZIndex(MainCanvasItem, ZIndex.Value);
+                VS.CanvasItemSetZAsRelativeToParent(MainCanvasItem, false);
+            }
         }
     }
 }

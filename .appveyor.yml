@@ -42,6 +42,9 @@ build:
   parallel: false
   verbosity: minimal
 
+build_script:
+- ps: msbuild SpaceStation14.sln /verbosity:minimal /nologo logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Platform=x64 /p:Configuration=Debug /p:AppVeyor=yes
+
 test_script:
 - ps: >
     if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER -And $env:APPVEYOR_REPO_BRANCH -Eq "master")
@@ -52,8 +55,6 @@ test_script:
     {
       nunit3-console.exe .\bin\UnitTesting\SS14.UnitTesting.dll;
     }
-
-
 
 after_test:
 - ps: >

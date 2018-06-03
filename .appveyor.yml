@@ -46,7 +46,7 @@ test_script:
 - ps: >
     if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER -And $env:APPVEYOR_REPO_BRANCH -Eq "master")
     {
-      OpenCover.Console.exe -register:user -target:"nunit3-console.exe" -targetargs:".\bin\UnitTesting\SS14.UnitTesting.dll --result:nunitTestResult.xml" -output:".\coverage_report.xml;
+      OpenCover.Console.exe -register:user -target:"nunit3-console.exe" -targetargs:".\bin\UnitTesting\SS14.UnitTesting.dll --result:nunitTestResult.xml" -output:".\coverage_report.xml";
     }
     else
     {

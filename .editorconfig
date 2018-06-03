@@ -9,3 +9,6 @@ charset = utf-8-bom
 
 [*.{csproj,xml,yml,dll.config,targets}]
 indent_size = 2
+
+[*.gdsl]
+indent_style = tab

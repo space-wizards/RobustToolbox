@@ -33,5 +33,5 @@ build:
   parallel: false
   verbosity: minimal
 
-after_build:
+after_test:
 - ps: if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER -And $env:APPVEYOR_REPO_BRANCH -Eq "master") { MSBuild.SonarQube.Runner.exe end /d:"sonar.login=$env:sonarqubekey" }

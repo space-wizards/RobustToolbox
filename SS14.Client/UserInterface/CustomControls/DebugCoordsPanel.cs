@@ -10,6 +10,9 @@ using SS14.Shared.Maths;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Client.Graphics.Drawing;
+using SS14.Client.Interfaces.State;
+using SS14.Client.State.States;
+using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
@@ -18,13 +21,14 @@ namespace SS14.Client.UserInterface.CustomControls
     {
         [Dependency]
         readonly IPlayerManager playerManager;
-
         [Dependency]
         readonly IEyeManager eyeManager;
         [Dependency]
         readonly IInputManager inputManager;
         [Dependency]
         readonly IResourceCache resourceCache;
+        [Dependency]
+        readonly IStateManager stateManager;
 
         private Label contents;
 
@@ -70,12 +74,17 @@ namespace SS14.Client.UserInterface.CustomControls
             int mouseWorldMap;
             int mouseWorldGrid;
             Vector2 mouseWorldPos;
+            IEntity mouseEntity = null;
             try
             {
                 var coords = eyeManager.ScreenToWorld(new ScreenCoordinates(mouseScreenPos, entityTransform.MapID));
                 mouseWorldMap = (int)coords.MapID;
                 mouseWorldGrid = (int)coords.GridID;
                 mouseWorldPos = coords.Position;
+                if (stateManager.CurrentState is GameScreen gameScreen)
+                {
+                    mouseEntity = gameScreen.GetEntityUnderPosition(coords);
+                }
             }
             catch
             {
@@ -95,7 +104,8 @@ Mouse Pos:
     Screen: {mouseScreenPos}
     World: {mouseWorldPos}
     Grid: {mouseWorldGrid}
-    Map: {mouseWorldMap}";
+    Map: {mouseWorldMap}
+    Entity: {mouseEntity}";
 
             MinimumSizeChanged();
         }

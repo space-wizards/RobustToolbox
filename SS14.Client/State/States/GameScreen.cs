@@ -198,7 +198,7 @@ namespace SS14.Client.State.States
             }
         }
 
-        private IEntity GetEntityUnderPosition(LocalCoordinates coordinates)
+        public IEntity GetEntityUnderPosition(LocalCoordinates coordinates)
         {
             // Find all the entities intersecting our click
             var entities =

@@ -36,6 +36,7 @@ cache:
 - packages -> **\packages.config
 - Dependencies
 - SS14.Client.Godot\.mono\assemblies\GodotSharp.dll
+- SS14.Client.Godot\.mono\assemblies\LAST_MODIFIED
 
 build:
   project: SpaceStation14.sln

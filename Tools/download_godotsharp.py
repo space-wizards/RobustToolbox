@@ -28,9 +28,14 @@ def main():
     # print(r.headers)
 
     if not r.ok:
-        print("ERROR: Bad status code from GodotSharp download!")
-        print(r.status_code)
-        exit(1)
+        if os.path.exists(godotsharp_filename):
+            print("WARNING: Builds server is down, using caches GodotSharp.dll!")
+            print(r.status_code)
+            exit(0)
+        else:
+            print("ERROR: Bad status code from GodotSharp download!")
+            print(r.status_code)
+            exit(1)
 
     # Not modified!
     if r.status_code == 304:

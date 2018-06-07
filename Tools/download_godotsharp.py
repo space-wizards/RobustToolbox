@@ -29,7 +29,7 @@ def main():
 
     if not r.ok:
         if os.path.exists(godotsharp_filename):
-            print("WARNING: Builds server is down, using caches GodotSharp.dll!")
+            print("WARNING: Builds server is down, using cached GodotSharp.dll!")
             print(r.status_code)
             exit(0)
         else:

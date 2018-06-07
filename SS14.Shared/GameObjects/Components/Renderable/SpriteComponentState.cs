@@ -51,8 +51,9 @@ namespace SS14.Shared.GameObjects
             public readonly Vector2 Scale;
             public readonly Angle Rotation;
             public readonly bool Visible;
+            public readonly Color Color;
 
-            public Layer(string shader, string texturePath, string rsiPath, string state, Vector2 scale, Angle rotation, bool visible)
+            public Layer(string shader, string texturePath, string rsiPath, string state, Vector2 scale, Angle rotation, bool visible, Color color)
             {
                 Shader = shader;
                 TexturePath = texturePath;
@@ -61,6 +62,7 @@ namespace SS14.Shared.GameObjects
                 Scale = scale;
                 Rotation = rotation;
                 Visible = visible;
+                Color = color;
             }
         }
     }

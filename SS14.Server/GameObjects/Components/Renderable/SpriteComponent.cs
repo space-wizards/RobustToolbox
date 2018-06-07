@@ -281,6 +281,20 @@ namespace SS14.Server.GameObjects
             Dirty();
         }
 
+        public void LayerSetColor(int layer, Color color)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set color! Trace:\n{1}", layer, Environment.StackTrace);
+                return;
+            }
+
+            var thelayer = Layers[layer];
+            thelayer.Color = color;
+            Layers[layer] = thelayer;
+            Dirty();
+        }
+
         public override void ExposeData(EntitySerializer serializer)
         {
             base.ExposeData(serializer);
@@ -397,12 +411,17 @@ namespace SS14.Server.GameObjects
                 layer.Visible = node.AsBool();
             }
 
+            if (mapping.TryGetNode("color", out node))
+            {
+                layer.Color = node.AsColor();
+            }
+
             Layers.Add(layer);
         }
 
         public override ComponentState GetComponentState()
         {
-            var list = Layers.Select((l) => l.ToStateLayer()).ToList();
+            var list = Layers.Select(l => l.ToStateLayer()).ToList();
             return new SpriteComponentState(Visible, DrawDepth, Scale, Rotation, Offset, Color, Directional, BaseRSIPath, list);
         }
         private struct Layer
@@ -414,6 +433,7 @@ namespace SS14.Server.GameObjects
             public Vector2 Scale;
             public Angle Rotation;
             public bool Visible;
+            public Color Color;
 
             public static Layer New()
             {
@@ -421,12 +441,13 @@ namespace SS14.Server.GameObjects
                 {
                     Scale = Vector2.One,
                     Visible = true,
+                    Color = Color.White,
                 };
             }
 
             public SpriteComponentState.Layer ToStateLayer()
             {
-                return new SpriteComponentState.Layer(Shader, TexturePath, RsiPath, State, Scale, Rotation, Visible);
+                return new SpriteComponentState.Layer(Shader, TexturePath, RsiPath, State, Scale, Rotation, Visible, Color);
             }
         }
     }

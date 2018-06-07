@@ -518,6 +518,20 @@ namespace SS14.Client.GameObjects
             RedrawQueued = true;
         }
 
+        public void LayerSetColor(int layer, Color color)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set color! Trace:\n{1}", layer, Environment.StackTrace);
+                return;
+            }
+
+            var thelayer = Layers[layer];
+            thelayer.Color = color;
+            Layers[layer] = thelayer;
+            RedrawQueued = true;
+        }
+
         public override void OnAdd()
         {
             base.OnAdd();
@@ -594,7 +608,7 @@ namespace SS14.Client.GameObjects
                 VS.CanvasItemAddSetTransform(currentItem, transform);
                 // Not instantiating a DrawingHandle here because those are ref types,
                 // and I really don't want the extra allocation.
-                texture.GodotTexture.Draw(currentItem, -texture.GodotTexture.GetSize() / 2);
+                texture.GodotTexture.Draw(currentItem, -texture.GodotTexture.GetSize() / 2, layer.Color.Convert());
             }
         }
 
@@ -795,6 +809,11 @@ namespace SS14.Client.GameObjects
                 layer.Visible = node.AsBool();
             }
 
+            if (mapping.TryGetNode("color", out node))
+            {
+                layer.Color = node.AsColor();
+            }
+
             Layers.Add(layer);
         }
 
@@ -904,6 +923,7 @@ namespace SS14.Client.GameObjects
                 layer.Scale = netlayer.Scale;
                 layer.Rotation = netlayer.Rotation;
                 layer.Visible = netlayer.Visible;
+                layer.Color = netlayer.Color;
                 Layers.Add(layer);
 
                 // Using the public API to handle errors.
@@ -949,6 +969,7 @@ namespace SS14.Client.GameObjects
             public Vector2 Scale;
             public Angle Rotation;
             public bool Visible;
+            public Color Color;
 
             public static Layer New()
             {
@@ -957,6 +978,7 @@ namespace SS14.Client.GameObjects
                     CurrentDir = RSI.State.Direction.South,
                     Scale = Vector2.One,
                     Visible = true,
+                    Color = Color.White
                 };
             }
         }

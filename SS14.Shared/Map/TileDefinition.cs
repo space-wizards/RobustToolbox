@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using SS14.Shared.Interfaces.Map;
-using SS14.Shared.IoC;
 
 namespace SS14.Shared.Map
 {
@@ -44,6 +43,9 @@ namespace SS14.Shared.Map
         /// </summary>
         /// <param name="data">Optional per-tile data.</param>
         /// <returns></returns>
-        public Tile Create(ushort data = 0) { return new Tile(TileId, data); }
+        public Tile Create(ushort data = 0)
+        {
+            return new Tile(TileId, data);
+        }
     }
 }

@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using SS14.Shared.Interfaces.Map;
-using SS14.Shared.Network.Messages;
 
 namespace SS14.Shared.Map
 {
     public class TileDefinitionManager : ITileDefinitionManager
     {
-        //[Dependency]
-        //private readonly IResourceManager resourceManager;
         private readonly List<ITileDefinition> _tileDefs;
         private readonly Dictionary<string, ITileDefinition> _tileNames;
         private readonly Dictionary<ITileDefinition, ushort> _tileIds;
@@ -36,13 +33,13 @@ namespace SS14.Shared.Map
                 throw new InvalidOperationException($"TileDefinition is already registered: {tileDef.GetType()}, id: {id}");
             }
 
-            string name = tileDef.Name;
+            var name = tileDef.Name;
             if (_tileNames.ContainsKey(name))
             {
                 throw new ArgumentException("Another tile definition with the same name has already been registered.", nameof(tileDef));
             }
 
-            id = checked((ushort)_tileDefs.Count);
+            id = checked((ushort) _tileDefs.Count);
             _tileDefs.Add(tileDef);
             _tileNames[name] = tileDef;
             _tileIds[tileDef] = id;

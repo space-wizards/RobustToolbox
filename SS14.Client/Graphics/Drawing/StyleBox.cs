@@ -86,7 +86,7 @@ namespace SS14.Client.Graphics.Drawing
         {
             get
             {
-                return cachedTexture ?? new GodotTextureSource(stylebox.Texture);
+                return cachedTexture ?? new GodotTextureSource((Godot.Texture)stylebox.Texture);
             }
             // Woo implicit casts.
             set => stylebox.Texture = cachedTexture = value;

@@ -12,7 +12,7 @@ allowdupeip = true
 
 [game]
 hostname = "MyServer"
-mapname = "SavedEntities.xml"
+mapname = "stationstation"
 maxplayers = 32
 type = 1
 welcomemsg = "Welcome to the server!"

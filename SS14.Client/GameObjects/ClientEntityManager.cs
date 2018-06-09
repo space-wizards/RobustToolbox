@@ -15,7 +15,7 @@ namespace SS14.Client.GameObjects
     /// </summary>
     public sealed class ClientEntityManager : EntityManager, IClientEntityManager, IDisposable
     {
-        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float Range)
+        public IEnumerable<IEntity> GetEntitiesInRange(GridLocalCoordinates position, float Range)
         {
             var AABB = new Box2(position.Position - new Vector2(Range / 2, Range / 2), position.Position + new Vector2(Range / 2, Range / 2));
             return GetEntitiesIntersecting(position.MapID, AABB);

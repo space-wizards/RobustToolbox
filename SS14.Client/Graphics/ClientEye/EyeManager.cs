@@ -83,23 +83,22 @@ namespace SS14.Client.Graphics.ClientEye
             return transform.Xform(point.Convert() * PIXELSPERMETER).Convert();
         }
 
-        public ScreenCoordinates WorldToScreen(LocalCoordinates point)
+        public ScreenCoordinates WorldToScreen(GridLocalCoordinates point)
         {
-            var pos = WorldToScreen(point.Position);
-            return new ScreenCoordinates(pos, point.MapID);
+            return new ScreenCoordinates(WorldToScreen(point.Position));
         }
 
-        public LocalCoordinates ScreenToWorld(ScreenCoordinates point)
+        public GridLocalCoordinates ScreenToWorld(ScreenCoordinates point)
         {
-            var pos = ScreenToWorld(point.Position);
-            var grid = IoCManager.Resolve<IMapManager>().GetMap(point.MapID).FindGridAt(pos);
-            return new LocalCoordinates(pos, grid);
+            return ScreenToWorld(point.Position);
         }
 
-        public Vector2 ScreenToWorld(Vector2 point)
+        public GridLocalCoordinates ScreenToWorld(Vector2 point)
         {
             var transform = sceneTree.WorldRoot.GetViewportTransform();
-            return transform.XformInv(point.Convert()).Convert() / PIXELSPERMETER;
+            var worldPos = transform.XformInv(point.Convert()).Convert() / PIXELSPERMETER;
+            var grid = IoCManager.Resolve<IMapManager>().GetMap(currentEye.MapId).FindGridAt(worldPos);
+            return new GridLocalCoordinates(worldPos, grid);
         }
     }
 }

@@ -285,6 +285,7 @@
     <None Include="packages.config" />
     <Compile Include="GameObjects\PlayerMessages.cs" />
     <Compile Include="Graphics\Shaders\Params.cs" />
+    <Compile Include="GameObjects\Components\Grid\GridComponent.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\MSBuild\SS14.Engine.targets" />

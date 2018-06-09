@@ -183,12 +183,12 @@ namespace SS14.Client.GameObjects
             /// <summary>
             /// Effect position relative to the emit position
             /// </summary>
-            public LocalCoordinates Coordinates;
+            public GridLocalCoordinates Coordinates;
 
             /// <summary>
             /// Where the emitter was when the effect was first emitted
             /// </summary>
-            public LocalCoordinates EmitterCoordinates;
+            public GridLocalCoordinates EmitterCoordinates;
 
             /// <summary>
             /// Effect's x/y velocity
@@ -320,7 +320,7 @@ namespace SS14.Client.GameObjects
 
                 //Calculate new position from our velocity as well as possible rotation/movement around emitter
                 deltaPosition += Velocity * frameTime;
-                Coordinates = new LocalCoordinates(Coordinates.Position + deltaPosition, Coordinates.Grid);
+                Coordinates = new GridLocalCoordinates(Coordinates.Position + deltaPosition, Coordinates.Grid);
 
                 //Finish calculating new rotation, size, color
                 Rotation += RotationRate * frameTime;

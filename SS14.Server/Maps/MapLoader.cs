@@ -34,9 +34,9 @@ namespace SS14.Server.Maps
         private readonly IMapManager _mapManager;
 
         /// <inheritdoc />
-        public void SaveBlueprint(IMap map, GridId gridId, string yamlPath)
+        public void SaveBlueprint(GridId gridId, string yamlPath)
         {
-            var grid = map.GetGrid(gridId);
+            var grid = _mapManager.GetGrid(gridId);
 
             var root = SaveBpNode(grid);
 
@@ -59,7 +59,7 @@ namespace SS14.Server.Maps
         }
 
         /// <inheritdoc />
-        public void LoadBlueprint(IMap map, GridId newId, string path)
+        public IMapGrid LoadBlueprint(IMap map, string path, GridId? newId = null)
         {
             var rootPath = _resMan.ConfigDirectory;
             var comb = Path.Combine(rootPath, "./", path);
@@ -80,7 +80,7 @@ namespace SS14.Server.Maps
                 else
                 {
                     Logger.ErrorS("map", $"No blueprint found: {path}");
-                    return;
+                    return null;
                 }
             }
             else
@@ -98,9 +98,11 @@ namespace SS14.Server.Maps
                 foreach (var document in stream.Documents)
                 {
                     var root = (YamlSequenceNode)document.RootNode;
-                    LoadBpNode(map, newId, root);
+                    return LoadBpNode(map, newId, root);
                 }
             }
+
+            return null;
         }
 
         /// <inheritdoc />
@@ -143,6 +145,10 @@ namespace SS14.Server.Maps
         /// <inheritdoc />
         public void LoadMap(MapId mapId, string path)
         {
+            // FIXME: The handling of grid IDs in here is absolutely 100% turbofucked ATM.
+            // This function absolutely will not work.
+            // It's CURRENTLY still working using the old map ID -> grid ID which absolutely DOES NOT WORK ANYMORE.
+            // BP loading works because grid IDs are manually hard set.
             var rootPath = _resMan.ConfigDirectory;
             var comb = Path.Combine(rootPath, "./", path);
             var fullPath = Path.GetFullPath(comb);
@@ -212,7 +218,7 @@ namespace SS14.Server.Maps
             }
         }
 
-        private void LoadBpNode(IMap map, GridId newId, YamlSequenceNode root)
+        private IMapGrid LoadBpNode(IMap map, GridId? newId, YamlSequenceNode root)
         {
             foreach (var yamlNode in root.Children)
             {
@@ -220,29 +226,28 @@ namespace SS14.Server.Maps
 
                 if (mapNode.Children.TryGetValue("grid", out var gridNode))
                 {
-                    // default grid always exists, and cannot be modified, no point loading it
-                    if (newId == GridId.DefaultGrid)
-                        continue;
-
                     var gridMap = (YamlMappingNode)gridNode;
-                    LoadGridNode(_mapManager, map, newId, gridMap);
+                    // This ref shit is so that the entities are loaded with the grid created by this load.
+                    LoadGridNode(_mapManager, map, ref newId, gridMap);
                 }
                 else if (mapNode.Children.TryGetValue("entities", out var entNode))
                 {
                     LoadEntNode(map, newId, (YamlSequenceNode)entNode);
                 }
             }
+
+            return IoCManager.Resolve<IMapManager>().GetGrid(newId.Value);
         }
 
-        private static void LoadGridNode(IMapManager mapMan, IMap map, GridId newId, YamlMappingNode gridNode)
+        private static void LoadGridNode(IMapManager mapMan, IMap map, ref GridId? newId, YamlMappingNode gridNode)
         {
             var info = (YamlMappingNode)gridNode["settings"];
             var chunk = (YamlSequenceNode)gridNode["chunks"];
 
-            YamlGridSerializer.DeserializeGrid(mapMan, map, newId, info, chunk);
+            YamlGridSerializer.DeserializeGrid(mapMan, map, ref newId, info, chunk);
         }
 
-        private void LoadEntNode(IMap map, GridId gridId, YamlSequenceNode entNode)
+        private void LoadEntNode(IMap map, GridId? gridId, YamlSequenceNode entNode)
         {
             foreach (var yamlNode in entNode.Children)
             {
@@ -258,7 +263,7 @@ namespace SS14.Server.Maps
 
                     // overwrite local position in the BP to the new map/grid ID
                     var transform = entity.GetComponent<IServerTransformComponent>();
-                    transform.LocalPosition = new LocalCoordinates(transform.LocalPosition.Position, gridId, map.Index);
+                    transform.LocalPosition = new GridLocalCoordinates(transform.LocalPosition.Position, gridId.Value);
                 }
                 catch (Exception e)
                 {

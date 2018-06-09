@@ -60,12 +60,12 @@ namespace SS14.Client.Placement.Modes
                     var closestSide =
                         (from Vector2 side in sides orderby (side - MouseCoords.Position).LengthSquared select side).First();
 
-                    MouseCoords = new LocalCoordinates(closestSide, MouseCoords.Grid);
+                    MouseCoords = new GridLocalCoordinates(closestSide, MouseCoords.Grid);
                 }
             }
         }
 
-        public override bool IsValidPosition(LocalCoordinates position)
+        public override bool IsValidPosition(GridLocalCoordinates position)
         {
             if (pManager.CurrentPermission.IsTile)
             {

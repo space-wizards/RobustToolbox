@@ -14,11 +14,14 @@ namespace SS14.Shared.Interfaces.Map
         ///     Creates a new empty grid with the given ID and optional chunk size. If a grid already
         ///     exists with the gridID, it is overwritten with the new grid.
         /// </summary>
-        /// <param name="gridId">The id of the new grid to create.</param>
+        /// <param name="gridId">If not null, the ID the new grid will have. If null, a new ID will be selected automatically.</param>
         /// <param name="chunkSize">Optional chunk size of the new grid.</param>
         /// <param name="snapSize">Optional size of the snap grid</param>
         /// <returns></returns>
-        IMapGrid CreateGrid(GridId gridId, ushort chunkSize = 16, float snapSize = 1);
+        /// <exception cref="InvalidOperationException">
+        ///     Throw if an explicit ID is passed and a map with the specified ID already exists.
+        /// </exception>
+        IMapGrid CreateGrid(GridId? gridId = null, ushort chunkSize = 16, float snapSize = 1);
 
         /// <summary>
         ///     Checks if a grid exists with the given ID.
@@ -38,20 +41,14 @@ namespace SS14.Shared.Interfaces.Map
         ///     Alias of IMapManager.GetGrid(IMapManager.DefaultGridId);
         /// </summary>
         /// <returns></returns>
-        IMapGrid GetDefaultGrid();
-
-        /// <summary>
-        ///     Deletes the grid associated with the given grid ID.
-        /// </summary>
-        /// <param name="gridId">The grid to remove.</param>
-        void RemoveGrid(GridId gridId);
+        IMapGrid DefaultGrid { get; }
 
         /// <summary>
         ///     Finds all of the grids at this position in the world.
         /// </summary>
         /// <param name="worldPos">The location of the tile in world coordinates.</param>
         /// <returns></returns>
-        IMapGrid FindGridAt(LocalCoordinates worldPos);
+        IMapGrid FindGridAt(GridLocalCoordinates worldPos);
 
         /// <summary>
         ///     Finds all of the grids at this position in the world.

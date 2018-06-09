@@ -24,7 +24,7 @@ namespace SS14.Client.Placement
         /// <summary>
         /// Local coordinates of our cursor on the map
         /// </summary>
-        public LocalCoordinates MouseCoords { get; set; }
+        public GridLocalCoordinates MouseCoords { get; set; }
 
         /// <summary>
         /// Texture resource to draw to represent the entity we are tryign to spawn
@@ -80,7 +80,7 @@ namespace SS14.Client.Placement
         /// </summary>
         /// <param name="mouseScreen"></param>
         /// <returns></returns>
-        public abstract bool IsValidPosition(LocalCoordinates position);
+        public abstract bool IsValidPosition(GridLocalCoordinates position);
 
         public virtual void Render()
         {
@@ -91,7 +91,7 @@ namespace SS14.Client.Placement
 
             var size = SpriteToDraw.Size;
 
-            IEnumerable<LocalCoordinates> locationcollection;
+            IEnumerable<GridLocalCoordinates> locationcollection;
             switch (pManager.PlacementType)
             {
                 case PlacementManager.PlacementTypes.None:
@@ -116,12 +116,12 @@ namespace SS14.Client.Placement
             }
         }
 
-        public IEnumerable<LocalCoordinates> SingleCoordinate()
+        public IEnumerable<GridLocalCoordinates> SingleCoordinate()
         {
             yield return MouseCoords;
         }
 
-        public IEnumerable<LocalCoordinates> LineCoordinates()
+        public IEnumerable<GridLocalCoordinates> LineCoordinates()
         {
             var placementdiff = MouseCoords.ToWorld().Position - pManager.StartPoint.ToWorld().Position;
             var iterations = 0f;
@@ -139,11 +139,11 @@ namespace SS14.Client.Placement
 
             for (var i = 0; i <= iterations; i++)
             {
-                yield return new LocalCoordinates(pManager.StartPoint.Position + distance * i, pManager.StartPoint.Grid);
+                yield return new GridLocalCoordinates(pManager.StartPoint.Position + distance * i, pManager.StartPoint.Grid);
             }
         }
 
-        public IEnumerable<LocalCoordinates> GridCoordinates()
+        public IEnumerable<GridLocalCoordinates> GridCoordinates()
         {
             var placementdiff = MouseCoords.ToWorld().Position - pManager.StartPoint.ToWorld().Position;
             var distanceX = new Vector2(placementdiff.X > 0 ? 1 : -1, 0) * GridDistancing;
@@ -156,7 +156,7 @@ namespace SS14.Client.Placement
             {
                 for (var y = 0; y <= iterationsY; y++)
                 {
-                    yield return new LocalCoordinates(pManager.StartPoint.Position + distanceX * x + distanceY * y, pManager.StartPoint.Grid);
+                    yield return new GridLocalCoordinates(pManager.StartPoint.Position + distanceX * x + distanceY * y, pManager.StartPoint.Grid);
                 }
             }
         }
@@ -180,7 +180,7 @@ namespace SS14.Client.Placement
         /// Checks if the player is spawning within a certain range of his character if range is required on this mode
         /// </summary>
         /// <returns></returns>
-        public bool RangeCheck(LocalCoordinates coordinates)
+        public bool RangeCheck(GridLocalCoordinates coordinates)
         {
             if (!RangeRequired)
                 return true;
@@ -190,7 +190,7 @@ namespace SS14.Client.Placement
             return true;
         }
 
-        public bool IsColliding(LocalCoordinates coordinates)
+        public bool IsColliding(GridLocalCoordinates coordinates)
         {
             var bounds = pManager.ColliderAABB;
             var worldcoords = coordinates.ToWorld();
@@ -209,7 +209,7 @@ namespace SS14.Client.Placement
 
         protected Vector2 ScreenToWorld(Vector2 point)
         {
-            return pManager.eyeManager.ScreenToWorld(point);
+            return pManager.eyeManager.ScreenToWorld(point).Position;
         }
 
         protected Vector2 WorldToScreen(Vector2 point)
@@ -217,12 +217,12 @@ namespace SS14.Client.Placement
             return pManager.eyeManager.WorldToScreen(point);
         }
 
-        protected LocalCoordinates ScreenToPlayerGrid(ScreenCoordinates coords)
+        protected GridLocalCoordinates ScreenToPlayerGrid(ScreenCoordinates coords)
         {
-            var worldPos = pManager.eyeManager.ScreenToWorld(coords.Position);
+            var worldPos = ScreenToWorld(coords.Position);
             var mapMgr = IoCManager.Resolve<IMapManager>();
             var entityGrid = pManager.PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().GridID;
-            return new LocalCoordinates(worldPos, mapMgr.GetMap(coords.MapID).GetGrid(entityGrid));
+            return new GridLocalCoordinates(worldPos, entityGrid);
         }
     }
 }

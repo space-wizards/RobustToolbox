@@ -41,7 +41,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
             else
                 grid = transform.LocalPosition.Map.FindGridAt(position);
 
-            transform.LocalPosition = new LocalCoordinates(position, grid);
+            transform.LocalPosition = new GridLocalCoordinates(position, grid);
 
             host.SendConsoleReply(player.ConnectedClient, $"Teleported {player} to {grid.MapID}:{posX},{posY}.");
         }
@@ -84,7 +84,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
 
         public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
         {
-            if(args.Length < 1)
+            if (args.Length < 1)
                 return;
 
             if (int.TryParse(args[0], out var number))

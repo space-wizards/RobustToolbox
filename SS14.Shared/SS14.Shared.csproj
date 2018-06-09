@@ -212,15 +212,12 @@
     <Compile Include="Log\LogManager.Sawmill.cs" />
     <Compile Include="Log\LogManager.cs" />
     <Compile Include="Map\GridId.cs" />
-    <Compile Include="Map\Map.cs" />
     <Compile Include="Map\Coordinates.cs" />
     <Compile Include="Map\MapId.cs" />
     <Compile Include="Maths\Angle.cs" />
     <Compile Include="Maths\Box2.cs" />
     <Compile Include="Maths\Box2i.cs" />
-    <Compile Include="Map\Chunk.cs" />
     <Compile Include="Map\DefaultTileDefinitions.cs" />
-    <Compile Include="Map\MapGrid.cs" />
     <Compile Include="Map\MapManager.cs" />
     <Compile Include="Map\MapManager.Network.cs" />
     <Compile Include="Map\Tile.cs" />
@@ -340,6 +337,9 @@
     <Compile Include="GameObjects\Components\NetIDs.cs" />
     <Compile Include="Network\Messages\MsgKeyFunctionChangeState.cs" />
     <Compile Include="Input\BoundKeyMap.cs" />
+    <Compile Include="GameObjects\Components\Grid\SharedGridComponent.cs" />
+    <Compile Include="Map\MapManager.Map.cs" />
+    <Compile Include="Map\MapManager.MapGrid.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -408,5 +408,7 @@
       <ResourceRoot />
       <Visible>False</Visible>
     </Resources>
+    <Compile Include="Map\MapManager.Chunk.cs" />
+    <Compile Include="Map\MapIndices.cs" />
   </ItemGroup>
 </Project>

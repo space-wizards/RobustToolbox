@@ -16,18 +16,6 @@ namespace SS14.Shared.Map
         /// <inheritdoc />
         public IMap DefaultMap => GetMap(MapId.Nullspace);
 
-        public void PostInject()
-        {
-            CreateMap(MapId.Nullspace);
-        }
-
-        /// <inheritdoc />
-        public void Initialize()
-        {
-            _netManager.RegisterNetMessage<MsgMap>(MsgMap.NAME, HandleNetworkMessage);
-            _netManager.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, message => SendMap(message.MsgChannel));
-        }
-
         /// <inheritdoc />
         public event EventHandler<TileChangedEventArgs> TileChanged;
 
@@ -50,6 +38,28 @@ namespace SS14.Shared.Map
 
         /// <inheritdoc />
         public bool SuppressOnTileChanged { get; set; }
+
+        private MapId HighestMapID = MapId.Nullspace;
+        private GridId HighestGridID = GridId.Nullspace;
+
+        /// <summary>
+        ///     Holds an indexed collection of map grids.
+        /// </summary>
+        private readonly Dictionary<MapId, Map> _maps = new Dictionary<MapId, Map>();
+
+        private readonly Dictionary<GridId, MapGrid> _grids = new Dictionary<GridId, MapGrid>();
+
+        public void PostInject()
+        {
+            CreateMap(MapId.Nullspace, GridId.Nullspace);
+        }
+
+        /// <inheritdoc />
+        public void Initialize()
+        {
+            _netManager.RegisterNetMessage<MsgMap>(MsgMap.NAME, HandleNetworkMessage);
+            _netManager.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, message => SendMap(message.MsgChannel));
+        }
 
         /// <summary>
         ///     Raises the OnTileChanged event.
@@ -76,33 +86,22 @@ namespace SS14.Shared.Map
                 Tile = (uint)tileRef.Tile
             };
             message.GridIndex = tileRef.LocalPos.GridID;
-            message.MapIndex = tileRef.LocalPos.MapID;
 
             _netManager.ServerSendToAll(message);
         }
 
-        public void RaiseOnGridCreated(MapId mapId, GridId gridId)
-        {
-            OnGridCreated?.Invoke(mapId, gridId);
-        }
-
-        public void RaiseOnGridRemoved(MapId mapId, GridId gridId)
-        {
-            OnGridRemoved?.Invoke(mapId, gridId);
-        }
-
-        /// <summary>
-        ///     Holds an indexed collection of map grids.
-        /// </summary>
-        private readonly Dictionary<MapId, Map> _maps = new Dictionary<MapId, Map>();
 
         /// <inheritdoc />
         public void DeleteMap(MapId mapID)
         {
-            if (!_maps.ContainsKey(mapID))
+            if (!_maps.TryGetValue(mapID, out var map))
             {
-                Logger.WarningS("map", "Attempted to delete nonexistent map.");
-                return;
+                throw new InvalidOperationException($"Attempted to delete nonexistant map '{mapID}'");
+            }
+
+            foreach (var grid in map.GetAllGrids())
+            {
+                DeleteGrid(grid.Index);
             }
 
             MapDestroyed?.Invoke(this, new MapEventArgs(_maps[mapID]));
@@ -120,17 +119,36 @@ namespace SS14.Shared.Map
         }
 
         /// <inheritdoc />
-        public IMap CreateMap(MapId mapID, bool overwrite = false)
+        public IMap CreateMap(MapId? mapID = null, GridId? defaultGridID = null)
         {
-            if (!overwrite && _maps.ContainsKey(mapID))
+            if (defaultGridID != null && GridExists(defaultGridID.Value))
             {
-                Logger.WarningS("map", "Attempted to overwrite existing map.");
-                return null;
+                throw new InvalidOperationException($"Grid '{defaultGridID}' already exists.");
+            }
+            MapId actualID;
+            if (mapID != null)
+            {
+                actualID = mapID.Value;
+            }
+            else
+            {
+                actualID = new MapId(HighestMapID.Value + 1);
             }
 
-            var newMap = new Map(this, mapID);
-            _maps.Add(mapID, newMap);
+            if (MapExists(actualID))
+            {
+                throw new InvalidOperationException($"A map with ID {actualID} already exists");
+            }
+
+            if (HighestMapID.Value < actualID.Value)
+            {
+                HighestMapID = actualID;
+            }
+
+            var newMap = new Map(this, actualID);
+            _maps.Add(actualID, newMap);
             MapCreated?.Invoke(this, new MapEventArgs(newMap));
+            newMap.DefaultGrid = CreateGrid(newMap.Index, defaultGridID);
 
             if (_netManager.IsClient)
                 return newMap;
@@ -160,9 +178,9 @@ namespace SS14.Shared.Map
         /// <inheritdoc />
         public bool TryGetMap(MapId mapID, out IMap map)
         {
-            if (_maps.ContainsKey(mapID))
+            if (_maps.TryGetValue(mapID, out var mapinterface))
             {
-                map = _maps[mapID];
+                map = mapinterface;
                 return true;
             }
             map = null;
@@ -172,6 +190,70 @@ namespace SS14.Shared.Map
         public IEnumerable<IMap> GetAllMaps()
         {
             return _maps.Values;
+        }
+
+        public IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16, float snapSize = 1)
+        {
+            var map = _maps[currentMapID];
+
+            GridId actualID;
+            if (gridID != null)
+            {
+                actualID = gridID.Value;
+            }
+            else
+            {
+                actualID = new GridId(HighestGridID.Value + 1);
+            }
+
+            if (GridExists(actualID))
+            {
+                throw new InvalidOperationException($"A map with ID {actualID} already exists");
+            }
+
+            if (HighestGridID.Value < actualID.Value)
+            {
+                HighestGridID = actualID;
+            }
+
+            var grid = new MapGrid(this, actualID, chunkSize, snapSize, currentMapID);
+            _grids.Add(actualID, grid);
+            map.AddGrid(grid);
+            OnGridCreated?.Invoke(actualID);
+            return grid;
+        }
+
+        public IMapGrid GetGrid(GridId gridID)
+        {
+            return _grids[gridID];
+        }
+
+        public bool TryGetGrid(GridId gridId, out IMapGrid grid)
+        {
+            if (_grids.TryGetValue(gridId, out var gridinterface))
+            {
+                grid = gridinterface;
+                return true;
+            }
+            grid = null;
+            return false;
+        }
+
+        public bool GridExists(GridId gridID)
+        {
+            return _grids.ContainsKey(gridID);
+        }
+
+        public void DeleteGrid(GridId gridID)
+        {
+            var grid = _grids[gridID];
+            var map = (Map)grid.Map;
+
+            grid.Dispose();
+            map.RemoveGrid(grid);
+            _grids.Remove(grid.Index);
+
+            OnGridRemoved?.Invoke(gridID);
         }
     }
 

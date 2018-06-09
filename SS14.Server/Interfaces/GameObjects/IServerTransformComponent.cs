@@ -10,7 +10,7 @@ namespace SS14.Server.Interfaces.GameObjects
         // These definitions allow setting too,
         // because the client can only read the properties.
         new Angle LocalRotation { get; set; }
-        new LocalCoordinates LocalPosition { get; set; }
+        new GridLocalCoordinates LocalPosition { get; set; }
         new Vector2 WorldPosition { get; set; }
 
         // These definitions are upgraded to IServerTransformCompont.

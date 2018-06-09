@@ -53,7 +53,7 @@ namespace SS14.Server.Player
 
         public string PlayerPrototypeName { get; set; } = "__engine_human";
 
-        public LocalCoordinates FallbackSpawnPoint { get; set; }
+        public GridLocalCoordinates FallbackSpawnPoint { get; set; }
 
         /// <inheritdoc />
         public int PlayerCount => _sessionCount;
@@ -147,7 +147,7 @@ namespace SS14.Server.Player
         /// <param name="position">Position of the circle in world-space.</param>
         /// <param name="range">Radius of the circle in world units.</param>
         /// <returns></returns>
-        public List<IPlayerSession> GetPlayersInRange(LocalCoordinates worldPos, int range)
+        public List<IPlayerSession> GetPlayersInRange(GridLocalCoordinates worldPos, int range)
         {
             //TODO: This needs to be moved to the PVS system.
             return

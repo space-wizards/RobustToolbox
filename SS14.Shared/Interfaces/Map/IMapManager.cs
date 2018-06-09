@@ -13,7 +13,7 @@ namespace SS14.Shared.Interfaces.Map
     /// <param name="oldTile">The old tile that is being replaced.</param>
     public delegate void TileChangedEventHandler(TileRef tileRef, Tile oldTile);
 
-    public delegate void GridEventHandler(MapId mapId, GridId gridId);
+    public delegate void GridEventHandler(GridId gridId);
 
     /// <summary>
     ///     This manages all of the grids in the world.
@@ -38,8 +38,26 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         void Initialize();
 
-        IMap CreateMap(MapId mapID, bool overwrite = false);
+        /// <summary>
+        ///     Creates a new map.
+        /// </summary>
+        /// <param name="mapID">
+        ///     If provided, the new map will use this ID. If not provided, a new ID will be selected automatically.
+        /// </param>
+        /// <param name="defaultGapID">
+        ///     If provided, the new map will use this grid ID as default grid. If not provided, a new ID will be selected automatically.
+        /// </param>
+        /// <returns>The new map.</returns>
+        /// <exception cref="InvalidOperationException">
+        ///     Throw if an explicit ID for the map or default grid is passed and a map or grid with the specified ID already exists, respectively.
+        /// </exception>
+        IMap CreateMap(MapId? mapID = null, GridId? defaultGridID = null);
 
+        /// <summary>
+        ///     Check whether a map with specified ID exists.
+        /// </summary>
+        /// <param name="mapID">The map ID to check existance of.</param>
+        /// <returns>True if the map exists, false otherwise.</returns>
         bool MapExists(MapId mapID);
 
         IMap GetMap(MapId mapID);
@@ -49,6 +67,12 @@ namespace SS14.Shared.Interfaces.Map
         void SendMap(INetChannel channel);
 
         void DeleteMap(MapId mapID);
+
+        IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16, float snapSize = 1);
+        IMapGrid GetGrid(GridId gridID);
+        bool TryGetGrid(GridId gridId, out IMapGrid grid);
+        bool GridExists(GridId gridID);
+        void DeleteGrid(GridId gridID);
 
         /// <summary>
         ///     A tile is being modified.

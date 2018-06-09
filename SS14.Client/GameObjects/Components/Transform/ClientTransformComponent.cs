@@ -22,7 +22,7 @@ namespace SS14.Client.GameObjects
     public class ClientTransformComponent : Component, ITransformComponent
     {
         private Vector2 _position;
-        public MapId MapID { get; private set; }
+        public MapId MapID => IoCManager.Resolve<IMapManager>().GetGrid(GridID).MapID;
         public GridId GridID { get; private set; }
         public Angle LocalRotation { get; private set; }
         public virtual ITransformComponent Parent { get; private set; }
@@ -75,7 +75,7 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public event Action<Angle> OnRotate;
 
-        public LocalCoordinates LocalPosition => LocalCoordinatesFor(_position, MapID, GridID);
+        public GridLocalCoordinates LocalPosition => LocalCoordinatesFor(_position, GridID);
 
         public Vector2 WorldPosition
         {
@@ -119,14 +119,13 @@ namespace SS14.Client.GameObjects
                 OnRotate?.Invoke(newState.Rotation);
             }
 
-            if (_position != newState.LocalPosition || MapID != newState.MapID || GridID != newState.GridID)
+            if (_position != newState.LocalPosition || GridID != newState.GridID)
             {
                 var oldPos = LocalPosition;
                 // TODO: this is horribly broken if the parent changes too, because the coordinates are all messed up.
                 // Help.
-                OnMove?.Invoke(this, new MoveEventArgs(oldPos, LocalCoordinatesFor(newState.LocalPosition, newState.MapID, newState.GridID)));
+                OnMove?.Invoke(this, new MoveEventArgs(oldPos, LocalCoordinatesFor(newState.LocalPosition, newState.GridID)));
                 SetPosition(newState.LocalPosition);
-                MapID = newState.MapID;
                 GridID = newState.GridID;
             }
 
@@ -222,20 +221,21 @@ namespace SS14.Client.GameObjects
         /// <summary>
         ///     Calculate our LocalCoordinates as if the location relative to our parent is equal to <paramref name="localPosition" />.
         /// </summary>
-        private LocalCoordinates LocalCoordinatesFor(Vector2 localPosition, MapId mapId, GridId gridId)
+        private GridLocalCoordinates LocalCoordinatesFor(Vector2 localPosition, GridId gridId)
         {
             if (Parent != null)
             {
                 // transform localPosition from parent coords to world coords
                 var worldPos = MatMult(Parent.WorldMatrix, localPosition);
-                var lc = new LocalCoordinates(worldPos, GridId.DefaultGrid, mapId);
+                var grid = IoCManager.Resolve<IMapManager>().GetGrid(gridId);
+                var lc = new GridLocalCoordinates(worldPos, grid.MapID);
 
                 // then to parent grid coords
                 return lc.ConvertToGrid(Parent.LocalPosition.Grid);
             }
             else
             {
-                return new LocalCoordinates(localPosition, gridId, mapId);
+                return new GridLocalCoordinates(localPosition, gridId);
             }
         }
 

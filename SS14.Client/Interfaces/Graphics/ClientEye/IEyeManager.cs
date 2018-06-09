@@ -19,8 +19,8 @@ namespace SS14.Client.Interfaces.Graphics.ClientEye
         void Initialize();
 
         Vector2 WorldToScreen(Vector2 point);
-        ScreenCoordinates WorldToScreen(LocalCoordinates point);
-        LocalCoordinates ScreenToWorld(ScreenCoordinates point);
-        Vector2 ScreenToWorld(Vector2 point);
+        ScreenCoordinates WorldToScreen(GridLocalCoordinates point);
+        GridLocalCoordinates ScreenToWorld(ScreenCoordinates point);
+        GridLocalCoordinates ScreenToWorld(Vector2 point);
     }
 }

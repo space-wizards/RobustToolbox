@@ -5,13 +5,13 @@ namespace SS14.Shared.Enums
 {
     public class MoveEventArgs : EventArgs
     {
-        public MoveEventArgs(LocalCoordinates oldPos, LocalCoordinates newPos)
+        public MoveEventArgs(GridLocalCoordinates oldPos, GridLocalCoordinates newPos)
         {
             OldPosition = oldPos;
             NewPosition = newPos;
         }
 
-        public LocalCoordinates OldPosition { get; }
-        public LocalCoordinates NewPosition { get; }
+        public GridLocalCoordinates OldPosition { get; }
+        public GridLocalCoordinates NewPosition { get; }
     }
 }

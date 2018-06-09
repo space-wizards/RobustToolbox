@@ -10,9 +10,9 @@ namespace SS14.Shared.GameObjects
     {
         public EntityUid Uid { get; }
         public ClickType Click { get; }
-        public LocalCoordinates Coordinates { get; }
+        public GridLocalCoordinates Coordinates { get; }
 
-        public ClickEventMessage(EntityUid uid, ClickType click, LocalCoordinates coordinates)
+        public ClickEventMessage(EntityUid uid, ClickType click, GridLocalCoordinates coordinates)
         {
             Uid = uid;
             Click = click;

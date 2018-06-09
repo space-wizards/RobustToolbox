@@ -128,7 +128,7 @@ namespace SS14.Client.State.States
             _entityManager.FrameUpdate(e.Elapsed);
 
             var map = playerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().MapID;
-            var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(inputManager.MouseScreenPosition, map));
+            var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(inputManager.MouseScreenPosition));
             IEntity entityToClick = GetEntityUnderPosition(mousePosWorld);
             if (entityToClick == lastHoveredEntity)
             {
@@ -154,7 +154,7 @@ namespace SS14.Client.State.States
                 return;
 
             var map = playerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().MapID;
-            var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(eventargs.Position, map));
+            var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(eventargs.Position));
             IEntity entityToClick = GetEntityUnderPosition(mousePosWorld);
 
             //First possible exit point for click, acceptable due to being clientside
@@ -198,7 +198,7 @@ namespace SS14.Client.State.States
             }
         }
 
-        public IEntity GetEntityUnderPosition(LocalCoordinates coordinates)
+        public IEntity GetEntityUnderPosition(GridLocalCoordinates coordinates)
         {
             // Find all the entities intersecting our click
             var entities =

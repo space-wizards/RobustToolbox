@@ -23,13 +23,13 @@ namespace SS14.Shared.GameObjects
     [Serializable, NetSerializable]
     public class PlayAudioPositionalMessage : AudioMessage
     {
-        public LocalCoordinates Coordinates { get; set; }
+        public GridLocalCoordinates Coordinates { get; set; }
     }
 
     [Serializable, NetSerializable]
     public class PlayAudioEntityMessage : AudioMessage
     {
-        public LocalCoordinates Coordinates { get; set; }
+        public GridLocalCoordinates Coordinates { get; set; }
         public EntityUid EntityUid { get; set; }
     }
 }

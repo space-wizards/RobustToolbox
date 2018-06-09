@@ -1,4 +1,5 @@
-﻿using SS14.Client.Interfaces.GameObjects;
+﻿using SS14.Client.Interfaces;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
 using SS14.Client.Interfaces.Player;
 using SS14.Shared;
@@ -26,11 +27,22 @@ namespace SS14.Client.GameStates
         private readonly IPlayerManager playerManager;
         [Dependency]
         private readonly IClientNetManager netManager;
+        [Dependency]
+        private readonly IBaseClient baseClient;
 
         public void Initialize()
         {
             netManager.RegisterNetMessage<MsgState>(MsgState.NAME, HandleStateMessage);
             netManager.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME);
+            baseClient.RunLevelChanged += RunLevelChanged;
+        }
+
+        private void RunLevelChanged(object sender, RunLevelChangedEventArgs args)
+        {
+            if (args.NewLevel == ClientRunLevel.Initialize)
+            {
+                GameSequence = 0;
+            }
         }
 
         public void HandleStateMessage(MsgState message)

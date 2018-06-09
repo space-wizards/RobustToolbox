@@ -2,35 +2,33 @@
 
 Space Station 14 is a revived attempt at an SS13 remake.
 
-**If you want to run the game and contribute, see our [wiki](https://github.com/space-wizards/space-station-14/wiki).**
+**This repository is the *engine* section of SS14. This is the base engine all SS14 servers will be built on. As such, it does not start on its own: it needs the [content repo](https://github.com/space-wizards/space-station-14-content). Use said repo for actual development, even if you're modifying the engine itself.**
 
-## GETTING IN TOUCH ##
+## Getting in Touch
 
-* Website: [space-wizards.github.io](https://space-wizards.github.io/)
-* IRC: `irc.rizon.net#spacebus`
+* Website: [spacestation14.io](https://spacestation14.io/)
 * Discord: [Invite Link](https://discord.gg/t2jac3p)
+* IRC: `irc.rizon.net#spacebus`
 * Project Management Board: [Waffle](https://waffle.io/space-wizards/space-station-14)
 * Code Analysis: [Sonar Cloud](https://sonarcloud.io/dashboard?id=ss14)
+* Automatic Content Builds: [builds.spacestation14.io](https://builds.spacestation14.io)
 
 The IRC is setup to relay back and forth to the Discord server so [IRC nerds](https://xkcd.com/1782/) will not be left out.
 
-# Legal Info
+## Documentation
 
-## COPYRIGHT ##
+We have various documentation articles about various systems on the [GitHub wiki](https://github.com/space-wizards/space-station-14/wiki).
 
-The Authors retain all copyright to their respective work here submitted.
+## Contributing
 
-## LICENSE ##
+We are happy to accept contributions from anybody. Get in Discord or IRC if you want to help. We've got a [list of issues](https://github.com/space-wizards/space-station-14/issues) that need to be done and anybody can pick them up. Don't be afraid to ask for help either!
 
-All human-readable source code materials in this repository are licensed under the GPL, version 3. See `LICENSE-CODE`.
+## Building
 
-All images, models, and rigging files in this repository are licensed under the Creative Commons Attribution-ShareAlike 3.0 United States license. See `LICENSE-ASSETS`.
+**In practice, you usually don't build this repository directly.**
 
-## WARRANTY ##
+If for some reason you want to anyways, [we have a wiki page on it.](https://github.com/space-wizards/space-station-14/wiki/Getting-Started).
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+## Legal Info
+
+See `legal.md` for licenses and copyright.

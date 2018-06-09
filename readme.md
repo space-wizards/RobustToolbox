@@ -27,7 +27,7 @@ We are happy to accept contributions from anybody. Get in Discord or IRC if you 
 
 **In practice, you usually don't build this repository directly.**
 
-If for some reason you want to anyways, [we have a wiki page on it.](https://github.com/space-wizards/space-station-14/wiki/Getting-Started).
+If for some reason you want to anyways, [we have a wiki page on it.](https://github.com/space-wizards/space-station-14/wiki/Getting-Started)
 
 ## Legal Info
 

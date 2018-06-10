@@ -25,6 +25,11 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
   - type: Transform
 ";
 
+        private IMap MapA;
+        private IMapGrid GridA;
+        private IMap MapB;
+        private IMapGrid GridB;
+
         [OneTimeSetUp]
         public void Setup()
         {
@@ -36,11 +41,11 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             manager.Resync();
 
             // build the net dream
-            var newMap = MapManager.CreateMap(new MapId(1));
-            newMap.CreateGrid(new GridId(4));
+            MapA = MapManager.CreateMap();
+            GridA = MapA.CreateGrid();
 
-            newMap = MapManager.CreateMap(new MapId(2));
-            newMap.CreateGrid(new GridId(5));
+            MapB = MapManager.CreateMap();
+            GridB = MapB.CreateGrid();
 
             //NOTE: The grids have not moved, so we can assert worldpos == localpos for the test
         }
@@ -56,19 +61,19 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             var childTrans = child.GetComponent<IServerTransformComponent>();
 
             // that are not on the same map
-            parentTrans.LocalPosition = new GridLocalCoordinates(5, 5, new GridId(4));
-            childTrans.LocalPosition = new GridLocalCoordinates(4, 4, new GridId(5));
+            parentTrans.LocalPosition = new GridLocalCoordinates(5, 5, GridA);
+            childTrans.LocalPosition = new GridLocalCoordinates(4, 4, GridB);
 
             // if they are parented, the child keeps its world position, but moves to the parents map
             childTrans.AttachParent(parentTrans);
 
             Assert.That(childTrans.MapID == parentTrans.MapID);
             Assert.That(childTrans.GridID == parentTrans.GridID);
-            Assert.That(childTrans.LocalPosition == new GridLocalCoordinates(4, 4, new GridId(4)), childTrans.LocalPosition.ToString);
+            Assert.That(childTrans.LocalPosition == new GridLocalCoordinates(4, 4, GridA), childTrans.LocalPosition.ToString);
             Assert.That(childTrans.WorldPosition == new Vector2(4, 4), childTrans.WorldPosition.ToString);
 
             // now you can move the child by setting the position, but the map/grid stays unchanged
-            childTrans.LocalPosition = new GridLocalCoordinates(5, 5, new GridId(5));
+            childTrans.LocalPosition = new GridLocalCoordinates(5, 5, GridB);
 
             Assert.That(childTrans.MapID == parentTrans.MapID, childTrans.MapID.ToString);
             Assert.That(childTrans.GridID == parentTrans.GridID, childTrans.GridID.ToString);

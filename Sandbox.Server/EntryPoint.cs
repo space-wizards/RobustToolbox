@@ -55,18 +55,17 @@ namespace Sandbox.Server
             switch (args.NewLevel)
             {
                 case ServerRunLevel.PreGame:
-                    IoCManager.Resolve<IPlayerManager>().FallbackSpawnPoint = new LocalCoordinates(0, 0, GridId.DefaultGrid, new MapId(2));
 
                     var timing = IoCManager.Resolve<IGameTiming>();
                     var mapLoader = IoCManager.Resolve<IMapLoader>();
                     var mapMan = IoCManager.Resolve<IMapManager>();
 
                     var startTime = timing.RealTime;
-                    {
-                        var newMap = mapMan.CreateMap(new MapId(2));
 
-                        mapLoader.LoadBlueprint(newMap, new GridId(4), "Maps/Demo/DemoGrid.yaml");
-                    }
+                    var newMap = mapMan.CreateMap();
+                    var grid = mapLoader.LoadBlueprint(newMap, "Maps/Demo/DemoGrid.yaml");
+                    IoCManager.Resolve<IPlayerManager>().FallbackSpawnPoint = new GridLocalCoordinates(0, 0, grid);
+
                     var timeSpan = timing.RealTime - startTime;
                     Logger.Info($"Loaded map in {timeSpan.TotalMilliseconds:N2}ms.");
 

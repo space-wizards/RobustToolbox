@@ -29,6 +29,7 @@ namespace SS14.Client.GodotGlue
             {
                 return;
             }
+
             Started = true;
             SS14Assembly = Assembly.LoadFrom("../bin/Client/SS14.Client.dll");
             var entryType = typeof(ClientEntryPoint);

@@ -4,7 +4,7 @@ using SS14.Shared.Map;
 namespace SS14.Shared.Interfaces.Map
 {
     /// <summary>
-    /// This is a square 'chunk' of a MapGrid. 
+    /// This is a square 'chunk' of a MapGrid.
     /// </summary>
     public interface IMapChunk : IEnumerable<TileRef>
     {
@@ -57,6 +57,6 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="gridTile">Tile indices relative to the grid.</param>
         /// <returns>Tile indices relative to this chunk.</returns>
-        MapGrid.Indices GridTileToChunkTile(MapGrid.Indices gridTile);
+        MapIndices GridTileToChunkTile(MapIndices gridTile);
     }
 }

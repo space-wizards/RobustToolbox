@@ -29,7 +29,7 @@ namespace SS14.Server.Interfaces.Player
         /// <summary>
         ///     Fallback spawn point to use if map does not provide it.
         /// </summary>
-        LocalCoordinates FallbackSpawnPoint { get; set; }
+        GridLocalCoordinates FallbackSpawnPoint { get; set; }
 
         /// <summary>
         ///     Raised when the <see cref="SessionStatus" /> of a <see cref="IPlayerSession" /> is changed.
@@ -65,7 +65,7 @@ namespace SS14.Server.Interfaces.Player
 
         void DetachAll();
         List<IPlayerSession> GetPlayersInLobby();
-        List<IPlayerSession> GetPlayersInRange(LocalCoordinates worldPos, int range);
+        List<IPlayerSession> GetPlayersInRange(GridLocalCoordinates worldPos, int range);
         List<IPlayerSession> GetAllPlayers();
         List<PlayerState> GetPlayerStates();
     }

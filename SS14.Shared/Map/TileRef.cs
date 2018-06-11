@@ -12,17 +12,17 @@ namespace SS14.Shared.Map
         public readonly MapId MapIndex;
         public readonly GridId GridIndex;
         private readonly Tile _tile;
-        private readonly MapGrid.Indices _gridTile;
+        private readonly MapIndices _gridTile;
 
         internal TileRef(MapId argMap, GridId gridIndex, int xIndex, int yIndex, Tile tile)
         {
             MapIndex = argMap;
-            _gridTile = new MapGrid.Indices(xIndex, yIndex);
+            _gridTile = new MapIndices(xIndex, yIndex);
             GridIndex = gridIndex;
             _tile = tile;
         }
 
-        internal TileRef(MapId argMap, GridId gridIndex, MapGrid.Indices gridTile, Tile tile)
+        internal TileRef(MapId argMap, GridId gridIndex, MapIndices gridTile, Tile tile)
         {
             MapIndex = argMap;
             _gridTile = gridTile;
@@ -32,7 +32,7 @@ namespace SS14.Shared.Map
 
         public int X => _gridTile.X;
         public int Y => _gridTile.Y;
-        public LocalCoordinates LocalPos => IoCManager.Resolve<IMapManager>().GetMap(MapIndex).GetGrid(GridIndex).GridTileToLocal(_gridTile);
+        public GridLocalCoordinates LocalPos => IoCManager.Resolve<IMapManager>().GetMap(MapIndex).GetGrid(GridIndex).GridTileToLocal(_gridTile);
         public ushort TileSize => IoCManager.Resolve<IMapManager>().GetMap(MapIndex).GetGrid(GridIndex).TileSize;
         public Tile Tile
         {
@@ -40,7 +40,7 @@ namespace SS14.Shared.Map
             set
             {
                 IMapGrid grid = IoCManager.Resolve<IMapManager>().GetMap(MapIndex).GetGrid(GridIndex);
-                grid.SetTile(new LocalCoordinates(_gridTile.X, _gridTile.Y, grid), value);
+                grid.SetTile(new GridLocalCoordinates(_gridTile.X, _gridTile.Y, grid), value);
             }
         }
 
@@ -54,33 +54,33 @@ namespace SS14.Shared.Map
 
         public bool GetStep(Direction dir, out TileRef steptile)
         {
-            MapGrid.Indices currenttile = _gridTile;
-            MapGrid.Indices shift;
+            MapIndices currenttile = _gridTile;
+            MapIndices shift;
             switch (dir)
             {
                 case Direction.East:
-                    shift = new MapGrid.Indices(1, 0);
+                    shift = new MapIndices(1, 0);
                     break;
                 case Direction.West:
-                    shift = new MapGrid.Indices(-1, 0);
+                    shift = new MapIndices(-1, 0);
                     break;
                 case Direction.North:
-                    shift = new MapGrid.Indices(0, 1);
+                    shift = new MapIndices(0, 1);
                     break;
                 case Direction.South:
-                    shift = new MapGrid.Indices(0, -1);
+                    shift = new MapIndices(0, -1);
                     break;
                 case Direction.NorthEast:
-                    shift = new MapGrid.Indices(1, 1);
+                    shift = new MapIndices(1, 1);
                     break;
                 case Direction.SouthEast:
-                    shift = new MapGrid.Indices(1, -1);
+                    shift = new MapIndices(1, -1);
                     break;
                 case Direction.NorthWest:
-                    shift = new MapGrid.Indices(-1, 1);
+                    shift = new MapIndices(-1, 1);
                     break;
                 case Direction.SouthWest:
-                    shift = new MapGrid.Indices(-1, -1);
+                    shift = new MapIndices(-1, -1);
                     break;
                 default:
                     steptile = new TileRef();

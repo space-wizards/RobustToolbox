@@ -16,13 +16,11 @@ namespace SS14.Client.Map
         [Dependency]
         private ISceneTreeHolder sceneTree;
 
-        private Dictionary<MapId, Dictionary<GridId, Godot.TileMap>> RenderTileMaps = new Dictionary<MapId, Dictionary<GridId, Godot.TileMap>>();
+        private Dictionary<GridId, Godot.TileMap> RenderTileMaps = new Dictionary<GridId, Godot.TileMap>();
 
         public ClientMapManager()
         {
             TileChanged += UpdateTileMapOnUpdate;
-            MapCreated += UpdateOnMapCreated;
-            MapDestroyed += UpdateOnMapDestroyed;
             OnGridCreated += UpdateOnGridCreated;
             OnGridRemoved += UpdateOnGridRemoved;
             GridChanged += UpdateOnGridModified;
@@ -30,7 +28,7 @@ namespace SS14.Client.Map
 
         private void UpdateOnGridModified(object sender, GridChangedEventArgs args)
         {
-            var tilemap = RenderTileMaps[args.Grid.MapID][args.Grid.Index];
+            var tilemap = RenderTileMaps[args.Grid.Index];
             foreach ((int x, int y, Tile tile) in args.Modified)
             {
                 tilemap.SetCell(x, y, tile.TileId);
@@ -39,11 +37,11 @@ namespace SS14.Client.Map
 
         private void UpdateTileMapOnUpdate(object sender, TileChangedEventArgs args)
         {
-            var tilemap = RenderTileMaps[args.NewTile.MapIndex][args.NewTile.GridIndex];
+            var tilemap = RenderTileMaps[args.NewTile.GridIndex];
             tilemap.SetCell(args.NewTile.X, args.NewTile.Y, args.NewTile.Tile.TileId);
         }
 
-        private void UpdateOnGridCreated(MapId mapId, GridId gridId)
+        private void UpdateOnGridCreated(GridId gridId)
         {
             var tilemap = new Godot.TileMap
             {
@@ -55,44 +53,19 @@ namespace SS14.Client.Map
                 CellQuadrantSize = 4,
                 //Visible = false,
             };
-            tilemap.SetName($"Grid {mapId}.{gridId}");
+            tilemap.SetName($"Grid {gridId}");
             sceneTree.WorldRoot.AddChild(tilemap);
             // Creating a map makes a grid before mapcreated is fired, so...
-            if (!RenderTileMaps.TryGetValue(mapId, out var map))
-            {
-                map = new Dictionary<GridId, Godot.TileMap>();
-                RenderTileMaps[mapId] = map;
-            }
-            map[gridId] = tilemap;
+            RenderTileMaps[gridId] = tilemap;
         }
 
-        private void UpdateOnGridRemoved(MapId mapId, GridId gridId)
+        private void UpdateOnGridRemoved(GridId gridId)
         {
-            Logger.Debug($"Removing grid {mapId}.{gridId}");
-            var tilemap = RenderTileMaps[mapId][gridId];
+            Logger.Debug($"Removing grid {gridId}");
+            var tilemap = RenderTileMaps[gridId];
             tilemap.QueueFree();
             tilemap.Dispose();
-            RenderTileMaps[mapId].Remove(gridId);
-        }
-
-        private void UpdateOnMapCreated(object sender, MapEventArgs eventArgs)
-        {
-            Logger.Debug($"Adding map {eventArgs.Map.Index}");
-            if (!RenderTileMaps.ContainsKey(eventArgs.Map.Index))
-            {
-                RenderTileMaps[eventArgs.Map.Index] = new Dictionary<GridId, Godot.TileMap>();
-            }
-        }
-
-        private void UpdateOnMapDestroyed(object sender, MapEventArgs eventArgs)
-        {
-            foreach (var grid in RenderTileMaps[eventArgs.Map.Index].Values)
-            {
-                grid.QueueFree();
-                grid.Dispose();
-            }
-
-            RenderTileMaps.Remove(eventArgs.Map.Index);
+            RenderTileMaps.Remove(gridId);
         }
     }
 }

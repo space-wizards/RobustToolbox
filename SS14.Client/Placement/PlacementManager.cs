@@ -72,7 +72,7 @@ namespace SS14.Client.Placement
         /// Dictionary of all placement mode types
         /// </summary>
         private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
-        private readonly List<Tuple<LocalCoordinates, TimeSpan>> _pendingTileChanges = new List<Tuple<LocalCoordinates, TimeSpan>>();
+        private readonly List<Tuple<GridLocalCoordinates, TimeSpan>> _pendingTileChanges = new List<Tuple<GridLocalCoordinates, TimeSpan>>();
 
         /// <summary>
         /// Tells this system to try to handle placement of an entity during the next frame
@@ -87,7 +87,7 @@ namespace SS14.Client.Placement
         /// <summary>
         /// Holds the anchor that we can try to spawn in a line or a grid from
         /// </summary>
-        public LocalCoordinates StartPoint { get; set; }
+        public GridLocalCoordinates StartPoint { get; set; }
 
         /// <summary>
         /// Whether the placement manager is currently in a mode where it accepts actions
@@ -335,11 +335,11 @@ namespace SS14.Client.Placement
 
             if (map == MapId.Nullspace || CurrentPermission == null || CurrentMode == null)
             {
-                coordinates = new ScreenCoordinates(Vector2.Zero, MapId.Nullspace);
+                coordinates = new ScreenCoordinates(Vector2.Zero);
                 return false;
             }
 
-            coordinates = new ScreenCoordinates(inputManager.MouseScreenPosition, map);
+            coordinates = new ScreenCoordinates(inputManager.MouseScreenPosition);
             return true;
         }
 
@@ -348,12 +348,6 @@ namespace SS14.Client.Placement
         {
             if (!CurrentMousePosition(out ScreenCoordinates mouseScreen))
             {
-                return;
-            }
-
-            if (mouseScreen.MapID == MapId.Nullspace)
-            {
-                _placenextframe = false;
                 return;
             }
 
@@ -507,7 +501,7 @@ namespace SS14.Client.Placement
             IsActive = true;
         }
 
-        private void RequestPlacement(LocalCoordinates coordinates)
+        private void RequestPlacement(GridLocalCoordinates coordinates)
         {
             if (coordinates.MapID == MapId.Nullspace) return;
             if (CurrentPermission == null) return;
@@ -530,7 +524,7 @@ namespace SS14.Client.Placement
                         return;
                 }
 
-                var tuple = new Tuple<LocalCoordinates, TimeSpan>(localPos, _time.RealTime + _pendingTileTimeout);
+                var tuple = new Tuple<GridLocalCoordinates, TimeSpan>(localPos, _time.RealTime + _pendingTileTimeout);
                 _pendingTileChanges.Add(tuple);
             }
 ;

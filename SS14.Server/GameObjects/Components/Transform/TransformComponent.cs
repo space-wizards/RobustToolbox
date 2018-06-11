@@ -31,7 +31,6 @@ namespace SS14.Server.GameObjects
         private EntityUid _parent;
         private Vector2 _position; // holds offset from grid, or offset from parent
         private Angle _rotation; // local rotation
-        private MapId _mapID;
         private GridId _gridID;
 
         private Matrix3 _worldMatrix;
@@ -68,11 +67,7 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public MapId MapID
-        {
-            get => _mapID;
-            private set => _mapID = value;
-        }
+        public MapId MapID => IoCManager.Resolve<IMapManager>().GetGrid(GridID).MapID;
 
         /// <inheritdoc />
         public GridId GridID
@@ -125,7 +120,7 @@ namespace SS14.Server.GameObjects
         public event Action<Angle> OnRotate;
 
         /// <inheritdoc />
-        public LocalCoordinates LocalPosition
+        public GridLocalCoordinates LocalPosition
         {
             get
             {
@@ -133,14 +128,14 @@ namespace SS14.Server.GameObjects
                 {
                     // transform _position from parent coords to world coords
                     var worldPos = MatMult(Parent.WorldMatrix, _position);
-                    var lc = new LocalCoordinates(worldPos, GridId.DefaultGrid, MapID);
+                    var lc = new GridLocalCoordinates(worldPos, MapID);
 
                     // then to parent grid coords
                     return lc.ConvertToGrid(Parent.LocalPosition.Grid);
                 }
                 else
                 {
-                    return new LocalCoordinates(_position, _gridID, _mapID);
+                    return new GridLocalCoordinates(_position, _gridID);
                 }
             }
             set
@@ -163,7 +158,6 @@ namespace SS14.Server.GameObjects
                 {
                     _position = value.Position;
 
-                    MapID = value.MapID;
                     GridID = value.GridID;
                 }
 
@@ -211,7 +205,7 @@ namespace SS14.Server.GameObjects
                 Dirty();
 
                 RebuildMatrices();
-                OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new LocalCoordinates(_position, GridID, MapID)));
+                OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new GridLocalCoordinates(_position, GridID)));
             }
         }
 
@@ -220,8 +214,7 @@ namespace SS14.Server.GameObjects
             base.ExposeData(serializer);
 
             serializer.DataField(ref _parent, "parent", new EntityUid());
-            serializer.DataField(ref _mapID, "map", MapId.Nullspace);
-            serializer.DataField(ref _gridID, "grid", GridId.DefaultGrid);
+            serializer.DataField(ref _gridID, "grid", GridId.Nullspace);
             serializer.DataField(ref _position, "pos", Vector2.Zero);
             serializer.DataField(ref _rotation, "rot", new Angle());
         }
@@ -229,7 +222,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new TransformComponentState(_position, GridID, MapID, LocalRotation, Parent?.Owner?.Uid);
+            return new TransformComponentState(_position, GridID, LocalRotation, Parent?.Owner?.Uid);
         }
 
         /// <summary>
@@ -243,7 +236,7 @@ namespace SS14.Server.GameObjects
 
             // transform _position from parent coords to world coords
             var worldPos = MatMult(Parent.WorldMatrix, _position);
-            var lc = new LocalCoordinates(worldPos, GridId.DefaultGrid, MapID);
+            var lc = new GridLocalCoordinates(worldPos, MapID);
 
             // then to parent grid coords
             lc = lc.ConvertToGrid(Parent.LocalPosition.Grid);
@@ -270,7 +263,6 @@ namespace SS14.Server.GameObjects
             Parent = parent;
 
             // move to parents grid
-            _mapID = parent.MapID;
             _gridID = parent.GridID;
 
             // offset position from world to parent

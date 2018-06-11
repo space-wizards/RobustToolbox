@@ -162,7 +162,7 @@ namespace SS14.Shared.Map
 
             for (var i = 0; i < chunkCount; ++i)
             {
-                var chunkPos = new MapGrid.Indices(message.ChunkDefs[i].X, message.ChunkDefs[i].Y);
+                var chunkPos = new MapIndices(message.ChunkDefs[i].X, message.ChunkDefs[i].Y);
                 var chunk = grid.GetChunk(chunkPos);
 
                 var counter = 0;
@@ -203,7 +203,7 @@ namespace SS14.Shared.Map
             var y = message.SingleTurf.Y;
             var tile = (Tile)message.SingleTurf.Tile;
 
-            var pos = new LocalCoordinates(x, y, message.GridIndex, message.MapIndex);
+            var pos = new GridLocalCoordinates(x, y, message.GridIndex);
             pos.Grid.SetTile(pos, tile);
         }
 

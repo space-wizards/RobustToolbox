@@ -14,7 +14,7 @@ namespace SS14.Client.GameObjects
         public override string Name => "Clickable";
         public override uint? NetID => NetIDs.CLICKABLE;
 
-        public bool CheckClick(LocalCoordinates worldPos, out int drawdepth)
+        public bool CheckClick(GridLocalCoordinates worldPos, out int drawdepth)
         {
             var component = Owner.GetComponent<IClickTargetComponent>();
 

@@ -73,14 +73,14 @@ namespace SS14.Client.UserInterface.CustomControls
             var mouseScreenPos = inputManager.MouseScreenPosition;
             int mouseWorldMap;
             int mouseWorldGrid;
-            Vector2 mouseWorldPos;
+            GridLocalCoordinates mouseWorldPos;
             IEntity mouseEntity = null;
             try
             {
-                var coords = eyeManager.ScreenToWorld(new ScreenCoordinates(mouseScreenPos, entityTransform.MapID));
+                var coords = eyeManager.ScreenToWorld(new ScreenCoordinates(mouseScreenPos));
                 mouseWorldMap = (int)coords.MapID;
                 mouseWorldGrid = (int)coords.GridID;
-                mouseWorldPos = coords.Position;
+                mouseWorldPos = coords;
                 if (stateManager.CurrentState is GameScreen gameScreen)
                 {
                     mouseEntity = gameScreen.GetEntityUnderPosition(coords);

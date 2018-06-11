@@ -10,40 +10,26 @@ namespace SS14.Server.ServerConsole.Commands
     {
         public string Command => "savebp";
         public string Description => "Serializes a grid to disk.";
-        public string Help => "savebp <mapID> <gridID> <Path>";
+        public string Help => "savebp <gridID> <Path>";
 
         public void Execute(params string[] args)
         {
             if (args.Length < 1)
                 return;
 
-            if (!int.TryParse(args[0], out var intMapId))
+            if (!int.TryParse(args[0], out var intGridId))
                 return;
 
-            if (!int.TryParse(args[1], out var intGridId))
-                return;
-
-            var mapID = new MapId(intMapId);
             var gridId = new GridId(intGridId);
-
-            // no saving null space
-            if (mapID == MapId.Nullspace)
-                return;
-
-            // no saving default grid
-            if (gridId == GridId.DefaultGrid)
-                return;
 
             var mapManager = IoCManager.Resolve<IMapManager>();
 
-            if (!mapManager.TryGetMap(mapID, out var map))
-                return;
-
-            if (!map.GridExists(gridId))
+            // no saving default grid
+            if (!mapManager.TryGetGrid(gridId, out var grid) || grid.IsDefaultGrid)
                 return;
 
             // TODO: Parse path
-            IoCManager.Resolve<IMapLoader>().SaveBlueprint(map, gridId, "Maps/Demo/DemoGrid.yaml");
+            IoCManager.Resolve<IMapLoader>().SaveBlueprint(gridId, "Maps/Demo/DemoGrid.yaml");
         }
     }
 

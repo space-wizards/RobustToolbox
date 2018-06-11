@@ -5,19 +5,19 @@ namespace SS14.Shared.Map
     [Serializable]
     public struct GridId : IEquatable<GridId>
     {
-        public static readonly GridId DefaultGrid = new GridId(0);
+        public static readonly GridId Nullspace = new GridId(0);
 
-        private readonly int _value;
+        internal readonly int Value;
 
         public GridId(int value)
         {
-            _value = value;
+            Value = value;
         }
 
         /// <inheritdoc />
         public bool Equals(GridId other)
         {
-            return _value == other._value;
+            return Value == other.Value;
         }
 
         /// <inheritdoc />
@@ -30,12 +30,12 @@ namespace SS14.Shared.Map
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return _value;
+            return Value;
         }
 
         public static bool operator ==(GridId a, GridId b)
         {
-            return a._value == b._value;
+            return a.Value == b.Value;
         }
 
         public static bool operator !=(GridId a, GridId b)
@@ -45,12 +45,12 @@ namespace SS14.Shared.Map
 
         public static explicit operator int(GridId self)
         {
-            return self._value;
+            return self.Value;
         }
 
         public override string ToString()
         {
-            return _value.ToString();
+            return Value.ToString();
         }
     }
 }

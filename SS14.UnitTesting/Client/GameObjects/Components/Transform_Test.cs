@@ -32,6 +32,11 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
   - type: Transform
 ";
 
+        private IMap MapA;
+        private IMapGrid GridA;
+        private IMap MapB;
+        private IMapGrid GridB;
+
         [OneTimeSetUp]
         public void Setup()
         {
@@ -47,11 +52,11 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
             manager.Resync();
 
             // build the net dream
-            var newMap = MapManager.CreateMap(new MapId(1));
-            newMap.CreateGrid(new GridId(4));
+            MapA = MapManager.CreateMap();
+            GridA = MapA.CreateGrid();
 
-            newMap = MapManager.CreateMap(new MapId(2));
-            newMap.CreateGrid(new GridId(5));
+            MapB = MapManager.CreateMap();
+            GridB = MapB.CreateGrid();
 
             //NOTE: The grids have not moved, so we can assert worldpos == localpos for the tests
         }
@@ -73,16 +78,16 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
             var parentTrans = parent.GetComponent<ITransformComponent>();
             var childTrans = child.GetComponent<ITransformComponent>();
 
-            var compState = new TransformComponentState(new Vector2(5, 5), new GridId(5), new MapId(2), new Angle(0), EntityUid.Invalid);
+            var compState = new TransformComponentState(new Vector2(5, 5), GridB.Index, new Angle(0), EntityUid.Invalid);
             parentTrans.HandleComponentState(compState);
 
-            compState = new TransformComponentState(new Vector2(6, 6), new GridId(5), new MapId(2), new Angle(0), EntityUid.Invalid);
+            compState = new TransformComponentState(new Vector2(6, 6), GridB.Index, new Angle(0), EntityUid.Invalid);
             childTrans.HandleComponentState(compState);
             // World pos should be 6, 6 now.
 
             // Act
             var oldWpos = childTrans.WorldPosition;
-            compState = new TransformComponentState(Vector2.One, new GridId(5), new MapId(2), new Angle(0), parent.Uid);
+            compState = new TransformComponentState(Vector2.One, GridB.Index, new Angle(0), parent.Uid);
             childTrans.HandleComponentState(compState);
             var newWpos = childTrans.WorldPosition;
 
@@ -109,11 +114,11 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
             var node2Trans = node2.GetComponent<ITransformComponent>();
             var node3Trans = node3.GetComponent<ITransformComponent>();
 
-            var compState = new TransformComponentState(new Vector2(6, 6), new GridId(5), new MapId(2), Angle.FromDegrees(135), EntityUid.Invalid);
+            var compState = new TransformComponentState(new Vector2(6, 6), GridB.Index, Angle.FromDegrees(135), EntityUid.Invalid);
             node1Trans.HandleComponentState(compState);
-            compState = new TransformComponentState(new Vector2(1, 1), new GridId(5), new MapId(2), Angle.FromDegrees(45), node1.Uid);
+            compState = new TransformComponentState(new Vector2(1, 1), GridB.Index, Angle.FromDegrees(45), node1.Uid);
             node2Trans.HandleComponentState(compState);
-            compState = new TransformComponentState(Vector2.Zero, new GridId(5), new MapId(2), Angle.FromDegrees(45), node2.Uid);
+            compState = new TransformComponentState(Vector2.Zero, GridB.Index, Angle.FromDegrees(45), node2.Uid);
             node3Trans.HandleComponentState(compState);
 
             // Act

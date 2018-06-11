@@ -27,7 +27,7 @@ namespace SS14.Server.Interfaces.GameObjects
         /// <param name="entityType"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
-        IEntity ForceSpawnEntityAt(string entityType, LocalCoordinates coordinates);
+        IEntity ForceSpawnEntityAt(string entityType, GridLocalCoordinates coordinates);
 
         /// <summary>
         /// Spawns an entity at a specific position
@@ -35,7 +35,7 @@ namespace SS14.Server.Interfaces.GameObjects
         /// <param name="entityType"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
-        bool TrySpawnEntityAt(string entityType, LocalCoordinates coordinates, out IEntity entity);
+        bool TrySpawnEntityAt(string entityType, GridLocalCoordinates coordinates, out IEntity entity);
 
         /// <summary>
         /// Spawns an entity at a specific position
@@ -64,7 +64,7 @@ namespace SS14.Server.Interfaces.GameObjects
         /// Gets entities with a bounding box that intersects this point in coordinate form
         /// </summary>
         /// <param name="position"></param>
-        IEnumerable<IEntity> GetEntitiesIntersecting(LocalCoordinates position);
+        IEnumerable<IEntity> GetEntitiesIntersecting(GridLocalCoordinates position);
 
         /// <summary>
         /// Gets entities that intersect with this entity
@@ -77,7 +77,7 @@ namespace SS14.Server.Interfaces.GameObjects
         /// </summary>
         /// <param name="position"></param>
         /// <param name="range"></param>
-        IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float range);
+        IEnumerable<IEntity> GetEntitiesInRange(GridLocalCoordinates position, float range);
 
         /// <summary>
         /// Gets entities within a certain *square* range of this entity
@@ -102,7 +102,7 @@ namespace SS14.Server.Interfaces.GameObjects
         /// <param name="direction"></param>
         /// <param name="arcwidth"></param>
         /// <returns></returns>
-        IEnumerable<IEntity> GetEntitiesInArc(LocalCoordinates coordinates, float range, Angle direction, float arcwidth);
+        IEnumerable<IEntity> GetEntitiesInArc(GridLocalCoordinates coordinates, float range, Angle direction, float arcwidth);
 
         /// <summary>
         ///     Gets all entity states that have been modified after and including the provided tick.

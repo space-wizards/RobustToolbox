@@ -27,7 +27,7 @@ namespace SS14.Server.GameObjects
         private readonly List<(uint tick, EntityUid uid)> DeletionHistory = new List<(uint, EntityUid)>();
 
         /// <inheritdoc />
-        public bool TrySpawnEntityAt(string entityType, LocalCoordinates coordinates, out IEntity entity)
+        public bool TrySpawnEntityAt(string entityType, GridLocalCoordinates coordinates, out IEntity entity)
         {
             var prototype = _protoManager.Index<EntityPrototype>(entityType);
             if (prototype.CanSpawnAt(coordinates.Grid, coordinates.Position))
@@ -48,12 +48,12 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public bool TrySpawnEntityAt(string entityType, Vector2 position, MapId argMap, out IEntity entity)
         {
-            var coordinates = new LocalCoordinates(position, _mapManager.GetMap(argMap).FindGridAt(position));
+            var coordinates = new GridLocalCoordinates(position, _mapManager.GetMap(argMap).FindGridAt(position));
             return TrySpawnEntityAt(entityType, coordinates, out entity);
         }
 
         /// <inheritdoc />
-        public IEntity ForceSpawnEntityAt(string entityType, LocalCoordinates coordinates)
+        public IEntity ForceSpawnEntityAt(string entityType, GridLocalCoordinates coordinates)
         {
             Entity entity = SpawnEntity(entityType);
             entity.GetComponent<TransformComponent>().LocalPosition = coordinates;
@@ -72,7 +72,7 @@ namespace SS14.Server.GameObjects
                 map = _mapManager.DefaultMap;
             }
 
-            return ForceSpawnEntityAt(entityType, new LocalCoordinates(position, map.FindGridAt(position)));
+            return ForceSpawnEntityAt(entityType, new GridLocalCoordinates(position, map.FindGridAt(position)));
         }
 
         /// <inheritdoc />
@@ -183,7 +183,7 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(LocalCoordinates position)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(GridLocalCoordinates position)
         {
             return GetEntitiesIntersecting(position.MapID, position.ToWorld().Position);
         }
@@ -202,7 +202,7 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float range)
+        public IEnumerable<IEntity> GetEntitiesInRange(GridLocalCoordinates position, float range)
         {
             var aabb = new Box2(position.Position - new Vector2(range / 2, range / 2), position.Position + new Vector2(range / 2, range / 2));
             return GetEntitiesIntersecting(position.MapID, aabb);
@@ -224,13 +224,13 @@ namespace SS14.Server.GameObjects
             }
             else
             {
-                LocalCoordinates coords = entity.GetComponent<ITransformComponent>().LocalPosition;
+                GridLocalCoordinates coords = entity.GetComponent<ITransformComponent>().LocalPosition;
                 return GetEntitiesInRange(coords, range);
             }
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInArc(LocalCoordinates coordinates, float range, Angle direction, float arcwidth)
+        public IEnumerable<IEntity> GetEntitiesInArc(GridLocalCoordinates coordinates, float range, Angle direction, float arcwidth)
         {
             var entities = GetEntitiesInRange(coordinates, range);
 

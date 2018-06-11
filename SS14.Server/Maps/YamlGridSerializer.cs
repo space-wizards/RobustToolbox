@@ -77,7 +77,7 @@ namespace SS14.Server.Maps
             return Convert.ToBase64String(barr);
         }
 
-        public static void DeserializeGrid(IMapManager mapMan, IMap map, GridId gridId, YamlMappingNode info, YamlSequenceNode chunks)
+        public static void DeserializeGrid(IMapManager mapMan, IMap map, ref GridId? gridId, YamlMappingNode info, YamlSequenceNode chunks)
         {
             ushort csz = 0;
             ushort tsz = 0;
@@ -96,6 +96,8 @@ namespace SS14.Server.Maps
             }
 
             var grid = map.CreateGrid(gridId, csz, sgsz);
+
+            gridId = grid.Index;
 
             foreach (YamlMappingNode chunkNode in chunks.Cast<YamlMappingNode>())
             {
@@ -124,7 +126,7 @@ namespace SS14.Server.Maps
                             var data = reader.ReadUInt16();
 
                             var tile = new Tile(id, data);
-                            grid.SetTile(new LocalCoordinates(x + indices.X, y + indices.Y, grid.Index, grid.MapID), tile);
+                            grid.SetTile(new GridLocalCoordinates(x + indices.X, y + indices.Y, grid), tile);
                         }
 
                     mapMan.SuppressOnTileChanged = false;

@@ -11,7 +11,13 @@ namespace SS14.Shared.Interfaces.Map
     public interface IMapGrid : IDisposable
     {
         /// <summary>
-        ///     The integer ID of the map this grid is located within
+        ///     True if we are the default grid of our map.
+        /// </summary>
+        bool IsDefaultGrid { get; }
+        IMap Map { get; }
+
+        /// <summary>
+        ///     The integer ID of the map this grid is currently located within.
         /// </summary>
         MapId MapID { get; }
 
@@ -59,7 +65,7 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="worldPos">The location of the tile in coordinates.</param>
         /// <returns>The tile at the world coordinates.</returns>
-        TileRef GetTile(LocalCoordinates worldPos);
+        TileRef GetTile(GridLocalCoordinates worldPos);
 
         /// <summary>
         ///     Returns all tiles in the grid, in row-major order [xTileIndex, yTileIndex].
@@ -72,7 +78,7 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="worldPos"></param>
         /// <param name="tile">The tile to insert at the coordinates.</param>
-        void SetTile(LocalCoordinates worldPos, Tile tile);
+        void SetTile(GridLocalCoordinates worldPos, Tile tile);
 
         /// <summary>
         ///     Modifies a single tile inside of the chunk.
@@ -80,7 +86,7 @@ namespace SS14.Shared.Interfaces.Map
         /// <param name="worldPos"></param>
         /// <param name="tileId">The new internal ID of the tile.</param>
         /// <param name="tileData">The new data of the tile.</param>
-        void SetTile(LocalCoordinates worldPos, ushort tileId, ushort tileData = 0);
+        void SetTile(GridLocalCoordinates worldPos, ushort tileId, ushort tileData = 0);
 
         /// <summary>
         ///     Returns all tiles inside the area that match the predicate.
@@ -115,7 +121,7 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="chunkIndices">The indices of the chunk in this grid.</param>
         /// <returns>The existing or new chunk.</returns>
-        IMapChunk GetChunk(MapGrid.Indices chunkIndices);
+        IMapChunk GetChunk(MapIndices chunkIndices);
 
         /// <summary>
         ///     Returns all chunks in this grid. This will not generate new chunks.
@@ -139,7 +145,7 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="posLocal">The world-space coordinates with local grid origin.</param>
         /// <returns>The world-space coordinates with global origin.</returns>
-        LocalCoordinates LocalToWorld(LocalCoordinates posLocal);
+        GridLocalCoordinates LocalToWorld(GridLocalCoordinates posLocal);
 
         /// <summary>
         ///     Transforms local vectors into world space vectors
@@ -153,14 +159,14 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="gridTile"></param>
         /// <returns></returns>
-        LocalCoordinates GridTileToLocal(MapGrid.Indices gridTile);
+        GridLocalCoordinates GridTileToLocal(MapIndices gridTile);
 
         /// <summary>
         ///     Transforms grid indices into an outvar tile, returns false if no tile is found
         /// </summary>
         /// <param name="gridTile">The Grid Tile indices.</param>
         /// <returns></returns>
-        bool IndicesToTile(MapGrid.Indices indices, out TileRef tile);
+        bool IndicesToTile(MapIndices indices, out TileRef tile);
 
         #endregion Transforms
     }

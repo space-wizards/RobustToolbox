@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Lidgren.Network;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
@@ -150,7 +151,19 @@ namespace SS14.Shared.Network
             foreach (var kvChannel in _channels)
                 DisconnectChannel(kvChannel.Value, reason);
 
+            // request shutdown of the netPeer
             _netPeer.Shutdown(reason);
+
+            // wait for the network thread to finish its work (like flushing packets and gracefully disconnecting)
+            // Lidgren does not expose the thread, so we can't join or or anything
+            // pretty much have to poll every so often and wait for it to finish before continuing
+            // when the network thread is finished, it will change status from ShutdownRequested to NotRunning
+            while (_netPeer.Status == NetPeerStatus.ShutdownRequested)
+            {
+                // sleep the thread for an arbitrary length so it isn't spinning in the while loop as much
+                Thread.Sleep(50);
+            }
+            
             _strings.Reset();
         }
 

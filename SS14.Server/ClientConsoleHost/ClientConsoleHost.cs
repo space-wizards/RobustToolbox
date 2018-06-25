@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Player;
+using SS14.Server.Interfaces.ServerConsole;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
@@ -20,10 +21,12 @@ namespace SS14.Server.ClientConsoleHost
         private readonly IPlayerManager _players;
         [Dependency]
         private readonly IServerNetManager _net;
+        [Dependency]
+        private readonly IConsoleManager _systemConsole;
 
 
         private readonly Dictionary<string, IClientCommand> availableCommands = new Dictionary<string, IClientCommand>();
-        public IDictionary<string, IClientCommand> AvailableCommands => availableCommands;
+        public IReadOnlyDictionary<string, IClientCommand> AvailableCommands => availableCommands;
 
         public void HandleRegistrationRequest(INetChannel senderConnection)
         {
@@ -53,7 +56,7 @@ namespace SS14.Server.ClientConsoleHost
                 if (AvailableCommands.TryGetValue(instance.Command, out var duplicate))
                     throw new InvalidImplementationException(instance.GetType(), typeof(IClientCommand), $"Command name already registered: {instance.Command}, previous: {duplicate.GetType()}");
 
-                AvailableCommands[instance.Command] = instance;
+                availableCommands[instance.Command] = instance;
             }
 
             _net.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, ProcessCommand);
@@ -66,38 +69,64 @@ namespace SS14.Server.ClientConsoleHost
             var text = message.Text;
             var sender = message.MsgChannel;
             var session = _players.GetSessionByChannel(sender);
-            var args = new List<string>();
 
-            Logger.Info($"[{(int)session.Index}]{session.Name}:{text}");
+            Logger.Info($"[CON] {FormatPlayerString(session)}:{text}");
 
-            CommandParsing.ParseArguments(text, args);
+            ExecuteCommand(session, text);
+        }
 
-            if (args.Count == 0)
-                return;
-            var cmd = args[0];
+        public void ExecuteHostCommand(string command)
+        {
+            ExecuteCommand(null, command);
+        }
 
+        public void ExecuteCommand(IPlayerSession session, string command)
+        {
             try
             {
-                if (availableCommands.TryGetValue(cmd, out var command))
+                var args = new List<string>();
+                CommandParsing.ParseArguments(command, args);
+
+                if (args.Count == 0)
+                    return;
+                var cmdName = args[0];
+
+                if (availableCommands.TryGetValue(cmdName, out var conCmd))
                 {
+                    //TODO: Authentication
+
                     args.RemoveAt(0);
-                    command.Execute(this, session, args.ToArray());
+                    conCmd.Execute(this, session, args.ToArray());
                 }
                 else
-                    SendConsoleReply(sender, $"Unknown command: '{cmd}'");
+                    SendText(session, $"Unknown command: '{cmdName}'");
             }
             catch (Exception e)
             {
-                SendConsoleReply(sender, $"There was an error while executing the command: {e.Message}");
+                Logger.Warning($"[CON] {FormatPlayerString(session)}: ExecuteError - {command}");
+                SendText(session, $"There was an error while executing the command: {e.Message}");
             }
         }
 
-        public void SendConsoleReply(INetChannel target, string text)
+        public void SendText(IPlayerSession session, string text)
+        {
+            if (session != null)
+                SendText(session, text);
+            else
+                _systemConsole.Print(text + "\n");
+        }
+
+        public void SendConsoleText(INetChannel target, string text)
         {
             var netMgr = IoCManager.Resolve<IServerNetManager>();
             var replyMsg = netMgr.CreateNetMessage<MsgConCmdAck>();
             replyMsg.Text = text;
             netMgr.ServerSendMessage(replyMsg, target);
+        }
+
+        private string FormatPlayerString(IPlayerSession session)
+        {
+            return session != null ? $"[{session.Index}]{session.Name}" : "[HOST]";
         }
     }
 }

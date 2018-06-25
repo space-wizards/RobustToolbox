@@ -11,7 +11,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Spawns an entity with specific type at your feet.";
         public string Help => "Usage: spawn <entity type>";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
+        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
         {
             var ent = IoCManager.Resolve<IServerEntityManager>();
             ent.ForceSpawnEntityAt(args[0], player.AttachedEntity.GetComponent<IServerTransformComponent>().LocalPosition);

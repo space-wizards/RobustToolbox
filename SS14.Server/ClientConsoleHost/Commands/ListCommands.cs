@@ -10,7 +10,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Lists all available commands.";
         public string Help => "Outputs a list of all commands which are currently available to you, and a total command number.";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
+        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
         {
             var builder = new StringBuilder("Available commands:\n");
             foreach (var command in host.AvailableCommands.Values)
@@ -18,7 +18,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
                 builder.AppendFormat("{0}: {1}\n", command.Command, command.Description);
             }
             var message = builder.ToString().Trim(' ', '\n');
-            host.SendConsoleReply(player.ConnectedClient, message);
+            host.SendText(player, message);
         }
     }
 }

@@ -1,9 +1,10 @@
+﻿using SS14.Server.Interfaces.Player;
 using SS14.Shared.Console;
 
 namespace SS14.Server.Interfaces.ServerConsole
 {
     public interface IConsoleCommand : ICommand
     {
-        void Execute(params string[] args);
+        void Execute(IConsoleManager host, IPlayerSession player, string[] args);
     }
 }

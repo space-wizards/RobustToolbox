@@ -11,7 +11,7 @@ namespace SS14.Server.ServerConsole.Commands
         public string Description => "Lists all players currently connected";
         public string Help => "Usage: listplayers";
 
-        public void Execute(params string[] args)
+        public void Execute(IConsoleManager host, IPlayerSession player, string[] args)
         {
             var players = IoCManager.Resolve<IPlayerManager>().GetAllPlayers();
             Console.ForegroundColor = ConsoleColor.Yellow;

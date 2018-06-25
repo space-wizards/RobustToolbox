@@ -5,8 +5,9 @@ namespace SS14.Server.Interfaces.ServerConsole
 {
     public interface IConsoleManager
     {
-        IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands { get; }
         void Update();
         void Initialize();
+
+        void Print(string text);
     }
 }

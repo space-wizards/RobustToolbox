@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SS14.Server.Interfaces.Player;
 
 namespace SS14.Server.ServerConsole.Commands
 {
@@ -16,7 +17,7 @@ namespace SS14.Server.ServerConsole.Commands
 
         public string Help => "Usage: loglevel <sawmill> <level>";
 
-        public void Execute(params string[] args)
+        public void Execute(IConsoleManager host, IPlayerSession player, string[] args)
         {
             if (args.Length != 2)
             {
@@ -47,7 +48,7 @@ namespace SS14.Server.ServerConsole.Commands
         public string Description => "Writes a test log to a sawmill.";
         public string Help => "Usage: testlog <sawmill> <level> <messagage>";
 
-        public void Execute(params string[] args)
+        public void Execute(IConsoleManager host, IPlayerSession player, string[] args)
         {
             if (args.Length != 3)
             {

@@ -1,5 +1,6 @@
 using SS14.Server.Interfaces.ServerConsole;
 using System;
+using SS14.Server.Interfaces.Player;
 
 namespace SS14.Server.ServerConsole.Commands
 {
@@ -9,7 +10,7 @@ namespace SS14.Server.ServerConsole.Commands
         public string Help => "Throws a bare Exception for debugging purposes.";
         public string Description => "Throws an exception.";
 
-        public void Execute(params string[] args)
+        public void Execute(IConsoleManager host, IPlayerSession player, string[] args)
         {
             throw new Exception("Debug exception");
         }

@@ -1,7 +1,9 @@
-using SS14.Server.Interfaces.ServerConsole;
+﻿using SS14.Server.Interfaces.ServerConsole;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
+using SS14.Server.Interfaces.ClientConsoleHost;
+using SS14.Server.Interfaces.Player;
 
 namespace SS14.Server.ServerConsole.Commands
 {
@@ -11,7 +13,7 @@ namespace SS14.Server.ServerConsole.Commands
         public string Description => "Show general or command specific help text.";
         public string Help => "help [command]\nIf command is not given, display general purpose help. If it is, print the help text for the specified command.";
 
-        public void Execute(params string[] args)
+        public void Execute(IConsoleManager host, IPlayerSession player, string[] args)
         {
             switch (args.Length)
             {
@@ -28,7 +30,7 @@ namespace SS14.Server.ServerConsole.Commands
 
                 case 1:
                     string commandName = args[0].ToLower();
-                    var commands = IoCManager.Resolve<IConsoleManager>().AvailableCommands;
+                    var commands = IoCManager.Resolve<IClientConsoleHost>().AvailableCommands;
                     if (!commands.ContainsKey(commandName))
                     {
                         Console.ForegroundColor = ConsoleColor.Red;

@@ -14,7 +14,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Fuck no idea what this does honestly.";
         public string Help => "Nope! no clue!";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
+        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
         {
             var random = new System.Random();
             foreach (var targetPlayer in IoCManager.Resolve<IPlayerManager>().GetAllPlayers())

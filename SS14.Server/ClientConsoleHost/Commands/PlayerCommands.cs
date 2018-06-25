@@ -19,7 +19,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Teleports a player to any location in the round.";
         public string Help => "tp <x> <y> [<mapID>]";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
+        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
         {
             if (player.Status != SessionStatus.InGame || player.AttachedEntity == null)
                 return;
@@ -43,7 +43,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
 
             transform.LocalPosition = new GridLocalCoordinates(position, grid);
 
-            host.SendConsoleReply(player.ConnectedClient, $"Teleported {player} to {grid.MapID}:{posX},{posY}.");
+            host.SendText(player, $"Teleported {player} to {grid.MapID}:{posX},{posY}.");
         }
     }
 
@@ -53,7 +53,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Lists all players currently connected";
         public string Help => "Usage: listplayers";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
+        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
         {
             var sb = new StringBuilder();
 
@@ -72,7 +72,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
                     p.ConnectedClient.Ping + "ms"));
             }
 
-            host.SendConsoleReply(player.ConnectedClient, sb.ToString());
+            host.SendText(player, sb.ToString());
         }
     }
 
@@ -82,7 +82,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Kicks a connected player out of the server, disconnecting them.";
         public string Help => "kick <PlayerIndex> [<Reason>]";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
+        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
         {
             if (args.Length < 1)
                 return;

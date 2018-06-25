@@ -1,4 +1,5 @@
 ﻿using SS14.Server.Interfaces.Maps;
+using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.ServerConsole;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
@@ -12,7 +13,7 @@ namespace SS14.Server.ServerConsole.Commands
         public string Description => "Serializes a grid to disk.";
         public string Help => "savebp <gridID> <Path>";
 
-        public void Execute(params string[] args)
+        public void Execute(IConsoleManager host, IPlayerSession player, string[] args)
         {
             if (args.Length < 1)
                 return;
@@ -39,7 +40,7 @@ namespace SS14.Server.ServerConsole.Commands
         public string Description => "Loads a blueprint from disk into the game.";
         public string Help => "loadbp <MapID> <GridID> <Path>";
 
-        public void Execute(params string[] args)
+        public void Execute(IConsoleManager host, IPlayerSession player, string[] args)
         {
             //TODO: Make me work after placement can create new grids.
         }
@@ -51,7 +52,7 @@ namespace SS14.Server.ServerConsole.Commands
         public string Description => "Serializes a map to disk.";
         public string Help => "savemap <MapID> <Path>";
 
-        public void Execute(params string[] args)
+        public void Execute(IConsoleManager host, IPlayerSession player, string[] args)
         {
             if (args.Length < 1)
                 return;
@@ -80,7 +81,7 @@ namespace SS14.Server.ServerConsole.Commands
         public string Description => "Loads a map from disk into the game.";
         public string Help => "loadmap <MapID> <Path>";
 
-        public void Execute(params string[] args)
+        public void Execute(IConsoleManager host, IPlayerSession player, string[] args)
         {
             if (args.Length < 1)
                 return;

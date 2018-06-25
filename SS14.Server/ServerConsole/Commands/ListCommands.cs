@@ -1,8 +1,10 @@
-using SS14.Server.Interfaces.ServerConsole;
+﻿using SS14.Server.Interfaces.ServerConsole;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Server.Interfaces.ClientConsoleHost;
+using SS14.Server.Interfaces.Player;
 using Con = System.Console;
 
 namespace SS14.Server.ServerConsole.Commands
@@ -13,9 +15,9 @@ namespace SS14.Server.ServerConsole.Commands
         public string Description => "Lists all available commands";
         public string Help => "Lists all available commands and their short description.";
 
-        public void Execute(params string[] args)
+        public void Execute(IConsoleManager host, IPlayerSession player, string[] args)
         {
-            var availableCommands = IoCManager.Resolve<IConsoleManager>().AvailableCommands;
+            var availableCommands = IoCManager.Resolve<IClientConsoleHost>().AvailableCommands;
             Con.ForegroundColor = ConsoleColor.Yellow;
             Con.WriteLine("\nAvailable commands:\n");
 

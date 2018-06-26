@@ -51,7 +51,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
     {
         public string Command => "listplayers";
         public string Description => "Lists all players currently connected";
-        public string Help => "Usage: listplayers";
+        public string Help => "listplayers";
 
         public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
         {

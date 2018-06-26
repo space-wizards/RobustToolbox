@@ -1,7 +1,6 @@
 ﻿using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Interfaces.ServerConsole;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;

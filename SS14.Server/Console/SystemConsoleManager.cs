@@ -1,19 +1,15 @@
-﻿using SS14.Server.Interfaces.ServerConsole;
-using SS14.Server.Interfaces;
-using SS14.Shared.Interfaces.Reflection;
-using SS14.Shared.IoC;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.ClientConsoleHost;
-using SS14.Shared.Configuration;
-using SS14.Shared.Interfaces.Configuration;
+using SS14.Server.Interfaces.Console;
+using SS14.Shared.IoC;
 using Con = System.Console;
 
-namespace SS14.Server.ServerConsole
+namespace SS14.Server.Console
 {
-    public class ConsoleManager : IConsoleManager, IPostInjectInit, IDisposable
+    public class SystemConsoleManager : ISystemConsoleManager, IPostInjectInit, IDisposable
     {
         [Dependency]
         private readonly IClientConsoleHost _conHost;
@@ -157,11 +153,11 @@ namespace SS14.Server.ServerConsole
 
         public void ClearCurrentLine()
         {
-            int currentLineCursor = Console.CursorTop;
-            Console.SetCursorPosition(0, Console.CursorTop);
-            for (int i = 0; i < Console.WindowWidth; i++)
-                Console.Write(" ");
-            Console.SetCursorPosition(0, currentLineCursor);
+            int currentLineCursor = Con.CursorTop;
+            Con.SetCursorPosition(0, Con.CursorTop);
+            for (int i = 0; i < Con.WindowWidth; i++)
+                Con.Write(" ");
+            Con.SetCursorPosition(0, currentLineCursor);
         }
         
         private string TabComplete()

@@ -9,13 +9,11 @@ using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Maps;
 using SS14.Server.Placement;
 using SS14.Server.Player;
 using SS14.Server.Prototypes;
 using SS14.Server.Reflection;
-using SS14.Server.ServerConsole;
 using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
 using SS14.Shared.GameObjects;
@@ -43,6 +41,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using SS14.Shared.Interfaces.Resources;
+using SS14.Server.Console;
+using SS14.Server.Interfaces.Console;
 
 namespace SS14.Server
 {
@@ -117,7 +117,7 @@ namespace SS14.Server
             IoCManager.Register<IServerNetManager, NetManager>();
             IoCManager.Register<IMapManager, MapManager>();
             IoCManager.Register<IPlacementManager, PlacementManager>();
-            IoCManager.Register<IConsoleManager, ConsoleManager>();
+            IoCManager.Register<ISystemConsoleManager, SystemConsoleManager>();
             IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
             IoCManager.Register<IBaseServer, BaseServer>();
             IoCManager.Register<ISS14Serializer, SS14Serializer>();

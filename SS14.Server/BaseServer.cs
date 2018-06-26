@@ -8,11 +8,11 @@ using SS14.Server.GameStates;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
+using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Interfaces.ServerConsole;
 using SS14.Shared;
 using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
@@ -74,7 +74,7 @@ namespace SS14.Server
         [Dependency]
         private readonly IServerNetManager _network;
         [Dependency]
-        private readonly IConsoleManager consoleManager;
+        private readonly ISystemConsoleManager _systemConsole;
 
         private FileLogHandler fileLogHandler;
         private GameLoop _mainLoop;
@@ -235,7 +235,7 @@ namespace SS14.Server
 
             var clientConsole = IoCManager.Resolve<IClientConsoleHost>();
             clientConsole.Initialize();
-            consoleManager.Initialize();
+            _systemConsole.Initialize();
 
             OnRunLevelChanged(ServerRunLevel.PreGame);
 
@@ -268,7 +268,7 @@ namespace SS14.Server
                 return;
 
             var netStats = UpdateBps();
-            Console.Title = string.Format("FPS: {0:N2} SD: {1:N2}ms | Net: ({2}) | Memory: {3:N0} KiB",
+            System.Console.Title = string.Format("FPS: {0:N2} SD: {1:N2}ms | Net: ({2}) | Memory: {3:N0} KiB",
                 Math.Round(_time.FramesPerSecondAvg, 2),
                 _time.RealFrameTimeStdDev.TotalMilliseconds,
                 netStats,
@@ -358,7 +358,7 @@ namespace SS14.Server
         private void Update(float frameTime)
         {
             UpdateTitle();
-            consoleManager.Update();
+            _systemConsole.Update();
 
             IoCManager.Resolve<IServerNetManager>().ProcessPackets();
 

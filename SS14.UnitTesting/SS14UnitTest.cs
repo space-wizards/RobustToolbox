@@ -19,10 +19,8 @@ using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Maps;
 using SS14.Server.Reflection;
-using SS14.Server.ServerConsole;
 using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
 using SS14.Shared.GameObjects;
@@ -63,6 +61,8 @@ using SS14.Client.GameStates;
 using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Graphics.Overlays;
 using SS14.Shared.Interfaces.Resources;
+using SS14.Server.Console;
+using SS14.Server.Interfaces.Console;
 
 namespace SS14.UnitTesting
 {
@@ -220,7 +220,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IServerNetManager, NetManager>();
                     IoCManager.Register<IMapManager, MapManager>();
                     IoCManager.Register<SS14.Server.Interfaces.Placement.IPlacementManager, SS14.Server.Placement.PlacementManager>();
-                    IoCManager.Register<IConsoleManager, ConsoleManager>();
+                    IoCManager.Register<ISystemConsoleManager, SystemConsoleManager>();
                     IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
                     IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();
                     IoCManager.Register<ICommandLineArgs, CommandLineArgs>();

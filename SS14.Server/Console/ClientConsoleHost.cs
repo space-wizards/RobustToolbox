@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using SS14.Server.Interfaces.ClientConsoleHost;
+using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Interfaces.ServerConsole;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
@@ -22,7 +22,7 @@ namespace SS14.Server.ClientConsoleHost
         [Dependency]
         private readonly IServerNetManager _net;
         [Dependency]
-        private readonly IConsoleManager _systemConsole;
+        private readonly ISystemConsoleManager _systemConsole;
 
 
         private readonly Dictionary<string, IClientCommand> availableCommands = new Dictionary<string, IClientCommand>();

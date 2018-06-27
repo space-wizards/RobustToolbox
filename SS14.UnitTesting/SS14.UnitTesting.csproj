@@ -92,6 +92,8 @@
     <Compile Include="Client\DummyUserInterfaceManager.cs" />
     <Compile Include="Client\GameControllerProxyDummy.cs" />
     <Compile Include="Client\Utility\GodotConversionsTest.cs" />
+    <Compile Include="Server\Console\PermGroupContainer_Test.cs" />
+    <Compile Include="Server\Console\PermGroup_Test.cs" />
     <Compile Include="Server\GameObjects\Components\Container_Test.cs" />
     <Compile Include="Server\GameObjects\Components\Transform_Test.cs" />
     <Compile Include="Shared\GameObjects\Serialization\YamlEntitySerializer_Test.cs" />

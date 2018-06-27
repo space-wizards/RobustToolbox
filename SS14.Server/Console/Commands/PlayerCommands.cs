@@ -56,11 +56,14 @@ namespace SS14.Server.Console.Commands
 
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
+            // Player: number of people connected and their byond keys
+            // Admin: read a byond variable which shows their ip, byond version, ckey, attached entity and hardware id
+
             var sb = new StringBuilder();
 
             var players = IoCManager.Resolve<IPlayerManager>().GetAllPlayers();
-            sb.AppendLine("Current Players:");
             sb.AppendLine($"{"Index",1}{"Player Name",20}{"IP Address",16}{"Status",12}{"Playing Time",14}{"Ping",9}");
+            sb.AppendLine("----------------------------------------------------------------------------");
 
             foreach (IPlayerSession p in players)
             {

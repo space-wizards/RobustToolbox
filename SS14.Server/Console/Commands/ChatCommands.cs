@@ -1,15 +1,15 @@
 ﻿using System.Linq;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
+using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.Player;
-using SS14.Shared;
 using SS14.Shared.Console;
 using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 
-namespace SS14.Server.ClientConsoleHost.Commands
+namespace SS14.Server.Console.Commands
 {
     internal class SayCommand : IClientCommand
     {
@@ -20,7 +20,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Send chat messages to the local channel or a specified radio channel.";
         public string Help => "say [<:channel>] <text>";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if (player.Status != SessionStatus.InGame || !player.AttachedEntityUid.HasValue)
                 return;
@@ -68,7 +68,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Send chat messages to the local channel in a 1 meter radius.";
         public string Help => "whisper <text>";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if (player.Status != SessionStatus.InGame || !player.AttachedEntityUid.HasValue)
                 return;
@@ -92,7 +92,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Send third person chat messages to the local channel.";
         public string Help => "me <text>";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if (player.Status != SessionStatus.InGame || !player.AttachedEntityUid.HasValue)
                 return;
@@ -127,7 +127,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Send Out of Character chat messages.";
         public string Help => "ooc <text>";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             var chat = IoCManager.Resolve<IChatManager>();
             chat.DispatchMessage(ChatChannel.OOC, args[0], player.Index);

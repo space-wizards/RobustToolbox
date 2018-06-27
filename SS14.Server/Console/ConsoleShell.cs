@@ -11,12 +11,15 @@ using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Utility;
 
-namespace SS14.Server.ClientConsoleHost
+namespace SS14.Server.Console
 {
-    public class ClientConsoleHost : IClientConsoleHost
+    /// <summary>
+    /// 
+    /// </summary>
+    public class ConsoleShell : IConsoleShell
     {
         [Dependency]
-        private readonly IReflectionManager reflectionManager;
+        private readonly IReflectionManager _reflectionManager;
         [Dependency]
         private readonly IPlayerManager _players;
         [Dependency]
@@ -50,7 +53,7 @@ namespace SS14.Server.ClientConsoleHost
 
         public void Initialize()
         {
-            foreach (var type in reflectionManager.GetAllChildren<IClientCommand>())
+            foreach (var type in _reflectionManager.GetAllChildren<IClientCommand>())
             {
                 var instance = Activator.CreateInstance(type, null) as IClientCommand;
                 if (AvailableCommands.TryGetValue(instance.Command, out var duplicate))

@@ -1,9 +1,10 @@
 ﻿using System;
 using SS14.Server.Interfaces.ClientConsoleHost;
+using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Log;
 
-namespace SS14.Server.ClientConsoleHost.Commands
+namespace SS14.Server.Console.Commands
 {
     class LogSetLevelCommand : IClientCommand
     {
@@ -11,11 +12,11 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Changes the log level for a provided sawmill.";
         public string Help => "loglevel <sawmill> <level>";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if (args.Length != 2)
             {
-                host.SendText(player, "Invalid argument amount. Expected 2 arguments.");
+                shell.SendText(player, "Invalid argument amount. Expected 2 arguments.");
                 return;
             }
 
@@ -40,11 +41,11 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Writes a test log to a sawmill.";
         public string Help => "testlog <sawmill> <level> <messagage>";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if (args.Length != 3)
             {
-                host.SendText(player, "Invalid argument amount. Expected exactly 3 arguments.");
+                shell.SendText(player, "Invalid argument amount. Expected exactly 3 arguments.");
                 return;
             }
 

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Console;
 using SS14.Shared.IoC;
 using Con = System.Console;
@@ -12,7 +11,7 @@ namespace SS14.Server.Console
     public class SystemConsoleManager : ISystemConsoleManager, IPostInjectInit, IDisposable
     {
         [Dependency]
-        private readonly IClientConsoleHost _conHost;
+        private readonly IConsoleShell _conShell;
         
         private readonly Dictionary<int, string> commandHistory = new Dictionary<int, string>();
         private string currentBuffer = "";
@@ -135,7 +134,7 @@ namespace SS14.Server.Console
 
         private void ExecuteCommand(string commandLine)
         {
-            _conHost.ExecuteHostCommand(commandLine);
+            _conShell.ExecuteHostCommand(commandLine);
         }
 
         public void Print(string text)
@@ -169,7 +168,7 @@ namespace SS14.Server.Console
 
             if (tabCompleteList.Count == 0)
             {
-                tabCompleteList = _conHost.AvailableCommands.Keys.Where(key => key.StartsWith(currentBuffer)).ToList();
+                tabCompleteList = _conShell.AvailableCommands.Keys.Where(key => key.StartsWith(currentBuffer)).ToList();
                 if (tabCompleteList.Count == 0)
                 {
                     return String.Empty;

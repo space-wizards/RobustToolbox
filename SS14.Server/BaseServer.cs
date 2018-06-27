@@ -233,7 +233,7 @@ namespace SS14.Server
             prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes"));
             prototypeManager.Resync();
 
-            var clientConsole = IoCManager.Resolve<IClientConsoleHost>();
+            var clientConsole = IoCManager.Resolve<IConsoleShell>();
             clientConsole.Initialize();
             _systemConsole.Initialize();
 

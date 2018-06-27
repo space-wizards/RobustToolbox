@@ -1,25 +1,45 @@
-﻿using NUnit.Framework;
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
+using NUnit.Framework;
+using SS14.Client;
+using SS14.Client.Console;
+using SS14.Client.Debugging;
 using SS14.Client.GameObjects;
+using SS14.Client.GameStates;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Overlays;
 using SS14.Client.Input;
+using SS14.Client.Interfaces;
+using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.GameStates;
+using SS14.Client.Interfaces.Graphics;
+using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Interfaces.Input;
+using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
-using SS14.Client.State;
 using SS14.Client.Reflection;
+using SS14.Client.ResourceManagement;
+using SS14.Client.State;
 using SS14.Server;
 using SS14.Server.Chat;
+using SS14.Server.Console;
 using SS14.Server.GameObjects;
 using SS14.Server.GameStates;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
-using SS14.Server.Interfaces.ClientConsoleHost;
+using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Maps;
+using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Maps;
+using SS14.Server.Placement;
+using SS14.Server.Player;
+using SS14.Server.Prototypes;
 using SS14.Server.Reflection;
 using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
@@ -29,40 +49,22 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Interfaces.Timers;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using SS14.Shared.Map;
 using SS14.Shared.Network;
+using SS14.Shared.Physics;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Serialization;
-using SS14.Shared.Timing;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using SS14.Shared.Interfaces.Physics;
-using SS14.Shared.Interfaces.Timing;
-using SS14.Shared.Physics;
 using SS14.Shared.Timers;
-using SS14.Client.ResourceManagement;
-using SS14.Client.Interfaces.ResourceManagement;
-using SS14.Client.Interfaces;
-using SS14.Client;
+using SS14.Shared.Timing;
 using SS14.UnitTesting.Client;
-using SS14.Client.Interfaces.Debugging;
-using SS14.Client.Debugging;
-using SS14.Client.Console;
-using SS14.Client.Interfaces.Graphics;
-using SS14.Shared.Log;
-using SS14.Server.Prototypes;
-using SS14.Client.Interfaces.GameStates;
-using SS14.Client.GameStates;
-using SS14.Client.Interfaces.Graphics.Overlays;
-using SS14.Client.Graphics.Overlays;
-using SS14.Shared.Interfaces.Resources;
-using SS14.Server.Console;
-using SS14.Server.Interfaces.Console;
 
 namespace SS14.UnitTesting
 {
@@ -75,6 +77,7 @@ namespace SS14.UnitTesting
     public abstract class SS14UnitTest
     {
         public delegate void EventHandler();
+
         public static event EventHandler InjectedMethod;
 
         #region Options
@@ -105,11 +108,7 @@ namespace SS14.UnitTesting
 
         #region Accessors
 
-        public IConfigurationManager GetConfigurationManager
-        {
-            get;
-            private set;
-        }
+        public IConfigurationManager GetConfigurationManager { get; private set; }
 
         #endregion Accessors
 
@@ -152,6 +151,7 @@ namespace SS14.UnitTesting
                 GetConfigurationManager = IoCManager.Resolve<IConfigurationManager>();
                 GetConfigurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("./client_config.toml"));
             }
+
             /*
             if (NeedsResourcePack)
             {
@@ -219,15 +219,15 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IChatManager, ChatManager>();
                     IoCManager.Register<IServerNetManager, NetManager>();
                     IoCManager.Register<IMapManager, MapManager>();
-                    IoCManager.Register<SS14.Server.Interfaces.Placement.IPlacementManager, SS14.Server.Placement.PlacementManager>();
+                    IoCManager.Register<IPlacementManager, PlacementManager>();
                     IoCManager.Register<ISystemConsoleManager, SystemConsoleManager>();
                     IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
                     IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();
                     IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
                     IoCManager.Register<IServerGameStateManager, ServerGameStateManager>();
                     IoCManager.Register<IReflectionManager, ServerReflectionManager>();
-                    IoCManager.Register<IClientConsoleHost, SS14.Server.ClientConsoleHost.ClientConsoleHost>();
-                    IoCManager.Register<IPlayerManager, SS14.Server.Player.PlayerManager>();
+                    IoCManager.Register<IConsoleShell, ConsoleShell>();
+                    IoCManager.Register<IPlayerManager, PlayerManager>();
                     IoCManager.Register<IComponentFactory, ServerComponentFactory>();
                     IoCManager.Register<IBaseServer, BaseServer>();
                     IoCManager.Register<IMapLoader, MapLoader>();
@@ -247,9 +247,7 @@ namespace SS14.UnitTesting
         /// Called after all IoC registration has been done, but before the graph has been built.
         /// This allows one to add new IoC types or overwrite existing ones if needed.
         /// </summary>
-        protected virtual void OverrideIoC()
-        {
-        }
+        protected virtual void OverrideIoC() { }
 
         #endregion Setup
     }

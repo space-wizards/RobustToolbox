@@ -147,7 +147,7 @@
     <Compile Include="CommandLineArgs.cs" />
     <Compile Include="Chat\ChatManager.cs" />
     <Compile Include="Console\Commands\ListCommands.cs" />
-    <Compile Include="Console\ClientConsoleHost.cs" />
+    <Compile Include="Console\ConsoleShell.cs" />
     <Compile Include="GameObjects\ServerComponentFactory.cs" />
     <Compile Include="GameObjects\ServerEntityManager.cs" />
     <Compile Include="GameObjects\ServerEntityNetworkManager.cs" />
@@ -169,7 +169,7 @@
     <Compile Include="Interfaces\Chat\IChatCommand.cs" />
     <Compile Include="Interfaces\Chat\IChatManager.cs" />
     <Compile Include="Interfaces\Console\IClientCommand.cs" />
-    <Compile Include="Interfaces\Console\IClientConsoleHost.cs" />
+    <Compile Include="Interfaces\Console\IConsoleShell.cs" />
     <Compile Include="Interfaces\GameObjects\IActorComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IMoverComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IServerEntityManager.cs" />

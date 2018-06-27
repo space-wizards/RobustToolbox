@@ -3,7 +3,6 @@ using SS14.Server.GameObjects;
 using SS14.Server.GameStates;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
-using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Maps;
@@ -125,7 +124,7 @@ namespace SS14.Server
             IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
             IoCManager.Register<IServerGameStateManager, ServerGameStateManager>();
             IoCManager.Register<IReflectionManager, ServerReflectionManager>();
-            IoCManager.Register<IClientConsoleHost, ClientConsoleHost.ClientConsoleHost>();
+            IoCManager.Register<IConsoleShell, ConsoleShell>();
             IoCManager.Register<IPlayerManager, PlayerManager>();
             IoCManager.Register<IComponentFactory, ServerComponentFactory>();
             IoCManager.Register<IMapLoader, MapLoader>();

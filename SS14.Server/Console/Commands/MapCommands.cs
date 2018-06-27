@@ -1,4 +1,5 @@
 ﻿using SS14.Server.Interfaces.ClientConsoleHost;
+using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Interfaces.GameObjects.Components;
@@ -6,7 +7,7 @@ using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 
-namespace SS14.Server.ClientConsoleHost.Commands
+namespace SS14.Server.Console.Commands
 {
     class AddMapCommand : IClientCommand
     {
@@ -14,7 +15,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Adds a new empty map to the round. If the mapID already exists, this command does nothing.";
         public string Help => "addmap <mapID>";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if (args.Length < 1)
                 return;
@@ -26,11 +27,11 @@ namespace SS14.Server.ClientConsoleHost.Commands
             if (!mapMgr.MapExists(mapId))
             {
                 mapMgr.CreateMap(mapId);
-                host.SendText(player, $"Map with ID {mapId} created.");
+                shell.SendText(player, $"Map with ID {mapId} created.");
                 return;
             }
 
-            host.SendText(player, $"Map with ID {mapId} already exists!");
+            shell.SendText(player, $"Map with ID {mapId} already exists!");
         }
     }
 
@@ -40,7 +41,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Serializes a grid to disk.";
         public string Help => "savebp <gridID> <Path>";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if (args.Length < 1)
                 return;
@@ -67,7 +68,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Loads a blueprint from disk into the game.";
         public string Help => "loadbp <MapID> <GridID> <Path>";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             //TODO: Make me work after placement can create new grids.
         }
@@ -79,7 +80,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Serializes a map to disk.";
         public string Help => "savemap <MapID> <Path>";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if (args.Length < 1)
                 return;
@@ -108,7 +109,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Loads a map from disk into the game.";
         public string Help => "loadmap <MapID> <Path>";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if (args.Length < 1)
                 return;
@@ -137,14 +138,14 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Prints the absolute location of the player's entity to console.";
         public string Help => "loc";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if(player.AttachedEntity == null)
                 return;
 
             var pos = player.AttachedEntity.GetComponent<ITransformComponent>().LocalPosition;
 
-            host.SendText(player, $"MapID:{pos.MapID} GridID:{pos.GridID} X:{pos.X:N2} Y:{pos.Y:N2}");
+            shell.SendText(player, $"MapID:{pos.MapID} GridID:{pos.GridID} X:{pos.X:N2} Y:{pos.Y:N2}");
         }
     }
 }

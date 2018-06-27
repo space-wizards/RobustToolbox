@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SS14.Server.Console;
 
 namespace SS14.UnitTesting.Server.Console
@@ -12,5 +7,6 @@ namespace SS14.UnitTesting.Server.Console
     [TestOf(typeof(PermGroup))]
     class PermGroup_Test
     {
+        // Not much to test here, but we need that sweet coverage.
     }
 }

@@ -3,7 +3,7 @@ using SS14.Server.Interfaces.Console;
 
 namespace SS14.Server.Console
 {
-    public class PermGroup: IPermGroup
+    public class PermGroup : IPermGroup
     {
         public int Index { get; set; }
 

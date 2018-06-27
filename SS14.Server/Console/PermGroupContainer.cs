@@ -7,17 +7,27 @@ using YamlDotNet.Serialization;
 
 namespace SS14.Server.Console
 {
+    /// <inheritdoc />
     internal class PermGroupContainer : IPermGroupContainer
     {
-        private static readonly ResourcePath GroupPath = new ResourcePath("/Groups/groups.yml");
+        private static readonly ResourcePath _groupPath = new ResourcePath("/Groups/groups.yml");
 
-        private Dictionary<int, IPermGroup> _groups = new Dictionary<int, IPermGroup>();
+        private readonly Dictionary<int, IPermGroup> _groups = new Dictionary<int, IPermGroup>();
 
+        /// <inheritdoc />
         public IReadOnlyDictionary<int, IPermGroup> Groups => _groups;
 
+        /// <inheritdoc />
         public void LoadGroups(IResourceManager resMan)
         {
-            if (!resMan.TryContentFileRead(GroupPath, out var memoryStream))
+            var rootPath = resMan.ConfigDirectory;
+            var path = Path.Combine(rootPath, "."+_groupPath.ToString());
+            var filePath = Path.GetFullPath(path);
+
+            if (!File.Exists(filePath))
+                return;
+
+            if (!resMan.TryContentFileRead(_groupPath, out var memoryStream))
                 return;
 
             using (var reader = new StreamReader(memoryStream))
@@ -30,6 +40,21 @@ namespace SS14.Server.Console
                 }
             }
         }
-        
+
+        /// <inheritdoc />
+        public void SaveGroups(IResourceManager resMan)
+        {
+            var rootPath = resMan.ConfigDirectory;
+            var path = Path.Combine(rootPath, "."+_groupPath.ToString());
+            var filePath = Path.GetFullPath(path);
+
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+            using (var sw = new StreamWriter(filePath))
+            {
+                var serializer = new Serializer();
+                serializer.Serialize(sw, _groups.Values);
+            }
+        }
     }
 }

@@ -12,5 +12,6 @@ namespace SS14.Server.Interfaces.Console
         IReadOnlyDictionary<int, IPermGroup> Groups { get; }
 
         void LoadGroups(IResourceManager resMan);
+        void SaveGroups(IResourceManager resMan);
     }
 }

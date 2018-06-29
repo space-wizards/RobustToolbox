@@ -144,10 +144,12 @@
     <Compile Include="ContentPack\GameServer.cs" />
     <Compile Include="ContentPack\GameShared.cs" />
     <Compile Include="ContentPack\IContentRoot.cs" />
+    <Compile Include="ContentPack\IWritableDirProvider.cs" />
     <Compile Include="ContentPack\PackLoader.cs" />
     <Compile Include="ContentPack\PathHelpers.cs" />
     <Compile Include="ContentPack\ResourceManager.cs" />
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
+    <Compile Include="ContentPack\WritableDirProvider.cs" />
     <Compile Include="GameObjects\ComponentMessage.cs" />
     <Compile Include="GameObjects\ComponentMessages\Messages.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\AudioMessages.cs" />

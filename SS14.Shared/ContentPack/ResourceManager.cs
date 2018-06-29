@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
@@ -28,6 +27,9 @@ namespace SS14.Shared.ContentPack
         public string ConfigDirectory => _configRoot.FullName;
 
         /// <inheritdoc />
+        public IWritableDirProvider UserData { get; private set; }
+
+        /// <inheritdoc />
         public void Initialize()
         {
             _config.RegisterCVar("resource.pack", "ResourcePack.zip", CVar.ARCHIVE);
@@ -36,6 +38,8 @@ namespace SS14.Shared.ContentPack
             configRoot = Path.Combine(configRoot, DataFolderName);
             configRoot = Path.GetFullPath(configRoot);
             _configRoot = Directory.CreateDirectory(configRoot);
+
+            UserData = new WritableDirProvider(_configRoot);
         }
 
         /// <inheritdoc />

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using SS14.Shared.ContentPack;
 
 namespace SS14.Shared.Interfaces
 {
@@ -10,6 +11,11 @@ namespace SS14.Shared.Interfaces
     /// </summary>
     public interface IResourceManager
     {
+        /// <summary>
+        ///     Provides access to the writable user data folder.
+        /// </summary>
+        IWritableDirProvider UserData { get; }
+
         /// <summary>
         ///     Sets the manager up so that the base game can run.
         /// </summary>
@@ -128,6 +134,7 @@ namespace SS14.Shared.Interfaces
         ///     Absolute disk path to the configuration directory for the game. If you are writing any files,
         ///     they need to be inside of this directory.
         /// </summary>
+        [Obsolete("Use the UserData functions in the resource manager to read/write to this location.")]
         string ConfigDirectory { get; }
     }
 }

@@ -7,7 +7,6 @@ using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Input;
-using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Resources;
@@ -259,13 +258,6 @@ namespace SS14.Client.Input
         private void SaveKeyFile(ResourcePath yamlPath)
         {
             throw new NotImplementedException();
-        }
-
-        private string KeyFilePath(string filename)
-        {
-            var rootPath = _resourceMan.ConfigDirectory;
-            var path = Path.Combine(rootPath, filename);
-            return Path.GetFullPath(path);
         }
 
         // Don't take input if we're focused on a LineEdit.

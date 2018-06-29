@@ -128,12 +128,5 @@ namespace SS14.Shared.Interfaces.Resources
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
         IEnumerable<ResourcePath> ContentFindFiles(string path);
-
-        /// <summary>
-        ///     Absolute disk path to the configuration directory for the game. If you are writing any files,
-        ///     they need to be inside of this directory.
-        /// </summary>
-        [Obsolete("Use the UserData functions in the resource manager to read/write to this location.")]
-        string ConfigDirectory { get; }
     }
 }

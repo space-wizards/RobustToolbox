@@ -25,9 +25,6 @@ namespace SS14.Shared.ContentPack
         private readonly List<(ResourcePath prefix, IContentRoot root)> _contentRoots = new List<(ResourcePath, IContentRoot)>();
 
         /// <inheritdoc />
-        public string ConfigDirectory => _configRoot.FullName;
-
-        /// <inheritdoc />
         public IWritableDirProvider UserData { get; private set; }
 
         /// <inheritdoc />

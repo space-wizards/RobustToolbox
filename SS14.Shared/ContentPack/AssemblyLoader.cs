@@ -8,6 +8,7 @@ using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Utility;
 
 namespace SS14.Shared.ContentPack
 {
@@ -175,15 +176,16 @@ namespace SS14.Shared.ContentPack
         /// <param name="resMan">The assembly will be located inside of this resource manager.</param>
         /// <param name="assemblyName">File name of the assembly inside of the ./Assemblies folder in the resource manager.</param>
         /// <returns>If the assembly was successfully located and loaded.</returns>
-        public static bool TryLoadAssembly<T>(IResourceManager resMan, string assemblyName) where T : GameShared
+        public static bool TryLoadAssembly<T>(IResourceManager resMan, string assemblyName)
+            where T : GameShared
         {
             // get the assembly from the file system
-            if (resMan.TryContentFileRead($@"/Assemblies/{assemblyName}.dll", out MemoryStream gameDll))
+            if (resMan.TryContentFileRead(new ResourcePath($@"/Assemblies/{assemblyName}.dll"), out var gameDll))
             {
                 Logger.DebugS("srv", $"Loading {assemblyName} DLL");
 
                 // see if debug info is present
-                if (resMan.TryContentFileRead($@"/Assemblies/{assemblyName}.pdb", out MemoryStream gamePdb))
+                if (resMan.TryContentFileRead(new ResourcePath($@"/Assemblies/{assemblyName}.pdb") , out var gamePdb))
                 {
                     try
                     {

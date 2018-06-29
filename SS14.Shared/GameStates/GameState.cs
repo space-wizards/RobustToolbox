@@ -1,10 +1,7 @@
 ﻿using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.Serialization;
-using SS14.Shared.IoC;
 using SS14.Shared.Serialization;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace SS14.Shared.GameStates
 {

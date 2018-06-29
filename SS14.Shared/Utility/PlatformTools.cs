@@ -16,7 +16,7 @@ namespace SS14.Shared.Utility
             var separators = new char[] { '/', '\\' };
             string newpath = "";
             foreach (string tmp in pathname.Split(separators))
-                newpath = System.IO.Path.Combine(newpath, tmp);
+                newpath = Path.Combine(newpath, tmp);
             return newpath;
         }
     }

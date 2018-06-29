@@ -4,7 +4,6 @@ using SS14.Shared.Log;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace SS14.Client.ResourceManagement
 {

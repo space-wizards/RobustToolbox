@@ -5,6 +5,7 @@ using SS14.Server.Interfaces.Maps;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Map;

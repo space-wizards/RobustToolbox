@@ -6,6 +6,7 @@ using SS14.Shared.Console;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.IoC;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;

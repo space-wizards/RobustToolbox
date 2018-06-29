@@ -1,10 +1,9 @@
-﻿using SS14.Shared.Utility;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using SS14.Shared.ContentPack;
+using SS14.Shared.Utility;
 
-namespace SS14.Shared.Interfaces
+namespace SS14.Shared.Interfaces.Resources
 {
     /// <summary>
     ///     Virtual file system for all disk resources.

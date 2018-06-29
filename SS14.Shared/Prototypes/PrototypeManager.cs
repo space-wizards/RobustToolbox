@@ -15,6 +15,7 @@ using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Resources;
 
 namespace SS14.Shared.Prototypes
 {

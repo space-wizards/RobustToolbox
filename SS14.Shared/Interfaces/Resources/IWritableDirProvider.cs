@@ -2,7 +2,7 @@
 using System.IO;
 using SS14.Shared.Utility;
 
-namespace SS14.Shared.ContentPack
+namespace SS14.Shared.Interfaces.Resources
 {
     /// <summary>
     /// Provides an API for file and directory manipulation inside of a rooted folder.

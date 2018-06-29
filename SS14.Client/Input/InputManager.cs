@@ -10,6 +10,7 @@ using SS14.Shared.Input;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;

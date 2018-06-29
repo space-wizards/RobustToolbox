@@ -1,5 +1,6 @@
 ﻿using SS14.Client.ResourceManagement;
 using SS14.Shared.Interfaces;
+using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.Interfaces.ResourceManagement

@@ -79,6 +79,7 @@ using SS14.Client.Interfaces.GameStates;
 using SS14.Client.GameStates;
 using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Graphics.Overlays;
+using SS14.Shared.Interfaces.Resources;
 
 namespace SS14.UnitTesting
 {

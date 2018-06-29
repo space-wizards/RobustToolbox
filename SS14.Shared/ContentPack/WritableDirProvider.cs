@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.Utility;
 
 namespace SS14.Shared.ContentPack

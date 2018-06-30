@@ -16,7 +16,8 @@ namespace SS14.Shared.ContentPack
         /// <param name="rootDir">Root file system directory to allow writing.</param>
         public WritableDirProvider(DirectoryInfo rootDir)
         {
-            _rootDirString = Path.Combine(rootDir.FullName, Path.DirectorySeparatorChar.ToString());
+            // FullName does not have a trailing separator, and we MUST have a separator.
+            _rootDirString = rootDir.FullName + Path.DirectorySeparatorChar.ToString();
         }
 
         #region File Access

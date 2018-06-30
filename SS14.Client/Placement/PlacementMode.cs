@@ -9,6 +9,7 @@ using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.Placement
 {
@@ -163,12 +164,12 @@ namespace SS14.Client.Placement
 
         public TextureResource GetSprite(string key)
         {
-            return pManager.ResourceCache.GetResource<TextureResource>("/Textures/" + key);
+            return pManager.ResourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/") / key);
         }
 
         public bool TryGetSprite(string key, out TextureResource sprite)
         {
-            return pManager.ResourceCache.TryGetResource("/Textures/" + key, out sprite);
+            return pManager.ResourceCache.TryGetResource(new ResourcePath(@"/Textures/") / key, out sprite);
         }
 
         public void SetSprite()

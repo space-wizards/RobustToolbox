@@ -9,6 +9,7 @@ using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 
 // Ok let me just quickly explain how deferred lighting works.
 // So for some reason, Godot's Light2D has performance issues on some computers. Why? No clue. Anyways.
@@ -88,7 +89,7 @@ namespace SS14.Client.Graphics.Lighting
                 deferredViewport.AddChild(canvasModulate);
                 rootViewport.AddChild(deferredViewport);
 
-                var whiteTex = resourceCache.GetResource<TextureResource>(@"/Textures/Effects/Light/white.png");
+                var whiteTex = resourceCache.GetResource<TextureResource>(new ResourcePath(@"/Textures/Effects/Light/white.png"));
                 deferredMaskBackground = new Godot.Sprite()
                 {
                     Name = "DeferredMaskBackground",

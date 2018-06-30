@@ -31,6 +31,7 @@ using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics;
 using SS14.Client.GameObjects;
 using SS14.Shared.GameObjects.Serialization;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.Placement
 {
@@ -496,7 +497,7 @@ namespace SS14.Client.Placement
         {
             var tileDefs = _tileDefManager;
 
-            CurrentBaseSprite = ResourceCache.GetResource<TextureResource>("/Textures/UserInterface/tilebuildoverlay.png").Texture;
+            CurrentBaseSprite = ResourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png")).Texture;
 
             IsActive = true;
         }

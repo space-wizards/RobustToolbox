@@ -15,6 +15,7 @@ using SS14.Shared.Log;
 using SS14.Shared.Map;
 using System.Collections.Generic;
 using System.IO;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
@@ -50,7 +51,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         public void Play(string filename, AudioParams? audioParams = null)
         {
-            Play(resourceCache.GetResource<AudioResource>(filename), audioParams);
+            Play(resourceCache.GetResource<AudioResource>(new ResourcePath(filename)), audioParams);
         }
 
         /// <summary>
@@ -84,7 +85,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// <param name="entity">The entity "emitting" the audio.</param>
         public void Play(string filename, IEntity entity, AudioParams? audioParams = null)
         {
-            Play(resourceCache.GetResource<AudioResource>(filename), entity, audioParams);
+            Play(resourceCache.GetResource<AudioResource>(new ResourcePath(filename)), entity, audioParams);
         }
 
         /// <summary>
@@ -120,7 +121,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         public void Play(string filename, GridLocalCoordinates coordinates, AudioParams? audioParams = null)
         {
-            Play(resourceCache.GetResource<AudioResource>(filename), coordinates, audioParams);
+            Play(resourceCache.GetResource<AudioResource>(new ResourcePath(filename)), coordinates, audioParams);
         }
 
         /// <summary>

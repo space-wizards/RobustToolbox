@@ -81,7 +81,7 @@ namespace SS14.Client.GameObjects
             {
                 radius = FloatMath.Clamp(value, 2, 10);
                 var mgr = IoCManager.Resolve<IResourceCache>();
-                var tex = mgr.GetResource<TextureResource>($"/Textures/Effects/Light/lighting_falloff_{(int)radius}.png");
+                var tex = mgr.GetResource<TextureResource>(new ResourcePath("/Textures/Effects/Light/") / $"lighting_falloff_{(int)radius}.png");
                 // TODO: Maybe editing the global texture resource is not a good idea.
                 tex.Texture.GodotTexture.SetFlags(tex.Texture.GodotTexture.GetFlags() | (int)Godot.Texture.FlagsEnum.Filter);
                 Light.Texture = tex.Texture;

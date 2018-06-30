@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
@@ -7,6 +7,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
@@ -44,7 +45,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
             contents = new Label();
             AddChild(contents);
-            contents.AddFontOverride("font", resourceCache.GetResource<FontResource>("/Fonts/CALIBRI.TTF").MakeDefault());
+            contents.AddFontOverride("font", resourceCache.GetResource<FontResource>(new ResourcePath("/Fonts/CALIBRI.TTF")).MakeDefault());
             contents.AddColorOverride("font_color_shadow", Color.Black);
             contents.MarginLeft = contents.MarginTop = 5;
 

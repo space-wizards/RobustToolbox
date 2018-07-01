@@ -1,5 +1,4 @@
-﻿using System;
-using SS14.Client.ResourceManagement;
+﻿using SS14.Client.ResourceManagement;
 using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.Utility;
 
@@ -17,21 +16,18 @@ namespace SS14.Client.Interfaces.ResourceManagement
         /// </summary>
         bool TryGetDiskFilePath(ResourcePath path, out string diskPath);
 
-        [Obsolete("Use GetResource<T>(ResourcePath, bool)")]
         T GetResource<T>(string path, bool useFallback = true)
             where T : BaseResource, new();
 
         T GetResource<T>(ResourcePath path, bool useFallback = true)
             where T : BaseResource, new();
 
-        [Obsolete("Use TryGetResource<T>(ResourcePath, out T)")]
         bool TryGetResource<T>(string path, out T resource)
             where T : BaseResource, new();
 
         bool TryGetResource<T>(ResourcePath path, out T resource)
             where T : BaseResource, new();
 
-        [Obsolete("Use CacheResource<T>(ResourcePath, T)")]
         void CacheResource<T>(string path, T resource)
             where T : BaseResource, new();
 

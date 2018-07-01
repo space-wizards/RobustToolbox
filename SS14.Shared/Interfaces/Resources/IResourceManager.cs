@@ -65,7 +65,6 @@ namespace SS14.Shared.Interfaces.Resources
         /// <exception cref="FileNotFoundException">Thrown if <paramref name="path"/> does not exist in the VFS.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        [Obsolete("Use ContentFileRead(ResourcePath)")]
         MemoryStream ContentFileRead(string path);
 
         /// <summary>
@@ -84,7 +83,6 @@ namespace SS14.Shared.Interfaces.Resources
         /// <returns>True if the file exists, false otherwise.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        [Obsolete("Use ContentFileExists(ResourcePath)")]
         bool ContentFileExists(string path);
 
         /// <summary>
@@ -105,7 +103,6 @@ namespace SS14.Shared.Interfaces.Resources
         /// <returns>True if the file could be loaded, false otherwise.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        [Obsolete("Use TryContentFileRead(ResourcePath,MemoryStream)")]
         bool TryContentFileRead(string path, out MemoryStream fileStream);
 
         /// <summary>
@@ -130,7 +127,6 @@ namespace SS14.Shared.Interfaces.Resources
         /// <returns>Enumeration of all relative file paths of the files found, that is they are relative to <paramref name="path"/>.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        [Obsolete("Use ContentFindFiles(ResourcePath)")]
         IEnumerable<ResourcePath> ContentFindFiles(string path);
     }
 }

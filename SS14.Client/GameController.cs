@@ -31,6 +31,7 @@ using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using System;
+using SS14.Shared.Interfaces.Resources;
 
 namespace SS14.Client
 {

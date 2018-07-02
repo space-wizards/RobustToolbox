@@ -148,6 +148,7 @@
     <Compile Include="ContentPack\PathHelpers.cs" />
     <Compile Include="ContentPack\ResourceManager.cs" />
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
+    <Compile Include="ContentPack\WritableDirProvider.cs" />
     <Compile Include="GameObjects\ComponentMessage.cs" />
     <Compile Include="GameObjects\ComponentMessages\Messages.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\AudioMessages.cs" />
@@ -179,7 +180,6 @@
     <Compile Include="Interfaces\GameObjects\IEntityQuery.cs" />
     <Compile Include="Interfaces\GameObjects\System\IEntitySystem.cs" />
     <Compile Include="Interfaces\GameObjects\IEntitySystemManager.cs" />
-    <Compile Include="Interfaces\IResourceManager.cs" />
     <Compile Include="Interfaces\Log\ILogHandler.cs" />
     <Compile Include="Interfaces\Log\ILogManager.cs" />
     <Compile Include="Interfaces\Log\ISawmill.cs" />
@@ -192,6 +192,8 @@
     <Compile Include="Interfaces\Physics\ICollider.cs" />
     <Compile Include="Interfaces\Physics\ICollisionManager.cs" />
     <Compile Include="Interfaces\Reflection\IReflectionManager.cs" />
+    <Compile Include="Interfaces\Resources\IResourceManager.cs" />
+    <Compile Include="Interfaces\Resources\IWritableDirProvider.cs" />
     <Compile Include="Interfaces\Serialization\ISS14Serializer.cs" />
     <Compile Include="Interfaces\Map\IMapChunk.cs" />
     <Compile Include="Interfaces\Map\IMapGrid.cs" />

@@ -1,4 +1,4 @@
-using SS14.Client.Interfaces.Graphics.ClientEye;
+﻿using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.UserInterface.Controls;
@@ -13,6 +13,7 @@ using SS14.Client.Graphics.Drawing;
 using SS14.Client.Interfaces.State;
 using SS14.Client.State.States;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
@@ -41,7 +42,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
             contents = new Label();
             AddChild(contents);
-            contents.AddFontOverride("font", resourceCache.GetResource<FontResource>("/Fonts/CALIBRI.TTF").MakeDefault());
+            contents.AddFontOverride("font", resourceCache.GetResource<FontResource>(new ResourcePath("/Fonts/CALIBRI.TTF")).MakeDefault());
             contents.AddColorOverride("font_color_shadow", Color.Black);
             contents.MarginLeft = contents.MarginTop = 5;
 

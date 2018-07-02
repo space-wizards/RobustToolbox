@@ -4,7 +4,6 @@ using SS14.Shared.Log;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace SS14.Client.ResourceManagement
 {
@@ -58,7 +57,7 @@ namespace SS14.Client.ResourceManagement
                 if (useFallback && _resource.Fallback != null)
                 {
                     Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', resorting to fallback.\n{Environment.StackTrace}\n{e}");
-                    return GetResource<T>(_resource.Fallback, useFallback = false);
+                    return GetResource<T>(_resource.Fallback, false);
                 }
                 else
                 {

@@ -12,7 +12,7 @@ namespace SS14.Client.ResourceManagement
         /// <summary>
         ///     Fallback resource path if this one does not exist.
         /// </summary>
-        public virtual string Fallback => null;
+        public virtual ResourcePath Fallback => null;
 
         /// <summary>
         ///     Disposes this resource.

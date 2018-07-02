@@ -55,6 +55,7 @@ using SS14.Client.Interfaces.Placement;
 using SS14.Client.Placement;
 using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Graphics.Overlays;
+using SS14.Shared.Interfaces.Resources;
 
 namespace SS14.Client
 {

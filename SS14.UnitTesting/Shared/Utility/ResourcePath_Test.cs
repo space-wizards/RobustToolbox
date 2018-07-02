@@ -92,6 +92,15 @@ namespace SS14.UnitTesting.Shared.Utility
             Assert.That(respath.FilenameWithoutExtension, Is.EqualTo(data.expected));
         }
 
+        [TestCase(@"", ExpectedResult = @".")]
+        [TestCase(@".", ExpectedResult = @".")]
+        [TestCase(@"/foo/bar", ExpectedResult = @"/foo")]
+        [TestCase(@"/foo/bar.txt", ExpectedResult = @"/foo")]
+        public string DirectoryTest(string path)
+        {
+            return new ResourcePath(path).Directory.ToString();
+        }
+
         [Test]
         public void ChangeSeparator_Test()
         {

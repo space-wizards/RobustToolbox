@@ -211,6 +211,27 @@ namespace SS14.Shared.Utility
         }
 
         /// <summary>
+        ///     Returns the directory that this file resides in.
+        /// </summary>
+        public ResourcePath Directory
+        {
+            get
+            {
+                if (IsSelf) return this;
+
+                var fileName = Filename;
+                if (!string.IsNullOrWhiteSpace(fileName))
+                {
+                    var path = ToString();
+                    var dir = path.Remove(path.Length - fileName.Length);
+                    return new ResourcePath(dir);
+                }
+
+                return this;
+            }
+        }
+
+        /// <summary>
         ///     Returns a new instance with a different separator set.
         /// </summary>
         /// <param name="newSeparator">The new separator to use.</param>

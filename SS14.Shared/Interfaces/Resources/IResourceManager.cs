@@ -1,15 +1,20 @@
-﻿using SS14.Shared.Utility;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using SS14.Shared.Utility;
 
-namespace SS14.Shared.Interfaces
+namespace SS14.Shared.Interfaces.Resources
 {
     /// <summary>
     ///     Virtual file system for all disk resources.
     /// </summary>
     public interface IResourceManager
     {
+        /// <summary>
+        ///     Provides access to the writable user data folder.
+        /// </summary>
+        IWritableDirProvider UserData { get; }
+
         /// <summary>
         ///     Sets the manager up so that the base game can run.
         /// </summary>
@@ -123,11 +128,5 @@ namespace SS14.Shared.Interfaces
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
         IEnumerable<ResourcePath> ContentFindFiles(string path);
-
-        /// <summary>
-        ///     Absolute disk path to the configuration directory for the game. If you are writing any files,
-        ///     they need to be inside of this directory.
-        /// </summary>
-        string ConfigDirectory { get; }
     }
 }

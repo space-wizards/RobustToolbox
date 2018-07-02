@@ -5,6 +5,7 @@ using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using System.Collections.Generic;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.Map
 {
@@ -27,7 +28,7 @@ namespace SS14.Client.Map
             TileSet.CreateTile(ret);
             if (!string.IsNullOrEmpty(tileDef.SpriteName))
             {
-                var texture = resourceCache.GetResource<TextureResource>($@"/Textures/Tiles/{tileDef.SpriteName}.png");
+                var texture = resourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/Tiles/") / $@"{tileDef.SpriteName}.png");
                 TileSet.TileSetTexture(ret, texture.Texture.GodotTexture);
                 Textures[ret] = texture;
             }

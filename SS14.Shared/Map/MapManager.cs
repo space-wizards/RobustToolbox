@@ -99,7 +99,8 @@ namespace SS14.Shared.Map
                 throw new InvalidOperationException($"Attempted to delete nonexistant map '{mapID}'");
             }
 
-            foreach (var grid in map.GetAllGrids())
+            // grids are cached because Delete modifies collection
+            foreach (var grid in map.GetAllGrids().ToList())
             {
                 DeleteGrid(grid.Index);
             }

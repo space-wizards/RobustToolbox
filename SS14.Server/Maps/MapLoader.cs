@@ -5,6 +5,7 @@ using SS14.Server.Interfaces.Maps;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Map;
@@ -42,55 +43,52 @@ namespace SS14.Server.Maps
 
             var document = new YamlDocument(root);
 
-            var rootPath = _resMan.ConfigDirectory;
-            var path = Path.Combine(rootPath.ToString(), "./", yamlPath);
-            var fullPath = Path.GetFullPath(path);
+            var resPath = new ResourcePath(yamlPath).ToRootedPath();
+            _resMan.UserData.CreateDir(resPath.Directory);
 
-            var dir = Path.GetDirectoryName(fullPath);
-            Directory.CreateDirectory(dir ?? throw new InvalidOperationException("Full YamlPath was null."));
-
-            using (var writer = new StreamWriter(fullPath))
+            using (var file = _resMan.UserData.Open(resPath, FileMode.OpenOrCreate))
             {
-                var stream = new YamlStream();
+                using (var writer = new StreamWriter(file))
+                {
+                    var stream = new YamlStream();
 
-                stream.Add(document);
-                stream.Save(writer);
+                    stream.Add(document);
+                    stream.Save(writer);
+                }
             }
         }
 
         /// <inheritdoc />
         public IMapGrid LoadBlueprint(IMap map, string path, GridId? newId = null)
         {
-            var rootPath = _resMan.ConfigDirectory;
-            var comb = Path.Combine(rootPath, "./", path);
-            var fullPath = Path.GetFullPath(comb);
-
             TextReader reader;
+            var resPath = new ResourcePath(path).ToRootedPath();
 
             // try user
-            if (!File.Exists(fullPath))
+            if (!_resMan.UserData.Exists(resPath))
             {
-                Logger.InfoS("map", $"No user blueprint path: {fullPath}");
+                Logger.InfoS("map", $"No user blueprint path: {resPath}");
 
                 // fallback to content
-                if (_resMan.TryContentFileRead(ResourcePath.Root / path, out var contentReader))
+                if (_resMan.TryContentFileRead(resPath, out var contentReader))
                 {
                     reader = new StreamReader(contentReader);
                 }
                 else
                 {
-                    Logger.ErrorS("map", $"No blueprint found: {path}");
+                    Logger.ErrorS("map", $"No blueprint found: {resPath}");
                     return null;
                 }
             }
             else
             {
-                reader = new StreamReader(fullPath);
+                var file = _resMan.UserData.Open(resPath, FileMode.Open);
+                reader = new StreamReader(file);
             }
 
             using (reader)
             {
-                Logger.InfoS("map", $"Loading Grid: {path}");
+                Logger.InfoS("map", $"Loading Grid: {resPath}");
 
                 var stream = new YamlStream();
                 stream.Load(reader);
@@ -125,20 +123,19 @@ namespace SS14.Server.Maps
             }
 
             var document = new YamlDocument(root);
+            
+            var resPath = new ResourcePath(yamlPath).ToRootedPath();
+            _resMan.UserData.CreateDir(resPath.Directory);
 
-            var rootPath = _resMan.ConfigDirectory;
-            var path = Path.Combine(rootPath, "./", yamlPath);
-            var fullPath = Path.GetFullPath(path);
-
-            var dir = Path.GetDirectoryName(fullPath);
-            Directory.CreateDirectory(dir ?? throw new InvalidOperationException("Full YamlPath was null."));
-
-            using (var writer = new StreamWriter(fullPath))
+            using (var file = _resMan.UserData.Open(resPath, FileMode.OpenOrCreate))
             {
-                var stream = new YamlStream();
+                using (var writer = new StreamWriter(file))
+                {
+                    var stream = new YamlStream();
 
-                stream.Add(document);
-                stream.Save(writer);
+                    stream.Add(document);
+                    stream.Save(writer);
+                }
             }
         }
 
@@ -149,36 +146,35 @@ namespace SS14.Server.Maps
             // This function absolutely will not work.
             // It's CURRENTLY still working using the old map ID -> grid ID which absolutely DOES NOT WORK ANYMORE.
             // BP loading works because grid IDs are manually hard set.
-            var rootPath = _resMan.ConfigDirectory;
-            var comb = Path.Combine(rootPath, "./", path);
-            var fullPath = Path.GetFullPath(comb);
 
             TextReader reader;
+            var resPath = new ResourcePath(path).ToRootedPath();
 
             // try user
-            if (!File.Exists(fullPath))
+            if (!_resMan.UserData.Exists(resPath))
             {
-                Logger.InfoS("map", $"No user blueprint found: {fullPath}");
+                Logger.InfoS("map", $"No user blueprint found: {resPath}");
 
                 // fallback to content
-                if (_resMan.TryContentFileRead(path, out var contentReader))
+                if (_resMan.TryContentFileRead(resPath, out var contentReader))
                 {
                     reader = new StreamReader(contentReader);
                 }
                 else
                 {
-                    Logger.ErrorS("map", $"No blueprint found: {path}");
+                    Logger.ErrorS("map", $"No blueprint found: {resPath}");
                     return;
                 }
             }
             else
             {
-                reader = new StreamReader(fullPath);
+                var file = _resMan.UserData.Open(resPath, FileMode.Open);
+                reader = new StreamReader(file);
             }
 
             using (reader)
             {
-                Logger.InfoS("map", $"Loading Map: {path}");
+                Logger.InfoS("map", $"Loading Map: {resPath}");
 
                 var stream = new YamlStream();
                 stream.Load(reader);

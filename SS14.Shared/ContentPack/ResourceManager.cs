@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using SS14.Shared.Configuration;
-using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
+using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Utility;
@@ -25,7 +24,7 @@ namespace SS14.Shared.ContentPack
         private readonly List<(ResourcePath prefix, IContentRoot root)> _contentRoots = new List<(ResourcePath, IContentRoot)>();
 
         /// <inheritdoc />
-        public string ConfigDirectory => _configRoot.FullName;
+        public IWritableDirProvider UserData { get; private set; }
 
         /// <inheritdoc />
         public void Initialize()
@@ -36,6 +35,8 @@ namespace SS14.Shared.ContentPack
             configRoot = Path.Combine(configRoot, DataFolderName);
             configRoot = Path.GetFullPath(configRoot);
             _configRoot = Directory.CreateDirectory(configRoot);
+
+            UserData = new WritableDirProvider(_configRoot);
         }
 
         /// <inheritdoc />

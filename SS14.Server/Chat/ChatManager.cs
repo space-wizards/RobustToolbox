@@ -6,9 +6,11 @@ using SS14.Shared.Console;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.IoC;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
+using SS14.Shared.Utility;
 
 namespace SS14.Server.Chat
 {
@@ -87,7 +89,7 @@ namespace SS14.Server.Chat
 
         private void LoadEmotes()
         {
-            if (!_resources.TryContentFileRead(@"/emotes.xml", out var emoteFileStream))
+            if (!_resources.TryContentFileRead(new ResourcePath(@"/emotes.xml"), out var emoteFileStream))
                 return;
 
             var serializer = new XmlSerializer(typeof(List<Emote>));

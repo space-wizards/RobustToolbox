@@ -42,6 +42,7 @@ using SS14.Shared.Timing;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using SS14.Shared.Interfaces.Resources;
 
 namespace SS14.Server
 {

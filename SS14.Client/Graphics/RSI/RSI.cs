@@ -1,16 +1,7 @@
-﻿using Newtonsoft.Json.Linq;
-using NJsonSchema;
-using SS14.Shared.Log;
-using SS14.Shared.Maths;
+﻿using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Collections;
-using SS14.Client.Interfaces.ResourceManagement;
-using SS14.Shared.Utility;
 
 namespace SS14.Client.Graphics
 {

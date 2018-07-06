@@ -121,13 +121,14 @@ namespace SS14.Client.Graphics.Lighting
 
             private Godot.Light2D Light2D;
             private LightManager Manager;
-            private bool Deferred => Manager.Deferred;
+            private LightingSystem System => Manager.System;
 
             private IGodotTransformComponent parentTransform;
             private Godot.Vector2 CurrentPos;
 
             public Light(LightManager manager)
             {
+                Manager = manager;
                 Light2D = new Godot.Light2D()
                 {
                     // TODO: Allow this to be modified.
@@ -136,11 +137,16 @@ namespace SS14.Client.Graphics.Lighting
                     ShadowGradientLength = 1,
                     ShadowFilterSmooth = 0.25f,
                 };
-                Manager = manager;
+
+                if (Manager.System == LightingSystem.Disabled)
+                {
+                    Light2D.Enabled = Light2D.Visible = false;
+                }
+
                 Mode = new LightModeConstant();
                 Mode.Start(this);
 
-                if (Deferred)
+                if (System == LightingSystem.Deferred)
                 {
                     Manager.deferredViewport.AddChild(Light2D);
                 }
@@ -148,7 +154,7 @@ namespace SS14.Client.Graphics.Lighting
 
             public void DeParent()
             {
-                if (Deferred)
+                if (System == LightingSystem.Deferred)
                 {
                     Light2D.Position = new Godot.Vector2(0, 0);
                 }
@@ -161,7 +167,7 @@ namespace SS14.Client.Graphics.Lighting
 
             public void ParentTo(IGodotTransformComponent node)
             {
-                if (!Deferred)
+                if (System != LightingSystem.Deferred)
                 {
                     node.SceneNode.AddChild(Light2D);
                 }
@@ -205,7 +211,7 @@ namespace SS14.Client.Graphics.Lighting
             public void FrameProcess(FrameEventArgs args)
             {
                 // TODO: Maybe use OnMove events to make this less expensive.
-                if (Deferred && parentTransform != null)
+                if (System == LightingSystem.Deferred && parentTransform != null)
                 {
                     var newpos = parentTransform.SceneNode.GlobalPosition;
                     if (CurrentPos != newpos)

@@ -50,7 +50,7 @@ namespace SS14.Client.Graphics.Lighting
         private List<Light> lights = new List<Light>();
         private List<Occluder> occluders = new List<Occluder>();
 
-        private bool Deferred = false;
+        private LightingSystem System = LightingSystem.Normal;
 
         private Godot.CanvasModulate canvasModulate;
         private Godot.Viewport rootViewport;
@@ -64,12 +64,12 @@ namespace SS14.Client.Graphics.Lighting
 
         public void PostInject()
         {
-            configManager.RegisterCVar("display.deferred_lighting", false, Shared.Configuration.CVar.ARCHIVE);
+            configManager.RegisterCVar("display.lighting_system", LightingSystem.Normal, Shared.Configuration.CVar.ARCHIVE);
         }
 
         public void Initialize()
         {
-            Deferred = configManager.GetCVar<bool>("display.deferred_lighting");
+            System = configManager.GetCVar<LightingSystem>("display.lighting_system");
             canvasModulate = new Godot.CanvasModulate()
             {
                 // Black
@@ -78,7 +78,7 @@ namespace SS14.Client.Graphics.Lighting
             };
             rootViewport = sceneTreeHolder.SceneTree.Root;
 
-            if (Deferred)
+            if (System == LightingSystem.Deferred)
             {
                 deferredViewport = new Godot.Viewport
                 {
@@ -112,7 +112,7 @@ namespace SS14.Client.Graphics.Lighting
                 CreateDeferMaskSprite();
                 OnWindowSizeChanged();
             }
-            else
+            else if (System == LightingSystem.Normal)
             {
                 sceneTreeHolder.WorldRoot.AddChild(canvasModulate);
             }
@@ -120,7 +120,7 @@ namespace SS14.Client.Graphics.Lighting
 
         private void OnWindowSizeChanged()
         {
-            if (Deferred)
+            if (System == LightingSystem.Deferred)
             {
                 var size = sceneTreeHolder.SceneTree.Root.Size;
                 deferredViewport.Size = size;
@@ -166,7 +166,7 @@ namespace SS14.Client.Graphics.Lighting
                 light.Dispose();
             }
 
-            if (Deferred)
+            if (System == LightingSystem.Deferred)
             {
                 deferredSizeChangedSubscriber.Disconnect(rootViewport, "size_changed");
                 deferredSizeChangedSubscriber.Dispose();
@@ -175,7 +175,7 @@ namespace SS14.Client.Graphics.Lighting
 
             rootViewport = null;
 
-            if (Deferred)
+            if (System == LightingSystem.Deferred)
             {
                 deferredViewport.QueueFree();
                 deferredViewport.Dispose();
@@ -230,7 +230,7 @@ namespace SS14.Client.Graphics.Lighting
 
         private void UpdateEnabled()
         {
-            if (Deferred)
+            if (System == LightingSystem.Deferred)
             {
                 deferredMaskSprite.Visible = Enabled;
             }
@@ -242,7 +242,7 @@ namespace SS14.Client.Graphics.Lighting
 
         public void FrameUpdate(RenderFrameEventArgs args)
         {
-            if (Deferred)
+            if (System == LightingSystem.Deferred)
             {
                 var transform = rootViewport.CanvasTransform;
                 deferredViewport.CanvasTransform = transform;
@@ -259,6 +259,13 @@ namespace SS14.Client.Graphics.Lighting
             {
                 occluder.FrameProcess(args);
             }
+        }
+
+        public enum LightingSystem
+        {
+            Normal = 0,
+            Deferred = 1,
+            Disabled = 2,
         }
     }
 }

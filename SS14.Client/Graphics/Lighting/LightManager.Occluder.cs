@@ -27,7 +27,7 @@ namespace SS14.Client.Graphics.Lighting
             private Godot.OccluderPolygon2D occluderPolygon;
             private Godot.LightOccluder2D occluder;
 
-            private bool Deferred => Manager.Deferred;
+            private bool Deferred => Manager.System == LightingSystem.Deferred;
             private IGodotTransformComponent parentTransform;
             private Godot.Vector2 CurrentPos;
 

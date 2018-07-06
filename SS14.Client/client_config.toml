@@ -12,7 +12,7 @@ width = 1280
 height = 720
 windowmode = 0
 vsync = true
-deferred_lighting = false
+lighting_system = 0
 
 [net]
 server = "127.0.0.1"

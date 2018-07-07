@@ -58,7 +58,7 @@ namespace SS14.Shared.Interfaces.Resources
         /// <param name="path">File path to open.</param>
         /// <param name="fileMode">Options on how to open the file.</param>
         /// <returns>A valid file stream, or null if the file could not be opened.</returns>
-        FileStream Open(ResourcePath path, FileMode fileMode);
+        Stream Open(ResourcePath path, FileMode fileMode);
 
         /// <summary>
         /// Reads the entire contents of a file to a string.

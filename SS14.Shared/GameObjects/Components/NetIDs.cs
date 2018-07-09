@@ -18,5 +18,6 @@
         public const uint KEY_BINDING_INPUT = 16;
         public const uint TRIGGERABLE = 20;
         public const uint AUDIO_PLAYER = 21;
+        public const uint APPEARANCE = 22;
     }
 }

@@ -74,6 +74,22 @@ namespace SS14.Shared.Interfaces.Reflection
         /// this means more types might be available from <see cref="GetType(string)"/> and <see cref="GetAllChildren{T}(bool)"/>
         /// </summary>
         event EventHandler<ReflectionUpdateEventArgs> OnAssemblyAdded;
+
+        /// <summary>
+        ///     Tries to parse an enum in the form "enum.PowerStorageAppearance.Charge", for use in prototyping.
+        /// </summary>
+        /// <param name="reference">
+        ///     The string enum reference, including the "enum." prefix.
+        ///     If this prefix does not exist, it is assumed to not be a reference and ignored.</param>
+        /// <param name="enum"></param>
+        /// <returns>
+        ///     True if the string was an enum reference that parsed correctly, false if it was not a reference.
+        ///     Note that if it was a reference and it could not be resolved, the function throws a <see cref="ArgumentException"/> instead.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///     Thrown if this string is an enum reference, but the enum could not be resolved.
+        /// </exception>
+        bool TryParseEnumReference(string reference, out Enum @enum);
     }
 
     public class ReflectionUpdateEventArgs : EventArgs

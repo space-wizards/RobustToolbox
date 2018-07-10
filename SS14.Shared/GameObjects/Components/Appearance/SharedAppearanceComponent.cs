@@ -9,7 +9,7 @@ namespace SS14.Shared.GameObjects.Components.Appearance
 {
     public abstract class SharedAppearanceComponent : Component
     {
-        public override string Name => "appearance";
+        public override string Name => "Appearance";
         public override uint? NetID => NetIDs.APPEARANCE;
         public override Type StateType => typeof(AppearanceComponentState);
 
@@ -23,7 +23,7 @@ namespace SS14.Shared.GameObjects.Components.Appearance
         public abstract bool TryGetData<T>(Enum key, out T data);
 
         [Serializable, NetSerializable]
-        public class AppearanceComponentState : ComponentState
+        protected class AppearanceComponentState : ComponentState
         {
             public readonly Dictionary<object, object> Data;
 

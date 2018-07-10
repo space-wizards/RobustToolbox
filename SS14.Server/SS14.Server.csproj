@@ -114,6 +114,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GameObjects\Components\Appearance\AppearanceComponent.cs" />
     <Compile Include="Prototypes\ServerPrototypeManager.cs" />
     <Compile Include="ClientConsoleHost\Commands\SpawnCommand.cs" />
     <Compile Include="AI\AiLogicProcessor.cs" />

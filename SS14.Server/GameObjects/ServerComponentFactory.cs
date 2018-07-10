@@ -39,6 +39,7 @@ namespace SS14.Server.GameObjects
             RegisterReference<ContainerManagerComponent, IContainerManager>();
 
             Register<AiControllerComponent>();
+            Register<AppearanceComponent>();
         }
     }
 }

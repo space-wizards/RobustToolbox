@@ -161,7 +161,7 @@ namespace SS14.Shared.GameObjects.Serialization
             return root;
         }
 
-        internal static object NodeToType(Type type, YamlNode node)
+        public static object NodeToType(Type type, YamlNode node)
         {
             // special snowflake string
             if (type == typeof(String))
@@ -219,7 +219,7 @@ namespace SS14.Shared.GameObjects.Serialization
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(type));
         }
 
-        internal static YamlNode TypeToNode(object obj)
+        public static YamlNode TypeToNode(object obj)
         {
             // special snowflake string
             if (obj is string s)
@@ -279,7 +279,7 @@ namespace SS14.Shared.GameObjects.Serialization
             return foo.ConvertFromInvariantString(str);
         }
 
-        internal static void RegisterTypeSerializer(Type type, TypeSerializer serializer)
+        public static void RegisterTypeSerializer(Type type, TypeSerializer serializer)
         {
             if (!_typeSerializers.ContainsKey(type))
                 _typeSerializers.Add(type, serializer);
@@ -317,7 +317,7 @@ namespace SS14.Shared.GameObjects.Serialization
         }
     }
 
-    internal abstract class TypeSerializer
+    public abstract class TypeSerializer
     {
         public abstract object NodeToType(Type type, YamlNode node);
         public abstract YamlNode TypeToNode(object obj);

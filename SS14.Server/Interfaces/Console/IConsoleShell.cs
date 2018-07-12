@@ -11,11 +11,20 @@ namespace SS14.Server.Interfaces.Console
     /// </summary>
     public interface IConsoleShell
     {
+        /// <summary>
+        /// A map of (commandName -> ICommand) of every registered command in the shell.
+        /// </summary>
         IReadOnlyDictionary<string, IClientCommand> AvailableCommands { get; }
 
         void Initialize();
         void ProcessCommand(MsgConCmd message);
         void SendConsoleText(INetChannel target, string text);
+
+        /// <summary>
+        ///     Scans all loaded assemblies for console commands and registers them. This will NOT sync with connected clients, and
+        ///     should only be used during server initialization.
+        /// </summary>
+        void ReloadCommands();
 
         /// <summary>
         /// Sends a text string to the remote player.

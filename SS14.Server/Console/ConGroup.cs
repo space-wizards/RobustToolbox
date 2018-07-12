@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
-using SS14.Server.Interfaces.Console;
 
 namespace SS14.Server.Console
 {
-    public class PermGroup : IPermGroup
+    internal class ConGroup
     {
         public int Index { get; set; }
 

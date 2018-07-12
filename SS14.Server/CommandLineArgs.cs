@@ -23,7 +23,7 @@ namespace SS14.Server
                 return configFile ?? PathHelpers.ExecutableRelativeFile("server_config.toml");
             }
         }
-
+        
         [HelpOption]
         public string GetUsage()
         {

@@ -114,10 +114,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Console\PermGroup.cs" />
-    <Compile Include="Console\PermGroupContainer.cs" />
-    <Compile Include="Interfaces\Console\IPermGroup.cs" />
-    <Compile Include="Interfaces\Console\IPermGroupContainer.cs" />
+    <Compile Include="Console\ConGroup.cs" />
+    <Compile Include="Console\ConGroupContainer.cs" />
+    <Compile Include="Console\ConGroupController.cs" />
+    <Compile Include="Console\ConGroupIndex.cs" />
+    <Compile Include="Console\SessionGroupContainer.cs" />
     <Compile Include="GameObjects\Components\Appearance\AppearanceComponent.cs" />
     <Compile Include="Prototypes\ServerPrototypeManager.cs" />
     <Compile Include="Console\Commands\SpawnCommand.cs" />

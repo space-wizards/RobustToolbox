@@ -11,7 +11,7 @@ using SS14.Shared.Utility;
 namespace SS14.UnitTesting.Server.Console
 {
     [TestFixture]
-    [TestOf(typeof(PermGroupContainer))]
+    [TestOf(typeof(ConGroupContainer))]
     class PermGroupContainer_Test
     {
         [Test]
@@ -33,15 +33,15 @@ namespace SS14.UnitTesting.Server.Console
             mockRes.SetupGet(res => res.UserData).Returns(mockData.Object);
             mockRes.Setup(res => res.TryContentFileRead(It.IsAny<ResourcePath>(), out contentStream)).Returns(true);
 
-            var container = new PermGroupContainer(mockRes.Object, SawmillFactory());
+            var container = new ConGroupContainer(mockRes.Object, SawmillFactory());
 
             //Act
             container.LoadGroups();
 
             //Assert
             Assert.That(contentStream.CanRead, Is.False);
-            Assert.That(container.Groups.ContainsKey(1), Is.True);
-            Assert.That(container.Groups[1].Commands.Contains("list"), Is.True);
+            Assert.That(container.Groups.ContainsKey(new ConGroupIndex(1)), Is.True);
+            Assert.That(container.Groups[new ConGroupIndex(1)].Commands.Contains("list"), Is.True);
         }
 
         [Test]
@@ -63,7 +63,7 @@ namespace SS14.UnitTesting.Server.Console
             mockData.Setup(data => data.Open(It.IsAny<ResourcePath>(), It.IsAny<FileMode>())).Returns(contentStream);
             mockRes.SetupGet(res => res.UserData).Returns(mockData.Object);
 
-            var container = new PermGroupContainer(mockRes.Object, SawmillFactory());
+            var container = new ConGroupContainer(mockRes.Object, SawmillFactory());
 
             //Act
             container.LoadGroups();
@@ -72,8 +72,8 @@ namespace SS14.UnitTesting.Server.Console
             contentStream.Close();
 
             Assert.That(contentStream.CanRead, Is.False);
-            Assert.That(container.Groups.ContainsKey(1), Is.True);
-            Assert.That(container.Groups[1].Commands.Contains("list"), Is.True);
+            Assert.That(container.Groups.ContainsKey(new ConGroupIndex(1)), Is.True);
+            Assert.That(container.Groups[new ConGroupIndex(1)].Commands.Contains("list"), Is.True);
         }
 
         [Test]
@@ -99,7 +99,7 @@ namespace SS14.UnitTesting.Server.Console
             mockRes.SetupGet(res => res.UserData).Returns(mockData.Object);
             mockRes.Setup(res => res.TryContentFileRead(It.Is<ResourcePath>(path => path.Equals(filePath)), out contentStream)).Returns(true);
 
-            var container = new PermGroupContainer(mockRes.Object, SawmillFactory());
+            var container = new ConGroupContainer(mockRes.Object, SawmillFactory());
             container.LoadGroups();
 
             //Act

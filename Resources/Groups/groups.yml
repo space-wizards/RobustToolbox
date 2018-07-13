@@ -1,0 +1,17 @@
+- Index: 1
+  Name: Player
+  Commands:
+  - help
+  - list
+
+- Index: 50
+  Name: Moderator
+  Commands:
+  - help
+  - list
+  
+- Index: 100
+  Name: Administrator
+  Commands:
+  - help
+  - list

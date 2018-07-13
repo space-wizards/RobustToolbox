@@ -128,10 +128,23 @@ namespace SS14.Server.Console
 
                 var cmdName = args[0];
 
-                if (_availableCommands.TryGetValue(cmdName, out var conCmd) && _groupController.CanCommand(session, cmdName))
+                if (_availableCommands.TryGetValue(cmdName, out var conCmd)) // command registered
                 {
-                    args.RemoveAt(0);
-                    conCmd.Execute(this, session, args.ToArray());
+                    if(session != null) // remote client
+                    {
+                        if (_groupController.CanCommand(session, cmdName)) // client has permission
+                        {
+                            args.RemoveAt(0);
+                            conCmd.Execute(this, session, args.ToArray());
+                        }
+                        else
+                            SendText(session, $"Unknown command: '{cmdName}'");
+                    }
+                    else // system console
+                    {
+                        args.RemoveAt(0);
+                        conCmd.Execute(this, null, args.ToArray());
+                    }
                 }
                 else
                     SendText(session, $"Unknown command: '{cmdName}'");

@@ -53,6 +53,7 @@ namespace SS14.Server.Console
             {
                 _logger.Info($"Loading permGroups from content: {_groupPath}");
                 LoadGroupYamlStream(memoryStream);
+                return;
             }
 
             _logger.Warning($"Permission group file not found: {_groupPath}");
@@ -60,16 +61,23 @@ namespace SS14.Server.Console
 
         private void LoadGroupYamlStream(Stream stream)
         {
-            using (var reader = new StreamReader(stream))
+            try
             {
-                var groupList = new Deserializer().Deserialize<List<ConGroup>>(reader);
-
-                foreach (var permGroup in groupList)
+                using (var reader = new StreamReader(stream))
                 {
-                    var grpIndex = new ConGroupIndex(permGroup.Index);
-                    if(!_groups.ContainsKey(grpIndex))
-                        _groups.Add(grpIndex, permGroup);
+                    var groupList = new Deserializer().Deserialize<List<ConGroup>>(reader);
+
+                    foreach (var permGroup in groupList)
+                    {
+                        var grpIndex = new ConGroupIndex(permGroup.Index);
+                        if (!_groups.ContainsKey(grpIndex))
+                            _groups.Add(grpIndex, permGroup);
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                _logger.Error($"Could not parse the yaml group file! {e.Message}");
             }
         }
 

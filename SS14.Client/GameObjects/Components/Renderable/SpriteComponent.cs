@@ -345,6 +345,10 @@ namespace SS14.Client.GameObjects
             }
 
             var thelayer = Layers[layer];
+            if (thelayer.State == stateId)
+            {
+                return;
+            }
             thelayer.State = stateId;
             var rsi = thelayer.RSI ?? BaseRSI;
             if (rsi == null)

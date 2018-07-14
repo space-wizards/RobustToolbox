@@ -123,7 +123,7 @@ namespace SS14.Server.Maps
             }
 
             var document = new YamlDocument(root);
-            
+
             var resPath = new ResourcePath(yamlPath).ToRootedPath();
             _resMan.UserData.CreateDir(resPath.Directory);
 
@@ -263,7 +263,7 @@ namespace SS14.Server.Maps
                 }
                 catch (Exception e)
                 {
-                    Logger.ErrorS("map", $"Error creating entity \"{protoName}\": {e.Message}");
+                    Logger.ErrorS("map", $"Error creating entity \"{protoName}\": {e}");
                 }
             }
         }

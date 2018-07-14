@@ -91,5 +91,36 @@ namespace SS14.Shared.Reflection
 
             return types;
         }
+
+        /// <inheritdoc />
+        public bool TryParseEnumReference(string reference, out Enum @enum)
+        {
+            if (!reference.StartsWith("enum."))
+            {
+                @enum = default(Enum);
+                return false;
+            }
+
+            reference = reference.Substring(5);
+            var dotIndex = reference.LastIndexOf('.');
+            var typeName = reference.Substring(0, dotIndex);
+            var value = reference.Substring(dotIndex + 1);
+
+            foreach (var assembly in assemblies)
+            {
+                foreach (var type in assembly.DefinedTypes)
+                {
+                    if (!type.IsEnum || !type.FullName.EndsWith(typeName))
+                    {
+                        continue;
+                    }
+
+                    @enum = (Enum)Enum.Parse(type, value);
+                    return true;
+                }
+            }
+
+            throw new ArgumentException("Could not resolve enum reference.");
+        }
     }
 }

@@ -35,6 +35,9 @@ namespace SS14.Client.GameObjects
 
             Register<EyeComponent>();
             RegisterIgnore("AiController");
+
+            Register<AppearanceComponent>();
+            Register<AppearanceTestComponent>();
         }
     }
 }

@@ -135,7 +135,7 @@ namespace SS14.Client.State.States
                 return;
             }
 
-            if (lastHoveredEntity != null)
+            if (lastHoveredEntity != null && !lastHoveredEntity.Deleted)
             {
                 lastHoveredEntity.GetComponent<IClientClickableComponent>().OnMouseLeave();
             }

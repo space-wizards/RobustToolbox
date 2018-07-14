@@ -349,7 +349,7 @@ namespace SS14.Client.GameObjects
             var rsi = thelayer.RSI ?? BaseRSI;
             if (rsi == null)
             {
-                Logger.ErrorS("go.comp.sprite", "No RSI to pull new state from! Trace:\n{1}", Environment.StackTrace);
+                Logger.ErrorS("go.comp.sprite", "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
                 thelayer.Texture = null;
             }
             else
@@ -384,7 +384,7 @@ namespace SS14.Client.GameObjects
             var actualrsi = thelayer.RSI ?? BaseRSI;
             if (actualrsi == null)
             {
-                Logger.ErrorS("go.comp.sprite", "No RSI to pull new state from! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS("go.comp.sprite", "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
                 thelayer.Texture = null;
             }
             else
@@ -440,7 +440,7 @@ namespace SS14.Client.GameObjects
             var actualRsi = thelayer.RSI ?? BaseRSI;
             if (actualRsi == null)
             {
-                Logger.ErrorS("go.comp.sprite", "No RSI to pull new state from! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS("go.comp.sprite", "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
                 thelayer.Texture = null;
             }
             else

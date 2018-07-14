@@ -371,7 +371,7 @@ namespace SS14.Client.UserInterface
             SceneControl = control;
         }
 
-        protected bool Disposed { get; private set; } = false;
+        public bool Disposed { get; private set; } = false;
 
         /// <summary>
         ///     Dispose this control, its own scene control, and all its children.

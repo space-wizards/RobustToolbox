@@ -181,6 +181,9 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        // TODO: Flyweighting per prototype with Copy-on-Write.
+        private readonly Dictionary<object, int> LayerMap = new Dictionary<object, int>();
+
         // To a future Clusterfack:
         // REALLY BIG OPTIMIZATION POTENTIAL:
         // Layer is god damn huge. Copying it is expensive.
@@ -198,31 +201,58 @@ namespace SS14.Client.GameObjects
         private IResourceCache resourceCache;
         private IPrototypeManager prototypes;
 
-        public int AddLayer(string texturePath)
+        /// <inheritdoc />
+        public void LayerMapSet(object key, int layer)
         {
-            return AddLayer(new ResourcePath(texturePath));
+            if (layer < 0 || layer >= Layers.Count)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+            LayerMap.Add(key, layer);
         }
 
-        public int AddLayer(ResourcePath texturePath)
+        /// <inheritdoc />
+        public void LayerMapRemove(object key)
+        {
+            LayerMap.Remove(key);
+        }
+
+        /// <inheritdoc />
+        public int LayerMapGet(object key)
+        {
+            return LayerMap[key];
+        }
+
+        /// <inheritdoc />
+        public bool LayerMapTryGet(object key, out int layer)
+        {
+            return LayerMap.TryGetValue(key, out layer);
+        }
+
+        public int AddLayer(string texturePath, int? newIndex = null)
+        {
+            return AddLayer(new ResourcePath(texturePath), newIndex);
+        }
+
+        public int AddLayer(ResourcePath texturePath, int? newIndex = null)
         {
             if (!resourceCache.TryGetResource<TextureResource>(TextureRoot / texturePath, out var texture))
             {
                 Logger.ErrorS("go.comp.sprite", "Unable to load texture '{0}'. Trace:\n{1}", texturePath, Environment.StackTrace);
             }
 
-            return AddLayer(texture);
+            return AddLayer(texture, newIndex);
         }
 
-        public int AddLayer(Texture texture)
+        public int AddLayer(Texture texture, int? newIndex = null)
         {
             var layer = Layer.New();
             layer.Texture = texture;
-            Layers.Add(layer);
             RedrawQueued = true;
-            return Layers.Count - 1;
+            return AddLayer(layer, newIndex);
         }
 
-        public int AddLayer(RSI.StateId stateId)
+        public int AddLayer(RSI.StateId stateId, int? newIndex = null)
         {
             var layer = Layer.New();
             layer.State = stateId;
@@ -234,17 +264,26 @@ namespace SS14.Client.GameObjects
             {
                 Logger.ErrorS("go.comp.sprite", "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId, Environment.StackTrace);
             }
-            Layers.Add(layer);
             RedrawQueued = true;
-            return Layers.Count - 1;
+            return AddLayer(layer, newIndex);
         }
 
-        public int AddLayer(RSI.StateId stateId, string rsiPath)
+        public int AddLayerState(string stateId, int? newIndex = null)
         {
-            return AddLayer(stateId, new ResourcePath(rsiPath));
+            return AddLayer(new RSI.StateId(stateId), newIndex);
         }
 
-        public int AddLayer(RSI.StateId stateId, ResourcePath rsiPath)
+        public int AddLayer(RSI.StateId stateId, string rsiPath, int? newIndex = null)
+        {
+            return AddLayer(stateId, new ResourcePath(rsiPath), newIndex);
+        }
+
+        public int AddLayerState(string stateId, string rsiPath, int? newIndex = null)
+        {
+            return AddLayer(new RSI.StateId(stateId), rsiPath, newIndex);
+        }
+
+        public int AddLayer(RSI.StateId stateId, ResourcePath rsiPath, int? newIndex = null)
         {
             if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
             {
@@ -254,7 +293,12 @@ namespace SS14.Client.GameObjects
             return AddLayer(stateId, res?.RSI);
         }
 
-        public int AddLayer(RSI.StateId stateId, RSI rsi)
+        public int AddLayerState(string stateId, ResourcePath rsiPath, int? newIndex = null)
+        {
+            return AddLayer(new RSI.StateId(stateId), rsiPath, newIndex);
+        }
+
+        public int AddLayer(RSI.StateId stateId, RSI rsi, int? newIndex = null)
         {
             var layer = Layer.New();
             layer.State = stateId;
@@ -267,9 +311,34 @@ namespace SS14.Client.GameObjects
             {
                 Logger.ErrorS("go.comp.sprite", "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId, Environment.StackTrace);
             }
-            Layers.Add(layer);
             RedrawQueued = true;
-            return Layers.Count - 1;
+            return AddLayer(layer, newIndex);
+        }
+
+        public int AddLayerState(string stateId, RSI rsi, int? newIndex = null)
+        {
+            return AddLayer(new RSI.StateId(stateId), rsi, newIndex);
+        }
+
+        int AddLayer(Layer layer, int? newIndex)
+        {
+            if (newIndex.HasValue)
+            {
+                Layers.Insert(newIndex.Value, layer);
+                foreach (var kv in LayerMap)
+                {
+                    if (kv.Value >= newIndex.Value)
+                    {
+                        LayerMap[kv.Key] = kv.Value + 1;
+                    }
+                }
+                return newIndex.Value;
+            }
+            else
+            {
+                Layers.Add(layer);
+                return Layers.Count - 1;
+            }
         }
 
         public void RemoveLayer(int layer)
@@ -280,7 +349,30 @@ namespace SS14.Client.GameObjects
                 return;
             }
             Layers.RemoveAt(layer);
+            foreach (var kv in LayerMap)
+            {
+                if (kv.Value == layer)
+                {
+                    LayerMap.Remove(kv.Key);
+                }
+
+                else if (kv.Value > layer)
+                {
+                    LayerMap[kv.Key] = kv.Value - 1;
+                }
+            }
             RedrawQueued = true;
+        }
+
+        public void RemoveLayer(object layerKey)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot remove! Trace:\n{1}", layerKey, Environment.StackTrace);
+                return;
+            }
+
+            RemoveLayer(layer);
         }
 
         public void LayerSetShader(int layer, Shader shader)
@@ -296,6 +388,17 @@ namespace SS14.Client.GameObjects
             RedrawQueued = true;
         }
 
+        public void LayerSetShader(object layerKey, Shader shader)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}", layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetShader(layer, shader);
+        }
+
         public void LayerSetShader(int layer, string shaderName)
         {
             if (!prototypes.TryIndex<ShaderPrototype>(shaderName, out var prototype))
@@ -305,6 +408,17 @@ namespace SS14.Client.GameObjects
 
             // This will set the shader to null if it does not exist.
             LayerSetShader(layer, prototype?.Instance());
+        }
+
+        public void LayerSetShader(object layerKey, string shaderName)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}", layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetShader(layer, shaderName);
         }
 
         public void LayerSetTexture(int layer, Texture texture)
@@ -321,9 +435,25 @@ namespace SS14.Client.GameObjects
             RedrawQueued = true;
         }
 
+        public void LayerSetTexture(object layerKey, Texture texture)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set texture! Trace:\n{1}", layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetTexture(layer, texture);
+        }
+
         public void LayerSetTexture(int layer, string texturePath)
         {
             LayerSetTexture(layer, new ResourcePath(texturePath));
+        }
+
+        public void LayerSetTexture(object layerKey, string texturePath)
+        {
+            LayerSetTexture(layerKey, new ResourcePath(texturePath));
         }
 
         public void LayerSetTexture(int layer, ResourcePath texturePath)
@@ -334,6 +464,17 @@ namespace SS14.Client.GameObjects
             }
 
             LayerSetTexture(layer, texture);
+        }
+
+        public void LayerSetTexture(object layerKey, ResourcePath texturePath)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set texture! Trace:\n{1}", layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetTexture(layer, texturePath);
         }
 
         public void LayerSetState(int layer, RSI.StateId stateId)
@@ -374,6 +515,17 @@ namespace SS14.Client.GameObjects
             RedrawQueued = true;
         }
 
+        public void LayerSetState(object layerKey, RSI.StateId stateId)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}", layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetState(layer, stateId);
+        }
+
         public void LayerSetState(int layer, RSI.StateId stateId, RSI rsi)
         {
             if (Layers.Count <= layer)
@@ -409,9 +561,25 @@ namespace SS14.Client.GameObjects
             RedrawQueued = true;
         }
 
+        public void LayerSetState(object layerKey, RSI.StateId stateId, RSI rsi)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}", layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetState(layer, stateId, rsi);
+        }
+
         public void LayerSetState(int layer, RSI.StateId stateId, string rsiPath)
         {
             LayerSetState(layer, stateId, new ResourcePath(rsiPath));
+        }
+
+        public void LayerSetState(object layerKey, RSI.StateId stateId, string rsiPath)
+        {
+            LayerSetState(layerKey, stateId, new ResourcePath(rsiPath));
         }
 
         public void LayerSetState(int layer, RSI.StateId stateId, ResourcePath rsiPath)
@@ -422,6 +590,17 @@ namespace SS14.Client.GameObjects
             }
 
             LayerSetState(layer, stateId, res?.RSI);
+        }
+
+        public void LayerSetState(object layerKey, RSI.StateId stateId, ResourcePath rsiPath)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}", layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetState(layer, stateId, rsiPath);
         }
 
         public void LayerSetRSI(int layer, RSI rsi)
@@ -465,9 +644,25 @@ namespace SS14.Client.GameObjects
             RedrawQueued = true;
         }
 
+        public void LayerSetRSI(object layerKey, RSI rsi)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set RSI! Trace:\n{1}", layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetRSI(layer, rsi);
+        }
+
         public void LayerSetRSI(int layer, string rsiPath)
         {
             LayerSetRSI(layer, new ResourcePath(rsiPath));
+        }
+
+        public void LayerSetRSI(object layerKey, string rsiPath)
+        {
+            LayerSetRSI(layerKey, new ResourcePath(rsiPath));
         }
 
         public void LayerSetRSI(int layer, ResourcePath rsiPath)
@@ -478,6 +673,17 @@ namespace SS14.Client.GameObjects
             }
 
             LayerSetRSI(layer, res?.RSI);
+        }
+
+        public void LayerSetRSI(object layerKey, ResourcePath rsiPath)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set RSI! Trace:\n{1}", layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetRSI(layer, rsiPath);
         }
 
         public void LayerSetScale(int layer, Vector2 scale)
@@ -494,6 +700,18 @@ namespace SS14.Client.GameObjects
             RedrawQueued = true;
         }
 
+        public void LayerSetScale(object layerKey, Vector2 scale)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set scale! Trace:\n{1}", layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetScale(layer, scale);
+        }
+
+
         public void LayerSetRotation(int layer, Angle rotation)
         {
             if (Layers.Count <= layer)
@@ -506,6 +724,17 @@ namespace SS14.Client.GameObjects
             thelayer.Rotation = rotation;
             Layers[layer] = thelayer;
             RedrawQueued = true;
+        }
+
+        public void LayerSetRotation(object layerKey, Angle rotation)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set rotation! Trace:\n{1}", layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetRotation(layer, rotation);
         }
 
         public void LayerSetVisible(int layer, bool visible)
@@ -522,6 +751,17 @@ namespace SS14.Client.GameObjects
             RedrawQueued = true;
         }
 
+        public void LayerSetVisible(object layerKey, bool visible)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set visibility! Trace:\n{1}", layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetVisible(layer, visible);
+        }
+
         public void LayerSetColor(int layer, Color color)
         {
             if (Layers.Count <= layer)
@@ -534,6 +774,17 @@ namespace SS14.Client.GameObjects
             thelayer.Color = color;
             Layers[layer] = thelayer;
             RedrawQueued = true;
+        }
+
+        public void LayerSetColor(object layerKey, Color color)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set color! Trace:\n{1}", layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetColor(layer, color);
         }
 
         public override void OnAdd()
@@ -564,7 +815,7 @@ namespace SS14.Client.GameObjects
 
             TransformComponent = Owner.GetComponent<IGodotTransformComponent>();
             TransformComponent.SceneNode.AddChild(SceneNode);
-            Redraw();
+            RedrawQueued = true;
         }
 
         private void ClearDraw()

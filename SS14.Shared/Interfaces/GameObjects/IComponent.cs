@@ -37,6 +37,8 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <seealso cref="IComponentRegistration.NetworkSynchronizeExistence" />
         bool NetworkSynchronizeExistence { get; }
 
+        bool NetSyncEnabled { get; }
+
         /// <summary>
         ///     Entity that this component is attached to.
         /// </summary>

@@ -115,7 +115,14 @@ namespace SS14.Client.GameObjects
                         return new SpriteLayerToggle(key, layer);
 
                     default:
-                        throw new ArgumentException();
+                        var visType = refl.LooseGetType(nodeType.AsString());
+                        if (!typeof(AppearanceVisualizer).IsAssignableFrom(visType))
+                        {
+                            throw new InvalidOperationException();
+                        }
+                        var vis = (AppearanceVisualizer)Activator.CreateInstance(visType);
+                        vis.LoadData(mapping);
+                        return vis;
                 }
             }
 
@@ -146,10 +153,6 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        internal abstract class AppearanceVisualizer
-        {
-        }
-
         internal class SpriteLayerToggle : AppearanceVisualizer
         {
             public const string NAME = "sprite_layer_toggle";
@@ -162,6 +165,17 @@ namespace SS14.Client.GameObjects
                 Key = key;
                 SpriteLayer = spriteLayer;
             }
+        }
+    }
+
+    public abstract class AppearanceVisualizer
+    {
+        public virtual void LoadData(YamlMappingNode node)
+        {
+        }
+
+        public virtual void OnChangeData(AppearanceComponent component)
+        {
         }
     }
 

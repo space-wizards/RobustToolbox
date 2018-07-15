@@ -52,6 +52,8 @@ namespace SS14.Shared.Interfaces.Reflection
         /// <returns></returns>
         Type GetType(string name);
 
+        Type LooseGetType(string name);
+
         /// <summary>
         /// Finds all Types in all Assemblies that have a specific Attribute.
         /// </summary>

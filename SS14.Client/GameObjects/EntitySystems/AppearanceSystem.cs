@@ -40,6 +40,10 @@ namespace SS14.Client.GameObjects.EntitySystems
                     case AppearanceComponent.SpriteLayerToggle spriteLayerToggle:
                         UpdateSpriteLayerToggle(component, spriteLayerToggle);
                         break;
+
+                    default:
+                        visualizer.OnChangeData(component);
+                        break;
                 }
             }
         }

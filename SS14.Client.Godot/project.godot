@@ -104,7 +104,6 @@ ui_end={
 
 [mono]
 
-debugger_agent/wait_for_debugger=true
 debugger_agent/wait_timeout=10000
 
 [network]

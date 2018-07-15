@@ -138,7 +138,5 @@ namespace SS14.Shared.Reflection
 
             throw new ArgumentException("Could not resolve enum reference.");
         }
-
-        public bool
     }
 }

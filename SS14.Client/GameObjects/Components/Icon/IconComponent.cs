@@ -26,7 +26,11 @@ namespace SS14.Client.GameObjects
 
             if (mapping.TryGetNode("texture", out YamlNode node))
             {
-                return resc.GetResource<TextureResource>(SpriteComponent.TextureRoot / node.AsResourcePath()).Texture;
+                // Pretty much to allow people to override things defining texture in child prototypes.
+                if (!string.IsNullOrWhiteSpace(node.AsString()))
+                {
+                    return resc.GetResource<TextureResource>(SpriteComponent.TextureRoot / node.AsResourcePath()).Texture;
+                }
             }
 
             RSI rsi;

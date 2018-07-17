@@ -21,6 +21,14 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public virtual bool NetworkSynchronizeExistence => false;
 
+        private bool _netSyncEnabled = true;
+        /// <inheritdoc />
+        public bool NetSyncEnabled
+        {
+            get => _netSyncEnabled;
+            set => _netSyncEnabled = value;
+        }
+
         /// <inheritdoc />
         public IEntity Owner { get; set; }
 
@@ -70,7 +78,10 @@ namespace SS14.Shared.GameObjects
         public virtual void LoadParameters(YamlMappingNode mapping) { }
 
         /// <inheritdoc />
-        public virtual void ExposeData(EntitySerializer serializer) { }
+        public virtual void ExposeData(EntitySerializer serializer)
+        {
+            serializer.DataField(ref _netSyncEnabled, "netsync", true);
+        }
 
         /// <inheritdoc />
         [Obsolete("Components should be updated through a system.")]

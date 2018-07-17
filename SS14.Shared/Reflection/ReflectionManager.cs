@@ -80,6 +80,22 @@ namespace SS14.Shared.Reflection
         }
 
         /// <inheritdoc />
+        public Type LooseGetType(string name)
+        {
+            foreach (var assembly in assemblies)
+            {
+                foreach (var type in assembly.DefinedTypes)
+                {
+                    if (type.FullName.EndsWith(name))
+                    {
+                        return type;
+                    }
+                }
+            }
+            throw new ArgumentException("Unable to find type.");
+        }
+
+        /// <inheritdoc />
         public IEnumerable<Type> FindTypesWithAttribute<T>()
         {
             var types = new List<Type>();

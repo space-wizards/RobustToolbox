@@ -9,7 +9,7 @@ namespace SS14.Shared.Serialization
     /// See the <see href="https://github.com/tomba/netserializer/blob/master/Doc.md">NetSerializer Documentation</see>
     /// for more info.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum, AllowMultiple = false, Inherited = false)]
     public class NetSerializableAttribute : Attribute
     {
     }

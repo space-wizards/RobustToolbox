@@ -65,7 +65,7 @@ namespace SS14.Client.Graphics
             public readonly string Name;
             public readonly Selectors Selectors;
 
-            public StateId(string name, Selectors selectors)
+            public StateId(string name, Selectors selectors = Selectors.None)
             {
                 Name = name;
                 Selectors = selectors;

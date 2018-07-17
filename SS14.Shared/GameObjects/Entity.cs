@@ -561,7 +561,7 @@ namespace SS14.Shared.GameObjects
         private List<ComponentState> GetComponentStates(uint fromTick)
         {
             return GetAllComponents()
-                .Where(c => c.NetID != null && c.LastModifiedTick >= fromTick)
+                .Where(c => c.NetID != null && c.NetSyncEnabled && c.LastModifiedTick >= fromTick)
                 .Select(component => component.GetComponentState())
                 .ToList();
         }

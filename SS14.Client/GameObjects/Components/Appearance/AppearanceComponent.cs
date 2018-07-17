@@ -1,14 +1,12 @@
-﻿using SS14.Shared.GameObjects;
+﻿using System;
+using System.Collections.Generic;
+using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Appearance;
 using SS14.Shared.GameObjects.Serialization;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
@@ -91,6 +89,16 @@ namespace SS14.Client.GameObjects
             serializer.DataField(ref Visualizers, "visuals", new List<AppearanceVisualizer>());
         }
 
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            foreach (var visual in Visualizers)
+            {
+                visual.InitializeEntity(Owner);
+            }
+        }
+
         class VisualizerTypeSerializer : TypeSerializer
         {
             public override object NodeToType(Type type, YamlNode node)
@@ -115,7 +123,14 @@ namespace SS14.Client.GameObjects
                         return new SpriteLayerToggle(key, layer);
 
                     default:
-                        throw new ArgumentException();
+                        var visType = refl.LooseGetType(nodeType.AsString());
+                        if (!typeof(AppearanceVisualizer).IsAssignableFrom(visType))
+                        {
+                            throw new InvalidOperationException();
+                        }
+                        var vis = (AppearanceVisualizer)Activator.CreateInstance(visType);
+                        vis.LoadData(mapping);
+                        return vis;
                 }
             }
 
@@ -141,13 +156,11 @@ namespace SS14.Client.GameObjects
                             { new YamlScalarNode("layer"), new YamlScalarNode(spriteLayerToggle.SpriteLayer.ToString()) },
                         };
                     default:
-                        throw new NotImplementedException();
+                        // TODO: A proper way to do serialization here.
+                        // I can't use the ExposeData system here since that's specific to entity serializers.
+                        return new YamlMappingNode();
                 }
             }
-        }
-
-        internal abstract class AppearanceVisualizer
-        {
         }
 
         internal class SpriteLayerToggle : AppearanceVisualizer
@@ -162,6 +175,33 @@ namespace SS14.Client.GameObjects
                 Key = key;
                 SpriteLayer = spriteLayer;
             }
+        }
+    }
+
+    public abstract class AppearanceVisualizer
+    {
+        /// <summary>
+        ///     Load data from the prototype declaring this visualizer, to configure settings and such.
+        /// </summary>
+        public virtual void LoadData(YamlMappingNode node)
+        {
+        }
+
+        /// <summary>
+        ///     Initializes an entity to be managed by this appearance controller.
+        ///     DO NOT assume this is your only entity. Visualizers are shared.
+        /// </summary>
+        public virtual void InitializeEntity(IEntity entity)
+        {
+        }
+
+        /// <summary>
+        ///     Called whenever appearance data for an entity changes.
+        ///     Update its visuals here.
+        /// </summary>
+        /// <param name="component">The appearance component of the entity that might need updating.</param>
+        public virtual void OnChangeData(AppearanceComponent component)
+        {
         }
     }
 

@@ -918,18 +918,22 @@ namespace SS14.Client.GameObjects
 
             if (mapping.TryGetNode("texture", out node))
             {
-                if (mapping.HasNode("state"))
+                // Pretty much to allow people to override things defining texture in child prototypes.
+                if (!String.IsNullOrWhiteSpace(node.AsString()))
                 {
-                    Logger.ErrorS("go.comp.sprite",
-                                  "Cannot use 'texture' if an RSI state is provided. Prototype: '{0}'",
-                                  Owner.Prototype.ID);
-                }
-                else
-                {
-                    var path = node.AsResourcePath();
-                    var layer = Layer.New();
-                    layer.Texture = resourceCache.GetResource<TextureResource>(TextureRoot / path);
-                    Layers.Add(layer);
+                    if (mapping.HasNode("state"))
+                    {
+                        Logger.ErrorS("go.comp.sprite",
+                                    "Cannot use 'texture' if an RSI state is provided. Prototype: '{0}'",
+                                    Owner.Prototype.ID);
+                    }
+                    else
+                    {
+                        var path = node.AsResourcePath();
+                        var layer = Layer.New();
+                        layer.Texture = resourceCache.GetResource<TextureResource>(TextureRoot / path);
+                        Layers.Add(layer);
+                    }
                 }
             }
 

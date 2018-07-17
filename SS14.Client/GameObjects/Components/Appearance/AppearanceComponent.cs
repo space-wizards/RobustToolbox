@@ -178,6 +178,10 @@ namespace SS14.Client.GameObjects
         }
     }
 
+    /// <summary>
+    ///     Handles the visualization of data inside of an appearance component.
+    ///     Implementations of this class are NOT bound to a specific entity, they are flyweighted across multiple.
+    /// </summary>
     public abstract class AppearanceVisualizer
     {
         /// <summary>

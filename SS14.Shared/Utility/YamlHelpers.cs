@@ -99,14 +99,11 @@ namespace SS14.Shared.Utility
 
         public static Color AsColor(this YamlNode node, Color? fallback = null)
         {
-            try
+            if (Color.TryFromName(node.AsString(), out var color))
             {
-                return Color.FromName(node.ToString());
+                return color;
             }
-            catch
-            {
-                return node.AsHexColor(fallback);
-            }
+            return node.AsHexColor(fallback);
         }
 
         public static ResourcePath AsResourcePath(this YamlNode node)

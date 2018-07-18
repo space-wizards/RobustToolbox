@@ -156,7 +156,6 @@
     <Compile Include="GameObjects\EntitySystemMessages\EffectMessage.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\ClickedOnEntityMessage.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\InputMessages.cs" />
-    <Compile Include="GameObjects\Serialization\EntitySerializer.cs" />
     <Compile Include="GameObjects\EntityUid.cs" />
     <Compile Include="GameObjects\Serialization\YamlEntitySerializer.cs" />
     <Compile Include="GameObjects\IncomingEntityComponentMessage.cs" />
@@ -412,5 +411,7 @@
     </Resources>
     <Compile Include="Map\MapManager.Chunk.cs" />
     <Compile Include="Map\MapIndices.cs" />
+    <Compile Include="Serialization\ObjectSerializer.cs" />
+    <Compile Include="Serialization\YamlObjectSerializer.cs" />
   </ItemGroup>
 </Project>

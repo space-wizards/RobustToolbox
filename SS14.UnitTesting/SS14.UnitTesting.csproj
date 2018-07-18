@@ -94,7 +94,6 @@
     <Compile Include="Client\Utility\GodotConversionsTest.cs" />
     <Compile Include="Server\GameObjects\Components\Container_Test.cs" />
     <Compile Include="Server\GameObjects\Components\Transform_Test.cs" />
-    <Compile Include="Shared\GameObjects\Serialization\YamlEntitySerializer_Test.cs" />
     <Compile Include="Shared\IoC\IoCManager_Test.cs" />
     <Compile Include="Shared\Maths\Angle_Test.cs" />
     <Compile Include="Shared\Maths\Matrix3_Test.cs" />
@@ -133,6 +132,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+    <Compile Include="Shared\Serialization\YamlObjectSerializer_Test.cs" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

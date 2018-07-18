@@ -30,8 +30,8 @@ using SS14.Client.Utility;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics;
 using SS14.Client.GameObjects;
-using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Utility;
+using SS14.Shared.Serialization;
 
 namespace SS14.Client.Placement
 {
@@ -129,7 +129,7 @@ namespace SS14.Client.Placement
                     && value.Components.ContainsKey("Collidable"))
                 {
                     var map = value.Components["BoundingBox"];
-                    var serializer = new YamlEntitySerializer(map);
+                    var serializer = new YamlObjectSerializer(map, reading: true);
                     serializer.DataField(ref _colliderAABB, "aabb", new Box2(0f, 0f, 0f, 0f));
                 }
                 else

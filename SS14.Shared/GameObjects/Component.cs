@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Reflection;
+using SS14.Shared.Serialization;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
@@ -74,11 +74,7 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        [Obsolete("Use the ExposeData serialization system.")]
-        public virtual void LoadParameters(YamlMappingNode mapping) { }
-
-        /// <inheritdoc />
-        public virtual void ExposeData(EntitySerializer serializer)
+        public virtual void ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(ref _netSyncEnabled, "netsync", true);
         }

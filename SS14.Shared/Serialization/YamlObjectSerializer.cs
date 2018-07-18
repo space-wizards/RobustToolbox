@@ -1,31 +1,27 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
-namespace SS14.Shared.GameObjects.Serialization
+namespace SS14.Shared.Serialization
 {
-    /*
-    public class YamlEntitySerializer : EntitySerializer
+    public class YamlObjectSerializer : ObjectSerializer
     {
         private static readonly Dictionary<Type, TypeSerializer> _typeSerializers;
         private static readonly StructSerializer _structSerializer;
 
-        private readonly bool _setDefaults;
+        private bool SetDefaults;
 
-        private readonly YamlSequenceNode _root;
-        private YamlMappingNode _entMap;
-        private YamlSequenceNode _compSeq;
-        private YamlMappingNode _curMap;
+        private YamlMappingNode Map;
+        private List<YamlMappingNode> Backups;
 
-        static YamlEntitySerializer()
+        static YamlObjectSerializer()
         {
             _structSerializer = new StructSerializer();
             _typeSerializers = new Dictionary<Type, TypeSerializer>
@@ -39,75 +35,23 @@ namespace SS14.Shared.GameObjects.Serialization
             };
         }
 
-        public YamlEntitySerializer()
+        public YamlObjectSerializer(YamlMappingNode map, bool reading, bool setDefaults = true, List<YamlMappingNode> backups = null)
         {
-            _root = new YamlSequenceNode();
-        }
-
-        public YamlEntitySerializer(YamlMappingNode entMap, bool setDefaults = true)
-        {
-            Reading = true;
-            _curMap = entMap;
-            _setDefaults = setDefaults;
-        }
-
-        public override void EntityHeader()
-        {
-            if (!Reading)
-            {
-                _entMap = new YamlMappingNode();
-                _root.Children.Add(_entMap);
-                _curMap = _entMap;
-            }
-        }
-
-        public override void EntityFooter()
-        {
-        }
-
-        public override void CompHeader()
-        {
-            if (Reading)
-            {
-                _compSeq = (YamlSequenceNode)_curMap.Children["components"];
-                _curMap = null;
-            }
-            else
-            {
-                _compSeq = new YamlSequenceNode();
-                _entMap.Children.Add("components", _compSeq);
-                _curMap = null;
-            }
-        }
-
-        public override void CompStart(string name)
-        {
-            if (Reading)
-            {
-                var compMaps = _compSeq.Children;
-
-                _curMap = (YamlMappingNode)compMaps.First(m => m["type"].ToString() == name);
-            }
-            else
-            {
-                _curMap = new YamlMappingNode();
-                _compSeq.Children.Add(_curMap);
-            }
-        }
-
-        public override void CompFooter()
-        {
+            Map = map;
+            Reading = reading;
+            SetDefaults = setDefaults;
+            Backups = backups;
         }
 
         public override void DataField<T>(ref T value, string name, T defaultValue, bool alwaysWrite = false)
         {
             if (Reading) // read
             {
-                if (_curMap.TryGetNode(name, out var node))
+                if (Map.TryGetNode(name, out var node))
                 {
                     value = (T)NodeToType(typeof(T), node);
                 }
-                else if (_setDefaults)
+                else if (SetDefaults)
                 {
                     value = defaultValue;
                 }
@@ -120,27 +64,27 @@ namespace SS14.Shared.GameObjects.Serialization
 
                 var key = name;
                 var val = value == null ? TypeToNode(defaultValue) : TypeToNode(value);
-                _curMap.Add(key, val);
+                Map.Add(key, val);
             }
         }
 
-        public override void DataSetFunction<T>(string name, T defaultValue, SetFunctionDelegate<T> func)
+        public override void DataReadFunction<T>(string name, T defaultValue, ReadFunctionDelegate<T> func)
         {
             if (!Reading) return;
 
-            if (_curMap.TryGetNode(name, out var node))
+            if (Map.TryGetNode(name, out var node))
             {
                 var value = (T)NodeToType(typeof(T), node);
                 func.Invoke(value);
             }
-            else if (_setDefaults)
+            else if (SetDefaults)
             {
                 var value = defaultValue;
                 func.Invoke(value);
             }
         }
 
-        public override void DataGetFunction<T>(string name, T defaultValue, GetFunctionDelegate<T> func, bool alwaysWrite = false)
+        public override void DataWriteFunction<T>(string name, T defaultValue, WriteFunctionDelegate<T> func, bool alwaysWrite = false)
         {
             if (Reading) return;
 
@@ -152,14 +96,7 @@ namespace SS14.Shared.GameObjects.Serialization
 
             var key = name;
             var val = value == null ? TypeToNode(defaultValue) : TypeToNode(value);
-            _curMap.Add(key, val);
-        }
-
-        public YamlMappingNode GetRootNode()
-        {
-            var root = new YamlMappingNode();
-            root.Add("entities", _root);
-            return root;
+            Map.Add(key, val);
         }
 
         public static object NodeToType(Type type, YamlNode node)
@@ -316,177 +253,163 @@ namespace SS14.Shared.GameObjects.Serialization
             valType = default(Type);
             return false;
         }
-    }
 
-    public abstract class TypeSerializer
-    {
-        public abstract object NodeToType(Type type, YamlNode node);
-        public abstract YamlNode TypeToNode(object obj);
-    }
-
-    internal class StructSerializer : TypeSerializer
-    {
-        public override object NodeToType(Type type, YamlNode node)
+        public abstract class TypeSerializer
         {
-            var mapNode = node as YamlMappingNode;
+            public abstract object NodeToType(Type type, YamlNode node);
+            public abstract YamlNode TypeToNode(object obj);
+        }
 
-            var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            var instance = Activator.CreateInstance(type);
-            var scalarNode = new YamlScalarNode();
-
-            foreach (var field in fields)
+        class StructSerializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node)
             {
-                if (field.IsNotSerialized)
-                    continue;
+                var mapNode = node as YamlMappingNode;
 
-                var fName = field.Name;
-                var fType = field.FieldType;
+                var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                var instance = Activator.CreateInstance(type);
+                var scalarNode = new YamlScalarNode();
 
-                scalarNode.Value = fName;
-
-                if (mapNode.Children.TryGetValue(scalarNode, out var fNode))
+                foreach (var field in fields)
                 {
-                    var fVal = YamlEntitySerializer.NodeToType(fType, fNode);
-                    field.SetValue(instance, fVal);
+                    if (field.IsNotSerialized)
+                        continue;
+
+                    var fName = field.Name;
+                    var fType = field.FieldType;
+
+                    scalarNode.Value = fName;
+
+                    if (mapNode.Children.TryGetValue(scalarNode, out var fNode))
+                    {
+                        var fVal = YamlObjectSerializer.NodeToType(fType, fNode);
+                        field.SetValue(instance, fVal);
+                    }
                 }
+
+                return instance;
             }
 
-            return instance;
-        }
-
-        public override YamlNode TypeToNode(object obj)
-        {
-            var node = new YamlMappingNode();
-            var type = obj.GetType();
-            var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
-            foreach (var field in fields)
+            public override YamlNode TypeToNode(object obj)
             {
-                if (field.IsNotSerialized)
-                    continue;
+                var node = new YamlMappingNode();
+                var type = obj.GetType();
+                var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
-                var fVal = field.GetValue(obj);
+                foreach (var field in fields)
+                {
+                    if (field.IsNotSerialized)
+                        continue;
 
-                // Potential recursive infinite loop?
-                var fTypeNode = YamlEntitySerializer.TypeToNode(fVal);
-                node.Add(field.Name, fTypeNode);
+                    var fVal = field.GetValue(obj);
+
+                    // Potential recursive infinite loop?
+                    var fTypeNode = YamlObjectSerializer.TypeToNode(fVal);
+                    node.Add(field.Name, fTypeNode);
+                }
+
+                return node;
             }
-
-            return node;
         }
-    }
 
-    internal class ColorSerializer : TypeSerializer
-    {
-        public override object NodeToType(Type type, YamlNode node)
+        class ColorSerializer : TypeSerializer
         {
-            try
+            public override object NodeToType(Type type, YamlNode node)
             {
-                return Color.FromName(node.ToString());
+                return node.AsColor();
             }
-            catch
+
+            public override YamlNode TypeToNode(object obj)
             {
-                return node.AsHexColor();
+                var color = (Color)obj;
+
+                Int32 hexColor = 0;
+                hexColor += color.RByte << 24;
+                hexColor += color.GByte << 16;
+                hexColor += color.BByte << 8;
+                hexColor += color.AByte;
+
+                return new YamlScalarNode("#" + hexColor.ToString("X"));
             }
         }
 
-        public override YamlNode TypeToNode(object obj)
+        class MapIdSerializer : TypeSerializer
         {
-            var color = (Color)obj;
+            public override object NodeToType(Type type, YamlNode node)
+            {
+                var val = int.Parse(node.ToString());
+                return new MapId(val);
+            }
 
-            Int32 hexColor = 0;
-            hexColor += color.RByte << 24;
-            hexColor += color.GByte << 16;
-            hexColor += color.BByte << 8;
-            hexColor += color.AByte;
+            public override YamlNode TypeToNode(object obj)
+            {
+                var val = (int)(MapId)obj;
+                return new YamlScalarNode(val.ToString());
+            }
+        }
 
-            return new YamlScalarNode("#" + hexColor.ToString("X"));
+        class GridIdSerializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node)
+            {
+                return new GridId(node.AsInt());
+            }
+
+            public override YamlNode TypeToNode(object obj)
+            {
+                var val = (int)(GridId)obj;
+                return new YamlScalarNode(val.ToString());
+            }
+        }
+
+        class Vector2Serializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node)
+            {
+                return node.AsVector2();
+            }
+
+            public override YamlNode TypeToNode(object obj)
+            {
+                var vec = (Vector2)obj;
+                return new YamlScalarNode($"{vec.X},{vec.Y}");
+            }
+        }
+
+        class AngleSerializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node)
+            {
+                var val = float.Parse(node.ToString());
+                return new Angle(val);
+            }
+
+            public override YamlNode TypeToNode(object obj)
+            {
+                var val = (float)((Angle)obj).Theta;
+                return new YamlScalarNode(val.ToString(CultureInfo.InvariantCulture));
+            }
+        }
+
+        class Box2Serializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node)
+            {
+                var args = node.ToString().Split(',');
+
+                var t = float.Parse(args[0], CultureInfo.InvariantCulture);
+                var l = float.Parse(args[1], CultureInfo.InvariantCulture);
+                var b = float.Parse(args[2], CultureInfo.InvariantCulture);
+                var r = float.Parse(args[3], CultureInfo.InvariantCulture);
+
+                return new Box2(l, t, r, b);
+            }
+
+            public override YamlNode TypeToNode(object obj)
+            {
+                var box = (Box2)obj;
+                return new YamlScalarNode($"{box.Top},{box.Left},{box.Bottom},{box.Right}");
+            }
         }
     }
-
-    internal class MapIdSerializer : TypeSerializer
-    {
-        public override object NodeToType(Type type, YamlNode node)
-        {
-            var val = int.Parse(node.ToString());
-            return new MapId(val);
-        }
-
-        public override YamlNode TypeToNode(object obj)
-        {
-            var val = (int)(MapId)obj;
-            return new YamlScalarNode(val.ToString());
-        }
-    }
-
-    internal class GridIdSerializer : TypeSerializer
-    {
-        public override object NodeToType(Type type, YamlNode node)
-        {
-            var val = int.Parse(node.ToString());
-            return new GridId(val);
-        }
-
-        public override YamlNode TypeToNode(object obj)
-        {
-            var val = (int)(GridId)obj;
-            return new YamlScalarNode(val.ToString());
-        }
-    }
-
-    internal class Vector2Serializer : TypeSerializer
-    {
-        public override object NodeToType(Type type, YamlNode node)
-        {
-            var args = node.ToString().Split(',');
-
-            var x = float.Parse(args[0], CultureInfo.InvariantCulture);
-            var y = float.Parse(args[1], CultureInfo.InvariantCulture);
-
-            return new Vector2(x, y);
-        }
-
-        public override YamlNode TypeToNode(object obj)
-        {
-            var vec = (Vector2)obj;
-            return new YamlScalarNode($"{vec.X},{vec.Y}");
-        }
-    }
-
-    internal class AngleSerializer : TypeSerializer
-    {
-        public override object NodeToType(Type type, YamlNode node)
-        {
-            var val = float.Parse(node.ToString());
-            return new Angle(val);
-        }
-
-        public override YamlNode TypeToNode(object obj)
-        {
-            var val = (float)((Angle)obj).Theta;
-            return new YamlScalarNode(val.ToString(CultureInfo.InvariantCulture));
-        }
-    }
-
-    internal class Box2Serializer : TypeSerializer
-    {
-        public override object NodeToType(Type type, YamlNode node)
-        {
-            var args = node.ToString().Split(',');
-
-            var t = float.Parse(args[0], CultureInfo.InvariantCulture);
-            var l = float.Parse(args[1], CultureInfo.InvariantCulture);
-            var b = float.Parse(args[2], CultureInfo.InvariantCulture);
-            var r = float.Parse(args[3], CultureInfo.InvariantCulture);
-
-            return new Box2(l, t, r, b);
-        }
-
-        public override YamlNode TypeToNode(object obj)
-        {
-            var box = (Box2)obj;
-            return new YamlScalarNode($"{box.Top},{box.Left},{box.Bottom},{box.Right}");
-        }
-    }
-    */
 }

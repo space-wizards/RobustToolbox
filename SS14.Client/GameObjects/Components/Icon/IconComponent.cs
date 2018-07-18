@@ -4,6 +4,7 @@ using SS14.Client.ResourceManagement;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Serialization;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -12,15 +13,21 @@ namespace SS14.Client.GameObjects
     public class IconComponent : Component
     {
         public override string Name => "Icon";
-        public IDirectionalTextureProvider Icon { get; private set; }
+        public IDirectionalTextureProvider Icon => _icon;
+        private IDirectionalTextureProvider _icon;
 
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void ExposeData(ObjectSerializer serializer)
         {
-            base.LoadParameters(mapping);
-            Icon = TextureForConfig(mapping, Owner.Prototype);
+            base.ExposeData(serializer);
+
+            // TODO: Does this need writing?
+            if (serializer.Reading)
+            {
+                TextureForConfig(ref _icon, serializer);
+            }
         }
 
-        private static IDirectionalTextureProvider TextureForConfig(YamlMappingNode mapping, EntityPrototype prototype)
+        private static IDirectionalTextureProvider TextureForConfig(ref IDirectionalTextureProvider iconRef, ObjectSerializer serializer)
         {
             var resc = IoCManager.Resolve<IResourceCache>();
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Serialization;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Interfaces.GameObjects
@@ -94,7 +94,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     This should basically be overridden by every inheriting component, as parameters will be different
         ///     across the board.
         /// </summary>
-        void ExposeData(EntitySerializer serializer);
+        void ExposeData(ObjectSerializer serializer);
 
         /// <summary>
         ///     Main method for updating the component. This is called from a big loop in ComponentManager.

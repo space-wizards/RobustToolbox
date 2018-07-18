@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Net.Configuration;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Interfaces.GameObjects

@@ -8,7 +8,7 @@ using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Map;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
-using SS14.Shared.GameObjects.Serialization;
+using SS14.Shared.Serialization;
 
 namespace SS14.Server.GameObjects
 {
@@ -118,7 +118,7 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public void SaveGridEntities(EntitySerializer serializer, GridId gridId)
+        public void SaveGridEntities(ObjectSerializer serializer, GridId gridId)
         {
             // serialize all entities to disk
             foreach (var entity in _allEntities)

@@ -2,8 +2,8 @@
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Map;
 using System.Collections.Generic;
-using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Maths;
+using SS14.Shared.Serialization;
 
 namespace SS14.Server.Interfaces.GameObjects
 {
@@ -124,6 +124,6 @@ namespace SS14.Server.Interfaces.GameObjects
         /// <summary>
         ///     Serializes all entities on a grid.
         /// </summary>
-        void SaveGridEntities(EntitySerializer serializer, GridId gridId);
+        void SaveGridEntities(ObjectSerializer serializer, GridId gridId);
     }
 }

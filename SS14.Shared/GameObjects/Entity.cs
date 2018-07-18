@@ -4,7 +4,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.GameObjects.Serialization;
+using SS14.Shared.Serialization;
 
 namespace SS14.Shared.GameObjects
 {
@@ -150,24 +150,18 @@ namespace SS14.Shared.GameObjects
         ///     its fields.
         /// </summary>
         /// <param name="serializer">The serialization object that contains the <c>data</c> field.</param>
-        public void ExposeData(EntitySerializer serializer)
+        public void ExposeData(ObjectSerializer serializer)
         {
             _id = Prototype.ID;
             _type = Prototype.TypeString;
-
-            serializer.EntityHeader();
 
             serializer.DataField(ref _type, "type", "entity", true);
             serializer.DataField(ref _id, "id", String.Empty, true);
             serializer.DataField(ref _name, "name", String.Empty, true);
 
-            serializer.CompHeader();
-
             foreach (var component in _components)
             {
                 string type = component.Name;
-
-                serializer.CompStart(type);
 
                 serializer.DataField(ref type, "type", component.Name, true);
 

@@ -7,10 +7,10 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
+using SS14.Shared.Serialization;
 
 namespace SS14.Shared.GameObjects
 {
@@ -105,6 +105,12 @@ namespace SS14.Shared.GameObjects
         public YamlMappingNode DataNode { get; set; }
 
         private readonly HashSet<Type> ReferenceTypes = new HashSet<Type>();
+
+        public static void LoadData(IEntity entity, YamlMappingNode node)
+        {
+            var ent = entity as Entity;
+            ent.ExposeData(new YamlObjectSerializer(node, reading: true, setDefaults: false));
+        }
 
         public void LoadFrom(YamlMappingNode mapping)
         {
@@ -286,7 +292,7 @@ namespace SS14.Shared.GameObjects
                     }
                     target.Components[component.Key] = new YamlMappingNode(component.Value.AsEnumerable());
                 }
-                next:;
+            next:;
             }
 
             // Copy all simple data over.
@@ -356,7 +362,7 @@ namespace SS14.Shared.GameObjects
 
             if (DataNode != null)
             {
-                entity.ExposeData(new YamlEntitySerializer(DataNode));
+                entity.ExposeData(new YamlObjectSerializer(DataNode, reading: true));
             }
 
             foreach (var componentData in Components)
@@ -365,7 +371,7 @@ namespace SS14.Shared.GameObjects
 
                 component.Owner = entity;
                 component.LoadParameters(componentData.Value);
-                component.ExposeData(new YamlEntitySerializer(componentData.Value));
+                component.ExposeData(new YamlObjectSerializer(componentData.Value, reading: true));
 
                 entity.AddComponent(component);
             }

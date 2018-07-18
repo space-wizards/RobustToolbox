@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
+using SS14.Shared.Serialization;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -295,7 +295,7 @@ namespace SS14.Server.GameObjects
             Dirty();
         }
 
-        public override void ExposeData(EntitySerializer serializer)
+        public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);
 

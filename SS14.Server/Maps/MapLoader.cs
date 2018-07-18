@@ -2,7 +2,6 @@
 using System.IO;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Maps;
-using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Resources;
@@ -12,6 +11,8 @@ using SS14.Shared.Map;
 using SS14.Shared.Prototypes;
 using YamlDotNet.RepresentationModel;
 using SS14.Shared.Utility;
+using SS14.Shared.Serialization;
+using SS14.Shared.GameObjects;
 
 namespace SS14.Server.Maps
 {
@@ -195,9 +196,10 @@ namespace SS14.Server.Maps
             var node = YamlGridSerializer.SerializeGrid(grid);
             root.Add(node);
 
-            var ents = new YamlEntitySerializer();
+            var map = new YamlMappingNode();
+            var ents = new YamlObjectSerializer(map, reading: false);
             _entityMan.SaveGridEntities(ents, grid.Index);
-            root.Add(ents.GetRootNode());
+            root.Add(map);
             return root;
         }
 
@@ -255,7 +257,7 @@ namespace SS14.Server.Maps
                 {
                     var entity = _entityMan.SpawnEntity(protoName);
 
-                    _protoMan.LoadData(entity, yamlEnt);
+                    EntityPrototype.LoadData(entity, yamlEnt);
 
                     // overwrite local position in the BP to the new map/grid ID
                     var transform = entity.GetComponent<IServerTransformComponent>();

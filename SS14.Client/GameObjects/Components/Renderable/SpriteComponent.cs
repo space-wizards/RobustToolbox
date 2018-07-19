@@ -8,10 +8,12 @@ using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Client.Utility;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
+using SS14.Shared.Serialization;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -172,7 +174,7 @@ namespace SS14.Client.GameObjects
                     }
                     else
                     {
-                        Logger.ErrorS("go.comp.sprite",
+                        Logger.ErrorS(LogCategory,
                                       "Layer '{0}'no longer has state '{1}' due to base RSI change. Trace:\n{2}",
                                       i, layer.State, Environment.StackTrace);
                         layer.Texture = null;
@@ -192,7 +194,7 @@ namespace SS14.Client.GameObjects
         // It may be a good idea to re-implement this list to use Layer[],
         // use ref locals EVERYWHERE, and handle the resizing ourselves.
         // This may be worth the overhead of basically reimplementing List<T>.
-        private readonly List<Layer> Layers = new List<Layer>();
+        private List<Layer> Layers;
         private readonly List<Godot.RID> CanvasItems = new List<Godot.RID>();
 
         private Godot.Node2D SceneNode;
@@ -200,6 +202,9 @@ namespace SS14.Client.GameObjects
 
         private IResourceCache resourceCache;
         private IPrototypeManager prototypes;
+
+        public const string LogCategory = "go.comp.sprite";
+        const string LayerSerializationCache = "spritelayer";
 
         /// <inheritdoc />
         public void LayerMapSet(object key, int layer)
@@ -238,7 +243,7 @@ namespace SS14.Client.GameObjects
         {
             if (!resourceCache.TryGetResource<TextureResource>(TextureRoot / texturePath, out var texture))
             {
-                Logger.ErrorS("go.comp.sprite", "Unable to load texture '{0}'. Trace:\n{1}", texturePath, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Unable to load texture '{0}'. Trace:\n{1}", texturePath, Environment.StackTrace);
             }
 
             return AddLayer(texture, newIndex);
@@ -262,7 +267,7 @@ namespace SS14.Client.GameObjects
             }
             else
             {
-                Logger.ErrorS("go.comp.sprite", "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId, Environment.StackTrace);
             }
             RedrawQueued = true;
             return AddLayer(layer, newIndex);
@@ -287,7 +292,7 @@ namespace SS14.Client.GameObjects
         {
             if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
             {
-                Logger.ErrorS("go.comp.sprite", "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
             }
 
             return AddLayer(stateId, res?.RSI);
@@ -309,7 +314,7 @@ namespace SS14.Client.GameObjects
             }
             else
             {
-                Logger.ErrorS("go.comp.sprite", "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId, Environment.StackTrace);
             }
             RedrawQueued = true;
             return AddLayer(layer, newIndex);
@@ -345,7 +350,7 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot remove! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot remove! Trace:\n{1}", layer, Environment.StackTrace);
                 return;
             }
             Layers.RemoveAt(layer);
@@ -368,7 +373,7 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot remove! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot remove! Trace:\n{1}", layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -379,7 +384,7 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set shader! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set shader! Trace:\n{1}", layer, Environment.StackTrace);
                 return;
             }
             var thelayer = Layers[layer];
@@ -392,7 +397,7 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}", layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -403,7 +408,7 @@ namespace SS14.Client.GameObjects
         {
             if (!prototypes.TryIndex<ShaderPrototype>(shaderName, out var prototype))
             {
-                Logger.ErrorS("go.comp.sprite", "Shader prototype '{0}' does not exist. Trace:\n{1}", shaderName, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Shader prototype '{0}' does not exist. Trace:\n{1}", shaderName, Environment.StackTrace);
             }
 
             // This will set the shader to null if it does not exist.
@@ -414,7 +419,7 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}", layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -425,7 +430,7 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set texture! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set texture! Trace:\n{1}", layer, Environment.StackTrace);
                 return;
             }
             var thelayer = Layers[layer];
@@ -439,7 +444,7 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set texture! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set texture! Trace:\n{1}", layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -460,7 +465,7 @@ namespace SS14.Client.GameObjects
         {
             if (!resourceCache.TryGetResource<TextureResource>(TextureRoot / texturePath, out var texture))
             {
-                Logger.ErrorS("go.comp.sprite", "Unable to load texture '{0}'. Trace:\n{1}", texturePath, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Unable to load texture '{0}'. Trace:\n{1}", texturePath, Environment.StackTrace);
             }
 
             LayerSetTexture(layer, texture);
@@ -470,7 +475,7 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set texture! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set texture! Trace:\n{1}", layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -481,7 +486,7 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set state! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set state! Trace:\n{1}", layer, Environment.StackTrace);
                 return;
             }
 
@@ -494,7 +499,7 @@ namespace SS14.Client.GameObjects
             var rsi = thelayer.RSI ?? BaseRSI;
             if (rsi == null)
             {
-                Logger.ErrorS("go.comp.sprite", "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
                 thelayer.Texture = null;
             }
             else
@@ -506,7 +511,7 @@ namespace SS14.Client.GameObjects
                 }
                 else
                 {
-                    Logger.ErrorS("go.comp.sprite", "State '{0}' does not exist in RSI. Trace:\n{1}", stateId, Environment.StackTrace);
+                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId, Environment.StackTrace);
                     thelayer.Texture = null;
                 }
             }
@@ -519,7 +524,7 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}", layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -530,7 +535,7 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set state! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set state! Trace:\n{1}", layer, Environment.StackTrace);
                 return;
             }
 
@@ -540,7 +545,7 @@ namespace SS14.Client.GameObjects
             var actualrsi = thelayer.RSI ?? BaseRSI;
             if (actualrsi == null)
             {
-                Logger.ErrorS("go.comp.sprite", "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
                 thelayer.Texture = null;
             }
             else
@@ -552,7 +557,7 @@ namespace SS14.Client.GameObjects
                 }
                 else
                 {
-                    Logger.ErrorS("go.comp.sprite", "State '{0}' does not exist in RSI. Trace:\n{1}", stateId, Environment.StackTrace);
+                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId, Environment.StackTrace);
                     thelayer.Texture = null;
                 }
             }
@@ -565,7 +570,7 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}", layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -586,7 +591,7 @@ namespace SS14.Client.GameObjects
         {
             if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
             {
-                Logger.ErrorS("go.comp.sprite", "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
             }
 
             LayerSetState(layer, stateId, res?.RSI);
@@ -596,7 +601,7 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}", layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -607,7 +612,7 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set RSI! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set RSI! Trace:\n{1}", layer, Environment.StackTrace);
                 return;
             }
 
@@ -623,7 +628,7 @@ namespace SS14.Client.GameObjects
             var actualRsi = thelayer.RSI ?? BaseRSI;
             if (actualRsi == null)
             {
-                Logger.ErrorS("go.comp.sprite", "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
                 thelayer.Texture = null;
             }
             else
@@ -635,7 +640,7 @@ namespace SS14.Client.GameObjects
                 }
                 else
                 {
-                    Logger.ErrorS("go.comp.sprite", "State '{0}' does not exist in set RSI. Trace:\n{1}", thelayer.State, Environment.StackTrace);
+                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in set RSI. Trace:\n{1}", thelayer.State, Environment.StackTrace);
                     thelayer.Texture = null;
                 }
             }
@@ -648,7 +653,7 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set RSI! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set RSI! Trace:\n{1}", layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -669,7 +674,7 @@ namespace SS14.Client.GameObjects
         {
             if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
             {
-                Logger.ErrorS("go.comp.sprite", "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
             }
 
             LayerSetRSI(layer, res?.RSI);
@@ -679,7 +684,7 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set RSI! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set RSI! Trace:\n{1}", layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -690,7 +695,7 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set scale! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set scale! Trace:\n{1}", layer, Environment.StackTrace);
                 return;
             }
 
@@ -704,7 +709,7 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set scale! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set scale! Trace:\n{1}", layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -716,7 +721,7 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set rotation! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set rotation! Trace:\n{1}", layer, Environment.StackTrace);
                 return;
             }
 
@@ -730,7 +735,7 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set rotation! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set rotation! Trace:\n{1}", layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -741,7 +746,7 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set visibility! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set visibility! Trace:\n{1}", layer, Environment.StackTrace);
                 return;
             }
 
@@ -755,7 +760,7 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set visibility! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set visibility! Trace:\n{1}", layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -766,7 +771,7 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set color! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set color! Trace:\n{1}", layer, Environment.StackTrace);
                 return;
             }
 
@@ -780,7 +785,7 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with key '{0}' does not exist, cannot set color! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set color! Trace:\n{1}", layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -867,215 +872,320 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void ExposeData(ObjectSerializer serializer)
         {
-            base.LoadParameters(mapping);
+            base.ExposeData(serializer);
+
+            serializer.DataFieldCached(ref scale, "scale", Vector2.One);
+            serializer.DataFieldCached(ref rotation, "rotation", Angle.Zero);
+            serializer.DataFieldCached(ref offset, "offset", Vector2.One);
+            serializer.DataFieldCached(ref drawDepth, "drawdepth", DrawDepth.Objects);
+            serializer.DataFieldCached(ref color, "color", Color.White);
+            serializer.DataFieldCached(ref _directional, "directional", true);
+            serializer.DataFieldCached(ref _visible, "visible", true);
+
+            // TODO: Writing?
+            if (!serializer.Reading)
+            {
+                return;
+            }
+
+            if (serializer.TryGetCacheData<List<Layer>>(LayerSerializationCache, out var layers))
+            {
+                Layers = layers.ShallowClone();
+                return;
+            }
 
             prototypes = IoCManager.Resolve<IPrototypeManager>();
             resourceCache = IoCManager.Resolve<IResourceCache>();
 
-            if (mapping.TryGetNode("sprite", out var node))
+            var rsi = serializer.ReadDataField<string>("sprite", null);
+            if (!string.IsNullOrWhiteSpace(rsi))
             {
-                var path = TextureRoot / node.AsResourcePath();
+                var rsiPath = TextureRoot / rsi;
                 try
                 {
-                    BaseRSI = resourceCache.GetResource<RSIResource>(path).RSI;
+                    BaseRSI = resourceCache.GetResource<RSIResource>(rsiPath).RSI;
                 }
                 catch
                 {
-                    Logger.ErrorS("go.comp.sprite", "Unable to load RSI '{0}'. Prototype: '{1}'", path, Owner.Prototype.ID);
+                    Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
                 }
             }
 
-            if (mapping.TryGetNode("state", out node))
-            {
-                if (BaseRSI == null)
-                {
-                    Logger.ErrorS("go.comp.sprite",
-                                  "No base RSI set to load states from: "
-                                  + "cannot use 'state' property. Prototype: '{0}'", Owner.Prototype.ID);
-                }
-                else
-                {
-                    var stateid = new RSI.StateId(node.AsString(), RSI.Selectors.None);
-                    var layer = Layer.New();
-                    layer.State = stateid;
+            layers = new List<Layer>();
 
-                    if (BaseRSI.TryGetState(stateid, out var state))
+            var layerData = serializer.ReadDataField<List<PrototypeLayerData>>("layers", new List<PrototypeLayerData>());
+
+            var baseState = serializer.ReadDataField<string>("state", null);
+            var texturePath = serializer.ReadDataField<string>("texture", null);
+
+            layerData.Insert(0, new PrototypeLayerData
+            {
+                TexturePath = string.IsNullOrWhiteSpace(texturePath) ? null : texturePath,
+                State = baseState,
+                Color = Color.White,
+                Scale = Vector2.One,
+                Visible = true,
+            });
+
+            foreach (var layerDatum in layerData)
+            {
+                var layer = Layer.New();
+                if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
+                {
+                    var path = TextureRoot / layerDatum.RsiPath;
+                    try
                     {
-                        layer.Texture = state.GetFrame(layer.CurrentDir, 0).icon;
+                        layer.RSI = resourceCache.GetResource<RSIResource>(path).RSI;
+                    }
+                    catch
+                    {
+                        Logger.ErrorS(LogCategory, "Unable to load layer RSI '{0}'.", path);
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(layerDatum.State))
+                {
+                    var theRsi = layer.RSI ?? BaseRSI;
+                    if (rsi == null)
+                    {
+                        Logger.ErrorS(LogCategory,
+                                      "Layer has no RSI to load states from."
+                                      + "cannot use 'state' property. Prototype: '{0}'", Owner.Prototype.ID);
                     }
                     else
                     {
-                        Logger.ErrorS("go.comp.sprite",
-                                      "State not found in RSI: '{0}'. Prototype: '{1}'",
-                                      stateid, Owner.Prototype.ID);
+                        var stateid = new RSI.StateId(layerDatum.State, RSI.Selectors.None);
+                        layer.State = stateid;
+                        if (BaseRSI.TryGetState(stateid, out var state))
+                        {
+                            layer.Texture = state.GetFrame(layer.CurrentDir, 0).icon;
+                        }
+                        else
+                        {
+                            Logger.ErrorS(LogCategory,
+                                          "State not found in layer RSI: '{0}'.",
+                                          stateid);
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(layerDatum.TexturePath))
+                {
+                    if (layer.State.IsValid)
+                    {
+                        Logger.ErrorS(LogCategory,
+                                      "Cannot specify 'texture' on a layer if it has an RSI state specified."
+                                     );
+                    }
+                    else
+                    {
+                        layer.Texture = resourceCache.GetResource<TextureResource>(TextureRoot / layerDatum.TexturePath);
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(layerDatum.Shader))
+                {
+                    if (prototypes.TryIndex<ShaderPrototype>(layerDatum.Shader, out var prototype))
+                    {
+                        layer.Shader = prototype.Instance();
+                    }
+                    else
+                    {
+                        Logger.ErrorS(LogCategory,
+                                      "Shader prototype '{0}' does not exist. Prototype: '{1}'",
+                                      layerDatum.Shader, Owner.Prototype.ID);
+                    }
+                }
+
+                layer.Color = layerDatum.Color;
+                layer.Rotation = layerDatum.Rotation;
+                layer.Visible = layerDatum.Visible;
+                layer.Scale = layerDatum.Scale;
+
+                layers.Add(layer);
+            }
+
+            Layers = layers;
+            serializer.SetCacheData(LayerSerializationCache, Layers);
+        }
+
+        /*
+                public override void LoadParameters(YamlMappingNode mapping)
+                {
+                    base.LoadParameters(mapping);
+
+                    prototypes = IoCManager.Resolve<IPrototypeManager>();
+                    resourceCache = IoCManager.Resolve<IResourceCache>();
+
+                    if (mapping.TryGetNode("sprite", out var node))
+                    {
+                        var path = TextureRoot / node.AsResourcePath();
+                        try
+                        {
+                            BaseRSI = resourceCache.GetResource<RSIResource>(path).RSI;
+                        }
+                        catch
+                        {
+                            Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Prototype: '{1}'", path, Owner.Prototype.ID);
+                        }
+                    }
+
+                    if (mapping.TryGetNode("state", out node))
+                    {
+                        if (BaseRSI == null)
+                        {
+                            Logger.ErrorS(LogCategory,
+                                          "No base RSI set to load states from: "
+                                          + "cannot use 'state' property. Prototype: '{0}'", Owner.Prototype.ID);
+                        }
+                        else
+                        {
+                            var stateid = new RSI.StateId(node.AsString(), RSI.Selectors.None);
+                            var layer = Layer.New();
+                            layer.State = stateid;
+
+                            if (BaseRSI.TryGetState(stateid, out var state))
+                            {
+                                layer.Texture = state.GetFrame(layer.CurrentDir, 0).icon;
+                            }
+                            else
+                            {
+                                Logger.ErrorS(LogCategory,
+                                              "State not found in RSI: '{0}'. Prototype: '{1}'",
+                                              stateid, Owner.Prototype.ID);
+                            }
+
+                            Layers.Add(layer);
+                        }
+                    }
+
+                    if (mapping.TryGetNode("texture", out node))
+                    {
+                        // Pretty much to allow people to override things defining texture in child prototypes.
+                        if (!String.IsNullOrWhiteSpace(node.AsString()))
+                        {
+                            if (mapping.HasNode("state"))
+                            {
+                                Logger.ErrorS(LogCategory,
+                                            "Cannot use 'texture' if an RSI state is provided. Prototype: '{0}'",
+                                            Owner.Prototype.ID);
+                            }
+                            else
+                            {
+                                var path = node.AsResourcePath();
+                                var layer = Layer.New();
+                                layer.Texture = resourceCache.GetResource<TextureResource>(TextureRoot / path);
+                                Layers.Add(layer);
+                            }
+                        }
+                    }
+
+                    if (mapping.TryGetNode("layers", out YamlSequenceNode layers))
+                    {
+                        foreach (var layernode in layers.Cast<YamlMappingNode>())
+                        {
+                            LoadLayerFrom(layernode, prototypes);
+                        }
+                    }
+                }
+
+                private void LoadLayerFrom(YamlMappingNode mapping, IPrototypeManager prototypeManager)
+                {
+                    var layer = Layer.New();
+
+                    if (mapping.TryGetNode("sprite", out var node))
+                    {
+                        var path = TextureRoot / node.AsResourcePath();
+                        try
+                        {
+                            layer.RSI = resourceCache.GetResource<RSIResource>(path).RSI;
+                        }
+                        catch
+                        {
+                            Logger.ErrorS(LogCategory, "Unable to load layer RSI '{0}'. Prototype: '{1}'", path, Owner.Prototype.ID);
+                        }
+                    }
+
+                    if (mapping.TryGetNode("state", out node))
+                    {
+                        var rsi = layer.RSI ?? BaseRSI;
+                        if (rsi == null)
+                        {
+                            Logger.ErrorS(LogCategory,
+                                          "Layer has no RSI to load states from."
+                                          + "cannot use 'state' property. Prototype: '{0}'", Owner.Prototype.ID);
+                        }
+                        else
+                        {
+                            var stateid = new RSI.StateId(node.AsString(), RSI.Selectors.None);
+                            layer.State = stateid;
+                            if (BaseRSI.TryGetState(stateid, out var state))
+                            {
+                                layer.Texture = state.GetFrame(layer.CurrentDir, 0).icon;
+                            }
+                            else
+                            {
+                                Logger.ErrorS(LogCategory,
+                                              "State not found in layer RSI: '{0}'. Prototype: '{1}'",
+                                              stateid, Owner.Prototype.ID);
+                            }
+                        }
+                    }
+
+                    if (mapping.TryGetNode("texture", out node))
+                    {
+                        if (layer.State.IsValid)
+                        {
+                            Logger.ErrorS(LogCategory,
+                                          "Cannot specify 'texture' on a layer if it has an RSI state specified. Prototype: '{0}'",
+                                          Owner.Prototype.ID);
+                        }
+                        else
+                        {
+                            var path = node.AsResourcePath();
+                            layer.Texture = resourceCache.GetResource<TextureResource>(TextureRoot / path);
+                        }
+                    }
+
+                    if (mapping.TryGetNode("shader", out node))
+                    {
+                        if (prototypeManager.TryIndex<ShaderPrototype>(node.AsString(), out var prototype))
+                        {
+                            layer.Shader = prototype.Instance();
+                        }
+                        else
+                        {
+                            Logger.ErrorS(LogCategory,
+                                          "Shader prototype '{0}' does not exist. Prototype: '{1}'",
+                                          node.AsString(), Owner.Prototype.ID);
+                        }
+                    }
+
+                    if (mapping.TryGetNode("scale", out node))
+                    {
+                        layer.Scale = node.AsVector2();
+                    }
+
+                    if (mapping.TryGetNode("rotation", out node))
+                    {
+                        layer.Rotation = Angle.FromDegrees(node.AsFloat());
+                    }
+
+                    if (mapping.TryGetNode("visible", out node))
+                    {
+                        layer.Visible = node.AsBool();
+                    }
+
+                    if (mapping.TryGetNode("color", out node))
+                    {
+                        layer.Color = node.AsColor();
                     }
 
                     Layers.Add(layer);
                 }
-            }
-
-            if (mapping.TryGetNode("texture", out node))
-            {
-                // Pretty much to allow people to override things defining texture in child prototypes.
-                if (!String.IsNullOrWhiteSpace(node.AsString()))
-                {
-                    if (mapping.HasNode("state"))
-                    {
-                        Logger.ErrorS("go.comp.sprite",
-                                    "Cannot use 'texture' if an RSI state is provided. Prototype: '{0}'",
-                                    Owner.Prototype.ID);
-                    }
-                    else
-                    {
-                        var path = node.AsResourcePath();
-                        var layer = Layer.New();
-                        layer.Texture = resourceCache.GetResource<TextureResource>(TextureRoot / path);
-                        Layers.Add(layer);
-                    }
-                }
-            }
-
-            if (mapping.TryGetNode("scale", out node))
-            {
-                Scale = node.AsVector2();
-            }
-
-            if (mapping.TryGetNode("rotation", out node))
-            {
-                Rotation = Angle.FromDegrees(node.AsFloat());
-            }
-
-            if (mapping.TryGetNode("offset", out node))
-            {
-                Offset = node.AsVector2();
-            }
-
-            if (mapping.TryGetNode("drawdepth", out node))
-            {
-                DrawDepth = node.AsEnum<DrawDepth>();
-            }
-
-            if (mapping.TryGetNode("color", out node))
-            {
-                Color = node.AsColor();
-            }
-
-            if (mapping.TryGetNode("directional", out node))
-            {
-                Directional = node.AsBool();
-            }
-
-            if (mapping.TryGetNode("visible", out node))
-            {
-                Visible = node.AsBool();
-            }
-
-            if (mapping.TryGetNode("layers", out YamlSequenceNode layers))
-            {
-                foreach (var layernode in layers.Cast<YamlMappingNode>())
-                {
-                    LoadLayerFrom(layernode, prototypes);
-                }
-            }
-        }
-
-        private void LoadLayerFrom(YamlMappingNode mapping, IPrototypeManager prototypeManager)
-        {
-            var layer = Layer.New();
-
-            if (mapping.TryGetNode("sprite", out var node))
-            {
-                var path = TextureRoot / node.AsResourcePath();
-                try
-                {
-                    layer.RSI = resourceCache.GetResource<RSIResource>(path).RSI;
-                }
-                catch
-                {
-                    Logger.ErrorS("go.comp.sprite", "Unable to load layer RSI '{0}'. Prototype: '{1}'", path, Owner.Prototype.ID);
-                }
-            }
-
-            if (mapping.TryGetNode("state", out node))
-            {
-                var rsi = layer.RSI ?? BaseRSI;
-                if (rsi == null)
-                {
-                    Logger.ErrorS("go.comp.sprite",
-                                  "Layer has no RSI to load states from."
-                                  + "cannot use 'state' property. Prototype: '{0}'", Owner.Prototype.ID);
-                }
-                else
-                {
-                    var stateid = new RSI.StateId(node.AsString(), RSI.Selectors.None);
-                    layer.State = stateid;
-                    if (BaseRSI.TryGetState(stateid, out var state))
-                    {
-                        layer.Texture = state.GetFrame(layer.CurrentDir, 0).icon;
-                    }
-                    else
-                    {
-                        Logger.ErrorS("go.comp.sprite",
-                                      "State not found in layer RSI: '{0}'. Prototype: '{1}'",
-                                      stateid, Owner.Prototype.ID);
-                    }
-                }
-            }
-
-            if (mapping.TryGetNode("texture", out node))
-            {
-                if (layer.State.IsValid)
-                {
-                    Logger.ErrorS("go.comp.sprite",
-                                  "Cannot specify 'texture' on a layer if it has an RSI state specified. Prototype: '{0}'",
-                                  Owner.Prototype.ID);
-                }
-                else
-                {
-                    var path = node.AsResourcePath();
-                    layer.Texture = resourceCache.GetResource<TextureResource>(TextureRoot / path);
-                }
-            }
-
-            if (mapping.TryGetNode("shader", out node))
-            {
-                if (prototypeManager.TryIndex<ShaderPrototype>(node.AsString(), out var prototype))
-                {
-                    layer.Shader = prototype.Instance();
-                }
-                else
-                {
-                    Logger.ErrorS("go.comp.sprite",
-                                  "Shader prototype '{0}' does not exist. Prototype: '{1}'",
-                                  node.AsString(), Owner.Prototype.ID);
-                }
-            }
-
-            if (mapping.TryGetNode("scale", out node))
-            {
-                layer.Scale = node.AsVector2();
-            }
-
-            if (mapping.TryGetNode("rotation", out node))
-            {
-                layer.Rotation = Angle.FromDegrees(node.AsFloat());
-            }
-
-            if (mapping.TryGetNode("visible", out node))
-            {
-                layer.Visible = node.AsBool();
-            }
-
-            if (mapping.TryGetNode("color", out node))
-            {
-                layer.Color = node.AsColor();
-            }
-
-            Layers.Add(layer);
-        }
-
+        */
         public void FrameUpdate(float delta)
         {
             if (Directional)
@@ -1166,7 +1276,7 @@ namespace SS14.Client.GameObjects
                 }
                 else
                 {
-                    Logger.ErrorS("go.comp.sprite", "Hey server, RSI '{0}' doesn't exist.", thestate.BaseRsiPath);
+                    Logger.ErrorS(LogCategory, "Hey server, RSI '{0}' doesn't exist.", thestate.BaseRsiPath);
                 }
             }
 
@@ -1239,6 +1349,30 @@ namespace SS14.Client.GameObjects
                     Visible = true,
                     Color = Color.White
                 };
+            }
+        }
+
+        private struct PrototypeLayerData : IExposeData
+        {
+            public string Shader;
+            public string TexturePath;
+            public string RsiPath;
+            public string State;
+            public Vector2 Scale;
+            public Angle Rotation;
+            public bool Visible;
+            public Color Color;
+
+            public void ExposeData(ObjectSerializer serializer)
+            {
+                serializer.DataField(ref Shader, "shader", null);
+                serializer.DataField(ref TexturePath, "texture", null);
+                serializer.DataField(ref RsiPath, "sprite", null);
+                serializer.DataField(ref State, "state", null);
+                serializer.DataField(ref Scale, "scale", Vector2.One);
+                serializer.DataField(ref Rotation, "rotation", Angle.Zero);
+                serializer.DataField(ref Visible, "visible", true);
+                serializer.DataField(ref Color, "color", Color.White);
             }
         }
     }

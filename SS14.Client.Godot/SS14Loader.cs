@@ -56,20 +56,30 @@ namespace SS14.Client.GodotGlue
 
         public override void _PhysicsProcess(float delta)
         {
-            if (!ShuttingDown)
+            try
             {
-                foreach (var entrypoint in EntryPoints)
+
+
+                if (!ShuttingDown)
                 {
-                    try
+                    foreach (var entrypoint in EntryPoints)
                     {
-                        entrypoint.PhysicsProcess(delta);
-                    }
-                    catch (Exception e)
-                    {
-                        GD.Print($"Caught exception inside PhysicsProcess:\n{e}");
+                        try
+                        {
+                            entrypoint.PhysicsProcess(delta);
+                        }
+                        catch (Exception e)
+                        {
+                            GD.Print($"Caught exception inside PhysicsProcess:\n{e}");
+                        }
                     }
                 }
             }
+            catch
+            {
+                GD.Print("Whoops");
+            }
+
         }
 
         public override void _Process(float delta)

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
+using SS14.Shared.Interfaces.Serialization;
+using SS14.Shared.Log;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
@@ -16,10 +18,9 @@ namespace SS14.Shared.Serialization
         private static readonly Dictionary<Type, TypeSerializer> _typeSerializers;
         private static readonly StructSerializer _structSerializer;
 
-        private bool SetDefaults;
-
         private YamlMappingNode Map;
         private List<YamlMappingNode> Backups;
+        private List<YamlMappingNode> ReadMaps;
 
         static YamlObjectSerializer()
         {
@@ -31,30 +32,41 @@ namespace SS14.Shared.Serialization
                 { typeof(GridId), new GridIdSerializer() },
                 { typeof(Vector2), new Vector2Serializer() },
                 { typeof(Angle), new AngleSerializer() },
-                { typeof(Box2), new Box2Serializer() }
+                { typeof(Box2), new Box2Serializer() },
+                { typeof(ResourcePath), new ResourcePathSerializer() },
             };
         }
 
-        public YamlObjectSerializer(YamlMappingNode map, bool reading, bool setDefaults = true, List<YamlMappingNode> backups = null)
+        public YamlObjectSerializer(YamlMappingNode map, bool reading, List<YamlMappingNode> backups = null)
         {
             Map = map;
             Reading = reading;
-            SetDefaults = setDefaults;
             Backups = backups;
+            if (Reading)
+            {
+                ReadMaps = new List<YamlMappingNode>
+                {
+                    Map,
+                };
+                ReadMaps.AddRange(backups);
+            }
         }
 
+        /// <inheritdoc />
         public override void DataField<T>(ref T value, string name, T defaultValue, bool alwaysWrite = false)
         {
             if (Reading) // read
             {
-                if (Map.TryGetNode(name, out var node))
+                foreach (var map in ReadMaps)
                 {
-                    value = (T)NodeToType(typeof(T), node);
+                    if (map.TryGetNode(name, out var node))
+                    {
+                        value = (T)NodeToType(typeof(T), node);
+                        return;
+                    }
                 }
-                else if (SetDefaults)
-                {
-                    value = defaultValue;
-                }
+                value = defaultValue;
+                return;
             }
             else // write
             {
@@ -68,20 +80,82 @@ namespace SS14.Shared.Serialization
             }
         }
 
+
+        /// <inheritdoc />
+        public override void DataField<TTarget, TSource>(
+            ref TTarget value,
+            string name,
+            TTarget defaultValue,
+            Func<TSource, TTarget> ReadConvertFunc,
+            Func<TTarget, TSource> WriteConvertFunc = null,
+            bool alwaysWrite = false)
+        {
+            if (Reading)
+            {
+                foreach (var map in ReadMaps)
+                {
+                    if (map.TryGetNode(name, out var node))
+                    {
+                        value = ReadConvertFunc((TSource)NodeToType(typeof(TSource), node));
+                        return;
+                    }
+                }
+                value = defaultValue;
+            }
+            else
+            {
+                if (WriteConvertFunc == null)
+                {
+                    // TODO: More verbosity diagnostics.
+                    Logger.WarningS(LogCategory, "Field '{0}' not written due to lack of WriteConvertFunc.", name);
+                    return;
+                }
+
+                // don't write if value is null or default
+                if (!alwaysWrite && (value != null || defaultValue == null) && (value == null || value.Equals(defaultValue)))
+                {
+                    return;
+                }
+
+                var key = name;
+                var val = value == null ? TypeToNode(WriteConvertFunc(defaultValue)) : TypeToNode(WriteConvertFunc(value));
+                Map.Add(key, val);
+            }
+        }
+
+        /// <inheritdoc />
+        public override T ReadDataField<T>(string name, T defaultValue)
+        {
+            if (!Reading)
+            {
+                throw new InvalidOperationException("Cannot use ReadDataField while not reading.");
+            }
+
+            foreach (var map in ReadMaps)
+            {
+                if (map.TryGetNode(name, out var node))
+                {
+                    return (T)NodeToType(typeof(T), node);
+
+                }
+            }
+            return defaultValue;
+        }
+
         public override void DataReadFunction<T>(string name, T defaultValue, ReadFunctionDelegate<T> func)
         {
             if (!Reading) return;
 
-            if (Map.TryGetNode(name, out var node))
+            foreach (var map in ReadMaps)
             {
-                var value = (T)NodeToType(typeof(T), node);
-                func.Invoke(value);
+                if (map.TryGetNode(name, out var node))
+                {
+                    func((T)NodeToType(typeof(T), node));
+                    return;
+                }
             }
-            else if (SetDefaults)
-            {
-                var value = defaultValue;
-                func.Invoke(value);
-            }
+
+            func(defaultValue);
         }
 
         public override void DataWriteFunction<T>(string name, T defaultValue, WriteFunctionDelegate<T> func, bool alwaysWrite = false)
@@ -149,6 +223,17 @@ namespace SS14.Shared.Serialization
             if (_typeSerializers.TryGetValue(type, out var serializer))
                 return serializer.NodeToType(type, node);
 
+            // IExposeData.
+            if (typeof(IExposeData).IsAssignableFrom(type))
+            {
+                var instance = (IExposeData)Activator.CreateInstance(type);
+                // TODO: Might be worth it to cut down on allocations here by using ourselves instead of creating a fork.
+                // Seems doable.
+                var fork = new YamlObjectSerializer((YamlMappingNode)node, reading: true);
+                instance.ExposeData(fork);
+                return instance;
+            }
+
             // other val (struct)
             if (type.IsValueType)
                 return _structSerializer.NodeToType(type, (YamlMappingNode)node);
@@ -197,6 +282,15 @@ namespace SS14.Shared.Serialization
                 }
 
                 return node;
+            }
+
+            // IExposeData.
+            if (obj is IExposeData exposable)
+            {
+                var mapping = new YamlMappingNode();
+                var fork = new YamlObjectSerializer(mapping, reading: false);
+                exposable.ExposeData(fork);
+                return mapping;
             }
 
             // custom TypeSerializer
@@ -409,6 +503,19 @@ namespace SS14.Shared.Serialization
             {
                 var box = (Box2)obj;
                 return new YamlScalarNode($"{box.Top},{box.Left},{box.Bottom},{box.Right}");
+            }
+        }
+
+        class ResourcePathSerializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node)
+            {
+                return node.AsResourcePath();
+            }
+
+            public override YamlNode TypeToNode(object obj)
+            {
+                return new YamlScalarNode(obj.ToString());
             }
         }
     }

@@ -8,6 +8,7 @@ using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 using SS14.Client.Graphics.Lighting;
 using SS14.Shared.Maths;
+using SS14.Shared.Serialization;
 
 namespace SS14.Client.GameObjects
 {
@@ -23,6 +24,8 @@ namespace SS14.Client.GameObjects
 
         private IOccluder occluder;
         private ILightManager lightManager;
+
+        const string BoxCache = "occluderbox";
 
         public override void Initialize()
         {
@@ -41,46 +44,44 @@ namespace SS14.Client.GameObjects
             base.OnRemove();
         }
 
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void ExposeData(ObjectSerializer serializer)
         {
             if (lightManager == null)
             {
                 // First in the init stack so...
+                // FIXME: This is terrible.
                 lightManager = IoCManager.Resolve<ILightManager>();
                 occluder = lightManager.MakeOccluder();
             }
 
-            base.LoadParameters(mapping);
+            base.ExposeData(serializer);
 
-            YamlNode node;
-            if (mapping.TryGetNode("sizeX", out node))
+            serializer.DataReadWriteFunction("enabled", true, en => Enabled = en, () => Enabled);
+
+            if (serializer.Writing)
             {
-                var width = node.AsFloat();
-                BoundingBox = Box2.FromDimensions(BoundingBox.Left + (BoundingBox.Width - width) / 2f, BoundingBox.Top, width, BoundingBox.Height);
+                serializer.DataWriteFunction("box", new Box2(-16, -16, 16, 16), () => BoundingBox);
+                return;
             }
 
-            if (mapping.TryGetNode("sizeY", out node))
+            // Shortcut so modifications on-map are read easily.
+            if (serializer.TryReadDataFieldCached("box", out Box2 box))
             {
-                var height = node.AsFloat();
-                BoundingBox = Box2.FromDimensions(BoundingBox.Left, BoundingBox.Top + (BoundingBox.Height - height) / 2f, BoundingBox.Width, height);
+                BoundingBox = box;
             }
 
-            if (mapping.TryGetNode("offsetX", out node))
+            if (serializer.TryGetCacheData(BoxCache, out box))
             {
-                var x = node.AsFloat();
-                BoundingBox = Box2.FromDimensions(x - BoundingBox.Width / 2f, BoundingBox.Top, BoundingBox.Width, BoundingBox.Height);
+                BoundingBox = box;
+                return;
             }
 
-            if (mapping.TryGetNode("offsetY", out node))
-            {
-                var y = node.AsFloat();
-                BoundingBox = Box2.FromDimensions(BoundingBox.Left, y - BoundingBox.Height / 2f, BoundingBox.Width, BoundingBox.Height);
-            }
+            var sizeX = serializer.ReadDataField("sizeX", 32f);
+            var sizeY = serializer.ReadDataField("sizeY", 32f);
+            var offsetX = serializer.ReadDataField("offsetX", -16f);
+            var offsetY = serializer.ReadDataField("offsetY", -16f);
 
-            if (mapping.TryGetNode("enabled", out node))
-            {
-                Enabled = node.AsBool();
-            }
+            box = Box2.FromDimensions(offsetX, offsetY, sizeX, sizeY);
 
             var poly = new Godot.Vector2[4]
             {

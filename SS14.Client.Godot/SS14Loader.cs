@@ -78,7 +78,14 @@ namespace SS14.Client.GodotGlue
             {
                 foreach (var entrypoint in EntryPoints)
                 {
-                    entrypoint.FrameProcess(delta);
+                    try
+                    {
+                        entrypoint.FrameProcess(delta);
+                    }
+                    catch (Exception e)
+                    {
+                        GD.Print($"Caught exception inside Process:\n{e}");
+                    }
                 }
             }
         }

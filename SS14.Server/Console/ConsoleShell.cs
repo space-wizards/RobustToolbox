@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Configuration;
@@ -95,9 +94,8 @@ namespace SS14.Server.Console
                 _availableCommands[instance.Command] = instance;
             }
         }
-
-        /// <inheritdoc />
-        public void ProcessCommand(MsgConCmd message)
+        
+        private void ProcessCommand(MsgConCmd message)
         {
             var text = message.Text;
             var sender = message.MsgChannel;
@@ -109,7 +107,7 @@ namespace SS14.Server.Console
         }
 
         /// <inheritdoc />
-        public void ExecuteHostCommand(string command)
+        public void ExecuteCommand(string command)
         {
             ExecuteCommand(null, command);
         }
@@ -160,13 +158,13 @@ namespace SS14.Server.Console
         public void SendText(IPlayerSession session, string text)
         {
             if (session != null)
-                SendConsoleText(session.ConnectedClient, text);
+                SendText(session.ConnectedClient, text);
             else
                 _systemConsole.Print(text + "\n");
         }
 
         /// <inheritdoc />
-        public void SendConsoleText(INetChannel target, string text)
+        public void SendText(INetChannel target, string text)
         {
             var replyMsg = _net.CreateNetMessage<MsgConCmdAck>();
             replyMsg.Text = text;

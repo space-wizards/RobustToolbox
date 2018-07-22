@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
-using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Network.Messages;
 
 namespace SS14.Server.Interfaces.Console
 {
@@ -17,8 +15,6 @@ namespace SS14.Server.Interfaces.Console
         IReadOnlyDictionary<string, IClientCommand> AvailableCommands { get; }
 
         void Initialize();
-        void ProcessCommand(MsgConCmd message);
-        void SendConsoleText(INetChannel target, string text);
 
         /// <summary>
         ///     Scans all loaded assemblies for console commands and registers them. This will NOT sync with connected clients, and
@@ -33,7 +29,24 @@ namespace SS14.Server.Interfaces.Console
         /// <param name="text">Text message to send.</param>
         void SendText(IPlayerSession session, string text);
 
-        void ExecuteHostCommand(string command);
+        /// <summary>
+        /// Sends a text string to the remote console.
+        /// </summary>
+        /// <param name="target">Net channel to send the text string to.</param>
+        /// <param name="text">Text message to send.</param>
+        void SendText(INetChannel target, string text);
+
+        /// <summary>
+        /// Execute a command string on the local shell.
+        /// </summary>
+        /// <param name="command">Command string to execute.</param>
+        void ExecuteCommand(string command);
+
+        /// <summary>
+        /// Execute a command string as a player.
+        /// </summary>
+        /// <param name="player">Session of the remote player. If this is null, the command is executed as the local console.</param>
+        /// <param name="command">Command string to execute.</param>
         void ExecuteCommand(IPlayerSession player, string command);
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.Player;
 
@@ -16,7 +15,7 @@ namespace SS14.Server.Console.Commands
             var builder = new StringBuilder("SIDE NAME            DESC\n-------------------------\n");
             foreach (var command in shell.AvailableCommands.Values)
             {
-                builder.AppendLine($"S    {command.Command,16}{command.Description}");
+                builder.AppendLine($"S {command.Command,-16}{command.Description}");
             }
             var message = builder.ToString().Trim(' ', '\n');
             shell.SendText(player, message);

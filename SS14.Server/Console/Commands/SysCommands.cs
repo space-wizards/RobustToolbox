@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Interfaces.Configuration;
@@ -28,7 +27,7 @@ namespace SS14.Server.Console.Commands
         public string Help => "shutdown";
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
-            IoCManager.Resolve<IBaseServer>().Shutdown();
+            IoCManager.Resolve<IBaseServer>().Shutdown(null);
         }
     }
     

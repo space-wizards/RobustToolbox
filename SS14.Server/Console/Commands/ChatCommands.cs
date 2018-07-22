@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using SS14.Server.Interfaces.Chat;
-using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Console;

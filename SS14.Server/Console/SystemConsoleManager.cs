@@ -134,7 +134,7 @@ namespace SS14.Server.Console
 
         private void ExecuteCommand(string commandLine)
         {
-            _conShell.ExecuteHostCommand(commandLine);
+            _conShell.ExecuteCommand(commandLine);
         }
 
         public void Print(string text)
@@ -188,7 +188,7 @@ namespace SS14.Server.Console
         {
             // Handle process exiting ourself.
             args.Cancel = true;
-            IoCManager.Resolve<IBaseServer>().Shutdown();
+            IoCManager.Resolve<IBaseServer>().Shutdown(null);
         }
     }
 }

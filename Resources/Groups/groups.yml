@@ -1,6 +1,7 @@
 - Index: 1
   Name: Player
   Commands:
+  - joingame
   - help
   - list
 

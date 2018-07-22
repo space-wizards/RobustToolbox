@@ -1,8 +1,7 @@
-﻿using SS14.Server.Interfaces.Console;
-using SS14.Server.Interfaces.Player;
+﻿using SS14.Server.Interfaces.Player;
 using SS14.Shared.Console;
 
-namespace SS14.Server.Interfaces.ClientConsoleHost
+namespace SS14.Server.Interfaces.Console
 {
     /// <summary>
     ///     A command, executed from the debug console of a client.

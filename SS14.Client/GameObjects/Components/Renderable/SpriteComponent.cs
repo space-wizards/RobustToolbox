@@ -8,6 +8,7 @@ using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Client.Utility;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -23,17 +24,8 @@ using VS = Godot.VisualServer;
 
 namespace SS14.Client.GameObjects
 {
-    public sealed class SpriteComponent : Component, ISpriteComponent, IClickTargetComponent
+    public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent, IClickTargetComponent
     {
-        public override string Name => "Sprite";
-        public override uint? NetID => NetIDs.SPRITE;
-        public override Type StateType => typeof(SpriteComponentState);
-
-        /// <summary>
-        ///     The resource path from which all texture paths are relative to.
-        /// </summary>
-        public static readonly ResourcePath TextureRoot = new ResourcePath("/Textures");
-
         private bool _visible = true;
         public bool Visible
         {
@@ -899,17 +891,19 @@ namespace SS14.Client.GameObjects
             prototypes = IoCManager.Resolve<IPrototypeManager>();
             resourceCache = IoCManager.Resolve<IResourceCache>();
 
-            var rsi = serializer.ReadDataField<string>("sprite", null);
-            if (!string.IsNullOrWhiteSpace(rsi))
             {
-                var rsiPath = TextureRoot / rsi;
-                try
+                var rsi = serializer.ReadDataField<string>("sprite", null);
+                if (!string.IsNullOrWhiteSpace(rsi))
                 {
-                    BaseRSI = resourceCache.GetResource<RSIResource>(rsiPath).RSI;
-                }
-                catch
-                {
-                    Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
+                    var rsiPath = TextureRoot / rsi;
+                    try
+                    {
+                        BaseRSI = resourceCache.GetResource<RSIResource>(rsiPath).RSI;
+                    }
+                    catch
+                    {
+                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
+                    }
                 }
             }
 
@@ -917,17 +911,19 @@ namespace SS14.Client.GameObjects
 
             var layerData = serializer.ReadDataField<List<PrototypeLayerData>>("layers", new List<PrototypeLayerData>());
 
-            var baseState = serializer.ReadDataField<string>("state", null);
-            var texturePath = serializer.ReadDataField<string>("texture", null);
-
-            layerData.Insert(0, new PrototypeLayerData
             {
-                TexturePath = string.IsNullOrWhiteSpace(texturePath) ? null : texturePath,
-                State = baseState,
-                Color = Color.White,
-                Scale = Vector2.One,
-                Visible = true,
-            });
+                var baseState = serializer.ReadDataField<string>("state", null);
+                var texturePath = serializer.ReadDataField<string>("texture", null);
+
+                layerData.Insert(0, new PrototypeLayerData
+                {
+                    TexturePath = string.IsNullOrWhiteSpace(texturePath) ? null : texturePath,
+                    State = baseState,
+                    Color = Color.White,
+                    Scale = Vector2.One,
+                    Visible = true,
+                });
+            }
 
             foreach (var layerDatum in layerData)
             {
@@ -948,7 +944,7 @@ namespace SS14.Client.GameObjects
                 if (!string.IsNullOrWhiteSpace(layerDatum.State))
                 {
                     var theRsi = layer.RSI ?? BaseRSI;
-                    if (rsi == null)
+                    if (theRsi == null)
                     {
                         Logger.ErrorS(LogCategory,
                                       "Layer has no RSI to load states from."
@@ -1008,7 +1004,7 @@ namespace SS14.Client.GameObjects
             }
 
             Layers = layers;
-            serializer.SetCacheData(LayerSerializationCache, Layers);
+            serializer.SetCacheData(LayerSerializationCache, Layers.ShallowClone());
         }
 
         /*
@@ -1349,30 +1345,6 @@ namespace SS14.Client.GameObjects
                     Visible = true,
                     Color = Color.White
                 };
-            }
-        }
-
-        private struct PrototypeLayerData : IExposeData
-        {
-            public string Shader;
-            public string TexturePath;
-            public string RsiPath;
-            public string State;
-            public Vector2 Scale;
-            public Angle Rotation;
-            public bool Visible;
-            public Color Color;
-
-            public void ExposeData(ObjectSerializer serializer)
-            {
-                serializer.DataField(ref Shader, "shader", null);
-                serializer.DataField(ref TexturePath, "texture", null);
-                serializer.DataField(ref RsiPath, "sprite", null);
-                serializer.DataField(ref State, "state", null);
-                serializer.DataField(ref Scale, "scale", Vector2.One);
-                serializer.DataField(ref Rotation, "rotation", Angle.Zero);
-                serializer.DataField(ref Visible, "visible", true);
-                serializer.DataField(ref Color, "color", Color.White);
             }
         }
     }

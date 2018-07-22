@@ -109,7 +109,7 @@ namespace SS14.Shared.GameObjects
         public static void LoadData(IEntity entity, YamlMappingNode node)
         {
             var ent = entity as Entity;
-            ent.ExposeData(new YamlObjectSerializer(node, reading: true, setDefaults: false));
+            ent.ExposeData(new YamlObjectSerializer(node, reading: true));
         }
 
         public void LoadFrom(YamlMappingNode mapping)
@@ -370,7 +370,6 @@ namespace SS14.Shared.GameObjects
                 var component = (Component)componentFactory.GetComponent(componentData.Key);
 
                 component.Owner = entity;
-                component.LoadParameters(componentData.Value);
                 component.ExposeData(new YamlObjectSerializer(componentData.Value, reading: true));
 
                 entity.AddComponent(component);

@@ -142,6 +142,26 @@ namespace SS14.Shared.Serialization
             return defaultValue;
         }
 
+        /// <inheritdoc />
+        public override bool TryReadDataField<T>(string name, out T value)
+        {
+            if (!Reading)
+            {
+                throw new InvalidOperationException("Cannot use ReadDataField while not reading.");
+            }
+
+            foreach (var map in ReadMaps)
+            {
+                if (map.TryGetNode(name, out var node))
+                {
+                    value = (T)NodeToType(typeof(T), node);
+                    return true;
+                }
+            }
+            value = default(T);
+            return false;
+        }
+
         public override void DataReadFunction<T>(string name, T defaultValue, ReadFunctionDelegate<T> func)
         {
             if (!Reading) return;

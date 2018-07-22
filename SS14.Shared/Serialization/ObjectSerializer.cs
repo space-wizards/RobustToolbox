@@ -134,7 +134,10 @@ namespace SS14.Shared.Serialization
         }
 
         public abstract bool TryReadDataField<T>(string name, out T value);
-        public abstract bool TryReadDataFieldCached<T>(string name, out T value);
+        public virtual bool TryReadDataFieldCached<T>(string name, out T value)
+        {
+            return TryReadDataField(name, out value);
+        }
 
 
         /// <summary>

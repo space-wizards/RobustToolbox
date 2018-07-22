@@ -14,7 +14,7 @@ namespace SS14.Server.Console
     /// </summary>
     internal class SessionGroupContainer
     {
-        private Dictionary<IPlayerSession, ConGroupIndex> _sessionGroups = new Dictionary<IPlayerSession, ConGroupIndex>();
+        private readonly Dictionary<IPlayerSession, ConGroupIndex> _sessionGroups = new Dictionary<IPlayerSession, ConGroupIndex>();
         private readonly IConfigurationManager _configMan;
         private readonly ISawmill _logger;
 
@@ -35,6 +35,7 @@ namespace SS14.Server.Console
         public SessionGroupContainer(IConfigurationManager configMan, ISawmill logger)
         {
             _configMan = configMan;
+            _logger = logger;
 
             if(!_configMan.IsCVarRegistered("console.defaultGroup"))
                 _configMan.RegisterCVar("console.defaultGroup", 1, CVar.ARCHIVE);

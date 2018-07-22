@@ -71,7 +71,10 @@ namespace SS14.Server.Console
             // register console admin global password. DO NOT ADD THE REPLICATED FLAG
             if(!_configMan.IsCVarRegistered("console.password"))
                 _configMan.RegisterCVar("console.password", string.Empty, CVar.ARCHIVE | CVar.SERVER | CVar.NOT_CONNECTED);
-            
+
+            if (!_configMan.IsCVarRegistered("console.adminGroup"))
+                _configMan.RegisterCVar("console.adminGroup", 100, CVar.ARCHIVE | CVar.SERVER);
+
             ReloadCommands();
 
             // setup networking with clients
@@ -176,7 +179,27 @@ namespace SS14.Server.Console
             return session != null ? $"[{session.Index}]{session.Name}" : "[HOST]";
         }
 
-#if _Future
+        public bool ElevateShell(IPlayerSession session, string password)
+        {
+            if(session == null)
+                throw new ArgumentNullException(nameof(session));
+
+            var realPass = _configMan.GetCVar<string>("console.password");
+
+            // password disabled
+            if (string.IsNullOrWhiteSpace(realPass))
+                return false;
+            
+            // wrong password
+            if (password != realPass)
+                return false;
+
+            // success!
+            _groupController.SetGroup(session, new ConGroupIndex(_configMan.GetCVar<int>("console.adminGroup")));
+
+            return true;
+        }
+        
         private class LoginCommand : IClientCommand
         {
             public string Command => "login";
@@ -188,13 +211,37 @@ namespace SS14.Server.Console
                 if(player == null)
                     return;
 
+                // If the password is null/empty/whitespace in the config, this effectively disables the command
                 if(args.Length < 1 || string.IsNullOrWhiteSpace(args[0]))
                     return;
 
-                //TODO: Make me work.
-                //AttemptLogin(player, args[0]);
+                // WE ARE AT THE BRIDGE OF DEATH
+                if (shell.ElevateShell(player, args[0]))
+                    return;
+
+                // CAST INTO THE GORGE OF ETERNAL PERIL
+                var log = IoCManager.Resolve<ILogManager>();
+                log.GetSawmill("con.auth").Warning(
+                    $"Failed console login authentication.\n  NAME:{player}\n  IP:  {player.ConnectedClient.RemoteAddress}");
+
+                var net = IoCManager.Resolve<IServerNetManager>();
+                net.DisconnectChannel(player.ConnectedClient, "Failed login authentication.");
             }
         }
-#endif
+
+        private class GroupCommand : IClientCommand
+        {
+            public string Command => "group";
+            public string Description => "Prints your current permission group.";
+            public string Help => "group";
+            public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+            {
+                // only the local server console bypasses permissions
+                if(player == null)
+                    shell.SendText(player, "LOCAL_CONSOLE");
+
+                //TODO: Turn console commands into delegates so that this can actually work.
+            }
+        }
     }
 }

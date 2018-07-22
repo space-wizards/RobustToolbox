@@ -48,5 +48,7 @@ namespace SS14.Server.Interfaces.Console
         /// <param name="player">Session of the remote player. If this is null, the command is executed as the local console.</param>
         /// <param name="command">Command string to execute.</param>
         void ExecuteCommand(IPlayerSession player, string command);
+
+        bool ElevateShell(IPlayerSession session, string password);
     }
 }

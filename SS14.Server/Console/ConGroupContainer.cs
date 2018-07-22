@@ -121,5 +121,10 @@ namespace SS14.Server.Console
             _logger.Error($"Unknown groupIndex: {groupIndex}");
             return false;
         }
+
+        public bool GroupExists(ConGroupIndex index)
+        {
+            return _groups.ContainsKey(index);
+        }
     }
 }

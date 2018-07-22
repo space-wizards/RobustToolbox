@@ -1,4 +1,5 @@
-﻿using SS14.Server.Interfaces.Player;
+﻿using System;
+using SS14.Server.Interfaces.Player;
 using SS14.Server.Player;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.Log;
@@ -53,6 +54,17 @@ namespace SS14.Server.Console
         {
             _groups.Clear();
             _groups.LoadGroups();
+        }
+
+        public void SetGroup(IPlayerSession session, ConGroupIndex newGroup)
+        {
+            if(session == null)
+                throw new ArgumentNullException(nameof(session));
+
+            if(!_groups.GroupExists(newGroup))
+                return;
+
+            _sessions.SetSessionGroup(session, newGroup);
         }
     }
 }

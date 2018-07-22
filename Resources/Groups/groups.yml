@@ -1,6 +1,7 @@
 - Index: 1
   Name: Player
   Commands:
+  - login
   - joingame
   - help
   - list
@@ -8,11 +9,14 @@
 - Index: 50
   Name: Moderator
   Commands:
+  - login
+  - joingame
   - help
   - list
   
 - Index: 100
   Name: Administrator
   Commands:
+  - joingame
   - help
   - list

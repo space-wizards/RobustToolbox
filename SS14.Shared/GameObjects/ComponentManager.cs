@@ -243,7 +243,7 @@ namespace SS14.Shared.GameObjects
                 throw new ArgumentNullException(nameof(component));
 
             if (component.Deleted)
-                throw new ArgumentException("Component has already been deleted.", nameof(component));
+                return;
 
             _deleteList.Add(component);
 

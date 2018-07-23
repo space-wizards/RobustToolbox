@@ -118,7 +118,9 @@ namespace SS14.Shared.GameObjects
             var components = EntityManager.ComponentManager.GetComponents(Uid).ToList();
             for (int i = 0; i < components.Count; i++)
             {
-                components[i].Initialize();
+                var comp = (Component)components[i];
+                if(comp != null && !comp.Initialized)
+                    comp.Initialize();
             }
         }
 
@@ -132,7 +134,9 @@ namespace SS14.Shared.GameObjects
             var components = EntityManager.ComponentManager.GetComponents(Uid).ToList();
             for (int i = 0; i < components.Count; i++)
             {
-                components[i].Startup();
+                var comp = (Component)components[i];
+                if(comp != null && comp.Initialized && !comp.Deleted)
+                    comp.Startup();
             }
         }
 

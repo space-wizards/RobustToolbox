@@ -34,6 +34,8 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public virtual Type StateType => typeof(ComponentState);
 
+        public bool Initialized { get; private set; }
+
         /// <inheritdoc />
         public bool Running { get; private set; }
 
@@ -52,22 +54,48 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         ///     Called when the component gets added to an entity.
         /// </summary>
-        public virtual void OnAdd() { }
+        public virtual void OnAdd()
+        {
+            if(Initialized)
+                throw new InvalidOperationException("Cannot Add an Intialized entity!");
+
+            if(Deleted)
+                throw new InvalidOperationException("Cannot Add a Deleted entity!");
+        }
 
         /// <inheritdoc />
         public virtual void Initialize()
         {
+            if(Initialized)
+                throw new InvalidOperationException("Entity already Initialized!");
+
+            if(Deleted)
+                throw new InvalidOperationException("Cannot Initialize a Deleted entity!");
+
+            Initialized = true;
         }
 
         /// <inheritdoc />
         public virtual void Startup()
         {
+            if(!Initialized)
+                throw new InvalidOperationException("Cannot Start an unitialized entity!");
+
+            if(Deleted)
+                throw new InvalidOperationException("Cannot Start a Deleted entity!");
+
             Running = true;
         }
 
         /// <inheritdoc />
         public virtual void Shutdown()
         {
+            if(!Initialized)
+                throw new InvalidOperationException("Cannot Shutdown an unintialized entity!");
+
+            if(Deleted)
+                throw new InvalidOperationException("Cannot Shutdown a Deleted entity!");
+
             Running = false;
         }
 

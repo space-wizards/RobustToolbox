@@ -232,9 +232,7 @@ namespace SS14.Server
             prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes"));
             prototypeManager.Resync();
 
-            var clientConsole = IoCManager.Resolve<IConsoleShell>();
-            clientConsole.Initialize();
-            _systemConsole.Initialize();
+            IoCManager.Resolve<IConsoleShell>().Initialize();
 
             OnRunLevelChanged(ServerRunLevel.PreGame);
 

@@ -15,6 +15,8 @@ namespace SS14.Server.Console.Commands
             var builder = new StringBuilder("SIDE NAME            DESC\n-------------------------\n");
             foreach (var command in shell.AvailableCommands.Values)
             {
+                //TODO: Make this actually check permissions.
+
                 builder.AppendLine($"S {command.Command,-16}{command.Description}");
             }
             var message = builder.ToString().Trim(' ', '\n');

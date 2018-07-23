@@ -30,11 +30,7 @@ namespace SS14.Server.Console
         {
             Con.CancelKeyPress += CancelKeyHandler;
         }
-
-        public void Initialize()
-        {
-        }
-
+        
         public void Update()
         {
             // Process keyboard input

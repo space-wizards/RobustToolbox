@@ -3,24 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
-using SS14.Shared.Utility;
 
 namespace SS14.Shared.GameObjects
 {
-    public class ComponentManager : IComponentManager, IPostInjectInit
+    public class ComponentManager : IComponentManager
     {
         private const int EntityCapacity = 1024; // starting capacity for entities
         private const int CompTypeCapacity = 32; // starting capacity for component types
-
-        /// <summary>
-        /// Dictionary of components -- this is the master list.
-        /// </summary>
-        [Obsolete]
-        private readonly Dictionary<Type, List<IComponent>> _listComponents
-            = new Dictionary<Type, List<IComponent>>();
-
-        [Obsolete]
-        private readonly List<IComponent> _allComponents = new List<IComponent>();
 
         private readonly Dictionary<Type, Dictionary<EntityUid, Component>> _dictComponents
             = new Dictionary<Type, Dictionary<EntityUid, Component>>(CompTypeCapacity);
@@ -31,54 +20,10 @@ namespace SS14.Shared.GameObjects
         private readonly List<Component> _deleteList = new List<Component>();
 
         [Dependency]
-        private readonly IComponentFactory ComponentFactory;
+        private readonly IComponentFactory _componentFactory;
 
         [Dependency]
-        private readonly IEntityManager EntityManager;
-
-        /// <inheritdoc />
-        public void PostInject()
-        {
-            foreach (var compType in ComponentFactory.AllRegisteredTypes)
-            {
-                _listComponents[compType] = new List<IComponent>();
-            }
-        }
-
-        private IEnumerable<IComponent> GetComponents(Type type)
-        {
-            if (_listComponents.TryGetValue(type, out var compList))
-                return compList.Where(c => !c.Deleted);
-
-            return Enumerable.Empty<IComponent>();
-        }
-
-        public IEnumerable<T> GetComponents<T>()
-            where T : IComponent
-        {
-            return GetComponents(typeof(T)).Cast<T>();
-        }
-
-        /// <summary>
-        /// Adds a component to the component list.
-        /// </summary>
-        /// <param name="component"></param>
-        public void AddComponentOld(IComponent component)
-        {
-            var reg = ComponentFactory.GetRegistration(component);
-
-            foreach (Type type in reg.References)
-            {
-                if (!_listComponents.ContainsKey(type))
-                {
-                    _listComponents[type] = new List<IComponent>();
-                }
-
-                _listComponents[type].Add(component);
-            }
-
-            _allComponents.Add(component);
-        }
+        private readonly IEntityManager _entityManager;
 
         /// <summary>
         /// Big update method -- loops through all components in order of family and calls Update() on them.
@@ -86,35 +31,22 @@ namespace SS14.Shared.GameObjects
         /// <param name="frameTime">Time since the last frame was rendered.</param>
         public void Update(float frameTime)
         {
-            // Cull components and update them too.
-            for (var i = 0; i < _allComponents.Count; i++)
+            CullRemovedComponents();
+
+            //TODO: Kill this.
+            // Call update on every component.
+            foreach (var typeDict in _dictComponents.Values)
             {
-                var component = _allComponents[i];
-                if (!component.Deleted)
+                foreach (var component in typeDict.Values)
                 {
                     component.Update(frameTime);
-                    continue;
                 }
-
-                var reg = ComponentFactory.GetRegistration(component);
-                _allComponents.RemoveSwap(i);
-
-                foreach (Type type in reg.References)
-                {
-                    // TODO: This is ridiculously slow due to O(n) removal times.
-                    var index = _listComponents[type].FindIndex(c => c == component);
-                    _listComponents[type].RemoveSwap(index);
-                }
-
-                // Check the one we just swapped with next iteration.
-                i--;
             }
         }
 
         public void Clear()
         {
-            _allComponents.Clear();
-            _listComponents.Clear();
+            //TODO: Make me work!
         }
 
         #region Component Management
@@ -125,7 +57,7 @@ namespace SS14.Shared.GameObjects
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            var newComponent = (Component) ComponentFactory.GetComponent<T>();
+            var newComponent = (Component) _componentFactory.GetComponent<T>();
 
             newComponent.Owner = entity;
             AddComponent(entity, newComponent);
@@ -145,7 +77,7 @@ namespace SS14.Shared.GameObjects
                 throw new InvalidOperationException("Component is not owned by entity.");
 
             // get interface aliases for mapping
-            var reg = ComponentFactory.GetRegistration(component);
+            var reg = _componentFactory.GetRegistration(component);
 
             // Check that there are no overlapping references.
             foreach (var type in reg.References)
@@ -267,7 +199,7 @@ namespace SS14.Shared.GameObjects
             DeleteComponent(component);
         }
 
-        public void CullDeletedComponents()
+        public void CullRemovedComponents()
         {
             foreach (var component in _deleteList)
             {
@@ -279,9 +211,9 @@ namespace SS14.Shared.GameObjects
 
         private void DeleteComponent(Component component)
         {
-            var reg = ComponentFactory.GetRegistration(component.GetType());
+            var reg = _componentFactory.GetRegistration(component.GetType());
 
-            EntityManager.RemoveSubscribedEvents(component);
+            _entityManager.RemoveSubscribedEvents(component);
 
             var entityUid = component.Owner.Uid;
 
@@ -406,6 +338,7 @@ namespace SS14.Shared.GameObjects
             }
         }
 
+        [Obsolete]
         public IEnumerable<T> GetAllComponents<T>()
             where T : IComponent
         {

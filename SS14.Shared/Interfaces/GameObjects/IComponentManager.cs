@@ -7,20 +7,6 @@ namespace SS14.Shared.Interfaces.GameObjects
     public interface IComponentManager
     {
         /// <summary>
-        /// Gets an <see cref="IEnumerable{IComponent}"/> over every known <see cref="IComponent"/> with a specified <see cref="ComponentFamily"/>.
-        /// </summary>
-        /// <param name="family">The <see cref="ComponentFamily"/> to look up.</param>
-        /// <returns>An <see cref="IEnumerable{IComponent}"/> over component with the specified family.</returns>
-        IEnumerable<T> GetComponents<T>()
-            where T : IComponent;
-
-        /// <summary>
-        /// Add a component to the master component list.
-        /// </summary>
-        /// <param name="component">The component to add.</param>
-        void AddComponentOld(IComponent component);
-
-        /// <summary>
         /// Clear the master component list
         /// </summary>
         void Clear();
@@ -68,7 +54,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         IEnumerable<T> GetAllComponents<T>()
             where T : IComponent;
 
-        void CullDeletedComponents();
+        void CullRemovedComponents();
 
         #endregion
     }

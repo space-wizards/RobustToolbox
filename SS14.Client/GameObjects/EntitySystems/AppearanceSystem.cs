@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SS14.Shared.GameObjects;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
@@ -17,12 +18,21 @@ namespace SS14.Client.GameObjects.EntitySystems
         public AppearanceSystem()
         {
             IoCManager.InjectDependencies(this);
+
+            EntityQuery = new ComponentEntityQuery
+            {
+                OneSet = new List<Type>
+                {
+                    typeof(AppearanceComponent),
+                },
+            };
         }
 
         public override void FrameUpdate(float frameTime)
         {
-            foreach (var component in componentManager.GetComponents<AppearanceComponent>())
+            foreach (var entity in  EntityManager.GetEntities(EntityQuery))
             {
+                var component = entity.GetComponent<AppearanceComponent>();
                 if (component.AppearanceDirty)
                 {
                     UpdateComponent(component);

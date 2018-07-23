@@ -16,77 +16,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
     {
         private const uint CompNetId = 3;
 
-        [Test]
-        public void ObsAddComponentOldTest()
-        {
-            // Arrange
-            var manager = ManagerFactory(out _);
-            var component = new DummyComponent();
-
-            // Act
-            manager.AddComponentOld(component);
-
-            // Assert
-            var result = manager.GetComponents<DummyComponent>().ToList();
-            Assert.That(result.Count, Is.EqualTo(1));
-            Assert.That(result[0], Is.EqualTo(component));
-        }
-
-        [Test]
-        public void ObsDeleteComponentTest()
-        {
-            // Arrange
-            var manager = ManagerFactory(out _);
-
-            var mockComponent = new Mock<IComponent>();
-            mockComponent.SetupGet(c => c.Deleted).Returns(true); // mark comp for deletion
-            var component = mockComponent.Object;
-            manager.AddComponentOld(component);
-
-            // Act
-            manager.Update(0); // update removes components marked for deletion
-
-            // Assert
-            var result = manager.GetComponents<IComponent>().ToList();
-            Assert.That(result.Count, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void ObsCullTest()
-        {
-            // Arrange
-            var manager = ManagerFactory(out _);
-
-            var mockComponent = new Mock<IComponent>();
-            var component = mockComponent.Object;
-            manager.AddComponentOld(component);
-
-            // Act
-            manager.Clear(); // deletes all components, regardless of Delete flag.
-
-            // Assert
-            var result = manager.GetComponents<IComponent>().ToList();
-            Assert.That(result.Count, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void ObsUpdateTest()
-        {
-            // Arrange
-            var manager = ManagerFactory(out _);
-
-            var mockComponent = new Mock<IComponent>();
-            var component = mockComponent.Object;
-            manager.AddComponentOld(component);
-
-            // Act
-            manager.Update(0.1f);
-
-            // Assert
-            mockComponent.Verify(x => x.Update(It.IsIn(0.1f)), Times.Once);
-        }
-
-        #region Component Management
+#region Component Management
 
         [Test]
         public void AddComponentTest()
@@ -225,7 +155,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
 
             // Act
             manager.RemoveComponent<DummyComponent>(entity.Uid);
-            manager.CullDeletedComponents();
+            manager.CullRemovedComponents();
 
             // Assert
             Assert.That(manager.HasComponent(entity.Uid, component.GetType()), Is.False);
@@ -243,7 +173,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
 
             // Act
             manager.RemoveComponent(entity.Uid, CompNetId);
-            manager.CullDeletedComponents();
+            manager.CullRemovedComponents();
 
             // Assert
             Assert.That(manager.HasComponent(entity.Uid, component.GetType()), Is.False);
@@ -287,7 +217,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
             Assert.That(list[0], Is.EqualTo(component));
         }
 
-        #endregion
+#endregion
 
         // mimics the IoC system.
         private static IComponentManager ManagerFactory(out IEntityManager entityManager)

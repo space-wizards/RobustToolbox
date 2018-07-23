@@ -63,7 +63,7 @@ namespace SS14.Client.Debugging
             protected override void Draw(DrawingHandle handle)
             {
                 var viewport = eyeManager.GetWorldViewport();
-                foreach (var boundingBox in componentManager.GetComponents<BoundingBoxComponent>())
+                foreach (var boundingBox in componentManager.GetAllComponents<BoundingBoxComponent>())
                 {
                     // all entities have a TransformComponent
                     var transform = boundingBox.Owner.GetComponent<ITransformComponent>();

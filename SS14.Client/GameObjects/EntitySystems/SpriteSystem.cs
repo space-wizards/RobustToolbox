@@ -1,4 +1,7 @@
-﻿using SS14.Client.Interfaces.GameObjects.Components;
+﻿using System;
+using System.Collections.Generic;
+using SS14.Client.Interfaces.GameObjects.Components;
+using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
@@ -13,15 +16,23 @@ namespace SS14.Client.GameObjects.EntitySystems
         public SpriteSystem()
         {
             IoCManager.InjectDependencies(this);
+
+            EntityQuery = new ComponentEntityQuery
+            {
+                OneSet = new List<Type>
+                {
+                    typeof(ISpriteComponent),
+                },
+            };
         }
 
         public override void FrameUpdate(float frameTime)
         {
-            foreach (var component in componentManager.GetComponents<ISpriteComponent>())
+            foreach (var entity in EntityManager.GetEntities(EntityQuery))
             {
                 // TODO: Don't call this on components without RSIs loaded.
                 // Serious performance benefit here.
-                component.FrameUpdate(frameTime);
+                entity.GetComponent<ISpriteComponent>().FrameUpdate(frameTime);
             }
         }
     }

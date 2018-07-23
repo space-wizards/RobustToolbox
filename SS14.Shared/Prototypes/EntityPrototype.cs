@@ -106,12 +106,6 @@ namespace SS14.Shared.GameObjects
 
         private readonly HashSet<Type> ReferenceTypes = new HashSet<Type>();
 
-        public static void LoadData(IEntity entity, YamlMappingNode node)
-        {
-            var ent = entity as Entity;
-            ent.ExposeData(new YamlObjectSerializer(node, reading: true));
-        }
-
         public void LoadFrom(YamlMappingNode mapping)
         {
             TypeString = mapping.GetNode("type").ToString();
@@ -347,8 +341,8 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <summary>
-        /// Creates an entity from this prototype.
-        /// Do not call this directly, use the server entity manager instead.
+        ///     Creates an entity from this prototype.
+        ///     Do not call this directly, use the server entity manager instead.
         /// </summary>
         /// <returns></returns>
         public Entity CreateEntity(EntityUid uid, IEntityManager manager, IEntityNetworkManager networkManager, IComponentFactory componentFactory)
@@ -359,11 +353,6 @@ namespace SS14.Shared.GameObjects
             entity.SetUid(uid);
             entity.Name = Name;
             entity.Prototype = this;
-
-            if (DataNode != null)
-            {
-                entity.ExposeData(new YamlObjectSerializer(DataNode, reading: true));
-            }
 
             foreach (var componentData in Components)
             {

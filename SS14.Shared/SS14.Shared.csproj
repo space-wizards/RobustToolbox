@@ -156,9 +156,7 @@
     <Compile Include="GameObjects\EntitySystemMessages\EffectMessage.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\ClickedOnEntityMessage.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\InputMessages.cs" />
-    <Compile Include="GameObjects\Serialization\EntitySerializer.cs" />
     <Compile Include="GameObjects\EntityUid.cs" />
-    <Compile Include="GameObjects\Serialization\YamlEntitySerializer.cs" />
     <Compile Include="GameObjects\IncomingEntityComponentMessage.cs" />
     <Compile Include="GameObjects\IncomingEntityMessage.cs" />
     <Compile Include="GameObjects\NetComponent.cs" />
@@ -416,5 +414,6 @@
     <Compile Include="Interfaces\Serialization\IExposeData.cs" />
     <Compile Include="Serialization\ObjectSerializer.cs" />
     <Compile Include="Serialization\YamlObjectSerializer.cs" />
+    <Compile Include="Interfaces\Serialization\IYamlObjectSerializerContext.cs" />
   </ItemGroup>
 </Project>

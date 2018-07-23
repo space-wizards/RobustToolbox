@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Maps;
@@ -13,6 +14,8 @@ using YamlDotNet.RepresentationModel;
 using SS14.Shared.Utility;
 using SS14.Shared.Serialization;
 using SS14.Shared.GameObjects;
+using System.Globalization;
+using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Server.Maps
 {
@@ -21,7 +24,7 @@ namespace SS14.Server.Maps
     /// </summary>
     public class MapLoader : IMapLoader
     {
-        private const int MapFormatVersion = 1;
+        private const int MapFormatVersion = 2;
 
         [Dependency]
         private IResourceManager _resMan;
@@ -40,8 +43,9 @@ namespace SS14.Server.Maps
         {
             var grid = _mapManager.GetGrid(gridId);
 
-            var root = SaveBpNode(grid);
-
+            var context = new MapContext();
+            context.RegisterGrid(grid);
+            var root = context.DoSerialize();
             var document = new YamlDocument(root);
 
             var resPath = new ResourcePath(yamlPath).ToRootedPath();
@@ -107,23 +111,13 @@ namespace SS14.Server.Maps
         /// <inheritdoc />
         public void SaveMap(IMap map, string yamlPath)
         {
-            var root = new YamlMappingNode();
-
-            root.Add("format", MapFormatVersion.ToString());
-            root.Add("name", "DemoStation");
-            root.Add("author", "Space-Wizards");
-
-            // save grids
-            var gridMap = new YamlMappingNode();
-            root.Add("grids", gridMap);
-
+            var context = new MapContext();
             foreach (var grid in map.GetAllGrids())
             {
-                var gridBpNode = SaveBpNode(grid);
-                gridMap.Add(grid.Index.ToString(), gridBpNode);
+                context.RegisterGrid(grid);
             }
 
-            var document = new YamlDocument(root);
+            var document = new YamlDocument(context.DoSerialize());
 
             var resPath = new ResourcePath(yamlPath).ToRootedPath();
             _resMan.UserData.CreateDir(resPath.Directory);
@@ -189,20 +183,6 @@ namespace SS14.Server.Maps
             }
         }
 
-        private YamlSequenceNode SaveBpNode(IMapGrid grid)
-        {
-            var root = new YamlSequenceNode();
-
-            var node = YamlGridSerializer.SerializeGrid(grid);
-            root.Add(node);
-
-            var map = new YamlMappingNode();
-            var ents = new YamlObjectSerializer(map, reading: false);
-            _entityMan.SaveGridEntities(ents, grid.Index);
-            root.Add(map);
-            return root;
-        }
-
         private void LoadMapNode(IMap map, YamlMappingNode rootNode)
         {
             var gridSeq = (YamlMappingNode)rootNode["grids"];
@@ -257,8 +237,6 @@ namespace SS14.Server.Maps
                 {
                     var entity = _entityMan.SpawnEntity(protoName);
 
-                    EntityPrototype.LoadData(entity, yamlEnt);
-
                     // overwrite local position in the BP to the new map/grid ID
                     var transform = entity.GetComponent<IServerTransformComponent>();
                     transform.LocalPosition = new GridLocalCoordinates(transform.LocalPosition.Position, gridId.Value);
@@ -267,6 +245,161 @@ namespace SS14.Server.Maps
                 {
                     Logger.ErrorS("map", $"Error creating entity \"{protoName}\": {e}");
                 }
+            }
+        }
+
+        /// <summary>
+        ///     Handles the primary bulk of state during the map serialization process.
+        /// </summary>
+        private class MapContext : IYamlObjectSerializerContext
+        {
+            readonly Dictionary<GridId, int> GridIDMap = new Dictionary<GridId, int>();
+            readonly List<IMapGrid> Grids = new List<IMapGrid>();
+
+            readonly Dictionary<EntityUid, int> EntityUidMap = new Dictionary<EntityUid, int>();
+            readonly List<IEntity> Entities = new List<IEntity>();
+
+            YamlMappingNode RootNode;
+
+            public void RegisterGrid(IMapGrid grid)
+            {
+                if (GridIDMap.ContainsKey(grid.Index))
+                {
+                    throw new InvalidOperationException();
+                }
+
+                Grids.Add(grid);
+                GridIDMap.Add(grid.Index, GridIDMap.Count);
+            }
+
+            public YamlNode DoSerialize()
+            {
+                RootNode = new YamlMappingNode();
+
+                WriteMetaSection();
+                WriteGridSection();
+
+                PopulateEntityList();
+                WriteEntitySection();
+
+                return RootNode;
+            }
+
+            void WriteMetaSection()
+            {
+                var meta = new YamlMappingNode();
+                RootNode.Add("meta", meta);
+                meta.Add("format", MapFormatVersion.ToString(CultureInfo.InvariantCulture));
+                // TODO: Make these values configurable.
+                meta.Add("name", "DemoStation");
+                meta.Add("author", "Space-Wizards");
+            }
+
+            void WriteGridSection()
+            {
+                var grids = new YamlSequenceNode();
+                RootNode.Add("grids", grids);
+
+                foreach (var grid in Grids)
+                {
+                    var entry = YamlGridSerializer.SerializeGrid(grid);
+                    grids.Add(entry);
+                }
+            }
+
+            private void PopulateEntityList()
+            {
+                var entMgr = IoCManager.Resolve<IEntityManager>();
+                foreach (var entity in entMgr.GetEntities())
+                {
+                    if (entity.TryGetComponent(out IServerTransformComponent transform) && GridIDMap.ContainsKey(transform.GridID))
+                    {
+                        // Welcome aboard!
+                        EntityUidMap.Add(entity.Uid, EntityUidMap.Count);
+                        Entities.Add(entity);
+                    }
+                }
+            }
+
+            private void WriteEntitySection()
+            {
+                var entities = new YamlSequenceNode();
+                RootNode.Add("entities", entities);
+
+                foreach (var entity in Entities)
+                {
+                    var mapping = new YamlMappingNode();
+                    var serializer = new YamlObjectSerializer(mapping, reading: false, context: this);
+                    entity.ExposeData(serializer);
+
+                    mapping.Add("type", entity.Prototype.ID);
+
+                    var components = new YamlSequenceNode();
+                    foreach (var component in entity.GetAllComponents())
+                    {
+                        var compMapping = new YamlMappingNode();
+                        var compSerializer = new YamlObjectSerializer(mapping, reading: false, context: this);
+
+                        component.ExposeData(compSerializer);
+
+                        // Don't need to write it if nothing was written!
+                        if (compMapping.Children.Count != 0)
+                        {
+                            // Something actually got written!
+                            compMapping.Add("type", component.Name);
+                            components.Add(compMapping);
+                        }
+                    }
+
+                    if (components.Children.Count != 0)
+                    {
+                        mapping.Add("components", components);
+                    }
+                }
+            }
+
+            public bool TryNodeToType(YamlNode node, Type type, out object obj)
+            {
+                obj = null;
+                return false;
+            }
+
+            public bool TryTypeToNode(object obj, out YamlNode node)
+            {
+                node = null;
+                return false;
+            }
+        }
+
+        /// <summary>
+        ///     Does basic pre-deserialization checks on map file load.
+        ///     For example, let's not try to use maps with multiple grids as blueprints, shall we?
+        /// </summary>
+        private class MapData
+        {
+            public YamlNode RootNode { get; }
+            public int GridCount { get; }
+
+            public MapData(TextReader reader)
+            {
+                var stream = new YamlStream();
+                stream.Load(reader);
+
+                if (stream.Documents.Count < 1)
+                {
+                    throw new InvalidDataException("Stream has no YAML documents.");
+                }
+
+                // Kinda wanted to just make this print a warning and pick [0] but screw that.
+                // What is this, a hug box?
+                if (stream.Documents.Count > 1)
+                {
+                    throw new InvalidDataException("Stream too many YAML documents. Map files store exactly one.");
+                }
+
+                RootNode = stream.Documents[0].RootNode;
+                GridCount = ((YamlSequenceNode)RootNode["grids"]).Children.Count;
+
             }
         }
     }

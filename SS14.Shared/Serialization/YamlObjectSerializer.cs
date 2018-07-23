@@ -21,6 +21,7 @@ namespace SS14.Shared.Serialization
         private YamlMappingNode Map;
         private List<YamlMappingNode> Backups;
         private List<YamlMappingNode> ReadMaps;
+        private readonly IYamlObjectSerializerContext Context;
 
         static YamlObjectSerializer()
         {
@@ -37,11 +38,12 @@ namespace SS14.Shared.Serialization
             };
         }
 
-        public YamlObjectSerializer(YamlMappingNode map, bool reading, List<YamlMappingNode> backups = null)
+        public YamlObjectSerializer(YamlMappingNode map, bool reading, IYamlObjectSerializerContext context = null, List<YamlMappingNode> backups = null)
         {
             Map = map;
             Reading = reading;
             Backups = backups;
+            Context = context;
             if (Reading)
             {
                 ReadMaps = new List<YamlMappingNode>
@@ -193,7 +195,7 @@ namespace SS14.Shared.Serialization
             Map.Add(key, val);
         }
 
-        public static object NodeToType(Type type, YamlNode node)
+        public object NodeToType(Type type, YamlNode node)
         {
             // special snowflake string
             if (type == typeof(String))
@@ -241,7 +243,13 @@ namespace SS14.Shared.Serialization
 
             // custom TypeSerializer
             if (_typeSerializers.TryGetValue(type, out var serializer))
-                return serializer.NodeToType(type, node);
+                return serializer.NodeToType(type, node, this);
+
+            // Hand it to the context.
+            if (Context != null && Context.TryNodeToType(node, type, out var contextObj))
+            {
+                return contextObj;
+            }
 
             // IExposeData.
             if (typeof(IExposeData).IsAssignableFrom(type))
@@ -256,13 +264,13 @@ namespace SS14.Shared.Serialization
 
             // other val (struct)
             if (type.IsValueType)
-                return _structSerializer.NodeToType(type, (YamlMappingNode)node);
+                return _structSerializer.NodeToType(type, (YamlMappingNode)node, this);
 
             // ref type that isn't a custom TypeSerializer
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(type));
         }
 
-        public static YamlNode TypeToNode(object obj)
+        public YamlNode TypeToNode(object obj)
         {
             // special snowflake string
             if (obj is string s)
@@ -304,6 +312,16 @@ namespace SS14.Shared.Serialization
                 return node;
             }
 
+            // custom TypeSerializer
+            if (_typeSerializers.TryGetValue(type, out var serializer))
+                return serializer.TypeToNode(obj, this);
+
+            // Hand it to the context.
+            if (Context != null && Context.TryTypeToNode(obj, out var contextNode))
+            {
+                return contextNode;
+            }
+
             // IExposeData.
             if (obj is IExposeData exposable)
             {
@@ -313,13 +331,9 @@ namespace SS14.Shared.Serialization
                 return mapping;
             }
 
-            // custom TypeSerializer
-            if (_typeSerializers.TryGetValue(type, out var serializer))
-                return serializer.TypeToNode(obj);
-
             // other val (struct)
             if (type.IsValueType)
-                return _structSerializer.TypeToNode(obj);
+                return _structSerializer.TypeToNode(obj, this);
 
             // ref type that isn't a custom TypeSerializer
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(obj));
@@ -370,13 +384,13 @@ namespace SS14.Shared.Serialization
 
         public abstract class TypeSerializer
         {
-            public abstract object NodeToType(Type type, YamlNode node);
-            public abstract YamlNode TypeToNode(object obj);
+            public abstract object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer);
+            public abstract YamlNode TypeToNode(object obj, YamlObjectSerializer serializer);
         }
 
         class StructSerializer : TypeSerializer
         {
-            public override object NodeToType(Type type, YamlNode node)
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
                 var mapNode = node as YamlMappingNode;
 
@@ -396,7 +410,7 @@ namespace SS14.Shared.Serialization
 
                     if (mapNode.Children.TryGetValue(scalarNode, out var fNode))
                     {
-                        var fVal = YamlObjectSerializer.NodeToType(fType, fNode);
+                        var fVal = serializer.NodeToType(fType, fNode);
                         field.SetValue(instance, fVal);
                     }
                 }
@@ -404,7 +418,7 @@ namespace SS14.Shared.Serialization
                 return instance;
             }
 
-            public override YamlNode TypeToNode(object obj)
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 var node = new YamlMappingNode();
                 var type = obj.GetType();
@@ -418,7 +432,7 @@ namespace SS14.Shared.Serialization
                     var fVal = field.GetValue(obj);
 
                     // Potential recursive infinite loop?
-                    var fTypeNode = YamlObjectSerializer.TypeToNode(fVal);
+                    var fTypeNode = serializer.TypeToNode(fVal);
                     node.Add(field.Name, fTypeNode);
                 }
 
@@ -428,12 +442,12 @@ namespace SS14.Shared.Serialization
 
         class ColorSerializer : TypeSerializer
         {
-            public override object NodeToType(Type type, YamlNode node)
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
                 return node.AsColor();
             }
 
-            public override YamlNode TypeToNode(object obj)
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 var color = (Color)obj;
 
@@ -449,13 +463,13 @@ namespace SS14.Shared.Serialization
 
         class MapIdSerializer : TypeSerializer
         {
-            public override object NodeToType(Type type, YamlNode node)
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
                 var val = int.Parse(node.ToString());
                 return new MapId(val);
             }
 
-            public override YamlNode TypeToNode(object obj)
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 var val = (int)(MapId)obj;
                 return new YamlScalarNode(val.ToString());
@@ -464,12 +478,12 @@ namespace SS14.Shared.Serialization
 
         class GridIdSerializer : TypeSerializer
         {
-            public override object NodeToType(Type type, YamlNode node)
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
                 return new GridId(node.AsInt());
             }
 
-            public override YamlNode TypeToNode(object obj)
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 var val = (int)(GridId)obj;
                 return new YamlScalarNode(val.ToString());
@@ -478,12 +492,12 @@ namespace SS14.Shared.Serialization
 
         class Vector2Serializer : TypeSerializer
         {
-            public override object NodeToType(Type type, YamlNode node)
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
                 return node.AsVector2();
             }
 
-            public override YamlNode TypeToNode(object obj)
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 var vec = (Vector2)obj;
                 return new YamlScalarNode($"{vec.X},{vec.Y}");
@@ -492,13 +506,13 @@ namespace SS14.Shared.Serialization
 
         class AngleSerializer : TypeSerializer
         {
-            public override object NodeToType(Type type, YamlNode node)
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
                 var val = float.Parse(node.ToString());
                 return new Angle(val);
             }
 
-            public override YamlNode TypeToNode(object obj)
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 var val = (float)((Angle)obj).Theta;
                 return new YamlScalarNode(val.ToString(CultureInfo.InvariantCulture));
@@ -507,7 +521,7 @@ namespace SS14.Shared.Serialization
 
         class Box2Serializer : TypeSerializer
         {
-            public override object NodeToType(Type type, YamlNode node)
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
                 var args = node.ToString().Split(',');
 
@@ -519,7 +533,7 @@ namespace SS14.Shared.Serialization
                 return new Box2(l, t, r, b);
             }
 
-            public override YamlNode TypeToNode(object obj)
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 var box = (Box2)obj;
                 return new YamlScalarNode($"{box.Top},{box.Left},{box.Bottom},{box.Right}");
@@ -528,12 +542,12 @@ namespace SS14.Shared.Serialization
 
         class ResourcePathSerializer : TypeSerializer
         {
-            public override object NodeToType(Type type, YamlNode node)
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
                 return node.AsResourcePath();
             }
 
-            public override YamlNode TypeToNode(object obj)
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 return new YamlScalarNode(obj.ToString());
             }

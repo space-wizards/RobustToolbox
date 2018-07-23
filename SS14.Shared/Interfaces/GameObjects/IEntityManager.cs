@@ -43,6 +43,8 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <returns>An enumerable over all matching entities.</returns>
         IEnumerable<IEntity> GetEntities(IEntityQuery query);
 
+        IEnumerable<IEntity> GetEntities();
+
         IEnumerable<IEntity> GetEntitiesAt(Vector2 position);
 
         /// <summary>

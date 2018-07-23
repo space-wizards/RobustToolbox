@@ -20,8 +20,6 @@ namespace SS14.Shared.GameObjects
         private readonly Dictionary<uint, IComponent> _netIDs = new Dictionary<uint, IComponent>();
         private readonly List<IComponent> _components = new List<IComponent>();
         private string _name;
-        private string _type = "entity";
-        private string _id;
 
         /// <inheritdoc />
         public IEntityNetworkManager EntityNetworkManager { get; private set; }
@@ -33,7 +31,7 @@ namespace SS14.Shared.GameObjects
         public EntityUid Uid { get; private set; }
 
         /// <inheritdoc />
-        public EntityPrototype Prototype { get; set; }
+        public EntityPrototype Prototype { get; internal set; }
 
         /// <inheritdoc />
         public string Description
@@ -152,21 +150,8 @@ namespace SS14.Shared.GameObjects
         /// <param name="serializer">The serialization object that contains the <c>data</c> field.</param>
         public void ExposeData(ObjectSerializer serializer)
         {
-            _id = Prototype.ID;
-            _type = Prototype.TypeString;
-
-            serializer.DataField(ref _type, "type", "entity", true);
-            serializer.DataField(ref _id, "id", String.Empty, true);
-            serializer.DataField(ref _name, "name", String.Empty, true);
-
-            foreach (var component in _components)
-            {
-                string type = component.Name;
-
-                serializer.DataField(ref type, "type", component.Name, true);
-
-                component.ExposeData(serializer);
-            }
+            serializer.DataField(ref _name, "name", Prototype.Name);
+            serializer.DataField(ref _description, "description", null);
         }
 
         /// <summary>

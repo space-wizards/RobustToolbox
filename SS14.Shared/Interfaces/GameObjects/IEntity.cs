@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Net.Configuration;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Serialization;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
-    public interface IEntity
+    public interface IEntity : IExposeData
     {
         uint LastModifiedTick { get; }
 

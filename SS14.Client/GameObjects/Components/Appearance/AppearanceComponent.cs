@@ -101,7 +101,7 @@ namespace SS14.Client.GameObjects
 
         class VisualizerTypeSerializer : YamlObjectSerializer.TypeSerializer
         {
-            public override object NodeToType(Type type, YamlNode node)
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
                 var refl = IoCManager.Resolve<IReflectionManager>();
                 var mapping = (YamlMappingNode)node;
@@ -134,7 +134,7 @@ namespace SS14.Client.GameObjects
                 }
             }
 
-            public override YamlNode TypeToNode(object obj)
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 switch (obj)
                 {

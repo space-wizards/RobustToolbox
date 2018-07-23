@@ -23,7 +23,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <summary>
         /// Clear the master component list
         /// </summary>
-        void Cull();
+        void Clear();
 
         /// <summary>
         /// Big update method -- loops through all components in order of family and calls Update() on them.
@@ -63,6 +63,10 @@ namespace SS14.Shared.Interfaces.GameObjects
         IEnumerable<IComponent> GetComponents(EntityUid uid);
         IEnumerable<T> GetComponents<T>(EntityUid uid);
         IEnumerable<IComponent> GetNetComponents(EntityUid uid);
+
+        [Obsolete("Are you pretending to be an EntitySystem?")]
+        IEnumerable<T> GetAllComponents<T>()
+            where T : IComponent;
 
         void CullDeletedComponents();
 

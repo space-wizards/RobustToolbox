@@ -83,7 +83,7 @@ namespace SS14.Shared.GameObjects
             FlushEntities();
             EntitySystemManager.Shutdown();
             Started = false;
-            _componentManager.Cull();
+            _componentManager.Clear();
         }
 
         public virtual void Update(float frameTime)

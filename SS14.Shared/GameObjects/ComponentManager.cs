@@ -15,9 +15,11 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         /// Dictionary of components -- this is the master list.
         /// </summary>
+        [Obsolete]
         private readonly Dictionary<Type, List<IComponent>> _listComponents
             = new Dictionary<Type, List<IComponent>>();
 
+        [Obsolete]
         private readonly List<IComponent> _allComponents = new List<IComponent>();
 
         private readonly Dictionary<Type, Dictionary<EntityUid, Component>> _dictComponents
@@ -109,7 +111,7 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        public void Cull()
+        public void Clear()
         {
             _allComponents.Clear();
             _listComponents.Clear();
@@ -153,18 +155,14 @@ namespace SS14.Shared.GameObjects
 
                 if (!overwrite)
                     throw new InvalidOperationException($"Component reference type {type} already occupied by {duplicate}");
-
-                if (component.Running)
-                    component.Shutdown();
-
-                component.OnRemove();
-
-                DeleteComponent(component);
+                
+                RemoveComponentImmediate((Component) duplicate);
             }
 
             // add the component to the grid
             foreach (var type in reg.References)
             {
+                // new types can be added at any time
                 if (!_dictComponents.TryGetValue(type, out var typeDict))
                 {
                     typeDict = new Dictionary<EntityUid, Component>(EntityCapacity);
@@ -206,13 +204,13 @@ namespace SS14.Shared.GameObjects
         public void RemoveComponent(EntityUid uid, Type type)
         {
             var component = GetComponent(uid, type);
-            RemoveComponent(component as Component);
+            RemoveComponentDeferred(component as Component);
         }
 
         public void RemoveComponent(EntityUid uid, uint netID)
         {
             var comp = GetComponent(uid, netID);
-            RemoveComponent(comp as Component);
+            RemoveComponentDeferred(comp as Component);
         }
 
         public void RemoveComponent(EntityUid uid, IComponent component)
@@ -223,7 +221,7 @@ namespace SS14.Shared.GameObjects
             if (component.Owner == null || component.Owner.Uid != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
-            RemoveComponent(component as Component);
+            RemoveComponentDeferred(component as Component);
         }
 
         public void RemoveComponents(EntityUid uid)
@@ -232,12 +230,12 @@ namespace SS14.Shared.GameObjects
             {
                 if (kvTypeDict.TryGetValue(uid, out var comp))
                 {
-                    RemoveComponent(comp);
+                    RemoveComponentDeferred(comp);
                 }
             }
         }
 
-        private void RemoveComponent(Component component)
+        private void RemoveComponentDeferred(Component component)
         {
             if (component == null)
                 throw new ArgumentNullException(nameof(component));
@@ -259,7 +257,7 @@ namespace SS14.Shared.GameObjects
                 throw new ArgumentNullException(nameof(component));
 
             if (component.Deleted)
-                throw new ArgumentException("Component has already been deleted.", nameof(component));
+                return;
 
             if (component.Running)
                 component.Shutdown();
@@ -406,6 +404,15 @@ namespace SS14.Shared.GameObjects
                 if (!kvNetComp.Value.Deleted)
                     yield return kvNetComp.Value;
             }
+        }
+
+        public IEnumerable<T> GetAllComponents<T>()
+            where T : IComponent
+        {
+            if (_dictComponents.TryGetValue(typeof(T), out var typeDict))
+                return typeDict.Values.Cast<T>();
+
+            return Enumerable.Empty<T>();
         }
 
         #endregion

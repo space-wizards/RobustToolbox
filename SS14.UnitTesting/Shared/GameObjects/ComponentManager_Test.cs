@@ -62,7 +62,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
             manager.AddComponentOld(component);
 
             // Act
-            manager.Cull(); // deletes all components, regardless of Delete flag.
+            manager.Clear(); // deletes all components, regardless of Delete flag.
 
             // Assert
             var result = manager.GetComponents<IComponent>().ToList();
@@ -261,6 +261,25 @@ namespace SS14.UnitTesting.Shared.GameObjects
 
             // Act
             var result = manager.GetComponents<DummyComponent>(entity.Uid);
+
+            // Assert
+            var list = result.ToList();
+            Assert.That(list.Count, Is.EqualTo(1));
+            Assert.That(list[0], Is.EqualTo(component));
+        }
+
+        [Test]
+        public void GetAllComponentsTest()
+        {
+            // Arrange
+            var manager = ManagerFactory(out var entityManager);
+            var entity = EntityFactory(entityManager);
+            var component = new DummyComponent();
+            component.Owner = entity;
+            manager.AddComponent(entity, component);
+
+            // Act
+            var result = manager.GetAllComponents<DummyComponent>();
 
             // Assert
             var list = result.ToList();

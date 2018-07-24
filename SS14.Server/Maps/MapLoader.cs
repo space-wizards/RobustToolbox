@@ -182,7 +182,7 @@ namespace SS14.Server.Maps
         /// <summary>
         ///     Handles the primary bulk of state during the map serialization process.
         /// </summary>
-        private class MapContext : IYamlObjectSerializerContext, IEntityFinishContext
+        private class MapContext : YamlObjectSerializerContext, IEntityFinishContext
         {
             public readonly Dictionary<GridId, int> GridIDMap = new Dictionary<GridId, int>();
             public readonly List<IMapGrid> Grids = new List<IMapGrid>();
@@ -387,7 +387,7 @@ namespace SS14.Server.Maps
                 }
             }
 
-            public bool TryNodeToType(YamlNode node, Type type, out object obj)
+            public override bool TryNodeToType(YamlNode node, Type type, out object obj)
             {
                 if (type == typeof(GridId))
                 {
@@ -432,7 +432,7 @@ namespace SS14.Server.Maps
                 return false;
             }
 
-            public bool TryTypeToNode(object obj, out YamlNode node)
+            public override bool TryTypeToNode(object obj, out YamlNode node)
             {
                 switch (obj)
                 {
@@ -490,7 +490,7 @@ namespace SS14.Server.Maps
                 return new YamlObjectSerializer(protoData, reading: true, context: this);
             }
 
-            bool IYamlObjectSerializerContext.IsValueDefault<T>(string field, T value)
+            public override bool IsValueDefault<T>(string field, T value)
             {
                 var compData = CurrentWritingEntity.Prototype.Components[CurrentWritingComponent];
                 var testSer = new YamlObjectSerializer(compData, reading: true);

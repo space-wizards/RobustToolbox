@@ -885,20 +885,14 @@ namespace SS14.Client.GameObjects
                 System.Console.WriteLine("eys!");
             }
 
+            prototypes = IoCManager.Resolve<IPrototypeManager>();
+            resourceCache = IoCManager.Resolve<IResourceCache>();
+
             // TODO: Writing?
             if (!serializer.Reading)
             {
                 return;
             }
-
-            if (serializer.TryGetCacheData<List<Layer>>(LayerSerializationCache, out var layers))
-            {
-                Layers = layers.ShallowClone();
-                return;
-            }
-
-            prototypes = IoCManager.Resolve<IPrototypeManager>();
-            resourceCache = IoCManager.Resolve<IResourceCache>();
 
             {
                 var rsi = serializer.ReadDataField<string>("sprite", null);
@@ -914,6 +908,12 @@ namespace SS14.Client.GameObjects
                         Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
                     }
                 }
+            }
+
+            if (serializer.TryGetCacheData<List<Layer>>(LayerSerializationCache, out var layers))
+            {
+                Layers = layers.ShallowClone();
+                return;
             }
 
             layers = new List<Layer>();

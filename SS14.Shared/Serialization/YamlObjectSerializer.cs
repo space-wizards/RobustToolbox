@@ -21,7 +21,7 @@ namespace SS14.Shared.Serialization
         private YamlMappingNode Map;
         private List<YamlMappingNode> Backups;
         private List<YamlMappingNode> ReadMaps;
-        private readonly IYamlObjectSerializerContext Context;
+        private readonly YamlObjectSerializerContext Context;
 
         static YamlObjectSerializer()
         {
@@ -33,10 +33,12 @@ namespace SS14.Shared.Serialization
                 { typeof(Angle), new AngleSerializer() },
                 { typeof(Box2), new Box2Serializer() },
                 { typeof(ResourcePath), new ResourcePathSerializer() },
+                { typeof(GridId), new GridIdSerializer() },
+                { typeof(MapId), new MapIdSerializer() },
             };
         }
 
-        public YamlObjectSerializer(YamlMappingNode map, bool reading, IYamlObjectSerializerContext context = null, List<YamlMappingNode> backups = null)
+        public YamlObjectSerializer(YamlMappingNode map, bool reading, YamlObjectSerializerContext context = null, List<YamlMappingNode> backups = null)
         {
             Map = map;
             Reading = reading;
@@ -55,6 +57,8 @@ namespace SS14.Shared.Serialization
             }
         }
 
+        // TODO: Theoretical optimization.
+        // Might be a good idea to make DataField<T> use caching for value types without references too.
         /// <inheritdoc />
         public override void DataField<T>(ref T value, string name, T defaultValue, bool alwaysWrite = false)
         {
@@ -83,6 +87,35 @@ namespace SS14.Shared.Serialization
             }
         }
 
+        /// <inheritdoc />
+        public override void DataFieldCached<T>(ref T value, string name, T defaultValue, bool alwaysWrite = false)
+        {
+            if (Reading) // read
+            {
+                if (Context != null & Context.TryGetCachedField(name, out T theValue))
+                {
+                    // Itermediate field so value doesn't get reset to default(T) if this fails.
+                    value = theValue;
+                    return;
+                }
+                foreach (var map in ReadMaps)
+                {
+                    if (map.TryGetNode(name, out var node))
+                    {
+                        value = (T)NodeToType(typeof(T), node);
+                        Context?.SetCachedField(name, value);
+                        return;
+                    }
+                }
+                value = defaultValue;
+                Context?.SetCachedField(name, value);
+                return;
+            }
+            else // write
+            {
+                DataField(ref value, name, defaultValue, alwaysWrite);
+            }
+        }
 
         /// <inheritdoc />
         public override void DataField<TTarget, TSource>(
@@ -127,6 +160,41 @@ namespace SS14.Shared.Serialization
         }
 
         /// <inheritdoc />
+        public override void DataFieldCached<TTarget, TSource>(
+            ref TTarget value,
+            string name,
+            TTarget defaultValue,
+            Func<TSource, TTarget> ReadConvertFunc,
+            Func<TTarget, TSource> WriteConvertFunc = null,
+            bool alwaysWrite = false)
+        {
+            if (Reading)
+            {
+                if (Context != null && Context.TryGetCachedField(name, out TTarget theValue))
+                {
+                    // Itermediate field so value doesn't get reset to default(T) if this fails.
+                    value = theValue;
+                    return;
+                }
+                foreach (var map in ReadMaps)
+                {
+                    if (map.TryGetNode(name, out var node))
+                    {
+                        value = ReadConvertFunc((TSource)NodeToType(typeof(TSource), node));
+                        Context?.SetCachedField(name, value);
+                        return;
+                    }
+                }
+                value = defaultValue;
+                Context?.SetCachedField(name, value);
+            }
+            else
+            {
+                DataField(ref value, name, defaultValue, ReadConvertFunc, WriteConvertFunc, alwaysWrite);
+            }
+        }
+
+        /// <inheritdoc />
         public override T ReadDataField<T>(string name, T defaultValue)
         {
             if (!Reading)
@@ -146,6 +214,32 @@ namespace SS14.Shared.Serialization
         }
 
         /// <inheritdoc />
+        public override T ReadDataFieldCached<T>(string name, T defaultValue)
+        {
+            if (!Reading)
+            {
+                throw new InvalidOperationException("Cannot use ReadDataField while not reading.");
+            }
+
+            if (Context != null && Context.TryGetCachedField(name, out T val))
+            {
+                return val;
+            }
+
+            foreach (var map in ReadMaps)
+            {
+                if (map.TryGetNode(name, out var node))
+                {
+                    val = (T)NodeToType(typeof(T), node);
+                    Context?.SetCachedField(name, val);
+                    return val;
+                }
+            }
+            Context?.SetCachedField(name, defaultValue);
+            return defaultValue;
+        }
+
+        /// <inheritdoc />
         public override bool TryReadDataField<T>(string name, out T value)
         {
             if (!Reading)
@@ -158,6 +252,32 @@ namespace SS14.Shared.Serialization
                 if (map.TryGetNode(name, out var node))
                 {
                     value = (T)NodeToType(typeof(T), node);
+                    return true;
+                }
+            }
+            value = default(T);
+            return false;
+        }
+
+        /// <inheritdoc />
+        public override bool TryReadDataFieldCached<T>(string name, out T value)
+        {
+            if (!Reading)
+            {
+                throw new InvalidOperationException("Cannot use ReadDataField while not reading.");
+            }
+
+            if (Context != null & Context.TryGetCachedField(name, out value))
+            {
+                return true;
+            }
+
+            foreach (var map in ReadMaps)
+            {
+                if (map.TryGetNode(name, out var node))
+                {
+                    value = (T)NodeToType(typeof(T), node);
+                    Context?.SetCachedField(name, value);
                     return true;
                 }
             }
@@ -194,6 +314,32 @@ namespace SS14.Shared.Serialization
             var key = name;
             var val = value == null ? TypeToNode(defaultValue) : TypeToNode(value);
             Map.Add(key, val);
+        }
+
+        public override void SetCacheData(string key, object value)
+        {
+            Context?.SetDataCache(key, value);
+        }
+
+        public override T GetCacheData<T>(string key)
+        {
+            if (Context != null && Context.TryGetDataCache(key, out var value))
+            {
+                return (T)value;
+            }
+            throw new KeyNotFoundException();
+        }
+
+        public override bool TryGetCacheData<T>(string key, out T data)
+        {
+            if (Context != null && Context.TryGetDataCache(key, out var value))
+            {
+                data = (T)value;
+                return true;
+            }
+
+            data = default(T);
+            return false;
         }
 
         public object NodeToType(Type type, YamlNode node)
@@ -242,15 +388,15 @@ namespace SS14.Shared.Serialization
                 return newDict;
             }
 
-            // custom TypeSerializer
-            if (_typeSerializers.TryGetValue(type, out var serializer))
-                return serializer.NodeToType(type, node, this);
-
             // Hand it to the context.
             if (Context != null && Context.TryNodeToType(node, type, out var contextObj))
             {
                 return contextObj;
             }
+
+            // custom TypeSerializer
+            if (_typeSerializers.TryGetValue(type, out var serializer))
+                return serializer.NodeToType(type, node, this);
 
             // IExposeData.
             if (typeof(IExposeData).IsAssignableFrom(type))
@@ -258,7 +404,15 @@ namespace SS14.Shared.Serialization
                 var instance = (IExposeData)Activator.CreateInstance(type);
                 // TODO: Might be worth it to cut down on allocations here by using ourselves instead of creating a fork.
                 // Seems doable.
-                var fork = new YamlObjectSerializer((YamlMappingNode)node, reading: true);
+                if (Context != null)
+                {
+                    Context.StackDepth++;
+                }
+                var fork = new YamlObjectSerializer((YamlMappingNode)node, reading: true, context: Context);
+                if (Context != null)
+                {
+                    Context.StackDepth--;
+                }
                 instance.ExposeData(fork);
                 return instance;
             }
@@ -313,21 +467,29 @@ namespace SS14.Shared.Serialization
                 return node;
             }
 
-            // custom TypeSerializer
-            if (_typeSerializers.TryGetValue(type, out var serializer))
-                return serializer.TypeToNode(obj, this);
-
             // Hand it to the context.
             if (Context != null && Context.TryTypeToNode(obj, out var contextNode))
             {
                 return contextNode;
             }
 
+            // custom TypeSerializer
+            if (_typeSerializers.TryGetValue(type, out var serializer))
+                return serializer.TypeToNode(obj, this);
+
             // IExposeData.
             if (obj is IExposeData exposable)
             {
                 var mapping = new YamlMappingNode();
-                var fork = new YamlObjectSerializer(mapping, reading: false);
+                if (Context != null)
+                {
+                    Context.StackDepth++;
+                }
+                var fork = new YamlObjectSerializer(mapping, reading: false, context: Context);
+                if (Context != null)
+                {
+                    Context.StackDepth--;
+                }
                 exposable.ExposeData(fork);
                 return mapping;
             }

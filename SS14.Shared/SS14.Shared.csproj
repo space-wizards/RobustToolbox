@@ -414,7 +414,7 @@
     <Compile Include="Interfaces\Serialization\IExposeData.cs" />
     <Compile Include="Serialization\ObjectSerializer.cs" />
     <Compile Include="Serialization\YamlObjectSerializer.cs" />
-    <Compile Include="Interfaces\Serialization\IYamlObjectSerializerContext.cs" />
     <Compile Include="Interfaces\GameObjects\IEntityFinishContext.cs" />
+    <Compile Include="Serialization\YamlObjectSerializerContext.cs" />
   </ItemGroup>
 </Project>

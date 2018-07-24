@@ -325,10 +325,13 @@ namespace SS14.Server.GameObjects
                 var baseState = serializer.ReadDataField<string>("state", null);
                 var texturePath = serializer.ReadDataField<string>("texture", null);
 
-                var layerZeroData = PrototypeLayerData.New();
-                layerZeroData.State = baseState;
-                layerZeroData.TexturePath = texturePath;
-                layerData.Insert(0, layerZeroData);
+                if (baseState != null || texturePath != null)
+                {
+                    var layerZeroData = PrototypeLayerData.New();
+                    layerZeroData.State = baseState;
+                    layerZeroData.TexturePath = texturePath;
+                    layerData.Insert(0, layerZeroData);
+                }
             }
 
             serializer.SetCacheData(LayerSerializationCache, layerData.ShallowClone());

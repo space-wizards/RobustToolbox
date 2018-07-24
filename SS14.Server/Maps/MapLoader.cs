@@ -52,14 +52,14 @@ namespace SS14.Server.Maps
             var resPath = new ResourcePath(yamlPath).ToRootedPath();
             _resMan.UserData.CreateDir(resPath.Directory);
 
-            using (var file = _resMan.UserData.Open(resPath, FileMode.OpenOrCreate))
+            using (var file = _resMan.UserData.Open(resPath, FileMode.Create))
             {
                 using (var writer = new StreamWriter(file))
                 {
                     var stream = new YamlStream();
 
                     stream.Add(document);
-                    stream.Save(writer);
+                    stream.Save(writer, false);
                 }
             }
         }
@@ -123,14 +123,14 @@ namespace SS14.Server.Maps
             var resPath = new ResourcePath(yamlPath).ToRootedPath();
             _resMan.UserData.CreateDir(resPath.Directory);
 
-            using (var file = _resMan.UserData.Open(resPath, FileMode.OpenOrCreate))
+            using (var file = _resMan.UserData.Open(resPath, FileMode.Create))
             {
                 using (var writer = new StreamWriter(file))
                 {
                     var stream = new YamlStream();
 
                     stream.Add(document);
-                    stream.Save(writer);
+                    stream.Save(writer, false);
                 }
             }
         }
@@ -138,11 +138,6 @@ namespace SS14.Server.Maps
         /// <inheritdoc />
         public void LoadMap(MapId mapId, string path)
         {
-            // FIXME: The handling of grid IDs in here is absolutely 100% turbofucked ATM.
-            // This function absolutely will not work.
-            // It's CURRENTLY still working using the old map ID -> grid ID which absolutely DOES NOT WORK ANYMORE.
-            // BP loading works because grid IDs are manually hard set.
-
             TextReader reader;
             var resPath = new ResourcePath(path).ToRootedPath();
 
@@ -201,6 +196,9 @@ namespace SS14.Server.Maps
             YamlMappingNode CurrentReadingEntity;
             Dictionary<string, YamlMappingNode> CurrentReadingEntityComponents;
 
+            string CurrentWritingComponent;
+            IEntity CurrentWritingEntity;
+
             public MapContext()
             {
                 RootNode = new YamlMappingNode();
@@ -258,7 +256,7 @@ namespace SS14.Server.Maps
 
                 foreach (var entityDef in entities.Cast<YamlMappingNode>())
                 {
-                    var type = entityDef.GetNode("id").AsString();
+                    var type = entityDef.GetNode("type").AsString();
                     var entity = entityMan.AllocEntity(type);
                     Entities.Add(entity);
                     if (entityDef.TryGetNode("name", out var nameNode))
@@ -338,7 +336,7 @@ namespace SS14.Server.Maps
                 var entMgr = IoCManager.Resolve<IEntityManager>();
                 foreach (var entity in entMgr.GetEntities())
                 {
-                    if (entity.TryGetComponent(out IServerTransformComponent transform) && GridIDMap.ContainsKey(transform.GridID))
+                    if (entity.Prototype.MapSavable && entity.TryGetComponent(out IServerTransformComponent transform) && GridIDMap.ContainsKey(transform.GridID))
                     {
                         EntityUidMap.Add(entity.Uid, EntityUidMap.Count);
                         Entities.Add(entity);
@@ -353,6 +351,7 @@ namespace SS14.Server.Maps
 
                 foreach (var entity in Entities)
                 {
+                    CurrentWritingEntity = entity;
                     var mapping = new YamlMappingNode();
                     mapping.Add("type", entity.Prototype.ID);
                     if (entity.Name != entity.Prototype.Name)
@@ -365,7 +364,8 @@ namespace SS14.Server.Maps
                     foreach (var component in entity.GetAllComponents())
                     {
                         var compMapping = new YamlMappingNode();
-                        var compSerializer = new YamlObjectSerializer(mapping, reading: false, context: this);
+                        CurrentWritingComponent = component.Name;
+                        var compSerializer = new YamlObjectSerializer(compMapping, reading: false, context: this);
 
                         component.ExposeData(compSerializer);
 
@@ -382,17 +382,96 @@ namespace SS14.Server.Maps
                     {
                         mapping.Add("components", components);
                     }
+
+                    entities.Add(mapping);
                 }
             }
 
             public bool TryNodeToType(YamlNode node, Type type, out object obj)
             {
+                if (type == typeof(GridId))
+                {
+                    var val = node.AsInt();
+                    if (val >= Grids.Count)
+                    {
+                        Logger.ErrorS("map", "Error in map file: found local grid ID '{0}' which does not exist.", val);
+                    }
+                    else
+                    {
+                        obj = Grids[val].Index;
+                        return true;
+                    }
+                }
+                if (type == typeof(EntityUid))
+                {
+                    var val = node.AsInt();
+                    if (val >= Entities.Count)
+                    {
+                        Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
+                    }
+                    else
+                    {
+                        obj = Entities[val].Uid;
+                        return true;
+                    }
+                }
+                if (typeof(IEntity).IsAssignableFrom(type))
+                {
+                    var val = node.AsInt();
+                    if (val >= Entities.Count)
+                    {
+                        Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
+                    }
+                    else
+                    {
+                        obj = Entities[val];
+                        return true;
+                    }
+                }
                 obj = null;
                 return false;
             }
 
             public bool TryTypeToNode(object obj, out YamlNode node)
             {
+                switch (obj)
+                {
+                    case GridId gridId:
+                        if (!GridIDMap.TryGetValue(gridId, out var gridMapped))
+                        {
+                            Logger.WarningS("map", "Cannot write grid ID '{0}', falling back to nullspace.", gridId);
+                            break;
+                        }
+                        else
+                        {
+                            node = new YamlScalarNode(gridMapped.ToString(CultureInfo.InvariantCulture));
+                            return true;
+                        }
+
+                    case EntityUid entityUid:
+                        if (!EntityUidMap.TryGetValue(entityUid, out var entityUidMapped))
+                        {
+                            Logger.WarningS("map", "Cannot write entity UID '{0}'.", entityUid);
+                            break;
+                        }
+                        else
+                        {
+                            node = new YamlScalarNode(entityUidMapped.ToString(CultureInfo.InvariantCulture));
+                            return true;
+                        }
+
+                    case IEntity entity:
+                        if (!EntityUidMap.TryGetValue(entity.Uid, out var entityMapped))
+                        {
+                            Logger.WarningS("map", "Cannot write entity UID '{0}'.", entity.Uid);
+                            break;
+                        }
+                        else
+                        {
+                            node = new YamlScalarNode(entityMapped.ToString(CultureInfo.InvariantCulture));
+                            return true;
+                        }
+                }
                 node = null;
                 return false;
             }
@@ -409,6 +488,28 @@ namespace SS14.Server.Maps
                 }
 
                 return new YamlObjectSerializer(protoData, reading: true, context: this);
+            }
+
+            bool IYamlObjectSerializerContext.IsValueDefault<T>(string field, T value)
+            {
+                var compData = CurrentWritingEntity.Prototype.Components[CurrentWritingComponent];
+                var testSer = new YamlObjectSerializer(compData, reading: true);
+                if (testSer.TryReadDataFieldCached(field, out T prototypeVal))
+                {
+                    if (value == null)
+                    {
+                        if (prototypeVal == null)
+                        {
+                            return true;
+                        }
+
+                        return prototypeVal.Equals(value);
+                    }
+
+                    return value.Equals(prototypeVal);
+                }
+
+                return false;
             }
         }
 

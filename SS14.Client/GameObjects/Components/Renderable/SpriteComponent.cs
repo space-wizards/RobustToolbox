@@ -151,6 +151,10 @@ namespace SS14.Client.GameObjects
             set
             {
                 _baseRsi = value;
+                if (Layers == null)
+                {
+                    return;
+                }
                 for (var i = 0; i < Layers.Count; i++)
                 {
                     var layer = Layers[i];
@@ -875,6 +879,11 @@ namespace SS14.Client.GameObjects
             serializer.DataFieldCached(ref color, "color", Color.White);
             serializer.DataFieldCached(ref _directional, "directional", true);
             serializer.DataFieldCached(ref _visible, "visible", true);
+
+            if (Owner.Prototype.ID == "Welder")
+            {
+                System.Console.WriteLine("eys!");
+            }
 
             // TODO: Writing?
             if (!serializer.Reading)

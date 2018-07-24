@@ -36,7 +36,7 @@ Contains data for all the grids. The section is an ordered sequence. Each sequen
 
 Contains data for all entities on the map. Just like grids these are stored in an indexed list, and an entity declaration is pretty much just like a prototype.
 
-Each entity has a `id` field which specifies which prototype it is, and the components list works as overrides in the same way as entity parenting.
+Each entity has a `type` field which specifies which prototype it is, and the components list works as overrides in the same way as entity parenting.
 
 #### Chunk Data
 
@@ -66,6 +66,10 @@ Numbers are serialized using `CultureInfo.InvariantCulture`.
 Distances, coordinates, etc... are measured in meters. That said, things such as scaling transforms might mess those up. It at least holds true for a specific coordinate system though.
 
 Angles are serialized in radians.
+
+### `IEntity` References
+
+Direct hard `IEntity` references are stored as entity UID, it is simply decoded differently upon request via `ObjectSerializer.DataField<T>` and such.
 
 ### Entity UIDs
 

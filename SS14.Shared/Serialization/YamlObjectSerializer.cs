@@ -29,8 +29,6 @@ namespace SS14.Shared.Serialization
             _typeSerializers = new Dictionary<Type, TypeSerializer>
             {
                 { typeof(Color), new ColorSerializer() },
-                { typeof(MapId), new MapIdSerializer() },
-                { typeof(GridId), new GridIdSerializer() },
                 { typeof(Vector2), new Vector2Serializer() },
                 { typeof(Angle), new AngleSerializer() },
                 { typeof(Box2), new Box2Serializer() },
@@ -76,7 +74,7 @@ namespace SS14.Shared.Serialization
             else // write
             {
                 // don't write if value is null or default
-                if (!alwaysWrite && (value != null || defaultValue == null) && (value == null || value.Equals(defaultValue)))
+                if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
                     return;
 
                 var key = name;
@@ -117,7 +115,7 @@ namespace SS14.Shared.Serialization
                 }
 
                 // don't write if value is null or default
-                if (!alwaysWrite && (value != null || defaultValue == null) && (value == null || value.Equals(defaultValue)))
+                if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
                 {
                     return;
                 }
@@ -190,7 +188,7 @@ namespace SS14.Shared.Serialization
             var value = func.Invoke();
 
             // don't write if value is null or default
-            if (!alwaysWrite && (value != null || defaultValue == null) && (value == null || value.Equals(defaultValue)))
+            if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
                 return;
 
             var key = name;
@@ -340,6 +338,22 @@ namespace SS14.Shared.Serialization
 
             // ref type that isn't a custom TypeSerializer
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(obj));
+        }
+
+        bool IsValueDefault<T>(string field, T value, T providedDefault)
+        {
+            if ((value != null || providedDefault == null) && (value == null || value.Equals(providedDefault)))
+            {
+                return true;
+            }
+
+            if (Context != null)
+            {
+                return Context.IsValueDefault(field, value);
+            }
+
+            return false;
+
         }
 
         private static object StringToType(Type type, string str)

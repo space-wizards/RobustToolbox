@@ -12,5 +12,6 @@ namespace SS14.Shared.Serialization
     {
         bool TryTypeToNode(object obj, out YamlNode node);
         bool TryNodeToType(YamlNode node, Type type, out object obj);
+        bool IsValueDefault<T>(string field, T value);
     }
 }

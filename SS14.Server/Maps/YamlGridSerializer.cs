@@ -35,9 +35,7 @@ namespace SS14.Server.Maps
                 chunkSeq.Add(chunkNode);
             }
 
-            var root = new YamlMappingNode();
-            root.Add("grid", gridn);
-            return root;
+            return gridn;
         }
 
         private static YamlNode SerializeChunk(IMapChunk chunk)

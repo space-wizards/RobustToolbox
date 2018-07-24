@@ -52,7 +52,6 @@ namespace SS14.Client.GameObjects
             RSI rsi;
 
             var rsiPath = serializer.ReadDataField<string>("sprite", null);
-            var path = SpriteComponent.TextureRoot / rsiPath;
 
             if (string.IsNullOrWhiteSpace(rsiPath))
             {
@@ -60,6 +59,8 @@ namespace SS14.Client.GameObjects
                 serializer.SetCacheData(SerializationCache, dirTex);
                 return dirTex;
             }
+
+            var path = SpriteComponent.TextureRoot / rsiPath;
 
             try
             {
@@ -95,15 +96,11 @@ namespace SS14.Client.GameObjects
 
         public static IDirectionalTextureProvider GetPrototypeIcon(EntityPrototype prototype)
         {
-            throw new System.NotImplementedException();
-            /*
             if (!prototype.Components.TryGetValue("Icon", out var mapping))
             {
                 return IoCManager.Resolve<IResourceCache>().GetFallback<TextureResource>().Texture;
             }
-
-            return TextureForConfig(mapping, prototype);
-            */
+            return TextureForConfig(new YamlObjectSerializer(mapping, reading: true));
         }
     }
 }

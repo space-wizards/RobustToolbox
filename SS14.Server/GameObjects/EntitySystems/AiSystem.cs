@@ -16,13 +16,7 @@ namespace SS14.Server.GameObjects.EntitySystems
         public AiSystem()
         {
             // register entity query
-            EntityQuery = new ComponentEntityQuery
-            {
-                OneSet = new List<Type>
-                {
-                    typeof(AiControllerComponent),
-                },
-            };
+            EntityQuery = new TypeEntityQuery(typeof(AiControllerComponent));
 
             var reflectionMan = IoCManager.Resolve<IReflectionManager>();
             var processors = reflectionMan.GetAllChildren<AiLogicProcessor>();

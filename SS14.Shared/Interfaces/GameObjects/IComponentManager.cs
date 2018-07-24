@@ -11,12 +11,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         void Clear();
 
-        /// <summary>
-        /// Big update method -- loops through all components in order of family and calls Update() on them.
-        /// </summary>
-        /// <param name="frameTime">Time since the last frame was rendered.</param>
-        void Update(float frameTime);
-
         #region Component Management
 
         T AddComponent<T>(IEntity entity)

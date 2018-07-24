@@ -367,7 +367,7 @@ namespace SS14.Server
             timerManager.UpdateTimers(frameTime);
             if (_runLevel >= ServerRunLevel.PreGame)
             {
-                _components.Update(frameTime);
+                _components.CullRemovedComponents();
                 _entities.Update(frameTime);
             }
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, frameTime);

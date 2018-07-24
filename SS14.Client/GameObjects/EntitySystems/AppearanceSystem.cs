@@ -24,19 +24,26 @@ namespace SS14.Client.GameObjects.EntitySystems
                 OneSet = new List<Type>
                 {
                     typeof(AppearanceComponent),
+                    typeof(AppearanceTestComponent),
                 },
             };
         }
 
         public override void FrameUpdate(float frameTime)
         {
-            foreach (var entity in  EntityManager.GetEntities(EntityQuery))
+            foreach (var entity in EntityManager.GetEntities(EntityQuery))
             {
-                var component = entity.GetComponent<AppearanceComponent>();
-                if (component.AppearanceDirty)
+                if(entity.TryGetComponent<AppearanceComponent>(out var appearComp))
                 {
-                    UpdateComponent(component);
-                    component.AppearanceDirty = false;
+                    if (appearComp.AppearanceDirty)
+                    {
+                        UpdateComponent(appearComp);
+                        appearComp.AppearanceDirty = false;
+                    }
+                }
+                else if (entity.TryGetComponent<AppearanceTestComponent>(out var testComp))
+                {
+                    testComp.OnUpdate(frameTime);
                 }
             }
         }

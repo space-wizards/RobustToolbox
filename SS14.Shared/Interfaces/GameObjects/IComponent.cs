@@ -2,7 +2,6 @@
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.Network;
-using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
@@ -95,13 +94,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     across the board.
         /// </summary>
         void ExposeData(EntitySerializer serializer);
-
-        /// <summary>
-        ///     Main method for updating the component. This is called from a big loop in ComponentManager.
-        /// </summary>
-        /// <param name="frameTime"></param>
-        [Obsolete("Components should be updated through a system.")]
-        void Update(float frameTime);
 
         /// <summary>
         ///     Handles an incoming component message.

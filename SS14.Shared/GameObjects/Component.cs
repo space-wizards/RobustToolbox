@@ -57,7 +57,7 @@ namespace SS14.Shared.GameObjects
         public virtual void OnAdd()
         {
             if(Initialized)
-                throw new InvalidOperationException("Cannot Add an Intialized entity!");
+                throw new InvalidOperationException("Cannot Add an Initialized entity!");
 
             if(Deleted)
                 throw new InvalidOperationException("Cannot Add a Deleted entity!");
@@ -79,7 +79,7 @@ namespace SS14.Shared.GameObjects
         public virtual void Startup()
         {
             if(!Initialized)
-                throw new InvalidOperationException("Cannot Start an unitialized entity!");
+                throw new InvalidOperationException("Cannot Start an uninitialized entity!");
 
             if(Deleted)
                 throw new InvalidOperationException("Cannot Start a Deleted entity!");
@@ -91,7 +91,7 @@ namespace SS14.Shared.GameObjects
         public virtual void Shutdown()
         {
             if(!Initialized)
-                throw new InvalidOperationException("Cannot Shutdown an unintialized entity!");
+                throw new InvalidOperationException("Cannot Shutdown an uninitialized entity!");
 
             if(Deleted)
                 throw new InvalidOperationException("Cannot Shutdown a Deleted entity!");
@@ -108,10 +108,6 @@ namespace SS14.Shared.GameObjects
         {
             serializer.DataField(ref _netSyncEnabled, "netsync", true);
         }
-
-        /// <inheritdoc />
-        [Obsolete("Components should be updated through a system.")]
-        public virtual void Update(float frameTime) { }
 
         public void Dirty()
         {

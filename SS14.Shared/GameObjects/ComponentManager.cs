@@ -25,25 +25,6 @@ namespace SS14.Shared.GameObjects
         [Dependency]
         private readonly IEntityManager _entityManager;
 
-        /// <summary>
-        /// Big update method -- loops through all components in order of family and calls Update() on them.
-        /// </summary>
-        /// <param name="frameTime">Time since the last frame was rendered.</param>
-        public void Update(float frameTime)
-        {
-            CullRemovedComponents();
-
-            //TODO: Kill this.
-            // Call update on every component.
-            foreach (var typeDict in _dictComponents.Values)
-            {
-                foreach (var component in typeDict.Values)
-                {
-                    component.Update(frameTime);
-                }
-            }
-        }
-
         public void Clear()
         {
             //TODO: Make me work!

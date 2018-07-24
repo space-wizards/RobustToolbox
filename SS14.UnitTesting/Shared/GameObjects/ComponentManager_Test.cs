@@ -250,9 +250,6 @@ namespace SS14.UnitTesting.Shared.GameObjects
                 }
             }
 
-            // call PostInject on manager
-            ((IPostInjectInit)manager).PostInject();
-
             entityManager = mockEntMan.Object;
             return manager;
         }

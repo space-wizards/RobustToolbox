@@ -43,6 +43,7 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         private string _description;
 
+        /// <inheritdoc />
         public uint LastModifiedTick { get; private set; }
 
         /// <inheritdoc />
@@ -191,7 +192,7 @@ namespace SS14.Shared.GameObjects
             foreach (var component in components)
             {
                 if (owner != component)
-                    component.HandleMessage(message, component: owner);
+                    component.HandleMessage(message, null, owner);
             }
         }
 

@@ -53,9 +53,8 @@ namespace SS14.Shared.GameObjects
         protected readonly List<Entity> _allEntities = new List<Entity>();
 
         protected readonly Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
-
-        // This MUST start > 0
-        protected int NextUid = 1;
+        
+        protected int NextUid = (int) EntityUid.FirstUid;
 
         private readonly Dictionary<Type, List<Delegate>> _eventSubscriptions
             = new Dictionary<Type, List<Delegate>>();

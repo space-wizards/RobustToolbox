@@ -6,6 +6,7 @@ using SS14.Shared.IoC;
 
 namespace SS14.Shared.GameObjects
 {
+    /// <inheritdoc />
     public class ComponentManager : IComponentManager
     {
         private const int EntityCapacity = 1024; // starting capacity for entities
@@ -25,13 +26,17 @@ namespace SS14.Shared.GameObjects
         [Dependency]
         private readonly IEntityManager _entityManager;
 
+        /// <inheritdoc />
         public void Clear()
         {
-            //TODO: Make me work!
+            _dictComponents.Clear();
+            _netComponents.Clear();
+            _deleteList.Clear();
         }
 
         #region Component Management
 
+        /// <inheritdoc />
         public T AddComponent<T>(IEntity entity)
             where T : Component, new()
         {
@@ -46,6 +51,7 @@ namespace SS14.Shared.GameObjects
             return (T) newComponent;
         }
 
+        /// <inheritdoc />
         public void AddComponent(IEntity entity, Component component, bool overwrite = false)
         {
             if (entity == null || !entity.IsValid())
@@ -109,23 +115,27 @@ namespace SS14.Shared.GameObjects
             }
         }
 
+        /// <inheritdoc />
         public void RemoveComponent<T>(EntityUid uid)
         {
             RemoveComponent(uid, typeof(T));
         }
 
+        /// <inheritdoc />
         public void RemoveComponent(EntityUid uid, Type type)
         {
             var component = GetComponent(uid, type);
             RemoveComponentDeferred(component as Component);
         }
 
+        /// <inheritdoc />
         public void RemoveComponent(EntityUid uid, uint netID)
         {
             var comp = GetComponent(uid, netID);
             RemoveComponentDeferred(comp as Component);
         }
 
+        /// <inheritdoc />
         public void RemoveComponent(EntityUid uid, IComponent component)
         {
             if (component == null)
@@ -137,6 +147,7 @@ namespace SS14.Shared.GameObjects
             RemoveComponentDeferred(component as Component);
         }
 
+        /// <inheritdoc />
         public void RemoveComponents(EntityUid uid)
         {
             foreach (var kvTypeDict in _dictComponents.Values)
@@ -180,6 +191,7 @@ namespace SS14.Shared.GameObjects
             DeleteComponent(component);
         }
 
+        /// <inheritdoc />
         public void CullRemovedComponents()
         {
             foreach (var component in _deleteList)
@@ -204,21 +216,23 @@ namespace SS14.Shared.GameObjects
                 typeDict.Remove(entityUid);
             }
 
-            if (component.NetID != null)
-            {
-                var netDict = _netComponents[entityUid];
-                netDict.Remove(component.NetID.Value);
+            if (component.NetID == null)
+                return;
 
-                // mark the owning entity as dirty for networking
-                component.Owner.Dirty();
-            }
+            var netDict = _netComponents[entityUid];
+            netDict.Remove(component.NetID.Value);
+
+            // mark the owning entity as dirty for networking
+            component.Owner.Dirty();
         }
 
+        /// <inheritdoc />
         public bool HasComponent<T>(EntityUid uid)
         {
             return HasComponent(uid, typeof(T));
         }
 
+        /// <inheritdoc />
         public bool HasComponent(EntityUid uid, Type type)
         {
             if (!_dictComponents.TryGetValue(type, out var typeDict))
@@ -227,6 +241,7 @@ namespace SS14.Shared.GameObjects
             return typeDict.ContainsKey(uid);
         }
 
+        /// <inheritdoc />
         public bool HasComponent(EntityUid uid, uint netID)
         {
             if (!_netComponents.TryGetValue(uid, out var comp))
@@ -235,24 +250,28 @@ namespace SS14.Shared.GameObjects
             return comp.ContainsKey(netID);
         }
 
+        /// <inheritdoc />
         public T GetComponent<T>(EntityUid uid)
             where T : Component
         {
             return (T) GetComponent(uid, typeof(T));
         }
 
+        /// <inheritdoc />
         public IComponent GetComponent(EntityUid uid, Type type)
         {
             var typeDict = _dictComponents[type];
             return typeDict[uid];
         }
 
+        /// <inheritdoc />
         public IComponent GetComponent(EntityUid uid, uint netID)
         {
             var netDict = _netComponents[uid];
             return netDict[netID];
         }
 
+        /// <inheritdoc />
         public bool TryGetComponent<T>(EntityUid uid, out T component)
             where T : class
         {
@@ -266,6 +285,7 @@ namespace SS14.Shared.GameObjects
             return false;
         }
 
+        /// <inheritdoc />
         public bool TryGetComponent(EntityUid uid, Type type, out IComponent component)
         {
             if (_dictComponents.TryGetValue(type, out var typeDict))
@@ -281,6 +301,7 @@ namespace SS14.Shared.GameObjects
             return false;
         }
 
+        /// <inheritdoc />
         public bool TryGetComponent(EntityUid uid, uint netID, out IComponent component)
         {
             if (_netComponents.TryGetValue(uid, out var netDict))
@@ -296,6 +317,7 @@ namespace SS14.Shared.GameObjects
             return false;
         }
 
+        /// <inheritdoc />
         public IEnumerable<IComponent> GetComponents(EntityUid uid)
         {
             foreach (var kvTypeDict in _dictComponents.Values)
@@ -305,11 +327,13 @@ namespace SS14.Shared.GameObjects
             }
         }
 
+        /// <inheritdoc />
         public IEnumerable<T> GetComponents<T>(EntityUid uid)
         {
             return GetComponents(uid).OfType<T>();
         }
 
+        /// <inheritdoc />
         public IEnumerable<IComponent> GetNetComponents(EntityUid uid)
         {
             foreach (var kvNetComp in _netComponents[uid])
@@ -319,6 +343,7 @@ namespace SS14.Shared.GameObjects
             }
         }
 
+        /// <inheritdoc />
         [Obsolete]
         public IEnumerable<T> GetAllComponents<T>()
             where T : IComponent

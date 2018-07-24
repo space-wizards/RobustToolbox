@@ -109,6 +109,7 @@ namespace SS14.Shared.GameObjects
             serializer.DataField(ref _netSyncEnabled, "netsync", true);
         }
 
+        /// <inheritdoc />
         public void Dirty()
         {
             if (Owner != null)
@@ -133,6 +134,7 @@ namespace SS14.Shared.GameObjects
         ///     This is an alias of 'Owner.SendNetworkMessage(this, message);'
         /// </summary>
         /// <param name="message">Message to send.</param>
+        /// <param name="channel">Network channel to send the message over. If null, broadcast to all channels.</param>
         protected void SendNetworkMessage(ComponentMessage message, INetChannel channel = null)
         {
             Owner.SendNetworkMessage(this, message, channel);

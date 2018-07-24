@@ -7,7 +7,7 @@ using SS14.Shared.Interfaces.Serialization;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
-    public interface IEntity : IExposeData
+    public interface IEntity
     {
         uint LastModifiedTick { get; }
 

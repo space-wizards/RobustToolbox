@@ -40,5 +40,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("0.1")]
 
 // The following allows another friend assembly access to the types marked as internal.
-[assembly: InternalsVisibleTo("SS14.UnitTesting")] // Gives access to Unit test project
+// SS14 engine assemblies are friends.
+// This way internal is "Content can't touch this".
+[assembly: InternalsVisibleTo("SS14.Server")]
+[assembly: InternalsVisibleTo("SS14.Client")]
+[assembly: InternalsVisibleTo("SS14.UnitTesting")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")] // Gives access to Castle(Moq)

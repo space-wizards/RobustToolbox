@@ -120,10 +120,5 @@ namespace SS14.Server.Interfaces.GameObjects
         /// </summary>
         /// <param name="toTick">The last tick to delete the history for. Inclusive.</param>
         void CullDeletionHistory(uint toTick);
-
-        /// <summary>
-        ///     Serializes all entities on a grid.
-        /// </summary>
-        void SaveGridEntities(ObjectSerializer serializer, GridId gridId);
     }
 }

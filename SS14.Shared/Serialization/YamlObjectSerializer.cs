@@ -50,7 +50,10 @@ namespace SS14.Shared.Serialization
                 {
                     Map,
                 };
-                ReadMaps.AddRange(backups);
+                if (backups != null)
+                {
+                    ReadMaps.AddRange(backups);
+                }
             }
         }
 

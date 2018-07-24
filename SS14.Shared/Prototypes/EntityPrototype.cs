@@ -340,31 +340,38 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        /// <summary>
-        ///     Creates an entity from this prototype.
-        ///     Do not call this directly, use the server entity manager instead.
-        /// </summary>
-        /// <returns></returns>
-        public Entity CreateEntity(EntityUid uid, IEntityManager manager, IEntityNetworkManager networkManager, IComponentFactory componentFactory)
+        internal Entity AllocEntity(EntityUid uid, IEntityManager manager, IEntityNetworkManager networkManager)
         {
             var entity = (Entity)Activator.CreateInstance(ClassType ?? typeof(Entity));
 
             entity.SetManagers(manager, networkManager);
             entity.SetUid(uid);
-            entity.Name = Name;
             entity.Prototype = this;
+            entity.Name = Name;
 
+            return entity;
+        }
+
+        internal void FinishEntity(Entity entity, IComponentFactory factory, IEntityFinishContext context)
+        {
             foreach (var componentData in Components)
             {
-                var component = (Component)componentFactory.GetComponent(componentData.Key);
+                var component = (Component)factory.GetComponent(componentData.Key);
 
                 component.Owner = entity;
-                component.ExposeData(new YamlObjectSerializer(componentData.Value, reading: true));
+                ObjectSerializer ser;
+                if (context != null)
+                {
+                    ser = context.GetComponentSerializer(componentData.Key, componentData.Value);
+                }
+                else
+                {
+                    ser = new YamlObjectSerializer(componentData.Value, reading: true);
+                }
+                component.ExposeData(ser);
 
                 entity.AddComponent(component);
             }
-
-            return entity;
         }
 
         /// <summary>

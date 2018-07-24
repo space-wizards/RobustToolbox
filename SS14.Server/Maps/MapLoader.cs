@@ -16,6 +16,7 @@ using SS14.Shared.Serialization;
 using SS14.Shared.GameObjects;
 using System.Globalization;
 using SS14.Shared.Interfaces.GameObjects;
+using System.Linq;
 
 namespace SS14.Server.Maps
 {
@@ -45,7 +46,7 @@ namespace SS14.Server.Maps
 
             var context = new MapContext();
             context.RegisterGrid(grid);
-            var root = context.DoSerialize();
+            var root = context.Serialize();
             var document = new YamlDocument(root);
 
             var resPath = new ResourcePath(yamlPath).ToRootedPath();
@@ -64,7 +65,7 @@ namespace SS14.Server.Maps
         }
 
         /// <inheritdoc />
-        public IMapGrid LoadBlueprint(IMap map, string path, GridId? newId = null)
+        public IMapGrid LoadBlueprint(IMap map, string path)
         {
             TextReader reader;
             var resPath = new ResourcePath(path).ToRootedPath();
@@ -95,17 +96,17 @@ namespace SS14.Server.Maps
             {
                 Logger.InfoS("map", $"Loading Grid: {resPath}");
 
-                var stream = new YamlStream();
-                stream.Load(reader);
+                var data = new MapData(reader);
 
-                foreach (var document in stream.Documents)
+                if (data.GridCount != 1)
                 {
-                    var root = (YamlSequenceNode)document.RootNode;
-                    return LoadBpNode(map, newId, root);
+                    throw new InvalidDataException("Cannot instance map with multiple grids as blueprint.");
                 }
-            }
 
-            return null;
+                var context = new MapContext((YamlMappingNode)data.RootNode, map);
+                context.Deserialize();
+                return context.Grids[0];
+            }
         }
 
         /// <inheritdoc />
@@ -117,7 +118,7 @@ namespace SS14.Server.Maps
                 context.RegisterGrid(grid);
             }
 
-            var document = new YamlDocument(context.DoSerialize());
+            var document = new YamlDocument(context.Serialize());
 
             var resPath = new ResourcePath(yamlPath).ToRootedPath();
             _resMan.UserData.CreateDir(resPath.Directory);
@@ -171,96 +172,123 @@ namespace SS14.Server.Maps
             {
                 Logger.InfoS("map", $"Loading Map: {resPath}");
 
-                var stream = new YamlStream();
-                stream.Load(reader);
+                var data = new MapData(reader);
 
-                foreach (var document in stream.Documents)
+                if (data.GridCount != 1)
                 {
-                    var root = (YamlMappingNode)document.RootNode;
-                    var map = _mapManager.CreateMap(mapId);
-                    LoadMapNode(map, root);
+                    throw new InvalidDataException("Cannot instance map with multiple grids as blueprint.");
                 }
-            }
-        }
 
-        private void LoadMapNode(IMap map, YamlMappingNode rootNode)
-        {
-            var gridSeq = (YamlMappingNode)rootNode["grids"];
-
-            foreach (var kvGrid in gridSeq)
-            {
-                var gridId = int.Parse(kvGrid.Key.ToString());
-                var gridNode = (YamlSequenceNode)kvGrid.Value;
-
-                LoadBpNode(map, new GridId(gridId), gridNode);
-            }
-        }
-
-        private IMapGrid LoadBpNode(IMap map, GridId? newId, YamlSequenceNode root)
-        {
-            foreach (var yamlNode in root.Children)
-            {
-                var mapNode = (YamlMappingNode)yamlNode;
-
-                if (mapNode.Children.TryGetValue("grid", out var gridNode))
-                {
-                    var gridMap = (YamlMappingNode)gridNode;
-                    // This ref shit is so that the entities are loaded with the grid created by this load.
-                    LoadGridNode(_mapManager, map, ref newId, gridMap);
-                }
-                else if (mapNode.Children.TryGetValue("entities", out var entNode))
-                {
-                    LoadEntNode(map, newId, (YamlSequenceNode)entNode);
-                }
-            }
-
-            return IoCManager.Resolve<IMapManager>().GetGrid(newId.Value);
-        }
-
-        private static void LoadGridNode(IMapManager mapMan, IMap map, ref GridId? newId, YamlMappingNode gridNode)
-        {
-            var info = (YamlMappingNode)gridNode["settings"];
-            var chunk = (YamlSequenceNode)gridNode["chunks"];
-
-            YamlGridSerializer.DeserializeGrid(mapMan, map, ref newId, info, chunk);
-        }
-
-        private void LoadEntNode(IMap map, GridId? gridId, YamlSequenceNode entNode)
-        {
-            foreach (var yamlNode in entNode.Children)
-            {
-                var yamlEnt = (YamlMappingNode)yamlNode;
-
-                var protoName = yamlEnt["id"].ToString();
-
-                try
-                {
-                    var entity = _entityMan.SpawnEntity(protoName);
-
-                    // overwrite local position in the BP to the new map/grid ID
-                    var transform = entity.GetComponent<IServerTransformComponent>();
-                    transform.LocalPosition = new GridLocalCoordinates(transform.LocalPosition.Position, gridId.Value);
-                }
-                catch (Exception e)
-                {
-                    Logger.ErrorS("map", $"Error creating entity \"{protoName}\": {e}");
-                }
+                var context = new MapContext((YamlMappingNode)data.RootNode, _mapManager.GetMap(mapId));
+                context.Deserialize();
             }
         }
 
         /// <summary>
         ///     Handles the primary bulk of state during the map serialization process.
         /// </summary>
-        private class MapContext : IYamlObjectSerializerContext
+        private class MapContext : IYamlObjectSerializerContext, IEntityFinishContext
         {
-            readonly Dictionary<GridId, int> GridIDMap = new Dictionary<GridId, int>();
-            readonly List<IMapGrid> Grids = new List<IMapGrid>();
+            public readonly Dictionary<GridId, int> GridIDMap = new Dictionary<GridId, int>();
+            public readonly List<IMapGrid> Grids = new List<IMapGrid>();
 
-            readonly Dictionary<EntityUid, int> EntityUidMap = new Dictionary<EntityUid, int>();
-            readonly List<IEntity> Entities = new List<IEntity>();
+            public readonly Dictionary<EntityUid, int> EntityUidMap = new Dictionary<EntityUid, int>();
+            public readonly List<IEntity> Entities = new List<IEntity>();
 
-            YamlMappingNode RootNode;
+            readonly YamlMappingNode RootNode;
+            readonly IMap TargetMap;
 
+            YamlMappingNode CurrentReadingEntity;
+            Dictionary<string, YamlMappingNode> CurrentReadingEntityComponents;
+
+            public MapContext()
+            {
+                RootNode = new YamlMappingNode();
+            }
+
+            public MapContext(YamlMappingNode node, IMap targetMap)
+            {
+                RootNode = node;
+                TargetMap = targetMap;
+            }
+
+            // Deserialization
+            public void Deserialize()
+            {
+                ReadMetaSection();
+                ReadGridSection();
+
+                // Entities are allocated in a separate step so entity UID cross references can be resolved.
+                AllocEntities();
+                FinishEntities();
+            }
+
+            void ReadMetaSection()
+            {
+                var meta = RootNode.GetNode<YamlMappingNode>("meta");
+                var ver = meta.GetNode("format").AsInt();
+                if (ver != MapFormatVersion)
+                {
+                    throw new InvalidDataException("Cannot handle this map file version.");
+                }
+            }
+
+            void ReadGridSection()
+            {
+                var grids = RootNode.GetNode<YamlSequenceNode>("grids");
+                var mapMan = IoCManager.Resolve<IMapManager>();
+
+                foreach (var grid in grids)
+                {
+                    var newId = new GridId?();
+                    YamlGridSerializer.DeserializeGrid(
+                        mapMan, TargetMap, ref newId,
+                        (YamlMappingNode)grid["settings"],
+                        (YamlSequenceNode)grid["chunks"]
+                    );
+
+                    Grids.Add(mapMan.GetGrid(newId.Value));
+                }
+            }
+
+            void AllocEntities()
+            {
+                var entities = RootNode.GetNode<YamlSequenceNode>("entities");
+                var entityMan = IoCManager.Resolve<IServerEntityManagerInternal>();
+
+                foreach (var entityDef in entities.Cast<YamlMappingNode>())
+                {
+                    var type = entityDef.GetNode("id").AsString();
+                    var entity = entityMan.AllocEntity(type);
+                    Entities.Add(entity);
+                    if (entityDef.TryGetNode("name", out var nameNode))
+                    {
+                        entity.Name = nameNode.AsString();
+                    }
+                }
+            }
+
+            void FinishEntities()
+            {
+                var entities = RootNode.GetNode<YamlSequenceNode>("entities");
+                var entityMan = IoCManager.Resolve<IServerEntityManagerInternal>();
+
+                foreach (var (entity, data) in Entities.Zip(entities, (a, b) => (a, (YamlMappingNode)b)))
+                {
+                    CurrentReadingEntity = (YamlMappingNode)data;
+                    CurrentReadingEntityComponents = new Dictionary<string, YamlMappingNode>();
+                    if (data.TryGetNode("components", out YamlSequenceNode componentList))
+                    {
+                        foreach (var compData in componentList)
+                        {
+                            CurrentReadingEntityComponents[compData["type"].AsString()] = (YamlMappingNode)compData;
+                        }
+                    }
+                    entityMan.FinishEntity(entity, this);
+                }
+            }
+
+            // Serialization
             public void RegisterGrid(IMapGrid grid)
             {
                 if (GridIDMap.ContainsKey(grid.Index))
@@ -272,10 +300,8 @@ namespace SS14.Server.Maps
                 GridIDMap.Add(grid.Index, GridIDMap.Count);
             }
 
-            public YamlNode DoSerialize()
+            public YamlNode Serialize()
             {
-                RootNode = new YamlMappingNode();
-
                 WriteMetaSection();
                 WriteGridSection();
 
@@ -307,21 +333,20 @@ namespace SS14.Server.Maps
                 }
             }
 
-            private void PopulateEntityList()
+            void PopulateEntityList()
             {
                 var entMgr = IoCManager.Resolve<IEntityManager>();
                 foreach (var entity in entMgr.GetEntities())
                 {
                     if (entity.TryGetComponent(out IServerTransformComponent transform) && GridIDMap.ContainsKey(transform.GridID))
                     {
-                        // Welcome aboard!
                         EntityUidMap.Add(entity.Uid, EntityUidMap.Count);
                         Entities.Add(entity);
                     }
                 }
             }
 
-            private void WriteEntitySection()
+            void WriteEntitySection()
             {
                 var entities = new YamlSequenceNode();
                 RootNode.Add("entities", entities);
@@ -329,10 +354,12 @@ namespace SS14.Server.Maps
                 foreach (var entity in Entities)
                 {
                     var mapping = new YamlMappingNode();
-                    var serializer = new YamlObjectSerializer(mapping, reading: false, context: this);
-                    entity.ExposeData(serializer);
-
                     mapping.Add("type", entity.Prototype.ID);
+                    if (entity.Name != entity.Prototype.Name)
+                    {
+                        // TODO: This shouldn't be hardcoded.
+                        mapping.Add("name", entity.Prototype.Name);
+                    }
 
                     var components = new YamlSequenceNode();
                     foreach (var component in entity.GetAllComponents())
@@ -369,6 +396,20 @@ namespace SS14.Server.Maps
                 node = null;
                 return false;
             }
+
+            ObjectSerializer IEntityFinishContext.GetComponentSerializer(string componentName, YamlMappingNode protoData)
+            {
+                if (CurrentReadingEntityComponents == null)
+                {
+                    throw new InvalidOperationException();
+                }
+                if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
+                {
+                    return new YamlObjectSerializer(mapping, reading: true, context: this, backups: new List<YamlMappingNode> { protoData });
+                }
+
+                return new YamlObjectSerializer(protoData, reading: true, context: this);
+            }
         }
 
         /// <summary>
@@ -399,7 +440,6 @@ namespace SS14.Server.Maps
 
                 RootNode = stream.Documents[0].RootNode;
                 GridCount = ((YamlSequenceNode)RootNode["grids"]).Children.Count;
-
             }
         }
     }

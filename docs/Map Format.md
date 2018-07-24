@@ -34,8 +34,9 @@ Contains data for all the grids. The section is an ordered sequence. Each sequen
 
 ### The `entities` Section
 
-### The `objects` Section
+Contains data for all entities on the map. Just like grids these are stored in an indexed list, and an entity declaration is pretty much just like a prototype.
 
+Each entity has a `id` field which specifies which prototype it is, and the components list works as overrides in the same way as entity parenting.
 
 #### Chunk Data
 

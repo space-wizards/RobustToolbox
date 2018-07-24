@@ -143,18 +143,6 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <summary>
-        ///     Called after the entity is constructed by its prototype to load serializable fields
-        ///     from the prototype's <c>data</c> field. Called any time during the Entities life to serialize
-        ///     its fields.
-        /// </summary>
-        /// <param name="serializer">The serialization object that contains the <c>data</c> field.</param>
-        public void ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(ref _name, "name", Prototype.Name);
-            serializer.DataField(ref _description, "description", null);
-        }
-
-        /// <summary>
         ///     Sets up the entity into a valid initial state.
         /// </summary>
         public void Initialize()

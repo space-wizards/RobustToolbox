@@ -22,7 +22,22 @@ namespace SS14.Client.GameObjects
     public class ClientTransformComponent : Component, ITransformComponent
     {
         private Vector2 _position;
-        public MapId MapID => IoCManager.Resolve<IMapManager>().GetGrid(GridID).MapID;
+        public MapId MapID
+        {
+            get
+            {
+                var mgr = IoCManager.Resolve<IMapManager>();
+                if (mgr.TryGetGrid(GridID, out var grid))
+                {
+                    return grid.MapID;
+                }
+                else
+                {
+                    return MapId.Nullspace;
+                }
+            }
+        }
+
         public GridId GridID { get; private set; }
         public Angle LocalRotation { get; private set; }
         public virtual ITransformComponent Parent { get; private set; }

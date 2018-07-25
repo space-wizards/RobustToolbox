@@ -112,6 +112,7 @@ namespace SS14.Shared.GameObjects
             if (entity.Initialized)
             {
                 component.Initialize();
+                component.Startup();
             }
         }
 
@@ -150,9 +151,9 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public void RemoveComponents(EntityUid uid)
         {
-            foreach (var kvTypeDict in _dictComponents.Values)
+            foreach (var kvTypeDict in _dictComponents)
             {
-                if (kvTypeDict.TryGetValue(uid, out var comp))
+                if (kvTypeDict.Value.TryGetValue(uid, out var comp))
                 {
                     RemoveComponentDeferred(comp);
                 }

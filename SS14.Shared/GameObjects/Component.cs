@@ -47,6 +47,9 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public virtual void OnRemove()
         {
+            if (Running)
+                throw new InvalidOperationException("Cannot Remove a running entity!");
+
             // We have been marked for deletion by the Component Manager.
             Deleted = true;
         }
@@ -59,7 +62,10 @@ namespace SS14.Shared.GameObjects
             if(Initialized)
                 throw new InvalidOperationException("Cannot Add an Initialized entity!");
 
-            if(Deleted)
+            if (Running)
+                throw new InvalidOperationException("Cannot Add a running entity!");
+
+            if (Deleted)
                 throw new InvalidOperationException("Cannot Add a Deleted entity!");
         }
 
@@ -69,7 +75,10 @@ namespace SS14.Shared.GameObjects
             if(Initialized)
                 throw new InvalidOperationException("Entity already Initialized!");
 
-            if(Deleted)
+            if (Running)
+                throw new InvalidOperationException("Cannot Initialize a running entity!");
+
+            if (Deleted)
                 throw new InvalidOperationException("Cannot Initialize a Deleted entity!");
 
             Initialized = true;
@@ -81,7 +90,10 @@ namespace SS14.Shared.GameObjects
             if(!Initialized)
                 throw new InvalidOperationException("Cannot Start an uninitialized entity!");
 
-            if(Deleted)
+            if (Running)
+                throw new InvalidOperationException("Cannot Startup a running entity!");
+
+            if (Deleted)
                 throw new InvalidOperationException("Cannot Start a Deleted entity!");
 
             Running = true;
@@ -92,6 +104,9 @@ namespace SS14.Shared.GameObjects
         {
             if(!Initialized)
                 throw new InvalidOperationException("Cannot Shutdown an uninitialized entity!");
+
+            if(!Running)
+                throw new InvalidOperationException("Cannot Shutdown an unstarted entity!");
 
             if(Deleted)
                 throw new InvalidOperationException("Cannot Shutdown a Deleted entity!");

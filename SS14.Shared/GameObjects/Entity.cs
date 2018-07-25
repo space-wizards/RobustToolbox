@@ -136,7 +136,7 @@ namespace SS14.Shared.GameObjects
             for (int i = 0; i < components.Count; i++)
             {
                 var comp = (Component)components[i];
-                if(comp != null && comp.Initialized && !comp.Deleted)
+                if(comp != null && comp.Initialized && !comp.Running && !comp.Deleted)
                     comp.Startup();
             }
         }

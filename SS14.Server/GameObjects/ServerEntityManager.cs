@@ -28,6 +28,12 @@ namespace SS14.Server.GameObjects
         private readonly List<(uint tick, EntityUid uid)> DeletionHistory = new List<(uint, EntityUid)>();
 
         /// <inheritdoc />
+        public IEntity CreateEntity(string protoName)
+        {
+            return SpawnEntity(protoName, null);
+        }
+
+        /// <inheritdoc />
         public bool TrySpawnEntityAt(string entityType, GridLocalCoordinates coordinates, out IEntity entity)
         {
             var prototype = _protoManager.Index<EntityPrototype>(entityType);

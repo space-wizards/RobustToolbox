@@ -196,12 +196,25 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <summary>
+        /// Spawns a new initialized entity.
+        /// </summary>
+        /// <param name="protoName">Name of the entity prototype to use.</param>
+        /// <returns>New spawned entity.</returns>
+        public Entity SpawnEntity(string protoName)
+        {
+            var newEnt = SpawnEntity(protoName, null);
+            InitializeEntity(newEnt);
+            return newEnt;
+
+        }
+
+        /// <summary>
         /// Creates an entity and adds it to the entity dictionary
         /// </summary>
         /// <param name="prototypeName">name of entity template to execute</param>
         /// <param name="uid">UID to give to the new entity.</param>
         /// <returns>spawned entity</returns>
-        public Entity SpawnEntity(string prototypeName, EntityUid? uid = null)
+        protected Entity SpawnEntity(string prototypeName, EntityUid? uid)
         {
             if (uid == null)
             {

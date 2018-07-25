@@ -18,7 +18,8 @@ namespace SS14.Shared.Interfaces.GameObjects
         #region Component Management
 
         /// <summary>
-        ///     Adds a component type to an entity.
+        ///     Adds a Component type to an entity. If the entity is already Initialized, the component will
+        ///     automatically be Initialized and Started.
         /// </summary>
         /// <typeparam name="T">Component type to add.</typeparam>
         /// <returns>The newly added component.</returns>
@@ -26,7 +27,8 @@ namespace SS14.Shared.Interfaces.GameObjects
             where T : Component, new();
 
         /// <summary>
-        ///     Adds an existing component to an entity.
+        ///     Adds a Component to an entity. If the entity is already Initialized, the component will
+        ///     automatically be Initialized and Started.
         /// </summary>
         /// <param name="entity">Entity being modified.</param>
         /// <param name="component">Component to add.</param>

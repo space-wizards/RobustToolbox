@@ -60,26 +60,26 @@ namespace SS14.Shared.GameObjects
         public virtual void OnAdd()
         {
             if(Initialized)
-                throw new InvalidOperationException("Cannot Add an Initialized entity!");
+                throw new InvalidOperationException("Cannot Add an Initialized component!");
 
             if (Running)
-                throw new InvalidOperationException("Cannot Add a running entity!");
+                throw new InvalidOperationException("Cannot Add a running component!");
 
             if (Deleted)
-                throw new InvalidOperationException("Cannot Add a Deleted entity!");
+                throw new InvalidOperationException("Cannot Add a Deleted component!");
         }
 
         /// <inheritdoc />
         public virtual void Initialize()
         {
             if(Initialized)
-                throw new InvalidOperationException("Entity already Initialized!");
+                throw new InvalidOperationException("Component already Initialized!");
 
             if (Running)
-                throw new InvalidOperationException("Cannot Initialize a running entity!");
+                throw new InvalidOperationException("Cannot Initialize a running component!");
 
             if (Deleted)
-                throw new InvalidOperationException("Cannot Initialize a Deleted entity!");
+                throw new InvalidOperationException("Cannot Initialize a Deleted component!");
 
             Initialized = true;
         }
@@ -88,13 +88,13 @@ namespace SS14.Shared.GameObjects
         public virtual void Startup()
         {
             if(!Initialized)
-                throw new InvalidOperationException("Cannot Start an uninitialized entity!");
+                throw new InvalidOperationException("Cannot Start an uninitialized component!");
 
             if (Running)
-                throw new InvalidOperationException("Cannot Startup a running entity!");
+                throw new InvalidOperationException("Cannot Startup a running component!");
 
             if (Deleted)
-                throw new InvalidOperationException("Cannot Start a Deleted entity!");
+                throw new InvalidOperationException("Cannot Start a Deleted component!");
 
             Running = true;
         }
@@ -103,13 +103,13 @@ namespace SS14.Shared.GameObjects
         public virtual void Shutdown()
         {
             if(!Initialized)
-                throw new InvalidOperationException("Cannot Shutdown an uninitialized entity!");
+                throw new InvalidOperationException("Cannot Shutdown an uninitialized component!");
 
             if(!Running)
-                throw new InvalidOperationException("Cannot Shutdown an unstarted entity!");
+                throw new InvalidOperationException("Cannot Shutdown an unstarted component!");
 
             if(Deleted)
-                throw new InvalidOperationException("Cannot Shutdown a Deleted entity!");
+                throw new InvalidOperationException("Cannot Shutdown a Deleted component!");
 
             Running = false;
         }

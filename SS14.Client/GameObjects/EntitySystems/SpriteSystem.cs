@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using SS14.Client.Interfaces.GameObjects.Components;
+﻿using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.Interfaces.GameObjects;
@@ -17,13 +15,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         {
             IoCManager.InjectDependencies(this);
 
-            EntityQuery = new ComponentEntityQuery
-            {
-                OneSet = new List<Type>
-                {
-                    typeof(ISpriteComponent),
-                },
-            };
+            EntityQuery = new TypeEntityQuery(typeof(ISpriteComponent));
         }
 
         public override void FrameUpdate(float frameTime)

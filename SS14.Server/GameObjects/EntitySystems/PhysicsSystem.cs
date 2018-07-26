@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Maths;
-using SS14.Shared.Interfaces.Physics;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
@@ -15,13 +12,7 @@ namespace SS14.Server.GameObjects.EntitySystems
 
         public PhysicsSystem()
         {
-            EntityQuery = new ComponentEntityQuery
-            {
-                OneSet = new List<Type>
-                {
-                    typeof(PhysicsComponent),
-                }
-            };
+            EntityQuery = new TypeEntityQuery(typeof(PhysicsComponent));
         }
 
         /// <inheritdoc />

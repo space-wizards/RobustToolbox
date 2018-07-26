@@ -89,7 +89,7 @@ namespace SS14.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public FileStream Open(ResourcePath path, FileMode fileMode)
+        public Stream Open(ResourcePath path, FileMode fileMode)
         {
             var fullPath = GetFullPath(path);
             return File.Open(fullPath, fileMode);

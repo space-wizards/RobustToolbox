@@ -348,7 +348,7 @@ namespace SS14.Shared.GameObjects
         {
             var entity = (Entity)Activator.CreateInstance(ClassType ?? typeof(Entity));
 
-            entity.SetManagers(manager, networkManager);
+            entity.SetManagers(manager);
             entity.SetUid(uid);
             entity.Prototype = this;
             entity.Name = Name;

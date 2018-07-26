@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using SS14.Shared.GameObjects;
-using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Shared.Maths;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
@@ -13,11 +13,16 @@ namespace SS14.Shared.Interfaces.GameObjects
         void Startup();
         void Shutdown();
         void Update(float frameTime);
+
         /// <summary>
         ///     Client-specific per-render frame updating.
         /// </summary>
         void FrameUpdate(float frameTime);
+
         bool MapsInitialized { get; set; }
+
+        IComponentManager ComponentManager { get; }
+        IEntityNetworkManager EntityNetManager { get; }
 
         #region Entity Management
 
@@ -74,9 +79,11 @@ namespace SS14.Shared.Interfaces.GameObjects
 
         #region ComponentEvents
 
-        void SubscribeEvent<T>(Delegate eventHandler, IEntityEventSubscriber s) where T : EntityEventArgs;
+        void SubscribeEvent<T>(Delegate eventHandler, IEntityEventSubscriber s)
+            where T : EntityEventArgs;
 
-        void UnsubscribeEvent<T>(IEntityEventSubscriber s) where T : EntityEventArgs;
+        void UnsubscribeEvent<T>(IEntityEventSubscriber s)
+            where T : EntityEventArgs;
 
         void UnsubscribeEvent(Type eventType, Delegate evh, IEntityEventSubscriber s);
 

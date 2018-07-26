@@ -216,7 +216,7 @@ namespace SS14.Client.GameObjects
         float time;
         bool state;
 
-        public override void Update(float frameTime)
+        public void OnUpdate(float frameTime)
         {
             time += frameTime;
             if (time > 1)

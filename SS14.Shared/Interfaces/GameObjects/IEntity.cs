@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Configuration;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Serialization;
@@ -67,7 +66,8 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         /// <typeparam name="T">The component type to add.</typeparam>
         /// <returns>The newly added component.</returns>
-        T AddComponent<T>() where T : Component, new();
+        T AddComponent<T>()
+            where T : Component, new();
 
         /// <summary>
         ///     Removes the component with the specified reference type,
@@ -128,7 +128,8 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <typeparam name="T">The component reference type to attempt to fetch.</typeparam>
         /// <param name="component">The component, if it was found. Null otherwise.</param>
         /// <returns>True if a component with specified type was found.</returns>
-        bool TryGetComponent<T>(out T component) where T : class;
+        bool TryGetComponent<T>(out T component)
+            where T : class;
 
         /// <summary>
         ///     Attempt to retrieve the component with specified type,
@@ -206,8 +207,12 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <returns></returns>
         EntityState GetEntityState(uint fromTick);
 
-        void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s) where T : EntityEventArgs;
-        void UnsubscribeEvent<T>(IEntityEventSubscriber s) where T : EntityEventArgs;
+        void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s)
+            where T : EntityEventArgs;
+
+        void UnsubscribeEvent<T>(IEntityEventSubscriber s)
+            where T : EntityEventArgs;
+
         void RaiseEvent(EntityEventArgs toRaise);
 
         void Dirty();

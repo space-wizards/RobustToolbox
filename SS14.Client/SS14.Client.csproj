@@ -103,6 +103,7 @@
     <Compile Include="GameController\GameController.GameTiming.cs" />
     <Compile Include="GameObjects\Components\Appearance\AppearanceComponent.cs" />
     <Compile Include="GameObjects\EntitySystems\AppearanceSystem.cs" />
+    <Compile Include="GameObjects\EntitySystems\AppearanceTestSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\AudioSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\SpriteSystem.cs" />
     <Compile Include="GameObjects\GodotComponentFactory.cs" />

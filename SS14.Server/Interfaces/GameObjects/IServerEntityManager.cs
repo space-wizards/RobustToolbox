@@ -9,7 +9,20 @@ namespace SS14.Server.Interfaces.GameObjects
 {
     public interface IServerEntityManager : IEntityManager
     {
-        Entity SpawnEntity(string template, EntityUid? uid = null);
+        /// <summary>
+        /// Creates an uninitialized entity.
+        /// </summary>
+        /// <param name="protoName">Prototype template to use. If this is null, the entity will only have an
+        /// uninitialized TransformComponent inside.</param>
+        /// <returns>Newly created entity.</returns>
+        IEntity CreateEntity(string protoName);
+
+        /// <summary>
+        /// Spawns an initialized entity at the default location.
+        /// </summary>
+        /// <param name="protoName"></param>
+        /// <returns></returns>
+        Entity SpawnEntity(string protoName);
 
         /// <summary>
         /// Spawns an entity at a specific position

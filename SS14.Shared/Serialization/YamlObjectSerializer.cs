@@ -129,7 +129,7 @@ namespace SS14.Shared.Serialization
         {
             if (Reading) // read
             {
-                if (_context != null & _context.TryGetCachedField(name, out T theValue))
+                if (_context != null && _context.TryGetCachedField(name, out T theValue))
                 {
                     // Itermediate field so value doesn't get reset to default(T) if this fails.
                     value = theValue;
@@ -304,7 +304,7 @@ namespace SS14.Shared.Serialization
                 throw new InvalidOperationException("Cannot use ReadDataField while not reading.");
             }
 
-            if (_context != null & _context.TryGetCachedField(name, out value))
+            if (_context != null && _context.TryGetCachedField(name, out value))
             {
                 return true;
             }

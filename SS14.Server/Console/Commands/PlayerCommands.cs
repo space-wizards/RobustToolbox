@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Text;
-using SS14.Server.Interfaces.ClientConsoleHost;
+using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Enums;
@@ -11,7 +11,7 @@ using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Players;
 
-namespace SS14.Server.ClientConsoleHost.Commands
+namespace SS14.Server.Console.Commands
 {
     internal class TeleportCommand : IClientCommand
     {
@@ -19,7 +19,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Teleports a player to any location in the round.";
         public string Help => "tp <x> <y> [<mapID>]";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if (player.Status != SessionStatus.InGame || player.AttachedEntity == null)
                 return;
@@ -43,7 +43,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
 
             transform.LocalPosition = new GridLocalCoordinates(position, grid);
 
-            host.SendConsoleReply(player.ConnectedClient, $"Teleported {player} to {grid.MapID}:{posX},{posY}.");
+            shell.SendText(player, $"Teleported {player} to {grid.MapID}:{posX},{posY}.");
         }
     }
 
@@ -51,15 +51,18 @@ namespace SS14.Server.ClientConsoleHost.Commands
     {
         public string Command => "listplayers";
         public string Description => "Lists all players currently connected";
-        public string Help => "Usage: listplayers";
+        public string Help => "listplayers";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
+            // Player: number of people connected and their byond keys
+            // Admin: read a byond variable which shows their ip, byond version, ckey, attached entity and hardware id
+
             var sb = new StringBuilder();
 
             var players = IoCManager.Resolve<IPlayerManager>().GetAllPlayers();
-            sb.AppendLine("Current Players:");
             sb.AppendLine($"{"Index",1}{"Player Name",20}{"IP Address",16}{"Status",12}{"Playing Time",14}{"Ping",9}");
+            sb.AppendLine("----------------------------------------------------------------------------");
 
             foreach (IPlayerSession p in players)
             {
@@ -72,7 +75,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
                     p.ConnectedClient.Ping + "ms"));
             }
 
-            host.SendConsoleReply(player.ConnectedClient, sb.ToString());
+            shell.SendText(player, sb.ToString());
         }
     }
 
@@ -82,7 +85,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Kicks a connected player out of the server, disconnecting them.";
         public string Help => "kick <PlayerIndex> [<Reason>]";
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if (args.Length < 1)
                 return;

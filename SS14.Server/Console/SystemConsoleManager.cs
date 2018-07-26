@@ -1,20 +1,18 @@
-﻿using SS14.Server.Interfaces.ServerConsole;
-using SS14.Server.Interfaces;
-using SS14.Shared.Interfaces.Reflection;
-using SS14.Shared.IoC;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using SS14.Shared.Configuration;
-using SS14.Shared.Interfaces.Configuration;
+using SS14.Server.Interfaces;
+using SS14.Server.Interfaces.Console;
+using SS14.Shared.IoC;
 using Con = System.Console;
 
-namespace SS14.Server.ServerConsole
+namespace SS14.Server.Console
 {
-    public class ConsoleManager : IConsoleManager, IPostInjectInit, IDisposable
+    public class SystemConsoleManager : ISystemConsoleManager, IPostInjectInit, IDisposable
     {
-        private Dictionary<string, IConsoleCommand> availableCommands = new Dictionary<string, IConsoleCommand>();
+        [Dependency]
+        private readonly IConsoleShell _conShell;
+        
         private readonly Dictionary<int, string> commandHistory = new Dictionary<int, string>();
         private string currentBuffer = "";
         private int historyIndex;
@@ -22,7 +20,6 @@ namespace SS14.Server.ServerConsole
         private List<string> tabCompleteList = new List<string>();
         private int tabCompleteIndex;
         private ConsoleKey lastKeyPressed = ConsoleKey.NoName;
-        public IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands => availableCommands;
 
         public void Dispose()
         {
@@ -33,19 +30,7 @@ namespace SS14.Server.ServerConsole
         {
             Con.CancelKeyPress += CancelKeyHandler;
         }
-
-        #region IConsoleManager Members
-
-        public void Initialize()
-        {
-            var manager = IoCManager.Resolve<IReflectionManager>();
-            foreach (var type in manager.GetAllChildren<IConsoleCommand>())
-            {
-                var instance = Activator.CreateInstance(type) as IConsoleCommand;
-                RegisterCommand(instance);
-            }
-        }
-
+        
         public void Update()
         {
             // Process keyboard input
@@ -143,35 +128,14 @@ namespace SS14.Server.ServerConsole
             }
         }
 
-        #endregion IConsoleManager Members
-
         private void ExecuteCommand(string commandLine)
         {
-            List<string> args = new List<string>(commandLine.Split(' '));
-            if (args.Count == 0)
-            {
-                return;
-            }
-            string cmd = args[0].ToLower();
+            _conShell.ExecuteCommand(commandLine);
+        }
 
-            try
-            {
-                IConsoleCommand command = AvailableCommands[cmd];
-                args.RemoveAt(0);
-                command.Execute(args.ToArray());
-            }
-            catch (KeyNotFoundException)
-            {
-                Con.ForegroundColor = ConsoleColor.Red;
-                Con.WriteLine("Unknown command: '{0}'", cmd);
-                Con.ResetColor();
-            }
-            catch (Exception e)
-            {
-                Con.ForegroundColor = ConsoleColor.Red;
-                Con.WriteLine("There was an error while executing the command:\n{0}", e);
-                Con.ResetColor();
-            }
+        public void Print(string text)
+        {
+            Con.Write(text);
         }
 
         public void DrawCommandLine()
@@ -184,19 +148,13 @@ namespace SS14.Server.ServerConsole
 
         public void ClearCurrentLine()
         {
-            int currentLineCursor = Console.CursorTop;
-            Console.SetCursorPosition(0, Console.CursorTop);
-            for (int i = 0; i < Console.WindowWidth; i++)
-                Console.Write(" ");
-            Console.SetCursorPosition(0, currentLineCursor);
+            int currentLineCursor = Con.CursorTop;
+            Con.SetCursorPosition(0, Con.CursorTop);
+            for (int i = 0; i < Con.WindowWidth; i++)
+                Con.Write(" ");
+            Con.SetCursorPosition(0, currentLineCursor);
         }
-
-        private void RegisterCommand(IConsoleCommand commandObj)
-        {
-            if (!availableCommands.ContainsKey(commandObj.Command.ToLower()))
-                availableCommands.Add(commandObj.Command.ToLower(), commandObj);
-        }
-
+        
         private string TabComplete()
         {
             if (currentBuffer.Trim() == String.Empty)
@@ -206,7 +164,7 @@ namespace SS14.Server.ServerConsole
 
             if (tabCompleteList.Count == 0)
             {
-                tabCompleteList = availableCommands.Keys.Where(key => key.StartsWith(currentBuffer)).ToList();
+                tabCompleteList = _conShell.AvailableCommands.Keys.Where(key => key.StartsWith(currentBuffer)).ToList();
                 if (tabCompleteList.Count == 0)
                 {
                     return String.Empty;
@@ -226,7 +184,7 @@ namespace SS14.Server.ServerConsole
         {
             // Handle process exiting ourself.
             args.Cancel = true;
-            IoCManager.Resolve<IBaseServer>().Shutdown();
+            IoCManager.Resolve<IBaseServer>().Shutdown(null);
         }
     }
 }

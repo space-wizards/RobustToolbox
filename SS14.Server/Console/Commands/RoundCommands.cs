@@ -1,12 +1,11 @@
 ﻿using System;
 using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.ClientConsoleHost;
+using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.Player;
-using SS14.Shared;
 using SS14.Shared.Enums;
 using SS14.Shared.IoC;
 
-namespace SS14.Server.ClientConsoleHost.Commands
+namespace SS14.Server.Console.Commands
 {
     class JoinGameCommand : IClientCommand
     {
@@ -14,7 +13,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Moves the player from the lobby to the game.";
         public string Help => String.Empty;
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if (player.Status == SessionStatus.InLobby)
                 player.JoinGame();
@@ -27,7 +26,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Moves the player from the game to the lobby.";
         public string Help => String.Empty;
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if (player.Status == SessionStatus.InGame)
                 player.JoinLobby();
@@ -40,7 +39,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Ends PreGame state and starts the round.";
         public string Help => String.Empty;
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             var baseServer = IoCManager.Resolve<IBaseServer>();
 
@@ -57,7 +56,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Ends the round and moves the server to PostGame.";
         public string Help => String.Empty;
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             var baseServer = IoCManager.Resolve<IBaseServer>();
 
@@ -74,7 +73,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
         public string Description => "Moves the server from PostRound to a new PreRound.";
         public string Help => String.Empty;
 
-        public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             var baseServer = IoCManager.Resolve<IBaseServer>();
 

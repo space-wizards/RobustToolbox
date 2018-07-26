@@ -7,13 +7,8 @@ namespace SS14.Client.GameObjects.EntitySystems
 {
     sealed class AppearanceSystem : EntitySystem
     {
-        [Dependency]
-        IComponentManager componentManager;
-
         public AppearanceSystem()
         {
-            IoCManager.InjectDependencies(this);
-
             EntityQuery = new TypeEntityQuery(typeof(AppearanceComponent));
         }
 

@@ -22,8 +22,6 @@ namespace SS14.Client.UserInterface.CustomControls
         private readonly IPlacementManager placementManager;
         [Dependency]
         private readonly IPrototypeManager prototypeManager;
-        [Dependency]
-        private readonly IResourceCache resourceCache;
 
         private Control HSplitContainer;
         private Control PrototypeList;

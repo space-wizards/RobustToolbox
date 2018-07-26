@@ -63,8 +63,6 @@ namespace SS14.Server
         [Dependency]
         private readonly IResourceManager _resources;
         [Dependency]
-        private readonly IMapLoader _mapLoader;
-        [Dependency]
         private readonly IMapManager _mapManager;
         [Dependency]
         private readonly ITimerManager timerManager;

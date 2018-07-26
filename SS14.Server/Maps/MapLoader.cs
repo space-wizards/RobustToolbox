@@ -31,12 +31,6 @@ namespace SS14.Server.Maps
         private IResourceManager _resMan;
 
         [Dependency]
-        private IServerEntityManager _entityMan;
-
-        [Dependency]
-        private IPrototypeManager _protoMan;
-
-        [Dependency]
         private readonly IMapManager _mapManager;
 
         /// <inheritdoc />

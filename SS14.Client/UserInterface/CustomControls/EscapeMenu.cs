@@ -13,10 +13,6 @@ namespace SS14.Client.UserInterface.CustomControls
     public class EscapeMenu : SS14Window
     {
         [Dependency]
-        readonly IClientNetManager netManager;
-        [Dependency]
-        readonly IStateManager stateManager;
-        [Dependency]
         readonly IClientConsole console;
 
         protected override Godot.Control SpawnSceneControl()

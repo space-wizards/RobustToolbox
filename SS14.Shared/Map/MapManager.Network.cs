@@ -16,9 +16,6 @@ namespace SS14.Shared.Map
         [Dependency]
         private readonly INetManager _netManager;
 
-        [Dependency]
-        private readonly ITileDefinitionManager _defManager;
-
         private int _gridsToReceive = -1;
         private int _gridsReceived;
 

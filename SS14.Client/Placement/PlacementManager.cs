@@ -58,8 +58,6 @@ namespace SS14.Client.Placement
         [Dependency]
         readonly public IInputManager inputManager;
         [Dependency]
-        private readonly IUserInterfaceManager _userInterfaceManager;
-        [Dependency]
         private readonly IPrototypeManager _prototypeManager;
         [Dependency]
         private readonly ITileDefinitionManager _tileDefManager;

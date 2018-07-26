@@ -54,7 +54,7 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         public bool IsHovered => SceneControl.IsHovered();
-        public Draw DrawMode => (Draw)SceneControl.GetDrawMode();
+        public DrawModeEnum DrawMode => (DrawModeEnum)SceneControl.GetDrawMode();
 
         public ButtonGroup ButtonGroup
         {
@@ -67,7 +67,7 @@ namespace SS14.Client.UserInterface.Controls
         public event Action<ButtonEventArgs> OnPressed;
         public event Action<ButtonToggledEventArgs> OnToggled;
 
-        public enum Draw
+        public enum DrawModeEnum
         {
             Normal = Godot.BaseButton.DrawMode.Normal,
             Pressed = Godot.BaseButton.DrawMode.Pressed,
@@ -173,7 +173,7 @@ namespace SS14.Client.UserInterface.Controls
     {
         public Godot.ButtonGroup GodotGroup { get; }
 
-        public ButtonGroup() : this(new Godot.ButtonGroup()) {}
+        public ButtonGroup() : this(new Godot.ButtonGroup()) { }
         public ButtonGroup(Godot.ButtonGroup group)
         {
             GodotGroup = group;

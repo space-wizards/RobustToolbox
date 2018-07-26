@@ -17,7 +17,6 @@ namespace SS14.Server.GameObjects
         private bool _collisionEnabled;
         private bool _isHardCollidable;
 
-        public event EventHandler<BumpEventArgs> OnBump;
 
         /// <inheritdoc />
         public override string Name => "Collidable";
@@ -59,7 +58,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         void ICollidable.Bumped(IEntity bumpedby)
         {
-            OnBump?.Invoke(this, new BumpEventArgs(Owner, bumpedby));
+            SendMessage(new BumpedEntMsg(bumpedby));
         }
 
         /// <inheritdoc />

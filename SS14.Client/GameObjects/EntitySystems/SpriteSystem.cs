@@ -8,13 +8,8 @@ namespace SS14.Client.GameObjects.EntitySystems
 {
     public class SpriteSystem : EntitySystem
     {
-        [Dependency]
-        IComponentManager componentManager;
-
         public SpriteSystem()
         {
-            IoCManager.InjectDependencies(this);
-
             EntityQuery = new TypeEntityQuery(typeof(ISpriteComponent));
         }
 

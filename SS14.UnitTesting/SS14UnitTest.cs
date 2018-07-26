@@ -76,10 +76,6 @@ namespace SS14.UnitTesting
 
     public abstract class SS14UnitTest
     {
-        public delegate void EventHandler();
-
-        public static event EventHandler InjectedMethod;
-
         #region Options
 
         // TODO: make this figured out at runtime so we don't have to pass a compiler flag.

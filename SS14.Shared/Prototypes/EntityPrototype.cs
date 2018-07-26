@@ -7,10 +7,10 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
+using SS14.Shared.Serialization;
 
 namespace SS14.Shared.GameObjects
 {
@@ -105,6 +105,10 @@ namespace SS14.Shared.GameObjects
         public YamlMappingNode DataNode { get; set; }
 
         private readonly HashSet<Type> ReferenceTypes = new HashSet<Type>();
+
+        string CurrentDeserializingComponent;
+        readonly Dictionary<string, Dictionary<(string, Type), object>> FieldCache = new Dictionary<string, Dictionary<(string, Type), object>>();
+        readonly Dictionary<string, object> DataCache = new Dictionary<string, object>();
 
         public void LoadFrom(YamlMappingNode mapping)
         {
@@ -286,7 +290,7 @@ namespace SS14.Shared.GameObjects
                     }
                     target.Components[component.Key] = new YamlMappingNode(component.Value.AsEnumerable());
                 }
-                next:;
+            next:;
             }
 
             // Copy all simple data over.
@@ -340,37 +344,44 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        /// <summary>
-        /// Creates an entity from this prototype.
-        /// Do not call this directly, use the server entity manager instead.
-        /// </summary>
-        /// <returns></returns>
-        public Entity CreateEntity(EntityUid uid, IEntityManager manager, IEntityNetworkManager networkManager, IComponentFactory componentFactory)
+        internal Entity AllocEntity(EntityUid uid, IEntityManager manager, IEntityNetworkManager networkManager)
         {
             var entity = (Entity)Activator.CreateInstance(ClassType ?? typeof(Entity));
 
             entity.SetManagers(manager);
             entity.SetUid(uid);
-            entity.Name = Name;
             entity.Prototype = this;
+            entity.Name = Name;
 
-            if (DataNode != null)
+            return entity;
+        }
+
+        internal void FinishEntity(Entity entity, IComponentFactory factory, IEntityFinishContext context)
+        {
+            YamlObjectSerializer.Context defaultContext = null;
+            if (context == null)
             {
-                entity.ExposeData(new YamlEntitySerializer(DataNode));
+                defaultContext = new PrototypeSerializationContext(this);
             }
-
             foreach (var componentData in Components)
             {
-                var component = (Component)componentFactory.GetComponent(componentData.Key);
+                var component = (Component)factory.GetComponent(componentData.Key);
 
                 component.Owner = entity;
-                component.LoadParameters(componentData.Value);
-                component.ExposeData(new YamlEntitySerializer(componentData.Value));
+                ObjectSerializer ser;
+                if (context != null)
+                {
+                    ser = context.GetComponentSerializer(componentData.Key, componentData.Value);
+                }
+                else
+                {
+                    CurrentDeserializingComponent = componentData.Key;
+                    ser = YamlObjectSerializer.NewReader(componentData.Value, defaultContext);
+                }
+                component.ExposeData(ser);
 
                 entity.AddComponent(component);
             }
-
-            return entity;
         }
 
         /// <summary>
@@ -415,6 +426,70 @@ namespace SS14.Shared.GameObjects
         public override string ToString()
         {
             return $"EntityPrototype({ID})";
+        }
+
+        class PrototypeSerializationContext : YamlObjectSerializer.Context
+        {
+            readonly EntityPrototype prototype;
+
+            public PrototypeSerializationContext(EntityPrototype owner)
+            {
+                prototype = owner;
+            }
+
+            public override void SetCachedField<T>(string field, T value)
+            {
+                if (StackDepth != 0)
+                {
+                    base.SetCachedField<T>(field, value);
+                    return;
+                }
+                if (!prototype.FieldCache.TryGetValue(prototype.CurrentDeserializingComponent, out var fieldList))
+                {
+                    fieldList = new Dictionary<(string, Type), object>();
+                    prototype.FieldCache[prototype.CurrentDeserializingComponent] = fieldList;
+                }
+
+                fieldList[(field, typeof(T))] = value;
+            }
+
+            public override bool TryGetCachedField<T>(string field, out T value)
+            {
+                if (StackDepth != 0)
+                {
+                    return base.TryGetCachedField<T>(field, out value);
+                }
+                if (prototype.FieldCache.TryGetValue(prototype.CurrentDeserializingComponent, out var dict))
+                {
+                    if (dict.TryGetValue((field, typeof(T)), out var theValue))
+                    {
+                        value = (T)theValue;
+                        return true;
+                    }
+                }
+
+                value = default(T);
+                return false;
+            }
+
+            public override void SetDataCache(string field, object value)
+            {
+                if (StackDepth != 0)
+                {
+                    base.SetDataCache(field, value);
+                    return;
+                }
+                prototype.DataCache[field] = value;
+            }
+
+            public override bool TryGetDataCache(string field, out object value)
+            {
+                if (StackDepth != 0)
+                {
+                    return base.TryGetDataCache(field, out value);
+                }
+                return prototype.DataCache.TryGetValue(field, out value);
+            }
         }
     }
 }

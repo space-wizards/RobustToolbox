@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.GameObjects.Serialization;
+using SS14.Shared.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
@@ -14,8 +14,6 @@ namespace SS14.Shared.GameObjects
         #region Members
 
         private string _name;
-        private string _type = "entity";
-        private string _id;
 
         /// <inheritdoc />
         public IEntityManager EntityManager { get; private set; }
@@ -24,7 +22,7 @@ namespace SS14.Shared.GameObjects
         public EntityUid Uid { get; private set; }
 
         /// <inheritdoc />
-        public EntityPrototype Prototype { get; set; }
+        public EntityPrototype Prototype { get; internal set; }
 
         /// <inheritdoc />
         public string Description
@@ -120,7 +118,7 @@ namespace SS14.Shared.GameObjects
             for (int i = 0; i < components.Count; i++)
             {
                 var comp = (Component)components[i];
-                if(comp != null && !comp.Initialized)
+                if (comp != null && !comp.Initialized)
                     comp.Initialize();
             }
         }
@@ -136,40 +134,8 @@ namespace SS14.Shared.GameObjects
             for (int i = 0; i < components.Count; i++)
             {
                 var comp = (Component)components[i];
-                if(comp != null && comp.Initialized && !comp.Running && !comp.Deleted)
+                if (comp != null && comp.Initialized && !comp.Running && !comp.Deleted)
                     comp.Startup();
-            }
-        }
-
-        /// <summary>
-        ///     Called after the entity is constructed by its prototype to load serializable fields
-        ///     from the prototype's <c>data</c> field. Called any time during the Entities life to serialize
-        ///     its fields.
-        /// </summary>
-        /// <param name="serializer">The serialization object that contains the <c>data</c> field.</param>
-        public void ExposeData(EntitySerializer serializer)
-        {
-            _id = Prototype.ID;
-            _type = Prototype.TypeString;
-
-            serializer.EntityHeader();
-
-            serializer.DataField(ref _type, "type", "entity", true);
-            serializer.DataField(ref _id, "id", String.Empty, true);
-            serializer.DataField(ref _name, "name", String.Empty, true);
-
-            serializer.CompHeader();
-
-            var components = EntityManager.ComponentManager.GetComponents(Uid);
-            foreach (var component in components)
-            {
-                string type = component.Name;
-
-                serializer.CompStart(type);
-
-                serializer.DataField(ref type, "type", component.Name, true);
-
-                component.ExposeData(serializer);
             }
         }
 
@@ -219,24 +185,24 @@ namespace SS14.Shared.GameObjects
             switch (message.Message.Type)
             {
                 case EntityMessageType.ComponentMessage:
-                {
-                    var compMsg = message.Message.ComponentMessage;
-                    var compChannel = message.Message.MsgChannel;
-                    compMsg.Remote = true;
+                    {
+                        var compMsg = message.Message.ComponentMessage;
+                        var compChannel = message.Message.MsgChannel;
+                        compMsg.Remote = true;
 
-                    if (compMsg.Directed)
-                    {
-                        if (EntityManager.ComponentManager.TryGetComponent(Uid, message.Message.NetId, out var component))
-                            component.HandleMessage(compMsg, compChannel);
-                    }
-                    else
-                    {
-                        foreach (var component in EntityManager.ComponentManager.GetComponents(Uid))
+                        if (compMsg.Directed)
                         {
-                            component.HandleMessage(compMsg, compChannel);
+                            if (EntityManager.ComponentManager.TryGetComponent(Uid, message.Message.NetId, out var component))
+                                component.HandleMessage(compMsg, compChannel);
+                        }
+                        else
+                        {
+                            foreach (var component in EntityManager.ComponentManager.GetComponents(Uid))
+                            {
+                                component.HandleMessage(compMsg, compChannel);
+                            }
                         }
                     }
-                }
                     break;
             }
         }
@@ -336,7 +302,7 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public T GetComponent<T>()
         {
-            return (T) EntityManager.ComponentManager.GetComponent(Uid, typeof(T));
+            return (T)EntityManager.ComponentManager.GetComponent(Uid, typeof(T));
         }
 
         /// <inheritdoc />
@@ -412,7 +378,7 @@ namespace SS14.Shared.GameObjects
                     RemoveComponent(GetComponent(t.Item1));
 
                 if (!HasComponent(t.Item1))
-                    AddComponent((Component) IoCManager.Resolve<IComponentFactory>().GetComponent(t.Item2), true);
+                    AddComponent((Component)IoCManager.Resolve<IComponentFactory>().GetComponent(t.Item2), true);
             }
 
             foreach (var compState in state.ComponentStates)

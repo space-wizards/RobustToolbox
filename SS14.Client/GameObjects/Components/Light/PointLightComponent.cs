@@ -12,6 +12,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
+using SS14.Shared.Serialization;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -96,45 +97,22 @@ namespace SS14.Client.GameObjects
             Light.ParentTo(transform);
         }
 
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void ExposeData(ObjectSerializer serializer)
         {
             if (lightManager == null)
             {
                 // First in the init stack so...
+                // FIXME: This is terrible.
                 lightManager = IoCManager.Resolve<ILightManager>();
                 Light = lightManager.MakeLight();
             }
 
-            YamlNode node;
-            if (mapping.TryGetNode("offset", out node))
-            {
-                Offset = node.AsVector2();
-            }
-
-            if (mapping.TryGetNode("radius", out node))
-            {
-                Radius = node.AsFloat();
-            }
-
-            if (mapping.TryGetNode("color", out node))
-            {
-                Color = node.AsHexColor();
-            }
-
-            if (mapping.TryGetNode("state", out node))
-            {
-                State = node.AsEnum<LightState>();
-            }
-
-            if (mapping.TryGetNode("energy", out node))
-            {
-                Energy = node.AsFloat();
-            }
-
-            if (mapping.TryGetNode("autoRot", out node))
-            {
-                MaskAutoRotate = node.AsBool();
-            }
+            serializer.DataReadWriteFunction("offset", Vector2.Zero, vec => Offset = vec, () => Offset);
+            serializer.DataReadWriteFunction("radius", 5f, radius => Radius = radius, () => Radius);
+            serializer.DataReadWriteFunction("color", Color.White, col => Color = col, () => Color);
+            serializer.DataReadWriteFunction("state", LightState.On, state => State = state, () => State);
+            serializer.DataReadWriteFunction("energy", 1f, energy => Energy = energy, () => Energy);
+            serializer.DataReadWriteFunction("autoRot", false, rot => MaskAutoRotate = rot, () => MaskAutoRotate);
         }
 
         public override void OnRemove()

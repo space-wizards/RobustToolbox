@@ -193,6 +193,7 @@
     <Compile Include="Console\SystemConsoleManager.cs" />
     <Compile Include="Player\PlayerInput.cs" />
     <Compile Include="Interfaces\Player\IPlayerInput.cs" />
+    <Compile Include="Interfaces\GameObjects\IServerEntityManagerInternal.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="..\MSBuild\SS14.Engine.targets" />

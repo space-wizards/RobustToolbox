@@ -1,8 +1,9 @@
 ﻿using System;
-using SS14.Shared.GameObjects.Serialization;
+using System.Runtime.CompilerServices;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Reflection;
+using SS14.Shared.Serialization;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
@@ -59,7 +60,7 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         public virtual void OnAdd()
         {
-            if(Initialized)
+            if (Initialized)
                 throw new InvalidOperationException("Cannot Add an Initialized component!");
 
             if (Running)
@@ -72,7 +73,7 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public virtual void Initialize()
         {
-            if(Initialized)
+            if (Initialized)
                 throw new InvalidOperationException("Component already Initialized!");
 
             if (Running)
@@ -87,7 +88,7 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public virtual void Startup()
         {
-            if(!Initialized)
+            if (!Initialized)
                 throw new InvalidOperationException("Cannot Start an uninitialized component!");
 
             if (Running)
@@ -102,24 +103,20 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public virtual void Shutdown()
         {
-            if(!Initialized)
+            if (!Initialized)
                 throw new InvalidOperationException("Cannot Shutdown an uninitialized component!");
 
-            if(!Running)
+            if (!Running)
                 throw new InvalidOperationException("Cannot Shutdown an unstarted component!");
 
-            if(Deleted)
+            if (Deleted)
                 throw new InvalidOperationException("Cannot Shutdown a Deleted component!");
 
             Running = false;
         }
 
         /// <inheritdoc />
-        [Obsolete("Use the ExposeData serialization system.")]
-        public virtual void LoadParameters(YamlMappingNode mapping) { }
-
-        /// <inheritdoc />
-        public virtual void ExposeData(EntitySerializer serializer)
+        public virtual void ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(ref _netSyncEnabled, "netsync", true);
         }

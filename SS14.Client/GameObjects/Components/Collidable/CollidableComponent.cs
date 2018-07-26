@@ -4,7 +4,6 @@ using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Utility;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Physics;

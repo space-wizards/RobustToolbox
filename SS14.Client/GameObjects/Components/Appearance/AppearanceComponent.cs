@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Appearance;
-using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
+using SS14.Shared.Serialization;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -20,7 +20,7 @@ namespace SS14.Client.GameObjects
 
         static AppearanceComponent()
         {
-            YamlEntitySerializer.RegisterTypeSerializer(typeof(AppearanceVisualizer), new VisualizerTypeSerializer());
+            YamlObjectSerializer.RegisterTypeSerializer(typeof(AppearanceVisualizer), new VisualizerTypeSerializer());
         }
 
         public override void SetData(string key, object value)
@@ -84,7 +84,7 @@ namespace SS14.Client.GameObjects
             AppearanceDirty = true;
         }
 
-        public override void ExposeData(EntitySerializer serializer)
+        public override void ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(ref Visualizers, "visuals", new List<AppearanceVisualizer>());
         }
@@ -99,9 +99,9 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        class VisualizerTypeSerializer : TypeSerializer
+        class VisualizerTypeSerializer : YamlObjectSerializer.TypeSerializer
         {
-            public override object NodeToType(Type type, YamlNode node)
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
                 var refl = IoCManager.Resolve<IReflectionManager>();
                 var mapping = (YamlMappingNode)node;
@@ -134,7 +134,7 @@ namespace SS14.Client.GameObjects
                 }
             }
 
-            public override YamlNode TypeToNode(object obj)
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 switch (obj)
                 {

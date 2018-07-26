@@ -1,7 +1,8 @@
 ﻿using System;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Serialization;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
@@ -107,13 +108,13 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     This should basically be overridden by every inheriting component, as parameters will be different
         ///     across the board.
         /// </summary>
-        void ExposeData(EntitySerializer serializer);
+        void ExposeData(ObjectSerializer serializer);
 
         /// <summary>
         ///     Handles an incoming component message.
         /// </summary>
         /// <param name="message">Incoming event message.</param>
-        /// <param name="netChannel">If this originates from a remote client, this is the channel it came from. If it 
+        /// <param name="netChannel">If this originates from a remote client, this is the channel it came from. If it
         /// originates locally, this is null.</param>
         /// <param name="component">If the message originates from a local component, this is the component that sent it.</param>
         void HandleMessage(ComponentMessage message, INetChannel netChannel = null, IComponent component = null);

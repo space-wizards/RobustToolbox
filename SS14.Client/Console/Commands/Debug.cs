@@ -13,6 +13,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.GameObjects.Components;
 
 namespace SS14.Client.Console.Commands
 {
@@ -28,7 +29,7 @@ namespace SS14.Client.Console.Commands
 
             foreach (IEntity e in entitymanager.GetEntities(new ComponentEntityQuery()))
             {
-                console.AddLine($"entity {e.Uid}, {e.Prototype.Name}.", ChatChannel.Default, Color.White);
+                console.AddLine($"entity {e.Uid}, {e.Prototype.ID}, {e.GetComponent<ITransformComponent>().LocalPosition}.", ChatChannel.Default, Color.White);
             }
 
             return false;

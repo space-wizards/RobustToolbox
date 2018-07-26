@@ -160,6 +160,11 @@ namespace SS14.Shared.Maths
             return DefaultColors[colorname.ToLower()];
         }
 
+        public static bool TryFromName(string colorName, out Color color)
+        {
+            return DefaultColors.TryGetValue(colorName.ToLower(), out color);
+        }
+
         public static IEnumerable<KeyValuePair<string, Color>> GetAllDefaultColors()
         {
             return DefaultColors;

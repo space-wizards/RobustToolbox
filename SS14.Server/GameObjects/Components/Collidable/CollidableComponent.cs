@@ -1,6 +1,5 @@
 ﻿using System;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Physics;
@@ -9,6 +8,7 @@ using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Serialization;
 
 namespace SS14.Server.GameObjects
 {
@@ -29,7 +29,7 @@ namespace SS14.Server.GameObjects
         public MapId MapID => Owner.GetComponent<ITransformComponent>().MapID;
 
 
-        public override void ExposeData(EntitySerializer serializer)
+        public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);
 

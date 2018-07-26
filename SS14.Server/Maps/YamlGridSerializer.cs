@@ -5,6 +5,7 @@ using System.Linq;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
+using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -22,9 +23,10 @@ namespace SS14.Server.Maps
             gridn.Add("settings", info);
             gridn.Add("chunks", chunkSeq);
 
-            info.Add("csz", grid.ChunkSize.ToString(CultureInfo.InvariantCulture));
-            info.Add("tsz", grid.TileSize.ToString(CultureInfo.InvariantCulture));
-            info.Add("sgsz", grid.SnapSize.ToString(CultureInfo.InvariantCulture));
+            info.Add("chunksize", grid.ChunkSize.ToString(CultureInfo.InvariantCulture));
+            info.Add("tilesize", grid.TileSize.ToString(CultureInfo.InvariantCulture));
+            info.Add("snapsize", grid.SnapSize.ToString(CultureInfo.InvariantCulture));
+            info.Add("worldpos", $"{grid.WorldPosition.X},{grid.WorldPosition.Y}");
 
             var chunks = grid.GetMapChunks();
             foreach (var chunk in chunks)
@@ -33,9 +35,7 @@ namespace SS14.Server.Maps
                 chunkSeq.Add(chunkNode);
             }
 
-            var root = new YamlMappingNode();
-            root.Add("grid", gridn);
-            return root;
+            return gridn;
         }
 
         private static YamlNode SerializeChunk(IMapChunk chunk)
@@ -82,17 +82,20 @@ namespace SS14.Server.Maps
             ushort csz = 0;
             ushort tsz = 0;
             float sgsz = 0.0f;
+            var worldPos = Vector2.Zero;
 
             foreach (var kvInfo in info)
             {
                 var key = kvInfo.Key.ToString();
                 var val = kvInfo.Value.ToString();
-                if (key == "csz")
+                if (key == "chunksize")
                     csz = ushort.Parse(val);
-                else if (key == "tsz")
+                else if (key == "tilesize")
                     tsz = ushort.Parse(val);
-                else if (key == "sgsz")
+                else if (key == "snapsize")
                     sgsz = float.Parse(val);
+                else if (key == "worldpos")
+                    worldPos = kvInfo.Value.AsVector2();
             }
 
             var grid = map.CreateGrid(gridId, csz, sgsz);

@@ -216,6 +216,13 @@ namespace SS14.Shared.GameObjects
         /// <returns>spawned entity</returns>
         protected Entity SpawnEntity(string prototypeName, EntityUid? uid)
         {
+            var entity = AllocEntity(prototypeName, uid);
+            FinishEntity(entity);
+            return entity;
+        }
+
+        internal Entity AllocEntity(string prototypeName, EntityUid? uid = null)
+        {
             if (uid == null)
             {
                 uid = new EntityUid(NextUid++);
@@ -227,11 +234,14 @@ namespace SS14.Shared.GameObjects
             }
 
             EntityPrototype prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
-            Entity entity = prototype.CreateEntity(uid.Value, this, EntityNetworkManager, ComponentFactory);
-            Entities[uid.Value] = entity;
-            _allEntities.Add(entity);
+            return prototype.AllocEntity(uid.Value, this, EntityNetworkManager);
+        }
 
-            return entity;
+        internal void FinishEntity(IEntity entity, IEntityFinishContext context = null)
+        {
+            entity.Prototype.FinishEntity((Entity)entity, ComponentFactory, context);
+            Entities[entity.Uid] = entity;
+            _allEntities.Add((Entity)entity);
         }
 
         protected static void InitializeEntity(Entity entity)

@@ -13,7 +13,6 @@ using SS14.Shared.Interfaces;
 using SS14.Shared.Log;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
-using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Resources;
 
@@ -67,8 +66,6 @@ namespace SS14.Shared.Prototypes
         /// Syncs all inter-prototype data. Call this when operations adding new prototypes are done.
         /// </summary>
         void Resync();
-
-        void LoadData(IEntity entity, YamlMappingNode node);
     }
 
     /// <summary>
@@ -133,12 +130,6 @@ namespace SS14.Shared.Prototypes
             prototypes.Clear();
             prototypeTypes.Clear();
             indexedPrototypes.Clear();
-        }
-
-        public void LoadData(IEntity entity, YamlMappingNode node)
-        {
-            var ent = entity as Entity;
-            ent.ExposeData(new YamlEntitySerializer(node, setDefaults: false));
         }
 
         public void Resync()

@@ -1,9 +1,11 @@
-﻿using SS14.Client.Graphics;
+﻿using System.Diagnostics;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Serialization;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -12,61 +14,84 @@ namespace SS14.Client.GameObjects
     public class IconComponent : Component
     {
         public override string Name => "Icon";
-        public IDirectionalTextureProvider Icon { get; private set; }
+        public IDirectionalTextureProvider Icon => _icon;
+        private IDirectionalTextureProvider _icon;
 
-        public override void LoadParameters(YamlMappingNode mapping)
+        public const string LogCategory = "go.comp.icon";
+        const string SerializationCache = "icon";
+
+        public override void ExposeData(ObjectSerializer serializer)
         {
-            base.LoadParameters(mapping);
-            Icon = TextureForConfig(mapping, Owner.Prototype);
+            base.ExposeData(serializer);
+
+            // TODO: Does this need writing?
+            if (serializer.Reading)
+            {
+                _icon = TextureForConfig(serializer);
+            }
         }
 
-        private static IDirectionalTextureProvider TextureForConfig(YamlMappingNode mapping, EntityPrototype prototype)
+        private static IDirectionalTextureProvider TextureForConfig(ObjectSerializer serializer)
         {
             var resc = IoCManager.Resolve<IResourceCache>();
+            Debug.Assert(serializer.Reading);
 
-            if (mapping.TryGetNode("texture", out YamlNode node))
+            if (serializer.TryGetCacheData<IDirectionalTextureProvider>(SerializationCache, out var dirTex))
             {
-                // Pretty much to allow people to override things defining texture in child prototypes.
-                if (!string.IsNullOrWhiteSpace(node.AsString()))
-                {
-                    return resc.GetResource<TextureResource>(SpriteComponent.TextureRoot / node.AsResourcePath()).Texture;
-                }
+                return dirTex;
+            }
+
+            var tex = serializer.ReadDataField<string>("texture", null);
+            if (!string.IsNullOrWhiteSpace(tex))
+            {
+                dirTex = resc.GetResource<TextureResource>(SpriteComponent.TextureRoot / tex).Texture;
+                serializer.SetCacheData(SerializationCache, dirTex);
+                return dirTex;
             }
 
             RSI rsi;
 
-            if (mapping.TryGetNode("sprite", out node))
+            var rsiPath = serializer.ReadDataField<string>("sprite", null);
+
+            if (string.IsNullOrWhiteSpace(rsiPath))
             {
-                var path = SpriteComponent.TextureRoot / node.AsResourcePath();
-                try
-                {
-                    rsi = resc.GetResource<RSIResource>(path).RSI;
-                }
-                catch
-                {
-                    Logger.ErrorS("go.comp.icon", "Failed to load RSI '{0}' on prototype '{1}'", path, prototype.ID);
-                    return resc.GetFallback<TextureResource>().Texture;
-                }
+                dirTex = resc.GetFallback<TextureResource>().Texture;
+                serializer.SetCacheData(SerializationCache, dirTex);
+                return dirTex;
+            }
+
+            var path = SpriteComponent.TextureRoot / rsiPath;
+
+            try
+            {
+                rsi = resc.GetResource<RSIResource>(path).RSI;
+            }
+            catch
+            {
+                dirTex = resc.GetFallback<TextureResource>().Texture;
+                serializer.SetCacheData(SerializationCache, dirTex);
+                return dirTex;
+            }
+
+            var stateId = serializer.ReadDataField<string>("state", null);
+            if (string.IsNullOrWhiteSpace(stateId))
+            {
+                Logger.ErrorS(LogCategory, "No state specified.");
+                dirTex = resc.GetFallback<TextureResource>().Texture;
+                serializer.SetCacheData(SerializationCache, dirTex);
+                return dirTex;
+            }
+
+            if (rsi.TryGetState(stateId, out var state))
+            {
+                serializer.SetCacheData(SerializationCache, state);
+                return state;
             }
             else
             {
+                Logger.ErrorS(LogCategory, "State '{0}' does not exist on RSI.", stateId);
                 return resc.GetFallback<TextureResource>().Texture;
             }
-
-            if (mapping.TryGetNode("state", out node))
-            {
-                if (rsi.TryGetState(node.AsString(), out var state))
-                {
-                    return state;
-                }
-                else
-                {
-                    Logger.ErrorS("go.comp.icon", "State '{0}' does not exist on RSI. Prototype: '{1}'", node.AsString(), prototype.ID);
-                    return resc.GetFallback<TextureResource>().Texture;
-                }
-            }
-            Logger.ErrorS("go.comp.icon", "No state specified prototype '{0}'", prototype.ID);
-            return resc.GetFallback<TextureResource>().Texture;
         }
 
         public static IDirectionalTextureProvider GetPrototypeIcon(EntityPrototype prototype)
@@ -75,8 +100,7 @@ namespace SS14.Client.GameObjects
             {
                 return IoCManager.Resolve<IResourceCache>().GetFallback<TextureResource>().Texture;
             }
-
-            return TextureForConfig(mapping, prototype);
+            return TextureForConfig(YamlObjectSerializer.NewReader(mapping));
         }
     }
 }

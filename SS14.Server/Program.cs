@@ -112,6 +112,7 @@ namespace SS14.Server
             // Server stuff.
             IoCManager.Register<IEntityManager, ServerEntityManager>();
             IoCManager.Register<IServerEntityManager, ServerEntityManager>();
+            IoCManager.Register<IServerEntityManagerInternal, ServerEntityManager>();
             IoCManager.Register<IChatManager, ChatManager>();
             IoCManager.Register<IServerNetManager, NetManager>();
             IoCManager.Register<IMapManager, MapManager>();

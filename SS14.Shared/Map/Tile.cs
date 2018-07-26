@@ -33,26 +33,26 @@ namespace SS14.Shared.Map
 
         public static explicit operator uint(Tile tile)
         {
-            return ((uint) tile.TileId << 16) | tile.Data;
+            return ((uint)tile.TileId << 16) | tile.Data;
         }
 
 
         public static explicit operator Tile(uint tile)
         {
             return new Tile(
-                (ushort) (tile >> 16),
-                (ushort) tile
+                (ushort)(tile >> 16),
+                (ushort)tile
             );
         }
 
         public override bool Equals(object obj)
         {
-            return obj is Tile && this == (Tile) obj;
+            return obj is Tile && this == (Tile)obj;
         }
 
         public override int GetHashCode()
         {
-            return ((uint) this).GetHashCode();
+            return ((uint)this).GetHashCode();
         }
 
         public static bool operator ==(Tile a, Tile b)

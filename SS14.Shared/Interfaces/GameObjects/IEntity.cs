@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Serialization;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {

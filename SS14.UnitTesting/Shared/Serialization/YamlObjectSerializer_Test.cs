@@ -1,29 +1,29 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
-using SS14.Shared.GameObjects.Serialization;
+using SS14.Shared.Serialization;
 using YamlDotNet.RepresentationModel;
 
-namespace SS14.UnitTesting.Shared.GameObjects.Serialization
+namespace SS14.UnitTesting.Shared.Serialization
 {
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
-    [TestOf(typeof(YamlEntitySerializer))]
-    class YamlEntitySerializer_Test
+    [TestOf(typeof(YamlObjectSerializer))]
+    class YamlObjectSerializer_Test
     {
         [Test]
         public void SerializeListTest()
         {
             // Arrange
             var data = SerializableList;
-            var serializer = new YamlEntitySerializer();
-            serializer.EntityHeader();
+            var mapping = new YamlMappingNode();
+            var serializer = YamlObjectSerializer.NewWriter(mapping);
 
             // Act
             serializer.DataField(ref data, "datalist", new List<int>(0));
 
             // Assert
-            var result = NodeToYamlText(serializer.GetRootNode());
+            var result = NodeToYamlText(mapping);
             Assert.That(result, Is.EqualTo(SerializedListYaml));
         }
 
@@ -33,8 +33,7 @@ namespace SS14.UnitTesting.Shared.GameObjects.Serialization
             // Arrange
             List<int> data = null;
             var rootNode = YamlTextToNode(SerializedListYaml);
-            var serializer = new YamlEntitySerializer(rootNode);
-            serializer.EntityHeader();
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
 
             // Act
             serializer.DataField(ref data, "datalist", new List<int>(0));
@@ -46,7 +45,7 @@ namespace SS14.UnitTesting.Shared.GameObjects.Serialization
                 Assert.That(data[i], Is.EqualTo(SerializableList[i]));
         }
 
-        private readonly string SerializedListYaml = "entities:\n- datalist:\n  - 1\n  - 2\n  - 3\n...\n";
+        private readonly string SerializedListYaml = "datalist:\n- 1\n- 2\n- 3\n...\n";
         private readonly List<int> SerializableList = new List<int> { 1, 2, 3 };
 
         [Test]
@@ -54,14 +53,14 @@ namespace SS14.UnitTesting.Shared.GameObjects.Serialization
         {
             // Arrange
             var data = SerializableDict;
-            var serializer = new YamlEntitySerializer();
-            serializer.EntityHeader();
+            var mapping = new YamlMappingNode();
+            var serializer = YamlObjectSerializer.NewWriter(mapping);
 
             // Act
             serializer.DataField(ref data, "datadict", new Dictionary<string, int>(0));
 
             // Assert
-            var result = NodeToYamlText(serializer.GetRootNode());
+            var result = NodeToYamlText(mapping);
             Assert.That(result, Is.EqualTo(SerializedDictYaml));
         }
 
@@ -70,8 +69,7 @@ namespace SS14.UnitTesting.Shared.GameObjects.Serialization
         {
             Dictionary<string, int> data = null;
             var rootNode = YamlTextToNode(SerializedDictYaml);
-            var serializer = new YamlEntitySerializer(rootNode);
-            serializer.EntityHeader();
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
 
             // Act
             serializer.DataField(ref data, "datadict", new Dictionary<string, int>(0));
@@ -83,7 +81,7 @@ namespace SS14.UnitTesting.Shared.GameObjects.Serialization
                 Assert.That(data[kvEntry.Key], Is.EqualTo(kvEntry.Value));
         }
 
-        private readonly string SerializedDictYaml = "entities:\n- datadict:\n    val1: 1\n    val2: 2\n...\n";
+        private readonly string SerializedDictYaml = "datadict:\n  val1: 1\n  val2: 2\n...\n";
         private readonly Dictionary<string, int> SerializableDict = new Dictionary<string, int> { { "val1", 1 }, { "val2", 2 } };
 
         // serializes a node tree into text
@@ -123,13 +121,7 @@ namespace SS14.UnitTesting.Shared.GameObjects.Serialization
                 // read first document
                 var firstDoc = yamlStream.Documents[0];
 
-                // get entities sequence
-                var entMap = (YamlMappingNode)firstDoc.RootNode;
-                var entSeq = (YamlSequenceNode)entMap.Children["entities"];
-
-                var firstEnt = (YamlMappingNode)entSeq.Children[0];
-
-                return firstEnt;
+                return (YamlMappingNode)firstDoc.RootNode;
             }
         }
     }

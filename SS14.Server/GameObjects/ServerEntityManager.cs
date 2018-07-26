@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
@@ -9,13 +8,14 @@ using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
+using SS14.Shared.Serialization;
 
 namespace SS14.Server.GameObjects
 {
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    public class ServerEntityManager : EntityManager, IServerEntityManager
+    public class ServerEntityManager : EntityManager, IServerEntityManagerInternal
     {
         #region IEntityManager Members
 
@@ -129,19 +129,6 @@ namespace SS14.Server.GameObjects
             DeletionHistory.RemoveAll(hist => hist.tick <= toTick);
         }
 
-        /// <inheritdoc />
-        public void SaveGridEntities(EntitySerializer serializer, GridId gridId)
-        {
-            // serialize all entities to disk
-            foreach (var entity in _allEntities)
-            {
-                if (entity.TryGetComponent<ITransformComponent>(out var transform) && transform.GridID == gridId && entity.Prototype.MapSavable)
-                {
-                    entity.ExposeData(serializer);
-                }
-            }
-        }
-
         #endregion IEntityManager Members
 
         #region EntityGetters
@@ -253,6 +240,16 @@ namespace SS14.Server.GameObjects
         }
 
         #endregion EntityGetters
+
+        IEntity IServerEntityManagerInternal.AllocEntity(string prototypeName, EntityUid? uid)
+        {
+            return AllocEntity(prototypeName, uid);
+        }
+
+        void IServerEntityManagerInternal.FinishEntity(IEntity entity, IEntityFinishContext context)
+        {
+            FinishEntity(entity, context);
+        }
 
         /// <inheritdoc />
         public override void Startup()

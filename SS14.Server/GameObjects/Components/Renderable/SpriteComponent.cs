@@ -3,20 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Serialization;
+using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
+using SS14.Shared.Serialization;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
-    public class SpriteComponent : Component, ISpriteRenderableComponent
+    public class SpriteComponent : SharedSpriteComponent, ISpriteRenderableComponent
     {
-        public override string Name => "Sprite";
-        public override uint? NetID => NetIDs.SPRITE;
-
-        private List<Layer> Layers = new List<Layer>();
+        const string LayerSerializationCache = "spritelayersrv";
+        private List<PrototypeLayerData> Layers = new List<PrototypeLayerData>();
 
         private bool _visible;
         private DrawDepth _drawDepth = DrawDepth.Objects;
@@ -109,7 +108,7 @@ namespace SS14.Server.GameObjects
 
         public int AddLayerWithTexture(string texture)
         {
-            var layer = Layer.New();
+            var layer = PrototypeLayerData.New();
             layer.TexturePath = texture;
             Layers.Add(layer);
             Dirty();
@@ -123,7 +122,7 @@ namespace SS14.Server.GameObjects
 
         public int AddLayerWithState(string stateId)
         {
-            var layer = Layer.New();
+            var layer = PrototypeLayerData.New();
             layer.State = stateId;
             Layers.Add(layer);
             Dirty();
@@ -132,7 +131,7 @@ namespace SS14.Server.GameObjects
 
         public int AddLayerWithState(string stateId, string rsiPath)
         {
-            var layer = Layer.New();
+            var layer = PrototypeLayerData.New();
             layer.State = stateId;
             layer.RsiPath = rsiPath;
             Layers.Add(layer);
@@ -295,164 +294,53 @@ namespace SS14.Server.GameObjects
             Dirty();
         }
 
-        public override void ExposeData(EntitySerializer serializer)
+        public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);
 
-            serializer.DataField(ref _visible, "visible", true);
-            serializer.DataField(ref _drawDepth, "drawdepth", DrawDepth.Objects);
-            serializer.DataField(ref _offset, "offset", Vector2.Zero);
-            serializer.DataField(ref _scale, "scale", Vector2.One);
-            serializer.DataField(ref _color, "color", Color.White);
-            serializer.DataField(ref _directional, "directional", true);
-            serializer.DataField(ref _baseRSIPath, "sprite", null);
-        }
+            serializer.DataFieldCached(ref _visible, "visible", true);
+            serializer.DataFieldCached(ref _drawDepth, "drawdepth", DrawDepth.Objects);
+            serializer.DataFieldCached(ref _offset, "offset", Vector2.Zero);
+            serializer.DataFieldCached(ref _scale, "scale", Vector2.One);
+            serializer.DataFieldCached(ref _color, "color", Color.White);
+            serializer.DataFieldCached(ref _directional, "directional", true);
+            serializer.DataFieldCached(ref _baseRSIPath, "sprite", null);
+            serializer.DataFieldCached(ref _rotation, "rotation", Angle.Zero);
 
-        public override void LoadParameters(YamlMappingNode mapping)
-        {
-            base.LoadParameters(mapping);
-
-            if (mapping.TryGetNode("rotation", out var node))
+            // TODO: Writing?
+            if (!serializer.Reading)
             {
-                Rotation = Angle.FromDegrees(node.AsFloat());
+                return;
             }
 
-            if (mapping.TryGetNode("sprite", out node))
+            if (serializer.TryGetCacheData<List<PrototypeLayerData>>(LayerSerializationCache, out var layers))
             {
-                BaseRSIPath = node.AsString();
+                Layers = layers.ShallowClone();
+                return;
             }
 
-            if (mapping.TryGetNode("texture", out node))
+            var layerData = serializer.ReadDataField<List<PrototypeLayerData>>("layers", new List<PrototypeLayerData>());
+
             {
-                // Pretty much to allow people to override things defining texture in child prototypes.
-                if (!String.IsNullOrWhiteSpace(node.AsString()))
+                var baseState = serializer.ReadDataField<string>("state", null);
+                var texturePath = serializer.ReadDataField<string>("texture", null);
+
+                if (baseState != null || texturePath != null)
                 {
-                    if (mapping.HasNode("state"))
-                    {
-                        Logger.ErrorS("go.comp.sprite",
-                                    "Cannot use 'texture' if an RSI state is provided. Prototype: '{0}'",
-                                    Owner.Prototype.ID);
-                    }
-                    else
-                    {
-                        var layer = Layer.New();
-                        layer.TexturePath = node.AsString();
-                        Layers.Add(layer);
-                    }
+                    var layerZeroData = PrototypeLayerData.New();
+                    layerZeroData.State = baseState;
+                    layerZeroData.TexturePath = texturePath;
+                    layerData.Insert(0, layerZeroData);
                 }
             }
 
-            if (mapping.TryGetNode("state", out node))
-            {
-                if (BaseRSIPath == null)
-                {
-                    Logger.ErrorS("go.comp.sprite",
-                                  "No base RSI set to load states from: "
-                                  + "cannot use 'state' property. Prototype: '{0}'", Owner.Prototype.ID);
-                }
-                else
-                {
-                    var layer = Layer.New();
-                    layer.State = node.AsString();
-                    Layers.Add(layer);
-                }
-            }
-
-            if (mapping.TryGetNode("layers", out YamlSequenceNode layers))
-            {
-                foreach (var layernode in layers.Cast<YamlMappingNode>())
-                {
-                    LoadLayerFrom(layernode);
-                }
-            }
-        }
-
-        private void LoadLayerFrom(YamlMappingNode mapping)
-        {
-            var layer = Layer.New();
-
-            if (mapping.TryGetNode("sprite", out var node))
-            {
-                layer.RsiPath = node.AsString();
-            }
-
-            if (mapping.TryGetNode("state", out node))
-            {
-                layer.State = node.AsString();
-            }
-
-            if (mapping.TryGetNode("texture", out node))
-            {
-                if (layer.State != null)
-                {
-                    Logger.ErrorS("go.comp.sprite",
-                                  "Cannot specify 'texture' on a layer if it has an RSI state specified. Prototype: '{0}'",
-                                  Owner.Prototype.ID);
-                }
-                else
-                {
-                    layer.TexturePath = node.AsString();
-                }
-            }
-
-            if (mapping.TryGetNode("shader", out node))
-            {
-                layer.Shader = node.AsString();
-            }
-
-            if (mapping.TryGetNode("scale", out node))
-            {
-                layer.Scale = node.AsVector2();
-            }
-
-            if (mapping.TryGetNode("rotation", out node))
-            {
-                layer.Rotation = node.AsFloat();
-            }
-
-            if (mapping.TryGetNode("visible", out node))
-            {
-                layer.Visible = node.AsBool();
-            }
-
-            if (mapping.TryGetNode("color", out node))
-            {
-                layer.Color = node.AsColor();
-            }
-
-            Layers.Add(layer);
+            serializer.SetCacheData(LayerSerializationCache, layerData.ShallowClone());
+            Layers = layerData;
         }
 
         public override ComponentState GetComponentState()
         {
-            var list = Layers.Select(l => l.ToStateLayer()).ToList();
-            return new SpriteComponentState(Visible, DrawDepth, Scale, Rotation, Offset, Color, Directional, BaseRSIPath, list);
-        }
-        private struct Layer
-        {
-            public string Shader;
-            public string TexturePath;
-            public string RsiPath;
-            public string State;
-            public Vector2 Scale;
-            public Angle Rotation;
-            public bool Visible;
-            public Color Color;
-
-            public static Layer New()
-            {
-                return new Layer
-                {
-                    Scale = Vector2.One,
-                    Visible = true,
-                    Color = Color.White,
-                };
-            }
-
-            public SpriteComponentState.Layer ToStateLayer()
-            {
-                return new SpriteComponentState.Layer(Shader, TexturePath, RsiPath, State, Scale, Rotation, Visible, Color);
-            }
+            return new SpriteComponentState(Visible, DrawDepth, Scale, Rotation, Offset, Color, Directional, BaseRSIPath, Layers);
         }
     }
 }

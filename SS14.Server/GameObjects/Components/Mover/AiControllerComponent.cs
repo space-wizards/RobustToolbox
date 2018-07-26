@@ -1,7 +1,7 @@
 ﻿using SS14.Server.AI;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Serialization;
+using SS14.Shared.Serialization;
 
 namespace SS14.Server.GameObjects.Components
 {
@@ -21,7 +21,7 @@ namespace SS14.Server.GameObjects.Components
             set => _visionRadius = value;
         }
 
-        public override void ExposeData(EntitySerializer serializer)
+        public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);
 

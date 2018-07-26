@@ -100,7 +100,7 @@ namespace SS14.Client.GameObjects
             {
                 return IoCManager.Resolve<IResourceCache>().GetFallback<TextureResource>().Texture;
             }
-            return TextureForConfig(new YamlObjectSerializer(mapping, reading: true));
+            return TextureForConfig(YamlObjectSerializer.NewReader(mapping));
         }
     }
 }

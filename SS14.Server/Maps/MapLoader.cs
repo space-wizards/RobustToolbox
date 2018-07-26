@@ -182,7 +182,7 @@ namespace SS14.Server.Maps
         /// <summary>
         ///     Handles the primary bulk of state during the map serialization process.
         /// </summary>
-        private class MapContext : YamlObjectSerializerContext, IEntityFinishContext
+        private class MapContext : YamlObjectSerializer.Context, IEntityFinishContext
         {
             public readonly Dictionary<GridId, int> GridIDMap = new Dictionary<GridId, int>();
             public readonly List<IMapGrid> Grids = new List<IMapGrid>();
@@ -365,7 +365,7 @@ namespace SS14.Server.Maps
                     {
                         var compMapping = new YamlMappingNode();
                         CurrentWritingComponent = component.Name;
-                        var compSerializer = new YamlObjectSerializer(compMapping, reading: false, context: this);
+                        var compSerializer = YamlObjectSerializer.NewWriter(compMapping, this);
 
                         component.ExposeData(compSerializer);
 
@@ -482,18 +482,19 @@ namespace SS14.Server.Maps
                 {
                     throw new InvalidOperationException();
                 }
+
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
-                    return new YamlObjectSerializer(mapping, reading: true, context: this, backups: new List<YamlMappingNode> { protoData });
+                    return YamlObjectSerializer.NewReader(new List<YamlMappingNode> { mapping, protoData }, this);
                 }
 
-                return new YamlObjectSerializer(protoData, reading: true, context: this);
+                return YamlObjectSerializer.NewReader(protoData, this);
             }
 
             public override bool IsValueDefault<T>(string field, T value)
             {
                 var compData = CurrentWritingEntity.Prototype.Components[CurrentWritingComponent];
-                var testSer = new YamlObjectSerializer(compData, reading: true);
+                var testSer = YamlObjectSerializer.NewReader(compData);
                 if (testSer.TryReadDataFieldCached(field, out T prototypeVal))
                 {
                     if (value == null)

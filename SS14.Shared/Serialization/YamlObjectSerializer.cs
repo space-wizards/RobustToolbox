@@ -13,15 +13,17 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Serialization
 {
+    /// <summary>
+    ///     Object serializer that serializes to/from YAML.
+    /// </summary>
     public class YamlObjectSerializer : ObjectSerializer
     {
         private static readonly Dictionary<Type, TypeSerializer> _typeSerializers;
         private static readonly StructSerializer _structSerializer;
 
-        private YamlMappingNode Map;
-        private List<YamlMappingNode> Backups;
+        private YamlMappingNode WriteMap;
         private List<YamlMappingNode> ReadMaps;
-        private readonly YamlObjectSerializerContext Context;
+        private Context _context;
 
         static YamlObjectSerializer()
         {
@@ -38,23 +40,56 @@ namespace SS14.Shared.Serialization
             };
         }
 
-        public YamlObjectSerializer(YamlMappingNode map, bool reading, YamlObjectSerializerContext context = null, List<YamlMappingNode> backups = null)
+        /// <summary>
+        ///     Creates a new serializer to be used for reading from YAML data.
+        /// </summary>
+        /// <param name="readMap">
+        ///     The YAML mapping to read data from.
+        /// </param>
+        /// <param name="context">
+        ///     An optional context that can provide additional capabitilies such as caching and custom type serializers.
+        /// </param>
+        public static YamlObjectSerializer NewReader(YamlMappingNode readMap, Context context = null)
         {
-            Map = map;
-            Reading = reading;
-            Backups = backups;
-            Context = context;
-            if (Reading)
+            return NewReader(new List<YamlMappingNode>(1) { readMap });
+        }
+
+        /// <summary>
+        ///     Creates a new serializer to be used for reading from YAML data.
+        /// </summary>
+        /// <param name="readMaps">
+        ///     A list of maps to read from. The first list will be used first,
+        ///     then the second if the first does not contain a specific key, and so on.
+        /// </param>
+        /// <param name="context">
+        ///     An optional context that can provide additional capabitilies such as caching and custom type serializers.
+        /// </param>
+        public static YamlObjectSerializer NewReader(List<YamlMappingNode> readMaps, Context context = null)
+        {
+            return new YamlObjectSerializer
             {
-                ReadMaps = new List<YamlMappingNode>
-                {
-                    Map,
-                };
-                if (backups != null)
-                {
-                    ReadMaps.AddRange(backups);
-                }
-            }
+                ReadMaps = readMaps,
+                _context = context,
+            };
+        }
+
+        /// <summary>
+        ///     Creates a new serializer to be used from writing into YAML data.
+        /// </summary>
+        /// <param name="writeMap">
+        ///     The mapping to write into.
+        ///     Gets modified directly in place.
+        /// </param>
+        /// <param name="context">
+        ///     An optional context that can provide additional capabitilies such as caching and custom type serializers.
+        /// </param>
+        public static YamlObjectSerializer NewWriter(YamlMappingNode writeMap, Context context = null)
+        {
+            return new YamlObjectSerializer
+            {
+                WriteMap = writeMap,
+                _context = context,
+            };
         }
 
         // TODO: Theoretical optimization.
@@ -83,7 +118,7 @@ namespace SS14.Shared.Serialization
 
                 var key = name;
                 var val = value == null ? TypeToNode(defaultValue) : TypeToNode(value);
-                Map.Add(key, val);
+                WriteMap.Add(key, val);
             }
         }
 
@@ -92,7 +127,7 @@ namespace SS14.Shared.Serialization
         {
             if (Reading) // read
             {
-                if (Context != null & Context.TryGetCachedField(name, out T theValue))
+                if (_context != null & _context.TryGetCachedField(name, out T theValue))
                 {
                     // Itermediate field so value doesn't get reset to default(T) if this fails.
                     value = theValue;
@@ -103,12 +138,12 @@ namespace SS14.Shared.Serialization
                     if (map.TryGetNode(name, out var node))
                     {
                         value = (T)NodeToType(typeof(T), node);
-                        Context?.SetCachedField(name, value);
+                        _context?.SetCachedField(name, value);
                         return;
                     }
                 }
                 value = defaultValue;
-                Context?.SetCachedField(name, value);
+                _context?.SetCachedField(name, value);
                 return;
             }
             else // write
@@ -155,7 +190,7 @@ namespace SS14.Shared.Serialization
 
                 var key = name;
                 var val = value == null ? TypeToNode(WriteConvertFunc(defaultValue)) : TypeToNode(WriteConvertFunc(value));
-                Map.Add(key, val);
+                WriteMap.Add(key, val);
             }
         }
 
@@ -170,7 +205,7 @@ namespace SS14.Shared.Serialization
         {
             if (Reading)
             {
-                if (Context != null && Context.TryGetCachedField(name, out TTarget theValue))
+                if (_context != null && _context.TryGetCachedField(name, out TTarget theValue))
                 {
                     // Itermediate field so value doesn't get reset to default(T) if this fails.
                     value = theValue;
@@ -181,12 +216,12 @@ namespace SS14.Shared.Serialization
                     if (map.TryGetNode(name, out var node))
                     {
                         value = ReadConvertFunc((TSource)NodeToType(typeof(TSource), node));
-                        Context?.SetCachedField(name, value);
+                        _context?.SetCachedField(name, value);
                         return;
                     }
                 }
                 value = defaultValue;
-                Context?.SetCachedField(name, value);
+                _context?.SetCachedField(name, value);
             }
             else
             {
@@ -221,7 +256,7 @@ namespace SS14.Shared.Serialization
                 throw new InvalidOperationException("Cannot use ReadDataField while not reading.");
             }
 
-            if (Context != null && Context.TryGetCachedField(name, out T val))
+            if (_context != null && _context.TryGetCachedField(name, out T val))
             {
                 return val;
             }
@@ -231,11 +266,11 @@ namespace SS14.Shared.Serialization
                 if (map.TryGetNode(name, out var node))
                 {
                     val = (T)NodeToType(typeof(T), node);
-                    Context?.SetCachedField(name, val);
+                    _context?.SetCachedField(name, val);
                     return val;
                 }
             }
-            Context?.SetCachedField(name, defaultValue);
+            _context?.SetCachedField(name, defaultValue);
             return defaultValue;
         }
 
@@ -267,7 +302,7 @@ namespace SS14.Shared.Serialization
                 throw new InvalidOperationException("Cannot use ReadDataField while not reading.");
             }
 
-            if (Context != null & Context.TryGetCachedField(name, out value))
+            if (_context != null & _context.TryGetCachedField(name, out value))
             {
                 return true;
             }
@@ -277,7 +312,7 @@ namespace SS14.Shared.Serialization
                 if (map.TryGetNode(name, out var node))
                 {
                     value = (T)NodeToType(typeof(T), node);
-                    Context?.SetCachedField(name, value);
+                    _context?.SetCachedField(name, value);
                     return true;
                 }
             }
@@ -285,6 +320,7 @@ namespace SS14.Shared.Serialization
             return false;
         }
 
+        /// <inheritdoc />
         public override void DataReadFunction<T>(string name, T defaultValue, ReadFunctionDelegate<T> func)
         {
             if (!Reading) return;
@@ -301,6 +337,7 @@ namespace SS14.Shared.Serialization
             func(defaultValue);
         }
 
+        /// <inheritdoc />
         public override void DataWriteFunction<T>(string name, T defaultValue, WriteFunctionDelegate<T> func, bool alwaysWrite = false)
         {
             if (Reading) return;
@@ -313,26 +350,29 @@ namespace SS14.Shared.Serialization
 
             var key = name;
             var val = value == null ? TypeToNode(defaultValue) : TypeToNode(value);
-            Map.Add(key, val);
+            WriteMap.Add(key, val);
         }
 
+        /// <inheritdoc />
         public override void SetCacheData(string key, object value)
         {
-            Context?.SetDataCache(key, value);
+            _context?.SetDataCache(key, value);
         }
 
+        /// <inheritdoc />
         public override T GetCacheData<T>(string key)
         {
-            if (Context != null && Context.TryGetDataCache(key, out var value))
+            if (_context != null && _context.TryGetDataCache(key, out var value))
             {
                 return (T)value;
             }
             throw new KeyNotFoundException();
         }
 
+        /// <inheritdoc />
         public override bool TryGetCacheData<T>(string key, out T data)
         {
-            if (Context != null && Context.TryGetDataCache(key, out var value))
+            if (_context != null && _context.TryGetDataCache(key, out var value))
             {
                 data = (T)value;
                 return true;
@@ -389,7 +429,7 @@ namespace SS14.Shared.Serialization
             }
 
             // Hand it to the context.
-            if (Context != null && Context.TryNodeToType(node, type, out var contextObj))
+            if (_context != null && _context.TryNodeToType(node, type, out var contextObj))
             {
                 return contextObj;
             }
@@ -401,17 +441,21 @@ namespace SS14.Shared.Serialization
             // IExposeData.
             if (typeof(IExposeData).IsAssignableFrom(type))
             {
+                if (!(node is YamlMappingNode mapNode))
+                {
+                    throw new InvalidOperationException("Cannot read from IExposeData on non-mapping node.");
+                }
                 var instance = (IExposeData)Activator.CreateInstance(type);
                 // TODO: Might be worth it to cut down on allocations here by using ourselves instead of creating a fork.
                 // Seems doable.
-                if (Context != null)
+                if (_context != null)
                 {
-                    Context.StackDepth++;
+                    _context.StackDepth++;
                 }
-                var fork = new YamlObjectSerializer((YamlMappingNode)node, reading: true, context: Context);
-                if (Context != null)
+                var fork = NewReader(mapNode, _context);
+                if (_context != null)
                 {
-                    Context.StackDepth--;
+                    _context.StackDepth--;
                 }
                 instance.ExposeData(fork);
                 return instance;
@@ -468,7 +512,7 @@ namespace SS14.Shared.Serialization
             }
 
             // Hand it to the context.
-            if (Context != null && Context.TryTypeToNode(obj, out var contextNode))
+            if (_context != null && _context.TryTypeToNode(obj, out var contextNode))
             {
                 return contextNode;
             }
@@ -481,14 +525,14 @@ namespace SS14.Shared.Serialization
             if (obj is IExposeData exposable)
             {
                 var mapping = new YamlMappingNode();
-                if (Context != null)
+                if (_context != null)
                 {
-                    Context.StackDepth++;
+                    _context.StackDepth++;
                 }
-                var fork = new YamlObjectSerializer(mapping, reading: false, context: Context);
-                if (Context != null)
+                var fork = NewWriter(mapping, _context);
+                if (_context != null)
                 {
-                    Context.StackDepth--;
+                    _context.StackDepth--;
                 }
                 exposable.ExposeData(fork);
                 return mapping;
@@ -509,9 +553,9 @@ namespace SS14.Shared.Serialization
                 return true;
             }
 
-            if (Context != null)
+            if (_context != null)
             {
-                return Context.IsValueDefault(field, value);
+                return _context.IsValueDefault(field, value);
             }
 
             return false;
@@ -565,6 +609,58 @@ namespace SS14.Shared.Serialization
         {
             public abstract object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer);
             public abstract YamlNode TypeToNode(object obj, YamlObjectSerializer serializer);
+        }
+
+        /// <summary>
+        ///     Basically, when you're serializing say a map file, you gotta be a liiiittle smarter than "dump all these variables to YAML".
+        ///     Stuff like entity references need to handled, for example.
+        ///     This can do that.
+        /// </summary>
+        public abstract class Context
+        {
+            /// <summary>
+            ///     Current depth of the serialization "stack".
+            ///     Basically, when another sub-serializer gets made (e.g. to handle <see cref="IExposeData" />),
+            ///     This context will be passed around and this property increased to signal that.
+            /// </summary>
+            public int StackDepth { get; protected internal set; } = 0;
+
+            public virtual bool TryTypeToNode(object obj, out YamlNode node)
+            {
+                node = null;
+                return false;
+            }
+
+            public virtual bool TryNodeToType(YamlNode node, Type type, out object obj)
+            {
+                obj = default(object);
+                return false;
+            }
+
+            public virtual bool IsValueDefault<T>(string field, T value)
+            {
+                return false;
+            }
+
+            public virtual bool TryGetCachedField<T>(string field, out T value)
+            {
+                value = default(T);
+                return false;
+            }
+
+            public virtual void SetCachedField<T>(string field, T value)
+            {
+            }
+
+            public virtual bool TryGetDataCache(string field, out object value)
+            {
+                value = null;
+                return false;
+            }
+
+            public virtual void SetDataCache(string field, object value)
+            {
+            }
         }
 
         class StructSerializer : TypeSerializer

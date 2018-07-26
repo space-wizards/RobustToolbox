@@ -129,7 +129,7 @@ namespace SS14.Client.Placement
                     && value.Components.ContainsKey("Collidable"))
                 {
                     var map = value.Components["BoundingBox"];
-                    var serializer = new YamlObjectSerializer(map, reading: true);
+                    var serializer = YamlObjectSerializer.NewReader(map);
                     serializer.DataField(ref _colliderAABB, "aabb", new Box2(0f, 0f, 0f, 0f));
                 }
                 else

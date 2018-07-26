@@ -2,6 +2,21 @@ using System;
 
 namespace SS14.Shared.Serialization
 {
+    /// <summary>
+    ///     Handles serialization of objects to/from a storage medium (which medium is implementation defined).
+    ///     Provides methods for most common cases of data field reading/writing.
+    /// </summary>
+    /// <remarks>
+    ///     Object serialization may be "cached".
+    ///     This is a non-guaranteed on-request case where, if the serializer is sure it's deserialized something before,
+    ///     it can return a previous instance of the value instead of running deserialization logic again.
+    ///     Caching only occurs for cases where data would the same, e.g. deserializing the same prototype twice.
+    ///     Most methods that read data have a cached variant, which MAY return data shared with other objects (for reference objects).
+    ///     This is not guaranteed and should be considered a situational optimization only.
+    ///     It is also possible to write cached "data" fields that are not stored anywhere, but can be referenced later in other deserialization runs.
+    ///     This is useful for complex cases like sprites which cannot be expressed with a single cached field read, but would like to still take advantage of caching.
+    ///     The persistence of this cached data is in no way guaranteed.
+    /// </remarks>
     public abstract class ObjectSerializer
     {
         public const string LogCategory = "serialization";
@@ -133,7 +148,14 @@ namespace SS14.Shared.Serialization
             return ReadDataField(name, defaultValue);
         }
 
+        /// <summary>
+        ///     Try- pattern version of <see cref="ReadDataField" />.
+        /// </summary>
         public abstract bool TryReadDataField<T>(string name, out T value);
+
+        /// <summary>
+        ///     Try- pattern version of <see cref="ReadDataFieldCached" />.
+        /// </summary>
         public virtual bool TryReadDataFieldCached<T>(string name, out T value)
         {
             return TryReadDataField(name, out value);
@@ -143,17 +165,28 @@ namespace SS14.Shared.Serialization
         /// <summary>
         ///     Sets a cached field for this serialization context.
         ///     This field does not get written in any way,
-        ///     but can be recalled during other serialization runs with <see cref="GetCacheData" /> or <see cref="TryGetCacheData" />.
+        ///     but can be recalled during other serialization runs of the same data with <see cref="GetCacheData" /> or <see cref="TryGetCacheData" />.
         /// </summary>
         /// <param name="key">The cache key to write to.</param>
         /// <param name="value">The object to write.</param>
         public virtual void SetCacheData(string key, object value)
         {
         }
+
+        /// <summary>
+        ///     Gets cached data set by <see cref="SetCacheData" /> in a previous deserialization run of the same data.
+        /// </summary>
+        /// <param name="key">The key to recall.</param>
+        /// <typeparam name="T">The type to cast the return object to.</typeparam>
+        /// <returns>The data previously stored.</returns>
         public virtual T GetCacheData<T>(string key)
         {
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        ///     Try- pattern version of <see cref="GetCacheData" />.
+        /// </summary>
         public virtual bool TryGetCacheData<T>(string key, out T data)
         {
             data = default(T);
@@ -181,6 +214,10 @@ namespace SS14.Shared.Serialization
         /// <typeparam name="T">The type of the data that will be written to the storage medium.</typeparam>
         public abstract void DataWriteFunction<T>(string name, T defaultValue, WriteFunctionDelegate<T> func, bool alwaysWrite = false);
 
+        /// <summary>
+        ///     It's <see cref="DataReadFunction" /> and <see cref="DataWriteFunction" /> in one, so you don't need to pass name and default twice!
+        ///     Marvelous!
+        /// </summary>
         public virtual void DataReadWriteFunction<T>(string name, T defaultValue, ReadFunctionDelegate<T> readFunc, WriteFunctionDelegate<T> writeFunc, bool alwaysWrite = false)
         {
             if (Reading)

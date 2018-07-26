@@ -358,7 +358,7 @@ namespace SS14.Shared.GameObjects
 
         internal void FinishEntity(Entity entity, IComponentFactory factory, IEntityFinishContext context)
         {
-            YamlObjectSerializerContext defaultContext = null;
+            YamlObjectSerializer.Context defaultContext = null;
             if (context == null)
             {
                 defaultContext = new PrototypeSerializationContext(this);
@@ -376,7 +376,7 @@ namespace SS14.Shared.GameObjects
                 else
                 {
                     CurrentDeserializingComponent = componentData.Key;
-                    ser = new YamlObjectSerializer(componentData.Value, reading: true, context: defaultContext);
+                    ser = YamlObjectSerializer.NewReader(componentData.Value, defaultContext);
                 }
                 component.ExposeData(ser);
 
@@ -428,7 +428,7 @@ namespace SS14.Shared.GameObjects
             return $"EntityPrototype({ID})";
         }
 
-        class PrototypeSerializationContext : YamlObjectSerializerContext
+        class PrototypeSerializationContext : YamlObjectSerializer.Context
         {
             readonly EntityPrototype prototype;
 

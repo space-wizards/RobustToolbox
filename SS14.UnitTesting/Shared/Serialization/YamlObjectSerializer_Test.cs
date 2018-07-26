@@ -17,7 +17,7 @@ namespace SS14.UnitTesting.Shared.Serialization
             // Arrange
             var data = SerializableList;
             var mapping = new YamlMappingNode();
-            var serializer = new YamlObjectSerializer(mapping, reading: false);
+            var serializer = YamlObjectSerializer.NewWriter(mapping);
 
             // Act
             serializer.DataField(ref data, "datalist", new List<int>(0));
@@ -33,7 +33,7 @@ namespace SS14.UnitTesting.Shared.Serialization
             // Arrange
             List<int> data = null;
             var rootNode = YamlTextToNode(SerializedListYaml);
-            var serializer = new YamlObjectSerializer(rootNode, reading: true);
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
 
             // Act
             serializer.DataField(ref data, "datalist", new List<int>(0));
@@ -54,7 +54,7 @@ namespace SS14.UnitTesting.Shared.Serialization
             // Arrange
             var data = SerializableDict;
             var mapping = new YamlMappingNode();
-            var serializer = new YamlObjectSerializer(mapping, reading: false);
+            var serializer = YamlObjectSerializer.NewWriter(mapping);
 
             // Act
             serializer.DataField(ref data, "datadict", new Dictionary<string, int>(0));
@@ -69,7 +69,7 @@ namespace SS14.UnitTesting.Shared.Serialization
         {
             Dictionary<string, int> data = null;
             var rootNode = YamlTextToNode(SerializedDictYaml);
-            var serializer = new YamlObjectSerializer(rootNode, reading: true);
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
 
             // Act
             serializer.DataField(ref data, "datadict", new Dictionary<string, int>(0));

@@ -70,6 +70,7 @@ namespace SS14.Shared.Serialization
             {
                 ReadMaps = readMaps,
                 _context = context,
+                Reading = true,
             };
         }
 
@@ -89,6 +90,7 @@ namespace SS14.Shared.Serialization
             {
                 WriteMap = writeMap,
                 _context = context,
+                Reading = false,
             };
         }
 

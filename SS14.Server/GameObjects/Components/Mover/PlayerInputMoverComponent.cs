@@ -83,9 +83,8 @@ namespace SS14.Server.GameObjects
                     break;
             }
         }
-
-        /// <inheritdoc />
-        public override void Update(float frameTime)
+        
+        public void OnUpdate()
         {
             var transform = Owner.GetComponent<TransformComponent>();
             var physics = Owner.GetComponent<PhysicsComponent>();
@@ -100,8 +99,6 @@ namespace SS14.Server.GameObjects
             }
             physics.LinearVelocity = _moveDir * (_run ? FastMoveSpeed : BaseMoveSpeed);
             transform.LocalRotation = _moveDir.GetDir().ToAngle();
-
-            base.Update(frameTime);
         }
 
         private void HandleKeyChange()

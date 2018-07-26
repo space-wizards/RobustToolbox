@@ -117,7 +117,7 @@ namespace SS14.Client.State.States
 
         public override void Update(ProcessFrameEventArgs e)
         {
-            _componentManager.Update(e.Elapsed);
+            _componentManager.CullRemovedComponents();
             _entityManager.Update(e.Elapsed);
             playerManager.Update(e.Elapsed);
         }

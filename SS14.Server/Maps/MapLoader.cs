@@ -253,7 +253,7 @@ namespace SS14.Server.Maps
 
                 try
                 {
-                    var entity = _entityMan.SpawnEntity(protoName);
+                    var entity = _entityMan.CreateEntity(protoName);
 
                     _protoMan.LoadData(entity, yamlEnt);
 

@@ -11,7 +11,15 @@ namespace SS14.Shared.GameObjects
     {
         private readonly int _uid;
 
+        /// <summary>
+        ///     An Invalid entity UID you can compare against.
+        /// </summary>
         public static readonly EntityUid Invalid = new EntityUid(0);
+
+        /// <summary>
+        ///     The first entity UID the entityManager should use when the manager is initialized.
+        /// </summary>
+        public static readonly EntityUid FirstUid = new EntityUid(1);
 
         /// <summary>
         ///     Creates an instance of this structure, with the given network ID.
@@ -67,7 +75,7 @@ namespace SS14.Shared.GameObjects
 
         /// <summary>
         ///     Explicit conversion of EntityId to int. This should only be used in special
-        ///     cases like serialization. Do NOT use the in content.
+        ///     cases like serialization. Do NOT use this in content.
         /// </summary>
         public static explicit operator int(EntityUid self)
         {
@@ -80,6 +88,7 @@ namespace SS14.Shared.GameObjects
             return _uid.ToString();
         }
 
+        /// <inheritdoc />
         public int CompareTo(EntityUid other)
         {
             return _uid.CompareTo(other._uid);

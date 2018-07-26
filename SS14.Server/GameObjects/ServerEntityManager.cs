@@ -1,14 +1,14 @@
-﻿using SS14.Server.Interfaces.GameObjects;
+﻿using System.Collections.Generic;
+using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.IoC;
-using System.Collections.Generic;
-using SS14.Shared.Prototypes;
-using SS14.Shared.Interfaces.Map;
-using SS14.Shared.Map;
-using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.Maths;
 using SS14.Shared.GameObjects.Serialization;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Interfaces.Map;
+using SS14.Shared.IoC;
+using SS14.Shared.Map;
+using SS14.Shared.Maths;
+using SS14.Shared.Prototypes;
 
 namespace SS14.Server.GameObjects
 {
@@ -21,10 +21,17 @@ namespace SS14.Server.GameObjects
 
         [Dependency]
         private readonly IPrototypeManager _protoManager;
+
         [Dependency]
         private readonly IMapManager _mapManager;
 
         private readonly List<(uint tick, EntityUid uid)> DeletionHistory = new List<(uint, EntityUid)>();
+
+        /// <inheritdoc />
+        public IEntity CreateEntity(string protoName)
+        {
+            return SpawnEntity(protoName, null);
+        }
 
         /// <inheritdoc />
         public bool TrySpawnEntityAt(string entityType, GridLocalCoordinates coordinates, out IEntity entity)
@@ -38,9 +45,11 @@ namespace SS14.Server.GameObjects
                 {
                     InitializeEntity(result);
                 }
+
                 entity = result;
                 return true;
             }
+
             entity = null;
             return false;
         }
@@ -61,6 +70,7 @@ namespace SS14.Server.GameObjects
             {
                 InitializeEntity(entity);
             }
+
             return entity;
         }
 
@@ -85,9 +95,11 @@ namespace SS14.Server.GameObjects
                 {
                     continue;
                 }
+
                 EntityState entityState = entity.GetEntityState(fromTick);
                 stateEntities.Add(entityState);
             }
+
             return stateEntities;
         }
 
@@ -195,10 +207,8 @@ namespace SS14.Server.GameObjects
             {
                 return GetEntitiesIntersecting(entity.GetComponent<ITransformComponent>().MapID, component.WorldAABB);
             }
-            else
-            {
-                return GetEntitiesIntersecting(entity.GetComponent<ITransformComponent>().LocalPosition);
-            }
+
+            return GetEntitiesIntersecting(entity.GetComponent<ITransformComponent>().LocalPosition);
         }
 
         /// <inheritdoc />

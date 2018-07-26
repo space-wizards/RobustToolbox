@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using SS14.Shared.GameObjects.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
@@ -35,6 +34,8 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public virtual Type StateType => typeof(ComponentState);
 
+        public bool Initialized { get; private set; }
+
         /// <inheritdoc />
         public bool Running { get; private set; }
 
@@ -46,30 +47,70 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public virtual void OnRemove()
         {
-            Owner = null;
-            // Component manager will cull us because we've set ourselves to deleted.
+            if (Running)
+                throw new InvalidOperationException("Cannot Remove a running entity!");
+
+            // We have been marked for deletion by the Component Manager.
             Deleted = true;
         }
 
         /// <summary>
         ///     Called when the component gets added to an entity.
         /// </summary>
-        public virtual void OnAdd() { }
+        public virtual void OnAdd()
+        {
+            if(Initialized)
+                throw new InvalidOperationException("Cannot Add an Initialized component!");
+
+            if (Running)
+                throw new InvalidOperationException("Cannot Add a running component!");
+
+            if (Deleted)
+                throw new InvalidOperationException("Cannot Add a Deleted component!");
+        }
 
         /// <inheritdoc />
         public virtual void Initialize()
         {
+            if(Initialized)
+                throw new InvalidOperationException("Component already Initialized!");
+
+            if (Running)
+                throw new InvalidOperationException("Cannot Initialize a running component!");
+
+            if (Deleted)
+                throw new InvalidOperationException("Cannot Initialize a Deleted component!");
+
+            Initialized = true;
         }
 
         /// <inheritdoc />
         public virtual void Startup()
         {
+            if(!Initialized)
+                throw new InvalidOperationException("Cannot Start an uninitialized component!");
+
+            if (Running)
+                throw new InvalidOperationException("Cannot Startup a running component!");
+
+            if (Deleted)
+                throw new InvalidOperationException("Cannot Start a Deleted component!");
+
             Running = true;
         }
 
         /// <inheritdoc />
         public virtual void Shutdown()
         {
+            if(!Initialized)
+                throw new InvalidOperationException("Cannot Shutdown an uninitialized component!");
+
+            if(!Running)
+                throw new InvalidOperationException("Cannot Shutdown an unstarted component!");
+
+            if(Deleted)
+                throw new InvalidOperationException("Cannot Shutdown a Deleted component!");
+
             Running = false;
         }
 
@@ -84,9 +125,6 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        [Obsolete("Components should be updated through a system.")]
-        public virtual void Update(float frameTime) { }
-
         public void Dirty()
         {
             if (Owner != null)
@@ -111,6 +149,7 @@ namespace SS14.Shared.GameObjects
         ///     This is an alias of 'Owner.SendNetworkMessage(this, message);'
         /// </summary>
         /// <param name="message">Message to send.</param>
+        /// <param name="channel">Network channel to send the message over. If null, broadcast to all channels.</param>
         protected void SendNetworkMessage(ComponentMessage message, INetChannel channel = null)
         {
             Owner.SendNetworkMessage(this, message, channel);
@@ -130,12 +169,6 @@ namespace SS14.Shared.GameObjects
 
         /// <inheritdoc />
         public virtual void HandleComponentState(ComponentState state)
-        {
-        }
-
-        /// <inheritdoc />
-        [Obsolete("Use HandleMessage")]
-        public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
         }
     }

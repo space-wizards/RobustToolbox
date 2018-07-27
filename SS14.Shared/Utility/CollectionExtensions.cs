@@ -25,6 +25,16 @@ namespace SS14.Shared.Utility
             return list;
         }
 
+        public static Dictionary<TKey, TValue> ShallowClone<TKey, TValue>(this Dictionary<TKey, TValue> self)
+        {
+            var dict = new Dictionary<TKey, TValue>(self.Count);
+            foreach (var item in self)
+            {
+                dict[item.Key] = item.Value;
+            }
+            return dict;
+        }
+
         /// <summary>
         ///     Remove an item from the list, replacing it with the one at the very end of the list.
         ///     This means that the order will not be preserved, but it should be an O(1) operation.

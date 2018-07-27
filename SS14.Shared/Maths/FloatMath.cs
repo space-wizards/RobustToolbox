@@ -104,5 +104,21 @@ namespace SS14.Shared.Maths
             var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
             return Math.Abs(a - b) <= epsilon;
         }
+
+        /// <summary>
+        ///     <c>blend</c> 0 means <c>a</c>
+        /// </summary>
+        public static double Lerp(double a, double b, double blend)
+        {
+            return a + (b - a) * blend;
+        }
+
+        /// <summary>
+        ///     <c>blend</c> 0 means <c>a</c>
+        /// </summary>
+        public static float Lerp(float a, float b, float blend)
+        {
+            return a + (b - a) * blend;
+        }
     }
 }

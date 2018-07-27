@@ -40,6 +40,11 @@ namespace SS14.Shared.Serialization
             };
         }
 
+        // Use NewReader or NewWriter instead.
+        private YamlObjectSerializer()
+        {
+        }
+
         /// <summary>
         ///     Creates a new serializer to be used for reading from YAML data.
         /// </summary>

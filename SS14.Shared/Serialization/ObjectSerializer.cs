@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace SS14.Shared.Serialization
 {
@@ -129,6 +130,28 @@ namespace SS14.Shared.Serialization
         ///     Thrown if the reader is not currently reading.
         /// </exception>
         public abstract T ReadDataField<T>(string name, T defaultValue);
+
+        /// <summary>
+        ///     While reading, reads a data field and immediately returns it as value.
+        /// </summary>
+        /// <param name="name">The name of the field to read.</param>
+        /// <typeparam name="T">The type of the field.</typeparam>
+        /// <returns>The value of the field.</returns>
+        /// <exception cref="InvalidOperationException">
+        ///     Thrown if the reader is not currently reading.
+        /// </exception>
+        /// <exception cref="KeyNotFoundException">
+        ///     Thrown if the field does not exist.
+        /// </exception>
+        public virtual T ReadDataField<T>(string name)
+        {
+            if (TryReadDataField(name, out T val))
+            {
+                return val;
+            }
+
+            throw new KeyNotFoundException(name);
+        }
 
         /// <summary>
         ///     While reading, reads a data field and immediately returns it as value.

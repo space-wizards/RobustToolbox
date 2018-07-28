@@ -275,6 +275,7 @@
     <Compile Include="Timing\GameLoop.cs" />
     <Compile Include="Timing\IStopwatch.cs" />
     <Compile Include="Timing\Stopwatch.cs" />
+    <Compile Include="Utility\DebugTools.cs" />
     <Compile Include="Utility\ResourcePath.cs" />
     <Compile Include="Utility\QuadTree.cs" />
     <Compile Include="Reflection\ReflectAttribute.cs" />

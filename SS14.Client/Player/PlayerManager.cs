@@ -15,6 +15,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.Player
 {
@@ -123,9 +124,9 @@ namespace SS14.Client.Player
                 // This happens when the server says "nothing changed!"
                 return;
             }
-            Debug.Assert(_network.IsConnected, "Received player state without being connected?");
-            Debug.Assert(LocalPlayer != null, "Call Startup()");
-            Debug.Assert(LocalPlayer.Session != null, "Received player state before Session finished setup.");
+            DebugTools.Assert(_network.IsConnected, "Received player state without being connected?");
+            DebugTools.Assert(LocalPlayer != null, "Call Startup()");
+            DebugTools.Assert(LocalPlayer.Session != null, "Received player state before Session finished setup.");
 
             var myState = list.FirstOrDefault(s => s.Index == LocalPlayer.Index);
 
@@ -206,7 +207,7 @@ namespace SS14.Client.Player
                 {
                     if (info.Uuid != cSession.Uuid) // not the same player
                     {
-                        Debug.Assert(LocalPlayer.Index != info.Index, "my uuid should not change");
+                        DebugTools.Assert(LocalPlayer.Index != info.Index, "my uuid should not change");
                         dirty = true;
 
                         _sessions.Remove(info.Index);
@@ -230,7 +231,7 @@ namespace SS14.Client.Player
                 // clear slot, player left
                 else if (cSession != null)
                 {
-                    Debug.Assert(LocalPlayer.Index != i, "I'm still connected to the server, but i left?");
+                    DebugTools.Assert(LocalPlayer.Index != i, "I'm still connected to the server, but i left?");
                     dirty = true;
 
                     _sessions.Remove(cSession.Index);
@@ -239,7 +240,7 @@ namespace SS14.Client.Player
                 // add new session to slot
                 else if (info != null)
                 {
-                    Debug.Assert(LocalPlayer.Index != info.Index || LocalPlayer.Session == null, "I already have a session, why am i getting a new one?");
+                    DebugTools.Assert(LocalPlayer.Index != info.Index || LocalPlayer.Session == null, "I already have a session, why am i getting a new one?");
                     dirty = true;
 
                     var newSession = new PlayerSession(info.Index, info.Uuid);

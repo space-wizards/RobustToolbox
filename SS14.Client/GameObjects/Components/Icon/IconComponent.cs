@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.GameObjects;
@@ -7,7 +6,6 @@ using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Serialization;
 using SS14.Shared.Utility;
-using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
@@ -34,7 +32,7 @@ namespace SS14.Client.GameObjects
         private static IDirectionalTextureProvider TextureForConfig(ObjectSerializer serializer)
         {
             var resc = IoCManager.Resolve<IResourceCache>();
-            Debug.Assert(serializer.Reading);
+            DebugTools.Assert(serializer.Reading);
 
             if (serializer.TryGetCacheData<IDirectionalTextureProvider>(SerializationCache, out var dirTex))
             {

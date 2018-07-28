@@ -8,6 +8,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Utility;
 
 namespace SS14.Shared.Map
 {
@@ -24,7 +25,7 @@ namespace SS14.Shared.Map
             if (_netManager.IsClient)
                 return;
 
-            Debug.Assert(_netManager.IsServer, "Why is the client calling this?");
+            DebugTools.Assert(_netManager.IsServer, "Why is the client calling this?");
 
             Logger.Info(channel.RemoteAddress + ": Sending map");
 
@@ -136,7 +137,7 @@ namespace SS14.Shared.Map
         /// <param name="message">The message containing a serialized map and tileDefines.</param>
         private void HandleTileMap(MsgMap message)
         {
-            Debug.Assert(_netManager.IsClient, "Why is the server calling this?");
+            DebugTools.Assert(_netManager.IsClient, "Why is the server calling this?");
 
             _gridsReceived++;
 
@@ -194,7 +195,7 @@ namespace SS14.Shared.Map
         /// <param name="message">The message containing the info.</param>
         private void HandleTileUpdate(MsgMap message)
         {
-            Debug.Assert(_netManager.IsClient, "Why is the server calling this?");
+            DebugTools.Assert(_netManager.IsClient, "Why is the server calling this?");
 
             var x = message.SingleTurf.X;
             var y = message.SingleTurf.Y;
@@ -206,7 +207,7 @@ namespace SS14.Shared.Map
 
         private void CollectMapInfo(MsgMap message)
         {
-            Debug.Assert(_netManager.IsClient, "Why is the server calling this?");
+            DebugTools.Assert(_netManager.IsClient, "Why is the server calling this?");
 
             _gridsToReceive = message.MapGridsToSend;
 

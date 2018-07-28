@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
@@ -12,6 +11,7 @@ using SS14.Shared.Log;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
+using SS14.Shared.Utility;
 
 namespace SS14.Client
 {
@@ -53,8 +53,8 @@ namespace SS14.Client
         /// <inheritdoc />
         public void ConnectToServer(string ip, ushort port)
         {
-            Debug.Assert(RunLevel < ClientRunLevel.Connecting);
-            Debug.Assert(!_net.IsConnected);
+            DebugTools.Assert(RunLevel < ClientRunLevel.Connecting);
+            DebugTools.Assert(!_net.IsConnected);
 
             _net.Startup();
 
@@ -65,8 +65,8 @@ namespace SS14.Client
         /// <inheritdoc />
         public void DisconnectFromServer(string reason)
         {
-            Debug.Assert(RunLevel > ClientRunLevel.Initialize);
-            Debug.Assert(_net.IsConnected);
+            DebugTools.Assert(RunLevel > ClientRunLevel.Initialize);
+            DebugTools.Assert(_net.IsConnected);
 
             // run level changed in OnNetDisconnect()
             // are both of these *really* needed?
@@ -96,7 +96,7 @@ namespace SS14.Client
         /// <param name="session">Session of the player.</param>
         private void OnPlayerJoinedServer(PlayerSession session)
         {
-            Debug.Assert(RunLevel < ClientRunLevel.Connected);
+            DebugTools.Assert(RunLevel < ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.Connected);
 
             PlayerJoinedServer?.Invoke(this, new PlayerEventArgs(session));
@@ -108,7 +108,7 @@ namespace SS14.Client
         /// <param name="session">Session of the player.</param>
         private void OnPlayerJoinedLobby(PlayerSession session)
         {
-            Debug.Assert(RunLevel >= ClientRunLevel.Connected);
+            DebugTools.Assert(RunLevel >= ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.Lobby);
 
             PlayerJoinedLobby?.Invoke(this, new PlayerEventArgs(session));
@@ -120,7 +120,7 @@ namespace SS14.Client
         /// <param name="session">Session of the player.</param>
         private void OnPlayerJoinedGame(PlayerSession session)
         {
-            Debug.Assert(RunLevel >= ClientRunLevel.Lobby);
+            DebugTools.Assert(RunLevel >= ClientRunLevel.Lobby);
             OnRunLevelChanged(ClientRunLevel.Ingame);
 
             PlayerJoinedGame?.Invoke(this, new PlayerEventArgs(session));
@@ -133,13 +133,13 @@ namespace SS14.Client
 
         private void OnConnectFailed(object sender, NetConnectFailArgs args)
         {
-            Debug.Assert(RunLevel == ClientRunLevel.Connecting);
+            DebugTools.Assert(RunLevel == ClientRunLevel.Connecting);
             Reset();
         }
 
         private void OnNetDisconnect(object sender, NetChannelArgs args)
         {
-            Debug.Assert(RunLevel > ClientRunLevel.Initialize);
+            DebugTools.Assert(RunLevel > ClientRunLevel.Initialize);
 
             PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer.Session));
 

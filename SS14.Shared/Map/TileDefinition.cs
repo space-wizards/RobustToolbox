@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Utility;
 
 namespace SS14.Shared.Map
 {
@@ -12,7 +13,7 @@ namespace SS14.Shared.Map
         {
             get
             {
-                Debug.Assert(_tileId != ushort.MaxValue);
+                DebugTools.Assert(_tileId != ushort.MaxValue);
                 return _tileId;
             }
         }

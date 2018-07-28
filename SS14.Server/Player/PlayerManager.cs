@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
@@ -12,11 +11,11 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
 using SS14.Shared.Map;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
+using SS14.Shared.Utility;
 
 namespace SS14.Server.Player
 {
@@ -105,7 +104,7 @@ namespace SS14.Server.Player
         /// <inheritdoc />
         public IPlayerSession GetSessionById(PlayerIndex index)
         {
-            Debug.Assert(0 <= index && index <= MaxPlayers);
+            DebugTools.Assert(0 <= index && index <= MaxPlayers);
             return _sessions[index];
         }
 
@@ -221,7 +220,7 @@ namespace SS14.Server.Player
 
             session.PlayerStatusChanged += (obj, sessionArgs) => OnPlayerStatusChanged(session, sessionArgs.OldStatus, sessionArgs.NewStatus);
 
-            Debug.Assert(_sessions[pos] == null);
+            DebugTools.Assert(_sessions[pos] == null);
             _sessionCount++;
             _sessions[pos] = session;
         }
@@ -239,10 +238,10 @@ namespace SS14.Server.Player
             var session = GetSessionByChannel(args.Channel);
 
             // make sure nothing got messed up during the life of the session
-            Debug.Assert(_sessionCount > 0);
-            Debug.Assert(0 <= session.Index && session.Index <= MaxPlayers);
-            Debug.Assert(_sessions[session.Index] != null);
-            Debug.Assert(_sessions[session.Index].ConnectedClient.ConnectionId == args.Channel.ConnectionId);
+            DebugTools.Assert(_sessionCount > 0);
+            DebugTools.Assert(0 <= session.Index && session.Index <= MaxPlayers);
+            DebugTools.Assert(_sessions[session.Index] != null);
+            DebugTools.Assert(_sessions[session.Index].ConnectedClient.ConnectionId == args.Channel.ConnectionId);
 
             //Detach the entity and (don't)delete it.
             session.OnDisconnect();
@@ -252,7 +251,7 @@ namespace SS14.Server.Player
 
         private int GetFirstOpenIndex()
         {
-            Debug.Assert(PlayerCount <= MaxPlayers);
+            DebugTools.Assert(PlayerCount <= MaxPlayers);
 
             if (PlayerCount == MaxPlayers)
                 return -1;
@@ -261,7 +260,7 @@ namespace SS14.Server.Player
                 if (_sessions[i] == null)
                     return i;
 
-            Debug.Assert(true, "Why was a slot not found? There should be one.");
+            DebugTools.Assert("Why was a slot not found? There should be one.");
             return -1;
         }
 

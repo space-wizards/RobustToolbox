@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Utility;
 
 namespace SS14.Shared.Network
 {
@@ -46,7 +46,7 @@ namespace SS14.Shared.Network
         /// </summary>
         public void Initialize(INetManager network, InitCallback callback = null)
         {
-            Debug.Assert(!_initialized);
+            DebugTools.Assert(!_initialized);
 
             _callback = callback;
             _network = network;
@@ -145,7 +145,7 @@ namespace SS14.Shared.Network
         /// <returns>The ID of the added string.</returns>
         public void AddStringFixed(int id, string str)
         {
-            Debug.Assert(_network != null, "You need to call Initialize.");
+            DebugTools.Assert(_network != null, "You need to call Initialize.");
 
             // The client should receive the table from the server, not add their own.
             if (_network.IsClient)

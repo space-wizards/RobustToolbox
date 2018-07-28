@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Lidgren.Network;
 using SS14.Shared.Configuration;
@@ -8,6 +7,7 @@ using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Utility;
 
 namespace SS14.Shared.Network
 {
@@ -171,7 +171,7 @@ namespace SS14.Shared.Network
                 return;
 
             // server on the other hand needs it to be running
-            Debug.Assert(_netPeer != null);
+            DebugTools.Assert(_netPeer != null);
 
             NetIncomingMessage msg;
             while ((msg = _netPeer.ReadMessage()) != null)
@@ -217,9 +217,9 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void ClientConnect(string host, int port)
         {
-            Debug.Assert(_netPeer != null);
-            Debug.Assert(!IsServer, "Should never be called on the server.");
-            Debug.Assert(!IsConnected);
+            DebugTools.Assert(_netPeer != null);
+            DebugTools.Assert(!IsServer, "Should never be called on the server.");
+            DebugTools.Assert(!IsConnected);
 
             if (_netPeer.ConnectionsCount > 0)
                 ClientDisconnect("Client left server.");
@@ -231,13 +231,13 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void ClientDisconnect(string reason)
         {
-            Debug.Assert(IsClient, "Should never be called on the server.");
+            DebugTools.Assert(IsClient, "Should never be called on the server.");
 
             if (_netPeer == null)
                 return;
 
             // Client should never have more than one connection.
-            Debug.Assert(_netPeer.ConnectionsCount <= 1);
+            DebugTools.Assert(_netPeer.ConnectionsCount <= 1);
 
             foreach (var connection in _netPeer.Connections)
             {

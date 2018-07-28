@@ -66,6 +66,11 @@ namespace SS14.Shared.Prototypes
         /// Syncs all inter-prototype data. Call this when operations adding new prototypes are done.
         /// </summary>
         void Resync();
+
+        /// <summary>
+        ///     Registers a specific prototype name to be ignored.
+        /// </summary>
+        void RegisterIgnore(string name);
     }
 
     /// <summary>
@@ -96,7 +101,7 @@ namespace SS14.Shared.Prototypes
         private readonly Dictionary<Type, List<IPrototype>> prototypes = new Dictionary<Type, List<IPrototype>>();
         private readonly Dictionary<Type, Dictionary<string, IIndexedPrototype>> indexedPrototypes = new Dictionary<Type, Dictionary<string, IIndexedPrototype>>();
 
-        protected readonly HashSet<string> IgnoredPrototypeTypes = new HashSet<string>();
+        private readonly HashSet<string> IgnoredPrototypeTypes = new HashSet<string>();
 
         public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
         {
@@ -295,6 +300,11 @@ namespace SS14.Shared.Prototypes
             var returned = index.TryGetValue(id, out var uncast);
             prototype = (T)uncast;
             return returned;
+        }
+
+        public void RegisterIgnore(string name)
+        {
+            IgnoredPrototypeTypes.Add(name);
         }
     }
 

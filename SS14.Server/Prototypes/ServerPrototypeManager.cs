@@ -6,7 +6,7 @@ namespace SS14.Server.Prototypes
     {
         public ServerPrototypeManager() : base()
         {
-            IgnoredPrototypeTypes.Add("shader");
+            RegisterIgnore("shader");
         }
     }
 }

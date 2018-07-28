@@ -1,4 +1,7 @@
-[gd_scene format=2]
+[gd_scene load_steps=2 format=2]
 
-[node name="MainScene" type="Node" index="0"]
+[ext_resource path="res://SS14Loader.cs" type="Script" id=1]
+
+[node name="MainScene" type="Node"]
+script = ExtResource( 1 )
 

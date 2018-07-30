@@ -90,10 +90,12 @@ namespace SS14.Client
                         var mouseButtonEventArgs = (MouseButtonEventArgs)mouseButtonEvent;
                         if (mouseButtonEvent.Pressed)
                         {
+                            KeyDown((KeyEventArgs) mouseButtonEvent);
                             MouseDown(mouseButtonEventArgs);
                         }
                         else
                         {
+                            KeyUp((KeyEventArgs)mouseButtonEvent);
                             MouseUp(mouseButtonEventArgs);
                         }
                     }

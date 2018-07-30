@@ -141,6 +141,8 @@ namespace SS14.Client.Input
 
         private void SetBindState(KeyBinding binding, BoundKeyState state)
         {
+            Logger.DebugS("input.bindState", $"{binding.Function.FunctionName} - {state.ToString()}");
+
             binding.State = state;
             var cmd = GetInputCommand(binding.Function);
             OnKeyBindStateChanged?.Invoke(new BoundKeyEventArgs(binding.Function, binding.State));
@@ -248,9 +250,16 @@ namespace SS14.Client.Input
                     continue;
                 }
                 var key = keyMapping.GetNode("key").AsEnum<Keyboard.Key>();
+
+                var mod1 = Keyboard.Key.Unknown;
+                if (keyMapping.TryGetNode("mod1", out var mod1Name))
+                {
+                    mod1 = mod1Name.AsEnum<Keyboard.Key>();
+                }
+
                 var type = keyMapping.GetNode("type").AsEnum<KeyBindingType>();
 
-                var binding = new KeyBinding(function, type, key);
+                var binding = new KeyBinding(function, type, key, mod1);
                 RegisterBinding(binding);
             }
         }

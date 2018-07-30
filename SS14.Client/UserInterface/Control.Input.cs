@@ -53,7 +53,7 @@ namespace SS14.Client.UserInterface
             {
                 case Godot.InputEventKey keyEvent:
                     var keyEventArgs = new GUIKeyEventArgs(this,
-                                                           Keyboard.GonvertGodotKey(keyEvent.Scancode),
+                                                           Keyboard.ConvertGodotKey(keyEvent.Scancode),
                                                            (UInt32)keyEvent.Unicode,
                                                            keyEvent.Alt,
                                                            keyEvent.Control,

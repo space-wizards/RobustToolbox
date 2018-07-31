@@ -190,7 +190,7 @@ namespace SS14.Client.State.States
             if (clicktype != ClickType.None)
             {
                 var UID = EntityUid.Invalid;
-                if (entityToClick != null)
+                if (entityToClick != null && !entityToClick.Uid.IsClientSide())
                     UID = entityToClick.Uid;
 
                 ClickEventMessage message = new ClickEventMessage(UID, clicktype, mousePosWorld);

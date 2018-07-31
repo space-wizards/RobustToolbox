@@ -95,6 +95,10 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public override string ToString()
         {
+            if (IsClientSide())
+            {
+                return $"c{_uid & ~ClientUid}";
+            }
             return _uid.ToString();
         }
 

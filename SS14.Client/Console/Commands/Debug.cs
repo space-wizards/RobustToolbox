@@ -197,4 +197,46 @@ namespace SS14.Client.Console.Commands
             return false;
         }
     }
+
+    class EntityInfoCommand : IConsoleCommand
+    {
+        public string Command => "entfo";
+        public string Help => "entfo <entityuid>\nThe entity UID can be prefixed with 'c' to convert it to a client entity UID.";
+        public string Description => "Displays verbose diagnostics for an entity.";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            if (args.Length != 1)
+            {
+                console.AddLine("Must pass exactly 1 argument", Color.Red);
+                return false;
+            }
+            EntityUid uid;
+            var arg = args[0];
+            if (arg.StartsWith("c"))
+            {
+                uid = new EntityUid(int.Parse(arg.Substring(1)) | EntityUid.ClientUid);
+            }
+            else
+            {
+                uid = new EntityUid(int.Parse(arg));
+            }
+
+            var entmgr = IoCManager.Resolve<IEntityManager>();
+            if (!entmgr.TryGetEntity(uid, out var entity))
+            {
+                console.AddLine("That entity does not exist. Sorry lad.", Color.Red);
+                return false;
+            }
+
+            console.AddLine($"{entity.Uid}: {entity.Prototype.ID}/{entity.Name}");
+            console.AddLine($"init/del/lmt: {entity.Initialized}/{entity.Deleted}/{entity.LastModifiedTick}");
+            foreach (var component in entity.GetAllComponents())
+            {
+                console.AddLine(component.ToString());
+            }
+
+            return false;
+        }
+    }
 }

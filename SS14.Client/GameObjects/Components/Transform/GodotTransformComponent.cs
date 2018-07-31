@@ -2,13 +2,14 @@
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Utility;
+using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
-    public class GodotTransformComponent : ClientTransformComponent, IGodotTransformComponent
+    internal class GodotTransformComponent : TransformComponent, IGodotTransformComponent
     {
         public Godot.Node2D SceneNode { get; private set; }
 
@@ -31,7 +32,7 @@ namespace SS14.Client.GameObjects
             SceneNode.Visible = IsMapTransform;
         }
 
-        protected override void AttachParent(ITransformComponent parent)
+        public override void AttachParent(ITransformComponent parent)
         {
             if (parent == null)
             {
@@ -44,7 +45,7 @@ namespace SS14.Client.GameObjects
             UpdateSceneVisibility();
         }
 
-        protected override void DetachParent()
+        public override void DetachParent()
         {
             if (Parent == null)
             {

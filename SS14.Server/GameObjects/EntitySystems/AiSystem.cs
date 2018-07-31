@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using SS14.Server.AI;
 using SS14.Server.GameObjects.Components;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.System;
+using SS14.Shared.GameObjects.Systems;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 

@@ -1,6 +1,7 @@
 ﻿using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.Console.Commands
@@ -14,7 +15,7 @@ namespace SS14.Server.Console.Commands
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             var ent = IoCManager.Resolve<IServerEntityManager>();
-            ent.ForceSpawnEntityAt(args[0], player.AttachedEntity.GetComponent<IServerTransformComponent>().LocalPosition);
+            ent.ForceSpawnEntityAt(args[0], player.AttachedEntity.GetComponent<ITransformComponent>().LocalPosition);
         }
     }
 }

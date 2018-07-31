@@ -2,7 +2,7 @@
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Player;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.System;
+using SS14.Shared.GameObjects.Systems;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;

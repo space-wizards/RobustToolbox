@@ -5,6 +5,7 @@ using SS14.Client.Interfaces.GameObjects;
 using SS14.Server.GameObjects;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
@@ -21,7 +22,7 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
     {
         public override UnitTestProject Project => UnitTestProject.Client;
 
-        private EntityManager EntityManager;
+        private IClientEntityManager EntityManager;
         private IMapManager MapManager;
 
         const string PROTOTYPES = @"
@@ -41,10 +42,10 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
         public void Setup()
         {
             var factory = IoCManager.Resolve<IComponentFactory>();
-            factory.Register<ClientTransformComponent>();
-            factory.RegisterReference<ClientTransformComponent, ITransformComponent>();
+            factory.Register<TransformComponent>();
+            factory.RegisterReference<TransformComponent, ITransformComponent>();
 
-            EntityManager = (EntityManager)IoCManager.Resolve<IClientEntityManager>();
+            EntityManager = IoCManager.Resolve<IClientEntityManager>();
             MapManager = IoCManager.Resolve<IMapManager>();
 
             var manager = IoCManager.Resolve<IPrototypeManager>();
@@ -62,15 +63,10 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
         }
 
         /// <summary>
-        ///     Make sure that a child entity does not move when attaching to a parent.
-        ///
-        ///     NOTE: Looking over it after making messages work differently, I'm pretty sure this test's fucked and doesn't work like it's described.
-        ///     Problem is that now the messages carry relative position, which seems to be what this test was testing,
-        ///         so it's pretty much testing its own input data (if that makes any sense).
-        ///     Gonna leave it in since it might detect some position calculation shenanigans, but you're warned.
+        ///     Make sure that component state locations are RELATIVE.
         /// </summary>
         [Test]
-        public void ParentAttachMoveTest()
+        public void ComponentStatePositionTest()
         {
             // Arrange
             var parent = EntityManager.SpawnEntity("dummy");
@@ -78,16 +74,16 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
             var parentTrans = parent.GetComponent<ITransformComponent>();
             var childTrans = child.GetComponent<ITransformComponent>();
 
-            var compState = new TransformComponentState(new Vector2(5, 5), GridB.Index, new Angle(0), EntityUid.Invalid);
+            var compState = new TransformComponent.TransformComponentState(new Vector2(5, 5), GridB.Index, new Angle(0), EntityUid.Invalid);
             parentTrans.HandleComponentState(compState);
 
-            compState = new TransformComponentState(new Vector2(6, 6), GridB.Index, new Angle(0), EntityUid.Invalid);
+            compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), GridB.Index, new Angle(0), EntityUid.Invalid);
             childTrans.HandleComponentState(compState);
             // World pos should be 6, 6 now.
 
             // Act
             var oldWpos = childTrans.WorldPosition;
-            compState = new TransformComponentState(Vector2.One, GridB.Index, new Angle(0), parent.Uid);
+            compState = new TransformComponent.TransformComponentState(new Vector2(1, 1), GridB.Index, new Angle(0), parent.Uid);
             childTrans.HandleComponentState(compState);
             var newWpos = childTrans.WorldPosition;
 
@@ -114,11 +110,11 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
             var node2Trans = node2.GetComponent<ITransformComponent>();
             var node3Trans = node3.GetComponent<ITransformComponent>();
 
-            var compState = new TransformComponentState(new Vector2(6, 6), GridB.Index, Angle.FromDegrees(135), EntityUid.Invalid);
+            var compState = new TransformComponent.TransformComponentState(new Vector2(0, 0), GridB.Index, Angle.FromDegrees(135), EntityUid.Invalid);
             node1Trans.HandleComponentState(compState);
-            compState = new TransformComponentState(new Vector2(1, 1), GridB.Index, Angle.FromDegrees(45), node1.Uid);
+            compState = new TransformComponent.TransformComponentState(new Vector2(0, 0), GridB.Index, Angle.FromDegrees(45), node1.Uid);
             node2Trans.HandleComponentState(compState);
-            compState = new TransformComponentState(Vector2.Zero, GridB.Index, Angle.FromDegrees(45), node2.Uid);
+            compState = new TransformComponent.TransformComponentState(new Vector2(0, 0), GridB.Index, Angle.FromDegrees(45), node2.Uid);
             node3Trans.HandleComponentState(compState);
 
             // Act

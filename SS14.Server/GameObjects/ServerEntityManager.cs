@@ -30,7 +30,15 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public IEntity CreateEntity(string protoName)
         {
-            return SpawnEntity(protoName, null);
+            return InternalCreateEntity(protoName, null);
+        }
+
+        /// <inheritdoc />
+        public Entity SpawnEntity(string protoName)
+        {
+            var newEnt = (Entity)CreateEntity(protoName);
+            InitializeEntity(newEnt);
+            return newEnt;
         }
 
         /// <inheritdoc />
@@ -40,7 +48,7 @@ namespace SS14.Server.GameObjects
             if (prototype.CanSpawnAt(coordinates.Grid, coordinates.Position))
             {
                 Entity result = SpawnEntity(entityType);
-                result.GetComponent<TransformComponent>().LocalPosition = coordinates;
+                result.GetComponent<ITransformComponent>().LocalPosition = coordinates;
                 if (Started)
                 {
                     InitializeEntity(result);
@@ -65,7 +73,7 @@ namespace SS14.Server.GameObjects
         public IEntity ForceSpawnEntityAt(string entityType, GridLocalCoordinates coordinates)
         {
             Entity entity = SpawnEntity(entityType);
-            entity.GetComponent<TransformComponent>().LocalPosition = coordinates;
+            entity.GetComponent<ITransformComponent>().LocalPosition = coordinates;
             if (Started)
             {
                 InitializeEntity(entity);
@@ -233,7 +241,7 @@ namespace SS14.Server.GameObjects
 
             foreach (var entity in entities)
             {
-                var angle = new Angle(entity.GetComponent<TransformComponent>().WorldPosition - coordinates.ToWorld().Position);
+                var angle = new Angle(entity.GetComponent<ITransformComponent>().WorldPosition - coordinates.ToWorld().Position);
                 if (angle.Degrees < direction.Degrees + arcwidth / 2 && angle.Degrees > direction.Degrees - arcwidth / 2)
                     yield return entity;
             }

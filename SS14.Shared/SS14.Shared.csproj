@@ -176,7 +176,6 @@
     <Compile Include="Interfaces\GameObjects\IEntity.cs" />
     <Compile Include="Interfaces\GameObjects\IEntityManager.cs" />
     <Compile Include="Interfaces\GameObjects\IEntityQuery.cs" />
-    <Compile Include="Interfaces\GameObjects\System\IEntitySystem.cs" />
     <Compile Include="Interfaces\GameObjects\IEntitySystemManager.cs" />
     <Compile Include="Interfaces\Log\ILogHandler.cs" />
     <Compile Include="Interfaces\Log\ILogManager.cs" />
@@ -316,14 +315,12 @@
     <Compile Include="GameObjects\IEntityNetworkManager.cs" />
     <Compile Include="GameObjects\ParticleSettings.cs" />
     <Compile Include="Input\ClickType.cs" />
-    <Compile Include="GameObjects\System\EntitySystem.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponentState.cs" />
     <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponentState.cs" />
     <Compile Include="GameObjects\Components\Light\PointLightComponentState.cs" />
     <Compile Include="GameObjects\Components\Particles\ParticleSystemComponentState.cs" />
     <Compile Include="GameObjects\Components\Physics\PhysicsComponentState.cs" />
     <Compile Include="GameObjects\Components\Renderable\SpriteComponentState.cs" />
-    <Compile Include="GameObjects\Components\Transform\TransformComponentState.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\EntitySystemMessage.cs" />
     <Compile Include="GameObjects\ComponentEnums.cs" />
     <Compile Include="GameObjects\ComponentReplyMessage.cs" />
@@ -415,5 +412,8 @@
     <Compile Include="Serialization\ObjectSerializer.cs" />
     <Compile Include="Serialization\YamlObjectSerializer.cs" />
     <Compile Include="Interfaces\GameObjects\IEntityFinishContext.cs" />
+    <Compile Include="GameObjects\Components\Transform\TransformComponent.cs" />
+    <Compile Include="GameObjects\Systems\EntitySystem.cs" />
+    <Compile Include="Interfaces\GameObjects\Systems\IEntitySystem.cs" />
   </ItemGroup>
 </Project>

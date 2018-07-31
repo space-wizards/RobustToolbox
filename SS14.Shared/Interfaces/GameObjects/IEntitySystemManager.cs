@@ -1,6 +1,6 @@
 ﻿using SS14.Shared.IoC;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.GameObjects.System;
+using SS14.Shared.Interfaces.GameObjects.Systems;
 using SS14.Shared.Network.Messages;
 
 namespace SS14.Shared.Interfaces.GameObjects

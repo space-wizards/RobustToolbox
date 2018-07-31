@@ -1,6 +1,7 @@
 ﻿using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.Interfaces.GameObjects.Components;
 
 namespace SS14.Client.GameObjects
@@ -15,8 +16,8 @@ namespace SS14.Client.GameObjects
             RegisterIgnore("KeyBindingInput");
             Register<PointLightComponent>();
             Register<PhysicsComponent>();
-            Register<ClientTransformComponent>();
-            RegisterReference<ClientTransformComponent, ITransformComponent>();
+            Register<TransformComponent>();
+            RegisterReference<TransformComponent, ITransformComponent>();
 
             Register<PlayerInputMoverComponent>();
             RegisterReference<PlayerInputMoverComponent, IMoverComponent>();

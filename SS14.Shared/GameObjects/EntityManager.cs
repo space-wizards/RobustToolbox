@@ -53,8 +53,8 @@ namespace SS14.Shared.GameObjects
         protected readonly List<Entity> _allEntities = new List<Entity>();
 
         protected readonly Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
-        
-        protected int NextUid = (int) EntityUid.FirstUid;
+
+        protected int NextUid = (int)EntityUid.FirstUid;
 
         private readonly Dictionary<Type, List<Delegate>> _eventSubscriptions
             = new Dictionary<Type, List<Delegate>>();
@@ -196,25 +196,12 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <summary>
-        /// Spawns a new initialized entity.
-        /// </summary>
-        /// <param name="protoName">Name of the entity prototype to use.</param>
-        /// <returns>New spawned entity.</returns>
-        public Entity SpawnEntity(string protoName)
-        {
-            var newEnt = SpawnEntity(protoName, null);
-            InitializeEntity(newEnt);
-            return newEnt;
-
-        }
-
-        /// <summary>
         /// Creates an entity and adds it to the entity dictionary
         /// </summary>
         /// <param name="prototypeName">name of entity template to execute</param>
         /// <param name="uid">UID to give to the new entity.</param>
         /// <returns>spawned entity</returns>
-        protected Entity SpawnEntity(string prototypeName, EntityUid? uid)
+        protected Entity InternalCreateEntity(string prototypeName, EntityUid? uid)
         {
             var entity = AllocEntity(prototypeName, uid);
             FinishEntity(entity);
@@ -278,7 +265,7 @@ namespace SS14.Shared.GameObjects
             Type eventType = typeof(T);
             if (!_eventSubscriptions.ContainsKey(eventType))
             {
-                _eventSubscriptions.Add(eventType, new List<Delegate> {eventHandler});
+                _eventSubscriptions.Add(eventType, new List<Delegate> { eventHandler });
             }
             else if (!_eventSubscriptions[eventType].Contains(eventHandler))
             {

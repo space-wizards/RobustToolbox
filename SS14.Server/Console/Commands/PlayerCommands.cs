@@ -4,6 +4,7 @@ using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Enums;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
@@ -31,7 +32,7 @@ namespace SS14.Server.Console.Commands
 
             var position = new Vector2(posX, posY);
             var entity = player.AttachedEntity;
-            var transform = entity.GetComponent<IServerTransformComponent>();
+            var transform = entity.GetComponent<ITransformComponent>();
 
             transform.DetachParent();
 

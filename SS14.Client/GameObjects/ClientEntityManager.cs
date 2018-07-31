@@ -4,6 +4,8 @@ using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Interfaces.Map;
+using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 
@@ -14,6 +16,12 @@ namespace SS14.Client.GameObjects
     /// </summary>
     public sealed class ClientEntityManager : EntityManager, IClientEntityManager, IDisposable
     {
+        [Dependency]
+        readonly IMapManager _mapManager;
+
+
+        private int NextClientEntityUid = EntityUid.ClientUid + 1;
+
         public IEnumerable<IEntity> GetEntitiesInRange(GridLocalCoordinates position, float Range)
         {
             var AABB = new Box2(position.Position - new Vector2(Range / 2, Range / 2), position.Position + new Vector2(Range / 2, Range / 2));
@@ -118,7 +126,7 @@ namespace SS14.Client.GameObjects
                 }
                 else //Unknown entities
                 {
-                    Entity newEntity = SpawnEntity(es.StateData.TemplateName, es.StateData.Uid);
+                    Entity newEntity = InternalCreateEntity(es.StateData.TemplateName, es.StateData.Uid);
                     if (Started)
                     {
                         InitializeEntity(newEntity);
@@ -144,6 +152,49 @@ namespace SS14.Client.GameObjects
         public void Dispose()
         {
             Shutdown();
+        }
+
+        public IEntity CreateEntity(string protoName)
+        {
+            return InternalCreateEntity(protoName, NewClientEntityUid());
+        }
+
+        public Entity SpawnEntity(string protoName)
+        {
+            var ent = InternalCreateEntity(protoName, NewClientEntityUid());
+            if (Started)
+            {
+                InitializeEntity(ent);
+            }
+            return ent;
+        }
+
+        public IEntity ForceSpawnEntityAt(string entityType, GridLocalCoordinates coordinates)
+        {
+            Entity entity = SpawnEntity(entityType);
+            entity.GetComponent<ITransformComponent>().LocalPosition = coordinates;
+            if (Started)
+            {
+                InitializeEntity(entity);
+            }
+
+            return entity;
+        }
+
+        public IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap)
+        {
+            if (!_mapManager.TryGetMap(argMap, out var map))
+            {
+                map = _mapManager.DefaultMap;
+            }
+
+            return ForceSpawnEntityAt(entityType, new GridLocalCoordinates(position, map.FindGridAt(position)));
+
+        }
+
+        EntityUid NewClientEntityUid()
+        {
+            return new EntityUid(NextClientEntityUid++);
         }
     }
 }

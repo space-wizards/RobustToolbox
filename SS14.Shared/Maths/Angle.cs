@@ -166,5 +166,10 @@ namespace SS14.Shared.Maths
         {
             return new Angle(theta);
         }
+
+        public override string ToString()
+        {
+            return $"{Theta} rad";
+        }
     }
 }

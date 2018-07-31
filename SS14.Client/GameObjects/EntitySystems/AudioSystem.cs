@@ -7,7 +7,7 @@ using SS14.Client.ResourceManagement;
 using SS14.Client.Utility;
 using SS14.Shared.Audio;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.System;
+using SS14.Shared.GameObjects.Systems;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;

@@ -15,6 +15,7 @@ using YamlDotNet.RepresentationModel;
 using System.Linq;
 using System.Collections.Generic;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.GameObjects.Components.BoundingBox;
 
 namespace SS14.Client.GameObjects
 {

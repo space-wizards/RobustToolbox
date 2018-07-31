@@ -6,6 +6,7 @@ using SS14.Client.Graphics.Shaders;
 using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Graphics.Overlays;
+using SS14.Shared.GameObjects.Components.BoundingBox;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
@@ -63,7 +64,7 @@ namespace SS14.Client.Debugging
             protected override void Draw(DrawingHandle handle)
             {
                 var viewport = eyeManager.GetWorldViewport();
-                foreach (var boundingBox in componentManager.GetAllComponents<BoundingBoxComponent>())
+                foreach (var boundingBox in componentManager.GetAllComponents<ClientBoundingBoxComponent>())
                 {
                     // all entities have a TransformComponent
                     var transform = boundingBox.Owner.GetComponent<ITransformComponent>();

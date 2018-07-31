@@ -316,7 +316,6 @@
     <Compile Include="GameObjects\ParticleSettings.cs" />
     <Compile Include="Input\ClickType.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponentState.cs" />
-    <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponentState.cs" />
     <Compile Include="GameObjects\Components\Light\PointLightComponentState.cs" />
     <Compile Include="GameObjects\Components\Particles\ParticleSystemComponentState.cs" />
     <Compile Include="GameObjects\Components\Physics\PhysicsComponentState.cs" />
@@ -415,5 +414,6 @@
     <Compile Include="GameObjects\Components\Transform\TransformComponent.cs" />
     <Compile Include="GameObjects\Systems\EntitySystem.cs" />
     <Compile Include="Interfaces\GameObjects\Systems\IEntitySystem.cs" />
+    <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponent.cs" />
   </ItemGroup>
 </Project>

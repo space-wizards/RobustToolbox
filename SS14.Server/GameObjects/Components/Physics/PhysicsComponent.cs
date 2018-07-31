@@ -1,4 +1,5 @@
 ﻿using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components.BoundingBox;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;

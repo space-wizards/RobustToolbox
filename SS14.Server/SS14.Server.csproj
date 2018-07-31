@@ -159,7 +159,6 @@
     <Compile Include="GameObjects\Components\ClickableComponent.cs" />
     <Compile Include="GameObjects\Components\Actor\BasicActorComponent.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponent.cs" />
-    <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponent.cs" />
     <Compile Include="GameObjects\Components\Light\PointLightComponent.cs" />
     <Compile Include="GameObjects\Components\Mover\PlayerInputMoverComponent.cs" />
     <Compile Include="GameObjects\Components\Particles\ParticleSystemComponent.cs" />

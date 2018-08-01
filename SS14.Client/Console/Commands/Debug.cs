@@ -179,7 +179,7 @@ namespace SS14.Client.Console.Commands
         public bool Execute(IDebugConsole console, params string[] args)
         {
             var vp = IoCManager.Resolve<ISceneTreeHolder>().SceneTree.Root;
-            console.AddLine($"canvas_transform: {vp.CanvasTransform}, global_canvas_transform: {vp.GlobalCanvasTransform}");
+            console.AddLine($"canvas_transform: {vp.CanvasTransform}, global_canvas_transform: {vp.GlobalCanvasTransform}, size: {vp.Size}");
             return false;
         }
     }

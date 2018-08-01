@@ -63,10 +63,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
             {
                 if (_parent.IsValid())
                 {
-                    var lRotV = _rotation.ToVec();
-                    var wRotV = MatMult(Parent.WorldMatrix, lRotV);
-                    var uwRotV = wRotV.Normalized;
-                    return uwRotV.ToAngle();
+                    return Parent.WorldRotation + LocalRotation;
                 }
                 return _rotation;
             }

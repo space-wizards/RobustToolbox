@@ -57,7 +57,7 @@ namespace SS14.Client.Placement.Modes
                 (float)(Math.Round((MouseCoords.Position.Y / (double)snapSize - 0.5f), MidpointRounding.AwayFromZero) + 0.5) * snapSize);
 
             //Adjust mouseCoords to new calculated position
-            MouseCoords = new GridLocalCoordinates(mouseLocal + new Vector2(pManager.CurrentPrototype.PlacementOffset.X, pManager.CurrentPrototype.PlacementOffset.Y), MouseCoords.Grid);
+            MouseCoords = new GridLocalCoordinates(mouseLocal + new Vector2(pManager.PlacementOffset.X, pManager.PlacementOffset.Y), MouseCoords.Grid);
         }
 
         public override bool IsValidPosition(GridLocalCoordinates position)

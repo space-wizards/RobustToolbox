@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.GameObjects.System;
+using SS14.Shared.Interfaces.GameObjects.Systems;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Network.Messages;
@@ -64,7 +64,7 @@ namespace SS14.Shared.GameObjects
                 throw new InvalidEntitySystemException();
             }
 
-            return (T) Systems[type];
+            return (T)Systems[type];
         }
 
         public void Initialize()
@@ -72,7 +72,7 @@ namespace SS14.Shared.GameObjects
             foreach (Type type in ReflectionManager.GetAllChildren<IEntitySystem>())
             {
                 //Force initialization of all systems
-                var instance = (IEntitySystem) Activator.CreateInstance(type);
+                var instance = (IEntitySystem)Activator.CreateInstance(type);
                 AddSystem(instance);
                 instance.RegisterMessageTypes();
                 instance.SubscribeEvents();

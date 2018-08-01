@@ -14,6 +14,7 @@ namespace SS14.Client.Graphics
             public Vector2u Size { get; }
             public StateId StateId { get; }
             public DirectionType Directions { get; }
+            public Texture Frame0 => Icons[0][0].icon;
             private readonly (Texture icon, float delay)[][] Icons;
 
             internal State(Vector2u size, StateId stateId, DirectionType direction, (Texture icon, float delay)[][] icons)

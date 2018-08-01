@@ -5,3 +5,11 @@
   params:
     outline_width: 1
     outline_color: "#FF000055"
+
+- type: shader
+  id: selection_outline_unshaded
+  kind: source
+  path: "/Shaders/outline_unshaded.gdsl"
+  params:
+    outline_width: 1
+    outline_color: "#FF000055"

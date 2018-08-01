@@ -2,7 +2,7 @@
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Players;
 
-namespace SS14.Shared.Interfaces.GameObjects.System
+namespace SS14.Shared.Interfaces.GameObjects.Systems
 {
     /// <summary>
     ///     A subsystem that acts on all components of a type at once.

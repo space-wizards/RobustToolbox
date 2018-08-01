@@ -1,6 +1,7 @@
 ﻿using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.System;
+using SS14.Shared.GameObjects.Systems;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 
 namespace SS14.Server.GameObjects.EntitySystems
@@ -25,7 +26,7 @@ namespace SS14.Server.GameObjects.EntitySystems
 
         private static void DoMovement(IEntity entity, float frameTime)
         {
-            var transform = entity.GetComponent<TransformComponent>();
+            var transform = entity.GetComponent<ITransformComponent>();
             var velocity = entity.GetComponent<PhysicsComponent>();
 
             if (velocity.AngularVelocity == 0 && velocity.LinearVelocity == Vector2.Zero)

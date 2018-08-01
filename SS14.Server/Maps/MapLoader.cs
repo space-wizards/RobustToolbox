@@ -17,6 +17,7 @@ using SS14.Shared.GameObjects;
 using System.Globalization;
 using SS14.Shared.Interfaces.GameObjects;
 using System.Linq;
+using SS14.Shared.Interfaces.GameObjects.Components;
 
 namespace SS14.Server.Maps
 {
@@ -330,7 +331,7 @@ namespace SS14.Server.Maps
                 var entMgr = IoCManager.Resolve<IEntityManager>();
                 foreach (var entity in entMgr.GetEntities())
                 {
-                    if (entity.Prototype.MapSavable && entity.TryGetComponent(out IServerTransformComponent transform) && GridIDMap.ContainsKey(transform.GridID))
+                    if (entity.Prototype.MapSavable && entity.TryGetComponent(out ITransformComponent transform) && GridIDMap.ContainsKey(transform.GridID))
                     {
                         EntityUidMap.Add(entity.Uid, EntityUidMap.Count);
                         Entities.Add(entity);

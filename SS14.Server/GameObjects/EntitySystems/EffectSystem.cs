@@ -1,7 +1,7 @@
 ﻿using DataStructures;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.EntitySystemMessages;
-using SS14.Shared.GameObjects.System;
+using SS14.Shared.GameObjects.Systems;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using System;

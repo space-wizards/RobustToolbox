@@ -53,7 +53,7 @@ namespace SS14.Server.GameObjects.Components.Container
 
             foreach (var entity in ContainerList)
             {
-                var transform = entity.GetComponent<IServerTransformComponent>();
+                var transform = entity.GetComponent<ITransformComponent>();
                 transform.DetachParent();
             }
         }
@@ -91,14 +91,14 @@ namespace SS14.Server.GameObjects.Components.Container
         {
             if (CanInsert(toinsert)) //Verify we can insert and that the object got properly removed from its current location
             {
-                var transform = toinsert.GetComponent<IServerTransformComponent>();
+                var transform = toinsert.GetComponent<ITransformComponent>();
                 if (!transform.IsMapTransform && !transform.Parent.Owner.GetComponent<IContainerManager>().Remove(toinsert))
                 {
                     // Can't detach the entity from its parent, can't insert.
                     return false;
                 }
                 InternalInsert(toinsert);
-                transform.AttachParent(Owner.GetComponent<IServerTransformComponent>());
+                transform.AttachParent(Owner.GetComponent<ITransformComponent>());
                 return true;
             }
             return false;
@@ -129,7 +129,7 @@ namespace SS14.Server.GameObjects.Components.Container
                 return false;
             }
             InternalRemove(toremove);
-            toremove.GetComponent<IServerTransformComponent>().DetachParent();
+            toremove.GetComponent<ITransformComponent>().DetachParent();
             return true;
         }
 

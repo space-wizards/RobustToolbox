@@ -1,5 +1,5 @@
 ﻿using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.System;
+using SS14.Shared.GameObjects.Systems;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
@@ -7,7 +7,7 @@ namespace SS14.Server.GameObjects.EntitySystems
     {
         public override void Initialize()
         {
-            EntityQuery  = new TypeEntityQuery(typeof(PlayerInputMoverComponent));
+            EntityQuery = new TypeEntityQuery(typeof(PlayerInputMoverComponent));
         }
 
         public override void Update(float frameTime)

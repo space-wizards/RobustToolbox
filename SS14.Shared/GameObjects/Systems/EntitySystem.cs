@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.GameObjects.System;
+using SS14.Shared.Interfaces.GameObjects.Systems;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Reflection;
 
-namespace SS14.Shared.GameObjects.System
+namespace SS14.Shared.GameObjects.Systems
 {
     /// <summary>
     ///     A subsystem that acts on all components of a type at once.

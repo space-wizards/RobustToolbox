@@ -13,19 +13,19 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         /// <summary>
         ///     Current position offset of the entity.
         /// </summary>
-        GridLocalCoordinates LocalPosition { get; }
+        GridLocalCoordinates LocalPosition { get; set; }
 
         /// <summary>
         ///     Current position offset of the entity.
         /// </summary>
-        Vector2 WorldPosition { get; }
+        Vector2 WorldPosition { get; set; }
 
         event Action<Angle> OnRotate;
 
         /// <summary>
         ///     Current rotation offset of the entity.
         /// </summary>
-        Angle LocalRotation { get; }
+        Angle LocalRotation { get; set; }
 
         /// <summary>
         ///     Current world rotation of the entity.
@@ -76,5 +76,9 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         ///     Returns the index of the grid which this object is on
         /// </summary>
         GridId GridID { get; }
+
+        void DetachParent();
+        void AttachParent(ITransformComponent parent);
+        void AttachParent(IEntity parent);
     }
 }

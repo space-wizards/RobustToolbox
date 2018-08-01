@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using SS14.Server.GameObjects.Components.Container;
 using SS14.Server.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Prototypes;
 using System.Collections.Generic;
@@ -65,7 +66,7 @@ namespace SS14.UnitTesting.Server.GameObjects
         {
             var owner = EntityManager.SpawnEntity("dummy");
             var inserted = EntityManager.SpawnEntity("dummy");
-            var transform = inserted.GetComponent<IServerTransformComponent>();
+            var transform = inserted.GetComponent<ITransformComponent>();
 
             var container = ContainerManagerComponent.Create<Container>("dummy", owner);
             Assert.That(container.Insert(inserted), Is.True);

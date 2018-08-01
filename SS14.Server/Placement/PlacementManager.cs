@@ -128,9 +128,9 @@ namespace SS14.Server.Placement
                 if (!_entityManager.TrySpawnEntityAt(entityTemplateName, coordinates, out IEntity created))
                     return;
 
-                var transform = created.GetComponent<TransformComponent>();
+                var transform = created.GetComponent<ITransformComponent>();
                 transform.WorldPosition = new Vector2(xValue, yValue);
-                if (created.TryGetComponent<TransformComponent>(out var component))
+                if (created.TryGetComponent<ITransformComponent>(out var component))
                     component.LocalRotation = dirRcv.ToAngle();
             }
             else

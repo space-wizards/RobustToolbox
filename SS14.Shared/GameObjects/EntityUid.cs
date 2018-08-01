@@ -9,7 +9,12 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>
     {
-        private readonly int _uid;
+        /// <summary>
+        ///     If this bit is set on a UID, it's client sided.
+        ///     Use <see cref="IsClientSide" /> to check this.
+        /// </summary>
+        internal const int ClientUid = 2 << 29;
+        readonly int _uid;
 
         /// <summary>
         ///     An Invalid entity UID you can compare against.
@@ -36,6 +41,11 @@ namespace SS14.Shared.GameObjects
         public bool IsValid()
         {
             return _uid > 0;
+        }
+
+        public bool IsClientSide()
+        {
+            return (_uid & (2 << 29)) != 0;
         }
 
         /// <inheritdoc />
@@ -85,6 +95,10 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public override string ToString()
         {
+            if (IsClientSide())
+            {
+                return $"c{_uid & ~ClientUid}";
+            }
             return _uid.ToString();
         }
 

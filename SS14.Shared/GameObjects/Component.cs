@@ -35,6 +35,12 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public virtual Type StateType => typeof(ComponentState);
 
+        /// <summary>
+        ///     True if this entity is a client-only entity.
+        ///     That is, it does not exist on the server, only THIS client.
+        /// </summary>
+        public bool IsClientSide => Owner.Uid.IsClientSide();
+
         public bool Initialized { get; private set; }
 
         /// <inheritdoc />

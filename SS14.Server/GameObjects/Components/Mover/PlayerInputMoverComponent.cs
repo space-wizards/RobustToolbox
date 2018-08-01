@@ -4,6 +4,7 @@ using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Input;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
@@ -83,10 +84,10 @@ namespace SS14.Server.GameObjects
                     break;
             }
         }
-        
+
         public void OnUpdate()
         {
-            var transform = Owner.GetComponent<TransformComponent>();
+            var transform = Owner.GetComponent<ITransformComponent>();
             var physics = Owner.GetComponent<PhysicsComponent>();
 
             if (_moveDir.LengthSquared < 0.001)

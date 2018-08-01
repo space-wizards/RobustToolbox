@@ -9,6 +9,7 @@ using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Serialization;
+using SS14.Shared.GameObjects.Components.BoundingBox;
 
 namespace SS14.Server.GameObjects
 {

@@ -1,5 +1,5 @@
 ﻿using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.System;
+using SS14.Shared.GameObjects.Systems;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;

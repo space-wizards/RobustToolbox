@@ -34,7 +34,20 @@ namespace SS14.Shared.GameObjects.Components.Transform
         public sealed override Type StateType => typeof(TransformComponentState);
 
         /// <inheritdoc />
-        public MapId MapID => IoCManager.Resolve<IMapManager>().GetGrid(GridID).MapID;
+        public MapId MapID
+        {
+            get
+            {
+                // Work around a client-side race condition of the grids not being synced yet.
+                // Maybe it's better to fix the race condition instead.
+                // Eh.
+                if (IoCManager.Resolve<IMapManager>().TryGetGrid(GridID, out var grid))
+                {
+                    return grid.MapID;
+                }
+                return MapId.Nullspace;
+            }
+        }
 
         /// <inheritdoc />
         public GridId GridID
@@ -172,7 +185,14 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 }
                 else
                 {
-                    return IoCManager.Resolve<IMapManager>().GetMap(MapID).GetGrid(GridID).ConvertToWorld(_position);
+                    // Work around a client-side race condition of the grids not being synced yet.
+                    // Maybe it's better to fix the race condition instead.
+                    // Eh.
+                    if (IoCManager.Resolve<IMapManager>().TryGetGrid(GridID, out var grid))
+                    {
+                        return grid.ConvertToWorld(_position);
+                    }
+                    return _position;
                 }
             }
             set

@@ -103,6 +103,8 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         int AddLayerState(string stateId, string rsiPath, int? newIndex = null);
         int AddLayer(RSI.StateId stateId, ResourcePath rsiPath, int? newIndex = null);
         int AddLayerState(string stateId, ResourcePath rsiPath, int? newIndex = null);
+        int AddLayer(SpriteSpecifier specifier, int? newIndex = null);
+
         void RemoveLayer(int layer);
         void RemoveLayer(object layerKey);
 
@@ -110,6 +112,9 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         void LayerSetShader(object layerKey, Shader shader);
         void LayerSetShader(int layer, string shaderName);
         void LayerSetShader(object layerKey, string shaderName);
+
+        void LayerSetSprite(int layer, SpriteSpecifier specifier);
+        void LayerSetSprite(object layerKey, SpriteSpecifier specifier);
 
         void LayerSetTexture(int layer, Texture texture);
         void LayerSetTexture(object layerKey, Texture texture);

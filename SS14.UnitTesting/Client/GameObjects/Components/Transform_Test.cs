@@ -110,9 +110,9 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
             var node2Trans = node2.GetComponent<ITransformComponent>();
             var node3Trans = node3.GetComponent<ITransformComponent>();
 
-            var compState = new TransformComponent.TransformComponentState(new Vector2(0, 0), GridB.Index, Angle.FromDegrees(135), EntityUid.Invalid);
+            var compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), GridB.Index, Angle.FromDegrees(135), EntityUid.Invalid);
             node1Trans.HandleComponentState(compState);
-            compState = new TransformComponent.TransformComponentState(new Vector2(0, 0), GridB.Index, Angle.FromDegrees(45), node1.Uid);
+            compState = new TransformComponent.TransformComponentState(new Vector2(1, 1), GridB.Index, Angle.FromDegrees(45), node1.Uid);
             node2Trans.HandleComponentState(compState);
             compState = new TransformComponent.TransformComponentState(new Vector2(0, 0), GridB.Index, Angle.FromDegrees(45), node2.Uid);
             node3Trans.HandleComponentState(compState);

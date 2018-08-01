@@ -34,7 +34,8 @@ namespace SS14.Client.GameObjects
             transform = Owner.GetComponent<IGodotTransformComponent>();
             eye = new Eye
             {
-                Current = setCurrentOnInitialize
+                Current = setCurrentOnInitialize,
+                MapId = transform.MapID,
             };
             transform.SceneNode.AddChild(eye.GodotCamera);
             transform.OnMove += Transform_OnMove;

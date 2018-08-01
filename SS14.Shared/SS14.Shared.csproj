@@ -415,5 +415,6 @@
     <Compile Include="GameObjects\Systems\EntitySystem.cs" />
     <Compile Include="Interfaces\GameObjects\Systems\IEntitySystem.cs" />
     <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponent.cs" />
+    <Compile Include="Utility\SpriteSpecifier.cs" />
   </ItemGroup>
 </Project>

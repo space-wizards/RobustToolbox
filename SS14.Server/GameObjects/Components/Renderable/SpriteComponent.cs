@@ -106,6 +106,26 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        public int AddLayerWithSprite(SpriteSpecifier specifier)
+        {
+            var layer = PrototypeLayerData.New();
+            switch (specifier)
+            {
+                case SpriteSpecifier.Texture tex:
+                    layer.TexturePath = tex.TexturePath.ToString();
+                    break;
+                case SpriteSpecifier.Rsi rsi:
+                    layer.RsiPath = rsi.RsiPath.ToString();
+                    layer.State = rsi.RsiState;
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+            Layers.Add(layer);
+            Dirty();
+            return Layers.Count - 1;
+        }
+
         public int AddLayerWithTexture(string texture)
         {
             var layer = PrototypeLayerData.New();
@@ -163,6 +183,34 @@ namespace SS14.Server.GameObjects
             }
             var thelayer = Layers[layer];
             thelayer.Shader = shaderName;
+            Layers[layer] = thelayer;
+            Dirty();
+        }
+
+        public void LayerSetSprite(int layer, SpriteSpecifier specifier)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set sprite! Trace:\n{1}", layer, Environment.StackTrace);
+                return;
+            }
+            var thelayer = Layers[layer];
+            switch (specifier)
+            {
+                case SpriteSpecifier.Texture tex:
+                    thelayer.TexturePath = tex.TexturePath.ToString();
+                    thelayer.RsiPath = null;
+                    thelayer.State = null;
+                    break;
+                case SpriteSpecifier.Rsi rsi:
+                    thelayer.TexturePath = null;
+                    thelayer.RsiPath = rsi.RsiPath.ToString();
+                    thelayer.State = rsi.RsiState;
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+
             Layers[layer] = thelayer;
             Dirty();
         }

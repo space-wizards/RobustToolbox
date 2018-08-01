@@ -37,6 +37,7 @@ namespace SS14.Shared.Serialization
                 { typeof(ResourcePath), new ResourcePathSerializer() },
                 { typeof(GridId), new GridIdSerializer() },
                 { typeof(MapId), new MapIdSerializer() },
+                { typeof(SpriteSpecifier), new SpriteSpecifierSerializer() },
             };
         }
 
@@ -832,6 +833,30 @@ namespace SS14.Shared.Serialization
             public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 return new YamlScalarNode(obj.ToString());
+            }
+        }
+
+        class SpriteSpecifierSerializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
+            {
+                return SpriteSpecifier.FromYaml(node);
+            }
+
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
+            {
+                var specifier = (SpriteSpecifier)obj;
+                switch (obj)
+                {
+                    case SpriteSpecifier.Texture tex:
+                        return tex.TexturePath.ToString();
+                    case SpriteSpecifier.Rsi rsi:
+                        var mapping = new YamlMappingNode();
+                        mapping.Add("sprite", rsi.RsiPath.ToString());
+                        mapping.Add("state", rsi.RsiState);
+                        return mapping;
+                }
+                throw new NotImplementedException();
             }
         }
     }

@@ -321,6 +321,21 @@ namespace SS14.Client.GameObjects
             return AddLayer(new RSI.StateId(stateId), rsi, newIndex);
         }
 
+        public int AddLayer(SpriteSpecifier specifier, int? newIndex = null)
+        {
+            switch (specifier)
+            {
+                case SpriteSpecifier.Texture tex:
+                    return AddLayer(tex.TexturePath, newIndex);
+
+                case SpriteSpecifier.Rsi rsi:
+                    return AddLayerState(rsi.RsiState, rsi.RsiPath, newIndex);
+
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
         int AddLayer(Layer layer, int? newIndex)
         {
             if (newIndex.HasValue)
@@ -420,6 +435,38 @@ namespace SS14.Client.GameObjects
             }
 
             LayerSetShader(layer, shaderName);
+        }
+
+        public void LayerSetSprite(int layer, SpriteSpecifier specifier)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set sprite! Trace:\n{1}", layer, Environment.StackTrace);
+                return;
+            }
+
+            switch (specifier)
+            {
+                case SpriteSpecifier.Texture tex:
+                    LayerSetTexture(layer, tex.TexturePath);
+                    break;
+                case SpriteSpecifier.Rsi rsi:
+                    LayerSetState(layer, rsi.RsiState, rsi.RsiPath);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        public void LayerSetSprite(object layerKey, SpriteSpecifier specifier)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set sprite! Trace:\n{1}", layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetSprite(layer, specifier);
         }
 
         public void LayerSetTexture(int layer, Texture texture)

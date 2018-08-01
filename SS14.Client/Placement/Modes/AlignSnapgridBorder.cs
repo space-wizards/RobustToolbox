@@ -59,7 +59,7 @@ namespace SS14.Client.Placement.Modes
                 (float)Math.Round(MouseCoords.Y / (double)snapSize, MidpointRounding.AwayFromZero) * snapSize);
 
             //Convert back to original world and screen coordinates after applying offset
-            MouseCoords = new GridLocalCoordinates(mouselocal + new Vector2(pManager.CurrentPrototype.PlacementOffset.X, pManager.CurrentPrototype.PlacementOffset.Y), MouseCoords.Grid);
+            MouseCoords = new GridLocalCoordinates(mouselocal + new Vector2(pManager.PlacementOffset.X, pManager.PlacementOffset.Y), MouseCoords.Grid);
         }
 
         public override bool IsValidPosition(GridLocalCoordinates position)

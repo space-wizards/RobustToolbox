@@ -25,8 +25,8 @@ namespace SS14.Client.Placement.Modes
             }
             else
             {
-                MouseCoords = new GridLocalCoordinates(CurrentTile.X + tileSize / 2 + pManager.CurrentPrototype.PlacementOffset.X,
-                                                  CurrentTile.Y + tileSize / 2 + pManager.CurrentPrototype.PlacementOffset.Y,
+                MouseCoords = new GridLocalCoordinates(CurrentTile.X + tileSize / 2 + pManager.PlacementOffset.X,
+                                                  CurrentTile.Y + tileSize / 2 + pManager.PlacementOffset.Y,
                                                   MouseCoords.Grid);
             }
         }

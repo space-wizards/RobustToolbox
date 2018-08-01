@@ -110,6 +110,8 @@ namespace SS14.Client.Placement
 
         public PlacementInformation CurrentPermission { get; set; }
 
+        public PlacementHijack Hijack { get; private set; }
+
         private EntityPrototype _currentPrototype;
 
         /// <summary>
@@ -121,28 +123,36 @@ namespace SS14.Client.Placement
             set
             {
                 _currentPrototype = value;
-                //var name = BoundingBoxComponent.BoundingBoxName;
-                if (value != null
-                    && value.Components.ContainsKey("BoundingBox")
-                    && value.Components.ContainsKey("Collidable"))
+
+                if (value != null)
                 {
-                    var map = value.Components["BoundingBox"];
-                    var serializer = YamlObjectSerializer.NewReader(map);
-                    serializer.DataField(ref _colliderAABB, "aabb", new Box2(0f, 0f, 0f, 0f));
+                    PlacementOffset = value.PlacementOffset;
+
+                    if (value.Components.ContainsKey("BoundingBox") && value.Components.ContainsKey("Collidable"))
+                    {
+                        var map = value.Components["BoundingBox"];
+                        var serializer = YamlObjectSerializer.NewReader(map);
+                        serializer.DataField(ref _colliderAABB, "aabb", new Box2(0f, 0f, 0f, 0f));
+                        return;
+                    }
                 }
-                else
-                {
-                    _colliderAABB = new Box2(0f, 0f, 0f, 0f);
-                }
+                _colliderAABB = new Box2(0f, 0f, 0f, 0f);
             }
         }
+
+        public Vector2i PlacementOffset { get; set; }
+
 
         private Box2 _colliderAABB = new Box2(0f, 0f, 0f, 0f);
 
         /// <summary>
         /// The box which certain placement modes collision checks will be done against
         /// </summary>
-        public Box2 ColliderAABB => _colliderAABB;
+        public Box2 ColliderAABB
+        {
+            get => _colliderAABB;
+            set => _colliderAABB = value;
+        }
 
         /// <summary>
         /// The directional to spawn the entity in
@@ -217,6 +227,7 @@ namespace SS14.Client.Placement
 
         public void Clear()
         {
+            Hijack = null;
             CurrentBaseSprite = null;
             CurrentPrototype = null;
             CurrentPermission = null;
@@ -226,6 +237,7 @@ namespace SS14.Client.Placement
             _placenextframe = false;
             IsActive = false;
             Eraser = false;
+            PlacementOffset = Vector2i.Zero;
             // Make it draw again to remove the drawn things.
             drawNode?.Update();
         }
@@ -284,6 +296,7 @@ namespace SS14.Client.Placement
         public void HandleDeletion(IEntity entity)
         {
             if (!IsActive || !Eraser) return;
+            if (Hijack != null && Hijack.HijackDeletion(entity)) return;
 
             var msg = NetworkManager.CreateNetMessage<MsgPlacement>();
             msg.PlaceType = PlacementManagerMessage.RequestEntRemove;
@@ -301,7 +314,23 @@ namespace SS14.Client.Placement
             else Clear();
         }
 
+        public void ToggleEraserHijacked(PlacementHijack hijack)
+        {
+            if (!Eraser && !IsActive)
+            {
+                IsActive = true;
+                Eraser = true;
+                Hijack = hijack;
+            }
+            else Clear();
+        }
+
         public void BeginPlacing(PlacementInformation info)
+        {
+            BeginHijackedPlacing(info);
+        }
+
+        public void BeginHijackedPlacing(PlacementInformation info, PlacementHijack hijack = null)
         {
             Clear();
 
@@ -315,6 +344,14 @@ namespace SS14.Client.Placement
 
             Type modeType = _modeDictionary.First(pair => pair.Key.Equals(CurrentPermission.PlacementOption)).Value;
             CurrentMode = (PlacementMode)Activator.CreateInstance(modeType, this);
+
+            if (hijack != null)
+            {
+                Hijack = hijack;
+                Hijack.StartHijack(this);
+                IsActive = true;
+                return;
+            }
 
             if (info.IsTile)
                 PreparePlacementTile((Tile)info.TileType);
@@ -505,6 +542,7 @@ namespace SS14.Client.Placement
             if (coordinates.MapID == MapId.Nullspace) return;
             if (CurrentPermission == null) return;
             if (!CurrentMode.IsValidPosition(coordinates)) return;
+            if (Hijack != null && Hijack.HijackPlacementRequest(coordinates)) return;
 
             if (CurrentPermission.IsTile)
             {

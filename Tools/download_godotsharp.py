@@ -2,7 +2,7 @@
 import os
 import requests
 
-GODOTSHARP_URL = "https://builds.spacestation14.io/ss14_builds/godotsharp/GodotSharp.dll"
+GODOTSHARP_URL = "https://changelog.ss13.moe/static/GodotSharp.dll"
 
 
 def main():

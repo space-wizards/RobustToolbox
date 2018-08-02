@@ -8,16 +8,12 @@ using SS14.Shared.Players;
 
 namespace SS14.Server.Interfaces.Player
 {
-    public interface IPlayerSession
+    public interface IPlayerSession : ICommonSession
     {
         IEntity AttachedEntity { get; }
         EntityUid? AttachedEntityUid { get; }
-        string Name { get; set; }
-        SessionStatus Status { get; set; }
         INetChannel ConnectedClient { get; }
         DateTime ConnectedTime { get; }
-
-        PlayerIndex Index { get; }
 
         IPlayerInput Input { get; }
 

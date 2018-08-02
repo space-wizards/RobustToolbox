@@ -29,13 +29,13 @@ namespace SS14.Server.GameObjects
         private readonly List<(uint tick, EntityUid uid)> DeletionHistory = new List<(uint, EntityUid)>();
 
         /// <inheritdoc />
-        public IEntity CreateEntity(string protoName)
+        public override IEntity CreateEntity(string protoName)
         {
             return InternalCreateEntity(protoName, null);
         }
 
         /// <inheritdoc />
-        public Entity SpawnEntity(string protoName)
+        public override Entity SpawnEntity(string protoName)
         {
             var newEnt = (Entity)CreateEntity(protoName);
             InitializeEntity(newEnt);
@@ -43,7 +43,7 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TrySpawnEntityAt(string entityType, GridLocalCoordinates coordinates, out IEntity entity)
+        public override bool TrySpawnEntityAt(string entityType, GridLocalCoordinates coordinates, out IEntity entity)
         {
             var prototype = _protoManager.Index<EntityPrototype>(entityType);
             if (prototype.CanSpawnAt(coordinates.Grid, coordinates.Position))
@@ -64,14 +64,14 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TrySpawnEntityAt(string entityType, Vector2 position, MapId argMap, out IEntity entity)
+        public override bool TrySpawnEntityAt(string entityType, Vector2 position, MapId argMap, out IEntity entity)
         {
             var coordinates = new GridLocalCoordinates(position, _mapManager.GetMap(argMap).FindGridAt(position));
             return TrySpawnEntityAt(entityType, coordinates, out entity);
         }
 
         /// <inheritdoc />
-        public IEntity ForceSpawnEntityAt(string entityType, GridLocalCoordinates coordinates)
+        public override IEntity ForceSpawnEntityAt(string entityType, GridLocalCoordinates coordinates)
         {
             Entity entity = SpawnEntity(entityType);
             entity.GetComponent<ITransformComponent>().LocalPosition = coordinates;
@@ -84,7 +84,7 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap)
+        public override IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap)
         {
             if (!_mapManager.TryGetMap(argMap, out var map))
             {

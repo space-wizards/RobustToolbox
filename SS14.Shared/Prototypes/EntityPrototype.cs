@@ -110,6 +110,12 @@ namespace SS14.Shared.GameObjects
         readonly Dictionary<string, Dictionary<(string, Type), object>> FieldCache = new Dictionary<string, Dictionary<(string, Type), object>>();
         readonly Dictionary<string, object> DataCache = new Dictionary<string, object>();
 
+        public EntityPrototype()
+        {
+            // Everybody gets a transform component!
+            Components.Add("Transform", new YamlMappingNode());
+        }
+
         public void LoadFrom(YamlMappingNode mapping)
         {
             TypeString = mapping.GetNode("type").ToString();

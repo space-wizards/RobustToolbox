@@ -6,6 +6,7 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
+using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
@@ -13,7 +14,7 @@ using SS14.Shared.Utility;
 
 namespace SS14.Shared.GameObjects
 {
-    public class EntityManager : IEntityManager
+    public abstract class EntityManager : IEntityManager
     {
         #region Dependencies
 
@@ -108,6 +109,13 @@ namespace SS14.Shared.GameObjects
         }
 
         #region Entity Management
+
+        public abstract IEntity CreateEntity(string protoName);
+        public abstract Entity SpawnEntity(string protoName);
+        public abstract IEntity ForceSpawnEntityAt(string entityType, GridLocalCoordinates coordinates);
+        public abstract IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap);
+        public abstract bool TrySpawnEntityAt(string entityType, Vector2 position, MapId argMap, out IEntity entity);
+        public abstract bool TrySpawnEntityAt(string entityType, GridLocalCoordinates coordinates, out IEntity entity);
 
         /// <summary>
         /// Returns an entity by id

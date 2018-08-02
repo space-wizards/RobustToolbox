@@ -2,7 +2,6 @@
   id: __engine_janitor_suit
   name: "[engine] Janitor Jumpsuit"
   components:
-  - type: Transform
   - type: Clickable
   - type: Sprite
     texture: Items/janitorsuit.png
@@ -18,7 +17,6 @@
   id: __engine_shoes
   name: "[engine] shoes"
   components:
-  - type: Transform
   - type: Clickable
   - type: Sprite
     texture: Items/janitorsuit.png

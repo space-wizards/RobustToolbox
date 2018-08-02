@@ -2,7 +2,6 @@
   id: __engine_door
   name: "[engine] Real Fake Door"
   components:
-  - type: Transform
   - type: Clickable
   - type: Sprite
     drawdepth: Objects

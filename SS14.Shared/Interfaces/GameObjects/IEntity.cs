@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Serialization;
 
@@ -59,6 +60,11 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="query">The query to match this entity with.</param>
         /// <returns>True if the query matched, false otherwise.</returns>
         bool Match(IEntityQuery query);
+
+        /// <summary>
+        ///     The entity's transform component.
+        /// </summary>
+        ITransformComponent Transform { get; }
 
         /// <summary>
         ///     Public method to add a component to an entity.

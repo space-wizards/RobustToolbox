@@ -1,4 +1,5 @@
 ﻿using SS14.Shared.Map;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Graphics.ClientEye
 {
@@ -16,5 +17,7 @@ namespace SS14.Client.Interfaces.Graphics.ClientEye
         ///     Whether this is the current eye. If true, this one will be used.
         /// </summary>
         bool Current { get; set; }
+
+        Vector2 Zoom { get; set; }
     }
 }

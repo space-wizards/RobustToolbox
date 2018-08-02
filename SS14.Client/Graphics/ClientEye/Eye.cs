@@ -1,7 +1,9 @@
 ﻿using System;
 using SS14.Client.Interfaces.Graphics.ClientEye;
+using SS14.Client.Utility;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics.ClientEye
 {
@@ -29,6 +31,14 @@ namespace SS14.Client.Graphics.ClientEye
                     eyeManager.CurrentEye = null;
                 }
             }
+        }
+
+
+
+        public Vector2 Zoom
+        {
+            get => GodotCamera.Zoom.Convert();
+            set => GodotCamera.Zoom = value.Convert();
         }
 
         public MapId MapId { get; set; } = MapId.Nullspace;

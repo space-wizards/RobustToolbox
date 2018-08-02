@@ -1,6 +1,8 @@
 ﻿using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Maths;
+using SS14.Shared.Serialization;
 
 namespace SS14.Client.GameObjects
 {
@@ -12,6 +14,7 @@ namespace SS14.Client.GameObjects
 
         // Horrible hack to get around ordering issues.
         private bool setCurrentOnInitialize = false;
+        private Vector2 setZoomOnInitialize = Vector2.One;
         public bool Current
         {
             get => eye.Current;
@@ -26,6 +29,22 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        public Vector2 Zoom
+        {
+            get => eye?.Zoom ?? setZoomOnInitialize;
+            set
+            {
+                if (eye == null)
+                {
+                    setZoomOnInitialize = value;
+                }
+                else
+                {
+                    eye.Zoom = value;
+                }
+            }
+        }
+
         IGodotTransformComponent transform;
 
         public override void Initialize()
@@ -36,6 +55,7 @@ namespace SS14.Client.GameObjects
             {
                 Current = setCurrentOnInitialize,
                 MapId = transform.MapID,
+                Zoom = setZoomOnInitialize,
             };
             transform.SceneNode.AddChild(eye.GodotCamera);
             transform.OnMove += Transform_OnMove;
@@ -46,6 +66,13 @@ namespace SS14.Client.GameObjects
             base.OnRemove();
             transform.OnMove -= Transform_OnMove;
             eye.Dispose();
+        }
+
+        public override void ExposeData(ObjectSerializer serializer)
+        {
+            base.ExposeData(serializer);
+
+            serializer.DataFieldCached(ref setZoomOnInitialize, "zoom", Vector2.One);
         }
 
         private void Transform_OnMove(object sender, Shared.Enums.MoveEventArgs e)

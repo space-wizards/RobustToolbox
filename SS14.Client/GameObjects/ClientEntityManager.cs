@@ -155,12 +155,12 @@ namespace SS14.Client.GameObjects
             Shutdown();
         }
 
-        public IEntity CreateEntity(string protoName)
+        public override IEntity CreateEntity(string protoName)
         {
             return InternalCreateEntity(protoName, NewClientEntityUid());
         }
 
-        public Entity SpawnEntity(string protoName)
+        public override Entity SpawnEntity(string protoName)
         {
             var ent = InternalCreateEntity(protoName, NewClientEntityUid());
             if (Started)
@@ -170,7 +170,7 @@ namespace SS14.Client.GameObjects
             return ent;
         }
 
-        public IEntity ForceSpawnEntityAt(string entityType, GridLocalCoordinates coordinates)
+        public override IEntity ForceSpawnEntityAt(string entityType, GridLocalCoordinates coordinates)
         {
             Entity entity = SpawnEntity(entityType);
             entity.GetComponent<ITransformComponent>().LocalPosition = coordinates;
@@ -182,7 +182,7 @@ namespace SS14.Client.GameObjects
             return entity;
         }
 
-        public IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap)
+        public override IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap)
         {
             if (!_mapManager.TryGetMap(argMap, out var map))
             {
@@ -193,9 +193,24 @@ namespace SS14.Client.GameObjects
 
         }
 
+        public override bool TrySpawnEntityAt(string entityType, Vector2 position, MapId argMap, out IEntity entity)
+        {
+            // TODO: check collisions here?
+            entity = ForceSpawnEntityAt(entityType, position, argMap);
+            return true;
+        }
+
+        public override bool TrySpawnEntityAt(string entityType, GridLocalCoordinates coordinates, out IEntity entity)
+        {
+            // TODO: check collisions here?
+            entity = ForceSpawnEntityAt(entityType, coordinates);
+            return true;
+        }
+
         EntityUid NewClientEntityUid()
         {
             return new EntityUid(NextClientEntityUid++);
         }
+
     }
 }

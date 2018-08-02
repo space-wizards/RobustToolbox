@@ -2,7 +2,6 @@
   id: __engine_extinguisher
   name: "[engine] Extinguisher Cabinet"
   components:
-  - type: Transform
   - type: Clickable
   - type: Sprite
     texture: Objects/fire_extinguisher.png
@@ -24,7 +23,6 @@
   id: __engine_fire_alarm
   name: "[engine] Fire Alarm"
   components:
-  - type: Transform
   - type: Clickable
   - type: Sprite
     texture: Objects/fire_alarm_off.png
@@ -46,7 +44,6 @@
   id: __engine_med_cabinet
   name: "[engine] Medical Cabinet"
   components:
-  - type: Transform
   - type: Clickable
   - type: Sprite
     texture: Objects/med_cabinet.png

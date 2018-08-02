@@ -3,7 +3,6 @@
   name: "[engine] Urist McHuman"
   save: false
   components:
-  - type: Transform
   - type: Clickable
   - type: Sprite
     sprite: Mob/greyshirt.rsi

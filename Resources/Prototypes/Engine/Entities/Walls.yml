@@ -2,7 +2,6 @@
   id: __engine_wall
   name: "[engine] Wall"
   components:
-  - type: Transform
   - type: Clickable
   - type: Sprite
     drawdepth: Walls

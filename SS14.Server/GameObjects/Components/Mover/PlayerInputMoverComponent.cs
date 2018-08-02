@@ -87,7 +87,6 @@ namespace SS14.Server.GameObjects
 
         public void OnUpdate()
         {
-            var transform = Owner.GetComponent<ITransformComponent>();
             var physics = Owner.GetComponent<PhysicsComponent>();
 
             if (_moveDir.LengthSquared < 0.001)
@@ -99,7 +98,7 @@ namespace SS14.Server.GameObjects
                 return;
             }
             physics.LinearVelocity = _moveDir * (_run ? FastMoveSpeed : BaseMoveSpeed);
-            transform.LocalRotation = _moveDir.GetDir().ToAngle();
+            Owner.Transform.LocalRotation = _moveDir.GetDir().ToAngle();
         }
 
         private void HandleKeyChange()

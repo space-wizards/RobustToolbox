@@ -5,6 +5,7 @@ using SS14.Shared.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.GameObjects.Components;
 
 namespace SS14.Shared.GameObjects
 {
@@ -60,6 +61,10 @@ namespace SS14.Shared.GameObjects
 
         /// <inheritdoc />
         public bool Deleted { get; private set; }
+
+        private ITransformComponent _transform;
+        /// <inheritdoc />
+        public ITransformComponent Transform => _transform ?? (_transform = GetComponent<ITransformComponent>());
 
         #endregion Members
 

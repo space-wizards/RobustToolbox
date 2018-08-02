@@ -2,7 +2,6 @@
   id: __engine_toolbox
   name: "[engine] toolbox"
   components:
-  - type: Transform
   - type: Clickable
   - type: Sprite
     texture: Items/toolbox_r.png

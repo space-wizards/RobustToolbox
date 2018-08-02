@@ -2,7 +2,6 @@
   id: __engine_wall_light
   name: "[engine] Wall Light"
   components:
-  - type: Transform
   - type: Clickable
   - type: Sprite
     texture: Objects/wall_light.png

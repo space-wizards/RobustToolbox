@@ -2,7 +2,6 @@
   id: __engine_worktop
   name: "[engine] worktop"
   components:
-  - type: Transform
   - type: Clickable
   - type: Sprite
     texture: Objects/worktop_single.png

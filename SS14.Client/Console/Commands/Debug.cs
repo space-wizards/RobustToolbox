@@ -14,6 +14,10 @@ using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Map;
+using System.Globalization;
+using SS14.Shared.Interfaces.Map;
+using SS14.Shared.GameObjects.Components.Transform;
 
 namespace SS14.Client.Console.Commands
 {
@@ -234,6 +238,42 @@ namespace SS14.Client.Console.Commands
             foreach (var component in entity.GetAllComponents())
             {
                 console.AddLine(component.ToString());
+            }
+
+            return false;
+        }
+    }
+
+    class SnapGridGetCell : IConsoleCommand
+    {
+        public string Command => "sggcell";
+        public string Help => "sggcell <gridID> <mapIndices> [offset]\nThat mapindices param is in the form x,y.";
+        public string Description => "Lists entities on a snap grid cell.";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            if (args.Length != 2 && args.Length != 3)
+            {
+                console.AddLine("Must pass exactly 2 or 3 arguments", Color.Red);
+                return false;
+            }
+
+            var gridID = new GridId(int.Parse(args[0], CultureInfo.InvariantCulture));
+            var indexSplit = args[1].Split(',');
+            var x = int.Parse(indexSplit[0], CultureInfo.InvariantCulture);
+            var y = int.Parse(indexSplit[1], CultureInfo.InvariantCulture);
+            var indices = new MapIndices(x, y);
+            SnapGridOffset offset = SnapGridOffset.Center;
+            if (args.Length == 3)
+            {
+                offset = (SnapGridOffset)Enum.Parse(typeof(SnapGridOffset), args[2]);
+            }
+
+            var mapMan = IoCManager.Resolve<IMapManager>();
+            var grid = mapMan.GetGrid(gridID);
+            foreach (var entity in grid.GetSnapGridCell(indices, offset))
+            {
+                console.AddLine(entity.Owner.Uid.ToString());
             }
 
             return false;

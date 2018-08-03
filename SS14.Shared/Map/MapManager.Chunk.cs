@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.Interfaces.Map;
 
 namespace SS14.Shared.Map
@@ -19,6 +20,7 @@ namespace SS14.Shared.Map
             private readonly MapManager _mapManager;
 
             private readonly Tile[,] _tiles;
+            private readonly SnapGridCell[,] _snapGrid;
 
             /// <summary>
             ///     Constructs an instance of a MapGrid chunk.
@@ -36,6 +38,7 @@ namespace SS14.Shared.Map
                 _gridIndices = new MapIndices(x, y);
 
                 _tiles = new Tile[ChunkSize, ChunkSize];
+                _snapGrid = new SnapGridCell[ChunkSize, ChunkSize];
             }
 
             /// <inheritdoc />
@@ -143,6 +146,63 @@ namespace SS14.Shared.Map
                 SetTile(xChunkTile, yChunkTile, new Tile(tileId, tileData));
             }
 
+
+            public IEnumerable<SnapGridComponent> GetSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset)
+            {
+                var cell = _snapGrid[xCell, yCell];
+                List<SnapGridComponent> list;
+                if (offset == SnapGridOffset.Center)
+                {
+                    list = cell.Center;
+                }
+                else
+                {
+                    list = cell.Edge;
+                }
+
+                if (list != null)
+                {
+                    foreach (var element in list)
+                    {
+                        yield return element;
+                    }
+                }
+            }
+
+            public void AddToSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset, SnapGridComponent snap)
+            {
+                ref var cell = ref _snapGrid[xCell, yCell];
+                if (offset == SnapGridOffset.Center)
+                {
+                    if (cell.Center == null)
+                    {
+                        cell.Center = new List<SnapGridComponent>(1);
+                    }
+                    cell.Center.Add(snap);
+                }
+                else
+                {
+                    if (cell.Edge == null)
+                    {
+                        cell.Edge = new List<SnapGridComponent>(1);
+                    }
+                    cell.Edge.Add(snap);
+                }
+            }
+
+            public void RemoveFromSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset, SnapGridComponent snap)
+            {
+                ref var cell = ref _snapGrid[xCell, yCell];
+                if (offset == SnapGridOffset.Center)
+                {
+                    cell.Center?.Remove(snap);
+                }
+                else
+                {
+                    cell.Edge?.Remove(snap);
+                }
+            }
+
             /// <summary>
             ///     Translates chunk tile indices to grid tile indices.
             /// </summary>
@@ -170,6 +230,12 @@ namespace SS14.Shared.Map
             private static int Mod(double n, int d)
             {
                 return (int)(n - (int)Math.Floor(n / d) * d);
+            }
+
+            private struct SnapGridCell
+            {
+                public List<SnapGridComponent> Center;
+                public List<SnapGridComponent> Edge;
             }
         }
     }

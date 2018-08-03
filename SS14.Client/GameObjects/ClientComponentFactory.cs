@@ -41,6 +41,7 @@ namespace SS14.Client.GameObjects
 
             Register<AppearanceComponent>();
             Register<AppearanceTestComponent>();
+            Register<SnapGridComponent>();
         }
     }
 }

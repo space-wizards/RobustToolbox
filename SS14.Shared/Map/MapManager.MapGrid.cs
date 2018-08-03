@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Maths;
 
@@ -126,11 +127,8 @@ namespace SS14.Shared.Map
             /// <inheritdoc />
             public void SetTile(int xIndex, int yIndex, Tile tile)
             {
-                var gridTileIndices = new MapIndices(xIndex, yIndex);
-                var gridChunkIndices = GridTileToGridChunk(gridTileIndices);
-                var chunk = GetChunk(gridChunkIndices);
-                var chunkTileIndices = chunk.GridTileToChunkTile(gridTileIndices);
-                chunk.SetTile((ushort)chunkTileIndices.X, (ushort)chunkTileIndices.Y, tile);
+                var (chunk, chunkTile) = ChunkAndOffsetForTile(new MapIndices(xIndex, yIndex));
+                chunk.SetTile((ushort)chunkTile.X, (ushort)chunkTile.Y, tile);
             }
 
             /// <inheritdoc />
@@ -216,6 +214,64 @@ namespace SS14.Shared.Map
             }
 
             #endregion ChunkAccess
+
+            #region SnapGridAccess
+
+            public IEnumerable<SnapGridComponent> GetSnapGridCell(GridLocalCoordinates worldPos, SnapGridOffset offset)
+            {
+                return GetSnapGridCell(SnapGridCellFor(worldPos, offset), offset);
+            }
+
+            public IEnumerable<SnapGridComponent> GetSnapGridCell(MapIndices pos, SnapGridOffset offset)
+            {
+                var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
+                return chunk.GetSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, offset);
+            }
+
+            public MapIndices SnapGridCellFor(GridLocalCoordinates worldPos, SnapGridOffset offset)
+            {
+                var local = worldPos.ConvertToGrid(this);
+                if (offset == SnapGridOffset.Edge)
+                {
+                    local = local.Offset(new Vector2(TileSize / 2f, TileSize / 2f));
+                }
+                var x = (int)Math.Floor(local.X / TileSize);
+                var y = (int)Math.Floor(local.Y / TileSize);
+                return new MapIndices(x, y);
+            }
+
+            public void AddToSnapGridCell(MapIndices pos, SnapGridOffset offset, SnapGridComponent snap)
+            {
+                var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
+                chunk.AddToSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, offset, snap);
+            }
+
+            public void AddToSnapGridCell(GridLocalCoordinates worldPos, SnapGridOffset offset, SnapGridComponent snap)
+            {
+                AddToSnapGridCell(SnapGridCellFor(worldPos, offset), offset, snap);
+            }
+
+            public void RemoveFromSnapGridCell(MapIndices pos, SnapGridOffset offset, SnapGridComponent snap)
+            {
+                var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
+                chunk.RemoveFromSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, offset, snap);
+            }
+
+            public void RemoveFromSnapGridCell(GridLocalCoordinates worldPos, SnapGridOffset offset, SnapGridComponent snap)
+            {
+                RemoveFromSnapGridCell(SnapGridCellFor(worldPos, offset), offset, snap);
+            }
+
+
+            (IMapChunk, MapIndices) ChunkAndOffsetForTile(MapIndices pos)
+            {
+                var gridChunkIndices = GridTileToGridChunk(pos);
+                var chunk = GetChunk(gridChunkIndices);
+                var chunkTile = chunk.GridTileToChunkTile(pos);
+                return (chunk, chunkTile);
+            }
+
+            #endregion
 
             #region Transforms
 

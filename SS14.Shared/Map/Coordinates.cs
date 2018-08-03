@@ -116,6 +116,11 @@ namespace SS14.Shared.Map
             return ConvertToGrid(Map.DefaultGrid);
         }
 
+        public GridLocalCoordinates Offset(Vector2 offset)
+        {
+            return new GridLocalCoordinates(Position + offset, GridID);
+        }
+
         public bool InRange(GridLocalCoordinates localpos, float range)
         {
             if (localpos.MapID != MapID)

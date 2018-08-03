@@ -19,5 +19,6 @@
         public const uint TRIGGERABLE = 20;
         public const uint AUDIO_PLAYER = 21;
         public const uint APPEARANCE = 22;
+        public const uint SNAPGRID = 23;
     }
 }

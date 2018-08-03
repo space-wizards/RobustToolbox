@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 
@@ -98,6 +99,20 @@ namespace SS14.Shared.Interfaces.Map
         IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null);
 
         #endregion TileAccess
+
+        #region SnapGridAccess
+
+        IEnumerable<SnapGridComponent> GetSnapGridCell(GridLocalCoordinates worldPos, SnapGridOffset offset);
+        IEnumerable<SnapGridComponent> GetSnapGridCell(MapIndices pos, SnapGridOffset offset);
+
+        MapIndices SnapGridCellFor(GridLocalCoordinates worldPos, SnapGridOffset offset);
+
+        void AddToSnapGridCell(MapIndices pos, SnapGridOffset offset, SnapGridComponent snap);
+        void AddToSnapGridCell(GridLocalCoordinates worldPos, SnapGridOffset offset, SnapGridComponent snap);
+        void RemoveFromSnapGridCell(MapIndices pos, SnapGridOffset offset, SnapGridComponent snap);
+        void RemoveFromSnapGridCell(GridLocalCoordinates worldPos, SnapGridOffset offset, SnapGridComponent snap);
+
+        #endregion SnapGridAccess
 
         #region ChunkAccess
 

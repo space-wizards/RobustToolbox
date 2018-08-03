@@ -41,6 +41,7 @@ namespace SS14.Server.GameObjects
 
             Register<AiControllerComponent>();
             Register<AppearanceComponent>();
+            Register<SnapGridComponent>();
         }
     }
 }

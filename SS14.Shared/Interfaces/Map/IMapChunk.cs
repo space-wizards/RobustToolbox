@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.Map;
 
 namespace SS14.Shared.Interfaces.Map
@@ -58,5 +59,10 @@ namespace SS14.Shared.Interfaces.Map
         /// <param name="gridTile">Tile indices relative to the grid.</param>
         /// <returns>Tile indices relative to this chunk.</returns>
         MapIndices GridTileToChunkTile(MapIndices gridTile);
+
+        IEnumerable<SnapGridComponent> GetSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset);
+
+        void AddToSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset, SnapGridComponent snap);
+        void RemoveFromSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset, SnapGridComponent snap);
     }
 }

@@ -350,11 +350,11 @@ namespace SS14.Shared.GameObjects.Components.Transform
             if (_position != newState.LocalPosition || GridID != newState.GridID)
             {
                 var oldPos = LocalPosition;
-                // TODO: this is horribly broken if the parent changes too, because the coordinates are all messed up.
-                // Help.
-                OnMove?.Invoke(this, new MoveEventArgs(oldPos, LocalCoordinatesFor(newState.LocalPosition, newState.GridID)));
                 SetPosition(newState.LocalPosition);
                 GridID = newState.GridID;
+                // TODO: this is horribly broken if the parent changes too, because the coordinates are all messed up.
+                // Help.
+                OnMove?.Invoke(this, new MoveEventArgs(oldPos, LocalPosition));
                 rebuildMatrices = true;
             }
 

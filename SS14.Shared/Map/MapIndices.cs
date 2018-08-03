@@ -1,8 +1,12 @@
+using System;
+using SS14.Shared.Serialization;
+
 namespace SS14.Shared.Map
 {
     /// <summary>
     /// Internal structure to store 2 indices of a chunk or tile.
     /// </summary>
+    [Serializable, NetSerializable]
     public struct MapIndices
     {
         /// <summary>

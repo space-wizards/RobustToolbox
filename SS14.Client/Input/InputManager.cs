@@ -42,8 +42,6 @@ namespace SS14.Client.Input
         /// <inheritdoc />
         public BoundKeyMap NetworkBindMap { get; private set; }
 
-        public event Action<BoundKeyFunction> KeyBindDown;
-        public event Action<BoundKeyFunction> KeyBindUp;
         public event Action<BoundKeyEventArgs> KeyBindStateChanged;
 
         public void Initialize()
@@ -120,10 +118,6 @@ namespace SS14.Client.Input
                 {
                     SetBindState(binding, BoundKeyState.Up);
                 }
-                else
-                {
-                    return;
-                }
             }
             else
             {
@@ -144,16 +138,16 @@ namespace SS14.Client.Input
         private void SetBindState(KeyBinding binding, BoundKeyState state)
         {
             binding.State = state;
-            var cmd = GetInputCommand(binding.Function);
+
             KeyBindStateChanged?.Invoke(new BoundKeyEventArgs(binding.Function, binding.State, new ScreenCoordinates(MouseScreenPosition)));
+
+            var cmd = GetInputCommand(binding.Function);
             if (state == BoundKeyState.Up)
             {
-                KeyBindUp?.Invoke(binding.Function);
                 cmd?.Disabled();
             }
             else
             {
-                KeyBindDown?.Invoke(binding.Function);
                 cmd?.Enabled();
             }
 

@@ -40,9 +40,6 @@ namespace SS14.Client.Interfaces.Input
 
         void SetInputCommand(BoundKeyFunction function, InputCmdHandler cmdHandler);
 
-
-        event Action<BoundKeyFunction> KeyBindDown;
-        event Action<BoundKeyFunction> KeyBindUp;
         event Action<BoundKeyEventArgs> KeyBindStateChanged;
     }
 }

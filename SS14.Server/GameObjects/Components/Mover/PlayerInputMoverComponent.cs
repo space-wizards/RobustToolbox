@@ -27,11 +27,11 @@ namespace SS14.Server.GameObjects
         private bool _movingRight;
         private bool _run;
 
-        private InputCommand MoveUpCommand;
-        private InputCommand MoveDownCommand;
-        private InputCommand MoveLeftCommand;
-        private InputCommand MoveRightCommand;
-        private InputCommand RunCommand;
+        private InputCmdHandler _moveUpCmdHandler;
+        private InputCmdHandler _moveDownCmdHandler;
+        private InputCmdHandler _moveLeftCmdHandler;
+        private InputCmdHandler _moveRightCmdHandler;
+        private InputCmdHandler _runCmdHandler;
 
 
         /// <inheritdoc />
@@ -67,11 +67,11 @@ namespace SS14.Server.GameObjects
                 case PlayerAttachedMsg msg:
                     InitInputCommands();
                     input = msg.NewPlayer.Input;
-                    input.SetCommand(EngineKeyFunctions.MoveUp, MoveUpCommand);
-                    input.SetCommand(EngineKeyFunctions.MoveLeft, MoveLeftCommand);
-                    input.SetCommand(EngineKeyFunctions.MoveRight, MoveRightCommand);
-                    input.SetCommand(EngineKeyFunctions.MoveDown, MoveDownCommand);
-                    input.SetCommand(EngineKeyFunctions.Run, RunCommand);
+                    input.SetCommand(EngineKeyFunctions.MoveUp, _moveUpCmdHandler);
+                    input.SetCommand(EngineKeyFunctions.MoveLeft, _moveLeftCmdHandler);
+                    input.SetCommand(EngineKeyFunctions.MoveRight, _moveRightCmdHandler);
+                    input.SetCommand(EngineKeyFunctions.MoveDown, _moveDownCmdHandler);
+                    input.SetCommand(EngineKeyFunctions.Run, _runCmdHandler);
                     break;
 
                 case PlayerDetachedMsg msg:
@@ -129,20 +129,20 @@ namespace SS14.Server.GameObjects
 
         private void InitInputCommands()
         {
-            if (MoveUpCommand != null)
+            if (_moveUpCmdHandler != null)
             {
                 return;
             }
 
-            MoveUpCommand = InputCommand.FromDelegate(() => { _movingUp = true; HandleKeyChange(); },
+            _moveUpCmdHandler = InputCmdHandler.FromDelegate(() => { _movingUp = true; HandleKeyChange(); },
                                                       () => { _movingUp = false; HandleKeyChange(); });
-            MoveLeftCommand = InputCommand.FromDelegate(() => { _movingLeft = true; HandleKeyChange(); },
+            _moveLeftCmdHandler = InputCmdHandler.FromDelegate(() => { _movingLeft = true; HandleKeyChange(); },
                                                         () => { _movingLeft = false; HandleKeyChange(); });
-            MoveRightCommand = InputCommand.FromDelegate(() => { _movingRight = true; HandleKeyChange(); },
+            _moveRightCmdHandler = InputCmdHandler.FromDelegate(() => { _movingRight = true; HandleKeyChange(); },
                                                          () => { _movingRight = false; HandleKeyChange(); });
-            MoveDownCommand = InputCommand.FromDelegate(() => { _movingDown = true; HandleKeyChange(); },
+            _moveDownCmdHandler = InputCmdHandler.FromDelegate(() => { _movingDown = true; HandleKeyChange(); },
                                                         () => { _movingDown = false; HandleKeyChange(); });
-            RunCommand = InputCommand.FromDelegate(() => _run = true,
+            _runCmdHandler = InputCmdHandler.FromDelegate(() => _run = true,
                                                    () => _run = false);
         }
     }

@@ -2,12 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using SS14.Shared.Serialization;
 
 namespace SS14.Shared.Input
 {
     /// <summary>
     ///     A networked identifier for a <see cref="BoundKeyFunction"/>.
     /// </summary>
+    [Serializable, NetSerializable]
     public struct KeyFunctionId
     {
         private int _value;

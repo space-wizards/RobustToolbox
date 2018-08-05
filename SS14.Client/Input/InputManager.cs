@@ -12,6 +12,7 @@ using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Utility;
@@ -34,20 +35,21 @@ namespace SS14.Client.Input
         [Dependency]
         readonly IReflectionManager _reflectionManager;
 
-        private BoundKeyMap keyMap;
-
-        private readonly Dictionary<BoundKeyFunction, InputCommand> _commands = new Dictionary<BoundKeyFunction, InputCommand>();
+        private readonly Dictionary<BoundKeyFunction, InputCmdHandler> _commands = new Dictionary<BoundKeyFunction, InputCmdHandler>();
         private readonly List<KeyBinding> _bindings = new List<KeyBinding>();
         private bool[] _keysPressed = new bool[256];
 
-        public event Action<BoundKeyFunction> OnKeyBindDown;
-        public event Action<BoundKeyFunction> OnKeyBindUp;
-        public event Action<BoundKeyEventArgs> OnKeyBindStateChanged;
+        /// <inheritdoc />
+        public BoundKeyMap NetworkBindMap { get; private set; }
+
+        public event Action<BoundKeyFunction> KeyBindDown;
+        public event Action<BoundKeyFunction> KeyBindUp;
+        public event Action<BoundKeyEventArgs> KeyBindStateChanged;
 
         public void Initialize()
         {
-            keyMap = new BoundKeyMap(_reflectionManager);
-            keyMap.PopulateKeyFunctionsMap();
+            NetworkBindMap = new BoundKeyMap(_reflectionManager);
+            NetworkBindMap.PopulateKeyFunctionsMap();
 
             LoadKeyFile(new ResourcePath("/keybinds.yml"));
             var path = new ResourcePath("/keybinds_content.yml");
@@ -141,24 +143,22 @@ namespace SS14.Client.Input
 
         private void SetBindState(KeyBinding binding, BoundKeyState state)
         {
-            Logger.DebugS("input.bindState", $"{binding.Function.FunctionName} - {state.ToString()}");
-
             binding.State = state;
             var cmd = GetInputCommand(binding.Function);
-            OnKeyBindStateChanged?.Invoke(new BoundKeyEventArgs(binding.Function, binding.State));
+            KeyBindStateChanged?.Invoke(new BoundKeyEventArgs(binding.Function, binding.State, new ScreenCoordinates(MouseScreenPosition)));
             if (state == BoundKeyState.Up)
             {
-                OnKeyBindUp?.Invoke(binding.Function);
+                KeyBindUp?.Invoke(binding.Function);
                 cmd?.Disabled();
             }
             else
             {
-                OnKeyBindDown?.Invoke(binding.Function);
+                KeyBindDown?.Invoke(binding.Function);
                 cmd?.Enabled();
             }
 
             var msg = _netManager.CreateNetMessage<MsgKeyFunctionStateChange>();
-            msg.KeyFunction = keyMap.KeyFunctionID(binding.Function);
+            msg.KeyFunction = NetworkBindMap.KeyFunctionID(binding.Function);
             msg.NewState = state;
             _netManager.ClientSendMessage(msg);
         }
@@ -244,7 +244,7 @@ namespace SS14.Client.Input
             foreach (var keyMapping in mapping.GetNode<YamlSequenceNode>("binds").Cast<YamlMappingNode>())
             {
                 var function = keyMapping.GetNode("function").AsString();
-                if (!keyMap.FunctionExists(function))
+                if (!NetworkBindMap.FunctionExists(function))
                 {
                     Logger.ErrorS("input", "Key function in {0} does not exist: '{1}'", yamlFile, function);
                     continue;
@@ -307,7 +307,7 @@ namespace SS14.Client.Input
         }
 
         /// <inheritdoc />
-        public InputCommand GetInputCommand(BoundKeyFunction function)
+        public InputCmdHandler GetInputCommand(BoundKeyFunction function)
         {
             if (_commands.TryGetValue(function, out var val))
             {
@@ -318,9 +318,9 @@ namespace SS14.Client.Input
         }
 
         /// <inheritdoc />
-        public void SetInputCommand(BoundKeyFunction function, InputCommand command)
+        public void SetInputCommand(BoundKeyFunction function, InputCmdHandler cmdHandler)
         {
-            _commands[function] = command;
+            _commands[function] = cmdHandler;
         }
 
         class KeyBinding : IKeyBinding

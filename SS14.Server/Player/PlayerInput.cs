@@ -6,8 +6,8 @@ namespace SS14.Server.Player
 {
     public class PlayerInput : IPlayerInput
     {
-        private Dictionary<BoundKeyFunction, (BoundKeyState State, InputCommand Command)> functions
-          = new Dictionary<BoundKeyFunction, (BoundKeyState State, InputCommand Command)>();
+        private Dictionary<BoundKeyFunction, (BoundKeyState State, InputCmdHandler Command)> functions
+          = new Dictionary<BoundKeyFunction, (BoundKeyState State, InputCmdHandler Command)>();
 
         private void EnsureFunction(BoundKeyFunction function)
         {
@@ -17,7 +17,7 @@ namespace SS14.Server.Player
             }
         }
 
-        public InputCommand GetCommand(BoundKeyFunction function)
+        public InputCmdHandler GetCommand(BoundKeyFunction function)
         {
             if (functions.TryGetValue(function, out var tuple))
             {
@@ -40,12 +40,12 @@ namespace SS14.Server.Player
             return GetKeyState(function) == BoundKeyState.Down;
         }
 
-        public void SetCommand(BoundKeyFunction function, InputCommand command)
+        public void SetCommand(BoundKeyFunction function, InputCmdHandler cmdHandler)
         {
             EnsureFunction(function);
 
             var val = functions[function];
-            val.Command = command;
+            val.Command = cmdHandler;
             functions[function] = val;
         }
 

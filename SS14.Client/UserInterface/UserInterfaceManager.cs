@@ -79,7 +79,7 @@ namespace SS14.Client.UserInterface
             _debugMonitors = new DebugMonitors();
             RootControl.AddChild(_debugMonitors);
 
-            _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugMonitors, InputCommand.FromDelegate(enabled: () =>
+            _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugMonitors, InputCmdHandler.FromDelegate(enabled: () =>
             {
                 DebugMonitors.Visible = true;
             }, disabled: () =>

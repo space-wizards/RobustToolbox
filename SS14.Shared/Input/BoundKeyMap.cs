@@ -88,5 +88,26 @@ namespace SS14.Shared.Input
         {
             return KeyFunctionsList[(int) function];
         }
+
+        public bool TryGetKeyFunction(KeyFunctionId funcId, out BoundKeyFunction func)
+        {
+            var list = KeyFunctionsList;
+            var index = (int) funcId;
+            
+            if (0 > index || index >= list.Count)
+            {
+                func = default(BoundKeyFunction);
+                return false;
+            }
+
+            if (list[index] == null)
+            {
+                func = default(BoundKeyFunction);
+                return false;
+            }
+
+            func = list[index];
+            return true;
+        }
     }
 }

@@ -10,7 +10,9 @@ namespace SS14.Client.GameObjects.EntitySystems
 
         public void HandleInputCommand(InputCmdMessage message)
         {
-            //TODO: Make me work!
+            //TODO: Make the BindMap work!
+
+            RaiseNetworkEvent(message);
         }
     }
 }

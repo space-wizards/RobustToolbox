@@ -1,6 +1,7 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Input;
+using SS14.Shared.Players;
 
 namespace SS14.Server.Player
 {
@@ -49,7 +50,7 @@ namespace SS14.Server.Player
             functions[function] = val;
         }
 
-        public void SetFunctionState(BoundKeyFunction function, BoundKeyState state)
+        public void SetFunctionState(ICommonSession session, BoundKeyFunction function, BoundKeyState state)
         {
             if (state == GetKeyState(function))
             {
@@ -64,11 +65,11 @@ namespace SS14.Server.Player
 
             if (state == BoundKeyState.Up)
             {
-                val.Command?.Disabled();
+                val.Command?.Disabled(session);
             }
             else
             {
-                val.Command?.Enabled();
+                val.Command?.Enabled(session);
             }
         }
     }

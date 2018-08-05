@@ -35,7 +35,7 @@ namespace SS14.Server.Player
         [Dependency]
         private readonly IReflectionManager _reflectionManager;
 
-        private BoundKeyMap keyMap;
+        public BoundKeyMap KeyMap { get; private set; }
 
         private bool NeedsStateUpdate = false;
 
@@ -66,8 +66,8 @@ namespace SS14.Server.Player
         /// <inheritdoc />
         public void Initialize(int maxPlayers)
         {
-            keyMap = new BoundKeyMap(_reflectionManager);
-            keyMap.PopulateKeyFunctionsMap();
+            KeyMap = new BoundKeyMap(_reflectionManager);
+            KeyMap.PopulateKeyFunctionsMap();
 
             _sessions = new PlayerSession[maxPlayers];
 
@@ -333,9 +333,9 @@ namespace SS14.Server.Player
 
         private void HandleKeyFunctionStateChange(MsgKeyFunctionStateChange message)
         {
-            var function = keyMap.KeyFunctionName(message.KeyFunction);
+            var function = KeyMap.KeyFunctionName(message.KeyFunction);
             var player = GetSessionByChannel(message.MsgChannel);
-            player.Input.SetFunctionState(function, message.NewState);
+            player.Input.SetFunctionState(player, function, message.NewState);
         }
     }
 

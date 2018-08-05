@@ -134,16 +134,21 @@ namespace SS14.Server.GameObjects
                 return;
             }
 
-            _moveUpCmdHandler = InputCmdHandler.FromDelegate(() => { _movingUp = true; HandleKeyChange(); },
-                                                      () => { _movingUp = false; HandleKeyChange(); });
-            _moveLeftCmdHandler = InputCmdHandler.FromDelegate(() => { _movingLeft = true; HandleKeyChange(); },
-                                                        () => { _movingLeft = false; HandleKeyChange(); });
-            _moveRightCmdHandler = InputCmdHandler.FromDelegate(() => { _movingRight = true; HandleKeyChange(); },
-                                                         () => { _movingRight = false; HandleKeyChange(); });
-            _moveDownCmdHandler = InputCmdHandler.FromDelegate(() => { _movingDown = true; HandleKeyChange(); },
-                                                        () => { _movingDown = false; HandleKeyChange(); });
-            _runCmdHandler = InputCmdHandler.FromDelegate(() => _run = true,
-                                                   () => _run = false);
+            _moveUpCmdHandler = InputCmdHandler.FromDelegate(
+                session => { _movingUp = true; HandleKeyChange(); },
+                session => { _movingUp = false; HandleKeyChange(); });
+            _moveLeftCmdHandler = InputCmdHandler.FromDelegate(
+                session => { _movingLeft = true; HandleKeyChange(); },
+                session => { _movingLeft = false; HandleKeyChange(); });
+            _moveRightCmdHandler = InputCmdHandler.FromDelegate(
+                session => { _movingRight = true; HandleKeyChange(); },
+                session => { _movingRight = false; HandleKeyChange(); });
+            _moveDownCmdHandler = InputCmdHandler.FromDelegate(
+                session => { _movingDown = true; HandleKeyChange(); },
+                session => { _movingDown = false; HandleKeyChange(); });
+            _runCmdHandler = InputCmdHandler.FromDelegate(
+                session => _run = true,
+                session => _run = false);
         }
     }
 }

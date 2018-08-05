@@ -144,11 +144,11 @@ namespace SS14.Client.Input
             var cmd = GetInputCommand(binding.Function);
             if (state == BoundKeyState.Up)
             {
-                cmd?.Disabled();
+                cmd?.Disabled(null);
             }
             else
             {
-                cmd?.Enabled();
+                cmd?.Enabled(null);
             }
 
             var msg = _netManager.CreateNetMessage<MsgKeyFunctionStateChange>();

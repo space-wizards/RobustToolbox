@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using SS14.Server.Player;
 using SS14.Shared.Enums;
 using SS14.Shared.GameStates;
+using SS14.Shared.Input;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
 using SS14.Shared.Players;
@@ -20,6 +21,8 @@ namespace SS14.Server.Interfaces.Player
         int PlayerCount { get; }
 
         string PlayerPrototypeName { get; set; }
+
+        BoundKeyMap KeyMap { get; }
 
         /// <summary>
         ///     Maximum number of players that can connect to this server at one time.

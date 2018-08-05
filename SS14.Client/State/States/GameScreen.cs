@@ -70,7 +70,7 @@ namespace SS14.Client.State.States
             };
             escapeMenu.AddToScreen();
 
-            var escapeMenuCommand = InputCmdHandler.FromDelegate(() =>
+            var escapeMenuCommand = InputCmdHandler.FromDelegate(session =>
             {
                 if (escapeMenu.Visible)
                 {
@@ -89,7 +89,7 @@ namespace SS14.Client.State.States
                 }
             });
             inputManager.SetInputCommand(EngineKeyFunctions.EscapeMenu, escapeMenuCommand);
-            inputManager.SetInputCommand(EngineKeyFunctions.FocusChat, InputCmdHandler.FromDelegate(() =>
+            inputManager.SetInputCommand(EngineKeyFunctions.FocusChat, InputCmdHandler.FromDelegate(session =>
             {
                 _gameChat.Input.GrabFocus();
             }));
@@ -196,7 +196,7 @@ namespace SS14.Client.State.States
                         */
                 }
             }
-
+            
             //Assemble information to send to server about click
             if (clicktype != ClickType.None)
             {

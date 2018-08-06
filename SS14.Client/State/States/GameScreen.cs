@@ -268,32 +268,12 @@ namespace SS14.Client.State.States
             var func = args.Function;
             var funcId = inputManager.NetworkBindMap.KeyFunctionID(func);
 
-            if(!inputSys.BindMap.TryGetHandler(func, out var handler))
-                return;
-
-            InputCmdMessage message;
-            switch (handler)
-            {
-                case StateInputCmdHandler stateHandler:
-                {
-                    message = new InputCmdStateMessage(timing.CurTick, funcId, args.State);
-                }
-                    break;
-
-                case PointerInputCmdHandler ptrHandler:
-                {
-                    var mousePosWorld = eyeManager.ScreenToWorld(args.PointerLocation);
-                    var entityToClick = GetEntityUnderPosition(mousePosWorld);
-                        message = new InputCmdPointerMessage(timing.CurTick, funcId, mousePosWorld, entityToClick.Uid);
-                }
-                    break;
-
-                default:
-                    throw new InvalidOperationException();
-            }
+            var mousePosWorld = eyeManager.ScreenToWorld(args.PointerLocation);
+            var entityToClick = GetEntityUnderPosition(mousePosWorld);
+            var message = new FullInputCmdMessage(timing.CurTick, funcId, args.State, mousePosWorld, entityToClick?.Uid ?? EntityUid.Invalid);
 
             //TODO: Make me an EntityEvent
-            inputSys.HandleInputCommand(message);
+            inputSys.HandleInputCommand(func, message);
         }
     }
 }

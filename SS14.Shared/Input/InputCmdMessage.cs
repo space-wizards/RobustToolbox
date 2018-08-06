@@ -37,7 +37,7 @@ namespace SS14.Shared.Input
     ///     An Input Command for a function that has a state.
     /// </summary>
     [Serializable, NetSerializable]
-    public class InputCmdStateMessage : InputCmdMessage
+    public class StateInputCmdMessage : InputCmdMessage
     {
         /// <summary>
         ///     New state of the Input Function.
@@ -45,12 +45,12 @@ namespace SS14.Shared.Input
         public BoundKeyState State { get; }
 
         /// <summary>
-        ///     Creates an instance of <see cref="InputCmdStateMessage"/>.
+        ///     Creates an instance of <see cref="StateInputCmdMessage"/>.
         /// </summary>
         /// <param name="tick">Client tick this was created.</param>
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="state">New state of the Input Function.</param>
-        public InputCmdStateMessage(uint tick, KeyFunctionId inputFunctionId, BoundKeyState state)
+        public StateInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, BoundKeyState state)
             : base(tick, inputFunctionId)
         {
             State = state;
@@ -61,14 +61,14 @@ namespace SS14.Shared.Input
     ///     A OneShot Input Command that does not have a state.
     /// </summary>
     [Serializable, NetSerializable]
-    public class InputCmdEventMessage : InputCmdMessage
+    public class EventInputCmdMessage : InputCmdMessage
     {
         /// <summary>
-        ///     Creates an instance of <see cref="InputCmdEventMessage"/>.
+        ///     Creates an instance of <see cref="EventInputCmdMessage"/>.
         /// </summary>
         /// <param name="tick">Client tick this was created.</param>
         /// <param name="inputFunctionId">Function this command is changing.</param>
-        public InputCmdEventMessage(uint tick, KeyFunctionId inputFunctionId)
+        public EventInputCmdMessage(uint tick, KeyFunctionId inputFunctionId)
             : base(tick, inputFunctionId) { }
     }
 
@@ -76,7 +76,7 @@ namespace SS14.Shared.Input
     ///     A OneShot Input Command that also contains pointer info.
     /// </summary>
     [Serializable, NetSerializable]
-    public class InputCmdPointerMessage : InputCmdEventMessage
+    public class PointerInputCmdMessage : EventInputCmdMessage
     {
         /// <summary>
         ///     Local Coordinates of the pointer when the command was created.
@@ -89,24 +89,72 @@ namespace SS14.Shared.Input
         public EntityUid Uid { get; }
 
         /// <summary>
-        ///     Creates an instance of <see cref="InputCmdPointerMessage"/>.
+        ///     Creates an instance of <see cref="PointerInputCmdMessage"/>.
         /// </summary>
         /// <param name="tick">Client tick this was created.</param>
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
-        public InputCmdPointerMessage(uint tick, KeyFunctionId inputFunctionId, GridLocalCoordinates coordinates)
+        public PointerInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, GridLocalCoordinates coordinates)
             : this(tick, inputFunctionId, coordinates, EntityUid.Invalid) { }
 
         /// <summary>
-        ///     Creates an instance of <see cref="InputCmdPointerMessage"/> with an optional Entity reference.
+        ///     Creates an instance of <see cref="PointerInputCmdMessage"/> with an optional Entity reference.
         /// </summary>
         /// <param name="tick">Client tick this was created.</param>
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
         /// <param name="uid">Entity that was under the pointer when the command was created.</param>
-        public InputCmdPointerMessage(uint tick, KeyFunctionId inputFunctionId, GridLocalCoordinates coordinates, EntityUid uid)
+        public PointerInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, GridLocalCoordinates coordinates, EntityUid uid)
             : base(tick, inputFunctionId)
         {
+            Coordinates = coordinates;
+            Uid = uid;
+        }
+    }
+
+    /// <summary>
+    ///     An input command that has both state and pointer info.
+    /// </summary>
+    [Serializable, NetSerializable]
+    public class FullInputCmdMessage : InputCmdMessage
+    {
+        /// <summary>
+        ///     New state of the Input Function.
+        /// </summary>
+        public BoundKeyState State { get; }
+
+        /// <summary>
+        ///     Local Coordinates of the pointer when the command was created.
+        /// </summary>
+        public GridLocalCoordinates Coordinates { get; }
+
+        /// <summary>
+        ///     Entity that was under the pointer when the command was created (if any).
+        /// </summary>
+        public EntityUid Uid { get; }
+
+        /// <summary>
+        ///     Creates an instance of <see cref="FullInputCmdMessage"/>.
+        /// </summary>
+        /// <param name="tick">Client tick this was created.</param>
+        /// <param name="inputFunctionId">Function this command is changing.</param>
+        /// <param name="state">New state of the Input Function.</param>
+        /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
+        public FullInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, BoundKeyState state, GridLocalCoordinates coordinates)
+            : this(tick, inputFunctionId, state, coordinates, EntityUid.Invalid) { }
+
+        /// <summary>
+        ///     Creates an instance of <see cref="FullInputCmdMessage"/> with an optional Entity reference.
+        /// </summary>
+        /// <param name="tick">Client tick this was created.</param>
+        /// <param name="inputFunctionId">Function this command is changing.</param>
+        /// <param name="state">New state of the Input Function.</param>
+        /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
+        /// <param name="uid">Entity that was under the pointer when the command was created.</param>
+        public FullInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, BoundKeyState state, GridLocalCoordinates coordinates, EntityUid uid)
+            : base(tick, inputFunctionId)
+        {
+            State = state;
             Coordinates = coordinates;
             Uid = uid;
         }

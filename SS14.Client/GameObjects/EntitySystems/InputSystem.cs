@@ -8,9 +8,15 @@ namespace SS14.Client.GameObjects.EntitySystems
     {
         public CommandBindMapping BindMap { get; } = new CommandBindMapping();
 
-        public void HandleInputCommand(InputCmdMessage message)
+        public void HandleInputCommand(BoundKeyFunction function, FullInputCmdMessage message)
         {
-            //TODO: Make the BindMap work!
+            // handle local binds before sending off
+            if (BindMap.TryGetHandler(function, out var handler))
+            {
+                // local handlers can block sending over the network.
+                if (handler.HandleCmdMessage(null, message))
+                    return;
+            }
 
             RaiseNetworkEvent(message);
         }

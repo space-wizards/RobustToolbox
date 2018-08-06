@@ -50,7 +50,8 @@ namespace SS14.Shared.Input
         {
             if (_functionStates.ContainsKey(function))
                 _functionStates[function] = state;
-            _functionStates.Add(function, state);
+            else
+                _functionStates.Add(function, state);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Player;
 using SS14.Shared.Enums;
@@ -22,9 +23,7 @@ namespace SS14.Server.GameObjects.EntitySystems
         /// <inheritdoc />
         public override void RegisterMessageTypes()
         {
-            RegisterMessageType<InputCmdStateMessage>();
-            RegisterMessageType<InputCmdEventMessage>();
-            RegisterMessageType<InputCmdPointerMessage>();
+            RegisterMessageType<FullInputCmdMessage>();
         }
 
         /// <inheritdoc />
@@ -42,7 +41,7 @@ namespace SS14.Server.GameObjects.EntitySystems
         /// <inheritdoc />
         public override void HandleNetMessage(INetChannel channel, EntitySystemMessage message)
         {
-            if (!(message is InputCmdMessage msg))
+            if (!(message is FullInputCmdMessage msg))
                 return;
 
             //Client Sanitization: out of bounds functionID
@@ -51,20 +50,20 @@ namespace SS14.Server.GameObjects.EntitySystems
 
             var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(channel);
 
-            // set state if needed
-            if (message is InputCmdStateMessage stateMsg)
-            {
-                var states = GetInputStates(session);
-                states.SetState(function, stateMsg.State);
-            }
+            //Client Sanitization: bad enum key state value
+            if (!Enum.IsDefined(typeof(BoundKeyState), msg.State))
+                return;
+
+            // set state
+            var states = GetInputStates(session);
+            states.SetState(function, msg.State);
 
             // route the cmdMessage to the proper bind
+            //Client Sanitization: unbound command, just ignore
             if (_commandBinds.TryGetValue(function, out var command))
             {
                 command.HandleCmdMessage(session, msg);
             }
-
-            //Client Sanitization: unbound command, just ignore
         }
 
         public IPlayerCommandStates GetInputStates(IPlayerSession session)

@@ -10,7 +10,7 @@ namespace SS14.Shared.Input
         public virtual void Enabled(ICommonSession session) { }
         public virtual void Disabled(ICommonSession session) { }
 
-        public abstract void HandleCmdMessage(ICommonSession session, InputCmdMessage message);
+        public abstract bool HandleCmdMessage(ICommonSession session, InputCmdMessage message);
 
         /// <summary>
         ///     Makes a quick input command from enabled and disabled delegates.
@@ -44,29 +44,30 @@ namespace SS14.Shared.Input
             DisabledDelegate?.Invoke(session);
         }
 
-        public override void HandleCmdMessage(ICommonSession session, InputCmdMessage message)
+        public override bool HandleCmdMessage(ICommonSession session, InputCmdMessage message)
         {
-            if (!(message is InputCmdStateMessage msg))
-                return;
+            if (!(message is FullInputCmdMessage msg))
+                return false;
 
             switch (msg.State)
             {
                 case BoundKeyState.Up:
                     Disabled(session);
-                    break;
+                    return true;
                 case BoundKeyState.Down:
                     Enabled(session);
-                    break;
+                    return true;
             }
 
             //Client Sanitization: unknown key state, just ignore
+            return false;
         }
     }
 
     public class PointerInputCmdHandler : InputCmdHandler
     {
         //TODO: MAKE ME
-        public override void HandleCmdMessage(ICommonSession session, InputCmdMessage message)
+        public override bool HandleCmdMessage(ICommonSession session, InputCmdMessage message)
         {
             throw new NotImplementedException();
         }

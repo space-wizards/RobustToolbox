@@ -17,8 +17,12 @@ namespace SS14.Server.GameObjects.EntitySystems
     public class InputSystem : EntitySystem
     {
         private readonly Dictionary<IPlayerSession, IPlayerCommandStates> _playerInputs = new Dictionary<IPlayerSession, IPlayerCommandStates>();
+        private readonly CommandBindMapping _bindMap = new CommandBindMapping();
 
-        private readonly Dictionary<BoundKeyFunction, InputCmdHandler> _commandBinds = new Dictionary<BoundKeyFunction, InputCmdHandler>();
+        /// <summary>
+        ///     Server side input command binds.
+        /// </summary>
+        public ICommandBindMapping BindMap => _bindMap;
 
         /// <inheritdoc />
         public override void RegisterMessageTypes()
@@ -54,14 +58,14 @@ namespace SS14.Server.GameObjects.EntitySystems
             if (!Enum.IsDefined(typeof(BoundKeyState), msg.State))
                 return;
 
-            // set state
-            var states = GetInputStates(session);
-            states.SetState(function, msg.State);
-
             // route the cmdMessage to the proper bind
             //Client Sanitization: unbound command, just ignore
-            if (_commandBinds.TryGetValue(function, out var command))
+            if(_bindMap.TryGetHandler(function, out var command))
             {
+                // set state, only bound key functions get state changes
+                var states = GetInputStates(session);
+                states.SetState(function, msg.State);
+
                 command.HandleCmdMessage(session, msg);
             }
         }
@@ -70,17 +74,7 @@ namespace SS14.Server.GameObjects.EntitySystems
         {
             return _playerInputs[session];
         }
-
-        public void BindFunction(BoundKeyFunction function, InputCmdHandler command)
-        {
-            _commandBinds.Add(function, command);
-        }
-
-        public void UnbindFunction(BoundKeyFunction function)
-        {
-            _commandBinds.Remove(function);
-        }
-
+        
         private void OnPlayerStatusChanged(object sender, SessionStatusEventArgs args)
         {
             switch (args.NewStatus)

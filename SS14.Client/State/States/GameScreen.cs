@@ -261,8 +261,6 @@ namespace SS14.Client.State.States
         /// <param name="args">Event data values for a bound key state change.</param>
         private void OnKeyBindStateChanged(BoundKeyEventArgs args)
         {
-            Logger.DebugS("input.bindState", $"{args.Function.FunctionName} - {args.State.ToString()}");
-
             var inputSys = entitySystemManager.GetEntitySystem<InputSystem>();
             
             var func = args.Function;
@@ -272,8 +270,9 @@ namespace SS14.Client.State.States
             var entityToClick = GetEntityUnderPosition(mousePosWorld);
             var message = new FullInputCmdMessage(timing.CurTick, funcId, args.State, mousePosWorld, entityToClick?.Uid ?? EntityUid.Invalid);
 
-            //TODO: Make me an EntityEvent
-            inputSys.HandleInputCommand(func, message);
+            // client side command handlers will always be sent the local player session.
+            var session = playerManager.LocalPlayer.Session;
+            inputSys.HandleInputCommand(session, func, message);
         }
     }
 }

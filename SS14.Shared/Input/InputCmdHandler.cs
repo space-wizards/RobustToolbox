@@ -1,9 +1,8 @@
-﻿using System;
-using SS14.Shared.Players;
+﻿using SS14.Shared.Players;
 
 namespace SS14.Shared.Input
 {
-    public delegate void InputStateCmdDelegate(ICommonSession channel);
+    public delegate void InputStateCmdDelegate(ICommonSession session);
 
     public abstract class InputCmdHandler
     {
@@ -27,49 +26,39 @@ namespace SS14.Shared.Input
             };
         }
 
-    }
-
-    public class StateInputCmdHandler : InputCmdHandler
-    {
-        public InputStateCmdDelegate EnabledDelegate;
-        public InputStateCmdDelegate DisabledDelegate;
-
-        public override void Enabled(ICommonSession session)
+        private class StateInputCmdHandler : InputCmdHandler
         {
-            EnabledDelegate?.Invoke(session);
-        }
+            public InputStateCmdDelegate EnabledDelegate;
+            public InputStateCmdDelegate DisabledDelegate;
 
-        public override void Disabled(ICommonSession session)
-        {
-            DisabledDelegate?.Invoke(session);
-        }
-
-        public override bool HandleCmdMessage(ICommonSession session, InputCmdMessage message)
-        {
-            if (!(message is FullInputCmdMessage msg))
-                return false;
-
-            switch (msg.State)
+            public override void Enabled(ICommonSession session)
             {
-                case BoundKeyState.Up:
-                    Disabled(session);
-                    return true;
-                case BoundKeyState.Down:
-                    Enabled(session);
-                    return true;
+                EnabledDelegate?.Invoke(session);
             }
 
-            //Client Sanitization: unknown key state, just ignore
-            return false;
-        }
-    }
+            public override void Disabled(ICommonSession session)
+            {
+                DisabledDelegate?.Invoke(session);
+            }
 
-    public class PointerInputCmdHandler : InputCmdHandler
-    {
-        //TODO: MAKE ME
-        public override bool HandleCmdMessage(ICommonSession session, InputCmdMessage message)
-        {
-            throw new NotImplementedException();
+            public override bool HandleCmdMessage(ICommonSession session, InputCmdMessage message)
+            {
+                if (!(message is FullInputCmdMessage msg))
+                    return false;
+
+                switch (msg.State)
+                {
+                    case BoundKeyState.Up:
+                        Disabled(session);
+                        return true;
+                    case BoundKeyState.Down:
+                        Enabled(session);
+                        return true;
+                }
+
+                //Client Sanitization: unknown key state, just ignore
+                return false;
+            }
         }
     }
 }

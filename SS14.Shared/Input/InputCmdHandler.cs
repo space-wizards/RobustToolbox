@@ -1,8 +1,10 @@
-﻿using SS14.Shared.Players;
+﻿using SS14.Shared.GameObjects;
+using SS14.Shared.Map;
+using SS14.Shared.Players;
 
 namespace SS14.Shared.Input
 {
-    public delegate void InputStateCmdDelegate(ICommonSession session);
+    public delegate void StateInputCmdDelegate(ICommonSession session);
 
     public abstract class InputCmdHandler
     {
@@ -17,7 +19,7 @@ namespace SS14.Shared.Input
         /// <param name="enabled">The delegate to be ran when this command is enabled.</param>
         /// <param name="disabled">The delegate to be ran when this command is disabled.</param>
         /// <returns>The new input command.</returns>
-        public static InputCmdHandler FromDelegate(InputStateCmdDelegate enabled = null, InputStateCmdDelegate disabled = null)
+        public static InputCmdHandler FromDelegate(StateInputCmdDelegate enabled = null, StateInputCmdDelegate disabled = null)
         {
             return new StateInputCmdHandler
             {
@@ -28,8 +30,8 @@ namespace SS14.Shared.Input
 
         private class StateInputCmdHandler : InputCmdHandler
         {
-            public InputStateCmdDelegate EnabledDelegate;
-            public InputStateCmdDelegate DisabledDelegate;
+            public StateInputCmdDelegate EnabledDelegate;
+            public StateInputCmdDelegate DisabledDelegate;
 
             public override void Enabled(ICommonSession session)
             {
@@ -59,6 +61,28 @@ namespace SS14.Shared.Input
                 //Client Sanitization: unknown key state, just ignore
                 return false;
             }
+        }
+    }
+
+    public delegate void PointerInputCmdDelegate(ICommonSession session, GridLocalCoordinates coords, EntityUid uid);
+
+    public class PointerInputCmdHandler : InputCmdHandler
+    {
+        private PointerInputCmdDelegate _callback;
+
+        public PointerInputCmdHandler(PointerInputCmdDelegate callback)
+        {
+            _callback = callback;
+        }
+
+        public override bool HandleCmdMessage(ICommonSession session, InputCmdMessage message)
+        {
+            if (!(message is FullInputCmdMessage msg) || msg.State != BoundKeyState.Down)
+                return false;
+
+            _callback?.Invoke(session, msg.Coordinates, msg.Uid);
+
+            return true;
         }
     }
 }

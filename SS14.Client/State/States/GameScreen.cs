@@ -196,17 +196,6 @@ namespace SS14.Client.State.States
                         */
                 }
             }
-            
-            //Assemble information to send to server about click
-            if (clicktype != ClickType.None)
-            {
-                var UID = EntityUid.Invalid;
-                if (entityToClick != null && !entityToClick.Uid.IsClientSide())
-                    UID = entityToClick.Uid;
-
-                ClickEventMessage message = new ClickEventMessage(UID, clicktype, mousePosWorld);
-                IoCManager.Resolve<IEntityNetworkManager>().SendSystemNetworkMessage(message);
-            }
         }
 
         public IEntity GetEntityUnderPosition(GridLocalCoordinates coordinates)

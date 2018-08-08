@@ -1,4 +1,5 @@
-﻿using SS14.Client.Console;
+﻿using System;
+using SS14.Client.Console;
 using SS14.Client.Graphics.Shaders;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.GameObjects;
@@ -18,6 +19,9 @@ using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Client.GameObjects.EntitySystems;
+using SS14.Shared.Interfaces.Timing;
+using SS14.Shared.Log;
 
 namespace SS14.Client.State.States
 {
@@ -43,6 +47,10 @@ namespace SS14.Client.State.States
         readonly IPlacementManager placementManager;
         [Dependency]
         readonly IEyeManager eyeManager;
+        [Dependency]
+        private readonly IEntitySystemManager entitySystemManager;
+        [Dependency]
+        private readonly IGameTiming timing;
 
         private EscapeMenu escapeMenu;
 
@@ -53,6 +61,8 @@ namespace SS14.Client.State.States
         public override void Startup()
         {
             IoCManager.InjectDependencies(this);
+            
+            inputManager.KeyBindStateChanged += OnKeyBindStateChanged;
 
             escapeMenu = new EscapeMenu
             {
@@ -60,7 +70,7 @@ namespace SS14.Client.State.States
             };
             escapeMenu.AddToScreen();
 
-            var escapeMenuCommand = InputCommand.FromDelegate(() =>
+            var escapeMenuCommand = InputCmdHandler.FromDelegate(session =>
             {
                 if (escapeMenu.Visible)
                 {
@@ -79,7 +89,7 @@ namespace SS14.Client.State.States
                 }
             });
             inputManager.SetInputCommand(EngineKeyFunctions.EscapeMenu, escapeMenuCommand);
-            inputManager.SetInputCommand(EngineKeyFunctions.FocusChat, InputCommand.FromDelegate(() =>
+            inputManager.SetInputCommand(EngineKeyFunctions.FocusChat, InputCmdHandler.FromDelegate(session =>
             {
                 _gameChat.Input.GrabFocus();
             }));
@@ -113,6 +123,8 @@ namespace SS14.Client.State.States
 
             inputManager.SetInputCommand(EngineKeyFunctions.EscapeMenu, null);
             inputManager.SetInputCommand(EngineKeyFunctions.FocusChat, null);
+
+            inputManager.KeyBindStateChanged -= OnKeyBindStateChanged;
         }
 
         public override void Update(ProcessFrameEventArgs e)
@@ -152,10 +164,9 @@ namespace SS14.Client.State.States
         {
             if (playerManager.LocalPlayer == null || placementManager.MouseDown(eventargs))
                 return;
-
-            var map = playerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().MapID;
+            
             var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(eventargs.Position));
-            IEntity entityToClick = GetEntityUnderPosition(mousePosWorld);
+            var entityToClick = GetEntityUnderPosition(mousePosWorld);
 
             //First possible exit point for click, acceptable due to being clientside
             if (entityToClick != null && placementManager.Eraser && placementManager.IsActive)
@@ -164,7 +175,7 @@ namespace SS14.Client.State.States
                 return;
             }
 
-            ClickType clicktype = eventargs.ClickType;
+            var clicktype = eventargs.ClickType;
             //Dispatches clicks to relevant clickable components, another single exit point for UI
             if (entityToClick != null)
             {
@@ -185,7 +196,7 @@ namespace SS14.Client.State.States
                         */
                 }
             }
-
+            
             //Assemble information to send to server about click
             if (clicktype != ClickType.None)
             {
@@ -242,6 +253,26 @@ namespace SS14.Client.State.States
                 var transy = y.clicked.GetComponent<ITransformComponent>();
                 return transx.LocalPosition.Y.CompareTo(transy.LocalPosition.Y);
             }
+        }
+
+        /// <summary>
+        ///     Converts a state change event from outside the simulation to inside the simulation.
+        /// </summary>
+        /// <param name="args">Event data values for a bound key state change.</param>
+        private void OnKeyBindStateChanged(BoundKeyEventArgs args)
+        {
+            var inputSys = entitySystemManager.GetEntitySystem<InputSystem>();
+            
+            var func = args.Function;
+            var funcId = inputManager.NetworkBindMap.KeyFunctionID(func);
+
+            var mousePosWorld = eyeManager.ScreenToWorld(args.PointerLocation);
+            var entityToClick = GetEntityUnderPosition(mousePosWorld);
+            var message = new FullInputCmdMessage(timing.CurTick, funcId, args.State, mousePosWorld, entityToClick?.Uid ?? EntityUid.Invalid);
+
+            // client side command handlers will always be sent the local player session.
+            var session = playerManager.LocalPlayer.Session;
+            inputSys.HandleInputCommand(session, func, message);
         }
     }
 }

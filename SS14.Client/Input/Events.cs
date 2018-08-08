@@ -73,12 +73,18 @@ namespace SS14.Client.Input
 
         public static explicit operator KeyEventArgs(Godot.InputEventKey args)
         {
-            return new KeyEventArgs(Keyboard.GonvertGodotKey(args.Scancode),
+            return new KeyEventArgs(Keyboard.ConvertGodotKey(args.Scancode),
                                     (UInt32)args.Unicode,
                                     args.Alt,
                                     args.Control,
                                     args.Shift,
                                     args.Command);
+        }
+
+        public static explicit operator KeyEventArgs(Godot.InputEventMouseButton args)
+        {
+            var key = Mouse.ConvertGodotMouseButton((Mouse.Button) args.ButtonIndex);
+            return new KeyEventArgs(key, 0, false, false, false, false);
         }
     }
 

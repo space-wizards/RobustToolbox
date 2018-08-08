@@ -1,5 +1,4 @@
-﻿using SS14.Shared;
-using SS14.Shared.Enums;
+﻿using SS14.Shared.Enums;
 using SS14.Shared.Players;
 
 namespace SS14.Client.Player
@@ -7,7 +6,7 @@ namespace SS14.Client.Player
     /// <summary>
     ///     Client side session of a player.
     /// </summary>
-    public class PlayerSession
+    public class PlayerSession : ICommonSession
     {
         /// <summary>
         ///     Status of the session.

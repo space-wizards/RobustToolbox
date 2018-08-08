@@ -41,6 +41,21 @@ namespace SS14.Client.Input
             Left = Godot.ButtonList.WheelLeft,
             Right = Godot.ButtonList.WheelRight,
         }
+
+        public static Keyboard.Key ConvertGodotMouseButton(Button button)
+        {
+            switch (button)
+            {
+                case Button.Left:
+                    return Keyboard.Key.MouseLeft;
+                case Button.Middle:
+                    return Keyboard.Key.MouseMiddle;
+                case Button.Right:
+                    return Keyboard.Key.MouseRight;
+                default:
+                    return Keyboard.Key.Unknown;
+            }
+        }
     }
 
     public static class Keyboard
@@ -67,6 +82,11 @@ namespace SS14.Client.Input
         public enum Key : byte
         {
             Unknown = 0,
+            MouseLeft,
+            MouseRight,
+            MouseMiddle,
+            MouseButton4,
+            MouseButton5,
             A,
             B,
             C,
@@ -172,7 +192,7 @@ namespace SS14.Client.Input
             Pause,
         }
 
-        public static Key GonvertGodotKey(int key)
+        public static Key ConvertGodotKey(int key)
         {
             // As far as I can tell, Godot's KeyList has complete arbitrary ordering. Seriously.
             // They don't even prevent overlap if you remove the SPKEY flag (they totally could too...).

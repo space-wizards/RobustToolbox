@@ -1,15 +1,43 @@
-using SS14.Shared.Interfaces.Reflection;
+﻿using SS14.Shared.Interfaces.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using SS14.Shared.Serialization;
 
 namespace SS14.Shared.Input
 {
+    /// <summary>
+    ///     A networked identifier for a <see cref="BoundKeyFunction"/>.
+    /// </summary>
+    [Serializable, NetSerializable]
+    public struct KeyFunctionId
+    {
+        private int _value;
+
+        public KeyFunctionId(int id)
+        {
+            _value = id;
+        }
+
+        public static explicit operator int(KeyFunctionId funcId)
+        {
+            return funcId._value;
+        }
+        
+        public override string ToString()
+        {
+            return _value.ToString();
+        }
+    }
+
+    /// <summary>
+    ///     Sets up a mapping of <see cref="BoundKeyFunction"/> to <see cref="KeyFunctionId"/> for network messages.
+    /// </summary>
     public class BoundKeyMap
     {
         private readonly IReflectionManager reflectionManager;
 
-        private readonly Dictionary<BoundKeyFunction, int> KeyFunctionsMap = new Dictionary<BoundKeyFunction, int>();
+        private readonly Dictionary<BoundKeyFunction, KeyFunctionId> KeyFunctionsMap = new Dictionary<BoundKeyFunction, KeyFunctionId>();
         private readonly List<BoundKeyFunction> KeyFunctionsList = new List<BoundKeyFunction>();
 
         public BoundKeyMap(IReflectionManager reflectionManager)
@@ -42,7 +70,7 @@ namespace SS14.Shared.Input
 
             for (var i = 0; i < KeyFunctionsList.Count; i++)
             {
-                KeyFunctionsMap.Add(KeyFunctionsList[i], i);
+                KeyFunctionsMap.Add(KeyFunctionsList[i], new KeyFunctionId(i));
             }
         }
 
@@ -51,14 +79,35 @@ namespace SS14.Shared.Input
             return KeyFunctionsMap.ContainsKey(new BoundKeyFunction(name));
         }
 
-        public int KeyFunctionID(BoundKeyFunction function)
+        public KeyFunctionId KeyFunctionID(BoundKeyFunction function)
         {
             return KeyFunctionsMap[function];
         }
 
-        public BoundKeyFunction KeyFunctionName(int function)
+        public BoundKeyFunction KeyFunctionName(KeyFunctionId function)
         {
-            return KeyFunctionsList[function];
+            return KeyFunctionsList[(int) function];
+        }
+
+        public bool TryGetKeyFunction(KeyFunctionId funcId, out BoundKeyFunction func)
+        {
+            var list = KeyFunctionsList;
+            var index = (int) funcId;
+            
+            if (0 > index || index >= list.Count)
+            {
+                func = default(BoundKeyFunction);
+                return false;
+            }
+
+            if (list[index] == null)
+            {
+                func = default(BoundKeyFunction);
+                return false;
+            }
+
+            func = list[index];
+            return true;
         }
     }
 }

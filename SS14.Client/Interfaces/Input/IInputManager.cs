@@ -1,4 +1,4 @@
-using SS14.Shared;
+﻿using SS14.Shared;
 using SS14.Shared.IoC;
 using System;
 using SS14.Client.Input;
@@ -15,6 +15,8 @@ namespace SS14.Client.Interfaces.Input
         bool Enabled { get; set; }
 
         Vector2 MouseScreenPosition { get; }
+
+        BoundKeyMap NetworkBindMap { get; }
 
         void Initialize();
 
@@ -34,13 +36,10 @@ namespace SS14.Client.Interfaces.Input
         /// </summary>
         /// <param name="function">The key function to find the bound input command for.</param>
         /// <returns>An input command, if any. Null if no command is set.</returns>
-        InputCommand GetInputCommand(BoundKeyFunction function);
+        InputCmdHandler GetInputCommand(BoundKeyFunction function);
 
-        void SetInputCommand(BoundKeyFunction function, InputCommand command);
+        void SetInputCommand(BoundKeyFunction function, InputCmdHandler cmdHandler);
 
-
-        event Action<BoundKeyFunction> OnKeyBindDown;
-        event Action<BoundKeyFunction> OnKeyBindUp;
-        event Action<BoundKeyEventArgs> OnKeyBindStateChanged;
+        event Action<BoundKeyEventArgs> KeyBindStateChanged;
     }
 }

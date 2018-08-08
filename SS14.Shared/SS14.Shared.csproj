@@ -159,7 +159,9 @@
     <Compile Include="GameObjects\EntityUid.cs" />
     <Compile Include="GameObjects\IncomingEntityMessage.cs" />
     <Compile Include="GameObjects\NetComponent.cs" />
-    <Compile Include="Input\UserCmd.cs" />
+    <Compile Include="Input\CommandBindMapping.cs" />
+    <Compile Include="Input\InputCmdMessage.cs" />
+    <Compile Include="Input\PlayerCommandStates.cs" />
     <Compile Include="Interfaces\Configuration\IConfigurationManager.cs" />
     <Compile Include="Console\ICommand.cs" />
     <Compile Include="GameObjects\EntityEvents.cs" />
@@ -265,10 +267,12 @@
     <Compile Include="Physics\CollidablePoint.cs" />
     <Compile Include="Physics\CollisionManager.cs" />
     <Compile Include="Enums\PlacementInformation.cs" />
-    <Compile Include="Input\InputCommand.cs" />
+    <Compile Include="Input\InputCmdHandler.cs" />
     <Compile Include="Input\KeyFunctions.cs" />
     <Compile Include="Input\BoundKeyEventArgs.cs" />
     <Compile Include="Physics\RayCastResults.cs" />
+    <Compile Include="Players\IBaseSession.cs" />
+    <Compile Include="Players\ICommonSession.cs" />
     <Compile Include="Players\PlayerIndex.cs" />
     <Compile Include="Timing\FrameEventArgs.cs" />
     <Compile Include="Timing\GameLoop.cs" />

@@ -105,6 +105,7 @@
     <Compile Include="GameObjects\EntitySystems\AppearanceSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\AppearanceTestSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\AudioSystem.cs" />
+    <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\SpriteSystem.cs" />
     <Compile Include="GameObjects\GodotComponentFactory.cs" />
     <Compile Include="GameObjects\ClientComponentFactory.cs" />

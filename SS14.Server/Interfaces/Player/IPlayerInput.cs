@@ -7,7 +7,7 @@ namespace SS14.Server.Interfaces.Player
         BoundKeyState GetKeyState(BoundKeyFunction function);
         bool GetKeyStateBool(BoundKeyFunction function);
 
-        InputCommand GetCommand(BoundKeyFunction function);
-        void SetCommand(BoundKeyFunction function, InputCommand command);
+        InputCmdHandler GetCommand(BoundKeyFunction function);
+        void SetCommand(BoundKeyFunction function, InputCmdHandler cmdHandler);
     }
 }

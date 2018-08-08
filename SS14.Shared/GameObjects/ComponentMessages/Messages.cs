@@ -34,20 +34,6 @@ namespace SS14.Shared.GameObjects
     }
 
     [Serializable, NetSerializable]
-    public class BoundKeyChangedMsg : ComponentMessage
-    {
-        public BoundKeyFunction Function { get; }
-        public BoundKeyState State { get; }
-
-        public BoundKeyChangedMsg(BoundKeyFunction function, BoundKeyState state)
-        {
-            Directed = true;
-            Function = function;
-            State = state;
-        }
-    }
-
-    [Serializable, NetSerializable]
     public class ClientChangedHandMsg : ComponentMessage
     {
         public string Index { get; }

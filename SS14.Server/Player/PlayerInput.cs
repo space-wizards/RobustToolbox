@@ -1,13 +1,14 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Input;
+using SS14.Shared.Players;
 
 namespace SS14.Server.Player
 {
     public class PlayerInput : IPlayerInput
     {
-        private Dictionary<BoundKeyFunction, (BoundKeyState State, InputCommand Command)> functions
-          = new Dictionary<BoundKeyFunction, (BoundKeyState State, InputCommand Command)>();
+        private Dictionary<BoundKeyFunction, (BoundKeyState State, InputCmdHandler Command)> functions
+          = new Dictionary<BoundKeyFunction, (BoundKeyState State, InputCmdHandler Command)>();
 
         private void EnsureFunction(BoundKeyFunction function)
         {
@@ -17,7 +18,7 @@ namespace SS14.Server.Player
             }
         }
 
-        public InputCommand GetCommand(BoundKeyFunction function)
+        public InputCmdHandler GetCommand(BoundKeyFunction function)
         {
             if (functions.TryGetValue(function, out var tuple))
             {
@@ -40,16 +41,16 @@ namespace SS14.Server.Player
             return GetKeyState(function) == BoundKeyState.Down;
         }
 
-        public void SetCommand(BoundKeyFunction function, InputCommand command)
+        public void SetCommand(BoundKeyFunction function, InputCmdHandler cmdHandler)
         {
             EnsureFunction(function);
 
             var val = functions[function];
-            val.Command = command;
+            val.Command = cmdHandler;
             functions[function] = val;
         }
 
-        public void SetFunctionState(BoundKeyFunction function, BoundKeyState state)
+        public void SetFunctionState(ICommonSession session, BoundKeyFunction function, BoundKeyState state)
         {
             if (state == GetKeyState(function))
             {
@@ -64,11 +65,11 @@ namespace SS14.Server.Player
 
             if (state == BoundKeyState.Up)
             {
-                val.Command?.Disabled();
+                val.Command?.Disabled(session);
             }
             else
             {
-                val.Command?.Enabled();
+                val.Command?.Enabled(session);
             }
         }
     }

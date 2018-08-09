@@ -10,7 +10,7 @@ using SS14.Shared.Serialization;
 
 namespace SS14.Shared.GameObjects.Components.Transform
 {
-    internal class TransformComponent : Component, ITransformComponent
+    internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
         private EntityUid _parent;
         private Vector2 _position; // holds offset from grid, or offset from parent
@@ -421,6 +421,11 @@ namespace SS14.Shared.GameObjects.Components.Transform
             {
                 return new GridLocalCoordinates(localPosition, gridId);
             }
+        }
+
+        public string GetDebugString()
+        {
+            return $"pos/rot/wpos/wrot: {LocalPosition}/{LocalRotation}/{WorldPosition}/{WorldRotation}";
         }
 
         /// <summary>

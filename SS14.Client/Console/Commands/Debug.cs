@@ -18,6 +18,8 @@ using SS14.Shared.Map;
 using System.Globalization;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.GameObjects.Components.Transform;
+using System.Linq;
+using SS14.Client.Interfaces.GameObjects;
 
 namespace SS14.Client.Console.Commands
 {
@@ -235,9 +237,20 @@ namespace SS14.Client.Console.Commands
 
             console.AddLine($"{entity.Uid}: {entity.Prototype.ID}/{entity.Name}");
             console.AddLine($"init/del/lmt: {entity.Initialized}/{entity.Deleted}/{entity.LastModifiedTick}");
-            foreach (var component in entity.GetAllComponents())
+            foreach (var component in entity.GetAllComponents().Distinct())
             {
                 console.AddLine(component.ToString());
+                if (component is IComponentDebug debug)
+                {
+                    foreach (var line in debug.GetDebugString().Split('\n'))
+                    {
+                        if (string.IsNullOrWhiteSpace(line))
+                        {
+                            continue;
+                        }
+                        console.AddLine("\t" + line);
+                    }
+                }
             }
 
             return false;

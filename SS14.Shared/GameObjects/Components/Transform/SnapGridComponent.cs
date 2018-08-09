@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -19,8 +22,12 @@ namespace SS14.Shared.GameObjects.Components.Transform
         private bool IsSet;
         private SnapGridOffset _offset = SnapGridOffset.Center;
 
+        public event Action OnPositionChanged;
+
         public MapIndices Position { get; private set; }
         public SnapGridOffset Offset => _offset;
+
+
         public override void Startup()
         {
             base.Startup();
@@ -57,6 +64,43 @@ namespace SS14.Shared.GameObjects.Components.Transform
             serializer.DataFieldCached(ref _offset, "offset", SnapGridOffset.Center);
         }
 
+        /// <summary>
+        ///     Returns an enumerable over all the entities which are one tile over in a certain direction.
+        /// </summary>
+        public IEnumerable<IEntity> GetInDir(Direction dir)
+        {
+            var mapMan = IoCManager.Resolve<IMapManager>();
+            var grid = mapMan.GetGrid(Owner.Transform.GridID);
+            var pos = SnapGridPosAt(dir);
+
+            return grid.GetSnapGridCell(pos, Offset).Select(s => s.Owner);
+        }
+
+        MapIndices SnapGridPosAt(Direction dir)
+        {
+            switch (dir)
+            {
+                case Direction.East:
+                    return Position + new MapIndices(1, 0);
+                case Direction.SouthEast:
+                    return Position + new MapIndices(1, 1);
+                case Direction.South:
+                    return Position + new MapIndices(0, 1);
+                case Direction.SouthWest:
+                    return Position + new MapIndices(-1, 1);
+                case Direction.West:
+                    return Position + new MapIndices(-1, 0);
+                case Direction.NorthWest:
+                    return Position + new MapIndices(-1, -1);
+                case Direction.North:
+                    return Position + new MapIndices(0, -1);
+                case Direction.NorthEast:
+                    return Position + new MapIndices(1, -1);
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
         private void UpdatePosition()
         {
             var mapMan = IoCManager.Resolve<IMapManager>();
@@ -73,10 +117,15 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
             IsSet = true;
 
+            var oldPos = Position;
             Position = grid.SnapGridCellFor(Owner.Transform.LocalPosition, Offset);
             grid.AddToSnapGridCell(Position, Offset, this);
 
             Logger.InfoS(LogCategory, "We in there at {0}", Position);
+            if (oldPos != Position)
+            {
+                OnPositionChanged?.Invoke();
+            }
         }
     }
 

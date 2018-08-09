@@ -147,7 +147,7 @@ namespace SS14.Client.Console
                 return;
 
             // echo the command locally
-            AddLine("> " + text, ChatChannel.Default, new Color(255, 250, 240));
+            AddLine("> " + text, ChatChannel.Default, Color.Lime);
 
             //Commands are processed locally and then sent to the server to be processed there again.
             var args = new List<string>();

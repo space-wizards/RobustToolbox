@@ -8,7 +8,14 @@ namespace SS14.Client.GodotGlue
 
         public void SignalInvoker(object a)
         {
-            Signal?.Invoke(a);
+            try
+            {
+                Signal?.Invoke(a);
+            }
+            catch (Exception e)
+            {
+                HandleException(e);
+            }
         }
 
         protected override void Dispose(bool disposing)

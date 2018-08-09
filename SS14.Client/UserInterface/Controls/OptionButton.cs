@@ -160,11 +160,14 @@ namespace SS14.Client.UserInterface.Controls
 
         protected override void DisposeSignalHooks()
         {
-            base.SetupSignalHooks();
+            base.DisposeSignalHooks();
 
-            __itemSelectedSubscriber.Disconnect(SceneControl, "item_selected");
-            __itemSelectedSubscriber.Dispose();
-            __itemSelectedSubscriber = null;
+            if (__itemSelectedSubscriber != null)
+            {
+                __itemSelectedSubscriber.Disconnect(SceneControl, "item_selected");
+                __itemSelectedSubscriber.Dispose();
+                __itemSelectedSubscriber = null;
+            }
         }
 
         private void __itemSelectedHook(object id)

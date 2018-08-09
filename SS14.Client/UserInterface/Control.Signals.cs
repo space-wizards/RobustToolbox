@@ -44,29 +44,47 @@ namespace SS14.Client.UserInterface
 
         protected virtual void DisposeSignalHooks()
         {
-            __mouseEnteredSubscriber.Disconnect(SceneControl, "mouse_entered");
-            __mouseEnteredSubscriber.Dispose();
-            __mouseEnteredSubscriber = null;
+            if (__mouseEnteredSubscriber != null)
+            {
+                __mouseEnteredSubscriber.Disconnect(SceneControl, "mouse_entered");
+                __mouseEnteredSubscriber.Dispose();
+                __mouseEnteredSubscriber = null;
+            }
 
-            __mouseExitedSubscriber.Disconnect(SceneControl, "mouse_exited");
-            __mouseExitedSubscriber.Dispose();
-            __mouseExitedSubscriber = null;
+            if (__mouseExitedSubscriber != null)
+            {
+                __mouseExitedSubscriber.Disconnect(SceneControl, "mouse_exited");
+                __mouseExitedSubscriber.Dispose();
+                __mouseExitedSubscriber = null;
+            }
 
-            __guiInputSubscriber.Disconnect(SceneControl, "gui_input");
-            __guiInputSubscriber.Dispose();
-            __guiInputSubscriber = null;
+            if (__guiInputSubscriber != null)
+            {
+                __guiInputSubscriber.Disconnect(SceneControl, "gui_input");
+                __guiInputSubscriber.Dispose();
+                __guiInputSubscriber = null;
+            }
 
-            __focusEnteredSubscriber.Disconnect(SceneControl, "focus_entered");
-            __focusEnteredSubscriber.Dispose();
-            __focusEnteredSubscriber = null;
+            if (__focusEnteredSubscriber != null)
+            {
+                __focusEnteredSubscriber.Disconnect(SceneControl, "focus_entered");
+                __focusEnteredSubscriber.Dispose();
+                __focusEnteredSubscriber = null;
+            }
 
-            __focusExitedSubscriber.Disconnect(SceneControl, "focus_exited");
-            __focusExitedSubscriber.Dispose();
-            __focusExitedSubscriber = null;
+            if (__focusExitedSubscriber != null)
+            {
+                __focusExitedSubscriber.Disconnect(SceneControl, "focus_exited");
+                __focusExitedSubscriber.Dispose();
+                __focusExitedSubscriber = null;
+            }
 
-            __treeExitedSubscriber.Disconnect(SceneControl, "tree_exited");
-            __treeExitedSubscriber.Dispose();
-            __treeExitedSubscriber = null;
+            if (__treeExitedSubscriber != null)
+            {
+                __treeExitedSubscriber.Disconnect(SceneControl, "tree_exited");
+                __treeExitedSubscriber.Dispose();
+                __treeExitedSubscriber = null;
+            }
         }
 
         private void __mouseEnteredHook()

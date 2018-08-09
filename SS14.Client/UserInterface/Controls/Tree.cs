@@ -131,9 +131,12 @@ namespace SS14.Client.UserInterface.Controls
         {
             base.DisposeSignalHooks();
 
-            __itemSelectedSubscriber?.Disconnect(SceneControl, "item_selected");
-            __itemSelectedSubscriber?.Dispose();
-            __itemSelectedSubscriber = null;
+            if (__itemSelectedSubscriber != null)
+            {
+                __itemSelectedSubscriber?.Disconnect(SceneControl, "item_selected");
+                __itemSelectedSubscriber?.Dispose();
+                __itemSelectedSubscriber = null;
+            }
         }
         #endregion Signals
 

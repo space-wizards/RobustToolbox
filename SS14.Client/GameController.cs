@@ -90,6 +90,8 @@ namespace SS14.Client
         readonly IClientGameStateManager gameStateManager;
         [Dependency]
         readonly IOverlayManager overlayManager;
+        [Dependency]
+        readonly ILogManager logManager;
 
         public override void Main(Godot.SceneTree tree)
         {
@@ -212,13 +214,31 @@ namespace SS14.Client
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePostEngine, eventArgs.Elapsed);
         }
 
+        public override void HandleException(Exception exception)
+        {
+            try
+            {
+                if (logManager != null)
+                {
+                    logManager.GetSawmill("root").Error($"Unhandled exception:\n{exception}");
+                }
+                else
+                {
+                    Godot.GD.Print($"Unhandled exception:\n{exception}");
+                }
+            }
+            catch (Exception e)
+            {
+                Godot.GD.Print($"Welp. The unhandled exception handler threw an exception.\n{e}\nException that was being handled:\n{exception}");
+            }
+        }
+
         private void SetupLogging()
         {
-            var mgr = IoCManager.Resolve<ILogManager>();
-            mgr.RootSawmill.AddHandler(new GodotLogHandler());
-            mgr.GetSawmill("res.typecheck").Level = LogLevel.Info;
-            mgr.GetSawmill("res.tex").Level = LogLevel.Info;
-            mgr.GetSawmill("console").Level = LogLevel.Info;
+            logManager.RootSawmill.AddHandler(new GodotLogHandler());
+            logManager.GetSawmill("res.typecheck").Level = LogLevel.Info;
+            logManager.GetSawmill("res.tex").Level = LogLevel.Info;
+            logManager.GetSawmill("console").Level = LogLevel.Info;
         }
     }
 }

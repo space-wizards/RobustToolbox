@@ -217,6 +217,8 @@ namespace SS14.Client
             var mgr = IoCManager.Resolve<ILogManager>();
             mgr.RootSawmill.AddHandler(new GodotLogHandler());
             mgr.GetSawmill("res.typecheck").Level = LogLevel.Info;
+            mgr.GetSawmill("res.tex").Level = LogLevel.Info;
+            mgr.GetSawmill("console").Level = LogLevel.Info;
         }
     }
 }

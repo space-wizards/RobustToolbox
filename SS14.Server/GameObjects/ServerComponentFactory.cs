@@ -15,6 +15,7 @@ namespace SS14.Server.GameObjects
             RegisterIgnore("Icon");
             RegisterIgnore("Occluder");
             RegisterIgnore("Eye");
+            RegisterIgnore("IconSmooth");
 
             Register<BasicActorComponent>();
             RegisterReference<BasicActorComponent, IActorComponent>();

@@ -128,7 +128,7 @@ namespace SS14.Client.Console
                 // Do not do duplicate commands.
                 if (_commands.ContainsKey(commandName))
                 {
-                    Logger.Warning($"Server sent console command {commandName}, but we already have one with the same name. Ignoring.");
+                    Logger.DebugS("console", $"Server sent console command {commandName}, but we already have one with the same name. Ignoring.");
                     continue;
                 }
 

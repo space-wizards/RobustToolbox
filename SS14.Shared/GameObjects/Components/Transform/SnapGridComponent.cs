@@ -14,7 +14,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
     /// <summary>
     ///     Makes it possible to look this entity up with the snap grid.
     /// </summary>
-    public class SnapGridComponent : Component
+    public class SnapGridComponent : Component, IComponentDebug
     {
         public const string LogCategory = "go.comp.snapgrid";
         public sealed override string Name => "SnapGrid";
@@ -76,6 +76,12 @@ namespace SS14.Shared.GameObjects.Components.Transform
             return grid.GetSnapGridCell(pos, Offset).Select(s => s.Owner);
         }
 
+
+        public string GetDebugString()
+        {
+            return $"ofs/pos: {Offset}/{Position}";
+        }
+
         MapIndices SnapGridPosAt(Direction dir)
         {
             switch (dir)
@@ -121,7 +127,6 @@ namespace SS14.Shared.GameObjects.Components.Transform
             Position = grid.SnapGridCellFor(Owner.Transform.LocalPosition, Offset);
             grid.AddToSnapGridCell(Position, Offset, this);
 
-            Logger.InfoS(LogCategory, "We in there at {0}", Position);
             if (oldPos != Position)
             {
                 OnPositionChanged?.Invoke();

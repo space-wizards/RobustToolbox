@@ -1,4 +1,5 @@
 ﻿using System;
+using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Shaders;
 using SS14.Shared.GameObjects;
@@ -147,5 +148,9 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         void LayerSetVisible(object layerKey, bool visible);
         void LayerSetColor(int layer, Color color);
         void LayerSetColor(object layerKey, Color color);
+        // Yes, I realize how silly it is to reference an enum in the concrete implementation.
+        // I don't care.
+        void LayerSetDirOffset(int layer, SpriteComponent.DirectionOffset offset);
+        void LayerSetDirOffset(object layerKey, SpriteComponent.DirectionOffset offset);
     }
 }

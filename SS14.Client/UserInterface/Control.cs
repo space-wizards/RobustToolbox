@@ -403,13 +403,13 @@ namespace SS14.Client.UserInterface
 
             if (!GameController.ShuttingDownHard)
             {
-                SceneControl.QueueFree();
-                SceneControl.Dispose();
+                SceneControl?.QueueFree();
+                SceneControl?.Dispose();
                 SceneControl = null;
 
                 // Don't QueueFree since these are the same node.
                 // Kinda sorta mostly probably hopefully.
-                WrappedSceneControl.Dispose();
+                WrappedSceneControl?.Dispose();
                 WrappedSceneControl = null;
             }
         }

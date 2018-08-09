@@ -1,3 +1,5 @@
+using System;
+
 // Godot *really* doesn't like it if you inherit Godot.Object outside the main project.
 // in fact, it hard crashes.
 // So we use these tiny dummies to register signals.
@@ -14,6 +16,11 @@ namespace SS14.Client.GodotGlue
         public void Disconnect(Godot.Object obj, string signal)
         {
             obj.Disconnect(signal, this, "SignalInvoker");
+        }
+
+        protected void HandleException(Exception exception)
+        {
+            SS14Loader.Instance.ExceptionCaught(exception);
         }
     }
 }

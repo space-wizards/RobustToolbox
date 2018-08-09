@@ -11,6 +11,7 @@ namespace SS14.Client.GodotGlue
     /// </summary>
     public class SS14Loader : Node
     {
+        public static SS14Loader Instance { get; private set; }
         public bool ShuttingDown { get; private set; } = false;
         public Assembly SS14Assembly { get; private set; }
         public IReadOnlyList<ClientEntryPoint> EntryPoints => entryPoints;
@@ -20,6 +21,7 @@ namespace SS14.Client.GodotGlue
 
         public override void _Ready()
         {
+            Instance = this;
             CallDeferred(nameof(AnnounceMain));
         }
 
@@ -58,8 +60,6 @@ namespace SS14.Client.GodotGlue
         {
             try
             {
-
-
                 if (!ShuttingDown)
                 {
                     foreach (var entrypoint in EntryPoints)
@@ -94,7 +94,7 @@ namespace SS14.Client.GodotGlue
                     }
                     catch (Exception e)
                     {
-                        GD.Print($"Caught exception inside Process:\n{e}");
+                        ExceptionCaught(e);
                     }
                 }
             }
@@ -106,7 +106,14 @@ namespace SS14.Client.GodotGlue
             {
                 foreach (var entrypoint in EntryPoints)
                 {
-                    entrypoint.Input(inputEvent);
+                    try
+                    {
+                        entrypoint.Input(inputEvent);
+                    }
+                    catch (Exception e)
+                    {
+                        ExceptionCaught(e);
+                    }
                 }
             }
         }
@@ -117,7 +124,14 @@ namespace SS14.Client.GodotGlue
             {
                 foreach (var entrypoint in EntryPoints)
                 {
-                    entrypoint.PreInput(inputEvent);
+                    try
+                    {
+                        entrypoint.PreInput(inputEvent);
+                    }
+                    catch (Exception e)
+                    {
+                        ExceptionCaught(e);
+                    }
                 }
             }
         }
@@ -136,6 +150,14 @@ namespace SS14.Client.GodotGlue
                         }
                         break;
                 }
+            }
+        }
+
+        public void ExceptionCaught(Exception exception)
+        {
+            foreach (var entrypoint in EntryPoints)
+            {
+                entrypoint.HandleException(exception);
             }
         }
     }
@@ -192,6 +214,15 @@ namespace SS14.Client.GodotGlue
         /// </summary>
         public virtual void QuitRequest()
         {
+        }
+
+        /// <summary>
+        ///     Invoked whenever an exception was caught going into Godot.
+        /// </summary>
+        /// <param name="exception">The exception that was caught.</param>
+        public virtual void HandleException(Exception exception)
+        {
+            GD.Print($"Caught unhandled exception:\n{exception}");
         }
     }
 }

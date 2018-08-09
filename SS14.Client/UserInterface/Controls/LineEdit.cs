@@ -130,13 +130,19 @@ namespace SS14.Client.UserInterface.Controls
         {
             base.DisposeSignalHooks();
 
-            __textChangedSubscriber.Disconnect(SceneControl, "text_changed");
-            __textChangedSubscriber.Dispose();
-            __textChangedSubscriber = null;
+            if (__textChangedSubscriber != null)
+            {
+                __textChangedSubscriber.Disconnect(SceneControl, "text_changed");
+                __textChangedSubscriber.Dispose();
+                __textChangedSubscriber = null;
+            }
 
-            __textEnteredSubscriber.Disconnect(SceneControl, "text_entered");
-            __textEnteredSubscriber.Dispose();
-            __textEnteredSubscriber = null;
+            if (__textEnteredSubscriber != null)
+            {
+                __textEnteredSubscriber.Disconnect(SceneControl, "text_entered");
+                __textEnteredSubscriber.Dispose();
+                __textEnteredSubscriber = null;
+            }
         }
 
         private void __textChangedHook(object text)

@@ -129,23 +129,35 @@ namespace SS14.Client.UserInterface.Controls
 
         protected override void DisposeSignalHooks()
         {
-            base.SetupSignalHooks();
+            base.DisposeSignalHooks();
 
-            __buttonDownSubscriber.Disconnect(SceneControl, "button_down");
-            __buttonDownSubscriber.Dispose();
-            __buttonDownSubscriber = null;
+            if (__buttonDownSubscriber != null)
+            {
+                __buttonDownSubscriber.Disconnect(SceneControl, "button_down");
+                __buttonDownSubscriber.Dispose();
+                __buttonDownSubscriber = null;
+            }
 
-            __buttonUpSubscriber.Disconnect(SceneControl, "button_up");
-            __buttonUpSubscriber.Dispose();
-            __buttonUpSubscriber = null;
+            if (__buttonUpSubscriber != null)
+            {
+                __buttonUpSubscriber.Disconnect(SceneControl, "button_up");
+                __buttonUpSubscriber.Dispose();
+                __buttonUpSubscriber = null;
+            }
 
-            __toggledSubscriber.Disconnect(SceneControl, "toggled");
-            __toggledSubscriber.Dispose();
-            __toggledSubscriber = null;
+            if (__toggledSubscriber != null)
+            {
+                __toggledSubscriber.Disconnect(SceneControl, "toggled");
+                __toggledSubscriber.Dispose();
+                __toggledSubscriber = null;
+            }
 
-            __pressedSubscriber.Disconnect(SceneControl, "pressed");
-            __pressedSubscriber.Dispose();
-            __pressedSubscriber = null;
+            if (__pressedSubscriber != null)
+            {
+                __pressedSubscriber.Disconnect(SceneControl, "pressed");
+                __pressedSubscriber.Dispose();
+                __pressedSubscriber = null;
+            }
         }
 
         private void __buttonDownHook()

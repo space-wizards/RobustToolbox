@@ -24,3 +24,20 @@ binds:
 - function: FocusChatWindow
   key: T
   type: State
+- function: EditorLinePlace
+  key: MouseLeft
+  mod1: Shift
+  type: State
+- function: EditorGridPlace
+  key: MouseLeft
+  mod1: Ctrl
+  type: State
+- function: EditorPlaceObject
+  key: MouseLeft
+  type: State
+- function: EditorCancelPlace
+  key: MouseRight
+  type: State
+- function: EditorRotateObject
+  key: MouseMiddle
+  type: State

@@ -20,6 +20,13 @@ namespace SS14.Shared.Input
         public static readonly BoundKeyFunction ShowDebugMonitors = "ShowDebugMonitors";
         public static readonly BoundKeyFunction EscapeMenu = "ShowEscapeMenu";
         public static readonly BoundKeyFunction FocusChat = "FocusChatWindow";
+
+        public static readonly BoundKeyFunction EditorLinePlace = "EditorLinePlace";
+        public static readonly BoundKeyFunction EditorGridPlace = "EditorGridPlace";
+        public static readonly BoundKeyFunction EditorPlaceObject = "EditorPlaceObject";
+        public static readonly BoundKeyFunction EditorCancelPlace = "EditorCancelPlace";
+        public static readonly BoundKeyFunction EditorRotateObject = "EditorRotateObject";
+
     }
 
     [Serializable, NetSerializable]

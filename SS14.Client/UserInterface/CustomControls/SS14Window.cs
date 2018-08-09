@@ -278,7 +278,7 @@ namespace SS14.Client.UserInterface.CustomControls
             }
             var siblings = Parent.SceneControl.GetChildren();
             var ourPos = SceneControl.GetPositionInParent();
-            for (var i = ourPos + 1; i < siblings.Length; i++)
+            for (var i = ourPos + 1; i < siblings.Count; i++)
             {
                 if (siblings[i] is Godot.Control control)
                 {

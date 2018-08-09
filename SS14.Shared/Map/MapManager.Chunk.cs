@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Maths;
 
 namespace SS14.Shared.Map
 {
@@ -135,8 +136,8 @@ namespace SS14.Shared.Map
             public MapIndices GridTileToChunkTile(MapIndices gridTile)
             {
                 var size = ChunkSize;
-                var x = Mod(gridTile.X, size);
-                var y = Mod(gridTile.Y, size);
+                var x = MathHelper.Mod(gridTile.X, size);
+                var y = MathHelper.Mod(gridTile.Y, size);
                 return new MapIndices(x, y);
             }
 
@@ -217,19 +218,6 @@ namespace SS14.Shared.Map
             public override string ToString()
             {
                 return $"Chunk {_gridIndices}, {ChunkSize}";
-            }
-
-            /// <summary>
-            ///     This method provides floored modulus.
-            ///     C-like languages use truncated modulus for their '%' operator.
-            /// </summary>
-            /// <param name="n">The dividend.</param>
-            /// <param name="d">The divisor.</param>
-            /// <returns>The remainder.</returns>
-            [DebuggerStepThrough]
-            private static int Mod(double n, int d)
-            {
-                return (int)(n - (int)Math.Floor(n / d) * d);
             }
 
             private struct SnapGridCell

@@ -421,5 +421,6 @@
     <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponent.cs" />
     <Compile Include="Utility\SpriteSpecifier.cs" />
     <Compile Include="GameObjects\Components\Transform\SnapGridComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\IComponentDebug.cs" />
   </ItemGroup>
 </Project>

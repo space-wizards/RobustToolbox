@@ -134,6 +134,7 @@
     <None Include="app.config" />
     <None Include="packages.config" />
     <Compile Include="Shared\Serialization\YamlObjectSerializer_Test.cs" />
+    <Compile Include="Shared\Utility\MathHelper_Test.cs" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

@@ -7,7 +7,7 @@ namespace SS14.Shared.Map
     /// Internal structure to store 2 indices of a chunk or tile.
     /// </summary>
     [Serializable, NetSerializable]
-    public struct MapIndices
+    public struct MapIndices : IEquatable<MapIndices>
     {
         /// <summary>
         /// The X index.
@@ -41,9 +41,35 @@ namespace SS14.Shared.Map
             return new MapIndices(indices.X * multiplier, indices.Y * multiplier);
         }
 
+        public static bool operator ==(MapIndices a, MapIndices b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(MapIndices a, MapIndices b)
+        {
+            return !(a == b);
+        }
+
+
+        public override bool Equals(object obj)
+        {
+            return obj is MapIndices idx && Equals(idx);
+        }
+
+        public bool Equals(MapIndices other)
+        {
+            return other.X == X && other.Y == Y;
+        }
+
         public override string ToString()
         {
             return $"{{{X},{Y}}}";
+        }
+
+        public override int GetHashCode()
+        {
+            return X ^ (Y * 23011);
         }
     }
 }

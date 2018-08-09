@@ -9,6 +9,7 @@ using SS14.Client.ResourceManagement;
 using SS14.Client.Utility;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -19,12 +20,13 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using YamlDotNet.RepresentationModel;
 using VS = Godot.VisualServer;
 
 namespace SS14.Client.GameObjects
 {
-    public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent, IClickTargetComponent
+    public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent, IClickTargetComponent, IComponentDebug
     {
         private bool _visible = true;
         public bool Visible
@@ -165,8 +167,7 @@ namespace SS14.Client.GameObjects
 
                     if (value.TryGetState(layer.State, out var state))
                     {
-                        (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(0, 0);
-                        layer.CurrentDir = RSI.State.Direction.South;
+                        (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref layer), 0);
                     }
                     else
                     {
@@ -194,10 +195,11 @@ namespace SS14.Client.GameObjects
         private readonly List<Godot.RID> CanvasItems = new List<Godot.RID>();
 
         private Godot.Node2D SceneNode;
-        private IGodotTransformComponent TransformComponent;
 
         private IResourceCache resourceCache;
         private IPrototypeManager prototypes;
+
+        RSI.State.Direction LastDir;
 
         public const string LogCategory = "go.comp.sprite";
         const string LayerSerializationCache = "spritelayer";
@@ -259,7 +261,7 @@ namespace SS14.Client.GameObjects
             layer.State = stateId;
             if (BaseRSI.TryGetState(stateId, out var state))
             {
-                (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(layer.CurrentDir, 0);
+                (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref layer, state), 0);
             }
             else
             {
@@ -306,7 +308,7 @@ namespace SS14.Client.GameObjects
             layer.RSI = rsi;
             if (rsi.TryGetState(stateId, out var state))
             {
-                (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(layer.CurrentDir, 0);
+                (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(GetDir(), 0);
             }
             else
             {
@@ -549,8 +551,7 @@ namespace SS14.Client.GameObjects
             {
                 if (rsi.TryGetState(stateId, out var state))
                 {
-                    (thelayer.Texture, thelayer.AnimationTimeLeft) = state.GetFrame(0, 0);
-                    thelayer.CurrentDir = RSI.State.Direction.South;
+                    (thelayer.Texture, thelayer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref thelayer, state), 0);
                 }
                 else
                 {
@@ -595,8 +596,7 @@ namespace SS14.Client.GameObjects
             {
                 if (actualrsi.TryGetState(stateId, out var state))
                 {
-                    (thelayer.Texture, thelayer.AnimationTimeLeft) = state.GetFrame(0, 0);
-                    thelayer.CurrentDir = RSI.State.Direction.South;
+                    (thelayer.Texture, thelayer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref thelayer, state), 0);
                 }
                 else
                 {
@@ -678,8 +678,7 @@ namespace SS14.Client.GameObjects
             {
                 if (rsi.TryGetState(thelayer.State, out var state))
                 {
-                    (thelayer.Texture, thelayer.AnimationTimeLeft) = state.GetFrame(0, 0);
-                    thelayer.CurrentDir = RSI.State.Direction.South;
+                    (thelayer.Texture, thelayer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref thelayer, state), 0);
                 }
                 else
                 {
@@ -835,6 +834,32 @@ namespace SS14.Client.GameObjects
             LayerSetColor(layer, color);
         }
 
+        public void LayerSetDirOffset(int layer, DirectionOffset offset)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set dir offset! Trace:\n{1}", layer, Environment.StackTrace);
+                return;
+            }
+
+            var thelayer = Layers[layer];
+            thelayer.DirOffset = offset;
+            Layers[layer] = thelayer;
+            // Do NOT queue redraw.
+            // FrameUpdate handles it.
+        }
+
+        public void LayerSetDirOffset(object layerKey, DirectionOffset offset)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set dir offset! Trace:\n{1}", layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetDirOffset(layer, offset);
+        }
+
         public override void OnAdd()
         {
             base.OnAdd();
@@ -861,8 +886,7 @@ namespace SS14.Client.GameObjects
         {
             base.Initialize();
 
-            TransformComponent = Owner.GetComponent<IGodotTransformComponent>();
-            TransformComponent.SceneNode.AddChild(SceneNode);
+            ((IGodotTransformComponent)Owner.Transform).SceneNode.AddChild(SceneNode);
             RedrawQueued = true;
         }
 
@@ -927,11 +951,6 @@ namespace SS14.Client.GameObjects
             serializer.DataFieldCached(ref _directional, "directional", true);
             serializer.DataFieldCached(ref _visible, "visible", true);
 
-            if (Owner.Prototype.ID == "Welder")
-            {
-                System.Console.WriteLine("eys!");
-            }
-
             prototypes = IoCManager.Resolve<IPrototypeManager>();
             resourceCache = IoCManager.Resolve<IResourceCache>();
 
@@ -971,14 +990,22 @@ namespace SS14.Client.GameObjects
                 var baseState = serializer.ReadDataField<string>("state", null);
                 var texturePath = serializer.ReadDataField<string>("texture", null);
 
-                layerData.Insert(0, new PrototypeLayerData
+                if (Owner.Prototype.ID == "SMES")
                 {
-                    TexturePath = string.IsNullOrWhiteSpace(texturePath) ? null : texturePath,
-                    State = baseState,
-                    Color = Color.White,
-                    Scale = Vector2.One,
-                    Visible = true,
-                });
+                    Logger.Fatal("YES!");
+                }
+
+                if (baseState != null || texturePath != null)
+                {
+                    layerData.Insert(0, new PrototypeLayerData
+                    {
+                        TexturePath = string.IsNullOrWhiteSpace(texturePath) ? null : texturePath,
+                        State = baseState,
+                        Color = Color.White,
+                        Scale = Vector2.One,
+                        Visible = true,
+                    });
+                }
             }
 
             foreach (var layerDatum in layerData)
@@ -1012,7 +1039,7 @@ namespace SS14.Client.GameObjects
                         layer.State = stateid;
                         if (BaseRSI.TryGetState(stateid, out var state))
                         {
-                            layer.Texture = state.GetFrame(layer.CurrentDir, 0).icon;
+                            layer.Texture = state.GetFrame(CorrectLayerDir(ref layer, state), 0).icon;
                         }
                         else
                         {
@@ -1065,9 +1092,24 @@ namespace SS14.Client.GameObjects
 
         public void FrameUpdate(float delta)
         {
+            // TODO: This entire method is a hotspot of redundant code.
+            // This is definitely gonna deserve some optimizations later down the line.
+            RSI.State.Direction dirWeAreFacing;
+            bool dirChanged = false;
             if (Directional)
             {
-                SceneNode.Rotation = (float)(-TransformComponent.WorldRotation + Rotation) + MathHelper.PiOver2;
+                SceneNode.Rotation = (float)(-Owner.Transform.WorldRotation + Rotation) + MathHelper.PiOver2;
+                dirWeAreFacing = GetDir();
+                if (LastDir != dirWeAreFacing)
+                {
+                    dirChanged = true;
+                    LastDir = dirWeAreFacing;
+                }
+            }
+            else
+            {
+                dirWeAreFacing = RSI.State.Direction.South;
+
             }
 
             for (var i = 0; i < Layers.Count; i++)
@@ -1080,18 +1122,18 @@ namespace SS14.Client.GameObjects
                 }
 
                 var state = (layer.RSI ?? BaseRSI)[layer.State];
-                RSI.State.Direction dir;
-                if (!Directional || state.Directions == RSI.State.DirectionType.Dir1)
+                RSI.State.Direction layerSpecificDir;
+                if (state.Directions == RSI.State.DirectionType.Dir1)
                 {
-                    dir = RSI.State.Direction.South;
+                    layerSpecificDir = RSI.State.Direction.South;
                 }
                 else
                 {
-                    dir = GetDir();
+                    layerSpecificDir = OffsetRsiDir(dirWeAreFacing, layer.DirOffset);
                 }
-                if (dir == layer.CurrentDir)
+                if (!dirChanged)
                 {
-                    var delayCount = state.DelayCount(dir);
+                    var delayCount = state.DelayCount(layerSpecificDir);
                     if (delayCount < 2)
                     {
                         // Don't bother animating this.
@@ -1105,21 +1147,19 @@ namespace SS14.Client.GameObjects
                         {
                             layer.AnimationFrame = 0;
                         }
-                        layer.AnimationTimeLeft += state.GetFrame(dir, layer.AnimationFrame).delay;
+                        layer.AnimationTimeLeft += state.GetFrame(layerSpecificDir, layer.AnimationFrame).delay;
                     }
-                    layer.Texture = state.GetFrame(dir, layer.AnimationFrame).icon;
-                    RedrawQueued = true;
+                    layer.Texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame).icon;
                 }
                 else
                 {
                     // For simplicity, turning causes the animation to reset FOR NOW.
                     // This might be changed.
                     // Not sure how you'd go about it.
-                    layer.CurrentDir = dir;
                     layer.AnimationFrame = 0;
-                    (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(dir, 0);
-                    RedrawQueued = true;
+                    (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(layerSpecificDir, 0);
                 }
+                RedrawQueued = true;
                 Layers[i] = layer;
             }
 
@@ -1198,8 +1238,131 @@ namespace SS14.Client.GameObjects
 
         private RSI.State.Direction GetDir()
         {
-            var angle = new Angle(-TransformComponent.WorldRotation);
+            if (!Directional)
+            {
+                return RSI.State.Direction.South;
+            }
+            var angle = new Angle(-(Owner.Transform.WorldRotation));
             return angle.GetDir().Convert();
+        }
+
+        private static RSI.State.Direction OffsetRsiDir(RSI.State.Direction dir, DirectionOffset offset)
+        {
+            // There is probably a better way to do this.
+            // Eh.
+            switch (offset)
+            {
+                case DirectionOffset.None:
+                    return dir;
+                case DirectionOffset.Clockwise:
+                    switch (dir)
+                    {
+                        case RSI.State.Direction.North:
+                            return RSI.State.Direction.East;
+                        case RSI.State.Direction.East:
+                            return RSI.State.Direction.South;
+                        case RSI.State.Direction.South:
+                            return RSI.State.Direction.West;
+                        case RSI.State.Direction.West:
+                            return RSI.State.Direction.North;
+                        default:
+                            throw new NotImplementedException();
+                    }
+                case DirectionOffset.CounterClockwise:
+                    switch (dir)
+                    {
+                        case RSI.State.Direction.North:
+                            return RSI.State.Direction.West;
+                        case RSI.State.Direction.East:
+                            return RSI.State.Direction.North;
+                        case RSI.State.Direction.South:
+                            return RSI.State.Direction.East;
+                        case RSI.State.Direction.West:
+                            return RSI.State.Direction.South;
+                        default:
+                            throw new NotImplementedException();
+                    }
+                case DirectionOffset.Flip:
+                    switch (dir)
+                    {
+                        case RSI.State.Direction.North:
+                            return RSI.State.Direction.South;
+                        case RSI.State.Direction.East:
+                            return RSI.State.Direction.West;
+                        case RSI.State.Direction.South:
+                            return RSI.State.Direction.North;
+                        case RSI.State.Direction.West:
+                            return RSI.State.Direction.East;
+                        default:
+                            throw new NotImplementedException();
+                    }
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        public string GetDebugString()
+        {
+            var builder = new StringBuilder();
+            builder.AppendFormat(
+                "vis/depth/scl/rot/ofs/col/diral/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}\n",
+                Visible, DrawDepth, Scale, Rotation, Offset,
+                Color, Directional, GetDir()
+            );
+
+            foreach (var layer in Layers)
+            {
+                builder.AppendFormat(
+                    "shad/tex/rsi/state/ant/anf/scl/rot/vis/col/dofs: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}/{8}/{9}/{10}\n",
+                    // These are references and don't include useful data for knowing where they came from, sadly.
+                    // "is one set" is better than nothing at least.
+                    layer.Shader != null, layer.Texture != null, layer.RSI != null,
+                    layer.State,
+                    layer.AnimationTimeLeft, layer.AnimationFrame, layer.Scale, layer.Rotation, layer.Visible, layer.Color, layer.DirOffset
+                );
+            }
+
+            return builder.ToString();
+        }
+
+        RSI.State.Direction CorrectLayerDir(ref Layer layer)
+        {
+            return OffsetRsiDir(GetDir(), layer.DirOffset);
+        }
+
+        RSI.State.Direction CorrectLayerDir(ref Layer layer, RSI.State state)
+        {
+            if (state.Directions == RSI.State.DirectionType.Dir1)
+            {
+                return RSI.State.Direction.South;
+            }
+            return OffsetRsiDir(GetDir(), layer.DirOffset);
+        }
+
+        /// <summary>
+        ///     Enum to "offset" a cardinal direction.
+        /// </summary>
+        public enum DirectionOffset
+        {
+            /// <summary>
+            ///     No offset.
+            /// </summary>
+            None = 0,
+
+            /// <summary>
+            ///     Rotate direction clockwise. (North -> East, etc...)
+            /// </summary>
+            Clockwise = 1,
+
+            /// <summary>
+            ///     Rotate direction counter-clockwise. (North -> West, etc...)
+            /// </summary>
+            CounterClockwise = 2,
+
+            /// <summary>
+            ///     Rotate direction 180 degrees, so flip. (North -> South, etc...)
+            /// </summary>
+            Flip = 3,
         }
 
         private struct Layer
@@ -1209,19 +1372,18 @@ namespace SS14.Client.GameObjects
 
             public RSI RSI;
             public RSI.StateId State;
-            public RSI.State.Direction CurrentDir;
             public float AnimationTimeLeft;
             public int AnimationFrame;
             public Vector2 Scale;
             public Angle Rotation;
             public bool Visible;
             public Color Color;
+            public DirectionOffset DirOffset;
 
             public static Layer New()
             {
                 return new Layer()
                 {
-                    CurrentDir = RSI.State.Direction.South,
                     Scale = Vector2.One,
                     Visible = true,
                     Color = Color.White

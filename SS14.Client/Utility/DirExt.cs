@@ -50,5 +50,15 @@ namespace SS14.Client.Utility
 
             throw new ArgumentException($"Unknown dir: {dir}.", nameof(dir));
         }
+
+        public static Direction TurnCw(this Direction dir)
+        {
+            return (Direction)(((int)dir - 1) % 8);
+        }
+
+        public static Direction TurnCcw(this Direction dir)
+        {
+            return (Direction)(((int)dir + 1) % 8);
+        }
     }
 }

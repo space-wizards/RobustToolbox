@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Log;
+using SS14.Client.Utility;
 using SS14.Shared.Console;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Network;
@@ -27,6 +28,16 @@ namespace SS14.Client.Console
             Text = text;
             Color = color;
             Channel = channel;
+        }
+    }
+
+    public class AddFormattedMessageArgs : EventArgs
+    {
+        public readonly FormattedMessage Message;
+
+        public AddFormattedMessageArgs(FormattedMessage message)
+        {
+            Message = message;
         }
     }
 
@@ -101,6 +112,7 @@ namespace SS14.Client.Console
 
         public event EventHandler<AddStringArgs> AddString;
         public event EventHandler ClearText;
+        public event EventHandler<AddFormattedMessageArgs> AddFormatted;
 
         private void HandleConCmdAck(MsgConCmdAck msg)
         {
@@ -135,7 +147,7 @@ namespace SS14.Client.Console
                 return;
 
             // echo the command locally
-            AddLine("> " + text, ChatChannel.Default, new Color(255, 250, 240));
+            AddLine("> " + text, ChatChannel.Default, Color.Lime);
 
             //Commands are processed locally and then sent to the server to be processed there again.
             var args = new List<string>();
@@ -204,6 +216,12 @@ namespace SS14.Client.Console
             var msg = _network.CreateNetMessage<MsgConCmd>();
             msg.Text = text;
             _network.ClientSendMessage(msg);
+        }
+
+        public void AddFormattedLine(FormattedMessage message)
+        {
+            // Why the hell does this class implement IDebugConsole.
+            AddFormatted?.Invoke(this, new AddFormattedMessageArgs(message));
         }
     }
 

@@ -18,6 +18,7 @@ namespace SS14.Client.Console
 
 
         event EventHandler<AddStringArgs> AddString;
+        event EventHandler<AddFormattedMessageArgs> AddFormatted;
         event EventHandler ClearText;
 
         IReadOnlyDictionary<string, IConsoleCommand> Commands { get; }

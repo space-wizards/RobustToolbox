@@ -292,6 +292,7 @@
     <Compile Include="UserInterface\Controls\ItemList.cs" />
     <Compile Include="Placement\PlacementHijack.cs" />
     <Compile Include="Utility\SpriteSpecifierExt.cs" />
+    <Compile Include="Utility\FormattedMessage.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\MSBuild\SS14.Engine.targets" />

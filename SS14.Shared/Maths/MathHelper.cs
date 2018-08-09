@@ -11,6 +11,7 @@
 #endregion --- License ---
 
 using System;
+using System.Diagnostics;
 
 namespace SS14.Shared.Maths
 {
@@ -245,6 +246,34 @@ namespace SS14.Shared.Maths
         }
 
         #endregion MinMax
+
+        /// <summary>
+        ///     This method provides floored modulus.
+        ///     C-like languages use truncated modulus for their '%' operator.
+        /// </summary>
+        /// <param name="n">The dividend.</param>
+        /// <param name="d">The divisor.</param>
+        /// <returns>The remainder.</returns>
+        [DebuggerStepThrough]
+        public static double Mod(double n, double d)
+        {
+            return (n - Math.Floor(n / d) * d);
+        }
+
+        /// <summary>
+        ///     This method provides floored modulus.
+        ///     C-like languages use truncated modulus for their '%' operator.
+        /// </summary>
+        /// <param name="n">The dividend.</param>
+        /// <param name="d">The divisor.</param>
+        /// <returns>The remainder.</returns>
+        [DebuggerStepThrough]
+        public static int Mod(int n, int d)
+        {
+            int r = n % d;
+            return r < 0 ? r + d : r;
+        }
+
 
         #endregion Public Members
     }

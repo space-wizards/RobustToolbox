@@ -1,10 +1,12 @@
 ﻿using SS14.Client.Console;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.UserInterface.Controls;
+using SS14.Client.Utility;
 using SS14.Shared.Console;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Reflection;
+using System;
 using System.Collections.Generic;
 
 namespace SS14.Client.UserInterface.CustomControls
@@ -39,8 +41,9 @@ namespace SS14.Client.UserInterface.CustomControls
 
             CommandBar.OnTextEntered += CommandEntered;
 
-            console.AddString += (sender, args) => AddLine(args.Text, args.Channel, args.Color);
-            console.ClearText += (sender, args) => Clear();
+            console.AddString += (_, args) => AddLine(args.Text, args.Channel, args.Color);
+            console.AddFormatted += (_, args) => AddFormattedLine(args.Message);
+            console.ClearText += (_, args) => Clear();
         }
 
         public void Toggle()
@@ -91,6 +94,46 @@ namespace SS14.Client.UserInterface.CustomControls
         public void AddLine(string text)
         {
             AddLine(text, ChatChannel.Default, Color.White);
+        }
+
+        public void AddFormattedLine(FormattedMessage message)
+        {
+            if (!firstLine)
+            {
+                Contents.NewLine();
+            }
+            else
+            {
+                firstLine = false;
+            }
+
+            var pushCount = 0;
+            foreach (var tag in message.Tags)
+            {
+                switch (tag)
+                {
+                    case FormattedMessage.TagText text:
+                        Contents.AddText(text.Text);
+                        break;
+                    case FormattedMessage.TagColor color:
+                        Contents.PushColor(color.Color);
+                        pushCount++;
+                        break;
+                    case FormattedMessage.TagPop pop:
+                        if (pushCount <= 0)
+                        {
+                            throw new InvalidOperationException();
+                        }
+                        Contents.Pop();
+                        pushCount--;
+                        break;
+                }
+            }
+
+            for (; pushCount > 0; pushCount--)
+            {
+                Contents.Pop();
+            }
         }
 
         public void Clear()

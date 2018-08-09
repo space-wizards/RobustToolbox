@@ -2,6 +2,7 @@
 using SS14.Shared.Maths;
 using SS14.Shared;
 using SS14.Shared.Console;
+using SS14.Client.Utility;
 
 namespace SS14.Client.Interfaces.Console
 {
@@ -17,6 +18,8 @@ namespace SS14.Client.Interfaces.Console
         void AddLine(string text, Color color);
 
         void AddLine(string text);
+
+        void AddFormattedLine(FormattedMessage message);
 
         void Clear();
     }

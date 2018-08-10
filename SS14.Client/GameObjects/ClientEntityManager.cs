@@ -19,9 +19,18 @@ namespace SS14.Client.GameObjects
     {
         [Dependency]
         readonly IMapManager _mapManager;
+        [Dependency]
+        private readonly IEntitySystemManager _systemManager;
 
 
         private int NextClientEntityUid = EntityUid.ClientUid + 1;
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            _systemManager.Initialize();
+        }
 
         public IEnumerable<IEntity> GetEntitiesInRange(GridLocalCoordinates position, float Range)
         {
@@ -110,7 +119,6 @@ namespace SS14.Client.GameObjects
             }
 
             InitializeEntities();
-            EntitySystemManager.Initialize();
             Started = true;
         }
 

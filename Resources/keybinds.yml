@@ -30,7 +30,7 @@ binds:
   type: State
 - function: EditorGridPlace
   key: MouseLeft
-  mod1: Ctrl
+  mod1: Control
   type: State
 - function: EditorPlaceObject
   key: MouseLeft

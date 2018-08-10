@@ -67,6 +67,20 @@ namespace SS14.Shared.GameObjects
             return (T)Systems[type];
         }
 
+        /// <inheritdoc />
+        public bool TryGetEntitySystem<T>(out T entitySystem)
+            where T : IEntitySystem
+        {
+            if (Systems.TryGetValue(typeof(T), out var system))
+            {
+                entitySystem = (T) system;
+                return true;
+            }
+
+            entitySystem = default(T);
+            return false;
+        }
+
         public void Initialize()
         {
             foreach (Type type in ReflectionManager.GetAllChildren<IEntitySystem>())

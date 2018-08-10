@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Graphics.ClientEye;
@@ -63,6 +62,8 @@ namespace SS14.Client.Placement
         private readonly IEntityManager _entityManager;
         [Dependency]
         private readonly IPrototypeManager _prototypeManager;
+        [Dependency]
+        private readonly IBaseClient _baseClient;
 
         /// <summary>
         ///     How long before a pending tile change is dropped.
@@ -197,16 +198,26 @@ namespace SS14.Client.Placement
             drawNodeDrawSubscriber.Connect(drawNode, "draw");
             drawNodeDrawSubscriber.Signal += Render;
 
-            _inputManager.SetInputCommand(EngineKeyFunctions.EditorLinePlace,InputCmdHandler.FromDelegate(
-                session => {
+            // a bit ugly, oh well
+            _baseClient.PlayerJoinedServer += (sender, args) => SetupInput(_entitySystemManager);
+            _baseClient.PlayerLeaveServer += (sender, args) => TearDownInput(_entitySystemManager);
+        }
+
+        private void SetupInput(IEntitySystemManager entSysMan)
+        {
+            var inputSys = entSysMan.GetEntitySystem<InputSystem>();
+
+            inputSys.BindMap.BindFunction(EngineKeyFunctions.EditorLinePlace, InputCmdHandler.FromDelegate(
+                session =>
+                {
                     if (IsActive && !Eraser) ActivateLineMode();
                 }));
-            _inputManager.SetInputCommand(EngineKeyFunctions.EditorGridPlace, InputCmdHandler.FromDelegate(
-                session => {
+            inputSys.BindMap.BindFunction(EngineKeyFunctions.EditorGridPlace, InputCmdHandler.FromDelegate(
+                session =>
+                {
                     if (IsActive && !Eraser) ActivateGridMode();
                 }));
 
-            var inputSys = _entitySystemManager.GetEntitySystem<InputSystem>();
             inputSys.BindMap.BindFunction(EngineKeyFunctions.EditorPlaceObject, new PointerStateInputCmdHandler(
                 (session, coords, uid) =>
                 {
@@ -222,22 +233,23 @@ namespace SS14.Client.Placement
                         _placenextframe = true;
                     }
                 },
-                (session, coords, uid) => {
+                (session, coords, uid) =>
+                {
                     if (!IsActive || Eraser || !_placenextframe)
                         return;
-                    
+
                     //Places objects for non-tile entities
                     if (!CurrentPermission.IsTile)
                         HandlePlacement();
 
                     _placenextframe = false;
                 }));
-            _inputManager.SetInputCommand(EngineKeyFunctions.EditorRotateObject, InputCmdHandler.FromDelegate(
+            inputSys.BindMap.BindFunction(EngineKeyFunctions.EditorRotateObject, InputCmdHandler.FromDelegate(
                 session =>
                 {
                     if (IsActive && !Eraser) Rotate();
                 }));
-            _inputManager.SetInputCommand(EngineKeyFunctions.EditorCancelPlace, InputCmdHandler.FromDelegate(
+            inputSys.BindMap.BindFunction(EngineKeyFunctions.EditorCancelPlace, InputCmdHandler.FromDelegate(
                 session =>
                 {
                     if (!IsActive || Eraser)
@@ -246,6 +258,18 @@ namespace SS14.Client.Placement
                         return;
                     Clear();
                 }));
+        }
+
+        private static void TearDownInput(IEntitySystemManager entSysMan)
+        {
+            if(!entSysMan.TryGetEntitySystem(out InputSystem inputSys))
+                return;
+            
+            inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorLinePlace);
+            inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorGridPlace);
+            inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorPlaceObject);
+            inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorRotateObject);
+            inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorCancelPlace);
         }
 
         public void Dispose()
@@ -446,36 +470,6 @@ namespace SS14.Client.Placement
             drawNode.Update();
         }
 
-        /// <inheritdoc />
-        public bool MouseDown(MouseButtonEventArgs e)
-        {
-#if _DelMe
-            if (!IsActive || Eraser)
-                return false;
-
-            switch (e.Button)
-            {
-                case Mouse.Button.Left:
-                    if (e.Shift)
-                        ActivateLineMode();
-                    else if (e.Control)
-                        ActivateGridMode();
-                    else
-                        _placenextframe = true;
-                    return true;
-                case Mouse.Button.Right:
-                    if (DeactivateSpecialPlacement())
-                        return true;
-                    Clear();
-                    return true;
-                case Mouse.Button.Middle:
-                    Rotate();
-                    return true;
-            }
-#endif
-            return false;
-        }
-
         private void ActivateLineMode()
         {
             if (!CurrentMode.HasLineMode)
@@ -509,29 +503,6 @@ namespace SS14.Client.Placement
 
             PlacementType = PlacementTypes.None;
             return true;
-        }
-
-        public bool MouseUp(MouseButtonEventArgs e)
-        {
-#if _DelMe
-            if (!IsActive || Eraser)
-                return false;
-
-            if (!_placenextframe)
-            {
-                return false;
-            }
-            //Places objects for nontile entities
-            else if (!CurrentPermission.IsTile)
-            {
-                HandlePlacement();
-            }
-
-            _placenextframe = false;
-            return true;
-#else
-            return false;
-#endif
         }
 
         public void Render()

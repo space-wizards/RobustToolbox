@@ -1,6 +1,4 @@
-﻿using System;
-using SS14.Client.Console;
-using SS14.Client.Graphics.Shaders;
+﻿using SS14.Client.Console;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
@@ -21,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.GameObjects.EntitySystems;
 using SS14.Shared.Interfaces.Timing;
-using SS14.Shared.Log;
 
 namespace SS14.Client.State.States
 {
@@ -163,20 +160,10 @@ namespace SS14.Client.State.States
         {
             if (playerManager.LocalPlayer == null)
                 return;
-#if _DelMe
-            if (placementManager.MouseDown(eventargs))
-                return;
-#endif
+
             var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(eventargs.Position));
             var entityToClick = GetEntityUnderPosition(mousePosWorld);
-#if _DelMe
-            //First possible exit point for click, acceptable due to being clientside
-            if (entityToClick != null && placementManager.Eraser && placementManager.IsActive)
-            {
-                placementManager.HandleDeletion(entityToClick);
-                return;
-            }
-#endif
+
             //Dispatches clicks to relevant clickable components, another single exit point for UI
             if (entityToClick == null)
                 return;
@@ -212,11 +199,6 @@ namespace SS14.Client.State.States
 
             foundEntities.Sort(new ClickableEntityComparer());
             return foundEntities[foundEntities.Count - 1].clicked;
-        }
-
-        public override void MouseUp(MouseButtonEventArgs e)
-        {
-            placementManager.MouseUp(e);
         }
 
         internal class ClickableEntityComparer : IComparer<(IEntity clicked, int depth)>

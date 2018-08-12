@@ -133,9 +133,7 @@ namespace SS14.Client.Graphics.Lighting
                 {
                     // TODO: Allow this to be modified.
                     ShadowEnabled = true,
-                    ShadowFilter = Godot.Light2D.ShadowFilterEnum.Pcf13,
-                    ShadowGradientLength = 1,
-                    ShadowFilterSmooth = 0.25f,
+                    ShadowFilter = Godot.Light2D.ShadowFilterEnum.Pcf5,
                 };
 
                 if (Manager.System == LightingSystem.Disabled)

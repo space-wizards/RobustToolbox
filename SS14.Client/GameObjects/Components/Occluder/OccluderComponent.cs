@@ -9,89 +9,171 @@ using YamlDotNet.RepresentationModel;
 using SS14.Client.Graphics.Lighting;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
+using SS14.Client.Graphics.ClientEye;
+using SS14.Shared.GameObjects.Components.Transform;
+using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Client.GameObjects
 {
-    public class OccluderComponent : Component
+    public class OccluderComponent : Component, IComponentDebug
     {
         public override string Name => "Occluder";
+        
         public Box2 BoundingBox { get; private set; } = new Box2(-16, -16, 16, 16);
+        
         public bool Enabled
         {
-            get => occluder.Enabled;
-            set => occluder.Enabled = value;
+            get => _enabled;
+            set
+            {
+                _enabled = value;
+                UpdateEnabled();
+            }
         }
 
-        private IOccluder occluder;
-        private ILightManager lightManager;
-
-        const string BoxCache = "occluderbox";
+        // TODO: Unhardcode SideSize. Should be based on grid size.
+        const float SideSize = 1;
+        bool _enabled = true;
+        private IOccluder[] occluders = new IOccluder[4];
+        private OccluderComponent[] neighbors = new OccluderComponent[4];
+        private SnapGridComponent SnapGrid;
+        [Dependency]
+        private readonly ILightManager lightManager;
 
         public override void Initialize()
         {
             base.Initialize();
-            lightManager = IoCManager.Resolve<ILightManager>();
-            var transform = Owner.GetComponent<IGodotTransformComponent>();
+            IoCManager.InjectDependencies(this);
 
+            var transform = Owner.GetComponent<IGodotTransformComponent>();
+            SnapGrid = Owner.GetComponent<SnapGridComponent>();
+            SnapGrid.OnPositionChanged += SnapGridPositionChanged;
+
+            const float halfSize = (-SideSize / 2) * EyeManager.PIXELSPERMETER;
+            var ne = new Godot.Vector2(halfSize, -halfSize);
+            var se = new Godot.Vector2(halfSize, halfSize);
+            var sw = new Godot.Vector2(-halfSize, halfSize);
+            var nw = new Godot.Vector2(-halfSize, -halfSize);
+
+            // North occluder.
+            var occluder = lightManager.MakeOccluder();
+            occluder.CullMode = OccluderCullMode.Clockwise;
+            occluder.SetGodotPolygon(new Godot.Vector2[] { nw, ne });
+            occluders[(int)OccluderDir.North] = occluder;
             occluder.ParentTo(transform);
+
+            // East occluder.
+            occluder = lightManager.MakeOccluder();
+            occluder.CullMode = OccluderCullMode.Clockwise;
+            occluder.SetGodotPolygon(new Godot.Vector2[] { ne, se });
+            occluders[(int)OccluderDir.East] = occluder;
+            occluder.ParentTo(transform);
+
+            // South occluder.
+            occluder = lightManager.MakeOccluder();
+            occluder.CullMode = OccluderCullMode.Clockwise;
+            occluder.SetGodotPolygon(new Godot.Vector2[] { se, sw });
+            occluders[(int)OccluderDir.South] = occluder;
+            occluder.ParentTo(transform);
+
+            // West occluder.
+            occluder = lightManager.MakeOccluder();
+            occluder.CullMode = OccluderCullMode.Clockwise;
+            occluder.SetGodotPolygon(new Godot.Vector2[] { sw, nw });
+            occluders[(int)OccluderDir.West] = occluder;
+            occluder.ParentTo(transform);
+            
+            UpdateConnections(true);
         }
 
         public override void OnRemove()
         {
-            occluder.Dispose();
-            occluder = null;
+            foreach (var occluder in occluders)
+            {
+                occluder.Dispose();
+            }
+
+            occluders = null;
+            SnapGrid.OnPositionChanged -= SnapGridPositionChanged;
+            SayGoodbyes();
 
             base.OnRemove();
         }
 
         public override void ExposeData(ObjectSerializer serializer)
         {
-            if (lightManager == null)
-            {
-                // First in the init stack so...
-                // FIXME: This is terrible.
-                lightManager = IoCManager.Resolve<ILightManager>();
-                occluder = lightManager.MakeOccluder();
-            }
-
             base.ExposeData(serializer);
 
-            serializer.DataReadWriteFunction("enabled", true, en => Enabled = en, () => Enabled);
+            serializer.DataField(ref _enabled, "enabled", true);
+        }
 
-            if (serializer.Writing)
+        void UpdateEnabled()
+        {
+            occluders[0].Enabled = Enabled && neighbors[0] == null;
+            occluders[1].Enabled = Enabled && neighbors[1] == null;
+            occluders[2].Enabled = Enabled && neighbors[2] == null;
+            occluders[3].Enabled = Enabled && neighbors[3] == null;
+        }
+
+        void SnapGridPositionChanged()
+        {
+            SayGoodbyes();
+            UpdateConnections(true);
+        }
+
+        void SayGoodbyes()
+        {
+            foreach (var neighbor in neighbors)
             {
-                serializer.DataWriteFunction("box", new Box2(-16, -16, 16, 16), () => BoundingBox);
-                return;
+                // Goodbye neighbor.
+                neighbor?.UpdateConnections(false);
+            }
+        }
+
+        void UpdateConnections(bool propagate)
+        {
+            neighbors[0] = neighbors[1] = neighbors[2] = neighbors[3] = null;
+
+            void checkDir(Direction dir, OccluderDir oclDir)
+            {
+                foreach (var neighbor in SnapGrid.GetInDir(dir))
+                {
+                    if (neighbor.TryGetComponent(out OccluderComponent comp))
+                    {
+                        neighbors[(int)oclDir] = comp;
+                        if (propagate)
+                        {
+                            comp.UpdateConnections(false);
+                        }
+                        break;
+                    }
+                }
             }
 
-            // Shortcut so modifications on-map are read easily.
-            if (serializer.TryReadDataFieldCached("box", out Box2 box))
-            {
-                BoundingBox = box;
-            }
+            checkDir(Direction.North, OccluderDir.North);
+            checkDir(Direction.East, OccluderDir.East);
+            checkDir(Direction.South, OccluderDir.South);
+            checkDir(Direction.West, OccluderDir.West);
 
-            if (serializer.TryGetCacheData(BoxCache, out box))
-            {
-                BoundingBox = box;
-                return;
-            }
+            UpdateEnabled();
+        }
 
-            var sizeX = serializer.ReadDataField("sizeX", 32f);
-            var sizeY = serializer.ReadDataField("sizeY", 32f);
-            var offsetX = serializer.ReadDataField("offsetX", -16f);
-            var offsetY = serializer.ReadDataField("offsetY", -16f);
+        string IComponentDebug.GetDebugString()
+        {
+            return string.Format("N/S/E/W: {0}/{1}/{2}/{3}",
+                neighbors[(int)OccluderDir.North]?.Owner.Uid,
+                neighbors[(int)OccluderDir.South]?.Owner.Uid,
+                neighbors[(int)OccluderDir.East]?.Owner.Uid,
+                neighbors[(int)OccluderDir.West]?.Owner.Uid
+            );
+        }
 
-            box = Box2.FromDimensions(offsetX, offsetY, sizeX, sizeY);
-
-            var poly = new Godot.Vector2[4]
-            {
-                new Godot.Vector2(BoundingBox.Left, BoundingBox.Top),
-                new Godot.Vector2(BoundingBox.Right, BoundingBox.Top),
-                new Godot.Vector2(BoundingBox.Right, BoundingBox.Bottom),
-                new Godot.Vector2(BoundingBox.Left, BoundingBox.Bottom),
-            };
-
-            occluder.SetGodotPolygon(poly);
+        enum OccluderDir : byte
+        {
+            North = 0,
+            East = 1,
+            South = 2,
+            West = 3,
         }
     }
 }

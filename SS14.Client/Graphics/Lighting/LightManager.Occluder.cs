@@ -28,6 +28,13 @@ namespace SS14.Client.Graphics.Lighting
             private Godot.LightOccluder2D occluder;
 
             private bool Deferred => Manager.System == LightingSystem.Deferred;
+
+            public OccluderCullMode CullMode
+            {
+                get => (OccluderCullMode)occluderPolygon.CullMode;
+                set => occluderPolygon.CullMode = (Godot.OccluderPolygon2D.CullModeEnum)value;
+            }
+
             private IGodotTransformComponent parentTransform;
             private Godot.Vector2 CurrentPos;
 

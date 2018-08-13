@@ -945,7 +945,7 @@ namespace SS14.Client.GameObjects
 
             serializer.DataFieldCached(ref scale, "scale", Vector2.One);
             serializer.DataFieldCached(ref rotation, "rotation", Angle.Zero);
-            serializer.DataFieldCached(ref offset, "offset", Vector2.One);
+            serializer.DataFieldCached(ref offset, "offset", Vector2.Zero);
             serializer.DataFieldCached(ref drawDepth, "drawdepth", DrawDepth.Objects);
             serializer.DataFieldCached(ref color, "color", Color.White);
             serializer.DataFieldCached(ref _directional, "directional", true);

@@ -1,7 +1,5 @@
-﻿using System;
+﻿using SS14.Client.GameObjects.Components;
 using SS14.Client.Interfaces.Input;
-using SS14.Client.Interfaces.Player;
-using SS14.Client.Player;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Systems;
 using SS14.Shared.Input;
@@ -52,11 +50,22 @@ namespace SS14.Client.GameObjects.EntitySystems
 
             if (msg.AttachedEntity != null) // attach
             {
-                //TODO: get context from component
-                var contextName = "human";
+                if(!msg.AttachedEntity.TryGetComponent(out InputComponent inputComp))
+                {
+                    Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={msg.AttachedEntity.Uid}, entProto={msg.AttachedEntity.Prototype}");
+                    return;
+                }
 
                 var inputMan = IoCManager.Resolve<IInputManager>();
-                inputMan.Contexts.SetActiveContext(contextName);
+
+                if(inputMan.Contexts.Exists(inputComp.ContextName))
+                {
+                    inputMan.Contexts.SetActiveContext(inputComp.ContextName);
+                }
+                else
+                {
+                    Logger.ErrorS("input.context", $"Unknown context: entId={msg.AttachedEntity.Uid}, entProto={msg.AttachedEntity.Prototype}, context={inputComp.ContextName}");
+                }
             }
             else // detach
             {

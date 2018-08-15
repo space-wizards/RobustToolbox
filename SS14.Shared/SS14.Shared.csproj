@@ -45,6 +45,7 @@
     <Optimize>False</Optimize>
     <PlatformTarget>x64</PlatformTarget>
     <DebugType Condition="'$(AppVeyor)' != 'yes'">portable</DebugType>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <DefineConstants>TRACE;RELEASE</DefineConstants>
@@ -158,8 +159,10 @@
     <Compile Include="GameObjects\EntityUid.cs" />
     <Compile Include="GameObjects\IncomingEntityMessage.cs" />
     <Compile Include="GameObjects\NetComponent.cs" />
+    <Compile Include="Input\InputCmdContext.cs" />
     <Compile Include="Input\CommandBindMapping.cs" />
     <Compile Include="Input\InputCmdMessage.cs" />
+    <Compile Include="Input\InputContextContainer.cs" />
     <Compile Include="Input\PlayerCommandStates.cs" />
     <Compile Include="Interfaces\Configuration\IConfigurationManager.cs" />
     <Compile Include="Console\ICommand.cs" />

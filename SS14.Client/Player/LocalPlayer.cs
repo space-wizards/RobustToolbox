@@ -1,5 +1,6 @@
 ﻿using System;
 using SS14.Client.GameObjects;
+using SS14.Client.GameObjects.EntitySystems;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared;
@@ -107,6 +108,9 @@ namespace SS14.Client.Player
 
             EntityAttached?.Invoke(this, EventArgs.Empty);
             entity.SendMessage(null, new PlayerAttachedMsg());
+
+            // notify ECS Systems
+            ControlledEntity.EntityManager.RaiseEvent(this, new PlayerAttachSysMessage(ControlledEntity));
         }
 
         /// <summary>
@@ -123,6 +127,9 @@ namespace SS14.Client.Player
                 if (transform != null)
                     transform.OnMove -= OnPlayerMoved;
                 ControlledEntity.SendMessage(null, new PlayerDetachedMsg());
+
+                // notify ECS Systems
+                ControlledEntity.EntityManager.RaiseEvent(this, new PlayerAttachSysMessage(null));
             }
             ControlledEntity = null;
 

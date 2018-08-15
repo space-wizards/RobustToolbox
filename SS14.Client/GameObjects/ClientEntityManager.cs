@@ -22,7 +22,6 @@ namespace SS14.Client.GameObjects
         [Dependency]
         private readonly IEntitySystemManager _systemManager;
 
-
         private int NextClientEntityUid = EntityUid.ClientUid + 1;
 
         public override void Initialize()

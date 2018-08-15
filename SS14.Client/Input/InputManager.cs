@@ -42,12 +42,19 @@ namespace SS14.Client.Input
         /// <inheritdoc />
         public BoundKeyMap NetworkBindMap { get; private set; }
 
+        /// <inheritdoc />
+        public IInputContextContainer Contexts { get; } = new InputContextContainer();
+
         public event Action<BoundKeyEventArgs> KeyBindStateChanged;
 
         public void Initialize()
         {
             NetworkBindMap = new BoundKeyMap(_reflectionManager);
             NetworkBindMap.PopulateKeyFunctionsMap();
+
+            EngineContexts.SetupContexts(Contexts);
+
+            Contexts.ContextChanged += OnContextChanged;
 
             LoadKeyFile(new ResourcePath("/keybinds.yml"));
             var path = new ResourcePath("/keybinds_content.yml");
@@ -57,6 +64,19 @@ namespace SS14.Client.Input
             }
 
             _netManager.RegisterNetMessage<MsgKeyFunctionStateChange>(MsgKeyFunctionStateChange.NAME);
+        }
+
+        private void OnContextChanged(object sender, ContextChangedEventArgs args)
+        {
+            // keyup any commands that are not in the new contexts, because it will not exist in the new context and get filtered. Luckily
+            // the diff does not have to be symmetrical, otherwise instead of 'A \ B' we allocate all the things with '(A \ B) ∪ (B \ A)'
+            // It should be OK to artificially keyup these, because in the future the organic keyup will be blocked (either the context
+            // does not have the binding, or the double keyup check in UpBind will block it).
+            foreach (var function in args.OldContext.Except(args.NewContext))
+            {
+                var bind = _bindings.Find(binding => binding.Function == function);
+                SetBindState(bind, BoundKeyState.Up);
+            }
         }
 
         public void KeyDown(KeyEventArgs args)
@@ -69,11 +89,15 @@ namespace SS14.Client.Input
             var internalKey = KeyToInternal(args.Key);
             _keysPressed[internalKey] = true;
 
-            int matchedCombo = 0;
+            var matchedCombo = 0;
 
             // bindings are ordered with larger combos before single key bindings so combos have priority.
             foreach (var binding in _bindings)
             {
+                // check if our binding is even in the active context
+                if(!Contexts.ActiveContext.FunctionExistsHierarchy(binding.Function))
+                    continue;
+
                 if (PackedMatchesPressedState(binding.PackedKeyCombo))
                 {
                     // this statement *should* always be true first
@@ -101,6 +125,10 @@ namespace SS14.Client.Input
             var internalKey = KeyToInternal(args.Key);
             foreach (var binding in _bindings)
             {
+                // check if our binding is even in the active context
+                if (!Contexts.ActiveContext.FunctionExistsHierarchy(binding.Function))
+                    continue;
+
                 if (PackedContainsKey(binding.PackedKeyCombo, internalKey) && PackedMatchesPressedState(binding.PackedKeyCombo))
                 {
                     UpBind(binding);

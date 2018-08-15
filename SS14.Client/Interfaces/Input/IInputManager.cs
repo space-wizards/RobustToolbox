@@ -18,6 +18,8 @@ namespace SS14.Client.Interfaces.Input
 
         BoundKeyMap NetworkBindMap { get; }
 
+        IInputContextContainer Contexts { get; }
+
         void Initialize();
 
         void KeyDown(KeyEventArgs e);

@@ -88,14 +88,24 @@ namespace SS14.Shared.GameObjects
 
         public virtual void Update(float frameTime)
         {
-            EntitySystemManager.Update(frameTime);
-            ProcessEventQueue();
+            // for some 'special' reason entities require the map they are on to exist before they can
+            // be initialized. This should stop the EntitySystems from updating over the uninitialized entities.
+            if(MapsInitialized || _network.IsServer)
+            {
+                EntitySystemManager.Update(frameTime);
+
+                // dispatching events to systems will usually cause them to interact
+                // with entities, we don't want that to happen if the maps are not initialized.
+                ProcessEventQueue();
+            }
+
             CullDeletedEntities();
         }
 
         public virtual void FrameUpdate(float frameTime)
         {
-            EntitySystemManager.FrameUpdate(frameTime);
+            if (MapsInitialized || _network.IsServer)
+                EntitySystemManager.FrameUpdate(frameTime);
         }
 
         /// <summary>

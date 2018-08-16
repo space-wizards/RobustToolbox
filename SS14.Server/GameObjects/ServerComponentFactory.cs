@@ -25,6 +25,8 @@ namespace SS14.Server.GameObjects
             Register<BoundingBoxComponent>();
             Register<PointLightComponent>();
 
+            RegisterIgnore("Input");
+
             Register<PlayerInputMoverComponent>();
             RegisterReference<PlayerInputMoverComponent, IMoverComponent>();
 

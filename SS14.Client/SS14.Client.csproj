@@ -102,6 +102,7 @@
     <Compile Include="GameController\GameController.IoC.cs" />
     <Compile Include="GameController\GameController.GameTiming.cs" />
     <Compile Include="GameObjects\Components\Appearance\AppearanceComponent.cs" />
+    <Compile Include="GameObjects\Components\Input\InputComponent.cs" />
     <Compile Include="GameObjects\EntitySystems\AppearanceSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\AppearanceTestSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\AudioSystem.cs" />
@@ -138,6 +139,7 @@
     <Compile Include="Graphics\Overlays\OverlayManager.cs" />
     <Compile Include="Graphics\Shaders\ShaderPrototype.cs" />
     <Compile Include="Graphics\Shaders\Shader.cs" />
+    <Compile Include="Input\EngineContexts.cs" />
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
     <Compile Include="Interfaces\Console\IDebugConsole.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClientClickableComponent.cs" />

@@ -1,6 +1,4 @@
-﻿using System;
-using SS14.Client.Console;
-using SS14.Client.Graphics.Shaders;
+﻿using SS14.Client.Console;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
@@ -21,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.GameObjects.EntitySystems;
 using SS14.Shared.Interfaces.Timing;
-using SS14.Shared.Log;
 
 namespace SS14.Client.State.States
 {
@@ -63,7 +60,7 @@ namespace SS14.Client.State.States
             IoCManager.InjectDependencies(this);
 
             mapManager.Startup();
-            
+
             inputManager.KeyBindStateChanged += OnKeyBindStateChanged;
 
             escapeMenu = new EscapeMenu
@@ -142,14 +139,8 @@ namespace SS14.Client.State.States
             placementManager.FrameUpdate(e);
             _entityManager.FrameUpdate(e.Elapsed);
 
-            if (playerManager.LocalPlayer?.ControlledEntity == null)
-            {
-                return;
-            }
-
-            var map = playerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().MapID;
             var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(inputManager.MouseScreenPosition));
-            IEntity entityToClick = GetEntityUnderPosition(mousePosWorld);
+            var entityToClick = GetEntityUnderPosition(mousePosWorld);
             if (entityToClick == lastHoveredEntity)
             {
                 return;
@@ -170,82 +161,47 @@ namespace SS14.Client.State.States
 
         public override void MouseDown(MouseButtonEventArgs eventargs)
         {
-            if (playerManager.LocalPlayer == null || placementManager.MouseDown(eventargs))
+            if (playerManager.LocalPlayer == null)
                 return;
-            
+
             var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(eventargs.Position));
             var entityToClick = GetEntityUnderPosition(mousePosWorld);
 
-            //First possible exit point for click, acceptable due to being clientside
-            if (entityToClick != null && placementManager.Eraser && placementManager.IsActive)
-            {
-                placementManager.HandleDeletion(entityToClick);
-                return;
-            }
-
-            var clicktype = eventargs.ClickType;
             //Dispatches clicks to relevant clickable components, another single exit point for UI
-            if (entityToClick != null)
-            {
-                var clickable = entityToClick.GetComponent<IClientClickableComponent>();
-                switch (eventargs.ClickType)
-                {
-                    case ClickType.Left:
-                        clickable.DispatchClick(playerManager.LocalPlayer.ControlledEntity, ClickType.Left);
-                        break;
-                    case ClickType.Right:
-                        clickable.DispatchClick(playerManager.LocalPlayer.ControlledEntity, ClickType.Right);
-                        break;
-                        /*
-                    //Acceptable click exit due to being a UI behavior
-                    case Mouse.Button.Middle:
-                        OpenEntityEditWindow(entToClick);
-                        return;
-                        */
-                }
-            }
-            
-            //Assemble information to send to server about click
-            if (clicktype != ClickType.None)
-            {
-                var UID = EntityUid.Invalid;
-                if (entityToClick != null && !entityToClick.Uid.IsClientSide())
-                    UID = entityToClick.Uid;
+            if (entityToClick == null)
+                return;
 
-                ClickEventMessage message = new ClickEventMessage(UID, clicktype, mousePosWorld);
-                IoCManager.Resolve<IEntityNetworkManager>().SendSystemNetworkMessage(message);
-            }
+            var clickable = entityToClick.GetComponent<IClientClickableComponent>();
+            clickable.DispatchClick(playerManager.LocalPlayer.ControlledEntity, eventargs.ClickType);
         }
 
         public IEntity GetEntityUnderPosition(GridLocalCoordinates coordinates)
         {
+            return GetEntityUnderPosition(_entityManager, coordinates);
+        }
+
+        private static IEntity GetEntityUnderPosition(IClientEntityManager entityMan, GridLocalCoordinates coordinates)
+        {
             // Find all the entities intersecting our click
-            var entities =
-                _entityManager.GetEntitiesIntersecting(coordinates.MapID, coordinates.Position);
+            var entities = entityMan.GetEntitiesIntersecting(coordinates.MapID, coordinates.Position);
 
             // Check the entities against whether or not we can click them
             var foundEntities = new List<(IEntity clicked, int drawDepth)>();
-            foreach (IEntity entity in entities)
+            foreach (var entity in entities)
             {
                 if (entity.TryGetComponent<IClientClickableComponent>(out var component)
                 && entity.GetComponent<ITransformComponent>().IsMapTransform
-                && component.CheckClick(coordinates, out int drawdepthofclicked))
+                && component.CheckClick(coordinates, out var drawDepthClicked))
                 {
-                    foundEntities.Add((entity, drawdepthofclicked));
+                    foundEntities.Add((entity, drawDepthClicked));
                 }
             }
 
-            if (foundEntities.Count != 0)
-            {
-                foundEntities.Sort(new ClickableEntityComparer());
-                return foundEntities[foundEntities.Count - 1].clicked;
-            }
-            return null;
-        }
+            if (foundEntities.Count == 0)
+                return null;
 
-        public override void MouseUp(MouseButtonEventArgs e)
-        {
-            placementManager.MouseUp(e);
+            foundEntities.Sort(new ClickableEntityComparer());
+            return foundEntities[foundEntities.Count - 1].clicked;
         }
 
         internal class ClickableEntityComparer : IComparer<(IEntity clicked, int depth)>
@@ -270,12 +226,12 @@ namespace SS14.Client.State.States
         private void OnKeyBindStateChanged(BoundKeyEventArgs args)
         {
             var inputSys = entitySystemManager.GetEntitySystem<InputSystem>();
-            
+
             var func = args.Function;
             var funcId = inputManager.NetworkBindMap.KeyFunctionID(func);
 
             var mousePosWorld = eyeManager.ScreenToWorld(args.PointerLocation);
-            var entityToClick = GetEntityUnderPosition(mousePosWorld);
+            var entityToClick = GetEntityUnderPosition(_entityManager, mousePosWorld);
             var message = new FullInputCmdMessage(timing.CurTick, funcId, args.State, mousePosWorld, entityToClick?.Uid ?? EntityUid.Invalid);
 
             // client side command handlers will always be sent the local player session.

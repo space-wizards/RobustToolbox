@@ -1,4 +1,5 @@
-﻿using SS14.Client.Interfaces.GameObjects;
+﻿using SS14.Client.GameObjects.Components;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.BoundingBox;
@@ -19,6 +20,8 @@ namespace SS14.Client.GameObjects
             Register<PhysicsComponent>();
             Register<TransformComponent>();
             RegisterReference<TransformComponent, ITransformComponent>();
+
+            Register<InputComponent>();
 
             Register<PlayerInputMoverComponent>();
             RegisterReference<PlayerInputMoverComponent, IMoverComponent>();

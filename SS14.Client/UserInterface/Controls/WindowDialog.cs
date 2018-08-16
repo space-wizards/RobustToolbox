@@ -1,5 +1,6 @@
 ﻿namespace SS14.Client.UserInterface.Controls
 {
+    [ControlWrap(typeof(Godot.WindowDialog))]
     public class WindowDialog : Popup
     {
         public WindowDialog() : base()

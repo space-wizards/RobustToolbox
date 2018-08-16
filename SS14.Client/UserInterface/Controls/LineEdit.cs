@@ -3,6 +3,7 @@ using SS14.Client.GodotGlue;
 
 namespace SS14.Client.UserInterface.Controls
 {
+    [ControlWrap(typeof(Godot.LineEdit))]
     public class LineEdit : Control
     {
         public LineEdit() : base()

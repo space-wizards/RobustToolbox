@@ -2,6 +2,7 @@
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Shaders;
+using SS14.Client.UserInterface;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Maths;
@@ -152,5 +153,24 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         // I don't care.
         void LayerSetDirOffset(int layer, SpriteComponent.DirectionOffset offset);
         void LayerSetDirOffset(object layerKey, SpriteComponent.DirectionOffset offset);
+
+        ISpriteMirror CreateMirror();
+    }
+
+    /// <summary>
+    ///     A handle to allow a <see cref="ISpriteComponent"/> to draw in multiple locations, such as a UI slot.
+    /// </summary>
+    public interface ISpriteMirror : IDisposable
+    {
+        Vector2 Offset { get; set; }
+        void AttachToItem(Godot.RID item);
+    }
+
+    public static class SpriteMirrorExt
+    {
+        public static void AttachToControl(this ISpriteMirror mirror, Control control)
+        {
+            mirror.AttachToItem(control.SceneControl.GetCanvasItem());
+        }
     }
 }

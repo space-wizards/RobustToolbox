@@ -7,6 +7,7 @@ using Godot;
 
 namespace SS14.Client.UserInterface.Controls
 {
+    [ControlWrap(typeof(Godot.Button))]
     public class Button : BaseButton
     {
         public Button() : base()

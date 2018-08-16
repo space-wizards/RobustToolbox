@@ -7,6 +7,7 @@ using SS14.Shared.Log;
 
 namespace SS14.Client.UserInterface.Controls
 {
+    [ControlWrap(typeof(Godot.VScrollBar))]
     public class VScrollBar : ScrollBar
     {
         public VScrollBar() : base()

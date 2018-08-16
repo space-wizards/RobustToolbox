@@ -1,5 +1,6 @@
 ﻿namespace SS14.Client.UserInterface.Controls
 {
+    [ControlWrap(typeof(Godot.Panel))]
     public class Panel : Control
     {
         public Panel(string name) : base(name)

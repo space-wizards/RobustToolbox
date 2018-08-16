@@ -3,6 +3,7 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
+    [ControlWrap(typeof(Godot.RichTextLabel))]
     public class RichTextLabel : Control
     {
         public RichTextLabel() : base()

@@ -1,5 +1,6 @@
 ﻿namespace SS14.Client.UserInterface.Controls
 {
+    [ControlWrap(typeof(Godot.AcceptDialog))]
     public class AcceptDialog : WindowDialog
     {
         public AcceptDialog() : base()

@@ -2,6 +2,7 @@
 
 namespace SS14.Client.UserInterface.Controls
 {
+    [ControlWrap(typeof(Godot.TextureRect))]
     public class TextureRect : Control
     {
         public TextureRect() : base()

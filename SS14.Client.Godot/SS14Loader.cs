@@ -70,7 +70,7 @@ namespace SS14.Client.GodotGlue
                         }
                         catch (Exception e)
                         {
-                            GD.Print($"Caught exception inside PhysicsProcess:\n{e}");
+                            ExceptionCaught(e);
                         }
                     }
                 }

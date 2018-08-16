@@ -22,6 +22,7 @@ namespace SS14.Client.UserInterface
     ///     NOTE: For docs, most of these are direct proxies to Godot's Control.
     ///     See the official docs for more help: https://godot.readthedocs.io/en/3.0/classes/class_control.html
     /// </summary>
+    [ControlWrap(typeof(Godot.Control))]
     public partial class Control : IDisposable
     {
         /// <summary>
@@ -586,6 +587,11 @@ namespace SS14.Client.UserInterface
             SceneControl?.ReleaseFocus();
         }
 
+        protected virtual void Resized()
+        {
+
+        }
+
         internal static Control InstanceScene(string resourcePath)
         {
             var res = (Godot.PackedScene)Godot.ResourceLoader.Load(resourcePath);
@@ -676,16 +682,15 @@ namespace SS14.Client.UserInterface
         {
             GodotTranslationCache = new Dictionary<Type, Type>();
             var refl = IoCManager.Resolve<IReflectionManager>();
-            var godotAsm = AppDomain.CurrentDomain.GetAssemblyByName("GodotSharp");
             foreach (var childType in refl.GetAllChildren<Control>(inclusive: true))
             {
-                var childName = childType.Name;
-                var godotType = godotAsm.GetType($"Godot.{childName}");
-                if (godotType == null)
+                var attr = childType.GetCustomAttribute<ControlWrapAttribute>();
+                if (attr == null)
                 {
-                    Logger.Debug($"Unable to find Godot type for {childType}.");
                     continue;
                 }
+
+                var godotType = attr.GodotType;
 
                 if (GodotTranslationCache.TryGetValue(godotType, out var dupe))
                 {
@@ -868,6 +873,17 @@ namespace SS14.Client.UserInterface
         {
             var res = (Godot.PackedScene)Godot.ResourceLoader.Load(path);
             return (Godot.Control)res.Instance();
+        }
+
+        [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+        internal class ControlWrapAttribute : Attribute
+        {
+            public readonly Type GodotType;
+
+            public ControlWrapAttribute(Type type)
+            {
+                GodotType = type;
+            }
         }
     }
 }

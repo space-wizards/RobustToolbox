@@ -43,6 +43,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Scenes\SpriteMirror\SpriteView.cs" />
     <Compile Include="SS14Loader.cs" />
     <Compile Include="ControlWrap.cs" />
     <Compile Include="SignalSubscriber\BaseGodotSignalSubscriber.cs" />

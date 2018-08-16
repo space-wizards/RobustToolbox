@@ -1,5 +1,6 @@
 ﻿namespace SS14.Client.UserInterface.Controls
 {
+    [ControlWrap(typeof(Godot.Popup))]
     public class Popup : Control
     {
         public Popup() : base()

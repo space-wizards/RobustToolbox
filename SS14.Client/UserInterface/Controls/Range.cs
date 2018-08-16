@@ -7,6 +7,7 @@ using Godot;
 
 namespace SS14.Client.UserInterface.Controls
 {
+    [ControlWrap(typeof(Godot.Range))]
     public abstract class Range : Control
     {
         public Range() : base()

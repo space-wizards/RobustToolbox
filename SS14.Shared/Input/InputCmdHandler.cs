@@ -85,4 +85,36 @@ namespace SS14.Shared.Input
             return true;
         }
     }
+    
+    public class PointerStateInputCmdHandler : InputCmdHandler
+    {
+        private PointerInputCmdDelegate _enabled;
+        private PointerInputCmdDelegate _disabled;
+
+        public PointerStateInputCmdHandler(PointerInputCmdDelegate enabled, PointerInputCmdDelegate disabled)
+        {
+            _enabled = enabled;
+            _disabled = disabled;
+        }
+
+        /// <inheritdoc />
+        public override bool HandleCmdMessage(ICommonSession session, InputCmdMessage message)
+        {
+            if(!(message is FullInputCmdMessage msg))
+                return false;
+
+            switch (msg.State)
+            {
+                case BoundKeyState.Up:
+                    _disabled?.Invoke(session, msg.Coordinates, msg.Uid);
+                    return true;
+                case BoundKeyState.Down:
+                    _enabled?.Invoke(session, msg.Coordinates, msg.Uid);
+                    return true;
+            }
+
+            //Client Sanitization: unknown key state, just ignore
+            return false;
+        }
+    }
 }

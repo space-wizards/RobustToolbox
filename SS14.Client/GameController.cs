@@ -151,6 +151,8 @@ namespace SS14.Client
 
             _client.Initialize();
 
+            AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.PostInit);
+
             _stateManager.RequestStateChange<MainScreen>();
         }
 

@@ -21,7 +21,8 @@ namespace SS14.Shared.ContentPack
         public enum RunLevel
         {
             Error = 0,
-            Init = 1
+            Init = 1,
+            PostInit = 2,
         }
 
         /// <summary>
@@ -136,6 +137,9 @@ namespace SS14.Shared.ContentPack
                     {
                         case RunLevel.Init:
                             entry.Init();
+                            break;
+                        case RunLevel.PostInit:
+                            entry.PostInit();
                             break;
                         default:
                             Logger.ErrorS("res", $"Unknown RunLevel: {level}");

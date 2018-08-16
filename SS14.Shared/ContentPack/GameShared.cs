@@ -11,6 +11,10 @@ namespace SS14.Shared.ContentPack
         {
         }
 
+        public virtual void PostInit()
+        {
+        }
+
         public virtual void Update(AssemblyLoader.UpdateLevel level, float frameTime)
         {
         }
@@ -18,7 +22,7 @@ namespace SS14.Shared.ContentPack
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(true);
+            GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)

@@ -1,5 +1,7 @@
-﻿using SS14.Client.GameObjects.Components;
+﻿using System;
+using SS14.Client.GameObjects.Components;
 using SS14.Client.Interfaces.Input;
+using SS14.Client.Interfaces.Player;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Systems;
 using SS14.Shared.Input;
@@ -67,25 +69,44 @@ namespace SS14.Client.GameObjects.EntitySystems
 
             if (msg.AttachedEntity != null) // attach
             {
-                if(!msg.AttachedEntity.TryGetComponent(out InputComponent inputComp))
-                {
-                    Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={msg.AttachedEntity.Uid}, entProto={msg.AttachedEntity.Prototype}");
-                    return;
-                }
-
-                if(inputMan.Contexts.Exists(inputComp.ContextName))
-                {
-                    inputMan.Contexts.SetActiveContext(inputComp.ContextName);
-                }
-                else
-                {
-                    Logger.ErrorS("input.context", $"Unknown context: entId={msg.AttachedEntity.Uid}, entProto={msg.AttachedEntity.Prototype}, context={inputComp.ContextName}");
-                }
+                SetEntityContextActive(inputMan, msg.AttachedEntity);
             }
             else // detach
             {
                 inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
             }
+        }
+
+        private static void SetEntityContextActive(IInputManager inputMan, IEntity entity)
+        {
+            if(entity == null || !entity.IsValid())
+                throw new ArgumentNullException(nameof(entity));
+
+            if (!entity.TryGetComponent(out InputComponent inputComp))
+            {
+                Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity.Uid}, entProto={entity.Prototype}");
+                return;
+            }
+
+            if (inputMan.Contexts.Exists(inputComp.ContextName))
+            {
+                inputMan.Contexts.SetActiveContext(inputComp.ContextName);
+            }
+            else
+            {
+                Logger.ErrorS("input.context", $"Unknown context: entId={entity.Uid}, entProto={entity.Prototype}, context={inputComp.ContextName}");
+            }
+        }
+
+        /// <summary>
+        ///     Sets the active context to the defined context on the attached entity.
+        /// </summary>
+        public void SetEntityContextActive()
+        {
+            var inputMan = IoCManager.Resolve<IInputManager>();
+            var localPlayer = IoCManager.Resolve<IPlayerManager>().LocalPlayer;
+
+            SetEntityContextActive(inputMan, localPlayer.ControlledEntity);
         }
     }
 

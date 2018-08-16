@@ -29,6 +29,7 @@ using SS14.Client.Graphics;
 using SS14.Client.GameObjects;
 using SS14.Client.GameObjects.EntitySystems;
 using SS14.Shared.Input;
+using SS14.Shared.Log;
 using SS14.Shared.Utility;
 using SS14.Shared.Serialization;
 
@@ -94,7 +95,15 @@ namespace SS14.Client.Placement
         /// <summary>
         /// Whether the placement manager is currently in a mode where it accepts actions
         /// </summary>
-        public bool IsActive { get; private set; }
+        public bool IsActive
+        {
+            get => _isActive;
+            private set
+            {
+                _isActive = value;
+                SwitchEditorContext(value);
+            }
+        }
 
         /// <summary>
         /// Determines whether we are using the mode to delete an entity on click
@@ -164,12 +173,8 @@ namespace SS14.Client.Placement
 
         public Godot.Node2D drawNode { get; set; }
         private GodotGlue.GodotSignalSubscriber0 drawNodeDrawSubscriber;
-
-        public PlacementManager()
-        {
-            Clear();
-        }
-
+        private bool _isActive;
+        
         public void Initialize()
         {
             NetworkManager.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, HandlePlacementMessage);
@@ -258,18 +263,47 @@ namespace SS14.Client.Placement
                         return;
                     Clear();
                 }));
+
+            var localPlayer = PlayerManager.LocalPlayer;
+            localPlayer.EntityAttached += OnEntityAttached;
         }
 
-        private static void TearDownInput(IEntitySystemManager entSysMan)
+        private void TearDownInput(IEntitySystemManager entSysMan)
         {
-            if(!entSysMan.TryGetEntitySystem(out InputSystem inputSys))
-                return;
+            if (entSysMan.TryGetEntitySystem(out InputSystem inputSys))
+            {
+                inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorLinePlace);
+                inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorGridPlace);
+                inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorPlaceObject);
+                inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorRotateObject);
+                inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorCancelPlace);
+            }
+
+            if (PlayerManager.LocalPlayer != null)
+            {
+                PlayerManager.LocalPlayer.EntityAttached -= OnEntityAttached;
+            }
+        }
+
+        private void OnEntityAttached(object o, EventArgs eventArgs)
+        {
+            // player attached to a new entity, basically disable the editor
+            Clear();
+        }
+
+        private void SwitchEditorContext(bool enabled)
+        {
+            Logger.DebugS("placement", $"State={enabled}");
             
-            inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorLinePlace);
-            inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorGridPlace);
-            inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorPlaceObject);
-            inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorRotateObject);
-            inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorCancelPlace);
+            if(enabled)
+            {
+                _inputManager.Contexts.SetActiveContext("editor");
+            }
+            else
+            {
+                _entitySystemManager.GetEntitySystem<InputSystem>().SetEntityContextActive();
+            }
+
         }
 
         public void Dispose()

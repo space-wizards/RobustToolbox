@@ -154,21 +154,21 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         void LayerSetDirOffset(int layer, SpriteComponent.DirectionOffset offset);
         void LayerSetDirOffset(object layerKey, SpriteComponent.DirectionOffset offset);
 
-        ISpriteMirror CreateMirror();
+        ISpriteProxy CreateProxy();
     }
 
     /// <summary>
     ///     A handle to allow a <see cref="ISpriteComponent"/> to draw in multiple locations, such as a UI slot.
     /// </summary>
-    public interface ISpriteMirror : IDisposable
+    public interface ISpriteProxy : IDisposable
     {
         Vector2 Offset { get; set; }
         void AttachToItem(Godot.RID item);
     }
 
-    public static class SpriteMirrorExt
+    public static class SpriteProxyExt
     {
-        public static void AttachToControl(this ISpriteMirror mirror, Control control)
+        public static void AttachToControl(this ISpriteProxy mirror, Control control)
         {
             mirror.AttachToItem(control.SceneControl.GetCanvasItem());
         }

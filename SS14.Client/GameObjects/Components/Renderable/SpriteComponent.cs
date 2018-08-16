@@ -204,7 +204,7 @@ namespace SS14.Client.GameObjects
         // Do not directly store mirror instances, so that they can be picked up by the GC is not disposed correctly.
         // Don't need em anyways.
         readonly Dictionary<int, MirrorData> Mirrors = new Dictionary<int, MirrorData>();
-        ISpriteMirror MainMirror;
+        ISpriteProxy MainMirror;
 
         public const string LogCategory = "go.comp.sprite";
         const string LayerSerializationCache = "spritelayer";
@@ -865,14 +865,14 @@ namespace SS14.Client.GameObjects
             LayerSetDirOffset(layer, offset);
         }
 
-        public ISpriteMirror CreateMirror()
+        public ISpriteProxy CreateProxy()
         {
             var item = VS.CanvasItemCreate();
             RedrawQueued = true;
             return CreateMirror(item);
         }
 
-        ISpriteMirror CreateMirror(Godot.RID item)
+        ISpriteProxy CreateMirror(Godot.RID item)
         {
             var key = NextMirrorKey++;
             var mirror = new SpriteMirror(key, this, item);
@@ -1454,7 +1454,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        sealed class SpriteMirror : ISpriteMirror
+        sealed class SpriteMirror : ISpriteProxy
         {
             readonly int Key;
             readonly SpriteComponent Master;

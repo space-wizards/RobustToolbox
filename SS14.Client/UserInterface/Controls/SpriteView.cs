@@ -11,7 +11,7 @@ namespace SS14.Client.UserInterface.Controls
     [ControlWrap(typeof(GodotGlue.SpriteView))]
     public class SpriteView : Control
     {
-        ISpriteMirror Mirror;
+        ISpriteProxy Mirror;
         ISpriteComponent _sprite;
         public ISpriteComponent Sprite
         {
@@ -27,7 +27,7 @@ namespace SS14.Client.UserInterface.Controls
 
                 if (value != null)
                 {
-                    Mirror = value.CreateMirror();
+                    Mirror = value.CreateProxy();
                     Mirror.AttachToControl(this);
                     UpdateMirrorPosition();
                 }

@@ -61,6 +61,8 @@ namespace SS14.Client.State.States
         public override void Startup()
         {
             IoCManager.InjectDependencies(this);
+
+            mapManager.Startup();
             
             inputManager.KeyBindStateChanged += OnKeyBindStateChanged;
 
@@ -110,6 +112,7 @@ namespace SS14.Client.State.States
             playerManager.LocalPlayer.DetachEntity();
 
             _entityManager.Shutdown();
+            mapManager.Shutdown();
             userInterfaceManager.StateRoot.DisposeAllChildren();
 
             var maps = mapManager.GetAllMaps().ToArray();
@@ -138,6 +141,11 @@ namespace SS14.Client.State.States
         {
             placementManager.FrameUpdate(e);
             _entityManager.FrameUpdate(e.Elapsed);
+
+            if (playerManager.LocalPlayer?.ControlledEntity == null)
+            {
+                return;
+            }
 
             var map = playerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().MapID;
             var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(inputManager.MouseScreenPosition));

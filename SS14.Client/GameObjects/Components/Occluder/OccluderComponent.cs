@@ -88,6 +88,8 @@ namespace SS14.Client.GameObjects
 
         public override void OnRemove()
         {
+            base.OnRemove();
+
             foreach (var occluder in occluders)
             {
                 occluder.Dispose();
@@ -96,8 +98,6 @@ namespace SS14.Client.GameObjects
             occluders = null;
             SnapGrid.OnPositionChanged -= SnapGridPositionChanged;
             SayGoodbyes();
-
-            base.OnRemove();
         }
 
         public override void ExposeData(ObjectSerializer serializer)
@@ -133,6 +133,11 @@ namespace SS14.Client.GameObjects
         void UpdateConnections(bool propagate)
         {
             neighbors[0] = neighbors[1] = neighbors[2] = neighbors[3] = null;
+
+            if (Deleted)
+            {
+                return;
+            }
 
             void checkDir(Direction dir, OccluderDir oclDir)
             {

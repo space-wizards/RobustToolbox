@@ -61,6 +61,16 @@ namespace SS14.Shared.Map
             _netManager.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, message => SendMap(message.MsgChannel));
         }
 
+        public void Startup()
+        {
+            _gridsToReceive = -1;
+            _gridsReceived = 0;
+        }
+
+        public void Shutdown()
+        {
+        }
+
         /// <summary>
         ///     Raises the OnTileChanged event.
         /// </summary>

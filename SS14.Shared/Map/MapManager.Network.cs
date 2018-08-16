@@ -17,7 +17,7 @@ namespace SS14.Shared.Map
         [Dependency]
         private readonly INetManager _netManager;
 
-        private int _gridsToReceive = -1;
+        private int _gridsToReceive;
         private int _gridsReceived;
 
         public void SendMap(INetChannel channel)

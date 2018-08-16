@@ -5,6 +5,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Systems;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
 
 namespace SS14.Shared.GameObjects
@@ -85,6 +86,7 @@ namespace SS14.Shared.GameObjects
         {
             foreach (Type type in ReflectionManager.GetAllChildren<IEntitySystem>())
             {
+                Logger.DebugS("go.sys", "Initializing entity system {0}", type);
                 //Force initialization of all systems
                 var instance = (IEntitySystem)Activator.CreateInstance(type);
                 AddSystem(instance);

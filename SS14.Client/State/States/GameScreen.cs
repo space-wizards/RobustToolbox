@@ -58,7 +58,9 @@ namespace SS14.Client.State.States
         public override void Startup()
         {
             IoCManager.InjectDependencies(this);
-            
+
+            mapManager.Startup();
+
             inputManager.KeyBindStateChanged += OnKeyBindStateChanged;
 
             escapeMenu = new EscapeMenu
@@ -107,6 +109,7 @@ namespace SS14.Client.State.States
             playerManager.LocalPlayer.DetachEntity();
 
             _entityManager.Shutdown();
+            mapManager.Shutdown();
             userInterfaceManager.StateRoot.DisposeAllChildren();
 
             var maps = mapManager.GetAllMaps().ToArray();
@@ -135,7 +138,7 @@ namespace SS14.Client.State.States
         {
             placementManager.FrameUpdate(e);
             _entityManager.FrameUpdate(e.Elapsed);
-            
+
             var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(inputManager.MouseScreenPosition));
             var entityToClick = GetEntityUnderPosition(mousePosWorld);
             if (entityToClick == lastHoveredEntity)
@@ -223,7 +226,7 @@ namespace SS14.Client.State.States
         private void OnKeyBindStateChanged(BoundKeyEventArgs args)
         {
             var inputSys = entitySystemManager.GetEntitySystem<InputSystem>();
-            
+
             var func = args.Function;
             var funcId = inputManager.NetworkBindMap.KeyFunctionID(func);
 

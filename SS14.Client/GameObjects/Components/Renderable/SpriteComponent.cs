@@ -917,6 +917,9 @@ namespace SS14.Client.GameObjects
             base.Initialize();
 
             MainMirror = CreateMirror(SceneNode.GetCanvasItem());
+            var mir = Mirrors[0];
+            mir.DontFree = true;
+            Mirrors[0] = mir;
             ((IGodotTransformComponent)Owner.Transform).SceneNode.AddChild(SceneNode);
         }
 
@@ -1385,7 +1388,10 @@ namespace SS14.Client.GameObjects
             // TODO: Doing a full redraw when a mirror is disposed is kinda a waste.
             ClearDraw();
             RedrawQueued = true;
-            VS.FreeRid(val.Root);
+            if (!val.DontFree)
+            {
+                VS.FreeRid(val.Root);
+            }
             Mirrors.Remove(key);
         }
 
@@ -1541,6 +1547,10 @@ namespace SS14.Client.GameObjects
             public Godot.RID Root;
             public List<Godot.RID> Children;
             public bool Visible;
+            // Don't free the canvas item if it's the scene node item.
+            // That causes problems.
+            // Seriously.
+            public bool DontFree;
         }
     }
 }

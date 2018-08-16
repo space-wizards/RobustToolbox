@@ -162,6 +162,13 @@ namespace SS14.Client.GameObjects
             Shutdown();
         }
 
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            MapsInitialized = false;
+        }
+
         public override IEntity CreateEntity(string protoName)
         {
             return InternalCreateEntity(protoName, NewClientEntityUid());

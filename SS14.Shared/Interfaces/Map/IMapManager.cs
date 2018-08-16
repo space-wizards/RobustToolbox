@@ -38,6 +38,9 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         void Initialize();
 
+        void Shutdown();
+        void Startup();
+
         /// <summary>
         ///     Creates a new map.
         /// </summary>

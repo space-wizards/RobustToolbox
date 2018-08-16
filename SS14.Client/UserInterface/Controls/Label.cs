@@ -5,6 +5,7 @@ namespace SS14.Client.UserInterface.Controls
     /// <summary>
     ///     A label is a GUI control that displays simple text.
     /// </summary>
+    [ControlWrap(typeof(Godot.Label))]
     public class Label : Control
     {
         public Label(string name) : base(name)

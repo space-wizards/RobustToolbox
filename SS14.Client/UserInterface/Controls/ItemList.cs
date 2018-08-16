@@ -1,9 +1,10 @@
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
+    [ControlWrap(typeof(Godot.ItemList))]
     public class ItemList : Control
     {
         new Godot.ItemList SceneControl;

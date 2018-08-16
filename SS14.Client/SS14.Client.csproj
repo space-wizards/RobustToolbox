@@ -183,6 +183,7 @@
     <Compile Include="UserInterface\Controls\GridContainer.cs" />
     <Compile Include="UserInterface\Controls\Range.cs" />
     <Compile Include="UserInterface\Controls\ScrollBar.cs" />
+    <Compile Include="UserInterface\Controls\SpriteView.cs" />
     <Compile Include="UserInterface\Controls\VScrollBar.cs" />
     <Compile Include="UserInterface\CustomControls\Chatbox.cs" />
     <Compile Include="Utility\DirExt.cs" />

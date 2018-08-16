@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
+    [ControlWrap(typeof(Godot.Tree))]
     public class Tree : Control
     {
         new Godot.Tree SceneControl;

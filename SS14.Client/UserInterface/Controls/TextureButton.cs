@@ -1,5 +1,6 @@
 ﻿namespace SS14.Client.UserInterface.Controls
 {
+    [ControlWrap(typeof(Godot.TextureButton))]
     public class TextureButton : BaseButton
     {
         public TextureButton() : base()

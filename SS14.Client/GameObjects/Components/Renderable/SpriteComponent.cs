@@ -192,7 +192,6 @@ namespace SS14.Client.GameObjects
         // use ref locals EVERYWHERE, and handle the resizing ourselves.
         // This may be worth the overhead of basically reimplementing List<T>.
         private List<Layer> Layers;
-        private readonly List<Godot.RID> CanvasItems = new List<Godot.RID>();
 
         private Godot.Node2D SceneNode;
 
@@ -200,6 +199,12 @@ namespace SS14.Client.GameObjects
         private IPrototypeManager prototypes;
 
         RSI.State.Direction LastDir;
+
+        int NextMirrorKey;
+        // Do not directly store mirror instances, so that they can be picked up by the GC is not disposed correctly.
+        // Don't need em anyways.
+        readonly Dictionary<int, MirrorData> Mirrors = new Dictionary<int, MirrorData>();
+        ISpriteMirror MainMirror;
 
         public const string LogCategory = "go.comp.sprite";
         const string LayerSerializationCache = "spritelayer";
@@ -860,6 +865,27 @@ namespace SS14.Client.GameObjects
             LayerSetDirOffset(layer, offset);
         }
 
+        public ISpriteMirror CreateMirror()
+        {
+            var item = VS.CanvasItemCreate();
+            RedrawQueued = true;
+            return CreateMirror(item);
+        }
+
+        ISpriteMirror CreateMirror(Godot.RID item)
+        {
+            var key = NextMirrorKey++;
+            var mirror = new SpriteMirror(key, this, item);
+            var data = new MirrorData
+            {
+                Root = item,
+                Children = new List<Godot.RID>(),
+                Visible = true,
+            };
+            Mirrors.Add(key, data);
+            return mirror;
+        }
+
         public override void OnAdd()
         {
             base.OnAdd();
@@ -878,7 +904,11 @@ namespace SS14.Client.GameObjects
         {
             base.OnRemove();
 
-            ClearDraw();
+            foreach (var key in Mirrors.Keys.ToList())
+            {
+                DisposeMirror(key);
+            }
+            MainMirror.Dispose();
             SceneNode.QueueFree();
         }
 
@@ -886,56 +916,62 @@ namespace SS14.Client.GameObjects
         {
             base.Initialize();
 
+            MainMirror = CreateMirror(SceneNode.GetCanvasItem());
             ((IGodotTransformComponent)Owner.Transform).SceneNode.AddChild(SceneNode);
-            RedrawQueued = true;
         }
 
         private void ClearDraw()
         {
-            foreach (var item in CanvasItems)
+            foreach (var data in Mirrors.Values)
             {
-                VS.FreeRid(item);
+                foreach (var item in data.Children)
+                {
+                    VS.FreeRid(item);
+                }
+
+                data.Children.Clear();
             }
-            CanvasItems.Clear();
         }
 
         private void Redraw()
         {
             ClearDraw();
 
-            if (!Visible)
+            foreach (var data in Mirrors.Values)
             {
-                return;
-            }
-
-            Shader prevShader = null;
-            Godot.RID currentItem = null;
-            foreach (var layer in Layers)
-            {
-                if (!layer.Visible)
+                if (!data.Visible)
                 {
                     continue;
                 }
-                var shader = layer.Shader;
-                var texture = layer.Texture ?? resourceCache.GetFallback<TextureResource>();
-                if (currentItem == null || prevShader != shader)
+                Shader prevShader = null;
+                Godot.RID currentItem = null;
+                foreach (var layer in Layers)
                 {
-                    currentItem = VS.CanvasItemCreate();
-                    VS.CanvasItemSetParent(currentItem, SceneNode.GetCanvasItem());
-                    CanvasItems.Add(currentItem);
-                    if (shader != null)
+                    if (!layer.Visible)
                     {
-                        VS.CanvasItemSetMaterial(currentItem, shader.GodotMaterial.GetRid());
+                        continue;
                     }
-                    prevShader = shader;
-                }
+                    var shader = layer.Shader;
+                    var texture = layer.Texture ?? resourceCache.GetFallback<TextureResource>();
+                    if (currentItem == null || prevShader != shader)
+                    {
+                        currentItem = VS.CanvasItemCreate();
+                        VS.CanvasItemSetParent(currentItem, data.Root);
+                        data.Children.Add(currentItem);
+                        if (shader != null)
+                        {
+                            VS.CanvasItemSetMaterial(currentItem, shader.GodotMaterial.GetRid());
+                        }
+                        prevShader = shader;
+                    }
 
-                var transform = Godot.Transform2D.Identity;
-                DrawingHandle.SetTransform2DRotationAndScale(ref transform, layer.Rotation, layer.Scale);
-                VS.CanvasItemAddSetTransform(currentItem, transform);
-                // Not instantiating a DrawingHandle here because those are ref types,
-                // and I really don't want the extra allocation.
-                texture.GodotTexture.Draw(currentItem, -texture.GodotTexture.GetSize() / 2, layer.Color.Convert());
+                    var transform = Godot.Transform2D.Identity;
+                    DrawingHandle.SetTransform2DRotationAndScale(ref transform, layer.Rotation, layer.Scale);
+                    VS.CanvasItemAddSetTransform(currentItem, transform);
+                    // Not instantiating a DrawingHandle here because those are ref types,
+                    // and I really don't want the extra allocation.
+                    texture.GodotTexture.Draw(currentItem, -texture.GodotTexture.GetSize() / 2, layer.Color.Convert());
+                }
             }
         }
 
@@ -1339,6 +1375,33 @@ namespace SS14.Client.GameObjects
             return OffsetRsiDir(GetDir(), layer.DirOffset);
         }
 
+        private void DisposeMirror(int key)
+        {
+            if (!Mirrors.TryGetValue(key, out var val))
+            {
+                // Maybe possible if the sprite gets disposed before the mirror handle?
+                return;
+            }
+            // TODO: Doing a full redraw when a mirror is disposed is kinda a waste.
+            ClearDraw();
+            RedrawQueued = true;
+            VS.FreeRid(val.Root);
+            Mirrors.Remove(key);
+        }
+
+        private bool IsMirrorDisposed(int key)
+        {
+            return Mirrors.ContainsKey(key);
+        }
+
+        void MirrorSetVisible(int key, bool visible)
+        {
+            var mirror = Mirrors[key];
+            mirror.Visible = visible;
+            Mirrors[key] = mirror;
+            RedrawQueued = true;
+        }
+
         /// <summary>
         ///     Enum to "offset" a cardinal direction.
         /// </summary>
@@ -1389,6 +1452,95 @@ namespace SS14.Client.GameObjects
                     Color = Color.White
                 };
             }
+        }
+
+        sealed class SpriteMirror : ISpriteMirror
+        {
+            readonly int Key;
+            readonly SpriteComponent Master;
+            Godot.RID CanvasItem;
+
+            private Godot.RID Parent;
+            private Vector2 _offset;
+            public Vector2 Offset
+            {
+                get => _offset;
+                set
+                {
+                    CheckDisposed();
+                    _offset = value;
+                    UpdateTransform();
+                }
+            }
+
+            private bool _visible = true;
+            public bool Visible
+            {
+                get => _visible;
+                set
+                {
+                    _visible = value;
+                    Master.MirrorSetVisible(Key, value);
+                }
+            }
+
+            public SpriteMirror(int key, SpriteComponent master, Godot.RID canvasItem)
+            {
+                Master = master;
+                Key = key;
+                CanvasItem = canvasItem;
+            }
+
+            public bool Disposed => CanvasItem == null;
+
+            void CheckDisposed()
+            {
+                if (Disposed)
+                {
+                    throw new ObjectDisposedException(nameof(SpriteMirror));
+                }
+            }
+
+            private void UpdateTransform()
+            {
+                var transform = new Godot.Transform2D(0, Offset.Convert());
+                VS.CanvasItemSetTransform(CanvasItem, transform);
+            }
+
+            public void AttachToItem(Godot.RID item)
+            {
+                CheckDisposed();
+                Parent = item;
+                VS.CanvasItemSetParent(CanvasItem, Parent);
+            }
+
+            public void Dispose()
+            {
+                if (Disposed)
+                {
+                    return;
+                }
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
+
+            ~SpriteMirror()
+            {
+                Dispose(false);
+            }
+
+            void Dispose(bool disposing)
+            {
+                Master.DisposeMirror(Key);
+                CanvasItem = null;
+            }
+        }
+
+        struct MirrorData
+        {
+            public Godot.RID Root;
+            public List<Godot.RID> Children;
+            public bool Visible;
         }
     }
 }

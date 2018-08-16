@@ -1,9 +1,10 @@
-using System;
+﻿using System;
 using SS14.Client.GodotGlue;
 using SS14.Client.Graphics;
 
 namespace SS14.Client.UserInterface.Controls
 {
+    [ControlWrap(typeof(Godot.OptionButton))]
     public class OptionButton : Button
     {
         public event Action<ItemSelectedEventArgs> OnItemSelected;

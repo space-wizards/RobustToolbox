@@ -3,6 +3,7 @@ using System;
 
 namespace SS14.Client.UserInterface.Controls
 {
+    [ControlWrap(typeof(Godot.BaseButton))]
     public abstract class BaseButton : Control
     {
         public BaseButton() : base()

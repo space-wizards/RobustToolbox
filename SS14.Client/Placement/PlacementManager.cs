@@ -29,7 +29,6 @@ using SS14.Client.Graphics;
 using SS14.Client.GameObjects;
 using SS14.Client.GameObjects.EntitySystems;
 using SS14.Shared.Input;
-using SS14.Shared.Log;
 using SS14.Shared.Utility;
 using SS14.Shared.Serialization;
 
@@ -171,7 +170,7 @@ namespace SS14.Client.Placement
         /// </summary>
         public Direction Direction { get; set; } = Direction.South;
 
-        public Godot.Node2D drawNode { get; set; }
+        public Godot.Node2D DrawNode { get; set; }
         private GodotGlue.GodotSignalSubscriber0 drawNodeDrawSubscriber;
         private bool _isActive;
         
@@ -192,15 +191,15 @@ namespace SS14.Client.Placement
                 LightMode = Godot.CanvasItemMaterial.LightModeEnum.Unshaded
             };
 
-            drawNode = new Godot.Node2D()
+            DrawNode = new Godot.Node2D()
             {
                 Name = "Placement Manager Sprite",
                 ZIndex = 100,
                 Material = unshadedMaterial
             };
-            sceneTree.WorldRoot.AddChild(drawNode);
+            sceneTree.WorldRoot.AddChild(DrawNode);
             drawNodeDrawSubscriber = new GodotGlue.GodotSignalSubscriber0();
-            drawNodeDrawSubscriber.Connect(drawNode, "draw");
+            drawNodeDrawSubscriber.Connect(DrawNode, "draw");
             drawNodeDrawSubscriber.Signal += Render;
 
             // a bit ugly, oh well
@@ -293,8 +292,6 @@ namespace SS14.Client.Placement
 
         private void SwitchEditorContext(bool enabled)
         {
-            Logger.DebugS("placement", $"State={enabled}");
-            
             if(enabled)
             {
                 _inputManager.Contexts.SetActiveContext("editor");
@@ -308,10 +305,10 @@ namespace SS14.Client.Placement
 
         public void Dispose()
         {
-            drawNodeDrawSubscriber.Disconnect(drawNode, "draw");
+            drawNodeDrawSubscriber.Disconnect(DrawNode, "draw");
             drawNodeDrawSubscriber.Dispose();
-            drawNode.QueueFree();
-            drawNode.Dispose();
+            DrawNode.QueueFree();
+            DrawNode.Dispose();
         }
 
         private void HandlePlacementMessage(MsgPlacement msg)
@@ -349,7 +346,7 @@ namespace SS14.Client.Placement
             Eraser = false;
             PlacementOffset = Vector2i.Zero;
             // Make it draw again to remove the drawn things.
-            drawNode?.Update();
+            DrawNode?.Update();
         }
 
         public void Rotate()
@@ -501,7 +498,7 @@ namespace SS14.Client.Placement
             if (_placenextframe && CurrentPermission.IsTile)
                 HandlePlacement();
 
-            drawNode.Update();
+            DrawNode.Update();
         }
 
         private void ActivateLineMode()
@@ -551,7 +548,7 @@ namespace SS14.Client.Placement
 
             var pos = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
             const int ppm = EyeManager.PIXELSPERMETER;
-            drawNode.DrawCircle(pos.Convert() * ppm, CurrentPermission.Range * ppm, new Godot.Color(1, 1, 1, 0.25f));
+            DrawNode.DrawCircle(pos.Convert() * ppm, CurrentPermission.Range * ppm, new Godot.Color(1, 1, 1, 0.25f));
         }
 
         private void HandleStartPlacement(MsgPlacement msg)

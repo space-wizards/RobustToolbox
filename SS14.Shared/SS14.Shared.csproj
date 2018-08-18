@@ -338,7 +338,6 @@
     <Compile Include="IoC\Exceptions\UnregisteredDependencyException.cs" />
     <Compile Include="IoC\Exceptions\UnregisteredTypeException.cs" />
     <Compile Include="GameObjects\Components\NetIDs.cs" />
-    <Compile Include="Network\Messages\MsgKeyFunctionChangeState.cs" />
     <Compile Include="Input\BoundKeyMap.cs" />
     <Compile Include="Map\MapManager.Map.cs" />
     <Compile Include="Map\MapManager.MapGrid.cs" />

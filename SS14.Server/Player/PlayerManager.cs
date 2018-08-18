@@ -37,7 +37,7 @@ namespace SS14.Server.Player
 
         public BoundKeyMap KeyMap { get; private set; }
 
-        private bool NeedsStateUpdate = false;
+        private bool NeedsStateUpdate;
 
         /// <summary>
         ///     Number of active sessions.
@@ -77,7 +77,6 @@ namespace SS14.Server.Player
             _network.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME);
             _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, HandlePlayerListReq);
             _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME);
-            _network.RegisterNetMessage<MsgKeyFunctionStateChange>(MsgKeyFunctionStateChange.NAME, HandleKeyFunctionStateChange);
 
             _network.Connecting += OnConnecting;
             _network.Connected += NewSession;
@@ -143,7 +142,7 @@ namespace SS14.Server.Player
         /// <summary>
         ///     Gets all players inside of a circle.
         /// </summary>
-        /// <param name="position">Position of the circle in world-space.</param>
+        /// <param name="worldPos">Position of the circle in world-space.</param>
         /// <param name="range">Radius of the circle in world units.</param>
         /// <returns></returns>
         public List<IPlayerSession> GetPlayersInRange(GridLocalCoordinates worldPos, int range)
@@ -208,7 +207,7 @@ namespace SS14.Server.Player
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
-        public void NewSession(object sender, NetChannelArgs args)
+        private void NewSession(object sender, NetChannelArgs args)
         {
             var pos = GetFirstOpenIndex();
 
@@ -329,13 +328,6 @@ namespace SS14.Server.Player
         public void Dirty()
         {
             NeedsStateUpdate = true;
-        }
-
-        private void HandleKeyFunctionStateChange(MsgKeyFunctionStateChange message)
-        {
-            var function = KeyMap.KeyFunctionName(message.KeyFunction);
-            var player = GetSessionByChannel(message.MsgChannel);
-            player.Input.SetFunctionState(player, function, message.NewState);
         }
     }
 

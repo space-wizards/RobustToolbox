@@ -15,8 +15,6 @@ namespace SS14.Server.Interfaces.Player
         INetChannel ConnectedClient { get; }
         DateTime ConnectedTime { get; }
 
-        IPlayerInput Input { get; }
-
         event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
 
         void JoinLobby();

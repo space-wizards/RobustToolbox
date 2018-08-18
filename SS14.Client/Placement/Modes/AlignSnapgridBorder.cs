@@ -32,13 +32,13 @@ namespace SS14.Client.Placement.Modes
                 {
                     var from = ScreenToWorld(new Vector2(a, 0)).Convert() * ppm;
                     var to = ScreenToWorld(new Vector2(a, viewportSize.Y)).Convert() * ppm;
-                    pManager.drawNode.DrawLine(from, to, new Godot.Color(0, 0, 1), 0.5f);
+                    pManager.DrawNode.DrawLine(from, to, new Godot.Color(0, 0, 1), 0.5f);
                 }
                 for (var a = gridstart.Y; a < viewportSize.Y; a += snapSize * ppm)
                 {
                     var from = ScreenToWorld(new Vector2(0, a)).Convert() * ppm;
                     var to = ScreenToWorld(new Vector2(viewportSize.X, a)).Convert() * ppm;
-                    pManager.drawNode.DrawLine(from, to, new Godot.Color(0, 0, 1), 0.5f);
+                    pManager.DrawNode.DrawLine(from, to, new Godot.Color(0, 0, 1), 0.5f);
                 }
             }
 

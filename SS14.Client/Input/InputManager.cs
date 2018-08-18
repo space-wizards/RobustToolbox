@@ -7,14 +7,12 @@ using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Input;
-using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
-using SS14.Shared.Network.Messages;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -27,17 +25,15 @@ namespace SS14.Client.Input
         public virtual Vector2 MouseScreenPosition => Vector2.Zero;
 
         [Dependency]
-        readonly IUserInterfaceManager userInterfaceManager;
+        private readonly IUserInterfaceManager _uiManager;
         [Dependency]
-        readonly IResourceManager _resourceMan;
+        private readonly IResourceManager _resourceMan;
         [Dependency]
-        readonly IClientNetManager _netManager;
-        [Dependency]
-        readonly IReflectionManager _reflectionManager;
+        private readonly IReflectionManager _reflectionManager;
 
         private readonly Dictionary<BoundKeyFunction, InputCmdHandler> _commands = new Dictionary<BoundKeyFunction, InputCmdHandler>();
         private readonly List<KeyBinding> _bindings = new List<KeyBinding>();
-        private bool[] _keysPressed = new bool[256];
+        private readonly bool[] _keysPressed = new bool[256];
 
         /// <inheritdoc />
         public BoundKeyMap NetworkBindMap { get; private set; }
@@ -45,8 +41,10 @@ namespace SS14.Client.Input
         /// <inheritdoc />
         public IInputContextContainer Contexts { get; } = new InputContextContainer();
 
+        /// <inheritdoc />
         public event Action<BoundKeyEventArgs> KeyBindStateChanged;
 
+        /// <inheritdoc />
         public void Initialize()
         {
             NetworkBindMap = new BoundKeyMap(_reflectionManager);
@@ -62,8 +60,6 @@ namespace SS14.Client.Input
             {
                 LoadKeyFile(path);
             }
-
-            _netManager.RegisterNetMessage<MsgKeyFunctionStateChange>(MsgKeyFunctionStateChange.NAME);
         }
 
         private void OnContextChanged(object sender, ContextChangedEventArgs args)
@@ -79,6 +75,7 @@ namespace SS14.Client.Input
             }
         }
 
+        /// <inheritdoc />
         public void KeyDown(KeyEventArgs args)
         {
             if (!Enabled || UIBlocked() || args.Key == Keyboard.Key.Unknown)
@@ -116,6 +113,7 @@ namespace SS14.Client.Input
             }
         }
 
+        /// <inheritdoc />
         public void KeyUp(KeyEventArgs args)
         {
             if (args.Key == Keyboard.Key.Unknown)
@@ -178,11 +176,6 @@ namespace SS14.Client.Input
             {
                 cmd?.Enabled(null);
             }
-
-            var msg = _netManager.CreateNetMessage<MsgKeyFunctionStateChange>();
-            msg.KeyFunction = NetworkBindMap.KeyFunctionID(binding.Function);
-            msg.NewState = state;
-            _netManager.ClientSendMessage(msg);
         }
 
         private bool PackedMatchesPressedState(int packedKeyCombo)
@@ -219,19 +212,11 @@ namespace SS14.Client.Input
             return false;
         }
 
-        private static int PackedModifierCount(int packedCombo)
-        {
-            if ((packedCombo & 0x0000FF00) == 0x00000000) return 0;
-            if ((packedCombo & 0x00FF0000) == 0x00000000) return 1;
-            if ((packedCombo & 0xFF000000) == 0x00000000) return 2;
-            return 3;
-        }
-
         private static bool PackedIsSubPattern(int packedCombo, int subPackedCombo)
         {
             for (var i = 0; i < 32; i += 8)
             {
-                byte key = (byte)(subPackedCombo >> i);
+                var key = (byte)(subPackedCombo >> i);
                 if (!PackedContainsKey(packedCombo, key))
                 {
                     return false;
@@ -240,14 +225,9 @@ namespace SS14.Client.Input
             return true;
         }
 
-        internal static byte KeyToInternal(Keyboard.Key key)
+        private static byte KeyToInternal(Keyboard.Key key)
         {
             return (byte)key;
-        }
-
-        internal static Keyboard.Key InternalToKey(byte key)
-        {
-            return (Keyboard.Key)key;
         }
 
         private void LoadKeyFile(ResourcePath yamlFile)
@@ -286,11 +266,6 @@ namespace SS14.Client.Input
             }
         }
 
-        private void SaveKeyFile(ResourcePath yamlPath)
-        {
-            throw new NotImplementedException();
-        }
-
         // Don't take input if we're focused on a LineEdit.
         // LineEdits don't intercept keydowns when typing properly.
         // NOTE: macOS specific!
@@ -298,7 +273,7 @@ namespace SS14.Client.Input
         // So if we didn't do this, the DebugConsole wouldn't block movement (for example).
         private bool UIBlocked()
         {
-            return userInterfaceManager.Focused is LineEdit;
+            return _uiManager.Focused is LineEdit;
         }
 
         private void RegisterBinding(KeyBinding binding)
@@ -345,7 +320,7 @@ namespace SS14.Client.Input
             _commands[function] = cmdHandler;
         }
 
-        class KeyBinding : IKeyBinding
+        private class KeyBinding : IKeyBinding
         {
             public BoundKeyState State { get; set; }
             public int PackedKeyCombo { get; }
@@ -365,7 +340,7 @@ namespace SS14.Client.Input
                 PackedKeyCombo = PackKeyCombo(baseKey, mod1, mod2, mod3);
             }
 
-            public static int PackKeyCombo(Keyboard.Key baseKey,
+            private static int PackKeyCombo(Keyboard.Key baseKey,
                                            Keyboard.Key mod1 = Keyboard.Key.Unknown,
                                            Keyboard.Key mod2 = Keyboard.Key.Unknown,
                                            Keyboard.Key mod3 = Keyboard.Key.Unknown)
@@ -375,15 +350,15 @@ namespace SS14.Client.Input
 
                 //pack key combo
                 var combo = 0x00000000;
-                combo |= InputManager.KeyToInternal(baseKey);
+                combo |= KeyToInternal(baseKey);
 
                 // Modifiers are sorted so that the higher key values are lower in the integer bytes.
                 // Unknown is zero so at the very "top".
                 // More modifiers thus takes precedent with that sort in register,
                 // and order only matters for amount of modifiers, not the modifiers themselves,
-                var int1 = InputManager.KeyToInternal(mod1);
-                var int2 = InputManager.KeyToInternal(mod2);
-                var int3 = InputManager.KeyToInternal(mod3);
+                var int1 = KeyToInternal(mod1);
+                var int2 = KeyToInternal(mod2);
+                var int3 = KeyToInternal(mod3);
 
                 // Use a simplistic bubble sort to sort the key modifiers.
                 if (int1 < int2) (int1, int2) = (int2, int1);

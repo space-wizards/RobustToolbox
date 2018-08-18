@@ -113,7 +113,7 @@ namespace SS14.Client.Placement
             {
                 var pos = coordinate.Position * EyeManager.PIXELSPERMETER - size / 2f;
                 var color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
-                pManager.drawNode.DrawTexture(SpriteToDraw.GodotTexture, pos.Convert(), color.Convert());
+                pManager.DrawNode.DrawTexture(SpriteToDraw.GodotTexture, pos.Convert(), color.Convert());
             }
         }
 

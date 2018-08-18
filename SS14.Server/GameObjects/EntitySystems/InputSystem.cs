@@ -8,7 +8,6 @@ using SS14.Shared.GameObjects.Systems;
 using SS14.Shared.Input;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
@@ -58,9 +57,7 @@ namespace SS14.Server.GameObjects.EntitySystems
             //Client Sanitization: bad enum key state value
             if (!Enum.IsDefined(typeof(BoundKeyState), msg.State))
                 return;
-
-            Logger.DebugS("input.command", $"{function}: state={msg.State}, uid={msg.Uid}");
-
+            
             // route the cmdMessage to the proper bind
             //Client Sanitization: unbound command, just ignore
             if (_bindMap.TryGetHandler(function, out var command))

@@ -35,9 +35,7 @@ namespace SS14.Server.Player
             };
 
             ConnectedClient = client;
-
-            Input = new PlayerInput();
-
+            
             UpdatePlayerState();
         }
 
@@ -73,9 +71,6 @@ namespace SS14.Server.Player
 
         /// <inheritdoc />
         public PlayerIndex Index { get; }
-
-        public PlayerInput Input { get; }
-        IPlayerInput IPlayerSession.Input => Input;
 
         /// <inheritdoc />
         public event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;

@@ -189,7 +189,6 @@
     <Compile Include="Player\PlayerManager.cs" />
     <Compile Include="Player\PlayerSession.cs" />
     <Compile Include="Console\SystemConsoleManager.cs" />
-    <Compile Include="Player\PlayerInput.cs" />
     <Compile Include="Interfaces\Player\IPlayerInput.cs" />
     <Compile Include="Interfaces\GameObjects\IServerEntityManagerInternal.cs" />
   </ItemGroup>

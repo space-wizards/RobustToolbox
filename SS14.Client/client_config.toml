@@ -26,7 +26,7 @@ fakelagmin = 0.0
 fakelagrand = 0.0
 
 [player]
-name = "Joe Genero"
+name = "JoeGenero"
 
 [ent]
 logging = false

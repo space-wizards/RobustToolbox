@@ -130,7 +130,7 @@ namespace Lidgren.Network
 			om.Write(now);
 
 			WriteLocalHail(om);
-			
+
 			m_peer.SendLibrary(om, m_remoteEndPoint);
 
 			m_connectRequested = false;
@@ -285,7 +285,7 @@ namespace Lidgren.Network
 							}
 							else
 							{
-								m_remoteHailMessage = null; 
+								m_remoteHailMessage = null;
 							}
 
 							if (m_peerConfiguration.IsMessageTypeEnabled(NetIncomingMessageType.ConnectionApproval))
@@ -376,7 +376,7 @@ namespace Lidgren.Network
 							break;
 						case NetConnectionStatus.RespondedConnect:
 							// awesome
-				
+
 							NetIncomingMessage msg = m_peer.SetupReadHelperMessage(ptr, payloadLength);
 							InitializeRemoteTimeOffset(msg.ReadSingle());
 
@@ -453,7 +453,7 @@ namespace Lidgren.Network
 			}
 			return true;
 		}
-		
+
 		/// <summary>
 		/// Disconnect from the remote peer
 		/// </summary>

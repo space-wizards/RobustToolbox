@@ -16,7 +16,7 @@ namespace SS14.Shared.Network.Messages
 
         public ChatChannel Channel { get; set; }
         public string Text { get; set; }
-        public PlayerIndex? Index { get; set; }
+        public NetSessionId? SessionId { get; set; }
         public EntityUid? EntityId { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
@@ -24,11 +24,11 @@ namespace SS14.Shared.Network.Messages
             Channel = (ChatChannel)buffer.ReadByte();
             Text = buffer.ReadString();
 
-            var index = buffer.ReadInt32();
-            if (index == -1)
-                Index = null;
+            var index = buffer.ReadString();
+            if (index == "")
+                SessionId = null;
             else
-                Index = new PlayerIndex(index);
+                SessionId = new NetSessionId(index);
 
             var id = buffer.ReadInt32();
             if (id == -1)
@@ -42,10 +42,10 @@ namespace SS14.Shared.Network.Messages
             buffer.Write((byte)Channel);
             buffer.Write(Text);
 
-            if (Index == null)
-                buffer.Write(-1);
+            if (!SessionId.HasValue)
+                buffer.Write("");
             else
-                buffer.Write(Index.Value);
+                buffer.Write(SessionId.Value.Username);
 
             if (EntityId == null)
                 buffer.Write(-1);

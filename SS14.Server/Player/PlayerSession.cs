@@ -12,26 +12,27 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
+using SS14.Shared.Network;
 
 namespace SS14.Server.Player
 {
     /// <summary>
     /// This is the session of a connected client.
     /// </summary>
-    public class PlayerSession : IPlayerSession
+    internal class PlayerSession : IPlayerSession
     {
         private readonly PlayerManager _playerManager;
         public readonly PlayerState PlayerState;
 
-        public PlayerSession(PlayerManager playerManager, INetChannel client, PlayerIndex index)
+        public PlayerSession(PlayerManager playerManager, INetChannel client, PlayerData data)
         {
             _playerManager = playerManager;
-            Index = index;
+            SessionId = client.SessionId;
+            _data = data;
 
             PlayerState = new PlayerState
             {
-                Uuid = client.ConnectionId,
-                Index = index,
+                SessionId = client.SessionId,
             };
 
             ConnectedClient = client;
@@ -41,23 +42,13 @@ namespace SS14.Server.Player
 
         public INetChannel ConnectedClient { get; }
 
-        public IEntity AttachedEntity { get; set; }
+        public IEntity AttachedEntity { get; private set; }
         public EntityUid? AttachedEntityUid => AttachedEntity?.Uid;
 
-        private string _name = "<TERU-SAMA>";
         private SessionStatus _status = SessionStatus.Connecting;
 
         /// <inheritdoc />
-        public string Name
-        {
-            get => _name;
-            set
-            {
-                if (string.IsNullOrWhiteSpace(value))
-                    return;
-                _name = value;
-            }
-        }
+        public string Name => SessionId.Username;
 
         /// <inheritdoc />
         public SessionStatus Status
@@ -70,7 +61,10 @@ namespace SS14.Server.Player
         public DateTime ConnectedTime { get; private set; }
 
         /// <inheritdoc />
-        public PlayerIndex Index { get; }
+        public NetSessionId SessionId { get; }
+
+        readonly PlayerData _data;
+        public IPlayerData Data => _data;
 
         /// <inheritdoc />
         public event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
@@ -101,6 +95,7 @@ namespace SS14.Server.Player
             actorComponent.playerSession = this;
 
             AttachedEntity = a;
+            _data.AttachedEntityUid = a.Uid;
             a.SendMessage(actorComponent, new PlayerAttachedMsg(this));
             SendAttachMessage();
             SetAttachedEntityName();
@@ -109,6 +104,11 @@ namespace SS14.Server.Player
 
         /// <inheritdoc />
         public void DetachFromEntity()
+        {
+            DetachFromEntity(false);
+        }
+
+        private void DetachFromEntity(bool keepData)
         {
             if (AttachedEntity == null)
             {
@@ -119,15 +119,10 @@ namespace SS14.Server.Player
             AttachedEntity.RemoveComponent<PlayerInputMoverComponent>();
             AttachedEntity.RemoveComponent<BasicActorComponent>();
             AttachedEntity = null;
-            UpdatePlayerState();
-        }
-
-        /// <inheritdoc />
-        public void SetName(string name)
-        {
-            Name = name;
-            Logger.Info($"[SRV] {ConnectedClient.RemoteAddress}: Player set name: {Name}");
-            SetAttachedEntityName();
+            if (!keepData)
+            {
+                _data.AttachedEntityUid = null;
+            }
             UpdatePlayerState();
         }
 
@@ -144,7 +139,7 @@ namespace SS14.Server.Player
         {
             Status = SessionStatus.Disconnected;
 
-            DetachFromEntity();
+            DetachFromEntity(keepData: true);
             UpdatePlayerState();
         }
 
@@ -220,7 +215,7 @@ namespace SS14.Server.Player
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"[{Index}]{Name}";
+            return SessionId.ToString();
         }
     }
 }

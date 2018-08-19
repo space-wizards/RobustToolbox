@@ -105,7 +105,7 @@ namespace SS14.Client.Console
             Logger.Debug($"Got it! {msg.Text}");
             var channel = msg.Channel;
             var text = msg.Text;
-            var index = msg.Index;
+            var index = msg.SessionId;
             var entityId = msg.EntityId;
 
             switch (channel)

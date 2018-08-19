@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using SS14.Client.Player;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network;
 
 namespace SS14.Client.Interfaces.Player
 {
     public interface IPlayerManager
     {
         IEnumerable<PlayerSession> Sessions { get; }
-        IReadOnlyDictionary<int, PlayerSession> SessionsDict { get; }
+        IReadOnlyDictionary<NetSessionId, PlayerSession> SessionsDict { get; }
 
         LocalPlayer LocalPlayer { get; }
 

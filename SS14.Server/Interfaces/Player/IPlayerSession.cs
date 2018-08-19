@@ -20,13 +20,13 @@ namespace SS14.Server.Interfaces.Player
         void JoinLobby();
         void JoinGame();
 
-        void SetName(string name);
-
         void AttachToEntity(IEntity a);
 
         void DetachFromEntity();
         void OnConnect();
         void OnDisconnect();
         void AddPostProcessingEffect(PostProcessingEffectType type, float duration);
+
+        IPlayerData Data { get; }
     }
 }

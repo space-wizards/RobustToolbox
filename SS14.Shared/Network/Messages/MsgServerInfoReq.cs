@@ -11,16 +11,14 @@ namespace SS14.Shared.Network.Messages
         public MsgServerInfoReq(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
 
-        public string PlayerName { get; set; }
-
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            PlayerName = buffer.ReadString();
+            // Nothing
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
-            buffer.Write(PlayerName);
+            // Nothing
         }
     }
 }

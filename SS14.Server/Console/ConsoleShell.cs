@@ -10,6 +10,7 @@ using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
+using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Utility;
 
@@ -176,7 +177,7 @@ namespace SS14.Server.Console
 
         private static string FormatPlayerString(IPlayerSession session)
         {
-            return session != null ? $"[{session.Index}]{session.Name}" : "[HOST]";
+            return session != null ? $"{session.Name}" : "[HOST]";
         }
 
         public bool ElevateShell(IPlayerSession session, string password)
@@ -220,9 +221,8 @@ namespace SS14.Server.Console
                     return;
 
                 // CAST INTO THE GORGE OF ETERNAL PERIL
-                var log = IoCManager.Resolve<ILogManager>();
-                log.GetSawmill("con.auth").Warning(
-                    $"Failed console login authentication.\n  NAME:{player}\n  IP:  {player.ConnectedClient.RemoteAddress}");
+                Logger.WarningS(
+                    "con.auth", $"Failed console login authentication.\n  NAME:{player}\n  IP:  {player.ConnectedClient.RemoteEndPoint}");
 
                 var net = IoCManager.Resolve<IServerNetManager>();
                 net.DisconnectChannel(player.ConnectedClient, "Failed login authentication.");

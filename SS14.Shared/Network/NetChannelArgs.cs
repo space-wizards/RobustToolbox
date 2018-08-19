@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network
@@ -9,7 +10,7 @@ namespace SS14.Shared.Network
     public class NetChannelArgs : EventArgs
     {
         /// <summary>
-        /// The channel causing the event.
+        ///     The channel causing the event.
         /// </summary>
         public readonly INetChannel Channel;
 
@@ -31,21 +32,23 @@ namespace SS14.Shared.Network
         /// <summary>
         /// If this is set to true, deny the incoming connection.
         /// </summary>
+        public bool Deny { get; set; } = false;
 
         /// <summary>
         /// The IP of the incoming connection.
         /// </summary>
-        public readonly string Ip;
+        public readonly NetSessionId SessionId;
 
-        public bool Deny { get; set; }
+        public readonly IPEndPoint IP;
 
         /// <summary>
         /// Constructs a new instance.
         /// </summary>
-        /// <param name="ip">The IP of the incoming connection.</param>
-        public NetConnectingArgs(string ip)
+        /// <param name="sessionId">The session ID of the incoming connection.</param>
+        public NetConnectingArgs(NetSessionId sessionId, IPEndPoint ip)
         {
-            Ip = ip;
+            SessionId = sessionId;
+            IP = ip;
         }
     }
 

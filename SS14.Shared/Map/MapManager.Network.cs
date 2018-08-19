@@ -27,7 +27,7 @@ namespace SS14.Shared.Map
 
             DebugTools.Assert(_netManager.IsServer, "Why is the client calling this?");
 
-            Logger.Info(channel.RemoteAddress + ": Sending map");
+            Logger.Info($"{channel.RemoteEndPoint}: Sending map");
 
             var quantityGridsSent = 0;
 

@@ -1,4 +1,5 @@
 ﻿using SS14.Shared.Enums;
+using SS14.Shared.Network;
 using SS14.Shared.Players;
 
 namespace SS14.Client.Player
@@ -13,15 +14,7 @@ namespace SS14.Client.Player
         /// </summary>
         public SessionStatus Status { get; set; } = SessionStatus.Connecting;
 
-        /// <summary>
-        ///     Index of the session.
-        /// </summary>
-        public PlayerIndex Index { get; }
-
-        /// <summary>
-        ///     Universally unique identifier for this session.
-        /// </summary>
-        public long Uuid { get; }
+        public NetSessionId SessionId { get; }
 
         /// <summary>
         ///     Current name of this player.
@@ -34,14 +27,11 @@ namespace SS14.Client.Player
         public short Ping { get; set; }
 
         /// <summary>
-        ///     Creates an instance of a PlayerSession, using the index and uuid passed to it.
-        /// </summary>
-        /// <param name="index">Index of the session.</param>
-        /// <param name="uuid">Universally unique identifier for this session.</param>
-        public PlayerSession(PlayerIndex index, long uuid)
+        ///     Creates an instance of a PlayerSession.
+        /// </summary
+        public PlayerSession(NetSessionId session)
         {
-            Index = index;
-            Uuid = uuid;
+            SessionId = session;
         }
     }
 }

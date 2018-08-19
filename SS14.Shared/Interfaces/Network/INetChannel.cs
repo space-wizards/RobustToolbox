@@ -1,4 +1,5 @@
-﻿using SS14.Shared.Network;
+﻿using System.Net;
+using SS14.Shared.Network;
 
 namespace SS14.Shared.Interfaces.Network
 {
@@ -18,9 +19,16 @@ namespace SS14.Shared.Interfaces.Network
         long ConnectionId { get; }
 
         /// <summary>
-        ///     The IP address of the remote peer.
+        ///     The IP end point.
         /// </summary>
-        string RemoteAddress { get; }
+        IPEndPoint RemoteEndPoint { get; }
+
+        /// <summary>
+        ///     The session ID for this channel.
+        ///     On the server, this is the session ID for this client.
+        ///     On the client, this is the session ID for the client.
+        /// </summary>
+        NetSessionId SessionId { get; }
 
         /// <summary>
         ///     Average round trip time in milliseconds between the remote peer and us.

@@ -8,15 +8,15 @@ enabled = false
 [net]
 tickrate = 60
 port = 1212
-allowdupeip = true
 
 [game]
 hostname = "MyServer"
 mapname = "stationstation"
-maxplayers = 32
+maxplayers = 64
 type = 1
 welcomemsg = "Welcome to the server!"
 
 [console]
 width = 120
 height = 60
+password = "honk"

@@ -55,7 +55,7 @@ namespace SS14.Server.Console.Commands
             var pos = ents.GetEntity(player.AttachedEntityUid.Value).GetComponent<ITransformComponent>().LocalPosition;
             var clients = sessions.GetPlayersInRange(pos, VoiceRange).Select(p => p.ConnectedClient);
 
-            chat.DispatchMessage(clients.ToList(), ChatChannel.Local, text, player.Index);
+            chat.DispatchMessage(clients.ToList(), ChatChannel.Local, text, player.SessionId);
         }
     }
 
@@ -79,7 +79,7 @@ namespace SS14.Server.Console.Commands
             var pos = ents.GetEntity(player.AttachedEntityUid.Value).GetComponent<ITransformComponent>().LocalPosition;
             var clients = sessions.GetPlayersInRange(pos, WhisperRange).Select(p => p.ConnectedClient);
 
-            chat.DispatchMessage(clients.ToList(), ChatChannel.Local, args[0], player.Index);
+            chat.DispatchMessage(clients.ToList(), ChatChannel.Local, args[0], player.SessionId);
         }
     }
 
@@ -106,8 +106,8 @@ namespace SS14.Server.Console.Commands
                 var pos = ents.GetEntity(player.AttachedEntityUid.Value).GetComponent<ITransformComponent>().LocalPosition;
                 var clients = sessions.GetPlayersInRange(pos, VoiceRange).Where(p => p != player).Select(p => p.ConnectedClient);
 
-                chat.DispatchMessage(player.ConnectedClient, ChatChannel.Emote, self, player.Index);
-                chat.DispatchMessage(clients.ToList(), ChatChannel.Emote, other, player.Index);
+                chat.DispatchMessage(player.ConnectedClient, ChatChannel.Emote, self, player.SessionId);
+                chat.DispatchMessage(clients.ToList(), ChatChannel.Emote, other, player.SessionId);
             }
             else
             {
@@ -115,7 +115,7 @@ namespace SS14.Server.Console.Commands
                 var pos = ents.GetEntity(player.AttachedEntityUid.Value).GetComponent<ITransformComponent>().LocalPosition;
                 var clients = sessions.GetPlayersInRange(pos, VoiceRange).Select(p => p.ConnectedClient);
 
-                chat.DispatchMessage(clients.ToList(), ChatChannel.Emote, $"{player.Name} {args[0]}", player.Index);
+                chat.DispatchMessage(clients.ToList(), ChatChannel.Emote, $"{player.Name} {args[0]}", player.SessionId);
             }
         }
     }
@@ -129,7 +129,7 @@ namespace SS14.Server.Console.Commands
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             var chat = IoCManager.Resolve<IChatManager>();
-            chat.DispatchMessage(ChatChannel.OOC, args[0], player.Index);
+            chat.DispatchMessage(ChatChannel.OOC, args[0], player.SessionId);
         }
     }
 }

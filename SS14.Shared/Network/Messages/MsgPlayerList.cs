@@ -24,12 +24,13 @@ namespace SS14.Shared.Network.Messages
             PlyCount = buffer.ReadByte();
             for (var i = 0; i < PlyCount; i++)
             {
-                var plyNfo = new PlayerState();
-                plyNfo.Index = new PlayerIndex(buffer.ReadInt32());
-                plyNfo.Uuid = buffer.ReadInt64();
-                plyNfo.Name = buffer.ReadString();
-                plyNfo.Status = (SessionStatus) buffer.ReadByte();
-                plyNfo.Ping = buffer.ReadInt16();
+                var plyNfo = new PlayerState
+                {
+                    SessionId = new NetSessionId(buffer.ReadString()),
+                    Name = buffer.ReadString(),
+                    Status = (SessionStatus)buffer.ReadByte(),
+                    Ping = buffer.ReadInt16()
+                };
                 Plyrs.Add(plyNfo);
             }
         }
@@ -40,8 +41,7 @@ namespace SS14.Shared.Network.Messages
 
             foreach (var ply in Plyrs)
             {
-                buffer.Write(ply.Index);
-                buffer.Write(ply.Uuid);
+                buffer.Write(ply.SessionId.Username);
                 buffer.Write(ply.Name);
                 buffer.Write((byte) ply.Status);
                 buffer.Write(ply.Ping);

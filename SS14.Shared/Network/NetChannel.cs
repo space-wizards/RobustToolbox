@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Net;
 using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Utility;
 
 namespace SS14.Shared.Network
 {
@@ -22,22 +24,25 @@ namespace SS14.Shared.Network
         public short Ping => (short) Math.Round(_connection.AverageRoundtripTime * 1000);
 
         /// <inheritdoc />
-        public string RemoteAddress => _connection.RemoteEndPoint.Address.ToString();
+        public IPEndPoint RemoteEndPoint => _connection.RemoteEndPoint;
 
         /// <summary>
         ///     Exposes the lidgren connection.
         /// </summary>
         public NetConnection Connection => _connection;
 
+        public NetSessionId SessionId { get; }
+
         /// <summary>
         ///     Creates a new instance of a NetChannel.
         /// </summary>
         /// <param name="manager">The server this channel belongs to.</param>
         /// <param name="connection">The raw NetConnection to the remote peer.</param>
-        internal NetChannel(NetManager manager, NetConnection connection)
+        internal NetChannel(NetManager manager, NetConnection connection, NetSessionId sessionId)
         {
             _manager = manager;
             _connection = connection;
+            SessionId = sessionId;
         }
 
         /// <inheritdoc />

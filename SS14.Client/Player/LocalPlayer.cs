@@ -9,6 +9,7 @@ using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
 
@@ -38,10 +39,8 @@ namespace SS14.Client.Player
         /// </summary>
         public IEntity ControlledEntity { get; private set; }
 
-        /// <summary>
-        ///     Index of the client's player session.
-        /// </summary>
-        public PlayerIndex Index { get; set; }
+
+        public NetSessionId SessionId { get; set; }
 
         /// <summary>
         ///     Session of the local client.
@@ -49,13 +48,9 @@ namespace SS14.Client.Player
         public PlayerSession Session { get; set; }
 
         /// <summary>
-        ///     In game name of the local player.
+        ///     OOC name of the local player.
         /// </summary>
-        public string Name
-        {
-            get => _configManager.GetCVar<string>("player.name");
-            set => SetName(value);
-        }
+        public string Name => SessionId.Username;
 
         /// <summary>
         ///     The client's entity has moved. This only is raised when the player is attached to an entity.
@@ -149,24 +144,6 @@ namespace SS14.Client.Player
             var args = new StatusEventArgs(Session.Status, newStatus);
             Session.Status = newStatus;
             StatusChanged?.Invoke(this, args);
-        }
-
-        private void SetName(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                return;
-            var fixedName = name.Trim();
-            if (fixedName.Length < 3)
-                fixedName = $"Player {Session.Index}";
-
-            _configManager.SetCVar("player.name", fixedName);
-
-            if (!_networkManager.IsConnected)
-                return;
-
-            var msg = _networkManager.CreateNetMessage<MsgClGreet>();
-            msg.PlyName = name;
-            _networkManager.ClientSendMessage(msg);
         }
     }
 

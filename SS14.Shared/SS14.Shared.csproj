@@ -246,7 +246,6 @@
     <Compile Include="Network\NetChannelArgs.cs" />
     <Compile Include="Network\NetMessageArgs.cs" />
     <Compile Include="Network\Messages\MsgChat.cs" />
-    <Compile Include="Network\Messages\MsgClGreet.cs" />
     <Compile Include="Network\Messages\MsgConCmd.cs" />
     <Compile Include="Network\Messages\MsgConCmdAck.cs" />
     <Compile Include="Network\Messages\MsgConCmdReg.cs" />
@@ -263,6 +262,7 @@
     <Compile Include="Network\NetChannel.cs" />
     <Compile Include="Network\NetMessage.cs" />
     <Compile Include="Network\NetManager.cs" />
+    <Compile Include="Network\NetSessionId.cs" />
     <Compile Include="Network\StringTable.cs" />
     <Compile Include="Physics\CollidableAABB.cs" />
     <Compile Include="Physics\CollidableBucket.cs" />
@@ -275,7 +275,6 @@
     <Compile Include="Physics\RayCastResults.cs" />
     <Compile Include="Players\IBaseSession.cs" />
     <Compile Include="Players\ICommonSession.cs" />
-    <Compile Include="Players\PlayerIndex.cs" />
     <Compile Include="Timing\FrameEventArgs.cs" />
     <Compile Include="Timing\GameLoop.cs" />
     <Compile Include="Timing\IStopwatch.cs" />
@@ -302,6 +301,7 @@
     <Compile Include="Utility\RandomString.cs" />
     <Compile Include="Utility\Range.cs" />
     <Compile Include="Utility\unZipString.cs" />
+    <Compile Include="Utility\UsernameHelpers.cs" />
     <Compile Include="Utility\YamlHelpers.cs" />
     <Compile Include="Utility\CollectionExtensions.cs" />
     <Compile Include="Enums\NetworkEnums.cs" />

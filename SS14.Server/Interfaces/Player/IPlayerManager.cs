@@ -6,6 +6,7 @@ using SS14.Shared.GameStates;
 using SS14.Shared.Input;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
+using SS14.Shared.Network;
 using SS14.Shared.Players;
 
 namespace SS14.Server.Interfaces.Player
@@ -49,16 +50,15 @@ namespace SS14.Server.Interfaces.Player
         /// <summary>
         ///     Returns the client session of the networkId.
         /// </summary>
-        /// <param name="index">The id of the client.</param>
         /// <returns></returns>
-        IPlayerSession GetSessionById(PlayerIndex index);
+        IPlayerSession GetSessionById(NetSessionId index);
 
         IPlayerSession GetSessionByChannel(INetChannel channel);
 
         /// <summary>
         ///     Checks to see if a PlayerIndex is a valid session.
         /// </summary>
-        bool ValidSessionId(PlayerIndex index);
+        bool ValidSessionId(NetSessionId index);
 
         //TODO: Move to IPlayerSession
         void SpawnPlayerMob(IPlayerSession session);

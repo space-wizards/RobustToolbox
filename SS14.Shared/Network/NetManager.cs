@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using Lidgren.Network;
 using SS14.Shared.Configuration;
@@ -35,6 +36,8 @@ namespace SS14.Shared.Network
         ///     Holds the synced lookup table of NetConnection -> NetChannel
         /// </summary>
         private readonly Dictionary<NetConnection, NetChannel> _channels = new Dictionary<NetConnection, NetChannel>();
+
+        private readonly Dictionary<NetConnection, NetSessionId> _assignedSessions = new Dictionary<NetConnection, NetSessionId>();
 
         [Dependency]
         private readonly IConfigurationManager _config;
@@ -87,7 +90,6 @@ namespace SS14.Shared.Network
             IsServer = isServer;
 
             _config.RegisterCVar("net.port", 1212, CVar.ARCHIVE);
-            _config.RegisterCVar("net.allowdupeip", false, CVar.ARCHIVE);
 
             if (!isServer)
             {
@@ -113,7 +115,7 @@ namespace SS14.Shared.Network
 
         public void Startup()
         {
-            var netConfig = new NetPeerConfiguration("SS13_NetTag");
+            var netConfig = new NetPeerConfiguration("SS14_NetTag");
 
             if (IsServer)
             {
@@ -163,7 +165,7 @@ namespace SS14.Shared.Network
                 // sleep the thread for an arbitrary length so it isn't spinning in the while loop as much
                 Thread.Sleep(50);
             }
-            
+
             _strings.Reset();
         }
 
@@ -192,19 +194,19 @@ namespace SS14.Shared.Network
                 switch (msg.MessageType)
                 {
                     case NetIncomingMessageType.VerboseDebugMessage:
-                        Logger.Debug($"[NET] {msg.ReadString()}");
+                        Logger.DebugS("net", msg.ReadString());
                         break;
 
                     case NetIncomingMessageType.DebugMessage:
-                        Logger.Info("[NET] " + msg.ReadString());
+                        Logger.InfoS("net", msg.ReadString());
                         break;
 
                     case NetIncomingMessageType.WarningMessage:
-                        Logger.Warning("[NET] " + msg.ReadString());
+                        Logger.WarningS("net", msg.ReadString());
                         break;
 
                     case NetIncomingMessageType.ErrorMessage:
-                        Logger.Error("[NET] " + msg.ReadString());
+                        Logger.ErrorS("net", msg.ReadString());
                         break;
 
                     case NetIncomingMessageType.ConnectionApproval:
@@ -220,7 +222,7 @@ namespace SS14.Shared.Network
                         break;
 
                     default:
-                        Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: Unhandled incoming packet type: {msg.MessageType}");
+                        Logger.WarningS("net", "{msg.SenderConnection.RemoteEndPoint.Address}: Unhandled incoming packet type: {msg.MessageType}");
                         break;
                 }
                 _netPeer.Recycle(msg);
@@ -228,7 +230,7 @@ namespace SS14.Shared.Network
         }
 
         /// <inheritdoc />
-        public void ClientConnect(string host, int port)
+        public void ClientConnect(string host, int port, string userNameRequest)
         {
             DebugTools.Assert(_netPeer != null);
             DebugTools.Assert(!IsServer, "Should never be called on the server.");
@@ -237,8 +239,11 @@ namespace SS14.Shared.Network
             if (_netPeer.ConnectionsCount > 0)
                 ClientDisconnect("Client left server.");
 
-            Logger.Info($"[NET] Connecting to {host}:{port}...");
-            _netPeer.Connect(host, port);
+            Logger.InfoS("net", $"Connecting to {host}:{port}...");
+
+            var hail = _netPeer.CreateMessage();
+            hail.Write(userNameRequest);
+            _netPeer.Connect(host, port, hail);
         }
 
         /// <inheritdoc />
@@ -282,8 +287,7 @@ namespace SS14.Shared.Network
         private void HandleStatusChanged(NetIncomingMessage msg)
         {
             var sender = msg.SenderConnection;
-            var senderIp = sender.RemoteEndPoint.Address.ToString();
-            Logger.Debug($"[NET] {senderIp}: Status changed to {sender.Status}");
+            Logger.DebugS("net", $"{sender.RemoteEndPoint}: Status changed to {sender.Status}");
 
             switch (sender.Status)
             {
@@ -296,7 +300,7 @@ namespace SS14.Shared.Network
                         HandleDisconnect(msg);
                     else if (sender.RemoteUniqueIdentifier == 0) // is this the best way to detect an unsuccessful connect?
                     {
-                        Logger.Info($"[NET] {sender.RemoteEndPoint}: Failed to connect");
+                        Logger.InfoS("net", $"{sender.RemoteEndPoint}: Failed to connect");
                         OnConnectFailed();
                     }
                     break;
@@ -306,29 +310,54 @@ namespace SS14.Shared.Network
         private void HandleApproval(NetIncomingMessage message)
         {
             var sender = message.SenderConnection;
-            var ip = sender.RemoteEndPoint.Address;
-            if (!_config.GetCVar<bool>("net.allowdupeip") && _channels.Any(item => Equals(item.Key.RemoteEndPoint.Address, ip)))
+            var ip = sender.RemoteEndPoint;
+            var name = message.ReadString();
+            var origName = name;
+            var iterations = 1;
+
+            if (!UsernameHelpers.IsNameValid(name))
             {
-                Logger.Info($"[NET] {sender.RemoteEndPoint.Address}: Already connected.");
-                sender.Deny("Duplicate connection.");
+                sender.Deny("Username is invalid (contains illegal characters/too long).");
+            }
+
+            while (_assignedSessions.Values.Any(u => u.Username == name))
+            {
+                // This is shit but I don't care.
+                name = $"{origName}_{++iterations}";
+            }
+
+            var session = new NetSessionId(name);
+
+            if (OnConnecting(ip, session))
+            {
+                _assignedSessions.Add(sender, session);
+                var msg = _netPeer.CreateMessage();
+                msg.Write(name);
+                sender.Approve(msg);
             }
             else
             {
-                if (OnConnecting(ip.ToString()))
-                    message.SenderConnection.Approve();
-                else
-                    sender.Deny("Server is full.");
+                sender.Deny("Server is full.");
             }
         }
 
         private void HandleConnected(NetConnection sender)
         {
-            var channel = new NetChannel(this, sender);
+            NetSessionId session;
+            if (IsClient)
+            {
+                session = new NetSessionId(sender.RemoteHailMessage.ReadString());
+            }
+            else
+            {
+                session = _assignedSessions[sender];
+            }
+            var channel = new NetChannel(this, sender, session);
             _channels.Add(sender, channel);
 
             _strings.SendFullTable(channel);
 
-            Logger.Info($"[NET] {channel.RemoteAddress}: Connected");
+            Logger.InfoS("net", $"{channel.RemoteEndPoint}: Connected");
 
             // client is connected after string packet get received
             if (IsServer)
@@ -351,7 +380,8 @@ namespace SS14.Shared.Network
             var conn = message.SenderConnection;
             var channel = _channels[conn];
 
-            Logger.Info($"[NET] {channel.RemoteAddress}:{conn.RemoteEndPoint.Port}: Disconnected ({reason})");
+            Logger.InfoS("net", $"{channel.RemoteEndPoint}: Disconnected ({reason})");
+            _assignedSessions.Remove(conn);
 
             OnDisconnected(channel);
             _channels.Remove(conn);
@@ -379,7 +409,7 @@ namespace SS14.Shared.Network
 
             if (msg.LengthBytes < 1)
             {
-                Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: Received empty packet.");
+                Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: Received empty packet.");
                 return;
             }
 
@@ -387,13 +417,13 @@ namespace SS14.Shared.Network
 
             if (!_strings.TryGetString(id, out string name))
             {
-                Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}:  No string in table with ID {id}.");
+                Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}:  No string in table with ID {id}.");
                 return;
             }
 
             if (!_messages.TryGetValue(name, out Type packetType))
             {
-                Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: No message with Name {name}.");
+                Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: No message with Name {name}.");
                 return;
             }
 
@@ -407,12 +437,12 @@ namespace SS14.Shared.Network
             }
             catch (Exception e) // yes, we want to catch ALL exeptions for security
             {
-                Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: Failed to deserialize {packetType.Name} packet: {e.Message}");
+                Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: Failed to deserialize {packetType.Name} packet: {e.Message}");
             }
 
             if (!_callbacks.TryGetValue(packetType, out ProcessMessage callback))
             {
-                Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: Received packet {id}:{name}, but callback was not registered.");
+                Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: Received packet {id}:{name}, but callback was not registered.");
                 return;
             }
 
@@ -507,9 +537,9 @@ namespace SS14.Shared.Network
 
         #region Events
 
-        protected virtual bool OnConnecting(string ip)
+        protected virtual bool OnConnecting(IPEndPoint ip, NetSessionId sessionId)
         {
-            var args = new NetConnectingArgs(ip);
+            var args = new NetConnectingArgs(sessionId, ip);
             Connecting?.Invoke(this, args);
             return !args.Deny;
         }

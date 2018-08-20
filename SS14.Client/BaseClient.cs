@@ -5,6 +5,7 @@ using SS14.Client.Interfaces.State;
 using SS14.Client.Player;
 using SS14.Client.State.States;
 using SS14.Shared.Enums;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -26,6 +27,9 @@ namespace SS14.Client
 
         [Dependency]
         private readonly IStateManager _stateManager;
+
+        [Dependency]
+        private readonly IConfigurationManager _configManager;
 
         /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;
@@ -59,7 +63,7 @@ namespace SS14.Client
             _net.Startup();
 
             OnRunLevelChanged(ClientRunLevel.Connecting);
-            _net.ClientConnect(ip, port);
+            _net.ClientConnect(ip, port, _configManager.GetCVar<string>("player.name"));
         }
 
         /// <inheritdoc />
@@ -85,7 +89,6 @@ namespace SS14.Client
         {
             // request base info about the server
             var msgInfo = _net.CreateNetMessage<MsgServerInfoReq>();
-            msgInfo.PlayerName = "Joe Hello";
             _net.ClientSendMessage(msgInfo);
         }
 
@@ -163,12 +166,12 @@ namespace SS14.Client
             info.ServerMapName = msg.ServerMapName;
             info.GameMode = msg.GameMode;
             info.ServerPlayerCount = msg.ServerPlayerCount;
-            info.Index = msg.PlayerIndex;
+            info.SessionId = msg.PlayerSessionId;
 
             // start up player management
             _playMan.Startup(_net.ServerChannel);
 
-            _playMan.LocalPlayer.Index = info.Index;
+            _playMan.LocalPlayer.SessionId = info.SessionId;
 
             _playMan.LocalPlayer.StatusChanged += OnLocalStatusChanged;
         }
@@ -303,9 +306,6 @@ namespace SS14.Client
         /// </summary>
         public int ServerPlayerCount { get; set; }
 
-        /// <summary>
-        ///     Index of the client inside the PlayerManager.
-        /// </summary>
-        public PlayerIndex Index { get; set; }
+        public NetSessionId SessionId { get; set; }
     }
 }

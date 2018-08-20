@@ -10,6 +10,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
+using SS14.Shared.Network;
 using SS14.Shared.Players;
 
 namespace SS14.Server.Console.Commands
@@ -58,19 +59,19 @@ namespace SS14.Server.Console.Commands
         {
             // Player: number of people connected and their byond keys
             // Admin: read a byond variable which shows their ip, byond version, ckey, attached entity and hardware id
+            // EDIT: inb4 sued by MSO for AGPLv3 violation.
 
             var sb = new StringBuilder();
 
             var players = IoCManager.Resolve<IPlayerManager>().GetAllPlayers();
-            sb.AppendLine($"{"Index",1}{"Player Name",20}{"IP Address",16}{"Status",12}{"Playing Time",14}{"Ping",9}");
-            sb.AppendLine("----------------------------------------------------------------------------");
+            sb.AppendLine($"{"Player Name",20}{"IP Address",16}{"Status",12}{"Playing Time",14}{"Ping",9}");
+            sb.AppendLine("-----------------------------------------------------------------");
 
             foreach (IPlayerSession p in players)
             {
-                sb.Append($"  {p.Index,3}");
                 sb.Append($"  {p.Name,20}");
-                sb.AppendLine(string.Format("  {0,16}{1,12}{2,14}{3,9}",
-                    p.ConnectedClient.RemoteAddress,
+                sb.AppendLine(string.Format("  {0,21}{1,12}{2,14}{3,9}",
+                    p.ConnectedClient.RemoteEndPoint,
                     p.Status.ToString(),
                     (DateTime.Now - p.ConnectedTime).ToString(@"hh\:mm\:ss"),
                     p.ConnectedClient.Ping + "ms"));
@@ -89,26 +90,28 @@ namespace SS14.Server.Console.Commands
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if (args.Length < 1)
-                return;
-
-            if (int.TryParse(args[0], out var number))
             {
-                var players = IoCManager.Resolve<IPlayerManager>();
-                var index = new PlayerIndex(number);
+                shell.SendText(player, $"You need to provide a player to kick. Try running 'kick {player.Name}' as an example.");
+                return;
+            }
 
-                if (players.ValidSessionId(index))
+            var name = args[0];
+
+            var players = IoCManager.Resolve<IPlayerManager>();
+            var index = new NetSessionId(name);
+
+            if (players.ValidSessionId(index))
+            {
+                var network = IoCManager.Resolve<IServerNetManager>();
+                var targetPlyr = players.GetSessionById(index);
+
+                var reason = "Kicked by console.";
+                if (args.Length >= 2)
                 {
-                    var network = IoCManager.Resolve<IServerNetManager>();
-                    var targetPlyr = players.GetSessionById(index);
-
-                    var reason = "Kicked by console.";
-                    if (args.Length >= 2)
-                    {
-                        reason = reason + args[1];
-                    }
-
-                    network.DisconnectChannel(targetPlyr.ConnectedClient, reason);
+                    reason = reason + args[1];
                 }
+
+                network.DisconnectChannel(targetPlyr.ConnectedClient, reason);
             }
         }
     }

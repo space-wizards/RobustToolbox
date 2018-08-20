@@ -27,8 +27,8 @@ namespace Lidgren.Network
 
 		/// <summary>
 		/// Signalling event which can be waited on to determine when a message is queued for reading.
-		/// Note that there is no guarantee that after the event is signaled the blocked thread will 
-		/// find the message in the queue. Other user created threads could be preempted and dequeue 
+		/// Note that there is no guarantee that after the event is signaled the blocked thread will
+		/// find the message in the queue. Other user created threads could be preempted and dequeue
 		/// the message before the waiting thread wakes up.
 		/// </summary>
 		public AutoResetEvent MessageReceivedEvent { get { return m_messageReceivedEvent; } }
@@ -104,7 +104,7 @@ namespace Lidgren.Network
 			m_handshakes = new Dictionary<IPEndPoint, NetConnection>();
 			m_senderRemote = (EndPoint)new IPEndPoint(IPAddress.Any, 0);
 			m_status = NetPeerStatus.NotRunning;
-			m_receivedFragmentGroups = new Dictionary<NetConnection, Dictionary<int, ReceivedFragmentGroup>>();	
+			m_receivedFragmentGroups = new Dictionary<NetConnection, Dictionary<int, ReceivedFragmentGroup>>();
 		}
 
 		/// <summary>
@@ -129,7 +129,7 @@ namespace Lidgren.Network
 			}
 
 			InitializeNetwork();
-			
+
 			// start network thread
 			m_networkThread = new Thread(new ThreadStart(NetworkLoop));
 			m_networkThread.Name = m_configuration.NetworkThreadName;

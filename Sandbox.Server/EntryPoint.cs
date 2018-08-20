@@ -92,7 +92,7 @@ namespace Sandbox.Server
                     {
                         args.Session.JoinLobby();
                     }));
-                    IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined server!", args.Session.Index);
+                    IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined server!", args.Session.SessionId);
                 }
                     break;
 
@@ -109,7 +109,7 @@ namespace Sandbox.Server
                         }));
                     }
 
-                    IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined Lobby!", args.Session.Index);
+                    IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined Lobby!", args.Session.SessionId);
                 }
                     break;
 
@@ -118,13 +118,13 @@ namespace Sandbox.Server
                     //TODO: Check for existing mob and re-attach
                     IoCManager.Resolve<IPlayerManager>().SpawnPlayerMob(args.Session);
 
-                    IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined Game!", args.Session.Index);
+                    IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined Game!", args.Session.SessionId);
                 }
                     break;
 
                 case SessionStatus.Disconnected:
                 {
-                    IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player left!", args.Session.Index);
+                    IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player left!", args.Session.SessionId);
                 }
                     break;
             }

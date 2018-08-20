@@ -122,6 +122,8 @@
     <Compile Include="GameObjects\Components\Appearance\AppearanceComponent.cs" />
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\MoverSystem.cs" />
+    <Compile Include="Interfaces\Player\IPlayerData.cs" />
+    <Compile Include="Player\PlayerData.cs" />
     <Compile Include="Prototypes\ServerPrototypeManager.cs" />
     <Compile Include="Console\Commands\SpawnCommand.cs" />
     <Compile Include="AI\AiLogicProcessor.cs" />

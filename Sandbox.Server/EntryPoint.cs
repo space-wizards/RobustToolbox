@@ -135,7 +135,7 @@ namespace Sandbox.Server
 
         IEntity SpawnPlayerMob()
         {
-            return entityManager.ForceSpawnEntityAt("__engine_human", SpawnPoint);
+            return IoCManager.Resolve<IEntityManager>().ForceSpawnEntityAt("__engine_human", SpawnPoint);
         }
     }
 }

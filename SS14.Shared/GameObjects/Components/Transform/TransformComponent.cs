@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using SS14.Shared.Enums;
+using SS14.Shared.GameObjects.EntitySystemMessages;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
@@ -89,7 +90,12 @@ namespace SS14.Shared.GameObjects.Components.Transform
         public ITransformComponent Parent
         {
             get => !_parent.IsValid() ? null : Owner.EntityManager.GetEntity(_parent).GetComponent<ITransformComponent>();
-            private set => _parent = value?.Owner.Uid ?? EntityUid.Invalid;
+            private set
+            {
+                var msg = new EntParentChangedMessage(Owner, Parent?.Owner);
+                _parent = value?.Owner.Uid ?? EntityUid.Invalid;
+                Owner.EntityManager.RaiseEvent(Owner, msg);
+            }
         }
 
         /// <inheritdoc />

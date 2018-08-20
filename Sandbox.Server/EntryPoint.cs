@@ -25,6 +25,7 @@ namespace Sandbox.Server
         private IPlayerManager _players;
 
         private bool _countdownStarted;
+        private GridLocalCoordinates SpawnPoint;
 
         /// <inheritdoc />
         public override void Init()
@@ -64,7 +65,7 @@ namespace Sandbox.Server
 
                     var newMap = mapMan.CreateMap();
                     var grid = mapLoader.LoadBlueprint(newMap, "Maps/Demo/DemoGrid.yaml");
-                    IoCManager.Resolve<IPlayerManager>().FallbackSpawnPoint = new GridLocalCoordinates(0, 0, grid);
+                    SpawnPoint = new GridLocalCoordinates(0, 0, grid);
 
                     var timeSpan = timing.RealTime - startTime;
                     Logger.Info($"Loaded map in {timeSpan.TotalMilliseconds:N2}ms.");
@@ -116,7 +117,8 @@ namespace Sandbox.Server
                 case SessionStatus.InGame:
                 {
                     //TODO: Check for existing mob and re-attach
-                    IoCManager.Resolve<IPlayerManager>().SpawnPlayerMob(args.Session);
+                    var mob = SpawnPlayerMob();
+                    args.Session.AttachToEntity(mob);
 
                     IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined Game!", args.Session.SessionId);
                 }
@@ -128,6 +130,11 @@ namespace Sandbox.Server
                 }
                     break;
             }
+        }
+
+        IEntity SpawnPlayerMob()
+        {
+            return entityManager.ForceSpawnEntityAt("__engine_human", SpawnPoint);
         }
     }
 }

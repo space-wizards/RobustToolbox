@@ -95,7 +95,6 @@ namespace SS14.Server.Player
             actorComponent.playerSession = this;
 
             AttachedEntity = a;
-            _data.AttachedEntityUid = a.Uid;
             a.SendMessage(actorComponent, new PlayerAttachedMsg(this));
             SendAttachMessage();
             SetAttachedEntityName();
@@ -104,11 +103,6 @@ namespace SS14.Server.Player
 
         /// <inheritdoc />
         public void DetachFromEntity()
-        {
-            DetachFromEntity(false);
-        }
-
-        private void DetachFromEntity(bool keepData)
         {
             if (AttachedEntity == null)
             {
@@ -119,10 +113,6 @@ namespace SS14.Server.Player
             AttachedEntity.RemoveComponent<PlayerInputMoverComponent>();
             AttachedEntity.RemoveComponent<BasicActorComponent>();
             AttachedEntity = null;
-            if (!keepData)
-            {
-                _data.AttachedEntityUid = null;
-            }
             UpdatePlayerState();
         }
 
@@ -139,7 +129,7 @@ namespace SS14.Server.Player
         {
             Status = SessionStatus.Disconnected;
 
-            DetachFromEntity(keepData: true);
+            DetachFromEntity();
             UpdatePlayerState();
         }
 

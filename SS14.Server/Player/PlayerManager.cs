@@ -7,6 +7,7 @@ using SS14.Server.Interfaces.Player;
 using SS14.Shared.Enums;
 using SS14.Shared.GameStates;
 using SS14.Shared.Input;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
@@ -46,10 +47,6 @@ namespace SS14.Server.Player
 
         private Dictionary<NetSessionId, PlayerData> _playerData;
 
-        public string PlayerPrototypeName { get; set; } = "__engine_human";
-
-        public GridLocalCoordinates FallbackSpawnPoint { get; set; }
-
         /// <inheritdoc />
         public int PlayerCount => _sessions.Count;
 
@@ -80,16 +77,6 @@ namespace SS14.Server.Player
             _network.Disconnect += EndSession;
         }
 
-        /// <summary>
-        ///     Spawns the players entity.
-        /// </summary>
-        /// <param name="session"></param>
-        public void SpawnPlayerMob(IPlayerSession session)
-        {
-            var entity = _entityManager.ForceSpawnEntityAt(PlayerPrototypeName, FallbackSpawnPoint);
-            session.AttachToEntity(entity);
-        }
-
         IPlayerSession IPlayerManager.GetSessionByChannel(INetChannel channel) => GetSessionByChannel(channel);
         private PlayerSession GetSessionByChannel(INetChannel channel)
         {
@@ -106,6 +93,17 @@ namespace SS14.Server.Player
         public bool ValidSessionId(NetSessionId index)
         {
             return _sessions.ContainsKey(index);
+        }
+
+        public bool TryGetSessionById(NetSessionId sessionId, out IPlayerSession session)
+        {
+            if (_sessions.TryGetValue(sessionId, out var _session))
+            {
+                session = _session;
+                return true;
+            }
+            session = default(IPlayerSession);
+            return false;
         }
 
         /// <summary>
@@ -205,7 +203,7 @@ namespace SS14.Server.Player
         {
             if (!_playerData.TryGetValue(args.Channel.SessionId, out var data))
             {
-                data = new PlayerData();
+                data = new PlayerData(args.Channel.SessionId);
                 _playerData.Add(args.Channel.SessionId, data);
             }
             var session = new PlayerSession(this, args.Channel, data);
@@ -287,6 +285,27 @@ namespace SS14.Server.Player
         public void Dirty()
         {
             NeedsStateUpdate = true;
+        }
+
+        public IPlayerData GetPlayerData(NetSessionId sessionId)
+        {
+            return _playerData[sessionId];
+        }
+
+        public bool TryGetPlayerData(NetSessionId sessionId, out IPlayerData data)
+        {
+            if (_playerData.TryGetValue(sessionId, out var _data))
+            {
+                data = _data;
+                return true;
+            }
+            data = default(IPlayerData);
+            return false;
+        }
+
+        public bool HasPlayerData(NetSessionId sessionId)
+        {
+            return _playerData.ContainsKey(sessionId);
         }
     }
 

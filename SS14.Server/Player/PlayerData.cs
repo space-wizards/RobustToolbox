@@ -1,12 +1,18 @@
 ﻿using SS14.Server.Interfaces.Player;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Network;
 
 namespace SS14.Server.Player
 {
     class PlayerData : IPlayerData
     {
-        public EntityUid? AttachedEntityUid { get; set; }
+        public PlayerData(NetSessionId sessionId)
+        {
+            SessionId = sessionId;
+        }
 
-        public object ContentData { get; set; }
+        public NetSessionId SessionId { get; }
+
+        public object ContentDataUncast { get; set; }
     }
 }

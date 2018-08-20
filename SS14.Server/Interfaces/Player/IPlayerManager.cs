@@ -21,19 +21,12 @@ namespace SS14.Server.Interfaces.Player
         /// </summary>
         int PlayerCount { get; }
 
-        string PlayerPrototypeName { get; set; }
-
         BoundKeyMap KeyMap { get; }
 
         /// <summary>
         ///     Maximum number of players that can connect to this server at one time.
         /// </summary>
         int MaxPlayers { get; }
-
-        /// <summary>
-        ///     Fallback spawn point to use if map does not provide it.
-        /// </summary>
-        GridLocalCoordinates FallbackSpawnPoint { get; set; }
 
         /// <summary>
         ///     Raised when the <see cref="SessionStatus" /> of a <see cref="IPlayerSession" /> is changed.
@@ -55,13 +48,16 @@ namespace SS14.Server.Interfaces.Player
 
         IPlayerSession GetSessionByChannel(INetChannel channel);
 
+        bool TryGetSessionById(NetSessionId sessionId, out IPlayerSession session);
+
         /// <summary>
         ///     Checks to see if a PlayerIndex is a valid session.
         /// </summary>
         bool ValidSessionId(NetSessionId index);
 
-        //TODO: Move to IPlayerSession
-        void SpawnPlayerMob(IPlayerSession session);
+        IPlayerData GetPlayerData(NetSessionId sessionId);
+        bool TryGetPlayerData(NetSessionId sessionId, out IPlayerData data);
+        bool HasPlayerData(NetSessionId sessionId);
 
         void SendJoinGameToAll();
         void SendJoinLobbyToAll();

@@ -20,13 +20,27 @@ namespace SS14.Server.Interfaces.Player
         void JoinLobby();
         void JoinGame();
 
+        /// <summary>
+        ///     Attaches this player to an entity.
+        ///     NOTE: The content pack almost certainly has an alternative for this.
+        ///     Do not call this directly for most content code.
+        /// </summary>
+        /// <param name="a">The entity to attach to.</param>
         void AttachToEntity(IEntity a);
 
+        /// <summary>
+        ///     Detaches this player from an entity.
+        ///     NOTE: The content pack almost certainly has an alternative for this.
+        ///     Do not call this directly for most content code.
+        /// </summary>
         void DetachFromEntity();
         void OnConnect();
         void OnDisconnect();
         void AddPostProcessingEffect(PostProcessingEffectType type, float duration);
 
+        /// <summary>
+        ///     Persistant data for this player.
+        /// </summary>
         IPlayerData Data { get; }
     }
 }

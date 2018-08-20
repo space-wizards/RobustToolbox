@@ -33,8 +33,9 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DebugSymbols>True</DebugSymbols>
     <DebugType Condition="'$(AppVeyor)' != 'yes'">portable</DebugType>
-    <DebugType Condition="'$(AppVeyor)' == 'yes'">True</DebugType>
+    <DebugType Condition="'$(AppVeyor)' == 'yes'">full</DebugType>
     <Optimize>False</Optimize>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
@@ -46,8 +47,9 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DebugSymbols>True</DebugSymbols>
     <DebugType Condition="'$(AppVeyor)' != 'yes'">portable</DebugType>
-    <DebugType Condition="'$(AppVeyor)' == 'yes'">True</DebugType>
+    <DebugType Condition="'$(AppVeyor)' == 'yes'">full</DebugType>
     <Optimize>False</Optimize>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
@@ -58,8 +60,9 @@
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugSymbols>True</DebugSymbols>
     <DebugType Condition="'$(AppVeyor)' != 'yes'">portable</DebugType>
-    <DebugType Condition="'$(AppVeyor)' == 'yes'">True</DebugType>
+    <DebugType Condition="'$(AppVeyor)' == 'yes'">full</DebugType>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>

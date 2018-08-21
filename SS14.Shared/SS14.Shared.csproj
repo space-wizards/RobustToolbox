@@ -134,6 +134,10 @@
       <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\SS14.Shared.Math\SS14.Shared.Math.csproj">
+      <Project>{93f23a82-00c5-4572-964e-e7c9457726d4}</Project>
+      <Name>SS14.Shared.Math</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Audio\AudioParams.cs" />

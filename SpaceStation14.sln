@@ -26,7 +26,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sandbox.Server", "Sandbox.S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sandbox.Shared", "Sandbox.Shared\Sandbox.Shared.csproj", "{CC29CEC3-98F8-467D-8A70-BFB520EF0F45}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Shared.Math", "SS14.Shared.Math\SS14.Shared.Math.csproj", "{93F23A82-00C5-4572-964E-E7C9457726D4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Shared.Maths", "SS14.Shared.Maths\SS14.Shared.Maths.csproj", "{93F23A82-00C5-4572-964E-E7C9457726D4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

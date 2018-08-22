@@ -1,10 +1,10 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
+using Newtonsoft.Json;
 
 namespace SS14.Shared.Maths
 {
-    [JsonObject(memberSerialization: MemberSerialization.Fields)]
+    [JsonObject(MemberSerialization.Fields)]
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
     public struct Vector2u : IEquatable<Vector2u>

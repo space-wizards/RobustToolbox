@@ -134,9 +134,9 @@
       <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="..\SS14.Shared.Math\SS14.Shared.Math.csproj">
+    <ProjectReference Include="..\SS14.Shared.Maths\SS14.Shared.Maths.csproj">
       <Project>{93f23a82-00c5-4572-964e-e7c9457726d4}</Project>
-      <Name>SS14.Shared.Math</Name>
+      <Name>SS14.Shared.Maths</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -221,9 +221,6 @@
     <Compile Include="Map\GridId.cs" />
     <Compile Include="Map\Coordinates.cs" />
     <Compile Include="Map\MapId.cs" />
-    <Compile Include="Maths\Angle.cs" />
-    <Compile Include="Maths\Box2.cs" />
-    <Compile Include="Maths\Box2i.cs" />
     <Compile Include="Map\DefaultTileDefinitions.cs" />
     <Compile Include="Map\MapManager.cs" />
     <Compile Include="Map\MapManager.Network.cs" />
@@ -231,21 +228,6 @@
     <Compile Include="Map\TileDefinition.cs" />
     <Compile Include="Map\TileDefinitionManager.cs" />
     <Compile Include="Map\TileRef.cs" />
-    <Compile Include="Maths\Color.cs" />
-    <Compile Include="Maths\FloatMath.cs" />
-    <Compile Include="Maths\Direction.cs" />
-    <Compile Include="Maths\Circle.cs" />
-    <Compile Include="Maths\IApproxEquatable.cs" />
-    <Compile Include="Maths\MathHelper.cs" />
-    <Compile Include="Maths\Matrix3.cs" />
-    <Compile Include="Maths\Matrix4.cs" />
-    <Compile Include="Maths\Quaternion.cs" />
-    <Compile Include="Maths\Ray.cs" />
-    <Compile Include="Maths\Vector2.cs" />
-    <Compile Include="Maths\Vector2i.cs" />
-    <Compile Include="Maths\Vector2u.cs" />
-    <Compile Include="Maths\Vector3.cs" />
-    <Compile Include="Maths\Vector4.cs" />
     <Compile Include="Network\Messages\MsgState.cs" />
     <Compile Include="Network\NetChannelArgs.cs" />
     <Compile Include="Network\NetMessageArgs.cs" />

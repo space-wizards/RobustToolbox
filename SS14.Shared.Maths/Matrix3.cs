@@ -336,8 +336,8 @@ namespace SS14.Shared.Maths
 
         public static Matrix3 CreateRotation(float angle)
         {
-            var cos = (float)Math.Cos(angle);
-            var sin = (float)Math.Sin(angle);
+            var cos = (float)System.Math.Cos(angle);
+            var sin = (float)System.Math.Sin(angle);
 
             var result = Identity;
 
@@ -422,15 +422,15 @@ namespace SS14.Shared.Maths
         public bool EqualsApprox(ref Matrix3 matrix, float tolerance)
         {
             return
-                Math.Abs(R0C0 - matrix.R0C0) <= tolerance &&
-                Math.Abs(R0C1 - matrix.R0C1) <= tolerance &&
-                Math.Abs(R0C2 - matrix.R0C2) <= tolerance &&
-                Math.Abs(R1C0 - matrix.R1C0) <= tolerance &&
-                Math.Abs(R1C1 - matrix.R1C1) <= tolerance &&
-                Math.Abs(R1C2 - matrix.R1C2) <= tolerance &&
-                Math.Abs(R2C0 - matrix.R2C0) <= tolerance &&
-                Math.Abs(R2C1 - matrix.R2C1) <= tolerance &&
-                Math.Abs(R2C2 - matrix.R2C2) <= tolerance;
+                System.Math.Abs(R0C0 - matrix.R0C0) <= tolerance &&
+                System.Math.Abs(R0C1 - matrix.R0C1) <= tolerance &&
+                System.Math.Abs(R0C2 - matrix.R0C2) <= tolerance &&
+                System.Math.Abs(R1C0 - matrix.R1C0) <= tolerance &&
+                System.Math.Abs(R1C1 - matrix.R1C1) <= tolerance &&
+                System.Math.Abs(R1C2 - matrix.R1C2) <= tolerance &&
+                System.Math.Abs(R2C0 - matrix.R2C0) <= tolerance &&
+                System.Math.Abs(R2C1 - matrix.R2C1) <= tolerance &&
+                System.Math.Abs(R2C2 - matrix.R2C2) <= tolerance;
         }
 
         /// <summary>Indicates whether the current matrix is approximately equal to another matrix.</summary>
@@ -441,15 +441,15 @@ namespace SS14.Shared.Maths
         public static bool EqualsApprox(ref Matrix3 left, ref Matrix3 right, float tolerance)
         {
             return
-                Math.Abs(left.R0C0 - right.R0C0) <= tolerance &&
-                Math.Abs(left.R0C1 - right.R0C1) <= tolerance &&
-                Math.Abs(left.R0C2 - right.R0C2) <= tolerance &&
-                Math.Abs(left.R1C0 - right.R1C0) <= tolerance &&
-                Math.Abs(left.R1C1 - right.R1C1) <= tolerance &&
-                Math.Abs(left.R1C2 - right.R1C2) <= tolerance &&
-                Math.Abs(left.R2C0 - right.R2C0) <= tolerance &&
-                Math.Abs(left.R2C1 - right.R2C1) <= tolerance &&
-                Math.Abs(left.R2C2 - right.R2C2) <= tolerance;
+                System.Math.Abs(left.R0C0 - right.R0C0) <= tolerance &&
+                System.Math.Abs(left.R0C1 - right.R0C1) <= tolerance &&
+                System.Math.Abs(left.R0C2 - right.R0C2) <= tolerance &&
+                System.Math.Abs(left.R1C0 - right.R1C0) <= tolerance &&
+                System.Math.Abs(left.R1C1 - right.R1C1) <= tolerance &&
+                System.Math.Abs(left.R1C2 - right.R1C2) <= tolerance &&
+                System.Math.Abs(left.R2C0 - right.R2C0) <= tolerance &&
+                System.Math.Abs(left.R2C1 - right.R2C1) <= tolerance &&
+                System.Math.Abs(left.R2C2 - right.R2C2) <= tolerance;
         }
 
         #endregion Equality
@@ -777,8 +777,8 @@ namespace SS14.Shared.Maths
         public void Rotate(float angle)
         {
             var angleRadians = MathHelper.DegreesToRadians(angle);
-            var sin = (float)Math.Sin(angleRadians);
-            var cos = (float)Math.Cos(angleRadians);
+            var sin = (float)System.Math.Sin(angleRadians);
+            var cos = (float)System.Math.Cos(angleRadians);
 
             var r0c0 = cos * R0C0 + sin * R1C0;
             var r0c1 = cos * R0C1 + sin * R1C1;
@@ -796,8 +796,8 @@ namespace SS14.Shared.Maths
         public void Rotate(float angle, out Matrix3 result)
         {
             var angleRadians = MathHelper.DegreesToRadians(angle);
-            var sin = (float)Math.Sin(angleRadians);
-            var cos = (float)Math.Cos(angleRadians);
+            var sin = (float)System.Math.Sin(angleRadians);
+            var cos = (float)System.Math.Cos(angleRadians);
 
             result.R0C0 = cos * R0C0 + sin * R1C0;
             result.R0C1 = cos * R0C1 + sin * R1C1;
@@ -813,8 +813,8 @@ namespace SS14.Shared.Maths
         public static void Rotate(ref Matrix3 matrix, float angle, out Matrix3 result)
         {
             var angleRadians = MathHelper.DegreesToRadians(angle);
-            var sin = (float)Math.Sin(angleRadians);
-            var cos = (float)Math.Cos(angleRadians);
+            var sin = (float)System.Math.Sin(angleRadians);
+            var cos = (float)System.Math.Cos(angleRadians);
 
             result.R0C0 = cos * matrix.R0C0 + sin * matrix.R1C0;
             result.R0C1 = cos * matrix.R0C1 + sin * matrix.R1C1;
@@ -830,8 +830,8 @@ namespace SS14.Shared.Maths
         public static void RotateMatrix(float angle, out Matrix3 result)
         {
             var angleRadians = MathHelper.DegreesToRadians(angle);
-            var sin = (float)Math.Sin(angleRadians);
-            var cos = (float)Math.Cos(angleRadians);
+            var sin = (float)System.Math.Sin(angleRadians);
+            var cos = (float)System.Math.Cos(angleRadians);
 
             result.R0C0 = cos;
             result.R0C1 = sin;

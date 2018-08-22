@@ -36,7 +36,7 @@ namespace SS14.Shared.Maths
         public Angle(Vector2 dir)
         {
             dir = dir.Normalized;
-            Theta = Math.Atan2(dir.Y, dir.X);
+            Theta = System.Math.Atan2(dir.Y, dir.X);
         }
 
         /// <summary>
@@ -45,35 +45,35 @@ namespace SS14.Shared.Maths
         /// <returns>Unit Direction Vector</returns>
         public Vector2 ToVec()
         {
-            var x = Math.Cos(Theta);
-            var y = Math.Sin(Theta);
+            var x = System.Math.Cos(Theta);
+            var y = System.Math.Sin(Theta);
             return new Vector2((float)x, (float)y);
         }
 
-        private const double Segment = 2 * Math.PI / 8.0; // Cut the circle into 8 pieces
+        private const double Segment = 2 * System.Math.PI / 8.0; // Cut the circle into 8 pieces
         private const double Offset = Segment / 2.0; // offset the pieces by 1/2 their size
 
         public Direction GetDir()
         {
-            var ang = Theta % (2 * Math.PI);
+            var ang = Theta % (2 * System.Math.PI);
 
             if (ang < 0.0f) // convert -PI > PI to 0 > 2PI
-                ang += 2 * (float)Math.PI;
+                ang += 2 * (float)System.Math.PI;
 
-            return (Direction)(Math.Floor((ang + Offset) / Segment) % 8);
+            return (Direction)(System.Math.Floor((ang + Offset) / Segment) % 8);
         }
 
-        private const double CardinalSegment = 2 * Math.PI / 4.0; // Cut the circle into 4 pieces
+        private const double CardinalSegment = 2 * System.Math.PI / 4.0; // Cut the circle into 4 pieces
         private const double CardinalOffset = CardinalSegment / 2.0; // offset the pieces by 1/2 their size
 
         public Direction GetCardinalDir()
         {
-            var ang = Theta % (2 * Math.PI);
+            var ang = Theta % (2 * System.Math.PI);
 
             if (ang < 0.0f) // convert -PI > PI to 0 > 2PI
-                ang += 2 * (float)Math.PI;
+                ang += 2 * (float)System.Math.PI;
 
-            return (Direction)((Math.Floor((ang + CardinalOffset) / CardinalSegment) * 2) % 8);
+            return (Direction)((System.Math.Floor((ang + CardinalOffset) / CardinalSegment) * 2) % 8);
         }
 
         public bool EqualsApprox(Angle other, double tolerance)
@@ -116,8 +116,8 @@ namespace SS14.Shared.Maths
         private static double Reduce(double theta)
         {
             // int truncates value (round to 0)
-            var aTurns = (int)(theta / (2 * Math.PI));
-            return theta - aTurns * (2 * Math.PI);
+            var aTurns = (int)(theta / (2 * System.Math.PI));
+            return theta - aTurns * (2 * System.Math.PI);
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace SS14.Shared.Maths
             if (theta >= 0)
                 return theta;
 
-            return theta + 2 * Math.PI;
+            return theta + 2 * System.Math.PI;
         }
 
         /// <summary>

@@ -6,8 +6,8 @@ namespace SS14.Shared.Maths
     {
         private const int LookupSize = 1024 * 64; //has to be power of 2
         private static readonly float[] getSin, getCos;
-        public const float RadToDeg = (float)(180.0 / Math.PI);
-        public const float DegToRad = (float)(Math.PI / 180.0);
+        public const float RadToDeg = (float)(180.0 / System.Math.PI);
+        public const float DegToRad = (float)(System.Math.PI / 180.0);
 
         static FloatMath()
         {
@@ -16,8 +16,8 @@ namespace SS14.Shared.Maths
 
             for (var i = 0; i < LookupSize; i++)
             {
-                getSin[i] = (float)Math.Sin(i * Math.PI / LookupSize * 2);
-                getCos[i] = (float)Math.Cos(i * Math.PI / LookupSize * 2);
+                getSin[i] = (float)System.Math.Sin(i * System.Math.PI / LookupSize * 2);
+                getCos[i] = (float)System.Math.Cos(i * System.Math.PI / LookupSize * 2);
             }
         }
 
@@ -54,15 +54,15 @@ namespace SS14.Shared.Maths
 
         public static float Min(float a, float b)
         {
-            return Math.Min(a, b);
+            return System.Math.Min(a, b);
         }
 
         public static float Max(float a, float b)
         {
-            return Math.Max(a, b);
+            return System.Math.Max(a, b);
         }
 
-        public const float Pi = (float)Math.PI;
+        public const float Pi = (float)System.Math.PI;
 
         public static float ToDegrees(float radians)
         {
@@ -83,26 +83,26 @@ namespace SS14.Shared.Maths
 
         public static bool CloseTo(float a, float b, double tolerance = .00001)
         {
-            var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
-            return Math.Abs(a - b) <= epsilon;
+            var epsilon = System.Math.Max(System.Math.Max(System.Math.Abs(a), System.Math.Abs(b)) * tolerance, tolerance); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            return System.Math.Abs(a - b) <= epsilon;
         }
 
         public static bool CloseTo(float a, double b, double tolerance = .00001)
         {
-            var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
-            return Math.Abs(a - b) <= epsilon;
+            var epsilon = System.Math.Max(System.Math.Max(System.Math.Abs(a), System.Math.Abs(b)) * tolerance, tolerance); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            return System.Math.Abs(a - b) <= epsilon;
         }
 
         public static bool CloseTo(double a, float b, double tolerance = .00001)
         {
-            var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
-            return Math.Abs(a - b) <= epsilon;
+            var epsilon = System.Math.Max(System.Math.Max(System.Math.Abs(a), System.Math.Abs(b)) * tolerance, tolerance); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            return System.Math.Abs(a - b) <= epsilon;
         }
 
         public static bool CloseTo(double a, double b, double tolerance = .00001)
         {
-            var epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
-            return Math.Abs(a - b) <= epsilon;
+            var epsilon = System.Math.Max(System.Math.Max(System.Math.Abs(a), System.Math.Abs(b)) * tolerance, tolerance); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            return System.Math.Abs(a - b) <= epsilon;
         }
 
         /// <summary>

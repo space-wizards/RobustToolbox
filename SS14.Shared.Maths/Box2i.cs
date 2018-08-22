@@ -12,8 +12,8 @@ namespace SS14.Shared.Maths
 
         public Vector2i BottomRight => new Vector2i(Right, Bottom);
         public Vector2i TopLeft => new Vector2i(Left, Top);
-        public int Width => Math.Abs(Right - Left);
-        public int Height => Math.Abs(Top - Bottom);
+        public int Width => System.Math.Abs(Right - Left);
+        public int Height => System.Math.Abs(Top - Bottom);
         public Vector2i Size => new Vector2i(Width, Height);
 
         public Box2i(Vector2i topLeft, Vector2i bottomRight)

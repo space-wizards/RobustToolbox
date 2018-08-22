@@ -257,17 +257,17 @@ namespace SS14.Shared.Maths
             if (srgb.R <= 0.04045f)
                 r = srgb.R / 12.92f;
             else
-                r = (float)Math.Pow((srgb.R + 0.055f) / (1.0f + 0.055f), 2.4f);
+                r = (float)System.Math.Pow((srgb.R + 0.055f) / (1.0f + 0.055f), 2.4f);
 
             if (srgb.G <= 0.04045f)
                 g = srgb.G / 12.92f;
             else
-                g = (float)Math.Pow((srgb.G + 0.055f) / (1.0f + 0.055f), 2.4f);
+                g = (float)System.Math.Pow((srgb.G + 0.055f) / (1.0f + 0.055f), 2.4f);
 
             if (srgb.B <= 0.04045f)
                 b = srgb.B / 12.92f;
             else
-                b = (float)Math.Pow((srgb.B + 0.055f) / (1.0f + 0.055f), 2.4f);
+                b = (float)System.Math.Pow((srgb.B + 0.055f) / (1.0f + 0.055f), 2.4f);
 
             return new Color(r, g, b, srgb.A);
         }
@@ -286,17 +286,17 @@ namespace SS14.Shared.Maths
             if (rgb.R <= 0.0031308)
                 r = 12.92f * rgb.R;
             else
-                r = (1.0f + 0.055f) * (float)Math.Pow(rgb.R, 1.0f / 2.4f) - 0.055f;
+                r = (1.0f + 0.055f) * (float)System.Math.Pow(rgb.R, 1.0f / 2.4f) - 0.055f;
 
             if (rgb.G <= 0.0031308)
                 g = 12.92f * rgb.G;
             else
-                g = (1.0f + 0.055f) * (float)Math.Pow(rgb.G, 1.0f / 2.4f) - 0.055f;
+                g = (1.0f + 0.055f) * (float)System.Math.Pow(rgb.G, 1.0f / 2.4f) - 0.055f;
 
             if (rgb.B <= 0.0031308)
                 b = 12.92f * rgb.B;
             else
-                b = (1.0f + 0.055f) * (float)Math.Pow(rgb.B, 1.0f / 2.4f) - 0.055f;
+                b = (1.0f + 0.055f) * (float)System.Math.Pow(rgb.B, 1.0f / 2.4f) - 0.055f;
 
             return new Color(r, g, b, rgb.A);
         }
@@ -319,10 +319,10 @@ namespace SS14.Shared.Maths
             var saturation = hsl.Y;
             var lightness = hsl.Z;
 
-            var c = (1.0f - Math.Abs(2.0f * lightness - 1.0f)) * saturation;
+            var c = (1.0f - System.Math.Abs(2.0f * lightness - 1.0f)) * saturation;
 
             var h = hue / 60.0f;
-            var X = c * (1.0f - Math.Abs(h % 2.0f - 1.0f));
+            var X = c * (1.0f - System.Math.Abs(h % 2.0f - 1.0f));
 
             float r, g, b;
             if (0.0f <= h && h < 1.0f)
@@ -384,8 +384,8 @@ namespace SS14.Shared.Maths
         /// <param name="rgb">Color value to convert.</param>
         public static Vector4 ToHsl(Color rgb)
         {
-            var max = Math.Max(rgb.R, Math.Max(rgb.G, rgb.B));
-            var min = Math.Min(rgb.R, Math.Min(rgb.G, rgb.B));
+            var max = System.Math.Max(rgb.R, System.Math.Max(rgb.G, rgb.B));
+            var min = System.Math.Min(rgb.R, System.Math.Min(rgb.G, rgb.B));
             var c = max - min;
 
             var h = 0.0f;
@@ -404,7 +404,7 @@ namespace SS14.Shared.Maths
 
             var saturation = 0.0f;
             if (0.0f != lightness && lightness != 1.0f)
-                saturation = c / (1.0f - Math.Abs(2.0f * lightness - 1.0f));
+                saturation = c / (1.0f - System.Math.Abs(2.0f * lightness - 1.0f));
 
             return new Vector4(hue, saturation, lightness, rgb.A);
         }
@@ -430,7 +430,7 @@ namespace SS14.Shared.Maths
             var c = value * saturation;
 
             var h = hue / 60.0f;
-            var x = c * (1.0f - Math.Abs(h % 2.0f - 1.0f));
+            var x = c * (1.0f - System.Math.Abs(h % 2.0f - 1.0f));
 
             float r, g, b;
             if (0.0f <= h && h < 1.0f)
@@ -492,8 +492,8 @@ namespace SS14.Shared.Maths
         /// <param name="rgb">Color value to convert.</param>
         public static Vector4 ToHsv(Color rgb)
         {
-            var max = Math.Max(rgb.R, Math.Max(rgb.G, rgb.B));
-            var min = Math.Min(rgb.R, Math.Min(rgb.G, rgb.B));
+            var max = System.Math.Max(rgb.R, System.Math.Max(rgb.G, rgb.B));
+            var min = System.Math.Min(rgb.R, System.Math.Min(rgb.G, rgb.B));
             var c = max - min;
 
             var h = 0.0f;
@@ -611,7 +611,7 @@ namespace SS14.Shared.Maths
             var luminance = hcy.Z;
 
             var h = hue / 60.0f;
-            var x = c * (1.0f - Math.Abs(h % 2.0f - 1.0f));
+            var x = c * (1.0f - System.Math.Abs(h % 2.0f - 1.0f));
 
             float r, g, b;
             if (0.0f <= h && h < 1.0f)
@@ -673,8 +673,8 @@ namespace SS14.Shared.Maths
         /// <param name="rgb">Color value to convert.</param>
         public static Vector4 ToHcy(Color rgb)
         {
-            var max = Math.Max(rgb.R, Math.Max(rgb.G, rgb.B));
-            var min = Math.Min(rgb.R, Math.Min(rgb.G, rgb.B));
+            var max = System.Math.Max(rgb.R, System.Math.Max(rgb.G, rgb.B));
+            var min = System.Math.Min(rgb.R, System.Math.Min(rgb.G, rgb.B));
             var c = max - min;
 
             var h = 0.0f;

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SS14.Shared.Maths
+﻿namespace SS14.Shared.Maths
 {
     /// <summary>
     ///     Approximate equality checking, to handle floating point errors.

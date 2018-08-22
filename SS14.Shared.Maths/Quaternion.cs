@@ -70,13 +70,13 @@ namespace SS14.Shared.Maths
 
         public Quaternion(ref Matrix3 matrix)
         {
-            var scale = Math.Pow(matrix.Determinant, 1.0d / 3.0d);
+            var scale = System.Math.Pow(matrix.Determinant, 1.0d / 3.0d);
             float x, y, z;
 
-            w = (float)(Math.Sqrt(Math.Max(0, scale + matrix[0, 0] + matrix[1, 1] + matrix[2, 2])) / 2);
-            x = (float)(Math.Sqrt(Math.Max(0, scale + matrix[0, 0] - matrix[1, 1] - matrix[2, 2])) / 2);
-            y = (float)(Math.Sqrt(Math.Max(0, scale - matrix[0, 0] + matrix[1, 1] - matrix[2, 2])) / 2);
-            z = (float)(Math.Sqrt(Math.Max(0, scale - matrix[0, 0] - matrix[1, 1] + matrix[2, 2])) / 2);
+            w = (float)(System.Math.Sqrt(System.Math.Max(0, scale + matrix[0, 0] + matrix[1, 1] + matrix[2, 2])) / 2);
+            x = (float)(System.Math.Sqrt(System.Math.Max(0, scale + matrix[0, 0] - matrix[1, 1] - matrix[2, 2])) / 2);
+            y = (float)(System.Math.Sqrt(System.Math.Max(0, scale - matrix[0, 0] + matrix[1, 1] - matrix[2, 2])) / 2);
+            z = (float)(System.Math.Sqrt(System.Math.Max(0, scale - matrix[0, 0] - matrix[1, 1] + matrix[2, 2])) / 2);
 
             xyz = new Vector3(x, y, z);
 
@@ -181,13 +181,13 @@ namespace SS14.Shared.Maths
         public Vector4 ToAxisAngle()
         {
             var q = this;
-            if (Math.Abs(q.W) > 1.0f)
+            if (System.Math.Abs(q.W) > 1.0f)
                 q.Normalize();
 
             var result = new Vector4();
 
-            result.W = 2.0f * (float)Math.Acos(q.W); // angle
-            var den = (float)Math.Sqrt(1.0 - q.W * q.W);
+            result.W = 2.0f * (float)System.Math.Acos(q.W); // angle
+            var den = (float)System.Math.Sqrt(1.0 - q.W * q.W);
             if (den > 0.0001f)
             {
                 result.Xyz = q.Xyz / den;
@@ -210,7 +210,7 @@ namespace SS14.Shared.Maths
         /// Gets the length (magnitude) of the quaternion.
         /// </summary>
         /// <seealso cref="LengthSquared"/>
-        public float Length => (float)Math.Sqrt(W * W + Xyz.LengthSquared);
+        public float Length => (float)System.Math.Sqrt(W * W + Xyz.LengthSquared);
 
         #endregion public float Length
 
@@ -255,8 +255,8 @@ namespace SS14.Shared.Maths
 
         #region Fields
 
-        private const float RadToDeg = (float)(180.0 / Math.PI);
-        private const float DegToRad = (float)(Math.PI / 180.0);
+        private const float RadToDeg = (float)(180.0 / System.Math.PI);
+        private const float DegToRad = (float)(System.Math.PI / 180.0);
 
         /// <summary>
         /// Defines the identity quaternion.
@@ -489,8 +489,8 @@ namespace SS14.Shared.Maths
 
             angle *= 0.5f;
             axis.Normalize();
-            result.Xyz = axis * (float)Math.Sin(angle);
-            result.W = (float)Math.Cos(angle);
+            result.Xyz = axis * (float)System.Math.Sin(angle);
+            result.W = (float)System.Math.Cos(angle);
 
             return Normalize(result);
         }
@@ -541,11 +541,11 @@ namespace SS14.Shared.Maths
             if (cosHalfAngle < 0.99f)
             {
                 // do proper slerp for big angles
-                var halfAngle = (float)Math.Acos(cosHalfAngle);
-                var sinHalfAngle = (float)Math.Sin(halfAngle);
+                var halfAngle = (float)System.Math.Acos(cosHalfAngle);
+                var sinHalfAngle = (float)System.Math.Sin(halfAngle);
                 var oneOverSinHalfAngle = 1.0f / sinHalfAngle;
-                blendA = (float)Math.Sin(halfAngle * (1.0f - blend)) * oneOverSinHalfAngle;
-                blendB = (float)Math.Sin(halfAngle * blend) * oneOverSinHalfAngle;
+                blendA = (float)System.Math.Sin(halfAngle * (1.0f - blend)) * oneOverSinHalfAngle;
+                blendB = (float)System.Math.Sin(halfAngle * blend) * oneOverSinHalfAngle;
             }
             else
             {
@@ -571,7 +571,7 @@ namespace SS14.Shared.Maths
             {
                 return to;
             }
-            var t = Math.Min(1f, maxDegreesDelta / num);
+            var t = System.Math.Min(1f, maxDegreesDelta / num);
             return Slerp(from, to, t);
         }
 
@@ -582,7 +582,7 @@ namespace SS14.Shared.Maths
         public static float Angle(Quaternion a, Quaternion b)
         {
             var f = Dot(a, b);
-            return (float)(Math.Acos(Math.Min(Math.Abs(f), 1f)) * 2f * RadToDeg);
+            return (float)(System.Math.Acos(System.Math.Min(System.Math.Abs(f), 1f)) * 2f * RadToDeg);
         }
 
         #endregion Angle
@@ -663,15 +663,15 @@ namespace SS14.Shared.Maths
 
             if (test > 0.4995f * unit)
             { // singularity at north pole
-                v.Y = (float)(2f * Math.Atan2(rotation.y, rotation.x));
-                v.X = (float)(Math.PI / 2);
+                v.Y = (float)(2f * System.Math.Atan2(rotation.y, rotation.x));
+                v.X = (float)(System.Math.PI / 2);
                 v.Z = 0;
                 return NormalizeAngles(v * RadToDeg);
             }
             if (test < -0.4995f * unit)
             { // singularity at south pole
-                v.Y = (float)(-2f * Math.Atan2(rotation.y, rotation.x));
-                v.X = (float)(-Math.PI / 2);
+                v.Y = (float)(-2f * System.Math.Atan2(rotation.y, rotation.x));
+                v.X = (float)(-System.Math.PI / 2);
                 v.Z = 0;
                 return NormalizeAngles(v * RadToDeg);
             }

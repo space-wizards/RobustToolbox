@@ -54,7 +54,7 @@ namespace SS14.Shared.Maths
         /// <summary>
         ///     Gets the length (magnitude) of the vector.
         /// </summary>
-        public float Length => (float)System.Math.Sqrt(LengthSquared);
+        public float Length => (float) Math.Sqrt(LengthSquared);
 
         /// <summary>
         ///     Gets the squared length of the vector.
@@ -76,7 +76,7 @@ namespace SS14.Shared.Maths
 
         public Vector2 Rounded()
         {
-            return new Vector2((float)System.Math.Round(X), (float)System.Math.Round(Y));
+            return new Vector2((float) Math.Round(X), (float) Math.Round(Y));
         }
 
         /// <summary>

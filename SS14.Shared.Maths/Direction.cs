@@ -1,4 +1,6 @@
-﻿namespace SS14.Shared.Maths
+﻿using System;
+
+namespace SS14.Shared.Maths
 {
     public enum Direction
     {
@@ -17,7 +19,7 @@
     /// </summary>
     public static class DirectionExtensions
     {
-        private const double Segment = 2 * System.Math.PI / 8.0; // Cut the circle into 8 pieces
+        private const double Segment = 2 * Math.PI / 8.0; // Cut the circle into 8 pieces
         private const double Offset = Segment / 2.0; // offset the pieces by 1/2 their size
 
         /// <summary>
@@ -37,10 +39,10 @@
         /// <returns></returns>
         public static Angle ToAngle(this Direction dir)
         {
-            var ang = Segment * (int)dir;
+            var ang = Segment * (int) dir;
 
-            if (ang > System.Math.PI) // convert 0 > 2PI to -PI > +PI
-                ang -= 2 * System.Math.PI;
+            if (ang > Math.PI) // convert 0 > 2PI to -PI > +PI
+                ang -= 2 * Math.PI;
 
             return ang;
         }
@@ -62,7 +64,7 @@
         /// <returns>Angle of the vector.</returns>
         public static Angle ToAngle(this Vector2 vec)
         {
-            return System.Math.Atan2(vec.Y, vec.X);
+            return Math.Atan2(vec.Y, vec.X);
         }
     }
 }

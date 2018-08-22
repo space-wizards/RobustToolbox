@@ -39,13 +39,13 @@ namespace SS14.Shared.Maths
             hitPos = Vector2.Zero;
             distance = 0;
 
-            float tmin = 0.0f; // set to -FLT_MAX to get first hit on line
-            float tmax = float.MaxValue; // set to max distance ray can travel (for segment)
+            var tmin = 0.0f; // set to -FLT_MAX to get first hit on line
+            var tmax = float.MaxValue; // set to max distance ray can travel (for segment)
             const float epsilon = 1.0E-07f;
-            
+
             // X axis slab
             {
-                if (System.Math.Abs(_direction.X) < epsilon)
+                if (Math.Abs(_direction.X) < epsilon)
                 {
                     // ray is parallel to this slab, it will never hit unless ray is inside box
                     if (_position.X < FloatMath.Min(box.Left, box.Right) || _position.X > FloatMath.Max(box.Left, box.Right))
@@ -76,7 +76,7 @@ namespace SS14.Shared.Maths
 
             // Y axis slab
             {
-                if (System.Math.Abs(_direction.Y) < epsilon)
+                if (Math.Abs(_direction.Y) < epsilon)
                 {
                     // ray is parallel to this slab, it will never hit unless ray is inside box
                     if (_position.Y < FloatMath.Min(box.Top, box.Bottom) || _position.Y > FloatMath.Max(box.Top, box.Bottom))

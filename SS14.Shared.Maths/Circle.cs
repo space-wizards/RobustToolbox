@@ -32,11 +32,11 @@ namespace SS14.Shared.Maths
         /// </summary>
         public bool Contains(Vector2 point)
         {
-            var dx = System.Math.Abs(point.X - Position.X);
-            var dy = System.Math.Abs(point.Y - Position.Y);
+            var dx = Math.Abs(point.X - Position.X);
+            var dy = Math.Abs(point.Y - Position.Y);
             var r = Radius;
 
-            return (dx * dx + dy * dy <= r * r);
+            return dx * dx + dy * dy <= r * r;
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace SS14.Shared.Maths
             var dx = Position.X - circle.Position.X;
             var dy = Position.Y - circle.Position.Y;
 
-            return System.Math.Sqrt(dx * dx + dy * dy) < Radius + circle.Radius;
+            return Math.Sqrt(dx * dx + dy * dy) < Radius + circle.Radius;
         }
 
         /// <summary>
@@ -55,11 +55,11 @@ namespace SS14.Shared.Maths
         /// </summary>
         public bool Intersects(Box2 aabb)
         {
-            var dx = Position.X - System.Math.Max(aabb.Left, System.Math.Min(Position.X, aabb.Left + aabb.Height));
-            var dy = Position.Y - System.Math.Max(aabb.Top, System.Math.Min(Position.Y, aabb.Top + aabb.Height));
+            var dx = Position.X - Math.Max(aabb.Left, Math.Min(Position.X, aabb.Left + aabb.Height));
+            var dy = Position.Y - Math.Max(aabb.Top, Math.Min(Position.Y, aabb.Top + aabb.Height));
             var r = Radius;
 
-            return (dx * dx + dy * dy <= r * r);
+            return dx * dx + dy * dy <= r * r;
         }
 
         /// <inheritdoc />

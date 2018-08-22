@@ -86,7 +86,7 @@ namespace SS14.Shared.Maths
         public static long NextPowerOfTwo(long n)
         {
             if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (long)System.Math.Pow(2, System.Math.Ceiling(System.Math.Log(n, 2)));
+            return (long) Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
         }
 
         /// <summary>
@@ -97,7 +97,7 @@ namespace SS14.Shared.Maths
         public static int NextPowerOfTwo(int n)
         {
             if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (int)System.Math.Pow(2, System.Math.Ceiling(System.Math.Log(n, 2)));
+            return (int) Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace SS14.Shared.Maths
         public static float NextPowerOfTwo(float n)
         {
             if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (float)System.Math.Pow(2, System.Math.Ceiling(System.Math.Log(n, 2)));
+            return (float) Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace SS14.Shared.Maths
         public static double NextPowerOfTwo(double n)
         {
             if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return System.Math.Pow(2, System.Math.Ceiling(System.Math.Log(n, 2)));
+            return Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
         }
 
         #endregion NextPowerOfTwo
@@ -166,7 +166,7 @@ namespace SS14.Shared.Maths
         /// <returns>The angle expressed in radians</returns>
         public static float DegreesToRadians(float degrees)
         {
-            const float degToRad = (float)System.Math.PI / 180.0f;
+            const float degToRad = (float) Math.PI / 180.0f;
             return degrees * degToRad;
         }
 
@@ -177,7 +177,7 @@ namespace SS14.Shared.Maths
         /// <returns>The angle expressed in degrees</returns>
         public static float RadiansToDegrees(float radians)
         {
-            const float radToDeg = 180.0f / (float)System.Math.PI;
+            const float radToDeg = 180.0f / (float) Math.PI;
             return radians * radToDeg;
         }
 
@@ -188,7 +188,7 @@ namespace SS14.Shared.Maths
         /// <returns>The angle expressed in radians</returns>
         public static double DegreesToRadians(double degrees)
         {
-            const double degToRad = System.Math.PI / 180.0;
+            const double degToRad = Math.PI / 180.0;
             return degrees * degToRad;
         }
 
@@ -199,7 +199,7 @@ namespace SS14.Shared.Maths
         /// <returns>The angle expressed in degrees</returns>
         public static double RadiansToDegrees(double radians)
         {
-            const double radToDeg = 180.0 / System.Math.PI;
+            const double radToDeg = 180.0 / Math.PI;
             return radians * radToDeg;
         }
 
@@ -237,12 +237,12 @@ namespace SS14.Shared.Maths
 
         public static float Min(float a, float b, float c, float d)
         {
-            return System.Math.Min(a, System.Math.Min(b, System.Math.Min(c, d)));
+            return Math.Min(a, Math.Min(b, Math.Min(c, d)));
         }
 
         public static float Max(float a, float b, float c, float d)
         {
-            return System.Math.Max(a, System.Math.Max(b, System.Math.Max(c, d)));
+            return Math.Max(a, Math.Max(b, Math.Max(c, d)));
         }
 
         #endregion MinMax
@@ -257,7 +257,7 @@ namespace SS14.Shared.Maths
         [DebuggerStepThrough]
         public static double Mod(double n, double d)
         {
-            return (n - System.Math.Floor(n / d) * d);
+            return n - Math.Floor(n / d) * d;
         }
 
         /// <summary>
@@ -270,10 +270,9 @@ namespace SS14.Shared.Maths
         [DebuggerStepThrough]
         public static int Mod(int n, int d)
         {
-            int r = n % d;
+            var r = n % d;
             return r < 0 ? r + d : r;
         }
-
 
         #endregion Public Members
     }

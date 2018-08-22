@@ -59,11 +59,11 @@ namespace SS14.Shared.Maths
         {
             unchecked
             {
-                return ((int)X * 397) ^ (int)Y;
+                return ((int) X * 397) ^ (int) Y;
             }
         }
 
-        public static Vector2u operator / (Vector2u vector, uint divider)
+        public static Vector2u operator /(Vector2u vector, uint divider)
         {
             return new Vector2u(vector.X / divider, vector.Y / divider);
         }
@@ -75,7 +75,7 @@ namespace SS14.Shared.Maths
 
         public static explicit operator Vector2u(Vector2 vector)
         {
-            return new Vector2u((uint)vector.X, (uint)vector.Y);
+            return new Vector2u((uint) vector.X, (uint) vector.Y);
         }
     }
 }

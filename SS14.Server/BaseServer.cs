@@ -220,14 +220,13 @@ namespace SS14.Server
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
 
-            IoCManager.Resolve<ITileDefinitionManager>().Initialize();
-
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes"));
             prototypeManager.Resync();
 
+            IoCManager.Resolve<ITileDefinitionManager>().Initialize();
             IoCManager.Resolve<IConsoleShell>().Initialize();
 
             OnRunLevelChanged(ServerRunLevel.PreGame);

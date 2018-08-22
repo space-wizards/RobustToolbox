@@ -134,12 +134,12 @@ namespace SS14.Client
             eyeManager.Initialize();
             _serializer.Initialize();
             _userInterfaceManager.Initialize();
-            _tileDefinitionManager.Initialize();
             _networkManager.Initialize(false);
             inputManager.Initialize();
             _console.Initialize();
             _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
             _prototypeManager.Resync();
+            _tileDefinitionManager.Initialize();
             _mapManager.Initialize();
             placementManager.Initialize();
             lightManager.Initialize();

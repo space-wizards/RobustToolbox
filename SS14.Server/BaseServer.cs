@@ -194,14 +194,12 @@ namespace SS14.Server
             // _resources.MountDefaultContentPack();
 
             //identical code in game controller for client
-            if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared")
-                && !AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Sandbox.Shared"))
+            if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
             {
                 Logger.Warning($"[ENG] Could not load any Shared DLL.");
             }
 
-            if (!AssemblyLoader.TryLoadAssembly<GameServer>(_resources, $"Content.Server")
-                && !AssemblyLoader.TryLoadAssembly<GameServer>(_resources, $"Sandbox.Server"))
+            if (!AssemblyLoader.TryLoadAssembly<GameServer>(_resources, $"Content.Server"))
             {
                 Logger.Warning($"[ENG] Could not load any Server DLL.");
             }

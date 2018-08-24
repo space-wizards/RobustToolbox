@@ -85,8 +85,8 @@ namespace SS14.Shared.Maths
         /// <returns>The next power of two.</returns>
         public static long NextPowerOfTwo(long n)
         {
-            if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (long)Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
+            if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
+            return (long)NextPowerOfTwo((double)n);
         }
 
         /// <summary>
@@ -96,8 +96,8 @@ namespace SS14.Shared.Maths
         /// <returns>The next power of two.</returns>
         public static int NextPowerOfTwo(int n)
         {
-            if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (int)Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
+            if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
+            return (int)NextPowerOfTwo((double)n);
         }
 
         /// <summary>
@@ -107,8 +107,9 @@ namespace SS14.Shared.Maths
         /// <returns>The next power of two.</returns>
         public static float NextPowerOfTwo(float n)
         {
-            if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (float)Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
+            if (float.IsNaN(n) || float.IsInfinity(n)) throw new ArgumentOutOfRangeException(nameof(n), "Must be a number.");
+            if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
+            return (float)NextPowerOfTwo((double)n);
         }
 
         /// <summary>
@@ -118,8 +119,13 @@ namespace SS14.Shared.Maths
         /// <returns>The next power of two.</returns>
         public static double NextPowerOfTwo(double n)
         {
-            if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
+            if (double.IsNaN(n) || double.IsInfinity(n)) throw new ArgumentOutOfRangeException(nameof(n), "Must be a number.");
+            if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
+
+            // Don't return negative powers of two, that's nonsense.
+            if (n < 1) return 1.0;
+
+            return Math.Pow(2, Math.Floor(Math.Log(n, 2)) + 1);
         }
 
         #endregion NextPowerOfTwo
@@ -270,7 +276,7 @@ namespace SS14.Shared.Maths
         [DebuggerStepThrough]
         public static int Mod(int n, int d)
         {
-            int r = n % d;
+            var r = n % d;
             return r < 0 ? r + d : r;
         }
 

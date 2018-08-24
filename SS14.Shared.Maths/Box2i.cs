@@ -90,7 +90,7 @@ namespace SS14.Shared.Maths
 
         public static explicit operator Box2i(Box2 box)
         {
-            return new Box2i((int)box.Left, (int)box.Top, (int)box.Right, (int)box.Bottom);
+            return new Box2i((int) box.Left, (int) box.Top, (int) box.Right, (int) box.Bottom);
         }
 
         public static implicit operator Box2(Box2i box)

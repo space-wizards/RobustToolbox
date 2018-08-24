@@ -39,7 +39,7 @@ namespace SS14.Shared.Maths
         /// <returns></returns>
         public static Angle ToAngle(this Direction dir)
         {
-            var ang = Segment * (int)dir;
+            var ang = Segment * (int) dir;
 
             if (ang > Math.PI) // convert 0 > 2PI to -PI > +PI
                 ang -= 2 * Math.PI;

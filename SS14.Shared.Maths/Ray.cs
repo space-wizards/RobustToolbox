@@ -39,10 +39,10 @@ namespace SS14.Shared.Maths
             hitPos = Vector2.Zero;
             distance = 0;
 
-            float tmin = 0.0f; // set to -FLT_MAX to get first hit on line
-            float tmax = float.MaxValue; // set to max distance ray can travel (for segment)
+            var tmin = 0.0f; // set to -FLT_MAX to get first hit on line
+            var tmax = float.MaxValue; // set to max distance ray can travel (for segment)
             const float epsilon = 1.0E-07f;
-            
+
             // X axis slab
             {
                 if (Math.Abs(_direction.X) < epsilon)

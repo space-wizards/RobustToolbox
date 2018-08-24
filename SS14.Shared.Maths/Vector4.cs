@@ -2,7 +2,6 @@
 
 /*
 Copyright (c) 2006 - 2008 The Open Toolkit library.
-Copyright 2013 Xamarin Inc
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -23,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-#endregion
+#endregion --- License ---
 
 using System;
 using System.Runtime.InteropServices;
@@ -31,34 +30,72 @@ using System.Xml.Serialization;
 
 namespace SS14.Shared.Maths
 {
-    /// <summary>
-    /// Represents a 3D vector using three single-precision floating-point numbers.
-    /// </summary>
+    /// <summary>Represents a 4D vector using four single-precision floating-point numbers.</summary>
     /// <remarks>
-    /// The Vector3 structure is suitable for interoperation with unmanaged code requiring three consecutive floats.
+    /// The Vector4 structure is suitable for interoperation with unmanaged code requiring four consecutive floats.
     /// </remarks>
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Vector3 : IEquatable<Vector3>
+    public struct Vector4 : IEquatable<Vector4>
     {
         #region Fields
 
         /// <summary>
-        /// The X component of the Vector3.
+        /// The X component of the Vector4.
         /// </summary>
         public float X;
 
         /// <summary>
-        /// The Y component of the Vector3.
+        /// The Y component of the Vector4.
         /// </summary>
         public float Y;
 
         /// <summary>
-        /// The Z component of the Vector3.
+        /// The Z component of the Vector4.
         /// </summary>
         public float Z;
 
-        #endregion
+        /// <summary>
+        /// The W component of the Vector4.
+        /// </summary>
+        public float W;
+
+        /// <summary>
+        /// Defines a unit-length Vector4 that points towards the X-axis.
+        /// </summary>
+        public static readonly Vector4 UnitX = new Vector4(1, 0, 0, 0);
+
+        /// <summary>
+        /// Defines a unit-length Vector4 that points towards the Y-axis.
+        /// </summary>
+        public static readonly Vector4 UnitY = new Vector4(0, 1, 0, 0);
+
+        /// <summary>
+        /// Defines a unit-length Vector4 that points towards the Z-axis.
+        /// </summary>
+        public static readonly Vector4 UnitZ = new Vector4(0, 0, 1, 0);
+
+        /// <summary>
+        /// Defines a unit-length Vector4 that points towards the W-axis.
+        /// </summary>
+        public static readonly Vector4 UnitW = new Vector4(0, 0, 0, 1);
+
+        /// <summary>
+        /// Defines a zero-length Vector4.
+        /// </summary>
+        public static readonly Vector4 Zero = new Vector4(0, 0, 0, 0);
+
+        /// <summary>
+        /// Defines an instance with all components set to 1.
+        /// </summary>
+        public static readonly Vector4 One = new Vector4(1, 1, 1, 1);
+
+        /// <summary>
+        /// Defines the size of the Vector4 struct in bytes.
+        /// </summary>
+        public static readonly int SizeInBytes = Marshal.SizeOf(new Vector4());
+
+        #endregion Fields
 
         #region Constructors
 
@@ -66,60 +103,81 @@ namespace SS14.Shared.Maths
         /// Constructs a new instance.
         /// </summary>
         /// <param name="value">The value that will initialize this instance.</param>
-        public Vector3(float value)
+        public Vector4(float value)
         {
             X = value;
             Y = value;
             Z = value;
+            W = value;
         }
 
         /// <summary>
-        /// Constructs a new Vector3.
+        /// Constructs a new Vector4.
         /// </summary>
-        /// <param name="x">The x component of the Vector3.</param>
-        /// <param name="y">The y component of the Vector3.</param>
-        /// <param name="z">The z component of the Vector3.</param>
-        public Vector3(float x, float y, float z)
+        /// <param name="x">The x component of the Vector4.</param>
+        /// <param name="y">The y component of the Vector4.</param>
+        /// <param name="z">The z component of the Vector4.</param>
+        /// <param name="w">The w component of the Vector4.</param>
+        public Vector4(float x, float y, float z, float w)
         {
             X = x;
             Y = y;
             Z = z;
+            W = w;
         }
 
         /// <summary>
-        /// Constructs a new Vector3 from the given Vector2.
+        /// Constructs a new Vector4 from the given Vector2.
         /// </summary>
         /// <param name="v">The Vector2 to copy components from.</param>
-        public Vector3(Vector2 v)
+        public Vector4(Vector2 v)
         {
             X = v.X;
             Y = v.Y;
             Z = 0.0f;
+            W = 0.0f;
         }
 
         /// <summary>
-        /// Constructs a new Vector3 from the given Vector3.
+        /// Constructs a new Vector4 from the given Vector3.
+        /// The w component is initialized to 0.
         /// </summary>
         /// <param name="v">The Vector3 to copy components from.</param>
-        public Vector3(Vector3 v)
+        /// <remarks><seealso cref="Vector4(Vector3, float)"/></remarks>
+        public Vector4(Vector3 v)
         {
             X = v.X;
             Y = v.Y;
             Z = v.Z;
+            W = 0.0f;
         }
 
         /// <summary>
-        /// Constructs a new Vector3 from the given Vector4.
+        /// Constructs a new Vector4 from the specified Vector3 and w component.
         /// </summary>
-        /// <param name="v">The Vector4 to copy components from.</param>
-        public Vector3(Vector4 v)
+        /// <param name="v">The Vector3 to copy components from.</param>
+        /// <param name="w">The w component of the new Vector4.</param>
+        public Vector4(Vector3 v, float w)
         {
             X = v.X;
             Y = v.Y;
             Z = v.Z;
+            W = w;
         }
 
-        #endregion
+        /// <summary>
+        /// Constructs a new Vector4 from the given Vector4.
+        /// </summary>
+        /// <param name="v">The Vector4 to copy components from.</param>
+        public Vector4(Vector4 v)
+        {
+            X = v.X;
+            Y = v.Y;
+            Z = v.Z;
+            W = v.W;
+        }
+
+        #endregion Constructors
 
         #region Public Members
 
@@ -131,9 +189,9 @@ namespace SS14.Shared.Maths
         /// Gets the length (magnitude) of the vector.
         /// </summary>
         /// <seealso cref="LengthSquared"/>
-        public float Length => (float)Math.Sqrt(X * X + Y * Y + Z * Z);
+        public float Length => (float) Math.Sqrt(X * X + Y * Y + Z * Z + W * W);
 
-        #endregion
+        #endregion public float Length
 
         #region public float LengthSquared
 
@@ -145,14 +203,14 @@ namespace SS14.Shared.Maths
         /// for comparisons.
         /// </remarks>
         /// <see cref="Length"/>
-        public float LengthSquared => X * X + Y * Y + Z * Z;
+        public float LengthSquared => X * X + Y * Y + Z * Z + W * W;
 
-        #endregion
+        #endregion public float LengthSquared
 
         #region public void Normalize()
 
         /// <summary>
-        /// Scales the Vector3 to unit length.
+        /// Scales the Vector4 to unit length.
         /// </summary>
         public void Normalize()
         {
@@ -160,47 +218,14 @@ namespace SS14.Shared.Maths
             X *= scale;
             Y *= scale;
             Z *= scale;
+            W *= scale;
         }
 
-        #endregion
+        #endregion public void Normalize()
 
-        #endregion
+        #endregion Instance
 
         #region Static
-
-        #region Fields
-
-        /// <summary>
-        /// Defines a unit-length Vector3 that points towards the X-axis.
-        /// </summary>
-        public static readonly Vector3 UnitX = new Vector3(1, 0, 0);
-
-        /// <summary>
-        /// Defines a unit-length Vector3 that points towards the Y-axis.
-        /// </summary>
-        public static readonly Vector3 UnitY = new Vector3(0, 1, 0);
-
-        /// <summary>
-        /// /// Defines a unit-length Vector3 that points towards the Z-axis.
-        /// </summary>
-        public static readonly Vector3 UnitZ = new Vector3(0, 0, 1);
-
-        /// <summary>
-        /// Defines a zero-length Vector3.
-        /// </summary>
-        public static readonly Vector3 Zero = new Vector3(0, 0, 0);
-
-        /// <summary>
-        /// Defines an instance with all components set to 1.
-        /// </summary>
-        public static readonly Vector3 One = new Vector3(1, 1, 1);
-
-        /// <summary>
-        /// Defines the size of the Vector3 struct in bytes.
-        /// </summary>
-        public static readonly int SizeInBytes = Marshal.SizeOf(new Vector3());
-
-        #endregion
 
         #region Add
 
@@ -210,7 +235,7 @@ namespace SS14.Shared.Maths
         /// <param name="a">Left operand.</param>
         /// <param name="b">Right operand.</param>
         /// <returns>Result of operation.</returns>
-        public static Vector3 Add(Vector3 a, Vector3 b)
+        public static Vector4 Add(Vector4 a, Vector4 b)
         {
             Add(ref a, ref b, out a);
             return a;
@@ -222,12 +247,12 @@ namespace SS14.Shared.Maths
         /// <param name="a">Left operand.</param>
         /// <param name="b">Right operand.</param>
         /// <param name="result">Result of operation.</param>
-        public static void Add(ref Vector3 a, ref Vector3 b, out Vector3 result)
+        public static void Add(ref Vector4 a, ref Vector4 b, out Vector4 result)
         {
-            result = new Vector3(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+            result = new Vector4(a.X + b.X, a.Y + b.Y, a.Z + b.Z, a.W + b.W);
         }
 
-        #endregion
+        #endregion Add
 
         #region Subtract
 
@@ -237,7 +262,7 @@ namespace SS14.Shared.Maths
         /// <param name="a">First operand</param>
         /// <param name="b">Second operand</param>
         /// <returns>Result of subtraction</returns>
-        public static Vector3 Subtract(Vector3 a, Vector3 b)
+        public static Vector4 Subtract(Vector4 a, Vector4 b)
         {
             Subtract(ref a, ref b, out a);
             return a;
@@ -249,12 +274,12 @@ namespace SS14.Shared.Maths
         /// <param name="a">First operand</param>
         /// <param name="b">Second operand</param>
         /// <param name="result">Result of subtraction</param>
-        public static void Subtract(ref Vector3 a, ref Vector3 b, out Vector3 result)
+        public static void Subtract(ref Vector4 a, ref Vector4 b, out Vector4 result)
         {
-            result = new Vector3(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+            result = new Vector4(a.X - b.X, a.Y - b.Y, a.Z - b.Z, a.W - b.W);
         }
 
-        #endregion
+        #endregion Subtract
 
         #region Multiply
 
@@ -264,7 +289,7 @@ namespace SS14.Shared.Maths
         /// <param name="vector">Left operand.</param>
         /// <param name="scale">Right operand.</param>
         /// <returns>Result of the operation.</returns>
-        public static Vector3 Multiply(Vector3 vector, float scale)
+        public static Vector4 Multiply(Vector4 vector, float scale)
         {
             Multiply(ref vector, scale, out vector);
             return vector;
@@ -276,9 +301,9 @@ namespace SS14.Shared.Maths
         /// <param name="vector">Left operand.</param>
         /// <param name="scale">Right operand.</param>
         /// <param name="result">Result of the operation.</param>
-        public static void Multiply(ref Vector3 vector, float scale, out Vector3 result)
+        public static void Multiply(ref Vector4 vector, float scale, out Vector4 result)
         {
-            result = new Vector3(vector.X * scale, vector.Y * scale, vector.Z * scale);
+            result = new Vector4(vector.X * scale, vector.Y * scale, vector.Z * scale, vector.W * scale);
         }
 
         /// <summary>
@@ -287,7 +312,7 @@ namespace SS14.Shared.Maths
         /// <param name="vector">Left operand.</param>
         /// <param name="scale">Right operand.</param>
         /// <returns>Result of the operation.</returns>
-        public static Vector3 Multiply(Vector3 vector, Vector3 scale)
+        public static Vector4 Multiply(Vector4 vector, Vector4 scale)
         {
             Multiply(ref vector, ref scale, out vector);
             return vector;
@@ -299,12 +324,12 @@ namespace SS14.Shared.Maths
         /// <param name="vector">Left operand.</param>
         /// <param name="scale">Right operand.</param>
         /// <param name="result">Result of the operation.</param>
-        public static void Multiply(ref Vector3 vector, ref Vector3 scale, out Vector3 result)
+        public static void Multiply(ref Vector4 vector, ref Vector4 scale, out Vector4 result)
         {
-            result = new Vector3(vector.X * scale.X, vector.Y * scale.Y, vector.Z * scale.Z);
+            result = new Vector4(vector.X * scale.X, vector.Y * scale.Y, vector.Z * scale.Z, vector.W * scale.W);
         }
 
-        #endregion
+        #endregion Multiply
 
         #region Divide
 
@@ -314,7 +339,7 @@ namespace SS14.Shared.Maths
         /// <param name="vector">Left operand.</param>
         /// <param name="scale">Right operand.</param>
         /// <returns>Result of the operation.</returns>
-        public static Vector3 Divide(Vector3 vector, float scale)
+        public static Vector4 Divide(Vector4 vector, float scale)
         {
             Divide(ref vector, scale, out vector);
             return vector;
@@ -326,7 +351,7 @@ namespace SS14.Shared.Maths
         /// <param name="vector">Left operand.</param>
         /// <param name="scale">Right operand.</param>
         /// <param name="result">Result of the operation.</param>
-        public static void Divide(ref Vector3 vector, float scale, out Vector3 result)
+        public static void Divide(ref Vector4 vector, float scale, out Vector4 result)
         {
             Multiply(ref vector, 1 / scale, out result);
         }
@@ -337,7 +362,7 @@ namespace SS14.Shared.Maths
         /// <param name="vector">Left operand.</param>
         /// <param name="scale">Right operand.</param>
         /// <returns>Result of the operation.</returns>
-        public static Vector3 Divide(Vector3 vector, Vector3 scale)
+        public static Vector4 Divide(Vector4 vector, Vector4 scale)
         {
             Divide(ref vector, ref scale, out vector);
             return vector;
@@ -349,14 +374,14 @@ namespace SS14.Shared.Maths
         /// <param name="vector">Left operand.</param>
         /// <param name="scale">Right operand.</param>
         /// <param name="result">Result of the operation.</param>
-        public static void Divide(ref Vector3 vector, ref Vector3 scale, out Vector3 result)
+        public static void Divide(ref Vector4 vector, ref Vector4 scale, out Vector4 result)
         {
-            result = new Vector3(vector.X / scale.X, vector.Y / scale.Y, vector.Z / scale.Z);
+            result = new Vector4(vector.X / scale.X, vector.Y / scale.Y, vector.Z / scale.Z, vector.W / scale.W);
         }
 
-        #endregion
+        #endregion Divide
 
-        #region ComponentMin
+        #region Min
 
         /// <summary>
         /// Calculate the component-wise minimum of two vectors
@@ -364,11 +389,12 @@ namespace SS14.Shared.Maths
         /// <param name="a">First operand</param>
         /// <param name="b">Second operand</param>
         /// <returns>The component-wise minimum</returns>
-        public static Vector3 ComponentMin(Vector3 a, Vector3 b)
+        public static Vector4 Min(Vector4 a, Vector4 b)
         {
             a.X = a.X < b.X ? a.X : b.X;
             a.Y = a.Y < b.Y ? a.Y : b.Y;
             a.Z = a.Z < b.Z ? a.Z : b.Z;
+            a.W = a.W < b.W ? a.W : b.W;
             return a;
         }
 
@@ -378,16 +404,17 @@ namespace SS14.Shared.Maths
         /// <param name="a">First operand</param>
         /// <param name="b">Second operand</param>
         /// <param name="result">The component-wise minimum</param>
-        public static void ComponentMin(ref Vector3 a, ref Vector3 b, out Vector3 result)
+        public static void Min(ref Vector4 a, ref Vector4 b, out Vector4 result)
         {
             result.X = a.X < b.X ? a.X : b.X;
             result.Y = a.Y < b.Y ? a.Y : b.Y;
             result.Z = a.Z < b.Z ? a.Z : b.Z;
+            result.W = a.W < b.W ? a.W : b.W;
         }
 
-        #endregion
+        #endregion Min
 
-        #region ComponentMax
+        #region Max
 
         /// <summary>
         /// Calculate the component-wise maximum of two vectors
@@ -395,11 +422,12 @@ namespace SS14.Shared.Maths
         /// <param name="a">First operand</param>
         /// <param name="b">Second operand</param>
         /// <returns>The component-wise maximum</returns>
-        public static Vector3 ComponentMax(Vector3 a, Vector3 b)
+        public static Vector4 Max(Vector4 a, Vector4 b)
         {
             a.X = a.X > b.X ? a.X : b.X;
             a.Y = a.Y > b.Y ? a.Y : b.Y;
             a.Z = a.Z > b.Z ? a.Z : b.Z;
+            a.W = a.W > b.W ? a.W : b.W;
             return a;
         }
 
@@ -409,44 +437,15 @@ namespace SS14.Shared.Maths
         /// <param name="a">First operand</param>
         /// <param name="b">Second operand</param>
         /// <param name="result">The component-wise maximum</param>
-        public static void ComponentMax(ref Vector3 a, ref Vector3 b, out Vector3 result)
+        public static void Max(ref Vector4 a, ref Vector4 b, out Vector4 result)
         {
             result.X = a.X > b.X ? a.X : b.X;
             result.Y = a.Y > b.Y ? a.Y : b.Y;
             result.Z = a.Z > b.Z ? a.Z : b.Z;
+            result.W = a.W > b.W ? a.W : b.W;
         }
 
-        #endregion
-
-        #region Min
-
-        /// <summary>
-        /// Returns the Vector3 with the minimum magnitude
-        /// </summary>
-        /// <param name="left">Left operand</param>
-        /// <param name="right">Right operand</param>
-        /// <returns>The minimum Vector3</returns>
-        public static Vector3 Min(Vector3 left, Vector3 right)
-        {
-            return left.LengthSquared < right.LengthSquared ? left : right;
-        }
-
-        #endregion
-
-        #region Max
-
-        /// <summary>
-        /// Returns the Vector3 with the minimum magnitude
-        /// </summary>
-        /// <param name="left">Left operand</param>
-        /// <param name="right">Right operand</param>
-        /// <returns>The minimum Vector3</returns>
-        public static Vector3 Max(Vector3 left, Vector3 right)
-        {
-            return left.LengthSquared >= right.LengthSquared ? left : right;
-        }
-
-        #endregion
+        #endregion Max
 
         #region Clamp
 
@@ -457,11 +456,12 @@ namespace SS14.Shared.Maths
         /// <param name="min">Minimum vector</param>
         /// <param name="max">Maximum vector</param>
         /// <returns>The clamped vector</returns>
-        public static Vector3 Clamp(Vector3 vec, Vector3 min, Vector3 max)
+        public static Vector4 Clamp(Vector4 vec, Vector4 min, Vector4 max)
         {
             vec.X = vec.X < min.X ? min.X : vec.X > max.X ? max.X : vec.X;
             vec.Y = vec.Y < min.Y ? min.Y : vec.Y > max.Y ? max.Y : vec.Y;
-            vec.Z = vec.Z < min.Z ? min.Z : vec.Z > max.Z ? max.Z : vec.Z;
+            vec.Z = vec.X < min.Z ? min.Z : vec.Z > max.Z ? max.Z : vec.Z;
+            vec.W = vec.Y < min.W ? min.W : vec.W > max.W ? max.W : vec.W;
             return vec;
         }
 
@@ -472,14 +472,15 @@ namespace SS14.Shared.Maths
         /// <param name="min">Minimum vector</param>
         /// <param name="max">Maximum vector</param>
         /// <param name="result">The clamped vector</param>
-        public static void Clamp(ref Vector3 vec, ref Vector3 min, ref Vector3 max, out Vector3 result)
+        public static void Clamp(ref Vector4 vec, ref Vector4 min, ref Vector4 max, out Vector4 result)
         {
             result.X = vec.X < min.X ? min.X : vec.X > max.X ? max.X : vec.X;
             result.Y = vec.Y < min.Y ? min.Y : vec.Y > max.Y ? max.Y : vec.Y;
-            result.Z = vec.Z < min.Z ? min.Z : vec.Z > max.Z ? max.Z : vec.Z;
+            result.Z = vec.X < min.Z ? min.Z : vec.Z > max.Z ? max.Z : vec.Z;
+            result.W = vec.Y < min.W ? min.W : vec.W > max.W ? max.W : vec.W;
         }
 
-        #endregion
+        #endregion Clamp
 
         #region Normalize
 
@@ -488,12 +489,13 @@ namespace SS14.Shared.Maths
         /// </summary>
         /// <param name="vec">The input vector</param>
         /// <returns>The normalized vector</returns>
-        public static Vector3 Normalize(Vector3 vec)
+        public static Vector4 Normalize(Vector4 vec)
         {
             var scale = 1.0f / vec.Length;
             vec.X *= scale;
             vec.Y *= scale;
             vec.Z *= scale;
+            vec.W *= scale;
             return vec;
         }
 
@@ -502,71 +504,42 @@ namespace SS14.Shared.Maths
         /// </summary>
         /// <param name="vec">The input vector</param>
         /// <param name="result">The normalized vector</param>
-        public static void Normalize(ref Vector3 vec, out Vector3 result)
+        public static void Normalize(ref Vector4 vec, out Vector4 result)
         {
             var scale = 1.0f / vec.Length;
             result.X = vec.X * scale;
             result.Y = vec.Y * scale;
             result.Z = vec.Z * scale;
+            result.W = vec.W * scale;
         }
 
-        #endregion
+        #endregion Normalize
 
         #region Dot
 
         /// <summary>
-        /// Calculate the dot (scalar) product of two vectors
+        /// Calculate the dot product of two vectors
         /// </summary>
         /// <param name="left">First operand</param>
         /// <param name="right">Second operand</param>
         /// <returns>The dot product of the two inputs</returns>
-        public static float Dot(Vector3 left, Vector3 right)
+        public static float Dot(Vector4 left, Vector4 right)
         {
-            return left.X * right.X + left.Y * right.Y + left.Z * right.Z;
+            return left.X * right.X + left.Y * right.Y + left.Z * right.Z + left.W * right.W;
         }
 
         /// <summary>
-        /// Calculate the dot (scalar) product of two vectors
+        /// Calculate the dot product of two vectors
         /// </summary>
         /// <param name="left">First operand</param>
         /// <param name="right">Second operand</param>
         /// <param name="result">The dot product of the two inputs</param>
-        public static void Dot(ref Vector3 left, ref Vector3 right, out float result)
+        public static void Dot(ref Vector4 left, ref Vector4 right, out float result)
         {
-            result = left.X * right.X + left.Y * right.Y + left.Z * right.Z;
+            result = left.X * right.X + left.Y * right.Y + left.Z * right.Z + left.W * right.W;
         }
 
-        #endregion
-
-        #region Cross
-
-        /// <summary>
-        /// Caclulate the cross (vector) product of two vectors
-        /// </summary>
-        /// <param name="left">First operand</param>
-        /// <param name="right">Second operand</param>
-        /// <returns>The cross product of the two inputs</returns>
-        public static Vector3 Cross(Vector3 left, Vector3 right)
-        {
-            Cross(ref left, ref right, out var result);
-            return result;
-        }
-
-        /// <summary>
-        /// Caclulate the cross (vector) product of two vectors
-        /// </summary>
-        /// <param name="left">First operand</param>
-        /// <param name="right">Second operand</param>
-        /// <returns>The cross product of the two inputs</returns>
-        /// <param name="result">The cross product of the two inputs</param>
-        public static void Cross(ref Vector3 left, ref Vector3 right, out Vector3 result)
-        {
-            result = new Vector3(left.Y * right.Z - left.Z * right.Y,
-                left.Z * right.X - left.X * right.Z,
-                left.X * right.Y - left.Y * right.X);
-        }
-
-        #endregion
+        #endregion Dot
 
         #region Lerp
 
@@ -577,11 +550,12 @@ namespace SS14.Shared.Maths
         /// <param name="b">Second input vector</param>
         /// <param name="blend">The blend factor. a when blend=0, b when blend=1.</param>
         /// <returns>a when blend=0, b when blend=1, and a linear combination otherwise</returns>
-        public static Vector3 Lerp(Vector3 a, Vector3 b, float blend)
+        public static Vector4 Lerp(Vector4 a, Vector4 b, float blend)
         {
             a.X = blend * (b.X - a.X) + a.X;
             a.Y = blend * (b.Y - a.Y) + a.Y;
             a.Z = blend * (b.Z - a.Z) + a.Z;
+            a.W = blend * (b.W - a.W) + a.W;
             return a;
         }
 
@@ -592,14 +566,15 @@ namespace SS14.Shared.Maths
         /// <param name="b">Second input vector</param>
         /// <param name="blend">The blend factor. a when blend=0, b when blend=1.</param>
         /// <param name="result">a when blend=0, b when blend=1, and a linear combination otherwise</param>
-        public static void Lerp(ref Vector3 a, ref Vector3 b, float blend, out Vector3 result)
+        public static void Lerp(ref Vector4 a, ref Vector4 b, float blend, out Vector4 result)
         {
             result.X = blend * (b.X - a.X) + a.X;
             result.Y = blend * (b.Y - a.Y) + a.Y;
             result.Z = blend * (b.Z - a.Z) + a.Z;
+            result.W = blend * (b.W - a.W) + a.W;
         }
 
-        #endregion
+        #endregion Lerp
 
         #region Barycentric
 
@@ -612,7 +587,7 @@ namespace SS14.Shared.Maths
         /// <param name="u">First Barycentric Coordinate</param>
         /// <param name="v">Second Barycentric Coordinate</param>
         /// <returns>a when u=v=0, b when u=1,v=0, c when u=0,v=1, and a linear combination of a,b,c otherwise</returns>
-        public static Vector3 BaryCentric(Vector3 a, Vector3 b, Vector3 c, float u, float v)
+        public static Vector4 BaryCentric(Vector4 a, Vector4 b, Vector4 c, float u, float v)
         {
             return a + u * (b - a) + v * (c - a);
         }
@@ -624,7 +599,7 @@ namespace SS14.Shared.Maths
         /// <param name="u">First Barycentric Coordinate.</param>
         /// <param name="v">Second Barycentric Coordinate.</param>
         /// <param name="result">Output Vector. a when u=v=0, b when u=1,v=0, c when u=0,v=1, and a linear combination of a,b,c otherwise</param>
-        public static void BaryCentric(ref Vector3 a, ref Vector3 b, ref Vector3 c, float u, float v, out Vector3 result)
+        public static void BaryCentric(ref Vector4 a, ref Vector4 b, ref Vector4 c, float u, float v, out Vector4 result)
         {
             result = a; // copy
 
@@ -639,156 +614,17 @@ namespace SS14.Shared.Maths
             Add(ref result, ref temp, out result);
         }
 
-        #endregion
+        #endregion Barycentric
 
         #region Transform
-
-        /// <summary>Transform a direction vector by the given Matrix
-        /// Assumes the matrix has a bottom row of (0,0,0,1), that is the translation part is ignored.
-        /// </summary>
-        /// <param name="vec">The vector to transform</param>
-        /// <param name="mat">The desired transformation</param>
-        /// <returns>The transformed vector</returns>
-        public static Vector3 TransformVector(Vector3 vec, Matrix4 mat)
-        {
-            Vector3 v;
-            v.X = Dot(vec, new Vector3(mat.Column0));
-            v.Y = Dot(vec, new Vector3(mat.Column1));
-            v.Z = Dot(vec, new Vector3(mat.Column2));
-            return v;
-        }
-
-        /// <summary>Transform a direction vector by the given Matrix
-        /// Assumes the matrix has a bottom row of (0,0,0,1), that is the translation part is ignored.
-        /// </summary>
-        /// <param name="vec">The vector to transform</param>
-        /// <param name="mat">The desired transformation</param>
-        /// <param name="result">The transformed vector</param>
-        public static void TransformVector(ref Vector3 vec, ref Matrix4 mat, out Vector3 result)
-        {
-            result.X = vec.X * mat.Row0.X +
-                       vec.Y * mat.Row1.X +
-                       vec.Z * mat.Row2.X;
-
-            result.Y = vec.X * mat.Row0.Y +
-                       vec.Y * mat.Row1.Y +
-                       vec.Z * mat.Row2.Y;
-
-            result.Z = vec.X * mat.Row0.Z +
-                       vec.Y * mat.Row1.Z +
-                       vec.Z * mat.Row2.Z;
-        }
-
-        /// <summary>Transform a Normal by the given Matrix</summary>
-        /// <remarks>
-        /// This calculates the inverse of the given matrix, use TransformNormalInverse if you
-        /// already have the inverse to avoid this extra calculation
-        /// </remarks>
-        /// <param name="norm">The normal to transform</param>
-        /// <param name="mat">The desired transformation</param>
-        /// <returns>The transformed normal</returns>
-        public static Vector3 TransformNormal(Vector3 norm, Matrix4 mat)
-        {
-            mat.Invert();
-            return TransformNormalInverse(norm, mat);
-        }
-
-        /// <summary>Transform a Normal by the given Matrix</summary>
-        /// <remarks>
-        /// This calculates the inverse of the given matrix, use TransformNormalInverse if you
-        /// already have the inverse to avoid this extra calculation
-        /// </remarks>
-        /// <param name="norm">The normal to transform</param>
-        /// <param name="mat">The desired transformation</param>
-        /// <param name="result">The transformed normal</param>
-        public static void TransformNormal(ref Vector3 norm, ref Matrix4 mat, out Vector3 result)
-        {
-            var inverse = Matrix4.Invert(mat);
-            TransformNormalInverse(ref norm, ref inverse, out result);
-        }
-
-        /// <summary>Transform a Normal by the (transpose of the) given Matrix</summary>
-        /// <remarks>
-        /// This version doesn't calculate the inverse matrix.
-        /// Use this version if you already have the inverse of the desired transform to hand
-        /// </remarks>
-        /// <param name="norm">The normal to transform</param>
-        /// <param name="invMat">The inverse of the desired transformation</param>
-        /// <returns>The transformed normal</returns>
-        public static Vector3 TransformNormalInverse(Vector3 norm, Matrix4 invMat)
-        {
-            Vector3 n;
-            n.X = Dot(norm, new Vector3(invMat.Row0));
-            n.Y = Dot(norm, new Vector3(invMat.Row1));
-            n.Z = Dot(norm, new Vector3(invMat.Row2));
-            return n;
-        }
-
-        /// <summary>Transform a Normal by the (transpose of the) given Matrix</summary>
-        /// <remarks>
-        /// This version doesn't calculate the inverse matrix.
-        /// Use this version if you already have the inverse of the desired transform to hand
-        /// </remarks>
-        /// <param name="norm">The normal to transform</param>
-        /// <param name="invMat">The inverse of the desired transformation</param>
-        /// <param name="result">The transformed normal</param>
-        public static void TransformNormalInverse(ref Vector3 norm, ref Matrix4 invMat, out Vector3 result)
-        {
-            result.X = norm.X * invMat.Row0.X +
-                       norm.Y * invMat.Row0.Y +
-                       norm.Z * invMat.Row0.Z;
-
-            result.Y = norm.X * invMat.Row1.X +
-                       norm.Y * invMat.Row1.Y +
-                       norm.Z * invMat.Row1.Z;
-
-            result.Z = norm.X * invMat.Row2.X +
-                       norm.Y * invMat.Row2.Y +
-                       norm.Z * invMat.Row2.Z;
-        }
-
-        /// <summary>Transform a Position by the given Matrix</summary>
-        /// <param name="pos">The position to transform</param>
-        /// <param name="mat">The desired transformation</param>
-        /// <returns>The transformed position</returns>
-        public static Vector3 TransformPosition(Vector3 pos, Matrix4 mat)
-        {
-            Vector3 p;
-            p.X = Dot(pos, new Vector3(mat.Column0)) + mat.Row3.X;
-            p.Y = Dot(pos, new Vector3(mat.Column1)) + mat.Row3.Y;
-            p.Z = Dot(pos, new Vector3(mat.Column2)) + mat.Row3.Z;
-            return p;
-        }
-
-        /// <summary>Transform a Position by the given Matrix</summary>
-        /// <param name="pos">The position to transform</param>
-        /// <param name="mat">The desired transformation</param>
-        /// <param name="result">The transformed position</param>
-        public static void TransformPosition(ref Vector3 pos, ref Matrix4 mat, out Vector3 result)
-        {
-            result.X = pos.X * mat.Row0.X +
-                       pos.Y * mat.Row1.X +
-                       pos.Z * mat.Row2.X +
-                       mat.Row3.X;
-
-            result.Y = pos.X * mat.Row0.Y +
-                       pos.Y * mat.Row1.Y +
-                       pos.Z * mat.Row2.Y +
-                       mat.Row3.Y;
-
-            result.Z = pos.X * mat.Row0.Z +
-                       pos.Y * mat.Row1.Z +
-                       pos.Z * mat.Row2.Z +
-                       mat.Row3.Z;
-        }
 
         /// <summary>Transform a Vector by the given Matrix</summary>
         /// <param name="vec">The vector to transform</param>
         /// <param name="mat">The desired transformation</param>
         /// <returns>The transformed vector</returns>
-        public static Vector3 Transform(Vector3 vec, Matrix4 mat)
+        public static Vector4 Transform(Vector4 vec, Matrix4 mat)
         {
-            Transform(ref vec, ref mat, out Vector3 result);
+            Transform(ref vec, ref mat, out var result);
             return result;
         }
 
@@ -796,21 +632,13 @@ namespace SS14.Shared.Maths
         /// <param name="vec">The vector to transform</param>
         /// <param name="mat">The desired transformation</param>
         /// <param name="result">The transformed vector</param>
-        public static void Transform(ref Vector3 vec, ref Matrix4 mat, out Vector4 result)
+        public static void Transform(ref Vector4 vec, ref Matrix4 mat, out Vector4 result)
         {
-            var v4 = new Vector4(vec.X, vec.Y, vec.Z, 1.0f);
-            Vector4.Transform(ref v4, ref mat, out result);
-        }
-
-        /// <summary>Transform a Vector by the given Matrix</summary>
-        /// <param name="vec">The vector to transform</param>
-        /// <param name="mat">The desired transformation</param>
-        /// <param name="result">The transformed vector</param>
-        public static void Transform(ref Vector3 vec, ref Matrix4 mat, out Vector3 result)
-        {
-            var v4 = new Vector4(vec.X, vec.Y, vec.Z, 1.0f);
-            Vector4.Transform(ref v4, ref mat, out v4);
-            result = v4.Xyz;
+            result = new Vector4(
+                vec.X * mat.Row0.X + vec.Y * mat.Row1.X + vec.Z * mat.Row2.X + vec.W * mat.Row3.X,
+                vec.X * mat.Row0.Y + vec.Y * mat.Row1.Y + vec.Z * mat.Row2.Y + vec.W * mat.Row3.Y,
+                vec.X * mat.Row0.Z + vec.Y * mat.Row1.Z + vec.Z * mat.Row2.Z + vec.W * mat.Row3.Z,
+                vec.X * mat.Row0.W + vec.Y * mat.Row1.W + vec.Z * mat.Row2.W + vec.W * mat.Row3.W);
         }
 
         /// <summary>
@@ -819,7 +647,7 @@ namespace SS14.Shared.Maths
         /// <param name="vec">The vector to transform.</param>
         /// <param name="quat">The quaternion to rotate the vector by.</param>
         /// <returns>The result of the operation.</returns>
-        public static Vector3 Transform(Vector3 vec, Quaternion quat)
+        public static Vector4 Transform(Vector4 vec, Quaternion quat)
         {
             Transform(ref vec, ref quat, out var result);
             return result;
@@ -831,72 +659,19 @@ namespace SS14.Shared.Maths
         /// <param name="vec">The vector to transform.</param>
         /// <param name="quat">The quaternion to rotate the vector by.</param>
         /// <param name="result">The result of the operation.</param>
-        public static void Transform(ref Vector3 vec, ref Quaternion quat, out Vector3 result)
+        public static void Transform(ref Vector4 vec, ref Quaternion quat, out Vector4 result)
         {
-            // Since vec.W == 0, we can optimize quat * vec * quat^-1 as follows:
-            // vec + 2.0 * cross(quat.xyz, cross(quat.xyz, vec) + quat.w * vec)
-            var xyz = quat.Xyz;
-            Cross(ref xyz, ref vec, out var temp);
-            Multiply(ref vec, quat.W, out var temp2);
-            Add(ref temp, ref temp2, out temp);
-            Cross(ref xyz, ref temp, out temp);
-            Multiply(ref temp, 2, out temp);
-            Add(ref vec, ref temp, out result);
+            var v = new Quaternion(vec.X, vec.Y, vec.Z, vec.W);
+            Quaternion.Invert(ref quat, out var i);
+            Quaternion.Multiply(ref quat, ref v, out var t);
+            Quaternion.Multiply(ref t, ref i, out v);
+
+            result = new Vector4(v.X, v.Y, v.Z, v.W);
         }
 
-        /// <summary>Transform a Vector3 by the given Matrix, and project the resulting Vector4 back to a Vector3</summary>
-        /// <param name="vec">The vector to transform</param>
-        /// <param name="mat">The desired transformation</param>
-        /// <returns>The transformed vector</returns>
-        public static Vector3 TransformPerspective(Vector3 vec, Matrix4 mat)
-        {
-            TransformPerspective(ref vec, ref mat, out var result);
-            return result;
-        }
+        #endregion Transform
 
-        /// <summary>Transform a Vector3 by the given Matrix, and project the resulting Vector4 back to a Vector3</summary>
-        /// <param name="vec">The vector to transform</param>
-        /// <param name="mat">The desired transformation</param>
-        /// <param name="result">The transformed vector</param>
-        public static void TransformPerspective(ref Vector3 vec, ref Matrix4 mat, out Vector3 result)
-        {
-            var v = new Vector4(vec, 1);
-            Vector4.Transform(ref v, ref mat, out v);
-            result.X = v.X / v.W;
-            result.Y = v.Y / v.W;
-            result.Z = v.Z / v.W;
-        }
-
-        #endregion
-
-        #region CalculateAngle
-
-        /// <summary>
-        /// Calculates the angle (in radians) between two vectors.
-        /// </summary>
-        /// <param name="first">The first vector.</param>
-        /// <param name="second">The second vector.</param>
-        /// <returns>Angle (in radians) between the vectors.</returns>
-        /// <remarks>Note that the returned angle is never bigger than the constant Pi.</remarks>
-        public static float CalculateAngle(Vector3 first, Vector3 second)
-        {
-            return (float)Math.Acos(Dot(first, second) / (first.Length * second.Length));
-        }
-
-        /// <summary>Calculates the angle (in radians) between two vectors.</summary>
-        /// <param name="first">The first vector.</param>
-        /// <param name="second">The second vector.</param>
-        /// <param name="result">Angle (in radians) between the vectors.</param>
-        /// <remarks>Note that the returned angle is never bigger than the constant Pi.</remarks>
-        public static void CalculateAngle(ref Vector3 first, ref Vector3 second, out float result)
-        {
-            Dot(ref first, ref second, out var temp);
-            result = (float)Math.Acos(temp / (first.Length * second.Length));
-        }
-
-        #endregion
-
-        #endregion
+        #endregion Static
 
         #region Swizzle
 
@@ -914,7 +689,22 @@ namespace SS14.Shared.Maths
             }
         }
 
-        #endregion
+        /// <summary>
+        /// Gets or sets an OpenTK.Vector3 with the X, Y and Z components of this instance.
+        /// </summary>
+        [XmlIgnore]
+        public Vector3 Xyz
+        {
+            get => new Vector3(X, Y, Z);
+            set
+            {
+                X = value.X;
+                Y = value.Y;
+                Z = value.Z;
+            }
+        }
+
+        #endregion Swizzle
 
         #region Operators
 
@@ -924,11 +714,12 @@ namespace SS14.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <returns>The result of the calculation.</returns>
-        public static Vector3 operator +(Vector3 left, Vector3 right)
+        public static Vector4 operator +(Vector4 left, Vector4 right)
         {
             left.X += right.X;
             left.Y += right.Y;
             left.Z += right.Z;
+            left.W += right.W;
             return left;
         }
 
@@ -938,11 +729,12 @@ namespace SS14.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <returns>The result of the calculation.</returns>
-        public static Vector3 operator -(Vector3 left, Vector3 right)
+        public static Vector4 operator -(Vector4 left, Vector4 right)
         {
             left.X -= right.X;
             left.Y -= right.Y;
             left.Z -= right.Z;
+            left.W -= right.W;
             return left;
         }
 
@@ -951,11 +743,12 @@ namespace SS14.Shared.Maths
         /// </summary>
         /// <param name="vec">The instance.</param>
         /// <returns>The result of the calculation.</returns>
-        public static Vector3 operator -(Vector3 vec)
+        public static Vector4 operator -(Vector4 vec)
         {
             vec.X = -vec.X;
             vec.Y = -vec.Y;
             vec.Z = -vec.Z;
+            vec.W = -vec.W;
             return vec;
         }
 
@@ -965,11 +758,12 @@ namespace SS14.Shared.Maths
         /// <param name="vec">The instance.</param>
         /// <param name="scale">The scalar.</param>
         /// <returns>The result of the calculation.</returns>
-        public static Vector3 operator *(Vector3 vec, float scale)
+        public static Vector4 operator *(Vector4 vec, float scale)
         {
             vec.X *= scale;
             vec.Y *= scale;
             vec.Z *= scale;
+            vec.W *= scale;
             return vec;
         }
 
@@ -979,11 +773,12 @@ namespace SS14.Shared.Maths
         /// <param name="scale">The scalar.</param>
         /// <param name="vec">The instance.</param>
         /// <returns>The result of the calculation.</returns>
-        public static Vector3 operator *(float scale, Vector3 vec)
+        public static Vector4 operator *(float scale, Vector4 vec)
         {
             vec.X *= scale;
             vec.Y *= scale;
             vec.Z *= scale;
+            vec.W *= scale;
             return vec;
         }
 
@@ -993,12 +788,13 @@ namespace SS14.Shared.Maths
         /// <param name="vec">The instance.</param>
         /// <param name="scale">The scalar.</param>
         /// <returns>The result of the calculation.</returns>
-        public static Vector3 operator /(Vector3 vec, float scale)
+        public static Vector4 operator /(Vector4 vec, float scale)
         {
             var mult = 1.0f / scale;
             vec.X *= mult;
             vec.Y *= mult;
             vec.Z *= mult;
+            vec.W *= mult;
             return vec;
         }
 
@@ -1008,7 +804,7 @@ namespace SS14.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <returns>True, if left equals right; false otherwise.</returns>
-        public static bool operator ==(Vector3 left, Vector3 right)
+        public static bool operator ==(Vector4 left, Vector4 right)
         {
             return left.Equals(right);
         }
@@ -1018,41 +814,41 @@ namespace SS14.Shared.Maths
         /// </summary>
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
-        /// <returns>True, if left does not equa lright; false otherwise.</returns>
-        public static bool operator !=(Vector3 left, Vector3 right)
+        /// <returns>True, if left does not equal right; false otherwise.</returns>
+        public static bool operator !=(Vector4 left, Vector4 right)
         {
             return !left.Equals(right);
         }
 
-        #endregion
+        #endregion Operators
 
         #region Overrides
 
         #region public override string ToString()
 
         /// <summary>
-        /// Returns a System.String that represents the current Vector3.
+        /// Returns a System.String that represents the current Vector4.
         /// </summary>
         /// <returns></returns>
         public override string ToString()
         {
-            return $"({X}, {Y}, {Z})";
+            return $"({X}, {Y}, {Z}, {W})";
         }
 
-        #endregion
+        #endregion public override string ToString()
 
         #region public override int GetHashCode()
 
         /// <summary>
-        /// Returns the hashcode for this instance.
+        /// Returns the hash code for this instance.
         /// </summary>
         /// <returns>A System.Int32 containing the unique hashcode for this instance.</returns>
         public override int GetHashCode()
         {
-            return X.GetHashCode() ^ Y.GetHashCode() ^ Z.GetHashCode();
+            return X.GetHashCode() ^ Y.GetHashCode() ^ Z.GetHashCode() ^ W.GetHashCode();
         }
 
-        #endregion
+        #endregion public override int GetHashCode()
 
         #region public override bool Equals(object obj)
 
@@ -1063,31 +859,32 @@ namespace SS14.Shared.Maths
         /// <returns>True if the instances are equal; false otherwise.</returns>
         public override bool Equals(object obj)
         {
-            if (!(obj is Vector3))
+            if (!(obj is Vector4))
                 return false;
 
-            return Equals((Vector3)obj);
+            return Equals((Vector4) obj);
         }
 
-        #endregion
+        #endregion public override bool Equals(object obj)
 
-        #endregion
+        #endregion Overrides
 
-        #endregion
+        #endregion Public Members
 
-        #region IEquatable<Vector3> Members
+        #region IEquatable<Vector4> Members
 
         /// <summary>Indicates whether the current vector is equal to another vector.</summary>
         /// <param name="other">A vector to compare with this vector.</param>
         /// <returns>true if the current vector is equal to the vector parameter; otherwise, false.</returns>
-        public bool Equals(Vector3 other)
+        public bool Equals(Vector4 other)
         {
             return
                 X == other.X &&
                 Y == other.Y &&
-                Z == other.Z;
+                Z == other.Z &&
+                W == other.W;
         }
 
-        #endregion
+        #endregion IEquatable<Vector4> Members
     }
 }

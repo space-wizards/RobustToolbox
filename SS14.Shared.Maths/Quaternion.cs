@@ -73,10 +73,10 @@ namespace SS14.Shared.Maths
             var scale = Math.Pow(matrix.Determinant, 1.0d / 3.0d);
             float x, y, z;
 
-            w = (float)(Math.Sqrt(Math.Max(0, scale + matrix[0, 0] + matrix[1, 1] + matrix[2, 2])) / 2);
-            x = (float)(Math.Sqrt(Math.Max(0, scale + matrix[0, 0] - matrix[1, 1] - matrix[2, 2])) / 2);
-            y = (float)(Math.Sqrt(Math.Max(0, scale - matrix[0, 0] + matrix[1, 1] - matrix[2, 2])) / 2);
-            z = (float)(Math.Sqrt(Math.Max(0, scale - matrix[0, 0] - matrix[1, 1] + matrix[2, 2])) / 2);
+            w = (float) (Math.Sqrt(Math.Max(0, scale + matrix[0, 0] + matrix[1, 1] + matrix[2, 2])) / 2);
+            x = (float) (Math.Sqrt(Math.Max(0, scale + matrix[0, 0] - matrix[1, 1] - matrix[2, 2])) / 2);
+            y = (float) (Math.Sqrt(Math.Max(0, scale - matrix[0, 0] + matrix[1, 1] - matrix[2, 2])) / 2);
+            z = (float) (Math.Sqrt(Math.Max(0, scale - matrix[0, 0] - matrix[1, 1] + matrix[2, 2])) / 2);
 
             xyz = new Vector3(x, y, z);
 
@@ -156,6 +156,7 @@ namespace SS14.Shared.Maths
             get => xyz.Z;
             set => xyz.Z = value;
         }
+
         #endregion Properties
 
         #region Instance
@@ -186,8 +187,8 @@ namespace SS14.Shared.Maths
 
             var result = new Vector4();
 
-            result.W = 2.0f * (float)Math.Acos(q.W); // angle
-            var den = (float)Math.Sqrt(1.0 - q.W * q.W);
+            result.W = 2.0f * (float) Math.Acos(q.W); // angle
+            var den = (float) Math.Sqrt(1.0 - q.W * q.W);
             if (den > 0.0001f)
             {
                 result.Xyz = q.Xyz / den;
@@ -210,7 +211,7 @@ namespace SS14.Shared.Maths
         /// Gets the length (magnitude) of the quaternion.
         /// </summary>
         /// <seealso cref="LengthSquared"/>
-        public float Length => (float)Math.Sqrt(W * W + Xyz.LengthSquared);
+        public float Length => (float) Math.Sqrt(W * W + Xyz.LengthSquared);
 
         #endregion public float Length
 
@@ -255,8 +256,8 @@ namespace SS14.Shared.Maths
 
         #region Fields
 
-        private const float RadToDeg = (float)(180.0 / Math.PI);
-        private const float DegToRad = (float)(Math.PI / 180.0);
+        private const float RadToDeg = (float) (180.0 / Math.PI);
+        private const float DegToRad = (float) (Math.PI / 180.0);
 
         /// <summary>
         /// Defines the identity quaternion.
@@ -489,8 +490,8 @@ namespace SS14.Shared.Maths
 
             angle *= 0.5f;
             axis.Normalize();
-            result.Xyz = axis * (float)Math.Sin(angle);
-            result.W = (float)Math.Cos(angle);
+            result.Xyz = axis * (float) Math.Sin(angle);
+            result.W = (float) Math.Cos(angle);
 
             return Normalize(result);
         }
@@ -515,8 +516,10 @@ namespace SS14.Shared.Maths
                 {
                     return Identity;
                 }
+
                 return q2;
             }
+
             if (q2.LengthSquared == 0.0f)
             {
                 return q1;
@@ -529,6 +532,7 @@ namespace SS14.Shared.Maths
                 // angle = 0.0f, so just return one input.
                 return q1;
             }
+
             if (cosHalfAngle < 0.0f)
             {
                 q2.Xyz = -q2.Xyz;
@@ -541,11 +545,11 @@ namespace SS14.Shared.Maths
             if (cosHalfAngle < 0.99f)
             {
                 // do proper slerp for big angles
-                var halfAngle = (float)Math.Acos(cosHalfAngle);
-                var sinHalfAngle = (float)Math.Sin(halfAngle);
+                var halfAngle = (float) Math.Acos(cosHalfAngle);
+                var sinHalfAngle = (float) Math.Sin(halfAngle);
                 var oneOverSinHalfAngle = 1.0f / sinHalfAngle;
-                blendA = (float)Math.Sin(halfAngle * (1.0f - blend)) * oneOverSinHalfAngle;
-                blendB = (float)Math.Sin(halfAngle * blend) * oneOverSinHalfAngle;
+                blendA = (float) Math.Sin(halfAngle * (1.0f - blend)) * oneOverSinHalfAngle;
+                blendB = (float) Math.Sin(halfAngle * blend) * oneOverSinHalfAngle;
             }
             else
             {
@@ -571,6 +575,7 @@ namespace SS14.Shared.Maths
             {
                 return to;
             }
+
             var t = Math.Min(1f, maxDegreesDelta / num);
             return Slerp(from, to, t);
         }
@@ -582,7 +587,7 @@ namespace SS14.Shared.Maths
         public static float Angle(Quaternion a, Quaternion b)
         {
             var f = Dot(a, b);
-            return (float)(Math.Acos(Math.Min(Math.Abs(f), 1f)) * 2f * RadToDeg);
+            return (float) (Math.Acos(Math.Min(Math.Abs(f), 1f)) * 2f * RadToDeg);
         }
 
         #endregion Angle
@@ -593,7 +598,7 @@ namespace SS14.Shared.Maths
         public static Quaternion LookRotation(ref Vector3 forward, ref Vector3 up)
         {
             forward = Vector3.Normalize(forward);
-            Vector3 right = Vector3.Normalize(Vector3.Cross(up, forward));
+            var right = Vector3.Normalize(Vector3.Cross(up, forward));
             up = Vector3.Cross(forward, right);
             var m00 = right.X;
             var m01 = right.Y;
@@ -605,11 +610,11 @@ namespace SS14.Shared.Maths
             var m21 = forward.Y;
             var m22 = forward.Z;
 
-            var num8 = (m00 + m11) + m22;
+            var num8 = m00 + m11 + m22;
             var quaternion = new Quaternion();
             if (num8 > 0f)
             {
-                var num = (float)System.Math.Sqrt(num8 + 1f);
+                var num = (float) Math.Sqrt(num8 + 1f);
                 quaternion.w = num * 0.5f;
                 num = 0.5f / num;
                 quaternion.X = (m12 - m21) * num;
@@ -617,9 +622,10 @@ namespace SS14.Shared.Maths
                 quaternion.Z = (m01 - m10) * num;
                 return quaternion;
             }
-            if ((m00 >= m11) && (m00 >= m22))
+
+            if (m00 >= m11 && m00 >= m22)
             {
-                var num7 = (float)System.Math.Sqrt(((1f + m00) - m11) - m22);
+                var num7 = (float) Math.Sqrt(1f + m00 - m11 - m22);
                 var num4 = 0.5f / num7;
                 quaternion.X = 0.5f * num7;
                 quaternion.Y = (m01 + m10) * num4;
@@ -627,9 +633,10 @@ namespace SS14.Shared.Maths
                 quaternion.W = (m12 - m21) * num4;
                 return quaternion;
             }
+
             if (m11 > m22)
             {
-                var num6 = (float)System.Math.Sqrt(((1f + m11) - m00) - m22);
+                var num6 = (float) Math.Sqrt(1f + m11 - m00 - m22);
                 var num3 = 0.5f / num6;
                 quaternion.X = (m10 + m01) * num3;
                 quaternion.Y = 0.5f * num6;
@@ -637,7 +644,8 @@ namespace SS14.Shared.Maths
                 quaternion.W = (m20 - m02) * num3;
                 return quaternion;
             }
-            var num5 = (float)System.Math.Sqrt(((1f + m22) - m00) - m11);
+
+            var num5 = (float) Math.Sqrt(1f + m22 - m00 - m11);
             var num2 = 0.5f / num5;
             quaternion.X = (m20 + m02) * num2;
             quaternion.Y = (m21 + m12) * num2;
@@ -653,32 +661,36 @@ namespace SS14.Shared.Maths
         // from http://stackoverflow.com/questions/12088610/conversion-between-euler-quaternion-like-in-unity3d-engine
         public static Vector3 ToEulerRad(Quaternion rotation)
         {
-            float sqw = rotation.w * rotation.w;
-            float sqx = rotation.x * rotation.x;
-            float sqy = rotation.y * rotation.y;
-            float sqz = rotation.z * rotation.z;
-            float unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
-            float test = rotation.x * rotation.w - rotation.y * rotation.z;
+            var sqw = rotation.w * rotation.w;
+            var sqx = rotation.x * rotation.x;
+            var sqy = rotation.y * rotation.y;
+            var sqz = rotation.z * rotation.z;
+            var unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
+            var test = rotation.x * rotation.w - rotation.y * rotation.z;
             Vector3 v;
 
             if (test > 0.4995f * unit)
-            { // singularity at north pole
-                v.Y = (float)(2f * Math.Atan2(rotation.y, rotation.x));
-                v.X = (float)(Math.PI / 2);
+            {
+                // singularity at north pole
+                v.Y = (float) (2f * Math.Atan2(rotation.y, rotation.x));
+                v.X = (float) (Math.PI / 2);
                 v.Z = 0;
                 return NormalizeAngles(v * RadToDeg);
             }
+
             if (test < -0.4995f * unit)
-            { // singularity at south pole
-                v.Y = (float)(-2f * Math.Atan2(rotation.y, rotation.x));
-                v.X = (float)(-Math.PI / 2);
+            {
+                // singularity at south pole
+                v.Y = (float) (-2f * Math.Atan2(rotation.y, rotation.x));
+                v.X = (float) (-Math.PI / 2);
                 v.Z = 0;
                 return NormalizeAngles(v * RadToDeg);
             }
-            Quaternion q = new Quaternion(rotation.w, rotation.z, rotation.x, rotation.y);
-            v.Y = (float)System.Math.Atan2(2f * q.x * q.w + 2f * q.y * q.z, 1 - 2f * (q.z * q.z + q.w * q.w));     // Yaw
-            v.X = (float)System.Math.Asin(2f * (q.x * q.z - q.w * q.y));                             // Pitch
-            v.Z = (float)System.Math.Atan2(2f * q.x * q.y + 2f * q.z * q.w, 1 - 2f * (q.y * q.y + q.z * q.z));      // Roll
+
+            var q = new Quaternion(rotation.w, rotation.z, rotation.x, rotation.y);
+            v.Y = (float) Math.Atan2(2f * q.x * q.w + 2f * q.y * q.z, 1 - 2f * (q.z * q.z + q.w * q.w)); // Yaw
+            v.X = (float) Math.Asin(2f * (q.x * q.z - q.w * q.y)); // Pitch
+            v.Z = (float) Math.Atan2(2f * q.x * q.y + 2f * q.z * q.w, 1 - 2f * (q.y * q.y + q.z * q.z)); // Roll
             return NormalizeAngles(v * RadToDeg);
         }
 
@@ -815,7 +827,7 @@ namespace SS14.Shared.Maths
         public override bool Equals(object obj)
         {
             if (obj is Quaternion == false) return false;
-            return this == (Quaternion)obj;
+            return this == (Quaternion) obj;
         }
 
         #endregion public override bool Equals (object o)

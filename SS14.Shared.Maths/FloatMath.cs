@@ -6,8 +6,8 @@ namespace SS14.Shared.Maths
     {
         private const int LookupSize = 1024 * 64; //has to be power of 2
         private static readonly float[] getSin, getCos;
-        public const float RadToDeg = (float)(180.0 / Math.PI);
-        public const float DegToRad = (float)(Math.PI / 180.0);
+        public const float RadToDeg = (float) (180.0 / Math.PI);
+        public const float DegToRad = (float) (Math.PI / 180.0);
 
         static FloatMath()
         {
@@ -16,8 +16,8 @@ namespace SS14.Shared.Maths
 
             for (var i = 0; i < LookupSize; i++)
             {
-                getSin[i] = (float)Math.Sin(i * Math.PI / LookupSize * 2);
-                getCos[i] = (float)Math.Cos(i * Math.PI / LookupSize * 2);
+                getSin[i] = (float) Math.Sin(i * Math.PI / LookupSize * 2);
+                getCos[i] = (float) Math.Cos(i * Math.PI / LookupSize * 2);
             }
         }
 
@@ -41,7 +41,7 @@ namespace SS14.Shared.Maths
 
         public static int GetIndex(float degrees)
         {
-            return (int)(degrees * (LookupSize / 360f) + 0.5f) & (LookupSize - 1);
+            return (int) (degrees * (LookupSize / 360f) + 0.5f) & (LookupSize - 1);
         }
 
         public static void SinCos(float degrees, out float sin, out float cos)
@@ -62,12 +62,13 @@ namespace SS14.Shared.Maths
             return Math.Max(a, b);
         }
 
-        public const float Pi = (float)Math.PI;
+        public const float Pi = (float) Math.PI;
 
         public static float ToDegrees(float radians)
         {
             return radians / Pi * 180;
         }
+
         public static float ToRadians(float degrees)
         {
             return degrees / 180 * Pi;

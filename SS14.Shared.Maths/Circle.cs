@@ -36,7 +36,7 @@ namespace SS14.Shared.Maths
             var dy = Math.Abs(point.Y - Position.Y);
             var r = Radius;
 
-            return (dx * dx + dy * dy <= r * r);
+            return dx * dx + dy * dy <= r * r;
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace SS14.Shared.Maths
             var dy = Position.Y - Math.Max(aabb.Top, Math.Min(Position.Y, aabb.Top + aabb.Height));
             var r = Radius;
 
-            return (dx * dx + dy * dy <= r * r);
+            return dx * dx + dy * dy <= r * r;
         }
 
         /// <inheritdoc />

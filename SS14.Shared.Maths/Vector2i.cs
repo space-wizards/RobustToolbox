@@ -48,7 +48,7 @@ namespace SS14.Shared.Maths
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is Vector2i && Equals((Vector2i)obj);
+            return obj is Vector2i && Equals((Vector2i) obj);
         }
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace SS14.Shared.Maths
 
         public static explicit operator Vector2i(Vector2 vector)
         {
-            return new Vector2i((int)vector.X, (int)vector.Y);
+            return new Vector2i((int) vector.X, (int) vector.Y);
         }
     }
 }

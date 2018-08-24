@@ -86,7 +86,7 @@ namespace SS14.Shared.Maths
         public static long NextPowerOfTwo(long n)
         {
             if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (long)Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
+            return (long) Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
         }
 
         /// <summary>
@@ -97,7 +97,7 @@ namespace SS14.Shared.Maths
         public static int NextPowerOfTwo(int n)
         {
             if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (int)Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
+            return (int) Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace SS14.Shared.Maths
         public static float NextPowerOfTwo(float n)
         {
             if (n < 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (float)Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
+            return (float) Math.Pow(2, Math.Ceiling(Math.Log(n, 2)));
         }
 
         /// <summary>
@@ -166,7 +166,7 @@ namespace SS14.Shared.Maths
         /// <returns>The angle expressed in radians</returns>
         public static float DegreesToRadians(float degrees)
         {
-            const float degToRad = (float)Math.PI / 180.0f;
+            const float degToRad = (float) Math.PI / 180.0f;
             return degrees * degToRad;
         }
 
@@ -177,7 +177,7 @@ namespace SS14.Shared.Maths
         /// <returns>The angle expressed in degrees</returns>
         public static float RadiansToDegrees(float radians)
         {
-            const float radToDeg = 180.0f / (float)Math.PI;
+            const float radToDeg = 180.0f / (float) Math.PI;
             return radians * radToDeg;
         }
 
@@ -257,7 +257,7 @@ namespace SS14.Shared.Maths
         [DebuggerStepThrough]
         public static double Mod(double n, double d)
         {
-            return (n - Math.Floor(n / d) * d);
+            return n - Math.Floor(n / d) * d;
         }
 
         /// <summary>
@@ -270,10 +270,9 @@ namespace SS14.Shared.Maths
         [DebuggerStepThrough]
         public static int Mod(int n, int d)
         {
-            int r = n % d;
+            var r = n % d;
             return r < 0 ? r + d : r;
         }
-
 
         #endregion Public Members
     }

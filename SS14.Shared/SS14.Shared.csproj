@@ -160,6 +160,7 @@
     <Compile Include="GameObjects\EntitySystemMessages\AudioMessages.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\EffectMessage.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\ClickedOnEntityMessage.cs" />
+    <Compile Include="GameObjects\EntitySystemMessages\EntParentChangedMessage.cs" />
     <Compile Include="GameObjects\EntityUid.cs" />
     <Compile Include="GameObjects\IncomingEntityMessage.cs" />
     <Compile Include="GameObjects\NetComponent.cs" />

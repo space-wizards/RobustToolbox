@@ -1,11 +1,17 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.IoC;
+using SS14.Shared.Prototypes;
 
 namespace SS14.Shared.Map
 {
     public class TileDefinitionManager : ITileDefinitionManager
     {
+        [Dependency]
+        IPrototypeManager PrototypeManager;
+
         private readonly List<ITileDefinition> _tileDefs;
         private readonly Dictionary<string, ITileDefinition> _tileNames;
         private readonly Dictionary<ITileDefinition, ushort> _tileIds;
@@ -22,8 +28,10 @@ namespace SS14.Shared.Map
 
         public void Initialize()
         {
-            new SpaceTileDefinition().Register(this);
-            new FloorTileDefinition().Register(this);
+            foreach (var prototype in PrototypeManager.EnumeratePrototypes<PrototypeTileDefinition>().OrderBy(p => p.FutureID))
+            {
+                prototype.Register(this);
+            }
         }
 
         public virtual ushort Register(ITileDefinition tileDef)

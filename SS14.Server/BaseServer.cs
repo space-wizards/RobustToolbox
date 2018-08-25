@@ -194,14 +194,12 @@ namespace SS14.Server
             // _resources.MountDefaultContentPack();
 
             //identical code in game controller for client
-            if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared")
-                && !AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Sandbox.Shared"))
+            if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
             {
                 Logger.Warning($"[ENG] Could not load any Shared DLL.");
             }
 
-            if (!AssemblyLoader.TryLoadAssembly<GameServer>(_resources, $"Content.Server")
-                && !AssemblyLoader.TryLoadAssembly<GameServer>(_resources, $"Sandbox.Server"))
+            if (!AssemblyLoader.TryLoadAssembly<GameServer>(_resources, $"Content.Server"))
             {
                 Logger.Warning($"[ENG] Could not load any Server DLL.");
             }
@@ -222,14 +220,13 @@ namespace SS14.Server
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
 
-            IoCManager.Resolve<ITileDefinitionManager>().Initialize();
-
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes"));
             prototypeManager.Resync();
 
+            IoCManager.Resolve<ITileDefinitionManager>().Initialize();
             IoCManager.Resolve<IConsoleShell>().Initialize();
 
             OnRunLevelChanged(ServerRunLevel.PreGame);

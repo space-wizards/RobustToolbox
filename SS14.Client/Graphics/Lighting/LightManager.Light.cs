@@ -167,6 +167,10 @@ namespace SS14.Client.Graphics.Lighting
             {
                 if (System != LightingSystem.Deferred)
                 {
+                    if (parentTransform != null)
+                    {
+                        DeParent();
+                    }
                     node.SceneNode.AddChild(Light2D);
                 }
                 parentTransform = node;

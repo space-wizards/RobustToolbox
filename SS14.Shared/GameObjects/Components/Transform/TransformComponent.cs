@@ -24,6 +24,8 @@ namespace SS14.Shared.GameObjects.Components.Transform
         /// <inheritdoc />
         public event EventHandler<MoveEventArgs> OnMove;
 
+        public event Action<ParentChangedEventArgs> OnParentChanged;
+
         /// <inheritdoc />
         public event Action<Angle> OnRotate;
 
@@ -92,9 +94,11 @@ namespace SS14.Shared.GameObjects.Components.Transform
             get => !_parent.IsValid() ? null : Owner.EntityManager.GetEntity(_parent).GetComponent<ITransformComponent>();
             private set
             {
+                var old = _parent;
                 var msg = new EntParentChangedMessage(Owner, Parent?.Owner);
                 _parent = value?.Owner.Uid ?? EntityUid.Invalid;
                 Owner.EntityManager.RaiseEvent(Owner, msg);
+                OnParentChanged?.Invoke(new ParentChangedEventArgs(old, _parent));
             }
         }
 

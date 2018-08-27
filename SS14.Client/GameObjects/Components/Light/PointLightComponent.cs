@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.Remoting.Messaging;
 using SS14.Client.Graphics.Lighting;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Graphics.Lighting;
@@ -12,9 +13,10 @@ using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
-using SS14.Shared.Serialization;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
+using YamlDotNet.Serialization;
+using ObjectSerializer = SS14.Shared.Serialization.ObjectSerializer;
 
 namespace SS14.Client.GameObjects
 {
@@ -71,7 +73,32 @@ namespace SS14.Client.GameObjects
             set => Light.Energy = value;
         }
 
+        public bool VisibleNested
+        {
+            get => _visibleNested;
+            set
+            {
+                if (_visibleNested == value) return;
+                _visibleNested = value;
+                if (value)
+                {
+                    if (Owner.Transform.Parent == null) return;
+                    Light.ParentTo((GodotTransformComponent) Owner.Transform.Parent);
+                    _lightOnParent = true;
+                }
+                else
+                {
+                    if (!_lightOnParent) return;
+                    Light.ParentTo((GodotTransformComponent) Owner.Transform);
+                    _lightOnParent = false;
+                }
+            }
+        }
+
         private float radius = 5;
+        private bool _visibleNested = true;
+        private bool _lightOnParent = false;
+
         /// <summary>
         ///     Radius, in meters.
         /// </summary>
@@ -93,8 +120,28 @@ namespace SS14.Client.GameObjects
         {
             base.Initialize();
 
-            var transform = Owner.GetComponent<IGodotTransformComponent>();
-            Light.ParentTo(transform);
+            Light.ParentTo((GodotTransformComponent)Owner.Transform);
+            Owner.Transform.OnParentChanged += TransformOnOnParentChanged;
+        }
+
+        private void TransformOnOnParentChanged(ParentChangedEventArgs obj)
+        {
+            // TODO: this does not work for things nested multiply layers deep.
+            if (!VisibleNested)
+            {
+                return;
+            }
+
+            if (obj.New.IsValid() && Owner.EntityManager.TryGetEntity(obj.New, out var entity))
+            {
+                Light.ParentTo((GodotTransformComponent) entity.Transform);
+                _lightOnParent = true;
+            }
+            else
+            {
+                Light.ParentTo((GodotTransformComponent) Owner.Transform);
+                _lightOnParent = false;
+            }
         }
 
         public override void ExposeData(ObjectSerializer serializer)
@@ -113,6 +160,7 @@ namespace SS14.Client.GameObjects
             serializer.DataReadWriteFunction("state", LightState.On, state => State = state, () => State);
             serializer.DataReadWriteFunction("energy", 1f, energy => Energy = energy, () => Energy);
             serializer.DataReadWriteFunction("autoRot", false, rot => MaskAutoRotate = rot, () => MaskAutoRotate);
+            serializer.DataFieldCached(ref _visibleNested, "nestedvisible", true);
         }
 
         public override void OnRemove()

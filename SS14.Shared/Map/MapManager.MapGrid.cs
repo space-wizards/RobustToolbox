@@ -68,13 +68,13 @@ namespace SS14.Shared.Map
                 var a = AABBWorld;
                 var b = worldPos;
 
-                var x = Math.Min(a.Left, b.X);
-                var width = Math.Max(a.Left + a.Width, b.X);
+                var min_x = Math.Min(a.Left, b.X);
+                var max_x = Math.Max(a.Right, b.X);
 
-                var y = Math.Min(a.Top, b.Y);
-                var height = Math.Max(a.Top + a.Height, b.Y);
+                var min_y = Math.Min(a.Top, b.Y);
+                var max_y = Math.Max(a.Bottom, b.Y);
 
-                AABBWorld = new Box2(x, y, width - x, height - y);
+                AABBWorld = Box2.FromDimensions(min_x, min_y, max_x - min_x, max_y - min_y);
             }
 
             public bool OnSnapCenter(Vector2 position)

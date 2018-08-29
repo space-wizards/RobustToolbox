@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using SS14.Shared.Maths;
 
@@ -32,6 +33,94 @@ namespace SS14.UnitTesting.Shared.Maths
             (-1, 0, Direction.West),
             (0, -1, Direction.South),
         };
+
+        [Test]
+        public void TestAngleZero()
+        {
+            Assert.That(Angle.Zero.Theta, Is.AtMost(Epsilon));
+            Assert.That(Angle.Zero.Degrees, Is.AtMost(Epsilon));
+        }
+
+        [Test]
+        public void TestAngleEqualsApprox([ValueSource(nameof(Sources))] (float, float, Direction, double) test)
+        {
+            var control = new Angle(new Vector2(test.Item1, test.Item2));
+            var target = new Angle(test.Item4);
+            Angle targetPlusRev = target + MathHelper.TwoPi;
+            Angle targetMinusRev = target - MathHelper.TwoPi;
+
+            Assert.That(target.EqualsApprox(control));
+            Assert.That(targetPlusRev.EqualsApprox(control));
+            Assert.That(targetMinusRev.EqualsApprox(control));
+        }
+
+        [Test]
+        public void TestAngleEqualsApproxWithTolerance([ValueSource(nameof(Sources))] (float, float, Direction, double) test)
+        {
+            var control = new Angle(new Vector2(test.Item1, test.Item2));
+            var target = new Angle(test.Item4);
+            Angle targetPlusRev = target + MathHelper.TwoPi;
+            Angle targetMinusRev = target - MathHelper.TwoPi;
+
+            Assert.That(target.EqualsApprox(control, 0.00001));
+            Assert.That(targetPlusRev.EqualsApprox(control, 0.00001));
+            Assert.That(targetMinusRev.EqualsApprox(control, 0.00001));
+
+            Angle targetWithLargeDelta = target + 1;
+            Angle targetWithSmallDelta = target + 0.01;
+
+            // Large delta shouldn't be accepted, even with a large tolerance.
+            Assert.That(targetWithLargeDelta.EqualsApprox(control, 0.1), Is.False);
+
+            // Small detla should be accepted with a large tolerance, but not with small tolerance.
+            Assert.That(targetWithSmallDelta.EqualsApprox(control, 0.1));
+            Assert.That(targetWithSmallDelta.EqualsApprox(control, 0.00001), Is.False);
+        }
+
+        [Test]
+        public void TestAngleFromDegrees([ValueSource(nameof(Sources))] (float, float, Direction, double) test)
+        {
+            var rads = test.Item4;
+            var degrees = MathHelper.RadiansToDegrees(rads);
+
+            var target = Angle.FromDegrees(degrees);
+            var control = new Angle(rads);
+
+            Assert.That(target.EqualsApprox(control));
+        }
+
+        [Test]
+        public void TestAngleToDoubleImplicitConversion([ValueSource(nameof(Sources))] (float, float, Direction, double) test)
+        {
+            var control = new Angle(new Vector2(test.Item1, test.Item2));
+
+            double impl = control;
+            var expl = (double) control;
+
+            Assert.That(impl, Is.EqualTo(expl).Within(Epsilon));
+        }
+
+        [Test]
+        public void TestDoubleToAngleImplicitConversion([ValueSource(nameof(Sources))] (float, float, Direction, double) test)
+        {
+            var rads = test.Item4;
+
+            Angle impl = rads;
+            var expl = new Angle(rads);
+
+            Assert.That(impl.EqualsApprox(expl));
+        }
+
+        [Test]
+        public void TestFloatToAngleImplicitConversion([ValueSource(nameof(Sources))] (float, float, Direction, double) test)
+        {
+            var rads = (float) test.Item4;
+
+            Angle impl = rads;
+            var expl = new Angle(rads);
+
+            Assert.That(impl.EqualsApprox(expl));
+        }
 
         [Test]
         [Sequential]

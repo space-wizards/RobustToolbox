@@ -95,7 +95,11 @@ namespace SS14.Shared.Maths
             var aPositive = FlipPositive(aReduced);
             var bPositive = FlipPositive(bReduced);
 
-            return FloatMath.CloseTo(aPositive, bPositive);
+            // The second two expressions cover an edge case where one number is barely non-negative while the other number is negative.
+            // In this case, the negative number will get FlipPositived to ~2pi and the comparison will give a false negative.
+            return FloatMath.CloseTo(aPositive, bPositive)
+                || FloatMath.CloseTo(aPositive + MathHelper.TwoPi, bPositive)
+                || FloatMath.CloseTo(aPositive, bPositive + MathHelper.TwoPi);
         }
 
         private static bool EqualsApprox(Angle a, Angle b, double tolerance)
@@ -107,7 +111,11 @@ namespace SS14.Shared.Maths
             var aPositive = FlipPositive(aReduced);
             var bPositive = FlipPositive(bReduced);
 
-            return FloatMath.CloseTo(aPositive, bPositive, tolerance);
+            // The second two expressions cover an edge case where one number is barely non-negative while the other number is negative.
+            // In this case, the negative number will get FlipPositived to ~2pi and the comparison will give a false negative.
+            return FloatMath.CloseTo(aPositive, bPositive, tolerance)
+                || FloatMath.CloseTo(aPositive + MathHelper.TwoPi, bPositive, tolerance)
+                || FloatMath.CloseTo(aPositive, bPositive + MathHelper.TwoPi, tolerance);
         }
 
         /// <summary>

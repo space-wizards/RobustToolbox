@@ -556,6 +556,7 @@ namespace SS14.Client.GameObjects
             {
                 if (rsi.TryGetState(stateId, out var state))
                 {
+                    thelayer.AnimationFrame = 0;
                     (thelayer.Texture, thelayer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref thelayer, state), 0);
                 }
                 else
@@ -601,6 +602,7 @@ namespace SS14.Client.GameObjects
             {
                 if (actualrsi.TryGetState(stateId, out var state))
                 {
+                    thelayer.AnimationFrame = 0;
                     (thelayer.Texture, thelayer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref thelayer, state), 0);
                 }
                 else

@@ -29,9 +29,6 @@ namespace SS14.Server.Player
         private readonly IBaseServer _baseServer;
 
         [Dependency]
-        private readonly IServerEntityManager _entityManager;
-
-        [Dependency]
         private readonly IServerNetManager _network;
         [Dependency]
         private readonly IReflectionManager _reflectionManager;

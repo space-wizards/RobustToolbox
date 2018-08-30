@@ -388,10 +388,6 @@
       <ResourceRoot>Prototypes\Engine</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\SavedEntities.xml">
-      <ResourceRoot />
-      <Visible>False</Visible>
-    </Resources>
     <Resources Include="..\Resources\emotes.xml">
       <ResourceRoot />
       <Visible>False</Visible>

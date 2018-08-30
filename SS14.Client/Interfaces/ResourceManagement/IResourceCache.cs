@@ -11,11 +11,6 @@ namespace SS14.Client.Interfaces.ResourceManagement
         void LoadLocalResources();
         void LoadBaseResources();
 
-        /// <summary>
-        ///     TEMPORARY: We need this because Godot can't load most resources without the disk easily.
-        /// </summary>
-        bool TryGetDiskFilePath(ResourcePath path, out string diskPath);
-
         T GetResource<T>(string path, bool useFallback = true)
             where T : BaseResource, new();
 

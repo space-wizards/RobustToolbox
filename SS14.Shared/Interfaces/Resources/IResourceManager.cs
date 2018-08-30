@@ -128,5 +128,12 @@ namespace SS14.Shared.Interfaces.Resources
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
         IEnumerable<ResourcePath> ContentFindFiles(string path);
+
+        /// <summary>
+        ///     TODO: TEMPORARY: We need this because Godot can't load most resources without the disk easily.
+        ///     Actually, seems like JetBrains Rider has trouble loading PBD files passed into AppDomain.Load too.
+        ///     Hrm.
+        /// </summary>
+        bool TryGetDiskFilePath(ResourcePath path, out string diskPath);
     }
 }

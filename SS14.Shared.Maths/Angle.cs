@@ -8,7 +8,7 @@ namespace SS14.Shared.Maths
     [Serializable]
     public struct Angle : IApproxEquatable<Angle>
     {
-        public static Angle Zero { get; set; } = new Angle();
+        public static Angle Zero { get; } = new Angle();
 
         /// <summary>
         ///     Angle in radians.

@@ -525,8 +525,20 @@ namespace SS14.Client.UserInterface
             return (T)GetChild(name);
         }
 
+        private static readonly char[] SectionSplitDelimiter = {'/'};
+
         public Control GetChild(string name)
         {
+            if (name.IndexOf('/') != -1)
+            {
+                var current = this;
+                foreach (var section in name.Split(SectionSplitDelimiter, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    current = current.GetChild(section);
+                }
+
+                return current;
+            }
             if (TryGetChild(name, out var control))
             {
                 return control;

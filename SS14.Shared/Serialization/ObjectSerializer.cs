@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.IoC;
 
 namespace SS14.Shared.Serialization
 {
@@ -251,6 +253,26 @@ namespace SS14.Shared.Serialization
             {
                 DataWriteFunction(name, defaultValue, writeFunc, alwaysWrite);
             }
+        }
+
+        /// <summary>
+        ///     Returns a "string or enum" key value from a field.
+        ///     These values are either a string, or an enum.
+        ///     This is good for identifiers that can either be a string (any value, prototypes go wild),
+        ///     or an enum when type safety is required for the code.
+        /// </summary>
+        /// <param name="fieldName">The name of the field to read the key from.</param>
+        /// <seealso cref="IReflectionManager.TryParseEnumReference"/>
+        public virtual object ReadStringEnumKey(string fieldName)
+        {
+            var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+            var keyString = ReadDataField<string>(fieldName);
+            if (reflectionManager.TryParseEnumReference(keyString, out var @enum))
+            {
+                return @enum;
+            }
+
+            return keyString;
         }
     }
 }

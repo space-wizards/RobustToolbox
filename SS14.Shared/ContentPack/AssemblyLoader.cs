@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using SS14.Shared.Interfaces.Reflection;
@@ -124,6 +125,41 @@ namespace SS14.Shared.ContentPack
         }
 
         /// <summary>
+        ///     Loads an assembly into the current AppDomain.
+        /// </summary>
+        /// <typeparam name="T">The type of the entry point to search for.</typeparam>
+        public static void LoadGameAssembly<T>(string diskPath)
+            where T : GameShared
+        {
+            // TODO: Re-enable type check when it's not just a giant pain in the butt.
+            // It slows down development too much and we need other things like System.Type fixed
+            // before it can reasonably be re-enabled.
+            AssemblyTypeChecker.DisableTypeCheck = true;
+            AssemblyTypeChecker.DumpTypes = true;
+            if (!AssemblyTypeChecker.CheckAssembly(File.ReadAllBytes(diskPath)))
+                return;
+
+            var mod = new ModInfo();
+
+            mod.GameAssembly =
+                Assembly.LoadFrom(diskPath);
+
+            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(mod.GameAssembly);
+
+            var entryPoints = mod.GameAssembly.GetTypes().Where(t => typeof(T).IsAssignableFrom(t)).ToArray();
+
+            if (entryPoints.Length == 0)
+                Logger.WarningS("res", $"Assembly has no entry points: {mod.GameAssembly.FullName}");
+
+            foreach (var entryPoint in entryPoints)
+            {
+                mod.EntryPoints.Add(Activator.CreateInstance(entryPoint) as T);
+            }
+
+            _mods.Add(mod);
+        }
+
+        /// <summary>
         ///     Broadcasts a run level change to all loaded entry point.
         /// </summary>
         /// <param name="level">New level</param>
@@ -181,8 +217,23 @@ namespace SS14.Shared.ContentPack
         public static bool TryLoadAssembly<T>(IResourceManager resMan, string assemblyName)
             where T : GameShared
         {
-            // get the assembly from the file system
-            if (resMan.TryContentFileRead(new ResourcePath($@"/Assemblies/{assemblyName}.dll"), out var gameDll))
+            var dllPath = new ResourcePath($@"/Assemblies/{assemblyName}.dll");
+            // To prevent breaking debugging on Rider, try to load from disk if possible.
+            if (resMan.TryGetDiskFilePath(dllPath, out var path))
+            {
+                Logger.DebugS("srv", $"Loading {assemblyName} DLL");
+                try
+                {
+                    LoadGameAssembly<T>(path);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Logger.Error("srv", $"Exception loading DLL {assemblyName}.dll: {e}");
+                    return false;
+                }
+            }
+            else if (resMan.TryContentFileRead(dllPath, out var gameDll))
             {
                 Logger.DebugS("srv", $"Loading {assemblyName} DLL");
 

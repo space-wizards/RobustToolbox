@@ -177,10 +177,27 @@ namespace SS14.Client.State.States
 
         public IEntity GetEntityUnderPosition(GridLocalCoordinates coordinates)
         {
-            return GetEntityUnderPosition(_entityManager, coordinates);
+            var entitiesUnderPosition = GetEntitiesUnderPosition(coordinates);
+            return entitiesUnderPosition.Count > 0 ? entitiesUnderPosition[0] : null;
         }
 
-        private static IEntity GetEntityUnderPosition(IClientEntityManager entityMan, GridLocalCoordinates coordinates)
+        /// <summary>
+        ///     Gets all the entities currently under the mouse cursor.
+        /// </summary>
+        /// <returns>A list of the entities, sorted such that the first entry is the top entity.</returns>
+        public IList<IEntity> GetEntitiesUnderMouse()
+        {
+            var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(inputManager.MouseScreenPosition));
+            return GetEntitiesUnderPosition(mousePosWorld);
+        }
+
+        public IList<IEntity> GetEntitiesUnderPosition(GridLocalCoordinates coordinates)
+        {
+            return GetEntitiesUnderPosition(_entityManager, coordinates);
+        }
+
+        private static IList<IEntity> GetEntitiesUnderPosition(IClientEntityManager entityMan,
+            GridLocalCoordinates coordinates)
         {
             // Find all the entities intersecting our click
             var entities = entityMan.GetEntitiesIntersecting(coordinates.MapID, coordinates.Position);
@@ -190,18 +207,20 @@ namespace SS14.Client.State.States
             foreach (var entity in entities)
             {
                 if (entity.TryGetComponent<IClientClickableComponent>(out var component)
-                && entity.GetComponent<ITransformComponent>().IsMapTransform
-                && component.CheckClick(coordinates, out var drawDepthClicked))
+                    && entity.GetComponent<ITransformComponent>().IsMapTransform
+                    && component.CheckClick(coordinates, out var drawDepthClicked))
                 {
                     foundEntities.Add((entity, drawDepthClicked));
                 }
             }
 
             if (foundEntities.Count == 0)
-                return null;
+                return new List<IEntity>();
 
             foundEntities.Sort(new ClickableEntityComparer());
-            return foundEntities[foundEntities.Count - 1].clicked;
+            // 0 is the top element.
+            foundEntities.Reverse();
+            return foundEntities.Select(a => a.clicked).ToList();
         }
 
         internal class ClickableEntityComparer : IComparer<(IEntity clicked, int depth)>
@@ -231,7 +250,7 @@ namespace SS14.Client.State.States
             var funcId = inputManager.NetworkBindMap.KeyFunctionID(func);
 
             var mousePosWorld = eyeManager.ScreenToWorld(args.PointerLocation);
-            var entityToClick = GetEntityUnderPosition(_entityManager, mousePosWorld);
+            var entityToClick = GetEntityUnderPosition(mousePosWorld);
             var message = new FullInputCmdMessage(timing.CurTick, funcId, args.State, mousePosWorld, entityToClick?.Uid ?? EntityUid.Invalid);
 
             // client side command handlers will always be sent the local player session.

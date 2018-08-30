@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Import Project="..\MSBuild\SS14.Properties.targets" />
@@ -103,6 +103,7 @@
     <Compile Include="GameController\GameController.GameTiming.cs" />
     <Compile Include="GameObjects\Components\Appearance\AppearanceComponent.cs" />
     <Compile Include="GameObjects\Components\Input\InputComponent.cs" />
+    <Compile Include="GameObjects\Components\UserInterface\ClientUserInterfaceComponent.cs" />
     <Compile Include="GameObjects\EntitySystems\AppearanceSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\AppearanceTestSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\AudioSystem.cs" />

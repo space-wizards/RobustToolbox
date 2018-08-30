@@ -157,6 +157,7 @@
     <Compile Include="GameObjects\ComponentMessage.cs" />
     <Compile Include="GameObjects\ComponentMessages\Messages.cs" />
     <Compile Include="GameObjects\Components\Appearance\SharedAppearanceComponent.cs" />
+    <Compile Include="GameObjects\Components\UserInterface\SharedUserInterfaceComponent.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\AudioMessages.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\EffectMessage.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\ClickedOnEntityMessage.cs" />
@@ -333,7 +334,6 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="..\MSBuild\SS14.Engine.targets" />
   <PropertyGroup>

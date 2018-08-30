@@ -1,9 +1,11 @@
 ﻿using SS14.Server.GameObjects.Components;
 using SS14.Server.GameObjects.Components.Container;
+using SS14.Server.GameObjects.Components.UserInterface;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.BoundingBox;
 using SS14.Shared.GameObjects.Components.Transform;
+using SS14.Shared.GameObjects.Components.UserInterface;
 using SS14.Shared.Interfaces.GameObjects.Components;
 
 namespace SS14.Server.GameObjects
@@ -45,6 +47,9 @@ namespace SS14.Server.GameObjects
             Register<AiControllerComponent>();
             Register<AppearanceComponent>();
             Register<SnapGridComponent>();
+
+            Register<ServerUserInterfaceComponent>();
+            RegisterReference<ServerUserInterfaceComponent, SharedUserInterfaceComponent>();
         }
     }
 }

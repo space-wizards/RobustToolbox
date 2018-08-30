@@ -20,5 +20,6 @@
         public const uint AUDIO_PLAYER = 21;
         public const uint APPEARANCE = 22;
         public const uint SNAPGRID = 23;
+        public const uint USERINTERFACE = 24;
     }
 }

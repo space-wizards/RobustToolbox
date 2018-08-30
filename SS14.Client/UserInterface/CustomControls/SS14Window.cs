@@ -75,6 +75,11 @@ namespace SS14.Client.UserInterface.CustomControls
             set => TitleLabel.Text = value;
         }
 
+        /// <summary>
+        ///     Invoked when the close button of this window is pressed.
+        /// </summary>
+        public event Action OnClose;
+
         // Drag resizing and moving code is mostly taken from Godot's WindowDialog.
 
         protected override void Initialize()
@@ -104,6 +109,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private void CloseButtonPressed(BaseButton.ButtonEventArgs args)
         {
+            OnClose?.Invoke();
             if (HideOnClose)
             {
                 Visible = false;

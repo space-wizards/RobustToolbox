@@ -31,6 +31,7 @@ using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using System;
+using SS14.Client.Utility;
 using SS14.Shared.Interfaces.Resources;
 
 namespace SS14.Client
@@ -98,7 +99,6 @@ namespace SS14.Client
 #if !X64
             throw new InvalidOperationException("The client cannot start outside x64.");
 #endif
-
             PreInitIoC();
             IoCManager.Resolve<ISceneTreeHolder>().Initialize(tree);
             InitIoC();
@@ -111,6 +111,11 @@ namespace SS14.Client
             _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
 
             displayManager.Initialize();
+
+            // Ensure Godot's side of the resources are up to date.
+#if DEBUG
+            GodotResourceCopy.DoDirCopy("../Resources", "Engine");
+#endif
 
             // Init resources.
             // Doesn't do anything right now because TODO Godot asset management is a bit ad-hoc.

@@ -97,7 +97,9 @@
     <Compile Include="Shared\GameObjects\ComponentManager_Test.cs" />
     <Compile Include="Shared\IoC\IoCManager_Test.cs" />
     <Compile Include="Shared\Maths\Angle_Test.cs" />
+    <Compile Include="Shared\Maths\Box2i_Test.cs" />
     <Compile Include="Shared\Maths\Box2_Test.cs" />
+    <Compile Include="Shared\Maths\Circle_Test.cs" />
     <Compile Include="Shared\Maths\Matrix3_Test.cs" />
     <Compile Include="Shared\Maths\Ray_Test.cs" />
     <Compile Include="Shared\Maths\Vector2u_Test.cs" />

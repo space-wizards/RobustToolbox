@@ -8,12 +8,12 @@
     </When>
     <When Condition="'$(TargetOS)' == 'MacOS'" >
       <PropertyGroup>
-        <DefineConstants>$(DefineConstants);MACOS</DefineConstants>
+        <DefineConstants>$(DefineConstants);MACOS;UNIX</DefineConstants>
       </PropertyGroup>
     </When>
     <Otherwise>
       <PropertyGroup>
-        <DefineConstants>$(DefineConstants);LINUX</DefineConstants>
+        <DefineConstants>$(DefineConstants);LINUX;UNIX</DefineConstants>
       </PropertyGroup>
     </Otherwise>
   </Choose>

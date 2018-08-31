@@ -12,6 +12,8 @@ namespace SS14.Shared.Maths
 
         public Vector2i BottomRight => new Vector2i(Right, Bottom);
         public Vector2i TopLeft => new Vector2i(Left, Top);
+        public Vector2i TopRight => new Vector2i(Right, Top);
+        public Vector2i BottomLeft => new Vector2i(Left, Bottom);
         public int Width => Math.Abs(Right - Left);
         public int Height => Math.Abs(Top - Bottom);
         public Vector2i Size => new Vector2i(Width, Height);
@@ -34,7 +36,7 @@ namespace SS14.Shared.Maths
 
         public static Box2i FromDimensions(int left, int top, int width, int height)
         {
-            return new Box2i(left, top, left + width, top + height);
+            return new Box2i(left, top, left + width, top - height);
         }
 
         public static Box2i FromDimensions(Vector2i position, Vector2i size)

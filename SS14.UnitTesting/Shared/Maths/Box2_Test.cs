@@ -13,21 +13,21 @@ namespace SS14.UnitTesting.Shared.Maths
         private static IEnumerable<(float left, float top, float right, float bottom)> Sources => new (float, float, float, float)[]
         {
             (0, 0, 0, 0),
-            (0, 0, 0, -1f),
-            (0, 0, 1f, 0),
-            (0, 0, 1f, -1f),
-            (0, 1f, 0, 0),
-            (0, 1f, 0, -1f),
-            (0, 1f, 1f, 0),
-            (0, 1f, 1f, -1f),
-            (-1f, 0, 0, 0),
-            (-1f, 0, 0, -1f),
-            (-1f, 0, 1f, 0),
-            (-1f, 0, 1f, -1f),
-            (-1f, 1f, 0, 0),
-            (-1f, 1f, 0, -1f),
-            (-1f, 1f, 1f, 0),
-            (-1f, 1f, 1f, -1f)
+            (0, 0, 0, -1),
+            (0, 0, 1, 0),
+            (0, 0, 1, -1),
+            (0, 1, 0, 0),
+            (0, 1, 0, -1),
+            (0, 1, 1, 0),
+            (0, 1, 1, -1),
+            (-1, 0, 0, 0),
+            (-1, 0, 0, -1),
+            (-1, 0, 1, 0),
+            (-1, 0, 1, -1),
+            (-1, 1, 0, 0),
+            (-1, 1, 0, -1),
+            (-1, 1, 1, 0),
+            (-1, 1, 1, -1)
         };
 
         private static IEnumerable<(float x, float y)> SmallTranslations => new (float, float)[]
@@ -61,6 +61,7 @@ namespace SS14.UnitTesting.Shared.Maths
             -1.0f,
             -0.1f,
             0.0f,
+            0.1f,
             1.0f,
             5.0f,
             10.0f

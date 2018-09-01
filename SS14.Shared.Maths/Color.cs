@@ -1,4 +1,4 @@
-//
+﻿//
 // The Open Toolkit Library License
 //
 // Copyright (c) 2006 - 2008 the Open Toolkit library, except where noted.
@@ -716,7 +716,7 @@ namespace SS14.Shared.Maths
 
         public static Color FromHex(string hexColor, Color? fallback = null)
         {
-            if (hexColor[0] == '#')
+            if (hexColor.Length > 0 && hexColor[0] == '#')
             {
                 if (hexColor.Length == 9)
                     return new Color(Convert.ToByte(hexColor.Substring(1, 2), 16),
@@ -765,10 +765,10 @@ namespace SS14.Shared.Maths
         public bool Equals(Color other)
         {
             return
-                R == other.R &&
-                G == other.G &&
-                B == other.B &&
-                A == other.A;
+                FloatMath.CloseTo(R, other.R) &&
+                FloatMath.CloseTo(G, other.G) &&
+                FloatMath.CloseTo(B, other.B) &&
+                FloatMath.CloseTo(A, other.A);
         }
 
         #region Static Colors

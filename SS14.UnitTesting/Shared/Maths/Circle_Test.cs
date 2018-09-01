@@ -186,7 +186,6 @@ namespace SS14.UnitTesting.Shared.Maths
             var circleDifferentPosition = new Circle(new Vector2(100, 0), radius);
             var sameCircle = new Circle(centerVec, radius);
             Object sameCircleAsObject = sameCircle;
-            Circle? nullCircle = null;
             Vector2 notCircle = centerVec;
 
 #pragma warning disable CS1718 // Comparison made to same variable

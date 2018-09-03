@@ -19,8 +19,6 @@ using System.Globalization;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.GameObjects.Components.Transform;
 using System.Linq;
-using SS14.Client.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.Configuration;
 
 namespace SS14.Client.Console.Commands
 {

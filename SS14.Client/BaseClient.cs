@@ -40,6 +40,11 @@ namespace SS14.Client
         /// <inheritdoc />
         public ServerInfo GameInfo { get; private set; }
 
+        /// <summary>
+        /// A player name to use when connecting to the server instead of the one found in the configuration.
+        /// </summary>
+        public string PlayerNameForDebug = null;
+
         /// <inheritdoc />
         public void Initialize()
         {
@@ -63,7 +68,7 @@ namespace SS14.Client
             _net.Startup();
 
             OnRunLevelChanged(ClientRunLevel.Connecting);
-            _net.ClientConnect(ip, port, _configManager.GetCVar<string>("player.name"));
+            _net.ClientConnect(ip, port, PlayerNameForDebug ?? _configManager.GetCVar<string>("player.name"));
         }
 
         /// <inheritdoc />

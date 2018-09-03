@@ -301,18 +301,9 @@ namespace SS14.Client.Console.Commands
         public bool Execute(IDebugConsole console, params string[] args)
         {
             var client = IoCManager.Resolve<IBaseClient>();
+            client.PlayerNameOverride = args[0];
 
-            if (client is BaseClient bc)
-            {
-                var oldName = bc.PlayerNameForDebug;
-                bc.PlayerNameForDebug = args[0];
-
-                console.AddLine($"Overriding player name to \"{args[0]}\".", Color.White);
-            }
-            else
-            {
-                console.AddLine($"Cannot override name for client {client}.", Color.White);
-            }
+            console.AddLine($"Overriding player name to \"{args[0]}\".", Color.White);
 
             return false;
         }

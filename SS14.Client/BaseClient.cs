@@ -41,6 +41,9 @@ namespace SS14.Client
         public ServerInfo GameInfo { get; private set; }
 
         /// <inheritdoc />
+        public string PlayerNameOverride { get; set; }
+
+        /// <inheritdoc />
         public void Initialize()
         {
             _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, HandleServerInfo);
@@ -63,7 +66,7 @@ namespace SS14.Client
             _net.Startup();
 
             OnRunLevelChanged(ClientRunLevel.Connecting);
-            _net.ClientConnect(ip, port, _configManager.GetCVar<string>("player.name"));
+            _net.ClientConnect(ip, port, PlayerNameOverride ?? _configManager.GetCVar<string>("player.name"));
         }
 
         /// <inheritdoc />

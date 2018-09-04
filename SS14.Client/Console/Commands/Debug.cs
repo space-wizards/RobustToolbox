@@ -19,7 +19,6 @@ using System.Globalization;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.GameObjects.Components.Transform;
 using System.Linq;
-using SS14.Client.Interfaces.GameObjects;
 
 namespace SS14.Client.Console.Commands
 {
@@ -288,6 +287,23 @@ namespace SS14.Client.Console.Commands
             {
                 console.AddLine(entity.Owner.Uid.ToString());
             }
+
+            return false;
+        }
+    }
+
+    class SetPlayerName : IConsoleCommand
+    {
+        public string Command => "overrideplayername";
+        public string Description => "Changes the name used when attempting to connect to the server.";
+        public string Help => Command + " <name>";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var client = IoCManager.Resolve<IBaseClient>();
+            client.PlayerNameOverride = args[0];
+
+            console.AddLine($"Overriding player name to \"{args[0]}\".", Color.White);
 
             return false;
         }

@@ -39,17 +39,17 @@ namespace SS14.Shared.Maths
 
         public static Box2 FromDimensions(float left, float top, float width, float height)
         {
-            return new Box2(left, top, left + width, top + height);
+            return new Box2(left, top, left + width, top - height);
         }
 
-        public static Box2 FromDimensions(Vector2 position, Vector2 size)
+        public static Box2 FromDimensions(Vector2 leftTopPosition, Vector2 size)
         {
-            return FromDimensions(position.X, position.Y, size.X, size.Y);
+            return FromDimensions(leftTopPosition.X, leftTopPosition.Y, size.X, size.Y);
         }
 
         public bool Intersects(Box2 other)
         {
-            return !(Bottom < other.Top || Top > other.Bottom || Left > other.Right || Right < other.Left);
+            return other.Bottom <= this.Top && other.Top >= this.Bottom && other.Right >= this.Left && other.Left <= this.Right;
         }
 
         public bool IsEmpty()
@@ -59,7 +59,8 @@ namespace SS14.Shared.Maths
 
         public bool Encloses(Box2 inner)
         {
-            return !(Left <= inner.Left) || !(inner.Right <= Right) || !(Top <= inner.Top) || !(inner.Bottom <= Bottom);
+
+            return this.Left < inner.Left && this.Bottom < inner.Bottom && this.Right > inner.Right && this.Top > inner.Top;
         }
 
         public bool Contains(float x, float y)
@@ -122,10 +123,10 @@ namespace SS14.Shared.Maths
         /// </summary>
         public static bool operator ==(Box2 a, Box2 b)
         {
-            return !FloatMath.CloseTo(a.Bottom, b.Bottom) ||
-                   !FloatMath.CloseTo(a.Right, b.Right) ||
-                   !FloatMath.CloseTo(a.Top, b.Top) ||
-                   !FloatMath.CloseTo(a.Left, b.Left);
+            return FloatMath.CloseTo(a.Bottom, b.Bottom) &&
+                   FloatMath.CloseTo(a.Right, b.Right) &&
+                   FloatMath.CloseTo(a.Top, b.Top) &&
+                   FloatMath.CloseTo(a.Left, b.Left);
         }
 
         public static bool operator !=(Box2 a, Box2 b)

@@ -251,6 +251,15 @@ namespace SS14.Shared.Maths
             return Math.Max(a, Math.Max(b, Math.Max(c, d)));
         }
 
+        /// <summary>
+        /// Returns the median value out of a, b and c.
+        /// </summary>
+        /// <returns>THe median.</returns>
+        public static float Median(float a, float b, float c)
+        {
+            return Math.Max(Math.Min(a, b), Math.Min(Math.Max(a, b), c));
+        }
+
         #endregion MinMax
 
         /// <summary>

@@ -32,11 +32,7 @@ namespace SS14.Shared.Maths
         /// </summary>
         public bool Contains(Vector2 point)
         {
-            var dx = Math.Abs(point.X - Position.X);
-            var dy = Math.Abs(point.Y - Position.Y);
-            var r = Radius;
-
-            return dx * dx + dy * dy <= r * r;
+            return Contains(point.X, point.Y);
         }
 
         /// <summary>
@@ -46,20 +42,34 @@ namespace SS14.Shared.Maths
         {
             var dx = Position.X - circle.Position.X;
             var dy = Position.Y - circle.Position.Y;
+            var sumR = Radius + circle.Radius;
 
-            return Math.Sqrt(dx * dx + dy * dy) < Radius + circle.Radius;
+            return dx * dx + dy * dy < sumR * sumR;
         }
 
         /// <summary>
         ///     Checks if this circle intersects with a box.
         /// </summary>
-        public bool Intersects(Box2 aabb)
+        public bool Intersects(Box2 box)
         {
-            var dx = Position.X - Math.Max(aabb.Left, Math.Min(Position.X, aabb.Left + aabb.Height));
-            var dy = Position.Y - Math.Max(aabb.Top, Math.Min(Position.Y, aabb.Top + aabb.Height));
-            var r = Radius;
+            // Construct the point in / on the box nearest to the center of the circle.
+            float closestX = MathHelper.Median(box.Left, box.Right, Position.X);
+            float closestY = MathHelper.Median(box.Top, box.Bottom, Position.Y);
 
-            return dx * dx + dy * dy <= r * r;
+            // Check if the circle contains that point.
+            return Contains(closestX, closestY);
+        }
+
+        private bool Contains(float x, float y)
+        {
+            var dx = Position.X - x;
+            var dy = Position.Y - y;
+
+            var d2 = dx * dx + dy * dy;
+            var r2 = Radius * Radius;
+
+            // Instead of d2 <= r2, use FloatMath.CloseTo to allow for some tolerance.
+            return (d2 < r2) || FloatMath.CloseTo(d2, r2);
         }
 
         /// <inheritdoc />
@@ -92,6 +102,11 @@ namespace SS14.Shared.Maths
         public static bool operator !=(Circle a, Circle b)
         {
             return !(a == b);
+        }
+
+        public override string ToString()
+        {
+            return $"Circle ({Position.X}, {Position.Y}), {Radius} r";
         }
     }
 }

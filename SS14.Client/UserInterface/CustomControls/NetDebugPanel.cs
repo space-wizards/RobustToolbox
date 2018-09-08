@@ -43,17 +43,20 @@ namespace SS14.Client.UserInterface.CustomControls
 
             SizeFlagsHorizontal = SizeFlags.None;
 
-            contents = new Label();
-            AddChild(contents);
-            contents.AddFontOverride("font", resourceCache.GetResource<FontResource>(new ResourcePath("/Fonts/CALIBRI.TTF")).MakeDefault());
-            contents.AddColorOverride("font_color_shadow", Color.Black);
-            contents.MarginLeft = contents.MarginTop = 5;
-
-            var bg = new StyleBoxFlat
+            contents = new Label
             {
-                BackgroundColor = new Color(255, 105, 67, 138),
+                FontOverride = resourceCache.GetResource<FontResource>(new ResourcePath("/Fonts/CALIBRI.TTF"))
+                    .MakeDefault(),
+                FontColorShadowOverride = Color.Black,
+                MarginTop = 5,
+                MarginLeft = 5
             };
-            AddStyleBoxOverride("panel", bg);
+            AddChild(contents);
+
+            PanelOverride = new StyleBoxFlat
+            {
+                BackgroundColor = new Color(67, 105, 255, 138),
+            };
 
             MouseFilter = contents.MouseFilter = MouseFilterMode.Ignore;
         }

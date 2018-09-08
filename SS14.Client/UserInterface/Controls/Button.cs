@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Godot;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
@@ -55,6 +55,38 @@ namespace SS14.Client.UserInterface.Controls
         {
             get => SceneControl.Text;
             set => SceneControl.Text = value;
+        }
+
+        private Color? _fontColorOverride;
+
+        public Color? FontColorOverride
+        {
+            get => _fontColorOverride ?? GetColorOverride("font_color");
+            set => SetColorOverride("font_color", _fontColorOverride = value);
+        }
+
+        private Color? _fontColorDisabledOverride;
+
+        public Color? FontColorDisabledOverride
+        {
+            get => _fontColorDisabledOverride ?? GetColorOverride("font_color_disabled");
+            set => SetColorOverride("font_color_disabled", _fontColorDisabledOverride = value);
+        }
+
+        private Color? _fontColorHoverOverride;
+
+        public Color? FontColorHoverOverride
+        {
+            get => _fontColorHoverOverride ?? GetColorOverride("font_color_hover");
+            set => SetColorOverride("font_color_hover", _fontColorHoverOverride = value);
+        }
+
+        private Color? _fontColorPressedOverride;
+
+        public Color? FontColorPressedOverride
+        {
+            get => _fontColorPressedOverride ?? GetColorOverride("font_color_pressed");
+            set => SetColorOverride("font_color_pressed", _fontColorPressedOverride = value);
         }
 
         public enum AlignMode

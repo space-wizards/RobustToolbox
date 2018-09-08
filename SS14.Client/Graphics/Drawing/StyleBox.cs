@@ -21,7 +21,19 @@ namespace SS14.Client.Graphics.Drawing
             Right = 4,
             Left = 8,
             All = Top | Bottom | Right | Left,
+            Vertical = Top | Bottom,
+            Horizontal = Left | Right,
         }
+    }
+
+    internal class GodotStyleBoxWrap : StyleBox
+    {
+        public GodotStyleBoxWrap(Godot.StyleBox godotStyleBox)
+        {
+            GodotStyleBox = godotStyleBox;
+        }
+
+        internal override Godot.StyleBox GodotStyleBox { get; }
     }
 
     /// <summary>
@@ -134,6 +146,57 @@ namespace SS14.Client.Graphics.Drawing
         public StyleBoxFlat()
         {
             stylebox = new Godot.StyleBoxFlat();
+        }
+
+        public float MarginLeft
+        {
+            get => stylebox.ContentMarginLeft;
+            set => stylebox.ContentMarginLeft = value;
+        }
+
+        public float MarginRight
+        {
+            get => stylebox.ContentMarginRight;
+            set => stylebox.ContentMarginRight = value;
+        }
+
+        public float MarginTop
+        {
+            get => stylebox.ContentMarginTop;
+            set => stylebox.ContentMarginTop = value;
+        }
+
+        public float MarginBottom
+        {
+            get => stylebox.ContentMarginBottom;
+            set => stylebox.ContentMarginBottom = value;
+        }
+
+
+        /// <summary>
+        ///     Allows setting multiple margins at once.
+        /// </summary>
+        public void SetContentMargin(Margin margin, float value)
+        {
+            if ((margin & Margin.Top) != 0)
+            {
+                MarginTop = value;
+            }
+
+            if ((margin & Margin.Bottom) != 0)
+            {
+                MarginBottom = value;
+            }
+
+            if ((margin & Margin.Right) != 0)
+            {
+                MarginRight = value;
+            }
+
+            if ((margin & Margin.Left) != 0)
+            {
+                MarginLeft = value;
+            }
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿namespace SS14.Client.UserInterface.Controls
 {
     [ControlWrap(typeof(Godot.HBoxContainer))]
-    public class HBoxContainer : Control
+    public class HBoxContainer : BoxContainer
     {
         public HBoxContainer() : base() { }
         public HBoxContainer(string name) : base(name) { }

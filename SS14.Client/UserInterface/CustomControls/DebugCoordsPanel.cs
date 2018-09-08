@@ -40,17 +40,20 @@ namespace SS14.Client.UserInterface.CustomControls
 
             SizeFlagsHorizontal = SizeFlags.None;
 
-            contents = new Label();
+            contents = new Label
+            {
+                FontOverride = resourceCache.GetResource<FontResource>(new ResourcePath("/Fonts/CALIBRI.TTF"))
+                    .MakeDefault(),
+                FontColorShadowOverride = Color.Black,
+                MarginTop = 5,
+                MarginLeft = 5
+            };
             AddChild(contents);
-            contents.AddFontOverride("font", resourceCache.GetResource<FontResource>(new ResourcePath("/Fonts/CALIBRI.TTF")).MakeDefault());
-            contents.AddColorOverride("font_color_shadow", Color.Black);
-            contents.MarginLeft = contents.MarginTop = 5;
 
-            var bg = new StyleBoxFlat
+            PanelOverride = new StyleBoxFlat
             {
                 BackgroundColor = new Color(67, 105, 255, 138),
             };
-            AddStyleBoxOverride("panel", bg);
 
             MouseFilter = contents.MouseFilter = MouseFilterMode.Ignore;
         }

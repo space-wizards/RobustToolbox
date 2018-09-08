@@ -41,6 +41,18 @@ namespace SS14.Client.UserInterface.Controls
             set => SceneControl.Text = value;
         }
 
+        public bool Editable
+        {
+            get => SceneControl.Editable;
+            set => SceneControl.Editable = value;
+        }
+
+        public string PlaceHolder
+        {
+            get => SceneControl.PlaceholderText;
+            set => SceneControl.PlaceholderText = value;
+        }
+
         // TODO:
         // I decided to not implement the entire LineEdit API yet,
         // since most of it won't be used yet (if at all).

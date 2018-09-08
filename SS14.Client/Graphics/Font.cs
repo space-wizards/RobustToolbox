@@ -45,4 +45,14 @@ namespace SS14.Client.Graphics
             };
         }
     }
+
+    internal class GodotWrapFont : Font
+    {
+        public GodotWrapFont(Godot.Font godotFont)
+        {
+            GodotFont = godotFont;
+        }
+
+        internal override Godot.Font GodotFont { get; }
+    }
 }

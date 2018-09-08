@@ -11,9 +11,9 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             base.Initialize();
 
-            AddColorOverride("font_color_shadow", Color.Black);
-            AddConstantOverride("shadow_offset_x", 1);
-            AddConstantOverride("shadow_offset_y", 1);
+            FontColorShadowOverride = Color.Black;
+            ShadowOffsetXOverride = 1;
+            ShadowOffsetYOverride = 1;
 
             MouseFilter = MouseFilterMode.Ignore;
         }

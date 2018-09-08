@@ -42,6 +42,7 @@ using System.Reflection;
 using SS14.Shared.Interfaces.Resources;
 using SS14.Server.Console;
 using SS14.Server.Interfaces.Console;
+using SS14.Server.ViewVariables;
 
 namespace SS14.Server
 {
@@ -130,6 +131,7 @@ namespace SS14.Server
             IoCManager.Register<IComponentFactory, ServerComponentFactory>();
             IoCManager.Register<IMapLoader, MapLoader>();
             IoCManager.Register<IPrototypeManager, ServerPrototypeManager>();
+            IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
 
             IoCManager.BuildGraph();
         }

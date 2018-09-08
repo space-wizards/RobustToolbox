@@ -235,6 +235,13 @@
     <Compile Include="Map\TileDefinitionManager.cs" />
     <Compile Include="Map\TileRef.cs" />
     <Compile Include="Network\Messages\MsgState.cs" />
+    <Compile Include="Network\Messages\MsgViewVariablesCloseSession.cs" />
+    <Compile Include="Network\Messages\MsgViewVariablesDenySession.cs" />
+    <Compile Include="Network\Messages\MsgViewVariablesModifyRemote.cs" />
+    <Compile Include="Network\Messages\MsgViewVariablesOpenSession.cs" />
+    <Compile Include="Network\Messages\MsgViewVariablesRemoteData.cs" />
+    <Compile Include="Network\Messages\MsgViewVariablesReqData.cs" />
+    <Compile Include="Network\Messages\MsgViewVariablesReqSession.cs" />
     <Compile Include="Network\NetChannelArgs.cs" />
     <Compile Include="Network\NetMessageArgs.cs" />
     <Compile Include="Network\Messages\MsgChat.cs" />
@@ -334,6 +341,9 @@
     <Compile Include="Input\BoundKeyMap.cs" />
     <Compile Include="Map\MapManager.Map.cs" />
     <Compile Include="Map\MapManager.MapGrid.cs" />
+    <Compile Include="ViewVariables\ViewVariablesAttribute.cs" />
+    <Compile Include="ViewVariables\ViewVariablesBlob.cs" />
+    <Compile Include="ViewVariables\ViewVariablesObjectSelector.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

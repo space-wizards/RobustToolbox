@@ -32,6 +32,7 @@ using SS14.Shared.Prototypes;
 using SS14.Shared.Map;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Player;
+using SS14.Server.ViewVariables;
 using SS14.Shared.Enums;
 using SS14.Shared.Reflection;
 using SS14.Shared.Timing;
@@ -216,6 +217,7 @@ namespace SS14.Server
             IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
             _mapManager.Initialize();
             IoCManager.Resolve<IPlacementManager>().Initialize();
+            IoCManager.Resolve<IViewVariablesHost>().Initialize();
 
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);

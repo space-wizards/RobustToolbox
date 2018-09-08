@@ -1,0 +1,75 @@
+using System.Globalization;
+using SS14.Client.UserInterface;
+using SS14.Client.UserInterface.Controls;
+using SS14.Shared.Map;
+using SS14.Shared.Maths;
+
+namespace SS14.Client.ViewVariables.Editors
+{
+    public class ViewVariablesPropertyEditorGridLocalCoordinates : ViewVariablesPropertyEditor
+    {
+        protected override Control MakeUI(object value)
+        {
+            var coords = (GridLocalCoordinates) value;
+            var hBoxContainer = new HBoxContainer
+            {
+                CustomMinimumSize = new Vector2(240, 0),
+            };
+
+            hBoxContainer.AddChild(new Label {Text = "grid: "});
+
+            var gridId = new LineEdit
+            {
+                Editable = !ReadOnly,
+                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                PlaceHolder = "Grid ID",
+                ToolTip = "Grid ID",
+                Text = coords.GridID.ToString()
+            };
+
+            hBoxContainer.AddChild(gridId);
+
+            hBoxContainer.AddChild(new Label {Text = "pos: "});
+
+            var x = new LineEdit
+            {
+                Editable = !ReadOnly,
+                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                PlaceHolder = "X",
+                ToolTip = "X",
+                Text = coords.X.ToString(CultureInfo.InvariantCulture)
+            };
+
+            hBoxContainer.AddChild(x);
+
+            var y = new LineEdit
+            {
+                Editable = !ReadOnly,
+                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                PlaceHolder = "Y",
+                ToolTip = "Y",
+                Text = coords.Y.ToString(CultureInfo.InvariantCulture)
+            };
+
+            hBoxContainer.AddChild(y);
+
+            void OnEntered(LineEdit.LineEditEventArgs e)
+            {
+                var gridVal = int.Parse(gridId.Text, CultureInfo.InvariantCulture);
+                var xVal = float.Parse(x.Text, CultureInfo.InvariantCulture);
+                var yVal = float.Parse(y.Text, CultureInfo.InvariantCulture);
+
+                ValueChanged(new GridLocalCoordinates(xVal, yVal, new GridId(gridVal)));
+            }
+
+            if (!ReadOnly)
+            {
+                gridId.OnTextEntered += OnEntered;
+                x.OnTextEntered += OnEntered;
+                y.OnTextEntered += OnEntered;
+            }
+
+            return hBoxContainer;
+        }
+    }
+}

@@ -55,6 +55,7 @@ using SS14.Client.Interfaces.Placement;
 using SS14.Client.Placement;
 using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Graphics.Overlays;
+using SS14.Client.ViewVariables;
 using SS14.Shared.Interfaces.Resources;
 
 namespace SS14.Client
@@ -125,6 +126,8 @@ namespace SS14.Client
             IoCManager.Register<GameController.GameTiming, GameController.GameTiming>();
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<IOverlayManager, OverlayManager>();
+            IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();
+            IoCManager.Register<IViewVariablesManagerInternal, ViewVariablesManager>();
 
             IoCManager.BuildGraph();
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using SS14.Shared.Serialization;
 
 namespace SS14.Shared.GameObjects
 {
@@ -6,7 +7,7 @@ namespace SS14.Shared.GameObjects
     ///     This type contains a network identification number of an entity.
     ///     This can be used by the EntityManager to reference an IEntity.
     /// </summary>
-    [Serializable]
+    [Serializable, NetSerializable]
     public struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>
     {
         /// <summary>
@@ -32,6 +33,21 @@ namespace SS14.Shared.GameObjects
         public EntityUid(int uid)
         {
             _uid = uid;
+        }
+
+        /// <summary>
+        ///     Creates an entity UID by parsing a string number.
+        /// </summary>
+        public static EntityUid Parse(string uid)
+        {
+            if (uid.StartsWith("c"))
+            {
+                return new EntityUid(int.Parse(uid.Substring(1)) | ClientUid);
+            }
+            else
+            {
+                return new EntityUid(int.Parse(uid));
+            }
         }
 
         /// <summary>

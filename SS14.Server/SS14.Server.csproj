@@ -81,6 +81,10 @@
     <Reference Include="DataStructures, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\ConcurrentDataStructures.0.2.0\lib\net45\DataStructures.dll</HintPath>
     </Reference>
+    <Reference Include="JetBrains.Annotations, Version=2018.2.1.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325">
+      <HintPath>$(SolutionDir)packages\JetBrains.Annotations.2018.2.1\lib\net20\JetBrains.Annotations.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System">
       <Name>System</Name>
       <Private>False</Private>

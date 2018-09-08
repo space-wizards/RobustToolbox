@@ -757,6 +757,11 @@ namespace SS14.Shared.Maths
             throw new ArgumentException("Invalid color code and no fallback provided.", nameof(hexColor));
         }
 
+        public string ToHex()
+        {
+            return $"#{RByte:X2}{GByte:X2}{BByte:X2}{AByte:X2}";
+        }
+
         /// <summary>
         ///     Compares whether this Color4 structure is equal to the specified Color4.
         /// </summary>

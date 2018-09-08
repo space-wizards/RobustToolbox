@@ -187,11 +187,16 @@
     <Compile Include="SceneTreeHolder.cs" />
     <Compile Include="UserInterface\Controls\BaseButton.cs" />
     <Compile Include="UserInterface\Controls\Button.cs" />
+    <Compile Include="UserInterface\Controls\CheckBox.cs" />
     <Compile Include="UserInterface\Controls\GridContainer.cs" />
+    <Compile Include="UserInterface\Controls\MarginContainer.cs" />
+    <Compile Include="UserInterface\Controls\PanelContainer.cs" />
     <Compile Include="UserInterface\Controls\ProgressBar.cs" />
     <Compile Include="UserInterface\Controls\Range.cs" />
     <Compile Include="UserInterface\Controls\ScrollBar.cs" />
+    <Compile Include="UserInterface\Controls\ScrollContainer.cs" />
     <Compile Include="UserInterface\Controls\SpriteView.cs" />
+    <Compile Include="UserInterface\Controls\TabContainer.cs" />
     <Compile Include="UserInterface\Controls\VScrollBar.cs" />
     <Compile Include="UserInterface\CustomControls\Chatbox.cs" />
     <Compile Include="Utility\DirExt.cs" />

@@ -1,4 +1,5 @@
-﻿using SS14.Shared.Log;
+﻿using JetBrains.Annotations;
+using SS14.Shared.Log;
 
 namespace SS14.Shared.Interfaces.Log
 {
@@ -34,6 +35,7 @@ namespace SS14.Shared.Interfaces.Log
         /// <summary>
         ///     Log a message, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
+        [StringFormatMethod("message")]
         void Log(LogLevel level, string message, params object[] args);
 
         /// <summary>
@@ -45,6 +47,7 @@ namespace SS14.Shared.Interfaces.Log
         ///     Log a message as debug, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [StringFormatMethod("message")]
         void Debug(string message, params object[] args);
 
         /// <summary>
@@ -57,6 +60,7 @@ namespace SS14.Shared.Interfaces.Log
         ///     Log a message as info, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [StringFormatMethod("message")]
         void Info(string message, params object[] args);
 
         /// <summary>
@@ -69,6 +73,7 @@ namespace SS14.Shared.Interfaces.Log
         ///     Log a message as warning, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [StringFormatMethod("message")]
         void Warning(string message, params object[] args);
         /// <summary>
         ///     Log a message as warning, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
@@ -80,6 +85,7 @@ namespace SS14.Shared.Interfaces.Log
         ///     Log a message as error, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [StringFormatMethod("message")]
         void Error(string message, params object[] args);
 
         /// <summary>
@@ -92,6 +98,7 @@ namespace SS14.Shared.Interfaces.Log
         ///     Log a message as fatal, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [StringFormatMethod("message")]
         void Fatal(string message, params object[] args);
 
         /// <summary>

@@ -15,6 +15,17 @@ namespace SS14.Client.GameObjects
 
         IGodotTransformComponent IGodotTransformComponent.Parent => (IGodotTransformComponent)Parent;
 
+        bool visibleWhileParented = false;
+        public override bool VisibleWhileParented
+        {
+            get => visibleWhileParented;
+            set
+            {
+                visibleWhileParented = value;
+                UpdateSceneVisibility();
+            }
+        }
+
         protected override void SetPosition(Vector2 position)
         {
             base.SetPosition(position);
@@ -29,7 +40,7 @@ namespace SS14.Client.GameObjects
 
         private void UpdateSceneVisibility()
         {
-            SceneNode.Visible = IsMapTransform;
+            SceneNode.Visible = VisibleWhileParented || IsMapTransform;
         }
 
         public override void AttachParent(ITransformComponent parent)

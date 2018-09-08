@@ -134,6 +134,9 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
         public bool IsMapTransform => Parent == null;
 
+
+        public virtual bool VisibleWhileParented { set; get; }
+
         /// <inheritdoc />
         public GridLocalCoordinates LocalPosition
         {

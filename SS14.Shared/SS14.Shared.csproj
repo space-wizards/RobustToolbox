@@ -292,6 +292,7 @@
     <Compile Include="Utility\PlatformTools.cs" />
     <Compile Include="Utility\RandomString.cs" />
     <Compile Include="Utility\Range.cs" />
+    <Compile Include="Utility\TypeHelpers.cs" />
     <Compile Include="Utility\unZipString.cs" />
     <Compile Include="Utility\UsernameHelpers.cs" />
     <Compile Include="Utility\YamlHelpers.cs" />

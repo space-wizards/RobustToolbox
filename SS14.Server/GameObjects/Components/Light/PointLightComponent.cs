@@ -2,6 +2,7 @@
 using SS14.Shared.Enums;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Server.GameObjects
 {
@@ -16,6 +17,7 @@ namespace SS14.Server.GameObjects
         public override string Name => "PointLight";
         public override uint? NetID => NetIDs.POINT_LIGHT;
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public Color Color
         {
             get => _color;
@@ -26,6 +28,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        [ViewVariables]
         public LightModeClass Mode
         {
             get => _mode;
@@ -36,6 +39,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        [ViewVariables]
         public LightState State
         {
             get => _state;
@@ -46,6 +50,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public int Radius
         {
             get => _radius;
@@ -56,6 +61,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Offset
         {
             get => _offset;

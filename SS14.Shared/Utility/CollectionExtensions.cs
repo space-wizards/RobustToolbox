@@ -52,5 +52,12 @@ namespace SS14.Shared.Utility
             list.RemoveAt(list.Count - 1);
             return old;
         }
+
+        // So you can do foreach (var (key, value) in dict)
+        // This basically re-implements the CoreFX version because we're using a pretty old version of .NET Framework.
+        // https://github.com/dotnet/roslyn/issues/20393
+        public static void Deconstruct<TKey, TValue>(this KeyValuePair<TKey, TValue> k, out TKey t, out TValue u) {
+            t = k.Key; u = k.Value;
+        }
     }
 }

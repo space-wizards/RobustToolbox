@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.Graphics
 {
@@ -13,6 +14,7 @@ namespace SS14.Client.Graphics
         /// <summary>
         ///     The size of this RSI, width x height.
         /// </summary>
+        [ViewVariables]
         public Vector2u Size { get; private set; }
         private Dictionary<StateId, State> States = new Dictionary<StateId, State>();
 

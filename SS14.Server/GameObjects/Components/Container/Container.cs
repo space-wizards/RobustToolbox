@@ -4,6 +4,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Server.GameObjects.Components.Container
 {
@@ -65,12 +66,15 @@ namespace SS14.Server.GameObjects.Components.Container
         public IContainerManager Manager { get; protected set; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public string ID { get; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public IEntity Owner => Manager.Owner;
 
         /// <inheritdoc />
+        [ViewVariables]
         public bool Deleted { get; protected set; } = false;
 
         /// <inheritdoc />

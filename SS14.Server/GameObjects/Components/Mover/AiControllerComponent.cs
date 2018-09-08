@@ -2,6 +2,7 @@
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Serialization;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Server.GameObjects.Components
 {

@@ -4,6 +4,7 @@ using SS14.Shared.GameObjects.Components.BoundingBox;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.GameObjects
 {
@@ -15,10 +16,11 @@ namespace SS14.Client.GameObjects
     {
         private Color _debugColor;
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public Color DebugColor
         {
             get => _debugColor;
-            private set => _debugColor = value;
+            set => _debugColor = value;
         }
 
         public override void ExposeData(ObjectSerializer serializer)

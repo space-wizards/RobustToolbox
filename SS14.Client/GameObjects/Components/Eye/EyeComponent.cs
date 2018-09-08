@@ -3,6 +3,7 @@ using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.GameObjects
 {
@@ -15,6 +16,7 @@ namespace SS14.Client.GameObjects
         // Horrible hack to get around ordering issues.
         private bool setCurrentOnInitialize = false;
         private Vector2 setZoomOnInitialize = Vector2.One;
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool Current
         {
             get => eye.Current;
@@ -29,6 +31,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Zoom
         {
             get => eye?.Zoom ?? setZoomOnInitialize;

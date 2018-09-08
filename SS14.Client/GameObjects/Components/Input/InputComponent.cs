@@ -2,6 +2,7 @@
 using SS14.Shared.GameObjects;
 using SS14.Shared.Input;
 using SS14.Shared.Serialization;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.GameObjects.Components
 {
@@ -16,6 +17,7 @@ namespace SS14.Client.GameObjects.Components
         /// <summary>
         ///     The context that will be made active for a client that attaches to this entity.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public string ContextName { get; set; }
 
         /// <inheritdoc />

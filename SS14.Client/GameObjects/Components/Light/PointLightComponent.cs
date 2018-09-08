@@ -14,6 +14,7 @@ using SS14.Shared.Log;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
+using SS14.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
 using ObjectSerializer = SS14.Shared.Serialization.ObjectSerializer;
@@ -30,12 +31,14 @@ namespace SS14.Client.GameObjects
         [Dependency]
         private ILightManager lightManager;
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public Color Color
         {
             get => Light.Color;
             set => Light.Color = value;
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Offset
         {
             get => Light.Offset;
@@ -43,6 +46,7 @@ namespace SS14.Client.GameObjects
         }
 
         private LightState state = LightState.On;
+        [ViewVariables(VVAccess.ReadWrite)]
         public LightState State
         {
             get => state;
@@ -56,23 +60,27 @@ namespace SS14.Client.GameObjects
         /// <summary>
         ///     Determines if the light mask should automatically rotate with the entity. (like a flashlight)
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool MaskAutoRotate { get; set; }
 
         /// <summary>
         ///     Local rotation of the light mask around the center origin
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public Angle Rotation
         {
             get => Light.Rotation;
             set => Light.Rotation = value;
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public float Energy
         {
             get => Light.Energy;
             set => Light.Energy = value;
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool VisibleNested
         {
             get => _visibleNested;
@@ -102,6 +110,7 @@ namespace SS14.Client.GameObjects
         /// <summary>
         ///     Radius, in meters.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public float Radius
         {
             get => radius;

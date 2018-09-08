@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Serialization;
 using SS14.Shared.GameObjects.Components.BoundingBox;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Server.GameObjects
 {
@@ -50,6 +51,7 @@ namespace SS14.Server.GameObjects
         Box2 ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB;
 
         /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool IsHardCollidable
         {
             get => _isHardCollidable;

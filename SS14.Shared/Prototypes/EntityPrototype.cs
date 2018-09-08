@@ -11,6 +11,7 @@ using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 using SS14.Shared.Serialization;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Shared.GameObjects
 {
@@ -28,36 +29,43 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         /// The "in code name" of the object. Must be unique.
         /// </summary>
+        [ViewVariables]
         public string ID { get; private set; }
 
         /// <summary>
         /// The "in game name" of the object. What is displayed to most players.
         /// </summary>
+        [ViewVariables]
         public string Name { get; private set; }
 
         /// <summary>
         /// The description of the object that shows upon using examine
         /// </summary>
+        [ViewVariables]
         public string Description { get; private set; }
 
         /// <summary>
         /// The type of entity instantiated when a new entity is created from this template.
         /// </summary>
+        [ViewVariables]
         public Type ClassType { get; private set; }
 
         /// <summary>
         /// The different mounting points on walls. (If any).
         /// </summary>
+        [ViewVariables]
         public List<int> MountingPoints { get; private set; }
 
         /// <summary>
         /// The Placement mode used for client-initiated placement. This is used for admin and editor placement. The serverside version controls what type the server assigns in normal gameplay.
         /// </summary>
+        [ViewVariables]
         public string PlacementMode { get; protected set; } = "PlaceNearby";
 
         /// <summary>
         /// The Range this entity can be placed from. This is only used serverside since the server handles normal gameplay. The client uses unlimited range since it handles things like admin spawning and editing.
         /// </summary>
+        [ViewVariables]
         public int PlacementRange { get; protected set; } = DEFAULT_RANGE;
         private const int DEFAULT_RANGE = 200;
 
@@ -70,22 +78,26 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         /// Offset that is added to the position when placing. (if any). Client only.
         /// </summary>
+        [ViewVariables]
         public Vector2i PlacementOffset { get; protected set; }
         private bool _placementOverriden = false;
 
         /// <summary>
         /// True if this entity will be saved by the map loader.
         /// </summary>
+        [ViewVariables]
         public bool MapSavable { get; protected set; } = true;
 
         /// <summary>
         /// The prototype we inherit from.
         /// </summary>
+        [ViewVariables]
         public EntityPrototype Parent { get; private set; }
 
         /// <summary>
         /// A list of children inheriting from this prototype.
         /// </summary>
+        [ViewVariables]
         public List<EntityPrototype> Children { get; private set; }
         public bool IsRoot => Parent == null;
 

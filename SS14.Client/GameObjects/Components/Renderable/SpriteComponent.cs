@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SS14.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
 using VS = Godot.VisualServer;
 
@@ -29,6 +30,7 @@ namespace SS14.Client.GameObjects
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent, IClickTargetComponent, IComponentDebug
     {
         private bool _visible = true;
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool Visible
         {
             get => _visible;
@@ -51,6 +53,7 @@ namespace SS14.Client.GameObjects
         /// <summary>
         ///     Z-index for drawing.
         /// </summary>
+        [ViewVariables]
         public DrawDepth DrawDepth
         {
             get => drawDepth;
@@ -68,6 +71,7 @@ namespace SS14.Client.GameObjects
         /// <summary>
         ///     A scale applied to all layers.
         /// </summary>
+        [ViewVariables]
         public Vector2 Scale
         {
             get => scale;
@@ -82,6 +86,7 @@ namespace SS14.Client.GameObjects
         }
 
         private Angle rotation;
+        [ViewVariables]
         public Angle Rotation
         {
             get => rotation;
@@ -99,6 +104,7 @@ namespace SS14.Client.GameObjects
         /// <summary>
         ///     Offset applied to all layers.
         /// </summary>
+        [ViewVariables]
         public Vector2 Offset
         {
             get => offset;
@@ -113,6 +119,7 @@ namespace SS14.Client.GameObjects
         }
 
         private Color color = Color.White;
+        [ViewVariables]
         public Color Color
         {
             get => color;
@@ -132,6 +139,7 @@ namespace SS14.Client.GameObjects
         ///     Rotation transformations on individual layers still apply.
         ///     If false, all layers get locked to south and rotation is a transformation.
         /// </summary>
+        [ViewVariables]
         public bool Directional
         {
             get => _directional;
@@ -147,6 +155,7 @@ namespace SS14.Client.GameObjects
         private bool RedrawQueued = true;
 
         private RSI _baseRsi;
+        [ViewVariables]
         public RSI BaseRSI
         {
             get => _baseRsi;

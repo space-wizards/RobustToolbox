@@ -8,6 +8,7 @@ using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
 using SS14.Shared.Utility;
+using SS14.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
@@ -26,6 +27,7 @@ namespace SS14.Server.GameObjects
         private string _baseRSIPath;
         private Angle _rotation;
 
+        [ViewVariables]
         public DrawDepth DrawDepth
         {
             get => _drawDepth;
@@ -36,6 +38,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool Visible
         {
             get => _visible;
@@ -46,6 +49,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Scale
         {
             get => _scale;
@@ -56,6 +60,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public Angle Rotation
         {
             get => _rotation;
@@ -66,6 +71,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Offset
         {
             get => _offset;
@@ -76,6 +82,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public Color Color
         {
             get => _color;
@@ -86,6 +93,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool Directional
         {
             get => _directional;
@@ -96,6 +104,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public string BaseRSIPath
         {
             get => _baseRSIPath;

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
+using JetBrains.Annotations;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Log;
@@ -78,6 +79,7 @@ namespace SS14.Shared.Prototypes
     /// To prevent needing to instantiate it because interfaces can't declare statics.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+    [BaseTypeRequired(typeof(IPrototype))]
     public class PrototypeAttribute : Attribute
     {
         private readonly string type;

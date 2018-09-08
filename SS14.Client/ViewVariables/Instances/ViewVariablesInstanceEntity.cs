@@ -44,8 +44,15 @@ namespace SS14.Client.ViewVariables.Instances
 
             var type = obj.GetType();
 
-            var vBoxContainer = new VBoxContainer();
-            vBoxContainer.SetAnchorPreset(Control.LayoutPreset.Wide, true);
+            var scrollContainer = new ScrollContainer();
+            scrollContainer.SetAnchorPreset(Control.LayoutPreset.Wide, true);
+            window.Contents.AddChild(scrollContainer);
+            var vBoxContainer = new VBoxContainer
+            {
+                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                SizeFlagsVertical = Control.SizeFlags.FillExpand,
+            };
+            scrollContainer.AddChild(vBoxContainer);
 
             // Handle top bar displaying type and ToString().
             {
@@ -120,8 +127,6 @@ namespace SS14.Client.ViewVariables.Instances
                 _tabs.AddChild(_serverComponents);
                 _tabs.SetTabTitle(TabServerComponents, "Server Components");
             }
-
-            window.Contents.AddChild(vBoxContainer);
         }
 
         public override void Initialize(SS14Window window, ViewVariablesBlob blob, ViewVariablesRemoteSession session)
@@ -134,7 +139,7 @@ namespace SS14.Client.ViewVariables.Instances
             _blob = (ViewVariablesBlobEntity) blob;
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var uid = (EntityUid)blob.Properties.Single(p => p.Name == "Uid").Value;
+            var uid = (EntityUid) blob.Properties.Single(p => p.Name == "Uid").Value;
 
             var entity = entityManager.GetEntity(uid);
             Initialize(window, entity);
@@ -169,7 +174,9 @@ namespace SS14.Client.ViewVariables.Instances
                 }
                 catch (SessionDenyException e)
                 {
-                    Logger.ErrorS("vv", "Server denied VV request: {0}", e.Reason);
+                    var text = $"Server denied VV request: {e.Reason}";
+                    _serverVariables.AddChild(new Label {Text = text});
+                    _serverComponents.AddChild(new Label {Text = text});
                     return;
                 }
 

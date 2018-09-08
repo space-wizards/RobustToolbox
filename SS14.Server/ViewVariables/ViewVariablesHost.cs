@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using SS14.Server.Console;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.GameObjects;
@@ -19,6 +20,7 @@ namespace SS14.Server.ViewVariables
         [Dependency] private readonly IEntityManager _entityManager;
         [Dependency] private readonly IPlayerManager _playerManager;
         [Dependency] private readonly IComponentManager _componentManager;
+        [Dependency] private readonly IConGroupController _groupController;
 
         private readonly Dictionary<uint, ViewVariablesSession>
             _sessions = new Dictionary<uint, ViewVariablesSession>();
@@ -74,7 +76,15 @@ namespace SS14.Server.ViewVariables
                 return;
             }
 
-            property.SetValue(session.Object, message.Value);
+            try
+            {
+                property.SetValue(session.Object, message.Value);
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorS("vv", "Exception while modifying property {0} on session {1} object {2}: {3}",
+                    property.Name, session.SessionId, session.Object, e);
+            }
         }
 
         private void _msgReqData(MsgViewVariablesReqData message)
@@ -95,8 +105,6 @@ namespace SS14.Server.ViewVariables
 
         private void _msgReqSession(MsgViewVariablesReqSession message)
         {
-            // TODO: check for permissions.
-
             void Deny(DenyReason reason)
             {
                 var denyMsg = _netManager.CreateNetMessage<MsgViewVariablesDenySession>();
@@ -105,13 +113,21 @@ namespace SS14.Server.ViewVariables
                 _netManager.ServerSendMessage(denyMsg, message.MsgChannel);
             }
 
+            var player = _playerManager.GetSessionByChannel(message.MsgChannel);
+            if (!_groupController.CanViewVar(player))
+            {
+                Deny(DenyReason.NoAccess);
+                return;
+            }
+
             object theObject;
 
             switch (message.Selector)
             {
                 case ViewVariablesComponentSelector componentSelector:
                     var compType = Type.GetType(componentSelector.ComponentType);
-                    if (compType == null || !_componentManager.TryGetComponent(componentSelector.Entity, compType, out var component))
+                    if (compType == null ||
+                        !_componentManager.TryGetComponent(componentSelector.Entity, compType, out var component))
                     {
                         Deny(DenyReason.NoObject);
                         return;
@@ -200,7 +216,7 @@ namespace SS14.Server.ViewVariables
             allowMsg.SessionId = session.SessionId;
             _netManager.ServerSendMessage(allowMsg, message.MsgChannel);
 
-            var player = _playerManager.GetSessionByChannel(message.MsgChannel);
+
             player.PlayerStatusChanged += (_, args) =>
             {
                 if (args.NewStatus == SessionStatus.Disconnected)
@@ -216,6 +232,7 @@ namespace SS14.Server.ViewVariables
             {
                 return;
             }
+
             _sessions.Remove(sessionId);
             if (!sendMsg || !_playerManager.TryGetSessionById(session.PlayerSession, out var player) ||
                 player.Status == SessionStatus.Disconnected)

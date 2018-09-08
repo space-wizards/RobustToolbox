@@ -4,28 +4,38 @@ using SS14.Server.Player;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Resources;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.Console
 {
     /// <summary>
     /// Mediates the group system of a console shell.
     /// </summary>
-    class ConGroupController
+    internal class ConGroupController : IConGroupController
     {
+        [Dependency] private readonly IResourceManager _resourceManager;
+        [Dependency] private readonly IConfigurationManager _configurationManager;
+        [Dependency] private readonly ILogManager _logManager;
+        [Dependency] private readonly IPlayerManager _playerManager;
+
         private ConGroupContainer _groups;
         private SessionGroupContainer _sessions;
 
-        public ConGroupController(IResourceManager resMan, IConfigurationManager configMan, ISawmill logger)
+        public void Initialize()
         {
+            var logger = _logManager.GetSawmill("con.groups");
+
+            _playerManager.PlayerStatusChanged += _onClientStatusChanged;
+
             // load the permission groups in the console
-            _groups = new ConGroupContainer(resMan, logger);
+            _groups = new ConGroupContainer(_resourceManager, logger);
             _groups.LoadGroups();
 
             // set up the session group container
-            _sessions = new SessionGroupContainer(configMan, logger);
+            _sessions = new SessionGroupContainer(_configurationManager, logger);
         }
 
-        public void OnClientStatusChanged(object sender, SessionStatusEventArgs e)
+        private void _onClientStatusChanged(object sender, SessionStatusEventArgs e)
         {
             _sessions.OnClientStatusChanged(sender, e);
         }
@@ -36,7 +46,14 @@ namespace SS14.Server.Console
             var group = _sessions.GetSessionGroup(session);
 
             // check if group canCmd
-            return  _groups.HasCommand(group, cmdName);
+            return _groups.HasCommand(group, cmdName);
+        }
+
+        public bool CanViewVar(IPlayerSession session)
+        {
+            var group = _sessions.GetSessionGroup(session);
+
+            return _groups.CanViewVar(group);
         }
 
         /// <summary>
@@ -48,7 +65,7 @@ namespace SS14.Server.Console
         }
 
         /// <summary>
-        /// Clears the existing groups, and reloads from disk. 
+        /// Clears the existing groups, and reloads from disk.
         /// </summary>
         public void ReloadGroups()
         {
@@ -58,10 +75,10 @@ namespace SS14.Server.Console
 
         public void SetGroup(IPlayerSession session, ConGroupIndex newGroup)
         {
-            if(session == null)
+            if (session == null)
                 throw new ArgumentNullException(nameof(session));
 
-            if(!_groups.GroupExists(newGroup))
+            if (!_groups.GroupExists(newGroup))
                 return;
 
             _sessions.SetSessionGroup(session, newGroup);

@@ -132,6 +132,7 @@ namespace SS14.Server
             IoCManager.Register<IMapLoader, MapLoader>();
             IoCManager.Register<IPrototypeManager, ServerPrototypeManager>();
             IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
+            IoCManager.Register<IConGroupController, ConGroupController>();
 
             IoCManager.BuildGraph();
         }

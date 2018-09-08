@@ -21,24 +21,17 @@ namespace SS14.Server.Console
     {
         private const string SawmillName = "con";
 
-        [Dependency]
-        private readonly IReflectionManager _reflectionManager;
-        [Dependency]
-        private readonly IPlayerManager _players;
-        [Dependency]
-        private readonly IServerNetManager _net;
-        [Dependency]
-        private readonly ISystemConsoleManager _systemConsole;
-        [Dependency]
-        private readonly ILogManager _logMan;
-        [Dependency]
-        private readonly IResourceManager _resMan;
-        [Dependency]
-        private readonly IConfigurationManager _configMan;
-        
-        private ConGroupController _groupController;
+        [Dependency] private readonly IReflectionManager _reflectionManager;
+        [Dependency] private readonly IPlayerManager _players;
+        [Dependency] private readonly IServerNetManager _net;
+        [Dependency] private readonly ISystemConsoleManager _systemConsole;
+        [Dependency] private readonly ILogManager _logMan;
+        [Dependency] private readonly IResourceManager _resMan;
+        [Dependency] private readonly IConfigurationManager _configMan;
+        [Dependency] private readonly IConGroupController _groupController;
 
-        private readonly Dictionary<string, IClientCommand> _availableCommands = new Dictionary<string, IClientCommand>();
+        private readonly Dictionary<string, IClientCommand> _availableCommands =
+            new Dictionary<string, IClientCommand>();
 
         /// <inheritdoc />
         public IReadOnlyDictionary<string, IClientCommand> AvailableCommands => _availableCommands;
@@ -66,12 +59,10 @@ namespace SS14.Server.Console
         /// <inheritdoc />
         public void Initialize()
         {
-            _groupController = new ConGroupController(_resMan, _configMan, _logMan.GetSawmill("con.groups"));
-            _players.PlayerStatusChanged += _groupController.OnClientStatusChanged;
-
             // register console admin global password. DO NOT ADD THE REPLICATED FLAG
-            if(!_configMan.IsCVarRegistered("console.password"))
-                _configMan.RegisterCVar("console.password", string.Empty, CVar.ARCHIVE | CVar.SERVER | CVar.NOT_CONNECTED);
+            if (!_configMan.IsCVarRegistered("console.password"))
+                _configMan.RegisterCVar("console.password", string.Empty,
+                    CVar.ARCHIVE | CVar.SERVER | CVar.NOT_CONNECTED);
 
             if (!_configMan.IsCVarRegistered("console.adminGroup"))
                 _configMan.RegisterCVar("console.adminGroup", 100, CVar.ARCHIVE | CVar.SERVER);
@@ -81,7 +72,8 @@ namespace SS14.Server.Console
             // setup networking with clients
             _net.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, ProcessCommand);
             _net.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME);
-            _net.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, message => HandleRegistrationRequest(message.MsgChannel));
+            _net.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME,
+                message => HandleRegistrationRequest(message.MsgChannel));
         }
 
         /// <inheritdoc />
@@ -93,12 +85,13 @@ namespace SS14.Server.Console
             {
                 var instance = (IClientCommand) Activator.CreateInstance(type, null);
                 if (AvailableCommands.TryGetValue(instance.Command, out var duplicate))
-                    throw new InvalidImplementationException(instance.GetType(), typeof(IClientCommand), $"Command name already registered: {instance.Command}, previous: {duplicate.GetType()}");
+                    throw new InvalidImplementationException(instance.GetType(), typeof(IClientCommand),
+                        $"Command name already registered: {instance.Command}, previous: {duplicate.GetType()}");
 
                 _availableCommands[instance.Command] = instance;
             }
         }
-        
+
         private void ProcessCommand(MsgConCmd message)
         {
             var text = message.Text;
@@ -132,7 +125,7 @@ namespace SS14.Server.Console
 
                 if (_availableCommands.TryGetValue(cmdName, out var conCmd)) // command registered
                 {
-                    if(session != null) // remote client
+                    if (session != null) // remote client
                     {
                         if (_groupController.CanCommand(session, cmdName)) // client has permission
                         {
@@ -182,7 +175,7 @@ namespace SS14.Server.Console
 
         public bool ElevateShell(IPlayerSession session, string password)
         {
-            if(session == null)
+            if (session == null)
                 throw new ArgumentNullException(nameof(session));
 
             var realPass = _configMan.GetCVar<string>("console.password");
@@ -190,7 +183,7 @@ namespace SS14.Server.Console
             // password disabled
             if (string.IsNullOrWhiteSpace(realPass))
                 return false;
-            
+
             // wrong password
             if (password != realPass)
                 return false;
@@ -200,20 +193,21 @@ namespace SS14.Server.Console
 
             return true;
         }
-        
+
         private class LoginCommand : IClientCommand
         {
             public string Command => "login";
             public string Description => "Elevates client to admin permission group.";
             public string Help => "login";
+
             public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
             {
                 // system console can't log in to itself, and is pointless anyways
-                if(player == null)
+                if (player == null)
                     return;
 
                 // If the password is null/empty/whitespace in the config, this effectively disables the command
-                if(args.Length < 1 || string.IsNullOrWhiteSpace(args[0]))
+                if (args.Length < 1 || string.IsNullOrWhiteSpace(args[0]))
                     return;
 
                 // WE ARE AT THE BRIDGE OF DEATH
@@ -222,7 +216,8 @@ namespace SS14.Server.Console
 
                 // CAST INTO THE GORGE OF ETERNAL PERIL
                 Logger.WarningS(
-                    "con.auth", $"Failed console login authentication.\n  NAME:{player}\n  IP:  {player.ConnectedClient.RemoteEndPoint}");
+                    "con.auth",
+                    $"Failed console login authentication.\n  NAME:{player}\n  IP:  {player.ConnectedClient.RemoteEndPoint}");
 
                 var net = IoCManager.Resolve<IServerNetManager>();
                 net.DisconnectChannel(player.ConnectedClient, "Failed login authentication.");
@@ -234,10 +229,11 @@ namespace SS14.Server.Console
             public string Command => "group";
             public string Description => "Prints your current permission group.";
             public string Help => "group";
+
             public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
             {
                 // only the local server console bypasses permissions
-                if(player == null)
+                if (player == null)
                     shell.SendText(player, "LOCAL_CONSOLE");
 
                 //TODO: Turn console commands into delegates so that this can actually work.

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using SS14.Server.Console;
 using SS14.Server.GameStates;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
@@ -230,6 +231,7 @@ namespace SS14.Server
 
             IoCManager.Resolve<ITileDefinitionManager>().Initialize();
             IoCManager.Resolve<IConsoleShell>().Initialize();
+            IoCManager.Resolve<IConGroupController>().Initialize();
 
             OnRunLevelChanged(ServerRunLevel.PreGame);
 

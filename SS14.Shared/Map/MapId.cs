@@ -1,8 +1,9 @@
 ﻿using System;
+using SS14.Shared.Serialization;
 
 namespace SS14.Shared.Map
 {
-    [Serializable]
+    [Serializable, NetSerializable]
     public struct MapId : IEquatable<MapId>
     {
         public static readonly MapId Nullspace = new MapId(0);

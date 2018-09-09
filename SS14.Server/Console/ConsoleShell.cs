@@ -26,7 +26,6 @@ namespace SS14.Server.Console
         [Dependency] private readonly IServerNetManager _net;
         [Dependency] private readonly ISystemConsoleManager _systemConsole;
         [Dependency] private readonly ILogManager _logMan;
-        [Dependency] private readonly IResourceManager _resMan;
         [Dependency] private readonly IConfigurationManager _configMan;
         [Dependency] private readonly IConGroupController _groupController;
 

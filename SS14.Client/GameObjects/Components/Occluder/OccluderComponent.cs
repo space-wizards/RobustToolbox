@@ -12,15 +12,18 @@ using SS14.Shared.Serialization;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.GameObjects
 {
     public class OccluderComponent : Component, IComponentDebug
     {
         public override string Name => "Occluder";
-        
+
+        [ViewVariables]
         public Box2 BoundingBox { get; private set; } = new Box2(-16, -16, 16, 16);
-        
+
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool Enabled
         {
             get => _enabled;
@@ -82,7 +85,7 @@ namespace SS14.Client.GameObjects
             occluder.SetGodotPolygon(new Godot.Vector2[] { sw, nw });
             occluders[(int)OccluderDir.West] = occluder;
             occluder.ParentTo(transform);
-            
+
             UpdateConnections(true);
         }
 

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using SS14.Server.Console;
 using SS14.Server.GameStates;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
@@ -32,6 +33,7 @@ using SS14.Shared.Prototypes;
 using SS14.Shared.Map;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Player;
+using SS14.Server.ViewVariables;
 using SS14.Shared.Enums;
 using SS14.Shared.Reflection;
 using SS14.Shared.Timing;
@@ -216,6 +218,7 @@ namespace SS14.Server
             IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
             _mapManager.Initialize();
             IoCManager.Resolve<IPlacementManager>().Initialize();
+            IoCManager.Resolve<IViewVariablesHost>().Initialize();
 
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
@@ -228,6 +231,7 @@ namespace SS14.Server
 
             IoCManager.Resolve<ITileDefinitionManager>().Initialize();
             IoCManager.Resolve<IConsoleShell>().Initialize();
+            IoCManager.Resolve<IConGroupController>().Initialize();
 
             OnRunLevelChanged(ServerRunLevel.PreGame);
 

@@ -4,6 +4,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Server.GameObjects
 {
@@ -27,6 +28,7 @@ namespace SS14.Server.GameObjects
         /// <summary>
         ///     Current mass of the entity in kilograms.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public float Mass
         {
             get => _mass;
@@ -40,6 +42,7 @@ namespace SS14.Server.GameObjects
         /// <summary>
         ///     Current linear velocity of the entity in meters per second.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 LinearVelocity
         {
             get => _linVelocity;
@@ -53,12 +56,14 @@ namespace SS14.Server.GameObjects
         /// <summary>
         ///     Current angular velocity of the entity in radians per sec.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public float AngularVelocity
         {
             get => _angVelocity;
             set => _angVelocity = value;
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool EdgeSlide { get => edgeSlide; set => edgeSlide = value; }
         private bool edgeSlide = true;
 

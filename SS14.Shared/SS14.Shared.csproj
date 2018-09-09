@@ -73,6 +73,10 @@
     <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
+    <Reference Include="JetBrains.Annotations, Version=2018.2.1.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325">
+      <HintPath>$(SolutionDir)packages\JetBrains.Annotations.2018.2.1\lib\net20\JetBrains.Annotations.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.CSharp">
       <Name>Microsoft.CSharp</Name>
     </Reference>
@@ -231,6 +235,13 @@
     <Compile Include="Map\TileDefinitionManager.cs" />
     <Compile Include="Map\TileRef.cs" />
     <Compile Include="Network\Messages\MsgState.cs" />
+    <Compile Include="Network\Messages\MsgViewVariablesCloseSession.cs" />
+    <Compile Include="Network\Messages\MsgViewVariablesDenySession.cs" />
+    <Compile Include="Network\Messages\MsgViewVariablesModifyRemote.cs" />
+    <Compile Include="Network\Messages\MsgViewVariablesOpenSession.cs" />
+    <Compile Include="Network\Messages\MsgViewVariablesRemoteData.cs" />
+    <Compile Include="Network\Messages\MsgViewVariablesReqData.cs" />
+    <Compile Include="Network\Messages\MsgViewVariablesReqSession.cs" />
     <Compile Include="Network\NetChannelArgs.cs" />
     <Compile Include="Network\NetMessageArgs.cs" />
     <Compile Include="Network\Messages\MsgChat.cs" />
@@ -288,6 +299,7 @@
     <Compile Include="Utility\PlatformTools.cs" />
     <Compile Include="Utility\RandomString.cs" />
     <Compile Include="Utility\Range.cs" />
+    <Compile Include="Utility\TypeHelpers.cs" />
     <Compile Include="Utility\unZipString.cs" />
     <Compile Include="Utility\UsernameHelpers.cs" />
     <Compile Include="Utility\YamlHelpers.cs" />
@@ -329,6 +341,9 @@
     <Compile Include="Input\BoundKeyMap.cs" />
     <Compile Include="Map\MapManager.Map.cs" />
     <Compile Include="Map\MapManager.MapGrid.cs" />
+    <Compile Include="ViewVariables\ViewVariablesAttribute.cs" />
+    <Compile Include="ViewVariables\ViewVariablesBlob.cs" />
+    <Compile Include="ViewVariables\ViewVariablesObjectSelector.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

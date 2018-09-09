@@ -1,7 +1,7 @@
 ﻿namespace SS14.Client.UserInterface.Controls
 {
     [ControlWrap(typeof(Godot.VBoxContainer))]
-    public class VBoxContainer : Control
+    public class VBoxContainer : BoxContainer
     {
         public VBoxContainer() : base() { }
         public VBoxContainer(string name) : base(name) { }

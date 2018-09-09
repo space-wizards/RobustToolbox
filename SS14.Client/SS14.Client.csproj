@@ -57,6 +57,10 @@
   </PropertyGroup>
   <Import Project="..\MSBuild\SS14.DefineConstants.targets" />
   <ItemGroup>
+    <Reference Include="JetBrains.Annotations, Version=2018.2.1.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325">
+      <HintPath>$(SolutionDir)packages\JetBrains.Annotations.2018.2.1\lib\net20\JetBrains.Annotations.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -183,11 +187,16 @@
     <Compile Include="SceneTreeHolder.cs" />
     <Compile Include="UserInterface\Controls\BaseButton.cs" />
     <Compile Include="UserInterface\Controls\Button.cs" />
+    <Compile Include="UserInterface\Controls\CheckBox.cs" />
     <Compile Include="UserInterface\Controls\GridContainer.cs" />
+    <Compile Include="UserInterface\Controls\MarginContainer.cs" />
+    <Compile Include="UserInterface\Controls\PanelContainer.cs" />
     <Compile Include="UserInterface\Controls\ProgressBar.cs" />
     <Compile Include="UserInterface\Controls\Range.cs" />
     <Compile Include="UserInterface\Controls\ScrollBar.cs" />
+    <Compile Include="UserInterface\Controls\ScrollContainer.cs" />
     <Compile Include="UserInterface\Controls\SpriteView.cs" />
+    <Compile Include="UserInterface\Controls\TabContainer.cs" />
     <Compile Include="UserInterface\Controls\VScrollBar.cs" />
     <Compile Include="UserInterface\CustomControls\Chatbox.cs" />
     <Compile Include="Utility\DirExt.cs" />
@@ -268,6 +277,26 @@
     <Compile Include="UserInterface\CustomControls\DebugCoordsPanel.cs" />
     <Compile Include="Graphics\Drawing\StyleBox.cs" />
     <Compile Include="Graphics\Drawing\DrawingHandle.cs" />
+    <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorAngle.cs" />
+    <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorBoolean.cs" />
+    <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorBox2.cs" />
+    <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorColor.cs" />
+    <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorDummy.cs" />
+    <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorGridLocalCoordinates.cs" />
+    <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorNumeric.cs" />
+    <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorReference.cs" />
+    <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorString.cs" />
+    <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorVector2.cs" />
+    <Compile Include="ViewVariables\Instances\ViewVariablesInstanceEntity.cs" />
+    <Compile Include="ViewVariables\Instances\ViewVariablesInstanceObject.cs" />
+    <Compile Include="ViewVariables\IViewVariablesManager.cs" />
+    <Compile Include="ViewVariables\IViewVariablesManagerInternal.cs" />
+    <Compile Include="ViewVariables\ViewVariablesCommand.cs" />
+    <Compile Include="ViewVariables\ViewVariablesInstance.cs" />
+    <Compile Include="ViewVariables\ViewVariablesManager.cs" />
+    <Compile Include="ViewVariables\ViewVariablesPropertyControl.cs" />
+    <Compile Include="ViewVariables\ViewVariablesPropertyEditor.cs" />
+    <Compile Include="ViewVariables\ViewVariablesRemoteSession.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="client_config.toml">

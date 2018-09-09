@@ -6,6 +6,8 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Utility;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Shared.GameObjects
 {
@@ -20,12 +22,15 @@ namespace SS14.Shared.GameObjects
         public IEntityManager EntityManager { get; private set; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public EntityUid Uid { get; private set; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public EntityPrototype Prototype { get; internal set; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public string Description
         {
             get
@@ -43,9 +48,11 @@ namespace SS14.Shared.GameObjects
         private string _description;
 
         /// <inheritdoc />
+        [ViewVariables]
         public uint LastModifiedTick { get; private set; }
 
         /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
         public string Name
         {
             get => _name;
@@ -57,13 +64,16 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public bool Initialized { get; private set; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public bool Deleted { get; private set; }
 
         private ITransformComponent _transform;
         /// <inheritdoc />
+        [ViewVariables]
         public ITransformComponent Transform => _transform ?? (_transform = GetComponent<ITransformComponent>());
 
         #endregion Members
@@ -439,7 +449,7 @@ namespace SS14.Shared.GameObjects
 
         public override string ToString()
         {
-            return $"{Name} ({Uid}, {Prototype.Name})";
+            return $"{Name} ({Uid}, {Prototype.ID})";
         }
     }
 }

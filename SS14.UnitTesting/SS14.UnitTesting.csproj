@@ -50,6 +50,10 @@
     <Reference Include="Castle.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\Castle.Core.4.2.1\lib\net45\Castle.Core.dll</HintPath>
     </Reference>
+    <Reference Include="JetBrains.Annotations, Version=2018.2.1.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325">
+      <HintPath>$(SolutionDir)packages\JetBrains.Annotations.2018.2.1\lib\net20\JetBrains.Annotations.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.CodeCoverage.Shim, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\Microsoft.CodeCoverage.1.0.3\lib\netstandard1.0\Microsoft.VisualStudio.CodeCoverage.Shim.dll</HintPath>
     </Reference>
@@ -115,6 +119,7 @@
     <Compile Include="Shared\Timing\GameTiming_Test.cs" />
     <Compile Include="Shared\Utility\CollectionExtensions_Test.cs" />
     <Compile Include="Shared\Utility\ResourcePath_Test.cs" />
+    <Compile Include="Shared\Utility\TypeHelpers_Test.cs" />
     <Compile Include="Shared\Utility\YamlHelpers_Test.cs" />
     <Compile Include="Shared\ColorUtils_Test.cs" />
     <Compile Include="SS14UnitTest.cs" />

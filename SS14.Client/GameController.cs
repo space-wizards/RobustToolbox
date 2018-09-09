@@ -31,7 +31,9 @@ using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using System;
+using System.ComponentModel;
 using SS14.Client.Utility;
+using SS14.Client.ViewVariables;
 using SS14.Shared.Interfaces.Resources;
 
 namespace SS14.Client
@@ -94,6 +96,8 @@ namespace SS14.Client
         [Dependency]
         readonly ILogManager logManager;
 
+        [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager;
+
         public override void Main(Godot.SceneTree tree)
         {
 #if !X64
@@ -151,6 +155,7 @@ namespace SS14.Client
             _entityManager.Initialize();
             gameStateManager.Initialize();
             overlayManager.Initialize();
+            _viewVariablesManager.Initialize();
 
             _client.Initialize();
 

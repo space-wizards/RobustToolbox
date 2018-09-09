@@ -5,6 +5,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Input;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Map;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.GameObjects
 {
@@ -17,7 +18,10 @@ namespace SS14.Client.GameObjects
         public override string Name => "Clickable";
         public override uint? NetID => NetIDs.CLICKABLE;
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public string BaseShader { get => _baseShader; private set => _baseShader = value; }
+
+        [ViewVariables(VVAccess.ReadWrite)]
         public string SelectionShader { get => _selectionShader; set => _selectionShader = value; }
 
         public override void ExposeData(Shared.Serialization.ObjectSerializer serializer)

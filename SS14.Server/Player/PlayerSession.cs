@@ -3,7 +3,6 @@ using SS14.Server.Interfaces.Player;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
 using SS14.Server.GameObjects;
 using System;
 using SS14.Server.Interfaces;
@@ -11,8 +10,8 @@ using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network.Messages;
-using SS14.Shared.Players;
 using SS14.Shared.Network;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Server.Player
 {
@@ -36,13 +35,17 @@ namespace SS14.Server.Player
             };
 
             ConnectedClient = client;
-            
+
             UpdatePlayerState();
         }
 
+        [ViewVariables]
         public INetChannel ConnectedClient { get; }
 
+        [ViewVariables]
         public IEntity AttachedEntity { get; private set; }
+
+        [ViewVariables]
         public EntityUid? AttachedEntityUid => AttachedEntity?.Uid;
 
         private SessionStatus _status = SessionStatus.Connecting;
@@ -51,6 +54,7 @@ namespace SS14.Server.Player
         public string Name => SessionId.Username;
 
         /// <inheritdoc />
+        [ViewVariables]
         public SessionStatus Status
         {
             get => _status;
@@ -61,9 +65,11 @@ namespace SS14.Server.Player
         public DateTime ConnectedTime { get; private set; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public NetSessionId SessionId { get; }
 
         readonly PlayerData _data;
+        [ViewVariables]
         public IPlayerData Data => _data;
 
         /// <inheritdoc />

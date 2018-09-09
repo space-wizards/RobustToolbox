@@ -216,17 +216,7 @@ namespace SS14.Client.Console.Commands
                 console.AddLine("Must pass exactly 1 argument", Color.Red);
                 return false;
             }
-            EntityUid uid;
-            var arg = args[0];
-            if (arg.StartsWith("c"))
-            {
-                uid = new EntityUid(int.Parse(arg.Substring(1)) | EntityUid.ClientUid);
-            }
-            else
-            {
-                uid = new EntityUid(int.Parse(arg));
-            }
-
+            var uid = EntityUid.Parse(args[0]);
             var entmgr = IoCManager.Resolve<IEntityManager>();
             if (!entmgr.TryGetEntity(uid, out var entity))
             {

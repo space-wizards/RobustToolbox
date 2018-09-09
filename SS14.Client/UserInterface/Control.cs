@@ -13,6 +13,7 @@ using SS14.Client.Graphics.Drawing;
 using SS14.Shared.Utility;
 using SS14.Client.Interfaces.ResourceManagement;
 using System.IO;
+using JetBrains.Annotations;
 using SS14.Client.Graphics;
 
 namespace SS14.Client.UserInterface
@@ -23,6 +24,7 @@ namespace SS14.Client.UserInterface
     ///     See the official docs for more help: https://godot.readthedocs.io/en/3.0/classes/class_control.html
     /// </summary>
     [ControlWrap(typeof(Godot.Control))]
+    // ReSharper disable once RequiredBaseTypesIsNotInherited
     public partial class Control : IDisposable
     {
         /// <summary>
@@ -173,6 +175,12 @@ namespace SS14.Client.UserInterface
             set => SceneControl.RectScale = value.Convert();
         }
 
+        public string ToolTip
+        {
+            get => SceneControl.GetTooltip();
+            set => SceneControl.SetTooltip(value);
+        }
+
         public MouseFilterMode MouseFilter
         {
             get => (MouseFilterMode)SceneControl.MouseFilter;
@@ -195,6 +203,12 @@ namespace SS14.Client.UserInterface
         {
             get => (SizeFlags)SceneControl.SizeFlagsVertical;
             set => SceneControl.SizeFlagsVertical = (int)value;
+        }
+
+        public bool RectClipContent
+        {
+            get => SceneControl.RectClipContent;
+            set => SceneControl.RectClipContent = value;
         }
 
         /// <summary>
@@ -288,8 +302,7 @@ namespace SS14.Client.UserInterface
                 {
                     throw new FileNotFoundException("Scene path must exist on disk.");
                 }
-                var scene = (Godot.PackedScene)Godot.GD.Load(diskPath);
-                newSceneControl = (Godot.Control)scene.Instance();
+                newSceneControl = LoadScene(diskPath);
             }
             SetSceneControl(newSceneControl);
             SetupSignalHooks();
@@ -441,8 +454,12 @@ namespace SS14.Client.UserInterface
         ///     Thrown if we already have a component with the same name,
         ///     or the provided component is still parented to a different control.
         /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///    <paramref name="child"/> is <c>null</c>.
+        /// </exception>
         public virtual void AddChild(Control child, bool LegibleUniqueName = false)
         {
+            if (child == null) throw new ArgumentNullException(nameof(child));
             if (child.Parent != null)
             {
                 throw new InvalidOperationException("This component is still parented. Deparent it before adding it.");
@@ -566,6 +583,48 @@ namespace SS14.Client.UserInterface
         public bool HasChild(string name)
         {
             return _children.ContainsKey(name);
+        }
+
+        // TODO: Expose this as public.
+        // The problem is that non-Control nodes such as timers mess up the position so it isn't consistent.
+        /// <summary>
+        ///     Sets the index of this control in Godot's scene tree.
+        ///     This pretty much corresponds to layout and drawing order in relation to its siblings.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <exception cref="InvalidOperationException">This control has no parent.</exception>
+        internal void SetPositionInParent(int position)
+        {
+            if (Parent == null)
+            {
+                throw new InvalidOperationException("No parent to change position in.");
+            }
+
+            Parent.SceneControl.MoveChild(SceneControl, 0);
+        }
+
+        /// <summary>
+        ///     Makes this the first control among its siblings,
+        ///     So that it's first in things such as drawing order.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">This control has no parent.</exception>
+        public void SetPositionFirst()
+        {
+            SetPositionInParent(0);
+        }
+
+        /// <summary>
+        ///     Makes this the last control among its siblings,
+        ///     So that it's last in things such as drawing order.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">This control has no parent.</exception>
+        public void SetPositionLast()
+        {
+            if (Parent == null)
+            {
+                throw new InvalidOperationException("No parent to change position in.");
+            }
+            SetPositionInParent(Parent.SceneControl.GetChildCount());
         }
 
         /// <summary>
@@ -794,24 +853,64 @@ namespace SS14.Client.UserInterface
             ShrinkEnd = 8,
         }
 
-        public void AddColorOverride(string name, Color color)
+        protected void SetColorOverride(string name, Color? color)
         {
-            SceneControl.AddColorOverride(name, color.Convert());
+            // So here's an interesting one.
+            // Godot's AddColorOverride and such API on controls
+            // Doesn't actually have a way to REMOVE the override.
+            // Passing null via Set() does though.
+            if (color != null)
+            {
+                SceneControl.AddColorOverride(name, color.Value.Convert());
+            }
+            else
+            {
+                SceneControl.Set($"custom_colors/{name}", null);
+            }
         }
 
-        public void AddConstantOverride(string name, int constant)
+        protected Color? GetColorOverride(string name)
         {
-            SceneControl.AddConstantOverride(name, constant);
+            return SceneControl.HasColorOverride(name) ? SceneControl.GetColor(name).Convert() : (Color?)null;
         }
 
-        public void AddStyleBoxOverride(string name, StyleBox styleBox)
+        protected void SetConstantOverride(string name, int? constant)
+        {
+            if (constant != null)
+            {
+                SceneControl.AddConstantOverride(name, constant.Value);
+            }
+            else
+        {
+                SceneControl.Set($"custom_constants/{name}", null);
+            }
+        }
+
+        protected int? GetConstantOverride(string name)
+        {
+            return SceneControl.HasConstantOverride(name) ? SceneControl.GetConstant(name) : (int?)null;
+        }
+
+        protected void SetStyleBoxOverride(string name, StyleBox styleBox)
         {
             SceneControl.AddStyleboxOverride(name, styleBox.GodotStyleBox);
         }
 
-        public void AddFontOverride(string name, Font font)
+        protected StyleBox GetStyleBoxOverride(string name)
+        {
+            var box = SceneControl.HasStyleboxOverride(name) ? SceneControl.GetStylebox(name) : null;
+            return box == null ? null : new GodotStyleBoxWrap(box);
+        }
+
+        protected void SetFontOverride(string name, Font font)
         {
             SceneControl.AddFontOverride(name, font);
+        }
+
+        protected Font GetFontOverride(string name)
+        {
+            var font = SceneControl.HasFontOverride(name) ? SceneControl.GetFont(name) : null;
+            return font == null ? null : new GodotWrapFont(font);
         }
 
         public void DoUpdate(ProcessFrameEventArgs args)
@@ -883,11 +982,13 @@ namespace SS14.Client.UserInterface
         /// <returns>The root of the loaded scene.</returns>
         protected static Godot.Control LoadScene(string path)
         {
-            var res = (Godot.PackedScene)Godot.ResourceLoader.Load(path);
-            return (Godot.Control)res.Instance();
+            // See https://github.com/godotengine/godot/issues/21667 for why pNoCache is necessary.
+            var scene2 = (Godot.PackedScene) Godot.ResourceLoader.Load(path, pNoCache: true);
+            return (Godot.Control)scene2.Instance();
         }
 
         [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+        [BaseTypeRequired(typeof(Control))]
         internal class ControlWrapAttribute : Attribute
         {
             public readonly Type GodotType;

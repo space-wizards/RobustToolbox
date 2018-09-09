@@ -122,6 +122,17 @@ namespace SS14.Server.Console
             return false;
         }
 
+        public bool CanViewVar(ConGroupIndex groupIndex)
+        {
+            if (_groups.TryGetValue(groupIndex, out var group))
+            {
+                return group.CanViewVar;
+            }
+
+            _logger.Error($"Unknown groupIndex: {groupIndex}");
+            return false;
+        }
+
         public bool GroupExists(ConGroupIndex index)
         {
             return _groups.ContainsKey(index);

@@ -23,6 +23,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Reflection;
 using SS14.Client.ResourceManagement;
 using SS14.Client.State;
+using SS14.Client.ViewVariables;
 using SS14.Server;
 using SS14.Server.Chat;
 using SS14.Server.Console;
@@ -41,6 +42,7 @@ using SS14.Server.Placement;
 using SS14.Server.Player;
 using SS14.Server.Prototypes;
 using SS14.Server.Reflection;
+using SS14.Server.ViewVariables;
 using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
 using SS14.Shared.GameObjects;
@@ -206,6 +208,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IPrototypeManager, PrototypeManager>();
                     IoCManager.Register<IOverlayManager, OverlayManager>();
                     IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
+                    IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();
                     break;
 
                 case UnitTestProject.Server:
@@ -228,6 +231,8 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IBaseServer, BaseServer>();
                     IoCManager.Register<IMapLoader, MapLoader>();
                     IoCManager.Register<IPrototypeManager, ServerPrototypeManager>();
+                    IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
+                    IoCManager.Register<IConGroupController, ConGroupController>();
                     break;
 
                 default:

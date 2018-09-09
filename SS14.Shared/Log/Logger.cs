@@ -1,4 +1,5 @@
-﻿using SS14.Shared.Interfaces.Log;
+﻿using JetBrains.Annotations;
+using SS14.Shared.Interfaces.Log;
 using SS14.Shared.IoC;
 
 namespace SS14.Shared.Log
@@ -35,6 +36,7 @@ namespace SS14.Shared.Log
         /// <summary>
         ///     Log a message, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
+        [StringFormatMethod("message")]
         public static void LogS(LogLevel logLevel, string sawmillname, string message, params object[] args)
         {
             var sawmill = LogManagerSingleton.GetSawmill(sawmillname);
@@ -53,6 +55,7 @@ namespace SS14.Shared.Log
         /// <summary>
         /// Log a message, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
+        [StringFormatMethod("message")]
         public static void Log(LogLevel logLevel, string message, params object[] args)
         {
             LogManagerSingleton.RootSawmill.Log(logLevel, message, args);
@@ -70,6 +73,7 @@ namespace SS14.Shared.Log
         /// Log a message as debug, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [StringFormatMethod("message")]
         public static void DebugS(string sawmill, string message, params object[] args) => LogS(LogLevel.Debug, sawmill, message, args);
 
         /// <summary>
@@ -82,6 +86,7 @@ namespace SS14.Shared.Log
         /// Log a message as debug, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [StringFormatMethod("message")]
         public static void Debug(string message, params object[] args) => Log(LogLevel.Debug, message, args);
 
         /// <summary>
@@ -94,6 +99,7 @@ namespace SS14.Shared.Log
         /// Log a message as info, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [StringFormatMethod("message")]
         public static void InfoS(string sawmill, string message, params object[] args) => LogS(LogLevel.Info, sawmill, message, args);
 
         /// <summary>
@@ -106,6 +112,7 @@ namespace SS14.Shared.Log
         /// Log a message as info, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [StringFormatMethod("message")]
         public static void Info(string message, params object[] args) => Log(LogLevel.Info, message, args);
 
         /// <summary>
@@ -118,6 +125,7 @@ namespace SS14.Shared.Log
         /// Log a message as warning, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [StringFormatMethod("message")]
         public static void WarningS(string sawmill, string message, params object[] args) => LogS(LogLevel.Warning, sawmill, message, args);
 
         /// <summary>
@@ -130,6 +138,7 @@ namespace SS14.Shared.Log
         /// Log a message as warning, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [StringFormatMethod("message")]
         public static void Warning(string message, params object[] args) => Log(LogLevel.Warning, message, args);
 
         /// <summary>
@@ -142,6 +151,7 @@ namespace SS14.Shared.Log
         /// Log a message as error, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [StringFormatMethod("message")]
         public static void ErrorS(string sawmill, string message, params object[] args) => LogS(LogLevel.Error, sawmill, message, args);
 
         /// <summary>
@@ -154,6 +164,7 @@ namespace SS14.Shared.Log
         /// Log a message as error, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [StringFormatMethod("message")]
         public static void Error(string message, params object[] args) => Log(LogLevel.Error, message, args);
 
         /// <summary>
@@ -166,6 +177,7 @@ namespace SS14.Shared.Log
         /// Log a message as fatal, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [StringFormatMethod("message")]
         public static void FatalS(string sawmill, string message, params object[] args) => LogS(LogLevel.Fatal, sawmill, message, args);
 
         /// <summary>
@@ -178,6 +190,7 @@ namespace SS14.Shared.Log
         /// Log a message as fatal, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [StringFormatMethod("message")]
         public static void Fatal(string message, params object[] args) => Log(LogLevel.Fatal, message, args);
 
         /// <summary>

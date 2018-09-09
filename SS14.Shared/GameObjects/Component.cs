@@ -4,6 +4,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Reflection;
 using SS14.Shared.Serialization;
+using SS14.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
@@ -13,16 +14,20 @@ namespace SS14.Shared.GameObjects
     public abstract class Component : IComponent
     {
         /// <inheritdoc />
+        [ViewVariables]
         public abstract string Name { get; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public virtual uint? NetID => null;
 
         /// <inheritdoc />
+        [ViewVariables]
         public virtual bool NetworkSynchronizeExistence => false;
 
         private bool _netSyncEnabled = true;
         /// <inheritdoc />
+        [ViewVariables]
         public bool NetSyncEnabled
         {
             get => _netSyncEnabled;
@@ -30,6 +35,7 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public IEntity Owner { get; set; }
 
         /// <inheritdoc />
@@ -39,16 +45,21 @@ namespace SS14.Shared.GameObjects
         ///     True if this entity is a client-only entity.
         ///     That is, it does not exist on the server, only THIS client.
         /// </summary>
+        [ViewVariables]
         public bool IsClientSide => Owner.Uid.IsClientSide();
 
+        [ViewVariables]
         public bool Initialized { get; private set; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public bool Running { get; private set; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public bool Deleted { get; private set; }
 
+        [ViewVariables]
         public uint LastModifiedTick { get; private set; }
 
         /// <inheritdoc />

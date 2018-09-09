@@ -31,7 +31,7 @@ namespace SS14.Client.ResourceManagement.ResourceTypes
             }
 
             var properties = Godot.VisualServer.ShaderGetParamList(GodotShader.GetRid());
-            foreach (var dict in properties.Cast<Godot.Dictionary>())
+            foreach (var dict in properties.Cast<IDictionary<object, object>>())
             {
                 Parameters.Add((string)dict["name"], DetectParamType(dict));
             }
@@ -42,7 +42,7 @@ namespace SS14.Client.ResourceManagement.ResourceTypes
             return Parameters.TryGetValue(paramName, out shaderParamType);
         }
 
-        private ShaderParamType DetectParamType(Godot.Dictionary dict)
+        private ShaderParamType DetectParamType(IDictionary<object, object> dict)
         {
             var type = (Godot.Variant.Type)dict["type"];
             var hint = (Godot.PropertyHint)dict["hint"];

@@ -81,6 +81,10 @@
     <Reference Include="DataStructures, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\ConcurrentDataStructures.0.2.0\lib\net45\DataStructures.dll</HintPath>
     </Reference>
+    <Reference Include="JetBrains.Annotations, Version=2018.2.1.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325">
+      <HintPath>$(SolutionDir)packages\JetBrains.Annotations.2018.2.1\lib\net20\JetBrains.Annotations.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System">
       <Name>System</Name>
       <Private>False</Private>
@@ -122,6 +126,7 @@
     <Compile Include="Console\ConGroupContainer.cs" />
     <Compile Include="Console\ConGroupController.cs" />
     <Compile Include="Console\ConGroupIndex.cs" />
+    <Compile Include="Console\IConGroupController.cs" />
     <Compile Include="Console\SessionGroupContainer.cs" />
     <Compile Include="GameObjects\Components\Appearance\AppearanceComponent.cs" />
     <Compile Include="GameObjects\Components\UserInterface\ServerUserInterfaceComponent.cs" />
@@ -152,6 +157,11 @@
     <Compile Include="BaseServer.cs" />
     <Compile Include="Console\Commands\LogCommands.cs" />
     <Compile Include="Signals.cs" />
+    <Compile Include="ViewVariables\IViewVariablesHost.cs" />
+    <Compile Include="ViewVariables\ViewVariablesHost.cs" />
+    <Compile Include="ViewVariables\ViewVariablesSession.cs" />
+    <Compile Include="ViewVariables\ViewVariablesSessionEntity.cs" />
+    <Compile Include="ViewVariables\ViewVariablesSessionObject.cs" />
     <Content Include="server_config.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

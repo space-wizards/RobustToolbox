@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 
 namespace SS14.Shared.Utility
 {
@@ -10,6 +12,7 @@ namespace SS14.Shared.Utility
         /// </summary>
         /// <param name="message">Exception message.</param>
         [Conditional("DEBUG")]
+        [ContractAnnotation("=> halt")]
         public static void Assert(string message)
         {
             throw new DebugAssertException(message);
@@ -21,7 +24,9 @@ namespace SS14.Shared.Utility
         /// </summary>
         /// <param name="condition">Condition that must be true.</param>
         [Conditional("DEBUG")]
-        public static void Assert(bool condition)
+        [AssertionMethod]
+        public static void Assert([AssertionCondition(AssertionConditionType.IS_TRUE)]
+            bool condition)
         {
             if (!condition)
                 throw new DebugAssertException();
@@ -34,7 +39,9 @@ namespace SS14.Shared.Utility
         /// <param name="condition">Condition that must be true.</param>
         /// <param name="message">Exception message.</param>
         [Conditional("DEBUG")]
-        public static void Assert(bool condition, string message)
+        [AssertionMethod]
+        public static void Assert([AssertionCondition(AssertionConditionType.IS_TRUE)]
+            bool condition, string message)
         {
             if (!condition)
                 throw new DebugAssertException(message);
@@ -43,7 +50,12 @@ namespace SS14.Shared.Utility
 
     public class DebugAssertException : Exception
     {
-        public DebugAssertException() { }
-        public DebugAssertException(string message) : base(message) { }
+        public DebugAssertException()
+        {
+        }
+
+        public DebugAssertException(string message) : base(message)
+        {
+        }
     }
 }

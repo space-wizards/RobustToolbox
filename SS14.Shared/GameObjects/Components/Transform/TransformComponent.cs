@@ -8,6 +8,8 @@ using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
+using SS14.Shared.Utility;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Shared.GameObjects.Components.Transform
 {
@@ -37,6 +39,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
         public sealed override Type StateType => typeof(TransformComponentState);
 
         /// <inheritdoc />
+        [ViewVariables]
         public MapId MapID
         {
             get
@@ -53,6 +56,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public GridId GridID
         {
             get => _gridID;
@@ -60,6 +64,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
         }
 
         /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
         public Angle LocalRotation
         {
             get => _rotation;
@@ -73,6 +78,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public Angle WorldRotation
         {
             get
@@ -89,6 +95,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
         /// <summary>
         ///     Current parent entity of this entity.
         /// </summary>
+        [ViewVariables]
         public ITransformComponent Parent
         {
             get => !_parent.IsValid() ? null : Owner.EntityManager.GetEntity(_parent).GetComponent<ITransformComponent>();
@@ -138,6 +145,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
         public virtual bool VisibleWhileParented { set; get; }
 
         /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
         public GridLocalCoordinates LocalPosition
         {
             get
@@ -187,6 +195,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
         }
 
         /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 WorldPosition
         {
             get

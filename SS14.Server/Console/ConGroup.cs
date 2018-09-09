@@ -9,5 +9,7 @@ namespace SS14.Server.Console
         public string Name { get; set; }
 
         public List<string> Commands { get; set; }
+
+        public bool CanViewVar { get; set; }
     }
 }

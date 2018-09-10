@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using SS14.Server.Console;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Enums;
@@ -14,7 +13,7 @@ using DenyReason = SS14.Shared.Network.Messages.MsgViewVariablesDenySession.Deny
 
 namespace SS14.Server.ViewVariables
 {
-    internal class ViewVariablesHost : IViewVariablesHost
+    internal class ViewVariablesHost : ViewVariablesManagerShared, IViewVariablesHost
     {
         [Dependency] private readonly INetManager _netManager;
         [Dependency] private readonly IEntityManager _entityManager;
@@ -41,6 +40,8 @@ namespace SS14.Server.ViewVariables
             _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>(MsgViewVariablesRemoteData.NAME);
         }
 
+        ICollection<object> IViewVariablesHost.TraitIdsFor(Type type) => TraitIdsFor(type);
+
         private void _msgCloseSession(MsgViewVariablesCloseSession message)
         {
             if (!_sessions.TryGetValue(message.SessionId, out var session)
@@ -62,28 +63,12 @@ namespace SS14.Server.ViewVariables
                 return;
             }
 
-            var property = session.ObjectType.GetProperty(message.PropertyName);
-            if (property == null)
-            {
-                // TODO: logging?
-                return;
-            }
-
-            var attr = property.GetCustomAttribute<ViewVariablesAttribute>();
-            if (attr == null || attr.Access != VVAccess.ReadWrite)
-            {
-                // TODO: logging?
-                return;
-            }
-
             try
             {
-                property.SetValue(session.Object, message.Value);
+                session.Modify(message.PropertyIndex, message.Value);
             }
-            catch (Exception e)
+            catch (ArgumentOutOfRangeException)
             {
-                Logger.ErrorS("vv", "Exception while modifying property {0} on session {1} object {2}: {3}",
-                    property.Name, session.SessionId, session.Object, e);
             }
         }
 
@@ -96,9 +81,10 @@ namespace SS14.Server.ViewVariables
                 return;
             }
 
-            var blob = session.DataRequest();
+            var blob = session.DataRequest(message.RequestMeta);
+
             var dataMsg = _netManager.CreateNetMessage<MsgViewVariablesRemoteData>();
-            dataMsg.SessionId = message.SessionId;
+            dataMsg.ReqId = message.ReqId;
             dataMsg.Blob = blob;
             _netManager.ServerSendMessage(dataMsg, message.MsgChannel);
         }
@@ -155,25 +141,19 @@ namespace SS14.Server.ViewVariables
                         return;
                     }
 
-                    var relObject = relSession.Object;
-                    var relProperty = relSession.ObjectType.GetProperty(sessionRelativeSelector.PropertyName);
-                    if (relProperty == null)
-                    {
-                        Deny(DenyReason.NoObject);
-                        return;
-                    }
-
-                    var attr = relProperty.GetCustomAttribute<ViewVariablesAttribute>();
-                    if (attr == null)
-                    {
-                        Deny(DenyReason.NoObject);
-                        return;
-                    }
-
                     object value;
                     try
                     {
-                        value = relProperty.GetValue(relObject);
+                        if (!relSession.TryGetRelativeObject(sessionRelativeSelector.PropertyIndex, out value))
+                        {
+                            Deny(DenyReason.InvalidRequest);
+                            return;
+                        }
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        Deny(DenyReason.NoObject);
+                        return;
                     }
                     catch (Exception e)
                     {
@@ -196,18 +176,7 @@ namespace SS14.Server.ViewVariables
             }
 
             var sessionId = _nextSessionId++;
-            ViewVariablesSession session;
-            {
-                // TODO: Flexibility here, and allow the client more control.
-                if (theObject is IEntity entity)
-                {
-                    session = new ViewVariablesSessionEntity(message.MsgChannel.SessionId, entity, sessionId);
-                }
-                else
-                {
-                    session = new ViewVariablesSessionObject(message.MsgChannel.SessionId, theObject, sessionId);
-                }
-            }
+            var session = new ViewVariablesSession(message.MsgChannel.SessionId, theObject, sessionId, this);
 
             _sessions.Add(sessionId, session);
 
@@ -215,7 +184,6 @@ namespace SS14.Server.ViewVariables
             allowMsg.ReqId = message.ReqId;
             allowMsg.SessionId = session.SessionId;
             _netManager.ServerSendMessage(allowMsg, message.MsgChannel);
-
 
             player.PlayerStatusChanged += (_, args) =>
             {

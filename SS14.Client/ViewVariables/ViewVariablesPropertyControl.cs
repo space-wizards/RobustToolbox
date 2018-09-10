@@ -66,7 +66,7 @@ namespace SS14.Client.ViewVariables
             TopContainer.AddChild(NameLabel);
         }
 
-        public ViewVariablesPropertyEditor SetProperty(ViewVariablesBlob.PropertyData property)
+        public ViewVariablesPropertyEditor SetProperty(ViewVariablesBlobMembers.PropertyData property)
         {
             NameLabel.Text = property.Name;
             var type = Type.GetType(property.Type);
@@ -77,7 +77,7 @@ namespace SS14.Client.ViewVariables
             {
                 // Type is server-side only.
                 // Info whether it's reference or value type can be figured out from the sent value.
-                if (property.Value is ViewVariablesBlob.ServerValueTypeToken valueToken)
+                if (property.Value is ViewVariablesBlobMembers.ServerValueTypeToken valueToken)
                 {
                     // Value type, just display it stringified read-only.
                     editor = new ViewVariablesPropertyEditorDummy();
@@ -85,7 +85,7 @@ namespace SS14.Client.ViewVariables
                 else
                 {
                     // Has to be a reference type at this point.
-                    DebugTools.Assert(property.Value is ViewVariablesBlob.ReferenceToken || property.Value == null);
+                    DebugTools.Assert(property.Value is ViewVariablesBlobMembers.ReferenceToken || property.Value == null);
                     editor = _viewVariablesManager.PropertyFor(typeof(object));
                 }
             }

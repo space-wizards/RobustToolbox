@@ -291,12 +291,15 @@
     <Compile Include="ViewVariables\Instances\ViewVariablesInstanceObject.cs" />
     <Compile Include="ViewVariables\IViewVariablesManager.cs" />
     <Compile Include="ViewVariables\IViewVariablesManagerInternal.cs" />
+    <Compile Include="ViewVariables\Traits\ViewVariablesTraitEnumerable.cs" />
+    <Compile Include="ViewVariables\Traits\ViewVariablesTraitMembers.cs" />
     <Compile Include="ViewVariables\ViewVariablesCommand.cs" />
     <Compile Include="ViewVariables\ViewVariablesInstance.cs" />
     <Compile Include="ViewVariables\ViewVariablesManager.cs" />
     <Compile Include="ViewVariables\ViewVariablesPropertyControl.cs" />
     <Compile Include="ViewVariables\ViewVariablesPropertyEditor.cs" />
     <Compile Include="ViewVariables\ViewVariablesRemoteSession.cs" />
+    <Compile Include="ViewVariables\ViewVariablesTrait.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="client_config.toml">

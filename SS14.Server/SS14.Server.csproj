@@ -158,10 +158,12 @@
     <Compile Include="Console\Commands\LogCommands.cs" />
     <Compile Include="Signals.cs" />
     <Compile Include="ViewVariables\IViewVariablesHost.cs" />
+    <Compile Include="ViewVariables\Traits\ViewVariablesTraitEntity.cs" />
+    <Compile Include="ViewVariables\Traits\ViewVariablesTraitEnumerable.cs" />
+    <Compile Include="ViewVariables\Traits\ViewVariablesTraitMembers.cs" />
     <Compile Include="ViewVariables\ViewVariablesHost.cs" />
     <Compile Include="ViewVariables\ViewVariablesSession.cs" />
-    <Compile Include="ViewVariables\ViewVariablesSessionEntity.cs" />
-    <Compile Include="ViewVariables\ViewVariablesSessionObject.cs" />
+    <Compile Include="ViewVariables\ViewVariablesTrait.cs" />
     <Content Include="server_config.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

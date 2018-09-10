@@ -39,7 +39,7 @@ namespace SS14.Shared.ViewVariables
             ComponentType = componentType;
         }
 
-        public string ComponentType { get;  }
+        public string ComponentType { get; }
     }
 
     /// <inheritdoc />
@@ -49,13 +49,13 @@ namespace SS14.Shared.ViewVariables
     [Serializable, NetSerializable]
     public class ViewVariablesSessionRelativeSelector : ViewVariablesObjectSelector
     {
-        public ViewVariablesSessionRelativeSelector(uint sessionId, string propertyName)
+        public ViewVariablesSessionRelativeSelector(uint sessionId, object[] propertyIndex)
         {
             SessionId = sessionId;
-            PropertyName = propertyName;
+            PropertyIndex = propertyIndex;
         }
 
         public uint SessionId { get; }
-        public string PropertyName { get; }
+        public object[] PropertyIndex { get; }
     }
 }

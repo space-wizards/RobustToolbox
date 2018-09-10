@@ -43,6 +43,7 @@ using SS14.Shared.Interfaces.Resources;
 using SS14.Server.Console;
 using SS14.Server.Interfaces.Console;
 using SS14.Server.ViewVariables;
+using SS14.Shared.Asynchronous;
 
 namespace SS14.Server
 {
@@ -109,6 +110,7 @@ namespace SS14.Server
             IoCManager.Register<ICollisionManager, CollisionManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
             IoCManager.Register<ILogManager, LogManager>();
+            IoCManager.Register<ITaskManager, TaskManager>();
 
             // Server stuff.
             IoCManager.Register<IEntityManager, ServerEntityManager>();

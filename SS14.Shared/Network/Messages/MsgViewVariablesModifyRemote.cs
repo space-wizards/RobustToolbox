@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using Lidgren.Network;
@@ -18,19 +19,28 @@ namespace SS14.Shared.Network.Messages
         #endregion
 
         public uint SessionId { get; set; }
-        public string PropertyName { get; set; }
+        public object[] PropertyIndex { get; set; }
         public object Value { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
             var serializer = IoCManager.Resolve<ISS14Serializer>();
             SessionId = buffer.ReadUInt32();
-            PropertyName = buffer.ReadString();
-            var length = buffer.ReadInt32();
-            var bytes = buffer.ReadBytes(length);
-            using (var stream = new MemoryStream(bytes))
             {
-                Value = serializer.Deserialize(stream);
+                var length = buffer.ReadInt32();
+                var bytes = buffer.ReadBytes(length);
+                using (var stream = new MemoryStream(bytes))
+                {
+                    PropertyIndex = serializer.Deserialize<object[]>(stream);
+                }
+            }
+            {
+                var length = buffer.ReadInt32();
+                var bytes = buffer.ReadBytes(length);
+                using (var stream = new MemoryStream(bytes))
+                {
+                    Value = serializer.Deserialize(stream);
+                }
             }
         }
 
@@ -38,7 +48,12 @@ namespace SS14.Shared.Network.Messages
         {
             var serializer = IoCManager.Resolve<ISS14Serializer>();
             buffer.Write(SessionId);
-            buffer.Write(PropertyName);
+            using (var stream = new MemoryStream())
+            {
+                serializer.Serialize(stream, PropertyIndex);
+                buffer.Write((int)stream.Length);
+                buffer.Write(stream.ToArray());
+            }
             using (var stream = new MemoryStream())
             {
                 serializer.Serialize(stream, Value);

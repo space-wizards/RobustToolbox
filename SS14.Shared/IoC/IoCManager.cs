@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SS14.Shared.Utility;
 
 namespace SS14.Shared.IoC
 {
@@ -188,7 +189,7 @@ namespace SS14.Shared.IoC
         /// <seealso cref="BuildGraph"/>
         public static void InjectDependencies(object obj)
         {
-            foreach (FieldInfo field in GetAllFields(obj.GetType())
+            foreach (FieldInfo field in TypeHelpers.GetAllFields(obj.GetType())
                             .Where(p => Attribute.GetCustomAttribute(p, typeof(DependencyAttribute)) != null))
             {
                 // Not using Resolve<T>() because we're literally building it right now.
@@ -199,28 +200,6 @@ namespace SS14.Shared.IoC
 
                 // Quick note: this DOES work with readonly fields, though it may be a CLR implementation detail.
                 field.SetValue(obj, Services[field.FieldType]);
-            }
-        }
-
-        /// <summary>
-        /// Returns absolutely all fields, privates, readonlies, and ones from parents.
-        /// </summary>
-        private static IEnumerable<FieldInfo> GetAllFields(Type t)
-        {
-            // We need to fetch the entire class hierarchy and SelectMany(),
-            // Because BindingFlags.FlattenHierarchy doesn't read privates,
-            // Even when you pass BindingFlags.NonPublic.
-            return GetClassHierarchy(t).SelectMany(p => p.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly | BindingFlags.Public));
-        }
-
-        private static IEnumerable<Type> GetClassHierarchy(Type t)
-        {
-            yield return t;
-
-            while (t.BaseType != null)
-            {
-                t = t.BaseType;
-                yield return t;
             }
         }
     }

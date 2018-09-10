@@ -23,12 +23,12 @@ namespace SS14.Shared.Network.Messages
 
         #endregion
 
-        public uint SessionId { get; set; }
+        public uint ReqId { get; set; }
         public ViewVariablesBlob Blob { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            SessionId = buffer.ReadUInt32();
+            ReqId = buffer.ReadUInt32();
             var serializer = IoCManager.Resolve<ISS14Serializer>();
             var length = buffer.ReadInt32();
             var bytes = buffer.ReadBytes(length);
@@ -40,7 +40,7 @@ namespace SS14.Shared.Network.Messages
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
-            buffer.Write(SessionId);
+            buffer.Write(ReqId);
             var serializer = IoCManager.Resolve<ISS14Serializer>();
             using (var stream = new MemoryStream())
             {

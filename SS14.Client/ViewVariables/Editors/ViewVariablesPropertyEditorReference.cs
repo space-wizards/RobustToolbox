@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.IoC;

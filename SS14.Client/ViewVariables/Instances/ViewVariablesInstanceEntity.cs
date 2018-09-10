@@ -16,6 +16,14 @@ using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.ViewVariables.Instances
 {
+    // TODO:
+    // You're gonna hate me for this, future person.
+    // This code is already legacy and due for a refactor.
+    // Yes, there have been exactly 2 PRs relating to it.
+    // Oh well.
+    // Anyways, the different tabs in the entity view need to be moved to traits,
+    // and this class basically made a child of InstanceObject for the code that doesn't fit in a trait.
+
     internal class ViewVariablesInstanceEntity : ViewVariablesInstance
     {
         private const int TabClientVars = 0;
@@ -27,7 +35,8 @@ namespace SS14.Client.ViewVariables.Instances
         private IEntity _entity;
 
         private ViewVariablesRemoteSession _entitySession;
-        private ViewVariablesBlobEntity _blob;
+
+        private ViewVariablesBlobMembers _membersBlob;
 
         private VBoxContainer _serverVariables;
         private VBoxContainer _serverComponents;
@@ -129,17 +138,18 @@ namespace SS14.Client.ViewVariables.Instances
             }
         }
 
-        public override void Initialize(SS14Window window, ViewVariablesBlob blob, ViewVariablesRemoteSession session)
+        public override async void Initialize(SS14Window window, ViewVariablesBlobMetadata blob, ViewVariablesRemoteSession session)
         {
             // TODO: this is pretty poorly implemented right now.
             // For example, it assumes a client-side entity exists,
             // so it also means client bubbling won't work in this context.
 
             _entitySession = session;
-            _blob = (ViewVariablesBlobEntity) blob;
+
+            _membersBlob = await ViewVariablesManager.RequestData<ViewVariablesBlobMembers>(session, new ViewVariablesRequestMembers());
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var uid = (EntityUid) blob.Properties.Single(p => p.Name == "Uid").Value;
+            var uid = (EntityUid) _membersBlob.Properties.Single(p => p.Name == "Uid").Value;
 
             var entity = entityManager.GetEntity(uid);
             Initialize(window, entity);
@@ -180,37 +190,39 @@ namespace SS14.Client.ViewVariables.Instances
                     return;
                 }
 
-                _blob = (ViewVariablesBlobEntity) await ViewVariablesManager.RequestData(_entitySession);
+                _membersBlob = await ViewVariablesManager.RequestData<ViewVariablesBlobMembers>(_entitySession, new ViewVariablesRequestMembers());
             }
 
             var otherStyle = false;
-            foreach (var propertyData in _blob.Properties)
+            foreach (var propertyData in _membersBlob.Properties)
             {
                 var propertyEdit = new ViewVariablesPropertyControl();
                 propertyEdit.SetStyle(otherStyle = !otherStyle);
                 var editor = propertyEdit.SetProperty(propertyData);
                 editor.OnValueChanged += o =>
-                    ViewVariablesManager.ModifyRemote(_entitySession, propertyData.Name, o);
+                    ViewVariablesManager.ModifyRemote(_entitySession, new object[] {new ViewVariablesPropertySelector(propertyData.PropertyIndex)}, o);
                 if (editor is ViewVariablesPropertyEditorReference refEditor)
                 {
                     refEditor.OnPressed += () =>
                         ViewVariablesManager.OpenVV(
                             new ViewVariablesSessionRelativeSelector(_entitySession.SessionId,
-                                propertyData.Name));
+                                new object[] {new ViewVariablesPropertySelector(propertyData.PropertyIndex)}));
                 }
 
                 _serverVariables.AddChild(propertyEdit);
             }
 
+            var componentsBlob = await ViewVariablesManager.RequestData<ViewVariablesBlobEntityComponents>(_entitySession, new ViewVariablesRequestEntityComponents());
+
             _serverComponents.DisposeAllChildren();
-            _blob.ComponentTypes.Sort();
-            foreach (var componentType in _blob.ComponentTypes.OrderBy(t => t.stringified))
+            componentsBlob.ComponentTypes.Sort();
+            foreach (var componentType in componentsBlob.ComponentTypes.OrderBy(t => t.Stringified))
             {
-                var button = new Button {Text = componentType.stringified, TextAlign = Button.AlignMode.Left};
+                var button = new Button {Text = componentType.Stringified, TextAlign = Button.AlignMode.Left};
                 button.OnPressed += args =>
                 {
                     ViewVariablesManager.OpenVV(
-                        new ViewVariablesComponentSelector(_entity.Uid, componentType.qualified));
+                        new ViewVariablesComponentSelector(_entity.Uid, componentType.Qualified));
                 };
                 _serverComponents.AddChild(button);
             }

@@ -1,10 +1,14 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Client.ViewVariables.Editors;
 using SS14.Client.ViewVariables.Instances;
+using SS14.Client.ViewVariables.Traits;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
@@ -12,12 +16,13 @@ using SS14.Shared.Log;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Utility;
 using SS14.Shared.ViewVariables;
 using NumberType = SS14.Client.ViewVariables.Editors.ViewVariablesPropertyEditorNumeric.NumberType;
 
 namespace SS14.Client.ViewVariables
 {
-    internal class ViewVariablesManager : IViewVariablesManagerInternal
+    internal class ViewVariablesManager : ViewVariablesManagerShared, IViewVariablesManagerInternal
     {
         [Dependency] private readonly IClientNetManager _netManager;
 
@@ -35,6 +40,8 @@ namespace SS14.Client.ViewVariables
         private readonly Dictionary<uint, TaskCompletionSource<ViewVariablesBlob>> _requestedData
             = new Dictionary<uint, TaskCompletionSource<ViewVariablesBlob>>();
 
+        private readonly Dictionary<Type, HashSet<object>> _cachedTraits = new Dictionary<Type, HashSet<object>>();
+
         public void Initialize()
         {
             _netManager.RegisterNetMessage<MsgViewVariablesOpenSession>(MsgViewVariablesOpenSession.NAME,
@@ -50,7 +57,7 @@ namespace SS14.Client.ViewVariables
             _netManager.RegisterNetMessage<MsgViewVariablesReqData>(MsgViewVariablesReqData.NAME);
         }
 
-        ViewVariablesPropertyEditor IViewVariablesManagerInternal.PropertyFor(Type type)
+        public ViewVariablesPropertyEditor PropertyFor(Type type)
         {
             // TODO: make this more flexible.
             if (type == typeof(sbyte))
@@ -177,10 +184,7 @@ namespace SS14.Client.ViewVariables
             var window = new SS14Window {Title = "View Variables"};
             instance.Initialize(window, obj);
             window.AddToScreen();
-            window.OnClose += () =>
-            {
-                _closeInstance(instance, false);
-            };
+            window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
         }
 
@@ -205,7 +209,7 @@ namespace SS14.Client.ViewVariables
                 return;
             }
 
-            var blob = await RequestData(session);
+            var blob = await RequestData<ViewVariablesBlobMetadata>(session, new ViewVariablesRequestMetadata());
             var type = Type.GetType(blob.ObjectType);
             // TODO: more flexibility in allowing custom instances here.
             ViewVariablesInstance instance;
@@ -220,10 +224,7 @@ namespace SS14.Client.ViewVariables
 
             loadingLabel.Dispose();
             instance.Initialize(window, blob, session);
-            window.OnClose += () =>
-            {
-                _closeInstance(instance, false);
-            };
+            window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
         }
 
@@ -238,24 +239,26 @@ namespace SS14.Client.ViewVariables
             return tcs.Task;
         }
 
-        public Task<ViewVariablesBlob> RequestData(ViewVariablesRemoteSession session)
+        public Task<ViewVariablesBlob> RequestData(ViewVariablesRemoteSession session, ViewVariablesRequest meta)
         {
             if (session.Closed)
             {
                 throw new ArgumentException("Session is closed", nameof(session));
             }
 
-            if (_requestedData.ContainsKey(session.SessionId))
-            {
-                throw new InvalidOperationException("There is already a request going on.");
-            }
-
             var msg = _netManager.CreateNetMessage<MsgViewVariablesReqData>();
+            var reqId = msg.ReqId = _nextReqId++;
+            msg.RequestMeta = meta;
             msg.SessionId = session.SessionId;
             _netManager.ClientSendMessage(msg);
             var tcs = new TaskCompletionSource<ViewVariablesBlob>();
-            _requestedData.Add(session.SessionId, tcs);
+            _requestedData.Add(reqId, tcs);
             return tcs.Task;
+        }
+
+        public async Task<T> RequestData<T>(ViewVariablesRemoteSession session, ViewVariablesRequest meta) where T : ViewVariablesBlob
+        {
+            return (T) await RequestData(session, meta);
         }
 
         public void CloseSession(ViewVariablesRemoteSession session)
@@ -270,7 +273,7 @@ namespace SS14.Client.ViewVariables
             _netManager.ClientSendMessage(closeMsg);
         }
 
-        public void ModifyRemote(ViewVariablesRemoteSession session, string propertyName, object value)
+        public void ModifyRemote(ViewVariablesRemoteSession session, object[] propertyIndex, object value)
         {
             if (!_sessions.ContainsKey(session.SessionId))
             {
@@ -279,9 +282,14 @@ namespace SS14.Client.ViewVariables
 
             var msg = _netManager.CreateNetMessage<MsgViewVariablesModifyRemote>();
             msg.SessionId = session.SessionId;
-            msg.PropertyName = propertyName;
+            msg.PropertyIndex = propertyIndex;
             msg.Value = value;
             _netManager.ClientSendMessage(msg);
+        }
+
+        ICollection<object> IViewVariablesManagerInternal.TraitIdsFor(Type type)
+        {
+            return TraitIdsFor(type);
         }
 
         private void _closeInstance(ViewVariablesInstance instance, bool closeWindow)
@@ -329,13 +337,13 @@ namespace SS14.Client.ViewVariables
 
         private void _netMessageRemoteData(MsgViewVariablesRemoteData message)
         {
-            if (!_requestedData.TryGetValue(message.SessionId, out var tcs))
+            if (!_requestedData.TryGetValue(message.ReqId, out var tcs))
             {
-                Logger.WarningS("vv", "Server sent us data we didn't request: {0}.", message.SessionId);
+                Logger.WarningS("vv", "Server sent us data we didn't request: {0}.", message.ReqId);
                 return;
             }
 
-            _requestedData.Remove(message.SessionId);
+            _requestedData.Remove(message.ReqId);
             tcs.SetResult(message.Blob);
         }
 

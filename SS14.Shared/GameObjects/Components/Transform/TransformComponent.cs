@@ -16,6 +16,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
         private EntityUid _parent;
+        [ViewVariables]
         private Vector2 _position; // holds offset from grid, or offset from parent
         private Angle _rotation; // local rotation
         private GridId _gridID;

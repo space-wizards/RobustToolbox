@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.ResourceManagement;
@@ -11,6 +10,7 @@ using SS14.Client.UserInterface.CustomControls;
 using SS14.Client.ViewVariables.Editors;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.ViewVariables
@@ -20,7 +20,7 @@ namespace SS14.Client.ViewVariables
     /// </summary>
     internal abstract class ViewVariablesInstance
     {
-        protected readonly IViewVariablesManagerInternal ViewVariablesManager;
+        public readonly IViewVariablesManagerInternal ViewVariablesManager;
 
         protected ViewVariablesInstance(IViewVariablesManagerInternal vvm)
         {
@@ -41,7 +41,7 @@ namespace SS14.Client.ViewVariables
         /// <param name="window">The window to initialize by adding GUI components.</param>
         /// <param name="blob">The data blob sent by the server for this remote object.</param>
         /// <param name="session">The session connecting to the remote object.</param>
-        public virtual void Initialize(SS14Window window, ViewVariablesBlob blob, ViewVariablesRemoteSession session)
+        public virtual void Initialize(SS14Window window, ViewVariablesBlobMetadata blob, ViewVariablesRemoteSession session)
         {
             throw new NotSupportedException();
         }
@@ -53,50 +53,54 @@ namespace SS14.Client.ViewVariables
         {
         }
 
-        /// <summary>
-        ///     Gets a property data object for a local object's <see cref="PropertyInfo"/>.
-        /// </summary>
-        /// <param name="obj">The object owning the property.</param>
-        /// <param name="info">The <see cref="PropertyInfo"/> describing which property it is.</param>
-        protected static ViewVariablesBlob.PropertyData DataForProperty(object obj, PropertyInfo info)
-        {
-            var attr = info.GetCustomAttribute<ViewVariablesAttribute>();
-            if (attr == null)
-            {
-                return null;
-            }
-
-            return new ViewVariablesBlob.PropertyData
-            {
-                Editable = attr.Access == VVAccess.ReadWrite,
-                Name = info.Name,
-                Type = info.PropertyType.AssemblyQualifiedName,
-                TypePretty = info.PropertyType.ToString(),
-                // AHEM.
-                // Don't make this value be a reference token.
-                // If you do, be aware that the instances do NOT expect this.
-                Value = info.GetValue(obj)
-            };
-        }
-
-        protected static IEnumerable<Control> LocalPropertyList(object obj, IViewVariablesManagerInternal vvm)
+        protected internal static IEnumerable<Control> LocalPropertyList(object obj, IViewVariablesManagerInternal vvm)
         {
             var styleOther = false;
             var type = obj.GetType();
-            foreach (var property in type.GetProperties(BindingFlags.Public |
-                                                        BindingFlags.FlattenHierarchy |
-                                                        BindingFlags.Instance).OrderBy(p => p.Name))
+
+            var members = new List<(MemberInfo, VVAccess, object value, Action<object> onValueChanged, Type)>();
+
+            foreach (var fieldInfo in type.GetAllFields())
             {
-                var data = DataForProperty(obj, property);
-                if (data == null)
+                var attr = fieldInfo.GetCustomAttribute<ViewVariablesAttribute>();
+                if (attr == null)
                 {
                     continue;
                 }
 
+                members.Add((fieldInfo, attr.Access, fieldInfo.GetValue(obj), v => fieldInfo.SetValue(obj, v),
+                    fieldInfo.FieldType));
+            }
+
+            foreach (var propertyInfo in type.GetAllProperties())
+            {
+                var attr = propertyInfo.GetCustomAttribute<ViewVariablesAttribute>();
+                if (attr == null)
+                {
+                    continue;
+                }
+
+                members.Add((propertyInfo, attr.Access, propertyInfo.GetValue(obj),
+                    v => propertyInfo.GetSetMethod(true).Invoke(obj, new[] {v}), propertyInfo.PropertyType));
+            }
+
+            members.Sort((a, b) => string.Compare(a.Item1.Name, b.Item1.Name, StringComparison.Ordinal));
+
+            foreach (var (memberInfo, access, value, onValueChanged, memberType) in members)
+            {
+                var data = new ViewVariablesBlobMembers.PropertyData
+                {
+                    Editable = access == VVAccess.ReadWrite,
+                    Name = memberInfo.Name,
+                    Type = memberType.AssemblyQualifiedName,
+                    TypePretty = memberType.ToString(),
+                    Value = value
+                };
+
                 var propertyEdit = new ViewVariablesPropertyControl();
                 propertyEdit.SetStyle(styleOther = !styleOther);
                 var editor = propertyEdit.SetProperty(data);
-                editor.OnValueChanged += o => property.SetValue(obj, o);
+                editor.OnValueChanged += onValueChanged;
                 // TODO: should this maybe not be hardcoded?
                 if (editor is ViewVariablesPropertyEditorReference refEditor)
                 {

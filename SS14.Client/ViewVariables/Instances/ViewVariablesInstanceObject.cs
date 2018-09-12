@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.ResourceManagement;
@@ -6,6 +8,7 @@ using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Client.ViewVariables.Editors;
+using SS14.Client.ViewVariables.Traits;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using SS14.Shared.ViewVariables;
@@ -14,10 +17,13 @@ namespace SS14.Client.ViewVariables.Instances
 {
     internal class ViewVariablesInstanceObject : ViewVariablesInstance
     {
-        private VBoxContainer _propertyList;
+        private TabContainer _tabs;
+        private int _tabCount = 0;
 
-        private ViewVariablesRemoteSession _session;
-        private object _object;
+        private readonly List<ViewVariablesTrait> _traits = new List<ViewVariablesTrait>();
+
+        public ViewVariablesRemoteSession Session { get; private set; }
+        public object Object { get; private set; }
 
         public ViewVariablesInstanceObject(IViewVariablesManagerInternal vvm) : base(vvm)
         {
@@ -25,20 +31,30 @@ namespace SS14.Client.ViewVariables.Instances
 
         public override void Initialize(SS14Window window, object obj)
         {
-            _object = obj;
+            Object = obj;
             var type = obj.GetType();
 
             _wrappingInit(window, obj.ToString(), type.ToString());
+            foreach (var trait in TraitsFor(ViewVariablesManager.TraitIdsFor(type)))
+            {
+                trait.Initialize(this);
+                _traits.Add(trait);
+            }
             _refresh();
         }
 
         public override void Initialize(SS14Window window,
-            ViewVariablesBlob blob, ViewVariablesRemoteSession session)
+            ViewVariablesBlobMetadata blob, ViewVariablesRemoteSession session)
         {
-            _session = session;
+            Session = session;
 
             _wrappingInit(window, $"[SERVER] {blob.Stringified}", blob.ObjectTypePretty);
-            _refresh(blob);
+            foreach (var trait in TraitsFor(blob.Traits))
+            {
+                trait.Initialize(this);
+                _traits.Add(trait);
+            }
+            _refresh();
         }
 
         private void _wrappingInit(SS14Window window, string top, string bottom)
@@ -67,68 +83,50 @@ namespace SS14.Client.ViewVariables.Instances
                 vBoxContainer.AddChild(headBox);
             }
 
-            _propertyList = new VBoxContainer { SeparationOverride = 0};
-            vBoxContainer.AddChild(_propertyList);
+            _tabs = new TabContainer();
+            vBoxContainer.AddChild(_tabs);
         }
 
         public override void Close()
         {
             base.Close();
 
-            if (_session != null && !_session.Closed)
+            if (Session != null && !Session.Closed)
             {
-                ViewVariablesManager.CloseSession(_session);
+                ViewVariablesManager.CloseSession(Session);
             }
         }
 
-        private async void _refresh(ViewVariablesBlob preBlob = null)
+        public void AddTab(string title, Control control)
+        {
+            _tabs.AddChild(control);
+            _tabs.SetTabTitle(_tabCount++, title);
+        }
+
+        private void _refresh()
         {
             // TODO: I'm fully aware the ToString() isn't updated.
             // Eh.
-            if (_object != null)
+            foreach (var trait in _traits)
             {
-                // Local object mode.
-                _propertyList.DisposeAllChildren();
-                foreach (var control in LocalPropertyList(_object, ViewVariablesManager))
-                {
-                    _propertyList.AddChild(control);
-                }
+                trait.Refresh();
             }
-            else
+        }
+
+        private static List<ViewVariablesTrait> TraitsFor(ICollection<object> traitData)
+        {
+            var list = new List<ViewVariablesTrait>(traitData.Count);
+            if (traitData.Contains(ViewVariablesTraits.Members))
             {
-                // Remote object mode.
-                DebugTools.Assert(_session != null);
-
-                ViewVariablesBlob blob;
-                _propertyList.DisposeAllChildren();
-                if (preBlob != null)
-                {
-                    blob = preBlob;
-                }
-                else
-                {
-                    blob = await ViewVariablesManager.RequestData(_session);
-                }
-
-                var otherStyle = false;
-                foreach (var propertyData in blob.Properties)
-                {
-                    var propertyEdit = new ViewVariablesPropertyControl();
-                    propertyEdit.SetStyle(otherStyle = !otherStyle);
-                    var editor = propertyEdit.SetProperty(propertyData);
-                    // TODO: should this maybe not be hardcoded?
-                    if (editor is ViewVariablesPropertyEditorReference refEditor)
-                    {
-                        refEditor.OnPressed += () =>
-                            ViewVariablesManager.OpenVV(
-                                new ViewVariablesSessionRelativeSelector(_session.SessionId, propertyData.Name));
-                    }
-
-                    editor.OnValueChanged += o => { ViewVariablesManager.ModifyRemote(_session, propertyData.Name, o); };
-
-                    _propertyList.AddChild(propertyEdit);
-                }
+                list.Add(new ViewVariablesTraitMembers());
             }
+
+            if (traitData.Contains(ViewVariablesTraits.Enumerable))
+            {
+                list.Add(new ViewVariablesTraitEnumerable());
+            }
+
+            return list;
         }
     }
 }

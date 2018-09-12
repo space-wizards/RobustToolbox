@@ -56,6 +56,7 @@ using SS14.Client.Placement;
 using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Graphics.Overlays;
 using SS14.Client.ViewVariables;
+using SS14.Shared.Asynchronous;
 using SS14.Shared.Interfaces.Resources;
 
 namespace SS14.Client
@@ -99,6 +100,7 @@ namespace SS14.Client
             IoCManager.Register<IMapManager, ClientMapManager>();
             IoCManager.Register<ICollisionManager, CollisionManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
+            IoCManager.Register<ITaskManager, TaskManager>();
 
             // Client stuff.
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();

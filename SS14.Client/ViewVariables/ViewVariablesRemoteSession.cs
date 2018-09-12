@@ -5,7 +5,7 @@ namespace SS14.Client.ViewVariables
     /// </summary>
     public class ViewVariablesRemoteSession
     {
-        public uint SessionId { get; }
+        internal uint SessionId { get; }
         public bool Closed { get; internal set; }
 
         internal ViewVariablesRemoteSession(uint sessionId)

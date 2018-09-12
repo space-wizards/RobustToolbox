@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using SS14.Client.ViewVariables.Instances;
 using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.ViewVariables
@@ -25,7 +27,16 @@ namespace SS14.Client.ViewVariables
         ///     Requests a data blob from the object referenced by a VV session.
         /// </summary>
         /// <param name="session">The session for the remote object.</param>
-        Task<ViewVariablesBlob> RequestData(ViewVariablesRemoteSession session);
+        /// <param name="meta">A request object the server uses to know what kind of data you want of the remote object.</param>
+        Task<ViewVariablesBlob> RequestData(ViewVariablesRemoteSession session, ViewVariablesRequest meta);
+
+        /// <summary>
+        ///     Requests a data blob from the object referenced by a VV session.
+        /// </summary>
+        /// <typeparam name="T">The type of blob that is expected of the server to be sent back, to be automatically cast for convenience.</typeparam>
+        /// <param name="session">The session for the remote object.</param>
+        /// <param name="meta">A request object the server uses to know what kind of data you want of the remote object.</param>
+        Task<T> RequestData<T>(ViewVariablesRemoteSession session, ViewVariablesRequest meta) where T : ViewVariablesBlob;
 
         /// <summary>
         ///     Close a session to a remote object.
@@ -37,8 +48,15 @@ namespace SS14.Client.ViewVariables
         ///     Modify a remote object.
         /// </summary>
         /// <param name="session">The session pointing to the remote object.</param>
-        /// <param name="propertyName">The name of the property to modify.</param>
+        /// <param name="propertyIndex">An array of objects that the server can parse to figure out what to assign.</param>
         /// <param name="value">The new value for the object.</param>
-        void ModifyRemote(ViewVariablesRemoteSession session, string propertyName, object value);
+        void ModifyRemote(ViewVariablesRemoteSession session, object[] propertyIndex, object value);
+
+        /// <summary>
+        ///     Gets a collection of trait IDs that are agreed upon so <see cref="ViewVariablesInstanceObject"/> knows which traits to instantiate.
+        /// </summary>
+        /// <seealso cref="ViewVariablesBlobMetadata.Traits" />
+        /// <seealso cref="ViewVariablesManagerShared.TraitIdsFor"/>
+        ICollection<object> TraitIdsFor(Type type);
     }
 }

@@ -23,12 +23,20 @@ namespace SS14.Shared.Network.Messages
 
         #endregion
 
-        public uint SessionId { get; set; }
+        /// <summary>
+        ///     The request ID equal to the ID sent in <see cref="RequestId"/>,
+        ///     to identify multiple, potentially concurrent, requests.
+        /// </summary>
+        public uint RequestId { get; set; }
+
+        /// <summary>
+        ///     The data blob containing the requested data.
+        /// </summary>
         public ViewVariablesBlob Blob { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            SessionId = buffer.ReadUInt32();
+            RequestId = buffer.ReadUInt32();
             var serializer = IoCManager.Resolve<ISS14Serializer>();
             var length = buffer.ReadInt32();
             var bytes = buffer.ReadBytes(length);
@@ -40,7 +48,7 @@ namespace SS14.Shared.Network.Messages
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
-            buffer.Write(SessionId);
+            buffer.Write(RequestId);
             var serializer = IoCManager.Resolve<ISS14Serializer>();
             using (var stream = new MemoryStream())
             {

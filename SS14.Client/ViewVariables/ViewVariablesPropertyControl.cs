@@ -66,18 +66,18 @@ namespace SS14.Client.ViewVariables
             TopContainer.AddChild(NameLabel);
         }
 
-        public ViewVariablesPropertyEditor SetProperty(ViewVariablesBlob.PropertyData property)
+        public ViewVariablesPropertyEditor SetProperty(ViewVariablesBlobMembers.MemberData member)
         {
-            NameLabel.Text = property.Name;
-            var type = Type.GetType(property.Type);
+            NameLabel.Text = member.Name;
+            var type = Type.GetType(member.Type);
 
-            _bottomLabel.Text = $"Type: {property.TypePretty}";
+            _bottomLabel.Text = $"Type: {member.TypePretty}";
             ViewVariablesPropertyEditor editor;
             if (type == null)
             {
                 // Type is server-side only.
                 // Info whether it's reference or value type can be figured out from the sent value.
-                if (property.Value is ViewVariablesBlob.ServerValueTypeToken valueToken)
+                if (member.Value is ViewVariablesBlobMembers.ServerValueTypeToken valueToken)
                 {
                     // Value type, just display it stringified read-only.
                     editor = new ViewVariablesPropertyEditorDummy();
@@ -85,7 +85,7 @@ namespace SS14.Client.ViewVariables
                 else
                 {
                     // Has to be a reference type at this point.
-                    DebugTools.Assert(property.Value is ViewVariablesBlob.ReferenceToken || property.Value == null);
+                    DebugTools.Assert(member.Value is ViewVariablesBlobMembers.ReferenceToken || member.Value == null);
                     editor = _viewVariablesManager.PropertyFor(typeof(object));
                 }
             }
@@ -94,7 +94,7 @@ namespace SS14.Client.ViewVariables
                 editor = _viewVariablesManager.PropertyFor(type);
             }
 
-            var view = editor.Initialize(property.Value, !property.Editable);
+            var view = editor.Initialize(member.Value, !member.Editable);
             if (view.SizeFlagsHorizontal != SizeFlags.FillExpand)
             {
                 NameLabel.SizeFlagsHorizontal = SizeFlags.FillExpand;

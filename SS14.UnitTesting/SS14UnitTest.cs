@@ -43,6 +43,7 @@ using SS14.Server.Player;
 using SS14.Server.Prototypes;
 using SS14.Server.Reflection;
 using SS14.Server.ViewVariables;
+using SS14.Shared.Asynchronous;
 using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
 using SS14.Shared.GameObjects;
@@ -175,6 +176,7 @@ namespace SS14.UnitTesting
             IoCManager.Register<IGameTiming, GameTiming>();
             IoCManager.Register<ITimerManager, TimerManager>();
             IoCManager.Register<ILogManager, LogManager>();
+            IoCManager.Register<ITaskManager, TaskManager>();
 
             switch (Project)
             {

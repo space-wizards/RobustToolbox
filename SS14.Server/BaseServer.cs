@@ -34,6 +34,7 @@ using SS14.Shared.Map;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Player;
 using SS14.Server.ViewVariables;
+using SS14.Shared.Asynchronous;
 using SS14.Shared.Enums;
 using SS14.Shared.Reflection;
 using SS14.Shared.Timing;
@@ -74,6 +75,8 @@ namespace SS14.Server
         private readonly IServerNetManager _network;
         [Dependency]
         private readonly ISystemConsoleManager _systemConsole;
+        [Dependency]
+        private readonly ITaskManager _taskManager;
 
         private FileLogHandler fileLogHandler;
         private GameLoop _mainLoop;
@@ -154,6 +157,9 @@ namespace SS14.Server
             fileLogHandler = new FileLogHandler(logPath);
             _log.RootSawmill.Level = _config.GetCVar<LogLevel>("log.level");
             _log.RootSawmill.AddHandler(fileLogHandler);
+
+            // Has to be done early because this guy's in charge of the main thread Synchronization Context.
+            _taskManager.Initialize();
 
             OnRunLevelChanged(ServerRunLevel.Init);
 
@@ -361,6 +367,7 @@ namespace SS14.Server
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, frameTime);
 
             timerManager.UpdateTimers(frameTime);
+            _taskManager.ProcessPendingTasks();
             if (_runLevel >= ServerRunLevel.PreGame)
             {
                 _components.CullRemovedComponents();

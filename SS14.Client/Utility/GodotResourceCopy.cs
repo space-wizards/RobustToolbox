@@ -26,7 +26,10 @@ namespace SS14.Client.Utility
         public static void DoDirCopy(string sourcePath, string targetPath)
         {
 #if UNIX
-            // TODO: Test this.
+            if (Directory.Exists(targetPath))
+            {
+                return;
+            }
             var process = Process.Start("ln", $"-s \"{sourcePath}\" \"{targetPath}\"");
             if (process == null)
             {

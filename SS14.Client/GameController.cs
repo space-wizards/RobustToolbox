@@ -32,8 +32,11 @@ using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using System;
 using System.ComponentModel;
+using System.Threading;
 using SS14.Client.Utility;
 using SS14.Client.ViewVariables;
+using SS14.Shared;
+using SS14.Shared.Asynchronous;
 using SS14.Shared.Interfaces.Resources;
 
 namespace SS14.Client
@@ -95,6 +98,8 @@ namespace SS14.Client
         readonly IOverlayManager overlayManager;
         [Dependency]
         readonly ILogManager logManager;
+        [Dependency]
+        private readonly ITaskManager _taskManager;
 
         [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager;
 
@@ -108,6 +113,10 @@ namespace SS14.Client
             InitIoC();
             Godot.OS.SetWindowTitle("Space Station 14");
             SetupLogging();
+
+            // Set up custom synchronization context.
+            // Sorry Godot.
+            _taskManager.Initialize();
 
             tree.SetAutoAcceptQuit(false);
 
@@ -199,6 +208,7 @@ namespace SS14.Client
                     var eventArgs = new ProcessFrameEventArgs(delta);
                     AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, eventArgs.Elapsed);
                     _timerManager.UpdateTimers(delta);
+                    _taskManager.ProcessPendingTasks();
                     _userInterfaceManager.Update(eventArgs);
                     _stateManager.Update(eventArgs);
                     AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, eventArgs.Elapsed);

@@ -39,7 +39,7 @@ namespace SS14.Shared.ViewVariables
             ComponentType = componentType;
         }
 
-        public string ComponentType { get;  }
+        public string ComponentType { get; }
     }
 
     /// <inheritdoc />
@@ -49,13 +49,28 @@ namespace SS14.Shared.ViewVariables
     [Serializable, NetSerializable]
     public class ViewVariablesSessionRelativeSelector : ViewVariablesObjectSelector
     {
-        public ViewVariablesSessionRelativeSelector(uint sessionId, string propertyName)
+        public ViewVariablesSessionRelativeSelector(uint sessionId, object[] propertyIndex)
         {
             SessionId = sessionId;
-            PropertyName = propertyName;
+            PropertyIndex = propertyIndex;
         }
 
+        /// <summary>
+        ///     The session to which this selection is relative.
+        /// </summary>
         public uint SessionId { get; }
-        public string PropertyName { get; }
+
+        /// <summary>
+        ///     A list of objects that can be "resolved" in some way to figure out which object is being talked about,
+        ///     relative to this session.
+        /// </summary>
+        /// <remarks>
+        ///     The reason it's an array is that we might, in the future, want the ability to display tuples inline or whatever, and then perhaps not open a new remote session.
+        ///     Using an array would allow you to go "property name -> index -> index -> index" for as long as that madman is nesting tuples.
+        ///     This is not used yet.
+        ///     The reason it's <see cref="object"/> is to avoid confusion about which trait gets to handle it.
+        ///     <see cref="ViewVariablesMemberSelector"/> and <see cref="ViewVariablesEnumerableIndexSelector"/> are used here.
+        /// </remarks>
+        public object[] PropertyIndex { get; }
     }
 }

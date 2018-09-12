@@ -282,7 +282,7 @@ namespace SS14.Shared.GameObjects
                 return true;
             }
 
-            component = default(T);
+            component = default;
             return false;
         }
 

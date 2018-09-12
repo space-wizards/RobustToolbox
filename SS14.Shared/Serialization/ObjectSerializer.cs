@@ -214,7 +214,7 @@ namespace SS14.Shared.Serialization
         /// </summary>
         public virtual bool TryGetCacheData<T>(string key, out T data)
         {
-            data = default(T);
+            data = default;
             return false;
         }
 

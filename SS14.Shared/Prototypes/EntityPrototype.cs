@@ -486,7 +486,7 @@ namespace SS14.Shared.GameObjects
                     }
                 }
 
-                value = default(T);
+                value = default;
                 return false;
             }
 

@@ -110,7 +110,7 @@ namespace SS14.Client.Graphics.Overlays
                 overlay = (T)value.overlay;
                 return true;
             }
-            overlay = default(T);
+            overlay = default;
             return false;
         }
     }

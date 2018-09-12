@@ -95,7 +95,7 @@ namespace SS14.Server.ViewVariables
                 }
             }
 
-            value = default(object);
+            value = default;
             return false;
         }
     }

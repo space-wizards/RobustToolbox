@@ -60,7 +60,7 @@ namespace SS14.Server.ViewVariables.Traits
                 return true;
             }
 
-            value = default(object);
+            value = default;
             return false;
         }
 

@@ -87,7 +87,7 @@ namespace SS14.Server.ViewVariables.Traits
 
             if (selector.Index > _members.Count)
             {
-                value = default(object);
+                value = default;
                 return false;
             }
 
@@ -104,7 +104,7 @@ namespace SS14.Server.ViewVariables.Traits
                     {
                         Logger.ErrorS("vv", "Exception while getting property {0} on session {1} object {2}: {3}",
                             propertyInfo.Name, Session.SessionId, Session.Object, e);
-                        value = default(object);
+                        value = default;
                         return false;
                     }
 
@@ -118,7 +118,7 @@ namespace SS14.Server.ViewVariables.Traits
                     {
                         Logger.ErrorS("vv", "Exception while modifying field {0} on session {1} object {2}: {3}",
                             field.Name, Session.SessionId, Session.Object, e);
-                        value = default(object);
+                        value = default;
                         return false;
                     }
 

@@ -5,7 +5,7 @@ namespace SS14.Shared.Maths
 {
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Vector2i : IEquatable<Vector2i>
+    public readonly struct Vector2i : IEquatable<Vector2i>
     {
         public static readonly Vector2i Zero = new Vector2i(0, 0);
 

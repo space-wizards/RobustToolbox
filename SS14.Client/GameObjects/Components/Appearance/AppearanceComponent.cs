@@ -66,7 +66,7 @@ namespace SS14.Client.GameObjects
                 return true;
             }
 
-            data = default(T);
+            data = default;
             return false;
         }
 

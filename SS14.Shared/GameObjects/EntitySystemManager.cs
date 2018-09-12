@@ -78,7 +78,7 @@ namespace SS14.Shared.GameObjects
                 return true;
             }
 
-            entitySystem = default(T);
+            entitySystem = default;
             return false;
         }
 

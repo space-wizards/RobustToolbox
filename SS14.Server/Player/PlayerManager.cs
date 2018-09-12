@@ -99,7 +99,7 @@ namespace SS14.Server.Player
                 session = _session;
                 return true;
             }
-            session = default(IPlayerSession);
+            session = default;
             return false;
         }
 
@@ -296,7 +296,7 @@ namespace SS14.Server.Player
                 data = _data;
                 return true;
             }
-            data = default(IPlayerData);
+            data = default;
             return false;
         }
 

@@ -32,7 +32,7 @@ namespace SS14.Shared.Maths
     ///     Represents a color with 4 floating-point components (R, G, B, A).
     /// </summary>
     [Serializable]
-    public struct Color : IEquatable<Color>
+    public readonly struct Color : IEquatable<Color>
     {
         /// <summary>
         ///     The red component of this Color4 structure.

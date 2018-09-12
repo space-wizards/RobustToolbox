@@ -49,7 +49,7 @@ namespace SS14.Server.GameObjects
                 return true;
             }
 
-            data = default(T);
+            data = default;
             return false;
         }
 

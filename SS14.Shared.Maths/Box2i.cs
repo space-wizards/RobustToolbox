@@ -3,7 +3,7 @@
 namespace SS14.Shared.Maths
 {
     [Serializable]
-    public struct Box2i : IEquatable<Box2i>
+    public readonly struct Box2i : IEquatable<Box2i>
     {
         public readonly int Left;
         public readonly int Right;

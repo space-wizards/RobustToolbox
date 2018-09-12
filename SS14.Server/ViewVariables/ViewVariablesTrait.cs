@@ -57,7 +57,7 @@ namespace SS14.Server.ViewVariables
         /// <returns>True if we retrieved a value, false otherwise.</returns>
         public virtual bool TryGetRelativeObject(object property, out object value)
         {
-            value = default(object);
+            value = default;
             return false;
         }
 

@@ -7,7 +7,7 @@ using SS14.Shared.ViewVariables;
 
 namespace SS14.Server.ViewVariables.Traits
 {
-    internal class ViewVariablesTraitMembers : ViewVariablesTrait
+    internal sealed class ViewVariablesTraitMembers : ViewVariablesTrait
     {
         private readonly List<MemberInfo> _members = new List<MemberInfo>();
 
@@ -22,10 +22,10 @@ namespace SS14.Server.ViewVariables.Traits
                 return null;
             }
 
-            var dataList = new List<ViewVariablesBlobMembers.PropertyData>();
+            var dataList = new List<ViewVariablesBlobMembers.MemberData>();
             var blob = new ViewVariablesBlobMembers
             {
-                Properties = dataList
+                Members = dataList
             };
 
             foreach (var property in Session.ObjectType.GetAllProperties())
@@ -36,7 +36,7 @@ namespace SS14.Server.ViewVariables.Traits
                     continue;
                 }
 
-                dataList.Add(new ViewVariablesBlobMembers.PropertyData
+                dataList.Add(new ViewVariablesBlobMembers.MemberData
                 {
                     Editable = attr.Access == VVAccess.ReadWrite,
                     Name = property.Name,
@@ -56,7 +56,7 @@ namespace SS14.Server.ViewVariables.Traits
                     continue;
                 }
 
-                dataList.Add(new ViewVariablesBlobMembers.PropertyData
+                dataList.Add(new ViewVariablesBlobMembers.MemberData
                 {
                     Editable = attr.Access == VVAccess.ReadWrite,
                     Name = field.Name,
@@ -72,32 +72,7 @@ namespace SS14.Server.ViewVariables.Traits
 
             foreach (var data in dataList)
             {
-                var value = data.Value;
-                if (value != null)
-                {
-                    var valType = value.GetType();
-                    if (!valType.IsValueType)
-                    {
-                        // TODO: More flexibility in which types can be sent here.
-                        if (valType != typeof(string))
-                        {
-                            value = new ViewVariablesBlobMembers.ReferenceToken
-                            {
-                                Stringified = value.ToString()
-                            };
-                        }
-                    }
-                    else if (valType.IsServerSide())
-                    {
-                        // Can't send this value type over the wire.
-                        value = new ViewVariablesBlobMembers.ServerValueTypeToken
-                        {
-                            Stringified = value.ToString()
-                        };
-                    }
-                }
-
-                data.Value = value;
+                data.Value = MakeValueNetSafe(data.Value);
             }
 
             return blob;
@@ -105,17 +80,21 @@ namespace SS14.Server.ViewVariables.Traits
 
         public override bool TryGetRelativeObject(object property, out object value)
         {
-            if (property is ViewVariablesPropertySelector selector)
+            if (!(property is ViewVariablesMemberSelector selector))
             {
-                if (selector.Index > _members.Count)
-                {
-                    value = default(object);
-                    return false;
-                }
+                return base.TryGetRelativeObject(property, out value);
+            }
 
-                var member = _members[selector.Index];
-                if (member is PropertyInfo propertyInfo)
-                {
+            if (selector.Index > _members.Count)
+            {
+                value = default(object);
+                return false;
+            }
+
+            var member = _members[selector.Index];
+            switch (member)
+            {
+                case PropertyInfo propertyInfo:
                     try
                     {
                         value = propertyInfo.GetValue(Session.Object);
@@ -128,9 +107,8 @@ namespace SS14.Server.ViewVariables.Traits
                         value = default(object);
                         return false;
                     }
-                }
-                else if (member is FieldInfo field)
-                {
+
+                case FieldInfo field:
                     try
                     {
                         value = field.GetValue(Session.Object);
@@ -143,26 +121,28 @@ namespace SS14.Server.ViewVariables.Traits
                         value = default(object);
                         return false;
                     }
-                }
 
-                throw new InvalidOperationException();
+                default:
+                    throw new InvalidOperationException();
             }
-
-            return base.TryGetRelativeObject(property, out value);
         }
 
         public override bool TryModifyProperty(object[] property, object value)
         {
-            if (property[0] is ViewVariablesPropertySelector selector)
+            if (!(property[0] is ViewVariablesMemberSelector selector))
             {
-                if (selector.Index >= _members.Count)
-                {
-                    return false;
-                }
+                return base.TryModifyProperty(property, value);
+            }
 
-                var member = _members[selector.Index];
-                if (member is PropertyInfo propertyInfo)
-                {
+            if (selector.Index >= _members.Count)
+            {
+                return false;
+            }
+
+            var member = _members[selector.Index];
+            switch (member)
+            {
+                case PropertyInfo propertyInfo:
                     try
                     {
                         propertyInfo.GetSetMethod(true).Invoke(Session.Object, new[] {value});
@@ -174,10 +154,8 @@ namespace SS14.Server.ViewVariables.Traits
                             propertyInfo.Name, Session.SessionId, Session.Object, e);
                         return false;
                     }
-                }
 
-                if (member is FieldInfo field)
-                {
+                case FieldInfo field:
                     try
                     {
                         field.SetValue(Session.Object, value);
@@ -189,12 +167,10 @@ namespace SS14.Server.ViewVariables.Traits
                             field.Name, Session.SessionId, Session.Object, e);
                         return false;
                     }
-                }
 
-                throw new InvalidOperationException();
+                default:
+                    throw new InvalidOperationException();
             }
-
-            return base.TryModifyProperty(property, value);
         }
     }
 }

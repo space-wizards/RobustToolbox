@@ -37,7 +37,7 @@ namespace SS14.Client.ViewVariables.Traits
                     Instance.Session, new ViewVariablesRequestMembers());
 
                 var otherStyle = false;
-                foreach (var propertyData in blob.Properties)
+                foreach (var propertyData in blob.Members)
                 {
                     var propertyEdit = new ViewVariablesPropertyControl();
                     propertyEdit.SetStyle(otherStyle = !otherStyle);
@@ -48,13 +48,13 @@ namespace SS14.Client.ViewVariables.Traits
                         refEditor.OnPressed += () =>
                             Instance.ViewVariablesManager.OpenVV(
                                 new ViewVariablesSessionRelativeSelector(Instance.Session.SessionId,
-                                    new object[] {new ViewVariablesPropertySelector(propertyData.PropertyIndex)}));
+                                    new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)}));
                     }
 
                     editor.OnValueChanged += o =>
                     {
                         Instance.ViewVariablesManager.ModifyRemote(Instance.Session,
-                            new object[] {new ViewVariablesPropertySelector(propertyData.PropertyIndex)}, o);
+                            new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)}, o);
                     };
 
                     _memberList.AddChild(propertyEdit);

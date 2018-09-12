@@ -40,8 +40,6 @@ namespace SS14.Server.ViewVariables
             _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>(MsgViewVariablesRemoteData.NAME);
         }
 
-        ICollection<object> IViewVariablesHost.TraitIdsFor(Type type) => TraitIdsFor(type);
-
         private void _msgCloseSession(MsgViewVariablesCloseSession message)
         {
             if (!_sessions.TryGetValue(message.SessionId, out var session)
@@ -84,7 +82,7 @@ namespace SS14.Server.ViewVariables
             var blob = session.DataRequest(message.RequestMeta);
 
             var dataMsg = _netManager.CreateNetMessage<MsgViewVariablesRemoteData>();
-            dataMsg.ReqId = message.ReqId;
+            dataMsg.RequestId = message.RequestId;
             dataMsg.Blob = blob;
             _netManager.ServerSendMessage(dataMsg, message.MsgChannel);
         }
@@ -94,7 +92,7 @@ namespace SS14.Server.ViewVariables
             void Deny(DenyReason reason)
             {
                 var denyMsg = _netManager.CreateNetMessage<MsgViewVariablesDenySession>();
-                denyMsg.ReqId = message.ReqId;
+                denyMsg.RequestId = message.RequestId;
                 denyMsg.Reason = reason;
                 _netManager.ServerSendMessage(denyMsg, message.MsgChannel);
             }
@@ -181,7 +179,7 @@ namespace SS14.Server.ViewVariables
             _sessions.Add(sessionId, session);
 
             var allowMsg = _netManager.CreateNetMessage<MsgViewVariablesOpenSession>();
-            allowMsg.ReqId = message.ReqId;
+            allowMsg.RequestId = message.RequestId;
             allowMsg.SessionId = session.SessionId;
             _netManager.ServerSendMessage(allowMsg, message.MsgChannel);
 

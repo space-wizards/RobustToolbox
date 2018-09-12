@@ -4,7 +4,7 @@ using SS14.Shared.ViewVariables;
 
 namespace SS14.Server.ViewVariables.Traits
 {
-    internal class ViewVariablesTraitEnumerable : ViewVariablesTrait
+    internal sealed class ViewVariablesTraitEnumerable : ViewVariablesTrait
     {
         private readonly List<object> _cache = new List<object>();
         private IEnumerator _enumerator;
@@ -30,7 +30,7 @@ namespace SS14.Server.ViewVariables.Traits
 
                 for (var i = requestEnumerable.FromIndex; i < _cache.Count && i <= requestEnumerable.ToIndex; i++)
                 {
-                    list.Add(_cache[i]);
+                    list.Add(MakeValueNetSafe(_cache[i]));
                 }
 
                 return new ViewVariablesBlobEnumerable {Objects = list};

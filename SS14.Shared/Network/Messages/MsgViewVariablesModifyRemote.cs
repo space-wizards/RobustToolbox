@@ -5,6 +5,7 @@ using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Shared.Network.Messages
 {
@@ -18,8 +19,19 @@ namespace SS14.Shared.Network.Messages
 
         #endregion
 
+        /// <summary>
+        ///     The session ID of the session to modify.
+        /// </summary>
         public uint SessionId { get; set; }
+
+        /// <summary>
+        ///     Same deal as <see cref="ViewVariablesSessionRelativeSelector.PropertyIndex"/>.
+        /// </summary>
         public object[] PropertyIndex { get; set; }
+
+        /// <summary>
+        ///     The new value of the property.
+        /// </summary>
         public object Value { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)

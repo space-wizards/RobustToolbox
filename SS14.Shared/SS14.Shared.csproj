@@ -347,7 +347,7 @@
     <Compile Include="ViewVariables\ViewVariablesBlob.cs" />
     <Compile Include="ViewVariables\ViewVariablesManagerShared.cs" />
     <Compile Include="ViewVariables\ViewVariablesObjectSelector.cs" />
-    <Compile Include="ViewVariables\ViewVariablesPropertySelector.cs" />
+    <Compile Include="ViewVariables\ViewVariablesMemberSelector.cs" />
     <Compile Include="ViewVariables\ViewVariablesTraits.cs" />
     <Compile Include="ViewVariables\ViewVariablesUtility.cs" />
   </ItemGroup>

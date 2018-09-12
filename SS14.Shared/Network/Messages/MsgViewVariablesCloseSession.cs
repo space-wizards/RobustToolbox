@@ -16,6 +16,9 @@ namespace SS14.Shared.Network.Messages
 
         #endregion
 
+        /// <summary>
+        ///     The session ID to close, which was agreed upon in <see cref="MsgViewVariablesOpenSession.SessionId"/>.
+        /// </summary>
         public uint SessionId { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)

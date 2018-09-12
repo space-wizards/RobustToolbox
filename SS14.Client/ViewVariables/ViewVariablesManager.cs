@@ -232,10 +232,10 @@ namespace SS14.Client.ViewVariables
         {
             var msg = _netManager.CreateNetMessage<MsgViewVariablesReqSession>();
             msg.Selector = selector;
-            msg.ReqId = _nextReqId++;
+            msg.RequestId = _nextReqId++;
             _netManager.ClientSendMessage(msg);
             var tcs = new TaskCompletionSource<ViewVariablesRemoteSession>();
-            _requestedSessions.Add(msg.ReqId, tcs);
+            _requestedSessions.Add(msg.RequestId, tcs);
             return tcs.Task;
         }
 
@@ -247,7 +247,7 @@ namespace SS14.Client.ViewVariables
             }
 
             var msg = _netManager.CreateNetMessage<MsgViewVariablesReqData>();
-            var reqId = msg.ReqId = _nextReqId++;
+            var reqId = msg.RequestId = _nextReqId++;
             msg.RequestMeta = meta;
             msg.SessionId = session.SessionId;
             _netManager.ClientSendMessage(msg);
@@ -287,11 +287,6 @@ namespace SS14.Client.ViewVariables
             _netManager.ClientSendMessage(msg);
         }
 
-        ICollection<object> IViewVariablesManagerInternal.TraitIdsFor(Type type)
-        {
-            return TraitIdsFor(type);
-        }
-
         private void _closeInstance(ViewVariablesInstance instance, bool closeWindow)
         {
             if (!_windows.TryGetValue(instance, out var window))
@@ -310,14 +305,14 @@ namespace SS14.Client.ViewVariables
 
         private void _netMessageOpenSession(MsgViewVariablesOpenSession msg)
         {
-            if (!_requestedSessions.TryGetValue(msg.ReqId, out var tcs))
+            if (!_requestedSessions.TryGetValue(msg.RequestId, out var tcs))
             {
-                Logger.ErrorS("vv", "Server sent us new session {0}/{1} which we didn't request.", msg.ReqId,
+                Logger.ErrorS("vv", "Server sent us new session {0}/{1} which we didn't request.", msg.RequestId,
                     msg.SessionId);
                 return;
             }
 
-            _requestedSessions.Remove(msg.ReqId);
+            _requestedSessions.Remove(msg.RequestId);
             var session = new ViewVariablesRemoteSession(msg.SessionId);
             _sessions.Add(msg.SessionId, session);
             tcs.SetResult(session);
@@ -337,25 +332,25 @@ namespace SS14.Client.ViewVariables
 
         private void _netMessageRemoteData(MsgViewVariablesRemoteData message)
         {
-            if (!_requestedData.TryGetValue(message.ReqId, out var tcs))
+            if (!_requestedData.TryGetValue(message.RequestId, out var tcs))
             {
-                Logger.WarningS("vv", "Server sent us data we didn't request: {0}.", message.ReqId);
+                Logger.WarningS("vv", "Server sent us data we didn't request: {0}.", message.RequestId);
                 return;
             }
 
-            _requestedData.Remove(message.ReqId);
+            _requestedData.Remove(message.RequestId);
             tcs.SetResult(message.Blob);
         }
 
         private void _netMessageDenySession(MsgViewVariablesDenySession message)
         {
-            if (!_requestedSessions.TryGetValue(message.ReqId, out var tcs))
+            if (!_requestedSessions.TryGetValue(message.RequestId, out var tcs))
             {
-                Logger.WarningS("vv", "Server sent us a deny session {0} which we didn't request.", message.ReqId);
+                Logger.WarningS("vv", "Server sent us a deny session {0} which we didn't request.", message.RequestId);
                 return;
             }
 
-            _requestedSessions.Remove(message.ReqId);
+            _requestedSessions.Remove(message.RequestId);
             tcs.SetException(new SessionDenyException(message.Reason));
         }
     }

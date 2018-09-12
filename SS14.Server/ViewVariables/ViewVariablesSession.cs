@@ -15,6 +15,12 @@ namespace SS14.Server.ViewVariables
         public uint SessionId { get; }
         public Type ObjectType { get; }
 
+        /// <param name="playerSession">The session ID of the player who opened this session.</param>
+        /// <param name="o">The object we represent.</param>
+        /// <param name="sessionId">
+        ///     The session ID for this session. This is what the server and client use to talk about this session.
+        /// </param>
+        /// <param name="host">The view variables host owning this session.</param>
         public ViewVariablesSession(NetSessionId playerSession, object o, uint sessionId, IViewVariablesHost host)
         {
             PlayerSession = playerSession;

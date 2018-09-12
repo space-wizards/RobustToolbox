@@ -88,7 +88,7 @@ namespace SS14.Client.ViewVariables
 
             foreach (var (memberInfo, access, value, onValueChanged, memberType) in members)
             {
-                var data = new ViewVariablesBlobMembers.PropertyData
+                var data = new ViewVariablesBlobMembers.MemberData
                 {
                     Editable = access == VVAccess.ReadWrite,
                     Name = memberInfo.Name,

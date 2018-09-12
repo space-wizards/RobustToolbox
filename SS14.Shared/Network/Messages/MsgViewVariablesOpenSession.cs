@@ -16,18 +16,26 @@ namespace SS14.Shared.Network.Messages
 
         #endregion
 
-        public uint ReqId { get; set; }
+        /// <summary>
+        ///     The request ID to identify WHICH request has been granted.
+        ///     Equal to <see cref="MsgViewVariablesReqSession.RequestId"/> on the message that requested this session.
+        /// </summary>
+        public uint RequestId { get; set; }
+
+        /// <summary>
+        ///     The session ID with which to refer to the session from now on.
+        /// </summary>
         public uint SessionId { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            ReqId = buffer.ReadUInt32();
+            RequestId = buffer.ReadUInt32();
             SessionId = buffer.ReadUInt32();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
-            buffer.Write(ReqId);
+            buffer.Write(RequestId);
             buffer.Write(SessionId);
         }
     }

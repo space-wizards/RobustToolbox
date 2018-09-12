@@ -5,7 +5,7 @@ using SS14.Shared.ViewVariables;
 
 namespace SS14.Server.ViewVariables.Traits
 {
-    internal class ViewVariablesTraitEntity : ViewVariablesTrait
+    internal sealed class ViewVariablesTraitEntity : ViewVariablesTrait
     {
         private readonly IEntity _entity;
 

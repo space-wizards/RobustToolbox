@@ -23,13 +23,25 @@ namespace SS14.Shared.Network.Messages
 
         #endregion
 
-        public uint ReqId { get; set; }
+        /// <summary>
+        ///     The request ID that will be sent in <see cref="MsgViewVariablesRemoteData"/> to
+        ///     identify this request among multiple potentially concurrent ones.
+        /// </summary>
+        public uint RequestId { get; set; }
+
+        /// <summary>
+        ///     The session ID for the session to read the data from.
+        /// </summary>
         public uint SessionId { get; set; }
+
+        /// <summary>
+        ///     A metadata object that can be used by the server to know what data is being requested.
+        /// </summary>
         public ViewVariablesRequest RequestMeta { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            ReqId = buffer.ReadUInt32();
+            RequestId = buffer.ReadUInt32();
             SessionId = buffer.ReadUInt32();
             var serializer = IoCManager.Resolve<ISS14Serializer>();
             var length = buffer.ReadInt32();
@@ -42,7 +54,7 @@ namespace SS14.Shared.Network.Messages
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
-            buffer.Write(ReqId);
+            buffer.Write(RequestId);
             buffer.Write(SessionId);
             var serializer = IoCManager.Resolve<ISS14Serializer>();
             using (var stream = new MemoryStream())

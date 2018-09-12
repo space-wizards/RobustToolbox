@@ -16,37 +16,45 @@ namespace SS14.Shared.Network.Messages
 
         #endregion
 
-        public uint ReqId { get; set; }
+        /// <summary>
+        ///     The request ID to identify WHICH request has been denied.
+        ///     Equal to <see cref="MsgViewVariablesReqSession.RequestId"/> on the message that requested this denied session.
+        /// </summary>
+        public uint RequestId { get; set; }
+
+        /// <summary>
+        ///     Reason for why the request was denied.
+        /// </summary>
         public DenyReason Reason { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            ReqId = buffer.ReadUInt32();
-            Reason = (DenyReason)buffer.ReadByte();
+            RequestId = buffer.ReadUInt32();
+            Reason = (DenyReason)buffer.ReadUInt16();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
-            buffer.Write(ReqId);
-            buffer.Write((byte)Reason);
+            buffer.Write(RequestId);
+            buffer.Write((ushort)Reason);
         }
 
-        public enum DenyReason : byte
+        public enum DenyReason : ushort
         {
             /// <summary>
             ///     Come back with admin access.
             /// </summary>
-            NoAccess,
+            NoAccess = 401,
 
             /// <summary>
-            ///     Object tried to read does not exist.
+            ///     Object pointing to by the selector does not exist.
             /// </summary>
-            NoObject,
+            NoObject = 404,
 
             /// <summary>
             ///     Request was invalid or something.
             /// </summary>
-            InvalidRequest,
+            InvalidRequest = 400,
         }
     }
 }

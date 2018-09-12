@@ -149,7 +149,7 @@ namespace SS14.Client.ViewVariables.Instances
             _membersBlob = await ViewVariablesManager.RequestData<ViewVariablesBlobMembers>(session, new ViewVariablesRequestMembers());
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var uid = (EntityUid) _membersBlob.Properties.Single(p => p.Name == "Uid").Value;
+            var uid = (EntityUid) _membersBlob.Members.Single(p => p.Name == "Uid").Value;
 
             var entity = entityManager.GetEntity(uid);
             Initialize(window, entity);
@@ -194,19 +194,19 @@ namespace SS14.Client.ViewVariables.Instances
             }
 
             var otherStyle = false;
-            foreach (var propertyData in _membersBlob.Properties)
+            foreach (var propertyData in _membersBlob.Members)
             {
                 var propertyEdit = new ViewVariablesPropertyControl();
                 propertyEdit.SetStyle(otherStyle = !otherStyle);
                 var editor = propertyEdit.SetProperty(propertyData);
                 editor.OnValueChanged += o =>
-                    ViewVariablesManager.ModifyRemote(_entitySession, new object[] {new ViewVariablesPropertySelector(propertyData.PropertyIndex)}, o);
+                    ViewVariablesManager.ModifyRemote(_entitySession, new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)}, o);
                 if (editor is ViewVariablesPropertyEditorReference refEditor)
                 {
                     refEditor.OnPressed += () =>
                         ViewVariablesManager.OpenVV(
                             new ViewVariablesSessionRelativeSelector(_entitySession.SessionId,
-                                new object[] {new ViewVariablesPropertySelector(propertyData.PropertyIndex)}));
+                                new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)}));
                 }
 
                 _serverVariables.AddChild(propertyEdit);

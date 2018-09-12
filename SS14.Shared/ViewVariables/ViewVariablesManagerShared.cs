@@ -9,7 +9,11 @@ namespace SS14.Shared.ViewVariables
     {
         private readonly Dictionary<Type, HashSet<object>> _cachedTraits = new Dictionary<Type, HashSet<object>>();
 
-        protected HashSet<object> TraitIdsFor(Type type)
+        /// <summary>
+        ///     Figures out which VV traits an object type has. This method is in shared so the client and server agree on this mess.
+        /// </summary>
+        /// <seealso cref="ViewVariablesBlobMetadata.Traits"/>
+        public ICollection<object> TraitIdsFor(Type type)
         {
             if (!_cachedTraits.TryGetValue(type, out var traits))
             {

@@ -24,7 +24,11 @@ namespace SS14.Shared.Network.Messages
 
         #endregion
 
-        public uint ReqId { get; set; }
+        /// <summary>
+        ///     An ID the client assigns so it knows which request was accepted/denied through
+        ///     <see cref="MsgViewVariablesOpenSession"/> and <see cref="MsgViewVariablesCloseSession"/>.
+        /// </summary>
+        public uint RequestId { get; set; }
 
         /// <summary>
         ///     A selector that can be used to describe a server object.
@@ -34,7 +38,7 @@ namespace SS14.Shared.Network.Messages
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            ReqId = buffer.ReadUInt32();
+            RequestId = buffer.ReadUInt32();
             var serializer = IoCManager.Resolve<ISS14Serializer>();
             var length = buffer.ReadInt32();
             var bytes = buffer.ReadBytes(length);
@@ -46,7 +50,7 @@ namespace SS14.Shared.Network.Messages
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
-            buffer.Write(ReqId);
+            buffer.Write(RequestId);
             var serializer = IoCManager.Resolve<ISS14Serializer>();
             using (var stream = new MemoryStream())
             {

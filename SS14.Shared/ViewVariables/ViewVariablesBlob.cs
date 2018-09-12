@@ -1,20 +1,35 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Serialization;
 
 namespace SS14.Shared.ViewVariables
 {
     /// <summary>
     ///     Data blob that gets sent from server to client to display a VV window for a remote object.
+    ///     These blobs should be requested with a specific <see cref="ViewVariablesRequest"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesBlob
+    public abstract class ViewVariablesBlob
     {
     }
 
+    /// <summary>
+    ///     Contains the fundamental metadata for an object, such as type, <see cref="Object.ToString"/> output, and the list of "traits".
+    /// </summary>
     [Serializable, NetSerializable]
     public class ViewVariablesBlobMetadata : ViewVariablesBlob
     {
+        /// <summary>
+        ///     A list of traits for this remote object.
+        ///     A trait is basically saying "this object can be viewed in a specific way".
+        ///     There's a trait for "this object has members that are directly accessible to VV (the usual),
+        ///     A trait for objects that are <see cref="IEnumerable"/>, etc...
+        ///     For flexibility, these traits can be any object that the server/client need to understand each other.
+        ///     At the moment though the only thing they're used with is <see cref="ViewVariablesTraits"/>.
+        /// </summary>
+        /// <seealso cref="ViewVariablesManagerShared.TraitIdsFor" />
         public List<object> Traits { get; set; }
 
         /// <summary>
@@ -33,13 +48,17 @@ namespace SS14.Shared.ViewVariables
         public string Stringified { get; set; }
     }
 
+    /// <summary>
+    ///     Contains the VV-accessible members (fields or properties) of a remote object.
+    ///     Requested by <see cref="ViewVariablesRequestMembers"/>.
+    /// </summary>
     [Serializable, NetSerializable]
     public class ViewVariablesBlobMembers : ViewVariablesBlob
     {
         /// <summary>
-        ///     A list of properties the remote object has.
+        ///     A list of VV-accessible the remote object has.
         /// </summary>
-        public List<PropertyData> Properties { get; set; } = new List<PropertyData>();
+        public List<MemberData> Members { get; set; } = new List<MemberData>();
 
         /// <summary>
         ///     Token used to indicate "this is a reference, but I can't send the actual reference over".
@@ -81,7 +100,7 @@ namespace SS14.Shared.ViewVariables
         ///     Data for a specific property.
         /// </summary>
         [Serializable, NetSerializable]
-        public class PropertyData
+        public class MemberData
         {
             /// <summary>
             ///     Whether the property can be edited by this client.
@@ -117,6 +136,10 @@ namespace SS14.Shared.ViewVariables
         }
     }
 
+    /// <summary>
+    ///     Contains the type names of the components of a remote <see cref="IEntity"/>.
+    ///     Requested by <see cref="ViewVariablesBlobEntityComponents"/>.
+    /// </summary>
     [Serializable, NetSerializable]
     public class ViewVariablesBlobEntityComponents : ViewVariablesBlob
     {
@@ -138,33 +161,57 @@ namespace SS14.Shared.ViewVariables
         }
     }
 
+    /// <summary>
+    ///     Contains a range of a remote <see cref="IEnumerable"/>'s results.
+    ///     Requested by <see cref="ViewVariablesRequestEnumerable"/>
+    /// </summary>
     [Serializable, NetSerializable]
     public class ViewVariablesBlobEnumerable : ViewVariablesBlob
     {
+        /// <summary>
+        ///     The list of objects inside the range specified by the
+        ///     <see cref="ViewVariablesRequestEnumerable"/> used to request this blob.
+        /// </summary>
         public List<object> Objects { get; set; }
     }
 
+    /// <summary>
+    ///     Base class for a "request" that can be sent to get information about the remote object of a session.
+    ///     You should pass these requests to <c>IViewVariablesManagerInternal.RequestData</c>, which will return the corresponding blob over the wire.
+    /// </summary>
     [Serializable, NetSerializable]
     public abstract class ViewVariablesRequest
     {
     }
 
+    /// <summary>
+    ///     Requests the server to send us a <see cref="ViewVariablesRequestMembers"/>.
+    /// </summary>
     [Serializable, NetSerializable]
     public class ViewVariablesRequestMetadata : ViewVariablesRequest
     {
     }
 
+    /// <summary>
+    ///     Requests the server to send us a <see cref="ViewVariablesRequestMembers"/>.
+    /// </summary>
     [Serializable, NetSerializable]
     public class ViewVariablesRequestMembers : ViewVariablesRequest
     {
     }
 
+    /// <summary>
+    ///     Requests the server to send us a <see cref="ViewVariablesBlobEntityComponents"/>.
+    /// </summary>
     [Serializable, NetSerializable]
     public class ViewVariablesRequestEntityComponents : ViewVariablesRequest
     {
 
     }
 
+    /// <summary>
+    ///     Requests the server to send us a <see cref="ViewVariablesBlobEnumerable"/> containing data in the specified range.
+    /// </summary>
     [Serializable, NetSerializable]
     public class ViewVariablesRequestEnumerable : ViewVariablesRequest
     {

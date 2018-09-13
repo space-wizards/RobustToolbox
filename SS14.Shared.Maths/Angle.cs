@@ -6,7 +6,7 @@ namespace SS14.Shared.Maths
     ///     A representation of an angle, in radians.
     /// </summary>
     [Serializable]
-    public struct Angle : IApproxEquatable<Angle>
+    public readonly struct Angle : IApproxEquatable<Angle>
     {
         public static Angle Zero { get; } = new Angle();
 

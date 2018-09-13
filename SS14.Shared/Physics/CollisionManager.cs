@@ -284,7 +284,7 @@ namespace SS14.Shared.Physics
                 return true;
             }
 
-            results = default(RayCastResults);
+            results = default;
             return false;
         }
 

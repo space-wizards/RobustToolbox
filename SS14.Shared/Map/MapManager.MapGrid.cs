@@ -101,7 +101,7 @@ namespace SS14.Shared.Map
                     var chunkTileIndices = output.GridTileToChunkTile(gridTileIndices);
                     return output.GetTile((ushort)chunkTileIndices.X, (ushort)chunkTileIndices.Y);
                 }
-                return new TileRef(MapID, Index, gridTileIndices.X, gridTileIndices.Y, default(Tile));
+                return new TileRef(MapID, Index, gridTileIndices.X, gridTileIndices.Y, default);
             }
 
             /// <inheritdoc />

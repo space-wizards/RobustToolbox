@@ -7,7 +7,7 @@ namespace SS14.Shared.Maths
     [JsonObject(MemberSerialization.Fields)]
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Vector2u : IEquatable<Vector2u>
+    public readonly struct Vector2u : IEquatable<Vector2u>
     {
         /// <summary>
         /// The X component of the Vector2i.

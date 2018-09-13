@@ -6,7 +6,7 @@ namespace SS14.Shared.Maths
     ///     Axis Aligned rectangular box.
     /// </summary>
     [Serializable]
-    public struct Box2 : IEquatable<Box2>
+    public readonly struct Box2 : IEquatable<Box2>
     {
         public readonly float Left;
         public readonly float Right;

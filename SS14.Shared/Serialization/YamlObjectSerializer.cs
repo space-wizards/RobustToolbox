@@ -298,7 +298,7 @@ namespace SS14.Shared.Serialization
                     return true;
                 }
             }
-            value = default(T);
+            value = default;
             return false;
         }
 
@@ -324,7 +324,7 @@ namespace SS14.Shared.Serialization
                     return true;
                 }
             }
-            value = default(T);
+            value = default;
             return false;
         }
 
@@ -386,7 +386,7 @@ namespace SS14.Shared.Serialization
                 return true;
             }
 
-            data = default(T);
+            data = default;
             return false;
         }
 
@@ -592,7 +592,7 @@ namespace SS14.Shared.Serialization
                 return true;
             }
 
-            listType = default(Type);
+            listType = default;
             return false;
         }
 
@@ -608,8 +608,8 @@ namespace SS14.Shared.Serialization
                 return true;
             }
 
-            keyType = default(Type);
-            valType = default(Type);
+            keyType = default;
+            valType = default;
             return false;
         }
 
@@ -641,7 +641,7 @@ namespace SS14.Shared.Serialization
 
             public virtual bool TryNodeToType(YamlNode node, Type type, out object obj)
             {
-                obj = default(object);
+                obj = default;
                 return false;
             }
 
@@ -652,7 +652,7 @@ namespace SS14.Shared.Serialization
 
             public virtual bool TryGetCachedField<T>(string field, out T value)
             {
-                value = default(T);
+                value = default;
                 return false;
             }
 

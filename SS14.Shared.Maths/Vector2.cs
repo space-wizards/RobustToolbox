@@ -8,7 +8,7 @@ namespace SS14.Shared.Maths
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     [Serializable]
-    public struct Vector2 : IEquatable<Vector2>
+    public readonly struct Vector2 : IEquatable<Vector2>
     {
         /// <summary>
         ///     The X component of the vector.

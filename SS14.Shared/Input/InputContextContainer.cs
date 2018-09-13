@@ -162,7 +162,7 @@ namespace SS14.Shared.Input
                 return true;
             }
 
-            context = default(IInputCmdContext);
+            context = default;
             return false;
         }
 

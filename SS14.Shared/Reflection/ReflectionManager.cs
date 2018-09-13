@@ -113,7 +113,7 @@ namespace SS14.Shared.Reflection
         {
             if (!reference.StartsWith("enum."))
             {
-                @enum = default(Enum);
+                @enum = default;
                 return false;
             }
 

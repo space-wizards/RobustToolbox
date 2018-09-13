@@ -6,7 +6,7 @@ namespace SS14.Shared.Maths
     ///     Represents a circle with a 2D position and a radius.
     /// </summary>
     [Serializable]
-    public struct Circle : IEquatable<Circle>
+    public readonly struct Circle : IEquatable<Circle>
     {
         /// <summary>
         ///     Position of the circle in 2D space.

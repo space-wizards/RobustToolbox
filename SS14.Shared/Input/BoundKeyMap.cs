@@ -96,13 +96,13 @@ namespace SS14.Shared.Input
             
             if (0 > index || index >= list.Count)
             {
-                func = default(BoundKeyFunction);
+                func = default;
                 return false;
             }
 
             if (list[index] == null)
             {
-                func = default(BoundKeyFunction);
+                func = default;
                 return false;
             }
 

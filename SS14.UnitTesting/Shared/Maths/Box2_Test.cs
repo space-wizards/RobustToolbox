@@ -13,24 +13,24 @@ namespace SS14.UnitTesting.Shared.Maths
         private static IEnumerable<(float left, float top, float right, float bottom)> Sources => new (float, float, float, float)[]
         {
             (0, 0, 0, 0),
-            (0, 0, 0, -1),
+            (0, 0, 0, 1),
             (0, 0, 1, 0),
-            (0, 0, 1, -1),
-            (0, 1, 0, 0),
-            (0, 1, 0, -1),
-            (0, 1, 1, 0),
-            (0, 1, 1, -1),
+            (0, 0, 1, 1),
+            (0, -1, 0, 0),
+            (0, -1, 0, 1),
+            (0, -1, 1, 0),
+            (0, -1, 1, 1),
             (-1, 0, 0, 0),
-            (-1, 0, 0, -1),
+            (-1, 0, 0, 1),
             (-1, 0, 1, 0),
-            (-1, 0, 1, -1),
-            (-1, 1, 0, 0),
-            (-1, 1, 0, -1),
-            (-1, 1, 1, 0),
-            (-1, 1, 1, -1)
+            (-1, 0, 1, 1),
+            (-1, -1, 0, 0),
+            (-1, -1, 0, 1),
+            (-1, -1, 1, 0),
+            (-1, -1, 1, 1)
         };
 
-        private static IEnumerable<(float x, float y)> SmallTranslations => new (float, float)[]
+        private static IEnumerable<(float x, float y)> SmallTranslations => new []
         {
             (0, 0.1f),
             (0.1f, 0),
@@ -54,18 +54,26 @@ namespace SS14.UnitTesting.Shared.Maths
             (-5, -5)
         };
 
-        private static IEnumerable<float> Scalars => new float[]
+        private static IEnumerable<float> Scalars => new []
         {
-            -10.0f,
-            -5.0f,
-            -1.0f,
-            -0.1f,
             0.0f,
             0.1f,
             1.0f,
             5.0f,
             10.0f
         };
+
+        /// <summary>
+        ///     Check whether the sources list has correct data.
+        ///     That is, no boxes where left > right or top > bottom.
+        /// </summary>
+        [Test]
+        public void AssertSourcesValid([ValueSource(nameof(Sources))] (float, float, float, float) test)
+        {
+            var (left, top, right, bottom) = test;
+            Assert.That(right, Is.GreaterThanOrEqualTo(left));
+            Assert.That(bottom, Is.GreaterThanOrEqualTo(top));
+        }
 
         [Test]
         public void Box2VectorConstructor([ValueSource(nameof(Sources))] (float, float, float, float) test)
@@ -121,7 +129,7 @@ namespace SS14.UnitTesting.Shared.Maths
             Assert.That(box.Left, Is.EqualTo(left));
             Assert.That(box.Top, Is.EqualTo(top));
             Assert.That(box.Right, Is.EqualTo(left + width));
-            Assert.That(box.Bottom, Is.EqualTo(top - height));
+            Assert.That(box.Bottom, Is.EqualTo(top + height));
 
             Assert.That(box.Width, Is.EqualTo(width));
             Assert.That(box.Height, Is.EqualTo(height));
@@ -131,7 +139,7 @@ namespace SS14.UnitTesting.Shared.Maths
         public void Box2FromDimensionsVectors([ValueSource(nameof(Sources))] (float, float, float, float) test)
         {
             var (left, top, right, bottom) = test;
-            
+
             var width = Math.Abs(left - right);
             var height = Math.Abs(top - bottom);
             var size = new Vector2(width, height);
@@ -141,7 +149,7 @@ namespace SS14.UnitTesting.Shared.Maths
             Assert.That(box.Left, Is.EqualTo(left));
             Assert.That(box.Top, Is.EqualTo(top));
             Assert.That(box.Right, Is.EqualTo(left + width));
-            Assert.That(box.Bottom, Is.EqualTo(top - height));
+            Assert.That(box.Bottom, Is.EqualTo(top + height));
 
             Assert.That(box.Size, Is.EqualTo(size));
         }
@@ -152,7 +160,7 @@ namespace SS14.UnitTesting.Shared.Maths
             var (left, top, right, bottom) = test;
 
             var box = new Box2(left, top, right, bottom);
-            
+
             Assert.That(box.Intersects(box));
         }
 
@@ -161,7 +169,7 @@ namespace SS14.UnitTesting.Shared.Maths
         {
             var (x, y) = test;
 
-            var box = new Box2(-1, 1, 1, -1);
+            var box = new Box2(-1, -1, 1, 1);
             var translatedBox = box.Translated(new Vector2(x, y));
 
             Assert.That(box.Intersects(translatedBox));
@@ -172,7 +180,7 @@ namespace SS14.UnitTesting.Shared.Maths
         {
             var (x, y) = test;
 
-            var box = new Box2(-1, 1, 1, -1);
+            var box = new Box2(-1, -1, 1, 1);
             var translatedBox = box.Translated(new Vector2(x, y));
 
             Assert.That(box.Intersects(translatedBox), Is.False);
@@ -185,9 +193,9 @@ namespace SS14.UnitTesting.Shared.Maths
 
             Assert.That(degenerateBox.IsEmpty());
 
-            var tallDegenBox = new Box2(0, 1, 0, -1);
+            var tallDegenBox = new Box2(0, -1, 0, 1);
             var wideDegenBox = new Box2(-1, 0, 1, 0);
-            var meatyBox = new Box2(-1, 1, 1, -1);
+            var meatyBox = new Box2(-1, -1, 1, 1);
 
             Assert.That(tallDegenBox.IsEmpty(), Is.False);
             Assert.That(wideDegenBox.IsEmpty(), Is.False);
@@ -197,7 +205,7 @@ namespace SS14.UnitTesting.Shared.Maths
         [Test]
         public void Box2NotEnclosesSelf()
         {
-            var box = new Box2(-1, 1, 1, -1);
+            var box = new Box2(-1, -1, 1, 1);
 
             Assert.That(box.Encloses(box), Is.False);
         }
@@ -205,7 +213,7 @@ namespace SS14.UnitTesting.Shared.Maths
         [Test]
         public void Box2ScaledEncloses()
         {
-            var box = new Box2(-1, 1, 1, -1);
+            var box = new Box2(-1, -1, 1, 1);
             var smallBox = box.Scale(0.5f);
             var bigBox = box.Scale(2.0f);
 
@@ -220,7 +228,7 @@ namespace SS14.UnitTesting.Shared.Maths
         {
             var (x, y) = test;
 
-            var box = new Box2(-1, 1, 1, -1);
+            var box = new Box2(-1, -1, 1, 1);
             var translatedBox = box.Translated(new Vector2(x, y));
 
             Assert.That(box.Encloses(translatedBox), Is.False);
@@ -230,7 +238,7 @@ namespace SS14.UnitTesting.Shared.Maths
         [Test]
         public void Box2NotContainsSelfOpen()
         {
-            var box = new Box2(-1, 1, 1, -1);
+            var box = new Box2(-1, -1, 1, 1);
 
             Assert.That(box.Contains(box.BottomLeft, false), Is.False);
             Assert.That(box.Contains(box.TopLeft, false), Is.False);
@@ -241,7 +249,7 @@ namespace SS14.UnitTesting.Shared.Maths
         [Test]
         public void Box2ContainsSelfClosed()
         {
-            var box = new Box2(-1, 1, 1, -1);
+            var box = new Box2(-1, -1, 1, 1);
 
             Assert.That(box.Contains(box.BottomLeft));
             Assert.That(box.Contains(box.TopLeft));
@@ -265,7 +273,7 @@ namespace SS14.UnitTesting.Shared.Maths
             var (x, y) = test;
             var vec = new Vector2(x, y);
 
-            var box = new Box2(-1, 1, 1, -1);
+            var box = new Box2(-1, -1, 1, 1);
 
             Assert.That(box.Contains(x, y));
             Assert.That(box.Contains(vec));
@@ -278,7 +286,7 @@ namespace SS14.UnitTesting.Shared.Maths
             var (x, y) = test;
             var vec = new Vector2(x, y);
 
-            var box = new Box2(-1, 1, 1, -1);
+            var box = new Box2(-1, -1, 1, 1);
 
             Assert.That(box.Contains(x, y), Is.False);
             Assert.That(box.Contains(vec), Is.False);
@@ -288,13 +296,18 @@ namespace SS14.UnitTesting.Shared.Maths
         [Test]
         public void Box2Scale([ValueSource(nameof(Scalars))] float scalar)
         {
-            var box = new Box2(-1, 1, 1, -1);
+            var box = new Box2(-1, -1, 1, 1);
             var scaledBox = box.Scale(scalar);
 
-            Assert.That(scaledBox.Left, Is.EqualTo(box.Left * scalar));
-            Assert.That(scaledBox.Top, Is.EqualTo(box.Top * scalar));
-            Assert.That(scaledBox.Bottom, Is.EqualTo(box.Bottom * scalar));
-            Assert.That(scaledBox.Right, Is.EqualTo(box.Right * scalar));
+            Assert.That(scaledBox.Center, Is.EqualTo(box.Center));
+            Assert.That(scaledBox.Size, Is.EqualTo(box.Size * scalar));
+        }
+
+        [Test]
+        public void Box2ScaleNegativeException()
+        {
+            var box = new Box2(-1, -1, 1, 1);
+            Assert.That(() => box.Scale(-1), Throws.Exception);
         }
 
         [Test]
@@ -303,7 +316,7 @@ namespace SS14.UnitTesting.Shared.Maths
             var (x, y) = test;
             var vec = new Vector2(x, y);
 
-            var box = new Box2(-1, 1, 1, -1);
+            var box = new Box2(-1, -1, 1, 1);
             var scaledBox = box.Translated(vec);
 
             Assert.That(scaledBox.Left, Is.EqualTo(box.Left + x));
@@ -318,7 +331,7 @@ namespace SS14.UnitTesting.Shared.Maths
             var (left, top, right, bottom) = test;
 
             var controlBox = new Box2(left, top, right, bottom);
-            var differentBox = new Box2(-MathHelper.Pi, MathHelper.Pi, MathHelper.Pi, -MathHelper.Pi);
+            var differentBox = new Box2(-MathHelper.Pi, -MathHelper.Pi, MathHelper.Pi, MathHelper.Pi);
             var sameBox = new Box2(left, top, right, bottom);
             Object sameBoxAsObject = sameBox;
             Box2? nullBox = null;
@@ -328,7 +341,9 @@ namespace SS14.UnitTesting.Shared.Maths
             Assert.That(controlBox.Equals(differentBox), Is.False);
             Assert.That(controlBox.Equals(sameBox));
             Assert.That(controlBox.Equals(sameBoxAsObject));
+            // ReSharper disable once ExpressionIsAlwaysNull
             Assert.That(controlBox.Equals(nullBox), Is.False);
+            // ReSharper disable once SuspiciousTypeConversion.Global
             Assert.That(controlBox.Equals(notBox), Is.False);
         }
 
@@ -338,10 +353,11 @@ namespace SS14.UnitTesting.Shared.Maths
             var (left, top, right, bottom) = test;
 
             var controlBox = new Box2(left, top, right, bottom);
-            var differentBox = new Box2(-MathHelper.Pi, MathHelper.Pi, MathHelper.Pi, -MathHelper.Pi);
+            var differentBox = new Box2(-MathHelper.Pi, -MathHelper.Pi, MathHelper.Pi, MathHelper.Pi);
             var sameBox = new Box2(left, top, right, bottom);
 
 #pragma warning disable CS1718 // Comparison made to same variable
+            // ReSharper disable once EqualExpressionComparison
             Assert.That(controlBox == controlBox);
 #pragma warning restore CS1718 // Comparison made to same variable
             Assert.That(controlBox == differentBox, Is.False);
@@ -354,10 +370,11 @@ namespace SS14.UnitTesting.Shared.Maths
             var (left, top, right, bottom) = test;
 
             var controlBox = new Box2(left, top, right, bottom);
-            var differentBox = new Box2(-MathHelper.Pi, MathHelper.Pi, MathHelper.Pi, -MathHelper.Pi);
+            var differentBox = new Box2(-MathHelper.Pi, -MathHelper.Pi, MathHelper.Pi, MathHelper.Pi);
             var sameBox = new Box2(left, top, right, bottom);
 
 #pragma warning disable CS1718 // Comparison made to same variable
+            // ReSharper disable once EqualExpressionComparison
             Assert.That(controlBox != controlBox, Is.False);
 #pragma warning restore CS1718 // Comparison made to same variable
             Assert.That(controlBox != differentBox);

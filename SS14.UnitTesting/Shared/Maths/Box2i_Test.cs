@@ -13,21 +13,21 @@ namespace SS14.UnitTesting.Shared.Maths
         private static IEnumerable<(int left, int top, int right, int bottom)> Sources => new (int, int, int, int)[]
         {
             (0, 0, 0, 0),
-            (0, 0, 0, -10),
+            (0, 0, 0, 10),
             (0, 0, 10, 0),
-            (0, 0, 10, -10),
-            (0, 10, 0, 0),
-            (0, 10, 0, -10),
-            (0, 10, 10, 0),
-            (0, 10, 10, -10),
+            (0, 0, 10, 10),
+            (0, -10, 0, 0),
+            (0, -10, 0, 10),
+            (0, -10, 10, 0),
+            (0, -10, 10, 10),
             (-10, 0, 0, 0),
-            (-10, 0, 0, -10),
+            (-10, 0, 0, 10),
             (-10, 0, 10, 0),
-            (-10, 0, 10, -10),
-            (-10, 10, 0, 0),
-            (-10, 10, 0, -10),
-            (-10, 10, 10, 0),
-            (-10, 10, 10, -10)
+            (-10, 0, 10, 10),
+            (-10, -10, 0, 0),
+            (-10, -10, 0, 10),
+            (-10, -10, 10, 0),
+            (-10, -10, 10, 10)
         };
 
         private static IEnumerable<(int x, int y)> SmallTranslations => new (int, int)[]
@@ -119,7 +119,7 @@ namespace SS14.UnitTesting.Shared.Maths
             Assert.That(box.Left, Is.EqualTo(left));
             Assert.That(box.Top, Is.EqualTo(top));
             Assert.That(box.Right, Is.EqualTo(left + width));
-            Assert.That(box.Bottom, Is.EqualTo(top - height));
+            Assert.That(box.Bottom, Is.EqualTo(top + height));
 
             Assert.That(box.Width, Is.EqualTo(width));
             Assert.That(box.Height, Is.EqualTo(height));
@@ -139,7 +139,7 @@ namespace SS14.UnitTesting.Shared.Maths
             Assert.That(box.Left, Is.EqualTo(left));
             Assert.That(box.Top, Is.EqualTo(top));
             Assert.That(box.Right, Is.EqualTo(left + width));
-            Assert.That(box.Bottom, Is.EqualTo(top - height));
+            Assert.That(box.Bottom, Is.EqualTo(top + height));
 
             Assert.That(box.Size, Is.EqualTo(size));
         }
@@ -147,7 +147,7 @@ namespace SS14.UnitTesting.Shared.Maths
         [Test]
         public void Box2iNotContainsSelfOpen()
         {
-            var box = new Box2i(-1, 1, 1, -1);
+            var box = new Box2i(-1, -1, 1, 1);
 
             Assert.That(box.Contains(box.BottomLeft, false), Is.False);
             Assert.That(box.Contains(box.TopLeft, false), Is.False);
@@ -158,7 +158,7 @@ namespace SS14.UnitTesting.Shared.Maths
         [Test]
         public void Box2iContainsSelfClosed()
         {
-            var box = new Box2i(-1, 1, 1, -1);
+            var box = new Box2i(-1, -1, 1, 1);
 
             Assert.That(box.Contains(box.BottomLeft));
             Assert.That(box.Contains(box.TopLeft));
@@ -182,7 +182,7 @@ namespace SS14.UnitTesting.Shared.Maths
             var (x, y) = test;
             var vec = new Vector2i(x, y);
 
-            var box = new Box2i(-2, 2, 2, -2);
+            var box = new Box2i(-2, -2, 2, 2);
 
             Assert.That(box.Contains(x, y));
             Assert.That(box.Contains(vec));
@@ -195,7 +195,7 @@ namespace SS14.UnitTesting.Shared.Maths
             var (x, y) = test;
             var vec = new Vector2i(x, y);
 
-            var box = new Box2i(-2, 2, 2, -2);
+            var box = new Box2i(-2, -2, 2, 2);
 
             Assert.That(box.Contains(x, y), Is.False);
             Assert.That(box.Contains(vec), Is.False);
@@ -208,7 +208,7 @@ namespace SS14.UnitTesting.Shared.Maths
             var (x, y) = test;
             var vec = new Vector2i(x, y);
 
-            var box = new Box2i(-1, 1, 1, -1);
+            var box = new Box2i(-1, -1, 1, 1);
             var scaledBox = box.Translated(vec);
 
             Assert.That(scaledBox.Left, Is.EqualTo(box.Left + x));
@@ -223,7 +223,7 @@ namespace SS14.UnitTesting.Shared.Maths
             var (left, top, right, bottom) = test;
 
             var controlBox = new Box2i(left, top, right, bottom);
-            var differentBox = new Box2i(-3, 3, 3, -3);
+            var differentBox = new Box2i(-3, -3, 3, 3);
             var sameBox = new Box2i(left, top, right, bottom);
             Object sameBoxAsObject = sameBox;
             Box2i? nullBox = null;

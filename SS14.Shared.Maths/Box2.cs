@@ -20,13 +20,10 @@ namespace SS14.Shared.Maths
         public float Width => Math.Abs(Right - Left);
         public float Height => Math.Abs(Top - Bottom);
         public Vector2 Size => new Vector2(Width, Height);
+        public Vector2 Center => TopLeft + Size / 2;
 
-        public Box2(Vector2 leftTop, Vector2 rightBottom)
+        public Box2(Vector2 leftTop, Vector2 rightBottom) : this(leftTop.X, leftTop.Y, rightBottom.X, rightBottom.Y)
         {
-            Left = leftTop.X;
-            Top = leftTop.Y;
-            Right = rightBottom.X;
-            Bottom = rightBottom.Y;
         }
 
         public Box2(float left, float top, float right, float bottom)
@@ -39,7 +36,7 @@ namespace SS14.Shared.Maths
 
         public static Box2 FromDimensions(float left, float top, float width, float height)
         {
-            return new Box2(left, top, left + width, top - height);
+            return new Box2(left, top, left + width, top + height);
         }
 
         public static Box2 FromDimensions(Vector2 leftTopPosition, Vector2 size)
@@ -49,7 +46,8 @@ namespace SS14.Shared.Maths
 
         public bool Intersects(Box2 other)
         {
-            return other.Bottom <= this.Top && other.Top >= this.Bottom && other.Right >= this.Left && other.Left <= this.Right;
+            return other.Bottom >= this.Top && other.Top <= this.Bottom && other.Right >= this.Left &&
+                   other.Left <= this.Right;
         }
 
         public bool IsEmpty()
@@ -59,8 +57,8 @@ namespace SS14.Shared.Maths
 
         public bool Encloses(Box2 inner)
         {
-
-            return this.Left < inner.Left && this.Bottom < inner.Bottom && this.Right > inner.Right && this.Top > inner.Top;
+            return this.Left < inner.Left && this.Bottom > inner.Bottom && this.Right > inner.Right &&
+                   this.Top < inner.Top;
         }
 
         public bool Contains(float x, float y)
@@ -70,23 +68,34 @@ namespace SS14.Shared.Maths
 
         public bool Contains(Vector2 point, bool closedRegion = true)
         {
-            var xOK = closedRegion == Left <= Right ? point.X >= Left != point.X > Right : point.X > Left != point.X >= Right;
-            var yOK = closedRegion == Top <= Bottom ? point.Y >= Top != point.Y > Bottom : point.Y > Top != point.Y >= Bottom;
+            var xOK = closedRegion == Left <= Right
+                ? point.X >= Left != point.X > Right
+                : point.X > Left != point.X >= Right;
+            var yOK = closedRegion == Top <= Bottom
+                ? point.Y >= Top != point.Y > Bottom
+                : point.Y > Top != point.Y >= Bottom;
             return xOK && yOK;
         }
 
         /// <summary>
         ///     Uniformly scales the box by a given scalar.
+        ///     This scaling is done such that the center of the resulting box is the same as this box.
+        ///     i.e. it scales around the center of the box, just changing width/height.
         /// </summary>
         /// <param name="scalar">Value to scale the box by.</param>
         /// <returns>Scaled box.</returns>
         public Box2 Scale(float scalar)
         {
+            if (scalar < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(scalar), scalar, "Scalar cannot be negative.");
+            }
+
+            var center = Center;
+            var halfSize = Size / 2 * scalar;
             return new Box2(
-                Left * scalar,
-                Top * scalar,
-                Right * scalar,
-                Bottom * scalar);
+                center - halfSize,
+                center + halfSize);
         }
 
         /// <summary>Returns a Box2 translated by the given amount.</summary>
@@ -97,7 +106,8 @@ namespace SS14.Shared.Maths
 
         public bool Equals(Box2 other)
         {
-            return Left.Equals(other.Left) && Right.Equals(other.Right) && Top.Equals(other.Top) && Bottom.Equals(other.Bottom);
+            return Left.Equals(other.Left) && Right.Equals(other.Right) && Top.Equals(other.Top) &&
+                   Bottom.Equals(other.Bottom);
         }
 
         public override bool Equals(object obj)

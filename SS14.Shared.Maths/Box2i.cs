@@ -18,12 +18,8 @@ namespace SS14.Shared.Maths
         public int Height => Math.Abs(Top - Bottom);
         public Vector2i Size => new Vector2i(Width, Height);
 
-        public Box2i(Vector2i topLeft, Vector2i bottomRight)
+        public Box2i(Vector2i topLeft, Vector2i bottomRight) : this(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y)
         {
-            Left = topLeft.X;
-            Top = topLeft.Y;
-            Bottom = bottomRight.Y;
-            Right = bottomRight.X;
         }
 
         public Box2i(int left, int top, int right, int bottom)
@@ -36,7 +32,7 @@ namespace SS14.Shared.Maths
 
         public static Box2i FromDimensions(int left, int top, int width, int height)
         {
-            return new Box2i(left, top, left + width, top - height);
+            return new Box2i(left, top, left + width, top + height);
         }
 
         public static Box2i FromDimensions(Vector2i position, Vector2i size)
@@ -51,10 +47,12 @@ namespace SS14.Shared.Maths
 
         public bool Contains(Vector2i point, bool closedRegion = true)
         {
-            var xOk = closedRegion == Left <= Right ? point.X >= Left != point.X > Right : point.X > Left != point.X >= Right;
-
-            var yOk = closedRegion == Top <= Bottom ? point.Y >= Top != point.Y > Bottom : point.Y > Top != point.Y >= Bottom;
-
+            var xOk = closedRegion == Left <= Right
+                ? point.X >= Left != point.X > Right
+                : point.X > Left != point.X >= Right;
+            var yOk = closedRegion == Top <= Bottom
+                ? point.Y >= Top != point.Y > Bottom
+                : point.Y > Top != point.Y >= Bottom;
             return xOk && yOk;
         }
 

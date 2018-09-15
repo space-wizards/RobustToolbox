@@ -51,7 +51,7 @@ namespace SS14.UnitTesting.Shared.Maths
         {
             var centerVec = new Vector2(x, y);
             var circle = new Circle(centerVec, 0);
-            
+
             Assert.That(circle.Contains(centerVec));
         }
 
@@ -63,11 +63,11 @@ namespace SS14.UnitTesting.Shared.Maths
         {
             var centerVec = new Vector2(x, y);
             var circle = new Circle(centerVec, radius);
-            
+
             Assert.That(circle.Contains(centerVec));
 
             var (offX, offY) = offset;
-            
+
             var offsetDirection = new Vector2(offX, offY).Normalized;
             var pointInside = centerVec + offsetDirection * (radius * 0.5f);
             var pointOn = centerVec + offsetDirection * radius;
@@ -115,15 +115,15 @@ namespace SS14.UnitTesting.Shared.Maths
             var circle = new Circle(centerVec, radius);
 
             var boxDim = 1f;
-            
+
             var (offX, offY) = offset;
             var offsetDirection = new Vector2(offX, offY).Normalized;
 
             var boxCenterOn = centerVec + offsetDirection * radius;
             var boxCenterFar = centerVec + offsetDirection * (radius * 20);
-            
-            var boxIn = Box2.FromDimensions(boxCenterOn.X - boxDim / 2f, boxCenterOn.Y + boxDim / 2f, boxDim, boxDim);
-            var boxOut = Box2.FromDimensions(boxCenterFar.X - boxDim / 2f, boxCenterFar.Y + boxDim / 2f, boxDim, boxDim);
+
+            var boxIn = Box2.FromDimensions(boxCenterOn.X - boxDim / 2f, boxCenterOn.Y - boxDim / 2f, boxDim, boxDim);
+            var boxOut = Box2.FromDimensions(boxCenterFar.X - boxDim / 2f, boxCenterFar.Y - boxDim / 2f, boxDim, boxDim);
 
             Assert.That(circle.Intersects(boxIn));
             Assert.That(circle.Intersects(boxOut), Is.False);

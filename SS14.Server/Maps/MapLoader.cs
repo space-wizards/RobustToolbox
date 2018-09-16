@@ -356,7 +356,8 @@ namespace SS14.Server.Maps
                     }
 
                     var components = new YamlSequenceNode();
-                    foreach (var component in entity.GetAllComponents())
+                    // See engine#636 for why the Distinct() call.
+                    foreach (var component in entity.GetAllComponents().Distinct())
                     {
                         var compMapping = new YamlMappingNode();
                         CurrentWritingComponent = component.Name;

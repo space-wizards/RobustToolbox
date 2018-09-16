@@ -10,7 +10,7 @@ namespace SS14.UnitTesting.Shared.Maths
     {
         private const double Epsilon = 1.0e-8;
 
-        private static IEnumerable<(float, float, Direction, double)> sources => new(float, float, Direction, double)[]
+        private static IEnumerable<(float x, float y, Direction dir, double angle)> sources => new(float, float, Direction, double)[]
         {
             (1, 0, Direction.East, 0.0),
             (1, 1, Direction.NorthEast, System.Math.PI / 4.0),

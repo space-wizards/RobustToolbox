@@ -54,7 +54,7 @@ namespace SS14.Shared.Maths
         {
             // Construct the point in / on the box nearest to the center of the circle.
             float closestX = MathHelper.Median(box.Left, box.Right, Position.X);
-            float closestY = MathHelper.Median(box.Top, box.Bottom, Position.Y);
+            float closestY = MathHelper.Median(box.Bottom, box.Top, Position.Y);
 
             // Check if the circle contains that point.
             return Contains(closestX, closestY);

@@ -87,7 +87,7 @@ namespace SS14.Client.Graphics.Overlays
                 return;
             }
             var (overlay, item) = value;
-            overlay.ClearCanvasItem();
+            overlay.Dispose();
             VS.FreeRid(item);
             overlays.Remove(id);
         }

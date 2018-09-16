@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 
 namespace SS14.Shared.Maths
 {
     [Serializable]
-    public readonly struct Box2i : IEquatable<Box2i>
+    public readonly struct UIBox2i : IEquatable<UIBox2i>
     {
         public readonly int Left;
         public readonly int Right;
@@ -18,11 +18,11 @@ namespace SS14.Shared.Maths
         public int Height => Math.Abs(Top - Bottom);
         public Vector2i Size => new Vector2i(Width, Height);
 
-        public Box2i(Vector2i bottomLeft, Vector2i topRight) : this(bottomLeft.X, bottomLeft.Y, topRight.X, topRight.Y)
+        public UIBox2i(Vector2i topLeft, Vector2i bottomRight) : this(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y)
         {
         }
 
-        public Box2i(int left, int bottom, int right, int top)
+        public UIBox2i(int left, int top, int right, int bottom)
         {
             Left = left;
             Right = right;
@@ -30,12 +30,12 @@ namespace SS14.Shared.Maths
             Bottom = bottom;
         }
 
-        public static Box2i FromDimensions(int left, int bottom, int width, int height)
+        public static UIBox2i FromDimensions(int left, int top, int width, int height)
         {
-            return new Box2i(left, bottom, left + width, bottom + height);
+            return new UIBox2i(left, top, left + width, top + height);
         }
 
-        public static Box2i FromDimensions(Vector2i position, Vector2i size)
+        public static UIBox2i FromDimensions(Vector2i position, Vector2i size)
         {
             return FromDimensions(position.X, position.Y, size.X, size.Y);
         }
@@ -51,21 +51,21 @@ namespace SS14.Shared.Maths
                 ? point.X >= Left ^ point.X > Right
                 : point.X > Left ^ point.X >= Right;
             var yOk = closedRegion
-                ? point.Y >= Bottom ^ point.Y > Top
-                : point.Y > Bottom ^ point.Y >= Top;
+                ? point.Y >= Top ^ point.Y > Bottom
+                : point.Y > Top ^ point.Y >= Bottom;
             return xOk && yOk;
         }
 
         /// <summary>Returns a UIBox2 translated by the given amount.</summary>
-        public Box2i Translated(Vector2i point)
+        public UIBox2i Translated(Vector2i point)
         {
-            return new Box2i(Left + point.X, Bottom + point.Y, Right + point.X, Top + point.Y);
+            return new UIBox2i(Left + point.X, Top + point.Y, Right + point.X, Bottom + point.Y);
         }
 
         // override object.Equals
         public override bool Equals(object obj)
         {
-            if (obj is Box2i box)
+            if (obj is UIBox2i box)
             {
                 return Equals(box);
             }
@@ -73,7 +73,7 @@ namespace SS14.Shared.Maths
             return false;
         }
 
-        public bool Equals(Box2i other)
+        public bool Equals(UIBox2i other)
         {
             return other.Left == Left && other.Right == Right && other.Bottom == Bottom && other.Top == Top;
         }
@@ -88,14 +88,14 @@ namespace SS14.Shared.Maths
             return code;
         }
 
-        public static explicit operator Box2i(Box2 box)
+        public static explicit operator UIBox2i(UIBox2 box)
         {
-            return new Box2i((int) box.Left, (int) box.Bottom, (int) box.Right, (int) box.Top);
+            return new UIBox2i((int) box.Left, (int) box.Top, (int) box.Right, (int) box.Bottom);
         }
 
-        public static implicit operator Box2(Box2i box)
+        public static implicit operator UIBox2(UIBox2i box)
         {
-            return new Box2(box.Left, box.Bottom, box.Right, box.Top);
+            return new UIBox2(box.Left, box.Top, box.Right, box.Bottom);
         }
     }
 }

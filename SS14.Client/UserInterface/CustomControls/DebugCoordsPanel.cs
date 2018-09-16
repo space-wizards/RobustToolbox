@@ -78,6 +78,7 @@ namespace SS14.Client.UserInterface.CustomControls
             int mouseWorldMap;
             int mouseWorldGrid;
             GridLocalCoordinates mouseWorldPos;
+            ScreenCoordinates worldToScreen;
             IEntity mouseEntity = null;
             try
             {
@@ -85,6 +86,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 mouseWorldMap = (int)coords.MapID;
                 mouseWorldGrid = (int)coords.GridID;
                 mouseWorldPos = coords;
+                worldToScreen = eyeManager.WorldToScreen(coords);
                 if (stateManager.CurrentState is GameScreen gameScreen)
                 {
                     mouseEntity = gameScreen.GetEntityUnderPosition(coords);
@@ -95,6 +97,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 mouseWorldPos = eyeManager.ScreenToWorld(mouseScreenPos);
                 mouseWorldGrid = 0;
                 mouseWorldMap = 0;
+                worldToScreen = new ScreenCoordinates();
             }
 
             contents.Text = $@"Positioning Debug:
@@ -107,6 +110,7 @@ Character Pos:
 Mouse Pos:
     Screen: {mouseScreenPos}
     World: {mouseWorldPos}
+    W2S: {worldToScreen.Position}
     Grid: {mouseWorldGrid}
     Map: {mouseWorldMap}
     Entity: {mouseEntity}";

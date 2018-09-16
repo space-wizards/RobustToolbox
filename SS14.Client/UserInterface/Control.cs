@@ -164,7 +164,7 @@ namespace SS14.Client.UserInterface
             set => SceneControl.SetPosition(value.Convert());
         }
 
-        public Box2 Rect
+        public UIBox2 Rect
         {
             get => SceneControl.GetRect().Convert();
         }
@@ -351,13 +351,13 @@ namespace SS14.Client.UserInterface
 
         private void DoDraw()
         {
-            using (var handle = new DrawingHandle(SceneControl.GetCanvasItem()))
+            using (var handle = new DrawingHandleScreen(SceneControl.GetCanvasItem()))
             {
                 Draw(handle);
             }
         }
 
-        protected virtual void Draw(DrawingHandle handle)
+        protected virtual void Draw(DrawingHandleScreen handle)
         {
         }
 

@@ -31,7 +31,7 @@ namespace SS14.Client.Map
             var tilemap = RenderTileMaps[args.Grid.Index];
             foreach ((int x, int y, Tile tile) in args.Modified)
             {
-                tilemap.SetCell(x, y, tile.TileId);
+                tilemap.SetCell(x, -y, tile.TileId);
             }
         }
 

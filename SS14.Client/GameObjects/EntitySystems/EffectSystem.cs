@@ -151,8 +151,9 @@ namespace SS14.Client.GameObjects
 
             VS.CanvasItemClear(ShadedCanvasItem);
             VS.CanvasItemClear(UnshadedCanvasItem);
-            using (var shadedhandle = new DrawingHandle(ShadedCanvasItem))
-            using (var unshadedhandle = new DrawingHandle(UnshadedCanvasItem))
+            // TODO: this might be fucked.
+            using (var shadedHandle = new DrawingHandleScreen(ShadedCanvasItem))
+            using (var unshadedHandle = new DrawingHandleScreen(UnshadedCanvasItem))
             {
                 foreach (var effect in _Effects)
                 {
@@ -164,9 +165,9 @@ namespace SS14.Client.GameObjects
                     // NOTE TO FUTURE READERS:
                     // Yes, due to how this is implemented, unshaded is always on top of shaded.
                     // If you want to rework it to be properly defined, be my guest.
-                    var handle = effect.Shaded ? shadedhandle : unshadedhandle;
+                    var handle = effect.Shaded ? shadedHandle : unshadedHandle;
 
-                    handle.SetTransform(effect.Coordinates.ToWorld().Position * EyeManager.PIXELSPERMETER, new Angle(effect.Rotation), effect.Size);
+                    handle.SetTransform(effect.Coordinates.ToWorld().Position * EyeManager.PIXELSPERMETER * new Vector2(1, -1), new Angle(effect.Rotation), effect.Size);
                     Texture effectsprite = effect.EffectSprite;
                     handle.DrawTexture(effectsprite, -((Vector2)effectsprite.Size) / 2, ToColor(effect.Color));
                 }

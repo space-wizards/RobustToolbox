@@ -6,6 +6,7 @@ using SS14.Client.Graphics.Shaders;
 using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Graphics.Overlays;
+using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.BoundingBox;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
@@ -18,10 +19,10 @@ namespace SS14.Client.Debugging
 {
     public class DebugDrawing : IDebugDrawing
     {
-        [Dependency]
-        readonly IOverlayManager overlayManager;
+        [Dependency] readonly IOverlayManager _overlayManager;
 
         private bool _debugColliders = false;
+
         public bool DebugColliders
         {
             get => _debugColliders;
@@ -31,46 +32,45 @@ namespace SS14.Client.Debugging
                 {
                     return;
                 }
+
                 _debugColliders = value;
 
                 if (value)
                 {
-                    overlayManager.AddOverlay(new CollidableOverlay());
+                    _overlayManager.AddOverlay(new CollidableOverlay());
                 }
                 else
                 {
-                    overlayManager.RemoveOverlay(nameof(CollidableOverlay));
+                    _overlayManager.RemoveOverlay(nameof(CollidableOverlay));
                 }
             }
         }
 
         private class CollidableOverlay : Overlay
         {
-            [Dependency]
-            readonly IComponentManager componentManager;
-            [Dependency]
-            readonly IEyeManager eyeManager;
-            [Dependency]
-            readonly IPrototypeManager prototypeManager;
+            [Dependency] private readonly IComponentManager _componentManager;
+            [Dependency] private readonly IEyeManager _eyeManager;
+            [Dependency] private readonly IPrototypeManager _prototypeManager;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
             public CollidableOverlay() : base(nameof(CollidableOverlay))
             {
                 IoCManager.InjectDependencies(this);
-                Shader = prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
+                Shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
             }
 
             protected override void Draw(DrawingHandle handle)
             {
-                var viewport = eyeManager.GetWorldViewport();
-                foreach (var boundingBox in componentManager.GetAllComponents<ClientBoundingBoxComponent>())
+                var worldHandle = (DrawingHandleWorld) handle;
+                var viewport = _eyeManager.GetWorldViewport();
+                foreach (var boundingBox in _componentManager.GetAllComponents<ClientBoundingBoxComponent>())
                 {
                     // all entities have a TransformComponent
                     var transform = boundingBox.Owner.GetComponent<ITransformComponent>();
 
                     // if not on the same map, continue
-                    if (transform.MapID != eyeManager.CurrentMap)
+                    if (transform.MapID != _eyeManager.CurrentMap)
                         continue;
 
                     var colorEdge = boundingBox.DebugColor.WithAlpha(0.33f);
@@ -89,11 +89,8 @@ namespace SS14.Client.Debugging
                     if (!worldBox.Intersects(viewport) || worldBox.IsEmpty())
                         continue;
 
-                    const int ppm = EyeManager.PIXELSPERMETER;
-                    var screenBox = new Box2(worldBox.TopLeft * ppm, worldBox.BottomRight * ppm);
-
-                    handle.DrawRect(screenBox, colorFill);
-                    handle.DrawRect(screenBox, colorEdge, filled: false);
+                    worldHandle.DrawRect(worldBox, colorFill);
+                    worldHandle.DrawRect(worldBox, colorEdge, filled: false);
                 }
             }
         }

@@ -26,16 +26,17 @@ namespace SS14.Client.Placement.Modes
                 var gridstart = pManager.eyeManager.WorldToScreen(new Vector2( //Find snap grid closest to screen origin and convert back to screen coords
                     (float)(Math.Round(position.X / snapSize - 0.5f, MidpointRounding.AwayFromZero) + 0.5f) * snapSize,
                     (float)(Math.Round(position.Y / snapSize - 0.5f, MidpointRounding.AwayFromZero) + 0.5f) * snapSize));
+                var flip = new Godot.Vector2(1, -1);
                 for (var a = gridstart.X; a < viewportSize.X; a += snapSize * 32) //Iterate through screen creating gridlines
                 {
-                    var from = ScreenToWorld(new Vector2(a, 0)).Convert() * ppm;
-                    var to = ScreenToWorld(new Vector2(a, viewportSize.Y)).Convert() * ppm;
+                    var from = ScreenToWorld(new Vector2(a, 0)).Convert() * ppm * flip;
+                    var to = ScreenToWorld(new Vector2(a, viewportSize.Y)).Convert() * ppm * flip;
                     pManager.DrawNode.DrawLine(from, to, new Godot.Color(0, 0, 1), 0.5f);
                 }
                 for (var a = gridstart.Y; a < viewportSize.Y; a += snapSize * 32)
                 {
-                    var from = ScreenToWorld(new Vector2(0, a)).Convert() * ppm;
-                    var to = ScreenToWorld(new Vector2(viewportSize.X, a)).Convert() * ppm;
+                    var from = ScreenToWorld(new Vector2(0, a)).Convert() * ppm * flip;
+                    var to = ScreenToWorld(new Vector2(viewportSize.X, a)).Convert() * ppm * flip;
                     pManager.DrawNode.DrawLine(from, to, new Godot.Color(0, 0, 1), 0.5f);
                 }
             }

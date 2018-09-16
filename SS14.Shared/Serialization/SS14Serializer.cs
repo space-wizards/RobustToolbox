@@ -48,7 +48,7 @@ namespace SS14.Shared.Serialization
     {
         private static HashSet<Type> handledTypes = new HashSet<Type>
         {
-            typeof(Box2)
+            typeof(UIBox2)
         };
 
         public bool Handles(Type type) => handledTypes.Contains(type);
@@ -64,9 +64,9 @@ namespace SS14.Shared.Serialization
             return typeof(OpenTKTypeSerializer).GetMethod("Read", new Type[] { typeof(Stream), type.MakeByRefType() });
         }
 
-        #region Box2
+        #region UIBox2
 
-        public static void Write(Stream stream, Box2 value)
+        public static void Write(Stream stream, UIBox2 value)
         {
             stream.Write(BitConverter.GetBytes(value.Left), 0, sizeof(float));
             stream.Write(BitConverter.GetBytes(value.Right), 0, sizeof(float));
@@ -74,7 +74,7 @@ namespace SS14.Shared.Serialization
             stream.Write(BitConverter.GetBytes(value.Bottom), 0, sizeof(float));
         }
 
-        public static void Read(Stream stream, out Box2 value)
+        public static void Read(Stream stream, out UIBox2 value)
         {
             var buffer = new byte[sizeof(float)];
 
@@ -87,7 +87,7 @@ namespace SS14.Shared.Serialization
             stream.Read(buffer, 0, buffer.Length);
             var bottom = BitConverter.ToSingle(buffer, 0);
 
-            value = new Box2(left, top, right, bottom);
+            value = new UIBox2(left, top, right, bottom);
         }
         #endregion
     }

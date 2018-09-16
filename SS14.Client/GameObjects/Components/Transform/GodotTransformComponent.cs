@@ -1,4 +1,5 @@
-﻿using SS14.Client.Graphics.ClientEye;
+﻿using System;
+using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Utility;
@@ -29,7 +30,7 @@ namespace SS14.Client.GameObjects
         protected override void SetPosition(Vector2 position)
         {
             base.SetPosition(position);
-            SceneNode.Position = (position * EyeManager.PIXELSPERMETER).Rounded().Convert();
+            SceneNode.Position = (position * EyeManager.PIXELSPERMETER * new Vector2(1, -1)).Rounded().Convert();
         }
 
         protected override void SetRotation(Angle rotation)

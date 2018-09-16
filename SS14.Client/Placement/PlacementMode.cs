@@ -90,7 +90,6 @@ namespace SS14.Client.Placement
                 SetSprite();
             }
 
-            var size = SpriteToDraw.Size;
 
             IEnumerable<GridLocalCoordinates> locationcollection;
             switch (pManager.PlacementType)
@@ -109,9 +108,10 @@ namespace SS14.Client.Placement
                     break;
             }
 
+            var size = SpriteToDraw.Size;
             foreach (var coordinate in locationcollection)
             {
-                var pos = coordinate.Position * EyeManager.PIXELSPERMETER - size / 2f;
+                var pos = coordinate.Position * EyeManager.PIXELSPERMETER * new Vector2(1, -1) - size / 2f;
                 var color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
                 pManager.DrawNode.DrawTexture(SpriteToDraw.GodotTexture, pos.Convert(), color.Convert());
             }
@@ -198,7 +198,7 @@ namespace SS14.Client.Placement
 
             var collisionbox = Box2.FromDimensions(
                 bounds.Left + worldcoords.Position.X,
-                bounds.Top + worldcoords.Position.Y,
+                bounds.Bottom + worldcoords.Position.Y,
                 bounds.Width,
                 bounds.Height);
 

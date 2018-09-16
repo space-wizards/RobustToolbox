@@ -81,7 +81,7 @@ namespace SS14.Client.UserInterface.Controls
             SceneControl.SetItemIcon(idx, icon);
         }
 
-        public void SetItemIconRegion(int idx, Box2 region)
+        public void SetItemIconRegion(int idx, UIBox2 region)
         {
             SceneControl.SetItemIconRegion(idx, region.Convert());
         }

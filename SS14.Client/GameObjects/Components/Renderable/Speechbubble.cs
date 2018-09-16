@@ -104,7 +104,7 @@ namespace SS14.Client.GameObjects
             _bubbleSprite.Draw();
         }
 
-        public void Draw(Vector2 position, Vector2 windowOrigin, Box2 boundingBox)
+        public void Draw(Vector2 position, Vector2 windowOrigin, UIBox2 boundingBox)
         {
             if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
 

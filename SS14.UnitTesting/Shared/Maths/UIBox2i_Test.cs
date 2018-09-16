@@ -7,8 +7,8 @@ namespace SS14.UnitTesting.Shared.Maths
 {
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
-    [TestOf(typeof(Box2i))]
-    public class Box2i_Test
+    [TestOf(typeof(UIBox2i))]
+    public class UIBox2i_Test
     {
         private static IEnumerable<(int left, int top, int right, int bottom)> Sources => new (int, int, int, int)[]
         {
@@ -69,7 +69,7 @@ namespace SS14.UnitTesting.Shared.Maths
         public void Box2iVectorConstructor([ValueSource(nameof(Sources))] (int, int, int, int) test)
         {
             var (left, top, right, bottom) = test;
-            var box = new Box2i(new Vector2i(left, top), new Vector2i(right, bottom));
+            var box = new UIBox2i(new Vector2i(left, top), new Vector2i(right, bottom));
 
             Assert.That(box.Left, Is.EqualTo(left));
             Assert.That(box.Top, Is.EqualTo(top));
@@ -81,7 +81,7 @@ namespace SS14.UnitTesting.Shared.Maths
         public void Box2iEdgesConstructor([ValueSource(nameof(Sources))] (int, int, int, int) test)
         {
             var (left, top, right, bottom) = test;
-            var box = new Box2i(left, top, right, bottom);
+            var box = new UIBox2i(left, top, right, bottom);
 
             Assert.That(box.Left, Is.EqualTo(left));
             Assert.That(box.Top, Is.EqualTo(top));
@@ -93,7 +93,7 @@ namespace SS14.UnitTesting.Shared.Maths
         public void Box2iCornerVectorProperties([ValueSource(nameof(Sources))] (int, int, int, int) test)
         {
             var (left, top, right, bottom) = test;
-            var box = new Box2i(left, top, right, bottom);
+            var box = new UIBox2i(left, top, right, bottom);
 
             var br = new Vector2i(right, bottom);
             var tl = new Vector2i(left, top);
@@ -114,7 +114,7 @@ namespace SS14.UnitTesting.Shared.Maths
             var width = Math.Abs(left - right);
             var height = Math.Abs(top - bottom);
 
-            var box = Box2i.FromDimensions(left, top, width, height);
+            var box = UIBox2i.FromDimensions(left, top, width, height);
 
             Assert.That(box.Left, Is.EqualTo(left));
             Assert.That(box.Top, Is.EqualTo(top));
@@ -134,7 +134,7 @@ namespace SS14.UnitTesting.Shared.Maths
             var height = Math.Abs(top - bottom);
             var size = new Vector2i(width, height);
 
-            var box = Box2i.FromDimensions(new Vector2i(left, top), size);
+            var box = UIBox2i.FromDimensions(new Vector2i(left, top), size);
 
             Assert.That(box.Left, Is.EqualTo(left));
             Assert.That(box.Top, Is.EqualTo(top));
@@ -147,7 +147,7 @@ namespace SS14.UnitTesting.Shared.Maths
         [Test]
         public void Box2iNotContainsSelfOpen()
         {
-            var box = new Box2i(-1, -1, 1, 1);
+            var box = new UIBox2i(-1, -1, 1, 1);
 
             Assert.That(box.Contains(box.BottomLeft, false), Is.False);
             Assert.That(box.Contains(box.TopLeft, false), Is.False);
@@ -158,7 +158,7 @@ namespace SS14.UnitTesting.Shared.Maths
         [Test]
         public void Box2iContainsSelfClosed()
         {
-            var box = new Box2i(-1, -1, 1, 1);
+            var box = new UIBox2i(-1, -1, 1, 1);
 
             Assert.That(box.Contains(box.BottomLeft));
             Assert.That(box.Contains(box.TopLeft));
@@ -182,7 +182,7 @@ namespace SS14.UnitTesting.Shared.Maths
             var (x, y) = test;
             var vec = new Vector2i(x, y);
 
-            var box = new Box2i(-2, -2, 2, 2);
+            var box = new UIBox2i(-2, -2, 2, 2);
 
             Assert.That(box.Contains(x, y));
             Assert.That(box.Contains(vec));
@@ -195,7 +195,7 @@ namespace SS14.UnitTesting.Shared.Maths
             var (x, y) = test;
             var vec = new Vector2i(x, y);
 
-            var box = new Box2i(-2, -2, 2, 2);
+            var box = new UIBox2i(-2, -2, 2, 2);
 
             Assert.That(box.Contains(x, y), Is.False);
             Assert.That(box.Contains(vec), Is.False);
@@ -208,7 +208,7 @@ namespace SS14.UnitTesting.Shared.Maths
             var (x, y) = test;
             var vec = new Vector2i(x, y);
 
-            var box = new Box2i(-1, -1, 1, 1);
+            var box = new UIBox2i(-1, -1, 1, 1);
             var scaledBox = box.Translated(vec);
 
             Assert.That(scaledBox.Left, Is.EqualTo(box.Left + x));
@@ -222,11 +222,11 @@ namespace SS14.UnitTesting.Shared.Maths
         {
             var (left, top, right, bottom) = test;
 
-            var controlBox = new Box2i(left, top, right, bottom);
-            var differentBox = new Box2i(-3, -3, 3, 3);
-            var sameBox = new Box2i(left, top, right, bottom);
+            var controlBox = new UIBox2i(left, top, right, bottom);
+            var differentBox = new UIBox2i(-3, -3, 3, 3);
+            var sameBox = new UIBox2i(left, top, right, bottom);
             Object sameBoxAsObject = sameBox;
-            Box2i? nullBox = null;
+            UIBox2i? nullBox = null;
             Vector2i notBox = new Vector2i(left, top);
 
             Assert.That(controlBox.Equals(controlBox));

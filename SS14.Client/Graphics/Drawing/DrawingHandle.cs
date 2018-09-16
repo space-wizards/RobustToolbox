@@ -1,10 +1,7 @@
 ﻿using System;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Utility;
-using SS14.Shared.Map;
 using SS14.Shared.Maths;
-using Color = SS14.Shared.Maths.Color;
-using Vector2 = SS14.Shared.Maths.Vector2;
 using VS = Godot.VisualServer;
 
 namespace SS14.Client.Graphics.Drawing

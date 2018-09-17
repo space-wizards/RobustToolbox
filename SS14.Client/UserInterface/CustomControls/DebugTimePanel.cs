@@ -40,6 +40,8 @@ namespace SS14.Client.UserInterface.CustomControls
             };
 
             MouseFilter = _contents.MouseFilter = MouseFilterMode.Ignore;
+
+            SizeFlagsHorizontal = SizeFlags.None;
         }
 
         protected override void Update(ProcessFrameEventArgs args)
@@ -51,10 +53,8 @@ namespace SS14.Client.UserInterface.CustomControls
                 return;
             }
 
-            _contents.Text = $@"
-Paused: {_gameTiming.Paused}, CurTick: {_gameTiming.CurTick},
-CurTime: {_gameTiming.CurTime}, RealTime: {_gameTiming.RealTime}
-";
+            _contents.Text = $@"Paused: {_gameTiming.Paused}, CurTick: {_gameTiming.CurTick},
+CurTime: {_gameTiming.CurTime}, RealTime: {_gameTiming.RealTime}";
 
             MinimumSizeChanged();
         }

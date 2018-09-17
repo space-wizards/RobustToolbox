@@ -60,7 +60,7 @@ namespace SS14.Client.Utility
 
         /// <summary>
         ///     Loosely convert a 2D Godot transform into a 3x3 matrix.
-        ///     The third row will be
+        ///     The third row will be initialized to 0, 0, 1 as <see cref="Godot.Transform2D"/> does not carry it.
         /// </summary>
         public static Matrix3 Convert(in this Godot.Transform2D transform)
         {

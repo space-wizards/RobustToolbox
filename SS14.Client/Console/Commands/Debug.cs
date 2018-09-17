@@ -19,6 +19,9 @@ using System.Globalization;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.GameObjects.Components.Transform;
 using System.Linq;
+using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.Console.Commands
 {
@@ -301,6 +304,26 @@ namespace SS14.Client.Console.Commands
 
             console.AddLine($"Overriding player name to \"{args[0]}\".", Color.White);
 
+            return false;
+        }
+    }
+
+    class LoadResource : IConsoleCommand
+    {
+        public string Command => "ldrsc";
+        public string Description => "Pre-caches a resource.";
+        public string Help => "ldrsc <path> <type>";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var resourceCache = IoCManager.Resolve<IResourceCache>();
+            var reflection = IoCManager.Resolve<IReflectionManager>();
+
+            var type = reflection.LooseGetType(args[1]);
+            var getResourceMethod = resourceCache.GetType().GetMethod("GetResource", new [] {typeof(string), typeof(bool)});
+            DebugTools.Assert(getResourceMethod != null);
+            var generic = getResourceMethod.MakeGenericMethod(type);
+            generic.Invoke(resourceCache, new object[] {args[0], true});
             return false;
         }
     }

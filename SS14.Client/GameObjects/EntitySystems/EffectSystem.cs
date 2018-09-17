@@ -151,7 +151,6 @@ namespace SS14.Client.GameObjects
 
             VS.CanvasItemClear(ShadedCanvasItem);
             VS.CanvasItemClear(UnshadedCanvasItem);
-            // TODO: this might be fucked.
             using (var shadedHandle = new DrawingHandleScreen(ShadedCanvasItem))
             using (var unshadedHandle = new DrawingHandleScreen(UnshadedCanvasItem))
             {
@@ -168,8 +167,8 @@ namespace SS14.Client.GameObjects
                     var handle = effect.Shaded ? shadedHandle : unshadedHandle;
 
                     handle.SetTransform(effect.Coordinates.ToWorld().Position * EyeManager.PIXELSPERMETER * new Vector2(1, -1), new Angle(effect.Rotation), effect.Size);
-                    Texture effectsprite = effect.EffectSprite;
-                    handle.DrawTexture(effectsprite, -((Vector2)effectsprite.Size) / 2, ToColor(effect.Color));
+                    var effectSprite = effect.EffectSprite;
+                    handle.DrawTexture(effectSprite, -((Vector2)effectSprite.Size) / 2, ToColor(effect.Color));
                 }
             }
         }

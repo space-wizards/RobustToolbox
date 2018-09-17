@@ -58,11 +58,11 @@ namespace SS14.Client.Graphics.ClientEye
             var bottomLeft = ScreenToWorld(new Vector2(0, vpSize.Y));
 
             var left = MathHelper.Min(topLeft.X, topRight.X, bottomRight.X, bottomLeft.X);
-            var top = MathHelper.Min(topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y);
+            var bottom = MathHelper.Min(topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y);
             var right = MathHelper.Max(topLeft.X, topRight.X, bottomRight.X, bottomLeft.X);
-            var bottom = MathHelper.Max(topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y);
+            var top = MathHelper.Max(topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y);
 
-            return new Box2(left, top, right, bottom);
+            return new Box2(left, bottom, right, top);
         }
 
         public void Initialize()

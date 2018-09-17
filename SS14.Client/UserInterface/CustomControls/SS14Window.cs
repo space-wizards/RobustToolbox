@@ -219,9 +219,9 @@ namespace SS14.Client.UserInterface.CustomControls
                     right = Math.Max(args.GlobalPosition.X + DragOffsetBottomRight.X, left + minsize.X);
                 }
 
-                Position = new Vector2(left, top);
-                var rect = new Box2(left, top, right, bottom);
-                Size = new Vector2(rect.Width, rect.Height);
+                var rect = new UIBox2(left, bottom, right, top);
+                Position = rect.TopLeft;
+                Size = rect.Size;
             }
         }
 

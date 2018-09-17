@@ -28,7 +28,7 @@ namespace SS14.Shared.Interfaces.Physics
         /// </summary>
         /// <param name="ray">Ray to cast in the world.</param>
         /// <param name="maxLength">Maximum length of the ray in meters.</param>
-        /// <returns>Owning entity of the object that was hit, or null if nothing was hit.</returns>
+        /// <returns>A result object describing the hit, if any.</returns>
         RayCastResults IntersectRay(Ray ray, float maxLength = 50, IEntity entityignore = null);
     }
 }

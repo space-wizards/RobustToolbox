@@ -26,7 +26,7 @@ namespace SS14.UnitTesting.Shared.Physics
             var result = manager.IntersectRay(ray);
 
             // Assert
-            Assert.That(result.HitObject, Is.True);
+            Assert.That(result.DidHitObject, Is.True);
             Assert.That(result.Distance, Is.EqualTo(5));
             Assert.That(result.HitPos.X, Is.EqualTo(5));
             Assert.That(result.HitPos.Y, Is.EqualTo(1));

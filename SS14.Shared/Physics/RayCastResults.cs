@@ -3,12 +3,26 @@ using SS14.Shared.Maths;
 
 namespace SS14.Shared.Physics
 {
-    public struct RayCastResults
+    public readonly struct RayCastResults
     {
-        public bool HitObject => Distance < float.PositiveInfinity;
+        /// <summary>
+        ///     True if an object was indeed hit. False otherwise.
+        /// </summary>
+        public bool DidHitObject => Distance < float.PositiveInfinity;
 
+        /// <summary>
+        ///     The entity that was hit. <see langword="null" /> if no entity was hit.
+        /// </summary>
         public IEntity HitEntity { get; }
+
+        /// <summary>
+        ///     The point of contact where the entity was hit. Defaults to <see cref="Vector2.Zero"/> if no entity was hit.
+        /// </summary>
         public Vector2 HitPos { get; }
+
+        /// <summary>
+        ///     The distance from point of origin to the context point. <see cref="System.Single.PositiveInfinity"/> if nothing was hit.
+        /// </summary>
         public float Distance { get; }
 
         public RayCastResults(float distance, Vector2 hitPos, IEntity hitEntity)

@@ -985,7 +985,7 @@ namespace SS14.Client.GameObjects
                     }
 
                     var transform = Godot.Transform2D.Identity;
-                    DrawingHandle.SetTransform2DRotationAndScale(ref transform, layer.Rotation, layer.Scale);
+                    DrawingHandle.SetTransform2DRotationAndScale(ref transform, -layer.Rotation, layer.Scale);
                     VS.CanvasItemAddSetTransform(currentItem, transform);
                     // Not instantiating a DrawingHandle here because those are ref types,
                     // and I really don't want the extra allocation.
@@ -1153,7 +1153,7 @@ namespace SS14.Client.GameObjects
             var dirChanged = false;
             if (Directional)
             {
-                SceneNode.Rotation = (float)(-Owner.Transform.WorldRotation + Rotation) + MathHelper.PiOver2;
+                SceneNode.Rotation = (float)(Owner.Transform.WorldRotation - Rotation) - MathHelper.PiOver2;
                 dirWeAreFacing = GetDir();
                 if (LastDir != dirWeAreFacing || _recalcDirections)
                 {

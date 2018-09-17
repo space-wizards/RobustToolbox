@@ -36,7 +36,7 @@ namespace SS14.Client.GameObjects
         protected override void SetRotation(Angle rotation)
         {
             base.SetRotation(rotation);
-            SceneNode.Rotation = (float)rotation - MathHelper.PiOver2;
+            SceneNode.Rotation = -(float) rotation + MathHelper.PiOver2;
         }
 
         private void UpdateSceneVisibility()
@@ -78,7 +78,7 @@ namespace SS14.Client.GameObjects
             SceneNode = new Godot.Node2D
             {
                 Name = $"Transform {Owner.Uid} ({Owner.Name})",
-                Rotation = -MathHelper.PiOver2
+                Rotation = MathHelper.PiOver2
             };
             holder.WorldRoot.AddChild(SceneNode);
         }

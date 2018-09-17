@@ -103,11 +103,15 @@ namespace SS14.Client.GameObjects
         public void CreateEffect(EffectSystemMessage message)
         {
             var gametime = gameTiming.CurTime;
+
+            /*
+            // TODO: Fix this, it doesn't work. Probably because CurTime isn't synchronized with the server.
             if (gametime > message.DeathTime) //Did we already die in transit? That's pretty troubling isn't it
             {
                 Logger.Warning(string.Format("Effect using sprite {0} died in transit to the client", message.EffectSprite), message);
                 return;
             }
+            */
 
             //Create effect from creation message
             var effect = new Effect(message, resourceCache);
@@ -166,7 +170,7 @@ namespace SS14.Client.GameObjects
                     // If you want to rework it to be properly defined, be my guest.
                     var handle = effect.Shaded ? shadedHandle : unshadedHandle;
 
-                    handle.SetTransform(effect.Coordinates.ToWorld().Position * EyeManager.PIXELSPERMETER * new Vector2(1, -1), new Angle(effect.Rotation), effect.Size);
+                    handle.SetTransform(effect.Coordinates.ToWorld().Position * EyeManager.PIXELSPERMETER * new Vector2(1, -1), new Angle(-effect.Rotation), effect.Size);
                     var effectSprite = effect.EffectSprite;
                     handle.DrawTexture(effectSprite, -((Vector2)effectSprite.Size) / 2, ToColor(effect.Color));
                 }

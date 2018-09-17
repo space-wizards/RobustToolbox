@@ -9,6 +9,7 @@ namespace SS14.Shared.Maths
     public readonly struct Angle : IApproxEquatable<Angle>
     {
         public static Angle Zero { get; } = new Angle();
+        public static Angle South { get; } = new Angle(-MathHelper.PiOver2);
 
         /// <summary>
         ///     Angle in radians.

@@ -31,6 +31,7 @@ using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
 using SS14.Client.Utility;
@@ -171,6 +172,12 @@ namespace SS14.Client
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.PostInit);
 
             _stateManager.RequestStateChange<MainScreen>();
+
+            var args = (ICollection<string>) Godot.OS.GetCmdlineArgs();
+            if (args.Contains("--connect"))
+            {
+                _client.ConnectToServer("127.0.0.1", 1212);
+            }
         }
 
         public override void QuitRequest()

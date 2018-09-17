@@ -15,13 +15,13 @@ namespace SS14.Client.Graphics.ClientEye
         // No I can't be bothered to make this a shared constant.
         public const int PIXELSPERMETER = 32;
 
-        [Dependency]
-        readonly ISceneTreeHolder sceneTree;
+        [Dependency] readonly ISceneTreeHolder sceneTree;
 
         // We default to this when we get set to a null eye.
         private FixedEye defaultEye;
 
         private IEye currentEye;
+
         public IEye CurrentEye
         {
             get => currentEye;
@@ -95,10 +95,20 @@ namespace SS14.Client.Graphics.ClientEye
 
         public GridLocalCoordinates ScreenToWorld(Vector2 point)
         {
-            var transform = sceneTree.WorldRoot.GetViewportTransform();
-            var worldPos = transform.XformInv(point.Convert()).Convert() / PIXELSPERMETER * new Vector2(1, -1);
+            var matrix = Matrix3.Invert(MatrixViewPortTransform(sceneTree));
+            var vec3 = new Vector3(point.X, point.Y, 1);
+            matrix.Transform(ref vec3);
+            var vec2 = new Vector2(vec3.X, vec3.Y);
+            var worldPos = vec2 / PIXELSPERMETER * new Vector2(1, -1);
             var grid = IoCManager.Resolve<IMapManager>().GetMap(currentEye.MapId).FindGridAt(worldPos);
+            // TODO: This is incorrect. It assumes the grid has an identity transform.
             return new GridLocalCoordinates(worldPos, grid);
+        }
+
+        private static Matrix3 MatrixViewPortTransform(ISceneTreeHolder sceneTree)
+        {
+            var transform = sceneTree.WorldRoot.GetViewportTransform();
+            return sceneTree.WorldRoot.GetViewportTransform().Convert();
         }
     }
 }

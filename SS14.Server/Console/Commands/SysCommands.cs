@@ -4,6 +4,7 @@ using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Network;
 
@@ -30,7 +31,7 @@ namespace SS14.Server.Console.Commands
             IoCManager.Resolve<IBaseServer>().Shutdown(null);
         }
     }
-    
+
     public class SaveConfig : IClientCommand
     {
         public string Command => "saveconfig";
@@ -96,6 +97,19 @@ namespace SS14.Server.Console.Commands
                     shell.SendText(player, "Invalid amount of arguments.");
                     break;
             }
+        }
+    }
+
+    class ShowTimeCommand : IClientCommand
+    {
+        public string Command => "showtime";
+        public string Description => "Shows the server time.";
+        public string Help => "showtime";
+
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            var timing = IoCManager.Resolve<IGameTiming>();
+            shell.SendText(player, $"Paused: {timing.Paused}, CurTick: {timing.CurTick}, CurTime: {timing.CurTime}, RealTime: {timing.RealTime}");
         }
     }
 }

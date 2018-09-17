@@ -90,7 +90,7 @@ namespace SS14.Client.Console.Commands
     class ToggleMonitorCommand : IConsoleCommand
     {
         public string Command => "monitor";
-        public string Help => "Usage: monitor <name>\nPossible monitors are: fps, net, coord";
+        public string Help => "Usage: monitor <name>\nPossible monitors are: fps, net, coord, time";
         public string Description => "Toggles a debug monitor in the F3 menu.";
 
         public bool Execute(IDebugConsole console, params string[] args)
@@ -111,6 +111,12 @@ namespace SS14.Client.Console.Commands
                     break;
                 case "coord":
                     monitor.ShowCoords = !monitor.ShowCoords;
+                    break;
+                case "time":
+                    monitor.ShowTime = !monitor.ShowTime;
+                    break;
+                default:
+                    console.AddLine($"Invalid key: {args[0]}");
                     break;
             }
 

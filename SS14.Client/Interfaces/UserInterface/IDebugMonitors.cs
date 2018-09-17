@@ -6,5 +6,6 @@ namespace SS14.Client.Interfaces.UserInterface
         bool ShowFPS { get; set; }
         bool ShowCoords { get; set; }
         bool ShowNet { get; set; }
+        bool ShowTime { get; set; }
     }
 }

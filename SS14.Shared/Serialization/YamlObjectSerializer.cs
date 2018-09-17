@@ -792,14 +792,18 @@ namespace SS14.Shared.Serialization
         {
             public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
-                var val = float.Parse(node.ToString());
-                return new Angle(val);
+                var nodeContents = node.AsString();
+                if (nodeContents.EndsWith("rad"))
+                {
+                    return new Angle(double.Parse(nodeContents.Substring(0, nodeContents.Length - 3)));
+                }
+                return Angle.FromDegrees(double.Parse(nodeContents));
             }
 
             public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
-                var val = (float)((Angle)obj).Theta;
-                return new YamlScalarNode(val.ToString(CultureInfo.InvariantCulture));
+                var val = ((Angle)obj).Theta;
+                return new YamlScalarNode($"{val.ToString(CultureInfo.InvariantCulture)} rad");
             }
         }
 

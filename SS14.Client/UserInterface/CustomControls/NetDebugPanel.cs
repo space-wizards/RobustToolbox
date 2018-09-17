@@ -55,7 +55,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
             PanelOverride = new StyleBoxFlat
             {
-                BackgroundColor = new Color(67, 105, 255, 138),
+                BackgroundColor = new Color(255, 105, 67, 138),
             };
 
             MouseFilter = contents.MouseFilter = MouseFilterMode.Ignore;

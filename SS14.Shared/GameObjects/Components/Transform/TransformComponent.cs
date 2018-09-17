@@ -154,7 +154,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 if (Parent != null)
                 {
                     // transform _position from parent coords to world coords
-                    var worldPos = MatMult(Parent.WorldMatrix, _position);
+                    var worldPos = Parent.WorldMatrix.Transform(_position);
                     var lc = new GridLocalCoordinates(worldPos, MapID);
 
                     // then to parent grid coords
@@ -173,7 +173,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                     var worldCoords = value.ToWorld();
 
                     // world coords to parent coords
-                    var newPos = MatMult(Parent.InvWorldMatrix, worldCoords.Position);
+                    var newPos = Parent.InvWorldMatrix.Transform(worldCoords.Position);
 
                     // float rounding error guard, if the offset is less than 1mm ignore it
                     if (Math.Abs(newPos.LengthSquared - _position.LengthSquared) < 10.0E-3)
@@ -204,7 +204,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 if (Parent != null)
                 {
                     // parent coords to world coords
-                    return MatMult(Parent.WorldMatrix, _position);
+                    return Parent.WorldMatrix.Transform(_position);
                 }
                 else
                 {
@@ -223,7 +223,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 if (_parent.IsValid())
                 {
                     // world coords to parent coords
-                    var newPos = MatMult(Parent.InvWorldMatrix, value);
+                    var newPos = Parent.InvWorldMatrix.Transform(value);
 
                     // float rounding error guard, if the offset is less than 1mm ignore it
                     if (Math.Abs(newPos.LengthSquared - _position.LengthSquared) < 10.0E-3)
@@ -254,7 +254,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 return;
 
             // transform _position from parent coords to world coords
-            var worldPos = MatMult(Parent.WorldMatrix, _position);
+            var worldPos = Parent.WorldMatrix.Transform(_position);
             var lc = new GridLocalCoordinates(worldPos, MapID);
 
             // then to parent grid coords
@@ -285,7 +285,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
             _gridID = parent.GridID;
 
             // offset position from world to parent
-            SetPosition(MatMult(parent.InvWorldMatrix, _position));
+            SetPosition(parent.InvWorldMatrix.Transform(_position));
             RebuildMatrices();
             Dirty();
         }
@@ -398,13 +398,6 @@ namespace SS14.Shared.GameObjects.Components.Transform
             _rotation = rotation;
         }
 
-        private static Vector2 MatMult(Matrix3 mat, Vector2 vec)
-        {
-            var vecHom = new Vector3(vec.X, vec.Y, 1);
-            Matrix3.Transform(ref mat, ref vecHom);
-            return vecHom.Xy;
-        }
-
         private void RebuildMatrices()
         {
             var pos = _position;
@@ -433,7 +426,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
             if (Parent != null)
             {
                 // transform localPosition from parent coords to world coords
-                var worldPos = MatMult(Parent.WorldMatrix, localPosition);
+                var worldPos = Parent.WorldMatrix.Transform(localPosition);
                 var grid = IoCManager.Resolve<IMapManager>().GetGrid(gridId);
                 var lc = new GridLocalCoordinates(worldPos, grid.MapID);
 

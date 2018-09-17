@@ -16,10 +16,10 @@ namespace SS14.UnitTesting.Shared.Maths
             var control = new Vector2(1, 1);
             var matrix = Matrix3.CreateTranslation(control);
 
-            Vector3 origin = new Vector3(0, 0, 1);
-            Matrix3.Transform(ref matrix, ref origin);
+            var origin = new Vector3(0, 0, 1);
+            Matrix3.Transform(matrix, ref origin);
 
-            Vector2 result = origin.Xy;
+            var result = origin.Xy;
             Assert.That(control == result, Is.True, result.ToString);
         }
 
@@ -43,8 +43,8 @@ namespace SS14.UnitTesting.Shared.Maths
 
             var matrix = Matrix3.CreateRotation((float)angle);
 
-            Vector3 test = new Vector3(1, 0, 1);
-            Matrix3.Transform(ref matrix, ref test);
+            var test = new Vector3(1, 0, 1);
+            Matrix3.Transform(matrix, ref test);
 
             var control = testCase.Item1;
             var result = test.Xy;
@@ -65,8 +65,8 @@ namespace SS14.UnitTesting.Shared.Maths
             // OpenGL: TransformedVector = TranslationMatrix * RotationMatrix * ScaleMatrix * OriginalVector;
             Matrix3.Multiply(ref rotateMatrix, ref translateMatrix, out var transformMatrix);
 
-            Vector3 result = startPoint;
-            Matrix3.Transform(ref transformMatrix, ref result);
+            var result = startPoint;
+            Matrix3.Transform(transformMatrix, ref result);
 
             // (2,0) -> (0,2) -> (0,0)
             Assert.That(FloatMath.CloseTo(result.X, 0), Is.True, result.ToString);
@@ -113,7 +113,7 @@ namespace SS14.UnitTesting.Shared.Maths
 
             // Act
             Vector3 test = new Vector3(0, 0, 1);
-            Matrix3.Transform(ref res3, ref test);
+            Matrix3.Transform(res3, ref test);
             var result = test.Xy;
 
             // Assert

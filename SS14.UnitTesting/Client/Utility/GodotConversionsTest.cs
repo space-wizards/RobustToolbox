@@ -16,17 +16,17 @@ namespace SS14.UnitTesting.Client.Utility
             var xform = matrix.Convert();
             var vec = new Vector2(5, 7);
 
-            Assert.That(Xform(vec, xform), Is.EqualTo(Xform(vec, matrix)));
+            Assert.That(Xform(vec, xform), Is.EqualTo(matrix.Transform(vec)));
 
             matrix = new Matrix3(0.75f, 0.20f, 5,
                                  0.66f, 0.15f, 5,
                                  0, 0, 1);
             xform = matrix.Convert();
-            Assert.That(Xform(vec, xform), Is.EqualTo(Xform(vec, matrix)));
-            Assert.That(Xform(vec, xform.Convert()), Is.EqualTo(Xform(vec, matrix)));
+            Assert.That(Xform(vec, xform), Is.EqualTo(matrix.Transform(vec)));
+            Assert.That(Xform(vec, xform.Convert()), Is.EqualTo(matrix.Transform(vec)));
             vec = Vector2.Zero;
-            Assert.That(Xform(vec, xform), Is.EqualTo(Xform(vec, matrix)));
-            Assert.That(Xform(vec, xform.Convert()), Is.EqualTo(Xform(vec, matrix)));
+            Assert.That(Xform(vec, xform), Is.EqualTo(matrix.Transform(vec)));
+            Assert.That(Xform(vec, xform.Convert()), Is.EqualTo(matrix.Transform(vec)));
         }
 
         private static Vector2 Xform(Vector2 vector, Matrix3 matrix)

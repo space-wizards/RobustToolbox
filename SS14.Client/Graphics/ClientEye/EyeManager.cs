@@ -16,6 +16,7 @@ namespace SS14.Client.Graphics.ClientEye
         public const int PIXELSPERMETER = 32;
 
         [Dependency] readonly ISceneTreeHolder sceneTree;
+        [Dependency] private readonly IMapManager _mapManager;
 
         // We default to this when we get set to a null eye.
         private FixedEye defaultEye;
@@ -96,17 +97,13 @@ namespace SS14.Client.Graphics.ClientEye
         public GridLocalCoordinates ScreenToWorld(Vector2 point)
         {
             var matrix = Matrix3.Invert(MatrixViewPortTransform(sceneTree));
-            var vec3 = new Vector3(point.X, point.Y, 1);
-            matrix.Transform(ref vec3);
-            var vec2 = new Vector2(vec3.X, vec3.Y);
-            var worldPos = vec2 / PIXELSPERMETER * new Vector2(1, -1);
-            var grid = IoCManager.Resolve<IMapManager>().GetMap(currentEye.MapId).FindGridAt(worldPos);
+            var worldPos = matrix.Transform(point) / PIXELSPERMETER * new Vector2(1, -1);
+            var grid = _mapManager.GetMap(currentEye.MapId).FindGridAt(worldPos);
             return new GridLocalCoordinates(grid.WorldToLocal(worldPos), grid);
         }
 
         private static Matrix3 MatrixViewPortTransform(ISceneTreeHolder sceneTree)
         {
-            var transform = sceneTree.WorldRoot.GetViewportTransform();
             return sceneTree.WorldRoot.GetViewportTransform().Convert();
         }
     }

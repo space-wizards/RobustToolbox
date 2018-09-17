@@ -757,13 +757,37 @@ namespace SS14.Shared.Maths
             vector.Y = y;
         }
 
-        public static void Transform(ref Matrix3 matrix, ref Vector3 vector)
+        public static void Transform(in Matrix3 matrix, ref Vector3 vector)
         {
             var x = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2 * vector.Z;
             var y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2 * vector.Z;
             vector.Z = matrix.R2C0 * vector.X + matrix.R2C1 * vector.Y + matrix.R2C2 * vector.Z;
             vector.X = x;
             vector.Y = y;
+        }
+
+        public void Transform(ref Vector2 vector)
+        {
+            Transform(this, ref vector);
+        }
+
+        public static void Transform(in Matrix3 matrix, ref Vector2 vector)
+        {
+            var vec3 = new Vector3(vector.X, vector.Y, 1);
+            Transform(matrix, ref vec3);
+            vector = vec3.Xy;
+        }
+
+        public Vector2 Transform(Vector2 vector)
+        {
+            Transform(ref vector);
+            return vector;
+        }
+
+        public static Vector2 Transform(in Matrix3 matrix, Vector2 vector)
+        {
+            Transform(matrix, ref vector);
+            return vector;
         }
 
         public void Transform(ref Vector3 vector, out Vector3 result)

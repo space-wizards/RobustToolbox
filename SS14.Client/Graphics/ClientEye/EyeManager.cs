@@ -101,8 +101,7 @@ namespace SS14.Client.Graphics.ClientEye
             var vec2 = new Vector2(vec3.X, vec3.Y);
             var worldPos = vec2 / PIXELSPERMETER * new Vector2(1, -1);
             var grid = IoCManager.Resolve<IMapManager>().GetMap(currentEye.MapId).FindGridAt(worldPos);
-            // TODO: This is incorrect. It assumes the grid has an identity transform.
-            return new GridLocalCoordinates(worldPos, grid);
+            return new GridLocalCoordinates(grid.WorldToLocal(worldPos), grid);
         }
 
         private static Matrix3 MatrixViewPortTransform(ISceneTreeHolder sceneTree)

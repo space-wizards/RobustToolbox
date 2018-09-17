@@ -1,5 +1,6 @@
 ﻿using SS14.Shared.Serialization;
 using System;
+using System.Diagnostics.Contracts;
 
 namespace SS14.Shared.Audio
 {
@@ -63,6 +64,7 @@ namespace SS14.Shared.Audio
         ///     Returns a copy of this instance with a new volume set, for easy chaining.
         /// </summary>
         /// <param name="volume">The new volume.</param>
+        [Pure]
         public AudioParams WithVolume(float volume)
         {
             var me = this;
@@ -74,6 +76,7 @@ namespace SS14.Shared.Audio
         ///     Returns a copy of this instance with a new pitch scale set, for easy chaining.
         /// </summary>
         /// <param name="pitch">The new pitch scale.</param>
+        [Pure]
         public AudioParams WithPitchScale(float pitch)
         {
             var me = this;
@@ -85,6 +88,7 @@ namespace SS14.Shared.Audio
         ///     Returns a copy of this instance with a new bus name set, for easy chaining.
         /// </summary>
         /// <param name="bus">The new bus name.</param>
+        [Pure]
         public AudioParams WithBusName(string bus)
         {
             var me = this;
@@ -96,6 +100,7 @@ namespace SS14.Shared.Audio
         ///     Returns a copy of this instance with a new attenuation set, for easy chaining.
         /// </summary>
         /// <param name="attenuation">The new attenuation.</param>
+        [Pure]
         public AudioParams WithAttenuation(float attenuation)
         {
             var me = this;
@@ -107,6 +112,7 @@ namespace SS14.Shared.Audio
         ///     Returns a copy of this instance with a new max distance set, for easy chaining.
         /// </summary>
         /// <param name="dist">The new max distance.</param>
+        [Pure]
         public AudioParams WithMaxDistance(float dist)
         {
             var me = this;
@@ -116,8 +122,8 @@ namespace SS14.Shared.Audio
         /// <summary>
         ///     Returns a copy of this instance with a new mix target set, for easy chaining.
         /// </summary>
-        /// <param name="mixTarget">The new mnix target.</param>
-
+        /// <param name="mixTarget">The new mix target.</param>
+        [Pure]
         public AudioParams WithMixTarget(AudioMixTarget mixTarget)
         {
             var me = this;

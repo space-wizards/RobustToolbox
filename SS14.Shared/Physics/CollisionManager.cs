@@ -46,10 +46,10 @@ namespace SS14.Shared.Physics
         {
             Vector2[] points =
             {
-                new Vector2(collider.Left, collider.Top),
-                new Vector2(collider.Right, collider.Top),
-                new Vector2(collider.Right, collider.Bottom),
-                new Vector2(collider.Left, collider.Bottom)
+                collider.BottomLeft,
+                collider.TopLeft,
+                collider.TopRight,
+                collider.BottomRight
             };
 
             var colliders = points.Select(GetBucket) // Get the buckets that correspond to the collider's points.

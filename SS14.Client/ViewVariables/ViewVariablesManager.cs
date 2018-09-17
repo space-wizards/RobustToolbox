@@ -142,12 +142,22 @@ namespace SS14.Client.ViewVariables
 
             if (type == typeof(Box2))
             {
-                return new ViewVariablesPropertyEditorBox2(intBox: false);
+                return new ViewVariablesPropertyEditorUIBox2(ViewVariablesPropertyEditorUIBox2.BoxType.Box2);
             }
 
             if (type == typeof(Box2i))
             {
-                return new ViewVariablesPropertyEditorBox2(intBox: true);
+                return new ViewVariablesPropertyEditorUIBox2(ViewVariablesPropertyEditorUIBox2.BoxType.Box2i);
+            }
+
+            if (type == typeof(UIBox2))
+            {
+                return new ViewVariablesPropertyEditorUIBox2(ViewVariablesPropertyEditorUIBox2.BoxType.UIBox2);
+            }
+
+            if (type == typeof(UIBox2i))
+            {
+                return new ViewVariablesPropertyEditorUIBox2(ViewVariablesPropertyEditorUIBox2.BoxType.UIBox2i);
             }
 
             if (type == typeof(GridLocalCoordinates))

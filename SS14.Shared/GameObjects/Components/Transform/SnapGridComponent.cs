@@ -89,19 +89,19 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 case Direction.East:
                     return Position + new MapIndices(1, 0);
                 case Direction.SouthEast:
-                    return Position + new MapIndices(1, 1);
+                    return Position + new MapIndices(1, -1);
                 case Direction.South:
-                    return Position + new MapIndices(0, 1);
+                    return Position + new MapIndices(0, -1);
                 case Direction.SouthWest:
-                    return Position + new MapIndices(-1, 1);
+                    return Position + new MapIndices(-1, -1);
                 case Direction.West:
                     return Position + new MapIndices(-1, 0);
                 case Direction.NorthWest:
-                    return Position + new MapIndices(-1, -1);
+                    return Position + new MapIndices(-1, 1);
                 case Direction.North:
-                    return Position + new MapIndices(0, -1);
+                    return Position + new MapIndices(0, 1);
                 case Direction.NorthEast:
-                    return Position + new MapIndices(1, -1);
+                    return Position + new MapIndices(1, 1);
                 default:
                     throw new NotImplementedException();
             }

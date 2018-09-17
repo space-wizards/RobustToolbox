@@ -173,7 +173,7 @@ namespace SS14.Client.Placement
         public Godot.Node2D DrawNode { get; set; }
         private GodotGlue.GodotSignalSubscriber0 drawNodeDrawSubscriber;
         private bool _isActive;
-        
+
         public void Initialize()
         {
             NetworkManager.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, HandlePlacementMessage);
@@ -548,7 +548,7 @@ namespace SS14.Client.Placement
 
             var pos = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
             const int ppm = EyeManager.PIXELSPERMETER;
-            DrawNode.DrawCircle(pos.Convert() * ppm, CurrentPermission.Range * ppm, new Godot.Color(1, 1, 1, 0.25f));
+            DrawNode.DrawCircle(pos.Convert() * new Godot.Vector2(1, -1) * ppm, CurrentPermission.Range * ppm, new Godot.Color(1, 1, 1, 0.25f));
         }
 
         private void HandleStartPlacement(MsgPlacement msg)

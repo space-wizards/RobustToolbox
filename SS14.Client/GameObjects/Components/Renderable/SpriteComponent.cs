@@ -152,6 +152,7 @@ namespace SS14.Client.GameObjects
 
         private bool _directional = true;
 
+        [ViewVariables(VVAccess.ReadWrite)]
         private bool RedrawQueued = true;
 
         private RSI _baseRsi;
@@ -207,7 +208,10 @@ namespace SS14.Client.GameObjects
         private IResourceCache resourceCache;
         private IPrototypeManager prototypes;
 
+        [ViewVariables(VVAccess.ReadWrite)]
         RSI.State.Direction LastDir;
+        [ViewVariables(VVAccess.ReadWrite)]
+        private bool _recalcDirections = false;
 
         int NextMirrorKey;
         // Do not directly store mirror instances, so that they can be picked up by the GC is not disposed correctly.
@@ -861,6 +865,7 @@ namespace SS14.Client.GameObjects
             var thelayer = Layers[layer];
             thelayer.DirOffset = offset;
             Layers[layer] = thelayer;
+            _recalcDirections = true;
             // Do NOT queue redraw.
             // FrameUpdate handles it.
         }
@@ -1145,21 +1150,21 @@ namespace SS14.Client.GameObjects
             // TODO: This entire method is a hotspot of redundant code.
             // This is definitely gonna deserve some optimizations later down the line.
             RSI.State.Direction dirWeAreFacing;
-            bool dirChanged = false;
+            var dirChanged = false;
             if (Directional)
             {
                 SceneNode.Rotation = (float)(-Owner.Transform.WorldRotation + Rotation) + MathHelper.PiOver2;
                 dirWeAreFacing = GetDir();
-                if (LastDir != dirWeAreFacing)
+                if (LastDir != dirWeAreFacing || _recalcDirections)
                 {
                     dirChanged = true;
                     LastDir = dirWeAreFacing;
+                    _recalcDirections = false;
                 }
             }
             else
             {
                 dirWeAreFacing = RSI.State.Direction.South;
-
             }
 
             for (var i = 0; i < Layers.Count; i++)
@@ -1292,7 +1297,7 @@ namespace SS14.Client.GameObjects
             {
                 return RSI.State.Direction.South;
             }
-            var angle = new Angle(-(Owner.Transform.WorldRotation));
+            var angle = new Angle(Owner.Transform.WorldRotation);
             return angle.GetDir().Convert();
         }
 

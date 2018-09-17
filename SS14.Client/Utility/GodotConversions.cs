@@ -34,14 +34,14 @@ namespace SS14.Client.Utility
             return new Godot.Color(color.R, color.G, color.B, color.A);
         }
 
-        public static Godot.Rect2 Convert(this Box2 box)
+        public static Godot.Rect2 Convert(this UIBox2 box)
         {
             return new Godot.Rect2(box.Left, box.Top, box.Width, box.Height);
         }
 
-        public static Box2 Convert(this Godot.Rect2 rect)
+        public static UIBox2 Convert(this Godot.Rect2 rect)
         {
-            return new Box2(rect.Position.x, rect.Position.y, rect.End.x, rect.End.y);
+            return new UIBox2(rect.Position.x, rect.Position.y, rect.End.x, rect.End.y);
         }
 
         public static Godot.Transform2D Convert(this Matrix3 matrix)

@@ -138,7 +138,7 @@ namespace SS14.Shared.Utility
                 double newY = (rootDiRectangleFion == DiRectangleFion.NW || rootDiRectangleFion == DiRectangleFion.NE)
                                   ? root.Bounds.Top
                                   : root.Bounds.Top - root.Bounds.Height;
-                Box2 newRootBounds = Box2.FromDimensions((float)newX, (float)newY, (float)root.Bounds.Width * 2f, (float)root.Bounds.Height * 2f);
+                var newRootBounds = Box2.FromDimensions((float)newX, (float)newY, (float)root.Bounds.Width * 2f, (float)root.Bounds.Height * 2f);
                 QuadNode newRoot = new QuadNode(newRootBounds);
                 SetupChildNodes(newRoot);
                 newRoot[rootDiRectangleFion] = root;
@@ -520,6 +520,6 @@ namespace SS14.Shared.Utility
 
     public interface IQuadObject
     {
-        Box2 Bounds { get; }
+       Box2 Bounds { get; }
     }
 }

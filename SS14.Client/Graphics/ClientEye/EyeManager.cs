@@ -80,7 +80,7 @@ namespace SS14.Client.Graphics.ClientEye
         public Vector2 WorldToScreen(Vector2 point)
         {
             var transform = sceneTree.WorldRoot.GetViewportTransform();
-            return transform.Xform(point.Convert() * PIXELSPERMETER).Convert();
+            return transform.Xform(point.Convert() * PIXELSPERMETER * new Godot.Vector2(1, -1)).Convert();
         }
 
         public ScreenCoordinates WorldToScreen(GridLocalCoordinates point)
@@ -96,7 +96,7 @@ namespace SS14.Client.Graphics.ClientEye
         public GridLocalCoordinates ScreenToWorld(Vector2 point)
         {
             var transform = sceneTree.WorldRoot.GetViewportTransform();
-            var worldPos = transform.XformInv(point.Convert()).Convert() / PIXELSPERMETER;
+            var worldPos = transform.XformInv(point.Convert()).Convert() / PIXELSPERMETER * new Vector2(1, -1);
             var grid = IoCManager.Resolve<IMapManager>().GetMap(currentEye.MapId).FindGridAt(worldPos);
             return new GridLocalCoordinates(worldPos, grid);
         }

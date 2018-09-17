@@ -268,7 +268,7 @@
     <Compile Include="Graphics\Drawing\DrawingHandle.cs" />
     <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorAngle.cs" />
     <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorBoolean.cs" />
-    <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorBox2.cs" />
+    <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorUIBox2.cs" />
     <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorColor.cs" />
     <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorDummy.cs" />
     <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorGridLocalCoordinates.cs" />

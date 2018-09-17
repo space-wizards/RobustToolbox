@@ -11,7 +11,6 @@ namespace SS14.Client.Interfaces.Graphics.Overlays
         void FrameUpdate(RenderFrameEventArgs args);
 
         void AssignCanvasItem(Godot.RID canvasItem);
-        void ClearCanvasItem();
     }
 
     /// <summary>

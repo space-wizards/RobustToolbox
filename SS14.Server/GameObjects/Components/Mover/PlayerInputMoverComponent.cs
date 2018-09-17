@@ -106,8 +106,8 @@ namespace SS14.Server.GameObjects
             x += _movingRight ? 1 : 0;
 
             var y = 0;
-            y += _movingDown ? 1 : 0;
-            y -= _movingUp ? 1 : 0;
+            y -= _movingDown ? 1 : 0;
+            y += _movingUp ? 1 : 0;
 
             VelocityDir = new Vector2(x, y);
 

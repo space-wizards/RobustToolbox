@@ -71,8 +71,8 @@ namespace SS14.Shared.Map
                 var min_x = Math.Min(a.Left, b.X);
                 var max_x = Math.Max(a.Right, b.X);
 
-                var min_y = Math.Min(a.Top, b.Y);
-                var max_y = Math.Max(a.Bottom, b.Y);
+                var min_y = Math.Min(a.Bottom, b.Y);
+                var max_y = Math.Max(a.Top, b.Y);
 
                 AABBWorld = Box2.FromDimensions(min_x, min_y, max_x - min_x, max_y - min_y);
             }
@@ -141,14 +141,14 @@ namespace SS14.Shared.Map
             public IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null)
             {
                 //TODO: needs world -> local -> tile translations.
-                var gridTileLt = new MapIndices((int)Math.Floor(worldArea.Left), (int)Math.Floor(worldArea.Top));
-                var gridTileRb = new MapIndices((int)Math.Floor(worldArea.Right), (int)Math.Floor(worldArea.Bottom));
+                var gridTileLb = new MapIndices((int)Math.Floor(worldArea.Left), (int)Math.Floor(worldArea.Bottom));
+                var gridTileRt = new MapIndices((int)Math.Floor(worldArea.Right), (int)Math.Floor(worldArea.Top));
 
                 var tiles = new List<TileRef>();
 
-                for (var x = gridTileLt.X; x <= gridTileRb.X; x++)
+                for (var x = gridTileLb.X; x <= gridTileRt.X; x++)
                 {
-                    for (var y = gridTileLt.Y; y <= gridTileRb.Y; y++)
+                    for (var y = gridTileLb.Y; y <= gridTileRt.Y; y++)
                     {
                         var gridChunk = GridTileToGridChunk(new MapIndices(x, y));
                         Chunk chunk;

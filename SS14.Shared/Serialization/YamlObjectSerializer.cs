@@ -33,6 +33,7 @@ namespace SS14.Shared.Serialization
                 { typeof(Color), new ColorSerializer() },
                 { typeof(Vector2), new Vector2Serializer() },
                 { typeof(Angle), new AngleSerializer() },
+                { typeof(UIBox2), new UIBox2Serializer() },
                 { typeof(Box2), new Box2Serializer() },
                 { typeof(ResourcePath), new ResourcePathSerializer() },
                 { typeof(GridId), new GridIdSerializer() },
@@ -802,7 +803,7 @@ namespace SS14.Shared.Serialization
             }
         }
 
-        class Box2Serializer : TypeSerializer
+        class UIBox2Serializer : TypeSerializer
         {
             public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
@@ -813,13 +814,34 @@ namespace SS14.Shared.Serialization
                 var b = float.Parse(args[2], CultureInfo.InvariantCulture);
                 var r = float.Parse(args[3], CultureInfo.InvariantCulture);
 
-                return new Box2(l, t, r, b);
+                return new UIBox2(l, t, r, b);
+            }
+
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
+            {
+                var box = (UIBox2)obj;
+                return new YamlScalarNode($"{box.Top},{box.Left},{box.Bottom},{box.Right}");
+            }
+        }
+
+        class Box2Serializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
+            {
+                var args = node.ToString().Split(',');
+
+                var b = float.Parse(args[0], CultureInfo.InvariantCulture);
+                var l = float.Parse(args[1], CultureInfo.InvariantCulture);
+                var t = float.Parse(args[2], CultureInfo.InvariantCulture);
+                var r = float.Parse(args[3], CultureInfo.InvariantCulture);
+
+                return new Box2(l, b, r, t);
             }
 
             public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 var box = (Box2)obj;
-                return new YamlScalarNode($"{box.Top},{box.Left},{box.Bottom},{box.Right}");
+                return new YamlScalarNode($"{box.Bottom},{box.Left},{box.Top},{box.Right}");
             }
         }
 

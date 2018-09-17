@@ -120,7 +120,18 @@ namespace SS14.Client.Graphics.Overlays
                 VS.CanvasItemSetUseParentMaterial(item, SubHandlesUseMainShader);
             }
 
-            var handle = new DrawingHandle(item);
+            DrawingHandle handle;
+            switch (Space)
+            {
+                case OverlaySpace.ScreenSpace:
+                    handle = new DrawingHandleScreen(item);
+                    break;
+                case OverlaySpace.WorldSpace:
+                    handle = new DrawingHandleWorld(item);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
             TempHandles.Add(handle);
             return handle;
         }
@@ -142,7 +153,19 @@ namespace SS14.Client.Graphics.Overlays
             try
             {
                 Drawing = true;
-                Draw(new DrawingHandle(MainCanvasItem));
+                DrawingHandle handle;
+                switch (Space)
+                {
+                    case OverlaySpace.ScreenSpace:
+                        handle = new DrawingHandleScreen(MainCanvasItem);
+                        break;
+                    case OverlaySpace.WorldSpace:
+                        handle = new DrawingHandleWorld(MainCanvasItem);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+                Draw(handle);
             }
             finally
             {
@@ -153,12 +176,6 @@ namespace SS14.Client.Graphics.Overlays
                 }
                 TempHandles.Clear();
             }
-        }
-
-        public void ClearCanvasItem()
-        {
-            ClearDraw();
-            MainCanvasItem = null;
         }
 
         private void ClearDraw()

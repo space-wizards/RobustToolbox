@@ -155,8 +155,6 @@ namespace SS14.Client.GameObjects.EntitySystems
         {
             base.HandleNetMessage(channel, message);
 
-            Logger.Debug($"Ding: {message.GetType()}");
-
             if (!(message is AudioMessage msg))
             {
                 return;

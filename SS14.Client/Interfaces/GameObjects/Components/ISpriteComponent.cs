@@ -94,6 +94,14 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         /// </exception>
         bool LayerMapTryGet(object key, out int layer);
 
+        /// <summary>
+        ///     Adds a layer without texture (thus falling back to the error texture).
+        ///     The layer defaults to invisible.
+        /// </summary>
+        /// <param name="newIndex">If not null, the index of this new layer.</param>
+        /// <returns>Index of the new layer.</returns>
+        int AddBlankLayer(int? newIndex = null);
+
         int AddLayer(Texture texture, int? newIndex = null);
         int AddLayer(string texturePath, int? newIndex = null);
         int AddLayer(ResourcePath texturePath, int? newIndex = null);

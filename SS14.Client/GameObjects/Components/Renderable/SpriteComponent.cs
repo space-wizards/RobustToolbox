@@ -250,6 +250,16 @@ namespace SS14.Client.GameObjects
             return LayerMap.TryGetValue(key, out layer);
         }
 
+        /// <inheritdoc />
+        public int AddBlankLayer(int? newIndex = null)
+        {
+            var layer = Layer.New();
+            layer.Visible = false;
+            // Redraw is probably not needed but eh?
+            RedrawQueued = true;
+            return AddLayer(layer, newIndex);
+        }
+
         public int AddLayer(string texturePath, int? newIndex = null)
         {
             return AddLayer(new ResourcePath(texturePath), newIndex);
@@ -356,7 +366,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        int AddLayer(Layer layer, int? newIndex)
+        private int AddLayer(Layer layer, int? newIndex)
         {
             if (newIndex.HasValue)
             {

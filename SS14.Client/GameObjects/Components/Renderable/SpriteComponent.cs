@@ -27,9 +27,11 @@ using VS = Godot.VisualServer;
 
 namespace SS14.Client.GameObjects
 {
-    public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent, IClickTargetComponent, IComponentDebug
+    public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent, IClickTargetComponent,
+        IComponentDebug
     {
         private bool _visible = true;
+
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Visible
         {
@@ -62,12 +64,13 @@ namespace SS14.Client.GameObjects
                 drawDepth = value;
                 if (SceneNode != null)
                 {
-                    SceneNode.ZIndex = (int)value;
+                    SceneNode.ZIndex = (int) value;
                 }
             }
         }
 
         private Vector2 scale = Vector2.One;
+
         /// <summary>
         ///     A scale applied to all layers.
         /// </summary>
@@ -86,6 +89,7 @@ namespace SS14.Client.GameObjects
         }
 
         private Angle rotation;
+
         [ViewVariables]
         public Angle Rotation
         {
@@ -95,12 +99,13 @@ namespace SS14.Client.GameObjects
                 rotation = value;
                 if (SceneNode != null)
                 {
-                    SceneNode.Rotation = (float)value;
+                    SceneNode.Rotation = (float) value;
                 }
             }
         }
 
         private Vector2 offset = Vector2.Zero;
+
         /// <summary>
         ///     Offset applied to all layers.
         /// </summary>
@@ -119,6 +124,7 @@ namespace SS14.Client.GameObjects
         }
 
         private Color color = Color.White;
+
         [ViewVariables]
         public Color Color
         {
@@ -152,10 +158,10 @@ namespace SS14.Client.GameObjects
 
         private bool _directional = true;
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        private bool RedrawQueued = true;
+        [ViewVariables(VVAccess.ReadWrite)] private bool RedrawQueued = true;
 
         private RSI _baseRsi;
+
         [ViewVariables]
         public RSI BaseRSI
         {
@@ -167,6 +173,7 @@ namespace SS14.Client.GameObjects
                 {
                     return;
                 }
+
                 for (var i = 0; i < Layers.Count; i++)
                 {
                     var layer = Layers[i];
@@ -182,8 +189,8 @@ namespace SS14.Client.GameObjects
                     else
                     {
                         Logger.ErrorS(LogCategory,
-                                      "Layer '{0}'no longer has state '{1}' due to base RSI change. Trace:\n{2}",
-                                      i, layer.State, Environment.StackTrace);
+                            "Layer '{0}'no longer has state '{1}' due to base RSI change. Trace:\n{2}",
+                            i, layer.State, Environment.StackTrace);
                         layer.Texture = null;
                     }
                 }
@@ -208,16 +215,21 @@ namespace SS14.Client.GameObjects
         private IResourceCache resourceCache;
         private IPrototypeManager prototypes;
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        RSI.State.Direction LastDir;
-        [ViewVariables(VVAccess.ReadWrite)]
-        private bool _recalcDirections = false;
+        [ViewVariables(VVAccess.ReadWrite)] RSI.State.Direction LastDir;
+        [ViewVariables(VVAccess.ReadWrite)] private bool _recalcDirections = false;
 
         int NextMirrorKey;
+
         // Do not directly store mirror instances, so that they can be picked up by the GC is not disposed correctly.
         // Don't need em anyways.
         readonly Dictionary<int, MirrorData> Mirrors = new Dictionary<int, MirrorData>();
         ISpriteProxy MainMirror;
+
+        private static Shader _defaultShader;
+        private static Shader DefaultShader => _defaultShader ??
+                                               (_defaultShader = IoCManager.Resolve<IPrototypeManager>()
+                                                   .Index<ShaderPrototype>("shaded")
+                                                   .Instance());
 
         public const string LogCategory = "go.comp.sprite";
         const string LayerSerializationCache = "spritelayer";
@@ -229,6 +241,7 @@ namespace SS14.Client.GameObjects
             {
                 throw new ArgumentOutOfRangeException();
             }
+
             LayerMap.Add(key, layer);
         }
 
@@ -269,7 +282,8 @@ namespace SS14.Client.GameObjects
         {
             if (!resourceCache.TryGetResource<TextureResource>(TextureRoot / texturePath, out var texture))
             {
-                Logger.ErrorS(LogCategory, "Unable to load texture '{0}'. Trace:\n{1}", texturePath, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Unable to load texture '{0}'. Trace:\n{1}", texturePath,
+                    Environment.StackTrace);
             }
 
             return AddLayer(texture, newIndex);
@@ -293,8 +307,10 @@ namespace SS14.Client.GameObjects
             }
             else
             {
-                Logger.ErrorS(LogCategory, "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId,
+                    Environment.StackTrace);
             }
+
             RedrawQueued = true;
             return AddLayer(layer, newIndex);
         }
@@ -340,8 +356,10 @@ namespace SS14.Client.GameObjects
             }
             else
             {
-                Logger.ErrorS(LogCategory, "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId,
+                    Environment.StackTrace);
             }
+
             RedrawQueued = true;
             return AddLayer(layer, newIndex);
         }
@@ -378,6 +396,7 @@ namespace SS14.Client.GameObjects
                         LayerMap[kv.Key] = kv.Value + 1;
                     }
                 }
+
                 return newIndex.Value;
             }
             else
@@ -391,9 +410,11 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot remove! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot remove! Trace:\n{1}", layer,
+                    Environment.StackTrace);
                 return;
             }
+
             Layers.RemoveAt(layer);
             foreach (var kv in LayerMap)
             {
@@ -407,6 +428,7 @@ namespace SS14.Client.GameObjects
                     LayerMap[kv.Key] = kv.Value - 1;
                 }
             }
+
             RedrawQueued = true;
         }
 
@@ -414,7 +436,8 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot remove! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot remove! Trace:\n{1}", layerKey,
+                    Environment.StackTrace);
                 return;
             }
 
@@ -425,9 +448,11 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set shader! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set shader! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
+
             var thelayer = Layers[layer];
             thelayer.Shader = shader;
             Layers[layer] = thelayer;
@@ -438,7 +463,8 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -449,7 +475,8 @@ namespace SS14.Client.GameObjects
         {
             if (!prototypes.TryIndex<ShaderPrototype>(shaderName, out var prototype))
             {
-                Logger.ErrorS(LogCategory, "Shader prototype '{0}' does not exist. Trace:\n{1}", shaderName, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Shader prototype '{0}' does not exist. Trace:\n{1}", shaderName,
+                    Environment.StackTrace);
             }
 
             // This will set the shader to null if it does not exist.
@@ -460,7 +487,8 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set shader! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -471,7 +499,8 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set sprite! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set sprite! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
 
@@ -492,7 +521,8 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set sprite! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set sprite! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -503,9 +533,11 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set texture! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set texture! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
+
             var thelayer = Layers[layer];
             thelayer.State = null;
             thelayer.Texture = texture;
@@ -517,7 +549,8 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set texture! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set texture! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -538,7 +571,8 @@ namespace SS14.Client.GameObjects
         {
             if (!resourceCache.TryGetResource<TextureResource>(TextureRoot / texturePath, out var texture))
             {
-                Logger.ErrorS(LogCategory, "Unable to load texture '{0}'. Trace:\n{1}", texturePath, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Unable to load texture '{0}'. Trace:\n{1}", texturePath,
+                    Environment.StackTrace);
             }
 
             LayerSetTexture(layer, texture);
@@ -548,7 +582,8 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set texture! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set texture! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -559,7 +594,8 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set state! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set state! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
 
@@ -568,6 +604,7 @@ namespace SS14.Client.GameObjects
             {
                 return;
             }
+
             thelayer.State = stateId;
             var rsi = thelayer.RSI ?? BaseRSI;
             if (rsi == null)
@@ -580,11 +617,13 @@ namespace SS14.Client.GameObjects
                 if (rsi.TryGetState(stateId, out var state))
                 {
                     thelayer.AnimationFrame = 0;
-                    (thelayer.Texture, thelayer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref thelayer, state), 0);
+                    (thelayer.Texture, thelayer.AnimationTimeLeft) =
+                        state.GetFrame(CorrectLayerDir(ref thelayer, state), 0);
                 }
                 else
                 {
-                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId, Environment.StackTrace);
+                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId,
+                        Environment.StackTrace);
                     thelayer.Texture = null;
                 }
             }
@@ -597,7 +636,8 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -608,7 +648,8 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set state! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set state! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
 
@@ -626,11 +667,13 @@ namespace SS14.Client.GameObjects
                 if (actualrsi.TryGetState(stateId, out var state))
                 {
                     thelayer.AnimationFrame = 0;
-                    (thelayer.Texture, thelayer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref thelayer, state), 0);
+                    (thelayer.Texture, thelayer.AnimationTimeLeft) =
+                        state.GetFrame(CorrectLayerDir(ref thelayer, state), 0);
                 }
                 else
                 {
-                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId, Environment.StackTrace);
+                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId,
+                        Environment.StackTrace);
                     thelayer.Texture = null;
                 }
             }
@@ -643,7 +686,8 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -674,7 +718,8 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set state! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -685,7 +730,8 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set RSI! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set RSI! Trace:\n{1}", layer,
+                    Environment.StackTrace);
                 return;
             }
 
@@ -708,11 +754,13 @@ namespace SS14.Client.GameObjects
             {
                 if (rsi.TryGetState(thelayer.State, out var state))
                 {
-                    (thelayer.Texture, thelayer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref thelayer, state), 0);
+                    (thelayer.Texture, thelayer.AnimationTimeLeft) =
+                        state.GetFrame(CorrectLayerDir(ref thelayer, state), 0);
                 }
                 else
                 {
-                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in set RSI. Trace:\n{1}", thelayer.State, Environment.StackTrace);
+                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in set RSI. Trace:\n{1}", thelayer.State,
+                        Environment.StackTrace);
                     thelayer.Texture = null;
                 }
             }
@@ -725,7 +773,8 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set RSI! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set RSI! Trace:\n{1}", layerKey,
+                    Environment.StackTrace);
                 return;
             }
 
@@ -756,7 +805,8 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set RSI! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set RSI! Trace:\n{1}", layerKey,
+                    Environment.StackTrace);
                 return;
             }
 
@@ -767,7 +817,8 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set scale! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set scale! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
 
@@ -781,7 +832,8 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set scale! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set scale! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -793,7 +845,8 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set rotation! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set rotation! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
 
@@ -807,7 +860,8 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set rotation! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set rotation! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -818,7 +872,8 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set visibility! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set visibility! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
 
@@ -832,7 +887,8 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set visibility! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set visibility! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -843,7 +899,8 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set color! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set color! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
 
@@ -857,7 +914,8 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set color! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set color! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -868,7 +926,8 @@ namespace SS14.Client.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set dir offset! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set dir offset! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
 
@@ -884,7 +943,8 @@ namespace SS14.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set dir offset! Trace:\n{1}", layerKey, Environment.StackTrace);
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set dir offset! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
                 return;
             }
 
@@ -918,11 +978,11 @@ namespace SS14.Client.GameObjects
             SceneNode = new Godot.Node2D()
             {
                 Name = "Sprite",
-                ZIndex = (int)drawDepth,
+                ZIndex = (int) drawDepth,
                 Scale = scale.Convert(),
                 Position = offset.Convert(),
                 Modulate = color.Convert(),
-                Rotation = (float)rotation,
+                Rotation = (float) rotation,
             };
         }
 
@@ -934,6 +994,7 @@ namespace SS14.Client.GameObjects
             {
                 DisposeMirror(key);
             }
+
             MainMirror.Dispose();
             SceneNode.QueueFree();
         }
@@ -946,7 +1007,7 @@ namespace SS14.Client.GameObjects
             var mir = Mirrors[0];
             mir.DontFree = true;
             Mirrors[0] = mir;
-            ((IGodotTransformComponent)Owner.Transform).SceneNode.AddChild(SceneNode);
+            ((IGodotTransformComponent) Owner.Transform).SceneNode.AddChild(SceneNode);
         }
 
         private void ClearDraw()
@@ -972,6 +1033,7 @@ namespace SS14.Client.GameObjects
                 {
                     continue;
                 }
+
                 Shader prevShader = null;
                 Godot.RID currentItem = null;
                 foreach (var layer in Layers)
@@ -980,7 +1042,8 @@ namespace SS14.Client.GameObjects
                     {
                         continue;
                     }
-                    var shader = layer.Shader;
+
+                    var shader = layer.Shader ?? DefaultShader;
                     var texture = layer.Texture ?? resourceCache.GetFallback<TextureResource>();
                     if (currentItem == null || prevShader != shader)
                     {
@@ -991,6 +1054,7 @@ namespace SS14.Client.GameObjects
                         {
                             VS.CanvasItemSetMaterial(currentItem, shader.GodotMaterial.GetRid());
                         }
+
                         prevShader = shader;
                     }
 
@@ -1049,7 +1113,8 @@ namespace SS14.Client.GameObjects
 
             layers = new List<Layer>();
 
-            var layerData = serializer.ReadDataField<List<PrototypeLayerData>>("layers", new List<PrototypeLayerData>());
+            var layerData =
+                serializer.ReadDataField<List<PrototypeLayerData>>("layers", new List<PrototypeLayerData>());
 
             {
                 var baseState = serializer.ReadDataField<string>("state", null);
@@ -1095,8 +1160,8 @@ namespace SS14.Client.GameObjects
                     if (theRsi == null)
                     {
                         Logger.ErrorS(LogCategory,
-                                      "Layer has no RSI to load states from."
-                                      + "cannot use 'state' property. Prototype: '{0}'", Owner.Prototype.ID);
+                            "Layer has no RSI to load states from."
+                            + "cannot use 'state' property. Prototype: '{0}'", Owner.Prototype.ID);
                     }
                     else
                     {
@@ -1109,8 +1174,8 @@ namespace SS14.Client.GameObjects
                         else
                         {
                             Logger.ErrorS(LogCategory,
-                                          "State not found in layer RSI: '{0}'.",
-                                          stateid);
+                                "State not found in layer RSI: '{0}'.",
+                                stateid);
                         }
                     }
                 }
@@ -1120,12 +1185,13 @@ namespace SS14.Client.GameObjects
                     if (layer.State.IsValid)
                     {
                         Logger.ErrorS(LogCategory,
-                                      "Cannot specify 'texture' on a layer if it has an RSI state specified."
-                                     );
+                            "Cannot specify 'texture' on a layer if it has an RSI state specified."
+                        );
                     }
                     else
                     {
-                        layer.Texture = resourceCache.GetResource<TextureResource>(TextureRoot / layerDatum.TexturePath);
+                        layer.Texture =
+                            resourceCache.GetResource<TextureResource>(TextureRoot / layerDatum.TexturePath);
                     }
                 }
 
@@ -1138,8 +1204,8 @@ namespace SS14.Client.GameObjects
                     else
                     {
                         Logger.ErrorS(LogCategory,
-                                      "Shader prototype '{0}' does not exist. Prototype: '{1}'",
-                                      layerDatum.Shader, Owner.Prototype.ID);
+                            "Shader prototype '{0}' does not exist. Prototype: '{1}'",
+                            layerDatum.Shader, Owner.Prototype.ID);
                     }
                 }
 
@@ -1163,7 +1229,7 @@ namespace SS14.Client.GameObjects
             var dirChanged = false;
             if (Directional)
             {
-                SceneNode.Rotation = (float)(Owner.Transform.WorldRotation - Rotation) - MathHelper.PiOver2;
+                SceneNode.Rotation = (float) (Owner.Transform.WorldRotation - Rotation) - MathHelper.PiOver2;
                 dirWeAreFacing = GetDir();
                 if (LastDir != dirWeAreFacing || _recalcDirections)
                 {
@@ -1196,6 +1262,7 @@ namespace SS14.Client.GameObjects
                 {
                     layerSpecificDir = OffsetRsiDir(dirWeAreFacing, layer.DirOffset);
                 }
+
                 if (!dirChanged)
                 {
                     var delayCount = state.DelayCount(layerSpecificDir);
@@ -1205,6 +1272,7 @@ namespace SS14.Client.GameObjects
                         // There's no animation frames!
                         continue;
                     }
+
                     layer.AnimationTimeLeft -= delta;
                     while (layer.AnimationTimeLeft < 0)
                     {
@@ -1212,8 +1280,10 @@ namespace SS14.Client.GameObjects
                         {
                             layer.AnimationFrame = 0;
                         }
+
                         layer.AnimationTimeLeft += state.GetFrame(layerSpecificDir, layer.AnimationFrame).delay;
                     }
+
                     layer.Texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame).icon;
                 }
                 else
@@ -1224,6 +1294,7 @@ namespace SS14.Client.GameObjects
                     layer.AnimationFrame = 0;
                     (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(layerSpecificDir, 0);
                 }
+
                 RedrawQueued = true;
                 Layers[i] = layer;
             }
@@ -1237,7 +1308,7 @@ namespace SS14.Client.GameObjects
 
         public override void HandleComponentState(ComponentState state)
         {
-            var thestate = (SpriteComponentState)state;
+            var thestate = (SpriteComponentState) state;
 
             Visible = thestate.Visible;
             DrawDepth = thestate.DrawDepth;
@@ -1307,6 +1378,7 @@ namespace SS14.Client.GameObjects
             {
                 return RSI.State.Direction.South;
             }
+
             var angle = new Angle(Owner.Transform.WorldRotation);
             return angle.GetDir().Convert();
         }
@@ -1383,7 +1455,8 @@ namespace SS14.Client.GameObjects
                     // "is one set" is better than nothing at least.
                     layer.Shader != null, layer.Texture != null, layer.RSI != null,
                     layer.State,
-                    layer.AnimationTimeLeft, layer.AnimationFrame, layer.Scale, layer.Rotation, layer.Visible, layer.Color, layer.DirOffset
+                    layer.AnimationTimeLeft, layer.AnimationFrame, layer.Scale, layer.Rotation, layer.Visible,
+                    layer.Color, layer.DirOffset
                 );
             }
 
@@ -1401,6 +1474,7 @@ namespace SS14.Client.GameObjects
             {
                 return RSI.State.Direction.South;
             }
+
             return OffsetRsiDir(GetDir(), layer.DirOffset);
         }
 
@@ -1411,6 +1485,7 @@ namespace SS14.Client.GameObjects
                 // Maybe possible if the sprite gets disposed before the mirror handle?
                 return;
             }
+
             // TODO: Doing a full redraw when a mirror is disposed is kinda a waste.
             ClearDraw();
             RedrawQueued = true;
@@ -1418,6 +1493,7 @@ namespace SS14.Client.GameObjects
             {
                 VS.FreeRid(val.Root);
             }
+
             Mirrors.Remove(key);
         }
 
@@ -1494,6 +1570,7 @@ namespace SS14.Client.GameObjects
 
             private Godot.RID Parent;
             private Vector2 _offset;
+
             public Vector2 Offset
             {
                 get => _offset;
@@ -1506,6 +1583,7 @@ namespace SS14.Client.GameObjects
             }
 
             private bool _visible = true;
+
             public bool Visible
             {
                 get => _visible;
@@ -1552,6 +1630,7 @@ namespace SS14.Client.GameObjects
                 {
                     return;
                 }
+
                 Dispose(true);
                 GC.SuppressFinalize(this);
             }
@@ -1572,7 +1651,9 @@ namespace SS14.Client.GameObjects
         {
             public Godot.RID Root;
             public List<Godot.RID> Children;
+
             public bool Visible;
+
             // Don't free the canvas item if it's the scene node item.
             // That causes problems.
             // Seriously.

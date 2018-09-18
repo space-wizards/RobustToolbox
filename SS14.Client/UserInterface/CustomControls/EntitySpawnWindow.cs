@@ -142,7 +142,7 @@ namespace SS14.Client.UserInterface.CustomControls
             }
 
             var prototypes = prototypeManager.EnumeratePrototypes<EntityPrototype>()
-                .Where(prototype => searchStr == null || prototype.ID.ToLower().Contains(searchStr))
+                .Where(prototype => !prototype.Abstract && (searchStr == null || prototype.ID.ToLower().Contains(searchStr)))
                 .OrderBy(prototype => prototype.Name);
 
             foreach (var prototype in prototypes)

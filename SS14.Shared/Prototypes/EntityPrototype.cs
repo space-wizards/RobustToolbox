@@ -45,6 +45,12 @@ namespace SS14.Shared.GameObjects
         public string Description { get; private set; }
 
         /// <summary>
+        ///     If true, this object should not show up in the entity spawn panel.
+        /// </summary>
+        [ViewVariables]
+        public bool Abstract { get; private set; }
+
+        /// <summary>
         /// The type of entity instantiated when a new entity is created from this template.
         /// </summary>
         [ViewVariables]
@@ -200,6 +206,11 @@ namespace SS14.Shared.GameObjects
             if (mapping.TryGetNode("save", out node))
             {
                 MapSavable = node.AsBool();
+            }
+
+            if (mapping.TryGetNode("abstract", out node))
+            {
+                Abstract = node.AsBool();
             }
         }
 

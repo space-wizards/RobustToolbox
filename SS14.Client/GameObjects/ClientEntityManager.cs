@@ -123,26 +123,33 @@ namespace SS14.Client.GameObjects
 
         public void ApplyEntityStates(IEnumerable<EntityState> entityStates, IEnumerable<EntityUid> deletions, float serverTime)
         {
-            foreach (EntityState es in entityStates)
+            var toApply = new List<(Entity, EntityState)>();
+            foreach (var es in entityStates)
             {
                 //Todo defer component state result processing until all entities are loaded and initialized...
                 es.ReceivedTime = serverTime;
                 //Known entities
                 if (Entities.TryGetValue(es.StateData.Uid, out var entity))
                 {
-                    entity.HandleEntityState(es);
+                    toApply.Add(((Entity)entity, es));
                 }
                 else //Unknown entities
                 {
-                    Entity newEntity = InternalCreateEntity(es.StateData.TemplateName, es.StateData.Uid);
+                    var newEntity = InternalCreateEntity(es.StateData.TemplateName, es.StateData.Uid);
                     if (Started)
                     {
                         InitializeEntity(newEntity);
                     }
 
                     newEntity.Name = es.StateData.Name;
-                    newEntity.HandleEntityState(es);
+                    toApply.Add((newEntity, es));
                 }
+            }
+
+            // Make sure this is done after all entities have been instantiated.
+            foreach (var (entity, es) in toApply)
+            {
+                entity.HandleEntityState(es);
             }
 
             foreach (var id in deletions)

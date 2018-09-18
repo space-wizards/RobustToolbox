@@ -202,12 +202,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         void HandleNetworkMessage(IncomingEntityMessage message);
 
         /// <summary>
-        ///     Client method to handle an entity state object
-        /// </summary>
-        /// <param name="state"></param>
-        void HandleEntityState(EntityState state);
-
-        /// <summary>
         ///     Serverside method to prepare an entity state object
         /// </summary>
         /// <returns></returns>

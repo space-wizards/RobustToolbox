@@ -382,8 +382,7 @@ namespace SS14.Shared.GameObjects
 
         #region GameState
 
-        /// <inheritdoc />
-        public void HandleEntityState(EntityState state)
+        internal void HandleEntityState(EntityState state)
         {
             Name = state.StateData.Name;
             var synchedComponentTypes = state.StateData.SynchedComponentTypes;

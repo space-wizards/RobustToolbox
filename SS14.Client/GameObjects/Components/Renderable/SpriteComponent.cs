@@ -1105,16 +1105,11 @@ namespace SS14.Client.GameObjects
             layers = new List<Layer>();
 
             var layerData =
-                serializer.ReadDataField<List<PrototypeLayerData>>("layers", new List<PrototypeLayerData>());
+                serializer.ReadDataField("layers", new List<PrototypeLayerData>());
 
             {
                 var baseState = serializer.ReadDataField<string>("state", null);
                 var texturePath = serializer.ReadDataField<string>("texture", null);
-
-                if (Owner.Prototype.ID == "SMES")
-                {
-                    Logger.Fatal("YES!");
-                }
 
                 if (baseState != null || texturePath != null)
                 {

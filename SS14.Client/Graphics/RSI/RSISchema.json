@@ -35,7 +35,7 @@
                     }
                 }
             },
-            "required": ["name","select","flags","directions"] //'delays' is marked as optional in the spec
+            "required": ["name","directions"] //'delays' is marked as optional in the spec
         }
     },
     "properties": {

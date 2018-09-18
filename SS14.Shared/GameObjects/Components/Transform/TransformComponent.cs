@@ -155,10 +155,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 {
                     // transform _position from parent coords to world coords
                     var worldPos = Parent.WorldMatrix.Transform(_position);
-                    var lc = new GridLocalCoordinates(worldPos, MapID);
-
-                    // then to parent grid coords
-                    return lc.ConvertToGrid(Parent.LocalPosition.Grid);
+                    return new GridLocalCoordinates(worldPos, _gridID);
                 }
                 else
                 {

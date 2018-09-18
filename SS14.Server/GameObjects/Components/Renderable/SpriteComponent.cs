@@ -130,6 +130,7 @@ namespace SS14.Server.GameObjects
                 default:
                     throw new NotImplementedException();
             }
+
             Layers.Add(layer);
             Dirty();
             return Layers.Count - 1;
@@ -167,6 +168,7 @@ namespace SS14.Server.GameObjects
             Dirty();
             return Layers.Count - 1;
         }
+
         public int AddLayerWithState(string stateId, ResourcePath rsiPath)
         {
             return AddLayerWithState(stateId, rsiPath.ToString());
@@ -176,9 +178,11 @@ namespace SS14.Server.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot remove! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot remove! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
+
             Layers.RemoveAt(layer);
             Dirty();
         }
@@ -187,9 +191,11 @@ namespace SS14.Server.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set shader! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set shader! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
+
             var thelayer = Layers[layer];
             thelayer.Shader = shaderName;
             Layers[layer] = thelayer;
@@ -200,9 +206,11 @@ namespace SS14.Server.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set sprite! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set sprite! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
+
             var thelayer = Layers[layer];
             switch (specifier)
             {
@@ -228,15 +236,19 @@ namespace SS14.Server.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set texture! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS("go.comp.sprite",
+                    "Layer with index '{0}' does not exist, cannot set texture! Trace:\n{1}", layer,
+                    Environment.StackTrace);
                 return;
             }
+
             var thelayer = Layers[layer];
             thelayer.State = null;
             thelayer.TexturePath = texturePath;
             Layers[layer] = thelayer;
             Dirty();
         }
+
         public void LayerSetTexture(int layer, ResourcePath texturePath)
         {
             LayerSetTexture(layer, texturePath.ToString());
@@ -246,9 +258,11 @@ namespace SS14.Server.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set set! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set set! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
+
             var thelayer = Layers[layer];
             thelayer.State = stateId;
             thelayer.TexturePath = null;
@@ -260,9 +274,12 @@ namespace SS14.Server.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set state & RSI! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS("go.comp.sprite",
+                    "Layer with index '{0}' does not exist, cannot set state & RSI! Trace:\n{1}", layer,
+                    Environment.StackTrace);
                 return;
             }
+
             var thelayer = Layers[layer];
             thelayer.RsiPath = rsiPath;
             thelayer.State = stateId;
@@ -280,7 +297,8 @@ namespace SS14.Server.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set RSI! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set RSI! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
 
@@ -299,7 +317,8 @@ namespace SS14.Server.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set scale! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set scale! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
 
@@ -313,7 +332,9 @@ namespace SS14.Server.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set rotation! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS("go.comp.sprite",
+                    "Layer with index '{0}' does not exist, cannot set rotation! Trace:\n{1}", layer,
+                    Environment.StackTrace);
                 return;
             }
 
@@ -327,7 +348,9 @@ namespace SS14.Server.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set visibility! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS("go.comp.sprite",
+                    "Layer with index '{0}' does not exist, cannot set visibility! Trace:\n{1}", layer,
+                    Environment.StackTrace);
                 return;
             }
 
@@ -341,7 +364,8 @@ namespace SS14.Server.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set color! Trace:\n{1}", layer, Environment.StackTrace);
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set color! Trace:\n{1}",
+                    layer, Environment.StackTrace);
                 return;
             }
 
@@ -376,7 +400,8 @@ namespace SS14.Server.GameObjects
                 return;
             }
 
-            var layerData = serializer.ReadDataField<List<PrototypeLayerData>>("layers", new List<PrototypeLayerData>());
+            var layerData =
+                serializer.ReadDataField<List<PrototypeLayerData>>("layers", new List<PrototypeLayerData>());
 
             {
                 var baseState = serializer.ReadDataField<string>("state", null);
@@ -385,8 +410,16 @@ namespace SS14.Server.GameObjects
                 if (baseState != null || texturePath != null)
                 {
                     var layerZeroData = PrototypeLayerData.New();
-                    layerZeroData.State = baseState;
-                    layerZeroData.TexturePath = texturePath;
+                    if (!string.IsNullOrWhiteSpace(baseState))
+                    {
+                        layerZeroData.State = baseState;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(texturePath))
+                    {
+                        layerZeroData.TexturePath = texturePath;
+                    }
+
                     layerData.Insert(0, layerZeroData);
                 }
             }
@@ -397,7 +430,8 @@ namespace SS14.Server.GameObjects
 
         public override ComponentState GetComponentState()
         {
-            return new SpriteComponentState(Visible, DrawDepth, Scale, Rotation, Offset, Color, Directional, BaseRSIPath, Layers);
+            return new SpriteComponentState(Visible, DrawDepth, Scale, Rotation, Offset, Color, Directional,
+                BaseRSIPath, Layers);
         }
     }
 }

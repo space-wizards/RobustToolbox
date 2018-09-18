@@ -1034,8 +1034,6 @@ namespace SS14.Client.GameObjects
                     continue;
                 }
 
-                Shader prevShader = null;
-                Godot.RID currentItem = null;
                 foreach (var layer in Layers)
                 {
                     if (!layer.Visible)
@@ -1045,18 +1043,11 @@ namespace SS14.Client.GameObjects
 
                     var shader = layer.Shader ?? DefaultShader;
                     var texture = layer.Texture ?? resourceCache.GetFallback<TextureResource>();
-                    if (currentItem == null || prevShader != shader)
-                    {
-                        currentItem = VS.CanvasItemCreate();
-                        VS.CanvasItemSetParent(currentItem, data.Root);
-                        data.Children.Add(currentItem);
-                        if (shader != null)
-                        {
-                            VS.CanvasItemSetMaterial(currentItem, shader.GodotMaterial.GetRid());
-                        }
 
-                        prevShader = shader;
-                    }
+                    var currentItem = VS.CanvasItemCreate();
+                    VS.CanvasItemSetParent(currentItem, data.Root);
+                    data.Children.Add(currentItem);
+                    VS.CanvasItemSetMaterial(currentItem, shader.GodotMaterial.GetRid());
 
                     var transform = Godot.Transform2D.Identity;
                     DrawingHandle.SetTransform2DRotationAndScale(ref transform, -layer.Rotation, layer.Scale);

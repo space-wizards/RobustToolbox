@@ -184,7 +184,7 @@ namespace SS14.Client.GameObjects
 
                     if (value.TryGetState(layer.State, out var state))
                     {
-                        (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref layer), 0);
+                        (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref layer, state), 0);
                     }
                     else
                     {
@@ -352,7 +352,7 @@ namespace SS14.Client.GameObjects
             layer.RSI = rsi;
             if (rsi.TryGetState(stateId, out var state))
             {
-                (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(GetDir(), 0);
+                (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref layer, state), 0);
             }
             else
             {
@@ -1099,6 +1099,8 @@ namespace SS14.Client.GameObjects
             if (serializer.TryGetCacheData<List<Layer>>(LayerSerializationCache, out var layers))
             {
                 Layers = layers.ShallowClone();
+                // Do this because the directions in the cache may not be correct for us.
+                _recalcDirections = true;
                 return;
             }
 
@@ -1155,7 +1157,8 @@ namespace SS14.Client.GameObjects
                         layer.State = stateid;
                         if (BaseRSI.TryGetState(stateid, out var state))
                         {
-                            layer.Texture = state.GetFrame(CorrectLayerDir(ref layer, state), 0).icon;
+                            // Always use south because this layer will be cached in the serializer.
+                            (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(RSI.State.Direction.South, 0);
                         }
                         else
                         {
@@ -1205,6 +1208,8 @@ namespace SS14.Client.GameObjects
 
             Layers = layers;
             serializer.SetCacheData(LayerSerializationCache, Layers.ShallowClone());
+            // Do this because the directions in the cache may not be correct.
+            _recalcDirections = true;
         }
 
         public void FrameUpdate(float delta)
@@ -1447,11 +1452,6 @@ namespace SS14.Client.GameObjects
             }
 
             return builder.ToString();
-        }
-
-        RSI.State.Direction CorrectLayerDir(ref Layer layer)
-        {
-            return OffsetRsiDir(GetDir(), layer.DirOffset);
         }
 
         RSI.State.Direction CorrectLayerDir(ref Layer layer, RSI.State state)

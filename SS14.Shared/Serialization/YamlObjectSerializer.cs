@@ -749,7 +749,7 @@ namespace SS14.Shared.Serialization
         {
             public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
-                var val = int.Parse(node.ToString());
+                var val = int.Parse(node.ToString(), CultureInfo.InvariantCulture);
                 return new MapId(val);
             }
 
@@ -795,9 +795,9 @@ namespace SS14.Shared.Serialization
                 var nodeContents = node.AsString();
                 if (nodeContents.EndsWith("rad"))
                 {
-                    return new Angle(double.Parse(nodeContents.Substring(0, nodeContents.Length - 3)));
+                    return new Angle(double.Parse(nodeContents.Substring(0, nodeContents.Length - 3), CultureInfo.InvariantCulture));
                 }
-                return Angle.FromDegrees(double.Parse(nodeContents));
+                return Angle.FromDegrees(double.Parse(nodeContents, CultureInfo.InvariantCulture));
             }
 
             public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)

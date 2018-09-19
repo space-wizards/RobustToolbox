@@ -251,17 +251,13 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 return;
 
             // transform _position from parent coords to world coords
-            var worldPos = Parent.WorldMatrix.Transform(_position);
-            var lc = new GridLocalCoordinates(worldPos, MapID);
-
-            // then to parent grid coords
-            lc = lc.ConvertToGrid(Parent.LocalPosition.Grid);
+            var localPosition = LocalPosition;
 
             // detach
             Parent = null;
 
             // switch position back to grid coords
-            LocalPosition = lc;
+            _position = localPosition.Position;
 
             Dirty();
         }

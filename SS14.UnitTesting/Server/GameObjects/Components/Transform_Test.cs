@@ -59,8 +59,8 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             var parent = EntityManager.SpawnEntity("dummy");
             var child = EntityManager.SpawnEntity("dummy");
 
-            var parentTrans = parent.GetComponent<ITransformComponent>();
-            var childTrans = child.GetComponent<ITransformComponent>();
+            var parentTrans = parent.Transform;
+            var childTrans = child.Transform;
 
             // that are not on the same map
             parentTrans.LocalPosition = new GridLocalCoordinates(5, 5, GridA);
@@ -69,24 +69,24 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             // if they are parented, the child keeps its world position, but moves to the parents map
             childTrans.AttachParent(parentTrans);
 
-            Assert.That(childTrans.MapID == parentTrans.MapID);
-            Assert.That(childTrans.GridID == parentTrans.GridID);
-            Assert.That(childTrans.LocalPosition == new GridLocalCoordinates(4, 4, GridA), childTrans.LocalPosition.ToString);
-            Assert.That(childTrans.WorldPosition == new Vector2(4, 4), childTrans.WorldPosition.ToString);
+            Assert.That(childTrans.MapID, Is.EqualTo(parentTrans.MapID));
+            Assert.That(childTrans.GridID, Is.EqualTo(parentTrans.GridID));
+            Assert.That(childTrans.LocalPosition, Is.EqualTo(new GridLocalCoordinates(4, 4, GridA)));
+            Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(4, 4)));
 
             // now you can move the child by setting the position, but the map/grid stays unchanged
             childTrans.LocalPosition = new GridLocalCoordinates(5, 5, GridB);
 
-            Assert.That(childTrans.MapID == parentTrans.MapID, childTrans.MapID.ToString);
-            Assert.That(childTrans.GridID == parentTrans.GridID, childTrans.GridID.ToString);
-            Assert.That(childTrans.LocalPosition == parentTrans.LocalPosition, childTrans.LocalPosition.ToString);
-            Assert.That(childTrans.WorldPosition == parentTrans.WorldPosition, childTrans.WorldPosition.ToString);
+            Assert.That(childTrans.MapID, Is.EqualTo(parentTrans.MapID));
+            Assert.That(childTrans.GridID, Is.EqualTo(parentTrans.GridID));
+            Assert.That(childTrans.LocalPosition, Is.EqualTo(parentTrans.LocalPosition));
+            Assert.That(childTrans.WorldPosition, Is.EqualTo(parentTrans.WorldPosition));
 
             // move the parent, and the child should move with it
             childTrans.WorldPosition = new Vector2(6, 6);
             parentTrans.WorldPosition += new Vector2(-7, -7);
 
-            Assert.That(childTrans.WorldPosition == new Vector2(-1, -1), childTrans.WorldPosition.ToString);
+            Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(-1, -1)));
 
             // if we detach parent, the child should be left where it was, still relative to parents grid
             var oldLpos = childTrans.LocalPosition;
@@ -94,8 +94,8 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
 
             childTrans.DetachParent();
 
-            Assert.That(oldLpos == childTrans.LocalPosition);
-            Assert.That(oldWpos == childTrans.WorldPosition);
+            Assert.That(oldLpos, Is.EqualTo(childTrans.LocalPosition));
+            Assert.That(oldWpos, Is.EqualTo(childTrans.WorldPosition));
         }
 
         /// <summary>

@@ -1155,7 +1155,7 @@ namespace SS14.Client.GameObjects
                     {
                         var stateid = new RSI.StateId(layerDatum.State, RSI.Selectors.None);
                         layer.State = stateid;
-                        if (BaseRSI.TryGetState(stateid, out var state))
+                        if (theRsi.TryGetState(stateid, out var state))
                         {
                             // Always use south because this layer will be cached in the serializer.
                             (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(RSI.State.Direction.South, 0);

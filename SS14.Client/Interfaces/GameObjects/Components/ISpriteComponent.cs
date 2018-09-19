@@ -95,6 +95,16 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         bool LayerMapTryGet(object key, out int layer);
 
         /// <summary>
+        ///     Create a new blank layer and add it to the layer map,
+        ///     only if the key does not already exist on the layer map.
+        /// </summary>
+        /// <remarks>
+        ///     This is useful to allow layer map configs to be defined in prototypes,
+        ///     while still allowing code to create configs if they're absent.
+        /// </remarks>
+        void LayerMapReserveBlank(object key);
+
+        /// <summary>
         ///     Adds a layer without texture (thus falling back to the error texture).
         ///     The layer defaults to invisible.
         /// </summary>

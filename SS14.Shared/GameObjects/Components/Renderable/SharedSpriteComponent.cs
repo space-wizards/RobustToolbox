@@ -66,6 +66,7 @@ namespace SS14.Shared.GameObjects.Components.Renderable
             public Angle Rotation;
             public bool Visible;
             public Color Color;
+            public List<string> MapKeys;
 
             public static PrototypeLayerData New()
             {
@@ -87,6 +88,7 @@ namespace SS14.Shared.GameObjects.Components.Renderable
                 serializer.DataField(ref Rotation, "rotation", Angle.Zero);
                 serializer.DataField(ref Visible, "visible", true);
                 serializer.DataField(ref Color, "color", Color.White);
+                serializer.DataField(ref MapKeys, "map", null);
             }
         }
     }

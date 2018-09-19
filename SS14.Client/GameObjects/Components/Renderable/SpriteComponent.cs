@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
 using VS = Godot.VisualServer;
@@ -197,8 +198,10 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        // TODO: Flyweighting per prototype with Copy-on-Write.
-        private readonly Dictionary<object, int> LayerMap = new Dictionary<object, int>();
+        [ViewVariables]
+        private Dictionary<object, int> LayerMap = new Dictionary<object, int>();
+        [ViewVariables]
+        private bool _layerMapShared;
 
         // To a future Clusterfack:
         // REALLY BIG OPTIMIZATION POTENTIAL:
@@ -208,6 +211,7 @@ namespace SS14.Client.GameObjects
         // It may be a good idea to re-implement this list to use Layer[],
         // use ref locals EVERYWHERE, and handle the resizing ourselves.
         // This may be worth the overhead of basically reimplementing List<T>.
+        [ViewVariables]
         private List<Layer> Layers;
 
         private Godot.Node2D SceneNode;
@@ -226,6 +230,8 @@ namespace SS14.Client.GameObjects
         ISpriteProxy MainMirror;
 
         private static Shader _defaultShader;
+
+        [ViewVariables]
         private static Shader DefaultShader => _defaultShader ??
                                                (_defaultShader = IoCManager.Resolve<IPrototypeManager>()
                                                    .Index<ShaderPrototype>("shaded")
@@ -233,6 +239,7 @@ namespace SS14.Client.GameObjects
 
         public const string LogCategory = "go.comp.sprite";
         const string LayerSerializationCache = "spritelayer";
+        const string LayerMapSerializationCache = "spritelayermap";
 
         /// <inheritdoc />
         public void LayerMapSet(object key, int layer)
@@ -242,12 +249,14 @@ namespace SS14.Client.GameObjects
                 throw new ArgumentOutOfRangeException();
             }
 
+            _layerMapEnsurePrivate();
             LayerMap.Add(key, layer);
         }
 
         /// <inheritdoc />
         public void LayerMapRemove(object key)
         {
+            _layerMapEnsurePrivate();
             LayerMap.Remove(key);
         }
 
@@ -263,7 +272,27 @@ namespace SS14.Client.GameObjects
             return LayerMap.TryGetValue(key, out layer);
         }
 
-        /// <inheritdoc />
+        private void _layerMapEnsurePrivate()
+        {
+            if (!_layerMapShared)
+            {
+                return;
+            }
+
+            LayerMap = LayerMap.ShallowClone();
+            _layerMapShared = false;
+        }
+
+        public void LayerMapReserveBlank(object key)
+        {
+            if (LayerMapTryGet(key, out var _))
+            {
+                return;
+            }
+
+            LayerMapSet(key, AddBlankLayer());
+        }
+
         public int AddBlankLayer(int? newIndex = null)
         {
             var layer = Layer.New();
@@ -1098,6 +1127,8 @@ namespace SS14.Client.GameObjects
 
             if (serializer.TryGetCacheData<List<Layer>>(LayerSerializationCache, out var layers))
             {
+                LayerMap = serializer.GetCacheData<Dictionary<object, int>>(LayerMapSerializationCache);
+                _layerMapShared = true;
                 Layers = layers.ShallowClone();
                 // Do this because the directions in the cache may not be correct for us.
                 _recalcDirections = true;
@@ -1105,6 +1136,8 @@ namespace SS14.Client.GameObjects
             }
 
             layers = new List<Layer>();
+
+            var layerMap = new Dictionary<object, int>();
 
             var layerData =
                 serializer.ReadDataField("layers", new List<PrototypeLayerData>());
@@ -1118,7 +1151,7 @@ namespace SS14.Client.GameObjects
                     layerData.Insert(0, new PrototypeLayerData
                     {
                         TexturePath = string.IsNullOrWhiteSpace(texturePath) ? null : texturePath,
-                        State = baseState,
+                        State = string.IsNullOrWhiteSpace(baseState) ? null : baseState,
                         Color = Color.White,
                         Scale = Vector2.One,
                         Visible = true,
@@ -1126,8 +1159,11 @@ namespace SS14.Client.GameObjects
                 }
             }
 
+            var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+
             foreach (var layerDatum in layerData)
             {
+                var anyTextureAttempted = false;
                 var layer = Layer.New();
                 if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
                 {
@@ -1144,6 +1180,7 @@ namespace SS14.Client.GameObjects
 
                 if (!string.IsNullOrWhiteSpace(layerDatum.State))
                 {
+                    anyTextureAttempted = true;
                     var theRsi = layer.RSI ?? BaseRSI;
                     if (theRsi == null)
                     {
@@ -1171,6 +1208,7 @@ namespace SS14.Client.GameObjects
 
                 if (!string.IsNullOrWhiteSpace(layerDatum.TexturePath))
                 {
+                    anyTextureAttempted = true;
                     if (layer.State.IsValid)
                     {
                         Logger.ErrorS(LogCategory,
@@ -1200,14 +1238,43 @@ namespace SS14.Client.GameObjects
 
                 layer.Color = layerDatum.Color;
                 layer.Rotation = layerDatum.Rotation;
-                layer.Visible = layerDatum.Visible;
+                // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
+                layer.Visible = anyTextureAttempted && layerDatum.Visible;
                 layer.Scale = layerDatum.Scale;
 
                 layers.Add(layer);
+
+                if (layerDatum.MapKeys != null)
+                {
+                    var index = layers.Count - 1;
+                    foreach (var keyString in layerDatum.MapKeys)
+                    {
+                        object key;
+                        if (reflectionManager.TryParseEnumReference(keyString, out var @enum))
+                        {
+                            key = @enum;
+                        }
+                        else
+                        {
+                            key = keyString;
+                        }
+
+                        if (layerMap.ContainsKey(key))
+                        {
+                            Logger.ErrorS(LogCategory, "Duplicate layer map key definition: {0}", key);
+                            continue;
+                        }
+
+                        layerMap.Add(key, index);
+                    }
+                }
             }
 
             Layers = layers;
+            LayerMap = layerMap;
+            _layerMapShared = true;
             serializer.SetCacheData(LayerSerializationCache, Layers.ShallowClone());
+            serializer.SetCacheData(LayerMapSerializationCache, layerMap);
             // Do this because the directions in the cache may not be correct.
             _recalcDirections = true;
         }

@@ -94,8 +94,8 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
 
             childTrans.DetachParent();
 
-            Assert.That(oldLpos, Is.EqualTo(childTrans.LocalPosition));
-            Assert.That(oldWpos, Is.EqualTo(childTrans.WorldPosition));
+            Assert.That(childTrans.LocalPosition, Is.EqualTo(oldLpos));
+            Assert.That(childTrans.WorldPosition, Is.EqualTo(oldWpos));
         }
 
         /// <summary>

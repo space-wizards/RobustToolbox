@@ -68,13 +68,13 @@ namespace SS14.Server.GameObjects
         private bool edgeSlide = true;
 
         /// <inheritdoc />
-        public override void OnAdd()
+        public override void Initialize()
         {
             // This component requires that the entity has an AABB.
             if (!Owner.HasComponent<BoundingBoxComponent>())
                 Logger.Error($"[ECS] {Owner.Prototype.Name} - {nameof(PhysicsComponent)} requires {nameof(BoundingBoxComponent)}. ");
 
-            base.OnAdd();
+            base.Initialize();
         }
 
         /// <inheritdoc />

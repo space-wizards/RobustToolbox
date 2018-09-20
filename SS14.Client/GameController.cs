@@ -56,8 +56,6 @@ namespace SS14.Client
         [Dependency]
         readonly IResourceCache _resourceCache;
         [Dependency]
-        readonly ISceneTreeHolder _sceneTreeHolder;
-        [Dependency]
         readonly IResourceManager _resourceManager;
         [Dependency]
         readonly ISS14Serializer _serializer;
@@ -198,7 +196,9 @@ namespace SS14.Client
             Logger.Debug("Goodbye");
             IoCManager.Clear();
             ShuttingDownHard = true;
-            _sceneTreeHolder.SceneTree.Quit();
+            // Hahaha Godot is crashing absurdly and I can't be bothered to fix it.
+            // Hey now it shuts down easily.
+            Environment.Exit(0);
         }
 
         public override void PhysicsProcess(float delta)

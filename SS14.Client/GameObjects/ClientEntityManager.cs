@@ -19,17 +19,8 @@ namespace SS14.Client.GameObjects
     {
         [Dependency]
         readonly IMapManager _mapManager;
-        [Dependency]
-        private readonly IEntitySystemManager _systemManager;
 
         private int NextClientEntityUid = EntityUid.ClientUid + 1;
-
-        public override void Initialize()
-        {
-            base.Initialize();
-
-            _systemManager.Initialize();
-        }
 
         public IEnumerable<IEntity> GetEntitiesInRange(GridLocalCoordinates position, float Range)
         {
@@ -114,10 +105,10 @@ namespace SS14.Client.GameObjects
 
             if (Started)
             {
-                throw new InvalidOperationException("InitializeEntities() called multiple times");
+                throw new InvalidOperationException("Startup() called multiple times");
             }
 
-            InitializeEntities();
+            EntitySystemManager.Initialize();
             Started = true;
         }
 
@@ -136,7 +127,7 @@ namespace SS14.Client.GameObjects
                 else //Unknown entities
                 {
                     var newEntity = InternalCreateEntity(es.StateData.TemplateName, es.StateData.Uid);
-                    if (Started)
+                    if (EntitiesInitialized)
                     {
                         InitializeEntity(newEntity);
                     }
@@ -158,9 +149,9 @@ namespace SS14.Client.GameObjects
             }
 
             // After the first set of states comes in we do the startup.
-            if (!Started && MapsInitialized)
+            if (!EntitiesInitialized && MapsInitialized)
             {
-                Startup();
+                InitializeEntities();
             }
         }
 
@@ -174,6 +165,7 @@ namespace SS14.Client.GameObjects
             base.Shutdown();
 
             MapsInitialized = false;
+            EntitiesInitialized = false;
         }
 
         public override IEntity CreateEntity(string protoName)
@@ -184,7 +176,7 @@ namespace SS14.Client.GameObjects
         public override Entity SpawnEntity(string protoName)
         {
             var ent = InternalCreateEntity(protoName, NewClientEntityUid());
-            if (Started)
+            if (EntitiesInitialized)
             {
                 InitializeEntity(ent);
             }
@@ -195,7 +187,7 @@ namespace SS14.Client.GameObjects
         {
             Entity entity = SpawnEntity(entityType);
             entity.GetComponent<ITransformComponent>().LocalPosition = coordinates;
-            if (Started)
+            if (EntitiesInitialized)
             {
                 InitializeEntity(entity);
             }

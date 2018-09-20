@@ -66,6 +66,8 @@ namespace SS14.Shared.GameObjects
         private readonly Queue<Tuple<object, EntityEventArgs>> _eventQueue
             = new Queue<Tuple<object, EntityEventArgs>>();
 
+        protected bool EntitiesInitialized;
+
         public bool Started { get; protected set; }
         public bool MapsInitialized { get; set; } = false;
 
@@ -76,7 +78,9 @@ namespace SS14.Shared.GameObjects
             _network.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
         }
 
-        public virtual void Startup() { }
+        public virtual void Startup()
+        {
+        }
 
         public virtual void Shutdown()
         {
@@ -271,6 +275,8 @@ namespace SS14.Shared.GameObjects
 
                 InitializeEntity(ent);
             }
+
+            EntitiesInitialized = true;
         }
 
         #endregion Entity Management

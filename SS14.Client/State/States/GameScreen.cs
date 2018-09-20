@@ -12,7 +12,6 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Input;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using System.Collections.Generic;
@@ -37,8 +36,6 @@ namespace SS14.Client.State.States
         [Dependency]
         readonly IUserInterfaceManager userInterfaceManager;
         [Dependency]
-        readonly IMapManager mapManager;
-        [Dependency]
         readonly IClientChatConsole console;
         [Dependency]
         readonly IPlacementManager placementManager;
@@ -58,8 +55,6 @@ namespace SS14.Client.State.States
         public override void Startup()
         {
             IoCManager.InjectDependencies(this);
-
-            mapManager.Startup();
 
             inputManager.KeyBindStateChanged += OnKeyBindStateChanged;
 
@@ -108,18 +103,7 @@ namespace SS14.Client.State.States
 
             playerManager.LocalPlayer.DetachEntity();
 
-            _entityManager.Shutdown();
-            mapManager.Shutdown();
             userInterfaceManager.StateRoot.DisposeAllChildren();
-
-            var maps = mapManager.GetAllMaps().ToArray();
-            foreach (var map in maps)
-            {
-                if (map.Index != MapId.Nullspace)
-                {
-                    mapManager.DeleteMap(map.Index);
-                }
-            }
 
             inputManager.SetInputCommand(EngineKeyFunctions.EscapeMenu, null);
             inputManager.SetInputCommand(EngineKeyFunctions.FocusChat, null);

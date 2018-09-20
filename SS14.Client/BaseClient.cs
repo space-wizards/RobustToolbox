@@ -1,11 +1,13 @@
 ﻿using System;
 using SS14.Client.Interfaces;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Player;
 using SS14.Client.State.States;
 using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Configuration;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -30,6 +32,10 @@ namespace SS14.Client
 
         [Dependency]
         private readonly IConfigurationManager _configManager;
+
+        [Dependency] private readonly IClientEntityManager _entityManager;
+
+        [Dependency] private readonly IMapManager _mapManager;
 
         /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;
@@ -105,6 +111,9 @@ namespace SS14.Client
             DebugTools.Assert(RunLevel < ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.Connected);
 
+            _entityManager.Startup();
+            _mapManager.Startup();
+
             PlayerJoinedServer?.Invoke(this, new PlayerEventArgs(session));
         }
 
@@ -152,6 +161,8 @@ namespace SS14.Client
             _stateManager.RequestStateChange<MainScreen>();
 
             _playMan.Shutdown();
+            _entityManager.Shutdown();
+            _mapManager.Shutdown();
             Reset();
         }
 

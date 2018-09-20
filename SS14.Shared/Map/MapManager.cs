@@ -7,6 +7,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Utility;
 
 namespace SS14.Shared.Map
 {
@@ -69,6 +70,15 @@ namespace SS14.Shared.Map
 
         public void Shutdown()
         {
+            foreach (var map in _maps.Keys.ToArray())
+            {
+                if (map != MapId.Nullspace)
+                {
+                    DeleteMap(map);
+                }
+            }
+
+            DebugTools.Assert(_grids.Count == 1);
         }
 
         /// <summary>

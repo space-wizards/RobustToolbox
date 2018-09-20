@@ -69,6 +69,7 @@ namespace SS14.Client.GameObjects
             base.OnRemove();
             transform.OnMove -= Transform_OnMove;
             eye.Dispose();
+            eye = null;
         }
 
         public override void ExposeData(ObjectSerializer serializer)

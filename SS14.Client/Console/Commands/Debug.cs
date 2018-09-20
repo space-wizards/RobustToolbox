@@ -327,4 +327,24 @@ namespace SS14.Client.Console.Commands
             return false;
         }
     }
+
+    class ReloadResource : IConsoleCommand
+    {
+        public string Command => "rldrsc";
+        public string Description => "Reloads a resource.";
+        public string Help => "rldrsc <path> <type>";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var resourceCache = IoCManager.Resolve<IResourceCache>();
+            var reflection = IoCManager.Resolve<IReflectionManager>();
+
+            var type = reflection.LooseGetType(args[1]);
+            var getResourceMethod = resourceCache.GetType().GetMethod("ReloadResource", new [] {typeof(string)});
+            DebugTools.Assert(getResourceMethod != null);
+            var generic = getResourceMethod.MakeGenericMethod(type);
+            generic.Invoke(resourceCache, new object[] {args[0]});
+            return false;
+        }
+    }
 }

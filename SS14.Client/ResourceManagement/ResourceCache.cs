@@ -94,6 +94,26 @@ namespace SS14.Client.ResourceManagement
             }
         }
 
+        public void ReloadResource<T>(string path) where T : BaseResource, new()
+        {
+            ReloadResource<T>(new ResourcePath(path));
+        }
+
+        public void ReloadResource<T>(ResourcePath path) where T : BaseResource, new()
+        {
+            var resource = new T();
+            try
+            {
+                resource.Load(this, path);
+                CachedResources[(path, typeof(T))] = resource;
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Exception while reloading resource {typeof(T)} at '{path}'\n{e}");
+                throw;
+            }
+        }
+
         public bool HasResource<T>(string path) where T : BaseResource, new()
         {
             return HasResource<T>(new ResourcePath(path));

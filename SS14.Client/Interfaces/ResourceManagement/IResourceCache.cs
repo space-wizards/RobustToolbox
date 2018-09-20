@@ -23,6 +23,12 @@ namespace SS14.Client.Interfaces.ResourceManagement
         bool TryGetResource<T>(ResourcePath path, out T resource)
             where T : BaseResource, new();
 
+        void ReloadResource<T>(string path)
+            where T : BaseResource, new();
+
+        void ReloadResource<T>(ResourcePath path)
+            where T : BaseResource, new();
+
         void CacheResource<T>(string path, T resource)
             where T : BaseResource, new();
 

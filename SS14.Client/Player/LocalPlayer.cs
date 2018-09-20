@@ -89,9 +89,6 @@ namespace SS14.Client.Player
 
             ControlledEntity.AddComponent<PlayerInputMoverComponent>();
 
-            if (!ControlledEntity.HasComponent<ICollidableComponent>())
-                ControlledEntity.AddComponent<CollidableComponent>();
-
             if (!ControlledEntity.TryGetComponent<EyeComponent>(out var eye))
             {
                 eye = ControlledEntity.AddComponent<EyeComponent>();
@@ -116,7 +113,6 @@ namespace SS14.Client.Player
             if (ControlledEntity != null && ControlledEntity.Initialized)
             {
                 ControlledEntity.RemoveComponent<PlayerInputMoverComponent>();
-                ControlledEntity.RemoveComponent<ICollidableComponent>();
                 ControlledEntity.GetComponent<EyeComponent>().Current = false;
                 var transform = ControlledEntity.GetComponent<ITransformComponent>();
                 if (transform != null)

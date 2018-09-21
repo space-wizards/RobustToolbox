@@ -331,7 +331,7 @@ namespace SS14.Server.Maps
                 var entMgr = IoCManager.Resolve<IEntityManager>();
                 foreach (var entity in entMgr.GetEntities())
                 {
-                    if (entity.Prototype.MapSavable && entity.TryGetComponent(out ITransformComponent transform) && GridIDMap.ContainsKey(transform.GridID))
+                    if (IsMapSavable(entity))
                     {
                         EntityUidMap.Add(entity.Uid, EntityUidMap.Count);
                         Entities.Add(entity);
@@ -507,6 +507,29 @@ namespace SS14.Server.Maps
                 }
 
                 return false;
+            }
+
+            private bool IsMapSavable(IEntity entity)
+            {
+                if (!entity.Prototype.MapSavable || !GridIDMap.ContainsKey(entity.Transform.GridID))
+                {
+                    return false;
+                }
+
+                // Don't serialize things parented to un savable things.
+                // For example clothes inside a person.
+                var current = entity.Transform;
+                while (current.Parent != null)
+                {
+                    if (!current.Parent.Owner.Prototype.MapSavable)
+                    {
+                        return false;
+                    }
+
+                    current = current.Parent;
+                }
+
+                return true;
             }
         }
 

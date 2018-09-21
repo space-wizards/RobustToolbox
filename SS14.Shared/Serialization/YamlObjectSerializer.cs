@@ -58,7 +58,7 @@ namespace SS14.Shared.Serialization
         /// </param>
         public static YamlObjectSerializer NewReader(YamlMappingNode readMap, Context context = null)
         {
-            return NewReader(new List<YamlMappingNode>(1) { readMap });
+            return NewReader(new List<YamlMappingNode>(1) { readMap }, context);
         }
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace SS14.Shared.Serialization
         ///     then the second if the first does not contain a specific key, and so on.
         /// </param>
         /// <param name="context">
-        ///     An optional context that can provide additional capabitilies such as caching and custom type serializers.
+        ///     An optional context that can provide additional capabilities such as caching and custom type serializers.
         /// </param>
         public static YamlObjectSerializer NewReader(List<YamlMappingNode> readMaps, Context context = null)
         {

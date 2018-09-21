@@ -392,21 +392,43 @@ namespace SS14.Shared.GameObjects
             {
                 defaultContext = new PrototypeSerializationContext(this);
             }
-            foreach (var componentData in Components)
+            foreach (var (name, data) in Components)
             {
-                var component = (Component)factory.GetComponent(componentData.Key);
+                var component = (Component)factory.GetComponent(name);
 
                 component.Owner = entity;
                 ObjectSerializer ser;
                 if (context != null)
                 {
-                    ser = context.GetComponentSerializer(componentData.Key, componentData.Value);
+                    ser = context.GetComponentSerializer(name, data);
                 }
                 else
                 {
-                    CurrentDeserializingComponent = componentData.Key;
-                    ser = YamlObjectSerializer.NewReader(componentData.Value, defaultContext);
+                    CurrentDeserializingComponent = name;
+                    ser = YamlObjectSerializer.NewReader(data, defaultContext);
                 }
+                component.ExposeData(ser);
+
+                entity.AddComponent(component);
+            }
+
+            if (context == null)
+            {
+                return;
+            }
+
+            // This is for map loading.
+            // Components that have been ADDED NEW need to be handled too.
+            foreach (var name in context.GetExtraComponentTypes())
+            {
+                if (Components.ContainsKey(name))
+                {
+                    continue;
+                }
+
+                var component = (Component)factory.GetComponent(name);
+                component.Owner = entity;
+                var ser = context.GetComponentSerializer(name, null);
                 component.ExposeData(ser);
 
                 entity.AddComponent(component);

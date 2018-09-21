@@ -481,15 +481,29 @@ namespace SS14.Server.Maps
 
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
-                    return YamlObjectSerializer.NewReader(new List<YamlMappingNode> { mapping, protoData }, this);
+                    var list = new List<YamlMappingNode> {mapping};
+                    if (protoData != null)
+                    {
+                        list.Add(protoData);
+                    }
+                    return YamlObjectSerializer.NewReader(list, this);
                 }
 
                 return YamlObjectSerializer.NewReader(protoData, this);
             }
 
+            public IEnumerable<string> GetExtraComponentTypes()
+            {
+                return CurrentReadingEntityComponents.Keys;
+            }
+
             public override bool IsValueDefault<T>(string field, T value)
             {
-                var compData = CurrentWritingEntity.Prototype.Components[CurrentWritingComponent];
+                if (!CurrentWritingEntity.Prototype.Components.TryGetValue(CurrentWritingComponent, out var compData))
+                {
+                    // This component was added mid-game.
+                    return false;
+                }
                 var testSer = YamlObjectSerializer.NewReader(compData);
                 if (testSer.TryReadDataFieldCached(field, out T prototypeVal))
                 {

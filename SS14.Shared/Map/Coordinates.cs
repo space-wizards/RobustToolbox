@@ -10,7 +10,7 @@ namespace SS14.Shared.Map
     ///     Coordinates relative to a specific grid.
     /// </summary>
     [Serializable, NetSerializable]
-    public struct GridLocalCoordinates : IEquatable<GridLocalCoordinates>
+    public readonly struct GridLocalCoordinates : IEquatable<GridLocalCoordinates>
     {
         public readonly GridId GridID;
         public readonly Vector2 Position;
@@ -184,7 +184,8 @@ namespace SS14.Shared.Map
         }
     }
 
-    public struct ScreenCoordinates
+    [Serializable, NetSerializable]
+    public readonly struct ScreenCoordinates
     {
         public readonly Vector2 Position;
 
@@ -197,9 +198,14 @@ namespace SS14.Shared.Map
             Position = argPosition;
         }
 
-        public ScreenCoordinates(float X, float Y)
+        public ScreenCoordinates(float x, float y)
         {
-            Position = new Vector2(X, Y);
+            Position = new Vector2(x, y);
+        }
+
+        public override string ToString()
+        {
+            return Position.ToString();
         }
     }
 }

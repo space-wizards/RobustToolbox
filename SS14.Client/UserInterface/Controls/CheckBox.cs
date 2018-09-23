@@ -11,11 +11,11 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        public CheckBox(Godot.CheckBox box) : base(box)
+        internal CheckBox(Godot.CheckBox box) : base(box)
         {
         }
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.CheckBox();
         }

@@ -42,16 +42,16 @@ namespace SS14.Client.UserInterface.Controls
         public Tree() : base()
         {
         }
-        public Tree(Godot.Tree panel) : base(panel)
+        internal Tree(Godot.Tree panel) : base(panel)
         {
         }
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.Tree();
         }
 
-        protected override void SetSceneControl(Godot.Control control)
+        private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
             SceneControl = (Godot.Tree)control;

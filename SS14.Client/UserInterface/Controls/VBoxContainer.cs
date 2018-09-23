@@ -5,9 +5,9 @@
     {
         public VBoxContainer() : base() { }
         public VBoxContainer(string name) : base(name) { }
-        public VBoxContainer(Godot.VBoxContainer sceneControl) : base(sceneControl) { }
+        internal VBoxContainer(Godot.VBoxContainer sceneControl) : base(sceneControl) { }
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.VBoxContainer();
         }

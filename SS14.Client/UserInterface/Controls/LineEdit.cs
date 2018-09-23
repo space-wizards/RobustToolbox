@@ -12,18 +12,18 @@ namespace SS14.Client.UserInterface.Controls
         public LineEdit(string name) : base(name)
         {
         }
-        public LineEdit(Godot.LineEdit control) : base(control)
+        internal LineEdit(Godot.LineEdit control) : base(control)
         {
         }
 
         new private Godot.LineEdit SceneControl;
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.LineEdit();
         }
 
-        protected override void SetSceneControl(Godot.Control control)
+        private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
             SceneControl = (Godot.LineEdit)control;

@@ -20,7 +20,7 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        public TabContainer(Godot.TabContainer control) : base(control)
+        internal TabContainer(Godot.TabContainer control) : base(control)
         {
         }
 
@@ -65,13 +65,12 @@ namespace SS14.Client.UserInterface.Controls
             SceneControl.SetTabIcon(tab, icon);
         }
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.TabContainer();
-            ;
         }
 
-        protected override void SetSceneControl(Godot.Control control)
+        private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(SceneControl = (Godot.TabContainer) control);
         }

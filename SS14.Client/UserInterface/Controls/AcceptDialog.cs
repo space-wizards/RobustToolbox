@@ -9,18 +9,18 @@
         public AcceptDialog(string name) : base(name)
         {
         }
-        public AcceptDialog(Godot.AcceptDialog control) : base(control)
+        internal AcceptDialog(Godot.AcceptDialog control) : base(control)
         {
         }
 
         new private Godot.AcceptDialog SceneControl;
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.AcceptDialog();
         }
 
-        protected override void SetSceneControl(Godot.Control control)
+        private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
             SceneControl = (Godot.AcceptDialog)control;

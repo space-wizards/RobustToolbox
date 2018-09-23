@@ -5,9 +5,9 @@
     {
         public HBoxContainer() : base() { }
         public HBoxContainer(string name) : base(name) { }
-        public HBoxContainer(Godot.HBoxContainer sceneControl) : base(sceneControl) { }
+        internal HBoxContainer(Godot.HBoxContainer sceneControl) : base(sceneControl) { }
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.HBoxContainer();
         }

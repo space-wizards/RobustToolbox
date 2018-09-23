@@ -49,7 +49,7 @@ namespace SS14.Client.UserInterface.CustomControls
         {
         }
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return LoadScene("res://Scenes/ChatBox/ChatBox.tscn");
         }

@@ -9,11 +9,11 @@
         public TextureButton(string name) : base(name)
         {
         }
-        public TextureButton(Godot.TextureButton button) : base(button)
+        internal TextureButton(Godot.TextureButton button) : base(button)
         {
         }
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.TextureButton();
         }

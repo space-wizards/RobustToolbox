@@ -13,14 +13,14 @@ namespace SS14.Client.UserInterface.Controls
 
         public ItemList() : base() { }
         public ItemList(string name) : base(name) { }
-        public ItemList(Godot.ItemList control) : base(control) { }
+        internal ItemList(Godot.ItemList control) : base(control) { }
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.ItemList();
         }
 
-        protected override void SetSceneControl(Godot.Control control)
+        private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
             SceneControl = (Godot.ItemList)control;

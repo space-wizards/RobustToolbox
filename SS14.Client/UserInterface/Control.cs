@@ -3,6 +3,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using SS14.Shared.Log;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.ContentPack;
@@ -183,14 +184,14 @@ namespace SS14.Client.UserInterface
 
         public MouseFilterMode MouseFilter
         {
-            get => (MouseFilterMode)SceneControl.MouseFilter;
-            set => SceneControl.MouseFilter = (Godot.Control.MouseFilterEnum)value;
+            get => (MouseFilterMode) SceneControl.MouseFilter;
+            set => SceneControl.MouseFilter = (Godot.Control.MouseFilterEnum) value;
         }
 
         public SizeFlags SizeFlagsHorizontal
         {
-            get => (SizeFlags)SceneControl.SizeFlagsHorizontal;
-            set => SceneControl.SizeFlagsHorizontal = (int)value;
+            get => (SizeFlags) SceneControl.SizeFlagsHorizontal;
+            set => SceneControl.SizeFlagsHorizontal = (int) value;
         }
 
         public float SizeFlagsStretchRatio
@@ -201,8 +202,8 @@ namespace SS14.Client.UserInterface
 
         public SizeFlags SizeFlagsVertical
         {
-            get => (SizeFlags)SceneControl.SizeFlagsVertical;
-            set => SceneControl.SizeFlagsVertical = (int)value;
+            get => (SizeFlags) SceneControl.SizeFlagsVertical;
+            set => SceneControl.SizeFlagsVertical = (int) value;
         }
 
         public bool RectClipContent
@@ -258,6 +259,7 @@ namespace SS14.Client.UserInterface
             {
                 throw new ArgumentException("Name must not be null or whitespace.", nameof(name));
             }
+
             UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
             SetupSceneControl();
             Name = name;
@@ -268,7 +270,7 @@ namespace SS14.Client.UserInterface
         ///     Wrap the provided Godot control with this one.
         ///     This does NOT set up parenting correctly!
         /// </summary>
-        public Control(Godot.Control control)
+        internal Control(Godot.Control control)
         {
             SetSceneControl(control);
             UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
@@ -302,8 +304,10 @@ namespace SS14.Client.UserInterface
                 {
                     throw new FileNotFoundException("Scene path must exist on disk.");
                 }
+
                 newSceneControl = LoadScene(diskPath);
             }
+
             SetSceneControl(newSceneControl);
             SetupSignalHooks();
             // Certain controls (LineEdit, WindowDialog, etc...) create sub controls automatically,
@@ -328,19 +332,19 @@ namespace SS14.Client.UserInterface
             if (SceneControl.GetChildCount() > 0)
             {
                 // Potentially easiest: if we have a child, get the parent of our child (us).
-                WrappedSceneControl = (ControlWrap)SceneControl.GetChild(0).GetParent();
+                WrappedSceneControl = (ControlWrap) SceneControl.GetChild(0).GetParent();
             }
             else if (SceneControl.GetParent() != null)
             {
                 // If not but we have a parent use that.
-                WrappedSceneControl = (ControlWrap)SceneControl.GetParent().GetChild(SceneControl.GetIndex());
+                WrappedSceneControl = (ControlWrap) SceneControl.GetParent().GetChild(SceneControl.GetIndex());
             }
             else
             {
                 // Ok so we're literally a lone node guess making a temporary child'll be fine.
                 var node = new Godot.Node();
                 SceneControl.AddChild(node);
-                WrappedSceneControl = (ControlWrap)node.GetParent();
+                WrappedSceneControl = (ControlWrap) node.GetParent();
                 node.QueueFree();
             }
 
@@ -371,7 +375,7 @@ namespace SS14.Client.UserInterface
         ///     ONLY spawn the control in here. Use <see cref="SetSceneControl" /> for holding references to it.
         ///     This is to allow children to override it without breaking the setting.
         /// </summary>
-        protected virtual Godot.Control SpawnSceneControl()
+        private protected virtual Godot.Control SpawnSceneControl()
         {
             return new Godot.Control();
         }
@@ -380,7 +384,7 @@ namespace SS14.Client.UserInterface
         ///     override by child classes to have a reference to the Godot control for accessing.
         /// </summary>
         /// <param name="control"></param>
-        protected virtual void SetSceneControl(Godot.Control control)
+        private protected virtual void SetSceneControl(Godot.Control control)
         {
             SceneControl = control;
         }
@@ -473,6 +477,7 @@ namespace SS14.Client.UserInterface
             {
                 child._name = child.SceneControl.GetName();
             }
+
             _children[child.Name] = child;
         }
 
@@ -539,7 +544,7 @@ namespace SS14.Client.UserInterface
 
         public T GetChild<T>(string name) where T : Control
         {
-            return (T)GetChild(name);
+            return (T) GetChild(name);
         }
 
         private static readonly char[] SectionSplitDelimiter = {'/'};
@@ -556,6 +561,7 @@ namespace SS14.Client.UserInterface
 
                 return current;
             }
+
             if (TryGetChild(name, out var control))
             {
                 return control;
@@ -568,9 +574,10 @@ namespace SS14.Client.UserInterface
         {
             if (_children.TryGetValue(name, out var control))
             {
-                child = (T)control;
+                child = (T) control;
                 return true;
             }
+
             child = null;
             return false;
         }
@@ -624,6 +631,7 @@ namespace SS14.Client.UserInterface
             {
                 throw new InvalidOperationException("No parent to change position in.");
             }
+
             SetPositionInParent(Parent.SceneControl.GetChildCount());
         }
 
@@ -660,12 +668,11 @@ namespace SS14.Client.UserInterface
 
         protected virtual void Resized()
         {
-
         }
 
         internal static Control InstanceScene(string resourcePath)
         {
-            var res = (Godot.PackedScene)Godot.ResourceLoader.Load(resourcePath);
+            var res = (Godot.PackedScene) Godot.ResourceLoader.Load(resourcePath);
             return InstanceScene(res);
         }
 
@@ -681,14 +688,16 @@ namespace SS14.Client.UserInterface
         //         from SS14.Client.Godot I *think*?
         internal static Control InstanceScene(Godot.PackedScene scene)
         {
-            var root = (Godot.Control)scene.Instance();
+            var root = (Godot.Control) scene.Instance();
             return WrapGodotControl(null, root);
         }
 
         private static Control WrapGodotControl(Control parent, Godot.Control control)
         {
             var type = FindGodotTranslationType(control);
-            var newControl = (Control)Activator.CreateInstance(type, control);
+            var newControl = (Control) Activator.CreateInstance(type,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.NonPublic,
+                null, new object[] {control}, null, null);
 
             if (parent != null)
             {
@@ -728,6 +737,7 @@ namespace SS14.Client.UserInterface
             {
                 SetupGodotTranslationCache();
             }
+
             var original = control.GetType();
             var tmp = original;
             // CanvasItem is the parent of Godot.Control so reaching it means we passed Godot.Control.
@@ -746,7 +756,8 @@ namespace SS14.Client.UserInterface
                 tmp = tmp.BaseType;
             }
 
-            throw new InvalidOperationException("Managed to pass Godot.Control when finding translations. This should be impossible!");
+            throw new InvalidOperationException(
+                "Managed to pass Godot.Control when finding translations. This should be impossible!");
         }
 
         private static void SetupGodotTranslationCache()
@@ -765,7 +776,8 @@ namespace SS14.Client.UserInterface
 
                 if (GodotTranslationCache.TryGetValue(godotType, out var dupe))
                 {
-                    Logger.Error($"Found multiple SS14 Control types pointing to a single Godot Control type. Godot: {godotType}, first: {dupe}, second: {childType}");
+                    Logger.Error(
+                        $"Found multiple SS14 Control types pointing to a single Godot Control type. Godot: {godotType}, first: {dupe}, second: {childType}");
                     continue;
                 }
 
@@ -775,18 +787,21 @@ namespace SS14.Client.UserInterface
             if (!GodotTranslationCache.ContainsKey(typeof(Godot.Control)))
             {
                 GodotTranslationCache = null;
-                throw new InvalidOperationException("We don't even have the base Godot Control in the translation cache. We can't use scene instancing like this!");
+                throw new InvalidOperationException(
+                    "We don't even have the base Godot Control in the translation cache. We can't use scene instancing like this!");
             }
         }
 
         public void SetAnchorPreset(LayoutPreset preset, bool keepMargin = false)
         {
-            SceneControl.SetAnchorsPreset((Godot.Control.LayoutPreset)preset, keepMargin);
+            SceneControl.SetAnchorsPreset((Godot.Control.LayoutPreset) preset, keepMargin);
         }
 
-        public void SetMarginsPreset(LayoutPreset preset, LayoutPresetMode resizeMode = LayoutPresetMode.Minsize, int margin = 0)
+        public void SetMarginsPreset(LayoutPreset preset, LayoutPresetMode resizeMode = LayoutPresetMode.Minsize,
+            int margin = 0)
         {
-            SceneControl.SetMarginsPreset((Godot.Control.LayoutPreset)preset, (Godot.Control.LayoutPresetMode)resizeMode, margin);
+            SceneControl.SetMarginsPreset((Godot.Control.LayoutPreset) preset,
+                (Godot.Control.LayoutPresetMode) resizeMode, margin);
         }
 
         public enum LayoutPreset : byte
@@ -831,6 +846,7 @@ namespace SS14.Client.UserInterface
             ///     Fill as much space as possible in a container, without pushing others.
             /// </summary>
             Fill = 1,
+
             /// <summary>
             ///     Fill as much space as possible in a container, pushing other nodes.
             ///     The ratio of pushing if there's multiple set to expand is depenent on <see cref="SizeFlagsStretchRatio" />
@@ -871,7 +887,7 @@ namespace SS14.Client.UserInterface
 
         protected Color? GetColorOverride(string name)
         {
-            return SceneControl.HasColorOverride(name) ? SceneControl.GetColor(name).Convert() : (Color?)null;
+            return SceneControl.HasColorOverride(name) ? SceneControl.GetColor(name).Convert() : (Color?) null;
         }
 
         protected void SetConstantOverride(string name, int? constant)
@@ -881,14 +897,14 @@ namespace SS14.Client.UserInterface
                 SceneControl.AddConstantOverride(name, constant.Value);
             }
             else
-        {
+            {
                 SceneControl.Set($"custom_constants/{name}", null);
             }
         }
 
         protected int? GetConstantOverride(string name)
         {
-            return SceneControl.HasConstantOverride(name) ? SceneControl.GetConstant(name) : (int?)null;
+            return SceneControl.HasConstantOverride(name) ? SceneControl.GetConstant(name) : (int?) null;
         }
 
         protected void SetStyleBoxOverride(string name, StyleBox styleBox)
@@ -949,8 +965,8 @@ namespace SS14.Client.UserInterface
 
         public CursorShape DefaultCursorShape
         {
-            get => (CursorShape)SceneControl.GetDefaultCursorShape();
-            set => SceneControl.SetDefaultCursorShape((Godot.Control.CursorShape)value);
+            get => (CursorShape) SceneControl.GetDefaultCursorShape();
+            set => SceneControl.SetDefaultCursorShape((Godot.Control.CursorShape) value);
         }
 
         /// <summary>
@@ -962,12 +978,14 @@ namespace SS14.Client.UserInterface
             ///     The control will not be considered at all, and will not have any effects.
             /// </summary>
             Ignore = Godot.Control.MouseFilterEnum.Ignore,
+
             /// <summary>
             ///     The control will be able to receive mouse buttons events.
             ///     Furthermore, if a control with this mode does get clicked,
             ///     the event automatically gets marked as handled.
             /// </summary>
             Pass = Godot.Control.MouseFilterEnum.Pass,
+
             /// <summary>
             ///     The control will be able to receive mouse button events like <see cref="Pass"/>,
             ///     but the event will be stopped and handled even if the relevant events do not handle it.
@@ -980,11 +998,11 @@ namespace SS14.Client.UserInterface
         /// </summary>
         /// <param name="path">The resource path to the scene file to load.</param>
         /// <returns>The root of the loaded scene.</returns>
-        protected static Godot.Control LoadScene(string path)
+        private protected static Godot.Control LoadScene(string path)
         {
             // See https://github.com/godotengine/godot/issues/21667 for why pNoCache is necessary.
             var scene2 = (Godot.PackedScene) Godot.ResourceLoader.Load(path, pNoCache: true);
-            return (Godot.Control)scene2.Instance();
+            return (Godot.Control) scene2.Instance();
         }
 
         [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]

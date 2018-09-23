@@ -16,13 +16,13 @@ namespace SS14.Client.UserInterface.Controls
         public Range(string name) : base(name)
         {
         }
-        public Range(Godot.Range control) : base(control)
+        internal Range(Godot.Range control) : base(control)
         {
         }
 
         new private Godot.Range SceneControl;
 
-        protected override void SetSceneControl(Godot.Control control)
+        private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
             SceneControl = (Godot.Range)control;

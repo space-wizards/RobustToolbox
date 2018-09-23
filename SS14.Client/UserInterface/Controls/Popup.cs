@@ -14,18 +14,18 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        public Popup(Godot.Popup control) : base(control)
+        internal Popup(Godot.Popup control) : base(control)
         {
         }
 
         new private Godot.Popup SceneControl;
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.Popup();
         }
 
-        protected override void SetSceneControl(Godot.Control control)
+        private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
             SceneControl = (Godot.Popup) control;

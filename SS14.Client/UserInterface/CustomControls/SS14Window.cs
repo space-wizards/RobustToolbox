@@ -29,12 +29,12 @@ namespace SS14.Client.UserInterface.CustomControls
             Right = 1 << 4,
         }
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return LoadScene("res://Scenes/SS14Window/SS14Window.tscn");
         }
 
-        protected override void SetSceneControl(Godot.Control control)
+        private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
             SceneControl = control;

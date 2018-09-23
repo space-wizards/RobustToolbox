@@ -11,12 +11,12 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        public ScrollContainer(Godot.ScrollContainer container) : base(container)
+        internal ScrollContainer(Godot.ScrollContainer container) : base(container)
         {
 
         }
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.ScrollContainer();
         }

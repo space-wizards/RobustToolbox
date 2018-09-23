@@ -16,18 +16,18 @@ namespace SS14.Client.UserInterface.Controls
         public Button(string name) : base(name)
         {
         }
-        public Button(Godot.Button button) : base(button)
+        internal Button(Godot.Button button) : base(button)
         {
         }
 
         new private Godot.Button SceneControl;
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.Button();
         }
 
-        protected override void SetSceneControl(Godot.Control control)
+        private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
             SceneControl = (Godot.Button)control;

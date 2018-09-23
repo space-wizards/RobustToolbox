@@ -11,7 +11,7 @@
         {
         }
 
-        public BoxContainer(Godot.BoxContainer sceneControl) : base(sceneControl)
+        internal BoxContainer(Godot.BoxContainer sceneControl) : base(sceneControl)
         {
         }
 

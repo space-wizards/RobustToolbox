@@ -1,4 +1,5 @@
-﻿using SS14.Client.Graphics;
+﻿using JetBrains.Annotations;
+using SS14.Client.Graphics;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
@@ -15,7 +16,7 @@ namespace SS14.Client.UserInterface.Controls
         public Label() : base()
         {
         }
-        public Label(Godot.Label control) : base(control)
+        internal Label(Godot.Label control) : base(control)
         {
         }
 
@@ -79,12 +80,12 @@ namespace SS14.Client.UserInterface.Controls
 
         new private Godot.Label SceneControl;
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.Label();
         }
 
-        protected override void SetSceneControl(Godot.Control control)
+        private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
             SceneControl = (Godot.Label)control;

@@ -15,7 +15,7 @@ namespace SS14.Client.UserInterface.CustomControls
         [Dependency]
         readonly IClientConsole console;
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return LoadScene("res://Scenes/EscapeMenu/EscapeMenu.tscn");
         }

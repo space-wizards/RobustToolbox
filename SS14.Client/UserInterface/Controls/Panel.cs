@@ -11,11 +11,11 @@ namespace SS14.Client.UserInterface.Controls
         public Panel() : base()
         {
         }
-        public Panel(Godot.Panel panel) : base(panel)
+        internal Panel(Godot.Panel panel) : base(panel)
         {
         }
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.Panel();
         }

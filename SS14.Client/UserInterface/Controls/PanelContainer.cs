@@ -13,7 +13,7 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        public PanelContainer(Godot.PanelContainer container) : base(container)
+        internal PanelContainer(Godot.PanelContainer container) : base(container)
         {
         }
 
@@ -25,7 +25,7 @@ namespace SS14.Client.UserInterface.Controls
             set => SetStyleBoxOverride("panel", _panelOverride = value);
         }
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.PanelContainer();
         }

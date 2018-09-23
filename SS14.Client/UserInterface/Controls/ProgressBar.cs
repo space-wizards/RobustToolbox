@@ -13,7 +13,7 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        public ProgressBar(Godot.ProgressBar control) : base(control)
+        internal ProgressBar(Godot.ProgressBar control) : base(control)
         {
         }
 
@@ -26,12 +26,12 @@ namespace SS14.Client.UserInterface.Controls
             set => SceneControl.PercentVisible = value;
         }
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.ProgressBar();
         }
 
-        protected override void SetSceneControl(Godot.Control control)
+        private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(SceneControl = (Godot.ProgressBar)control);
         }

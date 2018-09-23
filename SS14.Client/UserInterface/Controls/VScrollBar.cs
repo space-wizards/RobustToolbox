@@ -16,11 +16,11 @@ namespace SS14.Client.UserInterface.Controls
         public VScrollBar(string name) : base(name)
         {
         }
-        public VScrollBar(Godot.ScrollBar control) : base(control)
+        internal VScrollBar(Godot.ScrollBar control) : base(control)
         {
         }
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.VScrollBar();
         }

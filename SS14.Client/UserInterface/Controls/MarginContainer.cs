@@ -11,11 +11,11 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        public MarginContainer(Godot.MarginContainer sceneControl) : base(sceneControl)
+        internal MarginContainer(Godot.MarginContainer sceneControl) : base(sceneControl)
         {
         }
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.MarginContainer();
         }

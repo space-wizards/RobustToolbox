@@ -31,7 +31,7 @@ namespace SS14.Client.UserInterface.CustomControls
         private Button EraseButton;
         protected override Vector2 ContentsMinimumSize => HSplitContainer.CombinedMinimumSize;
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return LoadScene("res://Scenes/Placement/EntitySpawnPanel.tscn");
         }
@@ -210,7 +210,7 @@ namespace SS14.Client.UserInterface.CustomControls
             public EntityPrototype Prototype { get; set; }
             public Button ActualButton { get; private set; }
 
-            protected override Godot.Control SpawnSceneControl()
+            private protected override Godot.Control SpawnSceneControl()
             {
                 return LoadScene("res://Scenes/Placement/EntitySpawnItem.tscn");
             }

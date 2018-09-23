@@ -24,12 +24,12 @@ namespace SS14.Client.UserInterface.Controls
 
         new private Godot.TextureRect SceneControl;
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.TextureRect();
         }
 
-        protected override void SetSceneControl(Godot.Control control)
+        private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
             SceneControl = (Godot.TextureRect)control;

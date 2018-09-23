@@ -9,18 +9,18 @@
         public WindowDialog(string name) : base(name)
         {
         }
-        public WindowDialog(Godot.WindowDialog control) : base(control)
+        internal WindowDialog(Godot.WindowDialog control) : base(control)
         {
         }
 
         new private Godot.WindowDialog SceneControl;
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.WindowDialog();
         }
 
-        protected override void SetSceneControl(Godot.Control control)
+        private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
             SceneControl = (Godot.WindowDialog)control;

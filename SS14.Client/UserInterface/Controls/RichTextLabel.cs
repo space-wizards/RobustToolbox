@@ -12,16 +12,16 @@ namespace SS14.Client.UserInterface.Controls
         public RichTextLabel(string name) : base(name)
         {
         }
-        public RichTextLabel(Godot.RichTextLabel button) : base(button)
+        internal RichTextLabel(Godot.RichTextLabel button) : base(button)
         {
         }
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.RichTextLabel();
         }
 
-        protected override void SetSceneControl(Godot.Control control)
+        private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
 

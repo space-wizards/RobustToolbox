@@ -115,18 +115,18 @@ namespace SS14.Client.UserInterface.Controls
         public OptionButton(string name) : base(name)
         {
         }
-        public OptionButton(Godot.OptionButton button) : base(button)
+        internal OptionButton(Godot.OptionButton button) : base(button)
         {
         }
 
         new private Godot.OptionButton SceneControl;
 
-        protected override Godot.Control SpawnSceneControl()
+        private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.OptionButton();
         }
 
-        protected override void SetSceneControl(Godot.Control control)
+        private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
             SceneControl = (Godot.OptionButton)control;

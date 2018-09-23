@@ -46,6 +46,22 @@ namespace SS14.Shared.Utility
             if (!condition)
                 throw new DebugAssertException(message);
         }
+
+        /// <summary>
+        ///     An assertion that will <see langword="throw" /> an exception if the
+        ///     <paramref name="arg" /> is <see langword="null" />.
+        /// </summary>
+        /// <param name="arg">Condition that must be true.</param>
+        [Conditional("DEBUG")]
+        [AssertionMethod]
+        public static void AssertNotNull([AssertionCondition(AssertionConditionType.IS_NOT_NULL)]
+            object arg)
+        {
+            if (arg == null)
+            {
+                throw new DebugAssertException();
+            }
+        }
     }
 
     public class DebugAssertException : Exception

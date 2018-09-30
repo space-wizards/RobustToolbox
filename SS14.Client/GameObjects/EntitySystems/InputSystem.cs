@@ -15,7 +15,7 @@ namespace SS14.Client.GameObjects.EntitySystems
     /// <summary>
     ///     Client-side processing of all input commands through the simulation.
     /// </summary>
-    class InputSystem : EntitySystem
+    public class InputSystem : EntitySystem
     {
         private readonly IPlayerCommandStates _cmdStates = new PlayerCommandStates();
         private readonly CommandBindMapping _bindMap = new CommandBindMapping();

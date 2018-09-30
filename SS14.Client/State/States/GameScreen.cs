@@ -235,7 +235,7 @@ namespace SS14.Client.State.States
 
             var mousePosWorld = eyeManager.ScreenToWorld(args.PointerLocation);
             var entityToClick = GetEntityUnderPosition(mousePosWorld);
-            var message = new FullInputCmdMessage(timing.CurTick, funcId, args.State, mousePosWorld, entityToClick?.Uid ?? EntityUid.Invalid);
+            var message = new FullInputCmdMessage(timing.CurTick, funcId, args.State, mousePosWorld, args.PointerLocation, entityToClick?.Uid ?? EntityUid.Invalid);
 
             // client side command handlers will always be sent the local player session.
             var session = playerManager.LocalPlayer.Session;

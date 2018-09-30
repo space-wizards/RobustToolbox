@@ -1,4 +1,5 @@
-﻿using SS14.Shared.GameObjects;
+﻿using System;
+using SS14.Shared.GameObjects;
 using SS14.Shared.Map;
 using SS14.Shared.Players;
 
@@ -8,8 +9,13 @@ namespace SS14.Shared.Input
 
     public abstract class InputCmdHandler
     {
-        public virtual void Enabled(ICommonSession session) { }
-        public virtual void Disabled(ICommonSession session) { }
+        public virtual void Enabled(ICommonSession session)
+        {
+        }
+
+        public virtual void Disabled(ICommonSession session)
+        {
+        }
 
         public abstract bool HandleCmdMessage(ICommonSession session, InputCmdMessage message);
 
@@ -19,7 +25,8 @@ namespace SS14.Shared.Input
         /// <param name="enabled">The delegate to be ran when this command is enabled.</param>
         /// <param name="disabled">The delegate to be ran when this command is disabled.</param>
         /// <returns>The new input command.</returns>
-        public static InputCmdHandler FromDelegate(StateInputCmdDelegate enabled = null, StateInputCmdDelegate disabled = null)
+        public static InputCmdHandler FromDelegate(StateInputCmdDelegate enabled = null,
+            StateInputCmdDelegate disabled = null)
         {
             return new StateInputCmdHandler
             {
@@ -66,11 +73,18 @@ namespace SS14.Shared.Input
 
     public delegate void PointerInputCmdDelegate(ICommonSession session, GridLocalCoordinates coords, EntityUid uid);
 
+    public delegate void PointerInputCmdDelegate2(in PointerInputCmdHandler.PointerInputCmdArgs args);
+
     public class PointerInputCmdHandler : InputCmdHandler
     {
-        private PointerInputCmdDelegate _callback;
+        private PointerInputCmdDelegate2 _callback;
 
-        public PointerInputCmdHandler(PointerInputCmdDelegate callback)
+        public PointerInputCmdHandler(PointerInputCmdDelegate callback) : this((in PointerInputCmdArgs args) =>
+            callback(args.Session, args.Coordinates, args.EntityUid))
+        {
+        }
+
+        public PointerInputCmdHandler(PointerInputCmdDelegate2 callback)
         {
             _callback = callback;
         }
@@ -80,12 +94,29 @@ namespace SS14.Shared.Input
             if (!(message is FullInputCmdMessage msg) || msg.State != BoundKeyState.Down)
                 return false;
 
-            _callback?.Invoke(session, msg.Coordinates, msg.Uid);
+            _callback?.Invoke(new PointerInputCmdArgs(session, msg.Coordinates, msg.ScreenCoordinates, msg.Uid));
 
             return true;
         }
+
+        public readonly struct PointerInputCmdArgs
+        {
+            public readonly ICommonSession Session;
+            public readonly GridLocalCoordinates Coordinates;
+            public readonly ScreenCoordinates ScreenCoordinates;
+            public readonly EntityUid EntityUid;
+
+            public PointerInputCmdArgs(ICommonSession session, GridLocalCoordinates coordinates,
+                ScreenCoordinates screenCoordinates, EntityUid entityUid)
+            {
+                Session = session;
+                Coordinates = coordinates;
+                ScreenCoordinates = screenCoordinates;
+                EntityUid = entityUid;
+            }
+        }
     }
-    
+
     public class PointerStateInputCmdHandler : InputCmdHandler
     {
         private PointerInputCmdDelegate _enabled;
@@ -100,7 +131,7 @@ namespace SS14.Shared.Input
         /// <inheritdoc />
         public override bool HandleCmdMessage(ICommonSession session, InputCmdMessage message)
         {
-            if(!(message is FullInputCmdMessage msg))
+            if (!(message is FullInputCmdMessage msg))
                 return false;
 
             switch (msg.State)

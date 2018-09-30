@@ -129,6 +129,11 @@ namespace SS14.Shared.Input
         public GridLocalCoordinates Coordinates { get; }
 
         /// <summary>
+        ///     Screen Coordinates of the pointer when the command was created.
+        /// </summary>
+        public ScreenCoordinates ScreenCoordinates { get; }
+
+        /// <summary>
         ///     Entity that was under the pointer when the command was created (if any).
         /// </summary>
         public EntityUid Uid { get; }
@@ -140,8 +145,8 @@ namespace SS14.Shared.Input
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="state">New state of the Input Function.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
-        public FullInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, BoundKeyState state, GridLocalCoordinates coordinates)
-            : this(tick, inputFunctionId, state, coordinates, EntityUid.Invalid) { }
+        public FullInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, BoundKeyState state, GridLocalCoordinates coordinates, ScreenCoordinates screenCoordinates)
+            : this(tick, inputFunctionId, state, coordinates, screenCoordinates, EntityUid.Invalid) { }
 
         /// <summary>
         ///     Creates an instance of <see cref="FullInputCmdMessage"/> with an optional Entity reference.
@@ -151,11 +156,12 @@ namespace SS14.Shared.Input
         /// <param name="state">New state of the Input Function.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
         /// <param name="uid">Entity that was under the pointer when the command was created.</param>
-        public FullInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, BoundKeyState state, GridLocalCoordinates coordinates, EntityUid uid)
+        public FullInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, BoundKeyState state, GridLocalCoordinates coordinates, ScreenCoordinates screenCoordinates, EntityUid uid)
             : base(tick, inputFunctionId)
         {
             State = state;
             Coordinates = coordinates;
+            ScreenCoordinates = screenCoordinates;
             Uid = uid;
         }
     }

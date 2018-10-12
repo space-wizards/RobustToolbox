@@ -163,6 +163,10 @@
   <PropertyGroup>
     <DefineConstants Condition="'$(HEADLESS)'!=''">$(DefineConstants);HEADLESS</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|NoGodotx64' ">
+    <OutputPath>bin\NoGodotx64\Debug\</OutputPath>
+    <PlatformTarget>NoGodotx64</PlatformTarget>
+  </PropertyGroup>
   <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" />
   <!--
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -7,7 +7,9 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
+    #if GODOT
     [ControlWrap(typeof(Godot.Button))]
+    #endif
     public class Button : BaseButton
     {
         public Button() : base()
@@ -16,6 +18,8 @@ namespace SS14.Client.UserInterface.Controls
         public Button(string name) : base(name)
         {
         }
+
+        #if GODOT
         internal Button(Godot.Button button) : base(button)
         {
         }
@@ -32,29 +36,50 @@ namespace SS14.Client.UserInterface.Controls
             base.SetSceneControl(control);
             SceneControl = (Godot.Button)control;
         }
+        #endif
 
         public AlignMode TextAlign
         {
+            #if GODOT
             get => (AlignMode)SceneControl.Align;
             set => SceneControl.Align = (Godot.Button.TextAlign)value;
+            #else
+            get => default;
+            set { }
+            #endif
         }
 
         public bool ClipText
         {
+            #if GODOT
             get => SceneControl.ClipText;
             set => SceneControl.ClipText = value;
+            #else
+            get => default;
+            set { }
+            #endif
         }
 
         public bool Flat
         {
+            #if GODOT
             get => SceneControl.Flat;
             set => SceneControl.Flat = value;
+            #else
+            get => default;
+            set { }
+            #endif
         }
 
         public string Text
         {
+            #if GODOT
             get => SceneControl.Text;
             set => SceneControl.Text = value;
+            #else
+            get => default;
+            set { }
+            #endif
         }
 
         private Color? _fontColorOverride;
@@ -91,9 +116,9 @@ namespace SS14.Client.UserInterface.Controls
 
         public enum AlignMode
         {
-            Left = Godot.Button.TextAlign.Left,
-            Center = Godot.Button.TextAlign.Center,
-            Right = Godot.Button.TextAlign.Right,
+            Left = 0,
+            Center = 1,
+            Right = 2,
         }
     }
 }

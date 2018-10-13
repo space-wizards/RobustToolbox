@@ -91,13 +91,17 @@ namespace SS14.Client.GameObjects
                 if (value)
                 {
                     if (Owner.Transform.Parent == null) return;
+                    #if GODOT
                     Light.ParentTo((GodotTransformComponent) Owner.Transform.Parent);
+                    #endif
                     _lightOnParent = true;
                 }
                 else
                 {
                     if (!_lightOnParent) return;
+                    #if GODOT
                     Light.ParentTo((GodotTransformComponent) Owner.Transform);
+                    #endif
                     _lightOnParent = false;
                 }
             }
@@ -119,8 +123,10 @@ namespace SS14.Client.GameObjects
                 radius = FloatMath.Clamp(value, 2, 10);
                 var mgr = IoCManager.Resolve<IResourceCache>();
                 var tex = mgr.GetResource<TextureResource>(new ResourcePath("/Textures/Effects/Light/") / $"lighting_falloff_{(int)radius}.png");
+                #if GODOT
                 // TODO: Maybe editing the global texture resource is not a good idea.
                 tex.Texture.GodotTexture.SetFlags(tex.Texture.GodotTexture.GetFlags() | (int)Godot.Texture.FlagsEnum.Filter);
+                #endif
                 Light.Texture = tex.Texture;
             }
         }
@@ -129,7 +135,9 @@ namespace SS14.Client.GameObjects
         {
             base.Initialize();
 
+            #if GODOT
             Light.ParentTo((GodotTransformComponent)Owner.Transform);
+            #endif
             Owner.Transform.OnParentChanged += TransformOnOnParentChanged;
         }
 
@@ -143,12 +151,16 @@ namespace SS14.Client.GameObjects
 
             if (obj.New.IsValid() && Owner.EntityManager.TryGetEntity(obj.New, out var entity))
             {
+                #if GODOT
                 Light.ParentTo((GodotTransformComponent) entity.Transform);
+                #endif
                 _lightOnParent = true;
             }
             else
             {
+                #if GODOT
                 Light.ParentTo((GodotTransformComponent) Owner.Transform);
+                #endif
                 _lightOnParent = false;
             }
         }

@@ -24,7 +24,10 @@ using System.Text;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
+
+#if GODOT
 using VS = Godot.VisualServer;
+#endif
 
 namespace SS14.Client.GameObjects
 {
@@ -63,10 +66,12 @@ namespace SS14.Client.GameObjects
             set
             {
                 drawDepth = value;
+#if GODOT
                 if (SceneNode != null)
                 {
                     SceneNode.ZIndex = (int) value;
                 }
+                #endif
             }
         }
 
@@ -82,10 +87,12 @@ namespace SS14.Client.GameObjects
             set
             {
                 scale = value;
+#if GODOT
                 if (SceneNode != null)
                 {
                     SceneNode.Scale = value.Convert();
                 }
+                #endif
             }
         }
 
@@ -98,10 +105,12 @@ namespace SS14.Client.GameObjects
             set
             {
                 rotation = value;
+#if GODOT
                 if (SceneNode != null)
                 {
                     SceneNode.Rotation = (float) value;
                 }
+                #endif
             }
         }
 
@@ -117,10 +126,12 @@ namespace SS14.Client.GameObjects
             set
             {
                 offset = value;
+#if GODOT
                 if (SceneNode != null)
                 {
                     SceneNode.Position = value.Convert() * EyeManager.PIXELSPERMETER;
                 }
+                #endif
             }
         }
 
@@ -133,10 +144,12 @@ namespace SS14.Client.GameObjects
             set
             {
                 color = value;
+#if GODOT
                 if (SceneNode != null)
                 {
                     SceneNode.Modulate = value.Convert();
                 }
+                #endif
             }
         }
 
@@ -198,10 +211,8 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        [ViewVariables]
-        private Dictionary<object, int> LayerMap = new Dictionary<object, int>();
-        [ViewVariables]
-        private bool _layerMapShared;
+        [ViewVariables] private Dictionary<object, int> LayerMap = new Dictionary<object, int>();
+        [ViewVariables] private bool _layerMapShared;
 
         // To a future Clusterfack:
         // REALLY BIG OPTIMIZATION POTENTIAL:
@@ -211,10 +222,11 @@ namespace SS14.Client.GameObjects
         // It may be a good idea to re-implement this list to use Layer[],
         // use ref locals EVERYWHERE, and handle the resizing ourselves.
         // This may be worth the overhead of basically reimplementing List<T>.
-        [ViewVariables]
-        private List<Layer> Layers;
+        [ViewVariables] private List<Layer> Layers;
 
+#if GODOT
         private Godot.Node2D SceneNode;
+        #endif
 
         private IResourceCache resourceCache;
         private IPrototypeManager prototypes;
@@ -982,11 +994,16 @@ namespace SS14.Client.GameObjects
 
         public ISpriteProxy CreateProxy()
         {
+#if GODOT
             var item = VS.CanvasItemCreate();
             RedrawQueued = true;
             return CreateMirror(item);
+            #else
+            throw new NotImplementedException();
+#endif
         }
 
+#if GODOT
         ISpriteProxy CreateMirror(Godot.RID item)
         {
             var key = NextMirrorKey++;
@@ -1000,10 +1017,12 @@ namespace SS14.Client.GameObjects
             Mirrors.Add(key, data);
             return mirror;
         }
+#endif
 
         public override void OnAdd()
         {
             base.OnAdd();
+#if GODOT
             SceneNode = new Godot.Node2D()
             {
                 Name = "Sprite",
@@ -1013,6 +1032,7 @@ namespace SS14.Client.GameObjects
                 Modulate = color.Convert(),
                 Rotation = (float) rotation,
             };
+            #endif
         }
 
         public override void OnRemove()
@@ -1025,22 +1045,29 @@ namespace SS14.Client.GameObjects
             }
 
             MainMirror.Dispose();
+#if GODOT
             SceneNode.QueueFree();
+            #endif
         }
 
         public override void Initialize()
         {
             base.Initialize();
 
+#if GODOT
             MainMirror = CreateMirror(SceneNode.GetCanvasItem());
             var mir = Mirrors[0];
             mir.DontFree = true;
             Mirrors[0] = mir;
             ((IGodotTransformComponent) Owner.Transform).SceneNode.AddChild(SceneNode);
+            #else
+            throw new NotImplementedException();
+#endif
         }
 
         private void ClearDraw()
         {
+#if GODOT
             foreach (var data in Mirrors.Values)
             {
                 foreach (var item in data.Children)
@@ -1050,12 +1077,16 @@ namespace SS14.Client.GameObjects
 
                 data.Children.Clear();
             }
+            #else
+            throw new NotImplementedException();
+#endif
         }
 
         private void Redraw()
         {
             ClearDraw();
 
+#if GODOT
             foreach (var data in Mirrors.Values)
             {
                 if (!data.Visible)
@@ -1086,6 +1117,10 @@ namespace SS14.Client.GameObjects
                     texture.GodotTexture.Draw(currentItem, -texture.GodotTexture.GetSize() / 2, layer.Color.Convert());
                 }
             }
+
+            #else
+            throw new NotImplementedException();
+#endif
         }
 
         public override void ExposeData(ObjectSerializer serializer)
@@ -1287,7 +1322,9 @@ namespace SS14.Client.GameObjects
             var dirChanged = false;
             if (Directional)
             {
+                #if GODOT
                 SceneNode.Rotation = (float) (Owner.Transform.WorldRotation - Rotation) - MathHelper.PiOver2;
+                #endif
                 dirWeAreFacing = GetDir();
                 if (LastDir != dirWeAreFacing || _recalcDirections)
                 {
@@ -1544,7 +1581,9 @@ namespace SS14.Client.GameObjects
             RedrawQueued = true;
             if (!val.DontFree)
             {
+#if GODOT
                 VS.FreeRid(val.Root);
+                #endif
             }
 
             Mirrors.Remove(key);
@@ -1619,9 +1658,11 @@ namespace SS14.Client.GameObjects
         {
             readonly int Key;
             readonly SpriteComponent Master;
+#if GODOT
             Godot.RID CanvasItem;
 
             private Godot.RID Parent;
+#endif
             private Vector2 _offset;
 
             public Vector2 Offset
@@ -1647,14 +1688,20 @@ namespace SS14.Client.GameObjects
                 }
             }
 
+#if GODOT
             public SpriteMirror(int key, SpriteComponent master, Godot.RID canvasItem)
             {
                 Master = master;
                 Key = key;
                 CanvasItem = canvasItem;
             }
+#endif
 
+#if GODOT
             public bool Disposed => CanvasItem == null;
+#else
+            public bool Disposed => throw new NotImplementedException();
+#endif
 
             void CheckDisposed()
             {
@@ -1664,18 +1711,22 @@ namespace SS14.Client.GameObjects
                 }
             }
 
+
             private void UpdateTransform()
             {
+#if GODOT
                 var transform = new Godot.Transform2D(0, Offset.Convert());
                 VS.CanvasItemSetTransform(CanvasItem, transform);
+#endif
             }
-
+#if GODOT
             public void AttachToItem(Godot.RID item)
             {
                 CheckDisposed();
                 Parent = item;
                 VS.CanvasItemSetParent(CanvasItem, Parent);
             }
+#endif
 
             public void Dispose()
             {
@@ -1696,14 +1747,18 @@ namespace SS14.Client.GameObjects
             void Dispose(bool disposing)
             {
                 Master.DisposeMirror(Key);
+#if GODOT
                 CanvasItem = null;
+#endif
             }
         }
 
         struct MirrorData
         {
+#if GODOT
             public Godot.RID Root;
             public List<Godot.RID> Children;
+#endif
 
             public bool Visible;
 

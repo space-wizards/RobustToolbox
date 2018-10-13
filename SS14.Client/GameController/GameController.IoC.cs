@@ -64,13 +64,6 @@ namespace SS14.Client
     // Partial of GameController to initialize IoC and some other low-level systems like it.
     public sealed partial class GameController
     {
-        // Aaaaaah init order hurts.
-        private void PreInitIoC()
-        {
-            IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
-            IoCManager.BuildGraph();
-        }
-
         private void InitIoC()
         {
             RegisterIoC();
@@ -95,7 +88,11 @@ namespace SS14.Client
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
+            #if GODOT
             IoCManager.Register<IComponentFactory, GodotComponentFactory>();
+            #else
+            IoCManager.Register<IComponentFactory, ClientComponentFactory>();
+            #endif
             IoCManager.Register<IComponentManager, ComponentManager>();
             IoCManager.Register<IMapManager, ClientMapManager>();
             IoCManager.Register<ICollisionManager, CollisionManager>();
@@ -116,16 +113,24 @@ namespace SS14.Client
             IoCManager.Register<IStateManager, StateManager>();
             IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
             IoCManager.Register<IGameControllerProxy, GameControllerProxy>();
+            #if GODOT
             IoCManager.Register<IInputManager, GodotInputManager>();
+            #else
+            IoCManager.Register<IInputManager, InputManager>();
+            #endif
             IoCManager.Register<IDebugDrawing, DebugDrawing>();
             IoCManager.Register<IClientConsole, ClientChatConsole>();
             IoCManager.Register<IClientChatConsole, ClientChatConsole>();
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IDisplayManager, DisplayManager>();
             IoCManager.Register<IEyeManager, EyeManager>();
+            #if GODOT
             IoCManager.Register<IGameTiming, GameController.GameTiming>();
-            // Only GameController can acess this because the type is private so it's fine.
+            // Only GameController can access this because the type is private so it's fine.
             IoCManager.Register<GameController.GameTiming, GameController.GameTiming>();
+            #else
+            IoCManager.Register<IGameTiming, GameTiming>();
+            #endif
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<IOverlayManager, OverlayManager>();
             IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();

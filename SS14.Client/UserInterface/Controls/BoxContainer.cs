@@ -1,6 +1,8 @@
 ﻿namespace SS14.Client.UserInterface.Controls
 {
+    #if GODOT
     [ControlWrap(typeof(Godot.BoxContainer))]
+    #endif
     public abstract class BoxContainer : Container
     {
         public BoxContainer() : base()
@@ -11,9 +13,11 @@
         {
         }
 
+        #if GODOT
         internal BoxContainer(Godot.BoxContainer sceneControl) : base(sceneControl)
         {
         }
+        #endif
 
         private int? _separationOverride;
 

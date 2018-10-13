@@ -1,5 +1,4 @@
-﻿using Godot;
-using SS14.Client.Input;
+﻿using SS14.Client.Input;
 
 namespace SS14.Client
 {
@@ -53,81 +52,6 @@ namespace SS14.Client
         private void MouseWheel(MouseWheelEventArgs mouseWheelEventArgs)
         {
             _stateManager.MouseWheelMove(mouseWheelEventArgs);
-        }
-
-        // Override that converts and distributes the input events
-        //   to the more sane methods above.
-        public override void Input(InputEvent inputEvent)
-        {
-            switch (inputEvent)
-            {
-                case InputEventKey keyEvent:
-                    var keyEventArgs = (KeyEventArgs)keyEvent;
-                    if (keyEvent.Echo)
-                    {
-                        return;
-                    }
-                    else if (keyEvent.Pressed)
-                    {
-                        KeyDown(keyEventArgs);
-                    }
-                    else
-                    {
-                        KeyUp(keyEventArgs);
-                    }
-                    break;
-
-                case InputEventMouseButton mouseButtonEvent:
-                    if (mouseButtonEvent.ButtonIndex >= (int)ButtonList.WheelUp && mouseButtonEvent.ButtonIndex <= (int)ButtonList.WheelRight)
-                    {
-                        // Mouse wheel event.
-                        var mouseWheelEventArgs = (MouseWheelEventArgs)mouseButtonEvent;
-                        MouseWheel(mouseWheelEventArgs);
-                    }
-                    else
-                    {
-                        // Mouse button event.
-                        var mouseButtonEventArgs = (MouseButtonEventArgs)mouseButtonEvent;
-                        if (mouseButtonEvent.Pressed)
-                        {
-                            KeyDown((KeyEventArgs) mouseButtonEvent);
-                            MouseDown(mouseButtonEventArgs);
-                        }
-                        else
-                        {
-                            KeyUp((KeyEventArgs)mouseButtonEvent);
-                            MouseUp(mouseButtonEventArgs);
-                        }
-                    }
-                    break;
-
-                case InputEventMouseMotion mouseMotionEvent:
-                    var mouseMoveEventArgs = (MouseMoveEventArgs)mouseMotionEvent;
-                    MouseMove(mouseMoveEventArgs);
-                    break;
-            }
-        }
-
-        public override void PreInput(InputEvent inputEvent)
-        {
-            if (inputEvent is InputEventKey keyEvent)
-            {
-                var keyEventArgs = (KeyEventArgs)keyEvent;
-                if (keyEvent.Echo)
-                {
-                    return;
-                }
-                else if (keyEvent.Pressed)
-                {
-                    // TODO: these hacks are in right now for toggling the debug console.
-                    // Somehow find a way to make the console use the key binds system?
-                    _userInterfaceManager.PreKeyDown(keyEventArgs);
-                }
-                else
-                {
-                    _userInterfaceManager.PreKeyUp(keyEventArgs);
-                }
-            }
         }
     }
 }

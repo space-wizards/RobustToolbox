@@ -10,7 +10,9 @@ namespace SS14.Client.Graphics.Drawing
     /// </summary>
     public abstract class StyleBox
     {
+#if GODOT
         internal abstract Godot.StyleBox GodotStyleBox { get; }
+#endif
 
         [Flags]
         public enum Margin
@@ -28,12 +30,14 @@ namespace SS14.Client.Graphics.Drawing
 
     internal class GodotStyleBoxWrap : StyleBox
     {
+#if GODOT
         public GodotStyleBoxWrap(Godot.StyleBox godotStyleBox)
         {
             GodotStyleBox = godotStyleBox;
         }
 
         internal override Godot.StyleBox GodotStyleBox { get; }
+#endif
     }
 
     /// <summary>
@@ -41,13 +45,17 @@ namespace SS14.Client.Graphics.Drawing
     /// </summary>
     public class StyleBoxTexture : StyleBox
     {
+#if GODOT
         private readonly Godot.StyleBoxTexture stylebox;
 
         internal override Godot.StyleBox GodotStyleBox => stylebox;
+#endif
 
         public StyleBoxTexture()
         {
+#if GODOT
             stylebox = new Godot.StyleBoxTexture();
+#endif
         }
 
         /// <summary>
@@ -65,43 +73,71 @@ namespace SS14.Client.Graphics.Drawing
 
         public float MarginLeft
         {
+#if GODOT
             get => stylebox.MarginLeft;
             set => stylebox.MarginLeft = value;
+#else
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
+#endif
         }
 
         public float MarginRight
         {
+#if GODOT
             get => stylebox.MarginRight;
             set => stylebox.MarginRight = value;
+#else
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
+#endif
         }
 
         public float MarginTop
         {
+#if GODOT
             get => stylebox.MarginTop;
             set => stylebox.MarginTop = value;
+#else
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
+#endif
         }
 
         public float MarginBottom
         {
+#if GODOT
             get => stylebox.MarginBottom;
             set => stylebox.MarginBottom = value;
+#else
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
+#endif
         }
 
         public Color Modulate
         {
+#if GODOT
             get => stylebox.ModulateColor.Convert();
             set => stylebox.ModulateColor = value.Convert();
+#else
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
+#endif
         }
 
         private Texture cachedTexture;
+
         public Texture Texture
         {
-            get
-            {
-                return cachedTexture ?? new GodotTextureSource((Godot.Texture)stylebox.Texture);
-            }
+#if GODOT
+            get { return cachedTexture ?? new GodotTextureSource((Godot.Texture) stylebox.Texture); }
             // Woo implicit casts.
             set => stylebox.Texture = cachedTexture = value;
+#else
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
+#endif
         }
 
         /// <summary>
@@ -135,41 +171,70 @@ namespace SS14.Client.Graphics.Drawing
     {
         public Color BackgroundColor
         {
+#if GODOT
             get => stylebox.BgColor.Convert();
             set => stylebox.BgColor = value.Convert();
+#else
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
+#endif
         }
 
+#if GODOT
         private readonly Godot.StyleBoxFlat stylebox;
 
         internal override Godot.StyleBox GodotStyleBox => stylebox;
+#endif
 
         public StyleBoxFlat()
         {
+#if GODOT
             stylebox = new Godot.StyleBoxFlat();
+#endif
         }
 
         public float MarginLeft
         {
+#if GODOT
             get => stylebox.ContentMarginLeft;
             set => stylebox.ContentMarginLeft = value;
+#else
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
+#endif
         }
 
         public float MarginRight
         {
+#if GODOT
             get => stylebox.ContentMarginRight;
             set => stylebox.ContentMarginRight = value;
+#else
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
+#endif
         }
 
         public float MarginTop
         {
+#if GODOT
             get => stylebox.ContentMarginTop;
             set => stylebox.ContentMarginTop = value;
+#else
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
+#endif
         }
 
         public float MarginBottom
         {
+#if GODOT
             get => stylebox.ContentMarginBottom;
             set => stylebox.ContentMarginBottom = value;
+#else
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
+#endif
         }
 
 

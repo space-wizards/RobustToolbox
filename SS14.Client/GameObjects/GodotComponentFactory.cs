@@ -1,4 +1,5 @@
-﻿using SS14.Client.Interfaces.GameObjects.Components;
+﻿#if GODOT
+using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.GameObjects.Components;
 
 namespace SS14.Client.GameObjects
@@ -13,3 +14,4 @@ namespace SS14.Client.GameObjects
         }
     }
 }
+#endif

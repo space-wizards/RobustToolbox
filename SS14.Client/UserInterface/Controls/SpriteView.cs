@@ -9,7 +9,9 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
+    #if GODOT
     [ControlWrap(typeof(GodotGlue.SpriteView))]
+    #endif
     public class SpriteView : Control
     {
         ISpriteProxy Mirror;
@@ -45,10 +47,12 @@ namespace SS14.Client.UserInterface.Controls
 
         }
 
+        #if GODOT
         public SpriteView(GodotGlue.SpriteView control) : base(control)
         {
 
         }
+        #endif
 
         protected override void Initialize()
         {

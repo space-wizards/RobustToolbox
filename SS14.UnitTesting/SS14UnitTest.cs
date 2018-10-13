@@ -209,7 +209,9 @@ namespace SS14.UnitTesting
                     //IoCManager.Register<IEyeManager, EyeManager>();
                     IoCManager.Register<IPrototypeManager, PrototypeManager>();
                     IoCManager.Register<IOverlayManager, OverlayManager>();
+                    #if GODOT
                     IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
+                    #endif
                     IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();
                     break;
 

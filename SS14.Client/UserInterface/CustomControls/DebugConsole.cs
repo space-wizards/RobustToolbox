@@ -24,12 +24,14 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => console.Commands;
 
+        #if GODOT
         private protected override Godot.Control SpawnSceneControl()
         {
             var node = LoadScene("res://Scenes/DebugConsole/DebugConsole.tscn");
             node.Visible = false;
             return node;
         }
+        #endif
 
         protected override void Initialize()
         {

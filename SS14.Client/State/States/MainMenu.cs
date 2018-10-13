@@ -37,8 +37,10 @@ namespace SS14.Client.State.States
         {
             IoCManager.InjectDependencies(this);
 
+            #if GODOT
             var scene = (Godot.PackedScene)Godot.ResourceLoader.Load("res://Scenes/MainMenu/MainMenu.tscn");
             MainMenuControl = Control.InstanceScene(scene);
+            #endif
 
             userInterfaceManager.StateRoot.AddChild(MainMenuControl);
 

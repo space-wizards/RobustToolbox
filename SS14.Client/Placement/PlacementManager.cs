@@ -52,8 +52,10 @@ namespace SS14.Client.Placement
         private readonly IGameTiming _time;
         [Dependency]
         public readonly IEyeManager eyeManager;
+        #if GODOT
         [Dependency]
         public readonly ISceneTreeHolder sceneTree;
+        #endif
         [Dependency]
         private readonly IInputManager _inputManager;
         [Dependency]
@@ -170,8 +172,10 @@ namespace SS14.Client.Placement
         /// </summary>
         public Direction Direction { get; set; } = Direction.South;
 
+        #if GODOT
         public Godot.Node2D DrawNode { get; set; }
         private GodotGlue.GodotSignalSubscriber0 drawNodeDrawSubscriber;
+        #endif
         private bool _isActive;
 
         public void Initialize()
@@ -186,6 +190,7 @@ namespace SS14.Client.Placement
 
             _mapMan.TileChanged += HandleTileChanged;
 
+            #if GODOT
             var unshadedMaterial = new Godot.CanvasItemMaterial()
             {
                 LightMode = Godot.CanvasItemMaterial.LightModeEnum.Unshaded
@@ -201,6 +206,7 @@ namespace SS14.Client.Placement
             drawNodeDrawSubscriber = new GodotGlue.GodotSignalSubscriber0();
             drawNodeDrawSubscriber.Connect(DrawNode, "draw");
             drawNodeDrawSubscriber.Signal += Render;
+            #endif
 
             // a bit ugly, oh well
             _baseClient.PlayerJoinedServer += (sender, args) => SetupInput(_entitySystemManager);
@@ -305,10 +311,12 @@ namespace SS14.Client.Placement
 
         public void Dispose()
         {
+            #if GODOT
             drawNodeDrawSubscriber.Disconnect(DrawNode, "draw");
             drawNodeDrawSubscriber.Dispose();
             DrawNode.QueueFree();
             DrawNode.Dispose();
+            #endif
         }
 
         private void HandlePlacementMessage(MsgPlacement msg)
@@ -346,7 +354,9 @@ namespace SS14.Client.Placement
             Eraser = false;
             PlacementOffset = Vector2i.Zero;
             // Make it draw again to remove the drawn things.
+            #if GODOT
             DrawNode?.Update();
+            #endif
         }
 
         public void Rotate()
@@ -468,9 +478,9 @@ namespace SS14.Client.Placement
             // Try to get current map.
             var map = MapId.Nullspace;
             var ent = PlayerManager.LocalPlayer.ControlledEntity;
-            if (ent != null && ent.TryGetComponent<IGodotTransformComponent>(out var component))
+            if (ent != null)
             {
-                map = component.MapID;
+                map = ent.Transform.MapID;
             }
 
             if (map == MapId.Nullspace || CurrentPermission == null || CurrentMode == null)
@@ -498,7 +508,9 @@ namespace SS14.Client.Placement
             if (_placenextframe && CurrentPermission.IsTile)
                 HandlePlacement();
 
+            #if GODOT
             DrawNode.Update();
+            #endif
         }
 
         private void ActivateLineMode()
@@ -548,7 +560,9 @@ namespace SS14.Client.Placement
 
             var pos = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
             const int ppm = EyeManager.PIXELSPERMETER;
+            #if GODOT
             DrawNode.DrawCircle(pos.Convert() * new Godot.Vector2(1, -1) * ppm, CurrentPermission.Range * ppm, new Godot.Color(1, 1, 1, 0.25f));
+            #endif
         }
 
         private void HandleStartPlacement(MsgPlacement msg)

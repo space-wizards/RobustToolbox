@@ -48,11 +48,14 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        #if GODOT
         IGodotTransformComponent transform;
+        #endif
 
         public override void Initialize()
         {
             base.Initialize();
+            #if GODOT
             transform = Owner.GetComponent<IGodotTransformComponent>();
             eye = new Eye
             {
@@ -62,12 +65,15 @@ namespace SS14.Client.GameObjects
             };
             transform.SceneNode.AddChild(eye.GodotCamera);
             transform.OnMove += Transform_OnMove;
+            #endif
         }
 
         public override void OnRemove()
         {
             base.OnRemove();
+            #if GODOT
             transform.OnMove -= Transform_OnMove;
+            #endif
             eye.Dispose();
             eye = null;
         }

@@ -9,7 +9,9 @@ namespace SS14.Client.Interfaces.Graphics.ClientEye
     /// </summary>
     public interface IEye
     {
+        #if GODOT
         Godot.Camera2D GodotCamera { get; }
+        #endif
 
         MapId MapId { get; }
 

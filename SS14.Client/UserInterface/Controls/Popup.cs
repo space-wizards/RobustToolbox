@@ -3,7 +3,9 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
+    #if GODOT
     [ControlWrap(typeof(Godot.Popup))]
+    #endif
     public class Popup : Control
     {
         public Popup() : base()
@@ -14,6 +16,7 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
+        #if GODOT
         internal Popup(Godot.Popup control) : base(control)
         {
         }
@@ -30,20 +33,27 @@ namespace SS14.Client.UserInterface.Controls
             base.SetSceneControl(control);
             SceneControl = (Godot.Popup) control;
         }
+        #endif
 
         public void Open(UIBox2? box = null)
         {
+            #if GODOT
             SceneControl.Popup_(box?.Convert());
+            #endif
         }
 
         public void OpenCentered()
         {
+            #if GODOT
             SceneControl.PopupCentered();
+            #endif
         }
 
         public void OpenMinimum()
         {
+            #if GODOT
             SceneControl.PopupCenteredMinsize();
+            #endif
         }
     }
 }

@@ -14,6 +14,7 @@ namespace SS14.Client.Map
     /// </summary>
     public class ClientTileDefinitionManager : TileDefinitionManager, IClientTileDefinitionManager
     {
+        #if GODOT
         [Dependency]
         readonly IResourceCache resourceCache;
 
@@ -35,5 +36,6 @@ namespace SS14.Client.Map
 
             return ret;
         }
+        #endif
     }
 }

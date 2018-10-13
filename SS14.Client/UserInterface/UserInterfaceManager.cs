@@ -18,14 +18,18 @@ namespace SS14.Client.UserInterface
     {
         [Dependency]
         readonly IConfigurationManager _config;
+        #if GODOT
         [Dependency]
         readonly ISceneTreeHolder _sceneTreeHolder;
+        #endif
         [Dependency]
         readonly IInputManager _inputManager;
 
         public Control Focused { get; private set; }
 
+        #if GODOT
         private Godot.CanvasLayer CanvasLayer;
+        #endif
         public Control StateRoot { get; private set; }
         public Control RootControl { get; private set; }
         public Control WindowRoot { get; private set; }
@@ -41,6 +45,7 @@ namespace SS14.Client.UserInterface
 
         public void Initialize()
         {
+            #if GODOT
             CanvasLayer = new Godot.CanvasLayer
             {
                 Name = "UILayer",
@@ -48,6 +53,7 @@ namespace SS14.Client.UserInterface
             };
 
             _sceneTreeHolder.SceneTree.GetRoot().AddChild(CanvasLayer);
+            #endif
 
             RootControl = new Control("UIRoot")
             {
@@ -55,7 +61,9 @@ namespace SS14.Client.UserInterface
             };
             RootControl.SetAnchorPreset(Control.LayoutPreset.Wide);
 
+            #if GODOT
             CanvasLayer.AddChild(RootControl.SceneControl);
+            #endif
 
             StateRoot = new Control("StateRoot")
             {

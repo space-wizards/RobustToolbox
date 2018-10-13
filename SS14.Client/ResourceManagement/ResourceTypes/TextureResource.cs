@@ -11,10 +11,13 @@ namespace SS14.Client.ResourceManagement
     {
         public override ResourcePath Fallback { get; } = new ResourcePath("/Textures/noSprite.png");
         public Texture Texture { get; private set; }
+        #if GODOT
         private Godot.ImageTexture godotTexture;
+        #endif
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
+            #if GODOT
             if (!cache.ContentFileExists(path))
             {
                 throw new FileNotFoundException("Content file does not exist for texture");
@@ -35,6 +38,7 @@ namespace SS14.Client.ResourceManagement
             Texture = new GodotTextureSource(godotTexture);
             // Primarily for tracking down iCCP sRGB errors in the image files.
             Logger.DebugS("res.tex", $"Loaded texture {Path.GetFullPath(diskPath)}.");
+            #endif
         }
 
         public static implicit operator Texture(TextureResource res)
@@ -44,8 +48,10 @@ namespace SS14.Client.ResourceManagement
 
         public override void Dispose()
         {
+            #if GODOT
             godotTexture.Dispose();
             godotTexture = null;
+            #endif
         }
     }
 }

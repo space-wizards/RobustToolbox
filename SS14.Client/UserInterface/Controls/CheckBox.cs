@@ -1,6 +1,8 @@
 namespace SS14.Client.UserInterface.Controls
 {
+    #if GODOT
     [ControlWrap(typeof(Godot.CheckBox))]
+    #endif
     public class CheckBox : Button
     {
         public CheckBox()
@@ -11,6 +13,7 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
+        #if GODOT
         internal CheckBox(Godot.CheckBox box) : base(box)
         {
         }
@@ -19,5 +22,6 @@ namespace SS14.Client.UserInterface.Controls
         {
             return new Godot.CheckBox();
         }
+        #endif
     }
 }

@@ -15,7 +15,9 @@ namespace SS14.Client.Graphics.ClientEye
         // No I can't be bothered to make this a shared constant.
         public const int PIXELSPERMETER = 32;
 
+#if GODOT
         [Dependency] readonly ISceneTreeHolder sceneTree;
+        #endif
         [Dependency] private readonly IMapManager _mapManager;
 
         // We default to this when we get set to a null eye.
@@ -33,7 +35,9 @@ namespace SS14.Client.Graphics.ClientEye
                     return;
                 }
 
+#if GODOT
                 currentEye.GodotCamera.Current = false;
+#endif
                 if (value != null)
                 {
                     currentEye = value;
@@ -43,7 +47,9 @@ namespace SS14.Client.Graphics.ClientEye
                     currentEye = defaultEye;
                 }
 
+#if GODOT
                 currentEye.GodotCamera.Current = true;
+#endif
             }
         }
 
@@ -51,6 +57,7 @@ namespace SS14.Client.Graphics.ClientEye
 
         public Box2 GetWorldViewport()
         {
+#if GODOT
             var vpSize = sceneTree.SceneTree.Root.Size.Convert();
 
             var topLeft = ScreenToWorld(Vector2.Zero);
@@ -64,13 +71,18 @@ namespace SS14.Client.Graphics.ClientEye
             var top = MathHelper.Max(topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y);
 
             return new Box2(left, bottom, right, top);
+#else
+            throw new NotImplementedException();
+#endif
         }
 
         public void Initialize()
         {
             defaultEye = new FixedEye();
             currentEye = defaultEye;
+#if GODOT
             currentEye.GodotCamera.Current = true;
+#endif
         }
 
         public void Dispose()
@@ -80,8 +92,12 @@ namespace SS14.Client.Graphics.ClientEye
 
         public Vector2 WorldToScreen(Vector2 point)
         {
+#if GODOT
             var transform = sceneTree.WorldRoot.GetViewportTransform();
             return transform.Xform(point.Convert() * PIXELSPERMETER * new Godot.Vector2(1, -1)).Convert();
+#else
+            throw new NotImplementedException();
+#endif
         }
 
         public ScreenCoordinates WorldToScreen(GridLocalCoordinates point)
@@ -96,15 +112,21 @@ namespace SS14.Client.Graphics.ClientEye
 
         public GridLocalCoordinates ScreenToWorld(Vector2 point)
         {
+#if GODOT
             var matrix = Matrix3.Invert(MatrixViewPortTransform(sceneTree));
             var worldPos = matrix.Transform(point) / PIXELSPERMETER * new Vector2(1, -1);
             var grid = _mapManager.GetMap(currentEye.MapId).FindGridAt(worldPos);
             return new GridLocalCoordinates(grid.WorldToLocal(worldPos), grid);
+#else
+            throw new NotImplementedException();
+#endif
         }
 
+#if GODOT
         private static Matrix3 MatrixViewPortTransform(ISceneTreeHolder sceneTree)
         {
             return sceneTree.WorldRoot.GetViewportTransform().Convert();
         }
+#endif
     }
 }

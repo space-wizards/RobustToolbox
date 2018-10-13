@@ -24,8 +24,10 @@ namespace SS14.Client.Graphics.Lighting
 {
     public sealed partial class LightManager : ILightManager, IDisposable, IPostInjectInit
     {
+#if GODOT
         [Dependency]
         readonly ISceneTreeHolder sceneTreeHolder;
+#endif
         [Dependency]
         readonly IConfigurationManager configManager;
         [Dependency]
@@ -52,6 +54,7 @@ namespace SS14.Client.Graphics.Lighting
 
         private LightingSystem System = LightingSystem.Normal;
 
+        #if GODOT
         private Godot.CanvasModulate canvasModulate;
         private Godot.Viewport rootViewport;
         private Godot.Viewport deferredViewport;
@@ -59,6 +62,7 @@ namespace SS14.Client.Graphics.Lighting
         private Godot.Sprite deferredMaskBackground;
         private Godot.Sprite deferredMaskSprite;
         private GodotGlue.GodotSignalSubscriber0 deferredSizeChangedSubscriber;
+        #endif
 
         private bool disposed = false;
 
@@ -70,6 +74,7 @@ namespace SS14.Client.Graphics.Lighting
         public void Initialize()
         {
             System = configManager.GetCVar<LightingSystem>("display.lighting_system");
+            #if GODOT
             canvasModulate = new Godot.CanvasModulate()
             {
                 // Black
@@ -116,8 +121,10 @@ namespace SS14.Client.Graphics.Lighting
             {
                 sceneTreeHolder.WorldRoot.AddChild(canvasModulate);
             }
+            #endif
         }
 
+        #if GODOT
         private void OnWindowSizeChanged()
         {
             if (System == LightingSystem.Deferred)
@@ -152,6 +159,7 @@ namespace SS14.Client.Graphics.Lighting
             };
             deferredMaskLayer.AddChild(deferredMaskSprite);
         }
+        #endif
 
         public void Dispose()
         {
@@ -165,7 +173,7 @@ namespace SS14.Client.Graphics.Lighting
             {
                 light.Dispose();
             }
-
+#if GODOT
             if (System == LightingSystem.Deferred)
             {
                 deferredSizeChangedSubscriber.Disconnect(rootViewport, "size_changed");
@@ -195,6 +203,7 @@ namespace SS14.Client.Graphics.Lighting
             canvasModulate.QueueFree();
             canvasModulate.Dispose();
             canvasModulate = null;
+#endif
         }
 
         public ILight MakeLight()
@@ -230,6 +239,7 @@ namespace SS14.Client.Graphics.Lighting
 
         private void UpdateEnabled()
         {
+            #if GODOT
             if (System == LightingSystem.Deferred)
             {
                 deferredMaskSprite.Visible = Enabled;
@@ -238,10 +248,12 @@ namespace SS14.Client.Graphics.Lighting
             {
                 light.UpdateEnabled();
             }
+            #endif
         }
 
         public void FrameUpdate(RenderFrameEventArgs args)
         {
+            #if GODOT
             if (System == LightingSystem.Deferred)
             {
                 var transform = rootViewport.CanvasTransform;
@@ -249,6 +261,7 @@ namespace SS14.Client.Graphics.Lighting
                 deferredMaskBackground.Transform = transform.Inverse();
                 deferredMaskBackground.Scale = rootViewport.Size;
             }
+            #endif
 
             foreach (var light in lights)
             {

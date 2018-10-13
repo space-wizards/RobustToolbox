@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if GODOT
+using System;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects.Components;
@@ -93,3 +94,4 @@ namespace SS14.Client.GameObjects
         }
     }
 }
+#endif

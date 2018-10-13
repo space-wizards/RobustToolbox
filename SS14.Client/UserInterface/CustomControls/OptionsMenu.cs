@@ -17,10 +17,12 @@ namespace SS14.Client.UserInterface.CustomControls
         Button FullscreenCheckBox;
         private IConfigurationManager configManager;
 
+        #if GODOT
         private protected override Godot.Control SpawnSceneControl()
         {
             return LoadScene("res://Scenes/OptionsMenu/OptionsMenu.tscn");
         }
+        #endif
 
         protected override void Initialize()
         {

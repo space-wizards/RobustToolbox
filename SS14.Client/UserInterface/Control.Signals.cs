@@ -1,4 +1,5 @@
-﻿using SS14.Client.GodotGlue;
+﻿#if GODOT
+using SS14.Client.GodotGlue;
 using SS14.Client.Input;
 using SS14.Shared.Log;
 
@@ -136,3 +137,4 @@ namespace SS14.Client.UserInterface
         }
     }
 }
+#endif

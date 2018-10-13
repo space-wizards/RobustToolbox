@@ -45,8 +45,10 @@ namespace SS14.Client.Input
         /// </summary>
         public void Handle()
         {
+            #if GODOT
             var tree = IoCManager.Resolve<ISceneTreeHolder>();
             tree.SceneTree.SetInputAsHandled();
+            #endif
         }
     }
 
@@ -71,6 +73,7 @@ namespace SS14.Client.Input
             Unicode = unicode;
         }
 
+        #if GODOT
         public static explicit operator KeyEventArgs(Godot.InputEventKey args)
         {
             return new KeyEventArgs(Keyboard.ConvertGodotKey(args.Scancode),
@@ -86,6 +89,7 @@ namespace SS14.Client.Input
             var key = Mouse.ConvertGodotMouseButton((Mouse.Button) args.ButtonIndex);
             return new KeyEventArgs(key, 0, false, false, false, false);
         }
+        #endif
     }
 
     public abstract class MouseEventArgs : ModifierInputEventArgs
@@ -173,6 +177,7 @@ namespace SS14.Client.Input
             DoubleClick = doubleClick;
         }
 
+        #if GODOT
         public static explicit operator MouseButtonEventArgs(Godot.InputEventMouseButton inputEvent)
         {
             // Before cutting this up,
@@ -186,6 +191,7 @@ namespace SS14.Client.Input
                                             inputEvent.Shift,
                                             inputEvent.Command);
         }
+        #endif
     }
 
     public class MouseWheelEventArgs : MouseEventArgs
@@ -208,6 +214,7 @@ namespace SS14.Client.Input
             WheelDirection = wheelDirection;
         }
 
+        #if GODOT
         public static explicit operator MouseWheelEventArgs(Godot.InputEventMouseButton inputEvent)
         {
             // Before cutting this up,
@@ -220,6 +227,7 @@ namespace SS14.Client.Input
                                             inputEvent.Shift,
                                             inputEvent.Command);
         }
+        #endif
     }
 
     public class MouseMoveEventArgs : MouseEventArgs
@@ -251,6 +259,7 @@ namespace SS14.Client.Input
             Speed = speed;
         }
 
+        #if GODOT
         public static explicit operator MouseMoveEventArgs(Godot.InputEventMouseMotion inputEvent)
         {
             return new MouseMoveEventArgs(inputEvent.Relative.Convert(),
@@ -262,5 +271,6 @@ namespace SS14.Client.Input
                                           inputEvent.Shift,
                                           inputEvent.Command);
         }
+        #endif
     }
 }

@@ -47,6 +47,7 @@ namespace SS14.Client.UserInterface
         {
         }
 
+        #if GODOT
         private void HandleGuiInput(Godot.InputEvent input)
         {
             switch (input)
@@ -127,6 +128,7 @@ namespace SS14.Client.UserInterface
                     break;
             }
         }
+        #endif
     }
 
     public class GUIKeyEventArgs : KeyEventArgs
@@ -142,7 +144,9 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public new void Handle()
         {
+            #if GODOT
             SourceControl.SceneControl.AcceptEvent();
+            #endif
         }
 
         public GUIKeyEventArgs(Control sourceControl,
@@ -187,7 +191,9 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public new void Handle()
         {
+            #if GODOT
             SourceControl.SceneControl.AcceptEvent();
+            #endif
         }
 
         protected GUIMouseEventArgs(Control sourceControl,

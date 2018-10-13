@@ -23,10 +23,12 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private TileSpawnButton SelectedButton;
 
+        #if GODOT
         private protected override Godot.Control SpawnSceneControl()
         {
             return LoadScene("res://Scenes/Placement/TileSpawnPanel.tscn");
         }
+        #endif
 
         protected override void Initialize()
         {
@@ -100,10 +102,12 @@ namespace SS14.Client.UserInterface.CustomControls
             public string TileDef { get; set; }
             public Button ActualButton { get; private set; }
 
+            #if GODOT
             private protected override Godot.Control SpawnSceneControl()
             {
                 return LoadScene("res://Scenes/Placement/TileSpawnItem.tscn");
             }
+            #endif
 
             protected override void Initialize()
             {

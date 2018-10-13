@@ -1,4 +1,5 @@
-﻿using SS14.Client.Graphics;
+﻿#if GODOT
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -25,3 +26,4 @@ namespace SS14.Client
         }
     }
 }
+#endif

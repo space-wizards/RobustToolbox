@@ -1,11 +1,14 @@
-﻿using Godot;
-using System;
+﻿using System;
 
 namespace SS14.Client.Input
 {
     public static class Mouse
     {
-        public static bool IsButtonPressed(Button button) => Godot.Input.IsMouseButtonPressed((int)button);
+#if GODOT
+        public static bool IsButtonPressed(Button button) => Godot.Input.IsMouseButtonPressed((int) button);
+#else
+        public static bool IsButtonPressed(Button button) => false;
+#endif
 
         // TODO: People will definitely want support for extra mouse buttons,
         //         Godot doesn't seem to support this though.
@@ -14,9 +17,9 @@ namespace SS14.Client.Input
         /// </summary>
         public enum Button
         {
-            Left = ButtonList.Left,
-            Middle = ButtonList.Middle,
-            Right = ButtonList.Right,
+            Left = 1,
+            Middle = 2,
+            Right = 3,
         }
 
         /// <summary>
@@ -25,10 +28,11 @@ namespace SS14.Client.Input
         [Flags]
         public enum ButtonMask
         {
+            // These match Godot's
             None = 0,
-            Left = Godot.ButtonList.MaskLeft,
-            Middle = Godot.ButtonList.MaskMiddle,
-            Right = Godot.ButtonList.MaskRight,
+            Left = 1,
+            Middle = 2,
+            Right = 4,
         }
 
         /// <summary>
@@ -36,14 +40,16 @@ namespace SS14.Client.Input
         /// </summary>
         public enum Wheel
         {
-            Up = Godot.ButtonList.WheelUp,
-            Down = Godot.ButtonList.WheelDown,
-            Left = Godot.ButtonList.WheelLeft,
-            Right = Godot.ButtonList.WheelRight,
+            // These match Godot's
+            Up = 4,
+            Down = 5,
+            Left = 6,
+            Right = 7,
         }
 
         public static Keyboard.Key ConvertGodotMouseButton(Button button)
         {
+#if GODOT
             switch (button)
             {
                 case Button.Left:
@@ -55,26 +61,14 @@ namespace SS14.Client.Input
                 default:
                     return Keyboard.Key.Unknown;
             }
+#else
+            throw new NotImplementedException();
+#endif
         }
     }
 
     public static class Keyboard
     {
-        /// <summary>
-        ///     Checks whether the provided key on the keyboard is currently held down.
-        /// </summary>
-        /// <param name="key">The key to check for.</param>
-        /// <returns>True if the provided key is currently held down, false otherwise.</returns>
-        public static bool IsKeyPressed(Key key) => Godot.Input.IsKeyPressed((int)key);
-
-        /// <summary>
-        ///     Checks whether a key is printable.
-        /// </summary>
-        /// <param name="key">The key to check.</param>
-        /// <returns>True if the key is printable, false otherwise.</returns>
-        // See Godot docs: SPKEY = 16777216 — Scancodes with this bit applied are non printable.
-        public static bool IsKeyPrintable(Key key) => ((int)key & GD.Spkey) == 0;
-
         /// <summary>
         ///     Represents a key on the keyboard.
         /// </summary>
@@ -192,13 +186,14 @@ namespace SS14.Client.Input
             Pause,
         }
 
+        #if GODOT
         public static Key ConvertGodotKey(int key)
         {
             // As far as I can tell, Godot's KeyList has complete arbitrary ordering. Seriously.
             // They don't even prevent overlap if you remove the SPKEY flag (they totally could too...).
             // The macOS, X11 and Windows platform layers *all* have scancode translation tables so it literally can't be "oh they took them from X11!"
             // Also there are dumb scan codes like YACCUTE which *literally don't get fired ever*.
-            switch ((Godot.KeyList)key)
+            switch ((Godot.KeyList) key)
             {
                 // Dear mother of .NET optimize this nicely for me.
                 case Godot.KeyList.A:
@@ -411,5 +406,6 @@ namespace SS14.Client.Input
                     return Key.Unknown;
             }
         }
+        #endif
     }
 }

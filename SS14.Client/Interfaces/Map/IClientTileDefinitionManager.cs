@@ -9,6 +9,8 @@ namespace SS14.Client.Interfaces.Map
 {
     public interface IClientTileDefinitionManager : ITileDefinitionManager
     {
+        #if GODOT
         Godot.TileSet TileSet { get; }
+        #endif
     }
 }

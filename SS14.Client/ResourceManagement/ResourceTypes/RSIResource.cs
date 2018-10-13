@@ -134,6 +134,9 @@ namespace SS14.Client.ResourceManagement
                         var PosX = (counter % sheetWidth) * size.X;
                         var PosY = (counter / sheetWidth) * size.Y;
 
+                        throw new NotImplementedException();
+
+                        #if GODOT
                         var atlasTexture = new Godot.AtlasTexture()
                         {
                             Atlas = texture,
@@ -141,6 +144,7 @@ namespace SS14.Client.ResourceManagement
                         };
 
                         directionFrames[i] = (new GodotTextureSource(atlasTexture), delayList[i]);
+                        #endif
                         counter++;
                     }
                     iconFrames[j] = directionFrames;

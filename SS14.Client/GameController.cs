@@ -1,5 +1,4 @@
 ﻿using SS14.Client.Console;
-using SS14.Client.GodotGlue;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
@@ -34,6 +33,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
+using JetBrains.Annotations;
 using SS14.Client.Utility;
 using SS14.Client.ViewVariables;
 using SS14.Shared;
@@ -43,7 +43,8 @@ using SS14.Shared.Interfaces.Resources;
 namespace SS14.Client
 {
     // Gets automatically ran by SS14.Client.Godot.
-    public sealed partial class GameController : ClientEntryPoint, IGameController
+    [UsedImplicitly]
+    public sealed partial class GameController : IGameController
     {
         /// <summary>
         ///     QueueFreeing a Godot node during finalization can cause segfaults.
@@ -87,8 +88,10 @@ namespace SS14.Client
         readonly IClientEntityManager _entityManager;
         [Dependency]
         readonly IEyeManager eyeManager;
+        #if GODOT
         [Dependency]
         readonly GameTiming gameTiming;
+        #endif
         [Dependency]
         readonly IPlacementManager placementManager;
         [Dependency]
@@ -102,32 +105,20 @@ namespace SS14.Client
 
         [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager;
 
-        public override void Main(Godot.SceneTree tree)
+        private void Startup()
         {
-#if !X64
-            throw new InvalidOperationException("The client cannot start outside x64.");
-#endif
-            PreInitIoC();
-            IoCManager.Resolve<ISceneTreeHolder>().Initialize(tree);
             InitIoC();
-            Godot.OS.SetWindowTitle("Space Station 14");
             SetupLogging();
 
             // Set up custom synchronization context.
             // Sorry Godot.
             _taskManager.Initialize();
 
-            tree.SetAutoAcceptQuit(false);
-
             // Load config.
             _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
 
             displayManager.Initialize();
-
-            // Ensure Godot's side of the resources are up to date.
-#if DEBUG
-            GodotResourceCopy.DoDirCopy("../Resources", "Engine");
-#endif
+            displayManager.SetWindowTitle("Space Station 14");
 
             // Init resources.
             // Doesn't do anything right now because TODO Godot asset management is a bit ad-hoc.
@@ -171,16 +162,11 @@ namespace SS14.Client
 
             _stateManager.RequestStateChange<MainScreen>();
 
-            var args = (ICollection<string>) Godot.OS.GetCmdlineArgs();
+            var args = GetCommandLineArgs();
             if (args.Contains("--connect"))
             {
                 _client.ConnectToServer("127.0.0.1", 1212);
             }
-        }
-
-        public override void QuitRequest()
-        {
-            Shutdown("OS quit request");
         }
 
         public void Shutdown(string reason = null)
@@ -201,68 +187,11 @@ namespace SS14.Client
             Environment.Exit(0);
         }
 
-        public override void PhysicsProcess(float delta)
-        {
-            // Can't be too certain.
-            gameTiming.InSimulation = true;
-            gameTiming._tickRemainderTimer.Restart();
-            try
-            {
-                if (!gameTiming.Paused)
-                {
-                    gameTiming.CurTick++;
-                    _networkManager.ProcessPackets();
-                    var eventArgs = new ProcessFrameEventArgs(delta);
-                    AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, eventArgs.Elapsed);
-                    _timerManager.UpdateTimers(delta);
-                    _taskManager.ProcessPendingTasks();
-                    _userInterfaceManager.Update(eventArgs);
-                    _stateManager.Update(eventArgs);
-                    AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, eventArgs.Elapsed);
-                }
-            }
-            finally
-            {
-                gameTiming.InSimulation = false;
-            }
-        }
-
-        public override void FrameProcess(float delta)
-        {
-            gameTiming.InSimulation = false; // Better safe than sorry.
-            gameTiming.RealFrameTime = TimeSpan.FromSeconds(delta);
-            gameTiming.TickRemainder = gameTiming._tickRemainderTimer.Elapsed;
-
-            var eventArgs = new RenderFrameEventArgs(delta);
-            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePreEngine, eventArgs.Elapsed);
-            lightManager.FrameUpdate(eventArgs);
-            _stateManager.FrameUpdate(eventArgs);
-            overlayManager.FrameUpdate(eventArgs);
-            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePostEngine, eventArgs.Elapsed);
-        }
-
-        public override void HandleException(Exception exception)
-        {
-            try
-            {
-                if (logManager != null)
-                {
-                    logManager.GetSawmill("root").Error($"Unhandled exception:\n{exception}");
-                }
-                else
-                {
-                    Godot.GD.Print($"Unhandled exception:\n{exception}");
-                }
-            }
-            catch (Exception e)
-            {
-                Godot.GD.Print($"Welp. The unhandled exception handler threw an exception.\n{e}\nException that was being handled:\n{exception}");
-            }
-        }
-
         private void SetupLogging()
         {
+            #if GODOT
             logManager.RootSawmill.AddHandler(new GodotLogHandler());
+            #endif
             logManager.GetSawmill("res.typecheck").Level = LogLevel.Info;
             logManager.GetSawmill("res.tex").Level = LogLevel.Info;
             logManager.GetSawmill("console").Level = LogLevel.Info;

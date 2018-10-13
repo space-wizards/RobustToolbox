@@ -21,14 +21,18 @@ namespace SS14.Client.GameObjects.EntitySystems
 {
     public class AudioSystem : EntitySystem
     {
+        #if GODOT
         [Dependency]
         ISceneTreeHolder sceneTree;
+        #endif
 
         [Dependency]
         IResourceCache resourceCache;
 
         private uint LastPlayKey = 0;
+        #if GODOT
         private readonly Dictionary<uint, PlayingStream> PlayingStreams = new Dictionary<uint, PlayingStream>();
+        #endif
 
         public override void Initialize()
         {
@@ -60,6 +64,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// <param name="stream">The audio stream to play.</param>
         public void Play(AudioStream stream, AudioParams? audioParams = null)
         {
+            #if GODOT
             var key = LastPlayKey++;
             var player = new Godot.AudioStreamPlayer()
             {
@@ -76,6 +81,7 @@ namespace SS14.Client.GameObjects.EntitySystems
             }
             sceneTree.WorldRoot.AddChild(player);
             TrackAudioPlayer(player);
+            #endif
         }
 
         /// <summary>
@@ -95,6 +101,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// <param name="entity">The entity "emitting" the audio.</param>
         public void Play(AudioStream stream, IEntity entity, AudioParams? audioParams = null)
         {
+            #if GODOT
             var parent = entity.GetComponent<IGodotTransformComponent>().SceneNode;
             var player = new Godot.AudioStreamPlayer2D()
             {
@@ -112,6 +119,7 @@ namespace SS14.Client.GameObjects.EntitySystems
             }
             parent.AddChild(player);
             TrackAudioPlayer(player);
+            #endif
         }
 
         /// <summary>
@@ -131,6 +139,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         public void Play(AudioStream stream, GridLocalCoordinates coordinates, AudioParams? audioParams = null)
         {
+            #if GODOT
             var player = new Godot.AudioStreamPlayer2D()
             {
                 Stream = stream.GodotAudioStream,
@@ -149,6 +158,7 @@ namespace SS14.Client.GameObjects.EntitySystems
             }
             sceneTree.WorldRoot.AddChild(player);
             TrackAudioPlayer(player);
+            #endif
         }
 
         public override void HandleNetMessage(INetChannel channel, EntitySystemMessage message)
@@ -188,6 +198,7 @@ namespace SS14.Client.GameObjects.EntitySystems
             }
         }
 
+        #if GODOT
         private void TrackAudioPlayer(Godot.Node player)
         {
             var key = LastPlayKey++;
@@ -203,7 +214,9 @@ namespace SS14.Client.GameObjects.EntitySystems
                 Signal = signal
             };
         }
+        #endif
 
+        #if GODOT
         private void CleanupAudioPlayer(uint key)
         {
             var stream = PlayingStreams[key];
@@ -213,11 +226,14 @@ namespace SS14.Client.GameObjects.EntitySystems
             stream.Player.Dispose();
             PlayingStreams.Remove(key);
         }
+        #endif
 
+        #if GODOT
         private struct PlayingStream
         {
             public Godot.Node Player;
             public GodotGlue.GodotSignalSubscriber0 Signal;
         }
+        #endif
     }
 }

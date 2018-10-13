@@ -12,6 +12,7 @@ namespace SS14.Client.ResourceManagement
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
+            #if GODOT
             if (!cache.ContentFileExists(path))
             {
                 throw new FileNotFoundException("Content file does not exist for audio sample.");
@@ -28,8 +29,8 @@ namespace SS14.Client.ResourceManagement
                     throw new InvalidDataException();
                 }
                 AudioStream = new GodotAudioStreamSource(stream);
-                Shared.Log.Logger.Debug($"{stream.GetLength()}");
             }
+            #endif
         }
 
         public static implicit operator AudioStream(AudioResource res)

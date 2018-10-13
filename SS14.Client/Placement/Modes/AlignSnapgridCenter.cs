@@ -18,6 +18,7 @@ namespace SS14.Client.Placement.Modes
 
         public override void Render()
         {
+            #if GODOT
             if (onGrid)
             {
                 const int ppm = EyeManager.PIXELSPERMETER;
@@ -40,6 +41,7 @@ namespace SS14.Client.Placement.Modes
                     pManager.DrawNode.DrawLine(from, to, new Godot.Color(0, 0, 1), 0.5f);
                 }
             }
+            #endif
 
             // Draw grid BELOW the ghost thing.
             base.Render();

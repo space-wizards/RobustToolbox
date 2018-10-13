@@ -10,7 +10,7 @@ namespace SS14.Client.Utility
     // Don't use this outside debug builds.
     // Seriously.
     // For release builds, this should be handled by the release packaging script.
-#if DEBUG
+#if DEBUG && GODOT
     /// <summary>
     ///     Handles the automatic copying of resources that need to be accessible to Godot's res://.
     ///     That's .tscn files, font files and GUI image files.

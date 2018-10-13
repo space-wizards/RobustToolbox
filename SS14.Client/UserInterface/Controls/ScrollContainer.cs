@@ -1,6 +1,8 @@
 namespace SS14.Client.UserInterface.Controls
 {
+    #if GODOT
     [ControlWrap(typeof(Godot.ScrollContainer))]
+    #endif
     public class ScrollContainer : Container
     {
         public ScrollContainer()
@@ -11,6 +13,7 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
+        #if GODOT
         internal ScrollContainer(Godot.ScrollContainer container) : base(container)
         {
 
@@ -20,5 +23,6 @@ namespace SS14.Client.UserInterface.Controls
         {
             return new Godot.ScrollContainer();
         }
+        #endif
     }
 }

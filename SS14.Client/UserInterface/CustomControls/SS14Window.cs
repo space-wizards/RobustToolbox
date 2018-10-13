@@ -29,6 +29,7 @@ namespace SS14.Client.UserInterface.CustomControls
             Right = 1 << 4,
         }
 
+        #if GODOT
         private protected override Godot.Control SpawnSceneControl()
         {
             return LoadScene("res://Scenes/SS14Window/SS14Window.tscn");
@@ -41,6 +42,7 @@ namespace SS14.Client.UserInterface.CustomControls
         }
 
         new private Godot.Control SceneControl;
+        #endif
 
         public Control Contents { get; private set; }
         private TextureButton CloseButton;
@@ -101,7 +103,9 @@ namespace SS14.Client.UserInterface.CustomControls
             {
                 CloseButton.OnPressed -= CloseButtonPressed;
                 CloseButton = null;
+                #if GODOT
                 SceneControl = null;
+                #endif
                 Contents = null;
                 CloseButton = null;
             }
@@ -149,6 +153,7 @@ namespace SS14.Client.UserInterface.CustomControls
         protected override void MouseMove(GUIMouseMoveEventArgs args)
         {
             base.MouseMove(args);
+            #if GODOT
 
             if (CurrentDrag == DragMode.Move)
             {
@@ -223,6 +228,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 Position = rect.TopLeft;
                 Size = rect.Size;
             }
+            #endif
         }
 
         protected override void MouseExited()
@@ -273,11 +279,14 @@ namespace SS14.Client.UserInterface.CustomControls
             {
                 throw new InvalidOperationException("Window is not a child of the window root! You need to call AddToScreen first!");
             }
+            #if GODOT
             root.SceneControl.MoveChild(SceneControl, root.SceneControl.GetChildCount());
+            #endif
         }
 
         public bool IsAtFront()
         {
+            #if GODOT
             if (Parent != UserInterfaceManager.WindowRoot)
             {
                 throw new InvalidOperationException("Window is not a child of the window root! You need to call AddToScreen first!");
@@ -295,6 +304,7 @@ namespace SS14.Client.UserInterface.CustomControls
                     }
                 }
             }
+            #endif
 
             return true;
         }
@@ -341,6 +351,7 @@ namespace SS14.Client.UserInterface.CustomControls
         // Prevent window headers from getting off screen due to game window resizes.
         protected override void Update(ProcessFrameEventArgs args)
         {
+            #if GODOT
             var windowSize = Godot.OS.GetWindowSize().Convert();
             if (Position.Y > windowSize.Y)
             {
@@ -351,6 +362,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 // 50 is arbitrary here. As long as it's bumped back into view.
                 Position = new Vector2(windowSize.X - 50, Position.Y);
             }
+            #endif
         }
     }
 }

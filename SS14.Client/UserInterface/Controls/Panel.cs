@@ -2,7 +2,9 @@
 
 namespace SS14.Client.UserInterface.Controls
 {
+    #if GODOT
     [ControlWrap(typeof(Godot.Panel))]
+    #endif
     public class Panel : Control
     {
         public Panel(string name) : base(name)
@@ -11,6 +13,7 @@ namespace SS14.Client.UserInterface.Controls
         public Panel() : base()
         {
         }
+        #if GODOT
         internal Panel(Godot.Panel panel) : base(panel)
         {
         }
@@ -19,6 +22,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             return new Godot.Panel();
         }
+        #endif
 
         private StyleBox _panelOverride;
 

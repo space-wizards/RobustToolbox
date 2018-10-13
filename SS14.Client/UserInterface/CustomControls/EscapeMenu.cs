@@ -15,10 +15,12 @@ namespace SS14.Client.UserInterface.CustomControls
         [Dependency]
         readonly IClientConsole console;
 
+        #if GODOT
         private protected override Godot.Control SpawnSceneControl()
         {
             return LoadScene("res://Scenes/EscapeMenu/EscapeMenu.tscn");
         }
+        #endif
 
         private BaseButton QuitButton;
         private BaseButton OptionsButton;

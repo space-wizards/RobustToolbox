@@ -24,8 +24,10 @@ namespace SS14.Client.UserInterface.CustomControls
             {
                 return;
             }
+            #if GODOT
             var fps = Godot.Performance.GetMonitor(Godot.Performance.Monitor.TimeFps);
             Text = $"FPS: {fps}";
+            #endif
         }
     }
 }

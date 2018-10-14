@@ -8,9 +8,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 #if GODOT
 using VS = Godot.VisualServer;
+
 #endif
 
 namespace SS14.Client.Graphics.Overlays
@@ -21,25 +21,24 @@ namespace SS14.Client.Graphics.Overlays
         private Godot.Node2D RootNodeWorld;
         private Godot.Node2D RootNodeScreen;
 
-        [Dependency]
-        readonly ISceneTreeHolder sceneTreeHolder;
-        #endif
+        [Dependency] readonly ISceneTreeHolder sceneTreeHolder;
+#endif
 
 #if GODOT
         private readonly Dictionary<string, (IOverlay overlay, Godot.RID canvasItem)> overlays =
- new Dictionary<string, (IOverlay, Godot.RID)>();
-        #endif
+            new Dictionary<string, (IOverlay, Godot.RID)>();
+#endif
 
         public void Initialize()
         {
 #if GODOT
-            RootNodeWorld = new Godot.Node2D { Name = "OverlayRoot" };
+            RootNodeWorld = new Godot.Node2D {Name = "OverlayRoot"};
             sceneTreeHolder.WorldRoot.AddChild(RootNodeWorld);
-            RootNodeWorld.ZIndex = (int)DrawDepth.Overlays;
+            RootNodeWorld.ZIndex = (int) DrawDepth.Overlays;
 
-            RootNodeScreen = new Godot.Node2D { Name = "OverlayRoot" };
+            RootNodeScreen = new Godot.Node2D {Name = "OverlayRoot"};
             sceneTreeHolder.SceneTree.Root.GetNode("UILayer").AddChild(RootNodeScreen);
-            #endif
+#endif
         }
 
         public void FrameUpdate(RenderFrameEventArgs args)
@@ -49,7 +48,7 @@ namespace SS14.Client.Graphics.Overlays
             {
                 overlay.FrameUpdate(args);
             }
-            #endif
+#endif
         }
 
         public void AddOverlay(IOverlay overlay)
@@ -59,6 +58,7 @@ namespace SS14.Client.Graphics.Overlays
             {
                 throw new InvalidOperationException($"We already have an overlay with ID '{overlay.ID}'");
             }
+
             Godot.RID parent;
             switch (overlay.Space)
             {
@@ -71,19 +71,20 @@ namespace SS14.Client.Graphics.Overlays
                 default:
                     throw new NotImplementedException($"Unknown overlay space: {overlay.Space}");
             }
+
             var item = VS.CanvasItemCreate();
             VS.CanvasItemSetParent(item, parent);
 
             overlays.Add(overlay.ID, (overlay, item));
             overlay.AssignCanvasItem(item);
-            #endif
+#endif
         }
 
         public IOverlay GetOverlay(string id)
         {
 #if GODOT
             return overlays[id].overlay;
-            #else
+#else
             throw new NotImplementedException();
 #endif
         }
@@ -97,7 +98,7 @@ namespace SS14.Client.Graphics.Overlays
         {
 #if GODOT
             return overlays.ContainsKey(id);
-            #else
+#else
             throw new NotImplementedException();
 #endif
         }
@@ -109,11 +110,12 @@ namespace SS14.Client.Graphics.Overlays
             {
                 return;
             }
+
             var (overlay, item) = value;
             overlay.Dispose();
             VS.FreeRid(item);
             overlays.Remove(id);
-            #endif
+#endif
         }
 
         public bool TryGetOverlay(string id, out IOverlay overlay)
@@ -124,11 +126,13 @@ namespace SS14.Client.Graphics.Overlays
                 overlay = value.overlay;
                 return true;
             }
+
             overlay = null;
             return false;
-            #endif
+#else
             overlay = default;
             return false;
+#endif
         }
 
         public bool TryGetOverlay<T>(string id, out T overlay) where T : IOverlay
@@ -136,10 +140,10 @@ namespace SS14.Client.Graphics.Overlays
 #if GODOT
             if (overlays.TryGetValue(id, out var value))
             {
-                overlay = (T)value.overlay;
+                overlay = (T) value.overlay;
                 return true;
             }
-            #endif
+#endif
             overlay = default;
             return false;
         }

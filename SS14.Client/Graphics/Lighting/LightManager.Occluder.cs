@@ -121,7 +121,7 @@ namespace SS14.Client.Graphics.Lighting
 #if GODOT
                 if (!Deferred)
                 {
-                    node.SceneNode.AddChild(occluder);
+                    ((IGodotTransformComponent)node).SceneNode.AddChild(occluder);
                 }
                 parentTransform = (IGodotTransformComponent)node;
                 UpdateEnabled();

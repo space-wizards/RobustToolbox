@@ -28,7 +28,7 @@ namespace SS14.Client.UserInterface
     /// </summary>
 #if GODOT
     [ControlWrap(typeof(Godot.Control))]
-    #endif
+#endif
     // ReSharper disable once RequiredBaseTypesIsNotInherited
     public partial class Control : IDisposable
     {
@@ -64,7 +64,7 @@ namespace SS14.Client.UserInterface
                 _name = value;
 #if GODOT
                 SceneControl.SetName(_name);
-                #endif
+#endif
 
                 if (Parent != null)
                 {
@@ -89,11 +89,11 @@ namespace SS14.Client.UserInterface
         public IEnumerable<Control> Children => _children.Values;
 
 #if GODOT
-/// <summary>
-///     The control's representation in Godot's scene tree.
-/// </summary>
+        /// <summary>
+        ///     The control's representation in Godot's scene tree.
+        /// </summary>
         internal Godot.Control SceneControl { get; private set; }
-        #endif
+#endif
 
         /// <summary>
         ///     Path to the .tscn file for this scene in the VFS.
@@ -104,7 +104,7 @@ namespace SS14.Client.UserInterface
 
 #if GODOT
         private ControlWrap WrappedSceneControl;
-        #endif
+#endif
 
         public const float ANCHOR_BEGIN = 0;
         public const float ANCHOR_END = 1;
@@ -367,7 +367,7 @@ namespace SS14.Client.UserInterface
             UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 #if GODOT
             SetupSceneControl();
-            #endif
+#endif
             Name = GetType().Name;
             Initialize();
         }
@@ -383,16 +383,16 @@ namespace SS14.Client.UserInterface
             UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 #if GODOT
             SetupSceneControl();
-            #endif
+#endif
             Name = name;
             Initialize();
         }
 
 #if GODOT
-/// <summary>
-///     Wrap the provided Godot control with this one.
-///     This does NOT set up parenting correctly!
-/// </summary>
+        /// <summary>
+        ///     Wrap the provided Godot control with this one.
+        ///     This does NOT set up parenting correctly!
+        /// </summary>
         internal Control(Godot.Control control)
         {
             SetSceneControl(control);
@@ -403,7 +403,7 @@ namespace SS14.Client.UserInterface
             Initialize();
             InjectControlWrap();
         }
-        #endif
+#endif
 
         /// <summary>
         ///     Use this to do various initialization of the control.
@@ -477,7 +477,7 @@ namespace SS14.Client.UserInterface
             WrappedSceneControl.HasPointOverride = (point) => HasPoint(point.Convert());
             WrappedSceneControl.DrawOverride = DoDraw;
         }
-        #endif
+#endif
 
         private void DoDraw()
         {
@@ -486,7 +486,7 @@ namespace SS14.Client.UserInterface
             {
                 Draw(handle);
             }
-            #endif
+#endif
         }
 
         protected virtual void Draw(DrawingHandleScreen handle)
@@ -497,15 +497,15 @@ namespace SS14.Client.UserInterface
         {
 #if GODOT
             SceneControl.Update();
-            #endif
+#endif
         }
 
 #if GODOT
-/// <summary>
-///     Overriden by child classes to change the Godot control type.
-///     ONLY spawn the control in here. Use <see cref="SetSceneControl" /> for holding references to it.
-///     This is to allow children to override it without breaking the setting.
-/// </summary>
+        /// <summary>
+        ///     Overriden by child classes to change the Godot control type.
+        ///     ONLY spawn the control in here. Use <see cref="SetSceneControl" /> for holding references to it.
+        ///     This is to allow children to override it without breaking the setting.
+        /// </summary>
         private protected virtual Godot.Control SpawnSceneControl()
         {
             return new Godot.Control();
@@ -519,7 +519,7 @@ namespace SS14.Client.UserInterface
         {
             SceneControl = control;
         }
-        #endif
+#endif
 
         public bool Disposed { get; private set; } = false;
 
@@ -612,7 +612,7 @@ namespace SS14.Client.UserInterface
             {
                 child._name = child.SceneControl.GetName();
             }
-            #endif
+#endif
 
             _children[child.Name] = child;
         }
@@ -643,7 +643,7 @@ namespace SS14.Client.UserInterface
             child.Parent = null;
 #if GODOT
             SceneControl.RemoveChild(child.SceneControl);
-            #endif
+#endif
         }
 
         /// <summary>
@@ -671,7 +671,7 @@ namespace SS14.Client.UserInterface
         {
 #if GODOT
             SceneControl.MinimumSizeChanged();
-            #endif
+#endif
         }
 
         protected virtual bool HasPoint(Vector2 point)
@@ -749,7 +749,7 @@ namespace SS14.Client.UserInterface
 
 #if GODOT
             Parent.SceneControl.MoveChild(SceneControl, 0);
-            #endif
+#endif
         }
 
         /// <summary>
@@ -776,7 +776,7 @@ namespace SS14.Client.UserInterface
 
 #if GODOT
             SetPositionInParent(Parent.SceneControl.GetChildCount());
-            #endif
+#endif
         }
 
         /// <summary>
@@ -808,14 +808,14 @@ namespace SS14.Client.UserInterface
         {
 #if GODOT
             SceneControl.GrabFocus();
-            #endif
+#endif
         }
 
         public void ReleaseFocus()
         {
 #if GODOT
             SceneControl?.ReleaseFocus();
-            #endif
+#endif
         }
 
         protected virtual void Resized()
@@ -828,16 +828,16 @@ namespace SS14.Client.UserInterface
             var res = (Godot.PackedScene) Godot.ResourceLoader.Load(resourcePath);
             return InstanceScene(res);
         }
-        #endif
+#endif
 
 #if GODOT
-/// <summary>
-///     Instance a packed Godot scene as a child of this one, wrapping all the nodes in SS14 controls.
-///     This makes it possible to use Godot's GUI editor relatively comfortably,
-///     while still being able to use the better SS14 API.
-/// </summary>
-/// <param name="scene"></param>
-/// <returns></returns>
+        /// <summary>
+        ///     Instance a packed Godot scene as a child of this one, wrapping all the nodes in SS14 controls.
+        ///     This makes it possible to use Godot's GUI editor relatively comfortably,
+        ///     while still being able to use the better SS14 API.
+        /// </summary>
+        /// <param name="scene"></param>
+        /// <returns></returns>
 // TODO: Handle instances inside the provided scene in some way.
 //       Shouldn't need more than support for populating the GodotTranslationCache
 //         from SS14.Client.Godot I *think*?
@@ -946,13 +946,13 @@ namespace SS14.Client.UserInterface
                     "We don't even have the base Godot Control in the translation cache. We can't use scene instancing like this!");
             }
         }
-        #endif
+#endif
 
         public void SetAnchorPreset(LayoutPreset preset, bool keepMargin = false)
         {
 #if GODOT
             SceneControl.SetAnchorsPreset((Godot.Control.LayoutPreset) preset, keepMargin);
-            #endif
+#endif
         }
 
         public void SetMarginsPreset(LayoutPreset preset, LayoutPresetMode resizeMode = LayoutPresetMode.Minsize,
@@ -961,7 +961,7 @@ namespace SS14.Client.UserInterface
 #if GODOT
             SceneControl.SetMarginsPreset((Godot.Control.LayoutPreset) preset,
                 (Godot.Control.LayoutPresetMode) resizeMode, margin);
-            #endif
+#endif
         }
 
         public enum LayoutPreset : byte
@@ -1044,7 +1044,7 @@ namespace SS14.Client.UserInterface
             {
                 SceneControl.Set($"custom_colors/{name}", null);
             }
-            #endif
+#endif
         }
 
         protected Color? GetColorOverride(string name)
@@ -1067,7 +1067,7 @@ namespace SS14.Client.UserInterface
             {
                 SceneControl.Set($"custom_constants/{name}", null);
             }
-            #endif
+#endif
         }
 
         protected int? GetConstantOverride(string name)
@@ -1083,7 +1083,7 @@ namespace SS14.Client.UserInterface
         {
 #if GODOT
             SceneControl.AddStyleboxOverride(name, styleBox.GodotStyleBox);
-            #endif
+#endif
         }
 
         protected StyleBox GetStyleBoxOverride(string name)
@@ -1100,7 +1100,7 @@ namespace SS14.Client.UserInterface
         {
 #if GODOT
             SceneControl.AddFontOverride(name, font);
-            #endif
+#endif
         }
 
         protected Font GetFontOverride(string name)
@@ -1183,11 +1183,11 @@ namespace SS14.Client.UserInterface
         }
 
 #if GODOT
-/// <summary>
-/// Convenient helper to load a Godot scene without all the casting. Does NOT wrap the nodes (duh!).
-/// </summary>
-/// <param name="path">The resource path to the scene file to load.</param>
-/// <returns>The root of the loaded scene.</returns>
+        /// <summary>
+        /// Convenient helper to load a Godot scene without all the casting. Does NOT wrap the nodes (duh!).
+        /// </summary>
+        /// <param name="path">The resource path to the scene file to load.</param>
+        /// <returns>The root of the loaded scene.</returns>
         private protected static Godot.Control LoadScene(string path)
         {
             // See https://github.com/godotengine/godot/issues/21667 for why pNoCache is necessary.
@@ -1206,6 +1206,6 @@ namespace SS14.Client.UserInterface
                 GodotType = type;
             }
         }
-        #endif
+#endif
     }
 }

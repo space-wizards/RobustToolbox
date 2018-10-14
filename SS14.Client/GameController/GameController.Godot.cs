@@ -2,10 +2,13 @@
 using System;
 using System.Collections.Generic;
 using SS14.Client.GodotGlue;
+using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Utility;
 using SS14.Shared.ContentPack;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
+using SS14.Shared.Timing;
 
 namespace SS14.Client
 {
@@ -101,11 +104,11 @@ namespace SS14.Client
 
         // Override that converts and distributes the input events
         //   to the more sane methods above.
-        public override void Input(InputEvent inputEvent)
+        public override void Input(Godot.InputEvent inputEvent)
         {
             switch (inputEvent)
             {
-                case InputEventKey keyEvent:
+                case Godot.InputEventKey keyEvent:
                     var keyEventArgs = (KeyEventArgs)keyEvent;
                     if (keyEvent.Echo)
                     {
@@ -121,8 +124,8 @@ namespace SS14.Client
                     }
                     break;
 
-                case InputEventMouseButton mouseButtonEvent:
-                    if (mouseButtonEvent.ButtonIndex >= (int)ButtonList.WheelUp && mouseButtonEvent.ButtonIndex <= (int)ButtonList.WheelRight)
+                case Godot.InputEventMouseButton mouseButtonEvent:
+                    if (mouseButtonEvent.ButtonIndex >= (int)Godot.ButtonList.WheelUp && mouseButtonEvent.ButtonIndex <= (int)Godot.ButtonList.WheelRight)
                     {
                         // Mouse wheel event.
                         var mouseWheelEventArgs = (MouseWheelEventArgs)mouseButtonEvent;
@@ -145,16 +148,16 @@ namespace SS14.Client
                     }
                     break;
 
-                case InputEventMouseMotion mouseMotionEvent:
+                case Godot.InputEventMouseMotion mouseMotionEvent:
                     var mouseMoveEventArgs = (MouseMoveEventArgs)mouseMotionEvent;
                     MouseMove(mouseMoveEventArgs);
                     break;
             }
         }
 
-        public override void PreInput(InputEvent inputEvent)
+        public override void PreInput(Godot.InputEvent inputEvent)
         {
-            if (inputEvent is InputEventKey keyEvent)
+            if (inputEvent is Godot.InputEventKey keyEvent)
             {
                 var keyEventArgs = (KeyEventArgs)keyEvent;
                 if (keyEvent.Echo)

@@ -204,9 +204,9 @@ namespace SS14.Client.Graphics.Lighting
                     {
                         DeParent();
                     }
-                    node.SceneNode.AddChild(Light2D);
+                    ((IGodotTransformComponent)node).SceneNode.AddChild(Light2D);
                 }
-                parentTransform = (IGodotTransfromComponent)node;
+                parentTransform = (IGodotTransformComponent)node;
                 UpdateEnabled();
 #endif
             }

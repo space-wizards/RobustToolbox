@@ -98,7 +98,7 @@ namespace SS14.Client.ResourceManagement
                         var delayList = delays[i];
                         if (delayList.Length == 0)
                         {
-                            delays[i] = new float[] { 1 };
+                            delays[i] = new float[] {1};
                         }
                     }
                 }
@@ -108,7 +108,7 @@ namespace SS14.Client.ResourceManagement
                     // No delays specified, default to 1 frame per dir.
                     for (var i = 0; i < dirValue; i++)
                     {
-                        delays[i] = new float[] { 1 };
+                        delays[i] = new float[] {1};
                     }
                 }
 
@@ -123,20 +123,18 @@ namespace SS14.Client.ResourceManagement
                 // Amount of icons per row of the sprite sheet.
                 var sheetWidth = texture.Width / size.X;
 
-                var iconFrames = new(Texture, float)[dirValue][];
+                var iconFrames = new (Texture, float)[dirValue][];
                 var counter = 0;
                 for (var j = 0; j < iconFrames.Length; j++)
                 {
                     var delayList = delays[j];
-                    var directionFrames = new(Texture, float)[delayList.Length];
+                    var directionFrames = new (Texture, float)[delayList.Length];
                     for (var i = 0; i < delayList.Length; i++)
                     {
                         var PosX = (counter % sheetWidth) * size.X;
                         var PosY = (counter / sheetWidth) * size.Y;
 
-                        throw new NotImplementedException();
-
-                        #if GODOT
+#if GODOT
                         var atlasTexture = new Godot.AtlasTexture()
                         {
                             Atlas = texture,
@@ -144,9 +142,12 @@ namespace SS14.Client.ResourceManagement
                         };
 
                         directionFrames[i] = (new GodotTextureSource(atlasTexture), delayList[i]);
-                        #endif
+#else
+                        throw new NotImplementedException();
+#endif
                         counter++;
                     }
+
                     iconFrames[j] = directionFrames;
                 }
 
@@ -162,7 +163,8 @@ namespace SS14.Client.ResourceManagement
         private static JsonSchema4 GetSchema()
         {
             string schema;
-            using (var schemaStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("SS14.Client.Graphics.RSI.RSISchema.json"))
+            using (var schemaStream = Assembly.GetExecutingAssembly()
+                .GetManifestResourceStream("SS14.Client.Graphics.RSI.RSISchema.json"))
             using (var schemaReader = new StreamReader(schemaStream))
             {
                 schema = schemaReader.ReadToEnd();
@@ -178,14 +180,19 @@ namespace SS14.Client.ResourceManagement
         public RSILoadException()
         {
         }
+
         public RSILoadException(string message) : base(message)
         {
         }
+
         public RSILoadException(string message, Exception inner) : base(message, inner)
         {
         }
+
         protected RSILoadException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+            System.Runtime.Serialization.SerializationInfo info,
+            System.Runtime.Serialization.StreamingContext context) : base(info, context)
+        {
+        }
     }
 }

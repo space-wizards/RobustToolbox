@@ -1,5 +1,6 @@
 ﻿using SS14.Shared.Interfaces.Log;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 namespace SS14.Shared.Log
 {
@@ -10,6 +11,7 @@ namespace SS14.Shared.Log
         private readonly Sawmill rootSawmill;
         public ISawmill RootSawmill => rootSawmill;
 
+        [Pure]
         public ISawmill GetSawmill(string name)
         {
             if (sawmills.TryGetValue(name, out var sawmill))

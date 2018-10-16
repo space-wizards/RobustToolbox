@@ -1,6 +1,7 @@
 ﻿using SS14.Shared.IoC.Exceptions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using SS14.Shared.Utility;
@@ -107,6 +108,7 @@ namespace SS14.Shared.IoC
         /// Thrown if the resolved type hasn't been created yet
         /// because the object graph still needs to be constructed for it.
         /// </exception>
+        [Pure]
         public static T Resolve<T>()
         {
             Type type = typeof(T);

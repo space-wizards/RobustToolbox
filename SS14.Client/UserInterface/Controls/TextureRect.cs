@@ -3,9 +3,7 @@ using SS14.Client.Graphics;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.TextureRect))]
-    #endif
+    [ControlWrap("TextureRect")]
     public class TextureRect : Control
     {
         public TextureRect() : base()

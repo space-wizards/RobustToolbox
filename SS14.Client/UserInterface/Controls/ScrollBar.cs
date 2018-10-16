@@ -6,9 +6,7 @@ using System.Threading.Tasks;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.ScrollBar))]
-    #endif
+    [ControlWrap("ScrollBar")]
     public abstract class ScrollBar : Range
     {
         public ScrollBar() : base()

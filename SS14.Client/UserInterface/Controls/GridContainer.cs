@@ -2,9 +2,7 @@
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.GridContainer))]
-    #endif
+    [ControlWrap("GridContainer")]
     public class GridContainer : Control
     {
         public GridContainer() : base() { }

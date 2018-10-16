@@ -6,9 +6,7 @@ using SS14.Client.Graphics;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.OptionButton))]
-    #endif
+    [ControlWrap("OptionButton")]
     public class OptionButton : Button
     {
         public event Action<ItemSelectedEventArgs> OnItemSelected;

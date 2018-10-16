@@ -5,9 +5,7 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.ItemList))]
-    #endif
+    [ControlWrap("ItemList")]
     public class ItemList : Control
     {
         #if GODOT

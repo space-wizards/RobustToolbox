@@ -16,8 +16,10 @@ using SS14.Client.Graphics.Drawing;
 using SS14.Shared.Utility;
 using SS14.Client.Interfaces.ResourceManagement;
 using System.IO;
+using System.Linq;
 using JetBrains.Annotations;
 using SS14.Client.Graphics;
+using SS14.Client.ResourceManagement.ResourceTypes;
 
 namespace SS14.Client.UserInterface
 {
@@ -26,9 +28,7 @@ namespace SS14.Client.UserInterface
     ///     NOTE: For docs, most of these are direct proxies to Godot's Control.
     ///     See the official docs for more help: https://godot.readthedocs.io/en/3.0/classes/class_control.html
     /// </summary>
-#if GODOT
-    [ControlWrap(typeof(Godot.Control))]
-#endif
+    [ControlWrap("Control")]
     // ReSharper disable once RequiredBaseTypesIsNotInherited
     public partial class Control : IDisposable
     {
@@ -89,9 +89,9 @@ namespace SS14.Client.UserInterface
         public IEnumerable<Control> Children => _children.Values;
 
 #if GODOT
-        /// <summary>
-        ///     The control's representation in Godot's scene tree.
-        /// </summary>
+/// <summary>
+///     The control's representation in Godot's scene tree.
+/// </summary>
         internal Godot.Control SceneControl { get; private set; }
 #endif
 
@@ -367,6 +367,11 @@ namespace SS14.Client.UserInterface
             UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 #if GODOT
             SetupSceneControl();
+#else
+            if (ScenePath != null)
+            {
+                _manualNodeSetup();
+            }
 #endif
             Name = GetType().Name;
             Initialize();
@@ -383,16 +388,21 @@ namespace SS14.Client.UserInterface
             UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 #if GODOT
             SetupSceneControl();
+#else
+            if (ScenePath != null)
+            {
+                _manualNodeSetup();
+            }
 #endif
             Name = name;
             Initialize();
         }
 
 #if GODOT
-        /// <summary>
-        ///     Wrap the provided Godot control with this one.
-        ///     This does NOT set up parenting correctly!
-        /// </summary>
+/// <summary>
+///     Wrap the provided Godot control with this one.
+///     This does NOT set up parenting correctly!
+/// </summary>
         internal Control(Godot.Control control)
         {
             SetSceneControl(control);
@@ -412,6 +422,156 @@ namespace SS14.Client.UserInterface
         protected virtual void Initialize()
         {
         }
+
+        private static Dictionary<string, Type> _manualNodeTypeTranslations;
+
+        private void _manualNodeSetup()
+        {
+            DebugTools.AssertNotNull(ScenePath);
+
+            if (_manualNodeTypeTranslations == null)
+            {
+                _initManualNodeTypeTranslations();
+            }
+
+            DebugTools.AssertNotNull(_manualNodeTypeTranslations);
+
+            var resourceCache = IoCManager.Resolve<IResourceCache>();
+            var asset = (GodotAssetScene) resourceCache.GetResource<GodotAssetResource>(ScenePath).Asset;
+
+            // Go over the inherited scenes with a stack,
+            // because you can theoretically have very deep scene inheritance.
+            var (_, inheritedSceneStack) = _manualFollowSceneInheritance(asset, resourceCache);
+
+            _manualApplyInheritedSceneStack(this, inheritedSceneStack, asset, resourceCache);
+        }
+
+        private static void _manualApplyInheritedSceneStack(Control baseControl, Stack<GodotAssetScene> inheritedSceneStack, GodotAssetScene asset,
+            IResourceCache resourceCache)
+        {
+            // Go over the inherited scenes bottom-first.
+            while (inheritedSceneStack.Count != 0)
+            {
+                var inheritedAsset = inheritedSceneStack.Pop();
+
+                // Use a queue to handle the tree.
+                var queue = new Queue<(GodotAssetScene.NodeDef, Control)>();
+                queue.Enqueue((inheritedAsset.RootNode, baseControl));
+
+                while (queue.Count != 0)
+                {
+                    var (currentNode, currentControl) = queue.Dequeue();
+
+                    foreach (var child in currentNode.Children)
+                    {
+                        Control childControl;
+                        // Type is null if this is modifying a property on an instance's node.
+                        if (child.Type != null)
+                        {
+                            if (!_manualNodeTypeTranslations.TryGetValue(child.Type, out var type))
+                            {
+                                type = typeof(Control);
+                            }
+
+                            childControl = (Control) Activator.CreateInstance(type);
+                            childControl.Name = child.Name;
+                            currentControl.AddChild(childControl);
+                        }
+                        else if (child.Instance != null)
+                        {
+                            var extResource = asset.GetExtResource(child.Instance.Value);
+                            DebugTools.Assert(extResource.Type == "PackedScene");
+                            var subScene = (GodotAssetScene) resourceCache.GetResource<GodotAssetResource>(extResource.Path).Asset;
+
+                            childControl = ManualSpawnFromScene(subScene);
+                            childControl.Name = child.Name;
+                            currentControl.AddChild(childControl);
+                        }
+                        else
+                        {
+                            // No type so this node should already exist due to instancing.
+                            childControl = currentControl.GetChild(child.Name);
+                        }
+
+                        queue.Enqueue((child, childControl));
+                    }
+                }
+            }
+        }
+
+        internal static Control ManualSpawnFromScene(GodotAssetScene scene)
+        {
+            if (_manualNodeTypeTranslations == null)
+            {
+                _initManualNodeTypeTranslations();
+            }
+
+            DebugTools.AssertNotNull(_manualNodeTypeTranslations);
+
+            var resourceCache = IoCManager.Resolve<IResourceCache>();
+
+            var (controlType, inheritedSceneStack) = _manualFollowSceneInheritance(scene, resourceCache);
+
+            var control = (Control) Activator.CreateInstance(controlType);
+            control.Name = scene.RootNode.Name;
+
+            _manualApplyInheritedSceneStack(control, inheritedSceneStack, scene, resourceCache);
+
+            return control;
+        }
+
+        private static (Type, Stack<GodotAssetScene>) _manualFollowSceneInheritance(GodotAssetScene scene, IResourceCache resourceCache)
+        {
+            // Go over the inherited scenes with a stack,
+            // because you can theoretically have very deep scene inheritance.
+            var inheritedSceneStack = new Stack<GodotAssetScene>();
+            inheritedSceneStack.Push(scene);
+
+            Type controlType = null;
+
+            while (scene.RootNode.Instance != null)
+            {
+                var extResource = scene.GetExtResource(scene.RootNode.Instance.Value);
+                DebugTools.Assert(extResource.Type == "PackedScene");
+
+                if (_manualNodeTypeTranslations.TryGetValue(extResource.Path, out controlType))
+                {
+                    break;
+                }
+
+                scene = (GodotAssetScene) resourceCache.GetResource<GodotAssetResource>(
+                    GodotPathUtility.GodotPathToResourcePath(extResource.Path)).Asset;
+
+                inheritedSceneStack.Push(scene);
+            }
+
+            if (controlType == null)
+            {
+                if (scene.RootNode.Type == null
+                    || !_manualNodeTypeTranslations.TryGetValue(scene.RootNode.Type, out controlType))
+                {
+                    controlType = typeof(Control);
+                }
+            }
+
+            return (controlType, inheritedSceneStack);
+        }
+
+        private static void _initManualNodeTypeTranslations()
+        {
+            DebugTools.AssertNull(_manualNodeTypeTranslations);
+
+            _manualNodeTypeTranslations = new Dictionary<string, Type>();
+
+            var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+
+            foreach (var type in reflectionManager.FindTypesWithAttribute<ControlWrapAttribute>())
+            {
+                var attr = type.GetCustomAttribute<ControlWrapAttribute>();
+                _manualNodeTypeTranslations[attr.GodotType] = type;
+            }
+        }
+
 
 #if GODOT
         private void SetupSceneControl()
@@ -501,11 +661,11 @@ namespace SS14.Client.UserInterface
         }
 
 #if GODOT
-        /// <summary>
-        ///     Overriden by child classes to change the Godot control type.
-        ///     ONLY spawn the control in here. Use <see cref="SetSceneControl" /> for holding references to it.
-        ///     This is to allow children to override it without breaking the setting.
-        /// </summary>
+/// <summary>
+///     Overriden by child classes to change the Godot control type.
+///     ONLY spawn the control in here. Use <see cref="SetSceneControl" /> for holding references to it.
+///     This is to allow children to override it without breaking the setting.
+/// </summary>
         private protected virtual Godot.Control SpawnSceneControl()
         {
             return new Godot.Control();
@@ -831,13 +991,13 @@ namespace SS14.Client.UserInterface
 #endif
 
 #if GODOT
-        /// <summary>
-        ///     Instance a packed Godot scene as a child of this one, wrapping all the nodes in SS14 controls.
-        ///     This makes it possible to use Godot's GUI editor relatively comfortably,
-        ///     while still being able to use the better SS14 API.
-        /// </summary>
-        /// <param name="scene"></param>
-        /// <returns></returns>
+/// <summary>
+///     Instance a packed Godot scene as a child of this one, wrapping all the nodes in SS14 controls.
+///     This makes it possible to use Godot's GUI editor relatively comfortably,
+///     while still being able to use the better SS14 API.
+/// </summary>
+/// <param name="scene"></param>
+/// <returns></returns>
 // TODO: Handle instances inside the provided scene in some way.
 //       Shouldn't need more than support for populating the GodotTranslationCache
 //         from SS14.Client.Godot I *think*?
@@ -1183,29 +1343,29 @@ namespace SS14.Client.UserInterface
         }
 
 #if GODOT
-        /// <summary>
-        /// Convenient helper to load a Godot scene without all the casting. Does NOT wrap the nodes (duh!).
-        /// </summary>
-        /// <param name="path">The resource path to the scene file to load.</param>
-        /// <returns>The root of the loaded scene.</returns>
+/// <summary>
+/// Convenient helper to load a Godot scene without all the casting. Does NOT wrap the nodes (duh!).
+/// </summary>
+/// <param name="path">The resource path to the scene file to load.</param>
+/// <returns>The root of the loaded scene.</returns>
         private protected static Godot.Control LoadScene(string path)
         {
             // See https://github.com/godotengine/godot/issues/21667 for why pNoCache is necessary.
             var scene2 = (Godot.PackedScene) Godot.ResourceLoader.Load(path, pNoCache: true);
             return (Godot.Control) scene2.Instance();
         }
+#endif
 
-        [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+        [AttributeUsage(AttributeTargets.Class, Inherited = false)]
         [BaseTypeRequired(typeof(Control))]
         internal class ControlWrapAttribute : Attribute
         {
-            public readonly Type GodotType;
+            public readonly string GodotType;
 
-            public ControlWrapAttribute(Type type)
+            public ControlWrapAttribute(string type)
             {
                 GodotType = type;
             }
         }
-#endif
     }
 }

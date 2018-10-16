@@ -1,8 +1,6 @@
 ﻿namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.HBoxContainer))]
-    #endif
+    [ControlWrap("HBoxContainer")]
     public class HBoxContainer : BoxContainer
     {
         public HBoxContainer() : base() { }

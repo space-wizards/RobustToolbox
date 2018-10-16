@@ -6,9 +6,7 @@ using System.Threading.Tasks;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.Range))]
-    #endif
+    [ControlWrap("Range")]
     public abstract class Range : Control
     {
         public Range() : base()

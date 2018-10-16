@@ -1,8 +1,6 @@
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.MarginContainer))]
-    #endif
+    [ControlWrap("MarginContainer")]
     public class MarginContainer : Container
     {
         public MarginContainer()

@@ -2,9 +2,7 @@
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.AcceptDialog))]
-    #endif
+    [ControlWrap("AcceptDialog")]
     public class AcceptDialog : WindowDialog
     {
         public AcceptDialog() : base()

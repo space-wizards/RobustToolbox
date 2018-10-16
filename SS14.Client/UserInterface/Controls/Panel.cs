@@ -2,9 +2,7 @@
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.Panel))]
-    #endif
+    [ControlWrap("Panel")]
     public class Panel : Control
     {
         public Panel(string name) : base(name)

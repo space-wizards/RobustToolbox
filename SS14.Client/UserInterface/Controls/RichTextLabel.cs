@@ -4,9 +4,7 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.RichTextLabel))]
-    #endif
+    [ControlWrap("RichTextLabel")]
     public class RichTextLabel : Control
     {
         public RichTextLabel() : base()

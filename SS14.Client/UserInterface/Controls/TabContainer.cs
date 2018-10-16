@@ -6,9 +6,7 @@ using SS14.Client.Graphics;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.TabContainer))]
-    #endif
+    [ControlWrap("TabContainer")]
     public class TabContainer : Control
     {
         #if GODOT

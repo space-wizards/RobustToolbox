@@ -7,9 +7,7 @@ using SS14.Shared.Log;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.VScrollBar))]
-    #endif
+    [ControlWrap("VScrollBar")]
     public class VScrollBar : ScrollBar
     {
         public VScrollBar() : base()

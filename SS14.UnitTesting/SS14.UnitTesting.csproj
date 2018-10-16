@@ -30,6 +30,7 @@
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <LangVersion>7.2</LangVersion>
+    <Godot>true</Godot>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -48,6 +49,19 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>portable</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|NoGodotx64' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Godot>false</Godot>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Godot)' == 'false'">
+    <DefineConstants>$(DefineConstants);NOGODOT</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Godot)' == 'true'">
+    <DefineConstants>$(DefineConstants);GODOT</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Castle.Core" Version="4.3.1" />
@@ -68,7 +82,7 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Drawing" />
-    <Reference Include="GodotSharp">
+    <Reference Include="GodotSharp" Condition="'$(Godot)' == 'true'">
       <HintPath>..\SS14.Client.Godot\.mono\assemblies\GodotSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
@@ -85,7 +99,9 @@
     <Compile Include="Client\GameObjects\Components\Transform_Test.cs" />
     <Compile Include="Client\DummyUserInterfaceManager.cs" />
     <Compile Include="Client\GameControllerProxyDummy.cs" />
+    <Compile Include="Client\UserInterface\ControlTest.cs" />
     <Compile Include="Client\Utility\GodotConversionsTest.cs" />
+    <Compile Include="Client\Utility\GodotParserTest.cs" />
     <Compile Include="LogCatcher.cs" />
     <Compile Include="Server\GameObjects\Components\Container_Test.cs" />
     <Compile Include="Server\GameObjects\Components\Transform_Test.cs" />
@@ -163,10 +179,6 @@
   <Import Project="..\MSBuild\SS14.Engine.targets" />
   <PropertyGroup>
     <DefineConstants Condition="'$(HEADLESS)'!=''">$(DefineConstants);HEADLESS</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|NoGodotx64' ">
-    <OutputPath>bin\NoGodotx64\Debug\</OutputPath>
-    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" />
   <!--

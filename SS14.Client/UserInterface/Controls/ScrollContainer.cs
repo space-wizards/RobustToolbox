@@ -1,8 +1,6 @@
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.ScrollContainer))]
-    #endif
+    [ControlWrap("ScrollContainer")]
     public class ScrollContainer : Container
     {
         public ScrollContainer()

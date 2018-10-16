@@ -5,9 +5,7 @@ using SS14.Client.GodotGlue;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.LineEdit))]
-    #endif
+    [ControlWrap("LineEdit")]
     public class LineEdit : Control
     {
         public LineEdit() : base()

@@ -2,9 +2,7 @@ using SS14.Client.Graphics.Drawing;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.PanelContainer))]
-    #endif
+    [ControlWrap("PanelContainer")]
     public class PanelContainer : Control
     {
         public PanelContainer()

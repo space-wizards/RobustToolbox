@@ -5,9 +5,7 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.Tree))]
-    #endif
+    [ControlWrap("Tree")]
     public class Tree : Control
     {
         #if GODOT

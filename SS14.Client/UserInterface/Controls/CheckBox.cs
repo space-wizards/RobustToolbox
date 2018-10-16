@@ -1,8 +1,6 @@
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.CheckBox))]
-    #endif
+    [ControlWrap("CheckBox")]
     public class CheckBox : Button
     {
         public CheckBox()

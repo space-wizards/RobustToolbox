@@ -2,9 +2,7 @@ using System;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.ProgressBar))]
-    #endif
+    [ControlWrap("ProgressBar")]
     public class ProgressBar : Range
     {
         #if GODOT

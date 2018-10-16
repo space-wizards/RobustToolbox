@@ -5,9 +5,7 @@ using System;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(Godot.BaseButton))]
-    #endif
+    [ControlWrap("BaseButton")]
     public abstract class BaseButton : Control
     {
         public BaseButton() : base()

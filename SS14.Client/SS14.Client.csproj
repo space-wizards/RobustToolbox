@@ -182,6 +182,7 @@
     <Compile Include="ResourceManagement\BaseResource.cs" />
     <Compile Include="ResourceManagement\ResourceCache.cs" />
     <Compile Include="ResourceManagement\ResourceTypes\AudioResource.cs" />
+    <Compile Include="ResourceManagement\ResourceTypes\GodotAssetResource.cs" />
     <Compile Include="ResourceManagement\ResourceTypes\ShaderSourceResource.cs" />
     <Compile Include="ResourceManagement\ResourceTypes\FontResource.cs" />
     <Compile Include="Graphics\RSI\RSI.cs" />
@@ -205,6 +206,8 @@
     <Compile Include="UserInterface\CustomControls\Chatbox.cs" />
     <Compile Include="UserInterface\CustomControls\DebugTimePanel.cs" />
     <Compile Include="Utility\DirExt.cs" />
+    <Compile Include="Utility\GodotParser.cs" />
+    <Compile Include="Utility\GodotPathUtility.cs" />
     <Compile Include="Utility\GodotResourceCopy.cs" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Utility\GodotConversions.cs" />

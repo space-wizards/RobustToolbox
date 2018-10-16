@@ -9,9 +9,7 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    #if GODOT
-    [ControlWrap(typeof(GodotGlue.SpriteView))]
-    #endif
+    [ControlWrap("res://Scenes/SpriteMirror/SpriteView.tscn")]
     public class SpriteView : Control
     {
         ISpriteProxy Mirror;

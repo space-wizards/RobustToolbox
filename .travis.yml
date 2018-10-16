@@ -33,5 +33,5 @@ before_script:
 
 script:
 - "msbuild /p:Configuration=Debug /p:Platform=x64 /p:HEADLESS=1 /nologo /m /p:AllowMissingMacNatives=yes SpaceStation14.sln /p:Python=python3.6"
-- "mono --debug packages/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe bin/UnitTesting/SS14.UnitTesting.dll"
+- "mono --debug ~/.nuget/packages/nunit.consolerunner/3.9.0/tools/nunit3-console.exe bin/UnitTesting/SS14.UnitTesting.dll"
 

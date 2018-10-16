@@ -1,7 +1,7 @@
-using Godot;
 using NUnit.Framework;
 using SS14.Client;
 using SS14.Server;
+using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 
 namespace SS14.UnitTesting.Shared.Utility

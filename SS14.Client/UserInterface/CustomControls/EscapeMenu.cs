@@ -6,6 +6,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Reflection;
 using SS14.Client.Console;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
@@ -14,13 +15,7 @@ namespace SS14.Client.UserInterface.CustomControls
         [Dependency]
         readonly IClientConsole console;
 
-        #if GODOT
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return LoadScene("res://Engine/Scenes/EscapeMenu/EscapeMenu.tscn");
-        }
-        #endif
-
+        protected override ResourcePath ScenePath => new ResourcePath("/Scenes/EscapeMenu/EscapeMenu.tscn");
         private BaseButton QuitButton;
         private BaseButton OptionsButton;
         private BaseButton SpawnEntitiesButton;

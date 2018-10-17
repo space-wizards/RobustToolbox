@@ -187,6 +187,18 @@ namespace SS14.Client
             Environment.Exit(0);
         }
 
+        private void Update(float frameTime)
+        {
+            _networkManager.ProcessPackets();
+            var eventArgs = new ProcessFrameEventArgs(frameTime);
+            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, eventArgs.Elapsed);
+            _timerManager.UpdateTimers(frameTime);
+            _taskManager.ProcessPendingTasks();
+            _userInterfaceManager.Update(eventArgs);
+            _stateManager.Update(eventArgs);
+            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, eventArgs.Elapsed);
+        }
+
         private void SetupLogging()
         {
             #if GODOT

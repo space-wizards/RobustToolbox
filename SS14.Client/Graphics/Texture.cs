@@ -16,8 +16,8 @@ namespace SS14.Client.Graphics
         public int Width => GodotTexture.GetWidth();
         public int Height => GodotTexture.GetHeight();
         #else
-        public int Width => throw new NotImplementedException();
-        public int Height => throw new NotImplementedException();
+        public int Width => 0;
+        public int Height => 0;
         #endif
         public Vector2i Size => new Vector2i(Width, Height);
 
@@ -34,6 +34,14 @@ namespace SS14.Client.Graphics
         {
             return this;
         }
+    }
+
+    /// <summary>
+    ///     Blank dummy texture.
+    /// </summary>
+    public class BlankTexture : Texture
+    {
+
     }
 
     #if GODOT

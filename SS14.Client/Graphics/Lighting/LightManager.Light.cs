@@ -19,8 +19,8 @@ namespace SS14.Client.Graphics.Lighting
                 get => Light2D.Offset.Convert();
                 set => Light2D.Offset = value.Convert();
                 #else
-                get => throw new NotImplementedException();
-                set => throw new NotImplementedException();
+                get => default;
+                set {}
 #endif
             }
 
@@ -30,8 +30,8 @@ namespace SS14.Client.Graphics.Lighting
                 get => new Angle(Light2D.GlobalRotation);
                 set => Light2D.Rotation = (float)value;
 #else
-                get => throw new NotImplementedException();
-                set => throw new NotImplementedException();
+                get => default;
+                set {}
 #endif
             }
 

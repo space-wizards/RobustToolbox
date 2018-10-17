@@ -998,8 +998,8 @@ namespace SS14.Client.GameObjects
             var item = VS.CanvasItemCreate();
             RedrawQueued = true;
             return CreateMirror(item);
-            #else
-            throw new NotImplementedException();
+#else
+            return new SpriteMirror();
 #endif
         }
 
@@ -1032,7 +1032,7 @@ namespace SS14.Client.GameObjects
                 Modulate = color.Convert(),
                 Rotation = (float) rotation,
             };
-            #endif
+#endif
         }
 
         public override void OnRemove()
@@ -1047,7 +1047,7 @@ namespace SS14.Client.GameObjects
             MainMirror.Dispose();
 #if GODOT
             SceneNode.QueueFree();
-            #endif
+#endif
         }
 
         public override void Initialize()
@@ -1060,8 +1060,6 @@ namespace SS14.Client.GameObjects
             mir.DontFree = true;
             Mirrors[0] = mir;
             ((IGodotTransformComponent) Owner.Transform).SceneNode.AddChild(SceneNode);
-            #else
-            throw new NotImplementedException();
 #endif
         }
 
@@ -1077,8 +1075,6 @@ namespace SS14.Client.GameObjects
 
                 data.Children.Clear();
             }
-            #else
-            throw new NotImplementedException();
 #endif
         }
 

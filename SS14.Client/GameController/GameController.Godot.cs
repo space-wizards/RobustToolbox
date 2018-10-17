@@ -47,14 +47,7 @@ namespace SS14.Client
                 if (!gameTiming.Paused)
                 {
                     gameTiming.CurTick++;
-                    _networkManager.ProcessPackets();
-                    var eventArgs = new ProcessFrameEventArgs(delta);
-                    AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, eventArgs.Elapsed);
-                    _timerManager.UpdateTimers(delta);
-                    _taskManager.ProcessPendingTasks();
-                    _userInterfaceManager.Update(eventArgs);
-                    _stateManager.Update(eventArgs);
-                    AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, eventArgs.Elapsed);
+                    Update(delta);
                 }
             }
             finally

@@ -38,6 +38,8 @@ namespace SS14.Client.ResourceManagement
             Texture = new GodotTextureSource(godotTexture);
             // Primarily for tracking down iCCP sRGB errors in the image files.
             Logger.DebugS("res.tex", $"Loaded texture {Path.GetFullPath(diskPath)}.");
+            #else
+            Texture = new BlankTexture();
             #endif
         }
 

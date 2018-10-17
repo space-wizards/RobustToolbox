@@ -10,10 +10,11 @@ namespace SS14.Client.UserInterface.Controls
         public RichTextLabel() : base()
         {
         }
+
         public RichTextLabel(string name) : base(name)
         {
         }
-        #if GODOT
+#if GODOT
         internal RichTextLabel(Godot.RichTextLabel button) : base(button)
         {
         }
@@ -35,66 +36,66 @@ namespace SS14.Client.UserInterface.Controls
 
         public bool BBCodeEnabled
         {
-            #if GODOT
+#if GODOT
             get => SceneControl.BbcodeEnabled;
             set => SceneControl.BbcodeEnabled = value;
             #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
-            #endif
+            get => default;
+            set { }
+#endif
         }
 
         public void Clear()
         {
-            #if GODOT
+#if GODOT
             SceneControl.Clear();
             #endif
         }
 
         public void AppendBBCode(string code)
         {
-            #if GODOT
+#if GODOT
             SceneControl.AppendBbcode(code);
             #endif
         }
 
         public void PushColor(Color color)
         {
-            #if GODOT
+#if GODOT
             SceneControl.PushColor(color.Convert());
             #endif
         }
 
         public void AddText(string text)
         {
-            #if GODOT
+#if GODOT
             SceneControl.AddText(text);
             #endif
         }
 
         public void Pop()
         {
-            #if GODOT
+#if GODOT
             SceneControl.Pop();
             #endif
         }
 
         public void NewLine()
         {
-            #if GODOT
+#if GODOT
             SceneControl.Newline();
             #endif
         }
 
         public bool ScrollFollowing
         {
-            #if GODOT
+#if GODOT
             get => SceneControl.IsScrollFollowing();
             set => SceneControl.SetScrollFollow(value);
             #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
-            #endif
+            get => default;
+            set { }
+#endif
         }
     }
 }

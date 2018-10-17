@@ -14,7 +14,7 @@ namespace SS14.UnitTesting.Client.Utility
         {
             const string data = @"[gd_scene load_steps=2 format=2]
 
-[ext_resource path=""res://Scenes/SS14Window/SS14Window.tscn"" type=""PackedScene"" id=1]
+[ext_resource path=""res://Engine/Scenes/SS14Window/SS14Window.tscn"" type=""PackedScene"" id=1]
 
 [node name=""SS14Window"" index=""0"" instance=ExtResource( 1 )]
 rect_clip_content = false

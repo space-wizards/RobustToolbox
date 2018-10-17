@@ -190,6 +190,7 @@ namespace SS14.UnitTesting
                     // Client stuff.
                     IoCManager.Register<IReflectionManager, ClientReflectionManager>();
                     IoCManager.Register<IResourceManager, ResourceCache>();
+                    IoCManager.Register<IResourceManagerInternal, ResourceCache>();
                     IoCManager.Register<IResourceCache, ResourceCache>();
                     IoCManager.Register<IClientNetManager, NetManager>();
                     IoCManager.Register<IClientEntityManager, ClientEntityManager>();
@@ -217,6 +218,7 @@ namespace SS14.UnitTesting
 
                 case UnitTestProject.Server:
                     IoCManager.Register<IResourceManager, ResourceManager>();
+                    IoCManager.Register<IResourceManagerInternal, ResourceManager>();
                     IoCManager.Register<IEntityManager, ServerEntityManager>();
                     IoCManager.Register<IServerEntityManager, ServerEntityManager>();
                     IoCManager.Register<IChatManager, ChatManager>();

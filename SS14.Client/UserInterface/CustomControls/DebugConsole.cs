@@ -8,11 +8,10 @@ using SS14.Shared.Maths;
 using SS14.Shared.Reflection;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
-    // Disable reflection so that we won't be looked at for scene translation.
-    [Reflect(false)]
     public class DebugConsole : Control, IDebugConsole
     {
         [Dependency]
@@ -24,18 +23,13 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => console.Commands;
 
-        #if GODOT
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            var node = LoadScene("res://Scenes/DebugConsole/DebugConsole.tscn");
-            node.Visible = false;
-            return node;
-        }
-        #endif
+        protected override ResourcePath ScenePath => new ResourcePath("/Scenes/DebugConsole/DebugConsole.tscn");
 
         protected override void Initialize()
         {
             IoCManager.InjectDependencies(this);
+
+            Visible = false;
 
             CommandBar = GetChild<LineEdit>("CommandBar");
             Contents = GetChild<RichTextLabel>("Contents");

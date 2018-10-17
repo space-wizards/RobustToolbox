@@ -36,44 +36,44 @@ namespace SS14.Client.Graphics
 #else
         public int ExtraSpacingTop
         {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
         }
 
         public int ExtraSpacingBottom
         {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
         }
 
         public int ExtraSpacingChar
         {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
         }
 
         public int ExtraSpacingSpace
         {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
         }
 
         public int Size
         {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
         }
 
         public bool UseFilter
         {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
         }
 
         public bool UseMipmaps
         {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
         }
 #endif
 

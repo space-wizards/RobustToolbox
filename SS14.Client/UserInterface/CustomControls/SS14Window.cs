@@ -5,10 +5,11 @@ using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Reflection;
 using System;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
-    [Reflect(false)]
+    [ControlWrap("res://Engine/Scenes/SS14Window/SS14Window.tscn")]
     public class SS14Window : Control
     {
         public SS14Window() : base()
@@ -29,20 +30,7 @@ namespace SS14.Client.UserInterface.CustomControls
             Right = 1 << 4,
         }
 
-        #if GODOT
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return LoadScene("res://Scenes/SS14Window/SS14Window.tscn");
-        }
-
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = control;
-        }
-
-        new private Godot.Control SceneControl;
-        #endif
+        protected override ResourcePath ScenePath => new ResourcePath("/Scenes/SS14Window/SS14Window.tscn");
 
         public Control Contents { get; private set; }
         private TextureButton CloseButton;

@@ -12,12 +12,14 @@ using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Reflection;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
-    [Reflect(false)]
-    class EntitySpawnWindow : SS14Window
+    internal class EntitySpawnWindow : SS14Window
     {
+        protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Placement/EntitySpawnPanel.tscn");
+
         [Dependency]
         private readonly IPlacementManager placementManager;
         [Dependency]
@@ -30,13 +32,6 @@ namespace SS14.Client.UserInterface.CustomControls
         private Button ClearButton;
         private Button EraseButton;
         protected override Vector2 ContentsMinimumSize => HSplitContainer.CombinedMinimumSize;
-
-        #if GODOT
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return LoadScene("res://Scenes/Placement/EntitySpawnPanel.tscn");
-        }
-        #endif
 
         private static readonly string[] initOpts = new string[]
         {
@@ -205,19 +200,13 @@ namespace SS14.Client.UserInterface.CustomControls
             SelectedButton = item;
         }
 
-        [Reflect(false)]
         private class EntitySpawnButton : Control
         {
             public string PrototypeID => Prototype.ID;
             public EntityPrototype Prototype { get; set; }
             public Button ActualButton { get; private set; }
 
-            #if GODOT
-            private protected override Godot.Control SpawnSceneControl()
-            {
-                return LoadScene("res://Scenes/Placement/EntitySpawnItem.tscn");
-            }
-            #endif
+            protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Placement/EntitySpawnItem.tscn");
 
             protected override void Initialize()
             {

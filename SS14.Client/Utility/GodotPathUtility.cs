@@ -14,7 +14,7 @@ namespace SS14.Client.Utility
             }
 
             const string resEngine = "res://Engine";
-            if (path.StartsWith(resContent))
+            if (path.StartsWith(resEngine))
             {
                 return new ResourcePath(path.Substring(resEngine.Length));
             }

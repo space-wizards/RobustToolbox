@@ -191,6 +191,8 @@ namespace SS14.Client
         {
             #if GODOT
             logManager.RootSawmill.AddHandler(new GodotLogHandler());
+            #else
+            logManager.RootSawmill.AddHandler(new ConsoleLogHandler());
             #endif
             logManager.GetSawmill("res.typecheck").Level = LogLevel.Info;
             logManager.GetSawmill("res.tex").Level = LogLevel.Info;

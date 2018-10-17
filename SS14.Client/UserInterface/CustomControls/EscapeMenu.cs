@@ -9,7 +9,6 @@ using SS14.Client.Console;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
-    [Reflect(false)]
     public class EscapeMenu : SS14Window
     {
         [Dependency]
@@ -18,7 +17,7 @@ namespace SS14.Client.UserInterface.CustomControls
         #if GODOT
         private protected override Godot.Control SpawnSceneControl()
         {
-            return LoadScene("res://Scenes/EscapeMenu/EscapeMenu.tscn");
+            return LoadScene("res://Engine/Scenes/EscapeMenu/EscapeMenu.tscn");
         }
         #endif
 

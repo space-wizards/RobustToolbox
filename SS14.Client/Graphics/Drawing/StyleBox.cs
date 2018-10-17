@@ -77,8 +77,8 @@ namespace SS14.Client.Graphics.Drawing
             get => stylebox.MarginLeft;
             set => stylebox.MarginLeft = value;
 #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
 #endif
         }
 
@@ -88,8 +88,8 @@ namespace SS14.Client.Graphics.Drawing
             get => stylebox.MarginRight;
             set => stylebox.MarginRight = value;
 #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
 #endif
         }
 
@@ -99,8 +99,8 @@ namespace SS14.Client.Graphics.Drawing
             get => stylebox.MarginTop;
             set => stylebox.MarginTop = value;
 #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
 #endif
         }
 
@@ -110,8 +110,8 @@ namespace SS14.Client.Graphics.Drawing
             get => stylebox.MarginBottom;
             set => stylebox.MarginBottom = value;
 #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
 #endif
         }
 
@@ -121,8 +121,8 @@ namespace SS14.Client.Graphics.Drawing
             get => stylebox.ModulateColor.Convert();
             set => stylebox.ModulateColor = value.Convert();
 #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
 #endif
         }
 
@@ -135,8 +135,8 @@ namespace SS14.Client.Graphics.Drawing
             // Woo implicit casts.
             set => stylebox.Texture = cachedTexture = value;
 #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
 #endif
         }
 
@@ -175,8 +175,8 @@ namespace SS14.Client.Graphics.Drawing
             get => stylebox.BgColor.Convert();
             set => stylebox.BgColor = value.Convert();
 #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
 #endif
         }
 
@@ -199,8 +199,8 @@ namespace SS14.Client.Graphics.Drawing
             get => stylebox.ContentMarginLeft;
             set => stylebox.ContentMarginLeft = value;
 #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
 #endif
         }
 
@@ -210,8 +210,8 @@ namespace SS14.Client.Graphics.Drawing
             get => stylebox.ContentMarginRight;
             set => stylebox.ContentMarginRight = value;
 #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
 #endif
         }
 
@@ -221,8 +221,8 @@ namespace SS14.Client.Graphics.Drawing
             get => stylebox.ContentMarginTop;
             set => stylebox.ContentMarginTop = value;
 #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
 #endif
         }
 
@@ -232,8 +232,8 @@ namespace SS14.Client.Graphics.Drawing
             get => stylebox.ContentMarginBottom;
             set => stylebox.ContentMarginBottom = value;
 #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => default;
+            set {}
 #endif
         }
 

@@ -93,6 +93,12 @@ namespace SS14.Client.Utility
                     extResources.Add(ParseExtResourceRef());
                 }
 
+                else
+                {
+                    // Probably something like sub_resource or whatever. Ignore it.
+                    continue;
+                }
+
                 _parser.Parse(']');
                 _parser.EnsureEOL();
             }

@@ -441,12 +441,13 @@ namespace SS14.Client.UserInterface
 
             // Go over the inherited scenes with a stack,
             // because you can theoretically have very deep scene inheritance.
-            var (_, inheritedSceneStack) = _manualFollowSceneInheritance(asset, resourceCache);
+            var (_, inheritedSceneStack) = _manualFollowSceneInheritance(asset, resourceCache, false);
 
             _manualApplyInheritedSceneStack(this, inheritedSceneStack, asset, resourceCache);
         }
 
-        private static void _manualApplyInheritedSceneStack(Control baseControl, Stack<GodotAssetScene> inheritedSceneStack, GodotAssetScene asset,
+        private static void _manualApplyInheritedSceneStack(Control baseControl,
+            Stack<GodotAssetScene> inheritedSceneStack, GodotAssetScene asset,
             IResourceCache resourceCache)
         {
             // Go over the inherited scenes bottom-first.
@@ -481,7 +482,8 @@ namespace SS14.Client.UserInterface
                         {
                             var extResource = asset.GetExtResource(child.Instance.Value);
                             DebugTools.Assert(extResource.Type == "PackedScene");
-                            var subScene = (GodotAssetScene) resourceCache.GetResource<GodotAssetResource>(extResource.Path).Asset;
+                            var subScene =
+                                (GodotAssetScene) resourceCache.GetResource<GodotAssetResource>(extResource.Path).Asset;
 
                             childControl = ManualSpawnFromScene(subScene);
                             childControl.Name = child.Name;
@@ -510,7 +512,7 @@ namespace SS14.Client.UserInterface
 
             var resourceCache = IoCManager.Resolve<IResourceCache>();
 
-            var (controlType, inheritedSceneStack) = _manualFollowSceneInheritance(scene, resourceCache);
+            var (controlType, inheritedSceneStack) = _manualFollowSceneInheritance(scene, resourceCache, true);
 
             var control = (Control) Activator.CreateInstance(controlType);
             control.Name = scene.RootNode.Name;
@@ -520,7 +522,8 @@ namespace SS14.Client.UserInterface
             return control;
         }
 
-        private static (Type, Stack<GodotAssetScene>) _manualFollowSceneInheritance(GodotAssetScene scene, IResourceCache resourceCache)
+        private static (Type, Stack<GodotAssetScene>) _manualFollowSceneInheritance(GodotAssetScene scene,
+            IResourceCache resourceCache, bool getType)
         {
             // Go over the inherited scenes with a stack,
             // because you can theoretically have very deep scene inheritance.
@@ -534,7 +537,7 @@ namespace SS14.Client.UserInterface
                 var extResource = scene.GetExtResource(scene.RootNode.Instance.Value);
                 DebugTools.Assert(extResource.Type == "PackedScene");
 
-                if (_manualNodeTypeTranslations.TryGetValue(extResource.Path, out controlType))
+                if (getType && _manualNodeTypeTranslations.TryGetValue(extResource.Path, out controlType))
                 {
                     break;
                 }
@@ -547,7 +550,8 @@ namespace SS14.Client.UserInterface
 
             if (controlType == null)
             {
-                if (scene.RootNode.Type == null
+                if (!getType
+                    || scene.RootNode.Type == null
                     || !_manualNodeTypeTranslations.TryGetValue(scene.RootNode.Type, out controlType))
                 {
                     controlType = typeof(Control);

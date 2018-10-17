@@ -17,8 +17,7 @@ using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
-    [Reflect(false)]
-    class DebugCoordsPanel : Panel
+    internal class DebugCoordsPanel : Panel
     {
         [Dependency]
         readonly IPlayerManager playerManager;

@@ -9,7 +9,7 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap("res://Scenes/SpriteMirror/SpriteView.tscn")]
+    [ControlWrap("res://Engine/Scenes/SpriteMirror/SpriteView.tscn")]
     public class SpriteView : Control
     {
         ISpriteProxy Mirror;

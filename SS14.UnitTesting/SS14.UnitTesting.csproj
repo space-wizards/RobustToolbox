@@ -102,9 +102,11 @@
     <Compile Include="Client\UserInterface\ControlTest.cs" />
     <Compile Include="Client\Utility\GodotConversionsTest.cs" />
     <Compile Include="Client\Utility\GodotParserTest.cs" />
+    <Compile Include="Client\Utility\GodotPathUtilityTest.cs" />
     <Compile Include="LogCatcher.cs" />
     <Compile Include="Server\GameObjects\Components\Container_Test.cs" />
     <Compile Include="Server\GameObjects\Components\Transform_Test.cs" />
+    <Compile Include="Shared\ContentPack\ResourceManagerTest.cs" />
     <Compile Include="Shared\GameObjects\ComponentManager_Test.cs" />
     <Compile Include="Shared\IoC\IoCManager_Test.cs" />
     <Compile Include="Shared\Maths\Angle_Test.cs" />

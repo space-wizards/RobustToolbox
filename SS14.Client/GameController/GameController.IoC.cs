@@ -102,6 +102,7 @@ namespace SS14.Client
             // Client stuff.
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();
             IoCManager.Register<IResourceManager, ResourceCache>();
+            IoCManager.Register<IResourceManagerInternal, ResourceCache>();
             IoCManager.Register<IResourceCache, ResourceCache>();
             IoCManager.Register<IClientTileDefinitionManager, ClientTileDefinitionManager>();
             IoCManager.Register<IClientNetManager, NetManager>();

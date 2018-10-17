@@ -12,6 +12,7 @@ using SS14.Shared.Log;
 using SS14.Client.Interfaces.State;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.State.States
 {
@@ -28,7 +29,7 @@ namespace SS14.Client.State.States
         [Dependency]
         readonly IStateManager stateManager;
 
-        private Control MainMenuControl;
+        private MainMenuControl _mainMenuControl;
 
         private OptionsMenu OptionsMenu;
 
@@ -37,14 +38,10 @@ namespace SS14.Client.State.States
         {
             IoCManager.InjectDependencies(this);
 
-            #if GODOT
-            var scene = (Godot.PackedScene)Godot.ResourceLoader.Load("res://Scenes/MainMenu/MainMenu.tscn");
-            MainMenuControl = Control.InstanceScene(scene);
-            #endif
+            _mainMenuControl = new MainMenuControl();
+            userInterfaceManager.StateRoot.AddChild(_mainMenuControl);
 
-            userInterfaceManager.StateRoot.AddChild(MainMenuControl);
-
-            var VBox = MainMenuControl.GetChild("VBoxContainer");
+            var VBox = _mainMenuControl.GetChild("VBoxContainer");
             VBox.GetChild<Button>("ExitButton").OnPressed += ExitButtonPressed;
             VBox.GetChild<Button>("OptionsButton").OnPressed += OptionsButtonPressed;
             VBox.GetChild<Button>("ConnectButton").OnPressed += ConnectButtonPressed;
@@ -64,7 +61,7 @@ namespace SS14.Client.State.States
         {
             _client.RunLevelChanged -= RunLevelChanged;
 
-            MainMenuControl.Dispose();
+            _mainMenuControl.Dispose();
             OptionsMenu.Dispose();
         }
 
@@ -80,7 +77,7 @@ namespace SS14.Client.State.States
 
         private void ConnectButtonPressed(BaseButton.ButtonEventArgs args)
         {
-            var input = MainMenuControl.GetChild("VBoxContainer").GetChild<LineEdit>("IPBox");
+            var input = _mainMenuControl.GetChild("VBoxContainer").GetChild<LineEdit>("IPBox");
             TryConnect(input.Text);
         }
 
@@ -130,6 +127,11 @@ namespace SS14.Client.State.States
                     throw new ArgumentException("Not a valid port.");
                 }
             }
+        }
+
+        private class MainMenuControl : Control
+        {
+            protected override ResourcePath ScenePath => new ResourcePath("/Scenes/MainMenu/MainMenu.tscn");
         }
     }
 }

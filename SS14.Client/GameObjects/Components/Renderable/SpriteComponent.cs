@@ -1696,7 +1696,7 @@ namespace SS14.Client.GameObjects
 #if GODOT
             public bool Disposed => CanvasItem == null;
 #else
-            public bool Disposed => throw new NotImplementedException();
+            public bool Disposed { get; private set; }
 #endif
 
             void CheckDisposed()
@@ -1745,6 +1745,8 @@ namespace SS14.Client.GameObjects
                 Master.DisposeMirror(Key);
 #if GODOT
                 CanvasItem = null;
+#else
+                Disposed = true;
 #endif
             }
         }

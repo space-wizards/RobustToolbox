@@ -450,52 +450,66 @@ namespace SS14.Client.UserInterface
             Stack<GodotAssetScene> inheritedSceneStack, GodotAssetScene asset,
             IResourceCache resourceCache)
         {
+            var parentMapping = new Dictionary<string, Control> {["."] = baseControl};
+
             // Go over the inherited scenes bottom-first.
             while (inheritedSceneStack.Count != 0)
             {
                 var inheritedAsset = inheritedSceneStack.Pop();
 
-                // Use a queue to handle the tree.
-                var queue = new Queue<(GodotAssetScene.NodeDef, Control)>();
-                queue.Enqueue((inheritedAsset.RootNode, baseControl));
-
-                while (queue.Count != 0)
+                foreach (var node in inheritedAsset.Nodes)
                 {
-                    var (currentNode, currentControl) = queue.Dequeue();
-
-                    foreach (var child in currentNode.Children)
+                    // It's the base control.
+                    if (node.Parent == null)
                     {
-                        Control childControl;
-                        // Type is null if this is modifying a property on an instance's node.
-                        if (child.Type != null)
-                        {
-                            if (!_manualNodeTypeTranslations.TryGetValue(child.Type, out var type))
-                            {
-                                type = typeof(Control);
-                            }
+                        continue;
+                    }
 
-                            childControl = (Control) Activator.CreateInstance(type);
-                            childControl.Name = child.Name;
-                            currentControl.AddChild(childControl);
+                    Control childControl;
+                    if (node.Type != null)
+                    {
+                        if (!_manualNodeTypeTranslations.TryGetValue(node.Type, out var type))
+                        {
+                            type = typeof(Control);
                         }
-                        else if (child.Instance != null)
-                        {
-                            var extResource = asset.GetExtResource(child.Instance.Value);
-                            DebugTools.Assert(extResource.Type == "PackedScene");
-                            var subScene =
-                                (GodotAssetScene) resourceCache.GetResource<GodotAssetResource>(extResource.Path).Asset;
 
-                            childControl = ManualSpawnFromScene(subScene);
-                            childControl.Name = child.Name;
-                            currentControl.AddChild(childControl);
+                        childControl = (Control) Activator.CreateInstance(type);
+                        childControl.Name = node.Name;
+                    }
+                    else if (node.Instance != null)
+                    {
+                        var extResource = asset.GetExtResource(node.Instance.Value);
+                        DebugTools.Assert(extResource.Type == "PackedScene");
+
+                        if (_manualNodeTypeTranslations.TryGetValue(extResource.Path, out var type))
+                        {
+                            childControl = (Control) Activator.CreateInstance(type);
                         }
                         else
                         {
-                            // No type so this node should already exist due to instancing.
-                            childControl = currentControl.GetChild(child.Name);
+                            var subScene =
+                                (GodotAssetScene) resourceCache
+                                    .GetResource<GodotAssetResource>(
+                                        GodotPathUtility.GodotPathToResourcePath(extResource.Path)).Asset;
+
+                            childControl = ManualSpawnFromScene(subScene);
                         }
 
-                        queue.Enqueue((child, childControl));
+                        childControl.Name = node.Name;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
+                    parentMapping[node.Parent].AddChild(childControl);
+                    if (node.Parent == ".")
+                    {
+                        parentMapping[node.Name] = childControl;
+                    }
+                    else
+                    {
+                        parentMapping[$"{node.Parent}/{node.Name}"] = childControl;
                     }
                 }
             }
@@ -515,7 +529,7 @@ namespace SS14.Client.UserInterface
             var (controlType, inheritedSceneStack) = _manualFollowSceneInheritance(scene, resourceCache, true);
 
             var control = (Control) Activator.CreateInstance(controlType);
-            control.Name = scene.RootNode.Name;
+            control.Name = scene.Nodes[0].Name;
 
             _manualApplyInheritedSceneStack(control, inheritedSceneStack, scene, resourceCache);
 
@@ -532,9 +546,9 @@ namespace SS14.Client.UserInterface
 
             Type controlType = null;
 
-            while (scene.RootNode.Instance != null)
+            while (scene.Nodes[0].Instance != null)
             {
-                var extResource = scene.GetExtResource(scene.RootNode.Instance.Value);
+                var extResource = scene.GetExtResource(scene.Nodes[0].Instance.Value);
                 DebugTools.Assert(extResource.Type == "PackedScene");
 
                 if (getType && _manualNodeTypeTranslations.TryGetValue(extResource.Path, out controlType))
@@ -551,8 +565,8 @@ namespace SS14.Client.UserInterface
             if (controlType == null)
             {
                 if (!getType
-                    || scene.RootNode.Type == null
-                    || !_manualNodeTypeTranslations.TryGetValue(scene.RootNode.Type, out controlType))
+                    || scene.Nodes[0].Type == null
+                    || !_manualNodeTypeTranslations.TryGetValue(scene.Nodes[0].Type, out controlType))
                 {
                     controlType = typeof(Control);
                 }

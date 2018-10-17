@@ -70,8 +70,8 @@ namespace SS14.Client.Graphics.Shaders
 
             return new Shader(mat);
             #else
-            throw new NotImplementedException();
-            #endif
+            return new Shader();
+#endif
         }
 
         public void LoadFrom(YamlMappingNode mapping)
@@ -121,11 +121,12 @@ namespace SS14.Client.Graphics.Shaders
 
         private void ReadCanvasKind(YamlMappingNode mapping)
         {
+#if GODOT
             if (mapping.TryGetNode("light_mode", out var node))
             {
                 switch (node.AsString())
                 {
-                    #if GODOT
+
                     case "normal":
                         LightMode = LightModeEnum.Normal;
                         break;
@@ -137,7 +138,6 @@ namespace SS14.Client.Graphics.Shaders
                     case "light_only":
                         LightMode = LightModeEnum.LightOnly;
                         break;
-                    #endif
 
                     default:
                         throw new InvalidOperationException($"Invalid light mode: '{node.AsString()}'");
@@ -148,7 +148,6 @@ namespace SS14.Client.Graphics.Shaders
             {
                 switch (node.AsString())
                 {
-                    #if GODOT
                     case "mix":
                         BlendMode = BlendModeEnum.Mix;
                         break;
@@ -168,11 +167,12 @@ namespace SS14.Client.Graphics.Shaders
                     case "premultiplied_alpha":
                         BlendMode = BlendModeEnum.PremultAlpha;
                         break;
-                    #endif
+
                     default:
                         throw new InvalidOperationException($"Invalid blend mode: '{node.AsString()}'");
                 }
             }
+#endif
         }
 
         private object ParseShaderParamFor(YamlNode node, ShaderParamType type)

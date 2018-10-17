@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using SS14.Client.Utility;
 
@@ -56,13 +57,10 @@ rect_clip_content = false
             Assert.That(asset.ExtResources[0].Type, Is.EqualTo("PackedScene"));
 
             Assert.That(asset.RootNode.Name, Is.EqualTo("SS14Window"));
-            Assert.That(asset.RootNode.Children, Has.Exactly(2).Items);
             Assert.That(asset.RootNode.Instance, Is.EqualTo(new GodotAsset.TokenExtResource(1)));
-
-            Assert.That(asset.RootNode.Children, Has.Exactly(2).Items);
-            Assert.That(asset.RootNode[1].Name, Is.EqualTo("Header"));
-
-            Assert.That(asset.RootNode[0][0].Type, Is.EqualTo("HSplitContainer"));
+            Assert.That(asset.Nodes.Where(n => n.Parent == "."), Has.Exactly(2).Items);
+            Assert.That(asset.Nodes.Last(n => n.Parent == ".").Name, Is.EqualTo("Header"));
+            Assert.That(asset.Nodes.Single(n => n.Parent == "Contents").Type, Is.EqualTo("HSplitContainer"));
         }
     }
 }

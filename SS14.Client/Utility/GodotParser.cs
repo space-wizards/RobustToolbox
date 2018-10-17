@@ -106,53 +106,15 @@ namespace SS14.Client.Utility
             // Alright try to resolve tree graph.
             // Sort based on tree depth by parsing parent path.
             // This way, when doing straight iteration, we'll always have the parent.
-            int NodeWeight(NodeHeader header)
-            {
-                switch (header.Parent)
-                {
-                    case null:
-                        return 0;
-                    case ".":
-                        return 1;
-                    default:
-                        return header.Parent.Count(c => c == '/') + 2;
-                }
-            }
 
-            nodes = nodes.OrderBy(NodeWeight)
-                .ThenBy(n => n.Index)
+
+            var finalNodes = nodes
+                .Select(n => new GodotAssetScene.NodeDef(n.Name, n.Type, n.Parent, n.Index, n.Instance))
                 .ToList();
 
-            // A dictionary mapping the contents of the parent field in the header
-            // to the node that will be parented to.
-            var dict = new Dictionary<string, GodotAssetScene.NodeDef>();
-            GodotAssetScene.NodeDef root = null;
+            finalNodes.Sort(GodotAssetScene.NodeDef.FlattenedTreeComparer);
 
-            foreach (var node in nodes)
-            {
-                var def = new GodotAssetScene.NodeDef(node.Name, node.Type, new List<GodotAssetScene.NodeDef>(),
-                    node.Instance);
-                if (node.Parent == null)
-                {
-                    dict.Add(".", def);
-                    root = def;
-                    continue;
-                }
-
-                var parent = dict[node.Parent];
-                parent.Children.Add(def);
-
-                if (node.Parent == ".")
-                {
-                    dict.Add(node.Name, def);
-                }
-                else
-                {
-                    dict.Add($"{node.Parent}/{node.Name}", def);
-                }
-            }
-
-            return new GodotAssetScene(root, extResources);
+            return new GodotAssetScene(finalNodes, extResources);
         }
 
         private NodeHeader ParseNodeHeader()
@@ -538,7 +500,7 @@ namespace SS14.Client.Utility
         /// <summary>
         ///     A token value to indicate "this is a reference to an external resource".
         /// </summary>
-        public readonly struct TokenExtResource
+        public readonly struct TokenExtResource : IEquatable<TokenExtResource>
         {
             public readonly long ResourceId;
 
@@ -601,14 +563,12 @@ namespace SS14.Client.Utility
     /// </summary>
     internal class GodotAssetScene : GodotAsset
     {
-        /// <summary>
-        ///     The node at the root of the tree.
-        /// </summary>
-        public NodeDef RootNode { get; }
+        public NodeDef RootNode => Nodes[0];
+        public List<NodeDef> Nodes { get; }
 
-        public GodotAssetScene(NodeDef node, List<ExtResourceRef> extResourceRefs) : base(extResourceRefs)
+        public GodotAssetScene(List<NodeDef> nodes, List<ExtResourceRef> extResourceRefs) : base(extResourceRefs)
         {
-            RootNode = node;
+            Nodes = nodes;
         }
 
         public class NodeDef
@@ -627,24 +587,60 @@ namespace SS14.Client.Utility
             public string Type { get; }
 
             /// <summary>
-            ///     A list of child nodes of this node.
+            ///     The scene-relative parent of this node.
             /// </summary>
-            public List<NodeDef> Children { get; }
+            [CanBeNull]
+            public string Parent { get; }
+
+            /// <summary>
+            ///     Index of this node among its siblings.
+            /// </summary>
+            public int Index { get; }
 
             /// <summary>
             ///     An external resource reference pointing to the scene we are instancing, if any.
             /// </summary>
             public TokenExtResource? Instance { get; }
 
-            public NodeDef(string name, [CanBeNull] string type, List<NodeDef> children, TokenExtResource? instance)
+            public NodeDef(string name, [CanBeNull] string type, [CanBeNull] string parent, int index, TokenExtResource? instance)
             {
                 Name = name;
                 Type = type;
-                Children = children;
+                Parent = parent;
+                Index = index;
                 Instance = instance;
             }
 
-            public NodeDef this[int index] => Children[index];
+            private sealed class FlattenedTreeComparerImpl : IComparer<NodeDef>
+            {
+                public int Compare(NodeDef x, NodeDef y)
+                {
+                    if (ReferenceEquals(x, y)) return 0;
+                    if (ReferenceEquals(null, y)) return 1;
+                    if (ReferenceEquals(null, x)) return -1;
+
+                    var parentComparison = ParentFieldWeight(x.Parent).CompareTo(ParentFieldWeight(y.Parent));
+                    if (parentComparison != 0) return parentComparison;
+                    var indexComparison = x.Index.CompareTo(y.Index);
+                    if (indexComparison != 0) return indexComparison;
+                    return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
+                }
+
+                private static int ParentFieldWeight(string parentField)
+                {
+                    switch (parentField)
+                    {
+                        case null:
+                            return 0;
+                        case ".":
+                            return 1;
+                        default:
+                            return parentField.Count(c => c == '/') + 2;
+                    }
+                }
+            }
+
+            public static IComparer<NodeDef> FlattenedTreeComparer { get; } = new FlattenedTreeComparerImpl();
         }
     }
 }

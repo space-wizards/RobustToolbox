@@ -13,6 +13,7 @@ namespace SS14.Client.Graphics.Lighting
         sealed class Occluder : IOccluder
         {
             private bool visible = true;
+
             public bool Enabled
             {
                 get => visible;
@@ -25,34 +26,34 @@ namespace SS14.Client.Graphics.Lighting
 
             private LightManager Manager;
 
-            #if GODOT
+#if GODOT
             private Godot.OccluderPolygon2D occluderPolygon;
             private Godot.LightOccluder2D occluder;
-            #endif
+#endif
 
             private bool Deferred => Manager.System == LightingSystem.Deferred;
 
             public OccluderCullMode CullMode
             {
-                #if GODOT
+#if GODOT
                 get => (OccluderCullMode)occluderPolygon.CullMode;
                 set => occluderPolygon.CullMode = (Godot.OccluderPolygon2D.CullModeEnum)value;
-                #else
-                get => throw new NotImplementedException();
-                set => throw new NotImplementedException();
-                #endif
+#else
+                get => default;
+                set { }
+#endif
             }
 
-            #if GODOT
+#if GODOT
             private IGodotTransformComponent parentTransform;
             private Godot.Vector2 CurrentPos;
-            #endif
+#endif
 
             public Occluder(LightManager manager)
             {
                 Manager = manager;
 
-                #if GODOT
+#if GODOT
                 occluderPolygon = new Godot.OccluderPolygon2D();
                 occluder = new Godot.LightOccluder2D()
                 {
@@ -63,47 +64,47 @@ namespace SS14.Client.Graphics.Lighting
                 {
                     Manager.deferredViewport.AddChild(occluder);
                 }
-                #endif
+#endif
             }
 
             public void Dispose()
             {
-                #if GODOT
-                // Already disposed.
+#if GODOT
+// Already disposed.
                 if (occluder == null)
                 {
                     return;
                 }
-                #endif
+#endif
 
                 Manager.RemoveOccluder(this);
                 Manager = null;
 
-                #if GODOT
+#if GODOT
                 occluder.QueueFree();
                 occluder.Dispose();
                 occluder = null;
 
                 occluderPolygon.Dispose();
                 occluderPolygon = null;
-                #endif
+#endif
             }
 
             public void SetPolygon(Vector2[] polygon)
             {
-                #if GODOT
+#if GODOT
                 var converted = new Godot.Vector2[polygon.Length];
                 for (var i = 0; i < polygon.Length; i++)
                 {
                     converted[i] = polygon[i].Convert();
                 }
                 occluderPolygon.Polygon = converted;
-                #endif
+#endif
             }
 
             public void DeParent()
             {
-                #if GODOT
+#if GODOT
                 if (Deferred)
                 {
                     occluder.Position = new Godot.Vector2(0, 0);
@@ -112,7 +113,7 @@ namespace SS14.Client.Graphics.Lighting
                 {
                     parentTransform.SceneNode.RemoveChild(occluder);
                 }
-                #endif
+#endif
                 UpdateEnabled();
             }
 
@@ -131,15 +132,15 @@ namespace SS14.Client.Graphics.Lighting
 
             private void UpdateEnabled()
             {
-                #if GODOT
+#if GODOT
                 occluder.Visible = parentTransform != null && Enabled;
-                #endif
+#endif
             }
 
             public void FrameProcess(FrameEventArgs args)
             {
-                #if GODOT
-                // TODO: Maybe use OnMove events to make this less expensive.
+#if GODOT
+// TODO: Maybe use OnMove events to make this less expensive.
                 if (Deferred && parentTransform != null)
                 {
                     var newPos = parentTransform.SceneNode.GlobalPosition;

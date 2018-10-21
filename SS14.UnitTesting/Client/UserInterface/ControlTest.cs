@@ -1,4 +1,3 @@
-#if NOGODOT
 using System.IO;
 using System.Text;
 using NUnit.Framework;
@@ -66,4 +65,3 @@ namespace SS14.UnitTesting.Client.UserInterface
         }
     }
 }
-#endif

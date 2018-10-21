@@ -1370,11 +1370,6 @@ namespace SS14.Client.UserInterface
         public enum MouseFilterMode
         {
             /// <summary>
-            ///     The control will not be considered at all, and will not have any effects.
-            /// </summary>
-            Ignore = 0,
-
-            /// <summary>
             ///     The control will be able to receive mouse buttons events.
             ///     Furthermore, if a control with this mode does get clicked,
             ///     the event automatically gets marked as handled.
@@ -1385,7 +1380,12 @@ namespace SS14.Client.UserInterface
             ///     The control will be able to receive mouse button events like <see cref="Pass"/>,
             ///     but the event will be stopped and handled even if the relevant events do not handle it.
             /// </summary>
-            Stop = 2,
+            Stop = 0,
+
+            /// <summary>
+            ///     The control will not be considered at all, and will not have any effects.
+            /// </summary>
+            Ignore = 2,
         }
 
         /// <summary>

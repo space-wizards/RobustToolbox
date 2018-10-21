@@ -68,8 +68,8 @@ namespace SS14.Client.UserInterface
             RootControl.AddChild(StateRoot);
 
             WindowRoot = new Control("WindowRoot");
-            WindowRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             WindowRoot.MouseFilter = Control.MouseFilterMode.Ignore;
+            WindowRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             RootControl.AddChild(WindowRoot);
 
             PopupControl = new AcceptDialog("RootPopup");

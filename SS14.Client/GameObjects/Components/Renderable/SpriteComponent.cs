@@ -980,6 +980,20 @@ namespace SS14.Client.GameObjects
             LayerSetDirOffset(layer, offset);
         }
 
+        /// <inheritdoc />
+        public RSI.StateId LayerGetState(int layer)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot get state! Trace:\n{1}",
+                    layer, Environment.StackTrace);
+                return null;
+            }
+
+            var thelayer = Layers[layer];
+            return thelayer.State;
+        }
+
         public ISpriteProxy CreateProxy()
         {
             var item = VS.CanvasItemCreate();

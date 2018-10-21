@@ -172,6 +172,8 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         void LayerSetDirOffset(int layer, SpriteComponent.DirectionOffset offset);
         void LayerSetDirOffset(object layerKey, SpriteComponent.DirectionOffset offset);
 
+        RSI.StateId LayerGetState(int layer);
+
         ISpriteProxy CreateProxy();
     }
 

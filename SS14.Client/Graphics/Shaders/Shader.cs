@@ -2,8 +2,12 @@
 {
     public sealed class Shader
     {
-        #if GODOT
         internal readonly Godot.Material GodotMaterial;
+
+        internal Shader()
+        {
+
+        }
 
         internal Shader(Godot.Material godotMaterial)
         {
@@ -14,6 +18,5 @@
         {
             Godot.VisualServer.CanvasItemSetMaterial(item, GodotMaterial.GetRid());
         }
-        #endif
     }
 }

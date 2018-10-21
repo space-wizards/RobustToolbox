@@ -4,14 +4,13 @@ using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Timing;
 
-#if NOGODOT
 namespace SS14.Client
 {
     public partial class GameController
     {
         private GameLoop _mainLoop;
 
-        [Dependency] private IGameTiming _gameTiming;
+        [Dependency] private IGameTiming _gameTimingHeadless;
 
         public static void Main()
         {
@@ -24,14 +23,10 @@ namespace SS14.Client
             gc.MainLoop();
         }
 
-        public ICollection<string> GetCommandLineArgs()
-        {
-            return Environment.GetCommandLineArgs();
-        }
 
         private void MainLoop()
         {
-            _mainLoop = new GameLoop(_gameTiming)
+            _mainLoop = new GameLoop(_gameTimingHeadless)
             {
                 SleepMode = SleepMode.Delay
             };
@@ -43,4 +38,3 @@ namespace SS14.Client
         }
     }
 }
-#endif

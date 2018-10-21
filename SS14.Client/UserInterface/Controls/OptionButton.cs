@@ -1,108 +1,95 @@
 ﻿using System;
-#if GODOT
 using SS14.Client.GodotGlue;
-#endif
 using SS14.Client.Graphics;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap("OptionButton")]
+    [ControlWrap(typeof(Godot.OptionButton))]
     public class OptionButton : Button
     {
         public event Action<ItemSelectedEventArgs> OnItemSelected;
 
         public int Selected
         {
-            #if GODOT
-            get => SceneControl.Selected;
-            set => SceneControl.Selected = value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? SceneControl.Selected : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Selected = value;
+                }
+            }
         }
 
         public void AddItem(Texture icon, string label, int id = 1)
         {
-            #if GODOT
-            SceneControl.AddIconItem(icon.GodotTexture, label, id);
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.AddIconItem(icon.GodotTexture, label, id);
+            }
         }
 
         public void AddItem(string label, int id = 1)
         {
-            #if GODOT
-            SceneControl.AddItem(label, id);
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.AddItem(label, id);
+            }
         }
 
         public void AddSeparator()
         {
-            #if GODOT
-            SceneControl.AddSeparator();
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.AddSeparator();
+            }
         }
 
         public void Clear()
         {
-            #if GODOT
-            SceneControl.Clear();
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.Clear();
+            }
         }
 
-        #if GODOT
-        public int ItemCount => SceneControl.GetItemCount();
-        #else
-        public int ItemCount => throw new NotImplementedException();
-        #endif
+
+        public int ItemCount => GameController.OnGodot ? SceneControl.GetItemCount() : default;
 
         public int GetItemId(int idx)
         {
-            #if GODOT
-            return SceneControl.GetItemId(idx);
-            #else
-            throw new NotImplementedException();
-            #endif
+            return GameController.OnGodot ? SceneControl.GetItemId(idx) : throw new NotImplementedException();
         }
 
         public object GetItemMetadata(int idx)
         {
-            #if GODOT
-            return SceneControl.GetItemMetadata(idx);
-            #else
-            throw new NotImplementedException();
-            #endif
+            return GameController.OnGodot ? SceneControl.GetItemMetadata(idx) : throw new NotImplementedException();
         }
 
-        #if GODOT
-        public int SelectedId => SceneControl.GetSelectedId();
-        public object SelectedMetadata => SceneControl.GetSceneInstanceLoadPlaceholder();
-        #else
-        public int SelectedId => throw new NotImplementedException();
-        public object SelectedMetadata => throw new NotImplementedException();
-        #endif
+        public int SelectedId => GameController.OnGodot ? SceneControl.GetSelectedId() : default;
+
+        public object SelectedMetadata =>
+            GameController.OnGodot ? SceneControl.GetSceneInstanceLoadPlaceholder() : default;
 
         public bool IsItemDisabled(int idx)
         {
-            #if GODOT
-            return SceneControl.IsItemDisabled(idx);
-            #else
-            throw new NotImplementedException();
-            #endif
+            return GameController.OnGodot ? SceneControl.IsItemDisabled(idx) : default;
         }
 
         public void RemoveItem(int idx)
         {
-            #if GODOT
-            SceneControl.RemoveItem(idx);
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.RemoveItem(idx);
+            }
         }
 
         public void Select(int idx)
         {
-            #if GODOT
-            SceneControl.Select(idx);
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.Select(idx);
+            }
         }
 
         public void SelectId(int id)
@@ -125,47 +112,52 @@ namespace SS14.Client.UserInterface.Controls
 
         public void SetItemDisabled(int idx, bool disabled)
         {
-            #if GODOT
-            SceneControl.SetItemDisabled(idx, disabled);
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.SetItemDisabled(idx, disabled);
+            }
         }
 
         public void SetItemIcon(int idx, Texture texture)
         {
-            #if GODOT
-            SceneControl.SetItemIcon(idx, texture);
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.SetItemIcon(idx, texture);
+            }
         }
 
         public void SetItemId(int idx, int id)
         {
-            #if GODOT
-            SceneControl.SetItemId(idx, id);
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.SetItemId(idx, id);
+            }
         }
 
         public void SetItemMetadata(int idx, object metadata)
         {
-            #if GODOT
-            SceneControl.SetItemMetadata(idx, metadata);
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.SetItemMetadata(idx, metadata);
+            }
         }
 
         public void SetItemText(int idx, string text)
         {
-            #if GODOT
-            SceneControl.SetItemText(idx, text);
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.SetItemText(idx, text);
+            }
         }
 
         public OptionButton() : base()
         {
         }
+
         public OptionButton(string name) : base(name)
         {
         }
 
-        #if GODOT
         internal OptionButton(Godot.OptionButton button) : base(button)
         {
         }
@@ -180,9 +172,8 @@ namespace SS14.Client.UserInterface.Controls
         private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
-            SceneControl = (Godot.OptionButton)control;
+            SceneControl = (Godot.OptionButton) control;
         }
-        #endif
 
         public class ItemSelectedEventArgs : EventArgs
         {
@@ -200,7 +191,6 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
-        #if GODOT
         private GodotSignalSubscriber1 __itemSelectedSubscriber;
 
         protected override void SetupSignalHooks()
@@ -226,8 +216,7 @@ namespace SS14.Client.UserInterface.Controls
 
         private void __itemSelectedHook(object id)
         {
-            OnItemSelected?.Invoke(new ItemSelectedEventArgs((int)id, this));
+            OnItemSelected?.Invoke(new ItemSelectedEventArgs((int) id, this));
         }
-        #endif
     }
 }

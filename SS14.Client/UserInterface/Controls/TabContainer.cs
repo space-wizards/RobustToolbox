@@ -1,20 +1,16 @@
 using System;
-#if GODOT
 using SS14.Client.GodotGlue;
-#endif
 using SS14.Client.Graphics;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap("TabContainer")]
+    [ControlWrap(typeof(Godot.TabContainer))]
     public class TabContainer : Control
     {
-        #if GODOT
         private new Godot.TabContainer SceneControl;
 
         private GodotSignalSubscriber1 _onTabSelectedSubscriber;
         private GodotSignalSubscriber1 _onTabChangedSubscriber;
-        #endif
 
         public TabContainer()
         {
@@ -24,43 +20,44 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        #if GODOT
         internal TabContainer(Godot.TabContainer control) : base(control)
         {
         }
-        #endif
 
         public int CurrentTab
         {
-            #if GODOT
-            get => SceneControl.CurrentTab;
-            set => SceneControl.CurrentTab = value;
-            #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
-            #endif
+            get => GameController.OnGodot ? SceneControl.CurrentTab : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.CurrentTab = value;
+                }
+            }
         }
 
         public TabAlignMode AlignMode
         {
-            #if GODOT
-            get => (TabAlignMode) SceneControl.TabAlign;
-            set => SceneControl.TabAlign = (Godot.TabContainer.TabAlignEnum) value;
-            #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
-            #endif
+            get => GameController.OnGodot ? (TabAlignMode) SceneControl.TabAlign : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.TabAlign = (Godot.TabContainer.TabAlignEnum) value;
+                }
+            }
         }
 
         public bool TabsVisible
         {
-            #if GODOT
-            get => SceneControl.TabsVisible;
-            set => SceneControl.TabsVisible = value;
-            #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
-            #endif
+            get => GameController.OnGodot ? SceneControl.TabsVisible : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.TabsVisible = value;
+                }
+            }
         }
 
         public event Action<int> OnTabSelected;
@@ -68,37 +65,29 @@ namespace SS14.Client.UserInterface.Controls
 
         public string GetTabTitle(int tab)
         {
-            #if GODOT
-            return SceneControl.GetTabTitle(tab);
-            #else
-            throw new NotImplementedException();
-            #endif
+            return GameController.OnGodot ? SceneControl.GetTabTitle(tab) : default;
         }
 
         public void SetTabTitle(int tab, string title)
         {
-            #if GODOT
-            SceneControl.SetTabTitle(tab, title);
-            #endif
+            if (GameController.OnGodot)
+            {SceneControl.SetTabTitle(tab, title);}
+
         }
 
         public Texture GetTabIcon(int tab)
         {
-            #if GODOT
-            return new GodotTextureSource(SceneControl.GetTabIcon(tab));
-            #else
-            throw new NotImplementedException();
-            #endif
+            return GameController.OnGodot ? (Texture)new GodotTextureSource(SceneControl.GetTabIcon(tab)) : new BlankTexture();
         }
 
         public void SetTabIcon(int tab, Texture icon)
         {
-            #if GODOT
-            SceneControl.SetTabIcon(tab, icon);
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.SetTabIcon(tab, icon);
+            }
         }
 
-        #if GODOT
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.TabContainer();
@@ -141,7 +130,6 @@ namespace SS14.Client.UserInterface.Controls
                 _onTabChangedSubscriber = null;
             }
         }
-        #endif
 
         public enum TabAlignMode
         {

@@ -16,6 +16,7 @@ namespace SS14.Client.GameObjects
         // Horrible hack to get around ordering issues.
         private bool setCurrentOnInitialize = false;
         private Vector2 setZoomOnInitialize = Vector2.One;
+
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Current
         {
@@ -27,6 +28,7 @@ namespace SS14.Client.GameObjects
                     setCurrentOnInitialize = value;
                     return;
                 }
+
                 eye.Current = value;
             }
         }
@@ -48,32 +50,34 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        #if GODOT
         IGodotTransformComponent transform;
-        #endif
 
         public override void Initialize()
         {
             base.Initialize();
-            #if GODOT
-            transform = Owner.GetComponent<IGodotTransformComponent>();
-            eye = new Eye
+
+            if (GameController.OnGodot)
             {
-                Current = setCurrentOnInitialize,
-                MapId = transform.MapID,
-                Zoom = setZoomOnInitialize,
-            };
-            transform.SceneNode.AddChild(eye.GodotCamera);
-            transform.OnMove += Transform_OnMove;
-            #endif
+                transform = Owner.GetComponent<IGodotTransformComponent>();
+                eye = new Eye
+                {
+                    Current = setCurrentOnInitialize,
+                    MapId = transform.MapID,
+                    Zoom = setZoomOnInitialize,
+                };
+                transform.SceneNode.AddChild(eye.GodotCamera);
+                transform.OnMove += Transform_OnMove;
+            }
         }
 
         public override void OnRemove()
         {
             base.OnRemove();
-            #if GODOT
-            transform.OnMove -= Transform_OnMove;
-            #endif
+            if (GameController.OnGodot)
+            {
+                transform.OnMove -= Transform_OnMove;
+            }
+
             eye.Dispose();
             eye = null;
         }

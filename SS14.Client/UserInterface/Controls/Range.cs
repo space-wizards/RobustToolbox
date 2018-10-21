@@ -6,16 +6,17 @@ using System.Threading.Tasks;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap("Range")]
+    [ControlWrap(typeof(Godot.Range))]
     public abstract class Range : Control
     {
         public Range() : base()
         {
         }
+
         public Range(string name) : base(name)
         {
         }
-        #if GODOT
+
         internal Range(Godot.Range control) : base(control)
         {
         }
@@ -25,61 +26,60 @@ namespace SS14.Client.UserInterface.Controls
         private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
-            SceneControl = (Godot.Range)control;
+            SceneControl = (Godot.Range) control;
         }
-        #endif
 
         public float GetAsRatio()
         {
-            #if GODOT
-            return SceneControl.GetAsRatio();
-            #else
-            return default;
-#endif
+            return GameController.OnGodot ? SceneControl.GetAsRatio() : default;
         }
 
         public float Page
         {
-            #if GODOT
-            get => SceneControl.Page;
-            set => SceneControl.Page = value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? SceneControl.Page : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Page = value;
+                }
+            }
         }
 
         public float MaxValue
         {
-            #if GODOT
-            get => SceneControl.MaxValue;
-            set => SceneControl.MaxValue = value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? SceneControl.MaxValue : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.MaxValue = value;
+                }
+            }
         }
 
         public float MinValue
         {
-            #if GODOT
-            get => SceneControl.MinValue;
-            set => SceneControl.MinValue = value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? SceneControl.MinValue : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.MinValue = value;
+                }
+            }
         }
 
         public float Value
         {
-            #if GODOT
-            get => SceneControl.Value;
-            set => SceneControl.Value = value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? SceneControl.Value : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Value = value;
+                }
+            }
         }
     }
 }

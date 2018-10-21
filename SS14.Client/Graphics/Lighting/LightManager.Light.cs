@@ -15,24 +15,26 @@ namespace SS14.Client.Graphics.Lighting
         {
             public Vector2 Offset
             {
-#if GODOT
-                get => Light2D.Offset.Convert();
-                set => Light2D.Offset = value.Convert();
-                #else
-                get => default;
-                set {}
-#endif
+                get => GameController.OnGodot ? Light2D.Offset.Convert() : default;
+                set
+                {
+                    if (GameController.OnGodot)
+                    {
+                        Light2D.Offset = value.Convert();
+                    }
+                }
             }
 
             public Angle Rotation
             {
-#if GODOT
-                get => new Angle(Light2D.GlobalRotation);
-                set => Light2D.Rotation = (float)value;
-#else
-                get => default;
-                set {}
-#endif
+                get => GameController.OnGodot ? new Angle(Light2D.GlobalRotation) : default;
+                set
+                {
+                    if (GameController.OnGodot)
+                    {
+                        Light2D.GlobalRotation = (float) value.Theta;
+                    }
+                }
             }
 
             private Color color;
@@ -48,9 +50,11 @@ namespace SS14.Client.Graphics.Lighting
                     }
 
                     color = value;
-                    #if GODOT
-                    Light2D.Color = value.Convert();
-                    #endif
+
+                    if (GameController.OnGodot)
+                    {
+                        Light2D.Color = value.Convert();
+                    }
                 }
             }
 
@@ -67,9 +71,11 @@ namespace SS14.Client.Graphics.Lighting
                     }
 
                     textureScale = value;
-                    #if GODOT
-                    Light2D.TextureScale = value;
-                    #endif
+
+                    if (GameController.OnGodot)
+                    {
+                        Light2D.TextureScale = value;
+                    }
                 }
             }
 
@@ -86,9 +92,10 @@ namespace SS14.Client.Graphics.Lighting
                     }
 
                     energy = value;
-                    #if GODOT
-                    Light2D.Energy = value;
-                    #endif
+                    if (GameController.OnGodot)
+                    {
+                        Light2D.Energy = value;
+                    }
                 }
             }
 
@@ -126,9 +133,10 @@ namespace SS14.Client.Graphics.Lighting
                     }
 
                     texture = value;
-                    #if GODOT
-                    Light2D.Texture = value;
-                    #endif
+                    if (GameController.OnGodot)
+                    {
+                        Light2D.Texture = value;
+                    }
                 }
             }
 
@@ -144,91 +152,100 @@ namespace SS14.Client.Graphics.Lighting
                 }
             }
 
+            public bool Disposed { get; private set; }
+
             private LightManager Manager;
             private LightingSystem System => Manager.System;
-#if GODOT
             private Godot.Light2D Light2D;
-
             private IGodotTransformComponent parentTransform;
             private Godot.Vector2 CurrentPos;
-#endif
+
             public Light(LightManager manager)
             {
                 Manager = manager;
-#if GODOT
-                Light2D = new Godot.Light2D()
-                {
-                    // TODO: Allow this to be modified.
-                    ShadowEnabled = true,
-                    ShadowFilter = Godot.Light2D.ShadowFilterEnum.Pcf5,
-                };
 
-                if (Manager.System == LightingSystem.Disabled)
+                if (GameController.OnGodot)
                 {
-                    Light2D.Enabled = Light2D.Visible = false;
+                    Light2D = new Godot.Light2D()
+                    {
+                        // TODO: Allow this to be modified.
+                        ShadowEnabled = true,
+                        ShadowFilter = Godot.Light2D.ShadowFilterEnum.Pcf5,
+                    };
+
+                    if (Manager.System == LightingSystem.Disabled)
+                    {
+                        Light2D.Enabled = Light2D.Visible = false;
+                    }
                 }
-                #endif
 
                 Mode = new LightModeConstant();
                 Mode.Start(this);
 
-#if GODOT
-                if (System == LightingSystem.Deferred)
+                if (GameController.OnGodot && System == LightingSystem.Deferred)
                 {
                     Manager.deferredViewport.AddChild(Light2D);
                 }
-                #endif
             }
 
             public void DeParent()
             {
-#if GODOT
-                if (System == LightingSystem.Deferred)
+                if (GameController.OnGodot)
                 {
-                    Light2D.Position = new Godot.Vector2(0, 0);
+                    if (System == LightingSystem.Deferred)
+                    {
+                        Light2D.Position = new Godot.Vector2(0, 0);
+                    }
+                    else
+                    {
+                        parentTransform.SceneNode.RemoveChild(Light2D);
+                    }
                 }
-                else
-                {
-                    parentTransform.SceneNode.RemoveChild(Light2D);
-                }
-                #endif
+
                 UpdateEnabled();
             }
 
             public void ParentTo(ITransformComponent node)
             {
-#if GODOT
+                if (!GameController.OnGodot)
+                {
+                    return;
+                }
+
                 if (System != LightingSystem.Deferred)
                 {
                     if (parentTransform != null)
                     {
                         DeParent();
                     }
-                    ((IGodotTransformComponent)node).SceneNode.AddChild(Light2D);
+
+                    ((IGodotTransformComponent) node).SceneNode.AddChild(Light2D);
                 }
-                parentTransform = (IGodotTransformComponent)node;
+
+                parentTransform = (IGodotTransformComponent) node;
                 UpdateEnabled();
-#endif
             }
 
             public void Dispose()
             {
-#if GODOT
-// Already disposed.
-                if (Light2D == null)
+                // Already disposed.
+                if (Disposed)
                 {
                     return;
                 }
-                #endif
+
 
                 Manager.RemoveLight(this);
-                Manager = null;
 
-#if GODOT
+                Disposed = true;
+
+                if (!GameController.OnGodot)
+                {
+                    return;
+                }
+
                 Light2D.QueueFree();
                 Light2D.Dispose();
-                Light2D = null;
-                #endif
             }
 
             private static ILightMode GetModeInstance(LightModeClass modeClass)
@@ -245,24 +262,26 @@ namespace SS14.Client.Graphics.Lighting
 
             public void UpdateEnabled()
             {
-#if GODOT
-                Light2D.Visible = Enabled && Manager.Enabled && parentTransform != null;
-                #endif
+                if (GameController.OnGodot)
+                {
+                    Light2D.Visible = Enabled && Manager.Enabled && parentTransform != null;
+                }
             }
 
             public void FrameProcess(FrameEventArgs args)
             {
-#if GODOT
 // TODO: Maybe use OnMove events to make this less expensive.
-                if (System == LightingSystem.Deferred && parentTransform != null)
+                if (!GameController.OnGodot || Manager.System != LightingSystem.Deferred ||
+                    parentTransform == null)
                 {
-                    var newpos = parentTransform.SceneNode.GlobalPosition;
-                    if (CurrentPos != newpos)
-                    {
-                        Light2D.Position = newpos;
-                    }
+                    return;
                 }
-                #endif
+
+                var newpos = parentTransform.SceneNode.GlobalPosition;
+                if (CurrentPos != newpos)
+                {
+                    Light2D.Position = newpos;
+                }
             }
         }
     }

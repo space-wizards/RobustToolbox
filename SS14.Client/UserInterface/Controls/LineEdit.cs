@@ -1,21 +1,19 @@
 ﻿using System;
-#if GODOT
 using SS14.Client.GodotGlue;
-#endif
 
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap("LineEdit")]
+    [ControlWrap(typeof(Godot.LineEdit))]
     public class LineEdit : Control
     {
         public LineEdit() : base()
         {
         }
+
         public LineEdit(string name) : base(name)
         {
         }
 
-        #if GODOT
         internal LineEdit(Godot.LineEdit control) : base(control)
         {
         }
@@ -30,52 +28,55 @@ namespace SS14.Client.UserInterface.Controls
         private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
-            SceneControl = (Godot.LineEdit)control;
+            SceneControl = (Godot.LineEdit) control;
         }
-        #endif
 
         public AlignMode TextAlign
         {
-            #if GODOT
-            get => (AlignMode)SceneControl.Align;
-            set => SceneControl.Align = (Godot.LineEdit.AlignEnum)value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? (AlignMode) SceneControl.Align : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Align = (Godot.LineEdit.AlignEnum) value;
+                }
+            }
         }
 
         public string Text
         {
-            #if GODOT
-            get => SceneControl.Text;
-            set => SceneControl.Text = value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? SceneControl.Text : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Text = value;
+                }
+            }
         }
 
         public bool Editable
         {
-            #if GODOT
-            get => SceneControl.Editable;
-            set => SceneControl.Editable = value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? SceneControl.Editable : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Editable = value;
+                }
+            }
         }
 
         public string PlaceHolder
         {
-            #if GODOT
-            get => SceneControl.PlaceholderText;
-            set => SceneControl.PlaceholderText = value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? SceneControl.PlaceholderText : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.PlaceholderText = value;
+                }
+            }
         }
 
         // TODO:
@@ -85,48 +86,54 @@ namespace SS14.Client.UserInterface.Controls
 
         public void AppendAtCursor(string text)
         {
-            #if GODOT
-            SceneControl.AppendAtCursor(text);
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.AppendAtCursor(text);
+            }
         }
 
         public void Clear()
         {
-            #if GODOT
-            SceneControl.Clear();
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.Clear();
+            }
         }
 
         public int CursorPosition
         {
-            #if GODOT
-            get => SceneControl.GetCursorPosition();
-            set => SceneControl.SetCursorPosition(value);
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? SceneControl.GetCursorPosition() : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.SetCursorPosition(value);
+                }
+            }
         }
 
         public void ExecuteMenuOption(MenuOption option)
         {
-            #if GODOT
-            SceneControl.MenuOption((int)option);
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.MenuOption((int) option);
+            }
         }
 
         public void Select(int from = 0, int to = -1)
         {
-            #if GODOT
-            SceneControl.Select(from, to);
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.Select(from, to);
+            }
         }
 
         public void SelectAll()
         {
-            #if GODOT
-            SceneControl.SelectAll();
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.SelectAll();
+            }
         }
 
         public event Action<LineEditEventArgs> OnTextChanged;
@@ -163,7 +170,6 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
-        #if GODOT
         private GodotSignalSubscriber1 __textChangedSubscriber;
         private GodotSignalSubscriber1 __textEnteredSubscriber;
 
@@ -201,13 +207,12 @@ namespace SS14.Client.UserInterface.Controls
 
         private void __textChangedHook(object text)
         {
-            OnTextChanged?.Invoke(new LineEditEventArgs(this, (string)text));
+            OnTextChanged?.Invoke(new LineEditEventArgs(this, (string) text));
         }
 
         private void __textEnteredHook(object text)
         {
-            OnTextEntered?.Invoke(new LineEditEventArgs(this, (string)text));
+            OnTextEntered?.Invoke(new LineEditEventArgs(this, (string) text));
         }
-        #endif
     }
 }

@@ -73,7 +73,7 @@ namespace SS14.Client
             // We are not IoC-managed (SS14.Client.Godot spawns us), but we still want the dependencies.
             IoCManager.InjectDependencies(this);
 
-            var proxy = (GameControllerProxy)IoCManager.Resolve<IGameControllerProxy>();
+            var proxy = (GameControllerProxy) IoCManager.Resolve<IGameControllerProxy>();
             proxy.GameController = this;
         }
 
@@ -88,11 +88,14 @@ namespace SS14.Client
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
-            #if GODOT
-            IoCManager.Register<IComponentFactory, GodotComponentFactory>();
-            #else
-            IoCManager.Register<IComponentFactory, ClientComponentFactory>();
-            #endif
+            if (OnGodot)
+            {
+                IoCManager.Register<IComponentFactory, GodotComponentFactory>();
+            }
+            else
+            {
+                IoCManager.Register<IComponentFactory, ClientComponentFactory>();
+            }
             IoCManager.Register<IComponentManager, ComponentManager>();
             IoCManager.Register<IMapManager, ClientMapManager>();
             IoCManager.Register<ICollisionManager, CollisionManager>();
@@ -114,24 +117,32 @@ namespace SS14.Client
             IoCManager.Register<IStateManager, StateManager>();
             IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
             IoCManager.Register<IGameControllerProxy, GameControllerProxy>();
-            #if GODOT
-            IoCManager.Register<IInputManager, GodotInputManager>();
-            #else
-            IoCManager.Register<IInputManager, InputManager>();
-            #endif
+            if (OnGodot)
+            {
+                IoCManager.Register<IInputManager, GodotInputManager>();
+            }
+            else
+            {
+                IoCManager.Register<IInputManager, InputManager>();
+            }
+
             IoCManager.Register<IDebugDrawing, DebugDrawing>();
             IoCManager.Register<IClientConsole, ClientChatConsole>();
             IoCManager.Register<IClientChatConsole, ClientChatConsole>();
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IDisplayManager, DisplayManager>();
             IoCManager.Register<IEyeManager, EyeManager>();
-            #if GODOT
-            IoCManager.Register<IGameTiming, GameController.GameTiming>();
-            // Only GameController can access this because the type is private so it's fine.
-            IoCManager.Register<GameController.GameTiming, GameController.GameTiming>();
-            #else
-            IoCManager.Register<IGameTiming, GameTiming>();
-            #endif
+            if (OnGodot)
+            {
+                IoCManager.Register<IGameTiming, GameController.GameTimingGodot>();
+                // Only GameController can access this because the type is private so it's fine.
+                IoCManager.Register<GameController.GameTimingGodot, GameController.GameTimingGodot>();
+            }
+            else
+            {
+                IoCManager.Register<IGameTiming, GameTiming>();
+            }
+
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<IOverlayManager, OverlayManager>();
             IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();

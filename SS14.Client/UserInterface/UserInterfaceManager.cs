@@ -16,20 +16,13 @@ namespace SS14.Client.UserInterface
 {
     public sealed class UserInterfaceManager : IUserInterfaceManager, IPostInjectInit, IDisposable
     {
-        [Dependency]
-        readonly IConfigurationManager _config;
-        #if GODOT
-        [Dependency]
-        readonly ISceneTreeHolder _sceneTreeHolder;
-        #endif
-        [Dependency]
-        readonly IInputManager _inputManager;
+        [Dependency] readonly IConfigurationManager _config;
+        [Dependency] readonly ISceneTreeHolder _sceneTreeHolder;
+        [Dependency] readonly IInputManager _inputManager;
 
         public Control Focused { get; private set; }
 
-        #if GODOT
         private Godot.CanvasLayer CanvasLayer;
-        #endif
         public Control StateRoot { get; private set; }
         public Control RootControl { get; private set; }
         public Control WindowRoot { get; private set; }
@@ -45,15 +38,16 @@ namespace SS14.Client.UserInterface
 
         public void Initialize()
         {
-            #if GODOT
-            CanvasLayer = new Godot.CanvasLayer
+            if (GameController.OnGodot)
             {
-                Name = "UILayer",
-                Layer = CanvasLayers.LAYER_GUI
-            };
+                CanvasLayer = new Godot.CanvasLayer
+                {
+                    Name = "UILayer",
+                    Layer = CanvasLayers.LAYER_GUI
+                };
 
-            _sceneTreeHolder.SceneTree.GetRoot().AddChild(CanvasLayer);
-            #endif
+                _sceneTreeHolder.SceneTree.GetRoot().AddChild(CanvasLayer);
+            }
 
             RootControl = new Control("UIRoot")
             {
@@ -61,9 +55,10 @@ namespace SS14.Client.UserInterface
             };
             RootControl.SetAnchorPreset(Control.LayoutPreset.Wide);
 
-            #if GODOT
-            CanvasLayer.AddChild(RootControl.SceneControl);
-            #endif
+            if (GameController.OnGodot)
+            {
+                CanvasLayer.AddChild(RootControl.SceneControl);
+            }
 
             StateRoot = new Control("StateRoot")
             {
@@ -87,13 +82,9 @@ namespace SS14.Client.UserInterface
             _debugMonitors = new DebugMonitors();
             RootControl.AddChild(_debugMonitors);
 
-            _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugMonitors, InputCmdHandler.FromDelegate(enabled: session =>
-            {
-                DebugMonitors.Visible = true;
-            }, disabled: session =>
-            {
-                DebugMonitors.Visible = false;
-            }));
+            _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugMonitors,
+                InputCmdHandler.FromDelegate(enabled: session => { DebugMonitors.Visible = true; },
+                    disabled: session => { DebugMonitors.Visible = false; }));
         }
 
         public void Dispose()

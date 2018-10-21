@@ -4,11 +4,7 @@ namespace SS14.Client.Input
 {
     public static class Mouse
     {
-#if GODOT
-        public static bool IsButtonPressed(Button button) => Godot.Input.IsMouseButtonPressed((int) button);
-#else
-        public static bool IsButtonPressed(Button button) => false;
-#endif
+        public static bool IsButtonPressed(Button button) => GameController.OnGodot ? Godot.Input.IsMouseButtonPressed((int) button) : default;
 
         // TODO: People will definitely want support for extra mouse buttons,
         //         Godot doesn't seem to support this though.
@@ -49,7 +45,6 @@ namespace SS14.Client.Input
 
         public static Keyboard.Key ConvertGodotMouseButton(Button button)
         {
-#if GODOT
             switch (button)
             {
                 case Button.Left:
@@ -61,9 +56,6 @@ namespace SS14.Client.Input
                 default:
                     return Keyboard.Key.Unknown;
             }
-#else
-            throw new NotImplementedException();
-#endif
         }
     }
 
@@ -186,7 +178,6 @@ namespace SS14.Client.Input
             Pause,
         }
 
-        #if GODOT
         public static Key ConvertGodotKey(int key)
         {
             // As far as I can tell, Godot's KeyList has complete arbitrary ordering. Seriously.
@@ -406,6 +397,5 @@ namespace SS14.Client.Input
                     return Key.Unknown;
             }
         }
-        #endif
     }
 }

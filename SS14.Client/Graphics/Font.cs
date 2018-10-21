@@ -9,14 +9,12 @@ namespace SS14.Client.Graphics
     /// </summary>
     public abstract class Font
     {
-#if GODOT
         internal abstract Godot.Font GodotFont { get; }
 
         public static implicit operator Godot.Font(Font font)
         {
             return font?.GodotFont;
         }
-#endif
     }
 
     /// <summary>
@@ -24,83 +22,110 @@ namespace SS14.Client.Graphics
     /// </summary>
     public class VectorFont : Font
     {
-#if GODOT
-        public int ExtraSpacingTop { get => _font.ExtraSpacingTop; set => _font.ExtraSpacingTop = value; }
-        public int ExtraSpacingBottom { get => _font.ExtraSpacingBottom; set => _font.ExtraSpacingBottom = value; }
-        public int ExtraSpacingChar { get => _font.ExtraSpacingChar; set => _font.ExtraSpacingChar = value; }
-        public int ExtraSpacingSpace { get => _font.ExtraSpacingSpace; set => _font.ExtraSpacingSpace = value; }
-
-        public int Size { get => _font.Size; set => _font.Size = value; }
-        public bool UseFilter { get => _font.UseFilter; set => _font.UseFilter = value; }
-        public bool UseMipmaps { get => _font.UseMipmaps; set => _font.UseMipmaps = value; }
-#else
         public int ExtraSpacingTop
         {
-            get => default;
-            set {}
+            get => GameController.OnGodot ? _font.ExtraSpacingTop : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    _font.ExtraSpacingTop = value;
+                }
+            }
         }
 
         public int ExtraSpacingBottom
         {
-            get => default;
-            set {}
+            get => GameController.OnGodot ? _font.ExtraSpacingBottom : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    _font.ExtraSpacingBottom = value;
+                }
+            }
         }
 
         public int ExtraSpacingChar
         {
-            get => default;
-            set {}
+            get => GameController.OnGodot ? _font.ExtraSpacingChar : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    _font.ExtraSpacingChar = value;
+                }
+            }
         }
 
         public int ExtraSpacingSpace
         {
-            get => default;
-            set {}
+            get => GameController.OnGodot ? _font.ExtraSpacingSpace : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    _font.ExtraSpacingSpace = value;
+                }
+            }
         }
 
         public int Size
         {
-            get => default;
-            set {}
+            get => _font.Size;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    _font.Size = value;
+                }
+            }
         }
 
         public bool UseFilter
         {
-            get => default;
-            set {}
+            get => _font.UseFilter;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    _font.UseFilter = value;
+                }
+            }
         }
 
         public bool UseMipmaps
         {
-            get => default;
-            set {}
+            get => _font.UseMipmaps;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    _font.UseMipmaps = value;
+                }
+            }
         }
-#endif
 
-#if GODOT
         internal override Godot.Font GodotFont => _font;
         private readonly Godot.DynamicFont _font;
-#endif
 
         public VectorFont(FontResource res)
-#if GODOT
             : this(res.FontData)
-#endif
         {
         }
 
-#if GODOT
         internal VectorFont(Godot.DynamicFontData data)
         {
-            _font = new Godot.DynamicFont
+            if (GameController.OnGodot)
             {
-                FontData = data,
-            };
+                _font = new Godot.DynamicFont
+                {
+                    FontData = data,
+                };
+            }
         }
-#endif
     }
 
-#if GODOT
     internal class GodotWrapFont : Font
     {
         public GodotWrapFont(Godot.Font godotFont)
@@ -110,5 +135,4 @@ namespace SS14.Client.Graphics
 
         internal override Godot.Font GodotFont { get; }
     }
-#endif
 }

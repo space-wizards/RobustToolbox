@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace SS14.Client.Interfaces
 {
-    #if GODOT
     public interface ISceneTreeHolder
     {
         void Initialize(Godot.SceneTree tree);
@@ -14,5 +13,4 @@ namespace SS14.Client.Interfaces
         Godot.SceneTree SceneTree { get; }
         Godot.Node2D WorldRoot { get; }
     }
-    #endif
 }

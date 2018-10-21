@@ -2,7 +2,7 @@ using SS14.Client.Graphics.Drawing;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap("PanelContainer")]
+    [ControlWrap(typeof(Godot.PanelContainer))]
     public class PanelContainer : Control
     {
         public PanelContainer()
@@ -13,7 +13,6 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        #if GODOT
         internal PanelContainer(Godot.PanelContainer container) : base(container)
         {
         }
@@ -22,7 +21,6 @@ namespace SS14.Client.UserInterface.Controls
         {
             return new Godot.PanelContainer();
         }
-        #endif
 
         private StyleBox _panelOverride;
 

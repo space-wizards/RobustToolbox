@@ -35,9 +35,10 @@ namespace SS14.Client.Graphics
 
         public void SetWindowTitle(string title)
         {
-#if GODOT
-            Godot.OS.SetWindowTitle(title);
-#endif
+            if (GameController.OnGodot)
+            {
+                Godot.OS.SetWindowTitle(title);
+            }
         }
 
         public void Initialize()
@@ -50,11 +51,11 @@ namespace SS14.Client.Graphics
             WindowMode = (WindowMode) configurationManager.GetCVar<int>("display.windowmode");
             VSync = configurationManager.GetCVar<bool>("display.vsync");
 
-#if GODOT
-            Godot.OS.VsyncEnabled = VSync;
-            Godot.OS.WindowFullscreen = WindowMode == WindowMode.Fullscreen;
-#endif
+            if (GameController.OnGodot)
+            {
+                Godot.OS.VsyncEnabled = VSync;
+                Godot.OS.WindowFullscreen = WindowMode == WindowMode.Fullscreen;
+            }
         }
     }
 }
-

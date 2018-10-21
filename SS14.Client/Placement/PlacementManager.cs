@@ -36,36 +36,20 @@ namespace SS14.Client.Placement
 {
     public class PlacementManager : IPlacementManager, IDisposable
     {
-        [Dependency]
-        public readonly ICollisionManager CollisionManager;
-        [Dependency]
-        private readonly IClientNetManager NetworkManager;
-        [Dependency]
-        public readonly IPlayerManager PlayerManager;
-        [Dependency]
-        public readonly IResourceCache ResourceCache;
-        [Dependency]
-        private readonly IReflectionManager ReflectionManager;
-        [Dependency]
-        private readonly IMapManager _mapMan;
-        [Dependency]
-        private readonly IGameTiming _time;
-        [Dependency]
-        public readonly IEyeManager eyeManager;
-        #if GODOT
-        [Dependency]
-        public readonly ISceneTreeHolder sceneTree;
-        #endif
-        [Dependency]
-        private readonly IInputManager _inputManager;
-        [Dependency]
-        private readonly IEntitySystemManager _entitySystemManager;
-        [Dependency]
-        private readonly IEntityManager _entityManager;
-        [Dependency]
-        private readonly IPrototypeManager _prototypeManager;
-        [Dependency]
-        private readonly IBaseClient _baseClient;
+        [Dependency] public readonly ICollisionManager CollisionManager;
+        [Dependency] private readonly IClientNetManager NetworkManager;
+        [Dependency] public readonly IPlayerManager PlayerManager;
+        [Dependency] public readonly IResourceCache ResourceCache;
+        [Dependency] private readonly IReflectionManager ReflectionManager;
+        [Dependency] private readonly IMapManager _mapMan;
+        [Dependency] private readonly IGameTiming _time;
+        [Dependency] public readonly IEyeManager eyeManager;
+        [Dependency] public readonly ISceneTreeHolder sceneTree;
+        [Dependency] private readonly IInputManager _inputManager;
+        [Dependency] private readonly IEntitySystemManager _entitySystemManager;
+        [Dependency] private readonly IEntityManager _entityManager;
+        [Dependency] private readonly IPrototypeManager _prototypeManager;
+        [Dependency] private readonly IBaseClient _baseClient;
 
         /// <summary>
         ///     How long before a pending tile change is dropped.
@@ -76,7 +60,9 @@ namespace SS14.Client.Placement
         /// Dictionary of all placement mode types
         /// </summary>
         private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
-        private readonly List<Tuple<GridLocalCoordinates, TimeSpan>> _pendingTileChanges = new List<Tuple<GridLocalCoordinates, TimeSpan>>();
+
+        private readonly List<Tuple<GridLocalCoordinates, TimeSpan>> _pendingTileChanges =
+            new List<Tuple<GridLocalCoordinates, TimeSpan>>();
 
         /// <summary>
         /// Tells this system to try to handle placement of an entity during the next frame
@@ -149,6 +135,7 @@ namespace SS14.Client.Placement
                         return;
                     }
                 }
+
                 _colliderAABB = new Box2(0f, 0f, 0f, 0f);
             }
         }
@@ -172,10 +159,8 @@ namespace SS14.Client.Placement
         /// </summary>
         public Direction Direction { get; set; } = Direction.South;
 
-        #if GODOT
         public Godot.Node2D DrawNode { get; set; }
         private GodotGlue.GodotSignalSubscriber0 drawNodeDrawSubscriber;
-        #endif
         private bool _isActive;
 
         public void Initialize()
@@ -190,23 +175,24 @@ namespace SS14.Client.Placement
 
             _mapMan.TileChanged += HandleTileChanged;
 
-            #if GODOT
-            var unshadedMaterial = new Godot.CanvasItemMaterial()
+            if (GameController.OnGodot)
             {
-                LightMode = Godot.CanvasItemMaterial.LightModeEnum.Unshaded
-            };
+                var unshadedMaterial = new Godot.CanvasItemMaterial()
+                {
+                    LightMode = Godot.CanvasItemMaterial.LightModeEnum.Unshaded
+                };
 
-            DrawNode = new Godot.Node2D()
-            {
-                Name = "Placement Manager Sprite",
-                ZIndex = 100,
-                Material = unshadedMaterial
-            };
-            sceneTree.WorldRoot.AddChild(DrawNode);
-            drawNodeDrawSubscriber = new GodotGlue.GodotSignalSubscriber0();
-            drawNodeDrawSubscriber.Connect(DrawNode, "draw");
-            drawNodeDrawSubscriber.Signal += Render;
-            #endif
+                DrawNode = new Godot.Node2D()
+                {
+                    Name = "Placement Manager Sprite",
+                    ZIndex = 100,
+                    Material = unshadedMaterial
+                };
+                sceneTree.WorldRoot.AddChild(DrawNode);
+                drawNodeDrawSubscriber = new GodotGlue.GodotSignalSubscriber0();
+                drawNodeDrawSubscriber.Connect(DrawNode, "draw");
+                drawNodeDrawSubscriber.Signal += Render;
+            }
 
             // a bit ugly, oh well
             _baseClient.PlayerJoinedServer += (sender, args) => SetupInput(_entitySystemManager);
@@ -298,7 +284,7 @@ namespace SS14.Client.Placement
 
         private void SwitchEditorContext(bool enabled)
         {
-            if(enabled)
+            if (enabled)
             {
                 _inputManager.Contexts.SetActiveContext("editor");
             }
@@ -306,17 +292,19 @@ namespace SS14.Client.Placement
             {
                 _entitySystemManager.GetEntitySystem<InputSystem>().SetEntityContextActive();
             }
-
         }
 
         public void Dispose()
         {
-            #if GODOT
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             drawNodeDrawSubscriber.Disconnect(DrawNode, "draw");
             drawNodeDrawSubscriber.Dispose();
             DrawNode.QueueFree();
             DrawNode.Dispose();
-            #endif
         }
 
         private void HandlePlacementMessage(MsgPlacement msg)
@@ -354,9 +342,11 @@ namespace SS14.Client.Placement
             Eraser = false;
             PlacementOffset = Vector2i.Zero;
             // Make it draw again to remove the drawn things.
-            #if GODOT
-            DrawNode?.Update();
-            #endif
+
+            if (GameController.OnGodot)
+            {
+                DrawNode?.Update();
+            }
         }
 
         public void Rotate()
@@ -395,6 +385,7 @@ namespace SS14.Client.Placement
                     {
                         RequestPlacement(coordinate);
                     }
+
                     DeactivateSpecialPlacement();
                     break;
                 case PlacementTypes.Grid:
@@ -402,6 +393,7 @@ namespace SS14.Client.Placement
                     {
                         RequestPlacement(coordinate);
                     }
+
                     DeactivateSpecialPlacement();
                     break;
             }
@@ -457,7 +449,7 @@ namespace SS14.Client.Placement
             }
 
             var modeType = _modeDictionary.First(pair => pair.Key.Equals(CurrentPermission.PlacementOption)).Value;
-            CurrentMode = (PlacementMode)Activator.CreateInstance(modeType, this);
+            CurrentMode = (PlacementMode) Activator.CreateInstance(modeType, this);
 
             if (hijack != null)
             {
@@ -508,9 +500,10 @@ namespace SS14.Client.Placement
             if (_placenextframe && CurrentPermission.IsTile)
                 HandlePlacement();
 
-            #if GODOT
-            DrawNode.Update();
-            #endif
+            if (GameController.OnGodot)
+            {
+                DrawNode.Update();
+            }
         }
 
         private void ActivateLineMode()
@@ -560,9 +553,12 @@ namespace SS14.Client.Placement
 
             var pos = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
             const int ppm = EyeManager.PIXELSPERMETER;
-            #if GODOT
-            DrawNode.DrawCircle(pos.Convert() * new Godot.Vector2(1, -1) * ppm, CurrentPermission.Range * ppm, new Godot.Color(1, 1, 1, 0.25f));
-            #endif
+
+            if (GameController.OnGodot)
+            {
+                DrawNode.DrawCircle(pos.Convert() * new Godot.Vector2(1, -1) * ppm, CurrentPermission.Range * ppm,
+                    new Godot.Color(1, 1, 1, 0.25f));
+            }
         }
 
         private void HandleStartPlacement(MsgPlacement msg)
@@ -591,7 +587,8 @@ namespace SS14.Client.Placement
 
         private void PreparePlacementTile()
         {
-            CurrentBaseSprite = ResourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png")).Texture;
+            CurrentBaseSprite = ResourceCache
+                .GetResource<TextureResource>(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png")).Texture;
 
             IsActive = true;
         }

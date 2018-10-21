@@ -8,25 +8,17 @@ namespace SS14.Client.Graphics
     /// </summary>
     public abstract class Texture : IDirectionalTextureProvider
     {
-        #if GODOT
         internal abstract Godot.Texture GodotTexture { get; }
-        #endif
 
-        #if GODOT
-        public int Width => GodotTexture.GetWidth();
-        public int Height => GodotTexture.GetHeight();
-        #else
-        public int Width => 0;
-        public int Height => 0;
-        #endif
+        public int Width => GameController.OnGodot ? GodotTexture.GetWidth() : default;
+        public int Height => GameController.OnGodot ? GodotTexture.GetHeight() : default;
+
         public Vector2i Size => new Vector2i(Width, Height);
 
-        #if GODOT
         public static implicit operator Godot.Texture(Texture src)
         {
             return src?.GodotTexture;
         }
-        #endif
 
         Texture IDirectionalTextureProvider.Default => this;
 
@@ -41,10 +33,9 @@ namespace SS14.Client.Graphics
     /// </summary>
     public class BlankTexture : Texture
     {
-
+        internal override Godot.Texture GodotTexture => null;
     }
 
-    #if GODOT
     /// <summary>
     ///     Wraps a texture returned by Godot itself,
     ///     for example when the texture was set in a GUI scene.
@@ -58,5 +49,4 @@ namespace SS14.Client.Graphics
             GodotTexture = texture;
         }
     }
-    #endif
 }

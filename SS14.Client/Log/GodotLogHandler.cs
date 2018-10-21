@@ -3,7 +3,6 @@ using SS14.Shared.Log;
 
 namespace SS14.Client.Log
 {
-    #if GODOT
     /// <summary>
     ///     Handles logs using Godot's <see cref="Godot.GD.Print(object[])"/>.
     /// </summary>
@@ -16,5 +15,4 @@ namespace SS14.Client.Log
             Godot.GD.Print(msg);
         }
     }
-    #endif
 }

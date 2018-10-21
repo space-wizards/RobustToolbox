@@ -9,10 +9,8 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using YamlDotNet.RepresentationModel;
-#if GODOT
 using BlendModeEnum = Godot.CanvasItemMaterial.BlendModeEnum;
 using LightModeEnum = Godot.CanvasItemMaterial.LightModeEnum;
-#endif
 
 namespace SS14.Client.Graphics.Shaders
 {
@@ -27,18 +25,20 @@ namespace SS14.Client.Graphics.Shaders
         private ShaderSourceResource Source;
         private Dictionary<string, object> ShaderParams;
 
-        #if GODOT
         // Canvas shader variables.
         private LightModeEnum LightMode;
         private BlendModeEnum BlendMode;
-        #endif
 
         /// <summary>
         ///     Creates a new instance of this shader.
         /// </summary>
         public Shader Instance()
         {
-            #if GODOT
+            if (!GameController.OnGodot)
+            {
+                return new Shader();
+            }
+
             Godot.Material mat;
 
             switch (Kind)
@@ -56,6 +56,7 @@ namespace SS14.Client.Graphics.Shaders
                             shaderMat.SetShaderParam(pair.Key, pair.Value);
                         }
                     }
+
                     break;
                 case ShaderKind.Canvas:
                     mat = new Godot.CanvasItemMaterial
@@ -69,9 +70,6 @@ namespace SS14.Client.Graphics.Shaders
             }
 
             return new Shader(mat);
-            #else
-            return new Shader();
-#endif
         }
 
         public void LoadFrom(YamlMappingNode mapping)
@@ -121,12 +119,15 @@ namespace SS14.Client.Graphics.Shaders
 
         private void ReadCanvasKind(YamlMappingNode mapping)
         {
-#if GODOT
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             if (mapping.TryGetNode("light_mode", out var node))
             {
                 switch (node.AsString())
                 {
-
                     case "normal":
                         LightMode = LightModeEnum.Normal;
                         break;
@@ -172,14 +173,16 @@ namespace SS14.Client.Graphics.Shaders
                         throw new InvalidOperationException($"Invalid blend mode: '{node.AsString()}'");
                 }
             }
-#endif
         }
 
         private object ParseShaderParamFor(YamlNode node, ShaderParamType type)
         {
+            if (!GameController.OnGodot)
+            {
+                throw new NotImplementedException();
+            }
             switch (type)
             {
-                #if GODOT
                 case ShaderParamType.Void:
                     throw new NotSupportedException();
                 case ShaderParamType.Bool:
@@ -208,8 +211,8 @@ namespace SS14.Client.Graphics.Shaders
                     var path = node.AsResourcePath();
                     var resc = IoCManager.Resolve<IResourceCache>();
                     return resc.GetResource<TextureResource>(path).Texture.GodotTexture;
+
                 // If something's not handled here, then that's probably because I was lazy.
-                #endif
                 default:
                     throw new NotImplementedException();
             }

@@ -1,4 +1,3 @@
-#if GODOT
 using System;
 using System.Collections.Generic;
 using SS14.Client.GodotGlue;
@@ -14,11 +13,14 @@ namespace SS14.Client
 {
     public partial class GameController : ClientEntryPoint
     {
+        [Dependency] private readonly GameTimingGodot _gameTimingGodotGodot;
+
         public override void Main(Godot.SceneTree tree)
         {
 #if !X64
             throw new InvalidOperationException("The client cannot start outside x64.");
 #endif
+            OnGodot = true;
             tree.SetAutoAcceptQuit(false);
             IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
             IoCManager.BuildGraph();
@@ -40,33 +42,33 @@ namespace SS14.Client
         public override void PhysicsProcess(float delta)
         {
             // Can't be too certain.
-            gameTiming.InSimulation = true;
-            gameTiming._tickRemainderTimer.Restart();
+            _gameTimingGodotGodot.InSimulation = true;
+            _gameTimingGodotGodot._tickRemainderTimer.Restart();
             try
             {
-                if (!gameTiming.Paused)
+                if (!_gameTimingGodotGodot.Paused)
                 {
-                    gameTiming.CurTick++;
+                    _gameTimingGodotGodot.CurTick++;
                     Update(delta);
                 }
             }
             finally
             {
-                gameTiming.InSimulation = false;
+                _gameTimingGodotGodot.InSimulation = false;
             }
         }
 
         public override void FrameProcess(float delta)
         {
-            gameTiming.InSimulation = false; // Better safe than sorry.
-            gameTiming.RealFrameTime = TimeSpan.FromSeconds(delta);
-            gameTiming.TickRemainder = gameTiming._tickRemainderTimer.Elapsed;
+            _gameTimingGodotGodot.InSimulation = false; // Better safe than sorry.
+            _gameTimingGodotGodot.RealFrameTime = TimeSpan.FromSeconds(delta);
+            _gameTimingGodotGodot.TickRemainder = _gameTimingGodotGodot._tickRemainderTimer.Elapsed;
 
             var eventArgs = new RenderFrameEventArgs(delta);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePreEngine, eventArgs.Elapsed);
-            lightManager.FrameUpdate(eventArgs);
+            _lightManager.FrameUpdate(eventArgs);
             _stateManager.FrameUpdate(eventArgs);
-            overlayManager.FrameUpdate(eventArgs);
+            _overlayManager.FrameUpdate(eventArgs);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePostEngine, eventArgs.Elapsed);
         }
 
@@ -74,9 +76,9 @@ namespace SS14.Client
         {
             try
             {
-                if (logManager != null)
+                if (_logManager != null)
                 {
-                    logManager.GetSawmill("root").Error($"Unhandled exception:\n{exception}");
+                    _logManager.GetSawmill("root").Error($"Unhandled exception:\n{exception}");
                 }
                 else
                 {
@@ -87,11 +89,6 @@ namespace SS14.Client
             {
                 Godot.GD.Print($"Welp. The unhandled exception handler threw an exception.\n{e}\nException that was being handled:\n{exception}");
             }
-        }
-
-        public ICollection<string> GetCommandLineArgs()
-        {
-            return Godot.OS.GetCmdlineArgs();
         }
 
 
@@ -171,12 +168,12 @@ namespace SS14.Client
         }
 
         // TODO: This class is basically just a bunch of stubs.
-        private class GameTiming : IGameTiming
+        private class GameTimingGodot : IGameTiming
         {
             private static readonly IStopwatch _realTimer = new Stopwatch();
             public readonly IStopwatch _tickRemainderTimer = new Stopwatch();
 
-            public GameTiming()
+            public GameTimingGodot()
             {
                 _realTimer.Start();
                 // Not sure if Restart() starts it implicitly so...
@@ -246,4 +243,3 @@ namespace SS14.Client
         }
     }
 }
-#endif

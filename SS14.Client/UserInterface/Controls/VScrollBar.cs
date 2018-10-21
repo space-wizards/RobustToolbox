@@ -7,16 +7,17 @@ using SS14.Shared.Log;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap("VScrollBar")]
+    [ControlWrap(typeof(Godot.VScrollBar))]
     public class VScrollBar : ScrollBar
     {
         public VScrollBar() : base()
         {
         }
+
         public VScrollBar(string name) : base(name)
         {
         }
-        #if GODOT
+
         internal VScrollBar(Godot.ScrollBar control) : base(control)
         {
         }
@@ -25,7 +26,6 @@ namespace SS14.Client.UserInterface.Controls
         {
             return new Godot.VScrollBar();
         }
-        #endif
 
         // The Value of a scrollbar is the position where the "bar" begins,
         //  so since Page is the "size" of the bar, page + value is the max.

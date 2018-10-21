@@ -8,52 +8,50 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-#if GODOT
 using VS = Godot.VisualServer;
-
-#endif
 
 namespace SS14.Client.Graphics.Overlays
 {
     internal class OverlayManager : IOverlayManager
     {
-#if GODOT
         private Godot.Node2D RootNodeWorld;
         private Godot.Node2D RootNodeScreen;
 
         [Dependency] readonly ISceneTreeHolder sceneTreeHolder;
-#endif
 
-#if GODOT
         private readonly Dictionary<string, (IOverlay overlay, Godot.RID canvasItem)> overlays =
             new Dictionary<string, (IOverlay, Godot.RID)>();
-#endif
 
         public void Initialize()
         {
-#if GODOT
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             RootNodeWorld = new Godot.Node2D {Name = "OverlayRoot"};
             sceneTreeHolder.WorldRoot.AddChild(RootNodeWorld);
             RootNodeWorld.ZIndex = (int) DrawDepth.Overlays;
 
             RootNodeScreen = new Godot.Node2D {Name = "OverlayRoot"};
             sceneTreeHolder.SceneTree.Root.GetNode("UILayer").AddChild(RootNodeScreen);
-#endif
         }
 
         public void FrameUpdate(RenderFrameEventArgs args)
         {
-#if GODOT
             foreach (var (overlay, _) in overlays.Values)
             {
                 overlay.FrameUpdate(args);
             }
-#endif
         }
 
         public void AddOverlay(IOverlay overlay)
         {
-#if GODOT
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             if (overlays.ContainsKey(overlay.ID))
             {
                 throw new InvalidOperationException($"We already have an overlay with ID '{overlay.ID}'");
@@ -77,16 +75,16 @@ namespace SS14.Client.Graphics.Overlays
 
             overlays.Add(overlay.ID, (overlay, item));
             overlay.AssignCanvasItem(item);
-#endif
         }
 
         public IOverlay GetOverlay(string id)
         {
-#if GODOT
-            return overlays[id].overlay;
-#else
+            if (GameController.OnGodot)
+            {
+                return overlays[id].overlay;
+            }
+
             throw new NotImplementedException();
-#endif
         }
 
         public T GetOverlay<T>(string id) where T : IOverlay
@@ -96,17 +94,17 @@ namespace SS14.Client.Graphics.Overlays
 
         public bool HasOverlay(string id)
         {
-#if GODOT
-            return overlays.ContainsKey(id);
-#else
+            if (GameController.OnGodot)
+            {
+                return overlays.ContainsKey(id);
+            }
+
             throw new NotImplementedException();
-#endif
         }
 
         public void RemoveOverlay(string id)
         {
-#if GODOT
-            if (!overlays.TryGetValue(id, out var value))
+            if (!GameController.OnGodot || !overlays.TryGetValue(id, out var value))
             {
                 return;
             }
@@ -115,35 +113,28 @@ namespace SS14.Client.Graphics.Overlays
             overlay.Dispose();
             VS.FreeRid(item);
             overlays.Remove(id);
-#endif
         }
 
         public bool TryGetOverlay(string id, out IOverlay overlay)
         {
-#if GODOT
-            if (overlays.TryGetValue(id, out var value))
+            if (GameController.OnGodot && overlays.TryGetValue(id, out var value))
             {
                 overlay = value.overlay;
                 return true;
             }
 
-            overlay = null;
-            return false;
-#else
             overlay = default;
             return false;
-#endif
         }
 
         public bool TryGetOverlay<T>(string id, out T overlay) where T : IOverlay
         {
-#if GODOT
             if (overlays.TryGetValue(id, out var value))
             {
                 overlay = (T) value.overlay;
                 return true;
             }
-#endif
+
             overlay = default;
             return false;
         }

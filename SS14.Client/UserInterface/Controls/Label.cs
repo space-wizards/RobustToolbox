@@ -8,52 +8,55 @@ namespace SS14.Client.UserInterface.Controls
     /// <summary>
     ///     A label is a GUI control that displays simple text.
     /// </summary>
-    [ControlWrap("Label")]
+    [ControlWrap(typeof(Godot.Label))]
     public class Label : Control
     {
         public Label(string name) : base(name)
         {
         }
+
         public Label() : base()
         {
         }
-        #if GODOT
+
         internal Label(Godot.Label control) : base(control)
         {
         }
-        #endif
 
         public string Text
         {
-            #if GODOT
-            get => SceneControl.Text;
-            set => SceneControl.Text = value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? SceneControl.Text : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Text = value;
+                }
+            }
         }
 
         public bool AutoWrap
         {
-            #if GODOT
-            get => SceneControl.Autowrap;
-            set => SceneControl.Autowrap = value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? SceneControl.Autowrap : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Autowrap = value;
+                }
+            }
         }
 
         public AlignMode Align
         {
-            #if GODOT
-            get => (AlignMode) SceneControl.Align;
-            set => SceneControl.Align = (Godot.Label.AlignEnum) value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? (AlignMode) SceneControl.Align : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Align = (Godot.Label.AlignEnum) value;
+                }
+            }
         }
 
         private Font _fontOverride;
@@ -96,7 +99,6 @@ namespace SS14.Client.UserInterface.Controls
             set => SetConstantOverride("shadow_offset_y", _shadowOffsetYOverride = value);
         }
 
-        #if GODOT
         new private Godot.Label SceneControl;
 
         private protected override Godot.Control SpawnSceneControl()
@@ -107,9 +109,8 @@ namespace SS14.Client.UserInterface.Controls
         private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
-            SceneControl = (Godot.Label)control;
+            SceneControl = (Godot.Label) control;
         }
-        #endif
 
         public enum AlignMode
         {

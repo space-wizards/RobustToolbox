@@ -4,7 +4,7 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap("RichTextLabel")]
+    [ControlWrap(typeof(Godot.RichTextLabel))]
     public class RichTextLabel : Control
     {
         public RichTextLabel() : base()
@@ -14,7 +14,7 @@ namespace SS14.Client.UserInterface.Controls
         public RichTextLabel(string name) : base(name)
         {
         }
-#if GODOT
+
         internal RichTextLabel(Godot.RichTextLabel button) : base(button)
         {
         }
@@ -28,74 +28,81 @@ namespace SS14.Client.UserInterface.Controls
         {
             base.SetSceneControl(control);
 
-            SceneControl = (Godot.RichTextLabel)control;
+            SceneControl = (Godot.RichTextLabel) control;
         }
 
         new private Godot.RichTextLabel SceneControl;
-        #endif
 
         public bool BBCodeEnabled
         {
-#if GODOT
-            get => SceneControl.BbcodeEnabled;
-            set => SceneControl.BbcodeEnabled = value;
-            #else
-            get => default;
-            set { }
-#endif
+            get => GameController.OnGodot ? SceneControl.BbcodeEnabled : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.BbcodeEnabled = value;
+                }
+            }
         }
 
         public void Clear()
         {
-#if GODOT
-            SceneControl.Clear();
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.Clear();
+            }
         }
 
         public void AppendBBCode(string code)
         {
-#if GODOT
-            SceneControl.AppendBbcode(code);
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.AppendBbcode(code);
+            }
         }
 
         public void PushColor(Color color)
         {
-#if GODOT
-            SceneControl.PushColor(color.Convert());
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.PushColor(color.Convert());
+            }
         }
 
         public void AddText(string text)
         {
-#if GODOT
-            SceneControl.AddText(text);
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.AddText(text);
+            }
         }
 
         public void Pop()
         {
-#if GODOT
-            SceneControl.Pop();
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.Pop();
+            }
         }
 
         public void NewLine()
         {
-#if GODOT
-            SceneControl.Newline();
-            #endif
+            if (GameController.OnGodot)
+            {
+                SceneControl.Newline();
+            }
         }
 
         public bool ScrollFollowing
         {
-#if GODOT
-            get => SceneControl.IsScrollFollowing();
-            set => SceneControl.SetScrollFollow(value);
-            #else
-            get => default;
-            set { }
-#endif
+            get => GameController.OnGodot ? SceneControl.IsScrollFollowing() : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.SetScrollFollow(value);
+                }
+            }
         }
     }
 }

@@ -9,7 +9,7 @@ namespace SS14.Client
         /// </summary>
         private void KeyDown(KeyEventArgs keyEvent)
         {
-            inputManager.KeyDown(keyEvent);
+            _inputManager.KeyDown(keyEvent);
         }
 
         /// <summary>
@@ -17,7 +17,7 @@ namespace SS14.Client
         /// </summary>
         private void KeyUp(KeyEventArgs keyEvent)
         {
-            inputManager.KeyUp(keyEvent);
+            _inputManager.KeyUp(keyEvent);
         }
 
         /// <summary>

@@ -1,5 +1,4 @@
-﻿#if GODOT
-using SS14.Client.GodotGlue;
+﻿using SS14.Client.GodotGlue;
 using SS14.Client.Input;
 using SS14.Shared.Log;
 
@@ -112,7 +111,7 @@ namespace SS14.Client.UserInterface
 
         private void __guiInputHook(object ev)
         {
-            HandleGuiInput((Godot.InputEvent)ev);
+            HandleGuiInput((Godot.InputEvent) ev);
         }
 
         private void __focusEnteredHook()
@@ -137,4 +136,3 @@ namespace SS14.Client.UserInterface
         }
     }
 }
-#endif

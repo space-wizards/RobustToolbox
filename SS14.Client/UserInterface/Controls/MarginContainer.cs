@@ -1,6 +1,6 @@
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap("MarginContainer")]
+    [ControlWrap(typeof(Godot.MarginContainer))]
     public class MarginContainer : Container
     {
         public MarginContainer()
@@ -11,7 +11,6 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        #if GODOT
         internal MarginContainer(Godot.MarginContainer sceneControl) : base(sceneControl)
         {
         }
@@ -20,6 +19,5 @@ namespace SS14.Client.UserInterface.Controls
         {
             return new Godot.MarginContainer();
         }
-        #endif
     }
 }

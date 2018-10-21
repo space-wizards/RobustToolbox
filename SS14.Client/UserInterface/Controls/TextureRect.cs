@@ -3,35 +3,34 @@ using SS14.Client.Graphics;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap("TextureRect")]
+    [ControlWrap(typeof(Godot.TextureRect))]
     public class TextureRect : Control
     {
         public TextureRect() : base()
         {
         }
+
         public TextureRect(string name) : base(name)
         {
         }
 
-        #if GODOT
         public TextureRect(Godot.TextureRect button) : base(button)
         {
         }
-        #endif
 
         public Texture Texture
         {
-            #if GODOT
             // TODO: Maybe store the texture passed in in case it's like a TextureResource or whatever.
-            get => new GodotTextureSource(SceneControl.Texture);
-            set => SceneControl.Texture = value?.GodotTexture;
-            #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
-            #endif
+            get => GameController.OnGodot ? (Texture) new GodotTextureSource(SceneControl.Texture) : new BlankTexture();
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Texture = value?.GodotTexture;
+                }
+            }
         }
 
-        #if GODOT
         new private Godot.TextureRect SceneControl;
 
         private protected override Godot.Control SpawnSceneControl()
@@ -42,8 +41,7 @@ namespace SS14.Client.UserInterface.Controls
         private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
-            SceneControl = (Godot.TextureRect)control;
+            SceneControl = (Godot.TextureRect) control;
         }
-        #endif
     }
 }

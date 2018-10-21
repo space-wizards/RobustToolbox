@@ -1,5 +1,4 @@
-﻿#if GODOT
-using SS14.Shared.Interfaces.GameObjects.Components;
+﻿using SS14.Shared.Interfaces.GameObjects.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,4 +14,3 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         Godot.Node2D SceneNode { get; }
     }
 }
-#endif

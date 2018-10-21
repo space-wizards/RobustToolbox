@@ -131,7 +131,11 @@ namespace SS14.Client.ResourceManagement
                     var directionFrames = new (Texture, float)[delayList.Length];
                     for (var i = 0; i < delayList.Length; i++)
                     {
-#if GODOT
+                        if (!GameController.OnGodot)
+                        {
+                            directionFrames[i] = (new BlankTexture(), delayList[i]);
+                            continue;
+                        }
                         var PosX = (counter % sheetWidth) * size.X;
                         var PosY = (counter / sheetWidth) * size.Y;
 
@@ -142,9 +146,6 @@ namespace SS14.Client.ResourceManagement
                         };
 
                         directionFrames[i] = (new GodotTextureSource(atlasTexture), delayList[i]);
-#else
-                        directionFrames[i] = (new BlankTexture(), delayList[i]);
-#endif
                         counter++;
                     }
 

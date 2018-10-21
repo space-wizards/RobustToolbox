@@ -2,16 +2,17 @@
 
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap("Panel")]
+    [ControlWrap(typeof(Godot.Panel))]
     public class Panel : Control
     {
         public Panel(string name) : base(name)
         {
         }
+
         public Panel() : base()
         {
         }
-        #if GODOT
+
         internal Panel(Godot.Panel panel) : base(panel)
         {
         }
@@ -20,7 +21,6 @@ namespace SS14.Client.UserInterface.Controls
         {
             return new Godot.Panel();
         }
-        #endif
 
         private StyleBox _panelOverride;
 

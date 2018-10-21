@@ -7,17 +7,17 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap("Button")]
+    [ControlWrap(typeof(Godot.Button))]
     public class Button : BaseButton
     {
         public Button() : base()
         {
         }
+
         public Button(string name) : base(name)
         {
         }
 
-        #if GODOT
         internal Button(Godot.Button button) : base(button)
         {
         }
@@ -32,52 +32,55 @@ namespace SS14.Client.UserInterface.Controls
         private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
-            SceneControl = (Godot.Button)control;
+            SceneControl = (Godot.Button) control;
         }
-        #endif
 
         public AlignMode TextAlign
         {
-            #if GODOT
-            get => (AlignMode)SceneControl.Align;
-            set => SceneControl.Align = (Godot.Button.TextAlign)value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? (AlignMode) SceneControl.Align : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Align = (Godot.Button.TextAlign) value;
+                }
+            }
         }
 
         public bool ClipText
         {
-            #if GODOT
-            get => SceneControl.ClipText;
-            set => SceneControl.ClipText = value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? SceneControl.ClipText : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.ClipText = value;
+                }
+            }
         }
 
         public bool Flat
         {
-            #if GODOT
-            get => SceneControl.Flat;
-            set => SceneControl.Flat = value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? SceneControl.Flat : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Flat = value;
+                }
+            }
         }
 
         public string Text
         {
-            #if GODOT
-            get => SceneControl.Text;
-            set => SceneControl.Text = value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? SceneControl.Text : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Text = value;
+                }
+            }
         }
 
         private Color? _fontColorOverride;

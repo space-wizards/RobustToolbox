@@ -12,17 +12,20 @@ namespace SS14.Client.ResourceManagement
 {
     public class FontResource : BaseResource
     {
-        #if GODOT
         public Godot.DynamicFontData FontData { get; private set; }
-        #endif
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
-            #if GODOT
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             if (!cache.ContentFileExists(path))
             {
                 throw new FileNotFoundException("Content file does not exist for texture");
             }
+
             if (!cache.TryGetDiskFilePath(path, out string diskPath))
             {
                 throw new InvalidOperationException("Textures can only be loaded from disk.");
@@ -35,7 +38,6 @@ namespace SS14.Client.ResourceManagement
             }
 
             FontData = fontData;
-            #endif
         }
 
         public VectorFont MakeDefault()
@@ -48,10 +50,10 @@ namespace SS14.Client.ResourceManagement
 
         public override void Dispose()
         {
-            #if GODOT
-            FontData.Dispose();
-            FontData = null;
-            #endif
+            if (GameController.OnGodot)
+            {
+                FontData.Dispose();
+            }
         }
     }
 }

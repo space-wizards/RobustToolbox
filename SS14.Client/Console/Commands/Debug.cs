@@ -169,7 +169,6 @@ namespace SS14.Client.Console.Commands
         }
     }
 
-    #if GODOT
     class DumpDeferredLightingCommand : IConsoleCommand
     {
         public string Command => "dumpdeferredlighting";
@@ -198,7 +197,6 @@ namespace SS14.Client.Console.Commands
             return false;
         }
     }
-    #endif
 
     class DisconnectCommand : IConsoleCommand
     {

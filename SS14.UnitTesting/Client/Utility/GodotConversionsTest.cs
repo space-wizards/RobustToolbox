@@ -1,5 +1,4 @@
-﻿#if GODOT
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
 
@@ -43,4 +42,3 @@ namespace SS14.UnitTesting.Client.Utility
         }
     }
 }
-#endif

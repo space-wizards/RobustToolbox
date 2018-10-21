@@ -85,7 +85,10 @@ namespace SS14.Client.Placement
 
         public virtual void Render()
         {
-            #if GODOT
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             if (SpriteToDraw == null)
             {
                 SetSprite();
@@ -116,7 +119,6 @@ namespace SS14.Client.Placement
                 var color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
                 pManager.DrawNode.DrawTexture(SpriteToDraw.GodotTexture, pos.Convert(), color.Convert());
             }
-            #endif
         }
 
         public IEnumerable<GridLocalCoordinates> SingleCoordinate()

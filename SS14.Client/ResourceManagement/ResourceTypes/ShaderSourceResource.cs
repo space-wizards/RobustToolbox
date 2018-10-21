@@ -14,15 +14,16 @@ namespace SS14.Client.ResourceManagement.ResourceTypes
     /// </summary>
     public class ShaderSourceResource : BaseResource
     {
-        #if GODOT
         internal Godot.Shader GodotShader { get; private set; }
-        #endif
 
         private readonly Dictionary<string, ShaderParamType> Parameters = new Dictionary<string, ShaderParamType>();
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
-            #if GODOT
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             using (var stream = cache.ContentFileRead(path))
             using (var reader = new StreamReader(stream, Encoding.UTF8))
             {
@@ -38,7 +39,6 @@ namespace SS14.Client.ResourceManagement.ResourceTypes
             {
                 Parameters.Add((string)dict["name"], DetectParamType(dict));
             }
-            #endif
         }
 
         internal bool TryGetShaderParamType(string paramName, out ShaderParamType shaderParamType)
@@ -48,7 +48,10 @@ namespace SS14.Client.ResourceManagement.ResourceTypes
 
         private ShaderParamType DetectParamType(IDictionary<object, object> dict)
         {
-            #if GODOT
+            if (!GameController.OnGodot)
+            {
+                throw new NotImplementedException();
+            }
             var type = (Godot.Variant.Type)dict["type"];
             var hint = (Godot.PropertyHint)dict["hint"];
             var hint_string = (string)dict["hint_string"];
@@ -116,9 +119,6 @@ namespace SS14.Client.ResourceManagement.ResourceTypes
                 default:
                     throw new NotSupportedException($"Unknown variant type: {type}");
             }
-            #else
-            throw new NotImplementedException();
-            #endif
         }
     }
 }

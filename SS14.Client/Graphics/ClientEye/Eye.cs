@@ -10,10 +10,9 @@ namespace SS14.Client.Graphics.ClientEye
     public class Eye : IEye, IDisposable
     {
         protected IEyeManager eyeManager;
-        #if GODOT
         public Godot.Camera2D GodotCamera { get; private set; }
-        #endif
         private bool disposed = false;
+
         public bool Current
         {
             get => eyeManager.CurrentEye == this;
@@ -36,30 +35,31 @@ namespace SS14.Client.Graphics.ClientEye
         }
 
 
-
         public Vector2 Zoom
         {
-            #if GODOT
-            get => GodotCamera.Zoom.Convert();
-            set => GodotCamera.Zoom = value.Convert();
-            #else
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
-            #endif
+            get => GameController.OnGodot ? GodotCamera.Zoom.Convert() : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    GodotCamera.Zoom = value.Convert();
+                }
+            }
         }
 
         public MapId MapId { get; set; } = MapId.Nullspace;
 
         public Eye()
         {
-            #if GODOT
-            GodotCamera = new Godot.Camera2D()
-            {
-                DragMarginHEnabled = false,
-                DragMarginVEnabled = false,
-            };
-            #endif
             eyeManager = IoCManager.Resolve<IEyeManager>();
+            if (GameController.OnGodot)
+            {
+                GodotCamera = new Godot.Camera2D()
+                {
+                    DragMarginHEnabled = false,
+                    DragMarginVEnabled = false,
+                };
+            }
         }
 
         protected virtual void Dispose(bool disposing)
@@ -72,11 +72,13 @@ namespace SS14.Client.Graphics.ClientEye
                 eyeManager = null;
             }
 
-            #if GODOT
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             GodotCamera.QueueFree();
             GodotCamera.Dispose();
             GodotCamera = null;
-            #endif
         }
 
         public void Dispose()
@@ -85,6 +87,7 @@ namespace SS14.Client.Graphics.ClientEye
             {
                 return;
             }
+
             Dispose(true);
             GC.SuppressFinalize(this);
         }

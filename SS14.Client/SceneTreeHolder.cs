@@ -1,11 +1,5 @@
-﻿#if GODOT
-using SS14.Client.Graphics;
-using SS14.Client.Interfaces;
+﻿using SS14.Client.Interfaces;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SS14.Client
 {
@@ -26,4 +20,3 @@ namespace SS14.Client
         }
     }
 }
-#endif

@@ -2,13 +2,20 @@
 
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap("GridContainer")]
+    [ControlWrap(typeof(Godot.GridContainer))]
     public class GridContainer : Control
     {
-        public GridContainer() : base() { }
-        public GridContainer(string name) : base(name) { }
-        #if GODOT
-        internal GridContainer(Godot.GridContainer sceneControl) : base(sceneControl) { }
+        public GridContainer() : base()
+        {
+        }
+
+        public GridContainer(string name) : base(name)
+        {
+        }
+
+        internal GridContainer(Godot.GridContainer sceneControl) : base(sceneControl)
+        {
+        }
 
         new private Godot.GridContainer SceneControl;
 
@@ -20,19 +27,19 @@ namespace SS14.Client.UserInterface.Controls
         private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
-            SceneControl = (Godot.GridContainer)control;
+            SceneControl = (Godot.GridContainer) control;
         }
-        #endif
 
         public int Columns
         {
-            #if GODOT
-            get => SceneControl.GetColumns();
-            set => SceneControl.SetColumns(value);
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? SceneControl.GetColumns() : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.SetColumns(value);
+                }
+            }
         }
     }
 }

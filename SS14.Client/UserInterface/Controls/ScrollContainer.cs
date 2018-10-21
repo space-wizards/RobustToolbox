@@ -1,6 +1,6 @@
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap("ScrollContainer")]
+    [ControlWrap(typeof(Godot.ScrollContainer))]
     public class ScrollContainer : Container
     {
         public ScrollContainer()
@@ -11,16 +11,13 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        #if GODOT
         internal ScrollContainer(Godot.ScrollContainer container) : base(container)
         {
-
         }
 
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.ScrollContainer();
         }
-        #endif
     }
 }

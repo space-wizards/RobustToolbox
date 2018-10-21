@@ -7,9 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-#if GODOT
 using VS = Godot.VisualServer;
-#endif
 
 namespace SS14.Client.Graphics.Overlays
 {
@@ -25,33 +23,32 @@ namespace SS14.Client.Graphics.Overlays
         public virtual OverlaySpace Space => OverlaySpace.ScreenSpace;
 
         private Shader _shader;
+
         public Shader Shader
         {
             get => _shader;
             set
             {
                 _shader = value;
-                #if GODOT
-                if (MainCanvasItem != null)
+                if (GameController.OnGodot && MainCanvasItem != null)
                 {
                     VS.CanvasItemSetMaterial(MainCanvasItem, value?.GodotMaterial?.GetRid());
                 }
-                #endif
             }
         }
 
         private int? _zIndex;
+
         public int? ZIndex
         {
             get => _zIndex;
             set
             {
-                #if GODOT
                 if (value != null && (_zIndex > VS.CanvasItemZMax || _zIndex < VS.CanvasItemZMin))
                 {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
-                #endif
+
                 _zIndex = value;
                 UpdateZIndex();
             }
@@ -61,11 +58,10 @@ namespace SS14.Client.Graphics.Overlays
 
         private bool _isDirty = true;
 
-        #if GODOT
+
         private Godot.RID MainCanvasItem;
 
         private readonly List<Godot.RID> CanvasItems = new List<Godot.RID>();
-        #endif
         private readonly List<DrawingHandle> TempHandles = new List<DrawingHandle>();
 
         private bool Disposed = false;
@@ -76,7 +72,6 @@ namespace SS14.Client.Graphics.Overlays
             ID = id;
         }
 
-        #if GODOT
         public void AssignCanvasItem(Godot.RID canvasItem)
         {
             MainCanvasItem = canvasItem;
@@ -84,9 +79,9 @@ namespace SS14.Client.Graphics.Overlays
             {
                 Shader.ApplyToCanvasItem(MainCanvasItem);
             }
+
             UpdateZIndex();
         }
-        #endif
 
         public void Dispose()
         {
@@ -94,6 +89,7 @@ namespace SS14.Client.Graphics.Overlays
             {
                 return;
             }
+
             Dispose(true);
             Disposed = true;
             GC.SuppressFinalize(this);
@@ -118,7 +114,25 @@ namespace SS14.Client.Graphics.Overlays
                 throw new InvalidOperationException("Can only allocate new handles while drawing.");
             }
 
-            #if GODOT
+            if (!GameController.OnGodot)
+            {
+                DrawingHandle handle;
+                switch (Space)
+                {
+                    case OverlaySpace.ScreenSpace:
+                        handle = new DrawingHandleScreen();
+                        break;
+                    case OverlaySpace.WorldSpace:
+                        handle = new DrawingHandleWorld();
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+                TempHandles.Add(handle);
+                return handle;
+            }
+
             var item = VS.CanvasItemCreate();
             VS.CanvasItemSetParent(item, MainCanvasItem);
             CanvasItems.Add(item);
@@ -130,24 +144,24 @@ namespace SS14.Client.Graphics.Overlays
             {
                 VS.CanvasItemSetUseParentMaterial(item, SubHandlesUseMainShader);
             }
-            #endif
 
-            DrawingHandle handle;
-            switch (Space)
             {
-                #if GODOT
-                case OverlaySpace.ScreenSpace:
-                    handle = new DrawingHandleScreen(item);
-                    break;
-                case OverlaySpace.WorldSpace:
-                    handle = new DrawingHandleWorld(item);
-                    break;
-                #endif
-                default:
-                    throw new ArgumentOutOfRangeException();
+                DrawingHandle handle;
+                switch (Space)
+                {
+                    case OverlaySpace.ScreenSpace:
+                        handle = new DrawingHandleScreen(item);
+                        break;
+                    case OverlaySpace.WorldSpace:
+                        handle = new DrawingHandleWorld(item);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+                TempHandles.Add(handle);
+                return handle;
             }
-            TempHandles.Add(handle);
-            return handle;
         }
 
         public void Dirty()
@@ -157,7 +171,7 @@ namespace SS14.Client.Graphics.Overlays
 
         public void FrameUpdate(RenderFrameEventArgs args)
         {
-            if (!IsDirty)
+            if (!IsDirty || !GameController.OnGodot)
             {
                 return;
             }
@@ -170,17 +184,16 @@ namespace SS14.Client.Graphics.Overlays
                 DrawingHandle handle;
                 switch (Space)
                 {
-                    #if GODOT
                     case OverlaySpace.ScreenSpace:
                         handle = new DrawingHandleScreen(MainCanvasItem);
                         break;
                     case OverlaySpace.WorldSpace:
                         handle = new DrawingHandleWorld(MainCanvasItem);
                         break;
-                    #endif
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+
                 Draw(handle);
             }
             finally
@@ -190,13 +203,18 @@ namespace SS14.Client.Graphics.Overlays
                 {
                     handle.Dispose();
                 }
+
                 TempHandles.Clear();
             }
         }
 
         private void ClearDraw()
         {
-            #if GODOT
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             foreach (var item in CanvasItems)
             {
                 VS.FreeRid(item);
@@ -205,13 +223,11 @@ namespace SS14.Client.Graphics.Overlays
             VS.CanvasItemClear(MainCanvasItem);
 
             CanvasItems.Clear();
-            #endif
         }
 
         private void UpdateZIndex()
         {
-            #if GODOT
-            if (MainCanvasItem == null)
+            if (MainCanvasItem == null || !GameController.OnGodot)
             {
                 return;
             }
@@ -226,7 +242,6 @@ namespace SS14.Client.Graphics.Overlays
                 VS.CanvasItemSetZIndex(MainCanvasItem, ZIndex.Value);
                 VS.CanvasItemSetZAsRelativeToParent(MainCanvasItem, false);
             }
-            #endif
         }
     }
 }

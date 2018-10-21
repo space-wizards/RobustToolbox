@@ -46,62 +46,37 @@ namespace SS14.Client
     [UsedImplicitly]
     public sealed partial class GameController : IGameController
     {
+        internal static bool OnGodot { get; set; }
+
         /// <summary>
         ///     QueueFreeing a Godot node during finalization can cause segfaults.
         ///     As such, this var is set as soon as we tell Godot to shut down proper.
         /// </summary>
         public static bool ShuttingDownHard { get; private set; } = false;
 
-        [Dependency]
-        readonly IConfigurationManager _configurationManager;
-        [Dependency]
-        readonly IResourceCache _resourceCache;
-        [Dependency]
-        readonly IResourceManager _resourceManager;
-        [Dependency]
-        readonly ISS14Serializer _serializer;
-        [Dependency]
-        readonly IPrototypeManager _prototypeManager;
-        [Dependency]
-        readonly IClientTileDefinitionManager _tileDefinitionManager;
-        [Dependency]
-        readonly IClientNetManager _networkManager;
-        [Dependency]
-        readonly IMapManager _mapManager;
-        [Dependency]
-        readonly IStateManager _stateManager;
-        [Dependency]
-        readonly IUserInterfaceManager _userInterfaceManager;
-        [Dependency]
-        readonly IBaseClient _client;
-        [Dependency]
-        readonly IInputManager inputManager;
-        [Dependency]
-        readonly IClientChatConsole _console;
-        [Dependency]
-        readonly ILightManager lightManager;
-        [Dependency]
-        readonly IDisplayManager displayManager;
-        [Dependency]
-        readonly ITimerManager _timerManager;
-        [Dependency]
-        readonly IClientEntityManager _entityManager;
-        [Dependency]
-        readonly IEyeManager eyeManager;
-        #if GODOT
-        [Dependency]
-        readonly GameTiming gameTiming;
-        #endif
-        [Dependency]
-        readonly IPlacementManager placementManager;
-        [Dependency]
-        readonly IClientGameStateManager gameStateManager;
-        [Dependency]
-        readonly IOverlayManager overlayManager;
-        [Dependency]
-        readonly ILogManager logManager;
-        [Dependency]
-        private readonly ITaskManager _taskManager;
+        [Dependency] private readonly IConfigurationManager _configurationManager;
+        [Dependency] private readonly IResourceCache _resourceCache;
+        [Dependency] private readonly IResourceManager _resourceManager;
+        [Dependency] private readonly ISS14Serializer _serializer;
+        [Dependency] private readonly IPrototypeManager _prototypeManager;
+        [Dependency] private readonly IClientTileDefinitionManager _tileDefinitionManager;
+        [Dependency] private readonly IClientNetManager _networkManager;
+        [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IStateManager _stateManager;
+        [Dependency] private readonly IUserInterfaceManager _userInterfaceManager;
+        [Dependency] private readonly IBaseClient _client;
+        [Dependency] private readonly IInputManager _inputManager;
+        [Dependency] private readonly IClientChatConsole _console;
+        [Dependency] private readonly ILightManager _lightManager;
+        [Dependency] private readonly IDisplayManager _displayManager;
+        [Dependency] private readonly ITimerManager _timerManager;
+        [Dependency] private readonly IClientEntityManager _entityManager;
+        [Dependency] private readonly IEyeManager _eyeManager;
+        [Dependency] private readonly IPlacementManager _placementManager;
+        [Dependency] private readonly IClientGameStateManager _gameStateManager;
+        [Dependency] private readonly IOverlayManager _overlayManager;
+        [Dependency] private readonly ILogManager _logManager;
+        [Dependency] private readonly ITaskManager _taskManager;
 
         [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager;
 
@@ -117,8 +92,8 @@ namespace SS14.Client
             // Load config.
             _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
 
-            displayManager.Initialize();
-            displayManager.SetWindowTitle("Space Station 14");
+            _displayManager.Initialize();
+            _displayManager.SetWindowTitle("Space Station 14");
 
             // Init resources.
             // Doesn't do anything right now because TODO Godot asset management is a bit ad-hoc.
@@ -139,21 +114,21 @@ namespace SS14.Client
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
 
-            eyeManager.Initialize();
+            _eyeManager.Initialize();
             _serializer.Initialize();
             _userInterfaceManager.Initialize();
             _networkManager.Initialize(false);
-            inputManager.Initialize();
+            _inputManager.Initialize();
             _console.Initialize();
             _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
             _prototypeManager.Resync();
             _tileDefinitionManager.Initialize();
             _mapManager.Initialize();
-            placementManager.Initialize();
-            lightManager.Initialize();
+            _placementManager.Initialize();
+            _lightManager.Initialize();
             _entityManager.Initialize();
-            gameStateManager.Initialize();
-            overlayManager.Initialize();
+            _gameStateManager.Initialize();
+            _overlayManager.Initialize();
             _viewVariablesManager.Initialize();
 
             _client.Initialize();
@@ -179,6 +154,7 @@ namespace SS14.Client
             {
                 Logger.Info("Shutting down!");
             }
+
             Logger.Debug("Goodbye");
             IoCManager.Clear();
             ShuttingDownHard = true;
@@ -201,14 +177,23 @@ namespace SS14.Client
 
         private void SetupLogging()
         {
-            #if GODOT
-            logManager.RootSawmill.AddHandler(new GodotLogHandler());
-            #else
-            logManager.RootSawmill.AddHandler(new ConsoleLogHandler());
-            #endif
-            logManager.GetSawmill("res.typecheck").Level = LogLevel.Info;
-            logManager.GetSawmill("res.tex").Level = LogLevel.Info;
-            logManager.GetSawmill("console").Level = LogLevel.Info;
+            if (OnGodot)
+            {
+                _logManager.RootSawmill.AddHandler(new GodotLogHandler());
+            }
+            else
+            {
+                _logManager.RootSawmill.AddHandler(new ConsoleLogHandler());
+            }
+
+            _logManager.GetSawmill("res.typecheck").Level = LogLevel.Info;
+            _logManager.GetSawmill("res.tex").Level = LogLevel.Info;
+            _logManager.GetSawmill("console").Level = LogLevel.Info;
+        }
+
+        public static ICollection<string> GetCommandLineArgs()
+        {
+            return OnGodot ? Godot.OS.GetCmdlineArgs() : Environment.GetCommandLineArgs();
         }
     }
 }

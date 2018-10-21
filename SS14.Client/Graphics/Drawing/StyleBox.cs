@@ -10,9 +10,7 @@ namespace SS14.Client.Graphics.Drawing
     /// </summary>
     public abstract class StyleBox
     {
-#if GODOT
         internal abstract Godot.StyleBox GodotStyleBox { get; }
-#endif
 
         [Flags]
         public enum Margin
@@ -30,14 +28,12 @@ namespace SS14.Client.Graphics.Drawing
 
     internal class GodotStyleBoxWrap : StyleBox
     {
-#if GODOT
         public GodotStyleBoxWrap(Godot.StyleBox godotStyleBox)
         {
             GodotStyleBox = godotStyleBox;
         }
 
         internal override Godot.StyleBox GodotStyleBox { get; }
-#endif
     }
 
     /// <summary>
@@ -45,17 +41,18 @@ namespace SS14.Client.Graphics.Drawing
     /// </summary>
     public class StyleBoxTexture : StyleBox
     {
-#if GODOT
         private readonly Godot.StyleBoxTexture stylebox;
-
         internal override Godot.StyleBox GodotStyleBox => stylebox;
-#endif
+
 
         public StyleBoxTexture()
         {
-#if GODOT
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             stylebox = new Godot.StyleBoxTexture();
-#endif
         }
 
         /// <summary>
@@ -73,71 +70,85 @@ namespace SS14.Client.Graphics.Drawing
 
         public float MarginLeft
         {
-#if GODOT
-            get => stylebox.MarginLeft;
-            set => stylebox.MarginLeft = value;
-#else
-            get => default;
-            set {}
-#endif
+            get => GameController.OnGodot ? stylebox.MarginLeft : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    stylebox.MarginLeft = value;
+                }
+            }
         }
 
         public float MarginRight
         {
-#if GODOT
-            get => stylebox.MarginRight;
-            set => stylebox.MarginRight = value;
-#else
-            get => default;
-            set {}
-#endif
+            get => GameController.OnGodot ? stylebox.MarginRight : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    stylebox.MarginRight = value;
+                }
+            }
         }
 
         public float MarginTop
         {
-#if GODOT
-            get => stylebox.MarginTop;
-            set => stylebox.MarginTop = value;
-#else
-            get => default;
-            set {}
-#endif
+            get => GameController.OnGodot ? stylebox.MarginTop : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    stylebox.MarginTop = value;
+                }
+            }
         }
 
         public float MarginBottom
         {
-#if GODOT
-            get => stylebox.MarginBottom;
-            set => stylebox.MarginBottom = value;
-#else
-            get => default;
-            set {}
-#endif
+            get => GameController.OnGodot ? stylebox.MarginBottom : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    stylebox.MarginBottom = value;
+                }
+            }
         }
 
         public Color Modulate
         {
-#if GODOT
-            get => stylebox.ModulateColor.Convert();
-            set => stylebox.ModulateColor = value.Convert();
-#else
-            get => default;
-            set {}
-#endif
+            get => GameController.OnGodot ? stylebox.ModulateColor.Convert() : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    stylebox.ModulateColor = value.Convert();
+                }
+            }
         }
 
         private Texture cachedTexture;
 
         public Texture Texture
         {
-#if GODOT
-            get { return cachedTexture ?? new GodotTextureSource((Godot.Texture) stylebox.Texture); }
+            get
+            {
+                if (!GameController.OnGodot)
+                {
+                    return null;
+                }
+
+                return cachedTexture ?? new GodotTextureSource((Godot.Texture) stylebox.Texture);
+            }
             // Woo implicit casts.
-            set => stylebox.Texture = cachedTexture = value;
-#else
-            get => default;
-            set {}
-#endif
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    stylebox.Texture = cachedTexture = value;
+                }
+            }
         }
 
         /// <summary>
@@ -171,70 +182,74 @@ namespace SS14.Client.Graphics.Drawing
     {
         public Color BackgroundColor
         {
-#if GODOT
-            get => stylebox.BgColor.Convert();
-            set => stylebox.BgColor = value.Convert();
-#else
-            get => default;
-            set {}
-#endif
+            get => GameController.OnGodot ? stylebox.BgColor.Convert() : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    stylebox.BgColor = value.Convert();
+                }
+            }
         }
 
-#if GODOT
         private readonly Godot.StyleBoxFlat stylebox;
 
         internal override Godot.StyleBox GodotStyleBox => stylebox;
-#endif
 
         public StyleBoxFlat()
         {
-#if GODOT
-            stylebox = new Godot.StyleBoxFlat();
-#endif
+            if (GameController.OnGodot)
+            {
+                stylebox = new Godot.StyleBoxFlat();
+            }
         }
 
         public float MarginLeft
         {
-#if GODOT
-            get => stylebox.ContentMarginLeft;
-            set => stylebox.ContentMarginLeft = value;
-#else
-            get => default;
-            set {}
-#endif
+            get => GameController.OnGodot ? stylebox.ContentMarginLeft : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    stylebox.ContentMarginLeft = value;
+                }
+            }
         }
 
         public float MarginRight
         {
-#if GODOT
-            get => stylebox.ContentMarginRight;
-            set => stylebox.ContentMarginRight = value;
-#else
-            get => default;
-            set {}
-#endif
+            get => GameController.OnGodot ? stylebox.ContentMarginRight : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    stylebox.ContentMarginRight = value;
+                }
+            }
         }
 
         public float MarginTop
         {
-#if GODOT
-            get => stylebox.ContentMarginTop;
-            set => stylebox.ContentMarginTop = value;
-#else
-            get => default;
-            set {}
-#endif
+            get => GameController.OnGodot ? stylebox.ContentMarginTop : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    stylebox.ContentMarginTop = value;
+                }
+            }
         }
 
         public float MarginBottom
         {
-#if GODOT
-            get => stylebox.ContentMarginBottom;
-            set => stylebox.ContentMarginBottom = value;
-#else
-            get => default;
-            set {}
-#endif
+            get => GameController.OnGodot ? stylebox.ContentMarginBottom : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    stylebox.ContentMarginBottom = value;
+                }
+            }
         }
 
 

@@ -2,17 +2,17 @@
 
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap("AcceptDialog")]
+    [ControlWrap(typeof(Godot.AcceptDialog))]
     public class AcceptDialog : WindowDialog
     {
         public AcceptDialog() : base()
         {
         }
+
         public AcceptDialog(string name) : base(name)
         {
         }
 
-        #if GODOT
         internal AcceptDialog(Godot.AcceptDialog control) : base(control)
         {
         }
@@ -27,19 +27,19 @@ namespace SS14.Client.UserInterface.Controls
         private protected override void SetSceneControl(Godot.Control control)
         {
             base.SetSceneControl(control);
-            SceneControl = (Godot.AcceptDialog)control;
+            SceneControl = (Godot.AcceptDialog) control;
         }
-        #endif
 
         public string DialogText
         {
-            #if GODOT
-            get => SceneControl.DialogText;
-            set => SceneControl.DialogText = value;
-            #else
-            get => default;
-            set { }
-            #endif
+            get => GameController.OnGodot ? SceneControl.DialogText : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.DialogText = value;
+                }
+            }
         }
     }
 }

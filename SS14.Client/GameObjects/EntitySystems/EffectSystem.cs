@@ -17,9 +17,7 @@ using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using SS14.Shared.Utility;
-#if GODOT
 using VS = Godot.VisualServer;
-#endif
 
 namespace SS14.Client.GameObjects
 {
@@ -31,10 +29,8 @@ namespace SS14.Client.GameObjects
         [Dependency]
         IResourceCache resourceCache;
 
-        #if GODOT
         [Dependency]
         ISceneTreeHolder sceneTree;
-        #endif
 
         [Dependency]
         IEyeManager eyeManager;
@@ -42,19 +38,20 @@ namespace SS14.Client.GameObjects
         private readonly List<Effect> _Effects = new List<Effect>();
         private TimeSpan lasttimeprocessed = TimeSpan.Zero;
 
-        #if GODOT
         private Godot.Node2D DrawingNode;
         private Godot.RID ShadedCanvasItem;
         private Godot.RID UnshadedCanvasItem;
         private Godot.CanvasItemMaterial UnshadedMaterial;
         private Godot.CanvasItemMaterial ShadedMaterial;
-        #endif
 
         public override void Initialize()
         {
             base.Initialize();
             IoCManager.InjectDependencies(this);
-            #if GODOT
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             DrawingNode = new Godot.Node2D()
             {
                 Name = "EffectSystem",
@@ -75,21 +72,21 @@ namespace SS14.Client.GameObjects
             UnshadedCanvasItem = VS.CanvasItemCreate();
             VS.CanvasItemSetParent(UnshadedCanvasItem, DrawingNode.GetCanvasItem());
             VS.CanvasItemSetMaterial(UnshadedCanvasItem, UnshadedMaterial.GetRid());
-            #endif
         }
 
         public override void Shutdown()
         {
             base.Shutdown();
-            #if GODOT
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             VS.FreeRid(ShadedCanvasItem);
             VS.FreeRid(UnshadedCanvasItem);
             UnshadedMaterial.Dispose();
             ShadedMaterial.Dispose();
             DrawingNode.QueueFree();
             DrawingNode.Dispose();
-            #endif
-
         }
 
         public override void RegisterMessageTypes()
@@ -164,7 +161,10 @@ namespace SS14.Client.GameObjects
         {
             var map = eyeManager.CurrentMap;
 
-            #if GODOT
+            if (GameController.OnGodot)
+            {
+                return;
+            }
             VS.CanvasItemClear(ShadedCanvasItem);
             VS.CanvasItemClear(UnshadedCanvasItem);
             using (var shadedHandle = new DrawingHandleScreen(ShadedCanvasItem))
@@ -187,7 +187,6 @@ namespace SS14.Client.GameObjects
                     handle.DrawTexture(effectSprite, -((Vector2)effectSprite.Size) / 2, ToColor(effect.Color));
                 }
             }
-            #endif
         }
 
         private class Effect

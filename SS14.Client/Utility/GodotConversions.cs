@@ -1,5 +1,4 @@
-﻿#if GODOT
-using SS14.Shared.Maths;
+﻿using SS14.Shared.Maths;
 
 namespace SS14.Client.Utility
 {
@@ -74,4 +73,3 @@ namespace SS14.Client.Utility
         }
     }
 }
-#endif

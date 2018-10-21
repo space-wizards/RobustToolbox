@@ -11,7 +11,6 @@ namespace SS14.Client.Map
 {
     public class ClientMapManager : MapManager
     {
-        #if GODOT
         [Dependency]
         private IClientTileDefinitionManager tileDefinitionManager;
         [Dependency]
@@ -21,6 +20,10 @@ namespace SS14.Client.Map
 
         public ClientMapManager()
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             TileChanged += UpdateTileMapOnUpdate;
             OnGridCreated += UpdateOnGridCreated;
             OnGridRemoved += UpdateOnGridRemoved;
@@ -68,6 +71,5 @@ namespace SS14.Client.Map
             tilemap.Dispose();
             RenderTileMaps.Remove(gridId);
         }
-        #endif
     }
 }

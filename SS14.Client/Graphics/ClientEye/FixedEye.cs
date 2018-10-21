@@ -17,23 +17,26 @@ namespace SS14.Client.Graphics.ClientEye
             get => position;
             set
             {
-#if GODOT
-                GodotCamera.Position = value.Convert();
-#endif
+                if (GameController.OnGodot)
+                {
+                    GodotCamera.Position = value.Convert();
+                }
+
                 position = value;
             }
         }
 
-#if GODOT
         private readonly ISceneTreeHolder sceneTree;
-#endif
 
         public FixedEye()
         {
-#if GODOT
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             sceneTree = IoCManager.Resolve<ISceneTreeHolder>();
             sceneTree.WorldRoot.AddChild(GodotCamera);
-#endif
         }
     }
 }

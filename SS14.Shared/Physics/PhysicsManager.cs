@@ -112,7 +112,6 @@ namespace SS14.Shared.Physics
             foreach (var body in _bodies)
             {
                 if (collidable.MapID != body.MapID ||
-                    collidable.IsHardCollidable == false ||
                     collidable == body ||
                     !colliderAABB.Intersects(body.WorldAABB))
                     continue;

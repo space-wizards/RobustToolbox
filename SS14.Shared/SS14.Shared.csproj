@@ -232,6 +232,7 @@
     <Compile Include="Input\InputCmdHandler.cs" />
     <Compile Include="Input\KeyFunctions.cs" />
     <Compile Include="Input\BoundKeyEventArgs.cs" />
+    <Compile Include="Physics\PhysicsBody.cs" />
     <Compile Include="Physics\RayCastResults.cs" />
     <Compile Include="Players\IBaseSession.cs" />
     <Compile Include="Players\ICommonSession.cs" />

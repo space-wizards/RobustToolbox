@@ -4,6 +4,7 @@ using System.Linq;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Physics;
+using SS14.Shared.Log;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 
@@ -27,6 +28,10 @@ namespace SS14.Shared.Physics
 
         private int _lastIndex;
 
+        private readonly Dictionary<ICollidable, PhysicsBody> _bodies = new Dictionary<ICollidable, PhysicsBody>();
+
+        private readonly List<ICollidable> _results = new List<ICollidable>();
+
         /// <summary>
         ///     Constructor
         /// </summary>
@@ -41,113 +46,109 @@ namespace SS14.Shared.Physics
         ///     returns true if collider intersects a collidable under management. Does not trigger Bump.
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
+        /// <param name="map">Map ID to filter</param>
         /// <returns></returns>
         public bool IsColliding(Box2 collider, MapId map)
         {
-            Vector2[] points =
+            foreach (var kvBody in _bodies)
             {
-                collider.BottomLeft,
-                collider.TopLeft,
-                collider.TopRight,
-                collider.BottomRight
-            };
+                var collidable = kvBody.Key;
 
-            var colliders = points.Select(GetBucket) // Get the buckets that correspond to the collider's points.
-                        .Distinct()
-                        .SelectMany(b => b.GetPoints()) // Get all of the points
-                        .Select(p => p.ParentAABB) // Expand points to distinct AABBs
-                        .Distinct();
-
-            foreach (var aabb in colliders)
-            {
-                if (aabb.Collidable.MapID == map
-                    && aabb.Collidable.WorldAABB.Intersects(collider)
-                    && aabb.Collidable.IsHardCollidable)
-                {
+                if (collidable.MapID == map &&
+                    collidable.IsHardCollidable &&
+                    collidable.WorldAABB.Intersects(collider))
                     return true;
-                }
             }
+
             return false;
         }
 
         /// <summary>
         ///     returns true if collider intersects a collidable under management and calls Bump.
         /// </summary>
-        /// <param name="collider">Rectangle to check for collision</param>
+        /// <param name="entity">Rectangle to check for collision</param>
+        /// <param name="offset"></param>
+        /// <param name="bump"></param>
         /// <returns></returns>
-        public bool TryCollide(IEntity collider)
+        public bool TryCollide(IEntity entity, Vector2 offset, bool bump = true)
         {
-            return TryCollide(collider, new Vector2());
-        }
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
 
-        /// <summary>
-        ///     returns true if collider intersects a collidable under management and calls Bump.
-        /// </summary>
-        /// <param name="collider">Rectangle to check for collision</param>
-        /// <returns></returns>
-        public bool TryCollide(IEntity collider, Vector2 offset, bool bump = true)
-        {
-            if (collider == null) return false;
-            var colliderComponent = collider.GetComponent<ICollidableComponent>();
-            if (colliderComponent == null) return false;
+            var collidable = (ICollidable) entity.GetComponent<ICollidableComponent>();
 
-            var colliderAABB = colliderComponent.WorldAABB;
+            var colliderAABB = collidable.WorldAABB;
             if (offset.LengthSquared > 0)
             {
                 colliderAABB = colliderAABB.Translated(offset);
             }
 
-            Vector2[] points =
-            {
-                new Vector2(colliderAABB.Left, colliderAABB.Top),
-                new Vector2(colliderAABB.Right, colliderAABB.Top),
-                new Vector2(colliderAABB.Right, colliderAABB.Bottom),
-                new Vector2(colliderAABB.Left, colliderAABB.Bottom)
-            };
+            // Test this collidable against every other one.
+            _results.Clear();
+            DoCollisionTest(collidable, colliderAABB, _results);
 
-            var bounds = points
-                    .Select(GetBucket) // Get the buckets that correspond to the collider's points.
-                    .Distinct()
-                    .SelectMany(b => b.GetPoints()) // Get all of the points
-                    .Select(p => p.ParentAABB) // Expand points to distinct AABBs
-                    .Distinct()
-                    .Where(aabb => aabb.Collidable != colliderComponent &&
-                           aabb.Collidable.WorldAABB.Intersects(colliderAABB) &&
-                           aabb.Collidable.MapID == colliderComponent.MapID); //try all of the AABBs against the target rect.
+            //See if our collision will be overridden by a component
+            var collisionmodifiers = entity.GetAllComponents<ICollideSpecial>().ToList();
+            var collidedwith = new List<IEntity>();
 
-            //See if our collision will be overriden by a component
-            List<ICollideSpecial> collisionmodifiers = collider.GetAllComponents<ICollideSpecial>().ToList();
-            List<IEntity> collidedwith = new List<IEntity>();
+            var collided = TestSpecialCollisionAndBump(entity, bump, collisionmodifiers, collidedwith);
 
-            //try all of the AABBs against the target rect.
-            var collided = false;
-            foreach (var aabb in bounds)
-            {
-                //Provides component level overrides for collision behavior based on the entity we are trying to collide with
-                var preventcollision = false;
-                for (var i = 0; i < collisionmodifiers.Count; i++)
-                {
-                    preventcollision |= collisionmodifiers[i].PreventCollide(aabb.Collidable);
-                }
-                if (preventcollision) //We were prevented, bail
-                    continue;
-
-                if (aabb.Collidable.IsHardCollidable) //If the collider is meant to be collidable at the moment
-                {
-                    collided = true;
-
-                    if (bump)
-                    {
-                        aabb.Collidable.Bumped(collider);
-                        collidedwith.Add(aabb.Collidable.Owner);
-                    }
-                }
-            }
-
-            colliderComponent.Bump(collidedwith);
+            collidable.Bump(collidedwith);
 
             //TODO: This needs multi-grid support.
             return collided;
+        }
+
+        private bool TestSpecialCollisionAndBump(IEntity entity, bool bump, List<ICollideSpecial> collisionmodifiers, List<IEntity> collidedwith)
+        {
+            //try all of the AABBs against the target rect.
+            var collided = false;
+            foreach (var otherCollidable in _results)
+            {
+                //Provides component level overrides for collision behavior based on the entity we are trying to collide with
+                var preventcollision = false;
+
+                foreach (var mods in collisionmodifiers)
+                    preventcollision |= mods.PreventCollide(otherCollidable);
+
+                if (preventcollision) //We were prevented, bail
+                    continue;
+
+                if (!otherCollidable.IsHardCollidable)
+                    continue;
+
+                collided = true;
+
+                if (!bump)
+                    continue;
+
+                otherCollidable.Bumped(entity);
+                collidedwith.Add(otherCollidable.Owner);
+            }
+
+            return collided;
+        }
+
+        /// <summary>
+        ///     Tests a collidable against every other registered collidable.
+        /// </summary>
+        /// <param name="collidable">Collidable being tested.</param>
+        /// <param name="colliderAABB">The AABB of the collidable being tested. This can be ICollidable.WorldAABB, or a modified version of it.</param>
+        /// <param name="results">An empty list that the function stores all colliding bodies inside of.</param>
+        public void DoCollisionTest(ICollidable collidable, Box2 colliderAABB, List<ICollidable> results)
+        {
+            foreach (var kvBody in _bodies)
+            {
+                var other = kvBody.Key;
+
+                if (collidable.MapID != other.MapID ||
+                    collidable.IsHardCollidable == false ||
+                    collidable == other ||
+                    !colliderAABB.Intersects(other.WorldAABB))
+                    continue;
+
+                results.Add(kvBody.Key);
+            }
         }
 
         /// <summary>
@@ -156,6 +157,17 @@ namespace SS14.Shared.Physics
         /// <param name="collidable"></param>
         public void AddCollidable(ICollidable collidable)
         {
+            var body = new PhysicsBody(collidable);
+
+            if (!_bodies.ContainsKey(collidable))
+                _bodies.Add(collidable, body);
+            else
+                Logger.WarningS("phys", $"Collidable already registered! {collidable.Owner}");
+
+            
+
+
+
             if (_aabbs.ContainsKey(collidable))
             {
                 // TODO: throw an exception instead.
@@ -179,6 +191,14 @@ namespace SS14.Shared.Physics
         /// <param name="collidable"></param>
         public void RemoveCollidable(ICollidable collidable)
         {
+            if (_bodies.ContainsKey(collidable))
+                _bodies.Remove(collidable);
+            else
+                Logger.WarningS("phys", $"Trying to remove unregistered collidable! {collidable.Owner}");
+
+
+
+
             var ourAABB = _aabbs[collidable].aabb;
 
             foreach (var p in ourAABB.Points)
@@ -192,6 +212,7 @@ namespace SS14.Shared.Physics
         ///     Updates the collidable in the manager.
         /// </summary>
         /// <param name="collidable"></param>
+        [Obsolete("What EventArgs is this?")]
         public void UpdateCollidable(ICollidable collidable)
         {
             RemoveCollidable(collidable);
@@ -202,6 +223,7 @@ namespace SS14.Shared.Physics
         ///     Adds an AABB point to a buckets
         /// </summary>
         /// <param name="point"></param>
+        [Obsolete("Point BS")]
         private void AddPoint(CollidablePoint point)
         {
             var b = GetBucket(point.Coordinates);
@@ -212,80 +234,38 @@ namespace SS14.Shared.Physics
         ///     Removes an AABB point from a bucket
         /// </summary>
         /// <param name="point"></param>
+        [Obsolete("Point BS")]
         private void RemovePoint(CollidablePoint point)
         {
             var b = GetBucket(point.Coordinates);
             b.RemovePoint(point);
         }
 
-        public RayCastResults IntersectRay(Ray ray, float maxLength = 50, IEntity entityignore = null)
-        {
-            var closestResults = new RayCastResults(float.PositiveInfinity, Vector2.Zero, null);
-            var minDist = float.PositiveInfinity;
-            var localBounds = new Box2(0, BucketSize, BucketSize, 0);
-
-            // for each bucket index
-            foreach (var kvIndices in _bucketIndex)
-            {
-                var worldBounds = localBounds.Translated(kvIndices.Key * BucketSize);
-
-                // check if ray intersects the bucket AABB
-                if (ray.Intersects(worldBounds, out var dist, out _))
-                {
-                    // bucket is too far away
-                    if (dist > maxLength)
-                        continue;
-
-                    // get the object it intersected in the bucket
-                    var bucket = _buckets[kvIndices.Value];
-                    if (TryGetClosestIntersect(ray, bucket, out var results, entityignore))
-                    {
-                        if (results.Distance < minDist)
-                        {
-                            minDist = results.Distance;
-                            closestResults = results;
-                        }
-                    }
-                }
-            }
-
-            return closestResults;
-        }
-
-        /// <summary>
-        ///     Return the closest object, inside a bucket, to the ray origin that was intersected (if any).
-        /// </summary>
-        private static bool TryGetClosestIntersect(Ray ray, CollidableBucket bucket, out RayCastResults results, IEntity entityignore = null)
+        /// <inheritdoc />
+        public RayCastResults IntersectRay(Ray ray, float maxLength = 50, IEntity ignoredEnt = null)
         {
             IEntity entity = null;
             var hitPosition = Vector2.Zero;
-            var minDist = float.PositiveInfinity;
+            var minDist = maxLength;
 
-            foreach (var collidablePoint in bucket.GetPoints()) // *goes to kitchen to freshen up his drink...*
+            foreach (var kvBody in _bodies)
             {
-                var worldAABB = collidablePoint.ParentAABB.Collidable.WorldAABB;
-
-                if (ray.Intersects(worldAABB, out var dist, out var hitPos) && !(dist > minDist))
+                var body = kvBody.Key;
+                if (ray.Intersects(body.WorldAABB, out var dist, out var hitPos) && dist < minDist)
                 {
-                    if (entityignore != null && entityignore == collidablePoint.ParentAABB.Collidable.Owner)
-                    {
+                    if (ignoredEnt != null && ignoredEnt == body.Owner)
                         continue;
-                    }
 
-                    entity = collidablePoint.ParentAABB.Collidable.Owner;
+                    entity = body.Owner;
                     minDist = dist;
                     hitPosition = hitPos;
                 }
             }
 
-            if (minDist < float.PositiveInfinity)
-            {
-                results = new RayCastResults(minDist, hitPosition, entity);
-                return true;
-            }
+            if (entity != null)
+                return new RayCastResults(minDist, hitPosition, entity);
 
-            results = default;
-            return false;
+            return default;
         }
 
         /// <summary>
@@ -293,6 +273,7 @@ namespace SS14.Shared.Physics
         /// </summary>
         /// <param name="coordinate"></param>
         /// <returns></returns>
+        [Obsolete("Bucket BS")]
         private CollidableBucket GetBucket(Vector2 coordinate)
         {
             var key = GetBucketCoordinate(coordinate);
@@ -301,6 +282,7 @@ namespace SS14.Shared.Physics
                 : CreateBucket(key);
         }
 
+        [Obsolete("Bucket BS")]
         private static Vector2i GetBucketCoordinate(Vector2 coordinate)
         {
             var x = (int)Math.Floor(coordinate.X / BucketSize);
@@ -308,6 +290,7 @@ namespace SS14.Shared.Physics
             return new Vector2i(x, y);
         }
 
+        [Obsolete("Bucket BS")]
         private CollidableBucket CreateBucket(Vector2i coordinate)
         {
             if (_bucketIndex.ContainsKey(coordinate))

@@ -185,7 +185,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IEntityManager, ClientEntityManager>();
                     IoCManager.Register<IComponentFactory, ComponentFactory>();
                     IoCManager.Register<IMapManager, MapManager>();
-                    IoCManager.Register<ICollisionManager, CollisionManager>();
+                    IoCManager.Register<IPhysicsManager, PhysicsManager>();
 
                     // Client stuff.
                     IoCManager.Register<IReflectionManager, ClientReflectionManager>();

@@ -81,7 +81,7 @@ namespace SS14.Server.GameObjects
         public override void OnAdd()
         {
             base.OnAdd();
-            var cm = IoCManager.Resolve<ICollisionManager>();
+            var cm = IoCManager.Resolve<IPhysicsManager>();
             cm.AddCollidable(this);
         }
 
@@ -90,14 +90,14 @@ namespace SS14.Server.GameObjects
         /// </summary>
         public override void Shutdown()
         {
-            var cm = IoCManager.Resolve<ICollisionManager>();
+            var cm = IoCManager.Resolve<IPhysicsManager>();
             cm.RemoveCollidable(this);
             base.Shutdown();
         }
 
         public bool TryCollision(Vector2 offset, bool bump = false)
         {
-            return IoCManager.Resolve<ICollisionManager>().TryCollide(Owner, offset, bump);
+            return IoCManager.Resolve<IPhysicsManager>().TryCollide(Owner, offset, bump);
         }
     }
 }

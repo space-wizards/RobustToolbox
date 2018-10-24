@@ -37,7 +37,7 @@ namespace SS14.Client.Placement
     public class PlacementManager : IPlacementManager, IDisposable
     {
         [Dependency]
-        public readonly ICollisionManager CollisionManager;
+        public readonly IPhysicsManager PhysicsManager;
         [Dependency]
         private readonly IClientNetManager NetworkManager;
         [Dependency]

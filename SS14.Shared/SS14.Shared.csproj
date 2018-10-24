@@ -161,8 +161,7 @@
     <Compile Include="Interfaces\Network\INetManager.cs" />
     <Compile Include="Interfaces\Network\IServerNetManager.cs" />
     <Compile Include="Interfaces\Physics\ICollidable.cs" />
-    <Compile Include="Interfaces\Physics\ICollider.cs" />
-    <Compile Include="Interfaces\Physics\ICollisionManager.cs" />
+    <Compile Include="Interfaces\Physics\IPhysicsManager.cs" />
     <Compile Include="Interfaces\Reflection\IReflectionManager.cs" />
     <Compile Include="Interfaces\Resources\IResourceManager.cs" />
     <Compile Include="Interfaces\Resources\IWritableDirProvider.cs" />
@@ -227,12 +226,11 @@
     <Compile Include="Physics\CollidableAABB.cs" />
     <Compile Include="Physics\CollidableBucket.cs" />
     <Compile Include="Physics\CollidablePoint.cs" />
-    <Compile Include="Physics\CollisionManager.cs" />
+    <Compile Include="Physics\PhysicsManager.cs" />
     <Compile Include="Enums\PlacementInformation.cs" />
     <Compile Include="Input\InputCmdHandler.cs" />
     <Compile Include="Input\KeyFunctions.cs" />
     <Compile Include="Input\BoundKeyEventArgs.cs" />
-    <Compile Include="Physics\PhysicsBody.cs" />
     <Compile Include="Physics\RayCastResults.cs" />
     <Compile Include="Players\IBaseSession.cs" />
     <Compile Include="Players\ICommonSession.cs" />

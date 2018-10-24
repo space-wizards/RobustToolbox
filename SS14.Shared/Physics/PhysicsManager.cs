@@ -10,37 +10,11 @@ using SS14.Shared.Maths;
 
 namespace SS14.Shared.Physics
 {
-    //Its the bucket list!
-    /// <summary>
-    ///     Here's what is happening here. Each collidable AABB added to this manager gets tossed into
-    ///     a "bucket". The buckets are subdivisions of the world space in 256-unit blocks.
-    /// </summary>
-    public class CollisionManager : ICollisionManager
+    /// <inheritdoc />
+    public class PhysicsManager : IPhysicsManager
     {
-        private const int BucketSize = 256;
-        private readonly Dictionary<ICollidable, (CollidableAABB aabb, IEntity owner)> _aabbs;
-
-        private readonly Dictionary<Vector2i, int> _bucketIndex;
-        //Indexed in 256-pixel blocks - 0 = 0, 1 = 256, 2 = 512 etc
-
-        private readonly Dictionary<int, CollidableBucket> _buckets;
-        // each bucket represents a 256x256 block of pixelspace
-
-        private int _lastIndex;
-
-        private readonly Dictionary<ICollidable, PhysicsBody> _bodies = new Dictionary<ICollidable, PhysicsBody>();
-
+        private readonly List<ICollidable> _bodies = new List<ICollidable>();
         private readonly List<ICollidable> _results = new List<ICollidable>();
-
-        /// <summary>
-        ///     Constructor
-        /// </summary>
-        public CollisionManager()
-        {
-            _bucketIndex = new Dictionary<Vector2i, int>();
-            _buckets = new Dictionary<int, CollidableBucket>();
-            _aabbs = new Dictionary<ICollidable, (CollidableAABB aabb, IEntity owner)>();
-        }
 
         /// <summary>
         ///     returns true if collider intersects a collidable under management. Does not trigger Bump.
@@ -50,13 +24,11 @@ namespace SS14.Shared.Physics
         /// <returns></returns>
         public bool IsColliding(Box2 collider, MapId map)
         {
-            foreach (var kvBody in _bodies)
+            foreach (var body in _bodies)
             {
-                var collidable = kvBody.Key;
-
-                if (collidable.MapID == map &&
-                    collidable.IsHardCollidable &&
-                    collidable.WorldAABB.Intersects(collider))
+                if (body.MapID == map &&
+                    body.IsHardCollidable &&
+                    body.WorldAABB.Intersects(collider))
                     return true;
             }
 
@@ -137,17 +109,15 @@ namespace SS14.Shared.Physics
         /// <param name="results">An empty list that the function stores all colliding bodies inside of.</param>
         public void DoCollisionTest(ICollidable collidable, Box2 colliderAABB, List<ICollidable> results)
         {
-            foreach (var kvBody in _bodies)
+            foreach (var body in _bodies)
             {
-                var other = kvBody.Key;
-
-                if (collidable.MapID != other.MapID ||
+                if (collidable.MapID != body.MapID ||
                     collidable.IsHardCollidable == false ||
-                    collidable == other ||
-                    !colliderAABB.Intersects(other.WorldAABB))
+                    collidable == body ||
+                    !colliderAABB.Intersects(body.WorldAABB))
                     continue;
 
-                results.Add(kvBody.Key);
+                results.Add(body);
             }
         }
 
@@ -157,32 +127,10 @@ namespace SS14.Shared.Physics
         /// <param name="collidable"></param>
         public void AddCollidable(ICollidable collidable)
         {
-            var body = new PhysicsBody(collidable);
-
-            if (!_bodies.ContainsKey(collidable))
-                _bodies.Add(collidable, body);
+            if (!_bodies.Contains(collidable))
+                _bodies.Add(collidable);
             else
                 Logger.WarningS("phys", $"Collidable already registered! {collidable.Owner}");
-
-            
-
-
-
-            if (_aabbs.ContainsKey(collidable))
-            {
-                // TODO: throw an exception instead.
-                // There's too much buggy code in the client that I can't be bothered to fix,
-                // so it'd crash reliably.
-                UpdateCollidable(collidable);
-                return;
-            }
-            var c = new CollidableAABB(collidable);
-            foreach (var p in c.Points)
-            {
-                AddPoint(p);
-            }
-            var comp = collidable as IComponent;
-            _aabbs.Add(collidable, (aabb: c, owner: comp?.Owner));
         }
 
         /// <summary>
@@ -191,54 +139,10 @@ namespace SS14.Shared.Physics
         /// <param name="collidable"></param>
         public void RemoveCollidable(ICollidable collidable)
         {
-            if (_bodies.ContainsKey(collidable))
+            if (_bodies.Contains(collidable))
                 _bodies.Remove(collidable);
             else
                 Logger.WarningS("phys", $"Trying to remove unregistered collidable! {collidable.Owner}");
-
-
-
-
-            var ourAABB = _aabbs[collidable].aabb;
-
-            foreach (var p in ourAABB.Points)
-            {
-                RemovePoint(p);
-            }
-            _aabbs.Remove(collidable);
-        }
-
-        /// <summary>
-        ///     Updates the collidable in the manager.
-        /// </summary>
-        /// <param name="collidable"></param>
-        [Obsolete("What EventArgs is this?")]
-        public void UpdateCollidable(ICollidable collidable)
-        {
-            RemoveCollidable(collidable);
-            AddCollidable(collidable);
-        }
-
-        /// <summary>
-        ///     Adds an AABB point to a buckets
-        /// </summary>
-        /// <param name="point"></param>
-        [Obsolete("Point BS")]
-        private void AddPoint(CollidablePoint point)
-        {
-            var b = GetBucket(point.Coordinates);
-            b.AddPoint(point);
-        }
-
-        /// <summary>
-        ///     Removes an AABB point from a bucket
-        /// </summary>
-        /// <param name="point"></param>
-        [Obsolete("Point BS")]
-        private void RemovePoint(CollidablePoint point)
-        {
-            var b = GetBucket(point.Coordinates);
-            b.RemovePoint(point);
         }
 
         /// <inheritdoc />
@@ -248,9 +152,8 @@ namespace SS14.Shared.Physics
             var hitPosition = Vector2.Zero;
             var minDist = maxLength;
 
-            foreach (var kvBody in _bodies)
+            foreach (var body in _bodies)
             {
-                var body = kvBody.Key;
                 if (ray.Intersects(body.WorldAABB, out var dist, out var hitPos) && dist < minDist)
                 {
                     if (ignoredEnt != null && ignoredEnt == body.Owner)
@@ -266,41 +169,6 @@ namespace SS14.Shared.Physics
                 return new RayCastResults(minDist, hitPosition, entity);
 
             return default;
-        }
-
-        /// <summary>
-        ///     Gets a bucket given a point coordinate
-        /// </summary>
-        /// <param name="coordinate"></param>
-        /// <returns></returns>
-        [Obsolete("Bucket BS")]
-        private CollidableBucket GetBucket(Vector2 coordinate)
-        {
-            var key = GetBucketCoordinate(coordinate);
-            return _bucketIndex.ContainsKey(key)
-                ? _buckets[_bucketIndex[key]]
-                : CreateBucket(key);
-        }
-
-        [Obsolete("Bucket BS")]
-        private static Vector2i GetBucketCoordinate(Vector2 coordinate)
-        {
-            var x = (int)Math.Floor(coordinate.X / BucketSize);
-            var y = (int)Math.Floor(coordinate.Y / BucketSize);
-            return new Vector2i(x, y);
-        }
-
-        [Obsolete("Bucket BS")]
-        private CollidableBucket CreateBucket(Vector2i coordinate)
-        {
-            if (_bucketIndex.ContainsKey(coordinate))
-                return _buckets[_bucketIndex[coordinate]];
-
-            var b = new CollidableBucket(_lastIndex, coordinate);
-            _buckets.Add(_lastIndex, b);
-            _bucketIndex.Add(coordinate, _lastIndex);
-            _lastIndex++;
-            return b;
         }
     }
 }

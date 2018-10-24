@@ -10,7 +10,7 @@ using SS14.Shared.Physics;
 namespace SS14.UnitTesting.Shared.Physics
 {
     [TestFixture]
-    [TestOf(typeof(CollisionManager))]
+    [TestOf(typeof(PhysicsManager))]
     internal class CollisionManager_Test
     {
         [Test]
@@ -19,7 +19,7 @@ namespace SS14.UnitTesting.Shared.Physics
             // Arrange
             var box = new Box2(5, -5, 10, 6);
             var testBox = new Box2(-3, -3, 4, 6);
-            var manager = new CollisionManager();
+            var manager = new PhysicsManager();
 
             var mock = new Mock<ICollidable>();
             mock.Setup(foo => foo.WorldAABB).Returns(box);
@@ -40,7 +40,7 @@ namespace SS14.UnitTesting.Shared.Physics
             // Arrange
             var box = new Box2(5, -5, 10, 6);
             var testBox = new Box2(-3, -3, 5, 6);
-            var manager = new CollisionManager();
+            var manager = new PhysicsManager();
 
             var mock = new Mock<ICollidable>();
             mock.Setup(foo => foo.WorldAABB).Returns(box);
@@ -61,7 +61,7 @@ namespace SS14.UnitTesting.Shared.Physics
             // Arrange
             var box = new Box2(5, -5, 10, 6);
             var testBox = new Box2(-3, -3, 5, 6);
-            var manager = new CollisionManager();
+            var manager = new PhysicsManager();
 
             var mock = new Mock<ICollidable>();
             mock.Setup(foo => foo.WorldAABB).Returns(box);
@@ -82,7 +82,7 @@ namespace SS14.UnitTesting.Shared.Physics
             // Arrange
             var box = new Box2(5, -5, 10, 6);
             var testBox = new Box2(-3, -3, 6, 6);
-            var manager = new CollisionManager();
+            var manager = new PhysicsManager();
 
             var mock = new Mock<ICollidable>();
             mock.Setup(foo => foo.WorldAABB).Returns(box);
@@ -103,7 +103,7 @@ namespace SS14.UnitTesting.Shared.Physics
             // Arrange
             var box = new Box2(5, -5, 10, 6);
             var testBox = new Box2(-3, -3, 5, 6);
-            var manager = new CollisionManager();
+            var manager = new PhysicsManager();
 
             var mock = new Mock<ICollidable>();
             mock.Setup(foo => foo.WorldAABB).Returns(box);
@@ -124,7 +124,7 @@ namespace SS14.UnitTesting.Shared.Physics
             // Arrange
             var box = new Box2(5, -5, 10, 6);
             var ray = new Ray(new Vector2(0, 1), Vector2.UnitX);
-            var manager = new CollisionManager();
+            var manager = new PhysicsManager();
 
             var mock = new Mock<ICollidable>();
             mock.Setup(foo => foo.WorldAABB).Returns(box);
@@ -147,7 +147,7 @@ namespace SS14.UnitTesting.Shared.Physics
             // Arrange
             var box = new Box2(5, -5, 10, 6);
             var ray = new Ray(new Vector2(4.99999f, 1), Vector2.UnitY);
-            var manager = new CollisionManager();
+            var manager = new PhysicsManager();
 
             var mock = new Mock<ICollidable>();
             mock.Setup(foo => foo.WorldAABB).Returns(box);
@@ -168,7 +168,7 @@ namespace SS14.UnitTesting.Shared.Physics
         {
             // Arrange
             var results = new List<ICollidable>(1);
-            var manager = new CollisionManager();
+            var manager = new PhysicsManager();
 
             var mock0 = new Mock<ICollidable>();
             mock0.Setup(foo => foo.WorldAABB).Returns(new Box2(-3, -3, 6, 6));

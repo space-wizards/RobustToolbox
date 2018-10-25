@@ -8,7 +8,7 @@ namespace SS14.Shared.Players
     public interface IBaseSession
     {
         /// <summary>
-        ///     The GUID of this session.
+        ///     The UID of this session.
         /// </summary>
         NetSessionId SessionId { get; }
 

@@ -8,7 +8,7 @@ namespace SS14.Shared.Physics
         /// <summary>
         ///     True if an object was indeed hit. False otherwise.
         /// </summary>
-        public bool DidHitObject => Distance < float.PositiveInfinity;
+        public bool DidHitObject => HitEntity != null;
 
         /// <summary>
         ///     The entity that was hit. <see langword="null" /> if no entity was hit.
@@ -21,7 +21,7 @@ namespace SS14.Shared.Physics
         public Vector2 HitPos { get; }
 
         /// <summary>
-        ///     The distance from point of origin to the context point. <see cref="System.Single.PositiveInfinity"/> if nothing was hit.
+        ///     The distance from point of origin to the context point. 0.0f if nothing was hit.
         /// </summary>
         public float Distance { get; }
 

@@ -72,7 +72,7 @@ namespace SS14.Client.GameObjects
 
             if (collisionEnabled)
             {
-                var cm = IoCManager.Resolve<ICollisionManager>();
+                var cm = IoCManager.Resolve<IPhysicsManager>();
                 cm.AddCollidable(this);
             }
         }
@@ -84,35 +84,11 @@ namespace SS14.Client.GameObjects
         {
             if (collisionEnabled)
             {
-                var cm = IoCManager.Resolve<ICollisionManager>();
+                var cm = IoCManager.Resolve<IPhysicsManager>();
                 cm.RemoveCollidable(this);
             }
 
             base.Shutdown();
-        }
-
-        /// <summary>
-        ///     Handles an incoming component message.
-        /// </summary>
-        /// <param name="owner">
-        ///     Object that raised the event. If the event was sent over the network or from some unknown place,
-        ///     this will be null.
-        /// </param>
-        /// <param name="message">Message that was sent.</param>
-        public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null, IComponent component = null)
-        {
-            base.HandleMessage(message, netChannel, component);
-
-            switch (message)
-            {
-                case SpriteChangedMsg msg:
-                    if (collisionEnabled)
-                    {
-                        var cm = IoCManager.Resolve<ICollisionManager>();
-                        cm.UpdateCollidable(this);
-                    }
-                    break;
-            }
         }
 
         /// <inheritdoc />
@@ -132,7 +108,7 @@ namespace SS14.Client.GameObjects
 
         public bool TryCollision(Vector2 offset, bool bump = false)
         {
-            return IoCManager.Resolve<ICollisionManager>().TryCollide(Owner, offset, bump);
+            return IoCManager.Resolve<IPhysicsManager>().TryCollide(Owner, offset, bump);
         }
 
         /// <summary>
@@ -141,7 +117,7 @@ namespace SS14.Client.GameObjects
         private void EnableCollision()
         {
             collisionEnabled = true;
-            var cm = IoCManager.Resolve<ICollisionManager>();
+            var cm = IoCManager.Resolve<IPhysicsManager>();
             cm.AddCollidable(this);
         }
 
@@ -151,7 +127,7 @@ namespace SS14.Client.GameObjects
         private void DisableCollision()
         {
             collisionEnabled = false;
-            var cm = IoCManager.Resolve<ICollisionManager>();
+            var cm = IoCManager.Resolve<IPhysicsManager>();
             cm.RemoveCollidable(this);
         }
     }

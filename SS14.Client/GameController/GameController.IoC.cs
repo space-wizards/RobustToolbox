@@ -98,7 +98,7 @@ namespace SS14.Client
             IoCManager.Register<IComponentFactory, GodotComponentFactory>();
             IoCManager.Register<IComponentManager, ComponentManager>();
             IoCManager.Register<IMapManager, ClientMapManager>();
-            IoCManager.Register<ICollisionManager, CollisionManager>();
+            IoCManager.Register<IPhysicsManager, PhysicsManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
             IoCManager.Register<ITaskManager, TaskManager>();
 

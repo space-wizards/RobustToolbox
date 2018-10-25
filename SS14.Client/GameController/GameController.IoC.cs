@@ -11,7 +11,6 @@ using SS14.Client.Interfaces.GameStates;
 using SS14.Client.Interfaces.Graphics.Lighting;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Map;
-using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;

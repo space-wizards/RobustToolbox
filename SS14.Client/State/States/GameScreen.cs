@@ -5,7 +5,6 @@ using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Placement;
-using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.GameObjects;
@@ -17,6 +16,7 @@ using SS14.Shared.Map;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.GameObjects.EntitySystems;
+using SS14.Client.Player;
 using SS14.Shared.Interfaces.Timing;
 
 namespace SS14.Client.State.States

@@ -154,7 +154,8 @@
     <Compile Include="Interfaces\IBaseClient.cs" />
     <Compile Include="Interfaces\ISceneTreeHolder.cs" />
     <Compile Include="Interfaces\Map\IClientTileDefinitionManager.cs" />
-    <Compile Include="Interfaces\Player\IPlayerManager.cs" />
+    <Compile Include="Player\IPlayerManager.cs" />
+    <Compile Include="Player\IPlayerSession.cs" />
     <Compile Include="Interfaces\State\IStateManager.cs" />
     <Compile Include="Interfaces\Utility\IRand.cs" />
     <Compile Include="Log\DebugConsoleLogHandler.cs" />

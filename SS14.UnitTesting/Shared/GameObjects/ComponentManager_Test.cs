@@ -217,7 +217,26 @@ namespace SS14.UnitTesting.Shared.GameObjects
             Assert.That(list[0], Is.EqualTo(component));
         }
 
-#endregion
+        [Test]
+        public void GetAllComponentInstances()
+        {
+            // Arrange
+            var manager = ManagerFactory(out var entityManager);
+            var entity = EntityFactory(entityManager);
+            var component = new DummyComponent();
+            component.Owner = entity;
+            manager.AddComponent(entity, component);
+
+            // Act
+            var result = manager.GetComponentInstances(entity.Uid);
+
+            // Assert
+            var list = result.ToList();
+            Assert.That(list.Count, Is.EqualTo(1));
+            Assert.That(list[0], Is.EqualTo(component));
+        }
+
+        #endregion
 
         // mimics the IoC system.
         private static IComponentManager ManagerFactory(out IEntityManager entityManager)
@@ -260,7 +279,7 @@ namespace SS14.UnitTesting.Shared.GameObjects
                 .Where(p => Attribute.GetCustomAttribute(p, typeof(DependencyAttribute)) != null);
         }
 
-        private class DummyComponent : Component
+        private class DummyComponent : Component, ICompType1, ICompType2
         {
             public override string Name => null;
             public override uint? NetID => CompNetId;
@@ -274,5 +293,9 @@ namespace SS14.UnitTesting.Shared.GameObjects
             mockEnt.Setup(x => x.IsValid()).Returns(true);
             return mockEnt.Object;
         }
+
+        private interface ICompType1 { }
+
+        private interface ICompType2 { }
     }
 }

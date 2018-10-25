@@ -329,6 +329,22 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public IEnumerable<IComponent> GetComponentInstances(EntityUid uid)
+        {
+            var results = new List<IComponent>();
+
+            foreach (var kvTypeDict in _dictComponents.Values)
+            {
+                if (kvTypeDict.TryGetValue(uid, out var comp) && !results.Contains(comp))
+                {
+                    results.Add(comp);
+                }
+            }
+
+            return results;
+        }
+
+        /// <inheritdoc />
         public IEnumerable<T> GetComponents<T>(EntityUid uid)
         {
             return GetComponents(uid).OfType<T>();

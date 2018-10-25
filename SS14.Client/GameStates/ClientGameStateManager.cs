@@ -1,7 +1,6 @@
 ﻿using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
-using SS14.Client.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Network;
@@ -12,6 +11,7 @@ using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Client.Player;
 
 namespace SS14.Client.GameStates
 {

@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using SS14.Client.Interfaces;
-using SS14.Client.Interfaces.Player;
-using SS14.Shared;
 using SS14.Shared.Configuration;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
@@ -15,6 +12,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Players;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.Player
@@ -43,7 +41,7 @@ namespace SS14.Client.Player
         /// <summary>
         ///     Active sessions of connected clients to the server.
         /// </summary>
-        private Dictionary<NetSessionId, PlayerSession> _sessions;
+        private Dictionary<NetSessionId, IPlayerSession> _sessions;
 
         /// <inheritdoc />
         public int PlayerCount => _sessions.Values.Count;
@@ -55,10 +53,10 @@ namespace SS14.Client.Player
         public LocalPlayer LocalPlayer { get; private set; }
 
         /// <inheritdoc />
-        public IEnumerable<PlayerSession> Sessions => _sessions.Values;
+        public IEnumerable<IPlayerSession> Sessions => _sessions.Values;
 
         /// <inheritdoc />
-        public IReadOnlyDictionary<NetSessionId, PlayerSession> SessionsDict => _sessions;
+        public IReadOnlyDictionary<NetSessionId, IPlayerSession> SessionsDict => _sessions;
 
         /// <inheritdoc />
         public event EventHandler PlayerListUpdated;
@@ -66,7 +64,7 @@ namespace SS14.Client.Player
         /// <inheritdoc />
         public void Initialize()
         {
-            _sessions = new Dictionary<NetSessionId, PlayerSession>();
+            _sessions = new Dictionary<NetSessionId, IPlayerSession>();
 
             _config.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
 
@@ -243,31 +241,5 @@ namespace SS14.Client.Player
                 PlayerListUpdated?.Invoke(this, EventArgs.Empty);
             }
         }
-        /*
-        private void AddEffect(PostProcessingEffectType type, float duration)
-        {
-            PostProcessingEffect e;
-            switch (type)
-            {
-                case PostProcessingEffectType.Blur:
-                    e = new BlurPostProcessingEffect(duration);
-                    e.OnExpired += EffectExpired;
-                    _effects.Add(e);
-                    break;
-                case PostProcessingEffectType.Death:
-                    e = new DeathPostProcessingEffect(duration);
-                    e.OnExpired += EffectExpired;
-                    _effects.Add(e);
-                    break;
-            }
-        }
-
-        private void EffectExpired(PostProcessingEffect effect)
-        {
-            effect.OnExpired -= EffectExpired;
-            if (_effects.Contains(effect))
-                _effects.Remove(effect);
-        }
-        */
     }
 }

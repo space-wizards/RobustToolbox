@@ -1,29 +1,21 @@
 ﻿using SS14.Shared.Enums;
 using SS14.Shared.Network;
-using SS14.Shared.Players;
 
 namespace SS14.Client.Player
 {
-    /// <summary>
-    ///     Client side session of a player.
-    /// </summary>
-    public class PlayerSession : ICommonSession
+
+    public class PlayerSession : IPlayerSession
     {
-        /// <summary>
-        ///     Status of the session.
-        /// </summary>
+        /// <inheritdoc />
         public SessionStatus Status { get; set; } = SessionStatus.Connecting;
 
+        /// <inheritdoc />
         public NetSessionId SessionId { get; }
 
-        /// <summary>
-        ///     Current name of this player.
-        /// </summary>
+        /// <inheritdoc cref="IPlayerSession" />
         public string Name { get; set; } = "<Unknown>";
 
-        /// <summary>
-        ///     Current connection latency of this session from the server to their client.
-        /// </summary>
+        /// <inheritdoc />
         public short Ping { get; set; }
 
         /// <summary>

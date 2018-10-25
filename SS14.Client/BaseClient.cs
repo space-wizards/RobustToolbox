@@ -1,7 +1,6 @@
 ﻿using System;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
-using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Player;
 using SS14.Client.State.States;

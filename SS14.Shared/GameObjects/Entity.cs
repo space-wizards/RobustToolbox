@@ -129,7 +129,7 @@ namespace SS14.Shared.GameObjects
         public void InitializeComponents()
         {
             // Initialize() can modify the collection of components.
-            var components = EntityManager.ComponentManager.GetComponents(Uid).ToList();
+            var components = EntityManager.ComponentManager.GetComponentInstances(Uid).ToList();
             for (int i = 0; i < components.Count; i++)
             {
                 var comp = (Component)components[i];
@@ -145,7 +145,7 @@ namespace SS14.Shared.GameObjects
         {
             // Startup() can modify _components
             // TODO: This code can only handle additions to the list. Is there a better way?
-            var components = EntityManager.ComponentManager.GetComponents(Uid).ToList();
+            var components = EntityManager.ComponentManager.GetComponentInstances(Uid).ToList();
             for (int i = 0; i < components.Count; i++)
             {
                 var comp = (Component)components[i];
@@ -169,7 +169,7 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public void SendMessage(IComponent owner, ComponentMessage message)
         {
-            var components = EntityManager.ComponentManager.GetComponents(Uid);
+            var components = EntityManager.ComponentManager.GetComponentInstances(Uid);
             foreach (var component in components)
             {
                 if (owner != component)
@@ -212,7 +212,7 @@ namespace SS14.Shared.GameObjects
                         }
                         else
                         {
-                            foreach (var component in EntityManager.ComponentManager.GetComponents(Uid))
+                            foreach (var component in EntityManager.ComponentManager.GetComponentInstances(Uid))
                             {
                                 component.HandleMessage(compMsg, compChannel);
                             }
@@ -370,6 +370,12 @@ namespace SS14.Shared.GameObjects
         public IEnumerable<IComponent> GetAllComponents()
         {
             return EntityManager.ComponentManager.GetComponents(Uid).Where(comp => !comp.Deleted);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IComponent> GetComponentInstances()
+        {
+            return EntityManager.ComponentManager.GetComponentInstances(Uid).Where(comp => !comp.Deleted);
         }
 
         /// <inheritdoc />

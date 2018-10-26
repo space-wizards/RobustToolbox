@@ -223,9 +223,6 @@
     <Compile Include="Network\NetManager.cs" />
     <Compile Include="Network\NetSessionId.cs" />
     <Compile Include="Network\StringTable.cs" />
-    <Compile Include="Physics\CollidableAABB.cs" />
-    <Compile Include="Physics\CollidableBucket.cs" />
-    <Compile Include="Physics\CollidablePoint.cs" />
     <Compile Include="Physics\PhysicsManager.cs" />
     <Compile Include="Enums\PlacementInformation.cs" />
     <Compile Include="Input\InputCmdHandler.cs" />

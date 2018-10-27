@@ -7,7 +7,6 @@ using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Components.BoundingBox;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;

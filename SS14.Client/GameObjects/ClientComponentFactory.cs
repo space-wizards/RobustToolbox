@@ -3,7 +3,6 @@ using SS14.Client.GameObjects.Components.UserInterface;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Components.BoundingBox;
 using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.GameObjects.Components.UserInterface;
 using SS14.Shared.Interfaces.GameObjects.Components;

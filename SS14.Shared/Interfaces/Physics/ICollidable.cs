@@ -25,22 +25,22 @@ namespace SS14.Shared.Interfaces.Physics
         /// <summary>
         ///     Enables or disabled collision processing of this body.
         /// </summary>
-        bool CollisionEnabled { get; }
+        bool CollisionEnabled { get; set; }
 
         /// <summary>
         ///     True if collisions should prevent movement, or just trigger bumps.
         /// </summary>
-        bool IsHardCollidable { get; }
+        bool IsHardCollidable { get; set; }
 
         /// <summary>
         ///     Bitmask of the collision layers this component is a part of.
         /// </summary>
-        int CollisionLayer { get; }
+        int CollisionLayer { get; set; }
 
         /// <summary>
         ///     Bitmask of the layers this component collides with.
         /// </summary>
-        int CollisionMask { get; }
+        int CollisionMask { get; set; }
 
         /// <summary>
         /// Called when the collidable is bumped into by someone/something

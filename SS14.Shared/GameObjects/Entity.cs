@@ -398,7 +398,11 @@ namespace SS14.Shared.GameObjects
                     RemoveComponent(GetComponent(t.Item1));
 
                 if (!HasComponent(t.Item1))
-                    AddComponent((Component)IoCManager.Resolve<IComponentFactory>().GetComponent(t.Item2), true);
+                {
+                    var newComp = (Component)IoCManager.Resolve<IComponentFactory>().GetComponent(t.Item2);
+                    newComp.Owner = this;
+                    AddComponent(newComp, true);
+                }
             }
 
             foreach (var compState in state.ComponentStates)

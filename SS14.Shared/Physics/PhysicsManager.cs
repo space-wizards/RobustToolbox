@@ -26,6 +26,9 @@ namespace SS14.Shared.Physics
         {
             foreach (var body in _bodies)
             {
+                if (!body.CollisionEnabled || body.CollisionLayer == 0x0)
+                    continue;
+
                 if (body.MapID == map &&
                     body.IsHardCollidable &&
                     body.WorldAABB.Intersects(collider))
@@ -48,6 +51,9 @@ namespace SS14.Shared.Physics
                 throw new ArgumentNullException(nameof(entity));
 
             var collidable = (ICollidable) entity.GetComponent<ICollidableComponent>();
+
+            if (!collidable.CollisionEnabled || collidable.CollisionLayer == 0x0)
+                return false;
 
             var colliderAABB = collidable.WorldAABB;
             if (offset.LengthSquared > 0)
@@ -111,6 +117,12 @@ namespace SS14.Shared.Physics
         {
             foreach (var body in _bodies)
             {
+                if(!body.CollisionEnabled)
+                    continue;
+
+                if ((collidable.CollisionMask & body.CollisionLayer) == 0x0)
+                    continue;
+
                 if (collidable.MapID != body.MapID ||
                     collidable == body ||
                     !colliderAABB.Intersects(body.WorldAABB))

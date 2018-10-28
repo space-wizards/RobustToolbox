@@ -1,8 +1,6 @@
 ﻿using System;
-using SS14.Client.Graphics.ClientEye;
-using SS14.Client.Interfaces.Debugging;
-using SS14.Client.Interfaces.GameObjects.Components;
-using SS14.Client.Utility;
+using System.Collections.Generic;
+using System.Linq;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
@@ -10,19 +8,15 @@ using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
-using SS14.Shared.Utility;
-using YamlDotNet.RepresentationModel;
-using System.Linq;
-using System.Collections.Generic;
-using SS14.Shared.Interfaces.Network;
-using SS14.Shared.GameObjects.Components.BoundingBox;
 
 namespace SS14.Client.GameObjects
 {
     public class CollidableComponent : Component, ICollidableComponent
     {
-        // no client side collision support for now
-        private bool collisionEnabled;
+        private bool _collisionEnabled;
+        private bool _isHardCollidable;
+        private int _collisionLayer; //bitfield
+        private int _collisionMask; //bitfield
 
         /// <inheritdoc />
         public override string Name => "Collidable";
@@ -51,7 +45,7 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         void ICollidable.Bump(List<IEntity> bumpedinto)
         {
-            List<ICollideBehavior> collidecomponents = Owner.GetAllComponents<ICollideBehavior>().ToList();
+            var collidecomponents = Owner.GetAllComponents<ICollideBehavior>().ToList();
 
             for (var i = 0; i < collidecomponents.Count; i++)
             {
@@ -60,17 +54,41 @@ namespace SS14.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public bool IsHardCollidable { get; } = true;
+        public bool CollisionEnabled
+        {
+            get => _collisionEnabled;
+            set => _collisionEnabled = value;
+        }
+
+        /// <inheritdoc />
+        public bool IsHardCollidable
+        {
+            get => _isHardCollidable;
+            set => _isHardCollidable = value;
+        }
+
+        /// <inheritdoc />
+        public int CollisionLayer
+        {
+            get => _collisionLayer;
+            set => _collisionLayer = value;
+        }
+
+        /// <inheritdoc />
+        public int CollisionMask
+        {
+            get => _collisionMask;
+            set => _collisionMask = value;
+        }
 
         /// <summary>
         ///     gets the AABB from the sprite component and sends it to the CollisionManager.
         /// </summary>
-        /// <param name="owner"></param>
         public override void Initialize()
         {
             base.Initialize();
 
-            if (collisionEnabled)
+            if (_collisionEnabled)
             {
                 var cm = IoCManager.Resolve<IPhysicsManager>();
                 cm.AddCollidable(this);
@@ -82,7 +100,7 @@ namespace SS14.Client.GameObjects
         /// </summary>
         public override void Shutdown()
         {
-            if (collisionEnabled)
+            if (_collisionEnabled)
             {
                 var cm = IoCManager.Resolve<IPhysicsManager>();
                 cm.RemoveCollidable(this);
@@ -94,10 +112,10 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState state)
         {
-            var newState = (CollidableComponentState)state;
+            var newState = (CollidableComponentState) state;
 
             // edge triggered
-            if (newState.CollisionEnabled == collisionEnabled)
+            if (newState.CollisionEnabled == _collisionEnabled)
                 return;
 
             if (newState.CollisionEnabled)
@@ -106,6 +124,7 @@ namespace SS14.Client.GameObjects
                 DisableCollision();
         }
 
+        /// <inheritdoc />
         public bool TryCollision(Vector2 offset, bool bump = false)
         {
             return IoCManager.Resolve<IPhysicsManager>().TryCollide(Owner, offset, bump);
@@ -116,7 +135,7 @@ namespace SS14.Client.GameObjects
         /// </summary>
         private void EnableCollision()
         {
-            collisionEnabled = true;
+            _collisionEnabled = true;
             var cm = IoCManager.Resolve<IPhysicsManager>();
             cm.AddCollidable(this);
         }
@@ -126,7 +145,7 @@ namespace SS14.Client.GameObjects
         /// </summary>
         private void DisableCollision()
         {
-            collisionEnabled = false;
+            _collisionEnabled = false;
             var cm = IoCManager.Resolve<IPhysicsManager>();
             cm.RemoveCollidable(this);
         }

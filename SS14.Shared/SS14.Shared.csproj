@@ -119,6 +119,7 @@
     <Compile Include="ContentPack\ResourceManager.cs" />
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
     <Compile Include="ContentPack\WritableDirProvider.cs" />
+    <Compile Include="Exceptions\RuntimeLog.cs" />
     <Compile Include="GameObjects\ComponentMessage.cs" />
     <Compile Include="GameObjects\ComponentMessages\Messages.cs" />
     <Compile Include="GameObjects\Components\Appearance\SharedAppearanceComponent.cs" />

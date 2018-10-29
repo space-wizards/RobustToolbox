@@ -82,6 +82,8 @@ namespace SS14.Server
         private GameLoop _mainLoop;
         private ServerRunLevel _runLevel;
 
+        private Shared.Exceptions.RuntimeLog runtimeLog;
+
         private TimeSpan _lastTitleUpdate;
         private int _lastReceivedBytes;
         private int _lastSentBytes;
@@ -136,6 +138,9 @@ namespace SS14.Server
         /// <inheritdoc />
         public bool Start()
         {
+            // Exception log
+            runtimeLog = new;
+
             //Sets up the configMgr
             _config.LoadFromFile(_commandLine.ConfigFile);
 
@@ -255,8 +260,14 @@ namespace SS14.Server
             _mainLoop.Tick += (sender, args) => Update(args.DeltaSeconds);
 
             // set GameLoop.Running to false to return from this function.
-            _mainLoop.Run();
-
+            try
+            {
+                _mainLoop.Run();
+            }
+            catch (Exception exp)
+            {
+                runtimeLog.AddException(exp);
+            }
             Cleanup();
         }
 

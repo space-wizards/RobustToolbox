@@ -139,7 +139,7 @@ namespace SS14.Server
         public bool Start()
         {
             // Exception log
-            runtimeLog = new;
+            runtimeLog = new Shared.Exceptions.RuntimeLog();
 
             //Sets up the configMgr
             _config.LoadFromFile(_commandLine.ConfigFile);

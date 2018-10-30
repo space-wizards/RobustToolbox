@@ -131,11 +131,18 @@ namespace SS14.Server.GameObjects.Components.Container
         /// <inheritdoc />
         public bool Remove(IEntity toremove)
         {
+            if (toremove == null)
+                return true;
+
             if (!CanRemove(toremove))
             {
                 return false;
             }
             InternalRemove(toremove);
+
+            if (!toremove.IsValid())
+                return true;
+
             toremove.GetComponent<ITransformComponent>().DetachParent();
             return true;
         }

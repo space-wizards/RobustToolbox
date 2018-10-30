@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Enums;
@@ -21,6 +21,11 @@ namespace SS14.Server.GameObjects.Components.UserInterface
     {
         private readonly Dictionary<object, BoundUserInterface> _interfaces =
             new Dictionary<object, BoundUserInterface>();
+
+        /// <summary>
+        ///     Enumeration of all the interfaces this component provides.
+        /// </summary>
+        public IEnumerable<BoundUserInterface> Interfaces => _interfaces.Values;
 
         public override void ExposeData(ObjectSerializer serializer)
         {
@@ -94,6 +99,11 @@ namespace SS14.Server.GameObjects.Components.UserInterface
         public ServerUserInterfaceComponent Owner { get; }
         private readonly HashSet<IPlayerSession> _subscribedSessions = new HashSet<IPlayerSession>();
         private BoundUserInterfaceState _lastState;
+
+        /// <summary>
+        ///     All of the sessions currently subscribed to this UserInterface.
+        /// </summary>
+        public IEnumerable<IPlayerSession> SubscribedSessions => _subscribedSessions;
 
         public event Action<BoundUserInterfaceMessage> OnReceiveMessage;
 
@@ -172,7 +182,7 @@ namespace SS14.Server.GameObjects.Components.UserInterface
                 throw new ArgumentNullException(nameof(session));
             }
 
-            if (_subscribedSessions.Contains(session))
+            if (!_subscribedSessions.Contains(session))
             {
                 return;
             }

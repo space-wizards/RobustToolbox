@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.UserInterface;
@@ -61,7 +61,7 @@ namespace SS14.Client.GameObjects.Components.UserInterface
                             break;
 
                         case CloseBoundInterfaceMessage _:
-                            Close(wrapped.UiKey);
+                            Close(wrapped.UiKey, true);
                             break;
 
                         default:
@@ -86,15 +86,16 @@ namespace SS14.Client.GameObjects.Components.UserInterface
             boundInterface.Open();
             _openInterfaces[wrapped.UiKey] = boundInterface;
         }
-
-        internal void Close(object uiKey)
+        
+        internal void Close(object uiKey, bool remoteCall)
         {
             if (!_openInterfaces.TryGetValue(uiKey, out var boundUserInterface))
             {
                 return;
             }
 
-            SendMessage(new CloseBoundInterfaceMessage(), uiKey);
+            if(!remoteCall)
+                SendMessage(new CloseBoundInterfaceMessage(), uiKey);
             _openInterfaces.Remove(uiKey);
             boundUserInterface.Dispose();
         }
@@ -151,7 +152,7 @@ namespace SS14.Client.GameObjects.Components.UserInterface
         /// </summary>
         protected void Close()
         {
-            Owner.Close(UiKey);
+            Owner.Close(UiKey, false);
         }
 
         /// <summary>

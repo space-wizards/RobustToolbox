@@ -241,6 +241,13 @@ namespace SS14.Shared.GameObjects.Components.Transform
             }
         }
 
+        /// <inheritdoc />
+        public override void OnRemove()
+        {
+            DetachParent();
+            base.OnRemove();
+        }
+
         /// <summary>
         /// Detaches this entity from its parent.
         /// </summary>

@@ -42,10 +42,6 @@ namespace SS14.Client.GameObjects
         {
             var message = new ClientEntityClickMsg(user.Uid, clickType);
             SendMessage(message);
-            if (!IsClientSide)
-            {
-                SendNetworkMessage(message);
-            }
         }
 
         public void OnMouseEnter()

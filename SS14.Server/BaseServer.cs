@@ -266,7 +266,8 @@ namespace SS14.Server
             }
             catch (Exception exp)
             {
-                runtimeLog.AddException(exp);
+                runtimeLog.AddException(exp, DateTime.Now);
+                throw exp; // It's displayed in the console.
             }
             Cleanup();
         }
@@ -343,6 +344,9 @@ namespace SS14.Server
 
             // shutdown entities
             _entities.Shutdown();
+
+            // Wrtie down exception log
+            System.IO.File.WriteAllText($"Runtime-{DateTime.Now.ToShortDateString()}", runtimeLog.Display());
 
             //TODO: This should prob shutdown all managers in a loop.
 

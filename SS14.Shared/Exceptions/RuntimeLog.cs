@@ -4,35 +4,65 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+public struct ExceptionAndTime
+{
+    public Exception exp;
+    public DateTime time;
+}
 namespace SS14.Shared.Exceptions
 {
-    class RuntimeLog
+    public class RuntimeLog
     {
-        private List<Exception> exceptions { get; set; }
-        private Dictionary<Type, int> exp_count { get; set; }
-        public void AddException(Exception E)
+        private Dictionary<Type, List<ExceptionAndTime>> exceptions;
+
+        public RuntimeLog()
         {
-            exceptions.Add(E);
-            exp_count.Add(E.GetType(), exp_count[E.GetType()] + 1);
+            this.exceptions = new Dictionary<Type, List<ExceptionAndTime>>();
+        }
+
+        public void AddException(Exception E, DateTime D)
+        {
+            if (exceptions.ContainsKey(E.GetType())) // If it contains elements
+            {
+                ExceptionAndTime EandD;
+                EandD.exp = E;
+                EandD.time = D;
+                exceptions[E.GetType()].Add(EandD);
+            }
+            else // Doesn't contain the element so let's instanciate it
+            {
+                exceptions[E.GetType()] = new List<ExceptionAndTime>();
+                ExceptionAndTime EandD;
+                EandD.exp = E;
+                EandD.time = D;
+                exceptions[E.GetType()].Add(EandD);
+            }
+
         }
         public string Display()
         {
-            var ret = "";
-            foreach (Exception E in exceptions)
+            StringBuilder ret = new StringBuilder();
+            foreach (Type T in exceptions.Keys)
             {
-                ret += "Exception in " + E.Source.ToString() + ", " + E.TargetSite.ToString() + ". \n";
-                ret += "Message: " + E.Message + "\n";
-                ret += "Stack Trace: " + E.StackTrace + "\n";
-                if (E.Data.Count > 0)
+                ret.AppendLine($"{exceptions[T].Count().ToString()} exception {((exceptions[T].Count() > 1) ? "s" : "")} {T.ToString()}");
+                foreach (ExceptionAndTime EandD in exceptions[T])
                 {
-                    ret += "Additional data:";
-                    foreach (Object x in E.Data)
+                    Exception E = EandD.exp;
+                    DateTime D = EandD.time;
+                    ret.AppendLine($"Exception in {E.TargetSite}, at {D.ToString()}:");
+                    ret.AppendLine($"Message: {E.Message}");
+                    ret.AppendLine($"Stack trace: {E.StackTrace}");
+                    if (E.Data.Count > 0)
                     {
-                        ret += x.ToString() + ": " + E.Data[x].ToString();
+                        ret.AppendLine("Additional data:");
+                        foreach (Object x in E.Data.Keys)
+                        {
+                            ret.AppendLine($"{x.ToString()}: {E.Data[x].ToString()}");
+                        }
                     }
                 }
             }
-            return ret;
+            return ret.ToString();
         }
     }
 }

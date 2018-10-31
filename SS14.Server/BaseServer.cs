@@ -267,7 +267,6 @@ namespace SS14.Server
             catch (Exception exp)
             {
                 runtimeLog.AddException(exp, DateTime.Now);
-                throw exp; // It's displayed in the console.
             }
             Cleanup();
         }

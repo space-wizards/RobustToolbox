@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 public struct ExceptionAndTime
 {
-    public Exception exp;
-    public DateTime time;
+    public Exception exp { get; set; }
+    public DateTime time { get; set; }
 }
 namespace SS14.Shared.Exceptions
 {
@@ -24,7 +24,7 @@ namespace SS14.Shared.Exceptions
         {
             if (exceptions.ContainsKey(E.GetType())) // If it contains elements
             {
-                ExceptionAndTime EandD;
+                ExceptionAndTime EandD = new ExceptionAndTime();
                 EandD.exp = E;
                 EandD.time = D;
                 exceptions[E.GetType()].Add(EandD);
@@ -32,7 +32,7 @@ namespace SS14.Shared.Exceptions
             else // Doesn't contain the element so let's instanciate it
             {
                 exceptions[E.GetType()] = new List<ExceptionAndTime>();
-                ExceptionAndTime EandD;
+                ExceptionAndTime EandD = new ExceptionAndTime();
                 EandD.exp = E;
                 EandD.time = D;
                 exceptions[E.GetType()].Add(EandD);

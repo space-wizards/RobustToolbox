@@ -22,21 +22,17 @@ namespace SS14.Shared.Exceptions
 
         public void AddException(Exception E, DateTime D)
         {
-            if (exceptions.ContainsKey(E.GetType())) // If it contains elements
+            if (!exceptions.TryGetValue(E.GetType(), out var list))
             {
-                ExceptionAndTime EandD = new ExceptionAndTime();
-                EandD.exp = E;
-                EandD.time = D;
-                exceptions[E.GetType()].Add(EandD);
+                list = new List<ExceptionAndTime>();
+                exceptions[E.GetType()] = list;
             }
-            else // Doesn't contain the element so let's instanciate it
+
+            list.Add(new ExceptionAndTime
             {
-                exceptions[E.GetType()] = new List<ExceptionAndTime>();
-                ExceptionAndTime EandD = new ExceptionAndTime();
-                EandD.exp = E;
-                EandD.time = D;
-                exceptions[E.GetType()].Add(EandD);
-            }
+                exp = E,
+                time = D,
+            });
 
         }
         public string Display()
@@ -44,7 +40,7 @@ namespace SS14.Shared.Exceptions
             StringBuilder ret = new StringBuilder();
             foreach (Type T in exceptions.Keys)
             {
-                ret.AppendLine($"{exceptions[T].Count()} exception {((exceptions[T].Count() > 1) ? "s" : "")} {T)}");
+                ret.AppendLine($"{exceptions[T].Count()} exception {((exceptions[T].Count() > 1) ? "s" : "")} {T}");
                 foreach (ExceptionAndTime EandD in exceptions[T])
                 {
                     Exception E = EandD.exp;

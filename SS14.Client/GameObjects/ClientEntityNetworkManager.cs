@@ -23,6 +23,11 @@ namespace SS14.Client.GameObjects
             _network.ClientSendMessage(msg);
         }
 
+        public void SendSystemNetworkMessage(EntitySystemMessage message, INetChannel channel)
+        {
+            throw new NotSupportedException();
+        }
+
         /// <inheritdoc />
         public void SendDirectedComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component, ComponentMessage message)
         {

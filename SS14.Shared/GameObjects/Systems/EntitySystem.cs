@@ -77,5 +77,10 @@ namespace SS14.Shared.GameObjects.Systems
         {
             EntityNetworkManager.SendSystemNetworkMessage(message);
         }
+
+        protected void RaiseNetworkEvent(EntitySystemMessage message, INetChannel channel)
+        {
+            EntityNetworkManager.SendSystemNetworkMessage(message, channel);
+        }
     }
 }

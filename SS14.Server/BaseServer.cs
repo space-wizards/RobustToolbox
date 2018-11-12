@@ -41,6 +41,7 @@ using SS14.Shared.Timing;
 using SS14.Shared.Utility;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Resources;
+using SS14.Shared.Exceptions;
 
 namespace SS14.Server
 {
@@ -82,7 +83,7 @@ namespace SS14.Server
         private GameLoop _mainLoop;
         private ServerRunLevel _runLevel;
 
-        private Shared.Exceptions.RuntimeLog runtimeLog;
+        private IRuntimeLog runtimeLog;
 
         private TimeSpan _lastTitleUpdate;
         private int _lastReceivedBytes;
@@ -139,7 +140,7 @@ namespace SS14.Server
         public bool Start()
         {
             // Exception log
-            runtimeLog = new Shared.Exceptions.RuntimeLog();
+            runtimeLog = IoCManager.Resolve<IRuntimeLog>();
 
             //Sets up the configMgr
             _config.LoadFromFile(_commandLine.ConfigFile);
@@ -260,14 +261,7 @@ namespace SS14.Server
             _mainLoop.Tick += (sender, args) => Update(args.DeltaSeconds);
 
             // set GameLoop.Running to false to return from this function.
-            try
-            {
-                _mainLoop.Run();
-            }
-            catch (Exception exp)
-            {
-                runtimeLog.AddException(exp, DateTime.Now);
-            }
+            _mainLoop.Run();
             Cleanup();
         }
 
@@ -345,7 +339,8 @@ namespace SS14.Server
             _entities.Shutdown();
 
             // Wrtie down exception log
-            System.IO.File.WriteAllText($"Runtime-{DateTime.Now.ToShortDateString()}", runtimeLog.Display());
+            var logPath = _config.GetCVar<string>("log.path");
+            System.IO.File.WriteAllText($"{PathHelpers.ExecutableRelativeFile(logPath)}/Runtime-{DateTime.Now.ToShortDateString()}", runtimeLog.Display());
 
             //TODO: This should prob shutdown all managers in a loop.
 

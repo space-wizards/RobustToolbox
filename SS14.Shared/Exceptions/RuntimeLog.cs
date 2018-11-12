@@ -4,20 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-public struct ExceptionAndTime
-{
-    public Exception exp { get; set; }
-    public DateTime time { get; set; }
-}
+
 namespace SS14.Shared.Exceptions
 {
-    public class RuntimeLog
+    public struct ExceptionAndTime
     {
-        private Dictionary<Type, List<ExceptionAndTime>> exceptions;
+        public Exception exp { get; set; }
+        public DateTime time { get; set; }
+    }
+    public class RuntimeLog : IRuntimeLog
+    {
+        private Dictionary<Type, List<ExceptionAndTime>> exceptions = new Dictionary<Type, List<ExceptionAndTime>>();
 
         public RuntimeLog()
         {
-            this.exceptions = new Dictionary<Type, List<ExceptionAndTime>>();
         }
 
         public void AddException(Exception E, DateTime D)
@@ -44,7 +44,7 @@ namespace SS14.Shared.Exceptions
             StringBuilder ret = new StringBuilder();
             foreach (Type T in exceptions.Keys)
             {
-                ret.AppendLine($"{exceptions[T].Count().ToString()} exception {((exceptions[T].Count() > 1) ? "s" : "")} {T.ToString()}");
+                ret.AppendLine($"{exceptions[T].Count()} exception {((exceptions[T].Count() > 1) ? "s" : "")} {T)}");
                 foreach (ExceptionAndTime EandD in exceptions[T])
                 {
                     Exception E = EandD.exp;
@@ -57,12 +57,17 @@ namespace SS14.Shared.Exceptions
                         ret.AppendLine("Additional data:");
                         foreach (Object x in E.Data.Keys)
                         {
-                            ret.AppendLine($"{x.ToString()}: {E.Data[x].ToString()}");
+                            ret.AppendLine($"{x}: {E.Data[x]}");
                         }
                     }
                 }
             }
             return ret.ToString();
         }
+    }
+    public interface IRuntimeLog
+    {
+        void AddException(Exception E, DateTime D);
+        string Display();
     }
 }

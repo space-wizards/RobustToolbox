@@ -1,4 +1,6 @@
-﻿using SS14.Client.Utility;
+﻿using System;
+using SS14.Client.GodotGlue;
+using SS14.Client.Utility;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
@@ -19,6 +21,8 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         new private Godot.Popup SceneControl;
+
+        public event Action OnPopupHide;
 
         private protected override Godot.Control SpawnSceneControl()
         {
@@ -44,6 +48,31 @@ namespace SS14.Client.UserInterface.Controls
         public void OpenMinimum()
         {
             SceneControl.PopupCenteredMinsize();
+        }
+
+        private GodotSignalSubscriber0 __popupHideSubscriber;
+
+        protected override void SetupSignalHooks()
+        {
+            base.SetupSignalHooks();
+
+            __popupHideSubscriber = new GodotSignalSubscriber0();
+            __popupHideSubscriber.Connect(SceneControl, "popup_hide");
+            __popupHideSubscriber.Signal += __popupHideHook;
+        }
+
+        protected override void DisposeSignalHooks()
+        {
+            base.DisposeSignalHooks();
+
+            __popupHideSubscriber.Disconnect(SceneControl, "popup_hide");
+            __popupHideSubscriber.Dispose();
+            __popupHideSubscriber = null;
+        }
+
+        private void __popupHideHook()
+        {
+            OnPopupHide?.Invoke();
         }
     }
 }

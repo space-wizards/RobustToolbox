@@ -21,6 +21,8 @@ namespace SS14.Shared.Map
 
         public IMapGrid Grid => IoCManager.Resolve<IMapManager>().GetGrid(GridID);
 
+        public static readonly GridLocalCoordinates Nullspace = new GridLocalCoordinates(0, 0, GridId.Nullspace);
+
         /// <summary>
         ///     The map the grid is currently on. This value is not persistent and may change!
         /// </summary>

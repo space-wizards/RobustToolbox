@@ -193,6 +193,8 @@ namespace SS14.Shared.Map
 
         public float Y => Position.Y;
 
+        public Vector2 AsVector => Position;
+
         public ScreenCoordinates(Vector2 argPosition)
         {
             Position = argPosition;

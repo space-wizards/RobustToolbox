@@ -100,7 +100,8 @@ namespace SS14.Client.State.States
             }
             catch (ArgumentException e)
             {
-                userInterfaceManager.Popup($"Unable to resolve address: {e.Message}", "Invalid IP");
+                userInterfaceManager.Popup($"Unable to connect: {e.Message}", "Connection error.");
+                Logger.Warning(e.ToString());
             }
         }
 

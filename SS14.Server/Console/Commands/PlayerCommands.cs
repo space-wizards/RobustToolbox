@@ -64,17 +64,17 @@ namespace SS14.Server.Console.Commands
             var sb = new StringBuilder();
 
             var players = IoCManager.Resolve<IPlayerManager>().GetAllPlayers();
-            sb.AppendLine($"{"Player Name",20}{"IP Address",16}{"Status",12}{"Playing Time",14}{"Ping",9}");
-            sb.AppendLine("-----------------------------------------------------------------");
+            sb.AppendLine($"{"Player Name",20} {"Status",12} {"Playing Time",14} {"Ping",9} {"IP EndPoint",20}");
+            sb.AppendLine("-------------------------------------------------------------------------------");
 
-            foreach (IPlayerSession p in players)
+            foreach (var p in players)
             {
-                sb.Append($"  {p.Name,20}");
-                sb.AppendLine(string.Format("  {0,21}{1,12}{2,14}{3,9}",
+                sb.AppendLine(string.Format("{4,20} {1,12} {2,14:hh\\:mm\\:ss} {3,9} {0,20}",
                     p.ConnectedClient.RemoteEndPoint,
                     p.Status.ToString(),
-                    (DateTime.Now - p.ConnectedTime).ToString(@"hh\:mm\:ss"),
-                    p.ConnectedClient.Ping + "ms"));
+                    DateTime.Now - p.ConnectedTime,
+                    p.ConnectedClient.Ping + "ms",
+                    p.Name));
             }
 
             shell.SendText(player, sb.ToString());

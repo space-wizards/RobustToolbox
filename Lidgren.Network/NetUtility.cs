@@ -124,16 +124,23 @@ namespace Lidgren.Network
 					}
 
 					// check each entry for a valid IP address
+					IPAddress bestAddress = null;
 					foreach (IPAddress ipCurrent in entry.AddressList)
 					{
-						if (ipCurrent.AddressFamily == AddressFamily.InterNetwork)
+						// Prefer IPv6 addresses.
+						if (ipCurrent.AddressFamily == AddressFamily.InterNetworkV6)
 						{
 							callback(ipCurrent);
 							return;
 						}
+
+						if (ipCurrent.AddressFamily == AddressFamily.InterNetwork)
+						{
+							bestAddress = ipCurrent;
+						}
 					}
 
-					callback(null);
+					callback(bestAddress);
 				}, null);
 			}
 			catch (SocketException ex)
@@ -177,13 +184,22 @@ namespace Lidgren.Network
 					return null;
 
 				// check each entry for a valid IP address
+				IPAddress bestAddress = null;
 				foreach (IPAddress ipCurrent in entry.AddressList)
 				{
-					if (ipCurrent.AddressFamily == AddressFamily.InterNetwork)
+					if (ipCurrent.AddressFamily == AddressFamily.InterNetworkV6)
+					{
 						return ipCurrent;
+					}
+					
+					// Prefer IPv6 addresses.
+					if (ipCurrent.AddressFamily == AddressFamily.InterNetwork)
+					{
+						bestAddress = ipCurrent;
+					}
 				}
 
-				return null;
+				return bestAddress;
 			}
 			catch (SocketException ex)
 			{
@@ -393,6 +409,11 @@ namespace Lidgren.Network
 		/// </summary>
 		public static bool IsLocal(IPAddress remote)
 		{
+			if (remote.AddressFamily == AddressFamily.InterNetworkV6)
+			{
+				// TODO: Can this be made to work? Do we even care for SS14?
+				return false;
+			}
 			IPAddress mask;
 			IPAddress local = GetMyAddress(out mask);
 

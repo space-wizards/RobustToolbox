@@ -123,6 +123,8 @@ namespace SS14.Shared.Network
                 netConfig.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
             }
 
+            netConfig.LocalAddress = IPAddress.IPv6Any;
+
 #if DEBUG
             //Simulate Latency
             if (_config.GetCVar<bool>("net.fakelag"))

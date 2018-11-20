@@ -85,7 +85,8 @@ namespace Lidgren.Network
 			IPAddress ipAddress = null;
 			if (IPAddress.TryParse(ipOrHost, out ipAddress))
 			{
-				if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+				if (ipAddress.AddressFamily == AddressFamily.InterNetwork
+				 || ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
 				{
 					callback(ipAddress);
 					return;
@@ -161,7 +162,8 @@ namespace Lidgren.Network
 			IPAddress ipAddress = null;
 			if (IPAddress.TryParse(ipOrHost, out ipAddress))
 			{
-				if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+				if (ipAddress.AddressFamily == AddressFamily.InterNetwork
+				 || ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
 					return ipAddress;
 				throw new ArgumentException("This method will not currently resolve other than ipv4 addresses");
 			}

@@ -212,6 +212,12 @@ namespace SS14.Client.UserInterface
             set => SceneControl.RectClipContent = value;
         }
 
+        public Color Modulate
+        {
+            get => SceneControl.Modulate.Convert();
+            set => SceneControl.Modulate = value.Convert();
+        }
+
         /// <summary>
         ///     A combination of <see cref="CustomMinimumSize" /> and <see cref="CalculateMinimumSize" />,
         ///     Whichever is greater.

@@ -169,18 +169,13 @@ namespace SS14.Server
             try
             {
                 netMan.Initialize(true);
-                netMan.Startup();
-            }
-            catch (System.Net.Sockets.SocketException)
-            {
-                var port = netMan.Port;
-                Logger.Fatal($"Unable to setup networking manager. Check port {port} is not already in use!, shutting down...");
-                Environment.Exit(1);
+                netMan.StartServer();
             }
             catch (Exception e)
             {
-                Logger.Fatal($"Unable to setup networking manager. Unknown exception: {e}, shutting down...");
-                Environment.Exit(1);
+                var port = netMan.Port;
+                Logger.Fatal("Unable to setup networking manager. Check port {0} is not already in use and that all binding addresses are correct!\n{1}", port, e);
+                return true;
             }
 
             // Set up the VFS

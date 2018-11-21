@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.UserInterface;
@@ -31,6 +32,9 @@ namespace SS14.Client.State.States
         private Control MainMenuControl;
 
         private OptionsMenu OptionsMenu;
+
+        // ReSharper disable once InconsistentNaming
+        private static readonly Regex IPv6Regex = new Regex(@"\[(.*:.*:.*)](?::(\d+))?");
 
         /// <inheritdoc />
         public override void Startup()
@@ -96,7 +100,8 @@ namespace SS14.Client.State.States
             }
             catch (ArgumentException e)
             {
-                userInterfaceManager.Popup($"Unable to resolve address: {e.Message}", "Invalid IP");
+                userInterfaceManager.Popup($"Unable to connect: {e.Message}", "Connection error.");
+                Logger.Warning(e.ToString());
             }
         }
 
@@ -110,6 +115,21 @@ namespace SS14.Client.State.States
 
         private void ParseAddress(string address, out string ip, out ushort port)
         {
+            var match6 = IPv6Regex.Match(address);
+            if (match6 != Match.Empty)
+            {
+                ip = match6.Groups[1].Value;
+                if (!match6.Groups[2].Success)
+                {
+                    port = _client.DefaultPort;
+                }
+                else if (!ushort.TryParse(match6.Groups[2].Value, out port))
+                {
+                    throw new ArgumentException("Not a valid port.");
+                }
+
+                return;
+            }
             // See if the IP includes a port.
             var split = address.Split(':');
             ip = address;

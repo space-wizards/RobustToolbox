@@ -65,10 +65,13 @@ namespace SS14.Client
         /// <inheritdoc />
         public void ConnectToServer(string ip, ushort port)
         {
+            if (RunLevel == ClientRunLevel.Connecting)
+            {
+                _net.Shutdown("Client mashing that connect button.");
+                Reset();
+            }
             DebugTools.Assert(RunLevel < ClientRunLevel.Connecting);
             DebugTools.Assert(!_net.IsConnected);
-
-            _net.Startup();
 
             OnRunLevelChanged(ClientRunLevel.Connecting);
             _net.ClientConnect(ip, port, PlayerNameOverride ?? _configManager.GetCVar<string>("player.name"));

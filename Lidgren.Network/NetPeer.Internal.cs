@@ -114,7 +114,13 @@ namespace Lidgren.Network
 				iep = new IPEndPoint(m_configuration.LocalAddress, m_configuration.Port);
 				EndPoint ep = (EndPoint)iep;
 
-				m_socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+				m_socket = new Socket(ep.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+				if (ep.AddressFamily == AddressFamily.InterNetworkV6)
+				{
+					// Disable IPv4 -> IPv6 mapping.
+					// SS14 handles IPv6 & IPv4 concurrently with a different net peer.
+					m_socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, true);
+				}
 				m_socket.ReceiveBufferSize = m_configuration.ReceiveBufferSize;
 				m_socket.SendBufferSize = m_configuration.SendBufferSize;
 				m_socket.Blocking = false;
@@ -386,6 +392,7 @@ namespace Lidgren.Network
 				int bytesReceived = 0;
 				try
 				{
+					var honk = this;
 					bytesReceived = m_socket.ReceiveFrom(m_receiveBuffer, 0, m_receiveBuffer.Length, SocketFlags.None, ref m_senderRemote);
 				}
 				catch (SocketException sx)

@@ -98,7 +98,15 @@ namespace SS14.Client.Graphics.ClientEye
         {
             var matrix = Matrix3.Invert(MatrixViewPortTransform(sceneTree));
             var worldPos = matrix.Transform(point) / PIXELSPERMETER * new Vector2(1, -1);
-            var grid = _mapManager.GetMap(currentEye.MapId).FindGridAt(worldPos);
+            IMapGrid grid ;
+            if (_mapManager.TryGetMap(currentEye.MapId, out var map))
+            {
+                grid = map.FindGridAt(worldPos);
+            }
+            else
+            {
+                grid = _mapManager.GetGrid(GridId.Nullspace);
+            }
             return new GridLocalCoordinates(grid.WorldToLocal(worldPos), grid);
         }
 

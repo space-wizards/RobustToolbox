@@ -9,11 +9,6 @@ namespace SS14.Server.Interfaces
     public interface IBaseServer
     {
         /// <summary>
-        ///     Current RunLevel that the server is at.
-        /// </summary>
-        ServerRunLevel RunLevel { get; set; }
-
-        /// <summary>
         ///     The name of the current running map.
         /// </summary>
         string MapName { get; }
@@ -59,10 +54,5 @@ namespace SS14.Server.Interfaces
         ///     Enters the main loop of the server. This functions blocks until the server is shut down.
         /// </summary>
         void MainLoop();
-
-        /// <summary>
-        ///     Raised when the server RunLevel is changed.
-        /// </summary>
-        event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
     }
 }

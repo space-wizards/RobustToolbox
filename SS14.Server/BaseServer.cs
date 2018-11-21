@@ -80,18 +80,10 @@ namespace SS14.Server
 
         private FileLogHandler fileLogHandler;
         private GameLoop _mainLoop;
-        private ServerRunLevel _runLevel;
 
         private TimeSpan _lastTitleUpdate;
         private int _lastReceivedBytes;
         private int _lastSentBytes;
-
-        /// <inheritdoc />
-        public ServerRunLevel RunLevel
-        {
-            get => _runLevel;
-            set => OnRunLevelChanged(value);
-        }
 
         /// <inheritdoc />
         public string MapName => _config.GetCVar<string>("game.mapname");
@@ -107,9 +99,6 @@ namespace SS14.Server
 
         /// <inheritdoc />
         public string GameModeName { get; set; } = string.Empty;
-
-        /// <inheritdoc />
-        public event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
 
         /// <inheritdoc />
         public void Restart()
@@ -160,8 +149,6 @@ namespace SS14.Server
 
             // Has to be done early because this guy's in charge of the main thread Synchronization Context.
             _taskManager.Initialize();
-
-            OnRunLevelChanged(ServerRunLevel.Init);
 
             LoadSettings();
 
@@ -234,7 +221,9 @@ namespace SS14.Server
             IoCManager.Resolve<IConsoleShell>().Initialize();
             IoCManager.Resolve<IConGroupController>().Initialize();
 
-            OnRunLevelChanged(ServerRunLevel.PreGame);
+            AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.PostInit);
+
+            _entities.Startup();
 
             return false;
         }
@@ -297,28 +286,6 @@ namespace SS14.Server
             Logger.InfoS("srv", $"Welcome message: {Motd}");
         }
 
-        /// <summary>
-        ///     Switches the run level of the BaseServer to the desired value.
-        /// </summary>
-        private void OnRunLevelChanged(ServerRunLevel level)
-        {
-            if (level == _runLevel)
-                return;
-
-            Logger.Debug($"[ENG] Runlevel changed to: {level}");
-            var args = new RunLevelChangedEventArgs(_runLevel, level);
-            _runLevel = level;
-            RunLevelChanged?.Invoke(this, args);
-
-            // positive edge triggers
-            switch (level)
-            {
-                case ServerRunLevel.PreGame:
-                    _entities.Startup();
-                    break;
-            }
-        }
-
         // called right before main loop returns, do all saving/cleanup in here
         private void Cleanup()
         {
@@ -329,15 +296,6 @@ namespace SS14.Server
             _entities.Shutdown();
 
             //TODO: This should prob shutdown all managers in a loop.
-
-            // remove all maps
-            if (_runLevel == ServerRunLevel.Game)
-            {
-                var mapMgr = IoCManager.Resolve<IMapManager>();
-
-                // TODO: Unregister all maps.
-                mapMgr.DeleteMap(new MapId(1));
-            }
         }
 
         private string UpdateBps()
@@ -363,28 +321,14 @@ namespace SS14.Server
 
             timerManager.UpdateTimers(frameTime);
             _taskManager.ProcessPendingTasks();
-            if (_runLevel >= ServerRunLevel.PreGame)
-            {
-                _components.CullRemovedComponents();
-                _entities.Update(frameTime);
-            }
+
+            _components.CullRemovedComponents();
+            _entities.Update(frameTime);
+
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, frameTime);
 
             _stateManager.SendGameStateUpdate();
         }
-    }
-
-    /// <summary>
-    ///     Enumeration of the run levels of the BaseServer.
-    /// </summary>
-    public enum ServerRunLevel
-    {
-        Error = 0,
-        Init,
-        PreGame,
-        Game,
-        PostGame,
-        MapChange,
     }
 
     /// <summary>
@@ -394,30 +338,5 @@ namespace SS14.Server
     {
         MapEditor = 0,
         Game,
-    }
-
-    /// <summary>
-    ///     Event arguments for when the RunLevel has changed in the BaseServer.
-    /// </summary>
-    public class RunLevelChangedEventArgs : EventArgs
-    {
-        /// <summary>
-        ///     RunLevel that the BaseServer switched from.
-        /// </summary>
-        public ServerRunLevel OldLevel { get; }
-
-        /// <summary>
-        ///     RunLevel that the BaseServers switched to.
-        /// </summary>
-        public ServerRunLevel NewLevel { get; }
-
-        /// <summary>
-        ///     Constructs a new instance of the class.
-        /// </summary>
-        public RunLevelChangedEventArgs(ServerRunLevel oldLevel, ServerRunLevel newLevel)
-        {
-            OldLevel = oldLevel;
-            NewLevel = newLevel;
-        }
     }
 }

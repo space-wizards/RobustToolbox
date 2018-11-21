@@ -189,7 +189,7 @@ namespace SS14.Server.Player
         {
             var baseServer = IoCManager.Resolve<IBaseServer>();
 
-            if (ConnectedClient == null || Status == SessionStatus.InGame || baseServer.RunLevel != ServerRunLevel.Game)
+            if (ConnectedClient == null || Status == SessionStatus.InGame)
                 return;
 
             Status = SessionStatus.InGame;

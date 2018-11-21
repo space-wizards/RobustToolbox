@@ -251,6 +251,10 @@ namespace SS14.Shared.GameObjects
             entity.Prototype.FinishEntity((Entity)entity, ComponentFactory, context);
             Entities[entity.Uid] = entity;
             _allEntities.Add((Entity)entity);
+            if (EntitiesInitialized)
+            {
+                InitializeEntity((Entity)entity);
+            }
         }
 
         protected static void InitializeEntity(Entity entity)

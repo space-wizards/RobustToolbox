@@ -208,6 +208,7 @@ namespace SS14.Shared.Network
 
             // request shutdown of the netPeer
             _netPeers.ForEach(p => p.Shutdown(reason));
+            _netPeers.Clear();
 
             // wait for the network thread to finish its work (like flushing packets and gracefully disconnecting)
             // Lidgren does not expose the thread, so we can't join or or anything
@@ -606,6 +607,9 @@ namespace SS14.Shared.Network
             // not connected to a server, so a message cannot be sent to it.
             if (!IsConnected)
                 return;
+
+            DebugTools.Assert(_netPeers.Count == 1);
+            DebugTools.Assert(_netPeers[0].ConnectionsCount == 1);
 
             var peer = _netPeers[0];
             var packet = BuildMessage(message, peer);

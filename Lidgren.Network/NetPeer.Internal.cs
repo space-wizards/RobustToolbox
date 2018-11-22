@@ -392,7 +392,6 @@ namespace Lidgren.Network
 				int bytesReceived = 0;
 				try
 				{
-					var honk = this;
 					bytesReceived = m_socket.ReceiveFrom(m_receiveBuffer, 0, m_receiveBuffer.Length, SocketFlags.None, ref m_senderRemote);
 				}
 				catch (SocketException sx)

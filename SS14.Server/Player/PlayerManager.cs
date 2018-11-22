@@ -113,15 +113,6 @@ namespace SS14.Server.Player
         }
 
         /// <summary>
-        ///     Causes all sessions to switch from the game to the lobby.
-        /// </summary>
-        public void SendJoinLobbyToAll()
-        {
-            foreach (var s in _sessions.Values)
-                s.JoinLobby();
-        }
-
-        /// <summary>
         ///     Causes all sessions to detach from their entity.
         /// </summary>
         public void DetachAll()
@@ -142,20 +133,6 @@ namespace SS14.Server.Player
             return
                 _sessions.Values.Where(x => x.AttachedEntity != null &&
                                      worldPos.InRange(x.AttachedEntity.GetComponent<ITransformComponent>().LocalPosition, range))
-                    .Cast<IPlayerSession>()
-                    .ToList();
-        }
-
-        /// <summary>
-        ///     Gets all the players in the game lobby.
-        /// </summary>
-        /// <returns></returns>
-        public List<IPlayerSession> GetPlayersInLobby()
-        {
-            //TODO: Lobby system needs to be moved to Content Assemblies.
-            return
-                _sessions.Values.Where(
-                        x => x.Status == SessionStatus.InLobby)
                     .Cast<IPlayerSession>()
                     .ToList();
         }

@@ -59,11 +59,7 @@ namespace SS14.Server.Interfaces.Player
         bool TryGetPlayerData(NetSessionId sessionId, out IPlayerData data);
         bool HasPlayerData(NetSessionId sessionId);
 
-        void SendJoinGameToAll();
-        void SendJoinLobbyToAll();
-
         void DetachAll();
-        List<IPlayerSession> GetPlayersInLobby();
         List<IPlayerSession> GetPlayersInRange(GridLocalCoordinates worldPos, int range);
         List<IPlayerSession> GetAllPlayers();
         List<PlayerState> GetPlayerStates();

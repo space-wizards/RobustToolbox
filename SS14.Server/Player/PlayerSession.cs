@@ -174,14 +174,6 @@ namespace SS14.Server.Player
             }
         }
 
-        /// <inheritdoc />
-        public void JoinLobby()
-        {
-            DetachFromEntity();
-            Status = SessionStatus.InLobby;
-            UpdatePlayerState();
-        }
-
         /// <summary>
         ///     Causes the session to switch from the lobby to the game.
         /// </summary>

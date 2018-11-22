@@ -107,9 +107,9 @@ namespace SS14.Client.State.States
 
         private void RunLevelChanged(object obj, RunLevelChangedEventArgs args)
         {
-            if (args.NewLevel == ClientRunLevel.Lobby)
+            if (args.NewLevel == ClientRunLevel.InGame)
             {
-                stateManager.RequestStateChange<Lobby>();
+                stateManager.RequestStateChange<GameScreen>();
             }
         }
 

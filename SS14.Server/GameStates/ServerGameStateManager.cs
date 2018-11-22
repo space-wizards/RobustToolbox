@@ -81,7 +81,7 @@ namespace SS14.Server.GameStates
             {
                 var session = _playerManager.GetSessionByChannel(c);
 
-                if (session == null || session.Status != SessionStatus.InGame && session.Status != SessionStatus.InLobby)
+                if (session == null || session.Status != SessionStatus.InGame)
                     continue;
 
                 var stateUpdateMessage = _networkManager.CreateNetMessage<MsgState>();

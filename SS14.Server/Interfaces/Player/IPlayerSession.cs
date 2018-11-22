@@ -17,7 +17,6 @@ namespace SS14.Server.Interfaces.Player
 
         event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
 
-        void JoinLobby();
         void JoinGame();
 
         /// <summary>

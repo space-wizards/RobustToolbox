@@ -235,7 +235,6 @@
     <Compile Include="Interfaces\Input\IKeyBinding.cs" />
     <Compile Include="Input\InputManager.cs" />
     <Compile Include="Input\GodotInputManager.cs" />
-    <Compile Include="State\States\LobbyMenu.cs" />
     <Compile Include="State\States\GameScreen.cs" />
     <Compile Include="Graphics\Texture.cs" />
     <Compile Include="Graphics\Font.cs" />

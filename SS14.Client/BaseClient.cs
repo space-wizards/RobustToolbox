@@ -92,7 +92,6 @@ namespace SS14.Client
         public event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
 
         public event EventHandler<PlayerEventArgs> PlayerJoinedServer;
-        public event EventHandler<PlayerEventArgs> PlayerJoinedLobby;
         public event EventHandler<PlayerEventArgs> PlayerJoinedGame;
         public event EventHandler<PlayerEventArgs> PlayerLeaveServer;
 
@@ -120,25 +119,13 @@ namespace SS14.Client
         }
 
         /// <summary>
-        ///     Player is joining the lobby for whatever reason.
-        /// </summary>
-        /// <param name="session">Session of the player.</param>
-        private void OnPlayerJoinedLobby(PlayerSession session)
-        {
-            DebugTools.Assert(RunLevel >= ClientRunLevel.Connected);
-            OnRunLevelChanged(ClientRunLevel.Lobby);
-
-            PlayerJoinedLobby?.Invoke(this, new PlayerEventArgs(session));
-        }
-
-        /// <summary>
-        ///     Player is joining the game (usually from lobby.)
+        ///     Player is joining the game
         /// </summary>
         /// <param name="session">Session of the player.</param>
         private void OnPlayerJoinedGame(PlayerSession session)
         {
-            DebugTools.Assert(RunLevel >= ClientRunLevel.Lobby);
-            OnRunLevelChanged(ClientRunLevel.Ingame);
+            DebugTools.Assert(RunLevel >= ClientRunLevel.Connected);
+            OnRunLevelChanged(ClientRunLevel.InGame);
 
             PlayerJoinedGame?.Invoke(this, new PlayerEventArgs(session));
         }
@@ -196,14 +183,11 @@ namespace SS14.Client
         {
             // player finished fully connecting to the server.
             if (eventArgs.OldStatus == SessionStatus.Connecting)
-                OnPlayerJoinedServer(_playMan.LocalPlayer.Session);
-
-            if (eventArgs.NewStatus == SessionStatus.InLobby)
             {
-                _stateManager.RequestStateChange<Lobby>();
-                OnPlayerJoinedLobby(_playMan.LocalPlayer.Session);
+                OnPlayerJoinedServer(_playMan.LocalPlayer.Session);
             }
-            else if (eventArgs.NewStatus == SessionStatus.InGame)
+
+            if (eventArgs.NewStatus == SessionStatus.InGame)
             {
                 _stateManager.RequestStateChange<GameScreen>();
 
@@ -233,9 +217,7 @@ namespace SS14.Client
         Initialize,
         Connecting,
         Connected,
-        Lobby,
-        Ingame,
-        ChangeMap
+        InGame,
     }
 
     /// <summary>

@@ -134,7 +134,6 @@
     <Compile Include="Console\Commands\ChatCommands.cs" />
     <Compile Include="Console\Commands\MapCommands.cs" />
     <Compile Include="Console\Commands\PlayerCommands.cs" />
-    <Compile Include="Console\Commands\RoundCommands.cs" />
     <Compile Include="Console\Commands\SysCommands.cs" />
     <Compile Include="GameObjects\Components\Container\Container.cs" />
     <Compile Include="GameObjects\Components\Container\ContainerManagerComponent.cs" />

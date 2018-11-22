@@ -32,7 +32,6 @@
         Zombie = 0,
         Connecting,
         Connected,
-        InLobby,
         InGame,
         Disconnected
     }

@@ -39,11 +39,6 @@ namespace SS14.Client.Interfaces
         event EventHandler<PlayerEventArgs> PlayerJoinedServer;
 
         /// <summary>
-        ///     Raised when the player switches to the lobby.
-        /// </summary>
-        event EventHandler<PlayerEventArgs> PlayerJoinedLobby;
-
-        /// <summary>
         ///     Raised when the player switches to the game.
         /// </summary>
         event EventHandler<PlayerEventArgs> PlayerJoinedGame;

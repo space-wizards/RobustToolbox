@@ -266,6 +266,7 @@ namespace SS14.Client
             logManager.GetSawmill("res.typecheck").Level = LogLevel.Info;
             logManager.GetSawmill("res.tex").Level = LogLevel.Info;
             logManager.GetSawmill("console").Level = LogLevel.Info;
+            logManager.GetSawmill("go.sys").Level = LogLevel.Info;
         }
     }
 }

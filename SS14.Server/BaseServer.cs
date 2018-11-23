@@ -86,19 +86,10 @@ namespace SS14.Server
         private int _lastSentBytes;
 
         /// <inheritdoc />
-        public string MapName => _config.GetCVar<string>("game.mapname");
-
-        /// <inheritdoc />
         public int MaxPlayers => _config.GetCVar<int>("game.maxplayers");
 
         /// <inheritdoc />
         public string ServerName => _config.GetCVar<string>("game.hostname");
-
-        /// <inheritdoc />
-        public string Motd => _config.GetCVar<string>("game.welcomemsg");
-
-        /// <inheritdoc />
-        public string GameModeName { get; set; } = string.Empty;
 
         /// <inheritdoc />
         public void Restart()
@@ -272,18 +263,14 @@ namespace SS14.Server
             cfgMgr.RegisterCVar("net.tickrate", 66, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
             cfgMgr.RegisterCVar("game.hostname", "MyServer", CVar.ARCHIVE);
-            cfgMgr.RegisterCVar("game.mapname", "SavedEntities.xml", CVar.ARCHIVE);
             cfgMgr.RegisterCVar("game.maxplayers", 32, CVar.ARCHIVE);
             cfgMgr.RegisterCVar("game.type", GameType.Game);
-            cfgMgr.RegisterCVar("game.welcomemsg", "Welcome to the server!", CVar.ARCHIVE);
 
             _time.TickRate = _config.GetCVar<int>("net.tickrate");
 
             Logger.InfoS("srv", $"Name: {ServerName}");
             Logger.InfoS("srv", $"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
-            Logger.InfoS("srv", $"Map: {MapName}");
             Logger.InfoS("srv", $"Max players: {MaxPlayers}");
-            Logger.InfoS("srv", $"Welcome message: {Motd}");
         }
 
         // called right before main loop returns, do all saving/cleanup in here

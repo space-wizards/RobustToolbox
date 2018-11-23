@@ -163,12 +163,7 @@ namespace SS14.Client
             var info = GameInfo;
 
             info.ServerName = msg.ServerName;
-            info.ServerPort = msg.ServerPort;
-            info.ServerWelcomeMessage = msg.ServerWelcomeMessage;
             info.ServerMaxPlayers = msg.ServerMaxPlayers;
-            info.ServerMapName = msg.ServerMapName;
-            info.GameMode = msg.GameMode;
-            info.ServerPlayerCount = msg.ServerPlayerCount;
             info.SessionId = msg.PlayerSessionId;
 
             // start up player management
@@ -275,34 +270,9 @@ namespace SS14.Client
         public string ServerName { get; set; }
 
         /// <summary>
-        ///     Current port the server is listening on.
-        /// </summary>
-        public int ServerPort { get; set; }
-
-        /// <summary>
-        ///     Current welcome message that is displayed when the client connects.
-        /// </summary>
-        public string ServerWelcomeMessage { get; set; }
-
-        /// <summary>
         ///     Max number of players that are allowed in the server at one time.
         /// </summary>
         public int ServerMaxPlayers { get; set; }
-
-        /// <summary>
-        ///     Name of the current map loaded on the server.
-        /// </summary>
-        public string ServerMapName { get; set; }
-
-        /// <summary>
-        ///     Name of the current game mode loaded on the server.
-        /// </summary>
-        public string GameMode { get; set; }
-
-        /// <summary>
-        ///     Current number of players connected to the server, never greater than ServerMaxPlayers.
-        /// </summary>
-        public int ServerPlayerCount { get; set; }
 
         public NetSessionId SessionId { get; set; }
     }

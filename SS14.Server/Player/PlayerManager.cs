@@ -214,12 +214,7 @@ namespace SS14.Server.Player
             var netMsg = message.MsgChannel.CreateNetMessage<MsgServerInfo>();
 
             netMsg.ServerName = _baseServer.ServerName;
-            netMsg.ServerPort = _network.Port;
-            netMsg.ServerWelcomeMessage = _baseServer.Motd;
             netMsg.ServerMaxPlayers = _baseServer.MaxPlayers;
-            netMsg.ServerMapName = _baseServer.MapName;
-            netMsg.GameMode = _baseServer.GameModeName;
-            netMsg.ServerPlayerCount = PlayerCount;
             netMsg.PlayerSessionId = session.SessionId;
 
             message.MsgChannel.SendMessage(netMsg);

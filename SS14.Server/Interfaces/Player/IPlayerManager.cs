@@ -59,6 +59,8 @@ namespace SS14.Server.Interfaces.Player
         bool TryGetPlayerData(NetSessionId sessionId, out IPlayerData data);
         bool HasPlayerData(NetSessionId sessionId);
 
+        IEnumerable<IPlayerData> GetAllPlayerData();
+
         void DetachAll();
         List<IPlayerSession> GetPlayersInRange(GridLocalCoordinates worldPos, int range);
         List<IPlayerSession> GetAllPlayers();

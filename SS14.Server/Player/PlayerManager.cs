@@ -112,6 +112,11 @@ namespace SS14.Server.Player
                 s.JoinGame();
         }
 
+        public IEnumerable<IPlayerData> GetAllPlayerData()
+        {
+            return _playerData.Values;
+        }
+
         /// <summary>
         ///     Causes all sessions to detach from their entity.
         /// </summary>

@@ -167,11 +167,18 @@ namespace SS14.Client.Player
         /// <param name="entity">AttachedEntity in the server session.</param>
         private void UpdateAttachedEntity(EntityUid? entity)
         {
-            if (entity != null &&
-                (LocalPlayer.ControlledEntity == null ||
-                 LocalPlayer.ControlledEntity != null && entity != LocalPlayer.ControlledEntity.Uid))
-                LocalPlayer.AttachEntity(
-                    _entityManager.GetEntity(entity.Value));
+            if (LocalPlayer.ControlledEntity?.Uid == entity)
+            {
+                return;
+            }
+
+            if (entity == null)
+            {
+                LocalPlayer.DetachEntity();
+                return;
+            }
+
+            LocalPlayer.AttachEntity(_entityManager.GetEntity(entity.Value));
         }
 
         /// <summary>
@@ -235,7 +242,7 @@ namespace SS14.Client.Player
                     dirty = true;
                 }
             }
-            
+
             if (dirty)
             {
                 PlayerListUpdated?.Invoke(this, EventArgs.Empty);

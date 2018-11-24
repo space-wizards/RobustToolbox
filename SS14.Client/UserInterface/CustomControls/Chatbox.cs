@@ -58,10 +58,10 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             base.Initialize();
 
-            Input = GetChild<LineEdit>("Input");
+            Input = GetChild<LineEdit>("VBoxContainer/Input");
             Input.OnKeyDown += InputKeyDown;
             Input.OnTextEntered += Input_OnTextEntered;
-            contents = GetChild<RichTextLabel>("Contents");
+            contents = GetChild<RichTextLabel>("VBoxContainer/Contents");
         }
 
         protected override void MouseDown(GUIMouseButtonEventArgs e)

@@ -91,6 +91,11 @@ namespace SS14.Server.Player
         {
             DetachFromEntity();
 
+            if (a == null)
+            {
+                return;
+            }
+
             var actorComponent = a.AddComponent<BasicActorComponent>();
             if (a.HasComponent<IMoverComponent>())
             {

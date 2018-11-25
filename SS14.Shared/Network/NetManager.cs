@@ -312,6 +312,7 @@ namespace SS14.Shared.Network
         public void ClientDisconnect(string reason)
         {
             DebugTools.Assert(IsClient, "Should never be called on the server.");
+            Disconnect?.Invoke(this, new NetChannelArgs(ServerChannel));
             Shutdown(reason);
         }
 

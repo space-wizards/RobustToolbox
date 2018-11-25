@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using JetBrains.Annotations;
 using SS14.Client.Interfaces.Console;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.ViewVariables;
 
@@ -14,7 +16,7 @@ namespace SS14.Client.ViewVariables
     {
         public string Command => "vv";
         public string Description => "Opens View Variables.";
-        public string Help => "Usage: vv <entity ID>";
+        public string Help => "Usage: vv <entity ID|IoC interface name|SIoC interface name>";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
@@ -27,10 +29,28 @@ namespace SS14.Client.ViewVariables
             }
             else
             {
+                var valArg = args[0];
+                if (valArg.StartsWith("SI"))
+                {
+                    var selector = new ViewVariablesIoCSelector(valArg.Substring(1));
+                    vvm.OpenVV(selector);
+                    return false;
+                }
+
+                if (valArg.StartsWith("I"))
+                {
+                    // IoC name.
+                    var type = IoCManager.Resolve<IReflectionManager>().LooseGetType(valArg);
+                    var obj = IoCManager.ResolveType(type);
+                    vvm.OpenVV(obj);
+                    return false;
+                }
+
                 var entityManager = IoCManager.Resolve<IEntityManager>();
                 var uid = EntityUid.Parse(args[0]);
                 vvm.OpenVV(entityManager.GetEntity(uid));
             }
+
             return false;
         }
 

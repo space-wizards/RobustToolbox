@@ -111,19 +111,25 @@ namespace SS14.Shared.IoC
         [Pure]
         public static T Resolve<T>()
         {
-            Type type = typeof(T);
-            if (!Services.ContainsKey(type))
-            {
-                if (ResolveTypes.ContainsKey(type))
-                {
-                    // If we have the type registered but not created that means we haven't been told to initialize the graph yet.
-                    throw new InvalidOperationException($"Attempted to resolve type {type} before the object graph for it has been populated.");
-                }
+            return (T)ResolveType(typeof(T));
+        }
 
-                throw new UnregisteredTypeException(type);
+        [Pure]
+        public static object ResolveType(Type type)
+        {
+            if (Services.TryGetValue(type, out var value))
+            {
+                return value;
             }
 
-            return (T)Services[type];
+            if (ResolveTypes.ContainsKey(type))
+            {
+                // If we have the type registered but not created that means we haven't been told to initialize the graph yet.
+                throw new InvalidOperationException($"Attempted to resolve type {type} before the object graph for it has been populated.");
+            }
+
+            throw new UnregisteredTypeException(type);
+
         }
 
         /// <summary>

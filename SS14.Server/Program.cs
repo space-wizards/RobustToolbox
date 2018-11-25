@@ -42,6 +42,8 @@ using System.Reflection;
 using SS14.Shared.Interfaces.Resources;
 using SS14.Server.Console;
 using SS14.Server.Interfaces.Console;
+using SS14.Server.Interfaces.ServerStatus;
+using SS14.Server.ServerStatus;
 using SS14.Server.ViewVariables;
 using SS14.Shared.Asynchronous;
 
@@ -135,6 +137,7 @@ namespace SS14.Server
             IoCManager.Register<IPrototypeManager, ServerPrototypeManager>();
             IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
             IoCManager.Register<IConGroupController, ConGroupController>();
+            IoCManager.Register<IStatusHost, StatusHost>();
 
             IoCManager.BuildGraph();
         }

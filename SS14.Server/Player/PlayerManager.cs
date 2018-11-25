@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
@@ -37,6 +38,8 @@ namespace SS14.Server.Player
 
         private bool NeedsStateUpdate;
 
+        private readonly ReaderWriterLockSlim _sessionsLock = new ReaderWriterLockSlim();
+
         /// <summary>
         ///     Active sessions of connected clients to the server.
         /// </summary>
@@ -45,7 +48,21 @@ namespace SS14.Server.Player
         private Dictionary<NetSessionId, PlayerData> _playerData;
 
         /// <inheritdoc />
-        public int PlayerCount => _sessions.Count;
+        public int PlayerCount
+        {
+            get
+            {
+                _sessionsLock.EnterReadLock();
+                try
+                {
+                    return _sessions.Count;
+                }
+                finally
+                {
+                    _sessionsLock.ExitReadLock();
+                }
+            }
+        }
 
         /// <inheritdoc />
         public int MaxPlayers { get; private set; } = 32;
@@ -77,27 +94,59 @@ namespace SS14.Server.Player
         IPlayerSession IPlayerManager.GetSessionByChannel(INetChannel channel) => GetSessionByChannel(channel);
         private PlayerSession GetSessionByChannel(INetChannel channel)
         {
-            // Should only be one session per client. Returns that session, in theory.
-            return _sessions[channel.SessionId];
+            _sessionsLock.EnterReadLock();
+            try
+            {
+                // Should only be one session per client. Returns that session, in theory.
+                return _sessions[channel.SessionId];
+            }
+            finally
+            {
+                _sessionsLock.ExitReadLock();
+            }
         }
 
         /// <inheritdoc />
         public IPlayerSession GetSessionById(NetSessionId index)
         {
-            return _sessions[index];
+            _sessionsLock.EnterReadLock();
+            try
+            {
+                return _sessions[index];
+            }
+            finally
+            {
+                _sessionsLock.ExitReadLock();
+            }
         }
 
         public bool ValidSessionId(NetSessionId index)
         {
-            return _sessions.ContainsKey(index);
+            _sessionsLock.EnterReadLock();
+            try
+            {
+                return _sessions.ContainsKey(index);
+            }
+            finally
+            {
+                _sessionsLock.ExitReadLock();
+            }
         }
 
         public bool TryGetSessionById(NetSessionId sessionId, out IPlayerSession session)
         {
-            if (_sessions.TryGetValue(sessionId, out var _session))
+            _sessionsLock.EnterReadLock();
+            try
             {
-                session = _session;
-                return true;
+                if (_sessions.TryGetValue(sessionId, out var _session))
+                {
+                    session = _session;
+                    return true;
+                }
+            }
+            finally
+            {
+                _sessionsLock.ExitReadLock();
             }
             session = default;
             return false;
@@ -108,8 +157,16 @@ namespace SS14.Server.Player
         /// </summary>
         public void SendJoinGameToAll()
         {
-            foreach (var s in _sessions.Values)
-                s.JoinGame();
+            _sessionsLock.EnterReadLock();
+            try
+            {
+                foreach (var s in _sessions.Values)
+                    s.JoinGame();
+            }
+            finally
+            {
+                _sessionsLock.ExitReadLock();
+            }
         }
 
         public IEnumerable<IPlayerData> GetAllPlayerData()
@@ -122,8 +179,16 @@ namespace SS14.Server.Player
         /// </summary>
         public void DetachAll()
         {
-            foreach (var s in _sessions.Values)
-                s.DetachFromEntity();
+            _sessionsLock.EnterReadLock();
+            try
+            {
+                foreach (var s in _sessions.Values)
+                    s.DetachFromEntity();
+            }
+            finally
+            {
+                _sessionsLock.ExitReadLock();
+            }
         }
 
         /// <summary>
@@ -134,12 +199,22 @@ namespace SS14.Server.Player
         /// <returns></returns>
         public List<IPlayerSession> GetPlayersInRange(GridLocalCoordinates worldPos, int range)
         {
+            _sessionsLock.EnterReadLock();
             //TODO: This needs to be moved to the PVS system.
-            return
-                _sessions.Values.Where(x => x.AttachedEntity != null &&
-                                     worldPos.InRange(x.AttachedEntity.GetComponent<ITransformComponent>().LocalPosition, range))
-                    .Cast<IPlayerSession>()
-                    .ToList();
+            try
+            {
+                return
+                    _sessions.Values.Where(x => x.AttachedEntity != null &&
+                                                worldPos.InRange(
+                                                    x.AttachedEntity.GetComponent<ITransformComponent>().LocalPosition,
+                                                    range))
+                        .Cast<IPlayerSession>()
+                        .ToList();
+            }
+            finally
+            {
+                _sessionsLock.ExitReadLock();
+            }
         }
 
         /// <summary>
@@ -148,7 +223,15 @@ namespace SS14.Server.Player
         /// <returns></returns>
         public List<IPlayerSession> GetAllPlayers()
         {
-            return _sessions.Values.Cast<IPlayerSession>().ToList();
+            _sessionsLock.EnterReadLock();
+            try
+            {
+                return _sessions.Values.Cast<IPlayerSession>().ToList();
+            }
+            finally
+            {
+                _sessionsLock.ExitReadLock();
+            }
         }
 
         /// <summary>
@@ -162,9 +245,17 @@ namespace SS14.Server.Player
                 return null;
             }
             NeedsStateUpdate = false;
-            return _sessions.Values
-                .Select(s => s.PlayerState)
-                .ToList();
+            _sessionsLock.EnterReadLock();
+            try
+            {
+                return _sessions.Values
+                    .Select(s => s.PlayerState)
+                    .ToList();
+            }
+            finally
+            {
+                _sessionsLock.ExitReadLock();
+            }
         }
 
         private void OnConnecting(object sender, NetConnectingArgs args)
@@ -189,7 +280,15 @@ namespace SS14.Server.Player
 
             session.PlayerStatusChanged += (obj, sessionArgs) => OnPlayerStatusChanged(session, sessionArgs.OldStatus, sessionArgs.NewStatus);
 
-            _sessions[args.Channel.SessionId] = session;
+            _sessionsLock.EnterWriteLock();
+            try
+            {
+                _sessions.Add(args.Channel.SessionId, session);
+            }
+            finally
+            {
+                _sessionsLock.ExitWriteLock();
+            }
         }
 
         private void OnPlayerStatusChanged(IPlayerSession session, SessionStatus oldStatus, SessionStatus newStatus)
@@ -209,7 +308,15 @@ namespace SS14.Server.Player
 
             //Detach the entity and (don't)delete it.
             session.OnDisconnect();
-            _sessions.Remove(session.SessionId);
+            _sessionsLock.EnterWriteLock();
+            try
+            {
+                _sessions.Remove(session.SessionId);
+            }
+            finally
+            {
+                _sessionsLock.ExitWriteLock();
+            }
         }
 
         private void HandleWelcomeMessageReq(MsgServerInfoReq message)

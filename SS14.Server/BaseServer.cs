@@ -32,6 +32,7 @@ using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Map;
 using SS14.Server.Interfaces.Maps;
+using SS14.Server.Interfaces.ServerStatus;
 using SS14.Server.Player;
 using SS14.Server.ViewVariables;
 using SS14.Shared.Asynchronous;
@@ -215,6 +216,7 @@ namespace SS14.Server
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.PostInit);
 
             _entities.Startup();
+            IoCManager.Resolve<IStatusHost>().Start();
 
             return false;
         }

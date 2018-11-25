@@ -18,6 +18,7 @@ namespace SS14.Server.Interfaces.Player
     {
         /// <summary>
         ///     Number of players currently connected to this server.
+        ///     Fetching this is thread safe.
         /// </summary>
         int PlayerCount { get; }
 

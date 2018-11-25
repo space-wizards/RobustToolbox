@@ -36,8 +36,6 @@ namespace SS14.Client.State.States
         [Dependency]
         readonly IUserInterfaceManager userInterfaceManager;
         [Dependency]
-        readonly IClientChatConsole console;
-        [Dependency]
         readonly IPlacementManager placementManager;
         [Dependency]
         readonly IEyeManager eyeManager;
@@ -47,9 +45,6 @@ namespace SS14.Client.State.States
         private readonly IGameTiming timing;
 
         private EscapeMenu escapeMenu;
-
-        private Chatbox _gameChat;
-
         private IEntity lastHoveredEntity;
 
         public override void Startup()
@@ -83,30 +78,17 @@ namespace SS14.Client.State.States
                 }
             });
             inputManager.SetInputCommand(EngineKeyFunctions.EscapeMenu, escapeMenuCommand);
-            inputManager.SetInputCommand(EngineKeyFunctions.FocusChat, InputCmdHandler.FromDelegate(session =>
-            {
-                _gameChat.Input.GrabFocus();
-            }));
-
-            _gameChat = new Chatbox();
-            userInterfaceManager.StateRoot.AddChild(_gameChat);
-            _gameChat.TextSubmitted += console.ParseChatMessage;
-            console.AddString += _gameChat.AddLine;
-            _gameChat.DefaultChatFormat = "say \"{0}\"";
         }
 
         public override void Shutdown()
         {
             escapeMenu.Dispose();
-            _gameChat.TextSubmitted -= console.ParseChatMessage;
-            console.AddString -= _gameChat.AddLine;
 
             playerManager.LocalPlayer.DetachEntity();
 
             userInterfaceManager.StateRoot.DisposeAllChildren();
 
             inputManager.SetInputCommand(EngineKeyFunctions.EscapeMenu, null);
-            inputManager.SetInputCommand(EngineKeyFunctions.FocusChat, null);
 
             inputManager.KeyBindStateChanged -= OnKeyBindStateChanged;
         }

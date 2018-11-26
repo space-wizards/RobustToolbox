@@ -1,5 +1,6 @@
 ﻿using SS14.Server.GameObjects.Components;
 using SS14.Server.GameObjects.Components.Container;
+using SS14.Server.GameObjects.Components.Markers;
 using SS14.Server.GameObjects.Components.UserInterface;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
@@ -49,6 +50,8 @@ namespace SS14.Server.GameObjects
 
             Register<ServerUserInterfaceComponent>();
             RegisterReference<ServerUserInterfaceComponent, SharedUserInterfaceComponent>();
+
+            Register<IgnorePauseComponent>();
         }
     }
 }

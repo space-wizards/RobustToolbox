@@ -38,12 +38,14 @@ using SS14.Server.Interfaces.Maps;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.ServerStatus;
+using SS14.Server.Interfaces.Timing;
 using SS14.Server.Maps;
 using SS14.Server.Placement;
 using SS14.Server.Player;
 using SS14.Server.Prototypes;
 using SS14.Server.Reflection;
 using SS14.Server.ServerStatus;
+using SS14.Server.Timing;
 using SS14.Server.ViewVariables;
 using SS14.Shared.Asynchronous;
 using SS14.Shared.Configuration;
@@ -239,6 +241,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
                     IoCManager.Register<IConGroupController, ConGroupController>();
                     IoCManager.Register<IStatusHost, StatusHost>();
+                    IoCManager.Register<IPauseManager, PauseManager>();
                     break;
 
                 default:

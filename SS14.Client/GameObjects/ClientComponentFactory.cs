@@ -49,6 +49,8 @@ namespace SS14.Client.GameObjects
 
             Register<ClientUserInterfaceComponent>();
             RegisterReference<ClientUserInterfaceComponent, SharedUserInterfaceComponent>();
+
+            RegisterIgnore("IgnorePause");
         }
     }
 }

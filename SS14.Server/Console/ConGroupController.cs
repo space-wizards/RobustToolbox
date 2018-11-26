@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Net;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Player;
+using SS14.Shared.Configuration;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Resources;
@@ -25,6 +28,8 @@ namespace SS14.Server.Console
         {
             var logger = _logManager.GetSawmill("con.groups");
 
+            _configurationManager.RegisterCVar("console.loginlocal", true, CVar.ARCHIVE);
+
             _playerManager.PlayerStatusChanged += _onClientStatusChanged;
 
             // load the permission groups in the console
@@ -38,6 +43,16 @@ namespace SS14.Server.Console
         private void _onClientStatusChanged(object sender, SessionStatusEventArgs e)
         {
             _sessions.OnClientStatusChanged(sender, e);
+
+            if (e.NewStatus == SessionStatus.Connected && _configurationManager.GetCVar<bool>("console.loginlocal"))
+            {
+                var session = e.Session;
+                var address = session.ConnectedClient.RemoteEndPoint.Address;
+                if (Equals(address, IPAddress.Loopback) || Equals(address, IPAddress.IPv6Loopback))
+                {
+                    SetGroup(session, new ConGroupIndex(_configurationManager.GetCVar<int>("console.adminGroup")));
+                }
+            }
         }
 
         public bool CanCommand(IPlayerSession session, string cmdName)

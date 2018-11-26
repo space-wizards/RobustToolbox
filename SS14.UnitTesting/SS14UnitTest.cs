@@ -37,11 +37,13 @@ using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
+using SS14.Server.Interfaces.ServerStatus;
 using SS14.Server.Maps;
 using SS14.Server.Placement;
 using SS14.Server.Player;
 using SS14.Server.Prototypes;
 using SS14.Server.Reflection;
+using SS14.Server.ServerStatus;
 using SS14.Server.ViewVariables;
 using SS14.Shared.Asynchronous;
 using SS14.Shared.Configuration;
@@ -236,6 +238,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IPrototypeManager, ServerPrototypeManager>();
                     IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
                     IoCManager.Register<IConGroupController, ConGroupController>();
+                    IoCManager.Register<IStatusHost, StatusHost>();
                     break;
 
                 default:

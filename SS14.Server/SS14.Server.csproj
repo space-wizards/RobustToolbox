@@ -126,6 +126,7 @@
     <Compile Include="GameObjects\EntitySystems\MoverSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\UserInterfaceSystem.cs" />
     <Compile Include="Interfaces\Player\IPlayerData.cs" />
+    <Compile Include="Interfaces\ServerStatus\IStatusHost.cs" />
     <Compile Include="Player\PlayerData.cs" />
     <Compile Include="Prototypes\ServerPrototypeManager.cs" />
     <Compile Include="Console\Commands\SpawnCommand.cs" />
@@ -148,6 +149,7 @@
     <Compile Include="Reflection\ServerReflectionManager.cs" />
     <Compile Include="BaseServer.cs" />
     <Compile Include="Console\Commands\LogCommands.cs" />
+    <Compile Include="ServerStatus\StatusHost.cs" />
     <Compile Include="Signals.cs" />
     <Compile Include="ViewVariables\IViewVariablesHost.cs" />
     <Compile Include="ViewVariables\Traits\ViewVariablesTraitEntity.cs" />

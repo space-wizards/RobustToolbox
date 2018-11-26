@@ -7,6 +7,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.ServerStatus;
+using SS14.Shared.Configuration;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 
 // This entire file is NIHing a REST server because pulling in libraries is effort.
@@ -17,7 +19,7 @@ namespace SS14.Server.ServerStatus
 {
     public sealed class StatusHost : IStatusHost, IDisposable
     {
-        [Dependency] private IPlayerManager _playerManager;
+        [Dependency] private IConfigurationManager _configurationManager;
 
         // See this SO post for inspiration: https://stackoverflow.com/a/4673210
 
@@ -27,11 +29,24 @@ namespace SS14.Server.ServerStatus
 
         public void Start()
         {
+            _configurationManager.RegisterCVar("status.enabled", false, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("status.bind", "localhost:1212", CVar.ARCHIVE);
+
+            if (!_configurationManager.GetCVar<bool>("status.enabled"))
+            {
+                return;
+            }
+
             _stop = new ManualResetEventSlim();
             _listener = new HttpListener();
-            _listener.Prefixes.Add("http://localhost:1212/");
+            _listener.Prefixes.Add($"http://{_configurationManager.GetCVar<string>("status.bind")}/");
             _listener.Start();
-            _listenerThread = new Thread(_worker) {Name = "REST API Thread", IsBackground = true};
+            _listenerThread = new Thread(_worker)
+            {
+                Name = "REST API Thread",
+                IsBackground = true,
+                Priority = ThreadPriority.BelowNormal
+            };
             _listenerThread.Start();
         }
 
@@ -39,6 +54,10 @@ namespace SS14.Server.ServerStatus
 
         public void Dispose()
         {
+            if (_stop == null)
+            {
+                return;
+            }
             _stop.Set();
             _listenerThread.Join(1000);
             _listener.Stop();
@@ -67,12 +86,13 @@ namespace SS14.Server.ServerStatus
             var request = context.Request;
             if (request.HttpMethod != "GET" && request.HttpMethod != "HEAD")
             {
-                response.StatusCode = (int)HttpStatusCode.BadRequest;
+                response.StatusCode = (int) HttpStatusCode.BadRequest;
                 response.StatusDescription = "Bad Request";
                 response.ContentType = "text/plain";
                 _respondText(response, "400 Bad Request", false);
                 return;
             }
+
             var head = request.HttpMethod == "HEAD";
             try
             {
@@ -115,6 +135,7 @@ namespace SS14.Server.ServerStatus
                         serializer.Serialize(jsonWriter, jObject);
                         jsonWriter.Flush();
                     }
+
                     response.OutputStream.Close();
                 }
                 else
@@ -150,6 +171,7 @@ namespace SS14.Server.ServerStatus
             {
                 writer.Write(contents);
             }
+
             response.OutputStream.Close();
         }
     }

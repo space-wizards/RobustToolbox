@@ -1,6 +1,8 @@
-﻿using SS14.Server.Interfaces.Console;
+﻿using System.Globalization;
+using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Interfaces.Player;
+using SS14.Server.Interfaces.Timing;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
@@ -145,6 +147,69 @@ namespace SS14.Server.Console.Commands
             var pos = player.AttachedEntity.GetComponent<ITransformComponent>().LocalPosition;
 
             shell.SendText(player, $"MapID:{pos.MapID} GridID:{pos.GridID} X:{pos.X:N2} Y:{pos.Y:N2}");
+        }
+    }
+
+    class PauseMapCommand : IClientCommand
+    {
+        public string Command => "pausemap";
+        public string Description => "Pauses a map, pausing all simulation processing on it.";
+        public string Help => "Usage: pausemap <map ID>";
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            var arg = args[0];
+            var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
+
+            var pauseManager = IoCManager.Resolve<IPauseManager>();
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            if (!mapManager.MapExists(mapId))
+            {
+                shell.SendText(player, "That map does not exist.");
+                return;
+            }
+            pauseManager.SetMapPaused(mapId, true);
+        }
+    }
+
+    class UnpauseMapCommand : IClientCommand
+    {
+        public string Command => "unpausemap";
+        public string Description => "unpauses a map, resuming all simulation processing on it.";
+        public string Help => "Usage: unpausemap <map ID>";
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            var arg = args[0];
+            var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
+
+            var pauseManager = IoCManager.Resolve<IPauseManager>();
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            if (!mapManager.MapExists(mapId))
+            {
+                shell.SendText(player, "That map does not exist.");
+                return;
+            }
+            pauseManager.SetMapPaused(mapId, false);
+        }
+    }
+
+    class QueryMapPausedCommand : IClientCommand
+    {
+        public string Command => "querymappaused";
+        public string Description => "Check whether a map is paused or not.";
+        public string Help => "Usage: querymappaused <map ID>";
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            var arg = args[0];
+            var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
+
+            var pauseManager = IoCManager.Resolve<IPauseManager>();
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            if (!mapManager.MapExists(mapId))
+            {
+                shell.SendText(player, "That map does not exist.");
+                return;
+            }
+            shell.SendText(player, pauseManager.IsMapPaused(mapId).ToString());
         }
     }
 }

@@ -60,7 +60,6 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// <param name="stream">The audio stream to play.</param>
         public void Play(AudioStream stream, AudioParams? audioParams = null)
         {
-            var key = LastPlayKey++;
             var player = new Godot.AudioStreamPlayer()
             {
                 Stream = stream.GodotAudioStream,

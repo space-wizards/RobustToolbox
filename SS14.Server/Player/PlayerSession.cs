@@ -155,8 +155,6 @@ namespace SS14.Server.Player
         /// </summary>
         public void JoinGame()
         {
-            var baseServer = IoCManager.Resolve<IBaseServer>();
-
             if (ConnectedClient == null || Status == SessionStatus.InGame)
                 return;
 

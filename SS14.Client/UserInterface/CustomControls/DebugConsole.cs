@@ -119,7 +119,7 @@ namespace SS14.Client.UserInterface.CustomControls
                         Contents.PushColor(color.Color);
                         pushCount++;
                         break;
-                    case FormattedMessage.TagPop pop:
+                    case FormattedMessage.TagPop _:
                         if (pushCount <= 0)
                         {
                             throw new InvalidOperationException();

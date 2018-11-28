@@ -871,7 +871,6 @@ namespace SS14.Shared.Serialization
 
             public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
-                var specifier = (SpriteSpecifier)obj;
                 switch (obj)
                 {
                     case SpriteSpecifier.Texture tex:

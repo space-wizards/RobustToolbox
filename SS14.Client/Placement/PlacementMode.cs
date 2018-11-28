@@ -221,7 +221,6 @@ namespace SS14.Client.Placement
         protected GridLocalCoordinates ScreenToPlayerGrid(ScreenCoordinates coords)
         {
             var worldPos = ScreenToWorld(coords.Position);
-            var mapMgr = IoCManager.Resolve<IMapManager>();
             var entityGrid = pManager.PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().GridID;
             return new GridLocalCoordinates(worldPos, entityGrid);
         }

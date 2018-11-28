@@ -161,8 +161,6 @@ namespace SS14.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
-
             var window = new EntitySpawnWindow();
             window.AddToScreen();
             return false;

@@ -107,6 +107,7 @@ namespace SS14.Client
 #if !X64
             throw new InvalidOperationException("The client cannot start outside x64.");
 #endif
+            ThreadUtility.MainThread = Thread.CurrentThread;
             PreInitIoC();
             IoCManager.Resolve<ISceneTreeHolder>().Initialize(tree);
             InitIoC();

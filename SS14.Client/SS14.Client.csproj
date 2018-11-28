@@ -267,6 +267,7 @@
     <Compile Include="UserInterface\CustomControls\DebugCoordsPanel.cs" />
     <Compile Include="Graphics\Drawing\StyleBox.cs" />
     <Compile Include="Graphics\Drawing\DrawingHandle.cs" />
+    <Compile Include="Utility\ThreadUtility.cs" />
     <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorAngle.cs" />
     <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorBoolean.cs" />
     <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorUIBox2.cs" />

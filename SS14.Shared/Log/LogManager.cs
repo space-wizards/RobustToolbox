@@ -1,6 +1,6 @@
 ﻿using SS14.Shared.Interfaces.Log;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
+using System.Threading;
 
 namespace SS14.Shared.Log
 {
@@ -11,8 +11,36 @@ namespace SS14.Shared.Log
         private readonly Sawmill rootSawmill;
         public ISawmill RootSawmill => rootSawmill;
 
-        [Pure]
+        private readonly Dictionary<string, Sawmill> sawmills = new Dictionary<string, Sawmill>();
+        private readonly ReaderWriterLockSlim _sawmillsLock = new ReaderWriterLockSlim();
+
         public ISawmill GetSawmill(string name)
+        {
+            _sawmillsLock.EnterReadLock();
+            try
+            {
+                if (sawmills.TryGetValue(name, out var sawmill))
+                {
+                    return sawmill;
+                }
+            }
+            finally
+            {
+                _sawmillsLock.ExitReadLock();
+            }
+
+            _sawmillsLock.EnterWriteLock();
+            try
+            {
+                return _getSawmillUnlocked(name);
+            }
+            finally
+            {
+                _sawmillsLock.ExitWriteLock();
+            }
+        }
+
+        private Sawmill _getSawmillUnlocked(string name)
         {
             if (sawmills.TryGetValue(name, out var sawmill))
             {
@@ -20,23 +48,21 @@ namespace SS14.Shared.Log
             }
 
             var index = name.LastIndexOf('.');
-            string parentname;
+            string parentName;
             if (index == -1)
             {
-                parentname = ROOT;
+                parentName = ROOT;
             }
             else
             {
-                parentname = name.Substring(0, index);
+                parentName = name.Substring(0, index);
             }
 
-            var parent = (Sawmill)GetSawmill(parentname);
+            var parent = _getSawmillUnlocked(parentName);
             sawmill = new Sawmill(parent, name);
-            sawmills[name] = sawmill;
+            sawmills.Add(name, sawmill);
             return sawmill;
         }
-
-        private Dictionary<string, Sawmill> sawmills = new Dictionary<string, Sawmill>();
 
         public LogManager()
         {

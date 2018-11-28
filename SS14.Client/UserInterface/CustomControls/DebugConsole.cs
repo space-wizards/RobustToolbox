@@ -73,17 +73,20 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public void AddLine(string text, ChatChannel channel, Color color)
         {
-            if (!firstLine)
+            lock (Contents)
             {
-                Contents.NewLine();
+                if (!firstLine)
+                {
+                    Contents.NewLine();
+                }
+                else
+                {
+                    firstLine = false;
+                }
+                Contents.PushColor(color);
+                Contents.AddText(text);
+                Contents.Pop(); // Pop the color off.
             }
-            else
-            {
-                firstLine = false;
-            }
-            Contents.PushColor(color);
-            Contents.AddText(text);
-            Contents.Pop(); // Pop the color off.
         }
 
         public void AddLine(string text, Color color)
@@ -98,48 +101,55 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public void AddFormattedLine(FormattedMessage message)
         {
-            if (!firstLine)
+            lock (Contents)
             {
-                Contents.NewLine();
-            }
-            else
-            {
-                firstLine = false;
-            }
-
-            var pushCount = 0;
-            foreach (var tag in message.Tags)
-            {
-                switch (tag)
+                if (!firstLine)
                 {
-                    case FormattedMessage.TagText text:
-                        Contents.AddText(text.Text);
-                        break;
-                    case FormattedMessage.TagColor color:
-                        Contents.PushColor(color.Color);
-                        pushCount++;
-                        break;
-                    case FormattedMessage.TagPop _:
-                        if (pushCount <= 0)
-                        {
-                            throw new InvalidOperationException();
-                        }
-                        Contents.Pop();
-                        pushCount--;
-                        break;
+                    Contents.NewLine();
                 }
-            }
+                else
+                {
+                    firstLine = false;
+                }
 
-            for (; pushCount > 0; pushCount--)
-            {
-                Contents.Pop();
+                var pushCount = 0;
+                foreach (var tag in message.Tags)
+                {
+                    switch (tag)
+                    {
+                        case FormattedMessage.TagText text:
+                            Contents.AddText(text.Text);
+                            break;
+                        case FormattedMessage.TagColor color:
+                            Contents.PushColor(color.Color);
+                            pushCount++;
+                            break;
+                        case FormattedMessage.TagPop _:
+                            if (pushCount <= 0)
+                            {
+                                throw new InvalidOperationException();
+                            }
+
+                            Contents.Pop();
+                            pushCount--;
+                            break;
+                    }
+                }
+
+                for (; pushCount > 0; pushCount--)
+                {
+                    Contents.Pop();
+                }
             }
         }
 
         public void Clear()
         {
-            Contents.Clear();
-            firstLine = true;
+            lock (Contents)
+            {
+                Contents.Clear();
+                firstLine = true;
+            }
         }
     }
 }

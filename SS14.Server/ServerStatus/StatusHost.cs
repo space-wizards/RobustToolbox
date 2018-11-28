@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
@@ -10,6 +11,7 @@ using SS14.Server.Interfaces.ServerStatus;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 
 // This entire file is NIHing a REST server because pulling in libraries is effort.
 // Also it was fun to write.
@@ -58,6 +60,7 @@ namespace SS14.Server.ServerStatus
             {
                 return;
             }
+
             _stop.Set();
             _listenerThread.Join(1000);
             _listener.Stop();
@@ -81,6 +84,15 @@ namespace SS14.Server.ServerStatus
         }
 
         private void _processRequest(HttpListenerContext context)
+        {
+            _processRequestInternal(context);
+            Logger.DebugS("statushost", "{0} -> {1} {2}",
+                context.Request.Url.AbsolutePath,
+                context.Response.StatusCode,
+                context.Response.StatusDescription);
+        }
+
+        private void _processRequestInternal(HttpListenerContext context)
         {
             var response = context.Response;
             var request = context.Request;
@@ -112,6 +124,7 @@ namespace SS14.Server.ServerStatus
                         response.StatusDescription = "Not Implemented";
                         response.ContentType = "text/plain";
                         _respondText(response, "501 Not Implemented", head);
+                        Logger.WarningS("statushost", "OnStatusRequest is not set, responding with a 501.");
                         return;
                     }
 
@@ -146,15 +159,13 @@ namespace SS14.Server.ServerStatus
                     _respondText(response, "404 Not Found", head);
                 }
             }
-            catch
+            catch (Exception e)
             {
                 response.StatusCode = (int) HttpStatusCode.InternalServerError;
                 response.StatusDescription = "Internal Server Error";
                 response.ContentType = "text/plain";
                 _respondText(response, "500 Internal Server Error", head);
-                // TODO: Logging.
-                // Logger is not thread safe atm.
-                // This is a problem.
+                Logger.ErrorS("statushost", "Exception in StatusHost: {0}", e);
             }
         }
 

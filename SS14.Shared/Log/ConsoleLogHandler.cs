@@ -8,16 +8,21 @@ namespace SS14.Shared.Log
     /// </summary>
     public sealed class ConsoleLogHandler : ILogHandler
     {
-        public void Log(LogMessage message)
-        {
-            string name = LogMessage.LogLevelToName(message.Level);
-            ConsoleColor color = LogLevelToConsoleColor(message.Level);
+        private readonly object locker = new object();
 
-            System.Console.Write('[');
-            System.Console.ForegroundColor = color;
-            System.Console.Write(name);
-            System.Console.ResetColor();
-            System.Console.WriteLine("] {0}: {1}", message.SawmillName, message.Message);
+        public void Log(in LogMessage message)
+        {
+            var name = LogMessage.LogLevelToName(message.Level);
+            var color = LogLevelToConsoleColor(message.Level);
+
+            lock (locker)
+            {
+                System.Console.Write('[');
+                System.Console.ForegroundColor = color;
+                System.Console.Write(name);
+                System.Console.ResetColor();
+                System.Console.WriteLine("] {0}: {1}", message.SawmillName, message.Message);
+            }
         }
 
         private static ConsoleColor LogLevelToConsoleColor(LogLevel level)

@@ -20,12 +20,18 @@ namespace SS14.UnitTesting
         /// </summary>
         public void Flush()
         {
-            _logs.Clear();
+            lock (_logs)
+            {
+                _logs.Clear();
+            }
         }
 
-        void ILogHandler.Log(LogMessage message)
+        void ILogHandler.Log(in LogMessage message)
         {
-            _logs.Add(message);
+            lock (_logs)
+            {
+                _logs.Add(message);
+            }
         }
     }
 }

@@ -32,8 +32,8 @@ namespace SS14.Client.Placement.Modes
             var manager = IoCManager.Resolve<IClientEntityManager>();
 
             var snapToEntities = manager.GetEntitiesInRange(MouseCoords, SnapToRange)
-                .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.GetComponent<ITransformComponent>().MapID == MouseCoords.MapID)
-                .OrderBy(entity => (entity.GetComponent<ITransformComponent>().WorldPosition - MouseCoords.ToWorld().Position).LengthSquared)
+                .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.Transform.MapID == MouseCoords.MapID)
+                .OrderBy(entity => (entity.Transform.WorldPosition - MouseCoords.ToWorld().Position).LengthSquared)
                 .ToList();
 
             if (snapToEntities.Count == 0)
@@ -51,8 +51,8 @@ namespace SS14.Client.Placement.Modes
 
             var closestRect =
                 Box2.FromDimensions(
-                    closestEntity.GetComponent<ITransformComponent>().WorldPosition.X - closestBounds.X / 2f,
-                    closestEntity.GetComponent<ITransformComponent>().WorldPosition.Y - closestBounds.Y / 2f,
+                    closestEntity.Transform.WorldPosition.X - closestBounds.X / 2f,
+                    closestEntity.Transform.WorldPosition.Y - closestBounds.Y / 2f,
                     closestBounds.X, closestBounds.Y);
 
             var sides = new[]

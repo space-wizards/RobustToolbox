@@ -173,7 +173,7 @@ namespace SS14.Client.State.States
             foreach (var entity in entities)
             {
                 if (entity.TryGetComponent<IClientClickableComponent>(out var component)
-                    && entity.GetComponent<ITransformComponent>().IsMapTransform
+                    && entity.Transform.IsMapTransform
                     && component.CheckClick(coordinates, out var drawDepthClicked))
                 {
                     foundEntities.Add((entity, drawDepthClicked));
@@ -198,8 +198,8 @@ namespace SS14.Client.State.States
                 {
                     return val;
                 }
-                var transx = x.clicked.GetComponent<ITransformComponent>();
-                var transy = y.clicked.GetComponent<ITransformComponent>();
+                var transx = x.clicked.Transform;
+                var transy = y.clicked.Transform;
                 return transx.LocalPosition.Y.CompareTo(transy.LocalPosition.Y);
             }
         }

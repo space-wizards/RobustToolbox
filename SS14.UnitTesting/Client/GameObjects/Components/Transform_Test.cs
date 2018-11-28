@@ -71,8 +71,8 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
             // Arrange
             var parent = EntityManager.SpawnEntity("dummy");
             var child = EntityManager.SpawnEntity("dummy");
-            var parentTrans = parent.GetComponent<ITransformComponent>();
-            var childTrans = child.GetComponent<ITransformComponent>();
+            var parentTrans = parent.Transform;
+            var childTrans = child.Transform;
 
             var compState = new TransformComponent.TransformComponentState(new Vector2(5, 5), GridB.Index, new Angle(0), EntityUid.Invalid);
             parentTrans.HandleComponentState(compState);
@@ -106,9 +106,9 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
             node2.Name = "node2_dummy";
             node3.Name = "node3_dummy";
 
-            var node1Trans = node1.GetComponent<ITransformComponent>();
-            var node2Trans = node2.GetComponent<ITransformComponent>();
-            var node3Trans = node3.GetComponent<ITransformComponent>();
+            var node1Trans = node1.Transform;
+            var node2Trans = node2.Transform;
+            var node3Trans = node3.Transform;
 
             var compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), GridB.Index, Angle.FromDegrees(135), EntityUid.Invalid);
             node1Trans.HandleComponentState(compState);

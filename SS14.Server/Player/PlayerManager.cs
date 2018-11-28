@@ -205,7 +205,7 @@ namespace SS14.Server.Player
                 return
                     _sessions.Values.Where(x => x.AttachedEntity != null &&
                                                 worldPos.InRange(
-                                                    x.AttachedEntity.GetComponent<ITransformComponent>().LocalPosition,
+                                                    x.AttachedEntity.Transform.LocalPosition,
                                                     range))
                         .Cast<IPlayerSession>()
                         .ToList();

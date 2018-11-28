@@ -186,7 +186,7 @@ namespace SS14.Client.Placement
             if (!RangeRequired)
                 return true;
             var range = pManager.CurrentPermission.Range;
-            if (range > 0 && !pManager.PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.InRange(coordinates, range))
+            if (range > 0 && !pManager.PlayerManager.LocalPlayer.ControlledEntity.Transform.LocalPosition.InRange(coordinates, range))
                 return false;
             return true;
         }
@@ -221,7 +221,7 @@ namespace SS14.Client.Placement
         protected GridLocalCoordinates ScreenToPlayerGrid(ScreenCoordinates coords)
         {
             var worldPos = ScreenToWorld(coords.Position);
-            var entityGrid = pManager.PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().GridID;
+            var entityGrid = pManager.PlayerManager.LocalPlayer.ControlledEntity.Transform.GridID;
             return new GridLocalCoordinates(worldPos, entityGrid);
         }
     }

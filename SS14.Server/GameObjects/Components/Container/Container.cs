@@ -54,7 +54,7 @@ namespace SS14.Server.GameObjects.Components.Container
 
             foreach (var entity in ContainerList)
             {
-                var transform = entity.GetComponent<ITransformComponent>();
+                var transform = entity.Transform;
                 transform.DetachParent();
             }
         }
@@ -143,7 +143,7 @@ namespace SS14.Server.GameObjects.Components.Container
             if (!toremove.IsValid())
                 return true;
 
-            toremove.GetComponent<ITransformComponent>().DetachParent();
+            toremove.Transform.DetachParent();
             return true;
         }
 

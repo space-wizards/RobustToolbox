@@ -107,8 +107,8 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             // Arrange
             var parent = EntityManager.SpawnEntity("dummy");
             var child = EntityManager.SpawnEntity("dummy");
-            var parentTrans = parent.GetComponent<ITransformComponent>();
-            var childTrans = child.GetComponent<ITransformComponent>();
+            var parentTrans = parent.Transform;
+            var childTrans = child.Transform;
             parentTrans.WorldPosition = new Vector2(5, 5);
             childTrans.WorldPosition = new Vector2(6, 6);
 
@@ -130,8 +130,8 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             // Arrange
             var parent = EntityManager.SpawnEntity("dummy");
             var child = EntityManager.SpawnEntity("dummy");
-            var parentTrans = parent.GetComponent<ITransformComponent>();
-            var childTrans = child.GetComponent<ITransformComponent>();
+            var parentTrans = parent.Transform;
+            var childTrans = child.Transform;
             parentTrans.WorldPosition = new Vector2(0, 0);
             childTrans.WorldPosition = new Vector2(2, 0);
             childTrans.AttachParent(parentTrans);
@@ -154,8 +154,8 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             // Arrange
             var parent = EntityManager.SpawnEntity("dummy");
             var child = EntityManager.SpawnEntity("dummy");
-            var parentTrans = parent.GetComponent<ITransformComponent>();
-            var childTrans = child.GetComponent<ITransformComponent>();
+            var parentTrans = parent.Transform;
+            var childTrans = child.Transform;
             parentTrans.WorldPosition = new Vector2(1, 1);
             childTrans.WorldPosition = new Vector2(2, 1);
             childTrans.AttachParent(parentTrans);
@@ -181,10 +181,10 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             var node3 = EntityManager.SpawnEntity("dummy");
             var node4 = EntityManager.SpawnEntity("dummy");
 
-            var node1Trans = node1.GetComponent<ITransformComponent>();
-            var node2Trans = node2.GetComponent<ITransformComponent>();
-            var node3Trans = node3.GetComponent<ITransformComponent>();
-            var node4Trans = node4.GetComponent<ITransformComponent>();
+            var node1Trans = node1.Transform;
+            var node2Trans = node2.Transform;
+            var node3Trans = node3.Transform;
+            var node4Trans = node4.Transform;
 
             node1Trans.WorldPosition = new Vector2(0, 0);
             node2Trans.WorldPosition = new Vector2(1, 1);
@@ -215,9 +215,9 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             var node2 = EntityManager.SpawnEntity("dummy");
             var node3 = EntityManager.SpawnEntity("dummy");
 
-            var node1Trans = node1.GetComponent<ITransformComponent>();
-            var node2Trans = node2.GetComponent<ITransformComponent>();
-            var node3Trans = node3.GetComponent<ITransformComponent>();
+            var node1Trans = node1.Transform;
+            var node2Trans = node2.Transform;
+            var node3Trans = node3.Transform;
 
             node1Trans.WorldPosition = new Vector2(0, 0);
             node2Trans.WorldPosition = new Vector2(1, 1);
@@ -255,9 +255,9 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             var node2 = EntityManager.SpawnEntity("dummy");
             var node3 = EntityManager.SpawnEntity("dummy");
 
-            var node1Trans = node1.GetComponent<ITransformComponent>();
-            var node2Trans = node2.GetComponent<ITransformComponent>();
-            var node3Trans = node3.GetComponent<ITransformComponent>();
+            var node1Trans = node1.Transform;
+            var node2Trans = node2.Transform;
+            var node3Trans = node3.Transform;
 
             node1Trans.WorldPosition = new Vector2(0, 0);
             node2Trans.WorldPosition = new Vector2(1, 1);
@@ -299,10 +299,10 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             var node3 = EntityManager.SpawnEntity("dummy");
             var node4 = EntityManager.SpawnEntity("dummy");
 
-            var node1Trans = node1.GetComponent<ITransformComponent>();
-            var node2Trans = node2.GetComponent<ITransformComponent>();
-            var node3Trans = node3.GetComponent<ITransformComponent>();
-            var node4Trans = node4.GetComponent<ITransformComponent>();
+            var node1Trans = node1.Transform;
+            var node2Trans = node2.Transform;
+            var node3Trans = node3.Transform;
+            var node4Trans = node4.Transform;
 
             node1Trans.WorldPosition = new Vector2(0, 0);
             node2Trans.WorldPosition = new Vector2(1, 1);
@@ -342,9 +342,9 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             var node2 = EntityManager.SpawnEntity("dummy");
             var node3 = EntityManager.SpawnEntity("dummy");
 
-            var node1Trans = node1.GetComponent<ITransformComponent>();
-            var node2Trans = node2.GetComponent<ITransformComponent>();
-            var node3Trans = node3.GetComponent<ITransformComponent>();
+            var node1Trans = node1.Transform;
+            var node2Trans = node2.Transform;
+            var node3Trans = node3.Transform;
             ;
             node2Trans.AttachParent(node1Trans);
             node3Trans.AttachParent(node2Trans);

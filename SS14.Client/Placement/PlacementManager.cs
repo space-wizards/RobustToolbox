@@ -546,7 +546,7 @@ namespace SS14.Client.Placement
             if (CurrentPermission == null || CurrentPermission.Range <= 0 || !CurrentMode.RangeRequired)
                 return;
 
-            var pos = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
+            var pos = PlayerManager.LocalPlayer.ControlledEntity.Transform.WorldPosition;
             const int ppm = EyeManager.PIXELSPERMETER;
             DrawNode.DrawCircle(pos.Convert() * new Godot.Vector2(1, -1) * ppm, CurrentPermission.Range * ppm, new Godot.Color(1, 1, 1, 0.25f));
         }

@@ -99,7 +99,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
         [ViewVariables]
         public ITransformComponent Parent
         {
-            get => !_parent.IsValid() ? null : Owner.EntityManager.GetEntity(_parent).GetComponent<ITransformComponent>();
+            get => !_parent.IsValid() ? null : Owner.EntityManager.GetEntity(_parent).Transform;
             private set
             {
                 var old = _parent;
@@ -292,7 +292,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
         public void AttachParent(IEntity parent)
         {
-            var transform = parent.GetComponent<ITransformComponent>();
+            var transform = parent.Transform;
             AttachParent(transform);
         }
 
@@ -358,7 +358,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 if (newParentId.HasValue && newParentId.Value.IsValid())
                 {
                     var newParent = Owner.EntityManager.GetEntity(newParentId.Value);
-                    AttachParent(newParent.GetComponent<ITransformComponent>());
+                    AttachParent(newParent.Transform);
                 }
             }
 

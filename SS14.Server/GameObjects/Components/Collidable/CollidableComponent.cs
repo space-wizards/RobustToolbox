@@ -26,7 +26,7 @@ namespace SS14.Server.GameObjects
         public override uint? NetID => NetIDs.COLLIDABLE;
 
         /// <inheritdoc />
-        public MapId MapID => Owner.GetComponent<ITransformComponent>().MapID;
+        public MapId MapID => Owner.Transform.MapID;
 
         /// <inheritdoc />
         public override void ExposeData(ObjectSerializer serializer)

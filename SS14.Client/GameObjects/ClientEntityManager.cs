@@ -31,7 +31,7 @@ namespace SS14.Client.GameObjects
         {
             foreach (var entity in GetEntities())
             {
-                var transform = entity.GetComponent<ITransformComponent>();
+                var transform = entity.Transform;
                 if (transform.MapID != mapId)
                     continue;
 
@@ -54,7 +54,7 @@ namespace SS14.Client.GameObjects
         {
             foreach (var entity in GetEntities())
             {
-                var transform = entity.GetComponent<ITransformComponent>();
+                var transform = entity.Transform;
                 if (transform.MapID != mapId)
                     continue;
 
@@ -77,7 +77,7 @@ namespace SS14.Client.GameObjects
         {
             foreach (var entity in GetEntities())
             {
-                var transform = entity.GetComponent<ITransformComponent>();
+                var transform = entity.Transform;
                 if (transform.MapID != mapId)
                     continue;
 
@@ -185,7 +185,7 @@ namespace SS14.Client.GameObjects
         public override IEntity ForceSpawnEntityAt(string entityType, GridLocalCoordinates coordinates)
         {
             Entity entity = SpawnEntity(entityType);
-            entity.GetComponent<ITransformComponent>().LocalPosition = coordinates;
+            entity.Transform.LocalPosition = coordinates;
             if (EntitiesInitialized)
             {
                 InitializeEntity(entity);

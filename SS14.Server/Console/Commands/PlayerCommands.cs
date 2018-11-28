@@ -33,7 +33,7 @@ namespace SS14.Server.Console.Commands
 
             var position = new Vector2(posX, posY);
             var entity = player.AttachedEntity;
-            var transform = entity.GetComponent<ITransformComponent>();
+            var transform = entity.Transform;
 
             transform.DetachParent();
 

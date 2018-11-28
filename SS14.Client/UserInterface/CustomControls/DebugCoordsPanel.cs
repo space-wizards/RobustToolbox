@@ -70,7 +70,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 return;
             }
 
-            var entityTransform = playerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>();
+            var entityTransform = playerManager.LocalPlayer.ControlledEntity.Transform;
             var playerWorldOffset = entityTransform.WorldPosition;
             var playerScreen = eyeManager.WorldToScreen(playerWorldOffset);
 

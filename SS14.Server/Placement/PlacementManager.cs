@@ -87,7 +87,7 @@ namespace SS14.Server.Placement
                 return;
 
             // get the MapID the player is on
-            var plyTransform = plyEntity.GetComponent<ITransformComponent>();
+            var plyTransform = plyEntity.Transform;
             var mapIndex = plyTransform.MapID;
 
             // no building in null space!
@@ -125,11 +125,10 @@ namespace SS14.Server.Placement
             */
             if (!isTile)
             {
-                if (!_entityManager.TrySpawnEntityAt(entityTemplateName, coordinates, out IEntity created))
+                if (!_entityManager.TrySpawnEntityAt(entityTemplateName, coordinates, out var created))
                     return;
-                
-                if (created.TryGetComponent<ITransformComponent>(out var component))
-                    component.LocalRotation = dirRcv.ToAngle();
+
+                created.Transform.LocalRotation = dirRcv.ToAngle();
             }
             else
             {

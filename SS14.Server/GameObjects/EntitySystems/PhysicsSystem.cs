@@ -42,7 +42,7 @@ namespace SS14.Server.GameObjects.EntitySystems
 
         private static void DoMovement(IEntity entity, float frameTime)
         {
-            var transform = entity.GetComponent<ITransformComponent>();
+            var transform = entity.Transform;
             var velocity = entity.GetComponent<PhysicsComponent>();
 
             if (velocity.AngularVelocity == 0 && velocity.LinearVelocity == Vector2.Zero)

@@ -92,6 +92,8 @@ namespace SS14.Shared.GameObjects
 
         public virtual void Update(float frameTime)
         {
+            ProcessMsgBuffer();
+
             // for some 'special' reason entities require the map they are on to exist before they can
             // be initialized. This should stop the EntitySystems from updating over the uninitialized entities.
             if(MapsInitialized || _network.IsServer)
@@ -392,32 +394,34 @@ namespace SS14.Shared.GameObjects
         protected void ProcessMsgBuffer()
         {
             if (!Started)
+            {
                 return;
-            if (!MessageBuffer.Any()) return;
+            }
+
+            if (MessageBuffer.Count == 0)
+            {
+                return;
+            }
+
             var misses = new List<IncomingEntityMessage>();
 
-            while (MessageBuffer.Any())
+            while (MessageBuffer.Count != 0)
             {
-                IncomingEntityMessage incomingEntity = MessageBuffer.Dequeue();
-                if (!Entities.ContainsKey(incomingEntity.Message.EntityUid))
+                var incomingEntity = MessageBuffer.Dequeue();
+                if (!Entities.TryGetValue(incomingEntity.Message.EntityUid, out var entity))
                 {
                     incomingEntity.LastProcessingAttempt = DateTime.Now;
                     if ((incomingEntity.LastProcessingAttempt - incomingEntity.ReceivedTime).TotalSeconds > incomingEntity.Expires)
                         misses.Add(incomingEntity);
                 }
                 else
-                    Entities[incomingEntity.Message.EntityUid].HandleNetworkMessage(incomingEntity);
+                {
+                    entity.HandleNetworkMessage(incomingEntity);
+                }
             }
 
-            foreach (IncomingEntityMessage miss in misses)
+            foreach (var miss in misses)
                 MessageBuffer.Enqueue(miss);
-
-            MessageBuffer.Clear(); //Should be empty at this point anyway.
-        }
-
-        protected IncomingEntityMessage ProcessNetMessage(MsgEntity msg)
-        {
-            return EntityNetworkManager.HandleEntityNetworkMessage(msg);
         }
 
         /// <summary>
@@ -425,29 +429,29 @@ namespace SS14.Shared.GameObjects
         /// and handling the parsed result.
         /// </summary>
         /// <param name="msg">Incoming raw network message</param>
-        public void HandleEntityNetworkMessage(MsgEntity msg)
+        private void HandleEntityNetworkMessage(MsgEntity msg)
         {
+            var incomingEntity = EntityNetworkManager.HandleEntityNetworkMessage(msg);
+            // bad message or handled by something else
+            if (incomingEntity == null)
+                return;
+
             if (!Started)
             {
-                var incomingEntity = ProcessNetMessage(msg);
                 if (incomingEntity.Message.Type != EntityMessageType.Error)
-                    MessageBuffer.Enqueue(incomingEntity);
-            }
-            else
-            {
-                ProcessMsgBuffer();
-                var incomingEntity = ProcessNetMessage(msg);
-
-                // bad message or handled by something else
-                if (incomingEntity == null)
-                    return;
-
-                if (!Entities.ContainsKey(incomingEntity.Message.EntityUid))
                 {
                     MessageBuffer.Enqueue(incomingEntity);
                 }
-                else
-                    Entities[incomingEntity.Message.EntityUid].HandleNetworkMessage(incomingEntity);
+                return;
+            }
+
+            if (!Entities.TryGetValue(incomingEntity.Message.EntityUid, out var entity))
+            {
+                MessageBuffer.Enqueue(incomingEntity);
+            }
+            else
+            {
+                entity.HandleNetworkMessage(incomingEntity);
             }
         }
 

@@ -37,7 +37,6 @@ namespace SS14.Server.Interfaces.Player
         /// <summary>
         ///     Initializes the manager.
         /// </summary>
-        /// <param name="baseServer">The server that instantiated this manager.</param>
         /// <param name="maxPlayers">Maximum number of players that can connect to this server at one time.</param>
         void Initialize(int maxPlayers);
 

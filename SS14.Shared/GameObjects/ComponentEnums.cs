@@ -1,16 +1,5 @@
 ﻿namespace SS14.Shared.GameObjects
 {
-    public enum ComponentMessageType
-    {
-        Null,
-        Empty,
-        BoundKeyChange, // U
-        BoundKeyRepeat, // U
-        SpriteChanged, // U
-        Bumped, // U
-        EntitySaidSomething, // U
-    }
-
     public enum DrawDepth
     {
         /// <summary>

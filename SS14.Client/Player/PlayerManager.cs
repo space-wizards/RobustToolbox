@@ -24,8 +24,6 @@ namespace SS14.Client.Player
     /// </summary>
     public class PlayerManager : IPlayerManager
     {
-        //private readonly List<PostProcessingEffect> _effects = new List<PostProcessingEffect>();
-
         [Dependency]
         private readonly IClientNetManager _network;
 
@@ -69,10 +67,7 @@ namespace SS14.Client.Player
             _config.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
 
             _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME);
-
             _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, HandlePlayerList);
-
-            _network.RegisterNetMessage<MsgSession>(MsgSession.NAME, HandleSessionMessage);
         }
 
         /// <inheritdoc />
@@ -88,10 +83,7 @@ namespace SS14.Client.Player
         /// <inheritdoc />
         public void Update(float frameTime)
         {
-            //foreach (var e in _effects.ToArray())
-            //{
-            //    e.Update(frameTime);
-            //}
+            // Uh, nothing anymore I guess.
         }
 
         /// <inheritdoc />
@@ -100,17 +92,6 @@ namespace SS14.Client.Player
             LocalPlayer = null;
             _sessions.Clear();
         }
-
-        /*
-        /// <inheritdoc />
-        public void ApplyEffects(RenderImage image)
-        {
-            foreach (var e in _effects)
-            {
-                e.ProcessImage(image);
-            }
-        }
-        */
 
         /// <inheritdoc />
         public void ApplyPlayerStates(IEnumerable<PlayerState> list)
@@ -133,23 +114,6 @@ namespace SS14.Client.Player
             }
 
             UpdatePlayerList(list);
-        }
-
-        /// <summary>
-        ///     Handles an incoming session NetMsg from the server.
-        /// </summary>
-        private void HandleSessionMessage(MsgSession msg)
-        {
-            switch (msg.MsgType)
-            {
-                case PlayerSessionMessage.AttachToEntity:
-                    break;
-                case PlayerSessionMessage.JoinLobby:
-                    break;
-                case PlayerSessionMessage.AddPostProcessingEffect:
-                    //AddEffect(msg.PpType, msg.PpDuration);
-                    break;
-            }
         }
 
         /// <summary>
@@ -235,7 +199,7 @@ namespace SS14.Client.Player
             foreach (var existing in hitSet)
             {
                 // clear slot, player left
-                if (!_sessions.TryGetValue(existing, out var local))
+                if (!_sessions.ContainsKey(existing))
                 {
                     DebugTools.Assert(LocalPlayer.SessionId != existing, "I'm still connected to the server, but i left?");
                     _sessions.Remove(existing);

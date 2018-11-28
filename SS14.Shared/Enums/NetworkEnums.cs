@@ -20,13 +20,6 @@
         DeleteMap
     }
 
-    public enum PlayerSessionMessage
-    {
-        AttachToEntity,
-        JoinLobby,
-        AddPostProcessingEffect
-    }
-
     public enum SessionStatus : byte
     {
         Zombie = 0,
@@ -52,13 +45,5 @@
         d_double,
         d_string,
         d_byteArray
-    }
-
-    public enum PostProcessingEffectType
-    {
-        Blur,
-        Death,
-        Perlin,
-        Acid
     }
 }

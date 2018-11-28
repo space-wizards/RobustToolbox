@@ -80,7 +80,6 @@ namespace SS14.Server.Player
             _sessions = new Dictionary<NetSessionId, PlayerSession>(maxPlayers);
             _playerData = new Dictionary<NetSessionId, PlayerData>(maxPlayers);
 
-            _network.RegisterNetMessage<MsgSession>(MsgSession.NAME);
             _network.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, HandleWelcomeMessageReq);
             _network.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME);
             _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, HandlePlayerListReq);

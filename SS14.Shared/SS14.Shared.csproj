@@ -215,7 +215,6 @@
     <Compile Include="Network\Messages\MsgPlayerListReq.cs" />
     <Compile Include="Network\Messages\MsgServerInfo.cs" />
     <Compile Include="Network\Messages\MsgServerInfoReq.cs" />
-    <Compile Include="Network\Messages\MsgSession.cs" />
     <Compile Include="Network\Messages\MsgStateAck.cs" />
     <Compile Include="Network\NetChannel.cs" />
     <Compile Include="Network\NetMessage.cs" />
@@ -253,7 +252,6 @@
     <Compile Include="Utility\CommandParsing.cs" />
     <Compile Include="Utility\NetParamsPacker.cs" />
     <Compile Include="Utility\PlatformDetector.cs" />
-    <Compile Include="Utility\PlatformTools.cs" />
     <Compile Include="Utility\RandomString.cs" />
     <Compile Include="Utility\Range.cs" />
     <Compile Include="Utility\TypeHelpers.cs" />
@@ -284,7 +282,6 @@
     <Compile Include="GameObjects\Components\Physics\PhysicsComponentState.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\EntitySystemMessage.cs" />
     <Compile Include="GameObjects\ComponentEnums.cs" />
-    <Compile Include="GameObjects\ComponentReplyMessage.cs" />
     <Compile Include="GameObjects\ComponentState.cs" />
     <Compile Include="GameObjects\EntityState.cs" />
     <Compile Include="Prototypes\IPrototype.cs" />

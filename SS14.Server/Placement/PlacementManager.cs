@@ -297,7 +297,7 @@ namespace SS14.Server.Placement
                 .Where(permission => permission.MobUid == mob.Uid)
                 .ToList();
 
-            if (mobPermissions.Any())
+            if (mobPermissions.Count != 0)
                 BuildPermissions.RemoveAll(x => mobPermissions.Contains(x));
         }
 
@@ -305,11 +305,15 @@ namespace SS14.Server.Placement
 
         private PlacementInformation GetPermission(EntityUid uid, string alignOpt)
         {
-            var permission = BuildPermissions
-                .Where(p => p.MobUid == uid && p.PlacementOption.Equals(alignOpt))
-                .ToList();
+            foreach (var buildPermission in BuildPermissions)
+            {
+                if (buildPermission.MobUid == uid && buildPermission.PlacementOption == alignOpt)
+                {
+                    return buildPermission;
+                }
+            }
 
-            return permission.Any() ? permission.First() : null;
+            return null;
         }
     }
 }

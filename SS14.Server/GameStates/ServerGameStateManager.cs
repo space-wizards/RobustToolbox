@@ -44,14 +44,14 @@ namespace SS14.Server.GameStates
 
         public void SendGameStateUpdate()
         {
-            var connections = _networkManager.Channels;
-            if (!connections.Any())
+            if (!_networkManager.IsConnected)
             {
                 // Prevent deletions piling up if we have no clients.
                 _entityManager.CullDeletionHistory(uint.MaxValue);
                 return;
             }
 
+            var connections = _networkManager.Channels;
             uint oldestAck = uint.MaxValue;
             foreach (var connection in connections)
             {

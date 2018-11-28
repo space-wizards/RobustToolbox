@@ -366,7 +366,7 @@ namespace SS14.Shared.GameObjects
 
         private void ProcessEventQueue()
         {
-            while (_eventQueue.Any())
+            while (_eventQueue.Count != 0)
             {
                 var current = _eventQueue.Dequeue();
                 ProcessSingleEvent(current);

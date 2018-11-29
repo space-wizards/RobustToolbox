@@ -222,6 +222,7 @@
     <Compile Include="Network\NetMessageExt.cs" />
     <Compile Include="Network\NetSessionId.cs" />
     <Compile Include="Network\StringTable.cs" />
+    <Compile Include="Noise\NoiseGenerator.cs" />
     <Compile Include="Physics\PhysicsManager.cs" />
     <Compile Include="Enums\PlacementInformation.cs" />
     <Compile Include="Input\InputCmdHandler.cs" />
@@ -377,5 +378,10 @@
     <Compile Include="Utility\SpriteSpecifier.cs" />
     <Compile Include="GameObjects\Components\Transform\SnapGridComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponentDebug.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="SS14.Shared.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

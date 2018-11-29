@@ -166,7 +166,7 @@ namespace SS14.Server
             // Load from the resources dir in the repo root instead.
             // It's a debug build so this is fine.
             _resources.MountContentDirectory(@"../../Resources/");
-            _resources.MountContentDirectory(@"Resources/Assemblies", new ResourcePath("/Assemblies/"));
+            _resources.MountContentDirectory(@"../../../bin/Content.Server/", new ResourcePath("/Assemblies/"));
 #endif
 
             //mount the engine content pack

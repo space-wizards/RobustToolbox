@@ -20,7 +20,7 @@ namespace SS14.Shared.Log
             writer.Dispose();
         }
 
-        public void Log(in LogMessage message)
+        public void Log(LogMessage message)
         {
             var name = message.LogLevelToName();
             writer.WriteLine("{0:o} [{1}] {2}: {3}", DateTime.Now, name, message.SawmillName, message.Message);

@@ -26,7 +26,7 @@ namespace SS14.UnitTesting
             }
         }
 
-        void ILogHandler.Log(in LogMessage message)
+        void ILogHandler.Log(LogMessage message)
         {
             lock (_logs)
             {

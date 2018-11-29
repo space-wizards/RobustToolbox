@@ -10,7 +10,7 @@ namespace SS14.Shared.Log
     {
         private readonly object locker = new object();
 
-        public void Log(in LogMessage message)
+        public void Log(LogMessage message)
         {
             var name = LogMessage.LogLevelToName(message.Level);
             var color = LogLevelToConsoleColor(message.Level);

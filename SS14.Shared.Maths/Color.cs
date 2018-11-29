@@ -838,7 +838,7 @@ namespace SS14.Shared.Maths
                     throw new NotImplementedException();
             }
 
-            return new Color(ret.X, ret.Y, ret.Z, Math.Min(0, dstColor.A + dstColor.A * srcColor.A));
+            return new Color(ret.X, ret.Y, ret.Z, Math.Min(1, dstColor.A + dstColor.A * srcColor.A));
         }
 
         public string ToHex()

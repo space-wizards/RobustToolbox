@@ -62,6 +62,8 @@
     <PackageReference Include="SharpZipLib" Version="1.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="NJsonSchema" Version="9.10.73" />
+    <PackageReference Include="SixLabors.Core" Version="1.0.0-beta0006" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0005" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="YamlDotNet" Version="5.0.1" />
   </ItemGroup>
@@ -192,6 +194,7 @@
     <Compile Include="UserInterface\CustomControls\DebugTimePanel.cs" />
     <Compile Include="Utility\DirExt.cs" />
     <Compile Include="Utility\GodotResourceCopy.cs" />
+    <Compile Include="Utility\ImageSharpExt.cs" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Utility\GodotConversions.cs" />
     <Compile Include="State\State.cs" />

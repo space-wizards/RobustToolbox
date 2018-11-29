@@ -16,6 +16,7 @@ namespace SS14.Client.Graphics.Overlays
     {
         private Godot.Node2D RootNodeWorld;
         private Godot.Node2D RootNodeScreen;
+        private Godot.Node2D RootNodeScreenBelowWorld;
 
         [Dependency]
         readonly ISceneTreeHolder sceneTreeHolder;
@@ -24,6 +25,9 @@ namespace SS14.Client.Graphics.Overlays
 
         public void Initialize()
         {
+            RootNodeScreenBelowWorld = new Godot.Node2D { Name = "OverlayRoot" };
+            sceneTreeHolder.BelowWorldScreenSpace.AddChild(RootNodeScreenBelowWorld);
+
             RootNodeWorld = new Godot.Node2D { Name = "OverlayRoot" };
             sceneTreeHolder.WorldRoot.AddChild(RootNodeWorld);
             RootNodeWorld.ZIndex = (int)DrawDepth.Overlays;
@@ -54,6 +58,9 @@ namespace SS14.Client.Graphics.Overlays
                     break;
                 case OverlaySpace.WorldSpace:
                     parent = RootNodeWorld.GetCanvasItem();
+                    break;
+                case OverlaySpace.ScreenSpaceBelowWorld:
+                    parent = RootNodeScreenBelowWorld.GetCanvasItem();
                     break;
                 default:
                     throw new NotImplementedException($"Unknown overlay space: {overlay.Space}");

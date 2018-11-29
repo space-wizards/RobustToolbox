@@ -53,7 +53,7 @@ namespace SS14.Client.Placement
         [Dependency]
         public readonly IEyeManager eyeManager;
         [Dependency]
-        public readonly ISceneTreeHolder sceneTree;
+        internal readonly ISceneTreeHolder sceneTree;
         [Dependency]
         private readonly IInputManager _inputManager;
         [Dependency]

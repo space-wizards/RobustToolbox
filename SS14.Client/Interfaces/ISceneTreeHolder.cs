@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace SS14.Client.Interfaces
 {
-    public interface ISceneTreeHolder
+    internal interface ISceneTreeHolder
     {
         void Initialize(Godot.SceneTree tree);
 
+        Godot.CanvasLayer BelowWorldScreenSpace { get; }
         Godot.SceneTree SceneTree { get; }
         Godot.Node2D WorldRoot { get; }
     }

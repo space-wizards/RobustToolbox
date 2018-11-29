@@ -37,11 +37,9 @@ def main():
         with open(version_file, "r") as f:
             existing_version = f.read().strip()
 
-    if existing_version == CURRENT_VERSION:
-        exit(0)
-
-    for x in os.listdir(dependencies_dir):
-        os.remove(x)
+    if existing_version != CURRENT_VERSION:
+        for x in os.listdir(dependencies_dir):
+            os.remove(x)
 
     with open(version_file, "w") as f:
         f.write(CURRENT_VERSION)

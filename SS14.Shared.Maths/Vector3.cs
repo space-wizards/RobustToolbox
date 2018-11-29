@@ -988,6 +988,14 @@ namespace SS14.Shared.Maths
         }
 
         /// <summary>
+        ///     Component wise multiply two vectors.
+        /// </summary>
+        public static Vector3 operator *(Vector3 a, Vector3 b)
+        {
+            return new Vector3(a.X * b.X, a.Y * b.Y, a.Z * b.Z);
+        }
+
+        /// <summary>
         /// Divides an instance by a scalar.
         /// </summary>
         /// <param name="vec">The instance.</param>

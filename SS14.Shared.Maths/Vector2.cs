@@ -235,6 +235,12 @@ namespace SS14.Shared.Maths
             );
         }
 
+        public void Deconstruct(out float x, out float y)
+        {
+            x = X;
+            y = Y;
+        }
+
         /// <summary>
         ///     Returns a string that represents the current Vector2.
         /// </summary>

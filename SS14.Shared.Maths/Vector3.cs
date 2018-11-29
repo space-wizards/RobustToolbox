@@ -119,6 +119,13 @@ namespace SS14.Shared.Maths
             Z = v.Z;
         }
 
+        public void Deconstruct(out float x, out float y, out float z)
+        {
+            x = X;
+            y = Y;
+            z = Z;
+        }
+
         #endregion
 
         #region Public Members

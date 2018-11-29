@@ -16,6 +16,12 @@ namespace SS14.Shared.Maths
             Y = y;
         }
 
+        public void Deconstruct(out double x, out double y)
+        {
+            x = X;
+            y = Y;
+        }
+
         public static implicit operator Vector2d(Vector2 vector)
         {
             return new Vector2d(vector.X, vector.Y);

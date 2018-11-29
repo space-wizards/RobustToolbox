@@ -20,6 +20,14 @@ namespace SS14.Shared.Maths
             W = w;
         }
 
+        public void Deconstruct(out double x, out double y, out double z, out double w)
+        {
+            x = X;
+            y = Y;
+            z = Z;
+            w = W;
+        }
+
         public static implicit operator Vector4d(Vector4 vector)
         {
             return new Vector4d(vector.X, vector.Y, vector.Z, vector.W);

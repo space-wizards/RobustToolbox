@@ -9,6 +9,7 @@ using SS14.Shared.Reflection;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using SS14.Client.Input;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
@@ -33,6 +34,10 @@ namespace SS14.Client.UserInterface.CustomControls
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => console.Commands;
         private readonly ConcurrentQueue<FormattedMessage> _messageQueue = new ConcurrentQueue<FormattedMessage>();
 
+        private readonly List<string> CommandHistory = new List<string>();
+        private int _historyPosition;
+        private bool _currentCommandEdited;
+
         private protected override Godot.Control SpawnSceneControl()
         {
             var node = LoadScene("res://Scenes/DebugConsole/DebugConsole.tscn");
@@ -45,10 +50,12 @@ namespace SS14.Client.UserInterface.CustomControls
             IoCManager.InjectDependencies(this);
 
             CommandBar = GetChild<LineEdit>("CommandBar");
+            CommandBar.OnKeyDown += CommandBarOnOnKeyDown;
             Contents = GetChild<RichTextLabel>("Contents");
             Contents.ScrollFollowing = true;
 
             CommandBar.OnTextEntered += CommandEntered;
+            CommandBar.OnTextChanged += CommandBarOnOnTextChanged;
 
             console.AddString += (_, args) => AddLine(args.Text, args.Channel, args.Color);
             console.AddFormatted += (_, args) => AddFormattedLine(args.Message);
@@ -84,6 +91,12 @@ namespace SS14.Client.UserInterface.CustomControls
             {
                 console.ProcessCommand(args.Text);
                 CommandBar.Clear();
+                if (CommandHistory.Count == 0 || CommandHistory[CommandHistory.Count - 1] != args.Text)
+                {
+                    _currentCommandEdited = false;
+                    CommandHistory.Add(args.Text);
+                    _historyPosition = CommandHistory.Count;
+                }
             }
         }
 
@@ -192,6 +205,62 @@ namespace SS14.Client.UserInterface.CustomControls
             while (_messageQueue.TryDequeue(out var message))
             {
                 _addFormattedLineInternal(message);
+            }
+        }
+
+        private void CommandBarOnOnKeyDown(GUIKeyEventArgs obj)
+        {
+            switch (obj.Key)
+            {
+                case Keyboard.Key.Up:
+                {
+                    obj.Handle();
+                    var current = CommandBar.Text;
+                    if (!string.IsNullOrWhiteSpace(current) && _currentCommandEdited)
+                    {
+                        // Block up/down if something is typed in.
+                        return;
+                    }
+
+                    if (_historyPosition <= 0)
+                    {
+                        return;
+                    }
+
+                    CommandBar.Text = CommandHistory[--_historyPosition];
+                    break;
+                }
+                case Keyboard.Key.Down:
+                {
+                    obj.Handle();
+                    var current = CommandBar.Text;
+                    if (!string.IsNullOrWhiteSpace(current) && _currentCommandEdited)
+                    {
+                        // Block up/down if something is typed in.
+                        return;
+                    }
+
+                    if (_historyPosition >= CommandHistory.Count-1)
+                    {
+                        CommandBar.Text = "";
+                        return;
+                    }
+
+                    CommandBar.Text = CommandHistory[++_historyPosition];
+                    break;
+                }
+            }
+        }
+
+        private void CommandBarOnOnTextChanged(LineEdit.LineEditEventArgs obj)
+        {
+            if (string.IsNullOrWhiteSpace(obj.Text))
+            {
+                _currentCommandEdited = false;
+            }
+            else
+            {
+                _currentCommandEdited = true;
             }
         }
     }

@@ -28,7 +28,6 @@ namespace SS14.Client.ResourceManagement
                     throw new InvalidDataException();
                 }
                 AudioStream = new GodotAudioStreamSource(stream);
-                Shared.Log.Logger.Debug($"{stream.GetLength()}");
             }
         }
 

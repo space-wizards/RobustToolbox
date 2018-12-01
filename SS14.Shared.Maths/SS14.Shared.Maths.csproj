@@ -81,6 +81,7 @@
     <Compile Include="Angle.cs" />
     <Compile Include="Box2.cs" />
     <Compile Include="Box2i.cs" />
+    <Compile Include="RandomExtensions.cs" />
     <Compile Include="UIBox2.cs" />
     <Compile Include="UIBox2i.cs" />
     <Compile Include="Circle.cs" />

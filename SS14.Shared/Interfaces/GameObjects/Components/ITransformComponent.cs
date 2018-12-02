@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Maths;
@@ -91,6 +92,8 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         void DetachParent();
         void AttachParent(ITransformComponent parent);
         void AttachParent(IEntity parent);
+
+        IEnumerable<ITransformComponent> Children { get; }
     }
 
     public class ParentChangedEventArgs : EventArgs

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects.EntitySystemMessages;
 using SS14.Shared.Interfaces.GameObjects;
@@ -8,7 +10,6 @@ using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
-using SS14.Shared.Utility;
 using SS14.Shared.ViewVariables;
 
 namespace SS14.Shared.GameObjects.Components.Transform
@@ -23,6 +24,8 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
         private Matrix3 _worldMatrix;
         private Matrix3 _invWorldMatrix;
+        [ViewVariables]
+        private readonly List<EntityUid> _children = new List<EntityUid>();
 
         /// <inheritdoc />
         public event EventHandler<MoveEventArgs> OnMove;
@@ -241,10 +244,20 @@ namespace SS14.Shared.GameObjects.Components.Transform
             }
         }
 
+        public IEnumerable<ITransformComponent> Children => _children.Select(u => Owner.EntityManager.GetEntity(u).Transform);
+
         /// <inheritdoc />
         public override void OnRemove()
         {
             DetachParent();
+
+            foreach (var child in _children.ToArray())
+            {
+                var transform = Owner.EntityManager.GetEntity(child).Transform;
+                transform.DetachParent();
+                transform.LocalPosition = GridLocalCoordinates.Nullspace;
+            }
+
             base.OnRemove();
         }
 
@@ -259,6 +272,9 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
             // transform _position from parent coords to world coords
             var localPosition = LocalPosition;
+
+            var concrete = (TransformComponent) Parent;
+            concrete._children.Remove(Owner.Uid);
 
             // detach
             Parent = null;
@@ -279,6 +295,10 @@ namespace SS14.Shared.GameObjects.Components.Transform
             if (parent == null)
                 return;
 
+            var oldConcrete = (TransformComponent) Parent;
+            oldConcrete?._children.Remove(Owner.Uid);
+            var newConcrete = (TransformComponent) parent;
+            newConcrete._children.Add(Owner.Uid);
             Parent = parent;
 
             // move to parents grid
@@ -325,7 +345,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
             }
             else
             {
-                return ContainsEntity(entityTransform.Parent); //Recursively search up the entitys containers for this object
+                return ContainsEntity(entityTransform.Parent); //Recursively search up the entities containers for this object
             }
         }
 

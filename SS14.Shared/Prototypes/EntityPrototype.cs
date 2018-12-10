@@ -302,7 +302,7 @@ namespace SS14.Shared.GameObjects
                 {
                     if (sourceTargetTuple.Item2 == null)
                     {
-                        break;
+                        continue;
                     }
                     foreach (var target in sourceTargetTuple.Item2)
                     {

@@ -278,14 +278,50 @@ namespace SS14.Shared.GameObjects
                     {
                         break;
                     }
-                    foreach (EntityPrototype child in Children)
-                    {
-                        PushInheritance(this, child);
-                    }
-
+                    PushInheritanceAll();
                     break;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Iteratively pushes inheritance down to all children, children's children, etc. breadth-first.
+        /// </summary>
+        private void PushInheritanceAll()
+        {
+            if (Children == null)
+            {
+                return;
+            }
+            var sourceTargets = new List<Tuple<EntityPrototype, List<EntityPrototype>>>();
+            var newSources = new List<EntityPrototype>();
+            sourceTargets.Add(new Tuple<EntityPrototype, List<EntityPrototype>>(this, Children));
+            while (true)
+            {
+                foreach (var sourceTargetTuple in sourceTargets)
+                {
+                    if (sourceTargetTuple.Item2 == null)
+                    {
+                        break;
+                    }
+                    foreach (var target in sourceTargetTuple.Item2)
+                    {
+                        PushInheritance(sourceTargetTuple.Item1, target);
+                    }
+                    newSources.AddRange(sourceTargetTuple.Item2);
+                }
+
+                if (newSources.Count == 0)
+                {
+                    break;
+                }
+                sourceTargets.Clear();
+                foreach (var newSource in newSources)
+                {
+                    sourceTargets.Add(new Tuple<EntityPrototype, List<EntityPrototype>>(newSource, newSource.Children));
+                }
+                newSources.Clear();
+            }
         }
 
         private static void PushInheritance(EntityPrototype source, EntityPrototype target)
@@ -364,12 +400,6 @@ namespace SS14.Shared.GameObjects
             if (target.Children == null)
             {
                 return;
-            }
-
-            // TODO: remove recursion somehow.
-            foreach (EntityPrototype child in target.Children)
-            {
-                PushInheritance(target, child);
             }
         }
 

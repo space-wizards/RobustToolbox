@@ -280,7 +280,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
             Parent = null;
 
             // switch position back to grid coords
-            _position = localPosition.Position;
+            SetPosition(localPosition.Position);
 
             Dirty();
         }

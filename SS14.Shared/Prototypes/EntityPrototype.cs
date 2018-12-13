@@ -298,10 +298,8 @@ namespace SS14.Shared.GameObjects
             var newSources = new List<EntityPrototype>();
             while (true)
             {
-                foreach (var sourceTargetTuple in sourceTargets)
+                foreach (var (source, targetList) in sourceTargets)
                 {
-                    var source = sourceTargetTuple.Item1;
-                    var targetList = sourceTargetTuple.Item2;
                     if (targetList == null)
                     {
                         continue;

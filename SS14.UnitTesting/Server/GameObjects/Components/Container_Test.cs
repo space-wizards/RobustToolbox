@@ -73,7 +73,7 @@ namespace SS14.UnitTesting.Server.GameObjects
             Assert.That(transform.Parent.Owner, Is.EqualTo(owner));
 
             var container2 = ContainerManagerComponent.Create<Container>("dummy", inserted);
-            Assert.That(() => container2.Insert(owner), Throws.InvalidOperationException);
+            Assert.That(container2.Insert(owner), Is.False);
 
             var success = container.Remove(inserted);
             Assert.That(success, Is.True);

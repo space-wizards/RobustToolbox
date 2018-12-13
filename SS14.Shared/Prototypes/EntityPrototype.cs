@@ -293,22 +293,24 @@ namespace SS14.Shared.GameObjects
             {
                 return;
             }
-            var sourceTargets = new List<Tuple<EntityPrototype, List<EntityPrototype>>>();
+
+            var sourceTargets = new List<(EntityPrototype, List<EntityPrototype>)> {(this, Children)};
             var newSources = new List<EntityPrototype>();
-            sourceTargets.Add(new Tuple<EntityPrototype, List<EntityPrototype>>(this, Children));
             while (true)
             {
                 foreach (var sourceTargetTuple in sourceTargets)
                 {
-                    if (sourceTargetTuple.Item2 == null)
+                    var source = sourceTargetTuple.Item1;
+                    var targetList = sourceTargetTuple.Item2;
+                    if (targetList == null)
                     {
                         continue;
                     }
-                    foreach (var target in sourceTargetTuple.Item2)
+                    foreach (var target in targetList)
                     {
-                        PushInheritance(sourceTargetTuple.Item1, target);
+                        PushInheritance(source, target);
                     }
-                    newSources.AddRange(sourceTargetTuple.Item2);
+                    newSources.AddRange(targetList);
                 }
 
                 if (newSources.Count == 0)
@@ -318,7 +320,7 @@ namespace SS14.Shared.GameObjects
                 sourceTargets.Clear();
                 foreach (var newSource in newSources)
                 {
-                    sourceTargets.Add(new Tuple<EntityPrototype, List<EntityPrototype>>(newSource, newSource.Children));
+                    sourceTargets.Add((newSource, newSource.Children));
                 }
                 newSources.Clear();
             }

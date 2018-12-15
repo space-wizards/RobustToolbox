@@ -56,25 +56,25 @@ namespace SS14.Shared.IoC
         /// </exception>
         public static void Register<TInterface, TImplementation>(bool overwrite = false) where TImplementation : class, TInterface, new()
         {
-            var InterfaceType = typeof(TInterface);
-            if (ResolveTypes.ContainsKey(InterfaceType))
+            var interfaceType = typeof(TInterface);
+            if (ResolveTypes.ContainsKey(interfaceType))
             {
                 if (!overwrite)
                 {
                     throw new InvalidOperationException
                     (
                         string.Format("Attempted to register already registered interface {0}. New implementation: {1}, Old implementation: {2}",
-                        InterfaceType, typeof(TImplementation), ResolveTypes[InterfaceType]
+                        interfaceType, typeof(TImplementation), ResolveTypes[interfaceType]
                     ));
                 }
 
-                if (Services.ContainsKey(InterfaceType))
+                if (Services.ContainsKey(interfaceType))
                 {
-                    throw new InvalidOperationException($"Attempted to overwrite already instantiated interface {InterfaceType}.");
+                    throw new InvalidOperationException($"Attempted to overwrite already instantiated interface {interfaceType}.");
                 }
             }
 
-            ResolveTypes[InterfaceType] = typeof(TImplementation);
+            ResolveTypes[interfaceType] = typeof(TImplementation);
         }
 
         /// <summary>

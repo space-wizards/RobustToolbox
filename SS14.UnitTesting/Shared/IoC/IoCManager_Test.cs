@@ -1,7 +1,6 @@
 ﻿using NUnit.Framework;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
 using System;
@@ -52,6 +51,54 @@ namespace SS14.UnitTesting.Shared.IoC
         {
             IoCManager.Register<IConstructorException, ConstructorException>();
             Assert.That(() => IoCManager.BuildGraph(), Throws.InstanceOf<ImplementationConstructorException>().And.InnerException.InstanceOf<TestConstructorExceptionException>());
+        }
+
+        [Test]
+        public void IoCTestUnregisteredDirectInject()
+        {
+            Assert.That(()=>IoCManager.InjectDependencies(new TestUnregisteredInjection()), Throws.TypeOf<UnregisteredDependencyException>());
+        }
+
+        [Test]
+        public void IoCTestResolveTypeThrowsWhenGraphUnbuilt()
+        {
+            IoCManager.Register<IIoCFailInterface, TestFailImplementation>();
+            // we *forgot* to call BuildGraph
+            Assert.That(()=>IoCManager.Resolve<IIoCFailInterface>(), Throws.TypeOf<InvalidOperationException>());
+        }
+
+        [Test]
+        public void IoCTestResolveThrowsUnregisteredType()
+        {
+            Assert.That(()=>IoCManager.Resolve<IIoCFailInterface>(), Throws.TypeOf<UnregisteredTypeException>());
+        }
+
+        [Test]
+        public void IoCTestDuplicateResgisterWithoutBuildingGraph()
+        {
+            IoCManager.Register<IIoCFailInterface, TestFailImplementation>();
+            IoCManager.BuildGraph();
+
+            // cannot overwrite an already built implementation.
+            Assert.That(()=> IoCManager.Register<IIoCFailInterface, TestFailImplementation>(true), Throws.TypeOf<InvalidOperationException>());
+        }
+
+        [Test]
+        public void IoCTestDumplicateRegisterThrows()
+        {
+            IoCManager.Register<IIoCFailInterface, TestFailImplementation>();
+
+            // duplicate registerations will throw an exception.
+            Assert.That(() => IoCManager.Register<IIoCFailInterface, TestFailImplementation>(), Throws.TypeOf<InvalidOperationException>());
+        }
+
+        [Test]
+        public void IoCTestCatchExceptionFromDisposingService()
+        {
+            IoCManager.Register<ITestDisposeExceptionCaught, TestDisposeExceptionCaught>();
+            IoCManager.BuildGraph();
+
+            IoCManager.Clear(); // should NOT throw an exception
         }
     }
 
@@ -104,6 +151,24 @@ namespace SS14.UnitTesting.Shared.IoC
             base.Test();
             Assert.That(myuniqueself, Is.EqualTo(this));
             Assert.That(mydifferentself, Is.EqualTo(this));
+        }
+    }
+
+    public class TestUnregisteredInjection
+    {
+        [Dependency]
+        private readonly IIoCFailInterface FailInterface;
+    }
+
+    public class TestFailImplementation : IIoCFailInterface { }
+
+    public interface ITestDisposeExceptionCaught { }
+
+    public class TestDisposeExceptionCaught : ITestDisposeExceptionCaught, IDisposable
+    {
+        public void Dispose()
+        {
+            throw new Exception("UNIT TEST EXCEPTION");
         }
     }
 }

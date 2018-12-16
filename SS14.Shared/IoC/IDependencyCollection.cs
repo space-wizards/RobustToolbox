@@ -1,6 +1,5 @@
-﻿using SS14.Shared.IoC.Exceptions;
-using System;
-using System.Diagnostics.Contracts;
+﻿using System;
+using SS14.Shared.IoC.Exceptions;
 
 namespace SS14.Shared.IoC
 {
@@ -24,12 +23,10 @@ namespace SS14.Shared.IoC
     /// </para>
     /// </remarks>
     /// <seealso cref="Interfaces.Reflection.IReflectionManager"/>
-    public static class IoCManager
+    public interface IDependencyCollection
     {
-        private static readonly IDependencyCollection _container = new DependencyCollection();
-
         /// <summary>
-        /// Registers an interface to an implementation, to make it accessible to <see cref="Resolve{T}"/>
+        /// Registers an interface to an implementation, to make it accessible to <see cref="DependencyCollection.Resolve{T}"/>
         /// </summary>
         /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
         /// <typeparam name="TImplementation">The type that will be constructed as implementation.</typeparam>
@@ -39,23 +36,16 @@ namespace SS14.Shared.IoC
         /// </param>
         /// <exception cref="InvalidOperationException">
         /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before,
-        /// or if an already instantiated interface (by <see cref="BuildGraph"/>) is attempting to be overwriten.
+        /// or if an already instantiated interface (by <see cref="DependencyCollection.BuildGraph"/>) is attempting to be overwritten.
         /// </exception>
-        public static void Register<TInterface, TImplementation>(bool overwrite = false)
-            where TImplementation : class, TInterface, new()
-        {
-            _container.Register<TInterface, TImplementation>(overwrite);
-        }
+        void Register<TInterface, TImplementation>(bool overwrite = false) where TImplementation : class, TInterface, new();
 
         /// <summary>
         /// Clear all services and types.
         /// Use this between unit tests and on program shutdown.
         /// If a service implements <see cref="IDisposable"/>, <see cref="IDisposable.Dispose"/> will be called on it.
         /// </summary>
-        public static void Clear()
-        {
-            _container.Clear();
-        }
+        void Clear();
 
         /// <summary>
         /// Resolve a dependency manually.
@@ -65,11 +55,7 @@ namespace SS14.Shared.IoC
         /// Thrown if the resolved type hasn't been created yet
         /// because the object graph still needs to be constructed for it.
         /// </exception>
-        [Pure]
-        public static T Resolve<T>()
-        {
-            return (T)ResolveType(typeof(T));
-        }
+        T Resolve<T>();
 
         /// <summary>
         /// Resolve a dependency manually.
@@ -79,20 +65,13 @@ namespace SS14.Shared.IoC
         /// Thrown if the resolved type hasn't been created yet
         /// because the object graph still needs to be constructed for it.
         /// </exception>
-        [Pure]
-        public static object ResolveType(Type type)
-        {
-            return _container.ResolveType(type);
-        }
+        object ResolveType(Type type);
 
         /// <summary>
         /// Initializes the object graph by building every object and resolving all dependencies.
         /// </summary>
-        /// <seealso cref="InjectDependencies(object)"/>
-        public static void BuildGraph()
-        {
-            _container.BuildGraph();
-        }
+        /// <seealso cref="DependencyCollection.InjectDependencies"/>
+        void BuildGraph();
 
         /// <summary>
         ///     Injects dependencies into all fields with <see cref="DependencyAttribute"/> on the provided object.
@@ -105,10 +84,7 @@ namespace SS14.Shared.IoC
         /// <exception cref="UnregisteredDependencyException">
         ///     Thrown if a dependency field on the object is not registered.
         /// </exception>
-        /// <seealso cref="BuildGraph"/>
-        public static void InjectDependencies(object obj)
-        {
-            _container.InjectDependencies(obj);
-        }
+        /// <seealso cref="DependencyCollection.BuildGraph"/>
+        void InjectDependencies(object obj);
     }
 }

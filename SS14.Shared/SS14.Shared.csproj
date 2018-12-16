@@ -174,8 +174,10 @@
     <Compile Include="Interfaces\Timing\IGameTiming.cs" />
     <Compile Include="GameStates\GameState.cs" />
     <Compile Include="GameStates\PlayerState.cs" />
+    <Compile Include="IoC\DependencyCollection.cs" />
     <Compile Include="IoC\Exceptions\ImplementationConstructorException.cs" />
     <Compile Include="Enums\Lighting.cs" />
+    <Compile Include="IoC\IDependencyCollection.cs" />
     <Compile Include="Log\ConsoleLogHandler.cs" />
     <Compile Include="Log\FileLogHandler.cs" />
     <Compile Include="Log\LogLevel.cs" />

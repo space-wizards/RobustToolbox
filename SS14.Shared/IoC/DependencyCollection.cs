@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
+using JetBrains.Annotations;
 using SS14.Shared.IoC.Exceptions;
 using SS14.Shared.Utility;
 
@@ -27,24 +27,51 @@ namespace SS14.Shared.IoC
             where TImplementation : class, TInterface, new()
         {
             var interfaceType = typeof(TInterface);
-            if (_resolveTypes.ContainsKey(interfaceType))
-            {
-                if (!overwrite)
-                {
-                    throw new InvalidOperationException
-                    (
-                        string.Format("Attempted to register already registered interface {0}. New implementation: {1}, Old implementation: {2}",
-                        interfaceType, typeof(TImplementation), _resolveTypes[interfaceType]
-                    ));
-                }
-
-                if (_services.ContainsKey(interfaceType))
-                {
-                    throw new InvalidOperationException($"Attempted to overwrite already instantiated interface {interfaceType}.");
-                }
-            }
+            CheckRegisterInterface(interfaceType, typeof(TImplementation), overwrite);
 
             _resolveTypes[interfaceType] = typeof(TImplementation);
+        }
+
+        [AssertionMethod]
+        private void CheckRegisterInterface(Type interfaceType, Type implementationType, bool overwrite)
+        {
+            if (!_resolveTypes.ContainsKey(interfaceType))
+                return;
+
+            if (!overwrite)
+            {
+                throw new InvalidOperationException
+                (
+                    string.Format("Attempted to register already registered interface {0}. New implementation: {1}, Old implementation: {2}",
+                        interfaceType, implementationType, _resolveTypes[interfaceType]
+                    ));
+            }
+
+            if (_services.ContainsKey(interfaceType))
+            {
+                throw new InvalidOperationException($"Attempted to overwrite already instantiated interface {interfaceType}.");
+            }
+        }
+
+        /// <inheritdoc />
+        public void RegisterInstance<TInterface>(object implementation, bool overwrite = false)
+        {
+            if(implementation == null)
+                throw new ArgumentNullException(nameof(implementation));
+
+            if(!(implementation is TInterface))
+                throw new InvalidOperationException($"Implementation type {implementation.GetType()} is not assignable to interface type {typeof(TInterface)}");
+
+            CheckRegisterInterface(typeof(TInterface), implementation.GetType(), overwrite);
+
+            // do the equivalent of BuildGraph with a single type. 
+            _resolveTypes[typeof(TInterface)] = implementation.GetType();
+            _services[typeof(TInterface)] = implementation;
+            
+            InjectDependencies(implementation);
+
+            if (implementation is IPostInjectInit init)
+                init.PostInject();
         }
 
         /// <inheritdoc />
@@ -67,14 +94,14 @@ namespace SS14.Shared.IoC
         }
 
         /// <inheritdoc />
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         public T Resolve<T>()
         {
             return (T)ResolveType(typeof(T));
         }
 
         /// <inheritdoc />
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         public object ResolveType(Type type)
         {
             if (_services.TryGetValue(type, out var value))

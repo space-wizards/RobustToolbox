@@ -27,6 +27,7 @@ namespace SS14.Shared.IoC
     {
         /// <summary>
         /// Registers an interface to an implementation, to make it accessible to <see cref="DependencyCollection.Resolve{T}"/>
+        /// <see cref="IDependencyCollection.BuildGraph"/> MUST be called after this method to make the new interface available.
         /// </summary>
         /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
         /// <typeparam name="TImplementation">The type that will be constructed as implementation.</typeparam>
@@ -38,7 +39,23 @@ namespace SS14.Shared.IoC
         /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before,
         /// or if an already instantiated interface (by <see cref="DependencyCollection.BuildGraph"/>) is attempting to be overwritten.
         /// </exception>
-        void Register<TInterface, TImplementation>(bool overwrite = false) where TImplementation : class, TInterface, new();
+        void Register<TInterface, TImplementation>(bool overwrite = false)
+            where TImplementation : class, TInterface, new();
+
+        /// <summary>
+        ///     Registers an interface to an existing instance of an implementation,
+        ///     making it accessible to <see cref="IDependencyCollection.Resolve{T}"/>.
+        ///     Unlike <see cref="IDependencyCollection.Register{TInterface, TImplementation}"/>,
+        ///     <see cref="IDependencyCollection.BuildGraph"/> does not need to be called after registering an instance.
+        /// </summary>
+        /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
+        /// <typeparam name="TImplementation">The type that will be constructed as implementation.</typeparam>
+        /// <param name="implementation">The existing instance to use as the implementation.</param>
+        /// <param name="overwrite">
+        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        /// replace the current implementation instead.
+        /// </param>
+        void RegisterInstance<TInterface>(object implementation, bool overwrite = false);
 
         /// <summary>
         /// Clear all services and types.

@@ -39,12 +39,30 @@ namespace SS14.Shared.IoC
         /// </param>
         /// <exception cref="InvalidOperationException">
         /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before,
-        /// or if an already instantiated interface (by <see cref="BuildGraph"/>) is attempting to be overwriten.
+        /// or if an already instantiated interface (by <see cref="BuildGraph"/>) is attempting to be overwritten.
         /// </exception>
         public static void Register<TInterface, TImplementation>(bool overwrite = false)
             where TImplementation : class, TInterface, new()
         {
             _container.Register<TInterface, TImplementation>(overwrite);
+        }
+
+        /// <summary>
+        ///     Registers an interface to an existing instance of an implementation,
+        ///     making it accessible to <see cref="IDependencyCollection.Resolve{T}"/>.
+        ///     Unlike <see cref="IDependencyCollection.Register{TInterface, TImplementation}"/>,
+        ///     <see cref="IDependencyCollection.BuildGraph"/> does not need to be called after registering an instance.
+        /// </summary>
+        /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
+        /// <typeparam name="TImplementation">The type that will be constructed as implementation.</typeparam>
+        /// <param name="implementation">The existing instance to use as the implementation.</param>
+        /// <param name="overwrite">
+        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        /// replace the current implementation instead.
+        /// </param>
+        public static void RegisterInstance<TInterface>(object implementation, bool overwrite = false)
+        {
+            _container.RegisterInstance<TInterface>(implementation, overwrite);
         }
 
         /// <summary>
@@ -68,7 +86,7 @@ namespace SS14.Shared.IoC
         [Pure]
         public static T Resolve<T>()
         {
-            return (T)ResolveType(typeof(T));
+            return _container.Resolve<T>();
         }
 
         /// <summary>

@@ -1,49 +1,53 @@
 ﻿using NUnit.Framework;
-using SS14.Server.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
 using System;
+using Moq;
 
 namespace SS14.UnitTesting.Shared.IoC
 {
     [TestFixture]
     [TestOf(typeof(IoCManager))]
-    public class IoCManager_Test : SS14UnitTest
+    [Parallelizable]
+    public class IoCManager_Test
     {
-        [OneTimeSetUp]
-        public void Setup()
+        [SetUp]
+        public void TestSetup()
         {
-            IoCManager.Register<IIoCTestPriories, IoCTestPriorities2>();
-            IoCManager.Register<IIoCTestPriories, IoCTestPriorities1>(true);
-            IoCManager.Register<TestFieldInjection, TestFieldInjection>();
-
-            IoCManager.BuildGraph();
+            // Because IoCManager is a singleton, it must be cleared every
+            // test so that each test is isolated.
+            IoCManager.Clear();
         }
-
+        
         [Test]
         public void IoCTestFieldInjection()
         {
+            IoCManager.Register<TestFieldInjection, TestFieldInjection>();
+            IoCManager.BuildGraph();
             var tester = IoCManager.Resolve<TestFieldInjection>();
+
             tester.Test();
         }
-
+        
         [Test]
         public void IoCTestBasic()
         {
-            Assert.That(IoCManager.Resolve<IEntityManager>(),
-                        Is.Not.Null,
-                        "IoC failed to return an IServerConfigurationManager.");
+            IoCManager.Register<TestFieldInjection, TestFieldInjection>();
+            IoCManager.BuildGraph();
 
-            Assert.That(IoCManager.Resolve<IServerEntityManager>(),
-                        Is.Not.Null,
-                        "IoC failed to return an IResourceCache.");
+            Assert.That(IoCManager.Resolve<TestFieldInjection>(), Is.Not.Null);
+
+            Assert.That(IoCManager.ResolveType(typeof(TestFieldInjection)), Is.Not.Null);
         }
-
+        
         [Test]
         public void IoCTestOverwrite()
         {
-            Assert.That(IoCManager.Resolve<IIoCTestPriories>(), Is.TypeOf<IoCTestPriorities1>());
+            IoCManager.Register<IIoCTestPriorities, IoCTestPriorities2>();
+            IoCManager.Register<IIoCTestPriorities, IoCTestPriorities1>(true);
+            IoCManager.BuildGraph();
+
+            Assert.That(IoCManager.Resolve<IIoCTestPriorities>(), Is.TypeOf<IoCTestPriorities1>());
         }
 
         [Test]
@@ -100,14 +104,24 @@ namespace SS14.UnitTesting.Shared.IoC
 
             IoCManager.Clear(); // should NOT throw an exception
         }
+
+        [Test]
+        public void IoCBasicRegisterInstance()
+        {
+            var obj = new Mock<IIoCTestPriorities>().Object;
+
+            IoCManager.RegisterInstance<IIoCTestPriorities>(obj);
+
+            Assert.That(IoCManager.Resolve<IIoCTestPriorities>(), Is.EqualTo(obj));
+        }
     }
 
     public interface IIoCFailInterface { }
 
-    public interface IIoCTestPriories { }
+    public interface IIoCTestPriorities { }
 
-    public class IoCTestPriorities1 : IIoCTestPriories { }
-    public class IoCTestPriorities2 : IIoCTestPriories { }
+    public class IoCTestPriorities1 : IIoCTestPriorities { }
+    public class IoCTestPriorities2 : IIoCTestPriorities { }
 
     public interface IConstructorException { }
 

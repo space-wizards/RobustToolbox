@@ -25,6 +25,7 @@ cache:
 #  - if [ $TRAVIS_OS_NAME = osx ]; then brew update && brew upgrade python; fi
 
 before_script:
+- "pyenv versions"
 - "if [ $TRAVIS_OS_NAME = linux ]; then pyenv shell 3.6; fi"
 - "pip3 install --user requests"
 - "nuget restore SpaceStation14.sln"

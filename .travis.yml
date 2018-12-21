@@ -13,7 +13,7 @@ addons:
     #- deadsnakes
 
     packages:
-    #- python3.6
+    - python3.5
     - python3-pip
 
 cache:
@@ -30,12 +30,12 @@ before_script:
 #- "if [ $TRAVIS_OS_NAME = linux ]; then pyenv shell 3.6; fi"
 #- "python3.6 -m pip --v"
 #- "python3.6 -m pip install --user --upgrade requests"
-- "python3 -m pip install --user requests"
+- "python3.5 -m pip install --user requests"
 - "nuget restore SpaceStation14.sln"
-- "python3 RUN_THIS.py --no-prompt"
+- "python3.5 RUN_THIS.py --no-prompt"
 - "Tools/download_godotsharp.py"
 
 script:
-- "msbuild /p:Configuration=Debug /p:Platform=x64 /p:HEADLESS=1 /nologo /m /p:AllowMissingMacNatives=yes SpaceStation14.sln /p:Python=python3"
+- "msbuild /p:Configuration=Debug /p:Platform=x64 /p:HEADLESS=1 /nologo /m /p:AllowMissingMacNatives=yes SpaceStation14.sln /p:Python=python3.5"
 - "mono --debug ~/.nuget/packages/nunit.consolerunner/3.9.0/tools/nunit3-console.exe bin/UnitTesting/SS14.UnitTesting.dll"
 

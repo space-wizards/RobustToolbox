@@ -6,9 +6,10 @@ using Moq;
 
 namespace SS14.UnitTesting.Shared.IoC
 {
-    [TestFixture]
-    [TestOf(typeof(IoCManager))]
-    [Parallelizable]
+    /// <remarks>
+    /// This fixture CAN NOT be parallelized, because <see cref="IoCManager"/> is a static singleton.
+    /// </remarks>
+    [TestFixture, TestOf(typeof(IoCManager))]
     public class IoCManager_Test
     {
         [SetUp]

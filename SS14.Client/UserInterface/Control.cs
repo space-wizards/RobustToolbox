@@ -85,7 +85,7 @@ namespace SS14.Client.UserInterface
         /// <summary>
         ///     The control's representation in Godot's scene tree.
         /// </summary>
-        internal Godot.Control SceneControl { get; private set; }
+        internal Godot.Control SceneControl => WrappedSceneControl;
 
         /// <summary>
         ///     Path to the .tscn file for this scene in the VFS.
@@ -278,13 +278,12 @@ namespace SS14.Client.UserInterface
         /// </summary>
         internal Control(Godot.Control control)
         {
-            SetSceneControl(control);
             UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
             _name = control.GetName();
+            InjectControlWrap(control);
             SetupSignalHooks();
             //Logger.Debug($"Wrapping control {Name} ({GetType()} -> {control.GetType()})");
             Initialize();
-            InjectControlWrap();
         }
 
         /// <summary>
@@ -314,48 +313,56 @@ namespace SS14.Client.UserInterface
                 newSceneControl = LoadScene(diskPath);
             }
 
-            SetSceneControl(newSceneControl);
+            System.Console.WriteLine(newSceneControl == null);
+
+            InjectControlWrap(newSceneControl);
             SetupSignalHooks();
             // Certain controls (LineEdit, WindowDialog, etc...) create sub controls automatically,
             // handle these.
             WrapChildControls();
-            InjectControlWrap();
         }
 
         // ASSUMING DIRECT CONTROL.
-        private void InjectControlWrap()
+        private void InjectControlWrap(Godot.Control control)
         {
             // Inject wrapper script to hook virtual functions.
             // IMPORTANT: Because of how Scripts work in Godot,
             // it has to effectively "replace" the type of the control.
             // It... obviously cannot do this because this is [insert statically typed language].
             // As such: getting an instance to the control AFTER this point will yield a control of type ControlWrap.
-            // Luckily, the old instance seems to still work flawlessy for everything, including signals!
+            // UPDATE: As of 3.1 alpha 3, the following does not work:
+            // Luckily, the old instance seems to still work flawlessy for everything, including signals!\
+            // /UPDATE: so yes we need to use _Set and such now. Oh well.
             var script = Godot.GD.Load("res://ControlWrap.cs");
-            SceneControl.SetScript(script);
 
             // So... getting a new reference to ourselves is surprisingly difficult!
-            if (SceneControl.GetChildCount() > 0)
+            if (control.GetChildCount() > 0)
             {
                 // Potentially easiest: if we have a child, get the parent of our child (us).
-                WrappedSceneControl = (ControlWrap) SceneControl.GetChild(0).GetParent();
+                var child = control.GetChild(0);
+                control.SetScript(script);
+                WrappedSceneControl = (ControlWrap) child.GetParent();
             }
-            else if (SceneControl.GetParent() != null)
+            else if (control.GetParent() != null)
             {
                 // If not but we have a parent use that.
-                WrappedSceneControl = (ControlWrap) SceneControl.GetParent().GetChild(SceneControl.GetIndex());
+                var index = control.GetIndex();
+                var parent = control.GetParent();
+                control.SetScript(script);
+                WrappedSceneControl = (ControlWrap) parent.GetChild(index);
             }
             else
             {
                 // Ok so we're literally a lone node guess making a temporary child'll be fine.
                 var node = new Godot.Node();
-                SceneControl.AddChild(node);
+                control.AddChild(node);
+                control.SetScript(script);
                 WrappedSceneControl = (ControlWrap) node.GetParent();
                 node.QueueFree();
             }
 
             WrappedSceneControl.GetMinimumSizeOverride = () => CalculateMinimumSize().Convert();
-            WrappedSceneControl.HasPointOverride = (point) => HasPoint(point.Convert());
+            WrappedSceneControl.HasPointOverride = point => HasPoint(point.Convert());
             WrappedSceneControl.DrawOverride = DoDraw;
         }
 
@@ -384,15 +391,6 @@ namespace SS14.Client.UserInterface
         private protected virtual Godot.Control SpawnSceneControl()
         {
             return new Godot.Control();
-        }
-
-        /// <summary>
-        ///     override by child classes to have a reference to the Godot control for accessing.
-        /// </summary>
-        /// <param name="control"></param>
-        private protected virtual void SetSceneControl(Godot.Control control)
-        {
-            SceneControl = control;
         }
 
         public bool Disposed { get; private set; } = false;
@@ -427,13 +425,8 @@ namespace SS14.Client.UserInterface
 
             if (!GameController.ShuttingDownHard)
             {
-                SceneControl?.QueueFree();
-                SceneControl?.Dispose();
-                SceneControl = null;
-
-                // Don't QueueFree since these are the same node.
-                // Kinda sorta mostly probably hopefully.
                 WrappedSceneControl?.Dispose();
+                WrappedSceneControl?.QueueFree();
                 WrappedSceneControl = null;
             }
         }

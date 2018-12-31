@@ -8,23 +8,15 @@ namespace SS14.Client.UserInterface.Controls
         public GridContainer(string name) : base(name) { }
         internal GridContainer(Godot.GridContainer sceneControl) : base(sceneControl) { }
 
-        new private Godot.GridContainer SceneControl;
-
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.GridContainer();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.GridContainer)control;
-        }
-
         public int Columns
         {
-            get => SceneControl.GetColumns();
-            set => SceneControl.SetColumns(value);
+            get => (int)SceneControl.Get("columns");
+            set => SceneControl.Set("columns", value);
         }
     }
 }

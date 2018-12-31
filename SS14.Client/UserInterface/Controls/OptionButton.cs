@@ -11,59 +11,59 @@ namespace SS14.Client.UserInterface.Controls
 
         public int Selected
         {
-            get => SceneControl.Selected;
-            set => SceneControl.Selected = value;
+            get => (int)SceneControl.Get("selected");
+            set => SceneControl.Set("selected", value);
         }
 
         public void AddItem(Texture icon, string label, int id = 1)
         {
-            SceneControl.AddIconItem(icon.GodotTexture, label, id);
+            SceneControl.Call("add_icon_item", icon.GodotTexture, label, id);
         }
 
         public void AddItem(string label, int id = 1)
         {
-            SceneControl.AddItem(label, id);
+            SceneControl.Call("add_item", label, id);
         }
 
         public void AddSeparator()
         {
-            SceneControl.AddSeparator();
+            SceneControl.Call("add_separator");
         }
 
         public void Clear()
         {
-            SceneControl.Clear();
+            SceneControl.Call("clear");
         }
 
-        public int ItemCount => SceneControl.GetItemCount();
+        public int ItemCount => (int)SceneControl.Call("get_item_count");
 
         public int GetItemId(int idx)
         {
-            return SceneControl.GetItemId(idx);
+            return (int)SceneControl.Call("get_item_id", idx);
         }
 
         public object GetItemMetadata(int idx)
         {
-            return SceneControl.GetItemMetadata(idx);
+            return SceneControl.Call("get_item_metadata", idx);
         }
 
-        public int SelectedId => SceneControl.GetSelectedId();
+        public int SelectedId => (int)SceneControl.Call("get_selected_id");
 
         public object SelectedMetadata => SceneControl.GetSceneInstanceLoadPlaceholder();
 
         public bool IsItemDisabled(int idx)
         {
-            return SceneControl.IsItemDisabled(idx);
+            return (bool)SceneControl.Call("is_item_disabled", idx);
         }
 
         public void RemoveItem(int idx)
         {
-            SceneControl.RemoveItem(idx);
+            SceneControl.Call("remove_item", idx);
         }
 
         public void Select(int idx)
         {
-            SceneControl.Select(idx);
+            SceneControl.Call("select", idx);
         }
 
         public void SelectId(int id)
@@ -86,27 +86,27 @@ namespace SS14.Client.UserInterface.Controls
 
         public void SetItemDisabled(int idx, bool disabled)
         {
-            SceneControl.SetItemDisabled(idx, disabled);
+            SceneControl.Call("set_item_disabled", idx, disabled);
         }
 
         public void SetItemIcon(int idx, Texture texture)
         {
-            SceneControl.SetItemIcon(idx, texture);
+            SceneControl.Call("set_item_icon", idx, texture);
         }
 
         public void SetItemId(int idx, int id)
         {
-            SceneControl.SetItemId(idx, id);
+            SceneControl.Call("set_item_id", idx, id);
         }
 
         public void SetItemMetadata(int idx, object metadata)
         {
-            SceneControl.SetItemMetadata(idx, metadata);
+            SceneControl.Call("set_item_metadata", idx, metadata);
         }
 
         public void SetItemText(int idx, string text)
         {
-            SceneControl.SetItemText(idx, text);
+            SceneControl.Call("set_item_text", idx, text);
         }
 
         public OptionButton() : base()
@@ -119,17 +119,9 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        new private Godot.OptionButton SceneControl;
-
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.OptionButton();
-        }
-
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.OptionButton)control;
         }
 
         public class ItemSelectedEventArgs : EventArgs

@@ -7,8 +7,6 @@ namespace SS14.Client.UserInterface.Controls
     [ControlWrap(typeof(Godot.TabContainer))]
     public class TabContainer : Control
     {
-        private new Godot.TabContainer SceneControl;
-
         private GodotSignalSubscriber1 _onTabSelectedSubscriber;
         private GodotSignalSubscriber1 _onTabChangedSubscriber;
 
@@ -26,20 +24,20 @@ namespace SS14.Client.UserInterface.Controls
 
         public int CurrentTab
         {
-            get => SceneControl.CurrentTab;
-            set => SceneControl.CurrentTab = value;
+            get => (int)SceneControl.Call("get_current_tab");
+            set => SceneControl.Call("set_current_tab", value);
         }
 
         public TabAlignMode AlignMode
         {
-            get => (TabAlignMode) SceneControl.TabAlign;
-            set => SceneControl.TabAlign = (Godot.TabContainer.TabAlignEnum) value;
+            get => (TabAlignMode) SceneControl.Call("get_tab_align");
+            set => SceneControl.Call("set_tab_align", (Godot.TabContainer.TabAlignEnum) value);
         }
 
         public bool TabsVisible
         {
-            get => SceneControl.TabsVisible;
-            set => SceneControl.TabsVisible = value;
+            get => (bool)SceneControl.Get("tabs_visible");
+            set => SceneControl.Set("tabs_visible", value);
         }
 
         public event Action<int> OnTabSelected;
@@ -47,32 +45,27 @@ namespace SS14.Client.UserInterface.Controls
 
         public string GetTabTitle(int tab)
         {
-            return SceneControl.GetTabTitle(tab);
+            return (string)SceneControl.Call("get_tab_title", tab);
         }
 
         public void SetTabTitle(int tab, string title)
         {
-            SceneControl.SetTabTitle(tab, title);
+            SceneControl.Call("set_tab_title", tab, title);
         }
 
         public Texture GetTabIcon(int tab)
         {
-            return new GodotTextureSource(SceneControl.GetTabIcon(tab));
+            return new GodotTextureSource((Godot.Texture)SceneControl.Call("get_tab_icon", tab));
         }
 
         public void SetTabIcon(int tab, Texture icon)
         {
-            SceneControl.SetTabIcon(tab, icon);
+            SceneControl.Call("set_tab_icon", tab, icon);
         }
 
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.TabContainer();
-        }
-
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(SceneControl = (Godot.TabContainer) control);
         }
 
         protected override void SetupSignalHooks()

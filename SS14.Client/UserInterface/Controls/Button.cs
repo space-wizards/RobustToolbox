@@ -20,41 +20,33 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        new private Godot.Button SceneControl;
-
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.Button();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.Button)control;
-        }
-
         public AlignMode TextAlign
         {
-            get => (AlignMode)SceneControl.Align;
-            set => SceneControl.Align = (Godot.Button.TextAlign)value;
+            get => (AlignMode)SceneControl.Get("align");
+            set => SceneControl.Set("align", (Godot.Button.TextAlign)value);
         }
 
         public bool ClipText
         {
-            get => SceneControl.ClipText;
-            set => SceneControl.ClipText = value;
+            get => (bool)SceneControl.Get("clip_text");
+            set => SceneControl.Set("clip_text", value);
         }
 
         public bool Flat
         {
-            get => SceneControl.Flat;
-            set => SceneControl.Flat = value;
+            get => (bool)SceneControl.Get("flat");
+            set => SceneControl.Set("flat", value);
         }
 
         public string Text
         {
-            get => SceneControl.Text;
-            set => SceneControl.Text = value;
+            get => (string)SceneControl.Get("text");
+            set => SceneControl.Set("text", value);
         }
 
         private Color? _fontColorOverride;

@@ -1132,9 +1132,9 @@ namespace SS14.Client.GameObjects
                     {
                         BaseRSI = resourceCache.GetResource<RSIResource>(rsiPath).RSI;
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
+                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, e);
                     }
                 }
             }

@@ -3,8 +3,6 @@ namespace SS14.Client.UserInterface.Controls
     [ControlWrap(typeof(Godot.ProgressBar))]
     public class ProgressBar : Range
     {
-        private new Godot.ProgressBar SceneControl;
-
         public ProgressBar()
         {
         }
@@ -22,18 +20,13 @@ namespace SS14.Client.UserInterface.Controls
         /// </summary>
         public bool PercentVisible
         {
-            get => SceneControl.PercentVisible;
-            set => SceneControl.PercentVisible = value;
+            get => (bool)SceneControl.Get("percent_visible");
+            set => SceneControl.Set("percent_visible", value);
         }
 
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.ProgressBar();
-        }
-
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(SceneControl = (Godot.ProgressBar)control);
         }
     }
 }

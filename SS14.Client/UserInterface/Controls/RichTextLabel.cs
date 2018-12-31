@@ -21,55 +21,46 @@ namespace SS14.Client.UserInterface.Controls
             return new Godot.RichTextLabel();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-
-            SceneControl = (Godot.RichTextLabel)control;
-        }
-
-        new private Godot.RichTextLabel SceneControl;
-
         public bool BBCodeEnabled
         {
-            get => SceneControl.BbcodeEnabled;
-            set => SceneControl.BbcodeEnabled = value;
+            get => (bool)SceneControl.Get("bbcode_enabled");
+            set => SceneControl.Set("bbcode_enabled", value);
         }
 
         public void Clear()
         {
-            SceneControl.Clear();
+            SceneControl.Call("clear");
         }
 
         public Godot.Error AppendBBCode(string code)
         {
-            return SceneControl.AppendBbcode(code);
+            return (Godot.Error)SceneControl.Call("append_bbcode", code);
         }
 
         public void PushColor(Color color)
         {
-            SceneControl.PushColor(color.Convert());
+            SceneControl.Call("push_color", color.Convert());
         }
 
         public void AddText(string text)
         {
-            SceneControl.AddText(text);
+            SceneControl.Call("add_text", text);
         }
 
         public void Pop()
         {
-            SceneControl.Pop();
+            SceneControl.Call("pop");
         }
 
         public void NewLine()
         {
-            SceneControl.Newline();
+            SceneControl.Call("newline");
         }
 
         public bool ScrollFollowing
         {
-            get => SceneControl.IsScrollFollowing();
-            set => SceneControl.SetScrollFollow(value);
+            get => (bool)SceneControl.Call("is_scroll_following");
+            set => SceneControl.Call("set_scroll_following", value);
         }
     }
 }

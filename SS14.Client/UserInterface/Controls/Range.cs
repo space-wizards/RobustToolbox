@@ -20,41 +20,33 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        new private Godot.Range SceneControl;
-
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.Range)control;
-        }
-
         public float GetAsRatio()
         {
-            return SceneControl.GetAsRatio();
+            return (float)SceneControl.Call("get_as_ratio");
         }
 
         public float Page
         {
-            get => SceneControl.Page;
-            set => SceneControl.Page = value;
+            get => (float)SceneControl.Get("page");
+            set => SceneControl.Set("page", value);
         }
 
         public float MaxValue
         {
-            get => SceneControl.MaxValue;
-            set => SceneControl.MaxValue = value;
+            get => (float)SceneControl.Get("max_value");
+            set => SceneControl.Set("max_value", value);
         }
 
         public float MinValue
         {
-            get => SceneControl.MinValue;
-            set => SceneControl.MinValue = value;
+            get => (float)SceneControl.Get("min_value");
+            set => SceneControl.Set("min_value", value);
         }
 
         public float Value
         {
-            get => SceneControl.Value;
-            set => SceneControl.Value = value;
+            get => (float)SceneControl.Get("value");
+            set => SceneControl.Set("value", value);
         }
     }
 }

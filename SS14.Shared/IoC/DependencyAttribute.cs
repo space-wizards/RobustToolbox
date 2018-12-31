@@ -19,7 +19,7 @@ namespace SS14.Shared.IoC
     /// If you would like to run code after the dependencies have been injected, use <see cref="IPostInjectInit" />
     /// </para>
     /// </remarks>
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Field)]
     public class DependencyAttribute : Attribute
     {
     }

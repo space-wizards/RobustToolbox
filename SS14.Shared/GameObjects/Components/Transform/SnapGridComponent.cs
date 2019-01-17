@@ -124,7 +124,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
             IsSet = true;
 
             var oldPos = Position;
-            Position = grid.SnapGridCellFor(Owner.Transform.LocalPosition, Offset);
+            Position = grid.SnapGridCellFor(Owner.Transform.GridPosition, Offset);
             grid.AddToSnapGridCell(Position, Offset, this);
 
             if (oldPos != Position)

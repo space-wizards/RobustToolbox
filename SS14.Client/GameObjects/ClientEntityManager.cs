@@ -65,7 +65,7 @@ namespace SS14.Client.GameObjects
                 }
                 else
                 {
-                    if (FloatMath.CloseTo(transform.LocalPosition.X, position.X) && FloatMath.CloseTo(transform.LocalPosition.Y, position.Y))
+                    if (FloatMath.CloseTo(transform.GridPosition.X, position.X) && FloatMath.CloseTo(transform.GridPosition.Y, position.Y))
                     {
                         yield return entity;
                     }
@@ -185,7 +185,7 @@ namespace SS14.Client.GameObjects
         public override IEntity ForceSpawnEntityAt(string entityType, GridCoordinates coordinates)
         {
             Entity entity = SpawnEntity(entityType);
-            entity.Transform.LocalPosition = coordinates;
+            entity.Transform.GridPosition = coordinates;
             if (EntitiesInitialized)
             {
                 InitializeEntity(entity);

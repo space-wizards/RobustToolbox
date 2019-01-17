@@ -150,7 +150,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
-        public GridCoordinates LocalPosition
+        public GridCoordinates GridPosition
         {
             get
             {
@@ -191,7 +191,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 Dirty();
 
                 RebuildMatrices();
-                OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, value));
+                OnMove?.Invoke(this, new MoveEventArgs(GridPosition, value));
             }
         }
 
@@ -240,7 +240,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 Dirty();
 
                 RebuildMatrices();
-                OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new GridCoordinates(_position, GridID)));
+                OnMove?.Invoke(this, new MoveEventArgs(GridPosition, new GridCoordinates(_position, GridID)));
             }
         }
 
@@ -255,7 +255,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
             {
                 var transform = Owner.EntityManager.GetEntity(child).Transform;
                 transform.DetachParent();
-                transform.LocalPosition = GridCoordinates.Nullspace;
+                transform.GridPosition = GridCoordinates.Nullspace;
             }
 
             base.OnRemove();
@@ -271,7 +271,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 return;
 
             // transform _position from parent coords to world coords
-            var localPosition = LocalPosition;
+            var localPosition = GridPosition;
 
             var concrete = (TransformComponent) Parent;
             concrete._children.Remove(Owner.Uid);
@@ -392,12 +392,12 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
             if (_position != newState.LocalPosition || GridID != newState.GridID)
             {
-                var oldPos = LocalPosition;
+                var oldPos = GridPosition;
                 SetPosition(newState.LocalPosition);
                 GridID = newState.GridID;
                 // TODO: this is horribly broken if the parent changes too, because the coordinates are all messed up.
                 // Help.
-                OnMove?.Invoke(this, new MoveEventArgs(oldPos, LocalPosition));
+                OnMove?.Invoke(this, new MoveEventArgs(oldPos, GridPosition));
                 rebuildMatrices = true;
             }
 
@@ -451,7 +451,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 var lc = new GridCoordinates(worldPos, grid.MapID);
 
                 // then to parent grid coords
-                return lc.ConvertToGrid(Parent.LocalPosition.Grid);
+                return lc.ConvertToGrid(Parent.GridPosition.Grid);
             }
             else
             {
@@ -461,7 +461,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
         public string GetDebugString()
         {
-            return $"pos/rot/wpos/wrot: {LocalPosition}/{LocalRotation}/{WorldPosition}/{WorldRotation}";
+            return $"pos/rot/wpos/wrot: {GridPosition}/{LocalRotation}/{WorldPosition}/{WorldRotation}";
         }
 
         /// <summary>

@@ -41,9 +41,9 @@ namespace SS14.Server.Console.Commands
             if (args.Length == 3 && int.TryParse(args[2], out var mapId) && mapMgr.TryGetMap(new MapId(mapId), out var map))
                 grid = map.FindGridAt(position);
             else
-                grid = transform.LocalPosition.Map.FindGridAt(position);
+                grid = transform.GridPosition.Map.FindGridAt(position);
 
-            transform.LocalPosition = new GridCoordinates(position, grid);
+            transform.GridPosition = new GridCoordinates(position, grid);
 
             shell.SendText(player, $"Teleported {player} to {grid.MapID}:{posX},{posY}.");
         }

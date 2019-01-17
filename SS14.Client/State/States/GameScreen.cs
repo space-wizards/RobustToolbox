@@ -200,7 +200,7 @@ namespace SS14.Client.State.States
                 }
                 var transx = x.clicked.Transform;
                 var transy = y.clicked.Transform;
-                return transx.LocalPosition.Y.CompareTo(transy.LocalPosition.Y);
+                return transx.GridPosition.Y.CompareTo(transy.GridPosition.Y);
             }
         }
 

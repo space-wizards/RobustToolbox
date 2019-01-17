@@ -144,7 +144,7 @@ namespace SS14.Server.Console.Commands
             if(player.AttachedEntity == null)
                 return;
 
-            var pos = player.AttachedEntity.Transform.LocalPosition;
+            var pos = player.AttachedEntity.Transform.GridPosition;
 
             shell.SendText(player, $"MapID:{pos.MapID} GridID:{pos.GridID} X:{pos.X:N2} Y:{pos.Y:N2}");
         }

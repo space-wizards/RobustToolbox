@@ -48,7 +48,7 @@ namespace SS14.Server.GameObjects
             if (prototype.CanSpawnAt(coordinates.Grid, coordinates.Position))
             {
                 Entity result = SpawnEntity(entityType);
-                result.Transform.LocalPosition = coordinates;
+                result.Transform.GridPosition = coordinates;
                 if (Started)
                 {
                     InitializeEntity(result);
@@ -73,7 +73,7 @@ namespace SS14.Server.GameObjects
         public override IEntity ForceSpawnEntityAt(string entityType, GridCoordinates coordinates)
         {
             Entity entity = SpawnEntity(entityType);
-            entity.Transform.LocalPosition = coordinates;
+            entity.Transform.GridPosition = coordinates;
             if (Started)
             {
                 InitializeEntity(entity);
@@ -181,7 +181,7 @@ namespace SS14.Server.GameObjects
                 }
                 else
                 {
-                    if (FloatMath.CloseTo(transform.LocalPosition.X, position.X) && FloatMath.CloseTo(transform.LocalPosition.Y, position.Y))
+                    if (FloatMath.CloseTo(transform.GridPosition.X, position.X) && FloatMath.CloseTo(transform.GridPosition.Y, position.Y))
                     {
                         yield return entity;
                     }
@@ -203,7 +203,7 @@ namespace SS14.Server.GameObjects
                 return GetEntitiesIntersecting(entity.Transform.MapID, component.WorldAABB);
             }
 
-            return GetEntitiesIntersecting(entity.Transform.LocalPosition);
+            return GetEntitiesIntersecting(entity.Transform.GridPosition);
         }
 
         /// <inheritdoc />
@@ -229,7 +229,7 @@ namespace SS14.Server.GameObjects
             }
             else
             {
-                GridCoordinates coords = entity.Transform.LocalPosition;
+                GridCoordinates coords = entity.Transform.GridPosition;
                 return GetEntitiesInRange(coords, range);
             }
         }

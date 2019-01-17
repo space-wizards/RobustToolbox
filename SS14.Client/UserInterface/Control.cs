@@ -999,8 +999,7 @@ namespace SS14.Client.UserInterface
         /// <returns>The root of the loaded scene.</returns>
         private protected static Godot.Control LoadScene(string path)
         {
-            // See https://github.com/godotengine/godot/issues/21667 for why pNoCache is necessary.
-            var scene2 = (Godot.PackedScene) Godot.ResourceLoader.Load(path, pNoCache: true);
+            var scene2 = (Godot.PackedScene) Godot.ResourceLoader.Load(path);
             return (Godot.Control) scene2.Instance();
         }
 

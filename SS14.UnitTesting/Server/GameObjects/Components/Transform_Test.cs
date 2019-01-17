@@ -74,14 +74,6 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             Assert.That(childTrans.GridPosition, Is.EqualTo(new GridCoordinates(4, 4, GridA)));
             Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(4, 4)));
 
-            // now you can move the child by setting the position, but the map/grid stays unchanged
-            childTrans.GridPosition = new GridCoordinates(5, 5, GridB);
-
-            Assert.That(childTrans.MapID, Is.EqualTo(parentTrans.MapID));
-            Assert.That(childTrans.GridID, Is.EqualTo(parentTrans.GridID));
-            Assert.That(childTrans.GridPosition, Is.EqualTo(parentTrans.GridPosition));
-            Assert.That(childTrans.WorldPosition, Is.EqualTo(parentTrans.WorldPosition));
-
             // move the parent, and the child should move with it
             childTrans.WorldPosition = new Vector2(6, 6);
             parentTrans.WorldPosition += new Vector2(-7, -7);

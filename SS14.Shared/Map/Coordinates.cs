@@ -3,6 +3,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
 using System;
+using JetBrains.Annotations;
 
 namespace SS14.Shared.Map
 {
@@ -135,7 +136,7 @@ namespace SS14.Shared.Map
 
         public bool InRange(GridCoordinates localpos, int range)
         {
-            return InRange(localpos, (float)range);
+            return InRange(localpos, (float) range);
         }
 
         public GridCoordinates Translated(Vector2 offset)
@@ -156,7 +157,7 @@ namespace SS14.Shared.Map
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is GridCoordinates && Equals((GridCoordinates)obj);
+            return obj is GridCoordinates && Equals((GridCoordinates) obj);
         }
 
         public override int GetHashCode()
@@ -195,8 +196,6 @@ namespace SS14.Shared.Map
 
         public float Y => Position.Y;
 
-        public Vector2 AsVector => Position;
-
         public ScreenCoordinates(Vector2 argPosition)
         {
             Position = argPosition;
@@ -210,6 +209,36 @@ namespace SS14.Shared.Map
         public override string ToString()
         {
             return Position.ToString();
+        }
+    }
+
+    /// <summary>
+    ///     Coordinates relative to a specific map.
+    /// </summary>
+    [PublicAPI]
+    [Serializable, NetSerializable]
+    public readonly struct MapCoordinates
+    {
+        public readonly Vector2 Position;
+        public readonly MapId MapId;
+
+        public float X => Position.X;
+        public float Y => Position.Y;
+        public IMap Map => IoCManager.Resolve<IMapManager>().GetMap(MapId);
+
+        public MapCoordinates(Vector2 position, MapId mapId)
+        {
+            Position = position;
+            MapId = mapId;
+        }
+
+        public MapCoordinates(float x, float y, MapId mapId) : this(new Vector2(x, y), mapId)
+        {
+        }
+
+        public override string ToString()
+        {
+            return $"({X}, {Y}, map: {MapId})";
         }
     }
 }

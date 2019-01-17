@@ -77,7 +77,7 @@ namespace SS14.Client.UserInterface.CustomControls
             var mouseScreenPos = inputManager.MouseScreenPosition;
             int mouseWorldMap;
             int mouseWorldGrid;
-            GridLocalCoordinates mouseWorldPos;
+            GridCoordinates mouseWorldPos;
             ScreenCoordinates worldToScreen;
             IEntity mouseEntity = null;
             try

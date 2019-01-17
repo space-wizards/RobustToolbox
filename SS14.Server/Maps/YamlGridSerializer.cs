@@ -129,7 +129,7 @@ namespace SS14.Server.Maps
                             var data = reader.ReadUInt16();
 
                             var tile = new Tile(id, data);
-                            grid.SetTile(new GridLocalCoordinates(x + indices.X, y + indices.Y, grid), tile);
+                            grid.SetTile(new GridCoordinates(x + indices.X, y + indices.Y, grid), tile);
                         }
 
                     mapMan.SuppressOnTileChanged = false;

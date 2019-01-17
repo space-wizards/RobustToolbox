@@ -21,7 +21,7 @@ namespace SS14.Client.GameObjects
 
         private int NextClientEntityUid = EntityUid.ClientUid + 1;
 
-        public IEnumerable<IEntity> GetEntitiesInRange(GridLocalCoordinates position, float Range)
+        public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float Range)
         {
             var AABB = new Box2(position.Position - new Vector2(Range / 2, Range / 2), position.Position + new Vector2(Range / 2, Range / 2));
             return GetEntitiesIntersecting(position.MapID, AABB);
@@ -182,7 +182,7 @@ namespace SS14.Client.GameObjects
             return ent;
         }
 
-        public override IEntity ForceSpawnEntityAt(string entityType, GridLocalCoordinates coordinates)
+        public override IEntity ForceSpawnEntityAt(string entityType, GridCoordinates coordinates)
         {
             Entity entity = SpawnEntity(entityType);
             entity.Transform.LocalPosition = coordinates;
@@ -201,7 +201,7 @@ namespace SS14.Client.GameObjects
                 map = _mapManager.DefaultMap;
             }
 
-            return ForceSpawnEntityAt(entityType, new GridLocalCoordinates(position, map.FindGridAt(position)));
+            return ForceSpawnEntityAt(entityType, new GridCoordinates(position, map.FindGridAt(position)));
 
         }
 
@@ -212,7 +212,7 @@ namespace SS14.Client.GameObjects
             return true;
         }
 
-        public override bool TrySpawnEntityAt(string entityType, GridLocalCoordinates coordinates, out IEntity entity)
+        public override bool TrySpawnEntityAt(string entityType, GridCoordinates coordinates, out IEntity entity)
         {
             // TODO: check collisions here?
             entity = ForceSpawnEntityAt(entityType, coordinates);

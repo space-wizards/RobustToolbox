@@ -43,7 +43,7 @@ namespace SS14.Server.Console.Commands
             else
                 grid = transform.LocalPosition.Map.FindGridAt(position);
 
-            transform.LocalPosition = new GridLocalCoordinates(position, grid);
+            transform.LocalPosition = new GridCoordinates(position, grid);
 
             shell.SendText(player, $"Teleported {player} to {grid.MapID}:{posX},{posY}.");
         }

@@ -67,11 +67,11 @@ namespace SS14.Client.Placement.Modes
 
             //Convert back to original world and screen coordinates after applying offset
             MouseCoords =
-                new GridLocalCoordinates(
+                new GridCoordinates(
                     mouselocal + new Vector2(pManager.PlacementOffset.X, pManager.PlacementOffset.Y), MouseCoords.Grid);
         }
 
-        public override bool IsValidPosition(GridLocalCoordinates position)
+        public override bool IsValidPosition(GridCoordinates position)
         {
             if (!RangeCheck(position))
             {

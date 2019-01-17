@@ -62,7 +62,7 @@ namespace SS14.Shared.Map
             }
 
             /// <inheritdoc />
-            public IMapGrid FindGridAt(GridLocalCoordinates worldPos)
+            public IMapGrid FindGridAt(GridCoordinates worldPos)
             {
                 var pos = worldPos.ToWorld().Position;
                 return FindGridAt(pos);

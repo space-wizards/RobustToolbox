@@ -15,7 +15,7 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         /// <summary>
         ///     Current position offset of the entity.
         /// </summary>
-        GridLocalCoordinates LocalPosition { get; set; }
+        GridCoordinates LocalPosition { get; set; }
 
         /// <summary>
         ///     Current position offset of the entity.

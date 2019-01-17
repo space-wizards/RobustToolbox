@@ -62,7 +62,7 @@ namespace SS14.Server.Interfaces.Player
         IEnumerable<IPlayerData> GetAllPlayerData();
 
         void DetachAll();
-        List<IPlayerSession> GetPlayersInRange(GridLocalCoordinates worldPos, int range);
+        List<IPlayerSession> GetPlayersInRange(GridCoordinates worldPos, int range);
         List<IPlayerSession> GetAllPlayers();
         List<PlayerState> GetPlayerStates();
     }

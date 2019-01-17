@@ -63,19 +63,19 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             var childTrans = child.Transform;
 
             // that are not on the same map
-            parentTrans.LocalPosition = new GridLocalCoordinates(5, 5, GridA);
-            childTrans.LocalPosition = new GridLocalCoordinates(4, 4, GridB);
+            parentTrans.LocalPosition = new GridCoordinates(5, 5, GridA);
+            childTrans.LocalPosition = new GridCoordinates(4, 4, GridB);
 
             // if they are parented, the child keeps its world position, but moves to the parents map
             childTrans.AttachParent(parentTrans);
 
             Assert.That(childTrans.MapID, Is.EqualTo(parentTrans.MapID));
             Assert.That(childTrans.GridID, Is.EqualTo(parentTrans.GridID));
-            Assert.That(childTrans.LocalPosition, Is.EqualTo(new GridLocalCoordinates(4, 4, GridA)));
+            Assert.That(childTrans.LocalPosition, Is.EqualTo(new GridCoordinates(4, 4, GridA)));
             Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(4, 4)));
 
             // now you can move the child by setting the position, but the map/grid stays unchanged
-            childTrans.LocalPosition = new GridLocalCoordinates(5, 5, GridB);
+            childTrans.LocalPosition = new GridCoordinates(5, 5, GridB);
 
             Assert.That(childTrans.MapID, Is.EqualTo(parentTrans.MapID));
             Assert.That(childTrans.GridID, Is.EqualTo(parentTrans.GridID));

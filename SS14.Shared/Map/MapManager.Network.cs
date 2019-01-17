@@ -201,7 +201,7 @@ namespace SS14.Shared.Map
             var y = message.SingleTurf.Y;
             var tile = (Tile)message.SingleTurf.Tile;
 
-            var pos = new GridLocalCoordinates(x, y, message.GridIndex);
+            var pos = new GridCoordinates(x, y, message.GridIndex);
             pos.Grid.SetTile(pos, tile);
         }
 

@@ -43,7 +43,7 @@ namespace SS14.Server.GameObjects.EntitySystems
         /// </summary>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
-        public void Play(string filename, GridLocalCoordinates coordinates, AudioParams? audioParams = null)
+        public void Play(string filename, GridCoordinates coordinates, AudioParams? audioParams = null)
         {
             var msg = new PlayAudioPositionalMessage
             {

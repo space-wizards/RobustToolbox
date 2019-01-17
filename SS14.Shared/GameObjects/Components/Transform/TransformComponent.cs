@@ -150,7 +150,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
-        public GridLocalCoordinates LocalPosition
+        public GridCoordinates LocalPosition
         {
             get
             {
@@ -158,11 +158,11 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 {
                     // transform _position from parent coords to world coords
                     var worldPos = Parent.WorldMatrix.Transform(_position);
-                    return new GridLocalCoordinates(worldPos, _gridID);
+                    return new GridCoordinates(worldPos, _gridID);
                 }
                 else
                 {
-                    return new GridLocalCoordinates(_position, _gridID);
+                    return new GridCoordinates(_position, _gridID);
                 }
             }
             set
@@ -240,7 +240,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 Dirty();
 
                 RebuildMatrices();
-                OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new GridLocalCoordinates(_position, GridID)));
+                OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new GridCoordinates(_position, GridID)));
             }
         }
 
@@ -255,7 +255,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
             {
                 var transform = Owner.EntityManager.GetEntity(child).Transform;
                 transform.DetachParent();
-                transform.LocalPosition = GridLocalCoordinates.Nullspace;
+                transform.LocalPosition = GridCoordinates.Nullspace;
             }
 
             base.OnRemove();
@@ -441,21 +441,21 @@ namespace SS14.Shared.GameObjects.Components.Transform
         /// <summary>
         ///     Calculate our LocalCoordinates as if the location relative to our parent is equal to <paramref name="localPosition" />.
         /// </summary>
-        private GridLocalCoordinates LocalCoordinatesFor(Vector2 localPosition, GridId gridId)
+        private GridCoordinates LocalCoordinatesFor(Vector2 localPosition, GridId gridId)
         {
             if (Parent != null)
             {
                 // transform localPosition from parent coords to world coords
                 var worldPos = Parent.WorldMatrix.Transform(localPosition);
                 var grid = IoCManager.Resolve<IMapManager>().GetGrid(gridId);
-                var lc = new GridLocalCoordinates(worldPos, grid.MapID);
+                var lc = new GridCoordinates(worldPos, grid.MapID);
 
                 // then to parent grid coords
                 return lc.ConvertToGrid(Parent.LocalPosition.Grid);
             }
             else
             {
-                return new GridLocalCoordinates(localPosition, gridId);
+                return new GridCoordinates(localPosition, gridId);
             }
         }
 

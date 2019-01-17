@@ -48,7 +48,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="entityType"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
-        IEntity ForceSpawnEntityAt(string entityType, GridLocalCoordinates coordinates);
+        IEntity ForceSpawnEntityAt(string entityType, GridCoordinates coordinates);
 
         /// <summary>
         /// Spawns an entity at a specific position
@@ -75,7 +75,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="entityType"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
-        bool TrySpawnEntityAt(string entityType, GridLocalCoordinates coordinates, out IEntity entity);
+        bool TrySpawnEntityAt(string entityType, GridCoordinates coordinates, out IEntity entity);
 
         /// <summary>
         /// Returns an entity by id

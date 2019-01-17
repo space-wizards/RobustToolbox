@@ -423,8 +423,8 @@ namespace SS14.Client.UserInterface
 
             if (!GameController.ShuttingDownHard)
             {
-                WrappedSceneControl?.Dispose();
                 WrappedSceneControl?.QueueFree();
+                WrappedSceneControl?.Dispose();
                 WrappedSceneControl = null;
             }
         }

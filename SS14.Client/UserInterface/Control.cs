@@ -313,8 +313,6 @@ namespace SS14.Client.UserInterface
                 newSceneControl = LoadScene(diskPath);
             }
 
-            System.Console.WriteLine(newSceneControl == null);
-
             InjectControlWrap(newSceneControl);
             SetupSignalHooks();
             // Certain controls (LineEdit, WindowDialog, etc...) create sub controls automatically,

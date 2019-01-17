@@ -8,30 +8,29 @@ namespace SS14.Client.UserInterface.Controls
     [ControlWrap(typeof(Godot.Tree))]
     public class Tree : Control
     {
-        new Godot.Tree SceneControl;
         readonly Dictionary<Godot.TreeItem, Item> ItemMap = new Dictionary<Godot.TreeItem, Item>();
 
         public bool HideRoot
         {
-            get => SceneControl.HideRoot;
-            set => SceneControl.HideRoot = value;
+            get => (bool)SceneControl.Get("hide_root");
+            set => SceneControl.Set("hide_root", value);
         }
 
         public int Columns
         {
-            get => SceneControl.Columns;
-            set => SceneControl.Columns = value;
+            get => (int)SceneControl.Get("columns");
+            set => SceneControl.Set("columns", value);
         }
 
         public bool ColumnTitlesVisible
         {
-            get => SceneControl.AreColumnTitlesVisible();
-            set => SceneControl.SetColumnTitlesVisible(value);
+            get => (bool)SceneControl.Call("are_column_items_visible");
+            set => SceneControl.Call("set_column_titles_visible", value);
         }
 
-        public Item Root => GetItem(SceneControl.GetRoot());
-        public Item Selected => GetItem(SceneControl.GetSelected());
-        public int SelectedColumn => SceneControl.GetSelectedColumn();
+        public Item Root => GetItem((Godot.TreeItem)SceneControl.Call("get_root"));
+        public Item Selected => GetItem((Godot.TreeItem)SceneControl.Call("get_selected"));
+        public int SelectedColumn => (int)SceneControl.Call("get_selected_column");
 
         public event Action OnItemSelected;
 
@@ -51,11 +50,6 @@ namespace SS14.Client.UserInterface.Controls
             return new Godot.Tree();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.Tree)control;
-        }
         #endregion Construction
 
         public void Clear()
@@ -66,12 +60,12 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             ItemMap.Clear();
-            SceneControl.Clear();
+            SceneControl.Call("clear");
         }
 
         public Item CreateItem(Item parent = null, int idx = -1)
         {
-            var nativeItem = (Godot.TreeItem)SceneControl.CreateItem(parent?.NativeItem);
+            var nativeItem = (Godot.TreeItem)SceneControl.Call("create_item", parent?.NativeItem);
             var item = new Item(nativeItem, this);
             ItemMap[nativeItem] = item;
             return item;
@@ -79,32 +73,32 @@ namespace SS14.Client.UserInterface.Controls
 
         public void EnsureCursorIsVisible()
         {
-            SceneControl.EnsureCursorIsVisible();
+            SceneControl.Call("ensure_cursor_is_visible");
         }
 
         public int GetColumnAtPosition(Vector2 position)
         {
-            return SceneControl.GetColumnAtPosition(position.Convert());
+            return (int)SceneControl.Call("get_column_at_position", position.Convert());
         }
 
         public string GetColumnTitle(int column)
         {
-            return SceneControl.GetColumnTitle(column);
+            return (string)SceneControl.Call("get_column_title", column);
         }
 
         public void SetColumnTitle(int column, string title)
         {
-            SceneControl.SetColumnTitle(column, title);
+            SceneControl.Call("set_column_title", column, title);
         }
 
         public int GetColumnWidth(int column)
         {
-            return SceneControl.GetColumnWidth(column);
+            return (int)SceneControl.Call("get_column_width", column);
         }
 
         public Vector2 GetScroll()
         {
-            return SceneControl.GetScroll().Convert();
+            return ((Godot.Vector2)SceneControl.Call("get_scroll")).Convert();
         }
 
         Item GetItem(Godot.TreeItem item)

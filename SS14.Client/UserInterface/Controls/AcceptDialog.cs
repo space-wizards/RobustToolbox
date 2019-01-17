@@ -13,23 +13,15 @@
         {
         }
 
-        new private Godot.AcceptDialog SceneControl;
-
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.AcceptDialog();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.AcceptDialog)control;
-        }
-
         public string DialogText
         {
-            get => SceneControl.DialogText;
-            set => SceneControl.DialogText = value;
+            get => (string)SceneControl.Get("dialog_text");
+            set => SceneControl.Set("dialog_text", value);
         }
     }
 }

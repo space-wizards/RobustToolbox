@@ -16,77 +16,70 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        new private Godot.LineEdit SceneControl;
-
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.LineEdit();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.LineEdit)control;
-        }
-
         public AlignMode TextAlign
         {
-            get => (AlignMode)SceneControl.Align;
-            set => SceneControl.Align = (Godot.LineEdit.AlignEnum)value;
+            get => (AlignMode)SceneControl.Get("align");
+            set => SceneControl.Set("align", (Godot.LineEdit.AlignEnum)value);
         }
 
         public string Text
         {
-            get => SceneControl.Text;
-            set => SceneControl.Text = value;
+            get => (string)SceneControl.Get("text");
+            set => SceneControl.Set("text", value);
         }
 
         public bool Editable
         {
-            get => SceneControl.Editable;
-            set => SceneControl.Editable = value;
+            get => (bool)SceneControl.Get("editable");
+            set => SceneControl.Set("editable", value);
         }
 
         public string PlaceHolder
         {
-            get => SceneControl.PlaceholderText;
-            set => SceneControl.PlaceholderText = value;
+            get => (string)SceneControl.Get("placeholder_text");
+            set => SceneControl.Set("placeholder_text", value);
         }
 
         // TODO:
         // I decided to not implement the entire LineEdit API yet,
         // since most of it won't be used yet (if at all).
         // Feel free to implement wrappers for all the other properties!
+        // Future me reporting, thanks past me.
 
         public void AppendAtCursor(string text)
         {
-            SceneControl.AppendAtCursor(text);
+            SceneControl.Call("append_at_cursor", text);
         }
 
         public void Clear()
         {
-            SceneControl.Clear();
+            SceneControl.Call("clear");
         }
 
         public int CursorPosition
         {
-            get => SceneControl.GetCursorPosition();
-            set => SceneControl.SetCursorPosition(value);
+            get => (int)SceneControl.Get("caret_position");
+            set => SceneControl.Set("caret_position", value);
         }
 
         public void ExecuteMenuOption(MenuOption option)
         {
-            SceneControl.MenuOption((int)option);
+            SceneControl.Call("menu_option", (int)option);
         }
 
         public void Select(int from = 0, int to = -1)
         {
-            SceneControl.Select(from, to);
+            SceneControl.Call("select", from, to);
         }
 
         public void SelectAll()
         {
-            SceneControl.SelectAll();
+            SceneControl.Call("select_all");
         }
 
         public event Action<LineEditEventArgs> OnTextChanged;

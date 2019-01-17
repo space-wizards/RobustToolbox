@@ -7,9 +7,7 @@ namespace SS14.Client.UserInterface.Controls
     [ControlWrap(typeof(Godot.ItemList))]
     public class ItemList : Control
     {
-        new Godot.ItemList SceneControl;
-
-        public int ItemCount => SceneControl.GetItemCount();
+        public int ItemCount => (int)SceneControl.Call("get_item_count");
 
         public ItemList() : base() { }
         public ItemList(string name) : base(name) { }
@@ -20,100 +18,94 @@ namespace SS14.Client.UserInterface.Controls
             return new Godot.ItemList();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.ItemList)control;
-        }
-
         public void AddItem(string text, Texture icon = null, bool selectable = true)
         {
-            SceneControl.AddItem(text, icon, selectable);
+            SceneControl.Call("add_item", text, icon, selectable);
         }
 
         public void AddIconItem(Texture icon, bool selectable = true)
         {
-            SceneControl.AddIconItem(icon, selectable);
+            SceneControl.Call("add_icon_item", icon, selectable);
         }
 
         public void Clear()
         {
-            SceneControl.Clear();
+            SceneControl.Call("clear");
         }
 
         public void EnsureCurrentIsVisible()
         {
-            SceneControl.EnsureCurrentIsVisible();
+            SceneControl.Call("ensure_current_is_visible");
         }
 
         public int GetItemAtPosition(Vector2 position, bool exact = false)
         {
-            return SceneControl.GetItemAtPosition(position.Convert(), exact);
+            return (int)SceneControl.Call("get_item_at_position", position.Convert(), exact);
         }
 
         public bool IsSelected(int idx)
         {
-            return SceneControl.IsSelected(idx);
+            return (bool)SceneControl.Call("is_selected", idx);
         }
 
         public void RemoveItem(int idx)
         {
-            SceneControl.RemoveItem(idx);
+            SceneControl.Call("remove_item", idx);
         }
 
         public void Select(int idx, bool single = true)
         {
-            SceneControl.Select(idx, single);
+            SceneControl.Call("select", idx, single);
         }
 
         public void SetItemCustomBgColor(int idx, Color color)
         {
-            SceneControl.SetItemCustomBgColor(idx, color.Convert());
+            SceneControl.Call("set_icon_custom_bg_color", idx, color.Convert());
         }
 
         public void SetItemDisabled(int idx, bool disabled)
         {
-            SceneControl.SetItemDisabled(idx, disabled);
+            SceneControl.Call("set_item_disabled", idx, disabled);
         }
 
         public void SetItemIcon(int idx, Texture icon)
         {
-            SceneControl.SetItemIcon(idx, icon);
+            SceneControl.Call("set_item_icon", idx, icon);
         }
 
         public void SetItemIconRegion(int idx, UIBox2 region)
         {
-            SceneControl.SetItemIconRegion(idx, region.Convert());
+            SceneControl.Call("set_item_icon_region", idx, region.Convert());
         }
 
         public void SetItemSelectable(int idx, bool selectable)
         {
-            SceneControl.SetItemSelectable(idx, selectable);
+            SceneControl.Call("set_item_selectable", idx, selectable);
         }
 
         public void SetItemText(int idx, string text)
         {
-            SceneControl.SetItemText(idx, text);
+            SceneControl.Call("set_item_text", idx, text);
         }
 
         public void SetItemTooltip(int idx, string tooltip)
         {
-            SceneControl.SetItemTooltip(idx, tooltip);
+            SceneControl.Call("set_item_tooltip", idx, tooltip);
         }
 
         public void SetItemTooltipEnabled(int idx, bool enabled)
         {
-            SceneControl.SetItemTooltipEnabled(idx, enabled);
+            SceneControl.Call("set_item_tooltip_enabled", idx, enabled);
         }
 
         public void SortItemsByText()
         {
-            SceneControl.SortItemsByText();
+            SceneControl.Call("sort_items_by_text");
         }
 
         public void Unselect(int idx)
         {
-            SceneControl.Unselect(idx);
+            SceneControl.Call("unselect", idx);
         }
     }
 }

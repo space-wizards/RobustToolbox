@@ -20,8 +20,6 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        new private Godot.Popup SceneControl;
-
         public event Action OnPopupHide;
 
         private protected override Godot.Control SpawnSceneControl()
@@ -29,25 +27,20 @@ namespace SS14.Client.UserInterface.Controls
             return new Godot.Popup();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.Popup) control;
-        }
 
         public void Open(UIBox2? box = null)
         {
-            SceneControl.Popup_(box?.Convert());
+            SceneControl.Call("popup", box?.Convert());
         }
 
         public void OpenCentered()
         {
-            SceneControl.PopupCentered();
+            SceneControl.Call("popup_centered");
         }
 
         public void OpenMinimum()
         {
-            SceneControl.PopupCenteredMinsize();
+            SceneControl.Call("popup_centered_minsize");
         }
 
         private GodotSignalSubscriber0 __popupHideSubscriber;

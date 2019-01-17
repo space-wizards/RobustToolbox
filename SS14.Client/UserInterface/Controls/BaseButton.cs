@@ -16,36 +16,28 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        new private Godot.BaseButton SceneControl;
-
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.BaseButton)control;
-        }
-
         public ActionMode Mode
         {
-            get => (ActionMode)SceneControl.ActionMode;
-            set => SceneControl.ActionMode = (Godot.BaseButton.ActionModeEnum)value;
+            get => (ActionMode)SceneControl.Get("action_mode");
+            set => SceneControl.Set("action_mode", (Godot.BaseButton.ActionModeEnum)value);
         }
 
         public bool Disabled
         {
-            get => SceneControl.Disabled;
-            set => SceneControl.Disabled = value;
+            get => (bool)SceneControl.Get("disabled");
+            set => SceneControl.Set("disabled", value);
         }
 
         public bool Pressed
         {
-            get => SceneControl.Pressed;
-            set => SceneControl.Pressed = value;
+            get => (bool)SceneControl.Get("pressed");
+            set => SceneControl.Set("pressed", value);
         }
 
         public bool ToggleMode
         {
-            get => SceneControl.ToggleMode;
-            set => SceneControl.ToggleMode = value;
+            get => (bool)SceneControl.Get("toggle_mode");
+            set => SceneControl.Set("toggle_mode", value);
         }
 
         public enum ActionMode
@@ -54,13 +46,13 @@ namespace SS14.Client.UserInterface.Controls
             Release = Godot.BaseButton.ActionModeEnum.Release,
         }
 
-        public bool IsHovered => SceneControl.IsHovered();
-        public DrawModeEnum DrawMode => (DrawModeEnum)SceneControl.GetDrawMode();
+        public bool IsHovered => (bool)SceneControl.Call("is_hovered");
+        public DrawModeEnum DrawMode => (DrawModeEnum)SceneControl.Call("get_draw_mode");
 
         public ButtonGroup ButtonGroup
         {
-            get => new ButtonGroup(SceneControl.GetButtonGroup());
-            set => SceneControl.SetButtonGroup(value?.GodotGroup);
+            get => new ButtonGroup((Godot.ButtonGroup)SceneControl.Call("get_button_group"));
+            set => SceneControl.Call("set_button_group", value?.GodotGroup);
         }
 
         public event Action<ButtonEventArgs> OnButtonDown;

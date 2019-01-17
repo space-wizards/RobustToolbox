@@ -13,29 +13,21 @@
         {
         }
 
-        new private Godot.WindowDialog SceneControl;
-
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.WindowDialog();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.WindowDialog)control;
-        }
-
         public string Title
         {
-            get => SceneControl.WindowTitle;
-            set => SceneControl.WindowTitle = value;
+            get => (string)SceneControl.Get("window_title");
+            set => SceneControl.Set("window_title", value);
         }
 
         public bool Resizable
         {
-            get => SceneControl.Resizable;
-            set => SceneControl.Resizable = value;
+            get => (bool)SceneControl.Get("resizable");
+            set => SceneControl.Set("resizable", value);
         }
     }
 }

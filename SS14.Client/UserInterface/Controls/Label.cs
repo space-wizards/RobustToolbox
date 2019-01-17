@@ -22,20 +22,20 @@ namespace SS14.Client.UserInterface.Controls
 
         public string Text
         {
-            get => SceneControl.Text;
-            set => SceneControl.Text = value;
+            get => (string)SceneControl.Get("text");
+            set => SceneControl.Set("text", value);
         }
 
         public bool AutoWrap
         {
-            get => SceneControl.Autowrap;
-            set => SceneControl.Autowrap = value;
+            get => (bool)SceneControl.Get("autowrap");
+            set => SceneControl.Set("autowrap", value);
         }
 
         public AlignMode Align
         {
-            get => (AlignMode) SceneControl.Align;
-            set => SceneControl.Align = (Godot.Label.AlignEnum) value;
+            get => (AlignMode) SceneControl.Get("align");
+            set => SceneControl.Set("align", (Godot.Label.AlignEnum) value);
         }
 
         private Font _fontOverride;
@@ -78,17 +78,9 @@ namespace SS14.Client.UserInterface.Controls
             set => SetConstantOverride("shadow_offset_y", _shadowOffsetYOverride = value);
         }
 
-        new private Godot.Label SceneControl;
-
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.Label();
-        }
-
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.Label)control;
         }
 
         public enum AlignMode

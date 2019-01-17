@@ -34,14 +34,6 @@ namespace SS14.Client.UserInterface.CustomControls
             return LoadScene("res://Scenes/SS14Window/SS14Window.tscn");
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = control;
-        }
-
-        new private Godot.Control SceneControl;
-
         public Control Contents { get; private set; }
         private TextureButton CloseButton;
 
@@ -101,7 +93,6 @@ namespace SS14.Client.UserInterface.CustomControls
             {
                 CloseButton.OnPressed -= CloseButtonPressed;
                 CloseButton = null;
-                SceneControl = null;
                 Contents = null;
                 CloseButton = null;
             }

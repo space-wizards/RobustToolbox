@@ -337,7 +337,7 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             var node1Trans = node1.Transform;
             var node2Trans = node2.Transform;
             var node3Trans = node3.Transform;
-            ;
+
             node2Trans.AttachParent(node1Trans);
             node3Trans.AttachParent(node2Trans);
 
@@ -351,6 +351,30 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             // Assert (135 + 45 + 45 = 225)
             var result = node3Trans.WorldRotation;
             Assert.That(result, new ApproxEqualityConstraint(Angle.FromDegrees(225)));
+        }
+
+        /// <summary>
+        ///     Test that, in a chain A -> B -> C, if A is moved C's world position correctly updates.
+        /// </summary>
+        [Test]
+        public void MatrixUpdateTest()
+        {
+            var node1 = EntityManager.SpawnEntity("dummy");
+            var node2 = EntityManager.SpawnEntity("dummy");
+            var node3 = EntityManager.SpawnEntity("dummy");
+
+            var node1Trans = node1.Transform;
+            var node2Trans = node2.Transform;
+            var node3Trans = node3.Transform;
+
+            node2Trans.AttachParent(node1Trans);
+            node3Trans.AttachParent(node2Trans);
+
+            node3Trans.LocalPosition = new Vector2(5, 5);
+            node2Trans.LocalPosition = new Vector2(5, 5);
+            node1Trans.LocalPosition = new Vector2(5, 5);
+
+            Assert.That(node3Trans.WorldPosition, new ApproxEqualityConstraint(new Vector2(15, 15)));
         }
     }
 }

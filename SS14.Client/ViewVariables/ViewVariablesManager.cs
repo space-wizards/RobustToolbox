@@ -160,7 +160,7 @@ namespace SS14.Client.ViewVariables
                 return new ViewVariablesPropertyEditorUIBox2(ViewVariablesPropertyEditorUIBox2.BoxType.UIBox2i);
             }
 
-            if (type == typeof(GridLocalCoordinates))
+            if (type == typeof(GridCoordinates))
             {
                 return new ViewVariablesPropertyEditorGridLocalCoordinates();
             }

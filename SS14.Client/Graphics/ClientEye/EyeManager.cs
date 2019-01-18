@@ -84,17 +84,17 @@ namespace SS14.Client.Graphics.ClientEye
             return transform.Xform(point.Convert() * PIXELSPERMETER * new Godot.Vector2(1, -1)).Convert();
         }
 
-        public ScreenCoordinates WorldToScreen(GridLocalCoordinates point)
+        public ScreenCoordinates WorldToScreen(GridCoordinates point)
         {
             return new ScreenCoordinates(WorldToScreen(point.Position));
         }
 
-        public GridLocalCoordinates ScreenToWorld(ScreenCoordinates point)
+        public GridCoordinates ScreenToWorld(ScreenCoordinates point)
         {
             return ScreenToWorld(point.Position);
         }
 
-        public GridLocalCoordinates ScreenToWorld(Vector2 point)
+        public GridCoordinates ScreenToWorld(Vector2 point)
         {
             var matrix = Matrix3.Invert(MatrixViewPortTransform(sceneTree));
             var worldPos = matrix.Transform(point) / PIXELSPERMETER * new Vector2(1, -1);
@@ -107,7 +107,7 @@ namespace SS14.Client.Graphics.ClientEye
             {
                 grid = _mapManager.GetGrid(GridId.Nullspace);
             }
-            return new GridLocalCoordinates(grid.WorldToLocal(worldPos), grid);
+            return new GridCoordinates(grid.WorldToLocal(worldPos), grid);
         }
 
         private static Matrix3 MatrixViewPortTransform(ISceneTreeHolder sceneTree)

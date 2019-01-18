@@ -99,7 +99,7 @@ namespace SS14.Server.Placement
             // get the grid under the worldCoords.
 
             var grid = _mapManager.GetMap(mapIndex).GetGrid(plyTransform.GridID);
-            var coordinates = new GridLocalCoordinates(xValue, yValue, grid);
+            var coordinates = new GridCoordinates(xValue, yValue, grid);
 
 
             /* TODO: Redesign permission system, or document what this is supposed to be doing

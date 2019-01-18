@@ -42,13 +42,13 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override bool TrySpawnEntityAt(string entityType, GridLocalCoordinates coordinates, out IEntity entity)
+        public override bool TrySpawnEntityAt(string entityType, GridCoordinates coordinates, out IEntity entity)
         {
             var prototype = _protoManager.Index<EntityPrototype>(entityType);
             if (prototype.CanSpawnAt(coordinates.Grid, coordinates.Position))
             {
                 Entity result = SpawnEntity(entityType);
-                result.Transform.LocalPosition = coordinates;
+                result.Transform.GridPosition = coordinates;
                 if (Started)
                 {
                     InitializeEntity(result);
@@ -65,15 +65,15 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public override bool TrySpawnEntityAt(string entityType, Vector2 position, MapId argMap, out IEntity entity)
         {
-            var coordinates = new GridLocalCoordinates(position, _mapManager.GetMap(argMap).FindGridAt(position));
+            var coordinates = new GridCoordinates(position, _mapManager.GetMap(argMap).FindGridAt(position));
             return TrySpawnEntityAt(entityType, coordinates, out entity);
         }
 
         /// <inheritdoc />
-        public override IEntity ForceSpawnEntityAt(string entityType, GridLocalCoordinates coordinates)
+        public override IEntity ForceSpawnEntityAt(string entityType, GridCoordinates coordinates)
         {
             Entity entity = SpawnEntity(entityType);
-            entity.Transform.LocalPosition = coordinates;
+            entity.Transform.GridPosition = coordinates;
             if (Started)
             {
                 InitializeEntity(entity);
@@ -90,7 +90,7 @@ namespace SS14.Server.GameObjects
                 map = _mapManager.DefaultMap;
             }
 
-            return ForceSpawnEntityAt(entityType, new GridLocalCoordinates(position, map.FindGridAt(position)));
+            return ForceSpawnEntityAt(entityType, new GridCoordinates(position, map.FindGridAt(position)));
         }
 
         /// <inheritdoc />
@@ -181,7 +181,7 @@ namespace SS14.Server.GameObjects
                 }
                 else
                 {
-                    if (FloatMath.CloseTo(transform.LocalPosition.X, position.X) && FloatMath.CloseTo(transform.LocalPosition.Y, position.Y))
+                    if (FloatMath.CloseTo(transform.GridPosition.X, position.X) && FloatMath.CloseTo(transform.GridPosition.Y, position.Y))
                     {
                         yield return entity;
                     }
@@ -190,7 +190,7 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(GridLocalCoordinates position)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position)
         {
             return GetEntitiesIntersecting(position.MapID, position.ToWorld().Position);
         }
@@ -203,11 +203,11 @@ namespace SS14.Server.GameObjects
                 return GetEntitiesIntersecting(entity.Transform.MapID, component.WorldAABB);
             }
 
-            return GetEntitiesIntersecting(entity.Transform.LocalPosition);
+            return GetEntitiesIntersecting(entity.Transform.GridPosition);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInRange(GridLocalCoordinates position, float range)
+        public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range)
         {
             var aabb = new Box2(position.Position - new Vector2(range / 2, range / 2), position.Position + new Vector2(range / 2, range / 2));
             return GetEntitiesIntersecting(position.MapID, aabb);
@@ -229,13 +229,13 @@ namespace SS14.Server.GameObjects
             }
             else
             {
-                GridLocalCoordinates coords = entity.Transform.LocalPosition;
+                GridCoordinates coords = entity.Transform.GridPosition;
                 return GetEntitiesInRange(coords, range);
             }
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInArc(GridLocalCoordinates coordinates, float range, Angle direction, float arcwidth)
+        public IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction, float arcwidth)
         {
             var entities = GetEntitiesInRange(coordinates, range);
 

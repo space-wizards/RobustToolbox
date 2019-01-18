@@ -6,15 +6,15 @@ namespace SS14.Shared.Network
 {
     public static class NetMessageExt
     {
-        public static GridLocalCoordinates ReadGridLocalCoordinates(this NetIncomingMessage message)
+        public static GridCoordinates ReadGridLocalCoordinates(this NetIncomingMessage message)
         {
             var gridId = new GridId(message.ReadInt32());
             var vector = message.ReadVector2();
 
-            return new GridLocalCoordinates(vector, gridId);
+            return new GridCoordinates(vector, gridId);
         }
 
-        public static void Write(this NetOutgoingMessage message, GridLocalCoordinates coordinates)
+        public static void Write(this NetOutgoingMessage message, GridCoordinates coordinates)
         {
             message.Write(coordinates.GridID.Value);
             message.Write(coordinates.Position);

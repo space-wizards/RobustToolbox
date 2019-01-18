@@ -52,7 +52,7 @@ namespace SS14.Server.Console.Commands
                 text = string.Concat(args);
             }
 
-            var pos = ents.GetEntity(player.AttachedEntityUid.Value).Transform.LocalPosition;
+            var pos = ents.GetEntity(player.AttachedEntityUid.Value).Transform.GridPosition;
             var clients = sessions.GetPlayersInRange(pos, VoiceRange).Select(p => p.ConnectedClient);
 
             chat.DispatchMessage(clients.ToList(), ChatChannel.Local, text, player.SessionId);
@@ -76,7 +76,7 @@ namespace SS14.Server.Console.Commands
             var ents = IoCManager.Resolve<IEntityManager>();
             var chat = IoCManager.Resolve<IChatManager>();
 
-            var pos = ents.GetEntity(player.AttachedEntityUid.Value).Transform.LocalPosition;
+            var pos = ents.GetEntity(player.AttachedEntityUid.Value).Transform.GridPosition;
             var clients = sessions.GetPlayersInRange(pos, WhisperRange).Select(p => p.ConnectedClient);
 
             chat.DispatchMessage(clients.ToList(), ChatChannel.Local, args[0], player.SessionId);
@@ -103,7 +103,7 @@ namespace SS14.Server.Console.Commands
             if (chat.ExpandEmote(args[0], player, out var self, out var other))
             {
                 //TODO: Dispatch in PVS range instead
-                var pos = ents.GetEntity(player.AttachedEntityUid.Value).Transform.LocalPosition;
+                var pos = ents.GetEntity(player.AttachedEntityUid.Value).Transform.GridPosition;
                 var clients = sessions.GetPlayersInRange(pos, VoiceRange).Where(p => p != player).Select(p => p.ConnectedClient);
 
                 chat.DispatchMessage(player.ConnectedClient, ChatChannel.Emote, self, player.SessionId);
@@ -112,7 +112,7 @@ namespace SS14.Server.Console.Commands
             else
             {
                 //TODO: Dispatch in PVS range instead
-                var pos = ents.GetEntity(player.AttachedEntityUid.Value).Transform.LocalPosition;
+                var pos = ents.GetEntity(player.AttachedEntityUid.Value).Transform.GridPosition;
                 var clients = sessions.GetPlayersInRange(pos, VoiceRange).Select(p => p.ConnectedClient);
 
                 chat.DispatchMessage(clients.ToList(), ChatChannel.Emote, $"{player.Name} {args[0]}", player.SessionId);

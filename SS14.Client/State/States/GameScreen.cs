@@ -141,7 +141,7 @@ namespace SS14.Client.State.States
             clickable.DispatchClick(playerManager.LocalPlayer.ControlledEntity, eventargs.ClickType);
         }
 
-        public IEntity GetEntityUnderPosition(GridLocalCoordinates coordinates)
+        public IEntity GetEntityUnderPosition(GridCoordinates coordinates)
         {
             var entitiesUnderPosition = GetEntitiesUnderPosition(coordinates);
             return entitiesUnderPosition.Count > 0 ? entitiesUnderPosition[0] : null;
@@ -157,13 +157,13 @@ namespace SS14.Client.State.States
             return GetEntitiesUnderPosition(mousePosWorld);
         }
 
-        public IList<IEntity> GetEntitiesUnderPosition(GridLocalCoordinates coordinates)
+        public IList<IEntity> GetEntitiesUnderPosition(GridCoordinates coordinates)
         {
             return GetEntitiesUnderPosition(_entityManager, coordinates);
         }
 
         private static IList<IEntity> GetEntitiesUnderPosition(IClientEntityManager entityMan,
-            GridLocalCoordinates coordinates)
+            GridCoordinates coordinates)
         {
             // Find all the entities intersecting our click
             var entities = entityMan.GetEntitiesIntersecting(coordinates.MapID, coordinates.Position);
@@ -200,7 +200,7 @@ namespace SS14.Client.State.States
                 }
                 var transx = x.clicked.Transform;
                 var transy = y.clicked.Transform;
-                return transx.LocalPosition.Y.CompareTo(transy.LocalPosition.Y);
+                return transx.GridPosition.Y.CompareTo(transy.GridPosition.Y);
             }
         }
 

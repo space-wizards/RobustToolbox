@@ -196,7 +196,7 @@ namespace SS14.Server.Player
         /// <param name="worldPos">Position of the circle in world-space.</param>
         /// <param name="range">Radius of the circle in world units.</param>
         /// <returns></returns>
-        public List<IPlayerSession> GetPlayersInRange(GridLocalCoordinates worldPos, int range)
+        public List<IPlayerSession> GetPlayersInRange(GridCoordinates worldPos, int range)
         {
             _sessionsLock.EnterReadLock();
             //TODO: This needs to be moved to the PVS system.
@@ -205,7 +205,7 @@ namespace SS14.Server.Player
                 return
                     _sessions.Values.Where(x => x.AttachedEntity != null &&
                                                 worldPos.InRange(
-                                                    x.AttachedEntity.Transform.LocalPosition,
+                                                    x.AttachedEntity.Transform.GridPosition,
                                                     range))
                         .Cast<IPlayerSession>()
                         .ToList();

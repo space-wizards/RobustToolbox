@@ -128,10 +128,10 @@ namespace SS14.Shared.GameObjects
 
         public abstract IEntity CreateEntity(string protoName);
         public abstract Entity SpawnEntity(string protoName);
-        public abstract IEntity ForceSpawnEntityAt(string entityType, GridLocalCoordinates coordinates);
+        public abstract IEntity ForceSpawnEntityAt(string entityType, GridCoordinates coordinates);
         public abstract IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap);
         public abstract bool TrySpawnEntityAt(string entityType, Vector2 position, MapId argMap, out IEntity entity);
-        public abstract bool TrySpawnEntityAt(string entityType, GridLocalCoordinates coordinates, out IEntity entity);
+        public abstract bool TrySpawnEntityAt(string entityType, GridCoordinates coordinates, out IEntity entity);
 
         /// <summary>
         /// Returns an entity by id
@@ -172,7 +172,7 @@ namespace SS14.Shared.GameObjects
             foreach (var entity in GetEntities())
             {
                 var transform = entity.Transform;
-                if (FloatMath.CloseTo(transform.LocalPosition.X, position.X) && FloatMath.CloseTo(transform.LocalPosition.Y, position.Y))
+                if (FloatMath.CloseTo(transform.GridPosition.X, position.X) && FloatMath.CloseTo(transform.GridPosition.Y, position.Y))
                 {
                     yield return entity;
                 }

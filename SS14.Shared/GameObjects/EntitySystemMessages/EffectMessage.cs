@@ -16,12 +16,12 @@ namespace SS14.Shared.GameObjects.EntitySystemMessages
         /// <summary>
         /// Effect position relative to the emit position
         /// </summary>
-        public GridLocalCoordinates Coordinates { get; set; }
+        public GridCoordinates Coordinates { get; set; }
 
         /// <summary>
         /// Where the emitter was when the effect was first emitted
         /// </summary>
-        public GridLocalCoordinates EmitterCoordinates { get; set; }
+        public GridCoordinates EmitterCoordinates { get; set; }
 
         /// <summary>
         /// Effect's x/y velocity

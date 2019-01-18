@@ -66,10 +66,10 @@ namespace SS14.Client.Placement.Modes
             var closestSide =
                 (from Vector2 side in sides orderby (side - MouseCoords.Position).LengthSquared select side).First();
 
-            MouseCoords = new GridLocalCoordinates(closestSide, MouseCoords.Grid);
+            MouseCoords = new GridCoordinates(closestSide, MouseCoords.Grid);
         }
 
-        public override bool IsValidPosition(GridLocalCoordinates position)
+        public override bool IsValidPosition(GridCoordinates position)
         {
             if (pManager.CurrentPermission.IsTile)
             {

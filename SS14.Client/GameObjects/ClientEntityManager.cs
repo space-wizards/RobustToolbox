@@ -148,7 +148,7 @@ namespace SS14.Client.GameObjects
             }
 
             // After the first set of states comes in we do the startup.
-            if (!EntitiesInitialized && MapsInitialized)
+            if (!EntitiesInitialized)
             {
                 InitializeEntities();
             }
@@ -163,7 +163,6 @@ namespace SS14.Client.GameObjects
         {
             base.Shutdown();
 
-            MapsInitialized = false;
             EntitiesInitialized = false;
         }
 

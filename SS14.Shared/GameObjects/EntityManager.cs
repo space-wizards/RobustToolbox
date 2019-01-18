@@ -69,7 +69,6 @@ namespace SS14.Shared.GameObjects
         protected bool EntitiesInitialized;
 
         public bool Started { get; protected set; }
-        public bool MapsInitialized { get; set; } = false;
 
         #region IEntityManager Members
 
@@ -93,25 +92,14 @@ namespace SS14.Shared.GameObjects
         public virtual void Update(float frameTime)
         {
             ProcessMsgBuffer();
-
-            // for some 'special' reason entities require the map they are on to exist before they can
-            // be initialized. This should stop the EntitySystems from updating over the uninitialized entities.
-            if(MapsInitialized || _network.IsServer)
-            {
-                EntitySystemManager.Update(frameTime);
-
-                // dispatching events to systems will usually cause them to interact
-                // with entities, we don't want that to happen if the maps are not initialized.
-                ProcessEventQueue();
-            }
-
+            EntitySystemManager.Update(frameTime);
+            ProcessEventQueue();
             CullDeletedEntities();
         }
 
         public virtual void FrameUpdate(float frameTime)
         {
-            if (MapsInitialized || _network.IsServer)
-                EntitySystemManager.FrameUpdate(frameTime);
+            EntitySystemManager.FrameUpdate(frameTime);
         }
 
         /// <summary>

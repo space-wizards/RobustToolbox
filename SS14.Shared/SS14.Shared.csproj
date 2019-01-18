@@ -129,6 +129,7 @@
     <Compile Include="GameObjects\EntityUid.cs" />
     <Compile Include="GameObjects\IncomingEntityMessage.cs" />
     <Compile Include="GameObjects\NetComponent.cs" />
+    <Compile Include="GameStates\GameStateMapData.cs" />
     <Compile Include="Input\InputCmdContext.cs" />
     <Compile Include="Input\CommandBindMapping.cs" />
     <Compile Include="Input\InputCmdMessage.cs" />
@@ -210,8 +211,6 @@
     <Compile Include="Network\Messages\MsgConCmdAck.cs" />
     <Compile Include="Network\Messages\MsgConCmdReg.cs" />
     <Compile Include="Network\Messages\MsgEntity.cs" />
-    <Compile Include="Network\Messages\MsgMap.cs" />
-    <Compile Include="Network\Messages\MsgMapReq.cs" />
     <Compile Include="Network\Messages\MsgPlacement.cs" />
     <Compile Include="Network\Messages\MsgPlayerList.cs" />
     <Compile Include="Network\Messages\MsgPlayerListReq.cs" />

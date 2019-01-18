@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
 
@@ -67,8 +68,6 @@ namespace SS14.Shared.Interfaces.Map
 
         bool TryGetMap(MapId mapID, out IMap map);
 
-        void SendMap(INetChannel channel);
-
         void DeleteMap(MapId mapID);
 
         IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16, float snapSize = 1);
@@ -100,5 +99,13 @@ namespace SS14.Shared.Interfaces.Map
         ///     An existing map has been destroyed.
         /// </summary>
         event EventHandler<MapEventArgs> MapDestroyed;
+
+        GameStateMapData GetStateData(uint fromTick);
+        void CullDeletionHistory(uint uptoTick);
+
+        // Two methods here, so that new grids etc can be made BEFORE entities get states applied,
+        // but old ones can be deleted after.
+        void ApplyGameStatePre(GameStateMapData data);
+        void ApplyGameStatePost(GameStateMapData data);
     }
 }

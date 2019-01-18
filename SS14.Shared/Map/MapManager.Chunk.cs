@@ -15,12 +15,12 @@ namespace SS14.Shared.Map
         /// </summary>
         internal class Chunk : IMapChunk
         {
-            private const int ChunkVersion = 1;
+            internal uint LastModifiedTick { get; private set; }
             private readonly MapGrid _grid;
             private readonly MapIndices _gridIndices;
             private readonly MapManager _mapManager;
 
-            private readonly Tile[,] _tiles;
+            internal readonly Tile[,] _tiles;
             private readonly SnapGridCell[,] _snapGrid;
 
             /// <summary>
@@ -34,6 +34,7 @@ namespace SS14.Shared.Map
             public Chunk(MapManager manager, MapGrid grid, int x, int y, ushort chunkSize)
             {
                 _mapManager = manager;
+                LastModifiedTick = _mapManager._gameTiming.CurTick;
                 ChunkSize = chunkSize;
                 _grid = grid;
                 _gridIndices = new MapIndices(x, y);
@@ -44,9 +45,6 @@ namespace SS14.Shared.Map
 
             /// <inheritdoc />
             public ushort ChunkSize { get; }
-
-            /// <inheritdoc />
-            public uint Version => ChunkVersion;
 
             /// <inheritdoc />
             public int X => _gridIndices.X;
@@ -107,6 +105,7 @@ namespace SS14.Shared.Map
                 var gridTile = ChunkTileToGridTile(new MapIndices(xChunkTile, yChunkTile));
                 var newTileRef = new TileRef(_grid.MapID, _grid.Index, gridTile.X, gridTile.Y, tile);
                 var oldTile = _tiles[xChunkTile, yChunkTile];
+                _grid.LastModifiedTick = LastModifiedTick = _mapManager._gameTiming.CurTick;
                 _mapManager.RaiseOnTileChanged(newTileRef, oldTile);
                 _grid.UpdateAABB(gridTile);
 

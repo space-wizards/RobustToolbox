@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using SS14.Shared.Enums;
+using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
@@ -14,205 +16,155 @@ namespace SS14.Shared.Map
 {
     public partial class MapManager
     {
-        [Dependency]
-        private readonly INetManager _netManager;
+        [Dependency] private readonly INetManager _netManager;
 
-        private int _gridsToReceive;
-        private int _gridsReceived;
-
-        public void SendMap(INetChannel channel)
+        public GameStateMapData GetStateData(uint fromTick)
         {
-            if (_netManager.IsClient)
-                return;
-
-            DebugTools.Assert(_netManager.IsServer, "Why is the client calling this?");
-
-            Logger.Info($"{channel.RemoteEndPoint}: Sending map");
-
-            var quantityGridsSent = 0;
-
-            foreach (var map in GetAllMaps())
+            var gridDatums = new Dictionary<GridId, GameStateMapData.GridDatum>();
+            foreach (var grid in _grids.Values)
             {
-                foreach (var grid in map.GetAllGrids())
+                if (grid.LastModifiedTick < fromTick)
                 {
-                    quantityGridsSent++;
-                    var message = _netManager.CreateNetMessage<MsgMap>();
-                    message.MessageType = MapMessage.SendTileMap;
-                    message.MapIndex = map.Index;
-                    message.GridIndex = grid.Index;
+                    continue;
+                }
 
-                    // Map chunks
-                    var gridSize = grid.ChunkSize;
-                    message.ChunkSize = gridSize;
-                    message.ChunkDefs = new MsgMap.ChunkDef[grid.ChunkCount];
-                    var defCounter = 0;
-                    foreach (var chunk in grid.GetMapChunks())
+                var chunkData = new List<GameStateMapData.ChunkDatum>();
+                foreach (var (index, chunk) in grid._chunks)
+                {
+                    if (chunk.LastModifiedTick < fromTick)
                     {
-                        var newChunk = new MsgMap.ChunkDef
-                        {
-                            X = chunk.X,
-                            Y = chunk.Y
-                        };
-
-                        newChunk.Tiles = new uint[gridSize * gridSize];
-                        var counter = 0;
-                        foreach (var tile in chunk)
-                        {
-                            newChunk.Tiles[counter] = (uint)tile.Tile;
-                            counter++;
-                        }
-
-                        message.ChunkDefs[defCounter++] = newChunk;
+                        continue;
                     }
 
-                    _netManager.ServerSendMessage(message, channel);
-                }
-            }
-            var msg = _netManager.CreateNetMessage<MsgMap>();
-            msg.MessageType = MapMessage.SendMapInfo;
-            msg.MapGridsToSend = quantityGridsSent;
-            _netManager.ServerSendMessage(msg, channel);
-        }
+                    var tileBuffer = new Tile[grid.ChunkSize * (uint) grid.ChunkSize];
 
-        private void HandleNetworkMessage(MsgMap message)
-        {
-            switch (message.MessageType)
-            {
-                case MapMessage.TurfClick:
-                    HandleTurfClick(message);
-                    break;
-                case MapMessage.TurfUpdate:
-                    HandleTileUpdate(message);
-                    break;
-                case MapMessage.SendTileMap:
-                    HandleTileMap(message);
-                    break;
-                case MapMessage.SendMapInfo:
-                    CollectMapInfo(message);
-                    break;
-                case MapMessage.CreateMap:
-                    CreateMap(message.MapIndex);
-                    break;
-                case MapMessage.DeleteMap:
-                    DeleteMap(message.MapIndex);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(message));
-            }
-        }
-
-        private void HandleTurfClick(MsgMap message)
-        {
-            /*
-            // Who clicked and on what tile.
-            Atom.Atom clicker = SS13Server.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom;
-            short x = message.ReadInt16();
-            short y = message.ReadInt16();
-            if (Vector2.Distance(clicker.position, new Vector2(x * tileSpacing + (tileSpacing / 2), y * tileSpacing + (tileSpacing / 2))) > 96)
-            {
-                return; // They were too far away to click us!
-            }
-            bool Update = false;
-            if (IsSaneArrayPosition(x, y))
-            {
-                Update = tileArray[x, y].ClickedBy(clicker);
-                if (Update)
-                {
-                    if (tileArray[x, y].tileState == TileState.Dead)
+                    // Flatten the tile array.
+                    // NetSerializer doesn't do multi-dimensional arrays.
+                    // This is probably really expensive.
+                    for (var x = 0; x < grid.ChunkSize; x++)
+                    for (var y = 0; y < grid.ChunkSize; y++)
                     {
-                        Tiles.Atmos.GasCell g = tileArray[x, y].gasCell;
-                        Tiles.Tile t = GenerateNewTile(x, y, tileArray[x, y].tileType);
-                        tileArray[x, y] = t;
-                        tileArray[x, y].gasCell = g;
+                        tileBuffer[x * grid.ChunkSize + y] = chunk._tiles[x, y];
                     }
-                    NetworkUpdateTile(x, y);
+
+                    chunkData.Add(new GameStateMapData.ChunkDatum(index, tileBuffer));
                 }
+
+                var gridDatum =
+                    new GameStateMapData.GridDatum(chunkData, new MapCoordinates(grid.WorldPosition, grid.MapID));
+
+                gridDatums.Add(grid.Index, gridDatum);
             }
-            */
+
+            var mapDeletionsData = _mapDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.mapId).ToList();
+            var gridDeletionsData = _gridDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.gridId).ToList();
+            var mapCreations = _maps.Values.Where(m => m.CreatedTick >= fromTick)
+                .ToDictionary(m => m.Index, m => m.DefaultGrid.Index);
+            var gridCreations = _grids.Values.Where(g => g.CreatedTick >= fromTick).ToDictionary(g => g.Index,
+                grid => new GameStateMapData.GridCreationDatum(grid.ChunkSize, grid.SnapSize,
+                    grid.IsDefaultGrid));
+
+            return new GameStateMapData(gridDatums, gridDeletionsData, mapDeletionsData, mapCreations, gridCreations);
         }
 
-        /// <summary>
-        ///     Deserializes an IMapManager and ITileDefinitionManager from a properly formatted NetMessage.
-        /// </summary>
-        /// <param name="message">The message containing a serialized map and tileDefines.</param>
-        private void HandleTileMap(MsgMap message)
+        public void CullDeletionHistory(uint uptoTick)
         {
-            DebugTools.Assert(_netManager.IsClient, "Why is the server calling this?");
+            _mapDeletionHistory.RemoveAll(t => t.tick < uptoTick);
+            _gridDeletionHistory.RemoveAll(t => t.tick < uptoTick);
+        }
 
-            _gridsReceived++;
+        public void ApplyGameStatePre(GameStateMapData data)
+        {
+            DebugTools.Assert(_netManager.IsClient, "Only the client should call this.");
 
-            var mapIndex = message.MapIndex;
-            var gridIndex = message.GridIndex;
+            // First we need to figure out all the NEW MAPS.
+            // And make their default grids too.
+            foreach (var (mapId, gridId) in data.CreatedMaps)
+            {
+                if (_maps.ContainsKey(mapId))
+                {
+                    continue;
+                }
+                var gridCreation = data.CreatedGrids[gridId];
+                DebugTools.Assert(gridCreation.IsTheDefault);
 
-            var chunkSize = message.ChunkSize;
-            var chunkCount = message.ChunkDefs.Length;
+                var newMap = new Map(this, mapId);
+                _maps.Add(mapId, newMap);
+                MapCreated?.Invoke(this, new MapEventArgs(newMap));
+                newMap.DefaultGrid = CreateGrid(newMap.Index, gridId, gridCreation.ChunkSize, gridCreation.SnapSize);
+            }
 
-            if (!TryGetMap(mapIndex, out var map))
-                map = CreateMap(mapIndex);
+            // Then make all the other grids.
+            foreach (var (gridId, creationDatum) in data.CreatedGrids)
+            {
+                if (creationDatum.IsTheDefault || _grids.ContainsKey(gridId))
+                {
+                    continue;
+                }
 
-            if (!map.GridExists(gridIndex))
-                GetMap(mapIndex).CreateGrid(gridIndex, chunkSize);
-
-            var grid = GetMap(mapIndex).GetGrid(gridIndex);
+                CreateGrid(data.GridData[gridId].Coordinates.MapId, gridId, creationDatum.ChunkSize,
+                    creationDatum.SnapSize);
+            }
 
             SuppressOnTileChanged = true;
-            var modified = new List<(int x, int y, Tile tile)>();
-
-            for (var i = 0; i < chunkCount; ++i)
+            // Ok good all the grids and maps exist now.
+            foreach (var (gridId, gridDatum) in data.GridData)
             {
-                var chunkPos = new MapIndices(message.ChunkDefs[i].X, message.ChunkDefs[i].Y);
-                var chunk = grid.GetChunk(chunkPos);
-
-                var counter = 0;
-                for (ushort x = 0; x < chunk.ChunkSize; x++)
+                var grid = _grids[gridId];
+                if (grid.MapID != gridDatum.Coordinates.MapId)
                 {
-                    for (ushort y = 0; y < chunk.ChunkSize; y++)
+                    throw new NotImplementedException("Moving grids between maps is not yet implemented");
+                }
+
+                grid.WorldPosition = gridDatum.Coordinates.Position;
+
+                var modified = new List<(MapIndices position, Tile tile)>();
+                foreach (var chunkData in gridDatum.ChunkData)
+                {
+                    var chunk = grid.GetChunk(chunkData.Index);
+                    DebugTools.Assert(chunkData.TileData.Length == grid.ChunkSize * grid.ChunkSize);
+
+                    var counter = 0;
+                    for (ushort x = 0; x < grid.ChunkSize; x++)
+                    for (ushort y = 0; y < grid.ChunkSize; y++)
                     {
-                        var tile = (Tile)message.ChunkDefs[i].Tiles[counter];
+                        var tile = chunkData.TileData[counter++];
                         if (chunk.GetTile(x, y).Tile != tile)
                         {
                             chunk.SetTile(x, y, tile);
-                            modified.Add((x + chunk.X * chunk.ChunkSize, y + chunk.Y * chunk.ChunkSize, tile));
+                            modified.Add((new MapIndices(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));
                         }
-                        counter++;
                     }
+                }
+
+                if (modified.Count != 0)
+                {
+                    GridChanged?.Invoke(this, new GridChangedEventArgs(grid, modified));
                 }
             }
 
             SuppressOnTileChanged = false;
-            if (modified.Count != 0)
+        }
+
+        public void ApplyGameStatePost(GameStateMapData data)
+        {
+            DebugTools.Assert(_netManager.IsClient, "Only the client should call this.");
+
+            foreach (var grid in data.DeletedGrids)
             {
-                GridChanged?.Invoke(this, new GridChangedEventArgs(grid, modified));
+                if (_grids.ContainsKey(grid))
+                {
+                    DeleteGrid(grid);
+                }
             }
 
-            if (_gridsReceived == _gridsToReceive)
-                IoCManager.Resolve<IEntityManager>().MapsInitialized = true;
-        }
-
-        /// <summary>
-        ///     Updates a single tile from the network message.
-        /// </summary>
-        /// <param name="message">The message containing the info.</param>
-        private void HandleTileUpdate(MsgMap message)
-        {
-            DebugTools.Assert(_netManager.IsClient, "Why is the server calling this?");
-
-            var x = message.SingleTurf.X;
-            var y = message.SingleTurf.Y;
-            var tile = (Tile)message.SingleTurf.Tile;
-
-            var pos = new GridCoordinates(x, y, message.GridIndex);
-            pos.Grid.SetTile(pos, tile);
-        }
-
-        private void CollectMapInfo(MsgMap message)
-        {
-            DebugTools.Assert(_netManager.IsClient, "Why is the server calling this?");
-
-            _gridsToReceive = message.MapGridsToSend;
-
-            if (_gridsReceived == _gridsToReceive)
-                IoCManager.Resolve<IEntityManager>().MapsInitialized = true;
+            foreach (var map in data.DeletedMaps)
+            {
+                if (_maps.ContainsKey(map))
+                {
+                    DeleteMap(map);
+                }
+            }
         }
     }
 }

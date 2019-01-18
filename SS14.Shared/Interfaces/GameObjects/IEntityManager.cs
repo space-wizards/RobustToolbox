@@ -20,8 +20,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         void FrameUpdate(float frameTime);
 
-        bool MapsInitialized { get; set; }
-
         IComponentManager ComponentManager { get; }
         IEntityNetworkManager EntityNetManager { get; }
 

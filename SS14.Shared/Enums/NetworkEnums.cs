@@ -9,17 +9,6 @@
         RequestEntRemove,
     }
 
-    public enum MapMessage
-    {
-        TurfUpdate = 0,
-        TurfClick,
-        SendTileMap,
-        SendMapInfo,
-
-        CreateMap,
-        DeleteMap
-    }
-
     public enum SessionStatus : byte
     {
         Zombie = 0,

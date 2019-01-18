@@ -10,11 +10,14 @@ namespace SS14.Shared.Map
     {
         public class MapGrid : IMapGrid
         {
+            public uint CreatedTick { get; }
+            public uint LastModifiedTick { get; internal set; }
             public bool IsDefaultGrid => Map.DefaultGrid == this;
             public IMap Map => _mapManager.GetMap(MapID);
             public MapId MapID { get; private set; }
             private readonly MapManager _mapManager;
-            private readonly Dictionary<MapIndices, Chunk> _chunks = new Dictionary<MapIndices, Chunk>();
+            internal readonly Dictionary<MapIndices, Chunk> _chunks = new Dictionary<MapIndices, Chunk>();
+            private Vector2 _worldPosition;
 
             internal MapGrid(MapManager mapManager, GridId gridIndex, ushort chunkSize, float snapsize, MapId mapID)
             {
@@ -23,6 +26,7 @@ namespace SS14.Shared.Map
                 ChunkSize = chunkSize;
                 SnapSize = snapsize;
                 MapID = mapID;
+                LastModifiedTick = CreatedTick = _mapManager._gameTiming.CurTick;
             }
 
             /// <summary>
@@ -47,10 +51,18 @@ namespace SS14.Shared.Map
             /// <summary>
             ///     The length of the side of a square tile in world units.
             /// </summary>
-            public ushort TileSize { get; set; } = 1;
+            public ushort TileSize { get; } = 1;
 
             /// <inheritdoc />
-            public Vector2 WorldPosition { get; set; }
+            public Vector2 WorldPosition
+            {
+                get => _worldPosition;
+                set
+                {
+                    _worldPosition = value;
+                    LastModifiedTick = _mapManager._gameTiming.CurTick;
+                }
+            }
 
             /// <summary>
             /// Expands the AABB for this grid when a new tile is added. If the tile is already inside the existing AABB,

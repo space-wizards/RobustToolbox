@@ -8,6 +8,7 @@ namespace SS14.Shared.Map
     {
         class Map : IMap
         {
+            public uint CreatedTick { get; }
             public IMapGrid DefaultGrid { get; set; }
             public MapId Index { get; }
             private readonly MapManager _mapManager;
@@ -17,6 +18,7 @@ namespace SS14.Shared.Map
             {
                 Index = mapID;
                 _mapManager = mapManager;
+                CreatedTick = _mapManager._gameTiming.CurTick;
             }
 
             /// <inheritdoc />

@@ -187,10 +187,6 @@ namespace SS14.Client
                 _stateManager.RequestStateChange<GameScreen>();
 
                 OnPlayerJoinedGame(_playMan.LocalPlayer.Session);
-
-                // request entire map be sent to us
-                var mapMsg = _net.CreateNetMessage<MsgMapReq>();
-                _net.ClientSendMessage(mapMsg);
             }
         }
 

@@ -5,10 +5,12 @@ using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Enums;
 using SS14.Shared.GameStates;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Utility;
 
 namespace SS14.Server.GameStates
 {
@@ -31,6 +33,8 @@ namespace SS14.Server.GameStates
         [Dependency]
         private IPlayerManager _playerManager;
 
+        [Dependency] private IMapManager _mapManager;
+
         public void Initialize()
         {
             _networkManager.RegisterNetMessage<MsgState>(MsgState.NAME);
@@ -44,16 +48,18 @@ namespace SS14.Server.GameStates
 
         public void SendGameStateUpdate()
         {
+            DebugTools.Assert(_networkManager.IsServer);
+
             if (!_networkManager.IsConnected)
             {
                 // Prevent deletions piling up if we have no clients.
                 _entityManager.CullDeletionHistory(uint.MaxValue);
+                _mapManager.CullDeletionHistory(uint.MaxValue);
                 return;
             }
 
-            var connections = _networkManager.Channels;
-            uint oldestAck = uint.MaxValue;
-            foreach (var connection in connections)
+            var oldestAck = uint.MaxValue;
+            foreach (var connection in _networkManager.Channels)
             {
                 if (!ackedStates.TryGetValue(connection.ConnectionId, out var ack))
                 {
@@ -74,10 +80,11 @@ namespace SS14.Server.GameStates
             var entities = _entityManager.GetEntityStates(oldestAck);
             var players = _playerManager.GetPlayerStates();
             var deletions = _entityManager.GetDeletedEntities(oldestAck);
+            var mapData = _mapManager.GetStateData(oldestAck);
 
-            var state = new GameState(oldestAck, _gameTiming.CurTick, entities, players, deletions);
+            var state = new GameState(oldestAck, _gameTiming.CurTick, entities, players, deletions, mapData);
 
-            foreach (var c in connections)
+            foreach (var c in _networkManager.Channels)
             {
                 var session = _playerManager.GetSessionByChannel(c);
 

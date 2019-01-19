@@ -1,6 +1,5 @@
 ﻿using System;
 using SS14.Server.Player;
-using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
@@ -17,7 +16,6 @@ namespace SS14.Server.Interfaces.Player
 
         event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
 
-        void JoinLobby();
         void JoinGame();
 
         /// <summary>
@@ -36,10 +34,9 @@ namespace SS14.Server.Interfaces.Player
         void DetachFromEntity();
         void OnConnect();
         void OnDisconnect();
-        void AddPostProcessingEffect(PostProcessingEffectType type, float duration);
 
         /// <summary>
-        ///     Persistant data for this player.
+        ///     Persistent data for this player.
         /// </summary>
         IPlayerData Data { get; }
     }

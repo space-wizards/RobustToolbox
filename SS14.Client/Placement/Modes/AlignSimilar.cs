@@ -32,40 +32,44 @@ namespace SS14.Client.Placement.Modes
             var manager = IoCManager.Resolve<IClientEntityManager>();
 
             var snapToEntities = manager.GetEntitiesInRange(MouseCoords, SnapToRange)
-                .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.GetComponent<ITransformComponent>().MapID == MouseCoords.MapID)
-                .OrderBy(entity => (entity.GetComponent<ITransformComponent>().WorldPosition - MouseCoords.ToWorld().Position).LengthSquared)
+                .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.Transform.MapID == MouseCoords.MapID)
+                .OrderBy(entity => (entity.Transform.WorldPosition - MouseCoords.ToWorld().Position).LengthSquared)
                 .ToList();
 
-            if (snapToEntities.Any())
+            if (snapToEntities.Count == 0)
             {
-                var closestEntity = snapToEntities.First();
-                if (closestEntity.TryGetComponent<ISpriteComponent>(out var component))
-                {
-                    var closestBounds = component.BaseRSI.Size;
-
-                    var closestRect =
-                        Box2.FromDimensions(
-                            closestEntity.GetComponent<ITransformComponent>().WorldPosition.X - closestBounds.X / 2f,
-                            closestEntity.GetComponent<ITransformComponent>().WorldPosition.Y - closestBounds.Y / 2f,
-                            closestBounds.X, closestBounds.Y);
-
-                    var sides = new[]
-                    {
-                        new Vector2(closestRect.Left + closestRect.Width / 2f, closestRect.Top - closestBounds.Y / 2f),
-                        new Vector2(closestRect.Left + closestRect.Width / 2f, closestRect.Bottom + closestBounds.Y / 2f),
-                        new Vector2(closestRect.Left - closestBounds.X / 2f, closestRect.Top + closestRect.Height / 2f),
-                        new Vector2(closestRect.Right + closestBounds.X / 2f, closestRect.Top + closestRect.Height / 2f)
-                    };
-
-                    var closestSide =
-                        (from Vector2 side in sides orderby (side - MouseCoords.Position).LengthSquared select side).First();
-
-                    MouseCoords = new GridLocalCoordinates(closestSide, MouseCoords.Grid);
-                }
+                return;
             }
+
+            var closestEntity = snapToEntities[0];
+            if (!closestEntity.TryGetComponent<ISpriteComponent>(out var component))
+            {
+                return;
+            }
+
+            var closestBounds = component.BaseRSI.Size;
+
+            var closestRect =
+                Box2.FromDimensions(
+                    closestEntity.Transform.WorldPosition.X - closestBounds.X / 2f,
+                    closestEntity.Transform.WorldPosition.Y - closestBounds.Y / 2f,
+                    closestBounds.X, closestBounds.Y);
+
+            var sides = new[]
+            {
+                new Vector2(closestRect.Left + closestRect.Width / 2f, closestRect.Top - closestBounds.Y / 2f),
+                new Vector2(closestRect.Left + closestRect.Width / 2f, closestRect.Bottom + closestBounds.Y / 2f),
+                new Vector2(closestRect.Left - closestBounds.X / 2f, closestRect.Top + closestRect.Height / 2f),
+                new Vector2(closestRect.Right + closestBounds.X / 2f, closestRect.Top + closestRect.Height / 2f)
+            };
+
+            var closestSide =
+                (from Vector2 side in sides orderby (side - MouseCoords.Position).LengthSquared select side).First();
+
+            MouseCoords = new GridCoordinates(closestSide, MouseCoords.Grid);
         }
 
-        public override bool IsValidPosition(GridLocalCoordinates position)
+        public override bool IsValidPosition(GridCoordinates position)
         {
             if (pManager.CurrentPermission.IsTile)
             {

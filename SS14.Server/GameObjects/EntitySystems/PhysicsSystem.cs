@@ -1,13 +1,16 @@
-﻿using SS14.Shared.GameObjects;
+﻿using SS14.Server.Interfaces.Timing;
+using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Systems;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
     internal class PhysicsSystem : EntitySystem
     {
+        private IPauseManager _pauseManager;
         private const float Epsilon = 1.0e-6f;
         private const float GlobalFriction = 0.01f;
 
@@ -16,17 +19,30 @@ namespace SS14.Server.GameObjects.EntitySystems
             EntityQuery = new TypeEntityQuery(typeof(PhysicsComponent));
         }
 
+        public override void Initialize()
+        {
+            base.Initialize();
+           
+            _pauseManager = IoCManager.Resolve<IPauseManager>();
+        }
+
         /// <inheritdoc />
         public override void Update(float frameTime)
         {
             var entities = EntityManager.GetEntities(EntityQuery);
             foreach (var entity in entities)
+            {
+                if (_pauseManager.IsEntityPaused(entity))
+                {
+                    continue;
+                }
                 DoMovement(entity, frameTime);
+            }
         }
 
         private static void DoMovement(IEntity entity, float frameTime)
         {
-            var transform = entity.GetComponent<ITransformComponent>();
+            var transform = entity.Transform;
             var velocity = entity.GetComponent<PhysicsComponent>();
 
             if (velocity.AngularVelocity == 0 && velocity.LinearVelocity == Vector2.Zero)

@@ -177,6 +177,14 @@ namespace SS14.Shared.Maths
             W = v.W;
         }
 
+        public void Deconstruct(out float x, out float y, out float z, out float w)
+        {
+            x = X;
+            y = Y;
+            z = Z;
+            w = W;
+        }
+
         #endregion Constructors
 
         #region Public Members

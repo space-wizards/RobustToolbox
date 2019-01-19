@@ -6,4 +6,8 @@
     <RemoveDir Directories="$(OutputPath)Resources" />
     <Copy SourceFiles="@(_ResourceFiles)" DestinationFolder="$(OutputPath)Resources\%(RecursiveDir)" />
   </Target>
+  <Target Name="CopySS14Noise">
+    <Exec Condition="'$(Platform)' == 'x64'" Command="$(Python) ../Tools/download_ss14_noise.py $(Platform) $(TargetOS) $(OutputPath)" CustomErrorRegularExpression="^Error" />
+    <Warning Condition="'$(Platform)' != 'x64'" Text="Did not download ss14_noise because the platform is not set to x64. Only use this build for unit testing!" />
+  </Target>
 </Project>

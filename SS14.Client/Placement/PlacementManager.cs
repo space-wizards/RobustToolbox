@@ -6,7 +6,6 @@ using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Placement;
-using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.Enums;
@@ -28,6 +27,7 @@ using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics;
 using SS14.Client.GameObjects;
 using SS14.Client.GameObjects.EntitySystems;
+using SS14.Client.Player;
 using SS14.Shared.Input;
 using SS14.Shared.Utility;
 using SS14.Shared.Serialization;
@@ -36,20 +36,34 @@ namespace SS14.Client.Placement
 {
     public class PlacementManager : IPlacementManager, IDisposable
     {
-        [Dependency] public readonly ICollisionManager CollisionManager;
-        [Dependency] private readonly IClientNetManager NetworkManager;
-        [Dependency] public readonly IPlayerManager PlayerManager;
-        [Dependency] public readonly IResourceCache ResourceCache;
-        [Dependency] private readonly IReflectionManager ReflectionManager;
-        [Dependency] private readonly IMapManager _mapMan;
-        [Dependency] private readonly IGameTiming _time;
-        [Dependency] public readonly IEyeManager eyeManager;
-        [Dependency] public readonly ISceneTreeHolder sceneTree;
-        [Dependency] private readonly IInputManager _inputManager;
-        [Dependency] private readonly IEntitySystemManager _entitySystemManager;
-        [Dependency] private readonly IEntityManager _entityManager;
-        [Dependency] private readonly IPrototypeManager _prototypeManager;
-        [Dependency] private readonly IBaseClient _baseClient;
+        [Dependency]
+        public readonly IPhysicsManager PhysicsManager;
+        [Dependency]
+        private readonly IClientNetManager NetworkManager;
+        [Dependency]
+        public readonly IPlayerManager PlayerManager;
+        [Dependency]
+        public readonly IResourceCache ResourceCache;
+        [Dependency]
+        private readonly IReflectionManager ReflectionManager;
+        [Dependency]
+        private readonly IMapManager _mapMan;
+        [Dependency]
+        private readonly IGameTiming _time;
+        [Dependency]
+        public readonly IEyeManager eyeManager;
+        [Dependency]
+        internal readonly ISceneTreeHolder sceneTree;
+        [Dependency]
+        private readonly IInputManager _inputManager;
+        [Dependency]
+        private readonly IEntitySystemManager _entitySystemManager;
+        [Dependency]
+        private readonly IEntityManager _entityManager;
+        [Dependency]
+        private readonly IPrototypeManager _prototypeManager;
+        [Dependency]
+        private readonly IBaseClient _baseClient;
 
         /// <summary>
         ///     How long before a pending tile change is dropped.
@@ -60,9 +74,7 @@ namespace SS14.Client.Placement
         /// Dictionary of all placement mode types
         /// </summary>
         private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
-
-        private readonly List<Tuple<GridLocalCoordinates, TimeSpan>> _pendingTileChanges =
-            new List<Tuple<GridLocalCoordinates, TimeSpan>>();
+        private readonly List<Tuple<GridCoordinates, TimeSpan>> _pendingTileChanges = new List<Tuple<GridCoordinates, TimeSpan>>();
 
         /// <summary>
         /// Tells this system to try to handle placement of an entity during the next frame
@@ -77,7 +89,7 @@ namespace SS14.Client.Placement
         /// <summary>
         /// Holds the anchor that we can try to spawn in a line or a grid from
         /// </summary>
-        public GridLocalCoordinates StartPoint { get; set; }
+        public GridCoordinates StartPoint { get; set; }
 
         /// <summary>
         /// Whether the placement manager is currently in a mode where it accepts actions
@@ -551,7 +563,7 @@ namespace SS14.Client.Placement
             if (CurrentPermission == null || CurrentPermission.Range <= 0 || !CurrentMode.RangeRequired)
                 return;
 
-            var pos = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
+            var pos = PlayerManager.LocalPlayer.ControlledEntity.Transform.WorldPosition;
             const int ppm = EyeManager.PIXELSPERMETER;
 
             if (GameController.OnGodot)
@@ -593,7 +605,7 @@ namespace SS14.Client.Placement
             IsActive = true;
         }
 
-        private void RequestPlacement(GridLocalCoordinates coordinates)
+        private void RequestPlacement(GridCoordinates coordinates)
         {
             if (coordinates.MapID == MapId.Nullspace) return;
             if (CurrentPermission == null) return;
@@ -617,7 +629,7 @@ namespace SS14.Client.Placement
                         return;
                 }
 
-                var tuple = new Tuple<GridLocalCoordinates, TimeSpan>(localPos, _time.RealTime + _pendingTileTimeout);
+                var tuple = new Tuple<GridCoordinates, TimeSpan>(localPos, _time.RealTime + _pendingTileTimeout);
                 _pendingTileChanges.Add(tuple);
             }
 

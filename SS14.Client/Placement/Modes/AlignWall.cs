@@ -38,12 +38,12 @@ namespace SS14.Client.Placement.Modes
                                    orderby (node - MouseCoords.Position).LengthSquared ascending
                                    select node).First();
 
-            MouseCoords = new GridLocalCoordinates(closestNode + new Vector2(pManager.PlacementOffset.X,
+            MouseCoords = new GridCoordinates(closestNode + new Vector2(pManager.PlacementOffset.X,
                                                                          pManager.PlacementOffset.Y),
                                                MouseCoords.Grid);
         }
 
-        public override bool IsValidPosition(GridLocalCoordinates position)
+        public override bool IsValidPosition(GridCoordinates position)
         {
             if (pManager.CurrentPermission.IsTile)
             {

@@ -22,63 +22,55 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        new private Godot.Button SceneControl;
-
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.Button();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.Button) control;
-        }
-
         public AlignMode TextAlign
         {
-            get => GameController.OnGodot ? (AlignMode) SceneControl.Align : default;
+            get => GameController.OnGodot ? (AlignMode)SceneControl.Get("align") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.Align = (Godot.Button.TextAlign) value;
+                    SceneControl.Set("align", (Godot.Button.TextAlign) value);
                 }
             }
         }
 
         public bool ClipText
         {
-            get => GameController.OnGodot ? SceneControl.ClipText : default;
+            get => GameController.OnGodot ? (bool)SceneControl.Get("clip_text") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.ClipText = value;
+                    SceneControl.Set("clip_text", value);
                 }
             }
         }
 
         public bool Flat
         {
-            get => GameController.OnGodot ? SceneControl.Flat : default;
+            get => GameController.OnGodot ? (bool)SceneControl.Get("flat") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.Flat = value;
+                    SceneControl.Set("flat", value);
                 }
             }
         }
 
         public string Text
         {
-            get => GameController.OnGodot ? SceneControl.Text : default;
+            get => GameController.OnGodot ? (string)SceneControl.Get("text") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.Text = value;
+                    SceneControl.Set("text", value);
                 }
             }
         }

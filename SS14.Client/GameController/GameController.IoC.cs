@@ -11,7 +11,6 @@ using SS14.Client.Interfaces.GameStates;
 using SS14.Client.Interfaces.Graphics.Lighting;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Map;
-using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
@@ -98,7 +97,7 @@ namespace SS14.Client
             }
             IoCManager.Register<IComponentManager, ComponentManager>();
             IoCManager.Register<IMapManager, ClientMapManager>();
-            IoCManager.Register<ICollisionManager, CollisionManager>();
+            IoCManager.Register<IPhysicsManager, PhysicsManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
             IoCManager.Register<ITaskManager, TaskManager>();
 

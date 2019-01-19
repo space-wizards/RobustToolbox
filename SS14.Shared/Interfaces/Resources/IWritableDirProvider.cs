@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using JetBrains.Annotations;
 using SS14.Shared.Utility;
 
 namespace SS14.Shared.Interfaces.Resources
@@ -7,16 +9,9 @@ namespace SS14.Shared.Interfaces.Resources
     /// <summary>
     /// Provides an API for file and directory manipulation inside of a rooted folder.
     /// </summary>
+    [PublicAPI]
     public interface IWritableDirProvider
     {
-        /// <summary>
-        /// Appends a string to the end of a file. If the file does not
-        /// exist, creates it.
-        /// </summary>
-        /// <param name="path">Path of file to append to.</param>
-        /// <param name="content">String to append.</param>
-        void Append(ResourcePath path, string content);
-
         /// <summary>
         /// Creates a directory. If the directory exists, does nothing.
         /// </summary>
@@ -43,7 +38,8 @@ namespace SS14.Shared.Interfaces.Resources
         /// <param name="pattern"></param>
         /// <param name="recursive"></param>
         /// <returns>A tuple that contains collections of files, directories that matched the expression.</returns>
-        (IEnumerable<ResourcePath> files, IEnumerable<ResourcePath> directories) Find(string pattern, bool recursive = true);
+        (IEnumerable<ResourcePath> files, IEnumerable<ResourcePath> directories) Find(string pattern,
+            bool recursive = true);
 
         /// <summary>
         /// Tests if a path is a directory.
@@ -61,26 +57,80 @@ namespace SS14.Shared.Interfaces.Resources
         Stream Open(ResourcePath path, FileMode fileMode);
 
         /// <summary>
-        /// Reads the entire contents of a file to a string.
-        /// </summary>
-        /// <param name="path">File to read.</param>
-        /// <returns>String of the file contents, or null if the file could not be read.</returns>
-        string Read(ResourcePath path);
-
-        /// <summary>
         /// Attempts to rename a file.
         /// </summary>
         /// <param name="oldPath">Path of the file to rename.</param>
         /// <param name="newPath">New name of the file.</param>
         /// <returns></returns>
         void Rename(ResourcePath oldPath, ResourcePath newPath);
+    }
+
+    [PublicAPI]
+    public static class WritableDirProviderExt
+    {
+        /// <summary>
+        /// Appends a string to the end of a file. If the file does not
+        /// exist, creates it.
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="path">Path of file to append to.</param>
+        /// <param name="content">String to append.</param>
+        public static void Append(this IWritableDirProvider provider, ResourcePath path, string content)
+        {
+            using (var stream = provider.Open(path, FileMode.Append))
+            using (var writer = new StreamWriter(stream, Encoding.UTF8))
+            {
+                writer.Write(content);
+            }
+        }
+
+        /// <summary>
+        /// Reads the entire contents of a file to a string.
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="path">File to read.</param>
+        /// <returns>String of the file contents, or null if the file could not be read.</returns>
+        public static string Read(this IWritableDirProvider provider, ResourcePath path)
+        {
+            using (var stream = provider.Open(path, FileMode.Open))
+            using (var reader = new StreamReader(stream, Encoding.UTF8))
+            {
+                return reader.ReadToEnd();
+            }
+        }
+
+        public static byte[] ReadBytes(this IWritableDirProvider provider, ResourcePath path)
+        {
+            using (var stream = provider.Open(path, FileMode.Open))
+            using (var memoryStream = new MemoryStream((int) stream.Length))
+            {
+                stream.CopyTo(memoryStream);
+                return memoryStream.ToArray();
+            }
+        }
 
         /// <summary>
         /// Writes the content string to a file. If the file exists, its existing contents will
         /// be replaced.
         /// </summary>
+        /// <param name="provider"></param>
         /// <param name="path">Path of the file to write to.</param>
         /// <param name="content">String contents of the file.</param>
-        void Write(ResourcePath path, string content);
+        public static void Write(this IWritableDirProvider provider, ResourcePath path, string content)
+        {
+            using (var stream = provider.Open(path, FileMode.Create))
+            using (var writer = new StreamWriter(stream, Encoding.UTF8))
+            {
+                writer.Write(content);
+            }
+        }
+
+        public static void WriteBytes(this IWritableDirProvider provider, ResourcePath path, byte[] content)
+        {
+            using (var stream = provider.Open(path, FileMode.Create))
+            {
+                stream.Write(content, 0, content.Length);
+            }
+        }
     }
 }

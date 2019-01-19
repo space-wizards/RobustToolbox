@@ -1,6 +1,5 @@
 ﻿using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Input;
-using SS14.Client.Interfaces.Player;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
@@ -11,6 +10,7 @@ using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Interfaces.State;
+using SS14.Client.Player;
 using SS14.Client.State.States;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Utility;
@@ -69,14 +69,14 @@ namespace SS14.Client.UserInterface.CustomControls
                 return;
             }
 
-            var entityTransform = playerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>();
+            var entityTransform = playerManager.LocalPlayer.ControlledEntity.Transform;
             var playerWorldOffset = entityTransform.WorldPosition;
             var playerScreen = eyeManager.WorldToScreen(playerWorldOffset);
 
             var mouseScreenPos = inputManager.MouseScreenPosition;
             int mouseWorldMap;
             int mouseWorldGrid;
-            GridLocalCoordinates mouseWorldPos;
+            GridCoordinates mouseWorldPos;
             ScreenCoordinates worldToScreen;
             IEntity mouseEntity = null;
             try

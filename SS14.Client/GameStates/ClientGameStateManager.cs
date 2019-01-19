@@ -1,7 +1,6 @@
 ﻿using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
-using SS14.Client.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Network;
@@ -12,6 +11,8 @@ using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Client.Player;
+using SS14.Shared.Interfaces.Map;
 
 namespace SS14.Client.GameStates
 {
@@ -29,6 +30,8 @@ namespace SS14.Client.GameStates
         private readonly IClientNetManager netManager;
         [Dependency]
         private readonly IBaseClient baseClient;
+        [Dependency]
+        private readonly IMapManager _mapManager;
 
         public void Initialize()
         {
@@ -73,8 +76,10 @@ namespace SS14.Client.GameStates
 
         private void ApplyGameState(GameState gameState)
         {
+            _mapManager.ApplyGameStatePre(gameState.MapData);
             entityManager.ApplyEntityStates(gameState.EntityStates, gameState.EntityDeletions, gameState.GameTime);
             playerManager.ApplyPlayerStates(gameState.PlayerStates);
+            _mapManager.ApplyGameStatePost(gameState.MapData);
         }
     }
 }

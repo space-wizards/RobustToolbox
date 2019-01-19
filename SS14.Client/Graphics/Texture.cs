@@ -1,4 +1,8 @@
 ﻿using System;
+using System.IO;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics
@@ -18,6 +22,52 @@ namespace SS14.Client.Graphics
         public static implicit operator Godot.Texture(Texture src)
         {
             return src?.GodotTexture;
+        }
+
+        public static Texture LoadFromImage<T>(Image<T> image) where T : struct, IPixel<T>
+        {
+            var stream = new MemoryStream();
+
+            try
+            {
+                image.SaveAsPng(stream, new PngEncoder {CompressionLevel = 1});
+
+                var gdImage = new Godot.Image();
+                var ret = gdImage.LoadPngFromBuffer(stream.ToArray());
+                if (ret != Godot.Error.Ok)
+                {
+                    throw new InvalidDataException(ret.ToString());
+                }
+
+                // Godot does not provide a way to load from memory directly so we turn it into a PNG I guess.
+                var texture = new Godot.ImageTexture();
+                texture.CreateFromImage(gdImage);
+                return new GodotTextureSource(texture);
+            }
+            finally
+            {
+                stream.Dispose();
+            }
+        }
+
+        public static Texture LoadFromPNGStream(Stream stream)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                stream.CopyTo(memoryStream);
+
+                var data = memoryStream.ToArray();
+                var gdImage = new Godot.Image();
+                var ret = gdImage.LoadPngFromBuffer(data);
+                if (ret != Godot.Error.Ok)
+                {
+                    throw new InvalidDataException(ret.ToString());
+                }
+
+                var texture = new Godot.ImageTexture();
+                texture.CreateFromImage(gdImage);
+                return new GodotTextureSource(texture);
+            }
         }
 
         Texture IDirectionalTextureProvider.Default => this;

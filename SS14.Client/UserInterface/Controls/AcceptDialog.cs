@@ -17,27 +17,19 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        new private Godot.AcceptDialog SceneControl;
-
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.AcceptDialog();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.AcceptDialog) control;
-        }
-
         public string DialogText
         {
-            get => GameController.OnGodot ? SceneControl.DialogText : default;
+            get => GameController.OnGodot ? (string)SceneControl.Get("dialog_text") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.DialogText = value;
+                    SceneControl.Set("dialog_text", value);
                 }
             }
         }

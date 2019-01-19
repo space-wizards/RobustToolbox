@@ -9,7 +9,6 @@ using SS14.Server.Interfaces;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Network.Messages;
 using SS14.Shared.Network;
 using SS14.Shared.ViewVariables;
 
@@ -91,6 +90,11 @@ namespace SS14.Server.Player
         {
             DetachFromEntity();
 
+            if (a == null)
+            {
+                return;
+            }
+
             var actorComponent = a.AddComponent<BasicActorComponent>();
             if (a.HasComponent<IMoverComponent>())
             {
@@ -102,7 +106,6 @@ namespace SS14.Server.Player
 
             AttachedEntity = a;
             a.SendMessage(actorComponent, new PlayerAttachedMsg(this));
-            SendAttachMessage();
             SetAttachedEntityName();
             UpdatePlayerState();
         }
@@ -139,33 +142,6 @@ namespace SS14.Server.Player
             UpdatePlayerState();
         }
 
-        /// <inheritdoc />
-        public void AddPostProcessingEffect(PostProcessingEffectType type, float duration)
-        {
-            var net = IoCManager.Resolve<IServerNetManager>();
-            var message = net.CreateNetMessage<MsgSession>();
-
-            message.MsgType = PlayerSessionMessage.AddPostProcessingEffect;
-            message.PpType = type;
-            message.PpDuration = duration;
-
-            net.ServerSendMessage(message, ConnectedClient);
-        }
-
-        private void SendAttachMessage()
-        {
-            if (AttachedEntity == null)
-                throw new Exception("Cannot attach player session to entity: No entity attached.");
-
-            var net = IoCManager.Resolve<IServerNetManager>();
-            var message = net.CreateNetMessage<MsgSession>();
-
-            message.MsgType = PlayerSessionMessage.AttachToEntity;
-            message.Uid = AttachedEntity.Uid;
-
-            net.ServerSendMessage(message, ConnectedClient);
-        }
-
         private void SetAttachedEntityName()
         {
             if (Name != null && AttachedEntity != null)
@@ -174,22 +150,12 @@ namespace SS14.Server.Player
             }
         }
 
-        /// <inheritdoc />
-        public void JoinLobby()
-        {
-            DetachFromEntity();
-            Status = SessionStatus.InLobby;
-            UpdatePlayerState();
-        }
-
         /// <summary>
         ///     Causes the session to switch from the lobby to the game.
         /// </summary>
         public void JoinGame()
         {
-            var baseServer = IoCManager.Resolve<IBaseServer>();
-
-            if (ConnectedClient == null || Status == SessionStatus.InGame || baseServer.RunLevel != ServerRunLevel.Game)
+            if (ConnectedClient == null || Status == SessionStatus.InGame)
                 return;
 
             Status = SessionStatus.InGame;

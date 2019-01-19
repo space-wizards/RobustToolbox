@@ -17,27 +17,19 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        new private Godot.GridContainer SceneControl;
-
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.GridContainer();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.GridContainer) control;
-        }
-
         public int Columns
         {
-            get => GameController.OnGodot ? SceneControl.GetColumns() : default;
+            get => GameController.OnGodot ? (int)SceneControl.Get("columns") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.SetColumns(value);
+                    SceneControl.Set("columns", value);
                 }
             }
         }

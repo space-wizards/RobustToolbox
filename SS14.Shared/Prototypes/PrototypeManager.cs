@@ -99,6 +99,8 @@ namespace SS14.Shared.Prototypes
         [Dependency]
         private readonly IResourceManager _resources;
 
+        private bool _hasEverBeenReloaded;
+
         #region IPrototypeManager members
         private readonly Dictionary<Type, List<IPrototype>> prototypes = new Dictionary<Type, List<IPrototype>>();
         private readonly Dictionary<Type, Dictionary<string, IIndexedPrototype>> indexedPrototypes = new Dictionary<Type, Dictionary<string, IIndexedPrototype>>();
@@ -107,16 +109,28 @@ namespace SS14.Shared.Prototypes
 
         public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
         {
+            if (!_hasEverBeenReloaded)
+            {
+                throw new InvalidOperationException("No prototypes have been loaded yet.");
+            }
             return prototypes[typeof(T)].Select((IPrototype p) => (T)p);
         }
 
         public IEnumerable<IPrototype> EnumeratePrototypes(Type type)
         {
+            if (!_hasEverBeenReloaded)
+            {
+                throw new InvalidOperationException("No prototypes have been loaded yet.");
+            }
             return prototypes[type];
         }
 
         public T Index<T>(string id) where T : class, IIndexedPrototype
         {
+            if (!_hasEverBeenReloaded)
+            {
+                throw new InvalidOperationException("No prototypes have been loaded yet.");
+            }
             try
             {
                 return (T)indexedPrototypes[typeof(T)][id];
@@ -129,6 +143,10 @@ namespace SS14.Shared.Prototypes
 
         public IIndexedPrototype Index(Type type, string id)
         {
+            if (!_hasEverBeenReloaded)
+            {
+                throw new InvalidOperationException("No prototypes have been loaded yet.");
+            }
             return indexedPrototypes[type][id];
         }
 
@@ -203,6 +221,7 @@ namespace SS14.Shared.Prototypes
 
         public void LoadFromStream(TextReader stream)
         {
+            _hasEverBeenReloaded = true;
             var yaml = new YamlStream();
             yaml.Load(stream);
 

@@ -1,4 +1,6 @@
-﻿using SS14.Client.Utility;
+﻿using System;
+using SS14.Client.GodotGlue;
+using SS14.Client.Utility;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
@@ -18,24 +20,19 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        new private Godot.Popup SceneControl;
+        public event Action OnPopupHide;
 
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.Popup();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.Popup) control;
-        }
 
         public void Open(UIBox2? box = null)
         {
             if (GameController.OnGodot)
             {
-                SceneControl.Popup_(box?.Convert());
+                SceneControl.Call("popup", box?.Convert());
             }
         }
 
@@ -43,7 +40,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.PopupCentered();
+                SceneControl.Call("popup_centered");
             }
         }
 
@@ -51,8 +48,33 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.PopupCenteredMinsize();
+                SceneControl.Call("popup_centered_minsize");
             }
+        }
+
+        private GodotSignalSubscriber0 __popupHideSubscriber;
+
+        protected override void SetupSignalHooks()
+        {
+            base.SetupSignalHooks();
+
+            __popupHideSubscriber = new GodotSignalSubscriber0();
+            __popupHideSubscriber.Connect(SceneControl, "popup_hide");
+            __popupHideSubscriber.Signal += __popupHideHook;
+        }
+
+        protected override void DisposeSignalHooks()
+        {
+            base.DisposeSignalHooks();
+
+            __popupHideSubscriber.Disconnect(SceneControl, "popup_hide");
+            __popupHideSubscriber.Dispose();
+            __popupHideSubscriber = null;
+        }
+
+        private void __popupHideHook()
+        {
+            OnPopupHide?.Invoke();
         }
     }
 }

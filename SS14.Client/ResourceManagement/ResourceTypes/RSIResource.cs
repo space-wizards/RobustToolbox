@@ -41,17 +41,20 @@ namespace SS14.Client.ResourceManagement
                 manifestContents = reader.ReadToEnd();
             }
 
-            var errors = RSISchema.Validate(manifestContents);
-            if (errors.Count != 0)
+            if (RSISchema != null)
             {
-                Logger.Error($"Unable to load RSI from '{path}', {errors.Count} errors:");
-
-                foreach (var error in errors)
+                var errors = RSISchema.Validate(manifestContents);
+                if (errors.Count != 0)
                 {
-                    Logger.Error("{0}", error.ToString());
-                }
+                    Logger.Error($"Unable to load RSI from '{path}', {errors.Count} errors:");
 
-                throw new RSILoadException($"{errors.Count} errors while loading RSI. See console.");
+                    foreach (var error in errors)
+                    {
+                        Logger.Error("{0}", error.ToString());
+                    }
+
+                    throw new RSILoadException($"{errors.Count} errors while loading RSI. See console.");
+                }
             }
 
             // Ok schema validated just fine.
@@ -163,15 +166,23 @@ namespace SS14.Client.ResourceManagement
 
         private static JsonSchema4 GetSchema()
         {
-            string schema;
-            using (var schemaStream = Assembly.GetExecutingAssembly()
-                .GetManifestResourceStream("SS14.Client.Graphics.RSI.RSISchema.json"))
-            using (var schemaReader = new StreamReader(schemaStream))
+            try
             {
-                schema = schemaReader.ReadToEnd();
-            }
+                string schema;
+                using (var schemaStream = Assembly.GetExecutingAssembly()
+                    .GetManifestResourceStream("SS14.Client.Graphics.RSI.RSISchema.json"))
+                using (var schemaReader = new StreamReader(schemaStream))
+                {
+                    schema = schemaReader.ReadToEnd();
+                }
 
-            return JsonSchema4.FromJsonAsync(schema).Result;
+                return JsonSchema4.FromJsonAsync(schema).Result;
+            }
+            catch (Exception e)
+            {
+                System.Console.WriteLine("Failed to load RSI JSON Schema!\n{0}", e);
+                return null;
+            }
         }
     }
 

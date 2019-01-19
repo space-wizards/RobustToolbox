@@ -2,6 +2,7 @@
 using System;
 using System.Reflection;
 using System.Collections.Generic;
+using Environment = System.Environment;
 
 // NOT SS14.Client.Godot so you can still use Godot.xxx without a using statement.
 namespace SS14.Client.GodotGlue
@@ -32,6 +33,16 @@ namespace SS14.Client.GodotGlue
                 return;
             }
 
+            // Hahahah fuck you Mono
+            // Mono's incorrectly versioned bullshit copy of SharpZipLib is prioritized over the correct NuGet version.
+            // This breaks our shit because they're not compatible.
+            // This completely bypasses that.
+            // Good fucking riddance.
+            // I win.
+            // Fucking deal with it.
+            var path = Environment.CurrentDirectory;
+            Assembly.LoadFile(System.IO.Path.Combine(path, "../bin/Client/ICSharpCode.SharpZipLib.dll"));
+
             Started = true;
             SS14Assembly = Assembly.LoadFrom("../bin/Client/SS14.Client.dll");
             var entryType = typeof(ClientEntryPoint);
@@ -39,7 +50,7 @@ namespace SS14.Client.GodotGlue
             {
                 if (entryType.IsAssignableFrom(type) && !type.IsAbstract)
                 {
-                    var instance = (ClientEntryPoint)Activator.CreateInstance(type);
+                    var instance = (ClientEntryPoint) Activator.CreateInstance(type);
                     try
                     {
                         instance.Main(GetTree());
@@ -51,6 +62,7 @@ namespace SS14.Client.GodotGlue
                         GetTree().Quit();
                         return;
                     }
+
                     entryPoints.Add(instance);
                 }
             }
@@ -79,7 +91,6 @@ namespace SS14.Client.GodotGlue
             {
                 GD.Print("Whoops");
             }
-
         }
 
         public override void _Process(float delta)
@@ -148,6 +159,7 @@ namespace SS14.Client.GodotGlue
                         {
                             entrypoint.QuitRequest();
                         }
+
                         break;
                 }
             }

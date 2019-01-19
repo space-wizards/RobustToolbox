@@ -164,7 +164,6 @@ namespace SS14.UnitTesting.Shared.Maths
             var circleDifferentRadius = new Circle(centerVec, 100);
             var circleDifferentPosition = new Circle(new Vector2(100, 0), radius);
             var sameCircle = new Circle(centerVec, radius);
-            Object sameCircleAsObject = sameCircle;
 
 #pragma warning disable CS1718 // Comparison made to same variable
             Assert.That(controlCircle == controlCircle);
@@ -185,8 +184,6 @@ namespace SS14.UnitTesting.Shared.Maths
             var circleDifferentRadius = new Circle(centerVec, 100);
             var circleDifferentPosition = new Circle(new Vector2(100, 0), radius);
             var sameCircle = new Circle(centerVec, radius);
-            Object sameCircleAsObject = sameCircle;
-            Vector2 notCircle = centerVec;
 
 #pragma warning disable CS1718 // Comparison made to same variable
             Assert.That(controlCircle != controlCircle, Is.False);

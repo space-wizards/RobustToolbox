@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
 using SS14.Shared.ViewVariables;
 
-namespace SS14.Shared.GameObjects.Components.BoundingBox
+namespace SS14.Shared.GameObjects
 {
     /// <summary>
     ///     Holds an Axis Aligned Bounding Box (AABB) for the entity. Using this component adds the entity
@@ -46,7 +46,7 @@ namespace SS14.Shared.GameObjects.Components.BoundingBox
         {
             get
             {
-                var trans = Owner.GetComponent<ITransformComponent>();
+                var trans = Owner.Transform;
                 return AABB.Translated(trans.WorldPosition);
             }
         }

@@ -18,10 +18,7 @@ namespace SS14.Shared.GameObjects
             Text = text;
         }
     }
-
-    [Serializable, NetSerializable]
-    public class SpriteChangedMsg : ComponentMessage { }
-
+    
     [Serializable, NetSerializable]
     public class BumpedEntMsg : ComponentMessage
     {

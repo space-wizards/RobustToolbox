@@ -1,7 +1,7 @@
 ﻿using System;
 using SS14.Client.GameObjects.Components;
 using SS14.Client.Interfaces.Input;
-using SS14.Client.Interfaces.Player;
+using SS14.Client.Player;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Systems;
 using SS14.Shared.Input;

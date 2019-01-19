@@ -7,7 +7,6 @@ using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Components.BoundingBox;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
@@ -67,7 +66,7 @@ namespace SS14.Client.Debugging
                 foreach (var boundingBox in _componentManager.GetAllComponents<ClientBoundingBoxComponent>())
                 {
                     // all entities have a TransformComponent
-                    var transform = boundingBox.Owner.GetComponent<ITransformComponent>();
+                    var transform = boundingBox.Owner.Transform;
 
                     // if not on the same map, continue
                     if (transform.MapID != _eyeManager.CurrentMap)

@@ -17,39 +17,31 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        new private Godot.WindowDialog SceneControl;
-
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.WindowDialog();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.WindowDialog) control;
-        }
-
         public string Title
         {
-            get => GameController.OnGodot ? SceneControl.WindowTitle : default;
+            get => GameController.OnGodot ? (string)SceneControl.Get("window_title") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.WindowTitle = value;
+                    SceneControl.Set("window_title", value);
                 }
             }
         }
 
         public bool Resizable
         {
-            get => GameController.OnGodot ? SceneControl.Resizable : default;
+            get => GameController.OnGodot ? (bool)SceneControl.Get("resizable") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.Resizable = value;
+                    SceneControl.Set("resizable", value);
                 }
             }
         }

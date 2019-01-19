@@ -32,7 +32,7 @@ namespace SS14.Shared.Map
 
         public int X => _gridTile.X;
         public int Y => _gridTile.Y;
-        public GridLocalCoordinates LocalPos => IoCManager.Resolve<IMapManager>().GetMap(MapIndex).GetGrid(GridIndex).GridTileToLocal(_gridTile);
+        public GridCoordinates LocalPos => IoCManager.Resolve<IMapManager>().GetMap(MapIndex).GetGrid(GridIndex).GridTileToLocal(_gridTile);
         public ushort TileSize => IoCManager.Resolve<IMapManager>().GetMap(MapIndex).GetGrid(GridIndex).TileSize;
         public Tile Tile
         {
@@ -40,7 +40,7 @@ namespace SS14.Shared.Map
             set
             {
                 IMapGrid grid = IoCManager.Resolve<IMapManager>().GetMap(MapIndex).GetGrid(GridIndex);
-                grid.SetTile(new GridLocalCoordinates(_gridTile.X, _gridTile.Y, grid), value);
+                grid.SetTile(new GridCoordinates(_gridTile.X, _gridTile.Y, grid), value);
             }
         }
 

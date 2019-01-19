@@ -10,7 +10,7 @@ namespace SS14.Client.ViewVariables.Editors
     {
         protected override Control MakeUI(object value)
         {
-            var coords = (GridLocalCoordinates) value;
+            var coords = (GridCoordinates) value;
             var hBoxContainer = new HBoxContainer
             {
                 CustomMinimumSize = new Vector2(240, 0),
@@ -59,7 +59,7 @@ namespace SS14.Client.ViewVariables.Editors
                 var xVal = float.Parse(x.Text, CultureInfo.InvariantCulture);
                 var yVal = float.Parse(y.Text, CultureInfo.InvariantCulture);
 
-                ValueChanged(new GridLocalCoordinates(xVal, yVal, new GridId(gridVal)));
+                ValueChanged(new GridCoordinates(xVal, yVal, new GridId(gridVal)));
             }
 
             if (!ReadOnly)

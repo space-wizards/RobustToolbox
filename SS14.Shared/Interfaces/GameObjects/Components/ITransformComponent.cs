@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using JetBrains.Annotations;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Maths;
@@ -9,18 +11,34 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
     /// <summary>
     ///     Stores the position and orientation of the entity.
     /// </summary>
+    [PublicAPI]
     public interface ITransformComponent : IComponent
     {
         /// <summary>
-        ///     Current position offset of the entity.
+        ///     Local offset of this entity relative to its parent
+        ///     (<see cref="Parent"/> if it's not null, to <see cref="GridID"/> otherwise).
         /// </summary>
-        GridLocalCoordinates LocalPosition { get; set; }
+        Vector2 LocalPosition { get; set; }
 
         /// <summary>
-        ///     Current position offset of the entity.
+        ///     Position offset of this entity relative to the grid it's on.
+        /// </summary>
+        GridCoordinates GridPosition { get; set; }
+
+        /// <summary>
+        ///     Current position offset of the entity relative to the world.
         /// </summary>
         Vector2 WorldPosition { get; set; }
 
+        /// <summary>
+        ///     Current position offset of the entity relative to the world.
+        ///     This is effectively a more complete version of <see cref="WorldPosition"/>
+        /// </summary>
+        MapCoordinates MapPosition { get; }
+
+        /// <summary>
+        ///     Invoked when the entity is rotated.
+        /// </summary>
         event Action<Angle> OnRotate;
 
         /// <summary>
@@ -31,7 +49,7 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         /// <summary>
         ///     Current world rotation of the entity.
         /// </summary>
-        Angle WorldRotation { get; }
+        Angle WorldRotation { get; set; }
 
         /// <summary>
         ///     Matrix for transforming points from local to world space.
@@ -91,6 +109,8 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         void DetachParent();
         void AttachParent(ITransformComponent parent);
         void AttachParent(IEntity parent);
+
+        IEnumerable<ITransformComponent> Children { get; }
     }
 
     public class ParentChangedEventArgs : EventArgs

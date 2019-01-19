@@ -64,7 +64,6 @@ namespace SS14.Client.GameObjects.EntitySystems
             {
                 return;
             }
-            var key = LastPlayKey++;
             var player = new Godot.AudioStreamPlayer()
             {
                 Stream = stream.GodotAudioStream,
@@ -127,7 +126,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// </summary>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
-        public void Play(string filename, GridLocalCoordinates coordinates, AudioParams? audioParams = null)
+        public void Play(string filename, GridCoordinates coordinates, AudioParams? audioParams = null)
         {
             Play(resourceCache.GetResource<AudioResource>(new ResourcePath(filename)), coordinates, audioParams);
         }
@@ -137,7 +136,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// </summary>
         /// <param name="filename">The audio stream to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
-        public void Play(AudioStream stream, GridLocalCoordinates coordinates, AudioParams? audioParams = null)
+        public void Play(AudioStream stream, GridCoordinates coordinates, AudioParams? audioParams = null)
         {
             if (!GameController.OnGodot)
             {

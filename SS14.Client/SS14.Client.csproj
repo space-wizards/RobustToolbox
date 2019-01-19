@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SS14.Client</RootNamespace>
     <AssemblyName>SS14.Client</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <OutputPath>..\bin\Client\</OutputPath>
     <WarningLevel>4</WarningLevel>
@@ -76,6 +76,8 @@
     <PackageReference Include="SharpZipLib" Version="1.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="NJsonSchema" Version="9.10.73" />
+    <PackageReference Include="SixLabors.Core" Version="1.0.0-beta0006" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0005" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="YamlDotNet" Version="5.0.1" />
   </ItemGroup>
@@ -169,7 +171,8 @@
     <Compile Include="Interfaces\IBaseClient.cs" />
     <Compile Include="Interfaces\ISceneTreeHolder.cs" />
     <Compile Include="Interfaces\Map\IClientTileDefinitionManager.cs" />
-    <Compile Include="Interfaces\Player\IPlayerManager.cs" />
+    <Compile Include="Player\IPlayerManager.cs" />
+    <Compile Include="Player\IPlayerSession.cs" />
     <Compile Include="Interfaces\State\IStateManager.cs" />
     <Compile Include="Interfaces\Utility\IRand.cs" />
     <Compile Include="Log\DebugConsoleLogHandler.cs" />
@@ -209,6 +212,7 @@
     <Compile Include="Utility\GodotParser.cs" />
     <Compile Include="Utility\GodotPathUtility.cs" />
     <Compile Include="Utility\GodotResourceCopy.cs" />
+    <Compile Include="Utility\ImageSharpExt.cs" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Utility\GodotConversions.cs" />
     <Compile Include="State\State.cs" />
@@ -252,7 +256,6 @@
     <Compile Include="Interfaces\Input\IKeyBinding.cs" />
     <Compile Include="Input\InputManager.cs" />
     <Compile Include="Input\GodotInputManager.cs" />
-    <Compile Include="State\States\LobbyMenu.cs" />
     <Compile Include="State\States\GameScreen.cs" />
     <Compile Include="Graphics\Texture.cs" />
     <Compile Include="Graphics\Font.cs" />
@@ -285,6 +288,7 @@
     <Compile Include="UserInterface\CustomControls\DebugCoordsPanel.cs" />
     <Compile Include="Graphics\Drawing\StyleBox.cs" />
     <Compile Include="Graphics\Drawing\DrawingHandle.cs" />
+    <Compile Include="Utility\ThreadUtility.cs" />
     <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorAngle.cs" />
     <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorBoolean.cs" />
     <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorUIBox2.cs" />
@@ -345,4 +349,5 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\MSBuild\SS14.Engine.targets" />
+  <Target Name="AfterBuild" DependsOnTargets="CopySS14Noise" />
 </Project>

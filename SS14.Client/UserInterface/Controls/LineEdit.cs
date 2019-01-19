@@ -18,63 +18,55 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        new private Godot.LineEdit SceneControl;
-
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.LineEdit();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.LineEdit) control;
-        }
-
         public AlignMode TextAlign
         {
-            get => GameController.OnGodot ? (AlignMode) SceneControl.Align : default;
+            get => GameController.OnGodot ? (AlignMode)SceneControl.Get("align") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.Align = (Godot.LineEdit.AlignEnum) value;
+                    SceneControl.Set("align", (Godot.LineEdit.AlignEnum) value);
                 }
             }
         }
 
         public string Text
         {
-            get => GameController.OnGodot ? SceneControl.Text : default;
+            get => GameController.OnGodot ? (string)SceneControl.Get("text") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.Text = value;
+                    SceneControl.Set("text", value);
                 }
             }
         }
 
         public bool Editable
         {
-            get => GameController.OnGodot ? SceneControl.Editable : default;
+            get => GameController.OnGodot ? (bool)SceneControl.Get("editable") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.Editable = value;
+                    SceneControl.Set("editable", value);
                 }
             }
         }
 
         public string PlaceHolder
         {
-            get => GameController.OnGodot ? SceneControl.PlaceholderText : default;
+            get => GameController.OnGodot ? (string)SceneControl.Get("placeholder_text") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.PlaceholderText = value;
+                    SceneControl.Set("placeholder_text", value);
                 }
             }
         }
@@ -83,12 +75,14 @@ namespace SS14.Client.UserInterface.Controls
         // I decided to not implement the entire LineEdit API yet,
         // since most of it won't be used yet (if at all).
         // Feel free to implement wrappers for all the other properties!
+        // Future me reporting, thanks past me.
+        // Second future me reporting, thanks again.
 
         public void AppendAtCursor(string text)
         {
             if (GameController.OnGodot)
             {
-                SceneControl.AppendAtCursor(text);
+                SceneControl.Call("append_at_cursor", text);
             }
         }
 
@@ -96,18 +90,18 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.Clear();
+                SceneControl.Call("clear");
             }
         }
 
         public int CursorPosition
         {
-            get => GameController.OnGodot ? SceneControl.GetCursorPosition() : default;
+            get => GameController.OnGodot ? (int)SceneControl.Get("caret_position") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.SetCursorPosition(value);
+                    SceneControl.Set("caret_position", value);
                 }
             }
         }
@@ -116,7 +110,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.MenuOption((int) option);
+                SceneControl.Call("menu_option", (int)option);
             }
         }
 
@@ -124,7 +118,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.Select(from, to);
+                SceneControl.Call("select", from, to);
             }
         }
 
@@ -132,7 +126,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.SelectAll();
+                SceneControl.Call("select_all");
             }
         }
 

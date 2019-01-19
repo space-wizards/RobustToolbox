@@ -100,7 +100,7 @@ namespace SS14.Shared.Network
             _initialized = false;
 
             // manually register the id on the client so it can bootstrap itself with incoming table entries
-            if (!TryFindStringId(MsgStringTableEntries.NAME, out int msgId))
+            if (!TryFindStringId(MsgStringTableEntries.NAME, out _))
             {
                 _strings.Add(StringTablePacketId, MsgStringTableEntries.NAME);
             }

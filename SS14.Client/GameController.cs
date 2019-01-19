@@ -82,6 +82,7 @@ namespace SS14.Client
 
         private void Startup()
         {
+            ThreadUtility.MainThread = Thread.CurrentThread;
             InitIoC();
             SetupLogging();
 
@@ -189,6 +190,7 @@ namespace SS14.Client
             _logManager.GetSawmill("res.typecheck").Level = LogLevel.Info;
             _logManager.GetSawmill("res.tex").Level = LogLevel.Info;
             _logManager.GetSawmill("console").Level = LogLevel.Info;
+            _logManager.GetSawmill("go.sys").Level = LogLevel.Info;
         }
 
         public static ICollection<string> GetCommandLineArgs()

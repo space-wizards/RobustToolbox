@@ -99,6 +99,11 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private void CloseButtonPressed(BaseButton.ButtonEventArgs args)
         {
+            Close();
+        }
+
+        public virtual void Close()
+        {
             OnClose?.Invoke();
             if (HideOnClose)
             {

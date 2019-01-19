@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using SS14.Client.Interfaces.GameObjects;
-using SS14.Client.Interfaces.Player;
+using SS14.Client.Player;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Console;
 using SS14.Shared.GameObjects;

@@ -9,30 +9,11 @@
         RequestEntRemove,
     }
 
-    public enum MapMessage
-    {
-        TurfUpdate = 0,
-        TurfClick,
-        SendTileMap,
-        SendMapInfo,
-
-        CreateMap,
-        DeleteMap
-    }
-
-    public enum PlayerSessionMessage
-    {
-        AttachToEntity,
-        JoinLobby,
-        AddPostProcessingEffect
-    }
-
     public enum SessionStatus : byte
     {
         Zombie = 0,
         Connecting,
         Connected,
-        InLobby,
         InGame,
         Disconnected
     }
@@ -53,13 +34,5 @@
         d_double,
         d_string,
         d_byteArray
-    }
-
-    public enum PostProcessingEffectType
-    {
-        Blur,
-        Death,
-        Perlin,
-        Acid
     }
 }

@@ -978,6 +978,20 @@ namespace SS14.Client.GameObjects
             LayerSetDirOffset(layer, offset);
         }
 
+        /// <inheritdoc />
+        public RSI.StateId LayerGetState(int layer)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot get state! Trace:\n{1}",
+                    layer, Environment.StackTrace);
+                return null;
+            }
+
+            var thelayer = Layers[layer];
+            return thelayer.State;
+        }
+
         public ISpriteProxy CreateProxy()
         {
             if (GameController.OnGodot)
@@ -1147,9 +1161,9 @@ namespace SS14.Client.GameObjects
                     {
                         BaseRSI = resourceCache.GetResource<RSIResource>(rsiPath).RSI;
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
+                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, e);
                     }
                 }
             }

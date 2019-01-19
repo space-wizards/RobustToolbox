@@ -8,11 +8,16 @@ namespace SS14.Client.Log
     /// </summary>
     class GodotLogHandler : ILogHandler
     {
-        public void Log(LogMessage message)
+        private readonly object locker = new object();
+
+        public void Log(in LogMessage message)
         {
             var name = message.LogLevelToName();
             var msg = $"[{name}] {message.SawmillName}: {message.Message}";
-            Godot.GD.Print(msg);
+            lock (locker)
+            {
+                Godot.GD.Print(msg);
+            }
         }
     }
 }

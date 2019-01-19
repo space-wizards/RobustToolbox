@@ -16,7 +16,6 @@ namespace SS14.Shared.Interfaces.Log
         /// <summary>
         ///     Gets the sawmill with the specified name. Creates a new one if necessary.
         /// </summary>
-        [Pure]
         ISawmill GetSawmill(string name);
     }
 }

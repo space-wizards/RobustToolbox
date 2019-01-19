@@ -21,63 +21,55 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        new private Godot.Range SceneControl;
-
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.Range) control;
-        }
-
         public float GetAsRatio()
         {
-            return GameController.OnGodot ? SceneControl.GetAsRatio() : default;
+            return GameController.OnGodot ? (float)SceneControl.Call("get_as_ratio") : default;
         }
 
         public float Page
         {
-            get => GameController.OnGodot ? SceneControl.Page : default;
+            get => GameController.OnGodot ? (float)SceneControl.Get("page") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.Page = value;
+                    SceneControl.Set("page", value);
                 }
             }
         }
 
         public float MaxValue
         {
-            get => GameController.OnGodot ? SceneControl.MaxValue : default;
+            get => GameController.OnGodot ? (float)SceneControl.Get("max_value") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.MaxValue = value;
+                    SceneControl.Set("max_value", value);
                 }
             }
         }
 
         public float MinValue
         {
-            get => GameController.OnGodot ? SceneControl.MinValue : default;
+            get => GameController.OnGodot ? (float)SceneControl.Get("min_value") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.MinValue = value;
+                    SceneControl.Set("min_value", value);
                 }
             }
         }
 
         public float Value
         {
-            get => GameController.OnGodot ? SceneControl.Value : default;
+            get => GameController.OnGodot ? (float)SceneControl.Get("value") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.Value = value;
+                    SceneControl.Set("value", value);
                 }
             }
         }

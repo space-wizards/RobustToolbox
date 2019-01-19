@@ -149,6 +149,7 @@ namespace SS14.Client.Graphics.Overlays
                 DrawingHandle handle;
                 switch (Space)
                 {
+                    case OverlaySpace.ScreenSpaceBelowWorld:
                     case OverlaySpace.ScreenSpace:
                         handle = new DrawingHandleScreen(item);
                         break;
@@ -184,6 +185,7 @@ namespace SS14.Client.Graphics.Overlays
                 DrawingHandle handle;
                 switch (Space)
                 {
+                    case OverlaySpace.ScreenSpaceBelowWorld:
                     case OverlaySpace.ScreenSpace:
                         handle = new DrawingHandleScreen(MainCanvasItem);
                         break;

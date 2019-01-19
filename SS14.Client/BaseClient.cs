@@ -1,7 +1,6 @@
 ﻿using System;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
-using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Player;
 using SS14.Client.State.States;
@@ -66,10 +65,13 @@ namespace SS14.Client
         /// <inheritdoc />
         public void ConnectToServer(string ip, ushort port)
         {
+            if (RunLevel == ClientRunLevel.Connecting)
+            {
+                _net.Shutdown("Client mashing that connect button.");
+                Reset();
+            }
             DebugTools.Assert(RunLevel < ClientRunLevel.Connecting);
             DebugTools.Assert(!_net.IsConnected);
-
-            _net.Startup();
 
             OnRunLevelChanged(ClientRunLevel.Connecting);
             _net.ClientConnect(ip, port, PlayerNameOverride ?? _configManager.GetCVar<string>("player.name"));
@@ -90,7 +92,6 @@ namespace SS14.Client
         public event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
 
         public event EventHandler<PlayerEventArgs> PlayerJoinedServer;
-        public event EventHandler<PlayerEventArgs> PlayerJoinedLobby;
         public event EventHandler<PlayerEventArgs> PlayerJoinedGame;
         public event EventHandler<PlayerEventArgs> PlayerLeaveServer;
 
@@ -118,25 +119,13 @@ namespace SS14.Client
         }
 
         /// <summary>
-        ///     Player is joining the lobby for whatever reason.
-        /// </summary>
-        /// <param name="session">Session of the player.</param>
-        private void OnPlayerJoinedLobby(PlayerSession session)
-        {
-            DebugTools.Assert(RunLevel >= ClientRunLevel.Connected);
-            OnRunLevelChanged(ClientRunLevel.Lobby);
-
-            PlayerJoinedLobby?.Invoke(this, new PlayerEventArgs(session));
-        }
-
-        /// <summary>
-        ///     Player is joining the game (usually from lobby.)
+        ///     Player is joining the game
         /// </summary>
         /// <param name="session">Session of the player.</param>
         private void OnPlayerJoinedGame(PlayerSession session)
         {
-            DebugTools.Assert(RunLevel >= ClientRunLevel.Lobby);
-            OnRunLevelChanged(ClientRunLevel.Ingame);
+            DebugTools.Assert(RunLevel >= ClientRunLevel.Connected);
+            OnRunLevelChanged(ClientRunLevel.InGame);
 
             PlayerJoinedGame?.Invoke(this, new PlayerEventArgs(session));
         }
@@ -174,12 +163,7 @@ namespace SS14.Client
             var info = GameInfo;
 
             info.ServerName = msg.ServerName;
-            info.ServerPort = msg.ServerPort;
-            info.ServerWelcomeMessage = msg.ServerWelcomeMessage;
             info.ServerMaxPlayers = msg.ServerMaxPlayers;
-            info.ServerMapName = msg.ServerMapName;
-            info.GameMode = msg.GameMode;
-            info.ServerPlayerCount = msg.ServerPlayerCount;
             info.SessionId = msg.PlayerSessionId;
 
             // start up player management
@@ -194,22 +178,15 @@ namespace SS14.Client
         {
             // player finished fully connecting to the server.
             if (eventArgs.OldStatus == SessionStatus.Connecting)
-                OnPlayerJoinedServer(_playMan.LocalPlayer.Session);
-
-            if (eventArgs.NewStatus == SessionStatus.InLobby)
             {
-                _stateManager.RequestStateChange<Lobby>();
-                OnPlayerJoinedLobby(_playMan.LocalPlayer.Session);
+                OnPlayerJoinedServer(_playMan.LocalPlayer.Session);
             }
-            else if (eventArgs.NewStatus == SessionStatus.InGame)
+
+            if (eventArgs.NewStatus == SessionStatus.InGame)
             {
                 _stateManager.RequestStateChange<GameScreen>();
 
                 OnPlayerJoinedGame(_playMan.LocalPlayer.Session);
-
-                // request entire map be sent to us
-                var mapMsg = _net.CreateNetMessage<MsgMapReq>();
-                _net.ClientSendMessage(mapMsg);
             }
         }
 
@@ -231,9 +208,7 @@ namespace SS14.Client
         Initialize,
         Connecting,
         Connected,
-        Lobby,
-        Ingame,
-        ChangeMap
+        InGame,
     }
 
     /// <summary>
@@ -291,34 +266,9 @@ namespace SS14.Client
         public string ServerName { get; set; }
 
         /// <summary>
-        ///     Current port the server is listening on.
-        /// </summary>
-        public int ServerPort { get; set; }
-
-        /// <summary>
-        ///     Current welcome message that is displayed when the client connects.
-        /// </summary>
-        public string ServerWelcomeMessage { get; set; }
-
-        /// <summary>
         ///     Max number of players that are allowed in the server at one time.
         /// </summary>
         public int ServerMaxPlayers { get; set; }
-
-        /// <summary>
-        ///     Name of the current map loaded on the server.
-        /// </summary>
-        public string ServerMapName { get; set; }
-
-        /// <summary>
-        ///     Name of the current game mode loaded on the server.
-        /// </summary>
-        public string GameMode { get; set; }
-
-        /// <summary>
-        ///     Current number of players connected to the server, never greater than ServerMaxPlayers.
-        /// </summary>
-        public int ServerPlayerCount { get; set; }
 
         public NetSessionId SessionId { get; set; }
     }

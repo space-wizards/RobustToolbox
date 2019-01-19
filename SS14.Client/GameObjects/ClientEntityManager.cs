@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Components.BoundingBox;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
@@ -22,7 +21,7 @@ namespace SS14.Client.GameObjects
 
         private int NextClientEntityUid = EntityUid.ClientUid + 1;
 
-        public IEnumerable<IEntity> GetEntitiesInRange(GridLocalCoordinates position, float Range)
+        public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float Range)
         {
             var AABB = new Box2(position.Position - new Vector2(Range / 2, Range / 2), position.Position + new Vector2(Range / 2, Range / 2));
             return GetEntitiesIntersecting(position.MapID, AABB);
@@ -32,7 +31,7 @@ namespace SS14.Client.GameObjects
         {
             foreach (var entity in GetEntities())
             {
-                var transform = entity.GetComponent<ITransformComponent>();
+                var transform = entity.Transform;
                 if (transform.MapID != mapId)
                     continue;
 
@@ -55,7 +54,7 @@ namespace SS14.Client.GameObjects
         {
             foreach (var entity in GetEntities())
             {
-                var transform = entity.GetComponent<ITransformComponent>();
+                var transform = entity.Transform;
                 if (transform.MapID != mapId)
                     continue;
 
@@ -66,7 +65,7 @@ namespace SS14.Client.GameObjects
                 }
                 else
                 {
-                    if (FloatMath.CloseTo(transform.LocalPosition.X, position.X) && FloatMath.CloseTo(transform.LocalPosition.Y, position.Y))
+                    if (FloatMath.CloseTo(transform.GridPosition.X, position.X) && FloatMath.CloseTo(transform.GridPosition.Y, position.Y))
                     {
                         yield return entity;
                     }
@@ -78,7 +77,7 @@ namespace SS14.Client.GameObjects
         {
             foreach (var entity in GetEntities())
             {
-                var transform = entity.GetComponent<ITransformComponent>();
+                var transform = entity.Transform;
                 if (transform.MapID != mapId)
                     continue;
 
@@ -149,7 +148,7 @@ namespace SS14.Client.GameObjects
             }
 
             // After the first set of states comes in we do the startup.
-            if (!EntitiesInitialized && MapsInitialized)
+            if (!EntitiesInitialized)
             {
                 InitializeEntities();
             }
@@ -164,7 +163,6 @@ namespace SS14.Client.GameObjects
         {
             base.Shutdown();
 
-            MapsInitialized = false;
             EntitiesInitialized = false;
         }
 
@@ -183,10 +181,10 @@ namespace SS14.Client.GameObjects
             return ent;
         }
 
-        public override IEntity ForceSpawnEntityAt(string entityType, GridLocalCoordinates coordinates)
+        public override IEntity ForceSpawnEntityAt(string entityType, GridCoordinates coordinates)
         {
             Entity entity = SpawnEntity(entityType);
-            entity.GetComponent<ITransformComponent>().LocalPosition = coordinates;
+            entity.Transform.GridPosition = coordinates;
             if (EntitiesInitialized)
             {
                 InitializeEntity(entity);
@@ -202,7 +200,7 @@ namespace SS14.Client.GameObjects
                 map = _mapManager.DefaultMap;
             }
 
-            return ForceSpawnEntityAt(entityType, new GridLocalCoordinates(position, map.FindGridAt(position)));
+            return ForceSpawnEntityAt(entityType, new GridCoordinates(position, map.FindGridAt(position)));
 
         }
 
@@ -213,7 +211,7 @@ namespace SS14.Client.GameObjects
             return true;
         }
 
-        public override bool TrySpawnEntityAt(string entityType, GridLocalCoordinates coordinates, out IEntity entity)
+        public override bool TrySpawnEntityAt(string entityType, GridCoordinates coordinates, out IEntity entity)
         {
             // TODO: check collisions here?
             entity = ForceSpawnEntityAt(entityType, coordinates);

@@ -77,7 +77,7 @@ namespace SS14.Client.ViewVariables
             {
                 // Type is server-side only.
                 // Info whether it's reference or value type can be figured out from the sent value.
-                if (member.Value is ViewVariablesBlobMembers.ServerValueTypeToken valueToken)
+                if (member.Value is ViewVariablesBlobMembers.ServerValueTypeToken)
                 {
                     // Value type, just display it stringified read-only.
                     editor = new ViewVariablesPropertyEditorDummy();

@@ -33,9 +33,9 @@ namespace SS14.Client.Map
         private void UpdateOnGridModified(object sender, GridChangedEventArgs args)
         {
             var tilemap = RenderTileMaps[args.Grid.Index];
-            foreach ((int x, int y, Tile tile) in args.Modified)
+            foreach (var (index, tile) in args.Modified)
             {
-                tilemap.SetCell(x, -y, tile.TileId);
+                tilemap.SetCell(index.X, -index.Y, tile.TileId);
             }
         }
 

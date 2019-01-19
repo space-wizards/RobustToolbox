@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.Utility;
 
@@ -21,13 +22,6 @@ namespace SS14.Shared.ContentPack
         }
 
         #region File Access
-
-        /// <inheritdoc />
-        public void Append(ResourcePath path, string content)
-        {
-            var fullPath = GetFullPath(path);
-            File.AppendAllText(fullPath, content);
-        }
 
         /// <inheritdoc />
         public void CreateDir(ResourcePath path)
@@ -96,25 +90,11 @@ namespace SS14.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public string Read(ResourcePath path)
-        {
-            var fullPath = GetFullPath(path);
-            return File.ReadAllText(fullPath);
-        }
-
-        /// <inheritdoc />
         public void Rename(ResourcePath oldPath, ResourcePath newPath)
         {
             var fullOldPath = GetFullPath(oldPath);
             var fullNewPath = GetFullPath(newPath);
             File.Move(fullOldPath, fullNewPath);
-        }
-
-        /// <inheritdoc />
-        public void Write(ResourcePath path, string content)
-        {
-            var fullPath = GetFullPath(path);
-            File.WriteAllText(fullPath, content);
         }
 
         #endregion

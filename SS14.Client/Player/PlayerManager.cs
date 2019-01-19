@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using SS14.Client.Interfaces;
-using SS14.Client.Interfaces.Player;
-using SS14.Shared;
 using SS14.Shared.Configuration;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
@@ -15,6 +12,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Players;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.Player
@@ -26,8 +24,6 @@ namespace SS14.Client.Player
     /// </summary>
     public class PlayerManager : IPlayerManager
     {
-        //private readonly List<PostProcessingEffect> _effects = new List<PostProcessingEffect>();
-
         [Dependency]
         private readonly IClientNetManager _network;
 
@@ -43,7 +39,7 @@ namespace SS14.Client.Player
         /// <summary>
         ///     Active sessions of connected clients to the server.
         /// </summary>
-        private Dictionary<NetSessionId, PlayerSession> _sessions;
+        private Dictionary<NetSessionId, IPlayerSession> _sessions;
 
         /// <inheritdoc />
         public int PlayerCount => _sessions.Values.Count;
@@ -55,10 +51,10 @@ namespace SS14.Client.Player
         public LocalPlayer LocalPlayer { get; private set; }
 
         /// <inheritdoc />
-        public IEnumerable<PlayerSession> Sessions => _sessions.Values;
+        public IEnumerable<IPlayerSession> Sessions => _sessions.Values;
 
         /// <inheritdoc />
-        public IReadOnlyDictionary<NetSessionId, PlayerSession> SessionsDict => _sessions;
+        public IReadOnlyDictionary<NetSessionId, IPlayerSession> SessionsDict => _sessions;
 
         /// <inheritdoc />
         public event EventHandler PlayerListUpdated;
@@ -66,15 +62,12 @@ namespace SS14.Client.Player
         /// <inheritdoc />
         public void Initialize()
         {
-            _sessions = new Dictionary<NetSessionId, PlayerSession>();
+            _sessions = new Dictionary<NetSessionId, IPlayerSession>();
 
             _config.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
 
             _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME);
-
             _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, HandlePlayerList);
-
-            _network.RegisterNetMessage<MsgSession>(MsgSession.NAME, HandleSessionMessage);
         }
 
         /// <inheritdoc />
@@ -90,10 +83,7 @@ namespace SS14.Client.Player
         /// <inheritdoc />
         public void Update(float frameTime)
         {
-            //foreach (var e in _effects.ToArray())
-            //{
-            //    e.Update(frameTime);
-            //}
+            // Uh, nothing anymore I guess.
         }
 
         /// <inheritdoc />
@@ -102,17 +92,6 @@ namespace SS14.Client.Player
             LocalPlayer = null;
             _sessions.Clear();
         }
-
-        /*
-        /// <inheritdoc />
-        public void ApplyEffects(RenderImage image)
-        {
-            foreach (var e in _effects)
-            {
-                e.ProcessImage(image);
-            }
-        }
-        */
 
         /// <inheritdoc />
         public void ApplyPlayerStates(IEnumerable<PlayerState> list)
@@ -138,23 +117,6 @@ namespace SS14.Client.Player
         }
 
         /// <summary>
-        ///     Handles an incoming session NetMsg from the server.
-        /// </summary>
-        private void HandleSessionMessage(MsgSession msg)
-        {
-            switch (msg.MsgType)
-            {
-                case PlayerSessionMessage.AttachToEntity:
-                    break;
-                case PlayerSessionMessage.JoinLobby:
-                    break;
-                case PlayerSessionMessage.AddPostProcessingEffect:
-                    //AddEffect(msg.PpType, msg.PpDuration);
-                    break;
-            }
-        }
-
-        /// <summary>
         ///     Compares the server sessionStatus to the client one, and updates if needed.
         /// </summary>
         private void UpdateSessionStatus(SessionStatus myStateStatus)
@@ -169,11 +131,18 @@ namespace SS14.Client.Player
         /// <param name="entity">AttachedEntity in the server session.</param>
         private void UpdateAttachedEntity(EntityUid? entity)
         {
-            if (entity != null &&
-                (LocalPlayer.ControlledEntity == null ||
-                 LocalPlayer.ControlledEntity != null && entity != LocalPlayer.ControlledEntity.Uid))
-                LocalPlayer.AttachEntity(
-                    _entityManager.GetEntity(entity.Value));
+            if (LocalPlayer.ControlledEntity?.Uid == entity)
+            {
+                return;
+            }
+
+            if (entity == null)
+            {
+                LocalPlayer.DetachEntity();
+                return;
+            }
+
+            LocalPlayer.AttachEntity(_entityManager.GetEntity(entity.Value));
         }
 
         /// <summary>
@@ -230,44 +199,18 @@ namespace SS14.Client.Player
             foreach (var existing in hitSet)
             {
                 // clear slot, player left
-                if (!_sessions.TryGetValue(existing, out var local))
+                if (!_sessions.ContainsKey(existing))
                 {
                     DebugTools.Assert(LocalPlayer.SessionId != existing, "I'm still connected to the server, but i left?");
                     _sessions.Remove(existing);
                     dirty = true;
                 }
             }
-            
+
             if (dirty)
             {
                 PlayerListUpdated?.Invoke(this, EventArgs.Empty);
             }
         }
-        /*
-        private void AddEffect(PostProcessingEffectType type, float duration)
-        {
-            PostProcessingEffect e;
-            switch (type)
-            {
-                case PostProcessingEffectType.Blur:
-                    e = new BlurPostProcessingEffect(duration);
-                    e.OnExpired += EffectExpired;
-                    _effects.Add(e);
-                    break;
-                case PostProcessingEffectType.Death:
-                    e = new DeathPostProcessingEffect(duration);
-                    e.OnExpired += EffectExpired;
-                    _effects.Add(e);
-                    break;
-            }
-        }
-
-        private void EffectExpired(PostProcessingEffect effect)
-        {
-            effect.OnExpired -= EffectExpired;
-            if (_effects.Contains(effect))
-                _effects.Remove(effect);
-        }
-        */
     }
 }

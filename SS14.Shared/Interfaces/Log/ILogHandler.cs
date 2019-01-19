@@ -7,6 +7,14 @@ namespace SS14.Shared.Interfaces.Log
     /// </summary>
     public interface ILogHandler
     {
-        void Log(LogMessage message);
+        /// <summary>
+        ///     Logs a message to.. somewhere.
+        ///     You choose that somewhere.
+        /// </summary>
+        /// <remarks>
+        ///     This method can be called from multiple threads so make sure it's thread safe!
+        /// </remarks>
+        /// <param name="message">The message to log.</param>
+        void Log(in LogMessage message);
     }
 }

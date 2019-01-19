@@ -24,23 +24,14 @@ namespace SS14.Client.UserInterface.Controls
             return new Godot.RichTextLabel();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-
-            SceneControl = (Godot.RichTextLabel) control;
-        }
-
-        new private Godot.RichTextLabel SceneControl;
-
         public bool BBCodeEnabled
         {
-            get => GameController.OnGodot ? SceneControl.BbcodeEnabled : default;
+            get => GameController.OnGodot ? (bool)SceneControl.Get("bbcode_enabled") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.BbcodeEnabled = value;
+                    SceneControl.Set("bbcode_enabled", value);
                 }
             }
         }
@@ -49,15 +40,19 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.Clear();
+                SceneControl.Call("clear");
             }
         }
 
-        public void AppendBBCode(string code)
+        public Godot.Error AppendBBCode(string code)
         {
             if (GameController.OnGodot)
             {
-                SceneControl.AppendBbcode(code);
+                return (Godot.Error)SceneControl.Call("append_bbcode", code);
+            }
+            else
+            {
+                return default;
             }
         }
 
@@ -65,7 +60,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.PushColor(color.Convert());
+                SceneControl.Call("push_color", color.Convert());
             }
         }
 
@@ -73,7 +68,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.AddText(text);
+                SceneControl.Call("add_text", text);
             }
         }
 
@@ -81,7 +76,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.Pop();
+                SceneControl.Call("pop");
             }
         }
 
@@ -89,18 +84,18 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.Newline();
+                SceneControl.Call("newline");
             }
         }
 
         public bool ScrollFollowing
         {
-            get => GameController.OnGodot ? SceneControl.IsScrollFollowing() : default;
+            get => GameController.OnGodot ? (bool)SceneControl.Call("is_scroll_following") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.SetScrollFollow(value);
+                    SceneControl.Call("set_scroll_following", value);
                 }
             }
         }

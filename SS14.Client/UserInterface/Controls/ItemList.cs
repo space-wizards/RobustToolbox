@@ -8,12 +8,7 @@ namespace SS14.Client.UserInterface.Controls
     [ControlWrap(typeof(Godot.ItemList))]
     public class ItemList : Control
     {
-        new Godot.ItemList SceneControl;
-        public int ItemCount => GameController.OnGodot ? SceneControl.GetItemCount() : default;
-
-        public ItemList() : base()
-        {
-        }
+        public int ItemCount => GameController.OnGodot ? (int)SceneControl.Call("get_item_count") : default;
 
         public ItemList(string name) : base(name)
         {
@@ -28,17 +23,11 @@ namespace SS14.Client.UserInterface.Controls
             return new Godot.ItemList();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.ItemList) control;
-        }
-
         public void AddItem(string text, Texture icon = null, bool selectable = true)
         {
             if (GameController.OnGodot)
             {
-                SceneControl.AddItem(text, icon, selectable);
+                SceneControl.Call("add_item", text, icon, selectable);
             }
         }
 
@@ -46,7 +35,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.AddIconItem(icon, selectable);
+                SceneControl.Call("add_icon_item", icon, selectable);
             }
         }
 
@@ -54,7 +43,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.Clear();
+                SceneControl.Call("clear");
             }
         }
 
@@ -62,26 +51,25 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.EnsureCurrentIsVisible();
+                SceneControl.Call("ensure_current_is_visible");
             }
         }
 
         public int GetItemAtPosition(Vector2 position, bool exact = false)
         {
-            return GameController.OnGodot ? SceneControl.GetItemAtPosition(position.Convert(), exact) : default;
-
+            return GameController.OnGodot ? (int)SceneControl.Call("get_item_at_position", position.Convert(), exact) : default;
         }
 
         public bool IsSelected(int idx)
         {
-            return GameController.OnGodot ? SceneControl.IsSelected(idx): default;
+            return GameController.OnGodot ? (bool)SceneControl.Call("is_selected", idx) : default;
         }
 
         public void RemoveItem(int idx)
         {
             if (GameController.OnGodot)
             {
-                SceneControl.RemoveItem(idx);
+                SceneControl.Call("remove_item", idx);
             }
         }
 
@@ -89,7 +77,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.Select(idx, single);
+                SceneControl.Call("select", idx, single);
             }
         }
 
@@ -97,7 +85,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.SetItemCustomBgColor(idx, color.Convert());
+                SceneControl.Call("set_icon_custom_bg_color", idx, color.Convert());
             }
         }
 
@@ -105,7 +93,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.SetItemDisabled(idx, disabled);
+                SceneControl.Call("set_item_disabled", idx, disabled);
             }
         }
 
@@ -113,7 +101,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.SetItemIcon(idx, icon);
+                SceneControl.Call("set_item_icon", idx, icon);
             }
         }
 
@@ -121,7 +109,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.SetItemIconRegion(idx, region.Convert());
+                SceneControl.Call("set_item_icon_region", idx, region.Convert());
             }
         }
 
@@ -129,7 +117,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.SetItemSelectable(idx, selectable);
+                SceneControl.Call("set_item_selectable", idx, selectable);
             }
         }
 
@@ -137,7 +125,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.SetItemText(idx, text);
+                SceneControl.Call("set_item_text", idx, text);
             }
         }
 
@@ -145,7 +133,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.SetItemTooltip(idx, tooltip);
+                SceneControl.Call("set_item_tooltip", idx, tooltip);
             }
         }
 
@@ -153,7 +141,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.SetItemTooltipEnabled(idx, enabled);
+                SceneControl.Call("set_item_tooltip_enabled", idx, enabled);
             }
         }
 
@@ -161,7 +149,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.SortItemsByText();
+                SceneControl.Call("sort_items_by_text");
             }
         }
 
@@ -169,7 +157,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                SceneControl.Unselect(idx);
+                SceneControl.Call("unselect", idx);
             }
         }
     }

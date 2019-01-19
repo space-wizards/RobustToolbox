@@ -25,36 +25,36 @@ namespace SS14.Client.UserInterface.Controls
 
         public string Text
         {
-            get => GameController.OnGodot ? SceneControl.Text : default;
+            get => GameController.OnGodot ? (string)SceneControl.Get("text") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.Text = value;
+                    SceneControl.Set("text", value);
                 }
             }
         }
 
         public bool AutoWrap
         {
-            get => GameController.OnGodot ? SceneControl.Autowrap : default;
+            get => GameController.OnGodot ? (bool)SceneControl.Get("autowrap") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.Autowrap = value;
+                    SceneControl.Set("autowrap", value);
                 }
             }
         }
 
         public AlignMode Align
         {
-            get => GameController.OnGodot ? (AlignMode) SceneControl.Align : default;
+            get => GameController.OnGodot ? (AlignMode) SceneControl.Get("align") : default;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.Align = (Godot.Label.AlignEnum) value;
+                    SceneControl.Set("align", (Godot.Label.AlignEnum) value);
                 }
             }
         }
@@ -99,17 +99,9 @@ namespace SS14.Client.UserInterface.Controls
             set => SetConstantOverride("shadow_offset_y", _shadowOffsetYOverride = value);
         }
 
-        new private Godot.Label SceneControl;
-
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.Label();
-        }
-
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.Label) control;
         }
 
         public enum AlignMode

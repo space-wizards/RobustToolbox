@@ -8,7 +8,7 @@
     <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <AssemblyKeyContainerName />
     <AssemblyName>SS14.Shared</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
     <AppDesignerFolder />
     <RootNamespace>SS14.Shared</RootNamespace>
@@ -126,11 +126,11 @@
     <Compile Include="GameObjects\Components\UserInterface\SharedUserInterfaceComponent.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\AudioMessages.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\EffectMessage.cs" />
-    <Compile Include="GameObjects\EntitySystemMessages\ClickedOnEntityMessage.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\EntParentChangedMessage.cs" />
     <Compile Include="GameObjects\EntityUid.cs" />
     <Compile Include="GameObjects\IncomingEntityMessage.cs" />
     <Compile Include="GameObjects\NetComponent.cs" />
+    <Compile Include="GameStates\GameStateMapData.cs" />
     <Compile Include="Input\InputCmdContext.cs" />
     <Compile Include="Input\CommandBindMapping.cs" />
     <Compile Include="Input\InputCmdMessage.cs" />
@@ -162,8 +162,7 @@
     <Compile Include="Interfaces\Network\INetManager.cs" />
     <Compile Include="Interfaces\Network\IServerNetManager.cs" />
     <Compile Include="Interfaces\Physics\ICollidable.cs" />
-    <Compile Include="Interfaces\Physics\ICollider.cs" />
-    <Compile Include="Interfaces\Physics\ICollisionManager.cs" />
+    <Compile Include="Interfaces\Physics\IPhysicsManager.cs" />
     <Compile Include="Interfaces\Reflection\IReflectionManager.cs" />
     <Compile Include="Interfaces\Resources\IResourceManager.cs" />
     <Compile Include="Interfaces\Resources\IWritableDirProvider.cs" />
@@ -177,8 +176,10 @@
     <Compile Include="Interfaces\Timing\IGameTiming.cs" />
     <Compile Include="GameStates\GameState.cs" />
     <Compile Include="GameStates\PlayerState.cs" />
+    <Compile Include="IoC\DependencyCollection.cs" />
     <Compile Include="IoC\Exceptions\ImplementationConstructorException.cs" />
     <Compile Include="Enums\Lighting.cs" />
+    <Compile Include="IoC\IDependencyCollection.cs" />
     <Compile Include="Log\ConsoleLogHandler.cs" />
     <Compile Include="Log\FileLogHandler.cs" />
     <Compile Include="Log\LogLevel.cs" />
@@ -211,24 +212,20 @@
     <Compile Include="Network\Messages\MsgConCmdAck.cs" />
     <Compile Include="Network\Messages\MsgConCmdReg.cs" />
     <Compile Include="Network\Messages\MsgEntity.cs" />
-    <Compile Include="Network\Messages\MsgMap.cs" />
-    <Compile Include="Network\Messages\MsgMapReq.cs" />
     <Compile Include="Network\Messages\MsgPlacement.cs" />
     <Compile Include="Network\Messages\MsgPlayerList.cs" />
     <Compile Include="Network\Messages\MsgPlayerListReq.cs" />
     <Compile Include="Network\Messages\MsgServerInfo.cs" />
     <Compile Include="Network\Messages\MsgServerInfoReq.cs" />
-    <Compile Include="Network\Messages\MsgSession.cs" />
     <Compile Include="Network\Messages\MsgStateAck.cs" />
     <Compile Include="Network\NetChannel.cs" />
     <Compile Include="Network\NetMessage.cs" />
     <Compile Include="Network\NetManager.cs" />
+    <Compile Include="Network\NetMessageExt.cs" />
     <Compile Include="Network\NetSessionId.cs" />
     <Compile Include="Network\StringTable.cs" />
-    <Compile Include="Physics\CollidableAABB.cs" />
-    <Compile Include="Physics\CollidableBucket.cs" />
-    <Compile Include="Physics\CollidablePoint.cs" />
-    <Compile Include="Physics\CollisionManager.cs" />
+    <Compile Include="Noise\NoiseGenerator.cs" />
+    <Compile Include="Physics\PhysicsManager.cs" />
     <Compile Include="Enums\PlacementInformation.cs" />
     <Compile Include="Input\InputCmdHandler.cs" />
     <Compile Include="Input\KeyFunctions.cs" />
@@ -258,7 +255,6 @@
     <Compile Include="Utility\CommandParsing.cs" />
     <Compile Include="Utility\NetParamsPacker.cs" />
     <Compile Include="Utility\PlatformDetector.cs" />
-    <Compile Include="Utility\PlatformTools.cs" />
     <Compile Include="Utility\RandomString.cs" />
     <Compile Include="Utility\Range.cs" />
     <Compile Include="Utility\TypeHelpers.cs" />
@@ -289,7 +285,6 @@
     <Compile Include="GameObjects\Components\Physics\PhysicsComponentState.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\EntitySystemMessage.cs" />
     <Compile Include="GameObjects\ComponentEnums.cs" />
-    <Compile Include="GameObjects\ComponentReplyMessage.cs" />
     <Compile Include="GameObjects\ComponentState.cs" />
     <Compile Include="GameObjects\EntityState.cs" />
     <Compile Include="Prototypes\IPrototype.cs" />
@@ -385,5 +380,10 @@
     <Compile Include="Utility\SpriteSpecifier.cs" />
     <Compile Include="GameObjects\Components\Transform\SnapGridComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponentDebug.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="SS14.Shared.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

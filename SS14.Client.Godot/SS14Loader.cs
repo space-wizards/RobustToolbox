@@ -44,7 +44,7 @@ namespace SS14.Client.GodotGlue
             Assembly.LoadFile(System.IO.Path.Combine(path, "../bin/Client/ICSharpCode.SharpZipLib.dll"));
 
             Started = true;
-            SS14Assembly = Assembly.LoadFrom("../bin/Client/SS14.Client.dll");
+            SS14Assembly = Assembly.LoadFrom("../bin/Client/SS14.Client.exe");
             var entryType = typeof(ClientEntryPoint);
             foreach (var type in SS14Assembly.GetTypes())
             {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using SS14.Client.Interfaces;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Timing;
@@ -17,6 +18,9 @@ namespace SS14.Client
 #if !X64
             throw new InvalidOperationException("The client cannot start outside x64.");
 #endif
+
+            IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
+            IoCManager.BuildGraph();
 
             var gc = new GameController();
             gc.Startup();

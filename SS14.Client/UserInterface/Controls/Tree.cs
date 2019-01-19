@@ -82,7 +82,10 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             ItemMap.Clear();
-            SceneControl.Call("clear");
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("clear");
+            }
 
             foreach (var item in _itemList)
             {

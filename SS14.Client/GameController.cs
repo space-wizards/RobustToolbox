@@ -46,7 +46,7 @@ namespace SS14.Client
     [UsedImplicitly]
     public sealed partial class GameController : IGameController
     {
-        internal static bool OnGodot { get; set; }
+        internal static bool OnGodot { get; private set; }
 
         /// <summary>
         ///     QueueFreeing a Godot node during finalization can cause segfaults.

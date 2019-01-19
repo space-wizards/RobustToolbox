@@ -13,7 +13,7 @@ namespace SS14.Client
 {
     public partial class GameController : ClientEntryPoint
     {
-        [Dependency] private readonly GameTimingGodot _gameTimingGodotGodot;
+        private GameTimingGodot _gameTimingGodotGodot;
 
         public override void Main(Godot.SceneTree tree)
         {
@@ -32,6 +32,8 @@ namespace SS14.Client
 #endif
 
             Startup();
+
+            _gameTimingGodotGodot = IoCManager.Resolve<GameTimingGodot>();
         }
 
         public override void QuitRequest()

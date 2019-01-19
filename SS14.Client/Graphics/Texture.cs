@@ -26,6 +26,10 @@ namespace SS14.Client.Graphics
 
         public static Texture LoadFromImage<T>(Image<T> image) where T : struct, IPixel<T>
         {
+            if (!GameController.OnGodot)
+            {
+                return new BlankTexture();
+            }
             var stream = new MemoryStream();
 
             try
@@ -52,6 +56,11 @@ namespace SS14.Client.Graphics
 
         public static Texture LoadFromPNGStream(Stream stream)
         {
+            if (!GameController.OnGodot)
+            {
+                return new BlankTexture();
+            }
+
             using (var memoryStream = new MemoryStream())
             {
                 stream.CopyTo(memoryStream);

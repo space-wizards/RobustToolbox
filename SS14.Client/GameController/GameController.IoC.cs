@@ -57,6 +57,7 @@ using SS14.Client.Graphics.Overlays;
 using SS14.Client.ViewVariables;
 using SS14.Shared.Asynchronous;
 using SS14.Shared.Interfaces.Resources;
+using SS14.Shared.Map;
 
 namespace SS14.Client
 {
@@ -90,13 +91,15 @@ namespace SS14.Client
             if (OnGodot)
             {
                 IoCManager.Register<IComponentFactory, GodotComponentFactory>();
+                IoCManager.Register<IMapManager, GodotMapManager>();
             }
             else
             {
                 IoCManager.Register<IComponentFactory, ClientComponentFactory>();
+                IoCManager.Register<IMapManager, MapManager>();
+
             }
             IoCManager.Register<IComponentManager, ComponentManager>();
-            IoCManager.Register<IMapManager, ClientMapManager>();
             IoCManager.Register<IPhysicsManager, PhysicsManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
             IoCManager.Register<ITaskManager, TaskManager>();

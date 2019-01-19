@@ -10,6 +10,10 @@ namespace SS14.Client.UserInterface.Controls
     {
         public int ItemCount => GameController.OnGodot ? (int)SceneControl.Call("get_item_count") : default;
 
+        public ItemList()
+        {
+        }
+
         public ItemList(string name) : base(name)
         {
         }

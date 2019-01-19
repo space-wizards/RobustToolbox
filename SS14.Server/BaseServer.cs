@@ -339,7 +339,8 @@ namespace SS14.Server
 
             // Wrtie down exception log
             var logPath = _config.GetCVar<string>("log.path");
-            System.IO.File.WriteAllText($"{PathHelpers.ExecutableRelativeFile(logPath)}/Runtime-{DateTime.Now.ToShortDateString()}", runtimeLog.Display());
+            var pathToWrite = System.IO.Path.Combine(PathHelpers.ExecutableRelativeFile(logPath), "/Runtime-", DateTime.Now.ToShortDateString());
+            System.IO.File.WriteAllText(pathToWrite, runtimeLog.Display());
 
             //TODO: This should prob shutdown all managers in a loop.
 

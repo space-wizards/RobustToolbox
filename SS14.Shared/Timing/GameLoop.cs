@@ -68,32 +68,32 @@ namespace SS14.Shared.Timing
 
             while (Running)
             {
-                try
+
+                var accumulator = _timing.RealTime - _lastTick;
+
+                // If the game can't keep up, limit time.
+                if (accumulator > maxTime)
                 {
-                    var accumulator = _timing.RealTime - _lastTick;
+                    // limit accumulator to max time.
+                    accumulator = maxTime;
 
-                    // If the game can't keep up, limit time.
-                    if (accumulator > maxTime)
+                    // pull lastTick up to the current realTime
+                    // This will slow down the simulation, but if we are behind from a
+                    // lag spike hopefully it will be able to catch up.
+                    _lastTick = _timing.RealTime - maxTime;
+
+                    // announce we are falling behind
+                    if ((_timing.RealTime - _lastKeepUp).TotalSeconds >= 15.0)
                     {
-                        // limit accumulator to max time.
-                        accumulator = maxTime;
-
-                        // pull lastTick up to the current realTime
-                        // This will slow down the simulation, but if we are behind from a
-                        // lag spike hopefully it will be able to catch up.
-                        _lastTick = _timing.RealTime - maxTime;
-
-                        // announce we are falling behind
-                        if ((_timing.RealTime - _lastKeepUp).TotalSeconds >= 15.0)
-                        {
-                            Logger.Warning("[ENG] MainLoop: Cannot keep up!");
-                            _lastKeepUp = _timing.RealTime;
-                        }
+                        Logger.Warning("[ENG] MainLoop: Cannot keep up!");
+                        _lastKeepUp = _timing.RealTime;
                     }
-                    _timing.StartFrame();
+                }
+                _timing.StartFrame();
 
-                    realFrameEvent.SetDeltaSeconds((float)_timing.RealFrameTime.TotalSeconds);
+                realFrameEvent.SetDeltaSeconds((float)_timing.RealFrameTime.TotalSeconds);
 
+                try {
                     // process Net/KB/Mouse input
                     Input?.Invoke(this, realFrameEvent);
 

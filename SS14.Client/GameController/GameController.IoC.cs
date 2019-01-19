@@ -57,6 +57,7 @@ using SS14.Client.Graphics.Overlays;
 using SS14.Client.ViewVariables;
 using SS14.Shared.Asynchronous;
 using SS14.Shared.Interfaces.Resources;
+using SS14.Shared.Exceptions;
 
 namespace SS14.Client
 {
@@ -100,6 +101,7 @@ namespace SS14.Client
             IoCManager.Register<IPhysicsManager, PhysicsManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
             IoCManager.Register<ITaskManager, TaskManager>();
+            IoCManager.Register<IRuntimeLog, RuntimeLog>();
 
             // Client stuff.
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();

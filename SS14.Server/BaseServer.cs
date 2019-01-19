@@ -83,6 +83,7 @@ namespace SS14.Server
         private GameLoop _mainLoop;
         private ServerRunLevel _runLevel;
 
+        [Dependency]
         private IRuntimeLog runtimeLog;
 
         private TimeSpan _lastTitleUpdate;
@@ -139,8 +140,6 @@ namespace SS14.Server
         /// <inheritdoc />
         public bool Start()
         {
-            // Exception log
-            runtimeLog = IoCManager.Resolve<IRuntimeLog>();
 
             //Sets up the configMgr
             _config.LoadFromFile(_commandLine.ConfigFile);

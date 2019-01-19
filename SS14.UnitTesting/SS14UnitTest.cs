@@ -67,6 +67,7 @@ using SS14.Shared.Prototypes;
 using SS14.Shared.Serialization;
 using SS14.Shared.Timers;
 using SS14.Shared.Timing;
+using SS14.Shared.Exceptions;
 using SS14.UnitTesting.Client;
 using IPlayerManager = SS14.Client.Player.IPlayerManager;
 
@@ -178,6 +179,7 @@ namespace SS14.UnitTesting
             IoCManager.Register<ITimerManager, TimerManager>();
             IoCManager.Register<ILogManager, LogManager>();
             IoCManager.Register<ITaskManager, TaskManager>();
+            IoCManager.Register<IRuntimeLog, RuntimeLog>();
 
             switch (Project)
             {

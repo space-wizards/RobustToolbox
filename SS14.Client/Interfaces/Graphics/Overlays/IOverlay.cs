@@ -9,7 +9,6 @@ namespace SS14.Client.Interfaces.Graphics.Overlays
         OverlaySpace Space { get; }
 
         void FrameUpdate(RenderFrameEventArgs args);
-
         void AssignCanvasItem(Godot.RID canvasItem);
     }
 

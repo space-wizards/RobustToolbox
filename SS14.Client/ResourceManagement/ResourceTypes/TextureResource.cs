@@ -14,6 +14,12 @@ namespace SS14.Client.ResourceManagement
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
+            if (!GameController.OnGodot)
+            {
+                Texture = new BlankTexture();
+                return;
+            }
+
             if (!cache.ContentFileExists(path))
             {
                 throw new FileNotFoundException("Content file does not exist for texture");
@@ -33,7 +39,7 @@ namespace SS14.Client.ResourceManagement
             }
 
             // Disable filter by default because pixel art.
-            godotTexture.SetFlags(godotTexture.GetFlags() & ~(int)Godot.Texture.FlagsEnum.Filter);
+            godotTexture.SetFlags(godotTexture.GetFlags() & ~(int) Godot.Texture.FlagsEnum.Filter);
             Texture = new GodotTextureSource(godotTexture);
             // Primarily for tracking down iCCP sRGB errors in the image files.
             Logger.DebugS("res.tex", $"Loaded texture {path}.");
@@ -46,8 +52,10 @@ namespace SS14.Client.ResourceManagement
 
         public override void Dispose()
         {
-            godotTexture.Dispose();
-            godotTexture = null;
+            if (GameController.OnGodot)
+            {
+                godotTexture.Dispose();
+            }
         }
     }
 }

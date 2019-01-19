@@ -190,7 +190,10 @@ namespace SS14.Client.Interfaces.GameObjects.Components
     {
         public static void AttachToControl(this ISpriteProxy mirror, Control control)
         {
-            mirror.AttachToItem(control.SceneControl.GetCanvasItem());
+            if (GameController.OnGodot)
+            {
+                mirror.AttachToItem(control.SceneControl.GetCanvasItem());
+            }
         }
     }
 }

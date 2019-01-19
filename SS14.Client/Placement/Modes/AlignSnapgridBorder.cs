@@ -20,7 +20,7 @@ namespace SS14.Client.Placement.Modes
 
         public override void Render()
         {
-            if (onGrid)
+            if (GameController.OnGodot && onGrid)
             {
                 const int ppm = EyeManager.PIXELSPERMETER;
                 var viewportSize = pManager.sceneTree.SceneTree.Root.Size.Convert();

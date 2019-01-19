@@ -1,3 +1,5 @@
+using System;
+
 namespace SS14.Client.UserInterface.Controls
 {
     [ControlWrap(typeof(Godot.ProgressBar))]
@@ -20,8 +22,11 @@ namespace SS14.Client.UserInterface.Controls
         /// </summary>
         public bool PercentVisible
         {
-            get => (bool)SceneControl.Get("percent_visible");
-            set => SceneControl.Set("percent_visible", value);
+            get => GameController.OnGodot ? (bool)SceneControl.Get("percent_visible") : default;
+            set
+            {
+                if (GameController.OnGodot) SceneControl.Set("percent_visible", value);
+            }
         }
 
         private protected override Godot.Control SpawnSceneControl()

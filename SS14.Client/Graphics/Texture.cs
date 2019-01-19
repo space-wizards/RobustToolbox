@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
@@ -13,8 +14,9 @@ namespace SS14.Client.Graphics
     {
         internal abstract Godot.Texture GodotTexture { get; }
 
-        public int Width => GodotTexture.GetWidth();
-        public int Height => GodotTexture.GetHeight();
+        public int Width => GameController.OnGodot ? GodotTexture.GetWidth() : default;
+        public int Height => GameController.OnGodot ? GodotTexture.GetHeight() : default;
+
         public Vector2i Size => new Vector2i(Width, Height);
 
         public static implicit operator Godot.Texture(Texture src)
@@ -24,6 +26,10 @@ namespace SS14.Client.Graphics
 
         public static Texture LoadFromImage<T>(Image<T> image) where T : struct, IPixel<T>
         {
+            if (!GameController.OnGodot)
+            {
+                return new BlankTexture();
+            }
             var stream = new MemoryStream();
 
             try
@@ -50,6 +56,11 @@ namespace SS14.Client.Graphics
 
         public static Texture LoadFromPNGStream(Stream stream)
         {
+            if (!GameController.OnGodot)
+            {
+                return new BlankTexture();
+            }
+
             using (var memoryStream = new MemoryStream())
             {
                 stream.CopyTo(memoryStream);
@@ -74,6 +85,14 @@ namespace SS14.Client.Graphics
         {
             return this;
         }
+    }
+
+    /// <summary>
+    ///     Blank dummy texture.
+    /// </summary>
+    public class BlankTexture : Texture
+    {
+        internal override Godot.Texture GodotTexture => null;
     }
 
     /// <summary>

@@ -30,17 +30,26 @@ namespace SS14.Client.UserInterface.Controls
 
         public void Open(UIBox2? box = null)
         {
-            SceneControl.Call("popup", box?.Convert());
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("popup", box?.Convert());
+            }
         }
 
         public void OpenCentered()
         {
-            SceneControl.Call("popup_centered");
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("popup_centered");
+            }
         }
 
         public void OpenMinimum()
         {
-            SceneControl.Call("popup_centered_minsize");
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("popup_centered_minsize");
+            }
         }
 
         private GodotSignalSubscriber0 __popupHideSubscriber;

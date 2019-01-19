@@ -60,6 +60,10 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// <param name="stream">The audio stream to play.</param>
         public void Play(AudioStream stream, AudioParams? audioParams = null)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             var player = new Godot.AudioStreamPlayer()
             {
                 Stream = stream.GodotAudioStream,
@@ -94,6 +98,10 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// <param name="entity">The entity "emitting" the audio.</param>
         public void Play(AudioStream stream, IEntity entity, AudioParams? audioParams = null)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             var parent = entity.GetComponent<IGodotTransformComponent>().SceneNode;
             var player = new Godot.AudioStreamPlayer2D()
             {
@@ -130,6 +138,10 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         public void Play(AudioStream stream, GridCoordinates coordinates, AudioParams? audioParams = null)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             var player = new Godot.AudioStreamPlayer2D()
             {
                 Stream = stream.GodotAudioStream,

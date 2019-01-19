@@ -11,59 +11,84 @@ namespace SS14.Client.UserInterface.Controls
 
         public int Selected
         {
-            get => (int)SceneControl.Get("selected");
-            set => SceneControl.Set("selected", value);
+            get => GameController.OnGodot ? (int)SceneControl.Get("selected") : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Set("selected", value);
+                }
+            }
         }
 
         public void AddItem(Texture icon, string label, int id = 1)
         {
-            SceneControl.Call("add_icon_item", icon.GodotTexture, label, id);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("add_icon_item", icon.GodotTexture, label, id);
+            }
         }
 
         public void AddItem(string label, int id = 1)
         {
-            SceneControl.Call("add_item", label, id);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("add_item", label, id);
+            }
         }
 
         public void AddSeparator()
         {
-            SceneControl.Call("add_separator");
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("add_separator");
+            }
         }
 
         public void Clear()
         {
-            SceneControl.Call("clear");
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("clear");
+            }
         }
 
-        public int ItemCount => (int)SceneControl.Call("get_item_count");
+        public int ItemCount => GameController.OnGodot ? (int)SceneControl.Call("get_item_count") : default;
 
         public int GetItemId(int idx)
         {
-            return (int)SceneControl.Call("get_item_id", idx);
+            return GameController.OnGodot ? (int)SceneControl.Call("get_item_id", idx) : throw new NotImplementedException();
         }
 
         public object GetItemMetadata(int idx)
         {
-            return SceneControl.Call("get_item_metadata", idx);
+            return GameController.OnGodot ? SceneControl.Call("get_item_metadata", idx) : throw new NotImplementedException();
         }
 
-        public int SelectedId => (int)SceneControl.Call("get_selected_id");
+        public int SelectedId => GameController.OnGodot ? (int)SceneControl.Call("get_selected_id") : default;
 
-        public object SelectedMetadata => SceneControl.GetSceneInstanceLoadPlaceholder();
+        public object SelectedMetadata =>
+            GameController.OnGodot ? SceneControl.GetSceneInstanceLoadPlaceholder() : default;
 
         public bool IsItemDisabled(int idx)
         {
-            return (bool)SceneControl.Call("is_item_disabled", idx);
+            return GameController.OnGodot ? (bool)SceneControl.Call("is_item_disabled", idx) : default;
         }
 
         public void RemoveItem(int idx)
         {
-            SceneControl.Call("remove_item", idx);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("remove_item", idx);
+            }
         }
 
         public void Select(int idx)
         {
-            SceneControl.Call("select", idx);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("select", idx);
+            }
         }
 
         public void SelectId(int id)
@@ -86,35 +111,52 @@ namespace SS14.Client.UserInterface.Controls
 
         public void SetItemDisabled(int idx, bool disabled)
         {
-            SceneControl.Call("set_item_disabled", idx, disabled);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("set_item_disabled", idx, disabled);
+            }
         }
 
         public void SetItemIcon(int idx, Texture texture)
         {
-            SceneControl.Call("set_item_icon", idx, texture);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("set_item_icon", idx, texture);
+            }
         }
 
         public void SetItemId(int idx, int id)
         {
-            SceneControl.Call("set_item_id", idx, id);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("set_item_id", idx, id);
+            }
         }
 
         public void SetItemMetadata(int idx, object metadata)
         {
-            SceneControl.Call("set_item_metadata", idx, metadata);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("set_item_metadata", idx, metadata);
+            }
         }
 
         public void SetItemText(int idx, string text)
         {
-            SceneControl.Call("set_item_text", idx, text);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("set_item_text", idx, text);
+            }
         }
 
         public OptionButton() : base()
         {
         }
+
         public OptionButton(string name) : base(name)
         {
         }
+
         internal OptionButton(Godot.OptionButton button) : base(button)
         {
         }
@@ -165,7 +207,7 @@ namespace SS14.Client.UserInterface.Controls
 
         private void __itemSelectedHook(object id)
         {
-            OnItemSelected?.Invoke(new ItemSelectedEventArgs((int)id, this));
+            OnItemSelected?.Invoke(new ItemSelectedEventArgs((int) id, this));
         }
     }
 }

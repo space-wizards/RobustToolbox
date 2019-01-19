@@ -1,4 +1,6 @@
-﻿namespace SS14.Client.UserInterface.Controls
+﻿using System;
+
+namespace SS14.Client.UserInterface.Controls
 {
     [ControlWrap(typeof(Godot.WindowDialog))]
     public class WindowDialog : Popup
@@ -6,9 +8,11 @@
         public WindowDialog() : base()
         {
         }
+
         public WindowDialog(string name) : base(name)
         {
         }
+
         internal WindowDialog(Godot.WindowDialog control) : base(control)
         {
         }
@@ -20,14 +24,26 @@
 
         public string Title
         {
-            get => (string)SceneControl.Get("window_title");
-            set => SceneControl.Set("window_title", value);
+            get => GameController.OnGodot ? (string)SceneControl.Get("window_title") : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Set("window_title", value);
+                }
+            }
         }
 
         public bool Resizable
         {
-            get => (bool)SceneControl.Get("resizable");
-            set => SceneControl.Set("resizable", value);
+            get => GameController.OnGodot ? (bool)SceneControl.Get("resizable") : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Set("resizable", value);
+                }
+            }
         }
     }
 }

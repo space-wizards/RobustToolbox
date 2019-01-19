@@ -1,4 +1,5 @@
-﻿using SS14.Client.Utility;
+﻿using System;
+using SS14.Client.Utility;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
@@ -9,9 +10,11 @@ namespace SS14.Client.UserInterface.Controls
         public RichTextLabel() : base()
         {
         }
+
         public RichTextLabel(string name) : base(name)
         {
         }
+
         internal RichTextLabel(Godot.RichTextLabel button) : base(button)
         {
         }
@@ -23,44 +26,78 @@ namespace SS14.Client.UserInterface.Controls
 
         public bool BBCodeEnabled
         {
-            get => (bool)SceneControl.Get("bbcode_enabled");
-            set => SceneControl.Set("bbcode_enabled", value);
+            get => GameController.OnGodot ? (bool)SceneControl.Get("bbcode_enabled") : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Set("bbcode_enabled", value);
+                }
+            }
         }
 
         public void Clear()
         {
-            SceneControl.Call("clear");
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("clear");
+            }
         }
 
         public Godot.Error AppendBBCode(string code)
         {
-            return (Godot.Error)SceneControl.Call("append_bbcode", code);
+            if (GameController.OnGodot)
+            {
+                return (Godot.Error)SceneControl.Call("append_bbcode", code);
+            }
+            else
+            {
+                return default;
+            }
         }
 
         public void PushColor(Color color)
         {
-            SceneControl.Call("push_color", color.Convert());
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("push_color", color.Convert());
+            }
         }
 
         public void AddText(string text)
         {
-            SceneControl.Call("add_text", text);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("add_text", text);
+            }
         }
 
         public void Pop()
         {
-            SceneControl.Call("pop");
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("pop");
+            }
         }
 
         public void NewLine()
         {
-            SceneControl.Call("newline");
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("newline");
+            }
         }
 
         public bool ScrollFollowing
         {
-            get => (bool)SceneControl.Call("is_scroll_following");
-            set => SceneControl.Call("set_scroll_following", value);
+            get => GameController.OnGodot ? (bool)SceneControl.Call("is_scroll_following") : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Call("set_scroll_following", value);
+                }
+            }
         }
     }
 }

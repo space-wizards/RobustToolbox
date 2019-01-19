@@ -23,13 +23,14 @@ namespace SS14.Client.Graphics.Overlays
         public virtual OverlaySpace Space => OverlaySpace.ScreenSpace;
 
         private Shader _shader;
+
         public Shader Shader
         {
             get => _shader;
             set
             {
                 _shader = value;
-                if (MainCanvasItem != null)
+                if (GameController.OnGodot && MainCanvasItem != null)
                 {
                     VS.CanvasItemSetMaterial(MainCanvasItem, value?.GodotMaterial?.GetRid());
                 }
@@ -37,6 +38,7 @@ namespace SS14.Client.Graphics.Overlays
         }
 
         private int? _zIndex;
+
         public int? ZIndex
         {
             get => _zIndex;
@@ -46,6 +48,7 @@ namespace SS14.Client.Graphics.Overlays
                 {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
+
                 _zIndex = value;
                 UpdateZIndex();
             }
@@ -54,6 +57,7 @@ namespace SS14.Client.Graphics.Overlays
         public virtual bool SubHandlesUseMainShader { get; } = true;
 
         private bool _isDirty = true;
+
 
         private Godot.RID MainCanvasItem;
 
@@ -75,6 +79,7 @@ namespace SS14.Client.Graphics.Overlays
             {
                 Shader.ApplyToCanvasItem(MainCanvasItem);
             }
+
             UpdateZIndex();
         }
 
@@ -84,6 +89,7 @@ namespace SS14.Client.Graphics.Overlays
             {
                 return;
             }
+
             Dispose(true);
             Disposed = true;
             GC.SuppressFinalize(this);
@@ -108,6 +114,25 @@ namespace SS14.Client.Graphics.Overlays
                 throw new InvalidOperationException("Can only allocate new handles while drawing.");
             }
 
+            if (!GameController.OnGodot)
+            {
+                DrawingHandle handle;
+                switch (Space)
+                {
+                    case OverlaySpace.ScreenSpace:
+                        handle = new DrawingHandleScreen();
+                        break;
+                    case OverlaySpace.WorldSpace:
+                        handle = new DrawingHandleWorld();
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+                TempHandles.Add(handle);
+                return handle;
+            }
+
             var item = VS.CanvasItemCreate();
             VS.CanvasItemSetParent(item, MainCanvasItem);
             CanvasItems.Add(item);
@@ -120,21 +145,24 @@ namespace SS14.Client.Graphics.Overlays
                 VS.CanvasItemSetUseParentMaterial(item, SubHandlesUseMainShader);
             }
 
-            DrawingHandle handle;
-            switch (Space)
             {
-                case OverlaySpace.ScreenSpaceBelowWorld:
-                case OverlaySpace.ScreenSpace:
-                    handle = new DrawingHandleScreen(item);
-                    break;
-                case OverlaySpace.WorldSpace:
-                    handle = new DrawingHandleWorld(item);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                DrawingHandle handle;
+                switch (Space)
+                {
+                    case OverlaySpace.ScreenSpaceBelowWorld:
+                    case OverlaySpace.ScreenSpace:
+                        handle = new DrawingHandleScreen(item);
+                        break;
+                    case OverlaySpace.WorldSpace:
+                        handle = new DrawingHandleWorld(item);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+                TempHandles.Add(handle);
+                return handle;
             }
-            TempHandles.Add(handle);
-            return handle;
         }
 
         public void Dirty()
@@ -144,7 +172,7 @@ namespace SS14.Client.Graphics.Overlays
 
         public void FrameUpdate(RenderFrameEventArgs args)
         {
-            if (!IsDirty)
+            if (!IsDirty || !GameController.OnGodot)
             {
                 return;
             }
@@ -167,6 +195,7 @@ namespace SS14.Client.Graphics.Overlays
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+
                 Draw(handle);
             }
             finally
@@ -176,12 +205,18 @@ namespace SS14.Client.Graphics.Overlays
                 {
                     handle.Dispose();
                 }
+
                 TempHandles.Clear();
             }
         }
 
         private void ClearDraw()
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             foreach (var item in CanvasItems)
             {
                 VS.FreeRid(item);
@@ -194,7 +229,7 @@ namespace SS14.Client.Graphics.Overlays
 
         private void UpdateZIndex()
         {
-            if (MainCanvasItem == null)
+            if (MainCanvasItem == null || !GameController.OnGodot)
             {
                 return;
             }

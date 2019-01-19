@@ -25,6 +25,10 @@ namespace SS14.Client.Utility
         /// </summary>
         public static void DoDirCopy(string sourcePath, string targetPath)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
 #if UNIX
             if (Directory.Exists(targetPath))
             {

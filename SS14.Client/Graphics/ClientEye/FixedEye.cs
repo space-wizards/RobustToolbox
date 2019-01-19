@@ -11,12 +11,17 @@ namespace SS14.Client.Graphics.ClientEye
     public class FixedEye : Eye
     {
         private Vector2 position;
+
         public Vector2 Position
         {
             get => position;
             set
             {
-                GodotCamera.Position = value.Convert();
+                if (GameController.OnGodot)
+                {
+                    GodotCamera.Position = value.Convert();
+                }
+
                 position = value;
             }
         }
@@ -25,6 +30,11 @@ namespace SS14.Client.Graphics.ClientEye
 
         public FixedEye()
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             sceneTree = IoCManager.Resolve<ISceneTreeHolder>();
             sceneTree.WorldRoot.AddChild(GodotCamera);
         }

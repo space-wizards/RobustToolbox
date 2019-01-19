@@ -85,6 +85,10 @@ namespace SS14.Client.Placement
 
         public virtual void Render()
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             if (SpriteToDraw == null)
             {
                 SetSprite();

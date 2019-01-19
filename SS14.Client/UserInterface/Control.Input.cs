@@ -20,6 +20,7 @@ namespace SS14.Client.UserInterface
         }
 
         public event Action<GUIMouseButtonEventArgs> OnMouseDown;
+
         protected virtual void MouseDown(GUIMouseButtonEventArgs args)
         {
             OnMouseDown?.Invoke(args);
@@ -34,6 +35,7 @@ namespace SS14.Client.UserInterface
         }
 
         public event Action<GUIKeyEventArgs> OnKeyDown;
+
         protected virtual void KeyDown(GUIKeyEventArgs args)
         {
             OnKeyDown?.Invoke(args);
@@ -53,12 +55,12 @@ namespace SS14.Client.UserInterface
             {
                 case Godot.InputEventKey keyEvent:
                     var keyEventArgs = new GUIKeyEventArgs(this,
-                                                           Keyboard.ConvertGodotKey(keyEvent.Scancode),
-                                                           (UInt32)keyEvent.Unicode,
-                                                           keyEvent.Alt,
-                                                           keyEvent.Control,
-                                                           keyEvent.Shift,
-                                                           keyEvent.Command);
+                        Keyboard.ConvertGodotKey(keyEvent.Scancode),
+                        (UInt32) keyEvent.Unicode,
+                        keyEvent.Alt,
+                        keyEvent.Control,
+                        keyEvent.Shift,
+                        keyEvent.Command);
                     if (keyEvent.Echo)
                     {
                         KeyHeld(keyEventArgs);
@@ -71,36 +73,38 @@ namespace SS14.Client.UserInterface
                     {
                         KeyUp(keyEventArgs);
                     }
+
                     break;
 
                 case Godot.InputEventMouseButton buttonEvent:
-                    if (buttonEvent.ButtonIndex >= (int)Godot.ButtonList.WheelUp && buttonEvent.ButtonIndex <= (int)Godot.ButtonList.WheelRight)
+                    if (buttonEvent.ButtonIndex >= (int) Godot.ButtonList.WheelUp &&
+                        buttonEvent.ButtonIndex <= (int) Godot.ButtonList.WheelRight)
                     {
                         // Mouse wheel event.
-                        var mouseWheelEventArgs = new GUIMouseWheelEventArgs((Mouse.Wheel)buttonEvent.ButtonIndex,
-                                                                             this,
-                                                                             (Mouse.ButtonMask)buttonEvent.ButtonMask,
-                                                                             buttonEvent.GlobalPosition.Convert(),
-                                                                             buttonEvent.Position.Convert(),
-                                                                             buttonEvent.Alt,
-                                                                             buttonEvent.Control,
-                                                                             buttonEvent.Shift,
-                                                                             buttonEvent.Command);
+                        var mouseWheelEventArgs = new GUIMouseWheelEventArgs((Mouse.Wheel) buttonEvent.ButtonIndex,
+                            this,
+                            (Mouse.ButtonMask) buttonEvent.ButtonMask,
+                            buttonEvent.GlobalPosition.Convert(),
+                            buttonEvent.Position.Convert(),
+                            buttonEvent.Alt,
+                            buttonEvent.Control,
+                            buttonEvent.Shift,
+                            buttonEvent.Command);
                         MouseWheel(mouseWheelEventArgs);
                     }
                     else
                     {
                         // Mouse button event.
-                        var mouseButtonEventArgs = new GUIMouseButtonEventArgs((Mouse.Button)buttonEvent.ButtonIndex,
-                                                                               buttonEvent.Doubleclick,
-                                                                               this,
-                                                                               (Mouse.ButtonMask)buttonEvent.ButtonMask,
-                                                                               buttonEvent.GlobalPosition.Convert(),
-                                                                               buttonEvent.Position.Convert(),
-                                                                               buttonEvent.Alt,
-                                                                               buttonEvent.Control,
-                                                                               buttonEvent.Shift,
-                                                                               buttonEvent.Command);
+                        var mouseButtonEventArgs = new GUIMouseButtonEventArgs((Mouse.Button) buttonEvent.ButtonIndex,
+                            buttonEvent.Doubleclick,
+                            this,
+                            (Mouse.ButtonMask) buttonEvent.ButtonMask,
+                            buttonEvent.GlobalPosition.Convert(),
+                            buttonEvent.Position.Convert(),
+                            buttonEvent.Alt,
+                            buttonEvent.Control,
+                            buttonEvent.Shift,
+                            buttonEvent.Command);
                         if (buttonEvent.Pressed)
                         {
                             MouseDown(mouseButtonEventArgs);
@@ -110,19 +114,20 @@ namespace SS14.Client.UserInterface
                             MouseUp(mouseButtonEventArgs);
                         }
                     }
+
                     break;
 
                 case Godot.InputEventMouseMotion motionEvent:
                     var mouseMoveEventArgs = new GUIMouseMoveEventArgs(motionEvent.Relative.Convert(),
-                                                                       motionEvent.Speed.Convert(),
-                                                                       this,
-                                                                       (Mouse.ButtonMask)motionEvent.ButtonMask,
-                                                                       motionEvent.GlobalPosition.Convert(),
-                                                                       motionEvent.Position.Convert(),
-                                                                       motionEvent.Alt,
-                                                                       motionEvent.Control,
-                                                                       motionEvent.Shift,
-                                                                       motionEvent.Command);
+                        motionEvent.Speed.Convert(),
+                        this,
+                        (Mouse.ButtonMask) motionEvent.ButtonMask,
+                        motionEvent.GlobalPosition.Convert(),
+                        motionEvent.Position.Convert(),
+                        motionEvent.Alt,
+                        motionEvent.Control,
+                        motionEvent.Shift,
+                        motionEvent.Command);
                     MouseMove(mouseMoveEventArgs);
                     break;
             }
@@ -142,16 +147,19 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public new void Handle()
         {
-            SourceControl.SceneControl.AcceptEvent();
+            if (GameController.OnGodot)
+            {
+                SourceControl.SceneControl.AcceptEvent();
+            }
         }
 
         public GUIKeyEventArgs(Control sourceControl,
-                               Keyboard.Key key,
-                               uint unicode,
-                               bool alt,
-                               bool control,
-                               bool shift,
-                               bool system)
+            Keyboard.Key key,
+            uint unicode,
+            bool alt,
+            bool control,
+            bool shift,
+            bool system)
             : base(key, unicode, alt, control, shift, system)
         {
             SourceControl = sourceControl;
@@ -187,17 +195,20 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public new void Handle()
         {
-            SourceControl.SceneControl.AcceptEvent();
+            if (GameController.OnGodot)
+            {
+                SourceControl.SceneControl.AcceptEvent();
+            }
         }
 
         protected GUIMouseEventArgs(Control sourceControl,
-                                    Mouse.ButtonMask buttonMask,
-                                    Vector2 globalPosition,
-                                    Vector2 relativePosition,
-                                    bool alt,
-                                    bool control,
-                                    bool shift,
-                                    bool system)
+            Mouse.ButtonMask buttonMask,
+            Vector2 globalPosition,
+            Vector2 relativePosition,
+            bool alt,
+            bool control,
+            bool shift,
+            bool system)
             : base(alt, control, shift, system)
         {
             SourceControl = sourceControl;
@@ -221,15 +232,15 @@ namespace SS14.Client.UserInterface
         public bool DoubleClick { get; }
 
         public GUIMouseButtonEventArgs(Mouse.Button button,
-                                       bool doubleClick,
-                                       Control sourceControl,
-                                       Mouse.ButtonMask buttonMask,
-                                       Vector2 globalPosition,
-                                       Vector2 relativePosition,
-                                       bool alt,
-                                       bool control,
-                                       bool shift,
-                                       bool system)
+            bool doubleClick,
+            Control sourceControl,
+            Mouse.ButtonMask buttonMask,
+            Vector2 globalPosition,
+            Vector2 relativePosition,
+            bool alt,
+            bool control,
+            bool shift,
+            bool system)
             : base(sourceControl, buttonMask, globalPosition, relativePosition, alt, control, shift, system)
         {
             Button = button;
@@ -253,15 +264,15 @@ namespace SS14.Client.UserInterface
 
         // ALL the parameters!
         public GUIMouseMoveEventArgs(Vector2 relative,
-                                     Vector2 speed,
-                                     Control sourceControl,
-                                     Mouse.ButtonMask buttonMask,
-                                     Vector2 globalPosition,
-                                     Vector2 relativePosition,
-                                     bool alt,
-                                     bool control,
-                                     bool shift,
-                                     bool system)
+            Vector2 speed,
+            Control sourceControl,
+            Mouse.ButtonMask buttonMask,
+            Vector2 globalPosition,
+            Vector2 relativePosition,
+            bool alt,
+            bool control,
+            bool shift,
+            bool system)
             : base(sourceControl, buttonMask, globalPosition, relativePosition, alt, control, shift, system)
         {
             Relative = relative;
@@ -277,14 +288,14 @@ namespace SS14.Client.UserInterface
         public Mouse.Wheel WheelDirection { get; }
 
         public GUIMouseWheelEventArgs(Mouse.Wheel wheelDirection,
-                                         Control sourceControl,
-                                         Mouse.ButtonMask buttonMask,
-                                         Shared.Maths.Vector2 globalPosition,
-                                         Shared.Maths.Vector2 relativePosition,
-                                         bool alt,
-                                         bool control,
-                                         bool shift,
-                                         bool system)
+            Control sourceControl,
+            Mouse.ButtonMask buttonMask,
+            Shared.Maths.Vector2 globalPosition,
+            Shared.Maths.Vector2 relativePosition,
+            bool alt,
+            bool control,
+            bool shift,
+            bool system)
             : base(sourceControl, buttonMask, globalPosition, relativePosition, alt, control, shift, system)
         {
             WheelDirection = wheelDirection;

@@ -4,4 +4,5 @@
 *.import
 # Negation would be like this:
 #!/Textures/UserInterface/1pxwhite.png.import
+!/Scenes/SS14Window/closewindow.png.import
 /I_MADE_THE_SYMLINK

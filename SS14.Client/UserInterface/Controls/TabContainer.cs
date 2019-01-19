@@ -24,20 +24,38 @@ namespace SS14.Client.UserInterface.Controls
 
         public int CurrentTab
         {
-            get => (int)SceneControl.Call("get_current_tab");
-            set => SceneControl.Call("set_current_tab", value);
+            get => GameController.OnGodot ? (int)SceneControl.Call("get_current_tab") : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Call("set_current_tab", value);
+                }
+            }
         }
 
         public TabAlignMode AlignMode
         {
-            get => (TabAlignMode) SceneControl.Call("get_tab_align");
-            set => SceneControl.Call("set_tab_align", (Godot.TabContainer.TabAlignEnum) value);
+            get => GameController.OnGodot ? (TabAlignMode) SceneControl.Call("get_tab_align") : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Call("set_tab_align", (Godot.TabContainer.TabAlignEnum) value);
+                }
+            }
         }
 
         public bool TabsVisible
         {
-            get => (bool)SceneControl.Get("tabs_visible");
-            set => SceneControl.Set("tabs_visible", value);
+            get => GameController.OnGodot ? (bool)SceneControl.Get("tabs_visible") : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Set("tabs_visible", value);
+                }
+            }
         }
 
         public event Action<int> OnTabSelected;
@@ -45,22 +63,28 @@ namespace SS14.Client.UserInterface.Controls
 
         public string GetTabTitle(int tab)
         {
-            return (string)SceneControl.Call("get_tab_title", tab);
+            return GameController.OnGodot ? (string)SceneControl.Call("get_tab_title", tab) : default;
         }
 
         public void SetTabTitle(int tab, string title)
         {
-            SceneControl.Call("set_tab_title", tab, title);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("set_tab_title", tab, title);
+            }
         }
 
         public Texture GetTabIcon(int tab)
         {
-            return new GodotTextureSource((Godot.Texture)SceneControl.Call("get_tab_icon", tab));
+            return GameController.OnGodot ? (Texture)new GodotTextureSource((Godot.Texture)SceneControl.Call("get_tab_icon", tab)) : new BlankTexture();
         }
 
         public void SetTabIcon(int tab, Texture icon)
         {
-            SceneControl.Call("set_tab_icon", tab, icon);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("set_tab_icon", tab, icon);
+            }
         }
 
         private protected override Godot.Control SpawnSceneControl()
@@ -103,9 +127,9 @@ namespace SS14.Client.UserInterface.Controls
 
         public enum TabAlignMode
         {
-            Left = Godot.TabContainer.TabAlignEnum.Left,
-            Center = Godot.TabContainer.TabAlignEnum.Center,
-            Right = Godot.TabContainer.TabAlignEnum.Right
+            Left = 0,
+            Center = 1,
+            Right = 2
         }
     }
 }

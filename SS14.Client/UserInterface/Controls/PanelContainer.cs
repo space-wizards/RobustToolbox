@@ -17,17 +17,17 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
+        private protected override Godot.Control SpawnSceneControl()
+        {
+            return new Godot.PanelContainer();
+        }
+
         private StyleBox _panelOverride;
 
         public StyleBox PanelOverride
         {
             get => _panelOverride ?? GetStyleBoxOverride("panel");
             set => SetStyleBoxOverride("panel", _panelOverride = value);
-        }
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.PanelContainer();
         }
     }
 }

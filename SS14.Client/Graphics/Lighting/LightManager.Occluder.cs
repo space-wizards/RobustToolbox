@@ -3,6 +3,7 @@ using System.Linq;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Graphics.Lighting;
 using SS14.Client.Utility;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics.Lighting
@@ -12,6 +13,7 @@ namespace SS14.Client.Graphics.Lighting
         sealed class Occluder : IOccluder
         {
             private bool visible = true;
+
             public bool Enabled
             {
                 get => visible;
@@ -22,6 +24,8 @@ namespace SS14.Client.Graphics.Lighting
                 }
             }
 
+            public bool Disposed { get; private set; }
+
             private LightManager Manager;
 
             private Godot.OccluderPolygon2D occluderPolygon;
@@ -31,9 +35,16 @@ namespace SS14.Client.Graphics.Lighting
 
             public OccluderCullMode CullMode
             {
-                get => (OccluderCullMode)occluderPolygon.CullMode;
-                set => occluderPolygon.CullMode = (Godot.OccluderPolygon2D.CullModeEnum)value;
+                get => GameController.OnGodot ? (OccluderCullMode) occluderPolygon.CullMode : default;
+                set
+                {
+                    if (GameController.OnGodot)
+                    {
+                        occluderPolygon.CullMode = (Godot.OccluderPolygon2D.CullModeEnum) value;
+                    }
+                }
             }
+
 
             private IGodotTransformComponent parentTransform;
             private Godot.Vector2 CurrentPos;
@@ -41,6 +52,11 @@ namespace SS14.Client.Graphics.Lighting
             public Occluder(LightManager manager)
             {
                 Manager = manager;
+
+                if (!GameController.OnGodot)
+                {
+                    return;
+                }
 
                 occluderPolygon = new Godot.OccluderPolygon2D();
                 occluder = new Godot.LightOccluder2D()
@@ -57,39 +73,48 @@ namespace SS14.Client.Graphics.Lighting
             public void Dispose()
             {
                 // Already disposed.
-                if (occluder == null)
+                if (Disposed)
                 {
                     return;
                 }
 
                 Manager.RemoveOccluder(this);
-                Manager = null;
+                Disposed = true;
+
+                if (!GameController.OnGodot)
+                {
+                    return;
+                }
 
                 occluder.QueueFree();
                 occluder.Dispose();
-                occluder = null;
 
                 occluderPolygon.Dispose();
-                occluderPolygon = null;
             }
 
             public void SetPolygon(Vector2[] polygon)
             {
+                if (!GameController.OnGodot)
+                {
+                    return;
+                }
+
                 var converted = new Godot.Vector2[polygon.Length];
                 for (var i = 0; i < polygon.Length; i++)
                 {
                     converted[i] = polygon[i].Convert();
                 }
-                occluderPolygon.Polygon = converted;
-            }
 
-            public void SetGodotPolygon(Godot.Vector2[] polygon)
-            {
-                occluderPolygon.Polygon = polygon;
+                occluderPolygon.Polygon = converted;
             }
 
             public void DeParent()
             {
+                if (!GameController.OnGodot)
+                {
+                    return;
+                }
+
                 if (Deferred)
                 {
                     occluder.Position = new Godot.Vector2(0, 0);
@@ -98,26 +123,42 @@ namespace SS14.Client.Graphics.Lighting
                 {
                     parentTransform.SceneNode.RemoveChild(occluder);
                 }
+
                 UpdateEnabled();
             }
 
-            public void ParentTo(IGodotTransformComponent node)
+            public void ParentTo(ITransformComponent node)
             {
+                if (!GameController.OnGodot)
+                {
+                    return;
+                }
+
                 if (!Deferred)
                 {
-                    node.SceneNode.AddChild(occluder);
+                    ((IGodotTransformComponent) node).SceneNode.AddChild(occluder);
                 }
-                parentTransform = node;
+
+                parentTransform = (IGodotTransformComponent) node;
                 UpdateEnabled();
             }
+
 
             private void UpdateEnabled()
             {
-                occluder.Visible = parentTransform != null && Enabled;
+                if (GameController.OnGodot)
+                {
+                    occluder.Visible = parentTransform != null && Enabled;
+                }
             }
 
             public void FrameProcess(FrameEventArgs args)
             {
+                if (!GameController.OnGodot)
+                {
+                    return;
+                }
+
                 // TODO: Maybe use OnMove events to make this less expensive.
                 if (Deferred && parentTransform != null)
                 {

@@ -33,7 +33,11 @@ namespace SS14.Client.Graphics.ClientEye
                     return;
                 }
 
-                currentEye.GodotCamera.Current = false;
+                if (GameController.OnGodot)
+                {
+                    currentEye.GodotCamera.Current = false;
+                }
+
                 if (value != null)
                 {
                     currentEye = value;
@@ -43,7 +47,10 @@ namespace SS14.Client.Graphics.ClientEye
                     currentEye = defaultEye;
                 }
 
-                currentEye.GodotCamera.Current = true;
+                if (GameController.OnGodot)
+                {
+                    currentEye.GodotCamera.Current = true;
+                }
             }
         }
 
@@ -51,6 +58,11 @@ namespace SS14.Client.Graphics.ClientEye
 
         public Box2 GetWorldViewport()
         {
+            if (!GameController.OnGodot)
+            {
+                return default;
+            }
+
             var vpSize = sceneTree.SceneTree.Root.Size.Convert();
 
             var topLeft = ScreenToWorld(Vector2.Zero);
@@ -70,7 +82,11 @@ namespace SS14.Client.Graphics.ClientEye
         {
             defaultEye = new FixedEye();
             currentEye = defaultEye;
-            currentEye.GodotCamera.Current = true;
+
+            if (GameController.OnGodot)
+            {
+                currentEye.GodotCamera.Current = true;
+            }
         }
 
         public void Dispose()
@@ -80,6 +96,10 @@ namespace SS14.Client.Graphics.ClientEye
 
         public Vector2 WorldToScreen(Vector2 point)
         {
+            if (!GameController.OnGodot)
+            {
+                return default;
+            }
             var transform = sceneTree.WorldRoot.GetViewportTransform();
             return transform.Xform(point.Convert() * PIXELSPERMETER * new Godot.Vector2(1, -1)).Convert();
         }
@@ -96,6 +116,10 @@ namespace SS14.Client.Graphics.ClientEye
 
         public GridCoordinates ScreenToWorld(Vector2 point)
         {
+            if (!GameController.OnGodot)
+            {
+                return default;
+            }
             var matrix = Matrix3.Invert(MatrixViewPortTransform(sceneTree));
             var worldPos = matrix.Transform(point) / PIXELSPERMETER * new Vector2(1, -1);
             IMapGrid grid ;

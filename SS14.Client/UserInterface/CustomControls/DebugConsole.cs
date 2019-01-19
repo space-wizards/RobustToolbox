@@ -38,16 +38,13 @@ namespace SS14.Client.UserInterface.CustomControls
         private int _historyPosition;
         private bool _currentCommandEdited;
 
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            var node = LoadScene("res://Scenes/DebugConsole/DebugConsole.tscn");
-            node.Visible = false;
-            return node;
-        }
+        protected override ResourcePath ScenePath => new ResourcePath("/Scenes/DebugConsole/DebugConsole.tscn");
 
         protected override void Initialize()
         {
             IoCManager.InjectDependencies(this);
+
+            Visible = false;
 
             CommandBar = GetChild<LineEdit>("CommandBar");
             CommandBar.OnKeyDown += CommandBarOnOnKeyDown;

@@ -13,20 +13,31 @@ namespace SS14.Client.Graphics.Drawing
     {
         // Use RIDs in the theoretical case some nerd wants to draw something WITHOUT consulting the scene tree.
         // Also it's probably faster or some shit.
-        internal Godot.RID Item { get; private set; }
+
+        internal Godot.RID Item { get; }
+        public bool Disposed { get; private set; }
 
         internal DrawingHandle(Godot.RID item)
         {
             Item = item ?? throw new ArgumentNullException(nameof(item));
         }
 
+        internal DrawingHandle()
+        {
+        }
+
         public void Dispose()
         {
-            Item = null;
+            Disposed = true;
         }
 
         public void SetTransform(Vector2 position, Angle rotation, Vector2 scale)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             CheckDisposed();
             var transform = Godot.Transform2D.Identity.Rotated((float) rotation.Theta).Scaled(scale.Convert());
             SetTransform2DRotationAndScale(ref transform, rotation.Theta, scale);
@@ -36,6 +47,11 @@ namespace SS14.Client.Graphics.Drawing
 
         public void SetTransform(Matrix3 matrix)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             CheckDisposed();
             VS.CanvasItemAddSetTransform(Item, matrix.Convert());
         }
@@ -49,7 +65,7 @@ namespace SS14.Client.Graphics.Drawing
 
         protected void CheckDisposed()
         {
-            if (Item == null)
+            if (Disposed)
             {
                 throw new ObjectDisposedException(nameof(DrawingHandle));
             }
@@ -72,14 +88,28 @@ namespace SS14.Client.Graphics.Drawing
         {
         }
 
+        internal DrawingHandleWorld() : base()
+        {
+        }
+
         public override void DrawCircle(Vector2 position, float radius, Color color)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             CheckDisposed();
             VS.CanvasItemAddCircle(Item, ToPixelCoords(position), radius * PPM, color.Convert());
         }
 
         public override void DrawLine(Vector2 from, Vector2 to, Color color, float width = 1, bool antiAliased = false)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             CheckDisposed();
             VS.CanvasItemAddLine(Item, ToPixelCoords(from), ToPixelCoords(to), color.Convert(), width, antiAliased);
         }
@@ -87,6 +117,11 @@ namespace SS14.Client.Graphics.Drawing
         public override void DrawTexture(Texture texture, Vector2 position, Color? modulate = null,
             Texture normalMap = null)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             CheckDisposed();
             texture.GodotTexture.Draw(Item, ToPixelCoords(position), modulate?.Convert(), false, normalMap);
         }
@@ -94,12 +129,22 @@ namespace SS14.Client.Graphics.Drawing
         public void DrawTextureRect(Texture texture, Box2 rect, bool tile, Color? modulate = null,
             bool transpose = false, Texture normalMap = null)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             CheckDisposed();
             texture.GodotTexture.DrawRect(Item, ToPixelCoords(rect), tile, modulate?.Convert(), transpose, normalMap);
         }
 
         public void DrawRect(Box2 rect, Color color, bool filled = true)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             CheckDisposed();
             if (filled)
             {
@@ -116,6 +161,11 @@ namespace SS14.Client.Graphics.Drawing
 
         public void DrawStyleBox(StyleBox styleBox, UIBox2 box)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             CheckDisposed();
             styleBox.GodotStyleBox.Draw(Item, box.Convert());
         }
@@ -137,26 +187,51 @@ namespace SS14.Client.Graphics.Drawing
         {
         }
 
+        internal DrawingHandleScreen() : base()
+        {
+        }
+
+
         public override void DrawCircle(Vector2 position, float radius, Color color)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             CheckDisposed();
             VS.CanvasItemAddCircle(Item, position.Convert(), radius, color.Convert());
         }
 
         public void DrawStyleBox(StyleBox styleBox, UIBox2 box)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             CheckDisposed();
             styleBox.GodotStyleBox.Draw(Item, box.Convert());
         }
 
         public override void DrawLine(Vector2 from, Vector2 to, Color color, float width = 1, bool antiAliased = false)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             CheckDisposed();
             VS.CanvasItemAddLine(Item, from.Convert(), to.Convert(), color.Convert(), width, antiAliased);
         }
 
         public void DrawRect(UIBox2 rect, Color color, bool filled = true)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             CheckDisposed();
             if (filled)
             {
@@ -174,6 +249,11 @@ namespace SS14.Client.Graphics.Drawing
         public override void DrawTexture(Texture texture, Vector2 position, Color? modulate = null,
             Texture normalMap = null)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             CheckDisposed();
             texture.GodotTexture.Draw(Item, position.Convert(), modulate?.Convert(), false, normalMap);
         }
@@ -181,6 +261,11 @@ namespace SS14.Client.Graphics.Drawing
         public void DrawTextureRect(Texture texture, UIBox2 rect, bool tile, Color? modulate = null,
             bool transpose = false, Texture normalMap = null)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             CheckDisposed();
             texture.GodotTexture.DrawRect(Item, rect.Convert(), tile, modulate?.Convert(), transpose, normalMap);
         }

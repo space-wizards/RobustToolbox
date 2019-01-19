@@ -1,4 +1,5 @@
-﻿using SS14.Client.Graphics;
+﻿using System;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.UserInterface.Controls
 {
@@ -8,9 +9,11 @@ namespace SS14.Client.UserInterface.Controls
         public TextureRect() : base()
         {
         }
+
         public TextureRect(string name) : base(name)
         {
         }
+
         public TextureRect(Godot.TextureRect button) : base(button)
         {
         }
@@ -18,8 +21,14 @@ namespace SS14.Client.UserInterface.Controls
         public Texture Texture
         {
             // TODO: Maybe store the texture passed in in case it's like a TextureResource or whatever.
-            get => new GodotTextureSource((Godot.Texture)SceneControl.Get("texture"));
-            set => SceneControl.Set("texture", value?.GodotTexture);
+            get => GameController.OnGodot ? (Texture)new GodotTextureSource((Godot.Texture)SceneControl.Get("texture")) : new BlankTexture();
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Set("texture", value?.GodotTexture);
+                }
+            }
         }
 
         private protected override Godot.Control SpawnSceneControl()

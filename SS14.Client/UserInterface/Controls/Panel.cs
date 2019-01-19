@@ -8,9 +8,11 @@ namespace SS14.Client.UserInterface.Controls
         public Panel(string name) : base(name)
         {
         }
+
         public Panel() : base()
         {
         }
+
         internal Panel(Godot.Panel panel) : base(panel)
         {
         }

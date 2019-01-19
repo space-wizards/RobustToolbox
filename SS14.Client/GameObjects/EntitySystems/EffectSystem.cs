@@ -48,6 +48,10 @@ namespace SS14.Client.GameObjects
         {
             base.Initialize();
             IoCManager.InjectDependencies(this);
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             DrawingNode = new Godot.Node2D()
             {
                 Name = "EffectSystem",
@@ -73,6 +77,10 @@ namespace SS14.Client.GameObjects
         public override void Shutdown()
         {
             base.Shutdown();
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             VS.FreeRid(ShadedCanvasItem);
             VS.FreeRid(UnshadedCanvasItem);
             UnshadedMaterial.Dispose();
@@ -153,6 +161,10 @@ namespace SS14.Client.GameObjects
         {
             var map = eyeManager.CurrentMap;
 
+            if (GameController.OnGodot)
+            {
+                return;
+            }
             VS.CanvasItemClear(ShadedCanvasItem);
             VS.CanvasItemClear(UnshadedCanvasItem);
             using (var shadedHandle = new DrawingHandleScreen(ShadedCanvasItem))

@@ -10,6 +10,11 @@ namespace SS14.Client.Graphics.Shaders
         // ReSharper disable once CollectionNeverQueried.Local
         private static readonly List<Shader> LeakyLeaky = new List<Shader>();
 
+        internal Shader()
+        {
+
+        }
+
         internal Shader(Godot.Material godotMaterial)
         {
             LeakyLeaky.Add(this);

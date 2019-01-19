@@ -5,6 +5,7 @@ namespace SS14.Client.Interfaces.Graphics
     /// </summary>
     public interface IDisplayManager
     {
+        void SetWindowTitle(string title);
         void Initialize();
         void ReadConfig();
     }

@@ -63,7 +63,8 @@ namespace SS14.Client.GameObjects
             set
             {
                 drawDepth = value;
-                if (SceneNode != null)
+
+                if (GameController.OnGodot && SceneNode != null)
                 {
                     SceneNode.ZIndex = (int) value;
                 }
@@ -82,7 +83,7 @@ namespace SS14.Client.GameObjects
             set
             {
                 scale = value;
-                if (SceneNode != null)
+                if (GameController.OnGodot && SceneNode != null)
                 {
                     SceneNode.Scale = value.Convert();
                 }
@@ -98,7 +99,7 @@ namespace SS14.Client.GameObjects
             set
             {
                 rotation = value;
-                if (SceneNode != null)
+                if (GameController.OnGodot && SceneNode != null)
                 {
                     SceneNode.Rotation = (float) value;
                 }
@@ -117,7 +118,7 @@ namespace SS14.Client.GameObjects
             set
             {
                 offset = value;
-                if (SceneNode != null)
+                if (GameController.OnGodot && SceneNode != null)
                 {
                     SceneNode.Position = value.Convert() * EyeManager.PIXELSPERMETER;
                 }
@@ -133,7 +134,7 @@ namespace SS14.Client.GameObjects
             set
             {
                 color = value;
-                if (SceneNode != null)
+                if (GameController.OnGodot && SceneNode != null)
                 {
                     SceneNode.Modulate = value.Convert();
                 }
@@ -198,10 +199,8 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        [ViewVariables]
-        private Dictionary<object, int> LayerMap = new Dictionary<object, int>();
-        [ViewVariables]
-        private bool _layerMapShared;
+        [ViewVariables] private Dictionary<object, int> LayerMap = new Dictionary<object, int>();
+        [ViewVariables] private bool _layerMapShared;
 
         // To a future Clusterfack:
         // REALLY BIG OPTIMIZATION POTENTIAL:
@@ -211,8 +210,7 @@ namespace SS14.Client.GameObjects
         // It may be a good idea to re-implement this list to use Layer[],
         // use ref locals EVERYWHERE, and handle the resizing ourselves.
         // This may be worth the overhead of basically reimplementing List<T>.
-        [ViewVariables]
-        private List<Layer> Layers;
+        [ViewVariables] private List<Layer> Layers;
 
         private Godot.Node2D SceneNode;
 
@@ -996,9 +994,17 @@ namespace SS14.Client.GameObjects
 
         public ISpriteProxy CreateProxy()
         {
-            var item = VS.CanvasItemCreate();
-            RedrawQueued = true;
-            return CreateMirror(item);
+            if (GameController.OnGodot)
+            {
+                var item = VS.CanvasItemCreate();
+                RedrawQueued = true;
+                return CreateMirror(item);
+            }
+
+            var key = NextMirrorKey++;
+            var mirror = new SpriteMirror(key, this);
+            Mirrors.Add(key, new MirrorData());
+            return mirror;
         }
 
         ISpriteProxy CreateMirror(Godot.RID item)
@@ -1018,15 +1024,19 @@ namespace SS14.Client.GameObjects
         public override void OnAdd()
         {
             base.OnAdd();
-            SceneNode = new Godot.Node2D()
+
+            if (GameController.OnGodot)
             {
-                Name = "Sprite",
-                ZIndex = (int) drawDepth,
-                Scale = scale.Convert(),
-                Position = offset.Convert(),
-                Modulate = color.Convert(),
-                Rotation = (float) rotation,
-            };
+                SceneNode = new Godot.Node2D()
+                {
+                    Name = "Sprite",
+                    ZIndex = (int) drawDepth,
+                    Scale = scale.Convert(),
+                    Position = offset.Convert(),
+                    Modulate = color.Convert(),
+                    Rotation = (float) rotation,
+                };
+            }
         }
 
         public override void OnRemove()
@@ -1039,12 +1049,21 @@ namespace SS14.Client.GameObjects
             }
 
             MainMirror.Dispose();
-            SceneNode.QueueFree();
+
+            if (GameController.OnGodot)
+            {
+                SceneNode.QueueFree();
+            }
         }
 
         public override void Initialize()
         {
             base.Initialize();
+
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
 
             MainMirror = CreateMirror(SceneNode.GetCanvasItem());
             var mir = Mirrors[0];
@@ -1055,6 +1074,11 @@ namespace SS14.Client.GameObjects
 
         private void ClearDraw()
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             foreach (var data in Mirrors.Values)
             {
                 foreach (var item in data.Children)
@@ -1069,6 +1093,11 @@ namespace SS14.Client.GameObjects
         private void Redraw()
         {
             ClearDraw();
+
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
 
             foreach (var data in Mirrors.Values)
             {
@@ -1301,7 +1330,11 @@ namespace SS14.Client.GameObjects
             var dirChanged = false;
             if (Directional)
             {
-                SceneNode.Rotation = (float) (Owner.Transform.WorldRotation - Rotation) - MathHelper.PiOver2;
+                if (GameController.OnGodot)
+                {
+                    SceneNode.Rotation = (float) (Owner.Transform.WorldRotation - Rotation) - MathHelper.PiOver2;
+                }
+
                 dirWeAreFacing = GetDir();
                 if (LastDir != dirWeAreFacing || _recalcDirections)
                 {
@@ -1556,7 +1589,7 @@ namespace SS14.Client.GameObjects
             // TODO: Doing a full redraw when a mirror is disposed is kinda a waste.
             ClearDraw();
             RedrawQueued = true;
-            if (!val.DontFree)
+            if (!val.DontFree && GameController.OnGodot)
             {
                 VS.FreeRid(val.Root);
             }
@@ -1633,8 +1666,7 @@ namespace SS14.Client.GameObjects
         {
             readonly int Key;
             readonly SpriteComponent Master;
-            Godot.RID CanvasItem;
-
+            private Godot.RID CanvasItem;
             private Godot.RID Parent;
             private Vector2 _offset;
 
@@ -1661,16 +1693,20 @@ namespace SS14.Client.GameObjects
                 }
             }
 
-            public SpriteMirror(int key, SpriteComponent master, Godot.RID canvasItem)
+            public SpriteMirror(int key, SpriteComponent master, Godot.RID canvasItem) : this(key, master)
             {
-                Master = master;
-                Key = key;
                 CanvasItem = canvasItem;
             }
 
-            public bool Disposed => CanvasItem == null;
+            public SpriteMirror(int key, SpriteComponent master)
+            {
+                Master = master;
+                Key = key;
+            }
 
-            void CheckDisposed()
+            public bool Disposed { get; private set; }
+
+            private void CheckDisposed()
             {
                 if (Disposed)
                 {
@@ -1680,6 +1716,11 @@ namespace SS14.Client.GameObjects
 
             private void UpdateTransform()
             {
+                if (!GameController.OnGodot)
+                {
+                    return;
+                }
+
                 var transform = new Godot.Transform2D(0, Offset.Convert());
                 VS.CanvasItemSetTransform(CanvasItem, transform);
             }
@@ -1710,7 +1751,13 @@ namespace SS14.Client.GameObjects
             void Dispose(bool disposing)
             {
                 Master.DisposeMirror(Key);
-                CanvasItem = null;
+
+                if (GameController.OnGodot)
+                {
+                    CanvasItem = null;
+                }
+
+                Disposed = true;
             }
         }
 

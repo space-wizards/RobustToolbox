@@ -147,6 +147,7 @@ namespace SS14.Client.Placement
                         return;
                     }
                 }
+
                 _colliderAABB = new Box2(0f, 0f, 0f, 0f);
             }
         }
@@ -186,21 +187,24 @@ namespace SS14.Client.Placement
 
             _mapMan.TileChanged += HandleTileChanged;
 
-            var unshadedMaterial = new Godot.CanvasItemMaterial()
+            if (GameController.OnGodot)
             {
-                LightMode = Godot.CanvasItemMaterial.LightModeEnum.Unshaded
-            };
+                var unshadedMaterial = new Godot.CanvasItemMaterial()
+                {
+                    LightMode = Godot.CanvasItemMaterial.LightModeEnum.Unshaded
+                };
 
-            DrawNode = new Godot.Node2D()
-            {
-                Name = "Placement Manager Sprite",
-                ZIndex = 100,
-                Material = unshadedMaterial
-            };
-            sceneTree.WorldRoot.AddChild(DrawNode);
-            drawNodeDrawSubscriber = new GodotGlue.GodotSignalSubscriber0();
-            drawNodeDrawSubscriber.Connect(DrawNode, "draw");
-            drawNodeDrawSubscriber.Signal += Render;
+                DrawNode = new Godot.Node2D()
+                {
+                    Name = "Placement Manager Sprite",
+                    ZIndex = 100,
+                    Material = unshadedMaterial
+                };
+                sceneTree.WorldRoot.AddChild(DrawNode);
+                drawNodeDrawSubscriber = new GodotGlue.GodotSignalSubscriber0();
+                drawNodeDrawSubscriber.Connect(DrawNode, "draw");
+                drawNodeDrawSubscriber.Signal += Render;
+            }
 
             // a bit ugly, oh well
             _baseClient.PlayerJoinedServer += (sender, args) => SetupInput(_entitySystemManager);
@@ -292,7 +296,7 @@ namespace SS14.Client.Placement
 
         private void SwitchEditorContext(bool enabled)
         {
-            if(enabled)
+            if (enabled)
             {
                 _inputManager.Contexts.SetActiveContext("editor");
             }
@@ -300,11 +304,15 @@ namespace SS14.Client.Placement
             {
                 _entitySystemManager.GetEntitySystem<InputSystem>().SetEntityContextActive();
             }
-
         }
 
         public void Dispose()
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             drawNodeDrawSubscriber.Disconnect(DrawNode, "draw");
             drawNodeDrawSubscriber.Dispose();
             DrawNode.QueueFree();
@@ -346,7 +354,11 @@ namespace SS14.Client.Placement
             Eraser = false;
             PlacementOffset = Vector2i.Zero;
             // Make it draw again to remove the drawn things.
-            DrawNode?.Update();
+
+            if (GameController.OnGodot)
+            {
+                DrawNode?.Update();
+            }
         }
 
         public void Rotate()
@@ -385,6 +397,7 @@ namespace SS14.Client.Placement
                     {
                         RequestPlacement(coordinate);
                     }
+
                     DeactivateSpecialPlacement();
                     break;
                 case PlacementTypes.Grid:
@@ -392,6 +405,7 @@ namespace SS14.Client.Placement
                     {
                         RequestPlacement(coordinate);
                     }
+
                     DeactivateSpecialPlacement();
                     break;
             }
@@ -447,7 +461,7 @@ namespace SS14.Client.Placement
             }
 
             var modeType = _modeDictionary.First(pair => pair.Key.Equals(CurrentPermission.PlacementOption)).Value;
-            CurrentMode = (PlacementMode)Activator.CreateInstance(modeType, this);
+            CurrentMode = (PlacementMode) Activator.CreateInstance(modeType, this);
 
             if (hijack != null)
             {
@@ -468,9 +482,9 @@ namespace SS14.Client.Placement
             // Try to get current map.
             var map = MapId.Nullspace;
             var ent = PlayerManager.LocalPlayer.ControlledEntity;
-            if (ent != null && ent.TryGetComponent<IGodotTransformComponent>(out var component))
+            if (ent != null)
             {
-                map = component.MapID;
+                map = ent.Transform.MapID;
             }
 
             if (map == MapId.Nullspace || CurrentPermission == null || CurrentMode == null)
@@ -498,7 +512,10 @@ namespace SS14.Client.Placement
             if (_placenextframe && CurrentPermission.IsTile)
                 HandlePlacement();
 
-            DrawNode.Update();
+            if (GameController.OnGodot)
+            {
+                DrawNode.Update();
+            }
         }
 
         private void ActivateLineMode()
@@ -548,7 +565,12 @@ namespace SS14.Client.Placement
 
             var pos = PlayerManager.LocalPlayer.ControlledEntity.Transform.WorldPosition;
             const int ppm = EyeManager.PIXELSPERMETER;
-            DrawNode.DrawCircle(pos.Convert() * new Godot.Vector2(1, -1) * ppm, CurrentPermission.Range * ppm, new Godot.Color(1, 1, 1, 0.25f));
+
+            if (GameController.OnGodot)
+            {
+                DrawNode.DrawCircle(pos.Convert() * new Godot.Vector2(1, -1) * ppm, CurrentPermission.Range * ppm,
+                    new Godot.Color(1, 1, 1, 0.25f));
+            }
         }
 
         private void HandleStartPlacement(MsgPlacement msg)
@@ -577,7 +599,8 @@ namespace SS14.Client.Placement
 
         private void PreparePlacementTile()
         {
-            CurrentBaseSprite = ResourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png")).Texture;
+            CurrentBaseSprite = ResourceCache
+                .GetResource<TextureResource>(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png")).Texture;
 
             IsActive = true;
         }

@@ -6,12 +6,14 @@ using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Console;
 using SS14.Shared.Maths;
 using SS14.Shared.Reflection;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
-    [Reflect(false)]
     public class Chatbox : Panel
     {
+        protected override ResourcePath ScenePath => new ResourcePath("/Scenes/ChatBox/ChatBox.tscn");
+
         public delegate void TextSubmitHandler(Chatbox chatbox, string text);
 
         private const int MaxLinePixelLength = 500;
@@ -47,11 +49,6 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public Chatbox() : base()
         {
-        }
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return LoadScene("res://Scenes/ChatBox/ChatBox.tscn");
         }
 
         protected override void Initialize()

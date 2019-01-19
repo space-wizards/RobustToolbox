@@ -12,6 +12,10 @@ namespace SS14.Client.ResourceManagement
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             if (!cache.ContentFileExists(path))
             {
                 throw new FileNotFoundException("Content file does not exist for audio sample.");

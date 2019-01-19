@@ -7,6 +7,6 @@ namespace SS14.Client.Interfaces.Graphics
     {
         void SetWindowTitle(string title);
         void Initialize();
-        void ReadConfig();
+        void ReloadConfig();
     }
 }

@@ -48,7 +48,7 @@ namespace SS14.Client.UserInterface.CustomControls
             configManager.SetCVar("display.windowmode", (int)(FullscreenCheckBox.Pressed ? WindowMode.Fullscreen : WindowMode.Windowed));
             configManager.SaveToFile();
             UpdateApplyButton();
-            IoCManager.Resolve<IDisplayManager>().ReadConfig();
+            IoCManager.Resolve<IDisplayManager>().ReloadConfig();
         }
 
         private void OnCheckBoxToggled(BaseButton.ButtonToggledEventArgs args)

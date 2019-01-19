@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Remoting.Channels;
 using SS14.Client.Interfaces;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
@@ -7,7 +8,7 @@ using SS14.Shared.Timing;
 
 namespace SS14.Client
 {
-    public partial class GameController
+    internal partial class GameController
     {
         private GameLoop _mainLoop;
 
@@ -21,6 +22,15 @@ namespace SS14.Client
 
             IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
             IoCManager.BuildGraph();
+
+            if (Environment.GetCommandLineArgs().Contains("--headless"))
+            {
+                Mode = DisplayMode.Headless;
+            }
+            else
+            {
+                Mode = DisplayMode.OpenGL;
+            }
 
             var gc = new GameController();
             gc.Startup();
@@ -36,7 +46,11 @@ namespace SS14.Client
             };
 
             _mainLoop.Tick += (sender, args) => Update(args.DeltaSeconds);
-
+            if (Mode == DisplayMode.OpenGL)
+            {
+                _mainLoop.Render += (sender, args) => _displayManagerOpenGL.Render(new FrameEventArgs(args.DeltaSeconds));
+                _mainLoop.Input += (sender, args) => _displayManagerOpenGL.ProcessInput(new FrameEventArgs(args.DeltaSeconds));
+            }
             // set GameLoop.Running to false to return from this function.
             _mainLoop.Run();
         }

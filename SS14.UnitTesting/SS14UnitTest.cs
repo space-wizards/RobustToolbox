@@ -211,7 +211,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IClientConsole, ClientChatConsole>();
                     IoCManager.Register<IClientChatConsole, ClientChatConsole>();
                     //IoCManager.Register<ILightManager, LightManager>();
-                    IoCManager.Register<IDisplayManager, DisplayManager>();
+                    IoCManager.Register<IDisplayManager, DisplayManagerHeadless>();
                     //IoCManager.Register<IEyeManager, EyeManager>();
                     IoCManager.Register<IPrototypeManager, PrototypeManager>();
                     IoCManager.Register<IOverlayManager, OverlayManager>();

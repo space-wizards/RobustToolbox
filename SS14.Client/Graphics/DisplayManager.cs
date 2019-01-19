@@ -1,12 +1,8 @@
-using System;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Graphics;
-using SS14.Client.Utility;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics
 {
@@ -18,44 +14,37 @@ namespace SS14.Client.Graphics
     }
 
     /// <summary>
-    ///     Manages the game window, resolutions, fullscreen mode, vsync, etc...
+    ///     Manages the game window, resolutions, fullscreen mode, VSync, etc...
     /// </summary>
-    public class DisplayManager : IDisplayManager, IPostInjectInit
+    internal abstract class DisplayManager : IDisplayManager, IPostInjectInit
     {
-        [Dependency] readonly IConfigurationManager configurationManager;
+        private const string CVarVSync = "display.vsync";
+        private const string CVarWindowMode = "display.windowmode";
 
-        public WindowMode WindowMode { get; private set; } = WindowMode.Windowed;
-        public bool VSync { get; private set; } = false;
+        [Dependency] private readonly IConfigurationManager _configurationManager;
+        [Dependency] protected readonly IGameControllerProxyInternal _gameController;
+
+        protected WindowMode WindowMode { get; private set; } = WindowMode.Windowed;
+        protected bool VSync { get; private set; }
 
         void IPostInjectInit.PostInject()
         {
-            configurationManager.RegisterCVar("display.vsync", VSync, CVar.ARCHIVE);
-            configurationManager.RegisterCVar("display.windowmode", (int) WindowMode, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar(CVarVSync, VSync, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar(CVarWindowMode, (int) WindowMode, CVar.ARCHIVE);
         }
 
-        public void SetWindowTitle(string title)
+        public abstract void SetWindowTitle(string title);
+        public abstract void Initialize();
+
+        public virtual void ReloadConfig()
         {
-            if (GameController.OnGodot)
-            {
-                Godot.OS.SetWindowTitle(title);
-            }
+            _readConfig();
         }
 
-        public void Initialize()
+        protected void _readConfig()
         {
-            ReadConfig();
-        }
-
-        public void ReadConfig()
-        {
-            WindowMode = (WindowMode) configurationManager.GetCVar<int>("display.windowmode");
-            VSync = configurationManager.GetCVar<bool>("display.vsync");
-
-            if (GameController.OnGodot)
-            {
-                Godot.OS.VsyncEnabled = VSync;
-                Godot.OS.WindowFullscreen = WindowMode == WindowMode.Fullscreen;
-            }
+            WindowMode = (WindowMode) _configurationManager.GetCVar<int>(CVarWindowMode);
+            VSync = _configurationManager.GetCVar<bool>(CVarVSync);
         }
     }
 }

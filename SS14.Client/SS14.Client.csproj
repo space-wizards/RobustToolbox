@@ -67,6 +67,7 @@
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0005" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="YamlDotNet" Version="5.0.1" />
+    <PackageReference Include="OpenTK" Version="3.0.1" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -128,6 +129,9 @@
     <Compile Include="Console\Commands\Debug.cs" />
     <Compile Include="GameStates\ClientGameStateManager.cs" />
     <Compile Include="Graphics\CanvasLayers.cs" />
+    <Compile Include="Graphics\DisplayManagerGodot.cs" />
+    <Compile Include="Graphics\DisplayManagerHeadless.cs" />
+    <Compile Include="Graphics\DisplayManagerOpenGL.cs" />
     <Compile Include="Graphics\IDirectionalTextureProvider.cs" />
     <Compile Include="Graphics\Lighting\LightManager.Light.cs" />
     <Compile Include="Graphics\Lighting\LightManager.Occluder.cs" />
@@ -149,6 +153,7 @@
     <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IRenderableComponent.cs" />
     <Compile Include="Interfaces\GameStates\IClientGameStateManager.cs" />
+    <Compile Include="Interfaces\Graphics\IDisplayManagerOpenGL.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILight.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILightManager.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILightMode.cs" />

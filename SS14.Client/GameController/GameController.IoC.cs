@@ -62,7 +62,7 @@ using SS14.Shared.Map;
 namespace SS14.Client
 {
     // Partial of GameController to initialize IoC and some other low-level systems like it.
-    public sealed partial class GameController
+    internal sealed partial class GameController
     {
         private void InitIoC()
         {
@@ -119,6 +119,7 @@ namespace SS14.Client
             IoCManager.Register<IStateManager, StateManager>();
             IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
             IoCManager.Register<IGameControllerProxy, GameControllerProxy>();
+            IoCManager.Register<IGameControllerProxyInternal, GameControllerProxy>();
             if (OnGodot)
             {
                 IoCManager.Register<IInputManager, GodotInputManager>();
@@ -132,7 +133,21 @@ namespace SS14.Client
             IoCManager.Register<IClientConsole, ClientChatConsole>();
             IoCManager.Register<IClientChatConsole, ClientChatConsole>();
             IoCManager.Register<ILightManager, LightManager>();
-            IoCManager.Register<IDisplayManager, DisplayManager>();
+            switch (Mode)
+            {
+                case DisplayMode.Headless:
+                    IoCManager.Register<IDisplayManager, DisplayManagerHeadless>();
+                    break;
+                case DisplayMode.Godot:
+                    IoCManager.Register<IDisplayManager, DisplayManagerGodot>();
+                    break;
+                case DisplayMode.OpenGL:
+                    IoCManager.Register<IDisplayManager, DisplayManagerOpenGL>();
+                    IoCManager.Register<IDisplayManagerOpenGL, DisplayManagerOpenGL>();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
             IoCManager.Register<IEyeManager, EyeManager>();
             if (OnGodot)
             {

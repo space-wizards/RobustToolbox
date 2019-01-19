@@ -11,7 +11,7 @@ using SS14.Shared.Timing;
 
 namespace SS14.Client
 {
-    public partial class GameController : ClientEntryPoint
+    internal partial class GameController : ClientEntryPoint
     {
         private GameTimingGodot _gameTimingGodotGodot;
 
@@ -20,7 +20,7 @@ namespace SS14.Client
 #if !X64
             throw new InvalidOperationException("The client cannot start outside x64.");
 #endif
-            OnGodot = true;
+            Mode = DisplayMode.Godot;
             tree.SetAutoAcceptQuit(false);
             IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
             IoCManager.BuildGraph();

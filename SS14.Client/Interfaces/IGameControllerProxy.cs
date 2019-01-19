@@ -4,4 +4,9 @@ namespace SS14.Client.Interfaces
     {
         IGameController GameController { get; }
     }
+
+    internal interface IGameControllerProxyInternal : IGameControllerProxy
+    {
+        new IGameControllerInternal GameController { get; }
+    }
 }

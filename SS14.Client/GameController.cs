@@ -44,9 +44,18 @@ namespace SS14.Client
 {
     // Gets automatically ran by SS14.Client.Godot.
     [UsedImplicitly]
-    public sealed partial class GameController : IGameController
+    internal sealed partial class GameController : IGameControllerInternal
     {
-        internal static bool OnGodot { get; private set; }
+        public enum DisplayMode
+        {
+            Headless,
+            Godot,
+            OpenGL
+        }
+
+        internal static DisplayMode Mode { get; private set; }
+
+        internal static bool OnGodot => Mode == DisplayMode.Godot;
 
         /// <summary>
         ///     QueueFreeing a Godot node during finalization can cause segfaults.
@@ -77,8 +86,8 @@ namespace SS14.Client
         [Dependency] private readonly IOverlayManager _overlayManager;
         [Dependency] private readonly ILogManager _logManager;
         [Dependency] private readonly ITaskManager _taskManager;
-
         [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager;
+        private IDisplayManagerOpenGL _displayManagerOpenGL;
 
         private void Startup()
         {
@@ -93,6 +102,10 @@ namespace SS14.Client
             // Load config.
             _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
 
+            if (Mode == DisplayMode.OpenGL)
+            {
+                _displayManagerOpenGL = IoCManager.Resolve<IDisplayManagerOpenGL>();
+            }
             _displayManager.Initialize();
             _displayManager.SetWindowTitle("Space Station 14");
 
@@ -156,6 +169,10 @@ namespace SS14.Client
                 Logger.Info("Shutting down!");
             }
 
+            if (Mode != DisplayMode.Godot)
+            {
+                _mainLoop.Running = false;
+            }
             Logger.Debug("Goodbye");
             IoCManager.Clear();
             ShuttingDownHard = true;
@@ -166,8 +183,8 @@ namespace SS14.Client
 
         private void Update(float frameTime)
         {
-            _networkManager.ProcessPackets();
             var eventArgs = new ProcessFrameEventArgs(frameTime);
+            _networkManager.ProcessPackets();
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, eventArgs.Elapsed);
             _timerManager.UpdateTimers(frameTime);
             _taskManager.ProcessPendingTasks();

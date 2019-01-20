@@ -1,6 +1,6 @@
 ﻿namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.BoxContainer))]
+    [ControlWrap(typeof(BoxContainer))]
     public abstract class BoxContainer : Container
     {
         public BoxContainer() : base()

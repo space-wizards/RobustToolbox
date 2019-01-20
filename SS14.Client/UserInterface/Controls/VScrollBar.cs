@@ -13,9 +13,11 @@ namespace SS14.Client.UserInterface.Controls
         public VScrollBar() : base()
         {
         }
+
         public VScrollBar(string name) : base(name)
         {
         }
+
         internal VScrollBar(Godot.ScrollBar control) : base(control)
         {
         }

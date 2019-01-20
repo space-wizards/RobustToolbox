@@ -5,15 +5,17 @@ using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Reflection;
 using System;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
-    [Reflect(false)]
+    [ControlWrap("res://Engine/Scenes/SS14Window/SS14Window.tscn")]
     public class SS14Window : Control
     {
         public SS14Window() : base()
         {
         }
+
         public SS14Window(string name) : base(name)
         {
         }
@@ -29,29 +31,21 @@ namespace SS14.Client.UserInterface.CustomControls
             Right = 1 << 4,
         }
 
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return LoadScene("res://Scenes/SS14Window/SS14Window.tscn");
-        }
-
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = control;
-        }
-
-        new private Godot.Control SceneControl;
+        protected override ResourcePath ScenePath => new ResourcePath("/Scenes/SS14Window/SS14Window.tscn");
 
         public Control Contents { get; private set; }
         private TextureButton CloseButton;
 
         private const int DRAG_MARGIN_SIZE = 7;
+
         // TODO: Unhardcode this header size.
         private const float HEADER_SIZE_Y = 25;
         protected virtual Vector2 ContentsMinimumSize => new Vector2(50, 50);
+
         protected override Vector2 CalculateMinimumSize()
         {
-            var marginSize = new Vector2(Contents.MarginLeft - Contents.MarginRight, Contents.MarginTop - Contents.MarginBottom);
+            var marginSize = new Vector2(Contents.MarginLeft - Contents.MarginRight,
+                Contents.MarginTop - Contents.MarginBottom);
             return ContentsMinimumSize + marginSize;
         }
 
@@ -100,10 +94,6 @@ namespace SS14.Client.UserInterface.CustomControls
             if (disposing)
             {
                 CloseButton.OnPressed -= CloseButtonPressed;
-                CloseButton = null;
-                SceneControl = null;
-                Contents = null;
-                CloseButton = null;
             }
         }
 
@@ -276,17 +266,29 @@ namespace SS14.Client.UserInterface.CustomControls
             var root = UserInterfaceManager.WindowRoot;
             if (Parent != root)
             {
-                throw new InvalidOperationException("Window is not a child of the window root! You need to call AddToScreen first!");
+                throw new InvalidOperationException(
+                    "Window is not a child of the window root! You need to call AddToScreen first!");
             }
-            root.SceneControl.MoveChild(SceneControl, root.SceneControl.GetChildCount());
+
+            if (GameController.OnGodot)
+            {
+                root.SceneControl.MoveChild(SceneControl, root.SceneControl.GetChildCount());
+            }
         }
 
         public bool IsAtFront()
         {
+            if (!GameController.OnGodot)
+            {
+                return false;
+            }
+
             if (Parent != UserInterfaceManager.WindowRoot)
             {
-                throw new InvalidOperationException("Window is not a child of the window root! You need to call AddToScreen first!");
+                throw new InvalidOperationException(
+                    "Window is not a child of the window root! You need to call AddToScreen first!");
             }
+
             var siblings = Parent.SceneControl.GetChildren();
             var ourPos = SceneControl.GetPositionInParent();
             for (var i = ourPos + 1; i < siblings.Count; i++)
@@ -310,6 +312,7 @@ namespace SS14.Client.UserInterface.CustomControls
             {
                 Parent.RemoveChild(this);
             }
+
             UserInterfaceManager.WindowRoot.AddChild(this);
         }
 
@@ -317,8 +320,10 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             if (Parent != UserInterfaceManager.WindowRoot)
             {
-                throw new InvalidOperationException("Window is not a child of the window root! You need to call AddToScreen first!");
+                throw new InvalidOperationException(
+                    "Window is not a child of the window root! You need to call AddToScreen first!");
             }
+
             Visible = true;
             MoveToFront();
         }
@@ -327,8 +332,10 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             if (Parent != UserInterfaceManager.WindowRoot)
             {
-                throw new InvalidOperationException("Window is not a child of the window root! You need to call AddToScreen first!");
+                throw new InvalidOperationException(
+                    "Window is not a child of the window root! You need to call AddToScreen first!");
             }
+
             Position = (Parent.Size - Size) / 2;
             Open();
         }
@@ -337,7 +344,8 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             if (Parent != UserInterfaceManager.WindowRoot)
             {
-                throw new InvalidOperationException("Window is not a child of the window root! You need to call AddToScreen first!");
+                throw new InvalidOperationException(
+                    "Window is not a child of the window root! You need to call AddToScreen first!");
             }
 
             Position = new Vector2(0, (Parent.Size.Y - Size.Y) / 2);
@@ -346,11 +354,17 @@ namespace SS14.Client.UserInterface.CustomControls
         // Prevent window headers from getting off screen due to game window resizes.
         protected override void Update(ProcessFrameEventArgs args)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             var windowSize = Godot.OS.GetWindowSize().Convert();
             if (Position.Y > windowSize.Y)
             {
                 Position = new Vector2(Position.X, windowSize.Y - HEADER_SIZE_Y);
             }
+
             if (Position.X > windowSize.X)
             {
                 // 50 is arbitrary here. As long as it's bumped back into view.

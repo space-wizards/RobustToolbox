@@ -8,6 +8,7 @@ namespace SS14.Client.Graphics
 {
     static class CanvasLayers
     {
+        public const int LAYER_SCREEN_BELOW_WORLD = -1;
         public const int LAYER_WORLD = 1;
         public const int LAYER_DEFERRED_LIGHTING = 2;
         public const int LAYER_GUI = 3;

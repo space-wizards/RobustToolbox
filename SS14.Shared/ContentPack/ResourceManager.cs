@@ -13,7 +13,7 @@ namespace SS14.Shared.ContentPack
     /// <summary>
     ///     Virtual file system for all disk resources.
     /// </summary>
-    public partial class ResourceManager : IResourceManager
+    public partial class ResourceManager : IResourceManagerInternal
     {
         private const string DataFolderName = "Space Station 14";
 
@@ -218,6 +218,17 @@ namespace SS14.Shared.ContentPack
             }
             diskPath = null;
             return false;
+        }
+
+        public void MountStreamAt(MemoryStream stream, ResourcePath path)
+        {
+            if (!path.IsRooted)
+            {
+                throw new ArgumentException("Path must be rooted.", nameof(path));
+            }
+            var loader = new SingleStreamLoader(stream, path.ToRelativePath());
+            loader.Mount();
+            _contentRoots.Add((ResourcePath.Root, loader));
         }
     }
 }

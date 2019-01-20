@@ -229,7 +229,7 @@ namespace SS14.Shared.ContentPack
                 }
                 catch (Exception e)
                 {
-                    Logger.Error("srv", $"Exception loading DLL {assemblyName}.dll: {e}");
+                    Logger.ErrorS("srv", $"Exception loading DLL {assemblyName}.dll: {e}");
                     return false;
                 }
             }
@@ -248,7 +248,7 @@ namespace SS14.Shared.ContentPack
                     }
                     catch (Exception e)
                     {
-                        Logger.Error("srv", $"Exception loading DLL {assemblyName}.dll: {e}");
+                        Logger.ErrorS("srv", $"Exception loading DLL {assemblyName}.dll: {e}");
                         return false;
                     }
                 }
@@ -262,7 +262,7 @@ namespace SS14.Shared.ContentPack
                     }
                     catch (Exception e)
                     {
-                        Logger.Error("srv", $"Exception loading DLL {assemblyName}.dll: {e}");
+                        Logger.ErrorS("srv", $"Exception loading DLL {assemblyName}.dll: {e}");
                         return false;
                     }
                 }

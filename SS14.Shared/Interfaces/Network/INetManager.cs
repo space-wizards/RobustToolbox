@@ -58,19 +58,13 @@ namespace SS14.Shared.Interfaces.Network
         /// <summary>
         ///     Starts the server running and listening on the port.
         /// </summary>
-        void Startup();
+        void StartServer();
 
         /// <summary>
         ///     Shuts down this peer, disconnecting all channels.
         /// </summary>
         /// <param name="reason">String describing why the peer was shut down.</param>
         void Shutdown(string reason);
-
-        /// <summary>
-        ///     Restarts this peer, disconnecting all channels.
-        /// </summary>
-        /// <param name="reason">String describing why the peer was restarted.</param>
-        void Restart(string reason);
 
         /// <summary>
         ///     Process all queued packets. Should be called often.

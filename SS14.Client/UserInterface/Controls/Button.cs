@@ -13,48 +13,66 @@ namespace SS14.Client.UserInterface.Controls
         public Button() : base()
         {
         }
+
         public Button(string name) : base(name)
         {
         }
+
         internal Button(Godot.Button button) : base(button)
         {
         }
-
-        new private Godot.Button SceneControl;
 
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.Button();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.Button)control;
-        }
-
         public AlignMode TextAlign
         {
-            get => (AlignMode)SceneControl.Align;
-            set => SceneControl.Align = (Godot.Button.TextAlign)value;
+            get => GameController.OnGodot ? (AlignMode)SceneControl.Get("align") : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Set("align", (Godot.Button.TextAlign) value);
+                }
+            }
         }
 
         public bool ClipText
         {
-            get => SceneControl.ClipText;
-            set => SceneControl.ClipText = value;
+            get => GameController.OnGodot ? (bool)SceneControl.Get("clip_text") : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Set("clip_text", value);
+                }
+            }
         }
 
         public bool Flat
         {
-            get => SceneControl.Flat;
-            set => SceneControl.Flat = value;
+            get => GameController.OnGodot ? (bool)SceneControl.Get("flat") : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Set("flat", value);
+                }
+            }
         }
 
         public string Text
         {
-            get => SceneControl.Text;
-            set => SceneControl.Text = value;
+            get => GameController.OnGodot ? (string)SceneControl.Get("text") : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Set("text", value);
+                }
+            }
         }
 
         private Color? _fontColorOverride;
@@ -91,9 +109,9 @@ namespace SS14.Client.UserInterface.Controls
 
         public enum AlignMode
         {
-            Left = Godot.Button.TextAlign.Left,
-            Center = Godot.Button.TextAlign.Center,
-            Right = Godot.Button.TextAlign.Right,
+            Left = 0,
+            Center = 1,
+            Right = 2,
         }
     }
 }

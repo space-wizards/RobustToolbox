@@ -6,7 +6,7 @@ namespace SS14.Client.Audio
     {
         internal abstract Godot.AudioStream GodotAudioStream { get; }
 
-        public TimeSpan Length => TimeSpan.FromSeconds(GodotAudioStream.GetLength());
+        public TimeSpan Length => TimeSpan.FromSeconds(GodotAudioStream?.GetLength() ?? 0);
     }
 
     internal class GodotAudioStreamSource : AudioStream

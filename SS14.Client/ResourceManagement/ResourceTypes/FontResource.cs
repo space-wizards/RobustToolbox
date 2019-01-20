@@ -16,10 +16,16 @@ namespace SS14.Client.ResourceManagement
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             if (!cache.ContentFileExists(path))
             {
                 throw new FileNotFoundException("Content file does not exist for texture");
             }
+
             if (!cache.TryGetDiskFilePath(path, out string diskPath))
             {
                 throw new InvalidOperationException("Textures can only be loaded from disk.");
@@ -44,8 +50,10 @@ namespace SS14.Client.ResourceManagement
 
         public override void Dispose()
         {
-            FontData.Dispose();
-            FontData = null;
+            if (GameController.OnGodot)
+            {
+                FontData.Dispose();
+            }
         }
     }
 }

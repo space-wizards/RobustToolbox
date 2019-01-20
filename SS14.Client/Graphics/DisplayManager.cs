@@ -1,4 +1,5 @@
 using System;
+using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Utility;
 using SS14.Shared.Configuration;
@@ -21,8 +22,7 @@ namespace SS14.Client.Graphics
     /// </summary>
     public class DisplayManager : IDisplayManager, IPostInjectInit
     {
-        [Dependency]
-        readonly IConfigurationManager configurationManager;
+        [Dependency] readonly IConfigurationManager configurationManager;
 
         public WindowMode WindowMode { get; private set; } = WindowMode.Windowed;
         public bool VSync { get; private set; } = false;
@@ -30,7 +30,15 @@ namespace SS14.Client.Graphics
         void IPostInjectInit.PostInject()
         {
             configurationManager.RegisterCVar("display.vsync", VSync, CVar.ARCHIVE);
-            configurationManager.RegisterCVar("display.windowmode", (int)WindowMode, CVar.ARCHIVE);
+            configurationManager.RegisterCVar("display.windowmode", (int) WindowMode, CVar.ARCHIVE);
+        }
+
+        public void SetWindowTitle(string title)
+        {
+            if (GameController.OnGodot)
+            {
+                Godot.OS.SetWindowTitle(title);
+            }
         }
 
         public void Initialize()
@@ -40,11 +48,14 @@ namespace SS14.Client.Graphics
 
         public void ReadConfig()
         {
-            WindowMode = (WindowMode)configurationManager.GetCVar<int>("display.windowmode");
+            WindowMode = (WindowMode) configurationManager.GetCVar<int>("display.windowmode");
             VSync = configurationManager.GetCVar<bool>("display.vsync");
 
-            Godot.OS.VsyncEnabled = VSync;
-            Godot.OS.WindowFullscreen = WindowMode == WindowMode.Fullscreen;
+            if (GameController.OnGodot)
+            {
+                Godot.OS.VsyncEnabled = VSync;
+                Godot.OS.WindowFullscreen = WindowMode == WindowMode.Fullscreen;
+            }
         }
     }
 }

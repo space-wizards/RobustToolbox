@@ -1,4 +1,5 @@
-﻿using SS14.Shared.Interfaces.GameObjects;
+﻿using System;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network.Messages;
 
@@ -30,6 +31,17 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         /// <param name="message">Message that should be sent.</param>
         void SendSystemNetworkMessage(EntitySystemMessage message);
+
+        /// <summary>
+        /// Sends an Entity System Message to relevant System on a client.
+        /// Server: Sends the message to the relevant systems of the client on <paramref name="channel"/>
+        /// </summary>
+        /// <param name="message">Message that should be sent.</param>
+        /// <param name="channel">The client to send the message to.</param>
+        /// <exception cref="NotSupportedException">
+        ///    Thrown if called on the client.
+        /// </exception>
+        void SendSystemNetworkMessage(EntitySystemMessage message, INetChannel channel);
 
         /// <summary>
         /// Allows a component owned by this entity to send a message to a counterpart component on the

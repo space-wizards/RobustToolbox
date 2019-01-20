@@ -48,41 +48,41 @@ namespace SS14.Client.GameObjects
             base.Initialize();
             IoCManager.InjectDependencies(this);
 
-            var transform = Owner.GetComponent<IGodotTransformComponent>();
+            var transform = Owner.Transform;
             SnapGrid = Owner.GetComponent<SnapGridComponent>();
             SnapGrid.OnPositionChanged += SnapGridPositionChanged;
 
             const float halfSize = (-SideSize / 2) * EyeManager.PIXELSPERMETER;
-            var ne = new Godot.Vector2(halfSize, -halfSize);
-            var se = new Godot.Vector2(halfSize, halfSize);
-            var sw = new Godot.Vector2(-halfSize, halfSize);
-            var nw = new Godot.Vector2(-halfSize, -halfSize);
+            var ne = new Vector2(halfSize, -halfSize);
+            var se = new Vector2(halfSize, halfSize);
+            var sw = new Vector2(-halfSize, halfSize);
+            var nw = new Vector2(-halfSize, -halfSize);
 
             // North occluder.
             var occluder = lightManager.MakeOccluder();
             occluder.CullMode = OccluderCullMode.Clockwise;
-            occluder.SetGodotPolygon(new Godot.Vector2[] { nw, ne });
+            occluder.SetPolygon(new Vector2[] { nw, ne });
             occluders[(int)OccluderDir.North] = occluder;
             occluder.ParentTo(transform);
 
             // East occluder.
             occluder = lightManager.MakeOccluder();
             occluder.CullMode = OccluderCullMode.Clockwise;
-            occluder.SetGodotPolygon(new Godot.Vector2[] { ne, se });
+            occluder.SetPolygon(new Vector2[] { ne, se });
             occluders[(int)OccluderDir.East] = occluder;
             occluder.ParentTo(transform);
 
             // South occluder.
             occluder = lightManager.MakeOccluder();
             occluder.CullMode = OccluderCullMode.Clockwise;
-            occluder.SetGodotPolygon(new Godot.Vector2[] { se, sw });
+            occluder.SetPolygon(new Vector2[] { se, sw });
             occluders[(int)OccluderDir.South] = occluder;
             occluder.ParentTo(transform);
 
             // West occluder.
             occluder = lightManager.MakeOccluder();
             occluder.CullMode = OccluderCullMode.Clockwise;
-            occluder.SetGodotPolygon(new Godot.Vector2[] { sw, nw });
+            occluder.SetPolygon(new Vector2[] { sw, nw });
             occluders[(int)OccluderDir.West] = occluder;
             occluder.ParentTo(transform);
 

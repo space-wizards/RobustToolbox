@@ -48,7 +48,7 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="worldPos">The location of the tile in world coordinates.</param>
         /// <returns></returns>
-        IMapGrid FindGridAt(GridLocalCoordinates worldPos);
+        IMapGrid FindGridAt(GridCoordinates worldPos);
 
         /// <summary>
         ///     Finds all of the grids at this position in the world.

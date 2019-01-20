@@ -6,12 +6,14 @@ using SS14.Shared.IoC;
 using SS14.Shared.Reflection;
 using System;
 using System.Linq;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
-    [Reflect(false)]
-    class TileSpawnWindow : SS14Window
+    internal class TileSpawnWindow : SS14Window
     {
+        protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Placement/TileSpawnPanel.tscn");
+
         [Dependency]
         private readonly ITileDefinitionManager tileDefinitionManager;
         [Dependency]
@@ -22,11 +24,6 @@ namespace SS14.Client.UserInterface.CustomControls
         private Button ClearButton;
 
         private TileSpawnButton SelectedButton;
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return LoadScene("res://Scenes/Placement/TileSpawnPanel.tscn");
-        }
 
         protected override void Initialize()
         {
@@ -94,16 +91,12 @@ namespace SS14.Client.UserInterface.CustomControls
             }
         }
 
-        [Reflect(false)]
         private class TileSpawnButton : Control
         {
             public string TileDef { get; set; }
             public Button ActualButton { get; private set; }
 
-            private protected override Godot.Control SpawnSceneControl()
-            {
-                return LoadScene("res://Scenes/Placement/TileSpawnItem.tscn");
-            }
+            protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Placement/TileSpawnItem.tscn");
 
             protected override void Initialize()
             {

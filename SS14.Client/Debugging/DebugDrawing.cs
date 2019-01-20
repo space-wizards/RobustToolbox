@@ -66,7 +66,7 @@ namespace SS14.Client.Debugging
                 foreach (var boundingBox in _componentManager.GetAllComponents<ClientBoundingBoxComponent>())
                 {
                     // all entities have a TransformComponent
-                    var transform = boundingBox.Owner.GetComponent<ITransformComponent>();
+                    var transform = boundingBox.Owner.Transform;
 
                     // if not on the same map, continue
                     if (transform.MapID != _eyeManager.CurrentMap)

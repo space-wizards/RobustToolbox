@@ -119,6 +119,13 @@ namespace SS14.Shared.Maths
             Z = v.Z;
         }
 
+        public void Deconstruct(out float x, out float y, out float z)
+        {
+            x = X;
+            y = Y;
+            z = Z;
+        }
+
         #endregion
 
         #region Public Members
@@ -985,6 +992,14 @@ namespace SS14.Shared.Maths
             vec.Y *= scale;
             vec.Z *= scale;
             return vec;
+        }
+
+        /// <summary>
+        ///     Component wise multiply two vectors.
+        /// </summary>
+        public static Vector3 operator *(Vector3 a, Vector3 b)
+        {
+            return new Vector3(a.X * b.X, a.Y * b.Y, a.Z * b.Z);
         }
 
         /// <summary>

@@ -37,11 +37,15 @@ using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
+using SS14.Server.Interfaces.ServerStatus;
+using SS14.Server.Interfaces.Timing;
 using SS14.Server.Maps;
 using SS14.Server.Placement;
 using SS14.Server.Player;
 using SS14.Server.Prototypes;
 using SS14.Server.Reflection;
+using SS14.Server.ServerStatus;
+using SS14.Server.Timing;
 using SS14.Server.ViewVariables;
 using SS14.Shared.Asynchronous;
 using SS14.Shared.Configuration;
@@ -193,6 +197,7 @@ namespace SS14.UnitTesting
                     // Client stuff.
                     IoCManager.Register<IReflectionManager, ClientReflectionManager>();
                     IoCManager.Register<IResourceManager, ResourceCache>();
+                    IoCManager.Register<IResourceManagerInternal, ResourceCache>();
                     IoCManager.Register<IResourceCache, ResourceCache>();
                     IoCManager.Register<IClientNetManager, NetManager>();
                     IoCManager.Register<IClientEntityManager, ClientEntityManager>();
@@ -218,6 +223,7 @@ namespace SS14.UnitTesting
 
                 case UnitTestProject.Server:
                     IoCManager.Register<IResourceManager, ResourceManager>();
+                    IoCManager.Register<IResourceManagerInternal, ResourceManager>();
                     IoCManager.Register<IEntityManager, ServerEntityManager>();
                     IoCManager.Register<IServerEntityManager, ServerEntityManager>();
                     IoCManager.Register<IChatManager, ChatManager>();
@@ -238,6 +244,8 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IPrototypeManager, ServerPrototypeManager>();
                     IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
                     IoCManager.Register<IConGroupController, ConGroupController>();
+                    IoCManager.Register<IStatusHost, StatusHost>();
+                    IoCManager.Register<IPauseManager, PauseManager>();
                     break;
 
                 default:

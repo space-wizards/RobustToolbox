@@ -54,7 +54,7 @@ namespace SS14.Server.GameObjects.Components.Container
 
             foreach (var entity in ContainerList)
             {
-                var transform = entity.GetComponent<ITransformComponent>();
+                var transform = entity.Transform;
                 transform.DetachParent();
             }
         }
@@ -120,30 +120,39 @@ namespace SS14.Server.GameObjects.Components.Container
         /// <inheritdoc />
         public virtual bool CanInsert(IEntity toinsert)
         {
+            // cannot insert into itself.
+            if (Owner == toinsert)
+                return false;
+
             // Crucial, prevent circular insertion.
-            if (toinsert.Transform.ContainsEntity(Owner.Transform))
-            {
-                throw new InvalidOperationException("Attempt to insert entity into one of its children.");
-            }
-            return true;
+            return !toinsert.Transform.ContainsEntity(Owner.Transform);
+
+            //Improvement: Traverse the entire tree to make sure we are not creating a loop.
         }
 
         /// <inheritdoc />
         public bool Remove(IEntity toremove)
         {
+            if (toremove == null)
+                return true;
+
             if (!CanRemove(toremove))
             {
                 return false;
             }
             InternalRemove(toremove);
-            toremove.GetComponent<ITransformComponent>().DetachParent();
+
+            if (!toremove.IsValid())
+                return true;
+
+            toremove.Transform.DetachParent();
             return true;
         }
 
         /// <summary>
         /// Implement to remove the reference you used to store the entity
         /// </summary>
-        /// <param name="toinsert"></param>
+        /// <param name="toremove"></param>
         protected abstract void InternalRemove(IEntity toremove);
 
         /// <inheritdoc />

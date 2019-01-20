@@ -16,12 +16,9 @@ namespace SS14.Client.UserInterface
 {
     public sealed class UserInterfaceManager : IUserInterfaceManager, IPostInjectInit, IDisposable
     {
-        [Dependency]
-        readonly IConfigurationManager _config;
-        [Dependency]
-        readonly ISceneTreeHolder _sceneTreeHolder;
-        [Dependency]
-        readonly IInputManager _inputManager;
+        [Dependency] readonly IConfigurationManager _config;
+        [Dependency] readonly ISceneTreeHolder _sceneTreeHolder;
+        [Dependency] readonly IInputManager _inputManager;
 
         public Control Focused { get; private set; }
 
@@ -41,13 +38,16 @@ namespace SS14.Client.UserInterface
 
         public void Initialize()
         {
-            CanvasLayer = new Godot.CanvasLayer
+            if (GameController.OnGodot)
             {
-                Name = "UILayer",
-                Layer = CanvasLayers.LAYER_GUI
-            };
+                CanvasLayer = new Godot.CanvasLayer
+                {
+                    Name = "UILayer",
+                    Layer = CanvasLayers.LAYER_GUI
+                };
 
-            _sceneTreeHolder.SceneTree.GetRoot().AddChild(CanvasLayer);
+                _sceneTreeHolder.SceneTree.GetRoot().AddChild(CanvasLayer);
+            }
 
             RootControl = new Control("UIRoot")
             {
@@ -55,7 +55,10 @@ namespace SS14.Client.UserInterface
             };
             RootControl.SetAnchorPreset(Control.LayoutPreset.Wide);
 
-            CanvasLayer.AddChild(RootControl.SceneControl);
+            if (GameController.OnGodot)
+            {
+                CanvasLayer.AddChild(RootControl.SceneControl);
+            }
 
             StateRoot = new Control("StateRoot")
             {
@@ -65,8 +68,8 @@ namespace SS14.Client.UserInterface
             RootControl.AddChild(StateRoot);
 
             WindowRoot = new Control("WindowRoot");
-            WindowRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             WindowRoot.MouseFilter = Control.MouseFilterMode.Ignore;
+            WindowRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             RootControl.AddChild(WindowRoot);
 
             PopupControl = new AcceptDialog("RootPopup");
@@ -79,13 +82,9 @@ namespace SS14.Client.UserInterface
             _debugMonitors = new DebugMonitors();
             RootControl.AddChild(_debugMonitors);
 
-            _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugMonitors, InputCmdHandler.FromDelegate(enabled: session =>
-            {
-                DebugMonitors.Visible = true;
-            }, disabled: session =>
-            {
-                DebugMonitors.Visible = false;
-            }));
+            _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugMonitors,
+                InputCmdHandler.FromDelegate(enabled: session => { DebugMonitors.Visible = true; },
+                    disabled: session => { DebugMonitors.Visible = false; }));
         }
 
         public void Dispose()

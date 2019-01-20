@@ -34,6 +34,11 @@ namespace SS14.Client.Graphics.Shaders
         /// </summary>
         public Shader Instance()
         {
+            if (!GameController.OnGodot)
+            {
+                return new Shader();
+            }
+
             Godot.Material mat;
 
             switch (Kind)
@@ -51,6 +56,7 @@ namespace SS14.Client.Graphics.Shaders
                             shaderMat.SetShaderParam(pair.Key, pair.Value);
                         }
                     }
+
                     break;
                 case ShaderKind.Canvas:
                     mat = new Godot.CanvasItemMaterial
@@ -113,6 +119,11 @@ namespace SS14.Client.Graphics.Shaders
 
         private void ReadCanvasKind(YamlMappingNode mapping)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             if (mapping.TryGetNode("light_mode", out var node))
             {
                 switch (node.AsString())
@@ -166,6 +177,10 @@ namespace SS14.Client.Graphics.Shaders
 
         private object ParseShaderParamFor(YamlNode node, ShaderParamType type)
         {
+            if (!GameController.OnGodot)
+            {
+                throw new NotImplementedException();
+            }
             switch (type)
             {
                 case ShaderParamType.Void:
@@ -196,6 +211,7 @@ namespace SS14.Client.Graphics.Shaders
                     var path = node.AsResourcePath();
                     var resc = IoCManager.Resolve<IResourceCache>();
                     return resc.GetResource<TextureResource>(path).Texture.GodotTexture;
+
                 // If something's not handled here, then that's probably because I was lazy.
                 default:
                     throw new NotImplementedException();

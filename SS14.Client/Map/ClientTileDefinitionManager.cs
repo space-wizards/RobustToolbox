@@ -14,21 +14,35 @@ namespace SS14.Client.Map
     /// </summary>
     public class ClientTileDefinitionManager : TileDefinitionManager, IClientTileDefinitionManager
     {
-        [Dependency]
-        readonly IResourceCache resourceCache;
+        [Dependency] readonly IResourceCache resourceCache;
 
-        public Godot.TileSet TileSet { get; private set; } = new Godot.TileSet();
+        public Godot.TileSet TileSet { get; private set; }
 
         private Dictionary<ushort, TextureResource> Textures = new Dictionary<ushort, TextureResource>();
 
+        public ClientTileDefinitionManager()
+        {
+            if (GameController.OnGodot)
+            {
+                TileSet = new Godot.TileSet();
+            }
+        }
+
         public override ushort Register(ITileDefinition tileDef)
         {
+            if (!GameController.OnGodot)
+            {
+                return base.Register(tileDef);
+            }
+
             var ret = base.Register(tileDef);
 
             TileSet.CreateTile(ret);
             if (!string.IsNullOrEmpty(tileDef.SpriteName))
             {
-                var texture = resourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/Tiles/") / $@"{tileDef.SpriteName}.png");
+                var texture =
+                    resourceCache.GetResource<TextureResource>(
+                        new ResourcePath("/Textures/Tiles/") / $@"{tileDef.SpriteName}.png");
                 TileSet.TileSetTexture(ret, texture.Texture.GodotTexture);
                 Textures[ret] = texture;
             }

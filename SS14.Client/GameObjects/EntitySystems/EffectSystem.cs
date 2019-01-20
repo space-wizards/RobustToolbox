@@ -48,6 +48,10 @@ namespace SS14.Client.GameObjects
         {
             base.Initialize();
             IoCManager.InjectDependencies(this);
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             DrawingNode = new Godot.Node2D()
             {
                 Name = "EffectSystem",
@@ -73,6 +77,10 @@ namespace SS14.Client.GameObjects
         public override void Shutdown()
         {
             base.Shutdown();
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             VS.FreeRid(ShadedCanvasItem);
             VS.FreeRid(UnshadedCanvasItem);
             UnshadedMaterial.Dispose();
@@ -153,6 +161,10 @@ namespace SS14.Client.GameObjects
         {
             var map = eyeManager.CurrentMap;
 
+            if (GameController.OnGodot)
+            {
+                return;
+            }
             VS.CanvasItemClear(ShadedCanvasItem);
             VS.CanvasItemClear(UnshadedCanvasItem);
             using (var shadedHandle = new DrawingHandleScreen(ShadedCanvasItem))
@@ -188,12 +200,12 @@ namespace SS14.Client.GameObjects
             /// <summary>
             /// Effect position relative to the emit position
             /// </summary>
-            public GridLocalCoordinates Coordinates;
+            public GridCoordinates Coordinates;
 
             /// <summary>
             /// Where the emitter was when the effect was first emitted
             /// </summary>
-            public GridLocalCoordinates EmitterCoordinates;
+            public GridCoordinates EmitterCoordinates;
 
             /// <summary>
             /// Effect's x/y velocity
@@ -325,7 +337,7 @@ namespace SS14.Client.GameObjects
 
                 //Calculate new position from our velocity as well as possible rotation/movement around emitter
                 deltaPosition += Velocity * frameTime;
-                Coordinates = new GridLocalCoordinates(Coordinates.Position + deltaPosition, Coordinates.Grid);
+                Coordinates = new GridCoordinates(Coordinates.Position + deltaPosition, Coordinates.Grid);
 
                 //Finish calculating new rotation, size, color
                 Rotation += RotationRate * frameTime;

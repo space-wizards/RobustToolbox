@@ -24,14 +24,12 @@ namespace SS14.Client.Graphics.Lighting
 {
     public sealed partial class LightManager : ILightManager, IDisposable, IPostInjectInit
     {
-        [Dependency]
-        readonly ISceneTreeHolder sceneTreeHolder;
-        [Dependency]
-        readonly IConfigurationManager configManager;
-        [Dependency]
-        readonly IResourceCache resourceCache;
+        [Dependency] readonly ISceneTreeHolder sceneTreeHolder;
+        [Dependency] readonly IConfigurationManager configManager;
+        [Dependency] readonly IResourceCache resourceCache;
 
         private bool enabled = true;
+
         public bool Enabled
         {
             get => enabled;
@@ -64,12 +62,18 @@ namespace SS14.Client.Graphics.Lighting
 
         public void PostInject()
         {
-            configManager.RegisterCVar("display.lighting_system", LightingSystem.Normal, Shared.Configuration.CVar.ARCHIVE);
+            configManager.RegisterCVar("display.lighting_system", LightingSystem.Normal,
+                Shared.Configuration.CVar.ARCHIVE);
         }
 
         public void Initialize()
         {
             System = configManager.GetCVar<LightingSystem>("display.lighting_system");
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
             canvasModulate = new Godot.CanvasModulate()
             {
                 // Black
@@ -89,7 +93,8 @@ namespace SS14.Client.Graphics.Lighting
                 deferredViewport.AddChild(canvasModulate);
                 rootViewport.AddChild(deferredViewport);
 
-                var whiteTex = resourceCache.GetResource<TextureResource>(new ResourcePath(@"/Textures/Effects/Light/white.png"));
+                var whiteTex =
+                    resourceCache.GetResource<TextureResource>(new ResourcePath(@"/Textures/Effects/Light/white.png"));
                 deferredMaskBackground = new Godot.Sprite()
                 {
                     Name = "DeferredMaskBackground",
@@ -117,6 +122,7 @@ namespace SS14.Client.Graphics.Lighting
                 sceneTreeHolder.WorldRoot.AddChild(canvasModulate);
             }
         }
+
 
         private void OnWindowSizeChanged()
         {
@@ -153,6 +159,7 @@ namespace SS14.Client.Graphics.Lighting
             deferredMaskLayer.AddChild(deferredMaskSprite);
         }
 
+
         public void Dispose()
         {
             if (disposed)
@@ -164,6 +171,11 @@ namespace SS14.Client.Graphics.Lighting
             foreach (var light in localLights)
             {
                 light.Dispose();
+            }
+
+            if (!GameController.OnGodot)
+            {
+                return;
             }
 
             if (System == LightingSystem.Deferred)
@@ -230,10 +242,15 @@ namespace SS14.Client.Graphics.Lighting
 
         private void UpdateEnabled()
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             if (System == LightingSystem.Deferred)
             {
                 deferredMaskSprite.Visible = Enabled;
             }
+
             foreach (var light in lights)
             {
                 light.UpdateEnabled();
@@ -242,7 +259,7 @@ namespace SS14.Client.Graphics.Lighting
 
         public void FrameUpdate(RenderFrameEventArgs args)
         {
-            if (System == LightingSystem.Deferred)
+            if (GameController.OnGodot && System == LightingSystem.Deferred)
             {
                 var transform = rootViewport.CanvasTransform;
                 deferredViewport.CanvasTransform = transform;

@@ -18,7 +18,7 @@ namespace SS14.Client.Placement.Modes
 
         public override void Render()
         {
-            if (onGrid)
+            if (GameController.OnGodot && onGrid)
             {
                 const int ppm = EyeManager.PIXELSPERMETER;
                 var viewportSize = pManager.sceneTree.SceneTree.Root.Size.Convert();
@@ -58,10 +58,10 @@ namespace SS14.Client.Placement.Modes
                 (float)(Math.Round((MouseCoords.Position.Y / (double)snapSize - 0.5f), MidpointRounding.AwayFromZero) + 0.5) * snapSize);
 
             //Adjust mouseCoords to new calculated position
-            MouseCoords = new GridLocalCoordinates(mouseLocal + new Vector2(pManager.PlacementOffset.X, pManager.PlacementOffset.Y), MouseCoords.Grid);
+            MouseCoords = new GridCoordinates(mouseLocal + new Vector2(pManager.PlacementOffset.X, pManager.PlacementOffset.Y), MouseCoords.Grid);
         }
 
-        public override bool IsValidPosition(GridLocalCoordinates position)
+        public override bool IsValidPosition(GridCoordinates position)
         {
             if (!RangeCheck(position))
             {

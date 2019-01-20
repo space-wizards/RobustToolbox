@@ -12,9 +12,11 @@ namespace SS14.Client.UserInterface.Controls
         public ScrollBar() : base()
         {
         }
+
         public ScrollBar(string name) : base(name)
         {
         }
+
         public ScrollBar(Godot.ScrollBar control) : base(control)
         {
         }

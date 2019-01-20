@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace SS14.Shared.Maths
 {
@@ -695,6 +696,9 @@ namespace SS14.Shared.Maths
         ///     Interpolate two colors with a lambda, AKA returning the two colors combined with a ratio of
         ///     <paramref name="lambda" />.
         /// </summary>
+        /// <remarks>
+        ///     This method is opposite of GLSL's <c>mix()</c> function.
+        /// </remarks>
         /// <param name="endPoint1"></param>
         /// <param name="endPoint2"></param>
         /// <param name="lambda">
@@ -757,6 +761,86 @@ namespace SS14.Shared.Maths
             throw new ArgumentException("Invalid color code and no fallback provided.", nameof(hexColor));
         }
 
+        public static Color Blend(Color dstColor, Color srcColor, BlendFactor dstFactor, BlendFactor srcFactor)
+        {
+            var dst = new Vector3(dstColor.R, dstColor.G, dstColor.B);
+            var src = new Vector3(srcColor.R, srcColor.G, srcColor.B);
+
+            var ret = new Vector3();
+
+            switch (dstFactor)
+            {
+                case BlendFactor.Zero:
+                    break;
+                case BlendFactor.One:
+                    ret = dst;
+                    break;
+                case BlendFactor.SrcColor:
+                    ret = dst * src;
+                    break;
+                case BlendFactor.OneMinusSrcColor:
+                    ret = dst * (Vector3.One - src);
+                    break;
+                case BlendFactor.DstColor:
+                    ret = dst * dst;
+                    break;
+                case BlendFactor.OneMinusDstColor:
+                    ret = dst * (Vector3.One - dst);
+                    break;
+                case BlendFactor.SrcAlpha:
+                    ret = dst * srcColor.A;
+                    break;
+                case BlendFactor.OneMinusSrcAlpha:
+                    ret = dst * (1 - srcColor.A);
+                    break;
+                case BlendFactor.DstAlpha:
+                    ret = dst * dstColor.A;
+                    break;
+                case BlendFactor.OneMinusDstAlpha:
+                    ret = dst * (1 - dstColor.A);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+
+            switch (srcFactor)
+            {
+                case BlendFactor.Zero:
+                    break;
+                case BlendFactor.One:
+                    ret += src;
+                    break;
+                case BlendFactor.SrcColor:
+                    ret += src * src;
+                    break;
+                case BlendFactor.OneMinusSrcColor:
+                    ret += src * (Vector3.One - src);
+                    break;
+                case BlendFactor.DstColor:
+                    ret += src * dst;
+                    break;
+                case BlendFactor.OneMinusDstColor:
+                    ret += src * (Vector3.One - dst);
+                    break;
+                case BlendFactor.SrcAlpha:
+                    ret += src * srcColor.A;
+                    break;
+                case BlendFactor.OneMinusSrcAlpha:
+                    ret += src * (1 - srcColor.A);
+                    break;
+                case BlendFactor.DstAlpha:
+                    ret += src * dstColor.A;
+                    break;
+                case BlendFactor.OneMinusDstAlpha:
+                    ret += src * (1 - dstColor.A);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+
+            return new Color(ret.X, ret.Y, ret.Z, Math.Min(1, dstColor.A + dstColor.A * srcColor.A));
+        }
+
         public string ToHex()
         {
             return $"#{RByte:X2}{GByte:X2}{BByte:X2}{AByte:X2}";
@@ -774,6 +858,21 @@ namespace SS14.Shared.Maths
                 FloatMath.CloseTo(G, other.G) &&
                 FloatMath.CloseTo(B, other.B) &&
                 FloatMath.CloseTo(A, other.A);
+        }
+
+        [PublicAPI]
+        public enum BlendFactor
+        {
+            Zero,
+            One,
+            SrcColor,
+            OneMinusSrcColor,
+            DstColor,
+            OneMinusDstColor,
+            SrcAlpha,
+            OneMinusSrcAlpha,
+            DstAlpha,
+            OneMinusDstAlpha,
         }
 
         #region Static Colors

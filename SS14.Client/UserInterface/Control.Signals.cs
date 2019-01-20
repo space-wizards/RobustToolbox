@@ -111,7 +111,7 @@ namespace SS14.Client.UserInterface
 
         private void __guiInputHook(object ev)
         {
-            HandleGuiInput((Godot.InputEvent)ev);
+            HandleGuiInput((Godot.InputEvent) ev);
         }
 
         private void __focusEnteredHook()

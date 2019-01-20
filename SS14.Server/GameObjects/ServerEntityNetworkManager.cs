@@ -60,29 +60,25 @@ namespace SS14.Server.GameObjects
         /// <summary>
         /// Sends a message to the relevant system(s) on all clients.
         /// </summary>
-        void IEntityNetworkManager.SendSystemNetworkMessage(EntitySystemMessage message)
-        {
-            SendSystemNetworkMessage(message, null);
-        }
-
-        /// <summary>
-        /// Sends a message to the relevant system(s) on the target client.
-        /// </summary>
-        public void SendSystemNetworkMessage(EntitySystemMessage message, INetChannel targetConnection = null)
+        public void SendSystemNetworkMessage(EntitySystemMessage message)
         {
             var newMsg = _mNetManager.CreateNetMessage<MsgEntity>();
             newMsg.Type = EntityMessageType.SystemMessage;
             newMsg.SystemMessage = message;
 
-            //Send the message
-            if (targetConnection != null)
-            {
-                _mNetManager.ServerSendMessage(newMsg, targetConnection);
-            }
-            else
-            {
-                _mNetManager.ServerSendToAll(newMsg);
-            }
+            _mNetManager.ServerSendToAll(newMsg);
+        }
+
+        /// <summary>
+        /// Sends a message to the relevant system(s) on the target client.
+        /// </summary>
+        public void SendSystemNetworkMessage(EntitySystemMessage message, INetChannel targetConnection)
+        {
+            var newMsg = _mNetManager.CreateNetMessage<MsgEntity>();
+            newMsg.Type = EntityMessageType.SystemMessage;
+            newMsg.SystemMessage = message;
+
+            _mNetManager.ServerSendMessage(newMsg, targetConnection);
         }
 
         #endregion Sending

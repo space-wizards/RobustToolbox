@@ -5,6 +5,7 @@ using SS14.Server.Interfaces.Player;
 using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
@@ -168,6 +169,17 @@ namespace SS14.Server.ViewVariables
 
                     theObject = value;
                     break;
+
+                case ViewVariablesIoCSelector ioCSelector:
+                    var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+                    if (!reflectionManager.TryLooseGetType(ioCSelector.TypeName, out var type))
+                    {
+                        Deny(DenyReason.InvalidRequest);
+                        return;
+                    }
+                    theObject = IoCManager.ResolveType(type);
+                    break;
+
                 default:
                     Deny(DenyReason.InvalidRequest);
                     return;

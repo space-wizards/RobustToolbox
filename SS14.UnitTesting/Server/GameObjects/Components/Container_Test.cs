@@ -66,14 +66,14 @@ namespace SS14.UnitTesting.Server.GameObjects
         {
             var owner = EntityManager.SpawnEntity("dummy");
             var inserted = EntityManager.SpawnEntity("dummy");
-            var transform = inserted.GetComponent<ITransformComponent>();
+            var transform = inserted.Transform;
 
             var container = ContainerManagerComponent.Create<Container>("dummy", owner);
             Assert.That(container.Insert(inserted), Is.True);
             Assert.That(transform.Parent.Owner, Is.EqualTo(owner));
 
             var container2 = ContainerManagerComponent.Create<Container>("dummy", inserted);
-            Assert.That(() => container2.Insert(owner), Throws.InvalidOperationException);
+            Assert.That(container2.Insert(owner), Is.False);
 
             var success = container.Remove(inserted);
             Assert.That(success, Is.True);

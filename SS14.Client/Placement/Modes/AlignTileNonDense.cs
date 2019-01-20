@@ -19,19 +19,19 @@ namespace SS14.Client.Placement.Modes
 
             if (pManager.CurrentPermission.IsTile)
             {
-                MouseCoords = new GridLocalCoordinates(CurrentTile.X + tileSize / 2,
+                MouseCoords = new GridCoordinates(CurrentTile.X + tileSize / 2,
                                                  CurrentTile.Y + tileSize / 2,
                                                  MouseCoords.Grid);
             }
             else
             {
-                MouseCoords = new GridLocalCoordinates(CurrentTile.X + tileSize / 2 + pManager.PlacementOffset.X,
+                MouseCoords = new GridCoordinates(CurrentTile.X + tileSize / 2 + pManager.PlacementOffset.X,
                                                   CurrentTile.Y + tileSize / 2 + pManager.PlacementOffset.Y,
                                                   MouseCoords.Grid);
             }
         }
 
-        public override bool IsValidPosition(GridLocalCoordinates position)
+        public override bool IsValidPosition(GridCoordinates position)
         {
             if (!RangeCheck(position))
             {

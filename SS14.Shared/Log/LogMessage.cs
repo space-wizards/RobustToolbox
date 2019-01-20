@@ -1,6 +1,6 @@
 ﻿namespace SS14.Shared.Log
 {
-    public struct LogMessage
+    public readonly struct LogMessage
     {
         /// <summary>
         ///     The actual log message given.

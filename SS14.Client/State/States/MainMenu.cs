@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.UserInterface;
@@ -12,6 +13,7 @@ using SS14.Shared.Log;
 using SS14.Client.Interfaces.State;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.State.States
 {
@@ -28,21 +30,22 @@ namespace SS14.Client.State.States
         [Dependency]
         readonly IStateManager stateManager;
 
-        private Control MainMenuControl;
+        private MainMenuControl _mainMenuControl;
 
         private OptionsMenu OptionsMenu;
+
+        // ReSharper disable once InconsistentNaming
+        private static readonly Regex IPv6Regex = new Regex(@"\[(.*:.*:.*)](?::(\d+))?");
 
         /// <inheritdoc />
         public override void Startup()
         {
             IoCManager.InjectDependencies(this);
 
-            var scene = (Godot.PackedScene)Godot.ResourceLoader.Load("res://Scenes/MainMenu/MainMenu.tscn");
-            MainMenuControl = Control.InstanceScene(scene);
+            _mainMenuControl = new MainMenuControl();
+            userInterfaceManager.StateRoot.AddChild(_mainMenuControl);
 
-            userInterfaceManager.StateRoot.AddChild(MainMenuControl);
-
-            var VBox = MainMenuControl.GetChild("VBoxContainer");
+            var VBox = _mainMenuControl.GetChild("VBoxContainer");
             VBox.GetChild<Button>("ExitButton").OnPressed += ExitButtonPressed;
             VBox.GetChild<Button>("OptionsButton").OnPressed += OptionsButtonPressed;
             VBox.GetChild<Button>("ConnectButton").OnPressed += ConnectButtonPressed;
@@ -62,7 +65,7 @@ namespace SS14.Client.State.States
         {
             _client.RunLevelChanged -= RunLevelChanged;
 
-            MainMenuControl.Dispose();
+            _mainMenuControl.Dispose();
             OptionsMenu.Dispose();
         }
 
@@ -78,7 +81,7 @@ namespace SS14.Client.State.States
 
         private void ConnectButtonPressed(BaseButton.ButtonEventArgs args)
         {
-            var input = MainMenuControl.GetChild("VBoxContainer").GetChild<LineEdit>("IPBox");
+            var input = _mainMenuControl.GetChild("VBoxContainer").GetChild<LineEdit>("IPBox");
             TryConnect(input.Text);
         }
 
@@ -96,20 +99,36 @@ namespace SS14.Client.State.States
             }
             catch (ArgumentException e)
             {
-                userInterfaceManager.Popup($"Unable to resolve address: {e.Message}", "Invalid IP");
+                userInterfaceManager.Popup($"Unable to connect: {e.Message}", "Connection error.");
+                Logger.Warning(e.ToString());
             }
         }
 
         private void RunLevelChanged(object obj, RunLevelChangedEventArgs args)
         {
-            if (args.NewLevel == ClientRunLevel.Lobby)
+            if (args.NewLevel == ClientRunLevel.InGame)
             {
-                stateManager.RequestStateChange<Lobby>();
+                stateManager.RequestStateChange<GameScreen>();
             }
         }
 
         private void ParseAddress(string address, out string ip, out ushort port)
         {
+            var match6 = IPv6Regex.Match(address);
+            if (match6 != Match.Empty)
+            {
+                ip = match6.Groups[1].Value;
+                if (!match6.Groups[2].Success)
+                {
+                    port = _client.DefaultPort;
+                }
+                else if (!ushort.TryParse(match6.Groups[2].Value, out port))
+                {
+                    throw new ArgumentException("Not a valid port.");
+                }
+
+                return;
+            }
             // See if the IP includes a port.
             var split = address.Split(':');
             ip = address;
@@ -128,6 +147,11 @@ namespace SS14.Client.State.States
                     throw new ArgumentException("Not a valid port.");
                 }
             }
+        }
+
+        private class MainMenuControl : Control
+        {
+            protected override ResourcePath ScenePath => new ResourcePath("/Scenes/MainMenu/MainMenu.tscn");
         }
     }
 }

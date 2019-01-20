@@ -30,6 +30,12 @@ namespace SS14.Shared.Maths
             Y = y;
         }
 
+        public void Deconstruct(out uint x, out uint y)
+        {
+            x = X;
+            y = Y;
+        }
+
         /// <summary>
         /// Compare a vector to another vector and check if they are equal.
         /// </summary>

@@ -1,4 +1,5 @@
-﻿using SS14.Client.ResourceManagement;
+﻿using System;
+using SS14.Client.ResourceManagement;
 
 namespace SS14.Client.Graphics
 {
@@ -21,28 +22,107 @@ namespace SS14.Client.Graphics
     /// </summary>
     public class VectorFont : Font
     {
-        public int ExtraSpacingTop { get => _font.ExtraSpacingTop; set => _font.ExtraSpacingTop = value; }
-        public int ExtraSpacingBottom { get => _font.ExtraSpacingBottom; set => _font.ExtraSpacingBottom = value; }
-        public int ExtraSpacingChar { get => _font.ExtraSpacingChar; set => _font.ExtraSpacingChar = value; }
-        public int ExtraSpacingSpace { get => _font.ExtraSpacingSpace; set => _font.ExtraSpacingSpace = value; }
+        public int ExtraSpacingTop
+        {
+            get => GameController.OnGodot ? _font.ExtraSpacingTop : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    _font.ExtraSpacingTop = value;
+                }
+            }
+        }
 
-        public int Size { get => _font.Size; set => _font.Size = value; }
-        public bool UseFilter { get => _font.UseFilter; set => _font.UseFilter = value; }
-        public bool UseMipmaps { get => _font.UseMipmaps; set => _font.UseMipmaps = value; }
+        public int ExtraSpacingBottom
+        {
+            get => GameController.OnGodot ? _font.ExtraSpacingBottom : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    _font.ExtraSpacingBottom = value;
+                }
+            }
+        }
+
+        public int ExtraSpacingChar
+        {
+            get => GameController.OnGodot ? _font.ExtraSpacingChar : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    _font.ExtraSpacingChar = value;
+                }
+            }
+        }
+
+        public int ExtraSpacingSpace
+        {
+            get => GameController.OnGodot ? _font.ExtraSpacingSpace : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    _font.ExtraSpacingSpace = value;
+                }
+            }
+        }
+
+        public int Size
+        {
+            get => _font.Size;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    _font.Size = value;
+                }
+            }
+        }
+
+        public bool UseFilter
+        {
+            get => _font.UseFilter;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    _font.UseFilter = value;
+                }
+            }
+        }
+
+        public bool UseMipmaps
+        {
+            get => _font.UseMipmaps;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    _font.UseMipmaps = value;
+                }
+            }
+        }
 
         internal override Godot.Font GodotFont => _font;
         private readonly Godot.DynamicFont _font;
 
-        public VectorFont(FontResource res) : this(res.FontData)
+        public VectorFont(FontResource res)
+            : this(res.FontData)
         {
         }
 
         internal VectorFont(Godot.DynamicFontData data)
         {
-            _font = new Godot.DynamicFont
+            if (GameController.OnGodot)
             {
-                FontData = data,
-            };
+                _font = new Godot.DynamicFont
+                {
+                    FontData = data,
+                };
+            }
         }
     }
 

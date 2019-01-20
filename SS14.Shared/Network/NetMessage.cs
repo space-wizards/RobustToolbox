@@ -48,7 +48,7 @@ namespace SS14.Shared.Network
         /// The group this message type belongs to.
         /// </summary>
         public MsgGroups MsgGroup { get; }
-        
+
         /// <summary>
         /// The channel that this message came in on.
         /// </summary>
@@ -59,7 +59,7 @@ namespace SS14.Shared.Network
         /// </summary>
         /// <param name="name">String identifier of the message type.</param>
         /// <param name="group">The group this message type belongs to.</param>
-        internal NetMessage(string name, MsgGroups group)
+        protected NetMessage(string name, MsgGroups group)
         {
             MsgName = name;
             MsgGroup = group;

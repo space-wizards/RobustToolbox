@@ -58,19 +58,13 @@ using SS14.Client.ViewVariables;
 using SS14.Shared.Asynchronous;
 using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.Exceptions;
+using SS14.Shared.Map;
 
 namespace SS14.Client
 {
     // Partial of GameController to initialize IoC and some other low-level systems like it.
     public sealed partial class GameController
     {
-        // Aaaaaah init order hurts.
-        private void PreInitIoC()
-        {
-            IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
-            IoCManager.BuildGraph();
-        }
-
         private void InitIoC()
         {
             RegisterIoC();
@@ -80,7 +74,7 @@ namespace SS14.Client
             // We are not IoC-managed (SS14.Client.Godot spawns us), but we still want the dependencies.
             IoCManager.InjectDependencies(this);
 
-            var proxy = (GameControllerProxy)IoCManager.Resolve<IGameControllerProxy>();
+            var proxy = (GameControllerProxy) IoCManager.Resolve<IGameControllerProxy>();
             proxy.GameController = this;
         }
 
@@ -95,9 +89,18 @@ namespace SS14.Client
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
-            IoCManager.Register<IComponentFactory, GodotComponentFactory>();
+            if (OnGodot)
+            {
+                IoCManager.Register<IComponentFactory, GodotComponentFactory>();
+                IoCManager.Register<IMapManager, GodotMapManager>();
+            }
+            else
+            {
+                IoCManager.Register<IComponentFactory, ClientComponentFactory>();
+                IoCManager.Register<IMapManager, MapManager>();
+
+            }
             IoCManager.Register<IComponentManager, ComponentManager>();
-            IoCManager.Register<IMapManager, ClientMapManager>();
             IoCManager.Register<IPhysicsManager, PhysicsManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
             IoCManager.Register<ITaskManager, TaskManager>();
@@ -106,6 +109,7 @@ namespace SS14.Client
             // Client stuff.
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();
             IoCManager.Register<IResourceManager, ResourceCache>();
+            IoCManager.Register<IResourceManagerInternal, ResourceCache>();
             IoCManager.Register<IResourceCache, ResourceCache>();
             IoCManager.Register<IClientTileDefinitionManager, ClientTileDefinitionManager>();
             IoCManager.Register<IClientNetManager, NetManager>();
@@ -117,16 +121,32 @@ namespace SS14.Client
             IoCManager.Register<IStateManager, StateManager>();
             IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
             IoCManager.Register<IGameControllerProxy, GameControllerProxy>();
-            IoCManager.Register<IInputManager, GodotInputManager>();
+            if (OnGodot)
+            {
+                IoCManager.Register<IInputManager, GodotInputManager>();
+            }
+            else
+            {
+                IoCManager.Register<IInputManager, InputManager>();
+            }
+
             IoCManager.Register<IDebugDrawing, DebugDrawing>();
             IoCManager.Register<IClientConsole, ClientChatConsole>();
             IoCManager.Register<IClientChatConsole, ClientChatConsole>();
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IDisplayManager, DisplayManager>();
             IoCManager.Register<IEyeManager, EyeManager>();
-            IoCManager.Register<IGameTiming, GameController.GameTiming>();
-            // Only GameController can acess this because the type is private so it's fine.
-            IoCManager.Register<GameController.GameTiming, GameController.GameTiming>();
+            if (OnGodot)
+            {
+                IoCManager.Register<IGameTiming, GameController.GameTimingGodot>();
+                // Only GameController can access this because the type is private so it's fine.
+                IoCManager.Register<GameController.GameTimingGodot, GameController.GameTimingGodot>();
+            }
+            else
+            {
+                IoCManager.Register<IGameTiming, GameTiming>();
+            }
+
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<IOverlayManager, OverlayManager>();
             IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();

@@ -42,6 +42,10 @@ using System.Reflection;
 using SS14.Shared.Interfaces.Resources;
 using SS14.Server.Console;
 using SS14.Server.Interfaces.Console;
+using SS14.Server.Interfaces.ServerStatus;
+using SS14.Server.Interfaces.Timing;
+using SS14.Server.ServerStatus;
+using SS14.Server.Timing;
 using SS14.Server.ViewVariables;
 using SS14.Shared.Asynchronous;
 using SS14.Shared.Exceptions;
@@ -137,6 +141,8 @@ namespace SS14.Server
             IoCManager.Register<IPrototypeManager, ServerPrototypeManager>();
             IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
             IoCManager.Register<IConGroupController, ConGroupController>();
+            IoCManager.Register<IStatusHost, StatusHost>();
+            IoCManager.Register<IPauseManager, PauseManager>();
 
             IoCManager.BuildGraph();
         }
@@ -157,6 +163,7 @@ namespace SS14.Server
             var handler = new ConsoleLogHandler();
             mgr.RootSawmill.AddHandler(handler);
             mgr.GetSawmill("res.typecheck").Level = LogLevel.Info;
+            mgr.GetSawmill("go.sys").Level = LogLevel.Info;
         }
     }
 }

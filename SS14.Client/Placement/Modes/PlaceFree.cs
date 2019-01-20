@@ -12,7 +12,7 @@ namespace SS14.Client.Placement.Modes
             CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
         }
 
-        public override bool IsValidPosition(GridLocalCoordinates position)
+        public override bool IsValidPosition(GridCoordinates position)
         {
             return true;
         }

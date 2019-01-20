@@ -6,21 +6,28 @@ using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL4;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.Graphics;
+using SS14.Client.Utility;
 using SS14.Shared.Log;
+using SS14.Shared.Maths;
+using Matrix3 = SS14.Shared.Maths.Matrix3;
 
 namespace SS14.Client.Graphics
 {
     internal class DisplayManagerOpenGL : DisplayManager, IDisplayManagerOpenGL, IDisposable
     {
-        private GameWindow _window;
+        private OpenTK.GameWindow _window;
 
+        private int VAO;
         private int VBO;
+        private int ShaderProgram;
 
         private static readonly float[] Vertices = {
-            -0.5f, -0.5f, 0.0f,
-            0.5f, -0.5f, 0.0f,
-            0.0f,  0.5f, 0.0f
+            -0.5f, -0.5f,
+            0.5f, -0.5f,
+            0.0f,  0.5f
         };
+
+        private DateTime _startTime;
 
         public override void SetWindowTitle(string title)
         {
@@ -46,6 +53,23 @@ namespace SS14.Client.Graphics
             }
 
             GL.Clear(ClearBufferMask.ColorBufferBit);
+
+            GL.UseProgram(ShaderProgram);
+
+            var uniform = GL.GetUniformLocation(ShaderProgram, "ourColor");
+            var uniformTransform = GL.GetUniformLocation(ShaderProgram, "transform");
+            var time = DateTime.Now - _startTime;
+            var seconds = (float)time.TotalSeconds % 5;
+            var color = Color.FromHsv(new Shared.Maths.Vector4(seconds / 5f, 1, 0.75f, 0));
+            GL.Uniform4(uniform, new OpenTK.Vector4(color.R, color.G, color.B, color.A));
+            var matrix = Matrix3.Identity;
+            matrix.Rotate(360f / 5 * seconds);
+            var cmatrix = matrix.ConvertOpenTK();
+            GL.UniformMatrix3(uniformTransform, false, ref cmatrix);
+
+            GL.BindVertexArray(VAO);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
+
             _window.SwapBuffers();
         }
 
@@ -101,24 +125,68 @@ namespace SS14.Client.Graphics
 
         private void _initOpenGL()
         {
-            GCHandle.Alloc(_debugMessageCallbackInstance);
-
-            System.Console.WriteLine(GL.GetString(StringName.Version) + GL.GetString(StringName.Vendor) + GL.GetString(StringName.ShadingLanguageVersion));
-
+            _startTime = DateTime.Now;
+            var vendor = GL.GetString(StringName.Vendor);
+            var version = GL.GetString(StringName.Version);
+            Logger.DebugS("ogl", "OpenGL Vendor: {0}", vendor);
+            Logger.DebugS("ogl", "OpenGL Version: {0}", version);
             GL.Enable(EnableCap.DebugOutput);
             GL.Enable(EnableCap.DebugOutputSynchronous);
             _hijackCallback();
 
             GL.ClearColor(0, 0, 0, 1);
 
+            VAO = GL.GenVertexArray();
+            GL.BindVertexArray(VAO);
+
             VBO = GL.GenBuffer();
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
             GL.NamedBufferStorage(VBO, sizeof(float) * Vertices.Length, Vertices, BufferStorageFlags.None);
+
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), IntPtr.Zero);
+            GL.EnableVertexAttribArray(0);
+
+            var vert = GL.CreateShader(ShaderType.VertexShader);
+            GL.ShaderSource(vert, VertexShader);
+            GL.CompileShader(vert);
+
+            GL.GetShader(vert, ShaderParameter.CompileStatus, out var success);
+            if (success == 0)
+            {
+                var why = GL.GetShaderInfoLog(vert);
+                throw new InvalidOperationException();
+            }
+
+            var frag = GL.CreateShader(ShaderType.FragmentShader);
+            GL.ShaderSource(frag, FragmentShader);
+            GL.CompileShader(frag);
+
+            GL.GetShader(frag, ShaderParameter.CompileStatus, out success);
+            if (success == 0)
+            {
+                var why = GL.GetShaderInfoLog(vert);
+                throw new InvalidOperationException();
+            }
+
+            ShaderProgram = GL.CreateProgram();
+            GL.AttachShader(ShaderProgram, vert);
+            GL.AttachShader(ShaderProgram, frag);
+            GL.LinkProgram(ShaderProgram);
+
+            GL.GetProgram(ShaderProgram, GetProgramParameterName.LinkStatus, out success);
+            if (success == 0)
+            {
+                throw new InvalidOperationException();
+            }
+
+            GL.DeleteShader(vert);
+            GL.DeleteShader(frag);
         }
 
         private static void _hijackCallback()
         {
+            GCHandle.Alloc(_debugMessageCallbackInstance);
             // See https://github.com/opentk/opentk/issues/880
             var type = typeof(GL);
             var entryPoints = (IntPtr[]) type.GetField("EntryPoints", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
@@ -166,20 +234,24 @@ namespace SS14.Client.Graphics
 
         private const string VertexShader = @"
 #version 450 core
-layout (location = 0) in vec3 aPos;
+layout (location = 0) in vec2 aPos;
+
+uniform mat3 transform;
 
 void main()
 {
-    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+    gl_Position = vec4(transform * vec3(aPos.xy, 0), 1.0);
 }";
 
         private const string FragmentShader = @"
 #version 450 core
 out vec4 FragColor;
 
+uniform vec4 ourColor;
+
 void main()
 {
-    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+    FragColor = ourColor;
 }
 ";
     }

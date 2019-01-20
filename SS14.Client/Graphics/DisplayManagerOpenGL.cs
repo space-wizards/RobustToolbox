@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using OpenTK;
 using OpenTK.Graphics;
@@ -101,13 +102,12 @@ namespace SS14.Client.Graphics
         private void _initOpenGL()
         {
             GCHandle.Alloc(_debugMessageCallbackInstance);
-            //Honk(_debugMessageCallbackInstance);
+
+            System.Console.WriteLine(GL.GetString(StringName.Version) + GL.GetString(StringName.Vendor) + GL.GetString(StringName.ShadingLanguageVersion));
 
             GL.Enable(EnableCap.DebugOutput);
             GL.Enable(EnableCap.DebugOutputSynchronous);
-            //System.Console.WriteLine(_debugMessageCallbackInstance);
-            GL.DebugMessageCallback(_debugMessageCallbackInstance, IntPtr.Zero);
-            //var err = GL.GetError();
+            _hijackCallback();
 
             GL.ClearColor(0, 0, 0, 1);
 
@@ -115,17 +115,24 @@ namespace SS14.Client.Graphics
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
             GL.NamedBufferStorage(VBO, sizeof(float) * Vertices.Length, Vertices, BufferStorageFlags.None);
-
-
         }
 
-        //[DllImport("libaaaah.so", CallingConvention = CallingConvention.Cdecl, EntryPoint = "honk")]
-        //private static extern void Honk(DebugProc x);
+        private static void _hijackCallback()
+        {
+            // See https://github.com/opentk/opentk/issues/880
+            var type = typeof(GL);
+            var entryPoints = (IntPtr[]) type.GetField("EntryPoints", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+            var ep = entryPoints[184];
+            var d = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(ep);
+            d(_debugMessageCallbackInstance, new IntPtr(0x3005));
+        }
+
+        private delegate void DebugMessageCallbackDelegate([MarshalAs(UnmanagedType.FunctionPtr)] DebugProc proc,
+            IntPtr userParam);
 
         private static void _debugMessageCallback(DebugSource source, DebugType type, int id, DebugSeverity severity,
             int length, IntPtr message, IntPtr userParam)
         {
-            System.Console.WriteLine("poop");
             var contents = $"{source}: {type}: " + Marshal.PtrToStringAnsi(message, length);
 
             switch (severity)

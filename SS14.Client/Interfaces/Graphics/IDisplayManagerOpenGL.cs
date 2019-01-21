@@ -8,8 +8,6 @@ namespace SS14.Client.Interfaces.Graphics
         void Render(FrameEventArgs args);
         void ProcessInput(FrameEventArgs frameEventArgs);
 
-        void DisplaySplash();
-
         Texture LoadTextureFromPNGStream(Stream stream);
     }
 }

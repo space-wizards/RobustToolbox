@@ -1,6 +1,7 @@
 ﻿using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
 using SS14.Shared.ViewVariables;
@@ -50,33 +51,32 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        IGodotTransformComponent transform;
+        private ITransformComponent transform;
 
         public override void Initialize()
         {
             base.Initialize();
 
+            transform = Owner.GetComponent<ITransformComponent>();
+            eye = new Eye
+            {
+                Current = setCurrentOnInitialize,
+                Position = transform.MapPosition,
+                Zoom = setZoomOnInitialize,
+            };
+
+            transform.OnMove += Transform_OnMove;
+
             if (GameController.OnGodot)
             {
-                transform = Owner.GetComponent<IGodotTransformComponent>();
-                eye = new Eye
-                {
-                    Current = setCurrentOnInitialize,
-                    MapId = transform.MapID,
-                    Zoom = setZoomOnInitialize,
-                };
-                transform.SceneNode.AddChild(eye.GodotCamera);
-                transform.OnMove += Transform_OnMove;
+                Owner.GetComponent<IGodotTransformComponent>().SceneNode.AddChild(eye.GodotCamera);
             }
         }
 
         public override void OnRemove()
         {
             base.OnRemove();
-            if (GameController.OnGodot)
-            {
-                transform.OnMove -= Transform_OnMove;
-            }
+            transform.OnMove -= Transform_OnMove;
 
             eye.Dispose();
             eye = null;
@@ -91,7 +91,7 @@ namespace SS14.Client.GameObjects
 
         private void Transform_OnMove(object sender, Shared.Enums.MoveEventArgs e)
         {
-            eye.MapId = e.NewPosition.MapID;
+            eye.Position = transform.MapPosition;
         }
     }
 }

@@ -84,7 +84,7 @@ namespace SS14.Client
         [Dependency] private readonly IEyeManager _eyeManager;
         [Dependency] private readonly IPlacementManager _placementManager;
         [Dependency] private readonly IClientGameStateManager _gameStateManager;
-        [Dependency] private readonly IOverlayManager _overlayManager;
+        [Dependency] private readonly IOverlayManagerInternal _overlayManager;
         [Dependency] private readonly ILogManager _logManager;
         [Dependency] private readonly ITaskManager _taskManager;
         [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager;
@@ -107,18 +107,15 @@ namespace SS14.Client
             {
                 _displayManagerOpenGL = IoCManager.Resolve<IDisplayManagerOpenGL>();
             }
-            _displayManager.Initialize();
-            _displayManager.SetWindowTitle("Space Station 14");
 
             // Init resources.
             // Doesn't do anything right now because TODO Godot asset management is a bit ad-hoc.
             _resourceCache.LoadBaseResources();
             _resourceCache.LoadLocalResources();
 
-            if (Mode == DisplayMode.OpenGL)
-            {
-                _displayManagerOpenGL.DisplaySplash();
-            }
+            // Bring display up as soon as resources are mounted.
+            _displayManager.Initialize();
+            _displayManager.SetWindowTitle("Space Station 14");
 
             //identical code for server in baseserver
             if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))

@@ -162,6 +162,7 @@ namespace SS14.Client
 
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<IOverlayManager, OverlayManager>();
+            IoCManager.Register<IOverlayManagerInternal, OverlayManager>();
             IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();
             IoCManager.Register<IViewVariablesManagerInternal, ViewVariablesManager>();
 

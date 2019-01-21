@@ -12,7 +12,7 @@ using VS = Godot.VisualServer;
 
 namespace SS14.Client.Graphics.Overlays
 {
-    internal class OverlayManager : IOverlayManager
+    internal class OverlayManager : IOverlayManagerInternal
     {
         private Godot.Node2D RootNodeWorld;
         private Godot.Node2D RootNodeScreen;

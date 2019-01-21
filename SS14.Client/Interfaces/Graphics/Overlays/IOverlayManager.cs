@@ -8,9 +8,6 @@ namespace SS14.Client.Interfaces.Graphics.Overlays
 {
     public interface IOverlayManager
     {
-        void Initialize();
-        void FrameUpdate(RenderFrameEventArgs args);
-
         void AddOverlay(IOverlay overlay);
         void RemoveOverlay(string id);
         bool HasOverlay(string id);
@@ -20,5 +17,11 @@ namespace SS14.Client.Interfaces.Graphics.Overlays
 
         bool TryGetOverlay(string id, out IOverlay overlay);
         bool TryGetOverlay<T>(string id, out T overlay) where T : IOverlay;
+    }
+
+    internal interface IOverlayManagerInternal : IOverlayManager
+    {
+        void Initialize();
+        void FrameUpdate(RenderFrameEventArgs args);
     }
 }

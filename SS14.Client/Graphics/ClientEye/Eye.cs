@@ -34,12 +34,13 @@ namespace SS14.Client.Graphics.ClientEye
             }
         }
 
-
+        private Vector2 _zoom = Vector2.One;
         public Vector2 Zoom
         {
-            get => GameController.OnGodot ? GodotCamera.Zoom.Convert() : default;
+            get => _zoom;
             set
             {
+                _zoom = value;
                 if (GameController.OnGodot)
                 {
                     GodotCamera.Zoom = value.Convert();
@@ -47,7 +48,15 @@ namespace SS14.Client.Graphics.ClientEye
             }
         }
 
-        public MapId MapId { get; set; } = MapId.Nullspace;
+        private MapCoordinates _position;
+
+        public virtual MapCoordinates Position
+        {
+            get => _position;
+            internal set => _position = value;
+        }
+
+        public MapId MapId => _position.MapId;
 
         public Eye()
         {

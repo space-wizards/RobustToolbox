@@ -1,58 +1,54 @@
 using System;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
+using System.Text;
 using System.Threading;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL4;
+using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.Graphics;
+using SS14.Client.Interfaces.Graphics.ClientEye;
+using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Client.Utility;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
-using SS14.Shared.Map;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 using Box2 = SS14.Shared.Maths.Box2;
 using Matrix3 = SS14.Shared.Maths.Matrix3;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Graphics
 {
+    /// <summary>
+    ///     Responsible for most things rendering on OpenGL mode.
+    /// </summary>
     internal partial class DisplayManagerOpenGL : DisplayManager, IDisplayManagerOpenGL, IDisposable
     {
-        [Dependency]
-        private readonly IResourceCache _resourceCache;
+        [Dependency] private readonly IResourceCache _resourceCache;
+        [Dependency] private readonly IEyeManager _eyeManager;
+        [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IOverlayManager _overlayManager;
+
         private OpenTK.GameWindow _window;
 
+        private int AnotherVBO;
         private int SplashVBO;
-
         private int Vertex2DProgram;
+        private int Vertex2DUniformModel;
+        private int Vertex2DUniformView;
+        private int Vertex2DUniformProjection;
         private int Vertex2DVAO;
 
-        private static readonly float[] SplashVertices =
-        {
-            -0.5f, 0.5f, 0, 0,
-            0.5f, 0.5f, 1, 0,
-            0.5f, -0.5f, 1, 1,
-            -0.5f, -0.5f, 0, 1,
-        };
-
-        private int VAO;
-        private int VBO;
-        private int ShaderProgram;
         private Thread _mainThread;
-
-        private static readonly float[] Vertices =
-        {
-            -0.5f, -0.5f,
-            0.5f, -0.5f,
-            0.0f, 0.5f
-        };
-
-        private DateTime _startTime;
 
         public override Vector2i ScreenSize => new Vector2i(_window.Width, _window.Height);
 
@@ -72,35 +68,6 @@ namespace SS14.Client.Graphics
             _window.ProcessEvents();
         }
 
-        public void DisplaySplash()
-        {
-            var texture = (OpenGLTexture)_resourceCache.GetResource<TextureResource>("/Textures/Logo/logo.png").Texture;
-            var loaded = _loadedTextures[texture.OpenGLTextureId];
-
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-            GL.ClearColor(0, 0, 0, 1);
-            GL.Clear(ClearBufferMask.ColorBufferBit);
-
-            GL.BindTextureUnit(0, loaded.OpenGLObject);
-            GL.UseProgram(Vertex2DProgram);
-
-            var uiBox = UIBox2i.FromDimensions((ScreenSize - texture.Size) / 2, texture.Size);
-            var box = ScreenToOGL(uiBox);
-            GL.NamedBufferSubData(SplashVBO, IntPtr.Zero, sizeof(float) * 16, new float[]
-            {
-                box.Left, box.Top, 0, 0,
-                box.Right, box.Top, 1, 0,
-                box.Right, box.Bottom, 1, 1,
-                box.Left, box.Bottom, 0, 1,
-            });
-
-            GL.BindVertexArray(Vertex2DVAO);
-            GL.BindVertexBuffer(0, SplashVBO, IntPtr.Zero, 4 * sizeof(float));
-            GL.DrawArrays(PrimitiveType.TriangleFan, 0, 4);
-
-            _window.SwapBuffers();
-        }
-
         public void Render(FrameEventArgs args)
         {
             if (GameController.Mode != GameController.DisplayMode.OpenGL)
@@ -111,22 +78,58 @@ namespace SS14.Client.Graphics
             GL.ClearColor(0, 0, 0, 1);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
-            GL.UseProgram(ShaderProgram);
+            GL.BindVertexArray(Vertex2DVAO);
+            GL.UseProgram(Vertex2DProgram);
 
-            var uniform = GL.GetUniformLocation(ShaderProgram, "ourColor");
-            var uniformTransform = GL.GetUniformLocation(ShaderProgram, "transform");
-            var time = DateTime.Now - _startTime;
-            var seconds = (float) time.TotalSeconds % 5;
-            var color = Color.FromHsv(new Shared.Maths.Vector4(seconds / 5f, 1, 0.75f, 1));
-            GL.Uniform4(uniform, new OpenTK.Vector4(color.R, color.G, color.B, color.A));
-            var matrix = Matrix3.Identity;
-            matrix.Rotate(360f / 5 * seconds);
-            var cmatrix = matrix.ConvertOpenTK();
-            GL.UniformMatrix3(uniformTransform, false, ref cmatrix);
+            // Render grids.
+            var eye = _eyeManager.CurrentEye;
+            var map = _eyeManager.CurrentMap;
 
-            GL.BindVertexArray(VAO);
-            GL.BindVertexBuffer(0, VBO, IntPtr.Zero, 2 * sizeof(float));
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
+            var tex = _resourceCache.GetResource<TextureResource>("/Textures/Tiles/floor_steel.png");
+            var loadedTex = _loadedTextures[((OpenGLTexture) tex.Texture).OpenGLTextureId];
+
+            GL.BindTextureUnit(0, loadedTex.OpenGLObject);
+
+            // Make projection matrix.
+            var projMatrix = Matrix3.Identity;
+            projMatrix.R0C0 = EyeManager.PIXELSPERMETER * 2f/_window.Width;
+            projMatrix.R1C1 = EyeManager.PIXELSPERMETER * 2f/_window.Height;
+            var oprojMatrix = projMatrix.ConvertOpenTK();
+            GL.UniformMatrix3(Vertex2DUniformProjection, true, ref oprojMatrix);
+
+            // Make view matrix.
+            var viewMatrix = Matrix3.Identity;
+            viewMatrix.R0C0 = 1/eye.Zoom.X;
+            viewMatrix.R1C1 = 1/eye.Zoom.Y;
+            viewMatrix.R0C2 = -_eyeManager.CurrentEye.Position.X * 1/eye.Zoom.X;
+            viewMatrix.R1C2 = -_eyeManager.CurrentEye.Position.Y * 1/eye.Zoom.Y;
+
+            var oviewMatrix = viewMatrix.ConvertOpenTK();
+            GL.UniformMatrix3(Vertex2DUniformView, true, ref oviewMatrix);
+
+            foreach (var grid in _mapManager.GetMap(map).GetAllGrids())
+            {
+                GL.NamedBufferSubData(AnotherVBO, IntPtr.Zero, sizeof(float) * 16, new float[]
+                {
+                    0.5f, 0.5f, 1, 0,
+                    -0.5f, 0.5f, 0, 0,
+                    0.5f, -0.5f, 1, 1,
+                    -0.5f, -0.5f, 0, 1,
+                });
+
+                GL.BindVertexBuffer(0, AnotherVBO, IntPtr.Zero, 4 * sizeof(float));
+
+                foreach (var tileRef in grid.GetAllTiles())
+                {
+                    var matrix = Matrix3.Identity;
+                    matrix.R0C2 = tileRef.X;
+                    matrix.R1C2 = tileRef.Y;
+                    var otkm = matrix.ConvertOpenTK();
+                    GL.UniformMatrix3(Vertex2DUniformModel, true, ref otkm);
+                    GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+                    //break;
+                }
+            }
 
             _window.SwapBuffers();
         }
@@ -157,7 +160,12 @@ namespace SS14.Client.Graphics
                 GameWindowFlags.Default,
                 DisplayDevice.Default,
                 4, 5,
-                GraphicsContextFlags.Debug | GraphicsContextFlags.ForwardCompatible)
+#if DEBUG
+                GraphicsContextFlags.Debug | GraphicsContextFlags.ForwardCompatible
+#else
+                GraphicsContextFlags.ForwardCompatible
+#endif
+            )
             {
                 Visible = true
             };
@@ -179,107 +187,26 @@ namespace SS14.Client.Graphics
             _window.Resize += (sender, eventArgs) => { GL.Viewport(0, 0, _window.Width, _window.Height); };
 
             _initOpenGL();
-
-            _window.SwapBuffers();
         }
 
         private void _initOpenGL()
         {
             GL.Enable(EnableCap.Blend);
 
-            _startTime = DateTime.Now;
-
             Logger.DebugS("ogl", "OpenGL Vendor: {0}", GL.GetString(StringName.Vendor));
             Logger.DebugS("ogl", "OpenGL Version: {0}", GL.GetString(StringName.Version));
 
+#if DEBUG
             _hijackCallback();
+#endif
 
-            // Gen VBO.
-            GL.CreateBuffers(1, out VBO);
-            GL.NamedBufferStorage(VBO, sizeof(float) * Vertices.Length, Vertices, BufferStorageFlags.None);
+            Vertex2DProgram = _compileProgram(
+                new ResourcePath("/Shaders/Internal/sprite.vert"),
+                new ResourcePath("/Shaders/Internal/sprite.frag"));
 
-            // Gen VAO.
-            GL.CreateVertexArrays(1, out VAO);
-            GL.VertexArrayAttribFormat(VAO, 0, 2, VertexAttribType.Float, false, 0);
-            GL.EnableVertexArrayAttrib(VAO, 0);
-            GL.VertexArrayAttribBinding(VAO, 0, 0);
-
-
-            {
-                var vert = GL.CreateShader(ShaderType.VertexShader);
-                GL.ShaderSource(vert, VertexShader);
-                GL.CompileShader(vert);
-
-                GL.GetShader(vert, ShaderParameter.CompileStatus, out var success);
-                if (success == 0)
-                {
-                    var why = GL.GetShaderInfoLog(vert);
-                    throw new InvalidOperationException();
-                }
-
-                var frag = GL.CreateShader(ShaderType.FragmentShader);
-                GL.ShaderSource(frag, FragmentShader);
-                GL.CompileShader(frag);
-
-                GL.GetShader(frag, ShaderParameter.CompileStatus, out success);
-                if (success == 0)
-                {
-                    var why = GL.GetShaderInfoLog(vert);
-                    throw new InvalidOperationException();
-                }
-
-                ShaderProgram = GL.CreateProgram();
-                GL.AttachShader(ShaderProgram, vert);
-                GL.AttachShader(ShaderProgram, frag);
-                GL.LinkProgram(ShaderProgram);
-
-                GL.GetProgram(ShaderProgram, GetProgramParameterName.LinkStatus, out success);
-                if (success == 0)
-                {
-                    throw new InvalidOperationException();
-                }
-
-                GL.DeleteShader(vert);
-                GL.DeleteShader(frag);
-            }
-
-            {
-                var vert = GL.CreateShader(ShaderType.VertexShader);
-                GL.ShaderSource(vert, VertexShaderTexture);
-                GL.CompileShader(vert);
-
-                GL.GetShader(vert, ShaderParameter.CompileStatus, out var success);
-                if (success == 0)
-                {
-                    var why = GL.GetShaderInfoLog(vert);
-                    throw new InvalidOperationException();
-                }
-
-                var frag = GL.CreateShader(ShaderType.FragmentShader);
-                GL.ShaderSource(frag, FragmentShaderTexture);
-                GL.CompileShader(frag);
-
-                GL.GetShader(frag, ShaderParameter.CompileStatus, out success);
-                if (success == 0)
-                {
-                    var why = GL.GetShaderInfoLog(vert);
-                    throw new InvalidOperationException();
-                }
-
-                Vertex2DProgram = GL.CreateProgram();
-                GL.AttachShader(Vertex2DProgram, vert);
-                GL.AttachShader(Vertex2DProgram, frag);
-                GL.LinkProgram(Vertex2DProgram);
-
-                GL.GetProgram(Vertex2DProgram, GetProgramParameterName.LinkStatus, out success);
-                if (success == 0)
-                {
-                    throw new InvalidOperationException();
-                }
-
-                GL.DeleteShader(vert);
-                GL.DeleteShader(frag);
-            }
+            Vertex2DUniformModel = GL.GetUniformLocation(Vertex2DProgram, "modelMatrix");
+            Vertex2DUniformView = GL.GetUniformLocation(Vertex2DProgram, "viewMatrix");
+            Vertex2DUniformProjection = GL.GetUniformLocation(Vertex2DProgram, "projectionMatrix");
 
             // Vertex2D VAO.
             GL.CreateVertexArrays(1, out Vertex2DVAO);
@@ -291,7 +218,47 @@ namespace SS14.Client.Graphics
             GL.VertexArrayAttribBinding(Vertex2DVAO, 1, 0);
 
             GL.CreateBuffers(1, out SplashVBO);
-            GL.NamedBufferStorage(SplashVBO, sizeof(float) * SplashVertices.Length, IntPtr.Zero, BufferStorageFlags.DynamicStorageBit);
+            GL.NamedBufferStorage(SplashVBO, sizeof(float) * 16, IntPtr.Zero, BufferStorageFlags.DynamicStorageBit);
+
+            GL.CreateBuffers(1, out AnotherVBO);
+            GL.NamedBufferStorage(AnotherVBO, sizeof(float) * 16, IntPtr.Zero, BufferStorageFlags.DynamicStorageBit);
+
+            _displaySplash();
+        }
+
+        private void _displaySplash()
+        {
+            var texture =
+                (OpenGLTexture) _resourceCache.GetResource<TextureResource>("/Textures/Logo/logo.png").Texture;
+            var loaded = _loadedTextures[texture.OpenGLTextureId];
+
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            GL.ClearColor(0, 0, 0, 1);
+            GL.Clear(ClearBufferMask.ColorBufferBit);
+
+            GL.BindTextureUnit(0, loaded.OpenGLObject);
+            GL.UseProgram(Vertex2DProgram);
+
+            var uiBox = UIBox2i.FromDimensions((ScreenSize - texture.Size) / 2, texture.Size);
+            var box = ScreenToOGL(uiBox);
+            GL.NamedBufferSubData(SplashVBO, IntPtr.Zero, sizeof(float) * 16, new[]
+            {
+                box.Left, box.Top, 0, 0,
+                box.Right, box.Top, 1, 0,
+                box.Right, box.Bottom, 1, 1,
+                box.Left, box.Bottom, 0, 1,
+            });
+
+            var identity = OpenTK.Matrix3.Identity;
+            GL.UniformMatrix3(Vertex2DUniformModel, false, ref identity);
+            GL.UniformMatrix3(Vertex2DUniformView, false, ref identity);
+            GL.UniformMatrix3(Vertex2DUniformProjection, false, ref identity);
+
+            GL.BindVertexArray(Vertex2DVAO);
+            GL.BindVertexBuffer(0, SplashVBO, IntPtr.Zero, 4 * sizeof(float));
+            GL.DrawArrays(PrimitiveType.TriangleFan, 0, 4);
+
+            _window.SwapBuffers();
         }
 
         private static void _hijackCallback()
@@ -301,11 +268,85 @@ namespace SS14.Client.Graphics
             GCHandle.Alloc(_debugMessageCallbackInstance);
             // See https://github.com/opentk/opentk/issues/880
             var type = typeof(GL);
+            // ReSharper disable once PossibleNullReferenceException
             var entryPoints = (IntPtr[]) type.GetField("EntryPoints", BindingFlags.Static | BindingFlags.NonPublic)
                 .GetValue(null);
             var ep = entryPoints[184];
             var d = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(ep);
             d(_debugMessageCallbackInstance, new IntPtr(0x3005));
+        }
+
+        private int _compileProgram(ResourcePath vertex, ResourcePath fragment)
+        {
+            string vertexSource;
+            string fragmentSource;
+
+            using (var vertexReader = new StreamReader(_resourceCache.ContentFileRead(vertex), Encoding.UTF8))
+            {
+                vertexSource = vertexReader.ReadToEnd();
+            }
+
+            using (var fragmentReader = new StreamReader(_resourceCache.ContentFileRead(fragment), Encoding.UTF8))
+            {
+                fragmentSource = fragmentReader.ReadToEnd();
+            }
+
+            var vertexShader = GL.CreateShader(ShaderType.VertexShader);
+
+            try
+            {
+                GL.ShaderSource(vertexShader, vertexSource);
+                GL.CompileShader(vertexShader);
+
+                GL.GetShader(vertexShader, ShaderParameter.CompileStatus, out var status);
+                if (status == 0)
+                {
+                    var log = GL.GetShaderInfoLog(vertexShader);
+
+                    throw new ShaderCompilationException($"Vertex shader {vertex} failed to compile:\n{log}");
+                }
+
+                var fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
+
+                try
+                {
+                    GL.ShaderSource(fragmentShader, fragmentSource);
+                    GL.CompileShader(fragmentShader);
+
+                    GL.GetShader(fragmentShader, ShaderParameter.CompileStatus, out status);
+                    if (status == 0)
+                    {
+                        var log = GL.GetShaderInfoLog(fragmentShader);
+
+                        throw new ShaderCompilationException($"Fragment shader {fragment} failed to compile:\n{log}");
+                    }
+
+                    var program = GL.CreateProgram();
+
+                    GL.AttachShader(program, vertexShader);
+                    GL.AttachShader(program, fragmentShader);
+                    GL.LinkProgram(program);
+
+                    GL.GetProgram(program, GetProgramParameterName.LinkStatus, out status);
+                    if (status == 0)
+                    {
+                        var log = GL.GetProgramInfoLog(program);
+                        GL.DeleteProgram(program);
+
+                        throw new ShaderCompilationException($"program {vertex},{fragment} failed to link:\n{log}");
+                    }
+
+                    return program;
+                }
+                finally
+                {
+                    GL.DeleteShader(fragmentShader);
+                }
+            }
+            finally
+            {
+                GL.DeleteShader(vertexShader);
+            }
         }
 
         private delegate void DebugMessageCallbackDelegate([MarshalAs(UnmanagedType.FunctionPtr)] DebugProc proc,
@@ -346,7 +387,7 @@ namespace SS14.Client.Graphics
         [Pure]
         private Vector2 ScreenToOGL(Vector2i coordinates)
         {
-            var c = coordinates - (Vector2)ScreenSize / 2;
+            var c = coordinates - (Vector2) ScreenSize / 2;
             c *= new Vector2i(1, -1);
             return c * 2 / ScreenSize;
         }
@@ -355,7 +396,7 @@ namespace SS14.Client.Graphics
         private Box2 ScreenToOGL(UIBox2i coordinates)
         {
             var bl = ScreenToOGL(coordinates.BottomLeft);
-            return Box2.FromDimensions(bl, coordinates.Size * 2 / (Vector2)ScreenSize);
+            return Box2.FromDimensions(bl, coordinates.Size * 2 / (Vector2) ScreenSize);
         }
 
         public void Dispose()
@@ -375,58 +416,37 @@ namespace SS14.Client.Graphics
                 TextureCoordinates = textureCoordinates;
             }
 
-            public Vertex2D(float x, float y, float u, float w)
-                : this(new Vector2(x, y), new Vector2(u, w))
+            public Vertex2D(float x, float y, float u, float v)
+                : this(new Vector2(x, y), new Vector2(u, v))
+            {
+            }
+
+            public Vertex2D(Vector2 position, float u, float v)
+                : this(position, new Vector2(u, v))
             {
             }
         }
+    }
 
-        private const string VertexShader = @"
-#version 450 core
-layout (location = 0) in vec2 aPos;
+    [Serializable]
+    internal class ShaderCompilationException : Exception
+    {
+        public ShaderCompilationException()
+        {
+        }
 
-uniform mat3 transform;
+        public ShaderCompilationException(string message) : base(message)
+        {
+        }
 
-void main()
-{
-    gl_Position = vec4(transform * vec3(aPos.xy, 0), 1.0);
-}";
+        public ShaderCompilationException(string message, Exception inner) : base(message, inner)
+        {
+        }
 
-        private const string FragmentShader = @"
-#version 450 core
-out vec4 FragColor;
-
-uniform vec4 ourColor;
-
-void main()
-{
-    FragColor = ourColor;
-}";
-
-        private const string VertexShaderTexture = @"
-#version 450 core
-layout (location = 0) in vec2 aPos;
-layout (location = 1) in vec2 tPos;
-
-out vec2 TexCoord;
-
-void main()
-{
-    gl_Position = vec4(aPos, 0.0, 1.0);
-    TexCoord = tPos;
-}";
-
-        private const string FragmentShaderTexture = @"
-#version 450 core
-out vec4 FragColor;
-
-in vec2 TexCoord;
-
-uniform sampler2D ourTexture;
-
-void main()
-{
-    FragColor = texture(ourTexture, TexCoord);
-}";
+        protected ShaderCompilationException(
+            SerializationInfo info,
+            StreamingContext context) : base(info, context)
+        {
+        }
     }
 }

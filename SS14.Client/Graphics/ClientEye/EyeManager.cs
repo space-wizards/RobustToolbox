@@ -54,7 +54,7 @@ namespace SS14.Client.Graphics.ClientEye
             }
         }
 
-        public MapId CurrentMap => currentEye.MapId;
+        public MapId CurrentMap => currentEye.Position.MapId;
 
         public Box2 GetWorldViewport()
         {
@@ -123,7 +123,7 @@ namespace SS14.Client.Graphics.ClientEye
             var matrix = Matrix3.Invert(MatrixViewPortTransform(sceneTree));
             var worldPos = matrix.Transform(point) / PIXELSPERMETER * new Vector2(1, -1);
             IMapGrid grid ;
-            if (_mapManager.TryGetMap(currentEye.MapId, out var map))
+            if (_mapManager.TryGetMap(currentEye.Position.MapId, out var map))
             {
                 grid = map.FindGridAt(worldPos);
             }

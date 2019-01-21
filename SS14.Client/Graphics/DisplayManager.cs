@@ -3,6 +3,7 @@ using SS14.Client.Interfaces.Graphics;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics
 {
@@ -33,6 +34,7 @@ namespace SS14.Client.Graphics
             _configurationManager.RegisterCVar(CVarWindowMode, (int) WindowMode, CVar.ARCHIVE);
         }
 
+        public abstract Vector2i ScreenSize { get; }
         public abstract void SetWindowTitle(string title);
         public abstract void Initialize();
 

@@ -34,6 +34,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
 using JetBrains.Annotations;
+using SS14.Client.ResourceManagement;
 using SS14.Client.Utility;
 using SS14.Client.ViewVariables;
 using SS14.Shared;
@@ -113,6 +114,11 @@ namespace SS14.Client
             // Doesn't do anything right now because TODO Godot asset management is a bit ad-hoc.
             _resourceCache.LoadBaseResources();
             _resourceCache.LoadLocalResources();
+
+            if (Mode == DisplayMode.OpenGL)
+            {
+                _displayManagerOpenGL.DisplaySplash();
+            }
 
             //identical code for server in baseserver
             if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))
@@ -205,7 +211,7 @@ namespace SS14.Client
             }
 
             _logManager.GetSawmill("res.typecheck").Level = LogLevel.Info;
-            _logManager.GetSawmill("res.tex").Level = LogLevel.Info;
+            //_logManager.GetSawmill("res.tex").Level = LogLevel.Info;
             _logManager.GetSawmill("console").Level = LogLevel.Info;
             _logManager.GetSawmill("go.sys").Level = LogLevel.Info;
         }

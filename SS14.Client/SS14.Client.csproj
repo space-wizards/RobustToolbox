@@ -19,6 +19,7 @@
     <NoWarn>0649</NoWarn>
     <LangVersion>7.2</LangVersion>
     <Godot>true</Godot>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -132,6 +133,7 @@
     <Compile Include="Graphics\DisplayManagerGodot.cs" />
     <Compile Include="Graphics\DisplayManagerHeadless.cs" />
     <Compile Include="Graphics\DisplayManagerOpenGL.cs" />
+    <Compile Include="Graphics\DisplayManagerOpenGL.Textures.cs" />
     <Compile Include="Graphics\IDirectionalTextureProvider.cs" />
     <Compile Include="Graphics\Lighting\LightManager.Light.cs" />
     <Compile Include="Graphics\Lighting\LightManager.Occluder.cs" />

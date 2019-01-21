@@ -1,3 +1,5 @@
+using SS14.Shared.Maths;
+
 namespace SS14.Client.Interfaces.Graphics
 {
     /// <summary>
@@ -5,6 +7,7 @@ namespace SS14.Client.Interfaces.Graphics
     /// </summary>
     public interface IDisplayManager
     {
+        Vector2i ScreenSize { get; }
         void SetWindowTitle(string title);
         void Initialize();
         void ReloadConfig();

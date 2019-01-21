@@ -14,8 +14,8 @@ namespace SS14.Client.Graphics
     {
         internal abstract Godot.Texture GodotTexture { get; }
 
-        public int Width => GameController.OnGodot ? GodotTexture.GetWidth() : default;
-        public int Height => GameController.OnGodot ? GodotTexture.GetHeight() : default;
+        public abstract int Width { get; }
+        public abstract int Height { get; }
 
         public Vector2i Size => new Vector2i(Width, Height);
 
@@ -93,6 +93,24 @@ namespace SS14.Client.Graphics
     public class BlankTexture : Texture
     {
         internal override Godot.Texture GodotTexture => null;
+        public override int Width => default;
+        public override int Height => default;
+    }
+
+    internal class OpenGLTexture : Texture
+    {
+        internal override Godot.Texture GodotTexture => null;
+        internal int OpenGLTextureId { get; }
+
+        public override int Width { get; }
+        public override int Height { get; }
+
+        internal OpenGLTexture(int id, int width, int height)
+        {
+            OpenGLTextureId = id;
+            Width = width;
+            Height = height;
+        }
     }
 
     /// <summary>
@@ -102,6 +120,8 @@ namespace SS14.Client.Graphics
     internal class GodotTextureSource : Texture
     {
         internal override Godot.Texture GodotTexture { get; }
+        public override int Width => GodotTexture.GetWidth();
+        public override int Height => GodotTexture.GetHeight();
 
         public GodotTextureSource(Godot.Texture texture)
         {

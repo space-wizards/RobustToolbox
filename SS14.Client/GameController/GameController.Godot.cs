@@ -66,6 +66,11 @@ namespace SS14.Client
             _gameTimingGodotGodot.RealFrameTime = TimeSpan.FromSeconds(delta);
             _gameTimingGodotGodot.TickRemainder = _gameTimingGodotGodot._tickRemainderTimer.Elapsed;
 
+            _frameProcessMain(delta);
+        }
+
+        private void _frameProcessMain(float delta)
+        {
             var eventArgs = new RenderFrameEventArgs(delta);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePreEngine, eventArgs.Elapsed);
             _lightManager.FrameUpdate(eventArgs);

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
@@ -10,6 +11,7 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL4;
 using SS14.Client.Graphics.ClientEye;
+using SS14.Client.Graphics.Overlays;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.Graphics.ClientEye;
@@ -41,6 +43,7 @@ namespace SS14.Client.Graphics
         private OpenTK.GameWindow _window;
 
         private int AnotherVBO;
+        private int AnotherEBO;
         private int SplashVBO;
         private int Vertex2DProgram;
         private int Vertex2DUniformModel;
@@ -81,6 +84,26 @@ namespace SS14.Client.Graphics
             GL.BindVertexArray(Vertex2DVAO);
             GL.UseProgram(Vertex2DProgram);
 
+            // Make projection matrix.
+            var projMatrix = Matrix3.Identity;
+            projMatrix.R0C0 = EyeManager.PIXELSPERMETER * 2f / _window.Width;
+            projMatrix.R1C1 = EyeManager.PIXELSPERMETER * 2f / _window.Height;
+            var oprojMatrix = projMatrix.ConvertOpenTK();
+            GL.ProgramUniformMatrix3(Vertex2DProgram, Vertex2DUniformProjection, true, ref oprojMatrix);
+
+            // Render some overlays.
+            {
+                var viewMatrixI = OpenTK.Matrix3.Identity;
+                GL.UniformMatrix3(Vertex2DUniformView, false, ref viewMatrixI);
+
+                foreach (var overlay in _overlayManager.AllOverlays
+                    .Where(o => o.Space == OverlaySpace.ScreenSpaceBelowWorld)
+                    .OrderBy(o => o.ZIndex))
+                {
+                    overlay.OpenGLRender();
+                }
+            }
+
             // Render grids.
             var eye = _eyeManager.CurrentEye;
             var map = _eyeManager.CurrentMap;
@@ -90,45 +113,73 @@ namespace SS14.Client.Graphics
 
             GL.BindTextureUnit(0, loadedTex.OpenGLObject);
 
-            // Make projection matrix.
-            var projMatrix = Matrix3.Identity;
-            projMatrix.R0C0 = EyeManager.PIXELSPERMETER * 2f/_window.Width;
-            projMatrix.R1C1 = EyeManager.PIXELSPERMETER * 2f/_window.Height;
-            var oprojMatrix = projMatrix.ConvertOpenTK();
-            GL.UniformMatrix3(Vertex2DUniformProjection, true, ref oprojMatrix);
-
             // Make view matrix.
             var viewMatrix = Matrix3.Identity;
-            viewMatrix.R0C0 = 1/eye.Zoom.X;
-            viewMatrix.R1C1 = 1/eye.Zoom.Y;
-            viewMatrix.R0C2 = -_eyeManager.CurrentEye.Position.X * 1/eye.Zoom.X;
-            viewMatrix.R1C2 = -_eyeManager.CurrentEye.Position.Y * 1/eye.Zoom.Y;
+            viewMatrix.R0C0 = 1 / eye.Zoom.X;
+            viewMatrix.R1C1 = 1 / eye.Zoom.Y;
+            viewMatrix.R0C2 = -_eyeManager.CurrentEye.Position.X * 1 / eye.Zoom.X;
+            viewMatrix.R1C2 = -_eyeManager.CurrentEye.Position.Y * 1 / eye.Zoom.Y;
 
             var oviewMatrix = viewMatrix.ConvertOpenTK();
             GL.UniformMatrix3(Vertex2DUniformView, true, ref oviewMatrix);
 
+            GL.VertexArrayVertexBuffer(Vertex2DVAO, 0, AnotherVBO, IntPtr.Zero, 4 * sizeof(float));
+            GL.VertexArrayElementBuffer(Vertex2DVAO, AnotherEBO);
+
+            var vertices = new float[65536 * 4];
+            var indices = new ushort[65536 / 4 * 6];
+            ushort nth = 0;
+
             foreach (var grid in _mapManager.GetMap(map).GetAllGrids())
             {
-                GL.NamedBufferSubData(AnotherVBO, IntPtr.Zero, sizeof(float) * 16, new float[]
-                {
-                    0.5f, 0.5f, 1, 0,
-                    -0.5f, 0.5f, 0, 0,
-                    0.5f, -0.5f, 1, 1,
-                    -0.5f, -0.5f, 0, 1,
-                });
-
-                GL.BindVertexBuffer(0, AnotherVBO, IntPtr.Zero, 4 * sizeof(float));
+                var matrix = Matrix3.Identity;
+                matrix.R0C2 = grid.WorldPosition.X;
+                matrix.R1C2 = grid.WorldPosition.Y;
+                var otkm = matrix.ConvertOpenTK();
+                GL.UniformMatrix3(Vertex2DUniformModel, true, ref otkm);
 
                 foreach (var tileRef in grid.GetAllTiles())
                 {
-                    var matrix = Matrix3.Identity;
-                    matrix.R0C2 = tileRef.X;
-                    matrix.R1C2 = tileRef.Y;
-                    var otkm = matrix.ConvertOpenTK();
-                    GL.UniformMatrix3(Vertex2DUniformModel, true, ref otkm);
-                    GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
-                    //break;
+                    var vidx = nth * 16;
+                    vertices[vidx] = tileRef.X + 0.5f;
+                    vertices[vidx + 1] = tileRef.Y + 0.5f;
+                    vertices[vidx + 2] = 1;
+                    vertices[vidx + 3] = 0;
+                    vertices[vidx + 4] = tileRef.X - 0.5f;
+                    vertices[vidx + 5] = tileRef.Y + 0.5f;
+                    vertices[vidx + 6] = 0;
+                    vertices[vidx + 7] = 0;
+                    vertices[vidx + 8] = tileRef.X + 0.5f;
+                    vertices[vidx + 9] = tileRef.Y - 0.5f;
+                    vertices[vidx + 10] = 1;
+                    vertices[vidx + 11] = 1;
+                    vertices[vidx + 12] = tileRef.X - 0.5f;
+                    vertices[vidx + 13] = tileRef.Y - 0.5f;
+                    vertices[vidx + 14] = 0;
+                    vertices[vidx + 15] = 1;
+                    var nidx = nth * 6;
+                    var tidx = (ushort) (nth * 4);
+                    indices[nidx] = tidx;
+                    indices[nidx + 1] = (ushort) (tidx + 1);
+                    indices[nidx + 2] = (ushort) (tidx + 2);
+                    indices[nidx + 3] = (ushort) (tidx + 1);
+                    indices[nidx + 4] = (ushort) (tidx + 2);
+                    indices[nidx + 5] = (ushort) (tidx + 3);
+                    checked
+                    {
+                        nth += 1;
+                    }
                 }
+
+                if (nth == 0)
+                {
+                    continue;
+                }
+
+                GL.NamedBufferSubData(AnotherVBO, IntPtr.Zero, nth * sizeof(float) * 16, vertices);
+                GL.NamedBufferSubData(AnotherEBO, IntPtr.Zero, nth * sizeof(ushort) * 6, indices);
+
+                GL.DrawElements(PrimitiveType.Triangles, nth*6, DrawElementsType.UnsignedShort, 0);
             }
 
             _window.SwapBuffers();
@@ -221,7 +272,12 @@ namespace SS14.Client.Graphics
             GL.NamedBufferStorage(SplashVBO, sizeof(float) * 16, IntPtr.Zero, BufferStorageFlags.DynamicStorageBit);
 
             GL.CreateBuffers(1, out AnotherVBO);
-            GL.NamedBufferStorage(AnotherVBO, sizeof(float) * 16, IntPtr.Zero, BufferStorageFlags.DynamicStorageBit);
+            GL.NamedBufferStorage(AnotherVBO, sizeof(float) * 65536 * 4, IntPtr.Zero,
+                BufferStorageFlags.DynamicStorageBit);
+
+            GL.CreateBuffers(1, out AnotherEBO);
+            GL.NamedBufferStorage(AnotherEBO, sizeof(ushort) * 65536 * 4 / 6, IntPtr.Zero,
+                BufferStorageFlags.DynamicStorageBit);
 
             _displaySplash();
         }

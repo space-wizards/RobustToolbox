@@ -57,7 +57,7 @@ namespace SS14.Client.Graphics.Drawing
         }
 
         // Effectively equivalent to Godot's internal Transform2D::set_rotation_and_scale defined in math_2d.h.
-        public static void SetTransform2DRotationAndScale(ref Godot.Transform2D transform, double rot, Vector2 scale)
+        internal static void SetTransform2DRotationAndScale(ref Godot.Transform2D transform, double rot, Vector2 scale)
         {
             transform.x = new Godot.Vector2((float) Math.Cos(rot), (float) Math.Sin(rot)) * scale.X;
             transform.y = new Godot.Vector2(-(float) Math.Sin(rot), (float) Math.Cos(rot)) * scale.Y;

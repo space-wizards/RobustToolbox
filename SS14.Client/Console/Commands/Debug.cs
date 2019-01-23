@@ -345,4 +345,20 @@ namespace SS14.Client.Console.Commands
             return false;
         }
     }
+
+    class GridTileCount : IConsoleCommand
+    {
+        public string Command => "gridtc";
+        public string Description => "Gets the tile count of a grid";
+        public string Help => "gridtc <gridId>";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var gridId = new GridId(int.Parse(args[0]));
+            var grid = IoCManager.Resolve<IMapManager>().GetGrid(gridId);
+
+            console.AddLine(grid.GetAllTiles().Count().ToString());
+            return false;
+        }
+    }
 }

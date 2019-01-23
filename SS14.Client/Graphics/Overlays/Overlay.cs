@@ -4,23 +4,29 @@ using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using JetBrains.Annotations;
 using VS = Godot.VisualServer;
 
 namespace SS14.Client.Graphics.Overlays
 {
-    public abstract class Overlay : IOverlay
+    /// <summary>
+    ///     An overlay is used for fullscreen drawing in the game, for example parallax.
+    /// </summary>
+    [PublicAPI]
+    public abstract class Overlay
     {
-        protected IOverlayManager OverlayManager { get; }
+        /// <summary>
+        ///     The ID of this overlay. This is used to identify it inside the <see cref="IOverlayManager"/>.
+        /// </summary>
         public string ID { get; }
 
         public virtual bool AlwaysDirty => false;
         public bool IsDirty => AlwaysDirty || _isDirty;
-        public bool Drawing { get; private set; } = false;
+        public bool Drawing { get; private set; }
 
         public virtual OverlaySpace Space => OverlaySpace.ScreenSpace;
+
+        protected IOverlayManager OverlayManager { get; }
 
         private Shader _shader;
 
@@ -38,7 +44,6 @@ namespace SS14.Client.Graphics.Overlays
         }
 
         private int? _zIndex;
-
         public int? ZIndex
         {
             get => _zIndex;
@@ -58,13 +63,12 @@ namespace SS14.Client.Graphics.Overlays
 
         private bool _isDirty = true;
 
-
         private Godot.RID MainCanvasItem;
 
         private readonly List<Godot.RID> CanvasItems = new List<Godot.RID>();
         private readonly List<DrawingHandle> TempHandles = new List<DrawingHandle>();
 
-        private bool Disposed = false;
+        private bool Disposed;
 
         protected Overlay(string id)
         {
@@ -72,14 +76,10 @@ namespace SS14.Client.Graphics.Overlays
             ID = id;
         }
 
-        public void AssignCanvasItem(Godot.RID canvasItem)
+        internal void AssignCanvasItem(Godot.RID canvasItem)
         {
             MainCanvasItem = canvasItem;
-            if (Shader != null)
-            {
-                Shader.ApplyToCanvasItem(MainCanvasItem);
-            }
-
+            Shader?.ApplyToCanvasItem(MainCanvasItem);
             UpdateZIndex();
         }
 
@@ -170,7 +170,7 @@ namespace SS14.Client.Graphics.Overlays
             _isDirty = true;
         }
 
-        public void FrameUpdate(RenderFrameEventArgs args)
+        internal void FrameUpdate(RenderFrameEventArgs args)
         {
             if (!IsDirty || !GameController.OnGodot)
             {
@@ -210,6 +210,11 @@ namespace SS14.Client.Graphics.Overlays
             }
         }
 
+        internal void OpenGLRender()
+        {
+
+        }
+
         private void ClearDraw()
         {
             if (!GameController.OnGodot)
@@ -245,5 +250,27 @@ namespace SS14.Client.Graphics.Overlays
                 VS.CanvasItemSetZAsRelativeToParent(MainCanvasItem, false);
             }
         }
+    }
+
+
+    /// <summary>
+    ///     Determines in which canvas layer an overlay gets drawn.
+    /// </summary>
+    public enum OverlaySpace
+    {
+        /// <summary>
+        ///     This overlay will be drawn in the UI root, thus being in screen space.
+        /// </summary>
+        ScreenSpace = 0,
+
+        /// <summary>
+        ///     This overlay will be drawn in the world root, thus being in world space.
+        /// </summary>
+        WorldSpace = 1,
+
+        /// <summary>
+        ///     Drawn in screen coordinates, but behind the world.
+        /// </summary>
+        ScreenSpaceBelowWorld = 2,
     }
 }

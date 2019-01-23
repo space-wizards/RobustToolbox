@@ -119,12 +119,15 @@ namespace SS14.Shared.Map
             /// <inheritdoc />
             public IEnumerable<TileRef> GetAllTiles(bool ignoreSpace = true)
             {
+                ushort nth = 0;
                 foreach (var kvChunk in _chunks)
                 {
                     foreach (var tileRef in kvChunk.Value)
                     {
                         if (!tileRef.Tile.IsEmpty)
                             yield return tileRef;
+                        nth++;
+
                     }
                 }
             }

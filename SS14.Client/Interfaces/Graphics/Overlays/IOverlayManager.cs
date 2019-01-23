@@ -1,22 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using JetBrains.Annotations;
+using SS14.Client.Graphics.Overlays;
 
 namespace SS14.Client.Interfaces.Graphics.Overlays
 {
+    [PublicAPI]
     public interface IOverlayManager
     {
-        void AddOverlay(IOverlay overlay);
+        void AddOverlay(Overlay overlay);
         void RemoveOverlay(string id);
         bool HasOverlay(string id);
 
-        IOverlay GetOverlay(string id);
-        T GetOverlay<T>(string id) where T : IOverlay;
+        Overlay GetOverlay(string id);
+        T GetOverlay<T>(string id) where T : Overlay;
 
-        bool TryGetOverlay(string id, out IOverlay overlay);
-        bool TryGetOverlay<T>(string id, out T overlay) where T : IOverlay;
+        bool TryGetOverlay(string id, out Overlay overlay);
+        bool TryGetOverlay<T>(string id, out T overlay) where T : Overlay;
+
+        IEnumerable<Overlay> AllOverlays { get; }
     }
 
     internal interface IOverlayManagerInternal : IOverlayManager

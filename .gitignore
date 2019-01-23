@@ -71,6 +71,9 @@ project.lock.json
 
 # MacOS finder makes these.
 .DS_Store
+# KDE Dolphin makes these, maybe it's even XDG standard, kinda hard to Google.
+# I do know it doesn't make them by merely opening the directory like some other file manager *cough* *cough*
+.directory
 
 # Created by NUnit.
 TestResult.xml

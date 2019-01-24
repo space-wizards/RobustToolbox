@@ -134,6 +134,8 @@
     <Compile Include="Graphics\DisplayManagerGodot.cs" />
     <Compile Include="Graphics\DisplayManagerHeadless.cs" />
     <Compile Include="Graphics\DisplayManagerOpenGL.cs" />
+    <Compile Include="Graphics\DisplayManagerOpenGL.Pool.cs" />
+    <Compile Include="Graphics\DisplayManagerOpenGL.Rendering.cs" />
     <Compile Include="Graphics\DisplayManagerOpenGL.Textures.cs" />
     <Compile Include="Graphics\IDirectionalTextureProvider.cs" />
     <Compile Include="Graphics\Lighting\LightManager.Light.cs" />

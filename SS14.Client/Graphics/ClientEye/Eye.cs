@@ -106,4 +106,17 @@ namespace SS14.Client.Graphics.ClientEye
             Dispose(false);
         }
     }
+
+    public static class EyeExtensions
+    {
+        public static Matrix3 GetMatrix(this IEye eye)
+        {
+            var matrix = Matrix3.Identity;
+            matrix.R0C0 = 1 / eye.Zoom.X;
+            matrix.R1C1 = 1 / eye.Zoom.Y;
+            matrix.R0C2 = -eye.Position.X / eye.Zoom.X;
+            matrix.R1C2 = -eye.Position.Y / eye.Zoom.Y;
+            return matrix;
+        }
+    }
 }

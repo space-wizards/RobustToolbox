@@ -2,12 +2,13 @@
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 using VS = Godot.VisualServer;
 
 namespace SS14.Client.Graphics.Drawing
 {
     /// <summary>
-    ///     Used for doing direct drawing without entities/nodes/controls.
+    ///     Used for doing direct drawing without sprite components, existing GUI controls, etc...
     /// </summary>
     public abstract class DrawingHandle : IDisposable
     {
@@ -15,15 +16,25 @@ namespace SS14.Client.Graphics.Drawing
         // Also it's probably faster or some shit.
 
         internal Godot.RID Item { get; }
+        private protected IRenderHandle _renderHandle;
+        private protected readonly int _handleId;
         public bool Disposed { get; private set; }
 
         internal DrawingHandle(Godot.RID item)
         {
+            DebugTools.Assert(GameController.Mode == GameController.DisplayMode.Godot);
             Item = item ?? throw new ArgumentNullException(nameof(item));
         }
 
         internal DrawingHandle()
         {
+            DebugTools.Assert(GameController.Mode == GameController.DisplayMode.Headless);
+        }
+
+        internal DrawingHandle(IRenderHandle handle, int handleId)
+        {
+            _renderHandle = handle;
+            _handleId = handleId;
         }
 
         public void Dispose()
@@ -88,17 +99,16 @@ namespace SS14.Client.Graphics.Drawing
         {
         }
 
-        internal DrawingHandleWorld() : base()
+        internal DrawingHandleWorld(IRenderHandle handle, int handleId) : base(handle, handleId)
+        {
+        }
+
+        internal DrawingHandleWorld()
         {
         }
 
         public override void DrawCircle(Vector2 position, float radius, Color color)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             CheckDisposed();
             VS.CanvasItemAddCircle(Item, ToPixelCoords(position), radius * PPM, color.Convert());
         }
@@ -187,6 +197,10 @@ namespace SS14.Client.Graphics.Drawing
         {
         }
 
+        internal DrawingHandleScreen(IRenderHandle handle, int handleId) : base(handle, handleId)
+        {
+        }
+
         internal DrawingHandleScreen() : base()
         {
         }
@@ -249,13 +263,15 @@ namespace SS14.Client.Graphics.Drawing
         public override void DrawTexture(Texture texture, Vector2 position, Color? modulate = null,
             Texture normalMap = null)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             CheckDisposed();
-            texture.GodotTexture.Draw(Item, position.Convert(), modulate?.Convert(), false, normalMap);
+            if (_renderHandle != null)
+            {
+                _renderHandle.DrawTexture(texture, position, _handleId);
+            }
+            else if (Item != null)
+            {
+                texture.GodotTexture.Draw(Item, position.Convert(), modulate?.Convert(), false, normalMap);
+            }
         }
 
         public void DrawTextureRect(Texture texture, UIBox2 rect, bool tile, Color? modulate = null,

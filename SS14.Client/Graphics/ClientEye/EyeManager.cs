@@ -1,7 +1,6 @@
 ﻿using System;
-using SS14.Client.Interfaces;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.Graphics.ClientEye;
-using SS14.Client.Utility;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
@@ -15,8 +14,8 @@ namespace SS14.Client.Graphics.ClientEye
         // No I can't be bothered to make this a shared constant.
         public const int PIXELSPERMETER = 32;
 
-        [Dependency] readonly ISceneTreeHolder sceneTree;
         [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IDisplayManager _displayManager;
 
         // We default to this when we get set to a null eye.
         private FixedEye defaultEye;
@@ -58,12 +57,7 @@ namespace SS14.Client.Graphics.ClientEye
 
         public Box2 GetWorldViewport()
         {
-            if (!GameController.OnGodot)
-            {
-                return default;
-            }
-
-            var vpSize = sceneTree.SceneTree.Root.Size.Convert();
+            var vpSize = _displayManager.ScreenSize;
 
             var topLeft = ScreenToWorld(Vector2.Zero);
             var topRight = ScreenToWorld(new Vector2(vpSize.X, 0));
@@ -96,12 +90,11 @@ namespace SS14.Client.Graphics.ClientEye
 
         public Vector2 WorldToScreen(Vector2 point)
         {
-            if (!GameController.OnGodot)
-            {
-                return default;
-            }
-            var transform = sceneTree.WorldRoot.GetViewportTransform();
-            return transform.Xform(point.Convert() * PIXELSPERMETER * new Godot.Vector2(1, -1)).Convert();
+            var matrix = CurrentEye.GetMatrix();
+            point = matrix.Transform(point);
+            point *= new Vector2(1, -1) * PIXELSPERMETER;
+            point += _displayManager.ScreenSize/2f;
+            return point;
         }
 
         public ScreenCoordinates WorldToScreen(GridCoordinates point)
@@ -116,13 +109,10 @@ namespace SS14.Client.Graphics.ClientEye
 
         public GridCoordinates ScreenToWorld(Vector2 point)
         {
-            if (!GameController.OnGodot)
-            {
-                return default;
-            }
-            var matrix = Matrix3.Invert(MatrixViewPortTransform(sceneTree));
-            var worldPos = matrix.Transform(point) / PIXELSPERMETER * new Vector2(1, -1);
-            IMapGrid grid ;
+            var matrix = Matrix3.Invert(CurrentEye.GetMatrix());
+            point -= _displayManager.ScreenSize/2f;
+            var worldPos = matrix.Transform(point / PIXELSPERMETER * new Vector2(1, -1));
+            IMapGrid grid;
             if (_mapManager.TryGetMap(currentEye.Position.MapId, out var map))
             {
                 grid = map.FindGridAt(worldPos);
@@ -132,11 +122,6 @@ namespace SS14.Client.Graphics.ClientEye
                 grid = _mapManager.GetGrid(GridId.Nullspace);
             }
             return new GridCoordinates(grid.WorldToLocal(worldPos), grid);
-        }
-
-        private static Matrix3 MatrixViewPortTransform(ISceneTreeHolder sceneTree)
-        {
-            return sceneTree.WorldRoot.GetViewportTransform().Convert();
         }
     }
 }

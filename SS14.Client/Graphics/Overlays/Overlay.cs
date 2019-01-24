@@ -5,6 +5,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using SS14.Shared.Utility;
 using VS = Godot.VisualServer;
 
 namespace SS14.Client.Graphics.Overlays
@@ -27,6 +28,8 @@ namespace SS14.Client.Graphics.Overlays
         public virtual OverlaySpace Space => OverlaySpace.ScreenSpace;
 
         protected IOverlayManager OverlayManager { get; }
+
+        private IRenderHandle _renderHandle;
 
         private Shader _shader;
 
@@ -114,54 +117,78 @@ namespace SS14.Client.Graphics.Overlays
                 throw new InvalidOperationException("Can only allocate new handles while drawing.");
             }
 
-            if (!GameController.OnGodot)
+            switch (GameController.Mode)
             {
-                DrawingHandle handle;
-                switch (Space)
+                case GameController.DisplayMode.Headless:
                 {
-                    case OverlaySpace.ScreenSpace:
-                        handle = new DrawingHandleScreen();
-                        break;
-                    case OverlaySpace.WorldSpace:
-                        handle = new DrawingHandleWorld();
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
+                    DrawingHandle handle;
+                    switch (Space)
+                    {
+                        case OverlaySpace.ScreenSpaceBelowWorld:
+                        case OverlaySpace.ScreenSpace:
+                            handle = new DrawingHandleScreen();
+                            break;
+                        case OverlaySpace.WorldSpace:
+                            handle = new DrawingHandleWorld();
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    TempHandles.Add(handle);
+                    return handle;
                 }
-
-                TempHandles.Add(handle);
-                return handle;
-            }
-
-            var item = VS.CanvasItemCreate();
-            VS.CanvasItemSetParent(item, MainCanvasItem);
-            CanvasItems.Add(item);
-            if (shader != null)
-            {
-                shader.ApplyToCanvasItem(item);
-            }
-            else
-            {
-                VS.CanvasItemSetUseParentMaterial(item, SubHandlesUseMainShader);
-            }
-
-            {
-                DrawingHandle handle;
-                switch (Space)
+                case GameController.DisplayMode.OpenGL:
                 {
-                    case OverlaySpace.ScreenSpaceBelowWorld:
-                    case OverlaySpace.ScreenSpace:
-                        handle = new DrawingHandleScreen(item);
-                        break;
-                    case OverlaySpace.WorldSpace:
-                        handle = new DrawingHandleWorld(item);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                    DrawingHandle handle;
+                    switch (Space)
+                    {
+                        case OverlaySpace.ScreenSpaceBelowWorld:
+                        case OverlaySpace.ScreenSpace:
+                            handle = _renderHandle.CreateHandleScreen();
+                            break;
+                        case OverlaySpace.WorldSpace:
+                            handle = _renderHandle.CreateHandleWorld();
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
 
-                TempHandles.Add(handle);
-                return handle;
+                    return handle;
+                }
+                case GameController.DisplayMode.Godot:
+                {
+                    var item = VS.CanvasItemCreate();
+                    VS.CanvasItemSetParent(item, MainCanvasItem);
+                    CanvasItems.Add(item);
+                    if (shader != null)
+                    {
+                        shader.ApplyToCanvasItem(item);
+                    }
+                    else
+                    {
+                        VS.CanvasItemSetUseParentMaterial(item, SubHandlesUseMainShader);
+                    }
+
+                    DrawingHandle handle;
+                    switch (Space)
+                    {
+                        case OverlaySpace.ScreenSpaceBelowWorld:
+                        case OverlaySpace.ScreenSpace:
+                            handle = new DrawingHandleScreen(item);
+                            break;
+                        case OverlaySpace.WorldSpace:
+                            handle = new DrawingHandleWorld(item);
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    TempHandles.Add(handle);
+                    return handle;
+                }
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -210,9 +237,23 @@ namespace SS14.Client.Graphics.Overlays
             }
         }
 
-        internal void OpenGLRender()
+        internal void OpenGLRender(IRenderHandle renderHandle)
         {
+            DebugTools.Assert(GameController.Mode == GameController.DisplayMode.OpenGL);
 
+            try
+            {
+                _renderHandle = renderHandle;
+                Drawing = true;
+
+                var handle = NewHandle();
+                Draw(handle);
+            }
+            finally
+            {
+                _renderHandle = null;
+                Drawing = false;
+            }
         }
 
         private void ClearDraw()

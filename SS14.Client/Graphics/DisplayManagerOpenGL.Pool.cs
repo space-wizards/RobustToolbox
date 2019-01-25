@@ -4,6 +4,9 @@ namespace SS14.Client.Graphics
 {
     internal partial class DisplayManagerOpenGL
     {
+        // We use pooling to store command list related objects.
+        // These command lists are causing GC overhead over my dead body.
+
         // Pooling capacities here are arbitrary. Tweak them if you want.
         private readonly Pool<RenderCommandList> _poolCommandList = new Pool<RenderCommandList>(200);
         private readonly Pool<RenderCommandTexture> _poolCommandTexture = new Pool<RenderCommandTexture>(500);

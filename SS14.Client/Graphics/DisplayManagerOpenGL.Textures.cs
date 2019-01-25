@@ -23,6 +23,8 @@ namespace SS14.Client.Graphics
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
 
+            // We use System.Drawing instead of ImageSharp because the latter has PNG loading bugs on Mono.
+            // Even though supposedly that issue was fixed with Mono 5.14... I'm on 5.16.
             using (var image = (System.Drawing.Bitmap) System.Drawing.Image.FromStream(stream))
             {
                 GL.CreateTextures(TextureTarget.Texture2D, 1, out int texture);
@@ -93,7 +95,6 @@ namespace SS14.Client.Graphics
             public int OpenGLObject;
             public int Width;
             public int Height;
-            public Vector2 subRegion;
             public Vector2i Size => new Vector2i(Width, Height);
         }
     }

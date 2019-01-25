@@ -13,6 +13,8 @@ out vec2 TexCoord;
 uniform mat3 modelMatrix;
 uniform mat3 viewMatrix;
 uniform mat3 projectionMatrix;
+// Allows us to do texture atlassing with texture coordinates 0->1
+// Input texture coordinates get mapped to this range.
 uniform vec4 modifyUV;
 
 void main()

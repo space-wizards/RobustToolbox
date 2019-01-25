@@ -19,7 +19,15 @@ namespace SS14.Client.Graphics
 {
     internal partial class DisplayManagerOpenGL
     {
+        /// <summary>
+        ///     The current model matrix we would use.
+        ///     Necessary since certain drawing operations mess with it still.
+        /// </summary>
         private Matrix3 _currentModelMatrix = Matrix3.Identity;
+
+        /// <summary>
+        ///     Are we current rendering screen space or world space? Some code works differently between the two.
+        /// </summary>
         private CurrentSpace _currentSpace;
 
         public void Render(FrameEventArgs args)
@@ -67,14 +75,11 @@ namespace SS14.Client.Graphics
                 viewMatrixWorld = worldView.ConvertOpenTK();
             }
 
+            // We hand out this handle so external code can generate command lists for us.
             var renderHandle = new RenderHandle(this);
             _currentSpace = CurrentSpace.ScreenSpace;
 
-
-            {
-                var identity = OpenTK.Matrix3.Identity;
-                GL.UniformMatrix3(Vertex2DUniformModel, false, ref identity);
-            }
+            _currentModelMatrix = Matrix3.Identity;
 
             // Render ScreenSpaceBelowWorld overlays.
             {
@@ -91,18 +96,13 @@ namespace SS14.Client.Graphics
 
             _flushRenderHandle(renderHandle);
 
-            // Render grids.
+            _currentSpace = CurrentSpace.WorldSpace;
+            // Render grids. Very hardcoded right now.
             var map = _eyeManager.CurrentMap;
 
             var tex = _resourceCache.GetResource<TextureResource>("/Textures/Tiles/floor_steel.png");
             var loadedTex = _loadedTextures[((OpenGLTexture) tex.Texture).OpenGLTextureId];
-
             GL.BindTextureUnit(0, loadedTex.OpenGLObject);
-
-            // Make view matrix.
-            var vertices = new float[65536 * 4];
-            var indices = new ushort[65536 / 4 * 6];
-            ushort nth = 0;
 
             GL.UniformMatrix3(Vertex2DUniformView, true, ref viewMatrixWorld);
             GL.UniformMatrix3(Vertex2DUniformProjection, true, ref projMatrixWorld);
@@ -110,8 +110,12 @@ namespace SS14.Client.Graphics
             GL.VertexArrayVertexBuffer(Vertex2DVAO, 0, AnotherVBO, IntPtr.Zero, 4 * sizeof(float));
             GL.VertexArrayElementBuffer(Vertex2DVAO, AnotherEBO);
 
+            var vertices = new float[65536 * 4];
+            var indices = new ushort[65536 / 4 * 6];
+
             foreach (var grid in _mapManager.GetMap(map).GetAllGrids())
             {
+                ushort nth = 0;
                 var matrix = Matrix3.Identity;
                 matrix.R0C2 = grid.WorldPosition.X;
                 matrix.R1C2 = grid.WorldPosition.Y;
@@ -162,8 +166,7 @@ namespace SS14.Client.Graphics
                 GL.DrawElements(PrimitiveType.Triangles, nth * 6, DrawElementsType.UnsignedShort, 0);
             }
 
-            _currentSpace = CurrentSpace.WorldSpace;
-
+            // Use a SINGLE drawing handle for all entities.
             var drawingHandle = renderHandle.CreateHandleWorld();
 
             // Draw entities.
@@ -192,20 +195,25 @@ namespace SS14.Client.Graphics
                     case RenderCommandTexture renderCommandTexture:
                     {
                         // Use QuadVBO to render a single quad and modify the model matrix to position it where we need it.
-                        var loaded = _loadedTextures[renderCommandTexture.TextureId];
+                        var loadedTexture = _loadedTextures[renderCommandTexture.TextureId];
                         Vector2 size;
                         if (renderCommandTexture.HasSubRegion)
                         {
+                            // If the texture is in an atlas we have to set modifyUV in the shader,
+                            // so that the shader translated the quad VBO 0->1 tex coords to the sub region needed.
                             size = renderCommandTexture.SubRegion.Size;
                             var subRegion = renderCommandTexture.SubRegion;
-                            var (w, h) = loaded.Size;
-                            var vec = new OpenTK.Vector4(subRegion.Left / w, subRegion.Top / h, subRegion.Right / w,
+                            var (w, h) = loadedTexture.Size;
+                            var vec = new OpenTK.Vector4(
+                                subRegion.Left / w,
+                                subRegion.Top / h,
+                                subRegion.Right / w,
                                 subRegion.Bottom / h);
                             GL.Uniform4(Vertex2DUniformModUV, vec);
                         }
                         else
                         {
-                            size = loaded.Size;
+                            size = loadedTexture.Size;
                             GL.Uniform4(Vertex2DUniformModUV, new OpenTK.Vector4(0, 0, 1, 1));
                         }
 
@@ -222,7 +230,7 @@ namespace SS14.Client.Graphics
 
                         GL.UniformMatrix3(Vertex2DUniformModel, true, ref oRectTransform);
                         GL.BindVertexBuffer(0, QuadVBO, IntPtr.Zero, 4 * sizeof(float));
-                        GL.BindTextureUnit(0, loaded.OpenGLObject);
+                        GL.BindTextureUnit(0, loadedTexture.OpenGLObject);
                         GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
                         break;
                     }
@@ -364,6 +372,9 @@ namespace SS14.Client.Graphics
             WorldSpace,
         }
 
+        /// <summary>
+        ///     A list of rendering commands to execute in order. Pooled.
+        /// </summary>
         private class RenderCommandList
         {
             public List<RenderCommand> Commands { get; } = new List<RenderCommand>();
@@ -373,6 +384,7 @@ namespace SS14.Client.Graphics
         {
         }
 
+        // ReSharper disable once ClassNeverInstantiated.Local
         private class RenderCommandTexture : RenderCommand
         {
             public int TextureId { get; set; }
@@ -381,13 +393,16 @@ namespace SS14.Client.Graphics
             public UIBox2 SubRegion { get; set; }
         }
 
+        // ReSharper disable once ClassNeverInstantiated.Local
         private class RenderCommandTransform : RenderCommand
         {
             public Matrix3 Matrix { get; set; }
         }
     }
 
-
+    /// <summary>
+    ///     Handle to generate command lists inside the OpenGL rendering system.
+    /// </summary>
     internal interface IRenderHandle
     {
         DrawingHandleWorld CreateHandleWorld();

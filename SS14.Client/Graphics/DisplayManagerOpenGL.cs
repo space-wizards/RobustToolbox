@@ -46,15 +46,21 @@ namespace SS14.Client.Graphics
 
         private int AnotherVBO;
         private int AnotherEBO;
+        // VBO used by the splash screen.
         private int SplashVBO;
+        // VBO to draw a single quad.
         private int QuadVBO;
         private int Vertex2DProgram;
+        // Locations of a few uniforms in the above program.
         private int Vertex2DUniformModel;
         private int Vertex2DUniformView;
         private int Vertex2DUniformModUV;
         private int Vertex2DUniformProjection;
+        // The main VAO we use.
         private int Vertex2DVAO;
 
+        // Thread the window is instantiated on.
+        // OpenGL is allergic to multi threading so we need to check this.
         private Thread _mainThread;
 
         public override Vector2i ScreenSize => new Vector2i(_window.Width, _window.Height);
@@ -73,14 +79,6 @@ namespace SS14.Client.Graphics
         public void ProcessInput(FrameEventArgs frameEventArgs)
         {
             _window.ProcessEvents();
-        }
-
-        public void Input(FrameEventArgs eventArgs)
-        {
-            if (GameController.Mode == GameController.DisplayMode.OpenGL)
-            {
-                _window.ProcessEvents();
-            }
         }
 
         public override void ReloadConfig()
@@ -169,12 +167,12 @@ namespace SS14.Client.Graphics
             GL.NamedBufferStorage(AnotherVBO, sizeof(float) * 65536 * 4, IntPtr.Zero,
                 BufferStorageFlags.DynamicStorageBit);
 
-            var quadVertices = new float[]
+            var quadVertices = new Vertex2D[]
             {
-                1, 0, 1, 1,
-                0, 0, 0, 1,
-                1, 1, 1, 0,
-                0, 1, 0, 0
+                new Vertex2D(1, 0, 1, 1),
+                new Vertex2D(0, 0, 0, 1),
+                new Vertex2D(1, 1, 1, 0),
+                new Vertex2D(0, 1, 0, 0),
             };
 
             GL.CreateBuffers(1, out QuadVBO);

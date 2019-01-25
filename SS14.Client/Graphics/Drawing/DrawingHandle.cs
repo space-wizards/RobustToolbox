@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Net.NetworkInformation;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 using VS = Godot.VisualServer;
 
 namespace SS14.Client.Graphics.Drawing
 {
     /// <summary>
-    ///     Used for doing direct drawing without entities/nodes/controls.
+    ///     Used for doing direct drawing without sprite components, existing GUI controls, etc...
     /// </summary>
     public abstract class DrawingHandle : IDisposable
     {
@@ -15,15 +17,25 @@ namespace SS14.Client.Graphics.Drawing
         // Also it's probably faster or some shit.
 
         internal Godot.RID Item { get; }
+        private protected IRenderHandle _renderHandle;
+        private protected readonly int _handleId;
         public bool Disposed { get; private set; }
 
         internal DrawingHandle(Godot.RID item)
         {
+            DebugTools.Assert(GameController.Mode == GameController.DisplayMode.Godot);
             Item = item ?? throw new ArgumentNullException(nameof(item));
         }
 
         internal DrawingHandle()
         {
+            DebugTools.Assert(GameController.Mode == GameController.DisplayMode.Headless);
+        }
+
+        internal DrawingHandle(IRenderHandle handle, int handleId)
+        {
+            _renderHandle = handle;
+            _handleId = handleId;
         }
 
         public void Dispose()
@@ -33,31 +45,40 @@ namespace SS14.Client.Graphics.Drawing
 
         public void SetTransform(Vector2 position, Angle rotation, Vector2 scale)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             CheckDisposed();
-            var transform = Godot.Transform2D.Identity.Rotated((float) rotation.Theta).Scaled(scale.Convert());
-            SetTransform2DRotationAndScale(ref transform, rotation.Theta, scale);
-            transform.o = position.Convert();
-            VS.CanvasItemAddSetTransform(Item, transform);
+            if (_renderHandle != null)
+            {
+                var matrix = Matrix3.Identity;
+                (matrix.R0C0, matrix.R1C1) = scale;
+                matrix.Rotate(rotation);
+                matrix.R0C2 += position.X;
+                matrix.R1C2 += position.Y;
+                _renderHandle.SetModelTransform(ref matrix, _handleId);
+            }
+            else if (Item != null)
+            {
+                var transform = Godot.Transform2D.Identity.Rotated((float) rotation.Theta).Scaled(scale.Convert());
+                SetTransform2DRotationAndScale(ref transform, rotation.Theta, scale);
+                transform.o = position.Convert();
+                VS.CanvasItemAddSetTransform(Item, transform);
+            }
         }
 
         public void SetTransform(Matrix3 matrix)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             CheckDisposed();
-            VS.CanvasItemAddSetTransform(Item, matrix.Convert());
+            if (_renderHandle != null)
+            {
+                _renderHandle.SetModelTransform(ref matrix, _handleId);
+            }
+            else if (Item != null)
+            {
+                VS.CanvasItemAddSetTransform(Item, matrix.Convert());
+            }
         }
 
         // Effectively equivalent to Godot's internal Transform2D::set_rotation_and_scale defined in math_2d.h.
-        public static void SetTransform2DRotationAndScale(ref Godot.Transform2D transform, double rot, Vector2 scale)
+        internal static void SetTransform2DRotationAndScale(ref Godot.Transform2D transform, double rot, Vector2 scale)
         {
             transform.x = new Godot.Vector2((float) Math.Cos(rot), (float) Math.Sin(rot)) * scale.X;
             transform.y = new Godot.Vector2(-(float) Math.Sin(rot), (float) Math.Cos(rot)) * scale.Y;
@@ -88,17 +109,16 @@ namespace SS14.Client.Graphics.Drawing
         {
         }
 
-        internal DrawingHandleWorld() : base()
+        internal DrawingHandleWorld(IRenderHandle handle, int handleId) : base(handle, handleId)
+        {
+        }
+
+        internal DrawingHandleWorld()
         {
         }
 
         public override void DrawCircle(Vector2 position, float radius, Color color)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             CheckDisposed();
             VS.CanvasItemAddCircle(Item, ToPixelCoords(position), radius * PPM, color.Convert());
         }
@@ -117,13 +137,16 @@ namespace SS14.Client.Graphics.Drawing
         public override void DrawTexture(Texture texture, Vector2 position, Color? modulate = null,
             Texture normalMap = null)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             CheckDisposed();
-            texture.GodotTexture.Draw(Item, ToPixelCoords(position), modulate?.Convert(), false, normalMap);
+
+            if (_renderHandle != null)
+            {
+                _renderHandle.DrawTexture(texture, position, modulate, _handleId);
+            }
+            else if (Item != null)
+            {
+                texture.GodotTexture.Draw(Item, ToPixelCoords(position), modulate?.Convert(), false, normalMap);
+            }
         }
 
         public void DrawTextureRect(Texture texture, Box2 rect, bool tile, Color? modulate = null,
@@ -184,6 +207,10 @@ namespace SS14.Client.Graphics.Drawing
     public sealed class DrawingHandleScreen : DrawingHandle
     {
         internal DrawingHandleScreen(Godot.RID item) : base(item)
+        {
+        }
+
+        internal DrawingHandleScreen(IRenderHandle handle, int handleId) : base(handle, handleId)
         {
         }
 
@@ -249,13 +276,15 @@ namespace SS14.Client.Graphics.Drawing
         public override void DrawTexture(Texture texture, Vector2 position, Color? modulate = null,
             Texture normalMap = null)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             CheckDisposed();
-            texture.GodotTexture.Draw(Item, position.Convert(), modulate?.Convert(), false, normalMap);
+            if (_renderHandle != null)
+            {
+                _renderHandle.DrawTexture(texture, position, modulate, _handleId);
+            }
+            else if (Item != null)
+            {
+                texture.GodotTexture.Draw(Item, position.Convert(), modulate?.Convert(), false, normalMap);
+            }
         }
 
         public void DrawTextureRect(Texture texture, UIBox2 rect, bool tile, Color? modulate = null,

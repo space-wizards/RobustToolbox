@@ -823,6 +823,24 @@ namespace SS14.Shared.Maths
             R0C2 = r0c2;
         }
 
+        public void Rotate(Angle angle)
+        {
+            var sin = (float) Math.Sin(angle);
+            var cos = (float) Math.Cos(angle);
+
+            var r0c0 = cos * R0C0 + sin * R1C0;
+            var r0c1 = cos * R0C1 + sin * R1C1;
+            var r0c2 = cos * R0C2 + sin * R1C2;
+
+            R1C0 = cos * R1C0 - sin * R0C0;
+            R1C1 = cos * R1C1 - sin * R0C1;
+            R1C2 = cos * R1C2 - sin * R0C2;
+
+            R0C0 = r0c0;
+            R0C1 = r0c1;
+            R0C2 = r0c2;
+        }
+
         public void Rotate(float angle, out Matrix3 result)
         {
             var angleRadians = MathHelper.DegreesToRadians(angle);

@@ -34,6 +34,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
 using JetBrains.Annotations;
+using SS14.Client.ResourceManagement;
 using SS14.Client.Utility;
 using SS14.Client.ViewVariables;
 using SS14.Shared;
@@ -44,9 +45,18 @@ namespace SS14.Client
 {
     // Gets automatically ran by SS14.Client.Godot.
     [UsedImplicitly]
-    public sealed partial class GameController : IGameController
+    internal sealed partial class GameController : IGameControllerInternal
     {
-        internal static bool OnGodot { get; private set; }
+        public enum DisplayMode
+        {
+            Headless,
+            Godot,
+            OpenGL
+        }
+
+        internal static DisplayMode Mode { get; private set; } = DisplayMode.Headless;
+
+        internal static bool OnGodot => Mode == DisplayMode.Godot;
 
         /// <summary>
         ///     QueueFreeing a Godot node during finalization can cause segfaults.
@@ -74,11 +84,11 @@ namespace SS14.Client
         [Dependency] private readonly IEyeManager _eyeManager;
         [Dependency] private readonly IPlacementManager _placementManager;
         [Dependency] private readonly IClientGameStateManager _gameStateManager;
-        [Dependency] private readonly IOverlayManager _overlayManager;
+        [Dependency] private readonly IOverlayManagerInternal _overlayManager;
         [Dependency] private readonly ILogManager _logManager;
         [Dependency] private readonly ITaskManager _taskManager;
-
         [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager;
+        private IDisplayManagerOpenGL _displayManagerOpenGL;
 
         private void Startup()
         {
@@ -93,13 +103,19 @@ namespace SS14.Client
             // Load config.
             _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
 
-            _displayManager.Initialize();
-            _displayManager.SetWindowTitle("Space Station 14");
+            if (Mode == DisplayMode.OpenGL)
+            {
+                _displayManagerOpenGL = IoCManager.Resolve<IDisplayManagerOpenGL>();
+            }
 
             // Init resources.
             // Doesn't do anything right now because TODO Godot asset management is a bit ad-hoc.
             _resourceCache.LoadBaseResources();
             _resourceCache.LoadLocalResources();
+
+            // Bring display up as soon as resources are mounted.
+            _displayManager.Initialize();
+            _displayManager.SetWindowTitle("Space Station 14");
 
             //identical code for server in baseserver
             if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))
@@ -156,6 +172,10 @@ namespace SS14.Client
                 Logger.Info("Shutting down!");
             }
 
+            if (Mode != DisplayMode.Godot)
+            {
+                _mainLoop.Running = false;
+            }
             Logger.Debug("Goodbye");
             IoCManager.Clear();
             ShuttingDownHard = true;
@@ -166,8 +186,8 @@ namespace SS14.Client
 
         private void Update(float frameTime)
         {
-            _networkManager.ProcessPackets();
             var eventArgs = new ProcessFrameEventArgs(frameTime);
+            _networkManager.ProcessPackets();
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, eventArgs.Elapsed);
             _timerManager.UpdateTimers(frameTime);
             _taskManager.ProcessPendingTasks();

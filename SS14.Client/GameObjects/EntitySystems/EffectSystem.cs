@@ -136,6 +136,10 @@ namespace SS14.Client.GameObjects
 
         public override void FrameUpdate(float frameTime)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             lasttimeprocessed = IoCManager.Resolve<IGameTiming>().CurTime;
 
             for (int i = 0; i < _Effects.Count; i++)

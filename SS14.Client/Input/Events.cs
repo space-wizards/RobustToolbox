@@ -91,6 +91,12 @@ namespace SS14.Client.Input
             var key = Mouse.ConvertGodotMouseButton((Mouse.Button) args.ButtonIndex);
             return new KeyEventArgs(key, 0, false, false, false, false);
         }
+
+        public static explicit operator KeyEventArgs(OpenTK.Input.KeyboardKeyEventArgs args)
+        {
+            return new KeyEventArgs(Keyboard.ConvertOpenTKKey(args.Key),
+                0, args.Alt, args.Control, args.Shift, false);
+        }
     }
 
     public abstract class MouseEventArgs : ModifierInputEventArgs

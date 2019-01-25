@@ -19,6 +19,7 @@
     <NoWarn>0649</NoWarn>
     <LangVersion>7.2</LangVersion>
     <Godot>true</Godot>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -65,8 +66,10 @@
     <PackageReference Include="NJsonSchema" Version="9.10.73" />
     <PackageReference Include="SixLabors.Core" Version="1.0.0-beta0006" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0005" />
+    <PackageReference Include="System.Memory" Version="4.5.2" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="YamlDotNet" Version="5.0.1" />
+    <PackageReference Include="OpenTK" Version="3.0.1" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -128,6 +131,12 @@
     <Compile Include="Console\Commands\Debug.cs" />
     <Compile Include="GameStates\ClientGameStateManager.cs" />
     <Compile Include="Graphics\CanvasLayers.cs" />
+    <Compile Include="Graphics\DisplayManagerGodot.cs" />
+    <Compile Include="Graphics\DisplayManagerHeadless.cs" />
+    <Compile Include="Graphics\DisplayManagerOpenGL.cs" />
+    <Compile Include="Graphics\DisplayManagerOpenGL.Pool.cs" />
+    <Compile Include="Graphics\DisplayManagerOpenGL.Rendering.cs" />
+    <Compile Include="Graphics\DisplayManagerOpenGL.Textures.cs" />
     <Compile Include="Graphics\IDirectionalTextureProvider.cs" />
     <Compile Include="Graphics\Lighting\LightManager.Light.cs" />
     <Compile Include="Graphics\Lighting\LightManager.Occluder.cs" />
@@ -149,11 +158,11 @@
     <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IRenderableComponent.cs" />
     <Compile Include="Interfaces\GameStates\IClientGameStateManager.cs" />
+    <Compile Include="Interfaces\Graphics\IDisplayManagerOpenGL.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILight.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILightManager.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILightMode.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\IOccluder.cs" />
-    <Compile Include="Interfaces\Graphics\Overlays\IOverlay.cs" />
     <Compile Include="Interfaces\Graphics\Overlays\IOverlayManager.cs" />
     <Compile Include="Interfaces\IBaseClient.cs" />
     <Compile Include="Interfaces\ISceneTreeHolder.cs" />
@@ -200,6 +209,7 @@
     <Compile Include="Utility\GodotPathUtility.cs" />
     <Compile Include="Utility\GodotResourceCopy.cs" />
     <Compile Include="Utility\ImageSharpExt.cs" />
+    <Compile Include="Utility\OpenTKConversions.cs" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Utility\GodotConversions.cs" />
     <Compile Include="State\State.cs" />

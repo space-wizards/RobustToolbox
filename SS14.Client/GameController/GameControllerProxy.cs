@@ -2,14 +2,18 @@ using SS14.Client.Interfaces;
 
 namespace SS14.Client
 {
-    public sealed partial class GameController
+    internal sealed partial class GameController
     {
         // Since GameController isn't managed by IoC,
         // this'll have to do as a proxy to it.
         // Should rarely be needed anyways.
-        class GameControllerProxy : IGameControllerProxy
+        // ReSharper disable once ClassNeverInstantiated.Local
+        private class GameControllerProxy : IGameControllerProxyInternal
         {
-            public IGameController GameController { get; set; }
+            public GameController GameController;
+
+            IGameController IGameControllerProxy.GameController => GameController;
+            IGameControllerInternal IGameControllerProxyInternal.GameController => GameController;
         }
     }
 }

@@ -56,6 +56,7 @@ namespace SS14.Client.Graphics
         private int Vertex2DUniformView;
         private int Vertex2DUniformModUV;
         private int Vertex2DUniformProjection;
+        private int Vertex2DUniformModulate;
         // The main VAO we use.
         private int Vertex2DVAO;
 
@@ -150,6 +151,7 @@ namespace SS14.Client.Graphics
             Vertex2DUniformView = GL.GetUniformLocation(Vertex2DProgram, "viewMatrix");
             Vertex2DUniformProjection = GL.GetUniformLocation(Vertex2DProgram, "projectionMatrix");
             Vertex2DUniformModUV = GL.GetUniformLocation(Vertex2DProgram, "modifyUV");
+            Vertex2DUniformModulate = GL.GetUniformLocation(Vertex2DProgram, "modulate");
 
             // Vertex2D VAO.
             GL.CreateVertexArrays(1, out Vertex2DVAO);
@@ -176,6 +178,7 @@ namespace SS14.Client.Graphics
             };
 
             GL.CreateBuffers(1, out QuadVBO);
+            GL.ObjectLabel(ObjectLabelIdentifier.Buffer, QuadVBO, 7, "QuadVBO");
             GL.NamedBufferStorage(QuadVBO, sizeof(float) * 16, quadVertices, BufferStorageFlags.None);
 
             GL.CreateBuffers(1, out AnotherEBO);

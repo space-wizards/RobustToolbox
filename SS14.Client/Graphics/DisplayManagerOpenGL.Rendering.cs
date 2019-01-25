@@ -110,6 +110,9 @@ namespace SS14.Client.Graphics
             GL.VertexArrayVertexBuffer(Vertex2DVAO, 0, AnotherVBO, IntPtr.Zero, 4 * sizeof(float));
             GL.VertexArrayElementBuffer(Vertex2DVAO, AnotherEBO);
 
+            GL.Enable(EnableCap.PrimitiveRestart);
+            GL.Enable(EnableCap.PrimitiveRestartFixedIndex);
+
             var vertices = new float[65536 * 4];
             var indices = new ushort[65536 / 4 * 6];
 
@@ -141,17 +144,18 @@ namespace SS14.Client.Graphics
                     vertices[vidx + 13] = tileRef.Y - 0.5f;
                     vertices[vidx + 14] = 0;
                     vertices[vidx + 15] = 1;
-                    var nidx = nth * 6;
+                    var nidx = nth * 5;
                     var tidx = (ushort) (nth * 4);
                     indices[nidx] = tidx;
                     indices[nidx + 1] = (ushort) (tidx + 1);
                     indices[nidx + 2] = (ushort) (tidx + 2);
-                    indices[nidx + 3] = (ushort) (tidx + 1);
-                    indices[nidx + 4] = (ushort) (tidx + 2);
-                    indices[nidx + 5] = (ushort) (tidx + 3);
-                    checked
+                    indices[nidx + 3] = (ushort) (tidx + 3);
+                    // Use primitive restart to shave off one single index per quad.
+                    // Whew.
+                    indices[nidx + 4] = 65535;
+                    if (++nth == 65535)
                     {
-                        nth += 1;
+                        throw new NotImplementedException("Can't render grids that are that big yet sorry.");
                     }
                 }
 
@@ -161,10 +165,13 @@ namespace SS14.Client.Graphics
                 }
 
                 GL.NamedBufferSubData(AnotherVBO, IntPtr.Zero, nth * sizeof(float) * 16, vertices);
-                GL.NamedBufferSubData(AnotherEBO, IntPtr.Zero, nth * sizeof(ushort) * 6, indices);
+                GL.NamedBufferSubData(AnotherEBO, IntPtr.Zero, nth * sizeof(ushort) * 5, indices);
 
-                GL.DrawElements(PrimitiveType.Triangles, nth * 6, DrawElementsType.UnsignedShort, 0);
+                GL.DrawElements(PrimitiveType.TriangleStrip, nth * 5, DrawElementsType.UnsignedShort, 0);
             }
+
+            GL.Disable(EnableCap.PrimitiveRestartFixedIndex);
+            GL.Disable(EnableCap.PrimitiveRestart);
 
             // Use a SINGLE drawing handle for all entities.
             var drawingHandle = renderHandle.CreateHandleWorld();
@@ -172,7 +179,7 @@ namespace SS14.Client.Graphics
             // Draw entities.
             foreach (var entity in _entityManager.GetEntities())
             {
-                if (!entity.TryGetComponent(out SpriteComponent sprite))
+                if (!entity.Transform.IsMapTransform || !entity.TryGetComponent(out SpriteComponent sprite))
                 {
                     continue;
                 }
@@ -197,12 +204,12 @@ namespace SS14.Client.Graphics
                         // Use QuadVBO to render a single quad and modify the model matrix to position it where we need it.
                         var loadedTexture = _loadedTextures[renderCommandTexture.TextureId];
                         Vector2 size;
-                        if (renderCommandTexture.HasSubRegion)
+                        if (renderCommandTexture.SubRegion.HasValue)
                         {
                             // If the texture is in an atlas we have to set modifyUV in the shader,
                             // so that the shader translated the quad VBO 0->1 tex coords to the sub region needed.
-                            size = renderCommandTexture.SubRegion.Size;
-                            var subRegion = renderCommandTexture.SubRegion;
+                            var subRegion = renderCommandTexture.SubRegion.Value;
+                            size = subRegion.Size;
                             var (w, h) = loadedTexture.Size;
                             var vec = new OpenTK.Vector4(
                                 subRegion.Left / w,
@@ -216,6 +223,10 @@ namespace SS14.Client.Graphics
                             size = loadedTexture.Size;
                             GL.Uniform4(Vertex2DUniformModUV, new OpenTK.Vector4(0, 0, 1, 1));
                         }
+
+                        // Handle modulate or the lack thereof.
+                        GL.Uniform4(Vertex2DUniformModulate,
+                            (renderCommandTexture.Modulate ?? Color.White).ConvertOpenTK());
 
                         if (_currentSpace == CurrentSpace.WorldSpace)
                         {
@@ -325,7 +336,7 @@ namespace SS14.Client.Graphics
                 list.Commands.Add(command);
             }
 
-            public void DrawTexture(Texture texture, Vector2 position, int handleId)
+            public void DrawTexture(Texture texture, Vector2 position, Color? modulate, int handleId)
             {
                 _assertNotDisposed();
 
@@ -339,7 +350,6 @@ namespace SS14.Client.Graphics
                     {
                         texture = atlas.SourceTexture;
                         command.SubRegion = atlas.SubRegion;
-                        command.HasSubRegion = true;
                         break;
                     }
                 }
@@ -347,6 +357,7 @@ namespace SS14.Client.Graphics
                 var list = _drawingHandles[handleId].Item2;
                 command.TextureId = ((OpenGLTexture) texture).OpenGLTextureId;
                 command.Position = position;
+                command.Modulate = modulate;
                 list.Commands.Add(command);
             }
 
@@ -389,8 +400,8 @@ namespace SS14.Client.Graphics
         {
             public int TextureId { get; set; }
             public Vector2 Position { get; set; }
-            public bool HasSubRegion { get; set; }
-            public UIBox2 SubRegion { get; set; }
+            public UIBox2? SubRegion { get; set; }
+            public Color? Modulate { get; set; }
         }
 
         // ReSharper disable once ClassNeverInstantiated.Local
@@ -409,7 +420,7 @@ namespace SS14.Client.Graphics
         DrawingHandleScreen CreateHandleScreen();
 
         void SetModelTransform(ref Matrix3 matrix, int handleId);
-        void DrawTexture(Texture texture, Vector2 position, int handleId);
+        void DrawTexture(Texture texture, Vector2 position, Color? modulate, int handleId);
         void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, int handleId);
     }
 }

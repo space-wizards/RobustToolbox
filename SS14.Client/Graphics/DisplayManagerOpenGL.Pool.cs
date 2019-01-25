@@ -20,7 +20,8 @@ namespace SS14.Client.Graphics
         private RenderCommandTexture _getNewCommandTexture()
         {
             var item = _getFromPool(_poolCommandTexture);
-            item.HasSubRegion = false;
+            item.SubRegion = null;
+            item.Modulate = null;
             return item;
         }
 

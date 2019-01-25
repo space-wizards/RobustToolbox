@@ -19,5 +19,10 @@ namespace SS14.Client.Utility
                 M33 = matrix.R2C2
             };
         }
+
+        public static OpenTK.Graphics.Color4 ConvertOpenTK(this Color color)
+        {
+            return new OpenTK.Graphics.Color4(color.R, color.G, color.B, color.A);
+        }
     }
 }

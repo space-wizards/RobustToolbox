@@ -141,7 +141,7 @@ namespace SS14.Client.Graphics.Drawing
 
             if (_renderHandle != null)
             {
-                _renderHandle.DrawTexture(texture, position, _handleId);
+                _renderHandle.DrawTexture(texture, position, modulate, _handleId);
             }
             else if (Item != null)
             {
@@ -279,7 +279,7 @@ namespace SS14.Client.Graphics.Drawing
             CheckDisposed();
             if (_renderHandle != null)
             {
-                _renderHandle.DrawTexture(texture, position, _handleId);
+                _renderHandle.DrawTexture(texture, position, modulate, _handleId);
             }
             else if (Item != null)
             {

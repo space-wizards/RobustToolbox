@@ -1142,7 +1142,7 @@ namespace SS14.Client.GameObjects
 
                 var texture = layer.Texture ?? resourceCache.GetFallback<TextureResource>();
                 drawingHandle.SetTransform(Owner.Transform.WorldPosition, Angle.Zero, Vector2.One);
-                drawingHandle.DrawTexture(texture, -(Vector2)texture.Size/(2f*EyeManager.PIXELSPERMETER));
+                drawingHandle.DrawTexture(texture, -(Vector2)texture.Size/(2f*EyeManager.PIXELSPERMETER), color);
             }
         }
 

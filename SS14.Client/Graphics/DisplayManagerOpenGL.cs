@@ -100,7 +100,7 @@ namespace SS14.Client.Graphics
                 GameWindowFlags.Default,
                 DisplayDevice.Default,
                 4, 5,
-#if !DEBUG
+#if DEBUG
                 GraphicsContextFlags.Debug | GraphicsContextFlags.ForwardCompatible
 #else
                 GraphicsContextFlags.ForwardCompatible

@@ -187,6 +187,8 @@ namespace SS14.Client.Graphics
             // Use a SINGLE drawing handle for all entities.
             var drawingHandle = renderHandle.CreateHandleWorld();
 
+            var entityList = new List<SpriteComponent>(100);
+
             // Draw entities.
             foreach (var entity in _entityManager.GetEntities())
             {
@@ -196,7 +198,14 @@ namespace SS14.Client.Graphics
                     continue;
                 }
 
-                sprite.OpenGLRender(drawingHandle);
+                entityList.Add(sprite);
+            }
+
+            entityList.Sort((a, b) => ((int)a.DrawDepth).CompareTo((int)b.DrawDepth));
+
+            foreach (var entity in entityList)
+            {
+                entity.OpenGLRender(drawingHandle);
             }
 
             _flushRenderHandle(renderHandle);

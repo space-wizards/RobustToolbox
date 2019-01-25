@@ -1131,6 +1131,21 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        internal void OpenGLRender(DrawingHandleWorld drawingHandle)
+        {
+            foreach (var layer in Layers)
+            {
+                if (!layer.Visible)
+                {
+                    continue;
+                }
+
+                var texture = layer.Texture ?? resourceCache.GetFallback<TextureResource>();
+                drawingHandle.SetTransform(Owner.Transform.WorldPosition, Angle.Zero, Vector2.One);
+                drawingHandle.DrawTexture(texture, -(Vector2)texture.Size/(2f*EyeManager.PIXELSPERMETER));
+            }
+        }
+
         public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);
@@ -1404,7 +1419,7 @@ namespace SS14.Client.GameObjects
                 Layers[i] = layer;
             }
 
-            if (RedrawQueued)
+            if (GameController.OnGodot && RedrawQueued)
             {
                 Redraw();
                 RedrawQueued = false;

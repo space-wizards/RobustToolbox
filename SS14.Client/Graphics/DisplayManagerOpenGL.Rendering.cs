@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL4;
+using SS14.Client.GameObjects;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Graphics.Overlays;
 using SS14.Client.Interfaces.Graphics;
+using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Client.Utility;
+using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 
@@ -16,6 +19,9 @@ namespace SS14.Client.Graphics
 {
     internal partial class DisplayManagerOpenGL
     {
+        private Matrix3 _currentModelMatrix = Matrix3.Identity;
+        private CurrentSpace _currentSpace;
+
         public void Render(FrameEventArgs args)
         {
             if (GameController.Mode != GameController.DisplayMode.OpenGL)
@@ -61,13 +67,14 @@ namespace SS14.Client.Graphics
                 viewMatrixWorld = worldView.ConvertOpenTK();
             }
 
-            var renderHandle = new RenderHandle(this)
-            {
-                CurrentSpace = CurrentSpace.ScreenSpace
-            };
+            var renderHandle = new RenderHandle(this);
+            _currentSpace = CurrentSpace.ScreenSpace;
 
-            GL.VertexArrayVertexBuffer(Vertex2DVAO, 0, AnotherVBO, IntPtr.Zero, 4 * sizeof(float));
-            GL.VertexArrayElementBuffer(Vertex2DVAO, AnotherEBO);
+
+            {
+                var identity = OpenTK.Matrix3.Identity;
+                GL.UniformMatrix3(Vertex2DUniformModel, false, ref identity);
+            }
 
             // Render ScreenSpaceBelowWorld overlays.
             {
@@ -82,10 +89,7 @@ namespace SS14.Client.Graphics
                 }
             }
 
-            foreach (var (_, commandList) in renderHandle._drawingHandles)
-            {
-                _processCommandList(commandList);
-            }
+            _flushRenderHandle(renderHandle);
 
             // Render grids.
             var map = _eyeManager.CurrentMap;
@@ -102,6 +106,9 @@ namespace SS14.Client.Graphics
 
             GL.UniformMatrix3(Vertex2DUniformView, true, ref viewMatrixWorld);
             GL.UniformMatrix3(Vertex2DUniformProjection, true, ref projMatrixWorld);
+
+            GL.VertexArrayVertexBuffer(Vertex2DVAO, 0, AnotherVBO, IntPtr.Zero, 4 * sizeof(float));
+            GL.VertexArrayElementBuffer(Vertex2DVAO, AnotherEBO);
 
             foreach (var grid in _mapManager.GetMap(map).GetAllGrids())
             {
@@ -155,6 +162,24 @@ namespace SS14.Client.Graphics
                 GL.DrawElements(PrimitiveType.Triangles, nth * 6, DrawElementsType.UnsignedShort, 0);
             }
 
+            _currentSpace = CurrentSpace.WorldSpace;
+
+            var drawingHandle = renderHandle.CreateHandleWorld();
+
+            // Draw entities.
+            foreach (var entity in _entityManager.GetEntities())
+            {
+                if (!entity.TryGetComponent(out SpriteComponent sprite))
+                {
+                    continue;
+                }
+
+                var modelMatrix = entity.Transform.WorldMatrix.ConvertOpenTK();
+                sprite.OpenGLRender(drawingHandle);
+            }
+
+            _flushRenderHandle(renderHandle);
+
             _window.SwapBuffers();
         }
 
@@ -165,28 +190,83 @@ namespace SS14.Client.Graphics
                 switch (command)
                 {
                     case RenderCommandTexture renderCommandTexture:
+                    {
+                        // Use QuadVBO to render a single quad and modify the model matrix to position it where we need it.
                         var loaded = _loadedTextures[renderCommandTexture.TextureId];
-                        var (x, y) = renderCommandTexture.Position;
-                        var vertices = new float[]
+                        Vector2 size;
+                        if (renderCommandTexture.HasSubRegion)
                         {
-                            x + loaded.Width, y, 1, 1,
-                            x, y, 0, 1,
-                            x + loaded.Width, y + loaded.Height, 1, 0,
-                            x, y + loaded.Height, 0, 0
-                        };
-                        GL.NamedBufferSubData(AnotherVBO, IntPtr.Zero, vertices.Length * sizeof(float), vertices);
+                            size = renderCommandTexture.SubRegion.Size;
+                            var subRegion = renderCommandTexture.SubRegion;
+                            var (w, h) = loaded.Size;
+                            var vec = new OpenTK.Vector4(subRegion.Left / w, subRegion.Top / h, subRegion.Right / w,
+                                subRegion.Bottom / h);
+                            GL.Uniform4(Vertex2DUniformModUV, vec);
+                        }
+                        else
+                        {
+                            size = loaded.Size;
+                            GL.Uniform4(Vertex2DUniformModUV, new OpenTK.Vector4(0, 0, 1, 1));
+                        }
+
+                        if (_currentSpace == CurrentSpace.WorldSpace)
+                        {
+                            size /= EyeManager.PIXELSPERMETER;
+                        }
+
+                        var rectTransform = Matrix3.Identity;
+                        (rectTransform.R0C0, rectTransform.R1C1) = size;
+                        (rectTransform.R0C2, rectTransform.R1C2) = renderCommandTexture.Position;
+                        rectTransform.Multiply(ref _currentModelMatrix);
+                        var oRectTransform = rectTransform.ConvertOpenTK();
+
+                        GL.UniformMatrix3(Vertex2DUniformModel, true, ref oRectTransform);
+                        GL.BindVertexBuffer(0, QuadVBO, IntPtr.Zero, 4 * sizeof(float));
                         GL.BindTextureUnit(0, loaded.OpenGLObject);
                         GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
                         break;
+                    }
                     case RenderCommandTransform renderCommandTransform:
+                        _currentModelMatrix = renderCommandTransform.Matrix;
                         break;
                 }
             }
         }
 
+        /// <summary>
+        ///     Flush the render handle, processing and re-pooling all the command lists.
+        /// </summary>
+        private void _flushRenderHandle(RenderHandle handle)
+        {
+            foreach (var (drawHandle, commandList) in handle._drawingHandles)
+            {
+                drawHandle.Dispose();
+                _processCommandList(commandList);
+
+                // TODO: Would it make sense to merge this into the same loop in _processCommandList?
+                // Seems like a waste to iterate twice.
+                foreach (var command in commandList.Commands)
+                {
+                    switch (command)
+                    {
+                        case RenderCommandTexture renderCommandTexture:
+                            _returnCommandTexture(renderCommandTexture);
+                            break;
+                        case RenderCommandTransform renderCommandTransform:
+                            _returnCommandTransform(renderCommandTransform);
+                            break;
+                    }
+                }
+
+                commandList.Commands.Clear();
+                _returnCommandList(commandList);
+            }
+
+            handle._drawingHandles.Clear();
+        }
+
         private class RenderHandle : IRenderHandle, IDisposable
         {
-            public CurrentSpace CurrentSpace { get; set; }
             private readonly DisplayManagerOpenGL _manager;
 
             public readonly List<(DrawingHandle, RenderCommandList)> _drawingHandles =
@@ -202,7 +282,7 @@ namespace SS14.Client.Graphics
             public DrawingHandleWorld CreateHandleWorld()
             {
                 _assertNotDisposed();
-                if (CurrentSpace != CurrentSpace.WorldSpace)
+                if (_manager._currentSpace != CurrentSpace.WorldSpace)
                 {
                     throw new InvalidOperationException(
                         "Cannot create world drawing handle while not drawing in world space.");
@@ -216,14 +296,14 @@ namespace SS14.Client.Graphics
             public DrawingHandleScreen CreateHandleScreen()
             {
                 _assertNotDisposed();
-                if (CurrentSpace != CurrentSpace.ScreenSpace)
+                if (_manager._currentSpace != CurrentSpace.ScreenSpace)
                 {
                     throw new InvalidOperationException(
                         "Cannot create world drawing handle while not drawing in screen space.");
                 }
 
                 var handle = new DrawingHandleScreen(this, _drawingHandles.Count);
-                _drawingHandles.Add((handle, _getFromPool(_manager._poolCommandList)));
+                _drawingHandles.Add((handle, _manager._getNewCommandList()));
                 return handle;
             }
 
@@ -231,7 +311,7 @@ namespace SS14.Client.Graphics
             {
                 _assertNotDisposed();
 
-                var command = _getFromPool(_manager._poolCommandTransform);
+                var command = _manager._getNewCommandTransform();
                 var list = _drawingHandles[handleId].Item2;
                 command.Matrix = matrix;
                 list.Commands.Add(command);
@@ -241,7 +321,21 @@ namespace SS14.Client.Graphics
             {
                 _assertNotDisposed();
 
-                var command = _getFromPool(_manager._poolCommandTexture);
+                var command = _manager._getNewCommandTexture();
+                switch (texture)
+                {
+                    case BlankTexture _:
+                        texture = IoCManager.Resolve<IResourceCache>().GetFallback<TextureResource>();
+                        break;
+                    case AtlasTexture atlas:
+                    {
+                        texture = atlas.SourceTexture;
+                        command.SubRegion = atlas.SubRegion;
+                        command.HasSubRegion = true;
+                        break;
+                    }
+                }
+
                 var list = _drawingHandles[handleId].Item2;
                 command.TextureId = ((OpenGLTexture) texture).OpenGLTextureId;
                 command.Position = position;
@@ -283,6 +377,8 @@ namespace SS14.Client.Graphics
         {
             public int TextureId { get; set; }
             public Vector2 Position { get; set; }
+            public bool HasSubRegion { get; set; }
+            public UIBox2 SubRegion { get; set; }
         }
 
         private class RenderCommandTransform : RenderCommand

@@ -19,6 +19,7 @@ using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Client.Utility;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -39,15 +40,18 @@ namespace SS14.Client.Graphics
         [Dependency] private readonly IEyeManager _eyeManager;
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IOverlayManager _overlayManager;
+        [Dependency] private readonly IEntityManager _entityManager;
 
         private OpenTK.GameWindow _window;
 
         private int AnotherVBO;
         private int AnotherEBO;
         private int SplashVBO;
+        private int QuadVBO;
         private int Vertex2DProgram;
         private int Vertex2DUniformModel;
         private int Vertex2DUniformView;
+        private int Vertex2DUniformModUV;
         private int Vertex2DUniformProjection;
         private int Vertex2DVAO;
 
@@ -147,6 +151,7 @@ namespace SS14.Client.Graphics
             Vertex2DUniformModel = GL.GetUniformLocation(Vertex2DProgram, "modelMatrix");
             Vertex2DUniformView = GL.GetUniformLocation(Vertex2DProgram, "viewMatrix");
             Vertex2DUniformProjection = GL.GetUniformLocation(Vertex2DProgram, "projectionMatrix");
+            Vertex2DUniformModUV = GL.GetUniformLocation(Vertex2DProgram, "modifyUV");
 
             // Vertex2D VAO.
             GL.CreateVertexArrays(1, out Vertex2DVAO);
@@ -163,6 +168,17 @@ namespace SS14.Client.Graphics
             GL.CreateBuffers(1, out AnotherVBO);
             GL.NamedBufferStorage(AnotherVBO, sizeof(float) * 65536 * 4, IntPtr.Zero,
                 BufferStorageFlags.DynamicStorageBit);
+
+            var quadVertices = new float[]
+            {
+                1, 0, 1, 1,
+                0, 0, 0, 1,
+                1, 1, 1, 0,
+                0, 1, 0, 0
+            };
+
+            GL.CreateBuffers(1, out QuadVBO);
+            GL.NamedBufferStorage(QuadVBO, sizeof(float) * 16, quadVertices, BufferStorageFlags.None);
 
             GL.CreateBuffers(1, out AnotherEBO);
             GL.NamedBufferStorage(AnotherEBO, sizeof(ushort) * 65536 * 4 / 6, IntPtr.Zero,
@@ -198,6 +214,7 @@ namespace SS14.Client.Graphics
             GL.UniformMatrix3(Vertex2DUniformModel, false, ref identity);
             GL.UniformMatrix3(Vertex2DUniformView, false, ref identity);
             GL.UniformMatrix3(Vertex2DUniformProjection, false, ref identity);
+            GL.Uniform4(Vertex2DUniformModUV, new OpenTK.Vector4(0, 0, 1, 1));
 
             GL.BindVertexArray(Vertex2DVAO);
             GL.BindVertexBuffer(0, SplashVBO, IntPtr.Zero, 4 * sizeof(float));

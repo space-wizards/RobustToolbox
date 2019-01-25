@@ -8,6 +8,7 @@ using OpenTK.Graphics.OpenGL;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
+using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
 
@@ -92,6 +93,8 @@ namespace SS14.Client.Graphics
             public int OpenGLObject;
             public int Width;
             public int Height;
+            public Vector2 subRegion;
+            public Vector2i Size => new Vector2i(Width, Height);
         }
     }
 }

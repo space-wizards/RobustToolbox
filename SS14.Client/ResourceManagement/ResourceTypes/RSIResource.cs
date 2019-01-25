@@ -134,21 +134,13 @@ namespace SS14.Client.ResourceManagement
                     var directionFrames = new (Texture, float)[delayList.Length];
                     for (var i = 0; i < delayList.Length; i++)
                     {
-                        if (!GameController.OnGodot)
-                        {
-                            directionFrames[i] = (new BlankTexture(), delayList[i]);
-                            continue;
-                        }
-                        var PosX = (counter % sheetWidth) * size.X;
-                        var PosY = (counter / sheetWidth) * size.Y;
+                        var posX = (counter % sheetWidth) * size.X;
+                        var posY = (counter / sheetWidth) * size.Y;
 
-                        var atlasTexture = new Godot.AtlasTexture()
-                        {
-                            Atlas = texture,
-                            Region = new Godot.Rect2(PosX, PosY, size.X, size.Y)
-                        };
+                        var atlasTexture = new AtlasTexture(
+                            texture, UIBox2.FromDimensions(posX, posY, size.X, size.Y));
 
-                        directionFrames[i] = (new GodotTextureSource(atlasTexture), delayList[i]);
+                        directionFrames[i] = (atlasTexture, delayList[i]);
                         counter++;
                     }
 

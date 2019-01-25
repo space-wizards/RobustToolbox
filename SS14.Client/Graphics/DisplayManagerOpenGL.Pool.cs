@@ -16,7 +16,9 @@ namespace SS14.Client.Graphics
 
         private RenderCommandTexture _getNewCommandTexture()
         {
-            return _getFromPool(_poolCommandTexture);
+            var item = _getFromPool(_poolCommandTexture);
+            item.HasSubRegion = false;
+            return item;
         }
 
         private RenderCommandTransform _getNewCommandTransform()

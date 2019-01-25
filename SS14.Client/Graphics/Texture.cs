@@ -1,11 +1,14 @@
 ﻿using System;
 using System.IO;
+using JetBrains.Annotations;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SS14.Client.Interfaces.Graphics;
+using SS14.Client.Utility;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.Graphics
 {
@@ -118,6 +121,31 @@ namespace SS14.Client.Graphics
         public override int Height => default;
     }
 
+    [PublicAPI]
+    public sealed class AtlasTexture : Texture
+    {
+        public AtlasTexture(Texture texture, UIBox2 subRegion)
+        {
+            if (GameController.OnGodot)
+            {
+                GodotTexture = new Godot.AtlasTexture
+                {
+                    Atlas = texture,
+                    Region = subRegion.Convert()
+                };
+            }
+
+            SubRegion = subRegion;
+            SourceTexture = texture;
+        }
+
+        internal override Godot.Texture GodotTexture { get; }
+        internal Texture SourceTexture { get; }
+        public UIBox2 SubRegion { get; }
+        public override int Width => (int) SubRegion.Width;
+        public override int Height => (int) SubRegion.Height;
+    }
+
     internal class OpenGLTexture : Texture
     {
         internal override Godot.Texture GodotTexture => null;
@@ -146,6 +174,7 @@ namespace SS14.Client.Graphics
 
         public GodotTextureSource(Godot.Texture texture)
         {
+            DebugTools.Assert(GameController.OnGodot);
             GodotTexture = texture;
         }
     }

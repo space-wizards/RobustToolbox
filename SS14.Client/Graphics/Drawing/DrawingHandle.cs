@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.NetworkInformation;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
@@ -44,27 +45,36 @@ namespace SS14.Client.Graphics.Drawing
 
         public void SetTransform(Vector2 position, Angle rotation, Vector2 scale)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             CheckDisposed();
-            var transform = Godot.Transform2D.Identity.Rotated((float) rotation.Theta).Scaled(scale.Convert());
-            SetTransform2DRotationAndScale(ref transform, rotation.Theta, scale);
-            transform.o = position.Convert();
-            VS.CanvasItemAddSetTransform(Item, transform);
+            if (_renderHandle != null)
+            {
+                var matrix = Matrix3.Identity;
+                (matrix.R0C0, matrix.R1C1) = scale;
+                matrix.Rotate(rotation);
+                matrix.R0C2 += position.X;
+                matrix.R1C2 += position.Y;
+                _renderHandle.SetModelTransform(ref matrix, _handleId);
+            }
+            else if (Item != null)
+            {
+                var transform = Godot.Transform2D.Identity.Rotated((float) rotation.Theta).Scaled(scale.Convert());
+                SetTransform2DRotationAndScale(ref transform, rotation.Theta, scale);
+                transform.o = position.Convert();
+                VS.CanvasItemAddSetTransform(Item, transform);
+            }
         }
 
         public void SetTransform(Matrix3 matrix)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             CheckDisposed();
-            VS.CanvasItemAddSetTransform(Item, matrix.Convert());
+            if (_renderHandle != null)
+            {
+                _renderHandle.SetModelTransform(ref matrix, _handleId);
+            }
+            else if (Item != null)
+            {
+                VS.CanvasItemAddSetTransform(Item, matrix.Convert());
+            }
         }
 
         // Effectively equivalent to Godot's internal Transform2D::set_rotation_and_scale defined in math_2d.h.
@@ -127,13 +137,16 @@ namespace SS14.Client.Graphics.Drawing
         public override void DrawTexture(Texture texture, Vector2 position, Color? modulate = null,
             Texture normalMap = null)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             CheckDisposed();
-            texture.GodotTexture.Draw(Item, ToPixelCoords(position), modulate?.Convert(), false, normalMap);
+
+            if (_renderHandle != null)
+            {
+                _renderHandle.DrawTexture(texture, position, _handleId);
+            }
+            else if (Item != null)
+            {
+                texture.GodotTexture.Draw(Item, ToPixelCoords(position), modulate?.Convert(), false, normalMap);
+            }
         }
 
         public void DrawTextureRect(Texture texture, Box2 rect, bool tile, Color? modulate = null,

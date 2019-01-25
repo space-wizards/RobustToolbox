@@ -54,7 +54,7 @@ namespace SS14.Client
             OpenGL
         }
 
-        internal static DisplayMode Mode { get; private set; }
+        internal static DisplayMode Mode { get; private set; } = DisplayMode.Headless;
 
         internal static bool OnGodot => Mode == DisplayMode.Godot;
 

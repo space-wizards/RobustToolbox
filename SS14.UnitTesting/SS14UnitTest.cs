@@ -206,6 +206,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IStateManager, StateManager>();
                     IoCManager.Register<IUserInterfaceManager, DummyUserInterfaceManager>();
                     IoCManager.Register<IGameControllerProxy, GameControllerProxyDummy>();
+                    IoCManager.Register<IGameControllerProxyInternal, GameControllerProxyDummy>();
                     IoCManager.Register<IInputManager, InputManager>();
                     IoCManager.Register<IDebugDrawing, DebugDrawing>();
                     IoCManager.Register<IClientConsole, ClientChatConsole>();

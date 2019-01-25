@@ -4,6 +4,7 @@ using System.Runtime.Remoting.Channels;
 using SS14.Client.Interfaces;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using SS14.Shared.Timing;
 
 namespace SS14.Client
@@ -42,14 +43,28 @@ namespace SS14.Client
         {
             _mainLoop = new GameLoop(_gameTimingHeadless)
             {
-                SleepMode = SleepMode.Delay
+                SleepMode = Mode == DisplayMode.Headless ? SleepMode.Delay : SleepMode.None
             };
+
+            /*
+            var start = DateTime.Now;
+            var frames = 0;
+            */
 
             _mainLoop.Tick += (sender, args) => Update(args.DeltaSeconds);
             if (Mode == DisplayMode.OpenGL)
             {
                 _mainLoop.Render += (sender, args) =>
                 {
+                    /*
+                    frames++;
+                    if ((DateTime.Now - start).TotalSeconds >= 1)
+                    {
+                        Logger.Info(frames.ToString());
+                        start = DateTime.Now;
+                        frames = 0;
+                    }
+                    */
                     // TODO: If the client is on headless, _frameProcessMain should still get called right?
                     _frameProcessMain(args.DeltaSeconds);
                     _displayManagerOpenGL.Render(new FrameEventArgs(args.DeltaSeconds));

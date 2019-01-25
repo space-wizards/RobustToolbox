@@ -17,6 +17,7 @@ using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.ResourceManagement;
 using SS14.Client.Utility;
 using SS14.Shared.Interfaces.GameObjects;
@@ -41,6 +42,7 @@ namespace SS14.Client.Graphics
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IOverlayManager _overlayManager;
         [Dependency] private readonly IEntityManager _entityManager;
+        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
 
         private OpenTK.GameWindow _window;
 

@@ -36,7 +36,6 @@ limits/debugger_stdout/max_chars_per_second=8128
 
 [rendering]
 
-quality/driver/driver_name="GLES3"
 quality/intended_usage/framebuffer_allocation=0
 quality/2d/use_pixel_snap=true
 environment/default_clear_color=Color( 0, 0, 0, 1 )

@@ -118,6 +118,7 @@ namespace SS14.Client
             IoCManager.Register<IPlayerManager, PlayerManager>();
             IoCManager.Register<IStateManager, StateManager>();
             IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
+            IoCManager.Register<IUserInterfaceManagerInternal, UserInterfaceManager>();
             IoCManager.Register<IGameControllerProxy, GameControllerProxy>();
             IoCManager.Register<IGameControllerProxyInternal, GameControllerProxy>();
             if (OnGodot)

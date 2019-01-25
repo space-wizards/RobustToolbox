@@ -210,6 +210,10 @@ namespace SS14.Client.Graphics
 
             _flushRenderHandle(renderHandle);
 
+            // Render UI.
+            _currentSpace = CurrentSpace.ScreenSpace;
+
+
             _window.SwapBuffers();
         }
 

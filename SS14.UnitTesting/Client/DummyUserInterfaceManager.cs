@@ -1,11 +1,12 @@
 using SS14.Client;
+using SS14.Client.Graphics;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface;
 
 namespace SS14.UnitTesting.Client
 {
-    public class DummyUserInterfaceManager : IUserInterfaceManager
+    internal class DummyUserInterfaceManager : IUserInterfaceManagerInternal
     {
         public Control Focused => throw new System.NotImplementedException();
 
@@ -48,6 +49,11 @@ namespace SS14.UnitTesting.Client
         }
 
         public void PreKeyUp(KeyEventArgs args)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void Render(IRenderHandle renderHandle)
         {
             throw new System.NotImplementedException();
         }

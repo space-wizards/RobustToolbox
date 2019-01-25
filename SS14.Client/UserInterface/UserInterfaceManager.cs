@@ -14,11 +14,11 @@ using SS14.Shared.Log;
 
 namespace SS14.Client.UserInterface
 {
-    public sealed class UserInterfaceManager : IUserInterfaceManager, IPostInjectInit, IDisposable
+    internal sealed class UserInterfaceManager : IPostInjectInit, IDisposable, IUserInterfaceManagerInternal
     {
-        [Dependency] readonly IConfigurationManager _config;
-        [Dependency] readonly ISceneTreeHolder _sceneTreeHolder;
-        [Dependency] readonly IInputManager _inputManager;
+        [Dependency] private readonly IConfigurationManager _config;
+        [Dependency] private readonly ISceneTreeHolder _sceneTreeHolder;
+        [Dependency] private readonly IInputManager _inputManager;
 
         public Control Focused { get; private set; }
 
@@ -120,6 +120,11 @@ namespace SS14.Client.UserInterface
 
         public void PreKeyUp(KeyEventArgs args)
         {
+        }
+
+        public void Render(IRenderHandle renderHandle)
+        {
+            var drawHandle = renderHandle.CreateHandleScreen();
         }
 
         public void UnhandledMouseDown(MouseButtonEventArgs args)

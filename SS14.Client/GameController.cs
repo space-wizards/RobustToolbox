@@ -73,7 +73,7 @@ namespace SS14.Client
         [Dependency] private readonly IClientNetManager _networkManager;
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IStateManager _stateManager;
-        [Dependency] private readonly IUserInterfaceManager _userInterfaceManager;
+        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
         [Dependency] private readonly IBaseClient _client;
         [Dependency] private readonly IInputManager _inputManager;
         [Dependency] private readonly IClientChatConsole _console;

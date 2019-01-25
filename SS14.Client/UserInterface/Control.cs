@@ -3,10 +3,8 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using SS14.Shared.Log;
 using SS14.Shared.Interfaces.Reflection;
-using SS14.Shared.ContentPack;
 using System.Reflection;
 using SS14.Shared.Maths;
 using SS14.Client.Utility;
@@ -14,7 +12,6 @@ using SS14.Client.Graphics.Drawing;
 using SS14.Shared.Utility;
 using SS14.Client.Interfaces.ResourceManagement;
 using System.IO;
-using System.Linq;
 using JetBrains.Annotations;
 using SS14.Client.Graphics;
 using SS14.Client.ResourceManagement.ResourceTypes;
@@ -26,6 +23,7 @@ namespace SS14.Client.UserInterface
     ///     NOTE: For docs, most of these are direct proxies to Godot's Control.
     ///     See the official docs for more help: https://godot.readthedocs.io/en/3.0/classes/class_control.html
     /// </summary>
+    [PublicAPI]
     [ControlWrap(typeof(Godot.Control))]
     // ReSharper disable once RequiredBaseTypesIsNotInherited
     public partial class Control : IDisposable
@@ -77,11 +75,12 @@ namespace SS14.Client.UserInterface
 
         public Control Parent { get; private set; }
 
+        internal IUserInterfaceManagerInternal UserInterfaceManagerInternal { get; }
+
         /// <summary>
         ///     The UserInterfaceManager we belong to, for convenience.
         /// </summary>
-        /// <returns></returns>
-        public IUserInterfaceManager UserInterfaceManager { get; }
+        public IUserInterfaceManager UserInterfaceManager => UserInterfaceManagerInternal;
 
         /// <summary>
         ///     Gets an enumerable over all the children of this control.
@@ -372,7 +371,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public Control()
         {
-            UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
+            UserInterfaceManagerInternal = IoCManager.Resolve<IUserInterfaceManagerInternal>();
 
             if (GameController.OnGodot)
             {
@@ -396,7 +395,7 @@ namespace SS14.Client.UserInterface
                 throw new ArgumentException("Name must not be null or whitespace.", nameof(name));
             }
 
-            UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
+            UserInterfaceManagerInternal = IoCManager.Resolve<IUserInterfaceManagerInternal>();
 
             if (GameController.OnGodot)
             {
@@ -418,7 +417,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         internal Control(Godot.Control control)
         {
-            UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
+            UserInterfaceManagerInternal = IoCManager.Resolve<IUserInterfaceManagerInternal>();
             _name = control.GetName();
             InjectControlWrap(control);
             SetupSignalHooks();
@@ -976,7 +975,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         protected virtual void FocusEntered()
         {
-            UserInterfaceManager.FocusEntered(this);
+            UserInterfaceManagerInternal.FocusEntered(this);
         }
 
         /// <summary>
@@ -984,7 +983,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         protected virtual void FocusExited()
         {
-            UserInterfaceManager.FocusExited(this);
+            UserInterfaceManagerInternal.FocusExited(this);
         }
 
         public bool HasFocus()

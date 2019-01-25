@@ -98,7 +98,7 @@
     <Compile Include="GameController.cs" />
     <Compile Include="GameController\FrameEventArgs.cs" />
     <Compile Include="GameController\GameController.Godot.cs" />
-    <Compile Include="GameController\GameController.Headless.cs" />
+    <Compile Include="GameController\GameController.Standalone.cs" />
     <Compile Include="GameController\GameController.Input.cs" />
     <Compile Include="GameController\GameController.IoC.cs" />
     <Compile Include="GameObjects\Components\Appearance\AppearanceComponent.cs" />

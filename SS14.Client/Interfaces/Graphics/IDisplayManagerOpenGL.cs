@@ -12,5 +12,6 @@ namespace SS14.Client.Interfaces.Graphics
 
         Texture LoadTextureFromPNGStream(Stream stream);
         Texture LoadTextureFromImage<T>(Image<T> image) where T : struct, IPixel<T>;
+        void Ready();
     }
 }

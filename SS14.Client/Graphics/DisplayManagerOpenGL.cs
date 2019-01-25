@@ -46,8 +46,6 @@ namespace SS14.Client.Graphics
 
         private int AnotherVBO;
         private int AnotherEBO;
-        // VBO used by the splash screen.
-        private int SplashVBO;
         // VBO to draw a single quad.
         private int QuadVBO;
         private int Vertex2DProgram;
@@ -63,6 +61,7 @@ namespace SS14.Client.Graphics
         // Thread the window is instantiated on.
         // OpenGL is allergic to multi threading so we need to check this.
         private Thread _mainThread;
+        private bool _drawingSplash;
 
         public override Vector2i ScreenSize => new Vector2i(_window.Width, _window.Height);
 
@@ -80,6 +79,11 @@ namespace SS14.Client.Graphics
         public void ProcessInput(FrameEventArgs frameEventArgs)
         {
             _window.ProcessEvents();
+        }
+
+        public void Ready()
+        {
+            _drawingSplash = false;
         }
 
         public override void ReloadConfig()
@@ -135,6 +139,7 @@ namespace SS14.Client.Graphics
         private void _initOpenGL()
         {
             GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
             Logger.DebugS("ogl", "OpenGL Vendor: {0}", GL.GetString(StringName.Vendor));
             Logger.DebugS("ogl", "OpenGL Version: {0}", GL.GetString(StringName.Version));
@@ -162,14 +167,11 @@ namespace SS14.Client.Graphics
             GL.VertexArrayAttribBinding(Vertex2DVAO, 0, 0);
             GL.VertexArrayAttribBinding(Vertex2DVAO, 1, 0);
 
-            GL.CreateBuffers(1, out SplashVBO);
-            GL.NamedBufferStorage(SplashVBO, sizeof(float) * 16, IntPtr.Zero, BufferStorageFlags.DynamicStorageBit);
-
             GL.CreateBuffers(1, out AnotherVBO);
             GL.NamedBufferStorage(AnotherVBO, sizeof(float) * 65536 * 4, IntPtr.Zero,
                 BufferStorageFlags.DynamicStorageBit);
 
-            var quadVertices = new Vertex2D[]
+            var quadVertices = new[]
             {
                 new Vertex2D(1, 0, 1, 1),
                 new Vertex2D(0, 0, 0, 1),
@@ -185,43 +187,16 @@ namespace SS14.Client.Graphics
             GL.NamedBufferStorage(AnotherEBO, sizeof(ushort) * 65536 * 4 / 6, IntPtr.Zero,
                 BufferStorageFlags.DynamicStorageBit);
 
-            _displaySplash();
+            _drawingSplash = true;
+            Render(null);
         }
 
-        private void _displaySplash()
+        private void _displaySplash(IRenderHandle handle)
         {
-            var texture =
-                (OpenGLTexture) _resourceCache.GetResource<TextureResource>("/Textures/Logo/logo.png").Texture;
-            var loaded = _loadedTextures[texture.OpenGLTextureId];
+            var texture = _resourceCache.GetResource<TextureResource>("/Textures/Logo/logo.png").Texture;
 
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-            GL.ClearColor(0, 0, 0, 1);
-            GL.Clear(ClearBufferMask.ColorBufferBit);
-
-            GL.BindTextureUnit(0, loaded.OpenGLObject);
-            GL.UseProgram(Vertex2DProgram);
-
-            var uiBox = UIBox2i.FromDimensions((ScreenSize - texture.Size) / 2, texture.Size);
-            var box = ScreenToOGL(uiBox);
-            GL.NamedBufferSubData(SplashVBO, IntPtr.Zero, sizeof(float) * 16, new[]
-            {
-                box.Left, box.Top, 0, 0,
-                box.Right, box.Top, 1, 0,
-                box.Right, box.Bottom, 1, 1,
-                box.Left, box.Bottom, 0, 1,
-            });
-
-            var identity = OpenTK.Matrix3.Identity;
-            GL.UniformMatrix3(Vertex2DUniformModel, false, ref identity);
-            GL.UniformMatrix3(Vertex2DUniformView, false, ref identity);
-            GL.UniformMatrix3(Vertex2DUniformProjection, false, ref identity);
-            GL.Uniform4(Vertex2DUniformModUV, new OpenTK.Vector4(0, 0, 1, 1));
-
-            GL.BindVertexArray(Vertex2DVAO);
-            GL.BindVertexBuffer(0, SplashVBO, IntPtr.Zero, 4 * sizeof(float));
-            GL.DrawArrays(PrimitiveType.TriangleFan, 0, 4);
-
-            _window.SwapBuffers();
+            var drawHandle = handle.CreateHandleScreen();
+            drawHandle.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
         }
 
         private static void _hijackCallback()
@@ -343,24 +318,6 @@ namespace SS14.Client.Graphics
         }
 
         private static readonly DebugProc _debugMessageCallbackInstance = new DebugProc(_debugMessageCallback);
-
-        /// <summary>
-        ///     Screen coords in pixels (0,0 top left, Y+ down) to OGL coordinates (0,0 center Y+ up, -1->1)
-        /// </summary>
-        [Pure]
-        private Vector2 ScreenToOGL(Vector2i coordinates)
-        {
-            var c = coordinates - (Vector2) ScreenSize / 2;
-            c *= new Vector2i(1, -1);
-            return c * 2 / ScreenSize;
-        }
-
-        [Pure]
-        private Box2 ScreenToOGL(UIBox2i coordinates)
-        {
-            var bl = ScreenToOGL(coordinates.BottomLeft);
-            return Box2.FromDimensions(bl, coordinates.Size * 2 / (Vector2) ScreenSize);
-        }
 
         public void Dispose()
         {

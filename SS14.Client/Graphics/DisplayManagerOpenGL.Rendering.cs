@@ -43,20 +43,16 @@ namespace SS14.Client.Graphics
             GL.BindVertexArray(Vertex2DVAO);
             GL.UseProgram(Vertex2DProgram);
 
-            var eye = _eyeManager.CurrentEye;
+            _currentModelMatrix = Matrix3.Identity;
 
-            // TODO: UBO?
-            OpenTK.Matrix3 projMatrixWorld;
+            // We hand out this handle so external code can generate command lists for us.
+            var renderHandle = new RenderHandle(this);
+            _currentSpace = CurrentSpace.ScreenSpace;
+
             OpenTK.Matrix3 projMatrixScreen;
-            OpenTK.Matrix3 viewMatrixWorld;
+            // Screen view matrix is identity. Easy huh.
             var viewMatrixScreen = OpenTK.Matrix3.Identity;
             {
-                // Make projection matrices.
-                // World projection matrix.
-                var worldProj = Matrix3.Identity;
-                worldProj.R0C0 = EyeManager.PIXELSPERMETER * 2f / _window.Width;
-                worldProj.R1C1 = EyeManager.PIXELSPERMETER * 2f / _window.Height;
-                projMatrixWorld = worldProj.ConvertOpenTK();
                 // Screen projection matrix.
                 var screenProj = Matrix3.Identity;
                 screenProj.R0C0 = 2f / _window.Width;
@@ -64,8 +60,29 @@ namespace SS14.Client.Graphics
                 screenProj.R0C2 = -1;
                 screenProj.R1C2 = 1;
                 projMatrixScreen = screenProj.ConvertOpenTK();
+            }
 
-                // Make view matrices.
+            if (_drawingSplash)
+            {
+                GL.UniformMatrix3(Vertex2DUniformProjection, true, ref projMatrixScreen);
+                GL.UniformMatrix3(Vertex2DUniformView, true, ref viewMatrixScreen);
+                _displaySplash(renderHandle);
+                _flushRenderHandle(renderHandle);
+                _window.SwapBuffers();
+                return;
+            }
+
+            var eye = _eyeManager.CurrentEye;
+
+            OpenTK.Matrix3 projMatrixWorld;
+            OpenTK.Matrix3 viewMatrixWorld;
+            {
+                // World projection matrix.
+                var worldProj = Matrix3.Identity;
+                worldProj.R0C0 = EyeManager.PIXELSPERMETER * 2f / _window.Width;
+                worldProj.R1C1 = EyeManager.PIXELSPERMETER * 2f / _window.Height;
+                projMatrixWorld = worldProj.ConvertOpenTK();
+
                 // World view matrix.
                 var worldView = Matrix3.Identity;
                 worldView.R0C0 = 1 / eye.Zoom.X;
@@ -74,12 +91,6 @@ namespace SS14.Client.Graphics
                 worldView.R1C2 = -eye.Position.Y / eye.Zoom.Y;
                 viewMatrixWorld = worldView.ConvertOpenTK();
             }
-
-            // We hand out this handle so external code can generate command lists for us.
-            var renderHandle = new RenderHandle(this);
-            _currentSpace = CurrentSpace.ScreenSpace;
-
-            _currentModelMatrix = Matrix3.Identity;
 
             // Render ScreenSpaceBelowWorld overlays.
             {
@@ -179,12 +190,12 @@ namespace SS14.Client.Graphics
             // Draw entities.
             foreach (var entity in _entityManager.GetEntities())
             {
-                if (!entity.Transform.IsMapTransform || !entity.TryGetComponent(out SpriteComponent sprite))
+                if (!entity.Transform.IsMapTransform || entity.Transform.MapID != map ||
+                    !entity.TryGetComponent(out SpriteComponent sprite))
                 {
                     continue;
                 }
 
-                var modelMatrix = entity.Transform.WorldMatrix.ConvertOpenTK();
                 sprite.OpenGLRender(drawingHandle);
             }
 
@@ -201,48 +212,7 @@ namespace SS14.Client.Graphics
                 {
                     case RenderCommandTexture renderCommandTexture:
                     {
-                        // Use QuadVBO to render a single quad and modify the model matrix to position it where we need it.
-                        var loadedTexture = _loadedTextures[renderCommandTexture.TextureId];
-                        Vector2 size;
-                        if (renderCommandTexture.SubRegion.HasValue)
-                        {
-                            // If the texture is in an atlas we have to set modifyUV in the shader,
-                            // so that the shader translated the quad VBO 0->1 tex coords to the sub region needed.
-                            var subRegion = renderCommandTexture.SubRegion.Value;
-                            size = subRegion.Size;
-                            var (w, h) = loadedTexture.Size;
-                            var vec = new OpenTK.Vector4(
-                                subRegion.Left / w,
-                                subRegion.Top / h,
-                                subRegion.Right / w,
-                                subRegion.Bottom / h);
-                            GL.Uniform4(Vertex2DUniformModUV, vec);
-                        }
-                        else
-                        {
-                            size = loadedTexture.Size;
-                            GL.Uniform4(Vertex2DUniformModUV, new OpenTK.Vector4(0, 0, 1, 1));
-                        }
-
-                        // Handle modulate or the lack thereof.
-                        GL.Uniform4(Vertex2DUniformModulate,
-                            (renderCommandTexture.Modulate ?? Color.White).ConvertOpenTK());
-
-                        if (_currentSpace == CurrentSpace.WorldSpace)
-                        {
-                            size /= EyeManager.PIXELSPERMETER;
-                        }
-
-                        var rectTransform = Matrix3.Identity;
-                        (rectTransform.R0C0, rectTransform.R1C1) = size;
-                        (rectTransform.R0C2, rectTransform.R1C2) = renderCommandTexture.Position;
-                        rectTransform.Multiply(ref _currentModelMatrix);
-                        var oRectTransform = rectTransform.ConvertOpenTK();
-
-                        GL.UniformMatrix3(Vertex2DUniformModel, true, ref oRectTransform);
-                        GL.BindVertexBuffer(0, QuadVBO, IntPtr.Zero, 4 * sizeof(float));
-                        GL.BindTextureUnit(0, loadedTexture.OpenGLObject);
-                        GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+                        _drawCommandTexture(renderCommandTexture);
                         break;
                     }
                     case RenderCommandTransform renderCommandTransform:
@@ -250,6 +220,73 @@ namespace SS14.Client.Graphics
                         break;
                 }
             }
+        }
+
+        private void _drawCommandTexture(RenderCommandTexture renderCommandTexture)
+        {
+            // Use QuadVBO to render a single quad and modify the model matrix to position it where we need it.
+            var loadedTexture = _loadedTextures[renderCommandTexture.TextureId];
+            Vector2 size;
+            if (renderCommandTexture.SubRegion.HasValue)
+            {
+                // If the texture is in an atlas we have to set modifyUV in the shader,
+                // so that the shader translated the quad VBO 0->1 tex coords to the sub region needed.
+                var subRegion = renderCommandTexture.SubRegion.Value;
+                size = subRegion.Size;
+                var (w, h) = loadedTexture.Size;
+                if (_currentSpace == CurrentSpace.ScreenSpace)
+                {
+                    // Flip Y texture coordinates to fix screen space flipping.
+                    var vec = new OpenTK.Vector4(
+                        subRegion.Left / w,
+                        subRegion.Bottom / h,
+                        subRegion.Right / w,
+                        subRegion.Top / h);
+                    GL.Uniform4(Vertex2DUniformModUV, vec);
+                }
+                else
+                {
+                    var vec = new OpenTK.Vector4(
+                        subRegion.Left / w,
+                        subRegion.Top / h,
+                        subRegion.Right / w,
+                        subRegion.Bottom / h);
+                    GL.Uniform4(Vertex2DUniformModUV, vec);
+                }
+            }
+            else
+            {
+                size = loadedTexture.Size;
+                if (_currentSpace == CurrentSpace.ScreenSpace)
+                {
+                    // Flip Y texture coordinates to fix screen space flipping.
+                    GL.Uniform4(Vertex2DUniformModUV, new OpenTK.Vector4(0, 1, 1, 0));
+                }
+                else
+                {
+                    GL.Uniform4(Vertex2DUniformModUV, new OpenTK.Vector4(0, 0, 1, 1));
+                }
+            }
+
+            // Handle modulate or the lack thereof.
+            GL.Uniform4(Vertex2DUniformModulate,
+                (renderCommandTexture.Modulate ?? Color.White).ConvertOpenTK());
+
+            if (_currentSpace == CurrentSpace.WorldSpace)
+            {
+                size /= EyeManager.PIXELSPERMETER;
+            }
+
+            var rectTransform = Matrix3.Identity;
+            (rectTransform.R0C0, rectTransform.R1C1) = size;
+            (rectTransform.R0C2, rectTransform.R1C2) = renderCommandTexture.Position;
+            rectTransform.Multiply(ref _currentModelMatrix);
+            var oRectTransform = rectTransform.ConvertOpenTK();
+
+            GL.UniformMatrix3(Vertex2DUniformModel, true, ref oRectTransform);
+            GL.BindVertexBuffer(0, QuadVBO, IntPtr.Zero, 4 * sizeof(float));
+            GL.BindTextureUnit(0, loadedTexture.OpenGLObject);
+            GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
         }
 
         /// <summary>

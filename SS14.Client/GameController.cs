@@ -154,6 +154,11 @@ namespace SS14.Client
 
             _stateManager.RequestStateChange<MainScreen>();
 
+            if (_displayManagerOpenGL != null)
+            {
+                _displayManagerOpenGL.Ready();
+            }
+
             var args = GetCommandLineArgs();
             if (args.Contains("--connect"))
             {

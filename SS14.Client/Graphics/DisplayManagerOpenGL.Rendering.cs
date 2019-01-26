@@ -10,6 +10,7 @@ using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Client.Utility;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 
@@ -43,6 +44,11 @@ namespace SS14.Client.Graphics
 
         // Need 5 indices per quad: 4 to draw the quad with triangle strips and another one as primitive restart.
         private readonly ushort[] BatchIndexData = new ushort[MaxBatchQuads * 5];
+
+        private readonly List<(RenderCommandTexture, Matrix3)>
+            BatchBuffer = new List<(RenderCommandTexture, Matrix3)>();
+
+        private int? BatchingTexture;
 
         public void Render(FrameEventArgs args)
         {
@@ -180,7 +186,6 @@ namespace SS14.Client.Graphics
                 GL.DrawElements(PrimitiveType.TriangleStrip, nth * 5, DrawElementsType.UnsignedShort, 0);
             }
 
-            GL.Disable(EnableCap.PrimitiveRestartFixedIndex);
             GL.Disable(EnableCap.PrimitiveRestart);
 
             // Use a SINGLE drawing handle for all entities.
@@ -224,7 +229,7 @@ namespace SS14.Client.Graphics
                 {
                     case RenderCommandTexture renderCommandTexture:
                     {
-                        _drawCommandTexture(renderCommandTexture);
+                        _drawCommandTexture(renderCommandTexture, true, ref _currentModelMatrix);
                         break;
                     }
                     case RenderCommandTransform renderCommandTransform:
@@ -234,11 +239,32 @@ namespace SS14.Client.Graphics
             }
         }
 
-        private void _drawCommandTexture(RenderCommandTexture renderCommandTexture)
+        private void _drawCommandTexture(
+            RenderCommandTexture renderCommandTexture,
+            bool doBatching,
+            ref Matrix3 modelMatrix)
         {
+            var loadedTexture = _loadedTextures[renderCommandTexture.TextureId];
+            if (doBatching)
+            {
+                if (BatchingTexture.HasValue)
+                {
+                    if (BatchingTexture.Value != loadedTexture.OpenGLObject)
+                    {
+                        _flushBatchBuffer();
+                        BatchingTexture = loadedTexture.OpenGLObject;
+                    }
+                }
+                else
+                {
+                    BatchingTexture = loadedTexture.OpenGLObject;
+                }
+                BatchBuffer.Add((renderCommandTexture, _currentModelMatrix));
+                return;
+            }
+
             // Use QuadVBO to render a single quad and modify the model matrix to position it where we need it.
             GL.BindVertexArray(QuadVAO);
-            var loadedTexture = _loadedTextures[renderCommandTexture.TextureId];
             Vector2 size;
             if (renderCommandTexture.SubRegion.HasValue)
             {
@@ -293,7 +319,7 @@ namespace SS14.Client.Graphics
             var rectTransform = Matrix3.Identity;
             (rectTransform.R0C0, rectTransform.R1C1) = size;
             (rectTransform.R0C2, rectTransform.R1C2) = renderCommandTexture.Position;
-            rectTransform.Multiply(ref _currentModelMatrix);
+            rectTransform.Multiply(ref modelMatrix);
             var oRectTransform = rectTransform.ConvertOpenTK();
 
             GL.UniformMatrix3(Vertex2DUniformModel, true, ref oRectTransform);
@@ -316,11 +342,10 @@ namespace SS14.Client.Graphics
                 // Seems like a waste to iterate twice.
                 foreach (var command in commandList.Commands)
                 {
+                    // Note: Texture commands are not re-pooled here.
+                    // They're always at least tried for batching which is responsible for pooling them.
                     switch (command)
                     {
-                        case RenderCommandTexture renderCommandTexture:
-                            _returnCommandTexture(renderCommandTexture);
-                            break;
                         case RenderCommandTransform renderCommandTransform:
                             _returnCommandTransform(renderCommandTransform);
                             break;
@@ -332,6 +357,74 @@ namespace SS14.Client.Graphics
             }
 
             handle._drawingHandles.Clear();
+            _flushBatchBuffer();
+        }
+
+        private void _flushBatchBuffer()
+        {
+            if (BatchBuffer.Count < TextureBatchThreshold)
+            {
+                foreach (var (command, modelMatrix) in BatchBuffer)
+                {
+                    var transform = modelMatrix;
+                    _drawCommandTexture(command, false, ref transform);
+                    _returnCommandTexture(command);
+                }
+
+                BatchBuffer.Clear();
+                BatchingTexture = null;
+                return;
+            }
+
+            DebugTools.Assert(BatchingTexture.HasValue);
+            var loadedTexture = _loadedTextures[BatchingTexture.Value];
+            var (w, h) = loadedTexture.Size;
+            ushort quadIndex = 0;
+            foreach (var (command, transform) in BatchBuffer)
+            {
+                var sr = command.SubRegion ?? new UIBox2(0, 0, 1, 1);
+                var bl = transform.Transform(new Vector2(0, 0));
+                var br = transform.Transform(new Vector2(1, 0));
+                var tr = transform.Transform(new Vector2(1, 1));
+                var tl = transform.Transform(new Vector2(0, 1));
+                var vIdx = quadIndex * 4;
+                BatchVertexData[vIdx + 0] = new Vertex2D(bl, sr.BottomLeft);
+                BatchVertexData[vIdx + 1] = new Vertex2D(br, sr.BottomRight);
+                BatchVertexData[vIdx + 2] = new Vertex2D(tl, sr.TopLeft);
+                BatchVertexData[vIdx + 3] = new Vertex2D(tr, sr.TopRight);
+                var nIdx = quadIndex * 5;
+                var tIdx = (ushort) (quadIndex * 4);
+                BatchIndexData[nIdx + 0] = tIdx;
+                BatchIndexData[nIdx + 1] = (ushort) (tIdx + 1);
+                BatchIndexData[nIdx + 2] = (ushort) (tIdx + 2);
+                BatchIndexData[nIdx + 3] = (ushort) (tIdx + 3);
+                BatchIndexData[nIdx + 4] = ushort.MaxValue;
+                quadIndex += 1;
+                _returnCommandTexture(command);
+                if (quadIndex >= MaxBatchQuads)
+                {
+                    throw new NotImplementedException("Can't batch things this big yet sorry.");
+                }
+            }
+
+            GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, quadIndex * 4 * Vertex2D.SizeOf, BatchVertexData);
+            GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, quadIndex * sizeof(ushort) * 5,
+                BatchIndexData);
+
+            var identity = OpenTK.Matrix3.Identity;
+
+            GL.ActiveTexture(TextureUnit.Texture0);
+            Logger.DebugS("ogl", $"Binding texture {loadedTexture.OpenGLObject}: {loadedTexture.Name}");
+            GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject);
+            GL.UniformMatrix3(Vertex2DUniformModel, false, ref identity);
+            GL.Uniform4(Vertex2DUniformModUV, new OpenTK.Vector4(0, 0, 1, 1));
+            GL.Enable(EnableCap.PrimitiveRestart);
+            GL.PrimitiveRestartIndex(ushort.MaxValue);
+            GL.DrawElements(PrimitiveType.TriangleStrip, quadIndex * 5, DrawElementsType.UnsignedShort, 0);
+            GL.Disable(EnableCap.PrimitiveRestart);
+
+            BatchBuffer.Clear();
+            BatchingTexture = null;
         }
 
         private class RenderHandle : IRenderHandle, IDisposable

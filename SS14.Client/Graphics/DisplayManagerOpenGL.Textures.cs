@@ -66,7 +66,8 @@ namespace SS14.Client.Graphics
             {
                 OpenGLObject = texture,
                 Width = image.Width,
-                Height = image.Height
+                Height = image.Height,
+                Name = name,
             };
 
             var id = ++_nextTextureId;
@@ -80,6 +81,7 @@ namespace SS14.Client.Graphics
             public int OpenGLObject;
             public int Width;
             public int Height;
+            public string Name;
             public Vector2i Size => new Vector2i(Width, Height);
         }
     }

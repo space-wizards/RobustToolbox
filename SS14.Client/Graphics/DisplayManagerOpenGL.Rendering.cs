@@ -40,7 +40,6 @@ namespace SS14.Client.Graphics
             GL.ClearColor(0, 0, 0, 1);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
-            GL.BindVertexArray(Vertex2DVAO);
             GL.UseProgram(Vertex2DProgram);
 
             _currentModelMatrix = Matrix3.Identity;
@@ -113,16 +112,16 @@ namespace SS14.Client.Graphics
 
             var tex = _resourceCache.GetResource<TextureResource>("/Textures/Tiles/floor_steel.png");
             var loadedTex = _loadedTextures[((OpenGLTexture) tex.Texture).OpenGLTextureId];
-            GL.BindTextureUnit(0, loadedTex.OpenGLObject);
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, loadedTex.OpenGLObject);
+
+            GL.BindVertexArray(BatchVAO);
 
             GL.UniformMatrix3(Vertex2DUniformView, true, ref viewMatrixWorld);
             GL.UniformMatrix3(Vertex2DUniformProjection, true, ref projMatrixWorld);
 
-            GL.VertexArrayVertexBuffer(Vertex2DVAO, 0, AnotherVBO, IntPtr.Zero, 4 * sizeof(float));
-            GL.VertexArrayElementBuffer(Vertex2DVAO, AnotherEBO);
-
             GL.Enable(EnableCap.PrimitiveRestart);
-            GL.Enable(EnableCap.PrimitiveRestartFixedIndex);
+            GL.PrimitiveRestartIndex(65535);
 
             var vertices = new float[65536 * 4];
             var indices = new ushort[65536 / 4 * 6];
@@ -175,8 +174,8 @@ namespace SS14.Client.Graphics
                     continue;
                 }
 
-                GL.NamedBufferSubData(AnotherVBO, IntPtr.Zero, nth * sizeof(float) * 16, vertices);
-                GL.NamedBufferSubData(AnotherEBO, IntPtr.Zero, nth * sizeof(ushort) * 5, indices);
+                GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, nth * sizeof(float) * 16, vertices);
+                GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, nth * sizeof(ushort) * 5, indices);
 
                 GL.DrawElements(PrimitiveType.TriangleStrip, nth * 5, DrawElementsType.UnsignedShort, 0);
             }
@@ -238,6 +237,7 @@ namespace SS14.Client.Graphics
         private void _drawCommandTexture(RenderCommandTexture renderCommandTexture)
         {
             // Use QuadVBO to render a single quad and modify the model matrix to position it where we need it.
+            GL.BindVertexArray(QuadVAO);
             var loadedTexture = _loadedTextures[renderCommandTexture.TextureId];
             Vector2 size;
             if (renderCommandTexture.SubRegion.HasValue)
@@ -297,8 +297,8 @@ namespace SS14.Client.Graphics
             var oRectTransform = rectTransform.ConvertOpenTK();
 
             GL.UniformMatrix3(Vertex2DUniformModel, true, ref oRectTransform);
-            GL.BindVertexBuffer(0, QuadVBO, IntPtr.Zero, 4 * sizeof(float));
-            GL.BindTextureUnit(0, loadedTexture.OpenGLObject);
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject);
             GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
         }
 

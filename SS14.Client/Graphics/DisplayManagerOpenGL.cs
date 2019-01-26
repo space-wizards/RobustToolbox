@@ -1,7 +1,7 @@
 using System;
-using System.Diagnostics.Contracts;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
@@ -10,8 +10,6 @@ using System.Threading;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL4;
-using SS14.Client.Graphics.ClientEye;
-using SS14.Client.Graphics.Overlays;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.Graphics.ClientEye;
@@ -19,15 +17,12 @@ using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.ResourceManagement;
-using SS14.Client.Utility;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
-using Box2 = SS14.Shared.Maths.Box2;
-using Matrix3 = SS14.Shared.Maths.Matrix3;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Graphics
@@ -46,19 +41,23 @@ namespace SS14.Client.Graphics
 
         private OpenTK.GameWindow _window;
 
-        private int AnotherVBO;
-        private int AnotherEBO;
+        private int BatchVBO;
+        private int BatchEBO;
+        private int BatchVAO;
+
         // VBO to draw a single quad.
         private int QuadVBO;
+        private int QuadVAO;
+
         private int Vertex2DProgram;
+
         // Locations of a few uniforms in the above program.
         private int Vertex2DUniformModel;
         private int Vertex2DUniformView;
         private int Vertex2DUniformModUV;
         private int Vertex2DUniformProjection;
+
         private int Vertex2DUniformModulate;
-        // The main VAO we use.
-        private int Vertex2DVAO;
 
         // Thread the window is instantiated on.
         // OpenGL is allergic to multi threading so we need to check this.
@@ -66,6 +65,9 @@ namespace SS14.Client.Graphics
         private bool _drawingSplash;
 
         public override Vector2i ScreenSize => new Vector2i(_window.Width, _window.Height);
+        private readonly HashSet<string> OpenGLExtensions = new HashSet<string>();
+
+        private bool HasKHRDebug => HasExtension("GL_KHR_debug");
 
         public override void SetWindowTitle(string title)
         {
@@ -105,7 +107,7 @@ namespace SS14.Client.Graphics
                 "Space Station 14",
                 GameWindowFlags.Default,
                 DisplayDevice.Default,
-                4, 5,
+                4, 1,
 #if DEBUG
                 GraphicsContextFlags.Debug | GraphicsContextFlags.ForwardCompatible
 #else
@@ -130,16 +132,15 @@ namespace SS14.Client.Graphics
 
             _window.KeyUp += (sender, eventArgs) => { _gameController.GameController.KeyUp((KeyEventArgs) eventArgs); };
             _window.Closed += (sender, eventArgs) => { _gameController.GameController.Shutdown("Window closed"); };
-            _window.Resize += (sender, eventArgs) =>
-            {
-                GL.Viewport(0, 0, _window.Width, _window.Height);
-            };
+            _window.Resize += (sender, eventArgs) => { GL.Viewport(0, 0, _window.Width, _window.Height); };
 
             _initOpenGL();
         }
 
         private void _initOpenGL()
         {
+            _loadExtensions();
+
             GL.Enable(EnableCap.Blend);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
@@ -147,31 +148,20 @@ namespace SS14.Client.Graphics
             Logger.DebugS("ogl", "OpenGL Version: {0}", GL.GetString(StringName.Version));
 
 #if DEBUG
-            _hijackCallback();
+            _hijackDebugCallback();
 #endif
 
             Vertex2DProgram = _compileProgram(
                 new ResourcePath("/Shaders/Internal/sprite.vert"),
                 new ResourcePath("/Shaders/Internal/sprite.frag"));
 
+            _objectLabelMaybe(ObjectLabelIdentifier.Program, Vertex2DProgram, "Vertex2DProgram");
+
             Vertex2DUniformModel = GL.GetUniformLocation(Vertex2DProgram, "modelMatrix");
             Vertex2DUniformView = GL.GetUniformLocation(Vertex2DProgram, "viewMatrix");
             Vertex2DUniformProjection = GL.GetUniformLocation(Vertex2DProgram, "projectionMatrix");
             Vertex2DUniformModUV = GL.GetUniformLocation(Vertex2DProgram, "modifyUV");
             Vertex2DUniformModulate = GL.GetUniformLocation(Vertex2DProgram, "modulate");
-
-            // Vertex2D VAO.
-            GL.CreateVertexArrays(1, out Vertex2DVAO);
-            GL.VertexArrayAttribFormat(Vertex2DVAO, 0, 2, VertexAttribType.Float, false, 0);
-            GL.EnableVertexArrayAttrib(Vertex2DVAO, 0);
-            GL.VertexArrayAttribFormat(Vertex2DVAO, 1, 2, VertexAttribType.Float, false, sizeof(float) * 2);
-            GL.EnableVertexArrayAttrib(Vertex2DVAO, 1);
-            GL.VertexArrayAttribBinding(Vertex2DVAO, 0, 0);
-            GL.VertexArrayAttribBinding(Vertex2DVAO, 1, 0);
-
-            GL.CreateBuffers(1, out AnotherVBO);
-            GL.NamedBufferStorage(AnotherVBO, sizeof(float) * 65536 * 4, IntPtr.Zero,
-                BufferStorageFlags.DynamicStorageBit);
 
             var quadVertices = new[]
             {
@@ -181,13 +171,38 @@ namespace SS14.Client.Graphics
                 new Vertex2D(0, 1, 0, 0),
             };
 
-            GL.CreateBuffers(1, out QuadVBO);
-            GL.ObjectLabel(ObjectLabelIdentifier.Buffer, QuadVBO, 7, "QuadVBO");
-            GL.NamedBufferStorage(QuadVBO, sizeof(float) * 16, quadVertices, BufferStorageFlags.None);
+            GL.GenBuffers(1, out QuadVBO);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, QuadVBO);
+            _objectLabelMaybe(ObjectLabelIdentifier.Buffer, QuadVBO, "QuadVBO");
+            GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * 16, quadVertices, BufferUsageHint.StaticDraw);
 
-            GL.CreateBuffers(1, out AnotherEBO);
-            GL.NamedBufferStorage(AnotherEBO, sizeof(ushort) * 65536 * 4 / 6, IntPtr.Zero,
-                BufferStorageFlags.DynamicStorageBit);
+            GL.GenVertexArrays(1, out QuadVAO);
+            GL.BindVertexArray(QuadVAO);
+            _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, QuadVAO, "QuadVAO");
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
+            GL.EnableVertexAttribArray(0);
+            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 4, 2 * sizeof(float));
+            GL.EnableVertexAttribArray(1);
+
+            GL.GenBuffers(1, out BatchVBO);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, BatchVBO);
+            _objectLabelMaybe(ObjectLabelIdentifier.Buffer, BatchVBO, "BatchVBO");
+            GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * 65536 * 4, IntPtr.Zero,
+                BufferUsageHint.DynamicDraw);
+
+            GL.GenVertexArrays(1, out BatchVAO);
+            GL.BindVertexArray(BatchVAO);
+            _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, BatchVAO, "BatchVAO");
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, sizeof(float) * 4, 0);
+            GL.EnableVertexAttribArray(0);
+            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 4, 2 * sizeof(float));
+            GL.EnableVertexAttribArray(1);
+
+            GL.GenBuffers(1, out BatchEBO);
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, BatchEBO);
+            _objectLabelMaybe(ObjectLabelIdentifier.Buffer, BatchEBO, "BatchEBO");
+            GL.BufferData(BufferTarget.ElementArrayBuffer, sizeof(ushort) * 65536 * 4 / 6, IntPtr.Zero,
+                BufferUsageHint.DynamicDraw);
 
             _drawingSplash = true;
             Render(null);
@@ -201,8 +216,14 @@ namespace SS14.Client.Graphics
             drawHandle.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
         }
 
-        private static void _hijackCallback()
+        private void _hijackDebugCallback()
         {
+            if (!HasKHRDebug)
+            {
+                Logger.DebugS("ogl", "KHR_debug not present, OpenGL debug logging not enabled.");
+                return;
+            }
+
             GL.Enable(EnableCap.DebugOutput);
             GL.Enable(EnableCap.DebugOutputSynchronous);
             GCHandle.Alloc(_debugMessageCallbackInstance);
@@ -320,6 +341,32 @@ namespace SS14.Client.Graphics
         }
 
         private static readonly DebugProc _debugMessageCallbackInstance = new DebugProc(_debugMessageCallback);
+
+        private void _loadExtensions()
+        {
+            var count = GL.GetInteger(GetPName.NumExtensions);
+            for (var i = 0; i < count; i++)
+            {
+                var extension = GL.GetString(StringNameIndexed.Extensions, i);
+                OpenGLExtensions.Add(extension);
+            }
+        }
+
+        private bool HasExtension(string extensionName)
+        {
+            return OpenGLExtensions.Contains(extensionName);
+        }
+
+        [Conditional("DEBUG")]
+        private void _objectLabelMaybe(ObjectLabelIdentifier identifier, int name, string label)
+        {
+            if (!HasKHRDebug)
+            {
+                return;
+            }
+
+            GL.ObjectLabel(identifier, name, label.Length, label);
+        }
 
         public void Dispose()
         {

@@ -27,17 +27,18 @@ namespace SS14.Client.Graphics
             // Even though supposedly that issue was fixed with Mono 5.14... I'm on 5.16.
             using (var image = (System.Drawing.Bitmap) System.Drawing.Image.FromStream(stream))
             {
-                GL.CreateTextures(TextureTarget.Texture2D, 1, out int texture);
-                GL.TextureStorage2D(texture, 1, SizedInternalFormat.Rgba8, image.Width, image.Height);
-                GL.TextureParameter(texture, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Nearest);
-                GL.TextureParameter(texture, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Nearest);
+                GL.GenTextures(1, out int texture);
+                GL.BindTexture(TextureTarget.Texture2D, texture);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
+                    (int) TextureMinFilter.Nearest);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
+                    (int) TextureMagFilter.Nearest);
 
                 var data = image.LockBits(new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
                     ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
-                GL.TextureSubImage2D(texture, 0, 0, 0, image.Width, image.Height, PixelFormat.Bgra,
-                    PixelType.UnsignedByte, data.Scan0);
-
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, image.Width, image.Height, 0,
+                    PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
                 image.UnlockBits(data);
                 var loaded = new LoadedTexture
                 {
@@ -62,18 +63,20 @@ namespace SS14.Client.Graphics
                 throw new NotImplementedException("Cannot load images other than Rgba32");
             }
 
-            GL.CreateTextures(TextureTarget.Texture2D, 1, out int texture);
-            GL.TextureStorage2D(texture, 1, SizedInternalFormat.Rgba8, image.Width, image.Height);
-            GL.TextureParameter(texture, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Nearest);
-            GL.TextureParameter(texture, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Nearest);
+            GL.GenTextures(1, out int texture);
+            GL.BindTexture(TextureTarget.Texture2D, texture);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
+                (int) TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
+                (int) TextureMagFilter.Nearest);
 
             var span = ((Image<Rgba32>) (object) image).GetPixelSpan();
             unsafe
             {
                 fixed (Rgba32* ptr = &MemoryMarshal.GetReference(span))
                 {
-                    GL.TextureSubImage2D(texture, 0, 0, 0, image.Width, image.Height, PixelFormat.Rgba,
-                        PixelType.UnsignedByte, (IntPtr) ptr);
+                    GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, image.Width, image.Height, 0,
+                        PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr) ptr);
                 }
             }
 

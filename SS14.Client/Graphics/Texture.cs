@@ -29,7 +29,7 @@ namespace SS14.Client.Graphics
             return src?.GodotTexture;
         }
 
-        public static Texture LoadFromImage<T>(Image<T> image) where T : struct, IPixel<T>
+        public static Texture LoadFromImage<T>(Image<T> image, string name=null) where T : struct, IPixel<T>
         {
             switch (GameController.Mode)
             {
@@ -63,14 +63,14 @@ namespace SS14.Client.Graphics
                 case GameController.DisplayMode.OpenGL:
                 {
                     var manager = IoCManager.Resolve<IDisplayManagerOpenGL>();
-                    return manager.LoadTextureFromImage(image);
+                    return manager.LoadTextureFromImage(image, name);
                 }
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
 
-        public static Texture LoadFromPNGStream(Stream stream)
+        public static Texture LoadFromPNGStream(Stream stream, string name=null)
         {
             switch (GameController.Mode)
             {
@@ -96,7 +96,7 @@ namespace SS14.Client.Graphics
                 case GameController.DisplayMode.OpenGL:
                 {
                     var manager = IoCManager.Resolve<IDisplayManagerOpenGL>();
-                    return manager.LoadTextureFromPNGStream(stream);
+                    return manager.LoadTextureFromPNGStream(stream, name);
                 }
                 default:
                     throw new ArgumentOutOfRangeException();

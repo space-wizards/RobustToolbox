@@ -39,8 +39,6 @@ namespace SS14.Client.ResourceManagement
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-
-
         }
 
         private void _loadGodot(IResourceCache cache, ResourcePath path)
@@ -71,7 +69,7 @@ namespace SS14.Client.ResourceManagement
 
             var manager = IoCManager.Resolve<IDisplayManagerOpenGL>();
 
-            Texture = manager.LoadTextureFromPNGStream(cache.ContentFileRead(path));
+            Texture = manager.LoadTextureFromPNGStream(cache.ContentFileRead(path), path.ToString());
         }
 
         public static implicit operator Texture(TextureResource res)

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -10,6 +9,7 @@ using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
+using ObjectLabelIdentifier = OpenTK.Graphics.OpenGL4.ObjectLabelIdentifier;
 using PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
 
 namespace SS14.Client.Graphics
@@ -19,42 +19,19 @@ namespace SS14.Client.Graphics
         private readonly Dictionary<int, LoadedTexture> _loadedTextures = new Dictionary<int, LoadedTexture>();
         private int _nextTextureId;
 
-        public Texture LoadTextureFromPNGStream(Stream stream)
+        public Texture LoadTextureFromPNGStream(Stream stream, string name=null)
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
 
             // We use System.Drawing instead of ImageSharp because the latter has PNG loading bugs on Mono.
             // Even though supposedly that issue was fixed with Mono 5.14... I'm on 5.16.
-            using (var image = (System.Drawing.Bitmap) System.Drawing.Image.FromStream(stream))
+            using (var image = Image.Load(stream))
             {
-                GL.GenTextures(1, out int texture);
-                GL.BindTexture(TextureTarget.Texture2D, texture);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
-                    (int) TextureMinFilter.Nearest);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
-                    (int) TextureMagFilter.Nearest);
-
-                var data = image.LockBits(new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
-                    ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, image.Width, image.Height, 0,
-                    PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
-                image.UnlockBits(data);
-                var loaded = new LoadedTexture
-                {
-                    OpenGLObject = texture,
-                    Width = image.Width,
-                    Height = image.Height
-                };
-
-                var id = ++_nextTextureId;
-                _loadedTextures.Add(id, loaded);
-
-                return new OpenGLTexture(id, image.Width, image.Height);
+                return LoadTextureFromImage(image, name);
             }
         }
 
-        public Texture LoadTextureFromImage<T>(Image<T> image) where T : struct, IPixel<T>
+        public Texture LoadTextureFromImage<T>(Image<T> image, string name=null) where T : struct, IPixel<T>
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
 
@@ -78,6 +55,11 @@ namespace SS14.Client.Graphics
                     GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, image.Width, image.Height, 0,
                         PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr) ptr);
                 }
+            }
+
+            if (name != null)
+            {
+                _objectLabelMaybe(ObjectLabelIdentifier.Texture, texture, name);
             }
 
             var loaded = new LoadedTexture

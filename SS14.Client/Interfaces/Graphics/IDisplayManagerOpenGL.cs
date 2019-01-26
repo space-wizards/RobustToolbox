@@ -10,8 +10,8 @@ namespace SS14.Client.Interfaces.Graphics
         void Render(FrameEventArgs args);
         void ProcessInput(FrameEventArgs frameEventArgs);
 
-        Texture LoadTextureFromPNGStream(Stream stream);
-        Texture LoadTextureFromImage<T>(Image<T> image) where T : struct, IPixel<T>;
+        Texture LoadTextureFromPNGStream(Stream stream, string name=null);
+        Texture LoadTextureFromImage<T>(Image<T> image, string name=null) where T : struct, IPixel<T>;
         void Ready();
     }
 }

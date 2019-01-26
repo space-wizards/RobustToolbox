@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
+using JetBrains.Annotations;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL4;
@@ -39,7 +40,7 @@ namespace SS14.Client.Graphics
         [Dependency] private readonly IEntityManager _entityManager;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
 
-        private OpenTK.GameWindow _window;
+        private GameWindow _window;
 
         private int BatchVBO;
         private int BatchEBO;
@@ -174,7 +175,7 @@ namespace SS14.Client.Graphics
             GL.GenBuffers(1, out QuadVBO);
             GL.BindBuffer(BufferTarget.ArrayBuffer, QuadVBO);
             _objectLabelMaybe(ObjectLabelIdentifier.Buffer, QuadVBO, "QuadVBO");
-            GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * 16, quadVertices, BufferUsageHint.StaticDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, quadVertices.Length * Vertex2D.SizeOf, quadVertices, BufferUsageHint.StaticDraw);
 
             GL.GenVertexArrays(1, out QuadVAO);
             GL.BindVertexArray(QuadVAO);
@@ -187,7 +188,7 @@ namespace SS14.Client.Graphics
             GL.GenBuffers(1, out BatchVBO);
             GL.BindBuffer(BufferTarget.ArrayBuffer, BatchVBO);
             _objectLabelMaybe(ObjectLabelIdentifier.Buffer, BatchVBO, "BatchVBO");
-            GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * 65536 * 4, IntPtr.Zero,
+            GL.BufferData(BufferTarget.ArrayBuffer, Vertex2D.SizeOf * BatchVertexData.Length, IntPtr.Zero,
                 BufferUsageHint.DynamicDraw);
 
             GL.GenVertexArrays(1, out BatchVAO);
@@ -201,7 +202,7 @@ namespace SS14.Client.Graphics
             GL.GenBuffers(1, out BatchEBO);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, BatchEBO);
             _objectLabelMaybe(ObjectLabelIdentifier.Buffer, BatchEBO, "BatchEBO");
-            GL.BufferData(BufferTarget.ElementArrayBuffer, sizeof(ushort) * 65536 * 4 / 6, IntPtr.Zero,
+            GL.BufferData(BufferTarget.ElementArrayBuffer, sizeof(ushort) * BatchIndexData.Length, IntPtr.Zero,
                 BufferUsageHint.DynamicDraw);
 
             _drawingSplash = true;
@@ -340,7 +341,7 @@ namespace SS14.Client.Graphics
             }
         }
 
-        private static readonly DebugProc _debugMessageCallbackInstance = new DebugProc(_debugMessageCallback);
+        private static readonly DebugProc _debugMessageCallbackInstance = _debugMessageCallback;
 
         private void _loadExtensions()
         {
@@ -374,10 +375,21 @@ namespace SS14.Client.Graphics
         }
 
         [StructLayout(LayoutKind.Sequential)]
+        [PublicAPI]
         private readonly struct Vertex2D
         {
+            public static readonly int SizeOf;
+
             public readonly Vector2 Position;
             public readonly Vector2 TextureCoordinates;
+
+            static Vertex2D()
+            {
+                unsafe
+                {
+                    SizeOf = sizeof(Vertex2D);
+                }
+            }
 
             public Vertex2D(Vector2 position, Vector2 textureCoordinates)
             {
@@ -398,6 +410,7 @@ namespace SS14.Client.Graphics
     }
 
     [Serializable]
+    [PublicAPI]
     internal class ShaderCompilationException : Exception
     {
         public ShaderCompilationException()

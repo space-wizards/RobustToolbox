@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL4;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Graphics.Overlays;
-using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Client.Utility;
@@ -29,6 +27,22 @@ namespace SS14.Client.Graphics
         ///     Are we current rendering screen space or world space? Some code works differently between the two.
         /// </summary>
         private CurrentSpace _currentSpace;
+
+        // The minimum amount of consecutive textures that have to be batch-able before we actually bother to batch them.
+        // BufferSubData has a non zero overhead and a few draw calls is much better.
+        private const int TextureBatchThreshold = 8;
+
+        // The max amount of vertices in one batch. Each quad is 4 vertices so...
+        private const ushort MaxBatchVertices = 16333 * 4;
+
+        // (2**16/4)-1, so that we can use ushort indices in the index buffer
+        // and leave open the primitive restart index (65535).
+        private const ushort MaxBatchQuads = 16333;
+
+        private readonly Vertex2D[] BatchVertexData = new Vertex2D[MaxBatchVertices];
+
+        // Need 5 indices per quad: 4 to draw the quad with triangle strips and another one as primitive restart.
+        private readonly ushort[] BatchIndexData = new ushort[MaxBatchQuads * 5];
 
         public void Render(FrameEventArgs args)
         {
@@ -121,10 +135,7 @@ namespace SS14.Client.Graphics
             GL.UniformMatrix3(Vertex2DUniformProjection, true, ref projMatrixWorld);
 
             GL.Enable(EnableCap.PrimitiveRestart);
-            GL.PrimitiveRestartIndex(65535);
-
-            var vertices = new float[65536 * 4];
-            var indices = new ushort[65536 / 4 * 6];
+            GL.PrimitiveRestartIndex(ushort.MaxValue);
 
             foreach (var grid in _mapManager.GetMap(map).GetAllGrids())
             {
@@ -132,38 +143,26 @@ namespace SS14.Client.Graphics
                 var matrix = Matrix3.Identity;
                 matrix.R0C2 = grid.WorldPosition.X;
                 matrix.R1C2 = grid.WorldPosition.Y;
-                var otkm = matrix.ConvertOpenTK();
-                GL.UniformMatrix3(Vertex2DUniformModel, true, ref otkm);
+                var oModelMatrix = matrix.ConvertOpenTK();
+                GL.UniformMatrix3(Vertex2DUniformModel, true, ref oModelMatrix);
 
                 foreach (var tileRef in grid.GetAllTiles())
                 {
-                    var vidx = nth * 16;
-                    vertices[vidx] = tileRef.X + 0.5f;
-                    vertices[vidx + 1] = tileRef.Y + 0.5f;
-                    vertices[vidx + 2] = 1;
-                    vertices[vidx + 3] = 0;
-                    vertices[vidx + 4] = tileRef.X - 0.5f;
-                    vertices[vidx + 5] = tileRef.Y + 0.5f;
-                    vertices[vidx + 6] = 0;
-                    vertices[vidx + 7] = 0;
-                    vertices[vidx + 8] = tileRef.X + 0.5f;
-                    vertices[vidx + 9] = tileRef.Y - 0.5f;
-                    vertices[vidx + 10] = 1;
-                    vertices[vidx + 11] = 1;
-                    vertices[vidx + 12] = tileRef.X - 0.5f;
-                    vertices[vidx + 13] = tileRef.Y - 0.5f;
-                    vertices[vidx + 14] = 0;
-                    vertices[vidx + 15] = 1;
-                    var nidx = nth * 5;
-                    var tidx = (ushort) (nth * 4);
-                    indices[nidx] = tidx;
-                    indices[nidx + 1] = (ushort) (tidx + 1);
-                    indices[nidx + 2] = (ushort) (tidx + 2);
-                    indices[nidx + 3] = (ushort) (tidx + 3);
+                    var vIdx = nth * 4;
+                    BatchVertexData[vIdx] = new Vertex2D(tileRef.X + 0.5f, tileRef.Y + 0.5f, 1, 0);
+                    BatchVertexData[vIdx + 1] = new Vertex2D(tileRef.X - 0.5f, tileRef.Y + 0.5f, 0, 0);
+                    BatchVertexData[vIdx + 2] = new Vertex2D(tileRef.X + 0.5f, tileRef.Y - 0.5f, 1, 1);
+                    BatchVertexData[vIdx + 3] = new Vertex2D(tileRef.X - 0.5f, tileRef.Y - 0.5f, 0, 1);
+                    var nIdx = nth * 5;
+                    var tIdx = (ushort) (nth * 4);
+                    BatchIndexData[nIdx] = tIdx;
+                    BatchIndexData[nIdx + 1] = (ushort) (tIdx + 1);
+                    BatchIndexData[nIdx + 2] = (ushort) (tIdx + 2);
+                    BatchIndexData[nIdx + 3] = (ushort) (tIdx + 3);
                     // Use primitive restart to shave off one single index per quad.
                     // Whew.
-                    indices[nidx + 4] = 65535;
-                    if (++nth == 65535)
+                    BatchIndexData[nIdx + 4] = ushort.MaxValue;
+                    if (++nth >= MaxBatchQuads)
                     {
                         throw new NotImplementedException("Can't render grids that are that big yet sorry.");
                     }
@@ -174,8 +173,9 @@ namespace SS14.Client.Graphics
                     continue;
                 }
 
-                GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, nth * sizeof(float) * 16, vertices);
-                GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, nth * sizeof(ushort) * 5, indices);
+                GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, nth * 4 * Vertex2D.SizeOf, BatchVertexData);
+                GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, nth * sizeof(ushort) * 5,
+                    BatchIndexData);
 
                 GL.DrawElements(PrimitiveType.TriangleStrip, nth * 5, DrawElementsType.UnsignedShort, 0);
             }
@@ -200,7 +200,7 @@ namespace SS14.Client.Graphics
                 entityList.Add(sprite);
             }
 
-            entityList.Sort((a, b) => ((int)a.DrawDepth).CompareTo((int)b.DrawDepth));
+            entityList.Sort((a, b) => ((int) a.DrawDepth).CompareTo((int) b.DrawDepth));
 
             foreach (var entity in entityList)
             {

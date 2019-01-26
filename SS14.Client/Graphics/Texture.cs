@@ -19,7 +19,14 @@ namespace SS14.Client.Graphics
     {
         internal abstract Godot.Texture GodotTexture { get; }
 
+        /// <summary>
+        ///     The width of the texture, in pixels.
+        /// </summary>
         public abstract int Width { get; }
+
+        /// <summary>
+        ///     The height of the texture, in pixels.
+        /// </summary>
         public abstract int Height { get; }
 
         public Vector2i Size => new Vector2i(Width, Height);
@@ -29,6 +36,12 @@ namespace SS14.Client.Graphics
             return src?.GodotTexture;
         }
 
+        /// <summary>
+        ///     Loads a new texture an existing image.
+        /// </summary>
+        /// <param name="image">The image to load.</param>
+        /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
+        /// <typeparam name="T">The type of pixels of the image. At the moment, images must be <see cref="Rgba32"/>.</typeparam>
         public static Texture LoadFromImage<T>(Image<T> image, string name=null) where T : struct, IPixel<T>
         {
             switch (GameController.Mode)
@@ -70,6 +83,11 @@ namespace SS14.Client.Graphics
             }
         }
 
+        /// <summary>
+        ///     Loads an image from a stream containing PNG data.
+        /// </summary>
+        /// <param name="stream">The stream to load the image from.</param>
+        /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
         public static Texture LoadFromPNGStream(Stream stream, string name=null)
         {
             switch (GameController.Mode)

@@ -130,6 +130,7 @@ namespace SS14.Client.Graphics
             // Render grids. Very hardcoded right now.
             var map = _eyeManager.CurrentMap;
 
+            _resourceCache.GetResource<TextureResource>("/Textures/UserInterface/handsbox.png");
             var tex = _resourceCache.GetResource<TextureResource>("/Textures/Tiles/floor_steel.png");
             var loadedTex = _loadedTextures[((OpenGLTexture) tex.Texture).OpenGLTextureId];
             GL.ActiveTexture(TextureUnit.Texture0);
@@ -252,12 +253,12 @@ namespace SS14.Client.Graphics
                     if (BatchingTexture.Value != loadedTexture.OpenGLObject)
                     {
                         _flushBatchBuffer();
-                        BatchingTexture = loadedTexture.OpenGLObject;
+                        BatchingTexture = renderCommandTexture.TextureId;
                     }
                 }
                 else
                 {
-                    BatchingTexture = loadedTexture.OpenGLObject;
+                    BatchingTexture = renderCommandTexture.TextureId;
                 }
                 BatchBuffer.Add((renderCommandTexture, _currentModelMatrix));
                 return;
@@ -414,7 +415,7 @@ namespace SS14.Client.Graphics
             var identity = OpenTK.Matrix3.Identity;
 
             GL.ActiveTexture(TextureUnit.Texture0);
-            Logger.DebugS("ogl", $"Binding texture {loadedTexture.OpenGLObject}: {loadedTexture.Name}");
+            Logger.DebugS("ogl", "Binding texture {0},{1}: {2}", BatchingTexture.Value, loadedTexture.OpenGLObject, loadedTexture.Name);
             GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject);
             GL.UniformMatrix3(Vertex2DUniformModel, false, ref identity);
             GL.Uniform4(Vertex2DUniformModUV, new OpenTK.Vector4(0, 0, 1, 1));

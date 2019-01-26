@@ -7,6 +7,7 @@ using OpenTK.Graphics.OpenGL;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
+using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using ObjectLabelIdentifier = OpenTK.Graphics.OpenGL4.ObjectLabelIdentifier;
@@ -70,7 +71,9 @@ namespace SS14.Client.Graphics
                 Name = name,
             };
 
+
             var id = ++_nextTextureId;
+            Logger.DebugS("ogl", "Loaded texture {0},{1}: {2}", id, texture, name);
             _loadedTextures.Add(id, loaded);
 
             return new OpenGLTexture(id, image.Width, image.Height);

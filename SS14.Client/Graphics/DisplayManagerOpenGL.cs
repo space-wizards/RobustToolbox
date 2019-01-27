@@ -42,15 +42,15 @@ namespace SS14.Client.Graphics
 
         private GameWindow _window;
 
-        private int BatchVBO;
-        private int BatchEBO;
-        private int BatchVAO;
+        private OGLHandle BatchVBO;
+        private OGLHandle BatchEBO;
+        private OGLHandle BatchVAO;
 
         // VBO to draw a single quad.
-        private int QuadVBO;
-        private int QuadVAO;
+        private OGLHandle QuadVBO;
+        private OGLHandle QuadVAO;
 
-        private int Vertex2DProgram;
+        private OGLHandle Vertex2DProgram;
 
         // Locations of a few uniforms in the above program.
         private int Vertex2DUniformModel;
@@ -158,11 +158,11 @@ namespace SS14.Client.Graphics
 
             _objectLabelMaybe(ObjectLabelIdentifier.Program, Vertex2DProgram, "Vertex2DProgram");
 
-            Vertex2DUniformModel = GL.GetUniformLocation(Vertex2DProgram, "modelMatrix");
-            Vertex2DUniformView = GL.GetUniformLocation(Vertex2DProgram, "viewMatrix");
-            Vertex2DUniformProjection = GL.GetUniformLocation(Vertex2DProgram, "projectionMatrix");
-            Vertex2DUniformModUV = GL.GetUniformLocation(Vertex2DProgram, "modifyUV");
-            Vertex2DUniformModulate = GL.GetUniformLocation(Vertex2DProgram, "modulate");
+            Vertex2DUniformModel = GL.GetUniformLocation(Vertex2DProgram.Handle, "modelMatrix");
+            Vertex2DUniformView = GL.GetUniformLocation(Vertex2DProgram.Handle, "viewMatrix");
+            Vertex2DUniformProjection = GL.GetUniformLocation(Vertex2DProgram.Handle, "projectionMatrix");
+            Vertex2DUniformModUV = GL.GetUniformLocation(Vertex2DProgram.Handle, "modifyUV");
+            Vertex2DUniformModulate = GL.GetUniformLocation(Vertex2DProgram.Handle, "modulate");
 
             var quadVertices = new[]
             {
@@ -172,35 +172,35 @@ namespace SS14.Client.Graphics
                 new Vertex2D(0, 1, 0, 0),
             };
 
-            GL.GenBuffers(1, out QuadVBO);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, QuadVBO);
+            QuadVBO = new OGLHandle(GL.GenBuffer());
+            GL.BindBuffer(BufferTarget.ArrayBuffer, QuadVBO.Handle);
             _objectLabelMaybe(ObjectLabelIdentifier.Buffer, QuadVBO, "QuadVBO");
             GL.BufferData(BufferTarget.ArrayBuffer, quadVertices.Length * Vertex2D.SizeOf, quadVertices, BufferUsageHint.StaticDraw);
 
-            GL.GenVertexArrays(1, out QuadVAO);
-            GL.BindVertexArray(QuadVAO);
+            QuadVAO = new OGLHandle(GL.GenVertexArray());
+            GL.BindVertexArray(QuadVAO.Handle);
             _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, QuadVAO, "QuadVAO");
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
             GL.EnableVertexAttribArray(0);
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
             GL.EnableVertexAttribArray(1);
 
-            GL.GenBuffers(1, out BatchVBO);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, BatchVBO);
+            BatchVBO = new OGLHandle(GL.GenBuffer());
+            GL.BindBuffer(BufferTarget.ArrayBuffer, BatchVBO.Handle);
             _objectLabelMaybe(ObjectLabelIdentifier.Buffer, BatchVBO, "BatchVBO");
             GL.BufferData(BufferTarget.ArrayBuffer, Vertex2D.SizeOf * BatchVertexData.Length, IntPtr.Zero,
                 BufferUsageHint.DynamicDraw);
 
-            GL.GenVertexArrays(1, out BatchVAO);
-            GL.BindVertexArray(BatchVAO);
+            BatchVAO = new OGLHandle(GL.GenVertexArray());
+            GL.BindVertexArray(BatchVAO.Handle);
             _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, BatchVAO, "BatchVAO");
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
             GL.EnableVertexAttribArray(0);
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
             GL.EnableVertexAttribArray(1);
 
-            GL.GenBuffers(1, out BatchEBO);
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, BatchEBO);
+            BatchEBO = new OGLHandle(GL.GenBuffer());
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, BatchEBO.Handle);
             _objectLabelMaybe(ObjectLabelIdentifier.Buffer, BatchEBO, "BatchEBO");
             GL.BufferData(BufferTarget.ElementArrayBuffer, sizeof(ushort) * BatchIndexData.Length, IntPtr.Zero,
                 BufferUsageHint.DynamicDraw);
@@ -238,7 +238,7 @@ namespace SS14.Client.Graphics
             d(_debugMessageCallbackInstance, new IntPtr(0x3005));
         }
 
-        private int _compileProgram(ResourcePath vertex, ResourcePath fragment)
+        private OGLHandle _compileProgram(ResourcePath vertex, ResourcePath fragment)
         {
             string vertexSource;
             string fragmentSource;
@@ -254,6 +254,7 @@ namespace SS14.Client.Graphics
             }
 
             var vertexShader = GL.CreateShader(ShaderType.VertexShader);
+            _objectLabelMaybe(ObjectLabelIdentifier.Shader, new OGLHandle(vertexShader), vertex.ToString());
 
             try
             {
@@ -269,6 +270,7 @@ namespace SS14.Client.Graphics
                 }
 
                 var fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
+                _objectLabelMaybe(ObjectLabelIdentifier.Shader, new OGLHandle(fragmentShader), fragment.ToString());
 
                 try
                 {
@@ -298,7 +300,7 @@ namespace SS14.Client.Graphics
                         throw new ShaderCompilationException($"program {vertex},{fragment} failed to link:\n{log}");
                     }
 
-                    return program;
+                    return new OGLHandle(program);
                 }
                 finally
                 {
@@ -359,14 +361,14 @@ namespace SS14.Client.Graphics
         }
 
         [Conditional("DEBUG")]
-        private void _objectLabelMaybe(ObjectLabelIdentifier identifier, int name, string label)
+        private void _objectLabelMaybe(ObjectLabelIdentifier identifier, OGLHandle name, string label)
         {
             if (!HasKHRDebug)
             {
                 return;
             }
 
-            GL.ObjectLabel(identifier, name, label.Length, label);
+            GL.ObjectLabel(identifier, name.Handle, label.Length, label);
         }
 
         public void Dispose()
@@ -405,6 +407,43 @@ namespace SS14.Client.Graphics
             public Vertex2D(Vector2 position, float u, float v)
                 : this(position, new Vector2(u, v))
             {
+            }
+        }
+
+        // Go through the commit log if you wanna find why this struct exists.
+        // And why there's no implicit operator.
+        /// <summary>
+        ///     Basically just a handle around the integer object handles returned by OpenGL.
+        /// </summary>
+        [PublicAPI]
+        private struct OGLHandle
+        {
+            public readonly int Handle;
+
+            public OGLHandle(int handle)
+            {
+                Handle = handle;
+            }
+
+            public bool Equals(OGLHandle other)
+            {
+                return Handle == other.Handle;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                return obj is OGLHandle other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                return Handle;
+            }
+
+            public override string ToString()
+            {
+                return $"{nameof(Handle)}: {Handle}";
             }
         }
     }

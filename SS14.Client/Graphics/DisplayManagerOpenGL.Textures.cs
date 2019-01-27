@@ -41,8 +41,8 @@ namespace SS14.Client.Graphics
                 throw new NotImplementedException("Cannot load images other than Rgba32");
             }
 
-            GL.GenTextures(1, out int texture);
-            GL.BindTexture(TextureTarget.Texture2D, texture);
+            var texture = new OGLHandle(GL.GenTexture());
+            GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
                 (int) TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
@@ -71,9 +71,7 @@ namespace SS14.Client.Graphics
                 Name = name,
             };
 
-
             var id = ++_nextTextureId;
-            Logger.DebugS("ogl", "Loaded texture {0},{1}: {2}", id, texture, name);
             _loadedTextures.Add(id, loaded);
 
             return new OpenGLTexture(id, image.Width, image.Height);
@@ -81,7 +79,7 @@ namespace SS14.Client.Graphics
 
         private class LoadedTexture
         {
-            public int OpenGLObject;
+            public OGLHandle OpenGLObject;
             public int Width;
             public int Height;
             public string Name;

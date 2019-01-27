@@ -10,7 +10,6 @@ using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Client.Utility;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 
@@ -60,7 +59,7 @@ namespace SS14.Client.Graphics
             GL.ClearColor(0, 0, 0, 1);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
-            GL.UseProgram(Vertex2DProgram);
+            GL.UseProgram(Vertex2DProgram.Handle);
 
             _currentModelMatrix = Matrix3.Identity;
 
@@ -130,13 +129,12 @@ namespace SS14.Client.Graphics
             // Render grids. Very hardcoded right now.
             var map = _eyeManager.CurrentMap;
 
-            _resourceCache.GetResource<TextureResource>("/Textures/UserInterface/handsbox.png");
             var tex = _resourceCache.GetResource<TextureResource>("/Textures/Tiles/floor_steel.png");
             var loadedTex = _loadedTextures[((OpenGLTexture) tex.Texture).OpenGLTextureId];
             GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, loadedTex.OpenGLObject);
+            GL.BindTexture(TextureTarget.Texture2D, loadedTex.OpenGLObject.Handle);
 
-            GL.BindVertexArray(BatchVAO);
+            GL.BindVertexArray(BatchVAO.Handle);
 
             GL.UniformMatrix3(Vertex2DUniformView, true, ref viewMatrixWorld);
             GL.UniformMatrix3(Vertex2DUniformProjection, true, ref projMatrixWorld);
@@ -250,7 +248,7 @@ namespace SS14.Client.Graphics
             {
                 if (BatchingTexture.HasValue)
                 {
-                    if (BatchingTexture.Value != loadedTexture.OpenGLObject)
+                    if (BatchingTexture.Value != renderCommandTexture.TextureId)
                     {
                         _flushBatchBuffer();
                         BatchingTexture = renderCommandTexture.TextureId;
@@ -265,7 +263,7 @@ namespace SS14.Client.Graphics
             }
 
             // Use QuadVBO to render a single quad and modify the model matrix to position it where we need it.
-            GL.BindVertexArray(QuadVAO);
+            GL.BindVertexArray(QuadVAO.Handle);
             Vector2 size;
             if (renderCommandTexture.SubRegion.HasValue)
             {
@@ -325,7 +323,7 @@ namespace SS14.Client.Graphics
 
             GL.UniformMatrix3(Vertex2DUniformModel, true, ref oRectTransform);
             GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject);
+            GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
             GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
         }
 
@@ -363,6 +361,8 @@ namespace SS14.Client.Graphics
 
         private void _flushBatchBuffer()
         {
+            // TODO: Tons of things are still unimplemented.
+            // Pretty much just look at _drawCommandTexture and see what's missing.
             if (BatchBuffer.Count < TextureBatchThreshold)
             {
                 foreach (var (command, modelMatrix) in BatchBuffer)
@@ -415,8 +415,7 @@ namespace SS14.Client.Graphics
             var identity = OpenTK.Matrix3.Identity;
 
             GL.ActiveTexture(TextureUnit.Texture0);
-            Logger.DebugS("ogl", "Binding texture {0},{1}: {2}", BatchingTexture.Value, loadedTexture.OpenGLObject, loadedTexture.Name);
-            GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject);
+            GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
             GL.UniformMatrix3(Vertex2DUniformModel, false, ref identity);
             GL.Uniform4(Vertex2DUniformModUV, new OpenTK.Vector4(0, 0, 1, 1));
             GL.Enable(EnableCap.PrimitiveRestart);

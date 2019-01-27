@@ -409,6 +409,11 @@ namespace SS14.Client.Graphics
                 : this(position, new Vector2(u, v))
             {
             }
+
+            public override string ToString()
+            {
+                return $"Vertex2D: {Position}, {TextureCoordinates}";
+            }
         }
 
         // Go through the commit log if you wanna find why this struct exists.

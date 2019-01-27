@@ -419,6 +419,7 @@ namespace SS14.Client.Graphics
                 }
             }
 
+            GL.BindVertexArray(BatchVAO.Handle);
             GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, quadIndex * 4 * Vertex2D.SizeOf, BatchVertexData);
             GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, quadIndex * sizeof(ushort) * 5,
                 BatchIndexData);

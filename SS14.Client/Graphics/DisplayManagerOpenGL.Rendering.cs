@@ -49,6 +49,12 @@ namespace SS14.Client.Graphics
 
         private int? BatchingTexture;
 
+        // We break batching when modulate changes too.
+        // This simplifies the rendering and catches most cases for now.
+        // For example all the walls have a single color.
+        // Yes this can be optimized later.
+        private Color? BatchingModulate;
+
         public void Render(FrameEventArgs args)
         {
             if (GameController.Mode != GameController.DisplayMode.OpenGL)
@@ -248,16 +254,21 @@ namespace SS14.Client.Graphics
             {
                 if (BatchingTexture.HasValue)
                 {
-                    if (BatchingTexture.Value != renderCommandTexture.TextureId)
+                    DebugTools.Assert(BatchingModulate.HasValue);
+                    if (BatchingTexture.Value != renderCommandTexture.TextureId ||
+                        BatchingModulate.Value != renderCommandTexture.Modulate)
                     {
                         _flushBatchBuffer();
                         BatchingTexture = renderCommandTexture.TextureId;
+                        BatchingModulate = renderCommandTexture.Modulate;
                     }
                 }
                 else
                 {
                     BatchingTexture = renderCommandTexture.TextureId;
+                    BatchingModulate = renderCommandTexture.Modulate;
                 }
+
                 BatchBuffer.Add((renderCommandTexture, _currentModelMatrix));
                 return;
             }
@@ -307,8 +318,7 @@ namespace SS14.Client.Graphics
             }
 
             // Handle modulate or the lack thereof.
-            GL.Uniform4(Vertex2DUniformModulate,
-                (renderCommandTexture.Modulate ?? Color.White).ConvertOpenTK());
+            GL.Uniform4(Vertex2DUniformModulate, renderCommandTexture.Modulate.ConvertOpenTK());
 
             if (_currentSpace == CurrentSpace.WorldSpace)
             {
@@ -374,20 +384,21 @@ namespace SS14.Client.Graphics
 
                 BatchBuffer.Clear();
                 BatchingTexture = null;
+                BatchingModulate = null;
                 return;
             }
 
             DebugTools.Assert(BatchingTexture.HasValue);
             var loadedTexture = _loadedTextures[BatchingTexture.Value];
-            var (w, h) = loadedTexture.Size;
             ushort quadIndex = 0;
             foreach (var (command, transform) in BatchBuffer)
             {
+                var (w, h) = loadedTexture.Size / (float) EyeManager.PIXELSPERMETER;
                 var sr = command.SubRegion ?? new UIBox2(0, 0, 1, 1);
-                var bl = transform.Transform(new Vector2(0, 0));
-                var br = transform.Transform(new Vector2(1, 0));
-                var tr = transform.Transform(new Vector2(1, 1));
-                var tl = transform.Transform(new Vector2(0, 1));
+                var bl = transform.Transform(command.Position);
+                var br = transform.Transform(command.Position + new Vector2(w, 0));
+                var tr = transform.Transform(command.Position + new Vector2(w, h));
+                var tl = transform.Transform(command.Position + new Vector2(0, h));
                 var vIdx = quadIndex * 4;
                 BatchVertexData[vIdx + 0] = new Vertex2D(bl, sr.BottomLeft);
                 BatchVertexData[vIdx + 1] = new Vertex2D(br, sr.BottomRight);
@@ -418,6 +429,8 @@ namespace SS14.Client.Graphics
             GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
             GL.UniformMatrix3(Vertex2DUniformModel, false, ref identity);
             GL.Uniform4(Vertex2DUniformModUV, new OpenTK.Vector4(0, 0, 1, 1));
+            DebugTools.Assert(BatchingModulate.HasValue);
+            GL.Uniform4(Vertex2DUniformModulate, BatchingModulate.Value.ConvertOpenTK());
             GL.Enable(EnableCap.PrimitiveRestart);
             GL.PrimitiveRestartIndex(ushort.MaxValue);
             GL.DrawElements(PrimitiveType.TriangleStrip, quadIndex * 5, DrawElementsType.UnsignedShort, 0);
@@ -425,6 +438,7 @@ namespace SS14.Client.Graphics
 
             BatchBuffer.Clear();
             BatchingTexture = null;
+            BatchingModulate = null;
         }
 
         private class RenderHandle : IRenderHandle, IDisposable
@@ -500,7 +514,7 @@ namespace SS14.Client.Graphics
                 var list = _drawingHandles[handleId].Item2;
                 command.TextureId = ((OpenGLTexture) texture).OpenGLTextureId;
                 command.Position = position;
-                command.Modulate = modulate;
+                command.Modulate = modulate ?? Color.White;
                 list.Commands.Add(command);
             }
 
@@ -544,7 +558,7 @@ namespace SS14.Client.Graphics
             public int TextureId { get; set; }
             public Vector2 Position { get; set; }
             public UIBox2? SubRegion { get; set; }
-            public Color? Modulate { get; set; }
+            public Color Modulate { get; set; }
         }
 
         // ReSharper disable once ClassNeverInstantiated.Local

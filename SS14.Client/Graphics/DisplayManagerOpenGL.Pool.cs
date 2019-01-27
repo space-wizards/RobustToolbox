@@ -21,7 +21,6 @@ namespace SS14.Client.Graphics
         {
             var item = _getFromPool(_poolCommandTexture);
             item.SubRegion = null;
-            item.Modulate = null;
             return item;
         }
 

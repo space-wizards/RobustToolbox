@@ -30,6 +30,7 @@ namespace SS14.Client.Graphics
 {
     /// <summary>
     ///     Responsible for most things rendering on OpenGL mode.
+    ///     Call him Clyde from now on, OK?
     /// </summary>
     internal sealed partial class DisplayManagerOpenGL : DisplayManager, IDisplayManagerOpenGL, IDisposable
     {

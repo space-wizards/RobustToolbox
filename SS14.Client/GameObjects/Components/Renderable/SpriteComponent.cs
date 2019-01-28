@@ -1048,7 +1048,10 @@ namespace SS14.Client.GameObjects
                 DisposeMirror(key);
             }
 
-            MainMirror.Dispose();
+            if (GameController.OnGodot)
+            {
+                MainMirror.Dispose();
+            }
 
             if (GameController.OnGodot)
             {

@@ -1,5 +1,5 @@
 // This is the main fragment shader used for rendering of 2D sprites.
-#version 450 core
+#version 410 core
 
 out vec4 FragColor;
 

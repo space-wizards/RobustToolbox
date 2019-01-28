@@ -1,5 +1,5 @@
 // This is the main vertex shader used for rendering of 2D sprites.
-#version 450 core
+#version 410 core
 
 // Vertex position.
 layout (location = 0) in vec2 aPos;

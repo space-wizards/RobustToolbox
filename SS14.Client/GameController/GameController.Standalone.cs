@@ -65,12 +65,16 @@ namespace SS14.Client
                         frames = 0;
                     }
                     */
-                    // TODO: If the client is on headless, _frameProcessMain should still get called right?
-                    _frameProcessMain(args.DeltaSeconds);
                     _displayManagerOpenGL.Render(new FrameEventArgs(args.DeltaSeconds));
                 };
                 _mainLoop.Input += (sender, args) => _displayManagerOpenGL.ProcessInput(new FrameEventArgs(args.DeltaSeconds));
             }
+
+            _mainLoop.Update += (sender, args) =>
+            {
+                _frameProcessMain(args.DeltaSeconds);
+            };
+
             // set GameLoop.Running to false to return from this function.
             _mainLoop.Run();
         }

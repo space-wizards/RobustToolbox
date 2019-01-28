@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Runtime.Remoting.Channels;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
@@ -27,13 +26,12 @@ using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
-namespace SS14.Client.Graphics
+namespace SS14.Client.Graphics.Clyde
 {
     /// <summary>
     ///     Responsible for most things rendering on OpenGL mode.
-    ///     Call him Clyde from now on, OK?
     /// </summary>
-    internal sealed partial class DisplayManagerOpenGL : DisplayManager, IDisplayManagerOpenGL, IDisposable
+    internal sealed partial class Clyde : DisplayManager, IDisplayManagerOpenGL, IDisposable
     {
         [Dependency] private readonly IResourceCache _resourceCache;
         [Dependency] private readonly IEyeManager _eyeManager;

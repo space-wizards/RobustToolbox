@@ -13,9 +13,9 @@ using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 
-namespace SS14.Client.Graphics
+namespace SS14.Client.Graphics.Clyde
 {
-    internal partial class DisplayManagerOpenGL
+    internal partial class Clyde
     {
         /// <summary>
         ///     The current model matrix we would use.
@@ -452,14 +452,14 @@ namespace SS14.Client.Graphics
 
         private class RenderHandle : IRenderHandle, IDisposable
         {
-            private readonly DisplayManagerOpenGL _manager;
+            private readonly Clyde _manager;
 
             public readonly List<(DrawingHandle, RenderCommandList)> _drawingHandles =
                 new List<(DrawingHandle, RenderCommandList)>();
 
             private bool _disposed;
 
-            public RenderHandle(DisplayManagerOpenGL manager)
+            public RenderHandle(Clyde manager)
             {
                 _manager = manager;
             }

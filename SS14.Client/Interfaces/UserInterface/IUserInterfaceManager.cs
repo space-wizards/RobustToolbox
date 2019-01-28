@@ -4,6 +4,7 @@ using SS14.Client.Graphics;
 using SS14.Client.UserInterface.Controls;
 using System;
 using System.Collections.Generic;
+using SS14.Client.Graphics.Clyde;
 
 namespace SS14.Client.Interfaces.UserInterface
 {

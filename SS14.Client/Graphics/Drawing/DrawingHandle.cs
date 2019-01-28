@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.NetworkInformation;
 using SS14.Client.Graphics.ClientEye;
+using SS14.Client.Graphics.Clyde;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;

@@ -5,6 +5,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using SS14.Client.Graphics.Clyde;
 using SS14.Shared.Utility;
 using VS = Godot.VisualServer;
 

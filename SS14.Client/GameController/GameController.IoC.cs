@@ -50,6 +50,7 @@ using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Graphics.ClientEye;
+using SS14.Client.Graphics.Clyde;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Placement;
 using SS14.Client.Interfaces.Graphics.Overlays;
@@ -136,8 +137,8 @@ namespace SS14.Client
                     IoCManager.Register<IInputManager, GodotInputManager>();
                     break;
                 case DisplayMode.OpenGL:
-                    IoCManager.Register<IDisplayManager, DisplayManagerOpenGL>();
-                    IoCManager.Register<IDisplayManagerOpenGL, DisplayManagerOpenGL>();
+                    IoCManager.Register<IDisplayManager, Clyde>();
+                    IoCManager.Register<IDisplayManagerOpenGL, Clyde>();
                     IoCManager.Register<IInputManager, OpenGLInputManager>();
                     break;
                 default:

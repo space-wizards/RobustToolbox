@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 
-namespace SS14.Client.Graphics
+namespace SS14.Client.Graphics.Clyde
 {
-    internal partial class DisplayManagerOpenGL
+    internal partial class Clyde
     {
         // We use pooling to store command list related objects.
         // These command lists are causing GC overhead over my dead body.

@@ -12,9 +12,9 @@ using SS14.Shared.Utility;
 using ObjectLabelIdentifier = OpenTK.Graphics.OpenGL4.ObjectLabelIdentifier;
 using PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
 
-namespace SS14.Client.Graphics
+namespace SS14.Client.Graphics.Clyde
 {
-    internal partial class DisplayManagerOpenGL
+    internal partial class Clyde
     {
         private readonly Dictionary<int, LoadedTexture> _loadedTextures = new Dictionary<int, LoadedTexture>();
         private int _nextTextureId;

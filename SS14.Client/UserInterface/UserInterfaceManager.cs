@@ -1,5 +1,6 @@
 ﻿using System;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Clyde;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Input;

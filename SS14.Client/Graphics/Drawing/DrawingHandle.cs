@@ -141,7 +141,8 @@ namespace SS14.Client.Graphics.Drawing
 
             if (_renderHandle != null)
             {
-                _renderHandle.DrawTexture(texture, position, modulate, _handleId);
+                _renderHandle.DrawTextureRect(texture, position,
+                    position + (texture.Size / (float) EyeManager.PIXELSPERMETER), modulate, _handleId);
             }
             else if (Item != null)
             {
@@ -152,13 +153,17 @@ namespace SS14.Client.Graphics.Drawing
         public void DrawTextureRect(Texture texture, Box2 rect, bool tile, Color? modulate = null,
             bool transpose = false, Texture normalMap = null)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             CheckDisposed();
-            texture.GodotTexture.DrawRect(Item, ToPixelCoords(rect), tile, modulate?.Convert(), transpose, normalMap);
+            if (_renderHandle != null)
+            {
+                _renderHandle.DrawTextureRect(texture, rect.BottomLeft, rect.TopRight, modulate,
+                    _handleId);
+            }
+            else if (Item != null)
+            {
+                texture.GodotTexture.DrawRect(Item, ToPixelCoords(rect), tile, modulate?.Convert(), transpose,
+                    normalMap);
+            }
         }
 
         public void DrawRect(Box2 rect, Color color, bool filled = true)
@@ -279,7 +284,7 @@ namespace SS14.Client.Graphics.Drawing
             CheckDisposed();
             if (_renderHandle != null)
             {
-                _renderHandle.DrawTexture(texture, position, modulate, _handleId);
+                _renderHandle.DrawTextureRect(texture, position, position + texture.Size, modulate, _handleId);
             }
             else if (Item != null)
             {
@@ -290,13 +295,15 @@ namespace SS14.Client.Graphics.Drawing
         public void DrawTextureRect(Texture texture, UIBox2 rect, bool tile, Color? modulate = null,
             bool transpose = false, Texture normalMap = null)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             CheckDisposed();
-            texture.GodotTexture.DrawRect(Item, rect.Convert(), tile, modulate?.Convert(), transpose, normalMap);
+            if (_renderHandle != null)
+            {
+                _renderHandle.DrawTextureRect(texture, rect.TopLeft, rect.BottomRight, modulate, _handleId);
+            }
+            else if (Item != null)
+            {
+                texture.GodotTexture.DrawRect(Item, rect.Convert(), tile, modulate?.Convert(), transpose, normalMap);
+            }
         }
     }
 }

@@ -86,10 +86,11 @@ namespace SS14.Client.Graphics
                 projMatrixScreen = screenProj.ConvertOpenTK();
             }
 
+            GL.UniformMatrix3(Vertex2DUniformProjection, true, ref projMatrixScreen);
+            GL.UniformMatrix3(Vertex2DUniformView, true, ref viewMatrixScreen);
+
             if (_drawingSplash)
             {
-                GL.UniformMatrix3(Vertex2DUniformProjection, true, ref projMatrixScreen);
-                GL.UniformMatrix3(Vertex2DUniformView, true, ref viewMatrixScreen);
                 _displaySplash(renderHandle);
                 _flushRenderHandle(renderHandle);
                 _window.SwapBuffers();
@@ -275,13 +276,11 @@ namespace SS14.Client.Graphics
 
             // Use QuadVBO to render a single quad and modify the model matrix to position it where we need it.
             GL.BindVertexArray(QuadVAO.Handle);
-            Vector2 size;
             if (renderCommandTexture.SubRegion.HasValue)
             {
                 // If the texture is in an atlas we have to set modifyUV in the shader,
                 // so that the shader translated the quad VBO 0->1 tex coords to the sub region needed.
                 var subRegion = renderCommandTexture.SubRegion.Value;
-                size = subRegion.Size;
                 var (w, h) = loadedTexture.Size;
                 if (_currentSpace == CurrentSpace.ScreenSpace)
                 {
@@ -305,7 +304,6 @@ namespace SS14.Client.Graphics
             }
             else
             {
-                size = loadedTexture.Size;
                 if (_currentSpace == CurrentSpace.ScreenSpace)
                 {
                     // Flip Y texture coordinates to fix screen space flipping.
@@ -320,14 +318,9 @@ namespace SS14.Client.Graphics
             // Handle modulate or the lack thereof.
             GL.Uniform4(Vertex2DUniformModulate, renderCommandTexture.Modulate.ConvertOpenTK());
 
-            if (_currentSpace == CurrentSpace.WorldSpace)
-            {
-                size /= EyeManager.PIXELSPERMETER;
-            }
-
             var rectTransform = Matrix3.Identity;
-            (rectTransform.R0C0, rectTransform.R1C1) = size;
-            (rectTransform.R0C2, rectTransform.R1C2) = renderCommandTexture.Position;
+            (rectTransform.R0C0, rectTransform.R1C1) = renderCommandTexture.PositionB - renderCommandTexture.PositionA;
+            (rectTransform.R0C2, rectTransform.R1C2) = renderCommandTexture.PositionA;
             rectTransform.Multiply(ref modelMatrix);
             var oRectTransform = rectTransform.ConvertOpenTK();
 
@@ -393,12 +386,21 @@ namespace SS14.Client.Graphics
             ushort quadIndex = 0;
             foreach (var (command, transform) in BatchBuffer)
             {
-                var (w, h) = loadedTexture.Size / (float) EyeManager.PIXELSPERMETER;
-                var sr = command.SubRegion ?? new UIBox2(0, 0, 1, 1);
-                var bl = transform.Transform(command.Position);
-                var br = transform.Transform(command.Position + new Vector2(w, 0));
-                var tr = transform.Transform(command.Position + new Vector2(w, h));
-                var tl = transform.Transform(command.Position + new Vector2(0, h));
+                UIBox2 sr;
+                if (command.SubRegion.HasValue)
+                {
+                    var (w, h) = loadedTexture.Size;
+                    var csr = command.SubRegion.Value;
+                    sr = new UIBox2(csr.Left / w, csr.Top / h, csr.Right / w, csr.Bottom / h);
+                }
+                else
+                {
+                    sr = new UIBox2(0, 0, 1, 1);
+                }
+                var bl = transform.Transform(command.PositionA);
+                var br = transform.Transform(new Vector2(command.PositionB.X, command.PositionA.Y));
+                var tr = transform.Transform(command.PositionB);
+                var tl = transform.Transform(new Vector2(command.PositionA.X, command.PositionB.Y));
                 var vIdx = quadIndex * 4;
                 BatchVertexData[vIdx + 0] = new Vertex2D(bl, sr.BottomLeft);
                 BatchVertexData[vIdx + 1] = new Vertex2D(br, sr.BottomRight);
@@ -426,17 +428,23 @@ namespace SS14.Client.Graphics
 
             var identity = OpenTK.Matrix3.Identity;
 
+            // Bind atlas texture.
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
+            // Model matrix becomes identity since it's built into the batch mesh.
             GL.UniformMatrix3(Vertex2DUniformModel, false, ref identity);
+            // Reset ModUV to ensure it's identity and doesn't touch anything.
             GL.Uniform4(Vertex2DUniformModUV, new OpenTK.Vector4(0, 0, 1, 1));
+            // Set modulate.
             DebugTools.Assert(BatchingModulate.HasValue);
             GL.Uniform4(Vertex2DUniformModulate, BatchingModulate.Value.ConvertOpenTK());
+            // Enable primitive restart & do that draw.
             GL.Enable(EnableCap.PrimitiveRestart);
             GL.PrimitiveRestartIndex(ushort.MaxValue);
             GL.DrawElements(PrimitiveType.TriangleStrip, quadIndex * 5, DrawElementsType.UnsignedShort, 0);
             GL.Disable(EnableCap.PrimitiveRestart);
 
+            // Reset batch buffer.
             BatchBuffer.Clear();
             BatchingTexture = null;
             BatchingModulate = null;
@@ -494,7 +502,7 @@ namespace SS14.Client.Graphics
                 list.Commands.Add(command);
             }
 
-            public void DrawTexture(Texture texture, Vector2 position, Color? modulate, int handleId)
+            public void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color? modulate, int handleId)
             {
                 _assertNotDisposed();
 
@@ -514,14 +522,10 @@ namespace SS14.Client.Graphics
 
                 var list = _drawingHandles[handleId].Item2;
                 command.TextureId = ((OpenGLTexture) texture).OpenGLTextureId;
-                command.Position = position;
+                command.PositionA = a;
+                command.PositionB = b;
                 command.Modulate = modulate ?? Color.White;
                 list.Commands.Add(command);
-            }
-
-            public void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, int handleId)
-            {
-                throw new NotImplementedException();
             }
 
             public void Dispose()
@@ -557,7 +561,8 @@ namespace SS14.Client.Graphics
         private class RenderCommandTexture : RenderCommand
         {
             public int TextureId { get; set; }
-            public Vector2 Position { get; set; }
+            public Vector2 PositionA { get; set; }
+            public Vector2 PositionB { get; set; }
             public UIBox2? SubRegion { get; set; }
             public Color Modulate { get; set; }
         }
@@ -578,7 +583,6 @@ namespace SS14.Client.Graphics
         DrawingHandleScreen CreateHandleScreen();
 
         void SetModelTransform(ref Matrix3 matrix, int handleId);
-        void DrawTexture(Texture texture, Vector2 position, Color? modulate, int handleId);
-        void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, int handleId);
+        void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color? modulate, int handleId);
     }
 }

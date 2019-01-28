@@ -7,7 +7,6 @@ using OpenTK.Graphics.OpenGL;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
-using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using ObjectLabelIdentifier = OpenTK.Graphics.OpenGL4.ObjectLabelIdentifier;
@@ -69,6 +68,7 @@ namespace SS14.Client.Graphics
                 Width = image.Width,
                 Height = image.Height,
                 Name = name,
+                Type = LoadedTextureType.Texture2D
             };
 
             var id = ++_nextTextureId;
@@ -77,13 +77,75 @@ namespace SS14.Client.Graphics
             return new OpenGLTexture(id, image.Width, image.Height);
         }
 
+        public TextureArray LoadArrayFromImages<T>(ICollection<Image<T>> images, string name = null) where T : struct, IPixel<T>
+        {
+            DebugTools.Assert(images.Count != 0);
+            (int x, int y)? size = null;
+            foreach (var image in images)
+            {
+                if (size == null)
+                {
+                    size = (image.Width, image.Height);
+                }
+
+                if (size.Value.x != image.Width || size.Value.y != image.Height)
+                {
+                    throw new ArgumentException("All images must be of the same dimensions.", nameof(images));
+                }
+            }
+
+            var textureId = ++_nextTextureId;
+            var texture = new OGLHandle(GL.GenTexture());
+            GL.BindTexture(TextureTarget.Texture2DArray, texture.Handle);
+            _objectLabelMaybe(ObjectLabelIdentifier.Texture, texture, name);
+
+            DebugTools.Assert(size.HasValue);
+            var (width, height) = size.Value;
+            var index = 0;
+            var refTextureList = new List<OpenGLTexture>();
+            foreach (var image in images)
+            {
+                var span = ((Image<Rgba32>) (object) image).GetPixelSpan();
+                unsafe
+                {
+                    fixed (Rgba32* ptr = &MemoryMarshal.GetReference(span))
+                    {
+                        GL.TexImage3D(TextureTarget.Texture2DArray, 0, PixelInternalFormat.Rgba8, width, height, index, 0, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)ptr);
+                    }
+                }
+                index += 1;
+                refTextureList.Add(new OpenGLTexture(textureId, width, height, index));
+            }
+
+            var loaded = new LoadedTexture
+            {
+                OpenGLObject = texture,
+                Width = width,
+                Height = height,
+                ArrayDepth = images.Count,
+                Name = name,
+                Type = LoadedTextureType.Array2D
+            };
+
+            _loadedTextures.Add(textureId, loaded);
+            return new TextureArray(refTextureList.ToArray());
+        }
+
         private class LoadedTexture
         {
             public OGLHandle OpenGLObject;
+            public LoadedTextureType Type;
             public int Width;
             public int Height;
+            public int? ArrayDepth;
             public string Name;
             public Vector2i Size => new Vector2i(Width, Height);
+        }
+
+        private enum LoadedTextureType
+        {
+            Texture2D,
+            Array2D,
         }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using JetBrains.Annotations;
 using SixLabors.ImageSharp;
@@ -42,7 +44,7 @@ namespace SS14.Client.Graphics
         /// <param name="image">The image to load.</param>
         /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
         /// <typeparam name="T">The type of pixels of the image. At the moment, images must be <see cref="Rgba32"/>.</typeparam>
-        public static Texture LoadFromImage<T>(Image<T> image, string name=null) where T : struct, IPixel<T>
+        public static Texture LoadFromImage<T>(Image<T> image, string name = null) where T : struct, IPixel<T>
         {
             switch (GameController.Mode)
             {
@@ -88,7 +90,7 @@ namespace SS14.Client.Graphics
         /// </summary>
         /// <param name="stream">The stream to load the image from.</param>
         /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
-        public static Texture LoadFromPNGStream(Stream stream, string name=null)
+        public static Texture LoadFromPNGStream(Stream stream, string name = null)
         {
             switch (GameController.Mode)
             {
@@ -121,11 +123,46 @@ namespace SS14.Client.Graphics
             }
         }
 
+        public static TextureArray LoadArrayFromImages<T>(ICollection<Image<T>> images, string name = null)
+            where T : struct, IPixel<T>
+        {
+            if (GameController.Mode != GameController.DisplayMode.OpenGL)
+            {
+                throw new NotImplementedException();
+            }
+
+            var manager = IoCManager.Resolve<IDisplayManagerOpenGL>();
+            return manager.LoadArrayFromImages(images, name);
+        }
+
         Texture IDirectionalTextureProvider.Default => this;
 
         Texture IDirectionalTextureProvider.TextureFor(Direction dir)
         {
             return this;
+        }
+    }
+
+    public sealed class TextureArray : IReadOnlyList<Texture>
+    {
+        public Texture this[int index] => _subTextures[index];
+        private readonly OpenGLTexture[] _subTextures;
+
+        public int Count => _subTextures.Length;
+
+        internal TextureArray(OpenGLTexture[] subTextures)
+        {
+            _subTextures = subTextures;
+        }
+
+        public IEnumerator<Texture> GetEnumerator()
+        {
+            return ((IReadOnlyCollection<Texture>) _subTextures).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 
@@ -177,6 +214,7 @@ namespace SS14.Client.Graphics
         ///     Our sub region within our source, in pixel coordinates.
         /// </summary>
         public UIBox2 SubRegion { get; }
+
         public override int Width => (int) SubRegion.Width;
         public override int Height => (int) SubRegion.Height;
     }
@@ -185,6 +223,7 @@ namespace SS14.Client.Graphics
     {
         internal override Godot.Texture GodotTexture => null;
         internal int OpenGLTextureId { get; }
+        internal int ArrayIndex { get; }
 
         public override int Width { get; }
         public override int Height { get; }
@@ -194,6 +233,14 @@ namespace SS14.Client.Graphics
             OpenGLTextureId = id;
             Width = width;
             Height = height;
+        }
+
+        internal OpenGLTexture(int id, int width, int height, int arrayIndex)
+        {
+            OpenGLTextureId = id;
+            Width = width;
+            Height = height;
+            ArrayIndex = arrayIndex;
         }
     }
 

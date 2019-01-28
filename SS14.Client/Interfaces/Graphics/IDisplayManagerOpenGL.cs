@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -14,6 +15,9 @@ namespace SS14.Client.Interfaces.Graphics
 
         Texture LoadTextureFromPNGStream(Stream stream, string name=null);
         Texture LoadTextureFromImage<T>(Image<T> image, string name=null) where T : struct, IPixel<T>;
+        TextureArray LoadArrayFromImages<T>(ICollection<Image<T>> images, string name = null)
+            where T : struct, IPixel<T>;
+
         void Ready();
 
         /// <summary>

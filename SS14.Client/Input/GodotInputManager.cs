@@ -5,7 +5,7 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.Input
 {
-    public class GodotInputManager : InputManager
+    internal class GodotInputManager : InputManager
     {
         [Dependency]
         readonly ISceneTreeHolder sceneTree;

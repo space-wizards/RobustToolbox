@@ -18,7 +18,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.Input
 {
-    public class InputManager : IInputManager
+    internal class InputManager : IInputManager
     {
         public bool Enabled { get; set; } = true;
 

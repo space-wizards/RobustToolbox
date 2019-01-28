@@ -121,15 +121,6 @@ namespace SS14.Client
             IoCManager.Register<IUserInterfaceManagerInternal, UserInterfaceManager>();
             IoCManager.Register<IGameControllerProxy, GameControllerProxy>();
             IoCManager.Register<IGameControllerProxyInternal, GameControllerProxy>();
-            if (OnGodot)
-            {
-                IoCManager.Register<IInputManager, GodotInputManager>();
-            }
-            else
-            {
-                IoCManager.Register<IInputManager, InputManager>();
-            }
-
             IoCManager.Register<IDebugDrawing, DebugDrawing>();
             IoCManager.Register<IClientConsole, ClientChatConsole>();
             IoCManager.Register<IClientChatConsole, ClientChatConsole>();
@@ -138,13 +129,16 @@ namespace SS14.Client
             {
                 case DisplayMode.Headless:
                     IoCManager.Register<IDisplayManager, DisplayManagerHeadless>();
+                    IoCManager.Register<IInputManager, InputManager>();
                     break;
                 case DisplayMode.Godot:
                     IoCManager.Register<IDisplayManager, DisplayManagerGodot>();
+                    IoCManager.Register<IInputManager, GodotInputManager>();
                     break;
                 case DisplayMode.OpenGL:
                     IoCManager.Register<IDisplayManager, DisplayManagerOpenGL>();
                     IoCManager.Register<IDisplayManagerOpenGL, DisplayManagerOpenGL>();
+                    IoCManager.Register<IInputManager, OpenGLInputManager>();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

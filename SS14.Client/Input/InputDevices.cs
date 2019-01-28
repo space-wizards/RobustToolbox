@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using TKKey = OpenTK.Input.Key;
+using TKButton = OpenTK.Input.MouseButton;
 
 namespace SS14.Client.Input
 {
@@ -8,8 +9,6 @@ namespace SS14.Client.Input
     {
         public static bool IsButtonPressed(Button button) => GameController.OnGodot ? Godot.Input.IsMouseButtonPressed((int) button) : default;
 
-        // TODO: People will definitely want support for extra mouse buttons,
-        //         Godot doesn't seem to support this though.
         /// <summary>
         ///     Represents one of three mouse buttons.
         /// </summary>
@@ -18,6 +17,13 @@ namespace SS14.Client.Input
             Left = 1,
             Middle = 2,
             Right = 3,
+            Button4,
+            Button5,
+            Button6,
+            Button7,
+            Button8,
+            Button9,
+            LastButton,
         }
 
         /// <summary>
@@ -45,20 +51,43 @@ namespace SS14.Client.Input
             Right = 7,
         }
 
-        public static Keyboard.Key ConvertGodotMouseButton(Button button)
+        public static Keyboard.Key MouseButtonToKey(Button button)
         {
-            switch (button)
-            {
-                case Button.Left:
-                    return Keyboard.Key.MouseLeft;
-                case Button.Middle:
-                    return Keyboard.Key.MouseMiddle;
-                case Button.Right:
-                    return Keyboard.Key.MouseRight;
-                default:
-                    return Keyboard.Key.Unknown;
-            }
+            return _mouseKeyMap[button];
         }
+
+        public static Button ConvertOpenTKButton(OpenTK.Input.MouseButton button)
+        {
+            return _openTKButtonMap[button];
+        }
+
+        private static readonly Dictionary<Button, Keyboard.Key> _mouseKeyMap = new Dictionary<Button, Keyboard.Key>
+        {
+            {Button.Left, Keyboard.Key.MouseLeft},
+            {Button.Middle, Keyboard.Key.MouseLeft},
+            {Button.Right, Keyboard.Key.MouseLeft},
+            {Button.Button4, Keyboard.Key.MouseButton4},
+            {Button.Button5, Keyboard.Key.MouseButton5},
+            {Button.Button6, Keyboard.Key.MouseButton6},
+            {Button.Button7, Keyboard.Key.MouseButton7},
+            {Button.Button8, Keyboard.Key.MouseButton8},
+            {Button.Button9, Keyboard.Key.MouseButton9},
+            {Button.LastButton, Keyboard.Key.Unknown},
+        };
+
+        private static readonly Dictionary<TKButton, Button> _openTKButtonMap = new Dictionary<TKButton, Button>
+        {
+            {TKButton.Left, Button.Left},
+            {TKButton.Middle, Button.Middle},
+            {TKButton.Right, Button.Right},
+            {TKButton.Button4, Button.Button4},
+            {TKButton.Button5, Button.Button5},
+            {TKButton.Button6, Button.Button6},
+            {TKButton.Button7, Button.Button7},
+            {TKButton.Button8, Button.Button8},
+            {TKButton.Button9, Button.Button9},
+            {TKButton.LastButton, Button.LastButton},
+        };
     }
 
     public static class Keyboard
@@ -75,6 +104,10 @@ namespace SS14.Client.Input
             MouseMiddle,
             MouseButton4,
             MouseButton5,
+            MouseButton6,
+            MouseButton7,
+            MouseButton8,
+            MouseButton9,
             A,
             B,
             C,

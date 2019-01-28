@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Channels;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
@@ -92,6 +93,15 @@ namespace SS14.Client.Graphics
             _drawingSplash = false;
         }
 
+        public Vector2 MouseScreenPosition
+        {
+            get
+            {
+                var state = OpenTK.Input.Mouse.GetState();
+                return new Vector2(state.X, state.Y);
+            }
+        }
+
         public override void ReloadConfig()
         {
             base.ReloadConfig();
@@ -132,9 +142,36 @@ namespace SS14.Client.Graphics
                 _gameController.GameController.KeyDown((KeyEventArgs) eventArgs);
             };
 
-            _window.KeyUp += (sender, eventArgs) => { _gameController.GameController.KeyUp((KeyEventArgs) eventArgs); };
-            _window.Closed += (sender, eventArgs) => { _gameController.GameController.Shutdown("Window closed"); };
-            _window.Resize += (sender, eventArgs) => { GL.Viewport(0, 0, _window.Width, _window.Height); };
+            _window.KeyUp += (sender, eventArgs) =>
+            {
+                _gameController.GameController.KeyUp((KeyEventArgs) eventArgs);
+            };
+            _window.Closed += (sender, eventArgs) =>
+            {
+                _gameController.GameController.Shutdown("Window closed");
+            };
+            _window.Resize += (sender, eventArgs) =>
+            {
+                GL.Viewport(0, 0, _window.Width, _window.Height);
+            };
+            _window.MouseDown += (sender, eventArgs) =>
+            {
+                _gameController.GameController.KeyDown((KeyEventArgs)eventArgs);
+                _gameController.GameController.MouseDown((MouseButtonEventArgs) eventArgs);
+            };
+            _window.MouseUp += (sender, eventArgs) =>
+            {
+                _gameController.GameController.KeyUp((KeyEventArgs)eventArgs);
+                _gameController.GameController.MouseUp((MouseButtonEventArgs) eventArgs);
+            };
+            _window.MouseMove += (sender, eventArgs) =>
+            {
+                _gameController.GameController.MouseMove((MouseMoveEventArgs)eventArgs);
+            };
+            _window.MouseWheel += (sender, eventArgs) =>
+            {
+                _gameController.GameController.MouseWheel((MouseWheelEventArgs)eventArgs);
+            };
 
             _initOpenGL();
         }

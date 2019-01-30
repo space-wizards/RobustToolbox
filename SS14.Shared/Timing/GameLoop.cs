@@ -93,55 +93,78 @@ namespace SS14.Shared.Timing
 
                 realFrameEvent.SetDeltaSeconds((float)_timing.RealFrameTime.TotalSeconds);
 
-                try {
+                try
+                {
                     // process Net/KB/Mouse input
                     Input?.Invoke(this, realFrameEvent);
-
-                    _timing.InSimulation = true;
-
-                    // run the simulation for every accumulated tick
-                    while (accumulator >= _timing.TickPeriod)
-                    {
-                        accumulator -= _timing.TickPeriod;
-                        _lastTick += _timing.TickPeriod;
-
-                        // only run the simulation if unpaused, but still use up the accumulated time
-                        if (_timing.Paused)
-                            continue;
-
-                        // update the simulation
-                        simFrameEvent.SetDeltaSeconds((float)_timing.FrameTime.TotalSeconds);
-                        Tick?.Invoke(this, simFrameEvent);
-                        _timing.CurTick++;
-
-                        if (SingleStep)
-                            _timing.Paused = true;
-                    }
-
-                    // if not paused, save how close to the next tick we are so interpolation works
-                    if (!_timing.Paused)
-                        _timing.TickRemainder = accumulator;
-
-                    _timing.InSimulation = false;
-
-                    // update out of the simulation
-                    simFrameEvent.SetDeltaSeconds((float)_timing.FrameTime.TotalSeconds);
-                    Update?.Invoke(this, simFrameEvent);
-
-                    // render the simulation
-                    Render?.Invoke(this, realFrameEvent);
-
-                    // Set sleep to 1 if you want to be nice and give the rest of the timeslice up to the os scheduler.
-                    // Set sleep to 0 if you want to use 100% cpu, but still cooperate with the scheduler.
-                    // do not call sleep if you want to be 'that thread' and hog 100% cpu.
-                    if (SleepMode != SleepMode.None)
-                        Thread.Sleep((int)SleepMode);
                 }
                 catch (Exception exp)
                 {
                     IRuntimeLog runtimeLog = IoCManager.Resolve<IRuntimeLog>();
                     runtimeLog.AddException(exp, DateTime.Now);
                 }
+                _timing.InSimulation = true;
+
+                // run the simulation for every accumulated tick
+                while (accumulator >= _timing.TickPeriod)
+                {
+                    accumulator -= _timing.TickPeriod;
+                    _lastTick += _timing.TickPeriod;
+
+                    // only run the simulation if unpaused, but still use up the accumulated time
+                    if (_timing.Paused)
+                        continue;
+
+                    // update the simulation
+                    simFrameEvent.SetDeltaSeconds((float)_timing.FrameTime.TotalSeconds);
+                    try
+                    {
+                        Tick?.Invoke(this, simFrameEvent);
+                    }
+                    catch (Exception exp)
+                    {
+                        IRuntimeLog runtimeLog = IoCManager.Resolve<IRuntimeLog>();
+                        runtimeLog.AddException(exp, DateTime.Now);
+                    }
+                    _timing.CurTick++;
+
+                    if (SingleStep)
+                        _timing.Paused = true;
+                }
+
+                // if not paused, save how close to the next tick we are so interpolation works
+                if (!_timing.Paused)
+                    _timing.TickRemainder = accumulator;
+
+                _timing.InSimulation = false;
+
+                // update out of the simulation
+                simFrameEvent.SetDeltaSeconds((float)_timing.FrameTime.TotalSeconds);
+                try
+                {
+                    Update?.Invoke(this, simFrameEvent);
+                }
+                catch (Exception)
+                {
+
+                    throw;
+                }
+
+                // render the simulation
+                try
+                {
+                    Render?.Invoke(this, realFrameEvent);
+                }
+                catch (Exception exp)
+                {
+                    IRuntimeLog runtimeLog = IoCManager.Resolve<IRuntimeLog>();
+                    runtimeLog.AddException(exp, DateTime.Now);
+                }
+                // Set sleep to 1 if you want to be nice and give the rest of the timeslice up to the os scheduler.
+                // Set sleep to 0 if you want to use 100% cpu, but still cooperate with the scheduler.
+                // do not call sleep if you want to be 'that thread' and hog 100% cpu.
+                if (SleepMode != SleepMode.None)
+                    Thread.Sleep((int)SleepMode);
             }
         }
     }

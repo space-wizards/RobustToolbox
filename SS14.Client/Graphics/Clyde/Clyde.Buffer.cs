@@ -12,35 +12,33 @@ namespace SS14.Client.Graphics.Clyde
         /// </summary>
         private class Buffer
         {
+            private readonly Clyde _clyde;
             public BufferTarget Type { get; }
-            public int Size { get; }
+            public int Size { get; private set; }
             public int Handle { get; private set; }
+            public BufferUsageHint UsageHint { get; }
+            public string Name { get; }
 
-            public Buffer(BufferTarget type, BufferUsageHint usage, int size)
+            public Buffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, string name=null)
             {
+                _clyde = clyde;
                 Type = type;
-                Size = size;
+                Name = name;
+                UsageHint = usage;
 
                 Handle = GL.GenBuffer();
-                GL.BindBuffer(type, Handle);
-                GL.BufferData(type, size, IntPtr.Zero, usage);
             }
 
-            public Buffer(BufferTarget type, BufferUsageHint usage, Span<byte> initialize)
+            public Buffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, int size, string name=null)
+                : this(clyde, type, usage, name)
             {
-                Type = type;
-                Size = initialize.Length;
+                Reallocate(size);
+            }
 
-                Handle = GL.GenBuffer();
-                GL.BindBuffer(type, Handle);
-
-                unsafe
-                {
-                    fixed (byte* ptr = &MemoryMarshal.GetReference(MemoryMarshal.AsBytes(initialize)))
-                    {
-                        GL.BufferData(type, Size, (IntPtr)ptr, usage);
-                    }
-                }
+            public Buffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, Span<byte> initialize, string name=null)
+                : this(clyde, type, usage, name)
+            {
+                Reallocate(initialize);
             }
 
             public void Use()
@@ -60,33 +58,37 @@ namespace SS14.Client.Graphics.Clyde
             {
                 Use();
 
+                var byteSpan = MemoryMarshal.AsBytes(data);
+
                 unsafe
                 {
-                    fixed (T* ptr = data)
+                    fixed (byte* ptr = byteSpan)
                     {
-                        GL.BufferSubData(Type, (IntPtr)start, data.Length, (IntPtr)ptr);
+                        GL.BufferSubData(Type, (IntPtr)start, byteSpan.Length, (IntPtr)ptr);
                     }
                 }
             }
 
-            public void Reallocate<T>(Span<T> data, BufferUsageHint usageHint) where T : unmanaged
+            public void Reallocate<T>(Span<T> data) where T : unmanaged
             {
                 Use();
 
+                var byteSpan = MemoryMarshal.AsBytes(data);
+
                 unsafe
                 {
-                    fixed (T* ptr = data)
+                    fixed (byte* ptr = byteSpan)
                     {
-                        GL.BufferData(Type, data.Length, (IntPtr)ptr, usageHint);
+                        GL.BufferData(Type, byteSpan.Length, (IntPtr)ptr, UsageHint);
                     }
                 }
             }
 
-            public void Reallocate(int size, BufferUsageHint usageHint)
+            public void Reallocate(int size)
             {
                 Use();
 
-                GL.BufferData(Type, size, IntPtr.Zero, usageHint);
+                GL.BufferData(Type, size, IntPtr.Zero, UsageHint);
             }
         }
 
@@ -97,8 +99,8 @@ namespace SS14.Client.Graphics.Clyde
         /// </summary>
         private class Buffer<T> : Buffer where T : unmanaged
         {
-            public Buffer(BufferTarget type, BufferUsageHint usage, Span<T> initialize)
-                : base(type, usage, MemoryMarshal.AsBytes(initialize))
+            public Buffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, Span<T> initialize, string name=null)
+                : base(clyde, type, usage, MemoryMarshal.AsBytes(initialize), name)
             {
             }
         }

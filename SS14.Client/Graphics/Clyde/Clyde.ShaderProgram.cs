@@ -8,12 +8,25 @@ namespace SS14.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
+        /// <summary>
+        ///     This is an utility class. It does not check whether the OpenGL state machine is set up correctly.
+        ///     You've been warned:
+        ///     using things like <see cref="SetUniformTexture" /> if this buffer isn't bound WILL mess things up!
+        /// </summary>
         private class ShaderProgram
         {
             private readonly Dictionary<string, int> _uniformCache = new Dictionary<string, int>();
             private int _handle = -1;
             private Shader _fragmentShader;
             private Shader _vertexShader;
+            public string Name { get; }
+            private readonly Clyde _clyde;
+
+            public ShaderProgram(Clyde clyde, string name=null)
+            {
+                _clyde = clyde;
+                Name = name;
+            }
 
             public void Add(Shader shader)
             {
@@ -31,10 +44,14 @@ namespace SS14.Client.Graphics.Clyde
                 }
             }
 
-            public void Compile(bool deleteShaders=true)
+            public void Link()
             {
                 _uniformCache.Clear();
                 _handle = GL.CreateProgram();
+                if (Name != null)
+                {
+                    _clyde._objectLabelMaybe(ObjectLabelIdentifier.Program, _handle, Name);
+                }
 
                 if (_vertexShader != null)
                 {
@@ -51,17 +68,8 @@ namespace SS14.Client.Graphics.Clyde
                 GL.GetProgram(_handle, GetProgramParameterName.LinkStatus, out var compiled);
                 if (compiled != 1)
                 {
-                    throw new Exception(GL.GetProgramInfoLog(_handle));
+                    throw new ShaderCompilationException(GL.GetProgramInfoLog(_handle));
                 }
-
-                if (!deleteShaders)
-                {
-                    return;
-                }
-
-                // don't need the shaders anymore, they are compiled into the program
-                _vertexShader?.Delete();
-                _fragmentShader?.Delete();
             }
 
             public void Use()
@@ -101,9 +109,20 @@ namespace SS14.Client.Graphics.Clyde
                 return result;
             }
 
+            public void SetUniform(string uniformName, in Matrix3 matrix)
+            {
+                var uniformId = GetUniform(uniformName);
+                unsafe
+                {
+                    fixed (Matrix3* ptr = &matrix)
+                    {
+                        GL.UniformMatrix3(uniformId, 1, true, (float*)ptr);
+                    }
+                }
+            }
+
             public void SetUniform(string uniformName, in Matrix4 matrix)
             {
-                Use();
                 var uniformId = GetUniform(uniformName);
                 unsafe
                 {
@@ -116,7 +135,6 @@ namespace SS14.Client.Graphics.Clyde
 
             public void SetUniform(string uniformName, in Vector4 vector)
             {
-                Use();
                 var uniformId = GetUniform(uniformName);
                 unsafe
                 {
@@ -129,7 +147,6 @@ namespace SS14.Client.Graphics.Clyde
 
             public void SetUniform(string uniformName, in Color color)
             {
-                Use();
                 var uniformId = GetUniform(uniformName);
                 unsafe
                 {
@@ -142,7 +159,6 @@ namespace SS14.Client.Graphics.Clyde
 
             public void SetUniform(string uniformName, in Vector3 vector)
             {
-                Use();
                 var uniformId = GetUniform(uniformName);
                 unsafe
                 {
@@ -153,9 +169,20 @@ namespace SS14.Client.Graphics.Clyde
                 }
             }
 
+            public void SetUniform(string uniformName, in Vector2 vector)
+            {
+                var uniformId = GetUniform(uniformName);
+                unsafe
+                {
+                    fixed (Vector2* ptr = &vector)
+                    {
+                        GL.Uniform2(uniformId, 1, (float*)ptr);
+                    }
+                }
+            }
+
             public void SetUniformTexture(string uniformName, TextureUnit textureUnit)
             {
-                Use();
                 var uniformId = GetUniform(uniformName);
                 GL.Uniform1(uniformId, textureUnit - TextureUnit.Texture0);
             }

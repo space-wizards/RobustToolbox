@@ -65,7 +65,7 @@ namespace SS14.Client.Graphics.Clyde
             GL.ClearColor(0, 0, 0, 1);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
-            GL.UseProgram(Vertex2DProgram.Handle);
+            Vertex2DProgram.Use();
 
             _currentModelMatrix = Matrix3.Identity;
 
@@ -73,21 +73,18 @@ namespace SS14.Client.Graphics.Clyde
             var renderHandle = new RenderHandle(this);
             _currentSpace = CurrentSpace.ScreenSpace;
 
-            OpenTK.Matrix3 projMatrixScreen;
             // Screen view matrix is identity. Easy huh.
-            var viewMatrixScreen = OpenTK.Matrix3.Identity;
-            {
-                // Screen projection matrix.
-                var screenProj = Matrix3.Identity;
-                screenProj.R0C0 = 2f / _window.Width;
-                screenProj.R1C1 = -2f / _window.Height;
-                screenProj.R0C2 = -1;
-                screenProj.R1C2 = 1;
-                projMatrixScreen = screenProj.ConvertOpenTK();
-            }
+            var viewMatrixScreen = Matrix3.Identity;
 
-            GL.UniformMatrix3(Vertex2DUniformProjection, true, ref projMatrixScreen);
-            GL.UniformMatrix3(Vertex2DUniformView, true, ref viewMatrixScreen);
+            // Screen projection matrix.
+            var projMatrixScreen = Matrix3.Identity;
+            projMatrixScreen.R0C0 = 2f / _window.Width;
+            projMatrixScreen.R1C1 = -2f / _window.Height;
+            projMatrixScreen.R0C2 = -1;
+            projMatrixScreen.R1C2 = 1;
+
+            Vertex2DProgram.SetUniform(UniProjMatrix, projMatrixScreen);
+            Vertex2DProgram.SetUniform(UniViewMatrix, viewMatrixScreen);
 
             if (_drawingSplash)
             {
@@ -99,35 +96,24 @@ namespace SS14.Client.Graphics.Clyde
 
             var eye = _eyeManager.CurrentEye;
 
-            OpenTK.Matrix3 projMatrixWorld;
-            OpenTK.Matrix3 viewMatrixWorld;
-            {
-                // World projection matrix.
-                var worldProj = Matrix3.Identity;
-                worldProj.R0C0 = EyeManager.PIXELSPERMETER * 2f / _window.Width;
-                worldProj.R1C1 = EyeManager.PIXELSPERMETER * 2f / _window.Height;
-                projMatrixWorld = worldProj.ConvertOpenTK();
+            // World projection matrix.
+            var projMatrixWorld = Matrix3.Identity;
+            projMatrixWorld.R0C0 = EyeManager.PIXELSPERMETER * 2f / _window.Width;
+            projMatrixWorld.R1C1 = EyeManager.PIXELSPERMETER * 2f / _window.Height;
 
-                // World view matrix.
-                var worldView = Matrix3.Identity;
-                worldView.R0C0 = 1 / eye.Zoom.X;
-                worldView.R1C1 = 1 / eye.Zoom.Y;
-                worldView.R0C2 = -eye.Position.X / eye.Zoom.X;
-                worldView.R1C2 = -eye.Position.Y / eye.Zoom.Y;
-                viewMatrixWorld = worldView.ConvertOpenTK();
-            }
+            // World view matrix.
+            var viewMatrixWorld = Matrix3.Identity;
+            viewMatrixWorld.R0C0 = 1 / eye.Zoom.X;
+            viewMatrixWorld.R1C1 = 1 / eye.Zoom.Y;
+            viewMatrixWorld.R0C2 = -eye.Position.X / eye.Zoom.X;
+            viewMatrixWorld.R1C2 = -eye.Position.Y / eye.Zoom.Y;
 
             // Render ScreenSpaceBelowWorld overlays.
+            foreach (var overlay in _overlayManager.AllOverlays
+                .Where(o => o.Space == OverlaySpace.ScreenSpaceBelowWorld)
+                .OrderBy(o => o.ZIndex))
             {
-                // Switch matrices to screen space.
-                GL.UniformMatrix3(Vertex2DUniformView, true, ref viewMatrixScreen);
-                GL.UniformMatrix3(Vertex2DUniformProjection, true, ref projMatrixScreen);
-                foreach (var overlay in _overlayManager.AllOverlays
-                    .Where(o => o.Space == OverlaySpace.ScreenSpaceBelowWorld)
-                    .OrderBy(o => o.ZIndex))
-                {
-                    overlay.OpenGLRender(renderHandle);
-                }
+                overlay.OpenGLRender(renderHandle);
             }
 
             _flushRenderHandle(renderHandle);
@@ -143,8 +129,8 @@ namespace SS14.Client.Graphics.Clyde
 
             GL.BindVertexArray(BatchVAO.Handle);
 
-            GL.UniformMatrix3(Vertex2DUniformView, true, ref viewMatrixWorld);
-            GL.UniformMatrix3(Vertex2DUniformProjection, true, ref projMatrixWorld);
+            Vertex2DProgram.SetUniform(UniViewMatrix, viewMatrixWorld);
+            Vertex2DProgram.SetUniform(UniProjMatrix, projMatrixWorld);
 
             GL.Enable(EnableCap.PrimitiveRestart);
             GL.PrimitiveRestartIndex(ushort.MaxValue);
@@ -152,11 +138,10 @@ namespace SS14.Client.Graphics.Clyde
             foreach (var grid in _mapManager.GetMap(map).GetAllGrids())
             {
                 ushort nth = 0;
-                var matrix = Matrix3.Identity;
-                matrix.R0C2 = grid.WorldPosition.X;
-                matrix.R1C2 = grid.WorldPosition.Y;
-                var oModelMatrix = matrix.ConvertOpenTK();
-                GL.UniformMatrix3(Vertex2DUniformModel, true, ref oModelMatrix);
+                var model = Matrix3.Identity;
+                model.R0C2 = grid.WorldPosition.X;
+                model.R1C2 = grid.WorldPosition.Y;
+                Vertex2DProgram.SetUniform(UniModelMatrix, model);
 
                 foreach (var tileRef in grid.GetAllTiles())
                 {
@@ -185,6 +170,7 @@ namespace SS14.Client.Graphics.Clyde
                     continue;
                 }
 
+                BatchVBO.Use();
                 BatchVBO.WriteSubData(0, new Span<Vertex2D>(BatchVertexData, 0, nth*4));
                 BatchEBO.WriteSubData(0, new Span<ushort>(BatchIndexData, 0, nth*5));
 
@@ -284,21 +270,21 @@ namespace SS14.Client.Graphics.Clyde
                 if (_currentSpace == CurrentSpace.ScreenSpace)
                 {
                     // Flip Y texture coordinates to fix screen space flipping.
-                    var vec = new OpenTK.Vector4(
+                    var vec = new Vector4(
                         subRegion.Left / w,
                         subRegion.Bottom / h,
                         subRegion.Right / w,
                         subRegion.Top / h);
-                    GL.Uniform4(Vertex2DUniformModUV, vec);
+                    Vertex2DProgram.SetUniform(UniModUV, vec);
                 }
                 else
                 {
-                    var vec = new OpenTK.Vector4(
+                    var vec = new Vector4(
                         subRegion.Left / w,
                         subRegion.Top / h,
                         subRegion.Right / w,
                         subRegion.Bottom / h);
-                    GL.Uniform4(Vertex2DUniformModUV, vec);
+                    Vertex2DProgram.SetUniform(UniModUV, vec);
                 }
             }
             else
@@ -306,24 +292,23 @@ namespace SS14.Client.Graphics.Clyde
                 if (_currentSpace == CurrentSpace.ScreenSpace)
                 {
                     // Flip Y texture coordinates to fix screen space flipping.
-                    GL.Uniform4(Vertex2DUniformModUV, new OpenTK.Vector4(0, 1, 1, 0));
+                    Vertex2DProgram.SetUniform(UniModUV, new Vector4(0, 1, 1, 0));
                 }
                 else
                 {
-                    GL.Uniform4(Vertex2DUniformModUV, new OpenTK.Vector4(0, 0, 1, 1));
+                    Vertex2DProgram.SetUniform(UniModUV, new Vector4(0, 0, 1, 1));
                 }
             }
 
-            // Handle modulate or the lack thereof.
-            GL.Uniform4(Vertex2DUniformModulate, renderCommandTexture.Modulate.ConvertOpenTK());
+            // Handle modulate.
+            Vertex2DProgram.SetUniform(UniModulate, renderCommandTexture.Modulate);
 
             var rectTransform = Matrix3.Identity;
             (rectTransform.R0C0, rectTransform.R1C1) = renderCommandTexture.PositionB - renderCommandTexture.PositionA;
             (rectTransform.R0C2, rectTransform.R1C2) = renderCommandTexture.PositionA;
             rectTransform.Multiply(ref modelMatrix);
-            var oRectTransform = rectTransform.ConvertOpenTK();
+            Vertex2DProgram.SetUniform(UniModelMatrix, rectTransform);
 
-            GL.UniformMatrix3(Vertex2DUniformModel, true, ref oRectTransform);
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
             GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
@@ -430,12 +415,12 @@ namespace SS14.Client.Graphics.Clyde
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
             // Model matrix becomes identity since it's built into the batch mesh.
-            GL.UniformMatrix3(Vertex2DUniformModel, false, ref identity);
+            Vertex2DProgram.SetUniform(UniModelMatrix, Matrix3.Identity);
             // Reset ModUV to ensure it's identity and doesn't touch anything.
-            GL.Uniform4(Vertex2DUniformModUV, new OpenTK.Vector4(0, 0, 1, 1));
+            Vertex2DProgram.SetUniform(UniModUV, new Vector4(0, 0, 1, 1));
             // Set modulate.
             DebugTools.Assert(BatchingModulate.HasValue);
-            GL.Uniform4(Vertex2DUniformModulate, BatchingModulate.Value.ConvertOpenTK());
+            Vertex2DProgram.SetUniform(UniModulate, BatchingModulate.Value);
             // Enable primitive restart & do that draw.
             GL.Enable(EnableCap.PrimitiveRestart);
             GL.PrimitiveRestartIndex(ushort.MaxValue);

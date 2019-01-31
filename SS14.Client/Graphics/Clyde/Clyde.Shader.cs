@@ -6,9 +6,16 @@ namespace SS14.Client.Graphics.Clyde
     {
         private class Shader
         {
-            public Shader(ShaderType type, string shaderSource)
+            private readonly Clyde _clyde;
+
+            public Shader(Clyde clyde, ShaderType type, string shaderSource, string name=null)
             {
+                _clyde = clyde;
                 Compile(type, shaderSource);
+                if (name != null)
+                {
+                    _clyde._objectLabelMaybe(ObjectLabelIdentifier.Shader, Handle, name);
+                }
             }
 
             public int Handle { get; private set; } = -1;
@@ -31,6 +38,10 @@ namespace SS14.Client.Graphics.Clyde
 
             public void Delete()
             {
+                if (Handle == -1)
+                {
+                    return;
+                }
                 GL.DeleteShader(Handle);
                 Handle = -1;
             }

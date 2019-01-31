@@ -50,15 +50,13 @@ namespace SS14.Client.Graphics.Clyde
         private Buffer QuadVBO;
         private OGLHandle QuadVAO;
 
-        private OGLHandle Vertex2DProgram;
+        private ShaderProgram Vertex2DProgram;
 
-        // Locations of a few uniforms in the above program.
-        private int Vertex2DUniformModel;
-        private int Vertex2DUniformView;
-        private int Vertex2DUniformModUV;
-        private int Vertex2DUniformProjection;
-
-        private int Vertex2DUniformModulate;
+        private const string UniModUV = "modifyUV";
+        private const string UniViewMatrix = "viewMatrix";
+        private const string UniProjMatrix = "projectionMatrix";
+        private const string UniModelMatrix = "modelMatrix";
+        private const string UniModulate = "modulate";
 
         // Thread the window is instantiated on.
         // OpenGL is allergic to multi threading so we need to check this.
@@ -118,7 +116,7 @@ namespace SS14.Client.Graphics.Clyde
                 GameWindowFlags.Default,
                 DisplayDevice.Default,
                 4, 1,
-#if DEBUG
+#if !DEBUG
                 GraphicsContextFlags.Debug | GraphicsContextFlags.ForwardCompatible
 #else
                 GraphicsContextFlags.ForwardCompatible
@@ -140,35 +138,26 @@ namespace SS14.Client.Graphics.Clyde
                 _gameController.GameController.KeyDown((KeyEventArgs) eventArgs);
             };
 
-            _window.KeyUp += (sender, eventArgs) =>
-            {
-                _gameController.GameController.KeyUp((KeyEventArgs) eventArgs);
-            };
-            _window.Closed += (sender, eventArgs) =>
-            {
-                _gameController.GameController.Shutdown("Window closed");
-            };
-            _window.Resize += (sender, eventArgs) =>
-            {
-                GL.Viewport(0, 0, _window.Width, _window.Height);
-            };
+            _window.KeyUp += (sender, eventArgs) => { _gameController.GameController.KeyUp((KeyEventArgs) eventArgs); };
+            _window.Closed += (sender, eventArgs) => { _gameController.GameController.Shutdown("Window closed"); };
+            _window.Resize += (sender, eventArgs) => { GL.Viewport(0, 0, _window.Width, _window.Height); };
             _window.MouseDown += (sender, eventArgs) =>
             {
-                _gameController.GameController.KeyDown((KeyEventArgs)eventArgs);
+                _gameController.GameController.KeyDown((KeyEventArgs) eventArgs);
                 _gameController.GameController.MouseDown((MouseButtonEventArgs) eventArgs);
             };
             _window.MouseUp += (sender, eventArgs) =>
             {
-                _gameController.GameController.KeyUp((KeyEventArgs)eventArgs);
+                _gameController.GameController.KeyUp((KeyEventArgs) eventArgs);
                 _gameController.GameController.MouseUp((MouseButtonEventArgs) eventArgs);
             };
             _window.MouseMove += (sender, eventArgs) =>
             {
-                _gameController.GameController.MouseMove((MouseMoveEventArgs)eventArgs);
+                _gameController.GameController.MouseMove((MouseMoveEventArgs) eventArgs);
             };
             _window.MouseWheel += (sender, eventArgs) =>
             {
-                _gameController.GameController.MouseWheel((MouseWheelEventArgs)eventArgs);
+                _gameController.GameController.MouseWheel((MouseWheelEventArgs) eventArgs);
             };
 
             _initOpenGL();
@@ -190,15 +179,8 @@ namespace SS14.Client.Graphics.Clyde
 
             Vertex2DProgram = _compileProgram(
                 new ResourcePath("/Shaders/Internal/sprite.vert"),
-                new ResourcePath("/Shaders/Internal/sprite.frag"));
-
-            _objectLabelMaybe(ObjectLabelIdentifier.Program, Vertex2DProgram, "Vertex2DProgram");
-
-            Vertex2DUniformModel = GL.GetUniformLocation(Vertex2DProgram.Handle, "modelMatrix");
-            Vertex2DUniformView = GL.GetUniformLocation(Vertex2DProgram.Handle, "viewMatrix");
-            Vertex2DUniformProjection = GL.GetUniformLocation(Vertex2DProgram.Handle, "projectionMatrix");
-            Vertex2DUniformModUV = GL.GetUniformLocation(Vertex2DProgram.Handle, "modifyUV");
-            Vertex2DUniformModulate = GL.GetUniformLocation(Vertex2DProgram.Handle, "modulate");
+                new ResourcePath("/Shaders/Internal/sprite.frag"),
+                "Vertex2DProgram");
 
             var quadVertices = new[]
             {
@@ -208,7 +190,8 @@ namespace SS14.Client.Graphics.Clyde
                 new Vertex2D(0, 1, 0, 0),
             };
 
-            QuadVBO = new Buffer<Vertex2D>(this, BufferTarget.ArrayBuffer, BufferUsageHint.StaticDraw, quadVertices, "QuadVBO");
+            QuadVBO = new Buffer<Vertex2D>(this, BufferTarget.ArrayBuffer, BufferUsageHint.StaticDraw, quadVertices,
+                "QuadVBO");
 
             QuadVAO = new OGLHandle(GL.GenVertexArray());
             GL.BindVertexArray(QuadVAO.Handle);
@@ -218,7 +201,8 @@ namespace SS14.Client.Graphics.Clyde
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
             GL.EnableVertexAttribArray(1);
 
-            BatchVBO = new Buffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw, Vertex2D.SizeOf * BatchVertexData.Length, "BatchVBO");
+            BatchVBO = new Buffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
+                Vertex2D.SizeOf * BatchVertexData.Length, "BatchVBO");
 
             BatchVAO = new OGLHandle(GL.GenVertexArray());
             GL.BindVertexArray(BatchVAO.Handle);
@@ -228,7 +212,8 @@ namespace SS14.Client.Graphics.Clyde
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
             GL.EnableVertexAttribArray(1);
 
-            BatchEBO = new Buffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw, sizeof(ushort) * BatchIndexData.Length, "BatchEBO");
+            BatchEBO = new Buffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
+                sizeof(ushort) * BatchIndexData.Length, "BatchEBO");
 
             _drawingSplash = true;
             Render(null);
@@ -263,7 +248,7 @@ namespace SS14.Client.Graphics.Clyde
             d(_debugMessageCallbackInstance, new IntPtr(0x3005));
         }
 
-        private OGLHandle _compileProgram(ResourcePath vertex, ResourcePath fragment)
+        private ShaderProgram _compileProgram(ResourcePath vertex, ResourcePath fragment, string name = null)
         {
             string vertexSource;
             string fragmentSource;
@@ -278,63 +263,53 @@ namespace SS14.Client.Graphics.Clyde
                 fragmentSource = fragmentReader.ReadToEnd();
             }
 
-            var vertexShader = GL.CreateShader(ShaderType.VertexShader);
-            _objectLabelMaybe(ObjectLabelIdentifier.Shader, new OGLHandle(vertexShader), vertex.ToString());
+            Shader vertexShader = null;
+            Shader fragmentShader = null;
 
             try
             {
-                GL.ShaderSource(vertexShader, vertexSource);
-                GL.CompileShader(vertexShader);
-
-                GL.GetShader(vertexShader, ShaderParameter.CompileStatus, out var status);
-                if (status == 0)
+                try
                 {
-                    var log = GL.GetShaderInfoLog(vertexShader);
-
-                    throw new ShaderCompilationException($"Vertex shader {vertex} failed to compile:\n{log}");
+                    vertexShader = new Shader(this, ShaderType.VertexShader, vertexSource, vertex.ToString());
                 }
-
-                var fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
-                _objectLabelMaybe(ObjectLabelIdentifier.Shader, new OGLHandle(fragmentShader), fragment.ToString());
+                catch (ShaderCompilationException e)
+                {
+                    throw new ShaderCompilationException(
+                        $"Failed to compile vertex shader {vertex}, see inner for details.", e);
+                }
 
                 try
                 {
-                    GL.ShaderSource(fragmentShader, fragmentSource);
-                    GL.CompileShader(fragmentShader);
-
-                    GL.GetShader(fragmentShader, ShaderParameter.CompileStatus, out status);
-                    if (status == 0)
-                    {
-                        var log = GL.GetShaderInfoLog(fragmentShader);
-
-                        throw new ShaderCompilationException($"Fragment shader {fragment} failed to compile:\n{log}");
-                    }
-
-                    var program = GL.CreateProgram();
-
-                    GL.AttachShader(program, vertexShader);
-                    GL.AttachShader(program, fragmentShader);
-                    GL.LinkProgram(program);
-
-                    GL.GetProgram(program, GetProgramParameterName.LinkStatus, out status);
-                    if (status == 0)
-                    {
-                        var log = GL.GetProgramInfoLog(program);
-                        GL.DeleteProgram(program);
-
-                        throw new ShaderCompilationException($"program {vertex},{fragment} failed to link:\n{log}");
-                    }
-
-                    return new OGLHandle(program);
+                    fragmentShader = new Shader(this, ShaderType.FragmentShader, fragmentSource, fragment.ToString());
                 }
-                finally
+                catch (ShaderCompilationException e)
                 {
-                    GL.DeleteShader(fragmentShader);
+                    throw new ShaderCompilationException(
+                        $"Failed to compile fragment shader {fragment}, see inner for details.", e);
                 }
+
+                var program = new ShaderProgram(this, name);
+                program.Add(vertexShader);
+                program.Add(fragmentShader);
+
+                try
+                {
+                    program.Link();
+                }
+                catch (ShaderCompilationException e)
+                {
+                    program.Delete();
+
+                    throw new ShaderCompilationException(
+                        $"Failed to link shaders. vert: {vertex}, frag: {fragment}, see inner for details.", e);
+                }
+
+                return program;
             }
             finally
             {
-                GL.DeleteShader(vertexShader);
+                vertexShader?.Delete();
+                fragmentShader?.Delete();
             }
         }
 
@@ -386,14 +361,22 @@ namespace SS14.Client.Graphics.Clyde
         }
 
         [Conditional("DEBUG")]
-        private void _objectLabelMaybe(ObjectLabelIdentifier identifier, OGLHandle name, string label)
+        private void _objectLabelMaybe(ObjectLabelIdentifier identifier, int name, string label)
         {
+            DebugTools.Assert(label != null);
+
             if (!HasKHRDebug)
             {
                 return;
             }
 
-            GL.ObjectLabel(identifier, name.Handle, label.Length, label);
+            GL.ObjectLabel(identifier, name, label.Length, label);
+        }
+
+        [Conditional("DEBUG")]
+        private void _objectLabelMaybe(ObjectLabelIdentifier identifier, OGLHandle name, string label)
+        {
+            _objectLabelMaybe(identifier, name.Handle, label);
         }
 
         public void Dispose()

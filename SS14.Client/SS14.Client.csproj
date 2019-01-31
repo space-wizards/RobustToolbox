@@ -17,7 +17,7 @@
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
     <NoWarn>0649</NoWarn>
-    <LangVersion>7.2</LangVersion>
+    <LangVersion>7.3</LangVersion>
     <Godot>true</Godot>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -131,9 +131,12 @@
     <Compile Include="Console\Commands\Debug.cs" />
     <Compile Include="GameStates\ClientGameStateManager.cs" />
     <Compile Include="Graphics\CanvasLayers.cs" />
+    <Compile Include="Graphics\Clyde\Clyde.Buffer.cs" />
     <Compile Include="Graphics\Clyde\Clyde.cs" />
     <Compile Include="Graphics\Clyde\Clyde.Pool.cs" />
     <Compile Include="Graphics\Clyde\Clyde.Rendering.cs" />
+    <Compile Include="Graphics\Clyde\Clyde.Shader.cs" />
+    <Compile Include="Graphics\Clyde\Clyde.ShaderProgram.cs" />
     <Compile Include="Graphics\Clyde\Clyde.Textures.cs" />
     <Compile Include="Graphics\DisplayManagerGodot.cs" />
     <Compile Include="Graphics\DisplayManagerHeadless.cs" />

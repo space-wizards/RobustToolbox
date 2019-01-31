@@ -185,9 +185,8 @@ namespace SS14.Client.Graphics.Clyde
                     continue;
                 }
 
-                GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, nth * 4 * Vertex2D.SizeOf, BatchVertexData);
-                GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, nth * sizeof(ushort) * 5,
-                    BatchIndexData);
+                BatchVBO.WriteSubData(0, new Span<Vertex2D>(BatchVertexData, 0, nth*4));
+                BatchEBO.WriteSubData(0, new Span<ushort>(BatchIndexData, 0, nth*5));
 
                 GL.DrawElements(PrimitiveType.TriangleStrip, nth * 5, DrawElementsType.UnsignedShort, 0);
             }
@@ -422,9 +421,8 @@ namespace SS14.Client.Graphics.Clyde
             }
 
             GL.BindVertexArray(BatchVAO.Handle);
-            GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, quadIndex * 4 * Vertex2D.SizeOf, BatchVertexData);
-            GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, quadIndex * sizeof(ushort) * 5,
-                BatchIndexData);
+            BatchVBO.WriteSubData(0, new Span<Vertex2D>(BatchVertexData, 0, quadIndex * 4));
+            BatchEBO.WriteSubData(0, new Span<ushort>(BatchIndexData, 0, quadIndex * 5));
 
             var identity = OpenTK.Matrix3.Identity;
 

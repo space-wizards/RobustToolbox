@@ -42,12 +42,12 @@ namespace SS14.Client.Graphics.Clyde
 
         private GameWindow _window;
 
-        private OGLHandle BatchVBO;
-        private OGLHandle BatchEBO;
+        private Buffer BatchVBO;
+        private Buffer BatchEBO;
         private OGLHandle BatchVAO;
 
         // VBO to draw a single quad.
-        private OGLHandle QuadVBO;
+        private Buffer QuadVBO;
         private OGLHandle QuadVAO;
 
         private OGLHandle Vertex2DProgram;
@@ -68,7 +68,7 @@ namespace SS14.Client.Graphics.Clyde
         public override Vector2i ScreenSize => new Vector2i(_window.Width, _window.Height);
         private readonly HashSet<string> OpenGLExtensions = new HashSet<string>();
 
-        private bool HasKHRDebug => HasExtension("GL_KHR_debug");
+        public bool HasKHRDebug => HasExtension("GL_KHR_debug");
 
         public override void SetWindowTitle(string title)
         {
@@ -208,10 +208,7 @@ namespace SS14.Client.Graphics.Clyde
                 new Vertex2D(0, 1, 0, 0),
             };
 
-            QuadVBO = new OGLHandle(GL.GenBuffer());
-            GL.BindBuffer(BufferTarget.ArrayBuffer, QuadVBO.Handle);
-            _objectLabelMaybe(ObjectLabelIdentifier.Buffer, QuadVBO, "QuadVBO");
-            GL.BufferData(BufferTarget.ArrayBuffer, quadVertices.Length * Vertex2D.SizeOf, quadVertices, BufferUsageHint.StaticDraw);
+            QuadVBO = new Buffer<Vertex2D>(this, BufferTarget.ArrayBuffer, BufferUsageHint.StaticDraw, quadVertices, "QuadVBO");
 
             QuadVAO = new OGLHandle(GL.GenVertexArray());
             GL.BindVertexArray(QuadVAO.Handle);
@@ -221,11 +218,7 @@ namespace SS14.Client.Graphics.Clyde
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
             GL.EnableVertexAttribArray(1);
 
-            BatchVBO = new OGLHandle(GL.GenBuffer());
-            GL.BindBuffer(BufferTarget.ArrayBuffer, BatchVBO.Handle);
-            _objectLabelMaybe(ObjectLabelIdentifier.Buffer, BatchVBO, "BatchVBO");
-            GL.BufferData(BufferTarget.ArrayBuffer, Vertex2D.SizeOf * BatchVertexData.Length, IntPtr.Zero,
-                BufferUsageHint.DynamicDraw);
+            BatchVBO = new Buffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw, Vertex2D.SizeOf * BatchVertexData.Length, "BatchVBO");
 
             BatchVAO = new OGLHandle(GL.GenVertexArray());
             GL.BindVertexArray(BatchVAO.Handle);
@@ -235,11 +228,7 @@ namespace SS14.Client.Graphics.Clyde
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
             GL.EnableVertexAttribArray(1);
 
-            BatchEBO = new OGLHandle(GL.GenBuffer());
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, BatchEBO.Handle);
-            _objectLabelMaybe(ObjectLabelIdentifier.Buffer, BatchEBO, "BatchEBO");
-            GL.BufferData(BufferTarget.ElementArrayBuffer, sizeof(ushort) * BatchIndexData.Length, IntPtr.Zero,
-                BufferUsageHint.DynamicDraw);
+            BatchEBO = new Buffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw, sizeof(ushort) * BatchIndexData.Length, "BatchEBO");
 
             _drawingSplash = true;
             Render(null);

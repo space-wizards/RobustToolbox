@@ -8,7 +8,6 @@ using SS14.Client.Graphics.Drawing;
 using SS14.Client.Graphics.Overlays;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
-using SS14.Client.Utility;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
@@ -83,8 +82,10 @@ namespace SS14.Client.Graphics.Clyde
             projMatrixScreen.R0C2 = -1;
             projMatrixScreen.R1C2 = 1;
 
-            Vertex2DProgram.SetUniform(UniProjMatrix, projMatrixScreen);
-            Vertex2DProgram.SetUniform(UniViewMatrix, viewMatrixScreen);
+            var combinedMatricesScreen = new ProjViewMatrices(projMatrixScreen, viewMatrixScreen);
+
+            ProjViewUBO.Use();
+            ProjViewUBO.Reallocate(combinedMatricesScreen);
 
             if (_drawingSplash)
             {
@@ -108,6 +109,8 @@ namespace SS14.Client.Graphics.Clyde
             viewMatrixWorld.R0C2 = -eye.Position.X / eye.Zoom.X;
             viewMatrixWorld.R1C2 = -eye.Position.Y / eye.Zoom.Y;
 
+            var combinedMatricesWorld = new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
+
             // Render ScreenSpaceBelowWorld overlays.
             foreach (var overlay in _overlayManager.AllOverlays
                 .Where(o => o.Space == OverlaySpace.ScreenSpaceBelowWorld)
@@ -129,8 +132,8 @@ namespace SS14.Client.Graphics.Clyde
 
             GL.BindVertexArray(BatchVAO.Handle);
 
-            Vertex2DProgram.SetUniform(UniViewMatrix, viewMatrixWorld);
-            Vertex2DProgram.SetUniform(UniProjMatrix, projMatrixWorld);
+            ProjViewUBO.Use();
+            ProjViewUBO.Reallocate(combinedMatricesWorld);
 
             GL.Enable(EnableCap.PrimitiveRestart);
             GL.PrimitiveRestartIndex(ushort.MaxValue);
@@ -408,8 +411,6 @@ namespace SS14.Client.Graphics.Clyde
             GL.BindVertexArray(BatchVAO.Handle);
             BatchVBO.WriteSubData(0, new Span<Vertex2D>(BatchVertexData, 0, quadIndex * 4));
             BatchEBO.WriteSubData(0, new Span<ushort>(BatchIndexData, 0, quadIndex * 5));
-
-            var identity = OpenTK.Matrix3.Identity;
 
             // Bind atlas texture.
             GL.ActiveTexture(TextureUnit.Texture0);

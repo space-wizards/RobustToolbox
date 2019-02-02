@@ -30,12 +30,12 @@ namespace SS14.Client.Graphics.Clyde
                 UsageHint = usage;
 
                 Handle = GL.GenBuffer();
+                Use();
+
                 if (name != null)
                 {
                     _clyde._objectLabelMaybe(ObjectLabelIdentifier.Buffer, Handle, name);
                 }
-
-                Use();
             }
 
             public Buffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, int size, string name = null)
@@ -86,6 +86,17 @@ namespace SS14.Client.Graphics.Clyde
                     fixed (byte* ptr = byteSpan)
                     {
                         GL.BufferData(Type, byteSpan.Length, (IntPtr) ptr, UsageHint);
+                    }
+                }
+            }
+
+            public void Reallocate<T>(in T data) where T : unmanaged
+            {
+                unsafe
+                {
+                    fixed (T* ptr = &data)
+                    {
+                        GL.BufferData(Type, sizeof(T), (IntPtr)ptr, UsageHint);
                     }
                 }
             }

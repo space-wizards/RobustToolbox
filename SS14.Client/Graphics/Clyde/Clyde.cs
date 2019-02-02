@@ -24,7 +24,10 @@ using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
+using Matrix3 = SS14.Shared.Maths.Matrix3;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using Vector3 = SS14.Shared.Maths.Vector3;
+using Vector4 = SS14.Shared.Maths.Vector4;
 
 namespace SS14.Client.Graphics.Clyde
 {
@@ -42,6 +45,9 @@ namespace SS14.Client.Graphics.Clyde
 
         private GameWindow _window;
 
+        private const int ProjViewBindingIndex = 0;
+        private Buffer ProjViewUBO;
+
         private Buffer BatchVBO;
         private Buffer BatchEBO;
         private OGLHandle BatchVAO;
@@ -53,8 +59,6 @@ namespace SS14.Client.Graphics.Clyde
         private ShaderProgram Vertex2DProgram;
 
         private const string UniModUV = "modifyUV";
-        private const string UniViewMatrix = "viewMatrix";
-        private const string UniProjMatrix = "projectionMatrix";
         private const string UniModelMatrix = "modelMatrix";
         private const string UniModulate = "modulate";
 
@@ -66,7 +70,7 @@ namespace SS14.Client.Graphics.Clyde
         public override Vector2i ScreenSize => new Vector2i(_window.Width, _window.Height);
         private readonly HashSet<string> OpenGLExtensions = new HashSet<string>();
 
-        public bool HasKHRDebug => HasExtension("GL_KHR_debug");
+        private bool HasKHRDebug => HasExtension("GL_KHR_debug");
 
         public override void SetWindowTitle(string title)
         {
@@ -182,6 +186,8 @@ namespace SS14.Client.Graphics.Clyde
                 new ResourcePath("/Shaders/Internal/sprite.frag"),
                 "Vertex2DProgram");
 
+            Vertex2DProgram.BindBlock("projectionViewMatrices", ProjViewBindingIndex);
+
             var quadVertices = new[]
             {
                 new Vertex2D(1, 0, 1, 1),
@@ -214,6 +220,9 @@ namespace SS14.Client.Graphics.Clyde
 
             BatchEBO = new Buffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
                 sizeof(ushort) * BatchIndexData.Length, "BatchEBO");
+
+            ProjViewUBO = new Buffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw, "ProjViewUBO");
+            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, ProjViewBindingIndex, ProjViewUBO.Handle);
 
             _drawingSplash = true;
             Render(null);
@@ -457,6 +466,34 @@ namespace SS14.Client.Graphics.Clyde
             public override string ToString()
             {
                 return $"{nameof(Handle)}: {Handle}";
+            }
+        }
+
+        [StructLayout(LayoutKind.Explicit)]
+        [PublicAPI]
+        private struct ProjViewMatrices
+        {
+            [FieldOffset(0 * sizeof(float))] public Vector3 ProjMatrixC0;
+            [FieldOffset(4 * sizeof(float))] public Vector3 ProjMatrixC1;
+            [FieldOffset(8 * sizeof(float))] public Vector3 ProjMatrixC2;
+
+            [FieldOffset(12 * sizeof(float))] public Vector3 ViewMatrixC0;
+            [FieldOffset(16 * sizeof(float))] public Vector3 ViewMatrixC1;
+            [FieldOffset(20 * sizeof(float))] public Vector3 ViewMatrixC2;
+            // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+            [FieldOffset(24 * sizeof(float))] private readonly Vector4 _pad;
+
+            public ProjViewMatrices(in Matrix3 projMatrix, in Matrix3 viewMatrix)
+            {
+                _pad = Vector4.Zero;
+
+                ProjMatrixC0 = new Vector3(projMatrix.R0C0, projMatrix.R1C0, projMatrix.R2C0);
+                ProjMatrixC1 = new Vector3(projMatrix.R0C1, projMatrix.R1C1, projMatrix.R2C1);
+                ProjMatrixC2 = new Vector3(projMatrix.R0C2, projMatrix.R1C2, projMatrix.R2C2);
+
+                ViewMatrixC0 = new Vector3(viewMatrix.R0C0, viewMatrix.R1C0, viewMatrix.R2C0);
+                ViewMatrixC1 = new Vector3(viewMatrix.R0C1, viewMatrix.R1C1, viewMatrix.R2C1);
+                ViewMatrixC2 = new Vector3(viewMatrix.R0C2, viewMatrix.R1C2, viewMatrix.R2C2);
             }
         }
     }

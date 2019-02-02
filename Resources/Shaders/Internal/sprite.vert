@@ -11,8 +11,11 @@ out vec2 TexCoord;
 // Maybe we should merge these CPU side.
 // idk yet.
 uniform mat3 modelMatrix;
-uniform mat3 viewMatrix;
-uniform mat3 projectionMatrix;
+layout (std140) uniform projectionViewMatrices
+{
+    mat3 projectionMatrix;
+    mat3 viewMatrix;
+};
 // Allows us to do texture atlassing with texture coordinates 0->1
 // Input texture coordinates get mapped to this range.
 uniform vec4 modifyUV;

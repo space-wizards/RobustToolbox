@@ -184,6 +184,8 @@ namespace SS14.Client.Graphics.Clyde
             _hijackDebugCallback();
 #endif
 
+            _loadStockTextures();
+
             Vertex2DProgram = _compileProgram(
                 new ResourcePath("/Shaders/Internal/sprite.vert"),
                 new ResourcePath("/Shaders/Internal/sprite.frag"),

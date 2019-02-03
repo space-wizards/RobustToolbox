@@ -7,6 +7,7 @@ using OpenTK.Graphics.OpenGL;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
@@ -24,8 +25,6 @@ namespace SS14.Client.Graphics.Clyde
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
 
-            // We use System.Drawing instead of ImageSharp because the latter has PNG loading bugs on Mono.
-            // Even though supposedly that issue was fixed with Mono 5.14... I'm on 5.16.
             using (var image = Image.Load(stream))
             {
                 return LoadTextureFromImage(image, name);
@@ -152,6 +151,17 @@ namespace SS14.Client.Graphics.Clyde
 
             _loadedTextures.Add(textureId, loaded);
             return new TextureArray(refTextureList.ToArray());
+        }
+
+        private void _loadStockTextures()
+        {
+            var white = new Image<Rgba32>(1, 1);
+            white[0, 0] = Rgba32.White;
+            Texture.White = Texture.LoadFromImage(white);
+
+            var blank = new Image<Rgba32>(1, 1);
+            blank[0, 0] = Rgba32.Transparent;
+            Texture.Transparent = Texture.LoadFromImage(blank);
         }
 
         private class LoadedTexture

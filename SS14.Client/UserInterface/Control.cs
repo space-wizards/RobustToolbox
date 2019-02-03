@@ -687,7 +687,7 @@ namespace SS14.Client.UserInterface
             }
         }
 
-        protected virtual void Draw(DrawingHandleScreen handle)
+        protected internal virtual void Draw(DrawingHandleScreen handle)
         {
         }
 

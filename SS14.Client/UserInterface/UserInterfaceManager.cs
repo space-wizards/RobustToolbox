@@ -1,6 +1,7 @@
 ﻿using System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Clyde;
+using SS14.Client.Graphics.Drawing;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Input;
@@ -12,6 +13,7 @@ using SS14.Shared.Input;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface
 {
@@ -126,6 +128,17 @@ namespace SS14.Client.UserInterface
         public void Render(IRenderHandle renderHandle)
         {
             var drawHandle = renderHandle.CreateHandleScreen();
+
+            _render(drawHandle, RootControl);
+        }
+
+        private void _render(DrawingHandleScreen handle, Control control)
+        {
+            control.Draw(handle);
+            foreach (var child in control.Children)
+            {
+                _render(handle, child);
+            }
         }
 
         public void UnhandledMouseDown(MouseButtonEventArgs args)

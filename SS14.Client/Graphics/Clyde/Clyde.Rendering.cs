@@ -210,9 +210,14 @@ namespace SS14.Client.Graphics.Clyde
 
             _flushRenderHandle(renderHandle);
 
+            ProjViewUBO.Use();
+            ProjViewUBO.Reallocate(combinedMatricesScreen);
+
             // Render UI.
             _currentSpace = CurrentSpace.ScreenSpace;
+            _userInterfaceManager.Render(renderHandle);
 
+            _flushRenderHandle(renderHandle);
 
             _window.SwapBuffers();
         }
@@ -551,9 +556,6 @@ namespace SS14.Client.Graphics.Clyde
                 var command = _manager._getNewCommandTexture();
                 switch (texture)
                 {
-                    case BlankTexture _:
-                        texture = IoCManager.Resolve<IResourceCache>().GetFallback<TextureResource>();
-                        break;
                     case AtlasTexture atlas:
                     {
                         texture = atlas.SourceTexture;

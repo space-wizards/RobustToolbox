@@ -21,7 +21,7 @@ namespace SS14.Client.UserInterface.Controls
         public Texture Texture
         {
             // TODO: Maybe store the texture passed in in case it's like a TextureResource or whatever.
-            get => GameController.OnGodot ? (Texture)new GodotTextureSource((Godot.Texture)SceneControl.Get("texture")) : new BlankTexture();
+            get => GameController.OnGodot ? (Texture)new GodotTextureSource((Godot.Texture)SceneControl.Get("texture")) : Texture.Transparent;
             set
             {
                 if (GameController.OnGodot)

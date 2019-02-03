@@ -17,6 +17,7 @@ namespace SS14.Client.Graphics
     /// <summary>
     ///     Contains a texture used for drawing things.
     /// </summary>
+    [PublicAPI]
     public abstract class Texture : IDirectionalTextureProvider
     {
         internal abstract Godot.Texture GodotTexture { get; }
@@ -38,6 +39,9 @@ namespace SS14.Client.Graphics
             return src?.GodotTexture;
         }
 
+        public static Texture Transparent { get; internal set; }
+        public static Texture White { get; internal set; }
+
         /// <summary>
         ///     Loads a new texture an existing image.
         /// </summary>
@@ -49,7 +53,7 @@ namespace SS14.Client.Graphics
             switch (GameController.Mode)
             {
                 case GameController.DisplayMode.Headless:
-                    return new BlankTexture();
+                    return new DummyTexture();
                 case GameController.DisplayMode.Godot:
                 {
                     var stream = new MemoryStream();
@@ -95,7 +99,7 @@ namespace SS14.Client.Graphics
             switch (GameController.Mode)
             {
                 case GameController.DisplayMode.Headless:
-                    return new BlankTexture();
+                    return new DummyTexture();
                 case GameController.DisplayMode.Godot:
                     using (var memoryStream = new MemoryStream())
                     {
@@ -166,14 +170,17 @@ namespace SS14.Client.Graphics
         }
     }
 
-    /// <summary>
-    ///     Blank dummy texture.
-    /// </summary>
-    public class BlankTexture : Texture
+    internal sealed class DummyTexture : Texture
     {
         internal override Godot.Texture GodotTexture => null;
+
         public override int Width => default;
         public override int Height => default;
+
+        public DummyTexture()
+        {
+            DebugTools.Assert(GameController.Mode == GameController.DisplayMode.Headless);
+        }
     }
 
     /// <summary>

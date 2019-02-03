@@ -28,7 +28,7 @@ namespace SS14.Client.ResourceManagement
             switch (GameController.Mode)
             {
                 case GameController.DisplayMode.Headless:
-                    Texture = new BlankTexture();
+                    Texture = new DummyTexture();
                     break;
                 case GameController.DisplayMode.Godot:
                     _loadGodot(cache, path);

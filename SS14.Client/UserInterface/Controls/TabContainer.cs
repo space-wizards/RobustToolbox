@@ -76,7 +76,7 @@ namespace SS14.Client.UserInterface.Controls
 
         public Texture GetTabIcon(int tab)
         {
-            return GameController.OnGodot ? (Texture)new GodotTextureSource((Godot.Texture)SceneControl.Call("get_tab_icon", tab)) : new BlankTexture();
+            return GameController.OnGodot ? (Texture)new GodotTextureSource((Godot.Texture)SceneControl.Call("get_tab_icon", tab)) : Texture.White;
         }
 
         public void SetTabIcon(int tab, Texture icon)

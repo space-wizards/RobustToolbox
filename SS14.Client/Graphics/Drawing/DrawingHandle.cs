@@ -169,15 +169,17 @@ namespace SS14.Client.Graphics.Drawing
 
         public void DrawRect(Box2 rect, Color color, bool filled = true)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             CheckDisposed();
             if (filled)
             {
-                VS.CanvasItemAddRect(Item, ToPixelCoords(rect), color.Convert());
+                if (_renderHandle != null)
+                {
+                    _renderHandle.DrawTextureRect(Texture.White, rect.BottomLeft, rect.TopRight, color, _handleId);
+                }
+                else if (Item != null)
+                {
+                    VS.CanvasItemAddRect(Item, ToPixelCoords(rect), color.Convert());
+                }
             }
             else
             {
@@ -260,15 +262,17 @@ namespace SS14.Client.Graphics.Drawing
 
         public void DrawRect(UIBox2 rect, Color color, bool filled = true)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             CheckDisposed();
             if (filled)
             {
-                VS.CanvasItemAddRect(Item, rect.Convert(), color.Convert());
+                if (_renderHandle != null)
+                {
+                    _renderHandle.DrawTextureRect(Texture.White, rect.TopLeft, rect.BottomRight, color, _handleId);
+                }
+                else if (Item != null)
+                {
+                    VS.CanvasItemAddRect(Item, rect.Convert(), color.Convert());
+                }
             }
             else
             {

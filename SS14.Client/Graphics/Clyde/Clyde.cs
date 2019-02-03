@@ -51,14 +51,17 @@ namespace SS14.Client.Graphics.Clyde
         private Buffer BatchVBO;
         private Buffer BatchEBO;
         private OGLHandle BatchVAO;
+        private OGLHandle BatchArrayedVAO;
 
         // VBO to draw a single quad.
         private Buffer QuadVBO;
         private OGLHandle QuadVAO;
 
         private ShaderProgram Vertex2DProgram;
+        private ShaderProgram Vertex2DArrayProgram;
 
         private const string UniModUV = "modifyUV";
+        private const string UniModArrayIndex = "modifyArrayIndex";
         private const string UniModelMatrix = "modelMatrix";
         private const string UniModulate = "modulate";
 
@@ -120,7 +123,7 @@ namespace SS14.Client.Graphics.Clyde
                 GameWindowFlags.Default,
                 DisplayDevice.Default,
                 4, 1,
-#if !DEBUG
+#if DEBUG
                 GraphicsContextFlags.Debug | GraphicsContextFlags.ForwardCompatible
 #else
                 GraphicsContextFlags.ForwardCompatible
@@ -188,12 +191,19 @@ namespace SS14.Client.Graphics.Clyde
 
             Vertex2DProgram.BindBlock("projectionViewMatrices", ProjViewBindingIndex);
 
+            Vertex2DArrayProgram = _compileProgram(
+                new ResourcePath("/Shaders/Internal/sprite-arrayed.vert"),
+                new ResourcePath("/Shaders/Internal/sprite-arrayed.frag"),
+                "Vertex2DArrayProgram");
+
+            Vertex2DArrayProgram.BindBlock("projectionViewMatrices", ProjViewBindingIndex);
+
             var quadVertices = new[]
             {
-                new Vertex2D(1, 0, 1, 1),
-                new Vertex2D(0, 0, 0, 1),
-                new Vertex2D(1, 1, 1, 0),
-                new Vertex2D(0, 1, 0, 0),
+                new Vertex2D(1, 0, 1, 1, 1),
+                new Vertex2D(0, 0, 0, 1, 1),
+                new Vertex2D(1, 1, 1, 0, 1),
+                new Vertex2D(0, 1, 0, 0, 1),
             };
 
             QuadVBO = new Buffer<Vertex2D>(this, BufferTarget.ArrayBuffer, BufferUsageHint.StaticDraw, quadVertices,
@@ -202,10 +212,15 @@ namespace SS14.Client.Graphics.Clyde
             QuadVAO = new OGLHandle(GL.GenVertexArray());
             GL.BindVertexArray(QuadVAO.Handle);
             _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, QuadVAO, "QuadVAO");
+            // Vertex Coords
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
             GL.EnableVertexAttribArray(0);
+            // Texture Coords.
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
             GL.EnableVertexAttribArray(1);
+            // Texture Array Index.
+            GL.VertexAttribPointer(2, 1, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 4 * sizeof(float));
+            GL.EnableVertexAttribArray(2);
 
             BatchVBO = new Buffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
                 Vertex2D.SizeOf * BatchVertexData.Length, "BatchVBO");
@@ -213,13 +228,30 @@ namespace SS14.Client.Graphics.Clyde
             BatchVAO = new OGLHandle(GL.GenVertexArray());
             GL.BindVertexArray(BatchVAO.Handle);
             _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, BatchVAO, "BatchVAO");
+            // Vertex Coords
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
             GL.EnableVertexAttribArray(0);
+            // Texture Coords.
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
             GL.EnableVertexAttribArray(1);
 
             BatchEBO = new Buffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
                 sizeof(ushort) * BatchIndexData.Length, "BatchEBO");
+
+            BatchArrayedVAO = new OGLHandle(GL.GenVertexArray());
+            BatchVBO.Use();
+            BatchEBO.Use();
+            GL.BindVertexArray(BatchArrayedVAO.Handle);
+            _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, BatchArrayedVAO, "BatchArrayedVAO");
+            // Vertex Coords
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
+            GL.EnableVertexAttribArray(0);
+            // Texture Coords.
+            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
+            GL.EnableVertexAttribArray(1);
+            // Texture Array Index.
+            GL.VertexAttribPointer(2, 1, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 4 * sizeof(float));
+            GL.EnableVertexAttribArray(2);
 
             ProjViewUBO = new Buffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw, "ProjViewUBO");
             GL.BindBufferBase(BufferRangeTarget.UniformBuffer, ProjViewBindingIndex, ProjViewUBO.Handle);
@@ -401,6 +433,7 @@ namespace SS14.Client.Graphics.Clyde
 
             public readonly Vector2 Position;
             public readonly Vector2 TextureCoordinates;
+            public readonly float ArrayIndex;
 
             static Vertex2D()
             {
@@ -410,19 +443,20 @@ namespace SS14.Client.Graphics.Clyde
                 }
             }
 
-            public Vertex2D(Vector2 position, Vector2 textureCoordinates)
+            public Vertex2D(Vector2 position, Vector2 textureCoordinates, int arrayIndex)
             {
                 Position = position;
                 TextureCoordinates = textureCoordinates;
+                ArrayIndex = arrayIndex;
             }
 
-            public Vertex2D(float x, float y, float u, float v)
-                : this(new Vector2(x, y), new Vector2(u, v))
+            public Vertex2D(float x, float y, float u, float v, int arrayIndex)
+                : this(new Vector2(x, y), new Vector2(u, v), arrayIndex)
             {
             }
 
-            public Vertex2D(Vector2 position, float u, float v)
-                : this(position, new Vector2(u, v))
+            public Vertex2D(Vector2 position, float u, float v, int arrayIndex)
+                : this(position, new Vector2(u, v), arrayIndex)
             {
             }
 

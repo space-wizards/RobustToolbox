@@ -115,6 +115,18 @@ namespace SS14.Client.Graphics.Clyde
                 GL.UniformBlockBinding(_handle, index, blockBinding);
             }
 
+            public void SetUniform(string uniformName, int integer)
+            {
+                var uniformId = GetUniform(uniformName);
+                GL.Uniform1(uniformId, integer);
+            }
+
+            public void SetUniform(string uniformName, float single)
+            {
+                var uniformId = GetUniform(uniformName);
+                GL.Uniform1(uniformId, single);
+            }
+
             public void SetUniform(string uniformName, in Matrix3 matrix)
             {
                 var uniformId = GetUniform(uniformName);

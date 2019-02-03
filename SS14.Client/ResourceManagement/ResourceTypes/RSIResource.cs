@@ -6,9 +6,14 @@ using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.Primitives;
 
 namespace SS14.Client.ResourceManagement
 {
@@ -63,6 +68,14 @@ namespace SS14.Client.ResourceManagement
 
             var rsi = new RSI(size);
 
+            List<Image<Rgba32>> images = null;
+            List<(Texture, float)[]> directionFramesList = null;
+            if (GameController.Mode == GameController.DisplayMode.OpenGL)
+            {
+                images = new List<Image<Rgba32>>();
+                directionFramesList = new List<(Texture, float)[]>();
+            }
+
             // Do every state.
             foreach (var stateObject in manifestJson["states"].Cast<JObject>())
             {
@@ -93,7 +106,7 @@ namespace SS14.Client.ResourceManagement
 
                     if (delays.Length != dirValue)
                     {
-                        throw new RSILoadException($"Directions count does not match amount of delays specified.");
+                        throw new RSILoadException("DirectionsdirectionFramesList count does not match amount of delays specified.");
                     }
 
                     for (var i = 0; i < delays.Length; i++)
@@ -116,15 +129,27 @@ namespace SS14.Client.ResourceManagement
                 }
 
                 var texPath = path / (stateName + ".png");
-                var texture = cache.GetResource<TextureResource>(texPath).Texture;
+                Image<Rgba32> image = null;
+                Texture texture = null;
+                Vector2i sheetSize;
+                if (GameController.Mode == GameController.DisplayMode.OpenGL)
+                {
+                    image = Image.Load(cache.ContentFileRead(texPath));
+                    sheetSize = new Vector2i(image.Width, image.Height);
+                }
+                else
+                {
+                    texture = cache.GetResource<TextureResource>(texPath).Texture;
+                    sheetSize = texture.Size;
+                }
 
-                if (texture.Width % size.X != 0 || texture.Height % size.Y != 0)
+                if (sheetSize.X % size.X != 0 || sheetSize.Y % size.Y != 0)
                 {
                     throw new RSILoadException("State image size is not a multiple of the icon size.");
                 }
 
                 // Amount of icons per row of the sprite sheet.
-                var sheetWidth = texture.Width / size.X;
+                var sheetWidth = (sheetSize.X / size.X);
 
                 var iconFrames = new (Texture, float)[dirValue][];
                 var counter = 0;
@@ -132,13 +157,30 @@ namespace SS14.Client.ResourceManagement
                 {
                     var delayList = delays[j];
                     var directionFrames = new (Texture, float)[delayList.Length];
+                    if (GameController.Mode == GameController.DisplayMode.OpenGL)
+                    {
+                        DebugTools.AssertNotNull(directionFramesList);
+                        directionFramesList.Add(directionFrames);
+                    }
                     for (var i = 0; i < delayList.Length; i++)
                     {
-                        var posX = (counter % sheetWidth) * size.X;
-                        var posY = (counter / sheetWidth) * size.Y;
+                        var posX = (int) ((counter % sheetWidth) * size.X);
+                        var posY = (int) ((counter / sheetWidth) * size.Y);
 
-                        var atlasTexture = new AtlasTexture(
-                            texture, UIBox2.FromDimensions(posX, posY, size.X, size.Y));
+                        Texture atlasTexture;
+
+                        if (GameController.Mode == GameController.DisplayMode.OpenGL)
+                        {
+                            atlasTexture = null;
+                            var rect = new Rectangle(posX, posY, (int) size.X, (int) size.Y);
+                            DebugTools.AssertNotNull(images);
+                            images.Add(image.Clone(x => x.Crop(rect)));
+                        }
+                        else
+                        {
+                            atlasTexture = new AtlasTexture(
+                                texture, UIBox2.FromDimensions(posX, posY, size.X, size.Y));
+                        }
 
                         directionFrames[i] = (atlasTexture, delayList[i]);
                         counter++;
@@ -149,6 +191,22 @@ namespace SS14.Client.ResourceManagement
 
                 var state = new RSI.State(size, stateName, directions, iconFrames);
                 rsi.AddState(state);
+            }
+
+            if (GameController.Mode == GameController.DisplayMode.OpenGL)
+            {
+                var arrayTexture = Texture.LoadArrayFromImages(images, path.ToString());
+                var i = 0;
+                DebugTools.AssertNotNull(directionFramesList);
+                foreach (var list in directionFramesList)
+                {
+                    for (var j = 0; j < list.Length; j++)
+                    {
+                        ref var tuple = ref list[j];
+                        tuple.Item1 = arrayTexture[i];
+                        i++;
+                    }
+                }
             }
 
             RSI = rsi;

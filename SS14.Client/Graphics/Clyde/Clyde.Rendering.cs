@@ -138,6 +138,7 @@ namespace SS14.Client.Graphics.Clyde
             GL.Enable(EnableCap.PrimitiveRestart);
             GL.PrimitiveRestartIndex(ushort.MaxValue);
 
+            Vertex2DProgram.Use();
             foreach (var grid in _mapManager.GetMap(map).GetAllGrids())
             {
                 ushort nth = 0;
@@ -149,13 +150,13 @@ namespace SS14.Client.Graphics.Clyde
                 foreach (var tileRef in grid.GetAllTiles())
                 {
                     var vIdx = nth * 4;
-                    BatchVertexData[vIdx] = new Vertex2D(tileRef.X + 0.5f, tileRef.Y + 0.5f, 1, 0);
-                    BatchVertexData[vIdx + 1] = new Vertex2D(tileRef.X - 0.5f, tileRef.Y + 0.5f, 0, 0);
-                    BatchVertexData[vIdx + 2] = new Vertex2D(tileRef.X + 0.5f, tileRef.Y - 0.5f, 1, 1);
-                    BatchVertexData[vIdx + 3] = new Vertex2D(tileRef.X - 0.5f, tileRef.Y - 0.5f, 0, 1);
+                    BatchVertexData[vIdx + 0] = new Vertex2D(tileRef.X + 0.5f, tileRef.Y + 0.5f, 1, 0, 0);
+                    BatchVertexData[vIdx + 1] = new Vertex2D(tileRef.X - 0.5f, tileRef.Y + 0.5f, 0, 0, 0);
+                    BatchVertexData[vIdx + 2] = new Vertex2D(tileRef.X + 0.5f, tileRef.Y - 0.5f, 1, 1, 0);
+                    BatchVertexData[vIdx + 3] = new Vertex2D(tileRef.X - 0.5f, tileRef.Y - 0.5f, 0, 1, 0);
                     var nIdx = nth * 5;
                     var tIdx = (ushort) (nth * 4);
-                    BatchIndexData[nIdx] = tIdx;
+                    BatchIndexData[nIdx + 0] = tIdx;
                     BatchIndexData[nIdx + 1] = (ushort) (tIdx + 1);
                     BatchIndexData[nIdx + 2] = (ushort) (tIdx + 2);
                     BatchIndexData[nIdx + 3] = (ushort) (tIdx + 3);
@@ -174,8 +175,9 @@ namespace SS14.Client.Graphics.Clyde
                 }
 
                 BatchVBO.Use();
-                BatchVBO.WriteSubData(0, new Span<Vertex2D>(BatchVertexData, 0, nth*4));
-                BatchEBO.WriteSubData(0, new Span<ushort>(BatchIndexData, 0, nth*5));
+                BatchVBO.WriteSubData(0, new Span<Vertex2D>(BatchVertexData, 0, nth * 4));
+                BatchEBO.Use();
+                BatchEBO.WriteSubData(0, new Span<ushort>(BatchIndexData, 0, nth * 5));
 
                 GL.DrawElements(PrimitiveType.TriangleStrip, nth * 5, DrawElementsType.UnsignedShort, 0);
             }
@@ -238,7 +240,6 @@ namespace SS14.Client.Graphics.Clyde
             bool doBatching,
             ref Matrix3 modelMatrix)
         {
-            var loadedTexture = _loadedTextures[renderCommandTexture.TextureId];
             if (doBatching)
             {
                 if (BatchingTexture.HasValue)
@@ -262,8 +263,26 @@ namespace SS14.Client.Graphics.Clyde
                 return;
             }
 
-            // Use QuadVBO to render a single quad and modify the model matrix to position it where we need it.
+            var loadedTexture = _loadedTextures[renderCommandTexture.TextureId];
+            var arrayed = loadedTexture.Type == LoadedTextureType.Array2D;
+            ShaderProgram program;
+            if (arrayed)
+            {
+                program = Vertex2DArrayProgram;
+            }
+            else
+            {
+                program = Vertex2DProgram;
+            }
+
+            program.Use();
+            if (arrayed)
+            {
+                program.SetUniform(UniModArrayIndex, (float)renderCommandTexture.ArrayIndex-1);
+            }
+
             GL.BindVertexArray(QuadVAO.Handle);
+            // Use QuadVBO to render a single quad and modify the model matrix to position it where we need it.
             if (renderCommandTexture.SubRegion.HasValue)
             {
                 // If the texture is in an atlas we have to set modifyUV in the shader,
@@ -278,7 +297,7 @@ namespace SS14.Client.Graphics.Clyde
                         subRegion.Bottom / h,
                         subRegion.Right / w,
                         subRegion.Top / h);
-                    Vertex2DProgram.SetUniform(UniModUV, vec);
+                    program.SetUniform(UniModUV, vec);
                 }
                 else
                 {
@@ -287,7 +306,7 @@ namespace SS14.Client.Graphics.Clyde
                         subRegion.Top / h,
                         subRegion.Right / w,
                         subRegion.Bottom / h);
-                    Vertex2DProgram.SetUniform(UniModUV, vec);
+                    program.SetUniform(UniModUV, vec);
                 }
             }
             else
@@ -295,25 +314,33 @@ namespace SS14.Client.Graphics.Clyde
                 if (_currentSpace == CurrentSpace.ScreenSpace)
                 {
                     // Flip Y texture coordinates to fix screen space flipping.
-                    Vertex2DProgram.SetUniform(UniModUV, new Vector4(0, 1, 1, 0));
+                    program.SetUniform(UniModUV, new Vector4(0, 1, 1, 0));
                 }
                 else
                 {
-                    Vertex2DProgram.SetUniform(UniModUV, new Vector4(0, 0, 1, 1));
+                    program.SetUniform(UniModUV, new Vector4(0, 0, 1, 1));
                 }
             }
 
             // Handle modulate.
-            Vertex2DProgram.SetUniform(UniModulate, renderCommandTexture.Modulate);
+            program.SetUniform(UniModulate, renderCommandTexture.Modulate);
 
             var rectTransform = Matrix3.Identity;
             (rectTransform.R0C0, rectTransform.R1C1) = renderCommandTexture.PositionB - renderCommandTexture.PositionA;
             (rectTransform.R0C2, rectTransform.R1C2) = renderCommandTexture.PositionA;
             rectTransform.Multiply(ref modelMatrix);
-            Vertex2DProgram.SetUniform(UniModelMatrix, rectTransform);
+            program.SetUniform(UniModelMatrix, rectTransform);
 
             GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
+            if (arrayed)
+            {
+                GL.BindTexture(TextureTarget.Texture2DArray, loadedTexture.OpenGLObject.Handle);
+            }
+            else
+            {
+                GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
+            }
+
             GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
         }
 
@@ -370,6 +397,7 @@ namespace SS14.Client.Graphics.Clyde
 
             DebugTools.Assert(BatchingTexture.HasValue);
             var loadedTexture = _loadedTextures[BatchingTexture.Value];
+            var arrayed = loadedTexture.Type == LoadedTextureType.Array2D;
             ushort quadIndex = 0;
             foreach (var (command, transform) in BatchBuffer)
             {
@@ -384,15 +412,17 @@ namespace SS14.Client.Graphics.Clyde
                 {
                     sr = new UIBox2(0, 0, 1, 1);
                 }
+
+                var arrayIndex = command.ArrayIndex-1;
                 var bl = transform.Transform(command.PositionA);
                 var br = transform.Transform(new Vector2(command.PositionB.X, command.PositionA.Y));
                 var tr = transform.Transform(command.PositionB);
                 var tl = transform.Transform(new Vector2(command.PositionA.X, command.PositionB.Y));
                 var vIdx = quadIndex * 4;
-                BatchVertexData[vIdx + 0] = new Vertex2D(bl, sr.BottomLeft);
-                BatchVertexData[vIdx + 1] = new Vertex2D(br, sr.BottomRight);
-                BatchVertexData[vIdx + 2] = new Vertex2D(tl, sr.TopLeft);
-                BatchVertexData[vIdx + 3] = new Vertex2D(tr, sr.TopRight);
+                BatchVertexData[vIdx + 0] = new Vertex2D(bl, sr.BottomLeft, arrayIndex);
+                BatchVertexData[vIdx + 1] = new Vertex2D(br, sr.BottomRight, arrayIndex);
+                BatchVertexData[vIdx + 2] = new Vertex2D(tl, sr.TopLeft, arrayIndex);
+                BatchVertexData[vIdx + 3] = new Vertex2D(tr, sr.TopRight, arrayIndex);
                 var nIdx = quadIndex * 5;
                 var tIdx = (ushort) (quadIndex * 4);
                 BatchIndexData[nIdx + 0] = tIdx;
@@ -408,20 +438,48 @@ namespace SS14.Client.Graphics.Clyde
                 }
             }
 
-            GL.BindVertexArray(BatchVAO.Handle);
+            if (arrayed)
+            {
+                GL.BindVertexArray(BatchArrayedVAO.Handle);
+            }
+            else
+            {
+                GL.BindVertexArray(BatchVAO.Handle);
+            }
+
+            BatchVBO.Use();
             BatchVBO.WriteSubData(0, new Span<Vertex2D>(BatchVertexData, 0, quadIndex * 4));
+            BatchEBO.Use();
             BatchEBO.WriteSubData(0, new Span<ushort>(BatchIndexData, 0, quadIndex * 5));
 
             // Bind atlas texture.
             GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
+            ShaderProgram program;
+            if (arrayed)
+            {
+                GL.BindTexture(TextureTarget.Texture2DArray, loadedTexture.OpenGLObject.Handle);
+                program = Vertex2DArrayProgram;
+            }
+            else
+            {
+                GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
+                program = Vertex2DProgram;
+            }
+
+            program.Use();
+
+            if (arrayed)
+            {
+                program.SetUniform(UniModArrayIndex, 1f);
+            }
+
             // Model matrix becomes identity since it's built into the batch mesh.
-            Vertex2DProgram.SetUniform(UniModelMatrix, Matrix3.Identity);
+            program.SetUniform(UniModelMatrix, Matrix3.Identity);
             // Reset ModUV to ensure it's identity and doesn't touch anything.
-            Vertex2DProgram.SetUniform(UniModUV, new Vector4(0, 0, 1, 1));
+            program.SetUniform(UniModUV, new Vector4(0, 0, 1, 1));
             // Set modulate.
             DebugTools.Assert(BatchingModulate.HasValue);
-            Vertex2DProgram.SetUniform(UniModulate, BatchingModulate.Value);
+            program.SetUniform(UniModulate, BatchingModulate.Value);
             // Enable primitive restart & do that draw.
             GL.Enable(EnableCap.PrimitiveRestart);
             GL.PrimitiveRestartIndex(ushort.MaxValue);
@@ -505,7 +563,9 @@ namespace SS14.Client.Graphics.Clyde
                 }
 
                 var list = _drawingHandles[handleId].Item2;
-                command.TextureId = ((OpenGLTexture) texture).OpenGLTextureId;
+                var openGLTexture = (OpenGLTexture) texture;
+                command.TextureId = openGLTexture.OpenGLTextureId;
+                command.ArrayIndex = openGLTexture.ArrayIndex;
                 command.PositionA = a;
                 command.PositionB = b;
                 command.Modulate = modulate ?? Color.White;
@@ -549,6 +609,7 @@ namespace SS14.Client.Graphics.Clyde
             public Vector2 PositionB { get; set; }
             public UIBox2? SubRegion { get; set; }
             public Color Modulate { get; set; }
+            public int ArrayIndex { get; set; }
         }
 
         // ReSharper disable once ClassNeverInstantiated.Local

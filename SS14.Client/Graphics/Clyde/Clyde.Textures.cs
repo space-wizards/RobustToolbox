@@ -7,6 +7,7 @@ using OpenTK.Graphics.OpenGL;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
+using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using ObjectLabelIdentifier = OpenTK.Graphics.OpenGL4.ObjectLabelIdentifier;
@@ -19,7 +20,7 @@ namespace SS14.Client.Graphics.Clyde
         private readonly Dictionary<int, LoadedTexture> _loadedTextures = new Dictionary<int, LoadedTexture>();
         private int _nextTextureId;
 
-        public Texture LoadTextureFromPNGStream(Stream stream, string name=null)
+        public Texture LoadTextureFromPNGStream(Stream stream, string name = null)
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
 
@@ -31,7 +32,7 @@ namespace SS14.Client.Graphics.Clyde
             }
         }
 
-        public Texture LoadTextureFromImage<T>(Image<T> image, string name=null) where T : struct, IPixel<T>
+        public Texture LoadTextureFromImage<T>(Image<T> image, string name = null) where T : struct, IPixel<T>
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
 
@@ -46,6 +47,10 @@ namespace SS14.Client.Graphics.Clyde
                 (int) TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
                 (int) TextureMagFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
+                (int) TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
+                (int) TextureWrapMode.ClampToEdge);
 
             var span = ((Image<Rgba32>) (object) image).GetPixelSpan();
             unsafe
@@ -77,7 +82,8 @@ namespace SS14.Client.Graphics.Clyde
             return new OpenGLTexture(id, image.Width, image.Height);
         }
 
-        public TextureArray LoadArrayFromImages<T>(ICollection<Image<T>> images, string name = null) where T : struct, IPixel<T>
+        public TextureArray LoadArrayFromImages<T>(ICollection<Image<T>> images, string name = null)
+            where T : struct, IPixel<T>
         {
             DebugTools.Assert(images.Count != 0);
             (int x, int y)? size = null;
@@ -97,10 +103,23 @@ namespace SS14.Client.Graphics.Clyde
             var textureId = ++_nextTextureId;
             var texture = new OGLHandle(GL.GenTexture());
             GL.BindTexture(TextureTarget.Texture2DArray, texture.Handle);
-            _objectLabelMaybe(ObjectLabelIdentifier.Texture, texture, name);
+            if (name != null)
+            {
+                _objectLabelMaybe(ObjectLabelIdentifier.Texture, texture, name);
+            }
 
             DebugTools.Assert(size.HasValue);
             var (width, height) = size.Value;
+            GL.TexImage3D(TextureTarget.Texture2DArray, 0, PixelInternalFormat.Rgba8, width, height, images.Count, 0,
+                PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMinFilter,
+                (int) TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMagFilter,
+                (int) TextureMagFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapS,
+                (int) TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapT,
+                (int) TextureWrapMode.ClampToEdge);
             var index = 0;
             var refTextureList = new List<OpenGLTexture>();
             foreach (var image in images)
@@ -108,11 +127,15 @@ namespace SS14.Client.Graphics.Clyde
                 var span = ((Image<Rgba32>) (object) image).GetPixelSpan();
                 unsafe
                 {
-                    fixed (Rgba32* ptr = &MemoryMarshal.GetReference(span))
+                    fixed (Rgba32* ptr = span)
                     {
-                        GL.TexImage3D(TextureTarget.Texture2DArray, 0, PixelInternalFormat.Rgba8, width, height, index, 0, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)ptr);
+                        Logger.Debug("Loading");
+                        GL.TexSubImage3D(TextureTarget.Texture2DArray, 0, 0, 0, index, width, height, 1,
+                            PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr) ptr);
+                        Logger.Debug("Survived");
                     }
                 }
+
                 index += 1;
                 refTextureList.Add(new OpenGLTexture(textureId, width, height, index));
             }

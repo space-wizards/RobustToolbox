@@ -31,8 +31,9 @@ namespace SS14.Client.Graphics.Clyde
                 GL.GetShader(Handle, ShaderParameter.CompileStatus, out var compiled);
                 if (compiled != 1)
                 {
+                    var message = GL.GetShaderInfoLog(Handle);
                     Delete();
-                    throw new ShaderCompilationException(GL.GetShaderInfoLog(Handle));
+                    throw new ShaderCompilationException(message);
                 }
             }
 

@@ -19,5 +19,7 @@
         {
             return new Godot.HBoxContainer();
         }
+
+        private protected override bool Vertical => false;
     }
 }

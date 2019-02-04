@@ -16,6 +16,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using SS14.Client.Graphics;
 using SS14.Client.ResourceManagement.ResourceTypes;
+using SS14.Client.UserInterface.Controls;
 
 namespace SS14.Client.UserInterface
 {
@@ -89,6 +90,8 @@ namespace SS14.Client.UserInterface
         ///     Gets an enumerable over all the children of this control.
         /// </summary>
         public IEnumerable<Control> Children => _orderedChildren;
+
+        public int ChildCount => _orderedChildren.Count;
 
         /// <summary>
         ///     The control's representation in Godot's scene tree.
@@ -293,6 +296,7 @@ namespace SS14.Client.UserInterface
                     var (diffX, diffY) = value - _size;
                     _marginRight += diffX;
                     _marginBottom += diffY;
+                    _size = value;
                     _updateLayout();
                 }
             }
@@ -311,7 +315,13 @@ namespace SS14.Client.UserInterface
                 }
                 else
                 {
-                    throw new NotImplementedException();
+                    var (diffX, diffY) = value - _position;
+                    _marginTop += diffY;
+                    _marginBottom += diffY;
+                    _marginLeft += diffX;
+                    _marginRight += diffY;
+                    _position = value;
+                    _updateLayout();
                 }
             }
         }
@@ -354,38 +364,64 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        private SizeFlags _sizeFlagsH = SizeFlags.Fill;
+
         public SizeFlags SizeFlagsHorizontal
         {
-            get => GameController.OnGodot ? (SizeFlags) SceneControl.SizeFlagsHorizontal : default;
+            get => GameController.OnGodot ? (SizeFlags) SceneControl.SizeFlagsHorizontal : _sizeFlagsH;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.SizeFlagsHorizontal = (int) value;
                 }
+                else
+                {
+                    // TODO: Notify parent container.
+                    _sizeFlagsH = value;
+                }
             }
         }
 
+        private float _sizeFlagsStretchRatio = 1;
+
         public float SizeFlagsStretchRatio
         {
-            get => GameController.OnGodot ? SceneControl.SizeFlagsStretchRatio : default;
+            get => GameController.OnGodot ? SceneControl.SizeFlagsStretchRatio : _sizeFlagsStretchRatio;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.SizeFlagsStretchRatio = value;
                 }
+                else
+                {
+                    if (value <= 0)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(value), value, "Value must be greater than zero.");
+                    }
+
+                    // TODO: Notify parent container.
+                    _sizeFlagsStretchRatio = value;
+                }
             }
         }
 
+        private SizeFlags _sizeFlagsV = SizeFlags.Fill;
+
         public SizeFlags SizeFlagsVertical
         {
-            get => GameController.OnGodot ? (SizeFlags) SceneControl.SizeFlagsVertical : default;
+            get => GameController.OnGodot ? (SizeFlags) SceneControl.SizeFlagsVertical : _sizeFlagsV;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.SizeFlagsVertical = (int) value;
+                }
+                else
+                {
+                    // TODO: Notify parent container.
+                    _sizeFlagsV = value;
                 }
             }
         }
@@ -459,6 +495,8 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        public bool LayoutLocked => Parent is Container;
+
         private void _updateMinimumSize()
         {
             _calculatedMinimumSize = Vector2.ComponentMax(Vector2.Zero, CalculateMinimumSize());
@@ -471,6 +509,8 @@ namespace SS14.Client.UserInterface
             new Dictionary<string, (Control, int)>();
 
         private readonly List<Control> _orderedChildren = new List<Control>();
+
+        public event Action<Control> OnMinimumSizeChanged;
 
         /// <summary>
         ///     Default constructor.
@@ -907,6 +947,11 @@ namespace SS14.Client.UserInterface
             _orderedChildren.Add(child);
 
             child.Parented(this);
+            ChildAdded(child);
+        }
+
+        protected virtual void ChildAdded(Control newChild)
+        {
         }
 
         /// <summary>
@@ -916,7 +961,6 @@ namespace SS14.Client.UserInterface
         protected virtual void Parented(Control newParent)
         {
             MinimumSizeChanged();
-            _updateLayout();
         }
 
         /// <summary>
@@ -949,6 +993,13 @@ namespace SS14.Client.UserInterface
             {
                 SceneControl.RemoveChild(child.SceneControl);
             }
+
+            child.Deparented();
+            ChildRemoved(child);
+        }
+
+        protected virtual void ChildRemoved(Control child)
+        {
         }
 
         /// <summary>
@@ -1432,6 +1483,8 @@ namespace SS14.Client.UserInterface
         /// <summary>
         ///     Controls how a control changes size when inside a container.
         /// </summary>
+        [Flags]
+        [PublicAPI]
         public enum SizeFlags : byte
         {
             /// <summary>
@@ -1586,7 +1639,7 @@ namespace SS14.Client.UserInterface
 
         private void _doUpdateLayout()
         {
-            if (Parent == null)
+            if (Parent == null || LayoutLocked || GameController.OnGodot)
             {
                 return;
             }

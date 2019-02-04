@@ -19,5 +19,7 @@
         {
             return new Godot.VBoxContainer();
         }
+
+        private protected override bool Vertical => true;
     }
 }

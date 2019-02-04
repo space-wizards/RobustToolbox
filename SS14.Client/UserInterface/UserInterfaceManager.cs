@@ -59,7 +59,10 @@ namespace SS14.Client.UserInterface
                 MouseFilter = Control.MouseFilterMode.Ignore
             };
             RootControl.SetAnchorPreset(Control.LayoutPreset.Wide);
-            RootControl.Size = _displayManager.ScreenSize;
+            if (!GameController.OnGodot)
+            {
+                RootControl.Size = _displayManager.ScreenSize;
+            }
 
             if (GameController.OnGodot)
             {

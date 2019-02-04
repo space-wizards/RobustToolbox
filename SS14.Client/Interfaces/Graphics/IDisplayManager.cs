@@ -1,3 +1,4 @@
+using System;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Graphics
@@ -11,5 +12,18 @@ namespace SS14.Client.Interfaces.Graphics
         void SetWindowTitle(string title);
         void Initialize();
         void ReloadConfig();
+        event Action<WindowResizedEventArgs> OnWindowResized;
+    }
+
+    public class WindowResizedEventArgs : EventArgs
+    {
+        public WindowResizedEventArgs(Vector2i oldSize, Vector2i newSize)
+        {
+            OldSize = oldSize;
+            NewSize = newSize;
+        }
+
+        public Vector2i OldSize { get; }
+        public Vector2i NewSize { get; }
     }
 }

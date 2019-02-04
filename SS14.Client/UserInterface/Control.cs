@@ -12,6 +12,7 @@ using SS14.Client.Graphics.Drawing;
 using SS14.Shared.Utility;
 using SS14.Client.Interfaces.ResourceManagement;
 using System.IO;
+using System.Linq;
 using JetBrains.Annotations;
 using SS14.Client.Graphics;
 using SS14.Client.ResourceManagement.ResourceTypes;
@@ -47,6 +48,7 @@ namespace SS14.Client.UserInterface
                     throw new ArgumentException("New name may not be null or whitespace.", nameof(value));
                 }
 
+                var index = 0;
                 if (Parent != null)
                 {
                     if (Parent.HasChild(value))
@@ -54,6 +56,7 @@ namespace SS14.Client.UserInterface
                         throw new ArgumentException($"Parent already has a child with name {value}.");
                     }
 
+                    index = Parent._children[_name].orderedIndex;
                     Parent._children.Remove(_name);
                 }
 
@@ -66,7 +69,7 @@ namespace SS14.Client.UserInterface
 
                 if (Parent != null)
                 {
-                    Parent._children[_name] = this;
+                    Parent._children[_name] = (this, index);
                 }
             }
         }
@@ -85,7 +88,7 @@ namespace SS14.Client.UserInterface
         /// <summary>
         ///     Gets an enumerable over all the children of this control.
         /// </summary>
-        public IEnumerable<Control> Children => _children.Values;
+        public IEnumerable<Control> Children => _orderedChildren;
 
         /// <summary>
         ///     The control's representation in Godot's scene tree.
@@ -104,142 +107,216 @@ namespace SS14.Client.UserInterface
         public const float ANCHOR_BEGIN = 0;
         public const float ANCHOR_END = 1;
 
+        private float _anchorBottom;
+
         public float AnchorBottom
         {
-            get => GameController.OnGodot ? GameController.OnGodot ? SceneControl.AnchorBottom : default : default;
+            get => GameController.OnGodot ? SceneControl.AnchorBottom : _anchorBottom;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.AnchorBottom = value;
                 }
+                else
+                {
+                    _anchorBottom = value;
+                    _updateLayout();
+                }
             }
         }
 
+        private float _anchorLeft;
+
         public float AnchorLeft
         {
-            get => GameController.OnGodot ? SceneControl.AnchorLeft : default;
+            get => GameController.OnGodot ? SceneControl.AnchorLeft : _anchorLeft;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.AnchorLeft = value;
                 }
+                else
+                {
+                    _anchorLeft = value;
+                    _updateLayout();
+                }
             }
         }
 
+        private float _anchorRight;
+
         public float AnchorRight
         {
-            get => GameController.OnGodot ? SceneControl.AnchorRight : default;
+            get => GameController.OnGodot ? SceneControl.AnchorRight : _anchorRight;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.AnchorRight = value;
                 }
+                else
+                {
+                    _anchorRight = value;
+                    _updateLayout();
+                }
             }
         }
 
+        private float _anchorTop;
+
         public float AnchorTop
         {
-            get => GameController.OnGodot ? SceneControl.AnchorTop : default;
+            get => GameController.OnGodot ? SceneControl.AnchorTop : _anchorTop;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.AnchorTop = value;
                 }
+                else
+                {
+                    _anchorTop = value;
+                    _updateLayout();
+                }
             }
         }
 
+        private float _marginRight;
+
         public float MarginRight
         {
-            get => GameController.OnGodot ? SceneControl.MarginRight : default;
+            get => GameController.OnGodot ? SceneControl.MarginRight : _marginRight;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.MarginRight = value;
                 }
+                else
+                {
+                    _marginRight = value;
+                    _updateLayout();
+                }
             }
         }
 
+        private float _marginLeft;
+
         public float MarginLeft
         {
-            get => GameController.OnGodot ? SceneControl.MarginLeft : default;
+            get => GameController.OnGodot ? SceneControl.MarginLeft : _marginLeft;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.MarginLeft = value;
                 }
+                else
+                {
+                    _marginLeft = value;
+                    _updateLayout();
+                }
             }
         }
 
+        private float _marginTop;
+
         public float MarginTop
         {
-            get => GameController.OnGodot ? SceneControl.MarginTop : default;
+            get => GameController.OnGodot ? SceneControl.MarginTop : _marginTop;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.MarginTop = value;
                 }
+                else
+                {
+                    _marginTop = value;
+                    _updateLayout();
+                }
             }
         }
 
+        private float _marginBottom;
+
         public float MarginBottom
         {
-            get => GameController.OnGodot ? SceneControl.MarginBottom : default;
+            get => GameController.OnGodot ? SceneControl.MarginBottom : _marginBottom;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.MarginBottom = value;
                 }
+                else
+                {
+                    _marginBottom = value;
+                    _updateLayout();
+                }
             }
         }
 
+        private bool _visible = true;
+
         public bool Visible
         {
-            get => GameController.OnGodot ? SceneControl.Visible : default;
+            get => GameController.OnGodot ? SceneControl.Visible : _visible;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.Visible = value;
                 }
+                else
+                {
+                    _visible = value;
+                }
             }
         }
 
+        private Vector2 _size;
+
         public Vector2 Size
         {
-            get => GameController.OnGodot ? SceneControl.GetSize().Convert() : default;
+            get => GameController.OnGodot ? SceneControl.GetSize().Convert() : _size;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.SetSize(value.Convert());
                 }
+                else
+                {
+                    var (diffX, diffY) = value - _size;
+                    _marginRight += diffX;
+                    _marginBottom += diffY;
+                    _updateLayout();
+                }
             }
         }
 
+        private Vector2 _position;
+
         public Vector2 Position
         {
-            get => GameController.OnGodot ? SceneControl.GetPosition().Convert() : default;
+            get => GameController.OnGodot ? SceneControl.GetPosition().Convert() : _position;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.SetPosition(value.Convert());
                 }
+                else
+                {
+                    throw new NotImplementedException();
+                }
             }
         }
 
-        public UIBox2 Rect
-        {
-            get => GameController.OnGodot ? SceneControl.GetRect().Convert() : default;
-        }
+        public UIBox2 Rect => UIBox2.FromDimensions(_position, _size);
 
         public Vector2 Scale
         {
@@ -338,8 +415,27 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public Vector2 CombinedMinimumSize
         {
-            get => GameController.OnGodot ? SceneControl.GetCombinedMinimumSize().Convert() : default;
+            get
+            {
+                if (GameController.OnGodot)
+                {
+                    return SceneControl.GetCombinedMinimumSize().Convert();
+                }
+                else
+                {
+                    if (!_calculatedMinimumSize.HasValue)
+                    {
+                        _updateMinimumSize();
+                        DebugTools.Assert(_calculatedMinimumSize.HasValue);
+                    }
+
+                    return Vector2.ComponentMax(CustomMinimumSize, _calculatedMinimumSize.Value);
+                }
+            }
         }
+
+        private Vector2? _calculatedMinimumSize;
+        private Vector2 _customMinimumSize;
 
         /// <summary>
         ///     A custom minimum size. If the control-calculated size is is smaller than this, this is used instead.
@@ -348,22 +444,33 @@ namespace SS14.Client.UserInterface
         /// <seealso cref="CombinedMinimumSize" />
         public Vector2 CustomMinimumSize
         {
-            get => GameController.OnGodot ? SceneControl.RectMinSize.Convert() : default;
+            get => GameController.OnGodot ? SceneControl.RectMinSize.Convert() : _customMinimumSize;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.RectMinSize = value.Convert();
                 }
+                else
+                {
+                    _customMinimumSize = Vector2.ComponentMax(Vector2.Zero, value);
+                    MinimumSizeChanged();
+                }
             }
         }
 
-        public Vector2 GlobalMousePosition
+        private void _updateMinimumSize()
         {
-            get => GameController.OnGodot ? SceneControl.GetGlobalMousePosition().Convert() : default;
+            _calculatedMinimumSize = Vector2.ComponentMax(Vector2.Zero, CalculateMinimumSize());
         }
 
-        private readonly Dictionary<string, Control> _children = new Dictionary<string, Control>();
+        public Vector2 GlobalMousePosition =>
+            GameController.OnGodot ? SceneControl.GetGlobalMousePosition().Convert() : default;
+
+        private readonly Dictionary<string, (Control, int orderedIndex)> _children =
+            new Dictionary<string, (Control, int)>();
+
+        private readonly List<Control> _orderedChildren = new List<Control>();
 
         /// <summary>
         ///     Default constructor.
@@ -780,7 +887,7 @@ namespace SS14.Client.UserInterface
         /// <exception cref="ArgumentNullException">
         ///    <paramref name="child"/> is <c>null</c>.
         /// </exception>
-        public virtual void AddChild(Control child, bool LegibleUniqueName = false)
+        public void AddChild(Control child, bool LegibleUniqueName = false)
         {
             if (child == null) throw new ArgumentNullException(nameof(child));
             if (child.Parent != null)
@@ -788,20 +895,18 @@ namespace SS14.Client.UserInterface
                 throw new InvalidOperationException("This component is still parented. Deparent it before adding it.");
             }
 
-            child.Parent = this;
-            child.Parented(this);
-
             if (GameController.OnGodot)
             {
                 SceneControl.AddChild(child.SceneControl, LegibleUniqueName);
                 // Godot changes the name automtically if you would cause a naming conflict.
-                if (child.SceneControl.GetName() != child._name)
-                {
-                    child._name = child.SceneControl.GetName();
-                }
+                child._name = child.SceneControl.GetName();
             }
 
-            _children[child.Name] = child;
+            child.Parent = this;
+            _children[child.Name] = (child, _orderedChildren.Count);
+            _orderedChildren.Add(child);
+
+            child.Parented(this);
         }
 
         /// <summary>
@@ -810,6 +915,8 @@ namespace SS14.Client.UserInterface
         /// <param name="newParent">The new parent component.</param>
         protected virtual void Parented(Control newParent)
         {
+            MinimumSizeChanged();
+            _updateLayout();
         }
 
         /// <summary>
@@ -819,11 +926,21 @@ namespace SS14.Client.UserInterface
         /// <exception cref="InvalidOperationException">
         ///     Thrown if the provided child is not one of this control's children.
         /// </exception>
-        public virtual void RemoveChild(Control child)
+        public void RemoveChild(Control child)
         {
-            if (!_children.ContainsKey(child.Name) || _children[child.Name] != child)
+            if (!_children.ContainsKey(child.Name) || _children[child.Name].Item1 != child)
             {
                 throw new InvalidOperationException("The provided control is not a direct child of this control.");
+            }
+
+            var index = _children[child.Name].orderedIndex;
+            _orderedChildren.RemoveAt(index);
+            foreach (var (reOrderChild, childIndex) in _children.Values.ToList())
+            {
+                if (childIndex > index)
+                {
+                    _children[reOrderChild.Name] = (reOrderChild, childIndex - 1);
+                }
             }
 
             _children.Remove(child.Name);
@@ -860,7 +977,11 @@ namespace SS14.Client.UserInterface
             if (GameController.OnGodot)
             {
                 SceneControl.MinimumSizeChanged();
+                return;
             }
+
+            _calculatedMinimumSize = null;
+            _updateLayout();
         }
 
         protected virtual bool HasPoint(Vector2 point)
@@ -903,17 +1024,24 @@ namespace SS14.Client.UserInterface
         {
             if (_children.TryGetValue(name, out var control))
             {
-                child = (T) control;
+                child = (T) control.Item1;
                 return true;
             }
 
-            child = null;
+            child = default;
             return false;
         }
 
         public bool TryGetChild(string name, out Control child)
         {
-            return _children.TryGetValue(name, out child);
+            if (_children.TryGetValue(name, out var childEntry))
+            {
+                child = childEntry.Item1;
+                return true;
+            }
+
+            child = default;
+            return false;
         }
 
         public bool HasChild(string name)
@@ -1043,7 +1171,8 @@ namespace SS14.Client.UserInterface
             if (parent != null)
             {
                 newControl.Parent = parent;
-                parent._children[newControl.Name] = newControl;
+                parent._children[newControl.Name] = (newControl, parent._orderedChildren.Count);
+                parent._orderedChildren.Add(newControl);
             }
 
             newControl.WrapChildControls();
@@ -1142,6 +1271,123 @@ namespace SS14.Client.UserInterface
             if (GameController.OnGodot)
             {
                 SceneControl.SetAnchorsPreset((Godot.Control.LayoutPreset) preset, keepMargin);
+                return;
+            }
+
+            // Left Anchor.
+            switch (preset)
+            {
+                case LayoutPreset.TopLeft:
+                case LayoutPreset.BottomLeft:
+                case LayoutPreset.CenterLeft:
+                case LayoutPreset.LeftWide:
+                case LayoutPreset.HorizontalCenterWide:
+                case LayoutPreset.Wide:
+                case LayoutPreset.TopWide:
+                case LayoutPreset.BottomWide:
+                    AnchorLeft = 0;
+                    break;
+                case LayoutPreset.TopRight:
+                case LayoutPreset.BottomRight:
+                case LayoutPreset.CenterRight:
+                case LayoutPreset.RightWide:
+                    AnchorLeft = 1;
+                    break;
+                case LayoutPreset.CenterTop:
+                case LayoutPreset.CenterBottom:
+                case LayoutPreset.Center:
+                case LayoutPreset.VerticalCenterWide:
+                    AnchorLeft = 0.5f;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
+            }
+
+            // Top Anchor.
+            switch (preset)
+            {
+                case LayoutPreset.TopLeft:
+                case LayoutPreset.TopRight:
+                case LayoutPreset.LeftWide:
+                case LayoutPreset.TopWide:
+                case LayoutPreset.Wide:
+                case LayoutPreset.RightWide:
+                case LayoutPreset.CenterTop:
+                case LayoutPreset.VerticalCenterWide:
+                    AnchorTop = 0;
+                    break;
+                case LayoutPreset.HorizontalCenterWide:
+                case LayoutPreset.BottomLeft:
+                case LayoutPreset.BottomRight:
+                case LayoutPreset.BottomWide:
+                    AnchorTop = 1;
+                    break;
+                case LayoutPreset.CenterBottom:
+                case LayoutPreset.CenterLeft:
+                case LayoutPreset.CenterRight:
+                case LayoutPreset.Center:
+                    AnchorTop = 0.5f;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
+            }
+
+            // Right Anchor.
+            switch (preset)
+            {
+                case LayoutPreset.CenterRight:
+                case LayoutPreset.TopRight:
+                case LayoutPreset.Wide:
+                case LayoutPreset.HorizontalCenterWide:
+                case LayoutPreset.TopWide:
+                case LayoutPreset.BottomWide:
+                case LayoutPreset.RightWide:
+                case LayoutPreset.BottomRight:
+                    AnchorRight = 0;
+                    break;
+                case LayoutPreset.TopLeft:
+                case LayoutPreset.CenterLeft:
+                case LayoutPreset.BottomLeft:
+                case LayoutPreset.LeftWide:
+                    AnchorRight = 1;
+                    break;
+                case LayoutPreset.CenterTop:
+                case LayoutPreset.CenterBottom:
+                case LayoutPreset.Center:
+                case LayoutPreset.VerticalCenterWide:
+                    AnchorRight = 0.5f;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
+            }
+
+            // Bottom Anchor.
+            switch (preset)
+            {
+                case LayoutPreset.BottomLeft:
+                case LayoutPreset.BottomRight:
+                case LayoutPreset.LeftWide:
+                case LayoutPreset.Wide:
+                case LayoutPreset.RightWide:
+                case LayoutPreset.VerticalCenterWide:
+                case LayoutPreset.BottomWide:
+                    AnchorBottom = 0;
+                    break;
+                case LayoutPreset.TopWide:
+                case LayoutPreset.TopLeft:
+                case LayoutPreset.TopRight:
+                case LayoutPreset.CenterTop:
+                case LayoutPreset.CenterBottom:
+                    AnchorBottom = 1;
+                    break;
+                case LayoutPreset.CenterLeft:
+                case LayoutPreset.CenterRight:
+                case LayoutPreset.Center:
+                case LayoutPreset.HorizontalCenterWide:
+                    AnchorBottom = 0.5f;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
             }
         }
 
@@ -1226,6 +1472,7 @@ namespace SS14.Client.UserInterface
             {
                 return;
             }
+
             // So here's an interesting one.
             // Godot's AddColorOverride and such API on controls
             // Doesn't actually have a way to REMOVE the override.
@@ -1246,6 +1493,7 @@ namespace SS14.Client.UserInterface
             {
                 return default;
             }
+
             return SceneControl.HasColorOverride(name) ? SceneControl.GetColor(name).Convert() : (Color?) null;
         }
 
@@ -1255,6 +1503,7 @@ namespace SS14.Client.UserInterface
             {
                 return;
             }
+
             if (constant != null)
             {
                 SceneControl.AddConstantOverride(name, constant.Value);
@@ -1271,6 +1520,7 @@ namespace SS14.Client.UserInterface
             {
                 return default;
             }
+
             return SceneControl.HasConstantOverride(name) ? SceneControl.GetConstant(name) : (int?) null;
         }
 
@@ -1280,6 +1530,7 @@ namespace SS14.Client.UserInterface
             {
                 return;
             }
+
             SceneControl.AddStyleboxOverride(name, styleBox.GodotStyleBox);
         }
 
@@ -1289,6 +1540,7 @@ namespace SS14.Client.UserInterface
             {
                 return default;
             }
+
             var box = SceneControl.HasStyleboxOverride(name) ? SceneControl.GetStylebox(name) : null;
             return box == null ? null : new GodotStyleBoxWrap(box);
         }
@@ -1299,6 +1551,7 @@ namespace SS14.Client.UserInterface
             {
                 return;
             }
+
             SceneControl.AddFontOverride(name, font);
         }
 
@@ -1308,6 +1561,7 @@ namespace SS14.Client.UserInterface
             {
                 return default;
             }
+
             var font = SceneControl.HasFontOverride(name) ? SceneControl.GetFont(name) : null;
             return font == null ? null : new GodotWrapFont(font);
         }
@@ -1323,6 +1577,46 @@ namespace SS14.Client.UserInterface
 
         protected virtual void Update(ProcessFrameEventArgs args)
         {
+        }
+
+        private void _updateLayout(bool immediate = false)
+        {
+            _doUpdateLayout();
+        }
+
+        private void _doUpdateLayout()
+        {
+            if (Parent == null)
+            {
+                return;
+            }
+
+            var (sizeX, sizeY) = Parent._size;
+
+            var top = _anchorTop * sizeY + _marginTop;
+            var left = _anchorLeft * sizeX + _marginLeft;
+            var right = _anchorRight * sizeX + _marginRight;
+            var bottom = _anchorBottom * sizeY + _marginBottom;
+
+            _position = new Vector2(left, top);
+            _size = new Vector2(right - left, bottom - top);
+            var (minX, minY) = CombinedMinimumSize;
+            if (_size.X < minX)
+            {
+                _marginRight += minX - _size.X;
+                _size = new Vector2(minX, _size.Y);
+            }
+
+            if (_size.Y < minY)
+            {
+                _marginBottom += minY - _size.Y;
+                _size = new Vector2(_size.Y, minY);
+            }
+
+            foreach (var child in _orderedChildren)
+            {
+                child._doUpdateLayout();
+            }
         }
 
         public enum CursorShape

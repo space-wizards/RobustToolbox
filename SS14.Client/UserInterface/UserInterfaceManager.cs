@@ -4,6 +4,7 @@ using SS14.Client.Graphics.Clyde;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface.Controls;
@@ -22,6 +23,7 @@ namespace SS14.Client.UserInterface
         [Dependency] private readonly IConfigurationManager _config;
         [Dependency] private readonly ISceneTreeHolder _sceneTreeHolder;
         [Dependency] private readonly IInputManager _inputManager;
+        [Dependency] private readonly IDisplayManager _displayManager;
 
         public Control Focused { get; private set; }
 
@@ -57,6 +59,7 @@ namespace SS14.Client.UserInterface
                 MouseFilter = Control.MouseFilterMode.Ignore
             };
             RootControl.SetAnchorPreset(Control.LayoutPreset.Wide);
+            RootControl.Size = _displayManager.ScreenSize;
 
             if (GameController.OnGodot)
             {
@@ -129,15 +132,20 @@ namespace SS14.Client.UserInterface
         {
             var drawHandle = renderHandle.CreateHandleScreen();
 
-            _render(drawHandle, RootControl);
+            _render(drawHandle, RootControl, Vector2.Zero);
         }
 
-        private void _render(DrawingHandleScreen handle, Control control)
+        private static void _render(DrawingHandleScreen handle, Control control, Vector2 position)
         {
+            if (!control.Visible)
+            {
+                return;
+            }
+            handle.SetTransform(position, Angle.Zero, Vector2.One);
             control.Draw(handle);
             foreach (var child in control.Children)
             {
-                _render(handle, child);
+                _render(handle, child, position + child.Position);
             }
         }
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net.NetworkInformation;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Clyde;
 using SS14.Client.Utility;
@@ -190,17 +189,6 @@ namespace SS14.Client.Graphics.Drawing
             }
         }
 
-        public void DrawStyleBox(StyleBox styleBox, UIBox2 box)
-        {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
-            CheckDisposed();
-            styleBox.GodotStyleBox.Draw(Item, box.Convert());
-        }
-
         private static Godot.Vector2 ToPixelCoords(Vector2 vec)
         {
             return (vec * new Vector2(1, -1) * PPM).Convert();
@@ -240,10 +228,7 @@ namespace SS14.Client.Graphics.Drawing
 
         public void DrawStyleBox(StyleBox styleBox, UIBox2 box)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
+            if (styleBox == null) throw new ArgumentNullException(nameof(styleBox));
 
             CheckDisposed();
             styleBox.GodotStyleBox.Draw(Item, box.Convert());

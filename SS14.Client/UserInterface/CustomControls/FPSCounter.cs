@@ -1,4 +1,6 @@
 ﻿using SS14.Client.UserInterface.Controls;
+using SS14.Shared.Interfaces.Timing;
+using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Reflection;
 
@@ -24,7 +26,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 return;
             }
 
-            var fps = Godot.Performance.GetMonitor(Godot.Performance.Monitor.TimeFps);
+            var fps = IoCManager.Resolve<IGameTiming>().FramesPerSecondAvg;
             Text = $"FPS: {fps}";
         }
     }

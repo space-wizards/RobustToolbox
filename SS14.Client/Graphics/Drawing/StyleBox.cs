@@ -24,6 +24,23 @@ namespace SS14.Client.Graphics.Drawing
             Vertical = Top | Bottom,
             Horizontal = Left | Right,
         }
+
+        public void Draw(DrawingHandleScreen handle, UIBox2 box)
+        {
+            if (GameController.OnGodot)
+            {
+                GodotStyleBox.Draw(handle.Item, box.Convert());
+            }
+            else
+            {
+                DoDraw(handle, box);
+            }
+        }
+
+        protected virtual void DoDraw(DrawingHandleScreen handle, UIBox2 box)
+        {
+
+        }
     }
 
     internal class GodotStyleBoxWrap : StyleBox
@@ -180,20 +197,24 @@ namespace SS14.Client.Graphics.Drawing
 
     public class StyleBoxFlat : StyleBox
     {
+        private Color _backgroundColor;
         public Color BackgroundColor
         {
-            get => GameController.OnGodot ? stylebox.BgColor.Convert() : default;
+            get => GameController.OnGodot ? stylebox.BgColor.Convert() : _backgroundColor;
             set
             {
                 if (GameController.OnGodot)
                 {
                     stylebox.BgColor = value.Convert();
                 }
+                else
+                {
+                    _backgroundColor = value;
+                }
             }
         }
 
         private readonly Godot.StyleBoxFlat stylebox;
-
         internal override Godot.StyleBox GodotStyleBox => stylebox;
 
         public StyleBoxFlat()
@@ -204,50 +225,70 @@ namespace SS14.Client.Graphics.Drawing
             }
         }
 
+        private float _marginLeft;
         public float MarginLeft
         {
-            get => GameController.OnGodot ? stylebox.ContentMarginLeft : default;
+            get => GameController.OnGodot ? stylebox.ContentMarginLeft : _marginLeft;
             set
             {
                 if (GameController.OnGodot)
                 {
                     stylebox.ContentMarginLeft = value;
                 }
+                else
+                {
+                    _marginLeft = value;
+                }
             }
         }
 
+        private float _marginRight;
         public float MarginRight
         {
-            get => GameController.OnGodot ? stylebox.ContentMarginRight : default;
+            get => GameController.OnGodot ? stylebox.ContentMarginRight : _marginRight;
             set
             {
                 if (GameController.OnGodot)
                 {
                     stylebox.ContentMarginRight = value;
                 }
+                else
+                {
+                    _marginRight = value;
+                }
             }
         }
 
+        private float _marginTop;
         public float MarginTop
         {
-            get => GameController.OnGodot ? stylebox.ContentMarginTop : default;
+            get => GameController.OnGodot ? stylebox.ContentMarginTop : _marginTop;
             set
             {
                 if (GameController.OnGodot)
                 {
                     stylebox.ContentMarginTop = value;
                 }
+                else
+                {
+                    _marginTop = value;
+                }
             }
         }
 
+        private float _marginBottom;
         public float MarginBottom
         {
-            get => GameController.OnGodot ? stylebox.ContentMarginBottom : default;
+            get => GameController.OnGodot ? stylebox.ContentMarginBottom : _marginBottom;
             set
             {
                 if (GameController.OnGodot)
                 {
                     stylebox.ContentMarginBottom = value;
+                }
+                else
+                {
+                    _marginBottom = value;
                 }
             }
         }
@@ -277,6 +318,14 @@ namespace SS14.Client.Graphics.Drawing
             {
                 MarginLeft = value;
             }
+        }
+
+        protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box)
+        {
+            var topLeft = box.TopLeft + new Vector2(_marginLeft, _marginTop);
+            var bottomRight = box.BottomRight + new Vector2(_marginRight, _marginBottom);
+
+            handle.DrawRect(new UIBox2(topLeft, bottomRight), _backgroundColor);
         }
     }
 }

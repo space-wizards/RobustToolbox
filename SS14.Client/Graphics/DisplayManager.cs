@@ -1,3 +1,4 @@
+using System;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Graphics;
 using SS14.Shared.Configuration;
@@ -42,6 +43,8 @@ namespace SS14.Client.Graphics
         {
             _readConfig();
         }
+
+        public abstract event Action<WindowResizedEventArgs> OnWindowResized;
 
         protected void _readConfig()
         {

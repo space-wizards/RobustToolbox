@@ -1,3 +1,5 @@
+using System;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
 
@@ -24,5 +26,7 @@ namespace SS14.Client.Graphics
             Godot.OS.VsyncEnabled = VSync;
             Godot.OS.WindowFullscreen = WindowMode == WindowMode.Fullscreen;
         }
+
+        public override event Action<WindowResizedEventArgs> OnWindowResized;
     }
 }

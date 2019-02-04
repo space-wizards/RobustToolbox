@@ -1,3 +1,5 @@
+using System;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics
@@ -21,5 +23,7 @@ namespace SS14.Client.Graphics
         {
             // Do nothing.
         }
+
+        public override event Action<WindowResizedEventArgs> OnWindowResized;
     }
 }

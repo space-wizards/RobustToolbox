@@ -43,6 +43,7 @@ namespace SS14.Client.Graphics.Clyde
         [Dependency] private readonly IEntityManager _entityManager;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
 
+        private Vector2i _windowSize;
         private GameWindow _window;
 
         private const int ProjViewBindingIndex = 0;
@@ -113,6 +114,8 @@ namespace SS14.Client.Graphics.Clyde
             _window.WindowState = WindowMode == WindowMode.Fullscreen ? WindowState.Fullscreen : WindowState.Normal;
         }
 
+        public override event Action<WindowResizedEventArgs> OnWindowResized;
+
         private void _initWindow()
         {
             _window = new GameWindow(
@@ -133,6 +136,8 @@ namespace SS14.Client.Graphics.Clyde
                 Visible = true
             };
 
+            _windowSize = new Vector2i(_window.Width, _window.Height);
+
             _mainThread = Thread.CurrentThread;
 
             _window.KeyDown += (sender, eventArgs) =>
@@ -147,7 +152,13 @@ namespace SS14.Client.Graphics.Clyde
 
             _window.KeyUp += (sender, eventArgs) => { _gameController.GameController.KeyUp((KeyEventArgs) eventArgs); };
             _window.Closed += (sender, eventArgs) => { _gameController.GameController.Shutdown("Window closed"); };
-            _window.Resize += (sender, eventArgs) => { GL.Viewport(0, 0, _window.Width, _window.Height); };
+            _window.Resize += (sender, eventArgs) =>
+            {
+                var oldSize = _windowSize;
+                _windowSize = new Vector2i(_window.Width, _window.Height);
+                GL.Viewport(0, 0, _window.Width, _window.Height);
+                OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _windowSize));
+            };
             _window.MouseDown += (sender, eventArgs) =>
             {
                 _gameController.GameController.KeyDown((KeyEventArgs) eventArgs);

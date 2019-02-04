@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Godot;
 using SS14.Client.GodotGlue;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
@@ -202,7 +203,7 @@ namespace SS14.Client
 
             public TimeSpan RealFrameTimeStdDev => throw new NotImplementedException();
 
-            public double FramesPerSecondAvg => throw new NotImplementedException();
+            public double FramesPerSecondAvg => Godot.Performance.GetMonitor(Performance.Monitor.TimeFps);
 
             public uint CurTick { get; set; }
             public int TickRate

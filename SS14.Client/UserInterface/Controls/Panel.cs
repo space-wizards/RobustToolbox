@@ -1,4 +1,5 @@
 ﻿using SS14.Client.Graphics.Drawing;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
@@ -28,6 +29,16 @@ namespace SS14.Client.UserInterface.Controls
         {
             get => _panelOverride ?? GetStyleBoxOverride("panel");
             set => SetStyleBoxOverride("panel", _panelOverride = value);
+        }
+
+        protected internal override void Draw(DrawingHandleScreen handle)
+        {
+            base.Draw(handle);
+
+            if (!GameController.OnGodot)
+            {
+                _panelOverride?.Draw(handle, UIBox2.FromDimensions(Vector2.Zero, Size));
+            }
         }
     }
 }

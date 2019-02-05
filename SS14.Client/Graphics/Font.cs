@@ -81,15 +81,16 @@ namespace SS14.Client.Graphics
         {
             DebugTools.Assert(!GameController.OnGodot);
 
-            var texture = Handle.GetCharTexture(chr);
-            if (texture == null)
-            {
-                return 0;
-            }
             var metrics = Handle.GetCharMetrics(chr);
             if (!metrics.HasValue)
             {
                 return 0;
+            }
+
+            var texture = Handle.GetCharTexture(chr);
+            if (texture == null)
+            {
+                return metrics.Value.Advance;
             }
 
             baseline += new Vector2(metrics.Value.BearingX, -metrics.Value.BearingY);

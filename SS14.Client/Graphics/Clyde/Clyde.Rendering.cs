@@ -411,7 +411,14 @@ namespace SS14.Client.Graphics.Clyde
                 {
                     var (w, h) = loadedTexture.Size;
                     var csr = command.SubRegion.Value;
-                    sr = new UIBox2(csr.Left / w, csr.Top / h, csr.Right / w, csr.Bottom / h);
+                    if (_currentSpace == CurrentSpace.WorldSpace)
+                    {
+                        sr = new UIBox2(csr.Left / w, csr.Top / h, csr.Right / w, csr.Bottom / h);
+                    }
+                    else
+                    {
+                        sr = new UIBox2(csr.Left / w, csr.Bottom / h, csr.Right / w, csr.Top / h);
+                    }
                 }
                 else
                 {

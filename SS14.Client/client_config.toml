@@ -13,6 +13,7 @@ height = 720
 windowmode = 0
 vsync = true
 lighting_system = 0
+fontdpi = 72
 
 [net]
 server = "127.0.0.1"

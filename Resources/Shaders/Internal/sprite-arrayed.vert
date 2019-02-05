@@ -25,7 +25,7 @@ uniform vec4 modifyUV;
 void main()
 {
     vec3 transformed = projectionMatrix * viewMatrix * modelMatrix * vec3(aPos, 1.0);
-    gl_Position = vec4(transformed, 1.0);
+    gl_Position = vec4(transformed.xy, 0.0, 1.0);
     TexCoord = mix(modifyUV.xy, modifyUV.zw, tCoord);
     ArrayIndex = tArrayIndex * modifyArrayIndex;
 }

@@ -55,21 +55,23 @@ namespace SS14.Client.Graphics
             }
 
             var face = fontFaceHandle.Face;
-            var (atlasData, glyphMap) = _generateAtlas(face, size);
+            var (atlasData, glyphMap, metricsMap) = _generateAtlas(face, size);
             var ascent = face.Size.Metrics.Ascender.ToInt32();
             var descent = face.Size.Metrics.Descender.ToInt32();
             var height = face.Size.Metrics.Height.ToInt32();
-            var instanceHandle = new FontInstanceHandle(this, atlasData, size, fontFaceHandle.Face, glyphMap, ascent, descent, height);
+            var instanceHandle = new FontInstanceHandle(this, atlasData, size, fontFaceHandle.Face, glyphMap, ascent,
+                descent, height, metricsMap);
             _loadedInstances.Add((fontFaceHandle, size), instanceHandle);
             return instanceHandle;
         }
 
         void IFontManagerInternal.Initialize()
         {
-            FontDPI = (uint)_configuration.GetCVar<int>("display.fontdpi");
+            FontDPI = (uint) _configuration.GetCVar<int>("display.fontdpi");
         }
 
-        private (FontTextureAtlas, Dictionary<char, uint> glyphMap) _generateAtlas(Face face, int size)
+        private (FontTextureAtlas, Dictionary<char, uint> glyphMap, Dictionary<uint, CharMetrics> metricsMap)
+            _generateAtlas(Face face, int size)
         {
             // TODO: This could use a better box packing algorithm.
             // Right now we treat each glyph bitmap as having the max size among all glyphs.
@@ -81,7 +83,7 @@ namespace SS14.Client.Graphics
 
             // TODO: Render more than ASCII, somehow. Does it make sense to just render every glyph in the font?
             // Render all the normal ASCII characters.
-            const uint startIndex = 33;
+            const uint startIndex = 32;
             const uint endIndex = 127;
             for (var i = startIndex; i <= endIndex; i++)
             {
@@ -102,6 +104,7 @@ namespace SS14.Client.Graphics
                 atlasEntriesVertical * maxGlyphSize.Y);
 
             var glyphMap = new Dictionary<char, uint>();
+            var metricsMap = new Dictionary<uint, CharMetrics>();
             var atlasRegions = new Dictionary<uint, UIBox2>();
             count = 0;
             for (var i = startIndex; i <= endIndex; i++)
@@ -110,6 +113,11 @@ namespace SS14.Client.Graphics
                 glyphMap.Add((char) i, glyphIndex);
                 face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
                 face.Glyph.RenderGlyph(RenderMode.Normal);
+                var glyphMetrics = face.Glyph.Metrics;
+                var metrics = new CharMetrics(glyphMetrics.HorizontalBearingX.ToInt32(),
+                    glyphMetrics.HorizontalBearingY.ToInt32(),
+                    glyphMetrics.HorizontalAdvance.ToInt32());
+                metricsMap.Add(glyphIndex, metrics);
 
                 var bitmap = face.Glyph.Bitmap;
                 if (bitmap.Pitch == 0)
@@ -182,7 +190,7 @@ namespace SS14.Client.Graphics
                 atlasDictionary.Add(glyph, new AtlasTexture(texture, region));
             }
 
-            return (new FontTextureAtlas(texture, atlasDictionary), glyphMap);
+            return (new FontTextureAtlas(texture, atlasDictionary), glyphMap, metricsMap);
         }
 
         private static Image<Alpha8> MonoBitMapToImage(FTBitmap bitmap)
@@ -228,14 +236,15 @@ namespace SS14.Client.Graphics
             public Face Face { get; }
             public int Size { get; }
             private readonly Dictionary<char, uint> _glyphMap;
-            private readonly Dictionary<char, CharMetrics> _metricsMap = new Dictionary<char, CharMetrics>();
+            private readonly Dictionary<uint, CharMetrics> _metricsMap;
             public int Ascent { get; }
             public int Descent { get; }
             public int Height { get; }
             private readonly FontManager _fontManager;
 
-            public FontInstanceHandle(FontManager manager, FontTextureAtlas atlas, int size, Face face, Dictionary<char, uint> glyphMap,
-                int ascent, int descent, int height)
+            public FontInstanceHandle(FontManager manager, FontTextureAtlas atlas, int size, Face face,
+                Dictionary<char, uint> glyphMap,
+                int ascent, int descent, int height, Dictionary<uint, CharMetrics> metricsMap)
             {
                 _fontManager = manager;
                 Atlas = atlas;
@@ -245,6 +254,7 @@ namespace SS14.Client.Graphics
                 Ascent = ascent;
                 Descent = descent;
                 Height = height;
+                _metricsMap = metricsMap;
             }
 
             public FontTextureAtlas Atlas { get; }
@@ -264,30 +274,18 @@ namespace SS14.Client.Graphics
                     return null;
                 }
 
-                if (!_metricsMap.TryGetValue(chr, out var metrics))
-                {
-                    Face.SetCharSize(0, Size, 0, _fontManager.FontDPI);
-                    Face.LoadGlyph(glyph, LoadFlags.Default, LoadTarget.Normal);
-
-                    var glyphMetrics = Face.Glyph.Metrics;
-                    metrics = new CharMetrics(glyphMetrics.HorizontalBearingX.ToInt32(),
-                        glyphMetrics.HorizontalBearingY.ToInt32(),
-                        glyphMetrics.HorizontalAdvance.ToInt32());
-                    _metricsMap.Add(chr, metrics);
-                }
-
+                _metricsMap.TryGetValue(glyph, out var metrics);
                 return metrics;
             }
 
             private uint _getGlyph(char chr)
             {
-                if (!_glyphMap.TryGetValue(chr, out var glyph))
+                if (_glyphMap.TryGetValue(chr, out var glyph))
                 {
-                    glyph = Face.GetCharIndex(chr);
-                    _glyphMap.Add(chr, glyph);
+                    return glyph;
                 }
 
-                return glyph;
+                return 0;
             }
         }
 

@@ -1033,6 +1033,7 @@ namespace SS14.Client.UserInterface
 
             _calculatedMinimumSize = null;
             _updateLayout();
+            OnMinimumSizeChanged?.Invoke(this);
         }
 
         protected virtual bool HasPoint(Vector2 point)

@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Drawing;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.Controls
 {
@@ -13,6 +14,8 @@ namespace SS14.Client.UserInterface.Controls
     [ControlWrap(typeof(Godot.Label))]
     public class Label : Control
     {
+        private Vector2i? _textDimensionCache;
+
         public Label(string name) : base(name)
         {
         }
@@ -25,12 +28,11 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-
         private string _text;
 
         public string Text
         {
-            get => GameController.OnGodot ? (string)SceneControl.Get("text") : _text;
+            get => GameController.OnGodot ? (string) SceneControl.Get("text") : _text;
             set
             {
                 if (GameController.OnGodot)
@@ -40,6 +42,7 @@ namespace SS14.Client.UserInterface.Controls
                 else
                 {
                     _text = value;
+                    _textDimensionCache = null;
                     MinimumSizeChanged();
                 }
             }
@@ -47,7 +50,7 @@ namespace SS14.Client.UserInterface.Controls
 
         public bool AutoWrap
         {
-            get => GameController.OnGodot ? (bool)SceneControl.Get("autowrap") : default;
+            get => GameController.OnGodot ? (bool) SceneControl.Get("autowrap") : default;
             set
             {
                 if (GameController.OnGodot)
@@ -121,18 +124,26 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
-            if (_fontOverride == null)
+            if (_fontOverride == null || _text == null)
             {
                 return;
             }
 
+            var newlines = 0;
             var baseLine = new Vector2(0, _fontOverride.Ascent);
-            foreach (var chr in "Hello, World!")
+            foreach (var chr in _text)
             {
+                if (chr == '\n')
+                {
+                    newlines += 1;
+                    baseLine = new Vector2(0, _fontOverride.Ascent + _fontOverride.Height * newlines);
+                }
+
                 var advance = _fontOverride.DrawChar(handle, chr, baseLine, Color.White);
                 baseLine += new Vector2(advance, 0);
             }
         }
+
 
         public enum AlignMode
         {
@@ -149,13 +160,48 @@ namespace SS14.Client.UserInterface.Controls
                 return base.CalculateMinimumSize();
             }
 
-            if (_fontOverride == null)
+            if (!_textDimensionCache.HasValue)
             {
-                return Vector2.Zero;
+                _calculateTextDimension();
+                DebugTools.Assert(_textDimensionCache.HasValue);
             }
 
-            var newlineCount = _text?.Count(c => c == '\n') ?? 0;
-            return new Vector2(0, (newlineCount + 1) * _fontOverride.Height);
+            return _textDimensionCache.Value;
+        }
+
+        private void _calculateTextDimension()
+        {
+            if (_fontOverride == null || _text == null)
+            {
+                _textDimensionCache = Vector2i.Zero;
+                return;
+            }
+
+            var height = _fontOverride.Ascent;
+            var maxLineSize = 0;
+            var currentLineSize = 0;
+            foreach (var chr in _text)
+            {
+                if (chr == '\n')
+                {
+                    maxLineSize = Math.Max(currentLineSize, maxLineSize);
+                    currentLineSize = 0;
+                    height += _fontOverride.Height;
+                }
+                else
+                {
+                    var metrics = _fontOverride.GetCharMetrics(chr);
+                    if (!metrics.HasValue)
+                    {
+                        continue;
+                    }
+
+                    currentLineSize += metrics.Value.Advance;
+                }
+            }
+            maxLineSize = Math.Max(currentLineSize, maxLineSize);
+
+            _textDimensionCache = new Vector2i(maxLineSize, height);
         }
     }
 }

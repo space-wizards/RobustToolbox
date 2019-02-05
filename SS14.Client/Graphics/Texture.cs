@@ -48,7 +48,7 @@ namespace SS14.Client.Graphics
         /// <param name="image">The image to load.</param>
         /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
         /// <typeparam name="T">The type of pixels of the image. At the moment, images must be <see cref="Rgba32"/>.</typeparam>
-        public static Texture LoadFromImage<T>(Image<T> image, string name = null) where T : struct, IPixel<T>
+        public static Texture LoadFromImage<T>(Image<T> image, string name = null) where T : unmanaged, IPixel<T>
         {
             switch (GameController.Mode)
             {
@@ -128,7 +128,7 @@ namespace SS14.Client.Graphics
         }
 
         public static TextureArray LoadArrayFromImages<T>(ICollection<Image<T>> images, string name = null)
-            where T : struct, IPixel<T>
+            where T : unmanaged, IPixel<T>
         {
             if (GameController.Mode != GameController.DisplayMode.OpenGL)
             {

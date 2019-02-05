@@ -31,14 +31,11 @@ namespace SS14.Client.Graphics.Clyde
             }
         }
 
-        public Texture LoadTextureFromImage<T>(Image<T> image, string name = null) where T : struct, IPixel<T>
+        public Texture LoadTextureFromImage<T>(Image<T> image, string name = null) where T : unmanaged, IPixel<T>
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
 
-            if (typeof(T) != typeof(Rgba32))
-            {
-                throw new NotImplementedException("Cannot load images other than Rgba32");
-            }
+            var pixelType = typeof(T);
 
             var texture = new OGLHandle(GL.GenTexture());
             GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
@@ -51,13 +48,38 @@ namespace SS14.Client.Graphics.Clyde
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
                 (int) TextureWrapMode.ClampToEdge);
 
-            var span = ((Image<Rgba32>) (object) image).GetPixelSpan();
+            PixelInternalFormat internalFormat;
+            PixelFormat pixelDataFormat;
+            PixelType pixelDataType;
+
+            if (pixelType == typeof(Rgba32))
+            {
+                internalFormat = PixelInternalFormat.Rgba8;
+                pixelDataFormat = PixelFormat.Rgba;
+                pixelDataType = PixelType.UnsignedByte;
+            }
+            else if (pixelType == typeof(Alpha8))
+            {
+                internalFormat = PixelInternalFormat.R8;
+                pixelDataFormat = PixelFormat.Red;
+                pixelDataType = PixelType.UnsignedByte;
+
+                // TODO: Does it make sense to default to 1 for RGB parameters?
+                // It might make more sense to pass some options to change swizzling.
+                var swizzle = new[] {(int) All.One, (int) All.One, (int) All.One, (int) All.Red};
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleRgba, swizzle);
+            }
+            else
+            {
+                throw new NotImplementedException($"Unable to handle pixel type '{pixelType.Name}'");
+            }
+
             unsafe
             {
-                fixed (Rgba32* ptr = &MemoryMarshal.GetReference(span))
+                fixed (T* ptr = image.GetPixelSpan())
                 {
-                    GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, image.Width, image.Height, 0,
-                        PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr) ptr);
+                    GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, image.Width, image.Height, 0,
+                        pixelDataFormat, pixelDataType, (IntPtr) ptr);
                 }
             }
 
@@ -82,7 +104,7 @@ namespace SS14.Client.Graphics.Clyde
         }
 
         public TextureArray LoadArrayFromImages<T>(ICollection<Image<T>> images, string name = null)
-            where T : struct, IPixel<T>
+            where T : unmanaged, IPixel<T>
         {
             DebugTools.Assert(images.Count != 0);
             (int x, int y)? size = null;

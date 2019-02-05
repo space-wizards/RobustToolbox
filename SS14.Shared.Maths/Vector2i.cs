@@ -30,6 +30,16 @@ namespace SS14.Shared.Maths
             Y = y;
         }
 
+        public static Vector2i ComponentMax(Vector2i a, Vector2i b)
+        {
+            return new Vector2i(Math.Max(a.X, b.X), Math.Max(a.Y, b.Y));
+        }
+
+        public static Vector2i ComponentMin(Vector2i a, Vector2i b)
+        {
+            return new Vector2i(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y));
+        }
+
         /// <summary>
         /// Compare a vector to another vector and check if they are equal.
         /// </summary>

@@ -935,10 +935,23 @@ namespace SS14.Client.UserInterface
                 throw new InvalidOperationException("This component is still parented. Deparent it before adding it.");
             }
 
+            var i = 0;
+            var origChildName = child.Name;
+            var childName = origChildName;
+            while (_children.ContainsKey(childName))
+            {
+                childName = $"{origChildName}_{++i}";
+            }
+
+            if (origChildName != childName)
+            {
+                child.Name = childName;
+            }
+
             if (GameController.OnGodot)
             {
                 SceneControl.AddChild(child.SceneControl, LegibleUniqueName);
-                // Godot changes the name automtically if you would cause a naming conflict.
+                // Godot changes the name automatically if you would cause a naming conflict.
                 child._name = child.SceneControl.GetName();
             }
 

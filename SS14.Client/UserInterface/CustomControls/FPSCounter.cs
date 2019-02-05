@@ -27,7 +27,7 @@ namespace SS14.Client.UserInterface.CustomControls
             }
 
             var fps = IoCManager.Resolve<IGameTiming>().FramesPerSecondAvg;
-            Text = $"FPS: {fps}";
+            Text = $"FPS: {fps:N1}";
         }
     }
 }

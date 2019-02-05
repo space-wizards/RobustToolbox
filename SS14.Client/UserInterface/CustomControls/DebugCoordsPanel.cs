@@ -57,11 +57,6 @@ namespace SS14.Client.UserInterface.CustomControls
             MouseFilter = contents.MouseFilter = MouseFilterMode.Ignore;
         }
 
-        protected internal override void Draw(DrawingHandleScreen handle)
-        {
-            base.Draw(handle);
-        }
-
         protected override void Update(ProcessFrameEventArgs args)
         {
             if (!Visible)
@@ -71,6 +66,7 @@ namespace SS14.Client.UserInterface.CustomControls
             if (playerManager.LocalPlayer?.ControlledEntity == null)
             {
                 contents.Text = "No attached entity.";
+                MinimumSizeChanged();
                 return;
             }
 

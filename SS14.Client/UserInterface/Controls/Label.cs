@@ -72,6 +72,7 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
+        private Font ActiveFont => _fontOverride ?? UserInterfaceManager.DefaultFont;
         private Font _fontOverride;
 
         public Font FontOverride
@@ -124,22 +125,22 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
-            if (_fontOverride == null || _text == null)
+            if (_text == null)
             {
                 return;
             }
 
             var newlines = 0;
-            var baseLine = new Vector2(0, _fontOverride.Ascent);
+            var baseLine = new Vector2(0, ActiveFont.Ascent);
             foreach (var chr in _text)
             {
                 if (chr == '\n')
                 {
                     newlines += 1;
-                    baseLine = new Vector2(0, _fontOverride.Ascent + _fontOverride.Height * newlines);
+                    baseLine = new Vector2(0, ActiveFont.Ascent + ActiveFont.Height * newlines);
                 }
 
-                var advance = _fontOverride.DrawChar(handle, chr, baseLine, Color.White);
+                var advance = ActiveFont.DrawChar(handle, chr, baseLine, Color.White);
                 baseLine += new Vector2(advance, 0);
             }
         }
@@ -171,13 +172,13 @@ namespace SS14.Client.UserInterface.Controls
 
         private void _calculateTextDimension()
         {
-            if (_fontOverride == null || _text == null)
+            if (_text == null)
             {
                 _textDimensionCache = Vector2i.Zero;
                 return;
             }
 
-            var height = _fontOverride.Ascent;
+            var height = ActiveFont.Ascent;
             var maxLineSize = 0;
             var currentLineSize = 0;
             foreach (var chr in _text)
@@ -186,11 +187,11 @@ namespace SS14.Client.UserInterface.Controls
                 {
                     maxLineSize = Math.Max(currentLineSize, maxLineSize);
                     currentLineSize = 0;
-                    height += _fontOverride.Height;
+                    height += ActiveFont.Height;
                 }
                 else
                 {
-                    var metrics = _fontOverride.GetCharMetrics(chr);
+                    var metrics = ActiveFont.GetCharMetrics(chr);
                     if (!metrics.HasValue)
                     {
                         continue;

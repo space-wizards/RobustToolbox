@@ -9,6 +9,8 @@ namespace SS14.UnitTesting.Client
 {
     internal class DummyUserInterfaceManager : IUserInterfaceManagerInternal
     {
+        public Font DefaultFont { get; }
+
         public Control Focused => throw new System.NotImplementedException();
 
         public Control StateRoot => throw new System.NotImplementedException();

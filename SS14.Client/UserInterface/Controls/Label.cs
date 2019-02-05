@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using JetBrains.Annotations;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Drawing;
@@ -39,6 +40,7 @@ namespace SS14.Client.UserInterface.Controls
                 else
                 {
                     _text = value;
+                    MinimumSizeChanged();
                 }
             }
         }
@@ -123,6 +125,13 @@ namespace SS14.Client.UserInterface.Controls
             {
                 return;
             }
+
+            var baseLine = new Vector2(0, _fontOverride.Ascent);
+            foreach (var chr in "Hello, World!")
+            {
+                var advance = _fontOverride.DrawChar(handle, chr, baseLine, Color.White);
+                baseLine += new Vector2(advance, 0);
+            }
         }
 
         public enum AlignMode
@@ -131,6 +140,22 @@ namespace SS14.Client.UserInterface.Controls
             Center = 1,
             Right = 2,
             Fill = 3,
+        }
+
+        protected override Vector2 CalculateMinimumSize()
+        {
+            if (GameController.OnGodot)
+            {
+                return base.CalculateMinimumSize();
+            }
+
+            if (_fontOverride == null)
+            {
+                return Vector2.Zero;
+            }
+
+            var newlineCount = _text?.Count(c => c == '\n') ?? 0;
+            return new Vector2(0, (newlineCount + 1) * _fontOverride.Height);
         }
     }
 }

@@ -83,11 +83,6 @@ namespace SS14.Client.Graphics.Clyde
                 {
                     GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, image.Width, image.Height, 0,
                         pixelDataFormat, pixelDataType, (IntPtr) ptr);
-                    if (name != null && name.Contains("font"))
-                    {
-                        var copy = Image.LoadPixelData(new ReadOnlySpan<T>(ptr, length), image.Width, image.Height);
-                        copy.Save($"copy-{name}.png");
-                    }
                 }
 
             }
@@ -159,10 +154,8 @@ namespace SS14.Client.Graphics.Clyde
                 {
                     fixed (Rgba32* ptr = span)
                     {
-                        Logger.Debug("Loading");
                         GL.TexSubImage3D(TextureTarget.Texture2DArray, 0, 0, 0, index, width, height, 1,
                             PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr) ptr);
-                        Logger.Debug("Survived");
                     }
                 }
 

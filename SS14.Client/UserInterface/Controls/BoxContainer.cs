@@ -185,6 +185,10 @@ namespace SS14.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
+            if (GameController.OnGodot)
+            {
+                return base.CalculateMinimumSize();
+            }
             var separation = _separationOverride ?? DefaultSeparation;
 
             var minWidth = 0f;

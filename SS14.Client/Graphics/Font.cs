@@ -4,6 +4,7 @@ using SS14.Client.Interfaces.Graphics;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.Graphics
 {
@@ -14,6 +15,10 @@ namespace SS14.Client.Graphics
     public abstract class Font
     {
         internal abstract Godot.Font GodotFont { get; }
+
+        public virtual int Ascent => (int?)GodotFont?.GetAscent() ?? default;
+        public virtual int Height => (int?)GodotFont?.GetHeight() ?? default;
+        public virtual int Descent => (int?)GodotFont?.GetDescent() ?? default;
 
         public static implicit operator Godot.Font(Font font)
         {
@@ -34,6 +39,8 @@ namespace SS14.Client.Graphics
         /// <param name="color">The color of the character to draw.</param>
         /// <returns>How much to advance the cursor to draw the next character.</returns>
         public abstract float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color);
+
+        public abstract CharMetrics? GetCharMetrics(char chr);
     }
 
     /// <summary>
@@ -48,6 +55,10 @@ namespace SS14.Client.Graphics
         private readonly Godot.DynamicFont _font;
 
         internal IFontInstanceHandle Handle { get; }
+
+        public override int Ascent => Handle?.Ascent ?? base.Ascent;
+        public override int Descent => Handle?.Descent ?? base.Descent;
+        public override int Height => Handle?.Height ?? base.Height;
 
         public VectorFont(FontResource res, int size)
         {
@@ -68,16 +79,27 @@ namespace SS14.Client.Graphics
 
         public override float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color)
         {
+            DebugTools.Assert(!GameController.OnGodot);
+
             var texture = Handle.GetCharTexture(chr);
             if (texture == null)
             {
                 return 0;
             }
             var metrics = Handle.GetCharMetrics(chr);
+            if (!metrics.HasValue)
+            {
+                return 0;
+            }
 
-            baseline += new Vector2(metrics.BearingX, -metrics.BearingY);
+            baseline += new Vector2(metrics.Value.BearingX, -metrics.Value.BearingY);
             handle.DrawTexture(texture, baseline, color);
-            return metrics.Advance;
+            return metrics.Value.Advance;
+        }
+
+        public override CharMetrics? GetCharMetrics(char chr)
+        {
+            return Handle.GetCharMetrics(chr);
         }
     }
 
@@ -91,6 +113,11 @@ namespace SS14.Client.Graphics
         internal override Godot.Font GodotFont { get; }
 
         public override float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override CharMetrics? GetCharMetrics(char chr)
         {
             throw new NotImplementedException();
         }

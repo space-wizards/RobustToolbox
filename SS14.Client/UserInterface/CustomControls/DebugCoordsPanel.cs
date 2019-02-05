@@ -42,7 +42,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
             contents = new Label
             {
-                FontOverride = new VectorFont(resourceCache.GetResource<FontResource>(new ResourcePath("/Fonts/NotoSans-Regular.ttf")), 12),
+                FontOverride = new VectorFont(resourceCache.GetResource<FontResource>(new ResourcePath("/Fonts/CALIBRI.TTF")), 12),
                 FontColorShadowOverride = Color.Black,
                 MarginTop = 5,
                 MarginLeft = 5

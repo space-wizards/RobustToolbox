@@ -12,6 +12,7 @@ namespace SS14.Client.Interfaces.Graphics
     {
         IFontFaceHandle Load(ReadOnlySpan<byte> data);
         IFontInstanceHandle MakeInstance(IFontFaceHandle handle, int size);
+        void Initialize();
     }
 
     internal interface IFontFaceHandle
@@ -22,10 +23,13 @@ namespace SS14.Client.Interfaces.Graphics
     internal interface IFontInstanceHandle
     {
         Texture GetCharTexture(char chr);
-        CharMetrics GetCharMetrics(char chr);
+        CharMetrics? GetCharMetrics(char chr);
+        int Ascent { get; }
+        int Descent { get; }
+        int Height { get; }
     }
 
-    internal readonly struct CharMetrics
+    public readonly struct CharMetrics
     {
         public readonly int BearingX;
         public readonly int BearingY;

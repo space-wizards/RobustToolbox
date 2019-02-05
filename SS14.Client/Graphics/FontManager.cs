@@ -7,14 +7,19 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.Primitives;
 using SS14.Client.Interfaces.Graphics;
+using SS14.Shared.Configuration;
+using SS14.Shared.Interfaces.Configuration;
+using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.Graphics
 {
-    internal sealed class FontManager : IFontManagerInternal
+    internal sealed class FontManager : IFontManagerInternal, IPostInjectInit
     {
-        private const int FontDPI = 96;
+        [Dependency] private readonly IConfigurationManager _configuration;
+
+        private uint FontDPI;
 
         private readonly Library _library;
 
@@ -49,10 +54,19 @@ namespace SS14.Client.Graphics
                 return instance;
             }
 
-            var (atlasData, glyphMap) = _generateAtlas(fontFaceHandle.Face, size);
-            var instanceHandle = new FontInstanceHandle(atlasData, size, fontFaceHandle.Face, glyphMap);
+            var face = fontFaceHandle.Face;
+            var (atlasData, glyphMap) = _generateAtlas(face, size);
+            var ascent = face.Size.Metrics.Ascender.ToInt32();
+            var descent = face.Size.Metrics.Descender.ToInt32();
+            var height = face.Size.Metrics.Height.ToInt32();
+            var instanceHandle = new FontInstanceHandle(this, atlasData, size, fontFaceHandle.Face, glyphMap, ascent, descent, height);
             _loadedInstances.Add((fontFaceHandle, size), instanceHandle);
             return instanceHandle;
+        }
+
+        void IFontManagerInternal.Initialize()
+        {
+            FontDPI = (uint)_configuration.GetCVar<int>("display.fontdpi");
         }
 
         private (FontTextureAtlas, Dictionary<char, uint> glyphMap) _generateAtlas(Face face, int size)
@@ -162,7 +176,6 @@ namespace SS14.Client.Graphics
 
             var atlasDictionary = new Dictionary<uint, AtlasTexture>();
             var texture = Texture.LoadFromImage(atlas, $"font-{face.FamilyName}-{size}");
-            atlas.Save($"font-{face.FamilyName}-{size}.png");
 
             foreach (var (glyph, region) in atlasRegions)
             {
@@ -216,13 +229,22 @@ namespace SS14.Client.Graphics
             public int Size { get; }
             private readonly Dictionary<char, uint> _glyphMap;
             private readonly Dictionary<char, CharMetrics> _metricsMap = new Dictionary<char, CharMetrics>();
+            public int Ascent { get; }
+            public int Descent { get; }
+            public int Height { get; }
+            private readonly FontManager _fontManager;
 
-            public FontInstanceHandle(FontTextureAtlas atlas, int size, Face face, Dictionary<char, uint> glyphMap)
+            public FontInstanceHandle(FontManager manager, FontTextureAtlas atlas, int size, Face face, Dictionary<char, uint> glyphMap,
+                int ascent, int descent, int height)
             {
+                _fontManager = manager;
                 Atlas = atlas;
                 Size = size;
                 Face = face;
                 _glyphMap = glyphMap;
+                Ascent = ascent;
+                Descent = descent;
+                Height = height;
             }
 
             public FontTextureAtlas Atlas { get; }
@@ -234,12 +256,17 @@ namespace SS14.Client.Graphics
                 return ret;
             }
 
-            public CharMetrics GetCharMetrics(char chr)
+            public CharMetrics? GetCharMetrics(char chr)
             {
                 var glyph = _getGlyph(chr);
+                if (glyph == 0)
+                {
+                    return null;
+                }
+
                 if (!_metricsMap.TryGetValue(chr, out var metrics))
                 {
-                    Face.SetCharSize(0, Size, 0, FontDPI);
+                    Face.SetCharSize(0, Size, 0, _fontManager.FontDPI);
                     Face.LoadGlyph(glyph, LoadFlags.Default, LoadTarget.Normal);
 
                     var glyphMetrics = Face.Glyph.Metrics;
@@ -276,6 +303,11 @@ namespace SS14.Client.Graphics
 
             // Maps glyph index to atlas.
             public Dictionary<uint, AtlasTexture> AtlasData { get; }
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _configuration.RegisterCVar("display.fontdpi", 72);
         }
     }
 }

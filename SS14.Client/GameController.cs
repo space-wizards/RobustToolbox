@@ -89,6 +89,7 @@ namespace SS14.Client
         [Dependency] private readonly ITaskManager _taskManager;
         [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager;
         private IDisplayManagerOpenGL _displayManagerOpenGL;
+        private IFontManagerInternal _fontManager;
 
         private void Startup()
         {
@@ -116,6 +117,12 @@ namespace SS14.Client
             // Bring display up as soon as resources are mounted.
             _displayManager.Initialize();
             _displayManager.SetWindowTitle("Space Station 14");
+
+            if (Mode == DisplayMode.OpenGL)
+            {
+                _fontManager = IoCManager.Resolve<IFontManagerInternal>();
+                _fontManager.Initialize();
+            }
 
             //identical code for server in baseserver
             if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))

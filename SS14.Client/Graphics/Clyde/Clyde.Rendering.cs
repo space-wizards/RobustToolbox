@@ -150,10 +150,10 @@ namespace SS14.Client.Graphics.Clyde
                 foreach (var tileRef in grid.GetAllTiles())
                 {
                     var vIdx = nth * 4;
-                    BatchVertexData[vIdx + 0] = new Vertex2D(tileRef.X + 0.5f, tileRef.Y + 0.5f, 1, 0, 0);
-                    BatchVertexData[vIdx + 1] = new Vertex2D(tileRef.X - 0.5f, tileRef.Y + 0.5f, 0, 0, 0);
-                    BatchVertexData[vIdx + 2] = new Vertex2D(tileRef.X + 0.5f, tileRef.Y - 0.5f, 1, 1, 0);
-                    BatchVertexData[vIdx + 3] = new Vertex2D(tileRef.X - 0.5f, tileRef.Y - 0.5f, 0, 1, 0);
+                    BatchVertexData[vIdx + 0] = new Vertex2D(tileRef.X+1, tileRef.Y, 1, 0, 0);
+                    BatchVertexData[vIdx + 1] = new Vertex2D(tileRef.X, tileRef.Y , 0, 0, 0);
+                    BatchVertexData[vIdx + 2] = new Vertex2D(tileRef.X+1, tileRef.Y - 1f, 1, 1, 0);
+                    BatchVertexData[vIdx + 3] = new Vertex2D(tileRef.X, tileRef.Y - 1f, 0, 1, 0);
                     var nIdx = nth * 5;
                     var tIdx = (ushort) (nth * 4);
                     BatchIndexData[nIdx + 0] = tIdx;

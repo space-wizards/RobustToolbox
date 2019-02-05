@@ -97,14 +97,7 @@ namespace SS14.Client.Graphics.Clyde
             _drawingSplash = false;
         }
 
-        public Vector2 MouseScreenPosition
-        {
-            get
-            {
-                var state = OpenTK.Input.Mouse.GetState();
-                return new Vector2(state.X, state.Y);
-            }
-        }
+        public Vector2 MouseScreenPosition { get; private set; }
 
         public override void ReloadConfig()
         {
@@ -171,6 +164,7 @@ namespace SS14.Client.Graphics.Clyde
             };
             _window.MouseMove += (sender, eventArgs) =>
             {
+                MouseScreenPosition = new Vector2(eventArgs.X, eventArgs.Y);
                 _gameController.GameController.MouseMove((MouseMoveEventArgs) eventArgs);
             };
             _window.MouseWheel += (sender, eventArgs) =>

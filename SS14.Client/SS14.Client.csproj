@@ -66,10 +66,12 @@
     <PackageReference Include="NJsonSchema" Version="9.10.73" />
     <PackageReference Include="SixLabors.Core" Version="1.0.0-beta0007" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0006" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0006" />
     <PackageReference Include="System.Memory" Version="4.5.2" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="YamlDotNet" Version="5.0.1" />
     <PackageReference Include="OpenTK" Version="3.0.1" />
+    <PackageReference Include="SharpFont" Version="4.0.1" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -140,6 +142,7 @@
     <Compile Include="Graphics\Clyde\Clyde.Textures.cs" />
     <Compile Include="Graphics\DisplayManagerGodot.cs" />
     <Compile Include="Graphics\DisplayManagerHeadless.cs" />
+    <Compile Include="Graphics\FontManager.cs" />
     <Compile Include="Graphics\IDirectionalTextureProvider.cs" />
     <Compile Include="Graphics\Lighting\LightManager.Light.cs" />
     <Compile Include="Graphics\Lighting\LightManager.Occluder.cs" />
@@ -163,6 +166,7 @@
     <Compile Include="Interfaces\GameObjects\IRenderableComponent.cs" />
     <Compile Include="Interfaces\GameStates\IClientGameStateManager.cs" />
     <Compile Include="Interfaces\Graphics\IDisplayManagerOpenGL.cs" />
+    <Compile Include="Interfaces\Graphics\IFontManager.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILight.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILightManager.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILightMode.cs" />

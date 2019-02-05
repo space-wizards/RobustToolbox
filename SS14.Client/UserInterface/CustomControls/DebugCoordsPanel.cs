@@ -1,4 +1,5 @@
-﻿using SS14.Client.Interfaces.Graphics.ClientEye;
+﻿using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Interfaces.GameObjects.Components;
@@ -41,8 +42,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
             contents = new Label
             {
-                FontOverride = resourceCache.GetResource<FontResource>(new ResourcePath("/Fonts/CALIBRI.TTF"))
-                    .MakeDefault(),
+                FontOverride = new VectorFont(resourceCache.GetResource<FontResource>(new ResourcePath("/Fonts/NotoSans-Regular.ttf")), 12),
                 FontColorShadowOverride = Color.Black,
                 MarginTop = 5,
                 MarginLeft = 5

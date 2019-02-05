@@ -1,5 +1,9 @@
 ﻿using System;
+using SS14.Client.Graphics.Drawing;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Client.ResourceManagement;
+using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics
 {
@@ -15,118 +19,69 @@ namespace SS14.Client.Graphics
         {
             return font?.GodotFont;
         }
+
+        // Yes, I am aware that using char is bad.
+        // At the same time the font system is nowhere close to rendering Unicode so...
+        /// <summary>
+        ///     Draw a character at a certain baseline position on screen.
+        /// </summary>
+        /// <param name="handle">The drawing handle to draw to.</param>
+        /// <param name="chr">
+        ///     The Unicode code point to draw. Yes I'm aware about UTF-16 being crap,
+        ///     do you think this system can draw anything except ASCII?
+        /// </param>
+        /// <param name="baseline">The baseline from which to draw the character.</param>
+        /// <param name="color">The color of the character to draw.</param>
+        /// <returns>How much to advance the cursor to draw the next character.</returns>
+        public abstract float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color);
     }
 
     /// <summary>
     ///     Font type that renders vector fonts such as OTF and TTF fonts from a <see cref="FontResource"/>
     /// </summary>
-    public class VectorFont : Font
+    public sealed class VectorFont : Font
     {
-        public int ExtraSpacingTop
-        {
-            get => GameController.OnGodot ? _font.ExtraSpacingTop : default;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    _font.ExtraSpacingTop = value;
-                }
-            }
-        }
-
-        public int ExtraSpacingBottom
-        {
-            get => GameController.OnGodot ? _font.ExtraSpacingBottom : default;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    _font.ExtraSpacingBottom = value;
-                }
-            }
-        }
-
-        public int ExtraSpacingChar
-        {
-            get => GameController.OnGodot ? _font.ExtraSpacingChar : default;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    _font.ExtraSpacingChar = value;
-                }
-            }
-        }
-
-        public int ExtraSpacingSpace
-        {
-            get => GameController.OnGodot ? _font.ExtraSpacingSpace : default;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    _font.ExtraSpacingSpace = value;
-                }
-            }
-        }
-
-        public int Size
-        {
-            get => _font.Size;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    _font.Size = value;
-                }
-            }
-        }
-
-        public bool UseFilter
-        {
-            get => _font.UseFilter;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    _font.UseFilter = value;
-                }
-            }
-        }
-
-        public bool UseMipmaps
-        {
-            get => _font.UseMipmaps;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    _font.UseMipmaps = value;
-                }
-            }
-        }
+        public int Size { get; }
 
         internal override Godot.Font GodotFont => _font;
+
         private readonly Godot.DynamicFont _font;
 
-        public VectorFont(FontResource res)
-            : this(res.FontData)
-        {
-        }
+        internal IFontInstanceHandle Handle { get; }
 
-        internal VectorFont(Godot.DynamicFontData data)
+        public VectorFont(FontResource res, int size)
         {
+            Size = size;
             if (GameController.OnGodot)
             {
                 _font = new Godot.DynamicFont
                 {
-                    FontData = data,
+                    FontData = res.FontData,
+                    Size = size,
                 };
             }
+            else
+            {
+                Handle = IoCManager.Resolve<IFontManagerInternal>().MakeInstance(res.FontFaceHandle, size);
+            }
+        }
+
+        public override float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color)
+        {
+            var texture = Handle.GetCharTexture(chr);
+            if (texture == null)
+            {
+                return 0;
+            }
+            var metrics = Handle.GetCharMetrics(chr);
+
+            baseline += new Vector2(metrics.BearingX, -metrics.BearingY);
+            handle.DrawTexture(texture, baseline, color);
+            return metrics.Advance;
         }
     }
 
-    internal class GodotWrapFont : Font
+    internal sealed class GodotWrapFont : Font
     {
         public GodotWrapFont(Godot.Font godotFont)
         {
@@ -134,5 +89,10 @@ namespace SS14.Client.Graphics
         }
 
         internal override Godot.Font GodotFont { get; }
+
+        public override float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

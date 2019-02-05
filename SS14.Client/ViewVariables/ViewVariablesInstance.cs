@@ -119,10 +119,8 @@ namespace SS14.Client.ViewVariables
             }
 
             var smallFont =
-                new VectorFont(IoCManager.Resolve<IResourceCache>().GetResource<FontResource>("/Fonts/CALIBRI.TTF"))
-                {
-                    Size = 10
-                };
+                new VectorFont(IoCManager.Resolve<IResourceCache>().GetResource<FontResource>("/Fonts/CALIBRI.TTF"),
+                    10);
 
             // Custom ToString() implementation.
             var headBox = new VBoxContainer {SeparationOverride = 0};

@@ -228,6 +228,10 @@ namespace SS14.Client.Graphics.Drawing
 
         public void DrawStyleBox(StyleBox styleBox, UIBox2 box)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             if (styleBox == null) throw new ArgumentNullException(nameof(styleBox));
 
             CheckDisposed();

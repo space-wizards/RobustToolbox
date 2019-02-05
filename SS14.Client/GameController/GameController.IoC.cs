@@ -140,6 +140,8 @@ namespace SS14.Client
                     IoCManager.Register<IDisplayManager, Clyde>();
                     IoCManager.Register<IDisplayManagerOpenGL, Clyde>();
                     IoCManager.Register<IInputManager, OpenGLInputManager>();
+                    IoCManager.Register<IFontManager, FontManager>();
+                    IoCManager.Register<IFontManagerInternal, FontManager>();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

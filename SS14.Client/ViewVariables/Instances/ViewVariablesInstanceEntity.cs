@@ -70,10 +70,7 @@ namespace SS14.Client.ViewVariables.Instances
                 if (type.FullName != stringified)
                 {
                     var resourceCache = IoCManager.Resolve<IResourceCache>();
-                    var smallFont = new VectorFont(resourceCache.GetResource<FontResource>("/Fonts/CALIBRI.TTF"))
-                    {
-                        Size = 10,
-                    };
+                    var smallFont = new VectorFont(resourceCache.GetResource<FontResource>("/Fonts/CALIBRI.TTF"), 10);
                     // Custom ToString() implementation.
                     var headBox = new VBoxContainer {SeparationOverride = 0};
                     headBox.AddChild(new Label {Text = stringified});

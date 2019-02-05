@@ -50,10 +50,7 @@ namespace SS14.Client.ViewVariables
             VBox.AddChild(BottomContainer);
 
             var resc = IoCManager.Resolve<IResourceCache>();
-            var smallFont = new VectorFont(resc.GetResource<FontResource>("/Fonts/CALIBRI.TTF"))
-            {
-                Size = 10,
-            };
+            var smallFont = new VectorFont(resc.GetResource<FontResource>("/Fonts/CALIBRI.TTF"), 10);
 
             _bottomLabel = new Label
             {

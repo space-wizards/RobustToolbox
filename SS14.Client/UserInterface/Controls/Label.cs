@@ -1,6 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Drawing;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
@@ -23,14 +24,21 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
+
+        private string _text;
+
         public string Text
         {
-            get => GameController.OnGodot ? (string)SceneControl.Get("text") : default;
+            get => GameController.OnGodot ? (string)SceneControl.Get("text") : _text;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.Set("text", value);
+                }
+                else
+                {
+                    _text = value;
                 }
             }
         }
@@ -102,6 +110,19 @@ namespace SS14.Client.UserInterface.Controls
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.Label();
+        }
+
+        protected internal override void Draw(DrawingHandleScreen handle)
+        {
+            if (GameController.OnGodot)
+            {
+                return;
+            }
+
+            if (_fontOverride == null)
+            {
+                return;
+            }
         }
 
         public enum AlignMode

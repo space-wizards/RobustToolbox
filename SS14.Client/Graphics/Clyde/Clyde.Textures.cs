@@ -76,11 +76,20 @@ namespace SS14.Client.Graphics.Clyde
 
             unsafe
             {
-                fixed (T* ptr = image.GetPixelSpan())
+                var span = image.GetPixelSpan();
+                var length = span.Length;
+                var val1 = span[0];
+                fixed (T* ptr = span)
                 {
                     GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, image.Width, image.Height, 0,
                         pixelDataFormat, pixelDataType, (IntPtr) ptr);
+                    if (name != null && name.Contains("font"))
+                    {
+                        var copy = Image.LoadPixelData(new ReadOnlySpan<T>(ptr, length), image.Width, image.Height);
+                        copy.Save($"copy-{name}.png");
+                    }
                 }
+
             }
 
             if (name != null)

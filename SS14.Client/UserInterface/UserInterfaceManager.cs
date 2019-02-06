@@ -68,6 +68,7 @@ namespace SS14.Client.UserInterface
             if (!GameController.OnGodot)
             {
                 RootControl.Size = _displayManager.ScreenSize;
+                _displayManager.OnWindowResized += args => RootControl.Size = args.NewSize;
             }
 
             if (GameController.OnGodot)

@@ -532,6 +532,7 @@ namespace SS14.Client.UserInterface
 
             Name = GetType().Name;
             Initialize();
+            _applyPropertyMap();
         }
 
         /// <param name="name">The name the component will have.</param>
@@ -555,6 +556,7 @@ namespace SS14.Client.UserInterface
 
             Name = name;
             Initialize();
+            _applyPropertyMap();
         }
 
 
@@ -695,21 +697,42 @@ namespace SS14.Client.UserInterface
                 switch (parent)
                 {
                     case null:
-                        node = baseControl;
-                        break;
+                        // Base control, which isn't initialized yet, so defer until after Initialize().
+                        baseControl._toApplyPropertyMapping = propMap;
+                        continue;
                     case ".":
                         node = parentMapping[nodeName];
                         break;
                     default:
-                        node = parentMapping[$"{parent}/{nodeName}"];
+                        var parentNode = baseControl.GetChild(parent);
+                        node = parentNode.GetChild(nodeName);
                         break;
                 }
 
+                // We need to defer this until AFTER Initialize() has ran because else everything blows up.
                 foreach (var (key, (value, source)) in propMap)
                 {
                     node.SetGodotProperty(key, value, source);
                 }
             }
+        }
+
+        private Dictionary<string, (object value, GodotAssetScene source)>
+            _toApplyPropertyMapping;
+
+        private void _applyPropertyMap()
+        {
+            if (_toApplyPropertyMapping == null)
+            {
+                return;
+            }
+
+            foreach (var (key, (value, source)) in _toApplyPropertyMapping)
+            {
+                SetGodotProperty(key, value, source);
+            }
+
+            _toApplyPropertyMapping = null;
         }
 
         internal static Control ManualSpawnFromScene(GodotAssetScene scene)

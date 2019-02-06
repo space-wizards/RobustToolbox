@@ -608,6 +608,9 @@ namespace SS14.Client.UserInterface
             IResourceCache resourceCache)
         {
             var parentMapping = new Dictionary<string, Control> {["."] = baseControl};
+            var propertyMapping =
+                new Dictionary<(string parent, string name), Dictionary<string, (object value, GodotAssetScene source)>
+                >();
 
             // Go over the inherited scenes bottom-first.
             while (inheritedSceneStack.Count != 0)
@@ -616,6 +619,19 @@ namespace SS14.Client.UserInterface
 
                 foreach (var node in inheritedAsset.Nodes)
                 {
+                    {
+                        if (!propertyMapping.TryGetValue((node.Parent, node.Name), out var propMap))
+                        {
+                            propMap = new Dictionary<string, (object value, GodotAssetScene source)>();
+                            propertyMapping[(node.Parent, node.Name)] = propMap;
+                        }
+
+                        foreach (var (key, value) in node.Properties)
+                        {
+                            propMap[key] = (value, inheritedAsset);
+                        }
+                    }
+
                     // It's the base control.
                     if (node.Parent == null)
                     {
@@ -656,6 +672,7 @@ namespace SS14.Client.UserInterface
                     }
                     else
                     {
+                        // This happens if the node def is overriding properties of a node instantiated in an instance.
                         continue;
                     }
 
@@ -668,6 +685,29 @@ namespace SS14.Client.UserInterface
                     {
                         parentMapping[$"{node.Parent}/{node.Name}"] = childControl;
                     }
+                }
+            }
+
+            // Apply all the properties.
+            foreach (var ((parent, nodeName), propMap) in propertyMapping)
+            {
+                Control node;
+                switch (parent)
+                {
+                    case null:
+                        node = baseControl;
+                        break;
+                    case ".":
+                        node = parentMapping[nodeName];
+                        break;
+                    default:
+                        node = parentMapping[$"{parent}/{nodeName}"];
+                        break;
+                }
+
+                foreach (var (key, (value, source)) in propMap)
+                {
+                    node.SetGodotProperty(key, value, source);
                 }
             }
         }
@@ -824,6 +864,37 @@ namespace SS14.Client.UserInterface
             WrappedSceneControl.GetMinimumSizeOverride = () => CalculateMinimumSize().Convert();
             WrappedSceneControl.HasPointOverride = point => HasPoint(point.Convert());
             WrappedSceneControl.DrawOverride = DoDraw;
+        }
+
+        private protected virtual void SetGodotProperty(string property, object value, GodotAssetScene context)
+        {
+            switch (property)
+            {
+                case "margin_left":
+                    MarginLeft = (float) value;
+                    break;
+                case "margin_right":
+                    MarginRight = (float) value;
+                    break;
+                case "margin_top":
+                    MarginTop = (float) value;
+                    break;
+                case "margin_bottom":
+                    MarginBottom = (float) value;
+                    break;
+                case "anchor_left":
+                    AnchorLeft = (float) value;
+                    break;
+                case "anchor_right":
+                    AnchorRight = (float) value;
+                    break;
+                case "anchor_bottom":
+                    AnchorBottom = (float) value;
+                    break;
+                case "anchor_top":
+                    AnchorTop = (float) value;
+                    break;
+            }
         }
 
         private void DoDraw()

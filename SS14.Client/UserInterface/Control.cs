@@ -1724,27 +1724,17 @@ namespace SS14.Client.UserInterface
 
         private void _doUpdateLayout()
         {
-            if (Parent == null)
-            {
-                foreach (var child in _orderedChildren)
-                {
-                    child._doUpdateLayout();
-                }
-
-                return;
-            }
-            
-            if (LayoutLocked || GameController.OnGodot)
+            if (GameController.OnGodot)
             {
                 return;
             }
 
-            var (sizeX, sizeY) = Parent._size;
+            var (pSizeX, pSizeY) = Parent?._size ?? Vector2.Zero;
 
-            var top = _anchorTop * sizeY + _marginTop;
-            var left = _anchorLeft * sizeX + _marginLeft;
-            var right = _anchorRight * sizeX + _marginRight;
-            var bottom = _anchorBottom * sizeY + _marginBottom;
+            var top = _anchorTop * pSizeY + _marginTop;
+            var left = _anchorLeft * pSizeX + _marginLeft;
+            var right = _anchorRight * pSizeX + _marginRight;
+            var bottom = _anchorBottom * pSizeY + _marginBottom;
 
             _position = new Vector2(left, top);
             _size = new Vector2(right - left, bottom - top);

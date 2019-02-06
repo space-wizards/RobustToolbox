@@ -11,8 +11,6 @@ namespace SS14.Client.Graphics.ClientEye
     /// </summary>
     public class FixedEye : Eye
     {
-        private MapCoordinates position;
-
         public override MapCoordinates Position
         {
             get => base.Position;

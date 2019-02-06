@@ -1653,7 +1653,17 @@ namespace SS14.Client.UserInterface
 
         private void _doUpdateLayout()
         {
-            if (Parent == null || LayoutLocked || GameController.OnGodot)
+            if (Parent == null)
+            {
+                foreach (var child in _orderedChildren)
+                {
+                    child._doUpdateLayout();
+                }
+
+                return;
+            }
+            
+            if (LayoutLocked || GameController.OnGodot)
             {
                 return;
             }

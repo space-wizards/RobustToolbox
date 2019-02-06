@@ -4,6 +4,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
+using SS14.Shared.Log;
+using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.Utility
 {
@@ -63,6 +66,8 @@ namespace SS14.Client.Utility
             var extResources = new List<GodotAsset.ExtResourceRef>();
             var nodes = new List<NodeHeader>();
 
+            NodeHeader? currentParsingHeader = null;
+
             // Go over all the [] headers in the file.
             while (!_parser.IsEOF())
             {
@@ -73,11 +78,14 @@ namespace SS14.Client.Utility
                     continue;
                 }
 
-                // Skip anything that isn't a header.
-                // Yes this means all node/resource properties are ignored.
-                // I don't need them at the moment.
                 if (!_parser.TryParse('['))
                 {
+                    if (!currentParsingHeader.HasValue)
+                    {
+                        continue;
+                    }
+
+                    _parseProperty(ref currentParsingHeader);
                     continue;
                 }
 
@@ -85,7 +93,8 @@ namespace SS14.Client.Utility
 
                 if (_parser.TryParse("node"))
                 {
-                    nodes.Add(ParseNodeHeader());
+                    currentParsingHeader = ParseNodeHeader();
+                    nodes.Add(currentParsingHeader.Value);
                 }
 
                 else if (_parser.TryParse("ext_resource"))
@@ -96,6 +105,7 @@ namespace SS14.Client.Utility
                 else
                 {
                     // Probably something like sub_resource or whatever. Ignore it.
+                    currentParsingHeader = null;
                     continue;
                 }
 
@@ -109,12 +119,36 @@ namespace SS14.Client.Utility
 
 
             var finalNodes = nodes
-                .Select(n => new GodotAssetScene.NodeDef(n.Name, n.Type, n.Parent, n.Index, n.Instance))
+                .Select(n => new GodotAssetScene.NodeDef(n.Name, n.Type, n.Parent, n.Index, n.Instance, n.Properties))
                 .ToList();
 
             finalNodes.Sort(GodotAssetScene.NodeDef.FlattenedTreeComparer);
 
             return new GodotAssetScene(finalNodes, extResources);
+        }
+
+        private void _parseProperty(ref NodeHeader? currentParsingHeader)
+        {
+            DebugTools.Assert(currentParsingHeader.HasValue);
+
+            var key = _parser.EatUntilWhitespace();
+            _parser.EatWhitespace();
+            _parser.Parse('=');
+            _parser.EatWhitespace();
+
+            try
+            {
+                var value = ParseGodotValue();
+                if (currentParsingHeader.Value.Properties.ContainsKey(key))
+                {
+                    Logger.WarningS("gdparse", "Duplicate property key: {0}", key);
+                }
+                currentParsingHeader.Value.Properties[key] = value;
+            }
+            catch (NotImplementedException e)
+            {
+                Logger.WarningS("gdparse","Can't parse Godot property value: {0}", e.Message);
+            }
         }
 
         private NodeHeader ParseNodeHeader()
@@ -221,12 +255,87 @@ namespace SS14.Client.Utility
                 return ParseGodotString();
             }
 
-            if (_parser.PeekIsDigit())
+            if (_parser.PeekIsDigit() || _parser.Peek() == '-')
             {
                 return ParseGodotNumber();
             }
 
+            if (_parser.TryParse("null"))
+            {
+                return null;
+            }
+
+            if (_parser.TryParse("true"))
+            {
+                return true;
+            }
+
+            if (_parser.TryParse("false"))
+            {
+                return false;
+            }
+
+            if (_parser.TryParse("Color("))
+            {
+                _parser.EatWhitespace();
+                var r = ParseGodotFloat();
+                _parser.EatWhitespace();
+                _parser.Parse(',');
+                _parser.EatWhitespace();
+                var g = ParseGodotFloat();
+                _parser.EatWhitespace();
+                _parser.Parse(',');
+                _parser.EatWhitespace();
+                var b = ParseGodotFloat();
+                _parser.EatWhitespace();
+                _parser.Parse(',');
+                _parser.EatWhitespace();
+                var a = ParseGodotFloat();
+                _parser.EatWhitespace();
+                _parser.Parse(')');
+                return new Color(r, g, b, a);
+            }
+
+            if (_parser.TryParse("Vector2("))
+            {
+                _parser.EatWhitespace();
+                var x = ParseGodotFloat();
+                _parser.EatWhitespace();
+                _parser.Parse(',');
+                _parser.EatWhitespace();
+                var y = ParseGodotFloat();
+                _parser.EatWhitespace();
+                _parser.Parse(')');
+                return new Vector2(x, y);
+            }
+
+            if (_parser.TryParse("Vector3("))
+            {
+                _parser.EatWhitespace();
+                var x = ParseGodotFloat();
+                _parser.EatWhitespace();
+                _parser.Parse(',');
+                _parser.EatWhitespace();
+                var y = ParseGodotFloat();
+                _parser.EatWhitespace();
+                _parser.Parse(',');
+                _parser.EatWhitespace();
+                var z = ParseGodotFloat();
+                _parser.EatWhitespace();
+                _parser.Parse(')');
+                return new Vector3(x, y, z);
+            }
+
             if (_parser.TryParse("ExtResource("))
+            {
+                _parser.EatWhitespace();
+                var val = new GodotAsset.TokenExtResource((long) ParseGodotNumber());
+                _parser.EatWhitespace();
+                _parser.Parse(')');
+                return val;
+            }
+
+            if (_parser.TryParse("SubResource("))
             {
                 _parser.EatWhitespace();
                 var val = new GodotAsset.TokenExtResource((long) ParseGodotNumber());
@@ -246,7 +355,12 @@ namespace SS14.Client.Utility
 
             while (true)
             {
-                _parser.EnsureNoEOL();
+                if (_parser.IsEOL())
+                {
+                    list.Add('\n');
+                    _parser.NextLine();
+                    continue;
+                }
 
                 var value = _parser.Take();
                 if (value == '\\')
@@ -272,18 +386,33 @@ namespace SS14.Client.Utility
                 {
                     throw new TextParser.ParserException("Unknown escape sequence");
                 }
-                else
-                {
-                    list.Add(value);
-                }
+
+                list.Add(value);
             }
 
             return new string(list.ToArray());
         }
 
+        private float ParseGodotFloat()
+        {
+            var number = ParseGodotNumber();
+            if (number is long l)
+            {
+                return l;
+            }
+
+            return (float) number;
+        }
+
         private object ParseGodotNumber()
         {
             var list = new List<char>();
+
+            if (_parser.Peek() == '-')
+            {
+                list.Add('-');
+                _parser.Advance();
+            }
 
             while (!_parser.IsEOL())
             {
@@ -312,6 +441,7 @@ namespace SS14.Client.Utility
             public readonly int Index;
             public readonly string Parent;
             public readonly GodotAsset.TokenExtResource? Instance;
+            public readonly Dictionary<string, object> Properties;
 
             public NodeHeader(string name, string type, int index, string parent, GodotAsset.TokenExtResource? instance)
             {
@@ -320,6 +450,7 @@ namespace SS14.Client.Utility
                 Index = index;
                 Parent = parent;
                 Instance = instance;
+                Properties = new Dictionary<string, object>();
             }
         }
 
@@ -441,6 +572,33 @@ namespace SS14.Client.Utility
                 return ateAny;
             }
 
+            public string EatUntilWhitespace()
+            {
+                var current = CurrentIndex;
+                while (!IsEOL())
+                {
+                    if (char.IsWhiteSpace(_currentLine, CurrentIndex))
+                    {
+                        break;
+                    }
+
+                    Advance();
+                }
+
+                return _currentLine.Substring(current, CurrentIndex - current);
+            }
+
+            public string EatUntilEOL()
+            {
+                var current = CurrentIndex;
+                while (!IsEOL())
+                {
+                    Advance();
+                }
+
+                return _currentLine.Substring(current, CurrentIndex - current);
+            }
+
             [System.Diagnostics.Contracts.Pure]
             public char Peek()
             {
@@ -494,7 +652,7 @@ namespace SS14.Client.Utility
 
         public ExtResourceRef GetExtResource(TokenExtResource token)
         {
-            return ExtResources[(int)token.ResourceId - 1];
+            return ExtResources[(int) token.ResourceId - 1];
         }
 
         /// <summary>
@@ -518,6 +676,35 @@ namespace SS14.Client.Utility
             {
                 if (ReferenceEquals(null, obj)) return false;
                 return obj is TokenExtResource other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                return ResourceId.GetHashCode();
+            }
+        }
+
+        /// <summary>
+        ///     A token value to indicate "this is a reference to a sub resource".
+        /// </summary>
+        public readonly struct TokenSubResource : IEquatable<TokenSubResource>
+        {
+            public readonly long ResourceId;
+
+            public TokenSubResource(long resourceId)
+            {
+                ResourceId = resourceId;
+            }
+
+            public bool Equals(TokenSubResource other)
+            {
+                return ResourceId == other.ResourceId;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                return obj is TokenSubResource other && Equals(other);
             }
 
             public override int GetHashCode()
@@ -602,13 +789,18 @@ namespace SS14.Client.Utility
             /// </summary>
             public TokenExtResource? Instance { get; }
 
-            public NodeDef(string name, [CanBeNull] string type, [CanBeNull] string parent, int index, TokenExtResource? instance)
+            [NotNull]
+            public IReadOnlyDictionary<string, object> Properties { get; }
+
+            public NodeDef(string name, [CanBeNull] string type, [CanBeNull] string parent, int index,
+                TokenExtResource? instance, Dictionary<string, object> properties)
             {
                 Name = name;
                 Type = type;
                 Parent = parent;
                 Index = index;
                 Instance = instance;
+                Properties = properties;
             }
 
             private sealed class FlattenedTreeComparerImpl : IComparer<NodeDef>

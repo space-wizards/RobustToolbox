@@ -1352,17 +1352,17 @@ namespace SS14.Client.UserInterface
                 case LayoutPreset.BottomWide:
                     AnchorLeft = 0;
                     break;
-                case LayoutPreset.TopRight:
-                case LayoutPreset.BottomRight:
-                case LayoutPreset.CenterRight:
-                case LayoutPreset.RightWide:
-                    AnchorLeft = 1;
-                    break;
                 case LayoutPreset.CenterTop:
                 case LayoutPreset.CenterBottom:
                 case LayoutPreset.Center:
                 case LayoutPreset.VerticalCenterWide:
                     AnchorLeft = 0.5f;
+                    break;
+                case LayoutPreset.TopRight:
+                case LayoutPreset.BottomRight:
+                case LayoutPreset.CenterRight:
+                case LayoutPreset.RightWide:
+                    AnchorLeft = 1;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
@@ -1381,17 +1381,17 @@ namespace SS14.Client.UserInterface
                 case LayoutPreset.VerticalCenterWide:
                     AnchorTop = 0;
                     break;
+                case LayoutPreset.CenterLeft:
+                case LayoutPreset.CenterRight:
                 case LayoutPreset.HorizontalCenterWide:
+                case LayoutPreset.Center:
+                    AnchorTop = 0.5f;
+                    break;
+                case LayoutPreset.CenterBottom:
                 case LayoutPreset.BottomLeft:
                 case LayoutPreset.BottomRight:
                 case LayoutPreset.BottomWide:
                     AnchorTop = 1;
-                    break;
-                case LayoutPreset.CenterBottom:
-                case LayoutPreset.CenterLeft:
-                case LayoutPreset.CenterRight:
-                case LayoutPreset.Center:
-                    AnchorTop = 0.5f;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
@@ -1400,6 +1400,18 @@ namespace SS14.Client.UserInterface
             // Right Anchor.
             switch (preset)
             {
+                case LayoutPreset.TopLeft:
+                case LayoutPreset.CenterLeft:
+                case LayoutPreset.BottomLeft:
+                case LayoutPreset.LeftWide:
+                    AnchorRight = 0;
+                    break;
+                case LayoutPreset.CenterTop:
+                case LayoutPreset.CenterBottom:
+                case LayoutPreset.Center:
+                case LayoutPreset.VerticalCenterWide:
+                    AnchorRight = 0.5f;
+                    break;
                 case LayoutPreset.CenterRight:
                 case LayoutPreset.TopRight:
                 case LayoutPreset.Wide:
@@ -1408,19 +1420,7 @@ namespace SS14.Client.UserInterface
                 case LayoutPreset.BottomWide:
                 case LayoutPreset.RightWide:
                 case LayoutPreset.BottomRight:
-                    AnchorRight = 0;
-                    break;
-                case LayoutPreset.TopLeft:
-                case LayoutPreset.CenterLeft:
-                case LayoutPreset.BottomLeft:
-                case LayoutPreset.LeftWide:
                     AnchorRight = 1;
-                    break;
-                case LayoutPreset.CenterTop:
-                case LayoutPreset.CenterBottom:
-                case LayoutPreset.Center:
-                case LayoutPreset.VerticalCenterWide:
-                    AnchorRight = 0.5f;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
@@ -1429,6 +1429,19 @@ namespace SS14.Client.UserInterface
             // Bottom Anchor.
             switch (preset)
             {
+                case LayoutPreset.TopWide:
+                case LayoutPreset.TopLeft:
+                case LayoutPreset.TopRight:
+                case LayoutPreset.CenterTop:
+                    AnchorBottom = 0;
+                    break;
+                case LayoutPreset.CenterLeft:
+                case LayoutPreset.CenterRight:
+                case LayoutPreset.Center:
+                case LayoutPreset.HorizontalCenterWide:
+                    AnchorBottom = 0.5f;
+                    break;
+                case LayoutPreset.CenterBottom:
                 case LayoutPreset.BottomLeft:
                 case LayoutPreset.BottomRight:
                 case LayoutPreset.LeftWide:
@@ -1436,20 +1449,7 @@ namespace SS14.Client.UserInterface
                 case LayoutPreset.RightWide:
                 case LayoutPreset.VerticalCenterWide:
                 case LayoutPreset.BottomWide:
-                    AnchorBottom = 0;
-                    break;
-                case LayoutPreset.TopWide:
-                case LayoutPreset.TopLeft:
-                case LayoutPreset.TopRight:
-                case LayoutPreset.CenterTop:
-                case LayoutPreset.CenterBottom:
                     AnchorBottom = 1;
-                    break;
-                case LayoutPreset.CenterLeft:
-                case LayoutPreset.CenterRight:
-                case LayoutPreset.Center:
-                case LayoutPreset.HorizontalCenterWide:
-                    AnchorBottom = 0.5f;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(preset), preset, null);

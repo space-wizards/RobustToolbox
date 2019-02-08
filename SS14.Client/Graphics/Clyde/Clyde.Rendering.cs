@@ -283,7 +283,7 @@ namespace SS14.Client.Graphics.Clyde
             program.Use();
             if (arrayed)
             {
-                program.SetUniform(UniModArrayIndex, (float)renderCommandTexture.ArrayIndex-1);
+                program.SetUniform(UniModArrayIndex, (float) renderCommandTexture.ArrayIndex - 1);
             }
 
             GL.BindVertexArray(QuadVAO.Handle);
@@ -425,7 +425,7 @@ namespace SS14.Client.Graphics.Clyde
                     sr = new UIBox2(0, 0, 1, 1);
                 }
 
-                var arrayIndex = command.ArrayIndex-1;
+                var arrayIndex = command.ArrayIndex - 1;
                 var bl = transform.Transform(command.PositionA);
                 var br = transform.Transform(new Vector2(command.PositionB.X, command.PositionA.Y));
                 var tr = transform.Transform(command.PositionB);
@@ -556,7 +556,8 @@ namespace SS14.Client.Graphics.Clyde
                 list.Commands.Add(command);
             }
 
-            public void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color? modulate, int handleId)
+            public void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color? modulate, UIBox2? subRegion,
+                int handleId)
             {
                 _assertNotDisposed();
 
@@ -566,7 +567,18 @@ namespace SS14.Client.Graphics.Clyde
                     case AtlasTexture atlas:
                     {
                         texture = atlas.SourceTexture;
-                        command.SubRegion = atlas.SubRegion;
+                        if (subRegion.HasValue)
+                        {
+                            var offset = atlas.SubRegion.TopLeft;
+                            subRegion = new UIBox2(
+                                subRegion.Value.TopLeft + offset,
+                                subRegion.Value.BottomRight + offset);
+                        }
+                        else
+                        {
+                            subRegion = atlas.SubRegion;
+                        }
+
                         break;
                     }
                 }
@@ -578,6 +590,7 @@ namespace SS14.Client.Graphics.Clyde
                 command.PositionA = a;
                 command.PositionB = b;
                 command.Modulate = modulate ?? Color.White;
+                command.SubRegion = subRegion;
                 list.Commands.Add(command);
             }
 
@@ -637,6 +650,6 @@ namespace SS14.Client.Graphics.Clyde
         DrawingHandleScreen CreateHandleScreen();
 
         void SetModelTransform(ref Matrix3 matrix, int handleId);
-        void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color? modulate, int handleId);
+        void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color? modulate, UIBox2? subRegion, int handleId);
     }
 }

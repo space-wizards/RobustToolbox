@@ -142,7 +142,7 @@ namespace SS14.Client.Graphics.Drawing
             if (_renderHandle != null)
             {
                 _renderHandle.DrawTextureRect(texture, position,
-                    position + (texture.Size / (float) EyeManager.PIXELSPERMETER), modulate, _handleId);
+                    position + (texture.Size / (float) EyeManager.PIXELSPERMETER), modulate, null, _handleId);
             }
             else if (Item != null)
             {
@@ -156,7 +156,7 @@ namespace SS14.Client.Graphics.Drawing
             CheckDisposed();
             if (_renderHandle != null)
             {
-                _renderHandle.DrawTextureRect(texture, rect.BottomLeft, rect.TopRight, modulate,
+                _renderHandle.DrawTextureRect(texture, rect.BottomLeft, rect.TopRight, modulate, null,
                     _handleId);
             }
             else if (Item != null)
@@ -173,7 +173,7 @@ namespace SS14.Client.Graphics.Drawing
             {
                 if (_renderHandle != null)
                 {
-                    _renderHandle.DrawTextureRect(Texture.White, rect.BottomLeft, rect.TopRight, color, _handleId);
+                    _renderHandle.DrawTextureRect(Texture.White, rect.BottomLeft, rect.TopRight, color, null, _handleId);
                 }
                 else if (Item != null)
                 {
@@ -228,14 +228,20 @@ namespace SS14.Client.Graphics.Drawing
 
         public void DrawStyleBox(StyleBox styleBox, UIBox2 box)
         {
-            if (!GameController.OnGodot)
+            if (styleBox == null)
             {
-                return;
+                throw new ArgumentNullException(nameof(styleBox));
             }
-            if (styleBox == null) throw new ArgumentNullException(nameof(styleBox));
 
             CheckDisposed();
-            styleBox.GodotStyleBox.Draw(Item, box.Convert());
+            if (GameController.OnGodot)
+            {
+                styleBox.GodotStyleBox.Draw(Item, box.Convert());
+            }
+            else
+            {
+                styleBox.Draw(this, box);
+            }
         }
 
         public override void DrawLine(Vector2 from, Vector2 to, Color color, float width = 1, bool antiAliased = false)
@@ -256,7 +262,7 @@ namespace SS14.Client.Graphics.Drawing
             {
                 if (_renderHandle != null)
                 {
-                    _renderHandle.DrawTextureRect(Texture.White, rect.TopLeft, rect.BottomRight, color, _handleId);
+                    _renderHandle.DrawTextureRect(Texture.White, rect.TopLeft, rect.BottomRight, color, null, _handleId);
                 }
                 else if (Item != null)
                 {
@@ -278,7 +284,7 @@ namespace SS14.Client.Graphics.Drawing
             CheckDisposed();
             if (_renderHandle != null)
             {
-                _renderHandle.DrawTextureRect(texture, position, position + texture.Size, modulate, _handleId);
+                _renderHandle.DrawTextureRect(texture, position, position + texture.Size, modulate, null, _handleId);
             }
             else if (Item != null)
             {
@@ -292,11 +298,24 @@ namespace SS14.Client.Graphics.Drawing
             CheckDisposed();
             if (_renderHandle != null)
             {
-                _renderHandle.DrawTextureRect(texture, rect.TopLeft, rect.BottomRight, modulate, _handleId);
+                _renderHandle.DrawTextureRect(texture, rect.TopLeft, rect.BottomRight, modulate, null, _handleId);
             }
             else if (Item != null)
             {
                 texture.GodotTexture.DrawRect(Item, rect.Convert(), tile, modulate?.Convert(), transpose, normalMap);
+            }
+        }
+
+        public void DrawTextureRectRegion(Texture texture, UIBox2 rect, UIBox2 subRegion, Color? modulate = null)
+        {
+            CheckDisposed();
+            if (_renderHandle != null)
+            {
+                _renderHandle.DrawTextureRect(texture, rect.TopLeft, rect.BottomRight, modulate, subRegion, _handleId);
+            }
+            else if (Item != null)
+            {
+                texture.GodotTexture.DrawRect(Item, rect.Convert(), false, modulate?.Convert());
             }
         }
     }

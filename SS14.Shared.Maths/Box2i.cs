@@ -97,5 +97,10 @@ namespace SS14.Shared.Maths
         {
             return new Box2(box.Left, box.Bottom, box.Right, box.Top);
         }
+
+        public override string ToString()
+        {
+            return $"({Left}, {Bottom}, {Right}, {Top})";
+        }
     }
 }

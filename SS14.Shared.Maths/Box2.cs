@@ -159,5 +159,10 @@ namespace SS14.Shared.Maths
         {
             return !(a == b);
         }
+
+        public override string ToString()
+        {
+            return $"({Left}, {Bottom}, {Right}, {Top})";
+        }
     }
 }

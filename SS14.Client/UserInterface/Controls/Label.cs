@@ -3,6 +3,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Drawing;
+using SS14.Client.Utility;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 
@@ -204,6 +205,16 @@ namespace SS14.Client.UserInterface.Controls
             maxLineSize = Math.Max(currentLineSize, maxLineSize);
 
             _textDimensionCache = new Vector2i(maxLineSize, height);
+        }
+
+        private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
+        {
+            base.SetGodotProperty(property, value, context);
+
+            if (property == "text")
+            {
+                Text = (string) value;
+            }
         }
     }
 }

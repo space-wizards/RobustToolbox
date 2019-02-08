@@ -1425,6 +1425,20 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        /// <summary>
+        ///     Changes all the anchors of a node at once to common presets.
+        /// </summary>
+        /// <param name="preset">
+        ///     The preset to apply to the anchors.
+        /// </param>
+        /// <param name="keepMargin">
+        ///     If this is true, the control margins themselves will not be changed,
+        ///     and the control position will change according to the new anchor parameters.
+        ///     If false, the control margins will adjust so that the control position remains the same relative to its parent.
+        /// </param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     Thrown if <paramref name="preset"/> isn't a valid preset value.
+        /// </exception>
         public void SetAnchorPreset(LayoutPreset preset, bool keepMargin = false)
         {
             if (GameController.OnGodot)
@@ -1550,14 +1564,152 @@ namespace SS14.Client.UserInterface
             }
         }
 
-        public void SetMarginsPreset(LayoutPreset preset, LayoutPresetMode resizeMode = LayoutPresetMode.Minsize,
+        /// <param name="preset"></param>
+        /// <param name="resizeMode"></param>
+        /// <param name="margin">Some extra margin to add depending on the preset chosen.</param>
+        public void SetMarginsPreset(LayoutPreset preset, LayoutPresetMode resizeMode = LayoutPresetMode.MinSize,
             int margin = 0)
         {
             if (GameController.OnGodot)
             {
                 SceneControl.SetMarginsPreset((Godot.Control.LayoutPreset) preset,
                     (Godot.Control.LayoutPresetMode) resizeMode, margin);
+                return;
             }
+
+            var newSize = Size;
+            var minSize = CombinedMinimumSize;
+            if ((resizeMode & LayoutPresetMode.KeepWidth) == 0)
+            {
+                newSize = new Vector2(minSize.X, newSize.Y);
+            }
+
+            if ((resizeMode & LayoutPresetMode.KeepHeight) == 0)
+            {
+                newSize = new Vector2(newSize.X, minSize.Y);
+            }
+
+            var parentSize = Parent?.Size ?? Vector2.Zero;
+
+            // Left Margin.
+            switch (preset)
+            {
+                case LayoutPreset.TopLeft:
+                case LayoutPreset.BottomLeft:
+                case LayoutPreset.CenterLeft:
+                case LayoutPreset.LeftWide:
+                case LayoutPreset.HorizontalCenterWide:
+                case LayoutPreset.Wide:
+                case LayoutPreset.TopWide:
+                case LayoutPreset.BottomWide:
+                    // The AnchorLeft bit is to reverse the effect of anchors,
+                    // So that the preset result is the same no matter what margins are set.
+                    _marginLeft = parentSize.X * (0 - AnchorLeft) + margin;
+                    break;
+                case LayoutPreset.CenterTop:
+                case LayoutPreset.CenterBottom:
+                case LayoutPreset.Center:
+                case LayoutPreset.VerticalCenterWide:
+                    _marginLeft = parentSize.X * (0.5f - AnchorLeft) - newSize.X / 2;
+                    break;
+                case LayoutPreset.TopRight:
+                case LayoutPreset.BottomRight:
+                case LayoutPreset.CenterRight:
+                case LayoutPreset.RightWide:
+                    _marginLeft = parentSize.X * (1 - AnchorLeft) - newSize.X - margin;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
+            }
+
+            // Top Anchor.
+            switch (preset)
+            {
+                case LayoutPreset.TopLeft:
+                case LayoutPreset.TopRight:
+                case LayoutPreset.LeftWide:
+                case LayoutPreset.TopWide:
+                case LayoutPreset.Wide:
+                case LayoutPreset.RightWide:
+                case LayoutPreset.CenterTop:
+                case LayoutPreset.VerticalCenterWide:
+                    _marginTop = parentSize.Y * (0 - AnchorTop) + margin;
+                    break;
+                case LayoutPreset.CenterLeft:
+                case LayoutPreset.CenterRight:
+                case LayoutPreset.HorizontalCenterWide:
+                case LayoutPreset.Center:
+                    _marginTop = parentSize.Y * (0.5f - AnchorTop) - newSize.Y / 2;
+                    break;
+                case LayoutPreset.CenterBottom:
+                case LayoutPreset.BottomLeft:
+                case LayoutPreset.BottomRight:
+                case LayoutPreset.BottomWide:
+                    _marginTop = parentSize.Y * (1 - AnchorTop) - newSize.Y - margin;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
+            }
+
+            // Right Anchor.
+            switch (preset)
+            {
+                case LayoutPreset.TopLeft:
+                case LayoutPreset.CenterLeft:
+                case LayoutPreset.BottomLeft:
+                case LayoutPreset.LeftWide:
+                    _marginRight = parentSize.X * (0 - AnchorRight) + newSize.X + margin;
+                    break;
+                case LayoutPreset.CenterTop:
+                case LayoutPreset.CenterBottom:
+                case LayoutPreset.Center:
+                case LayoutPreset.VerticalCenterWide:
+                    _marginRight = parentSize.X * (0.5f - AnchorRight) + newSize.X;
+                    break;
+                case LayoutPreset.CenterRight:
+                case LayoutPreset.TopRight:
+                case LayoutPreset.Wide:
+                case LayoutPreset.HorizontalCenterWide:
+                case LayoutPreset.TopWide:
+                case LayoutPreset.BottomWide:
+                case LayoutPreset.RightWide:
+                case LayoutPreset.BottomRight:
+                    _marginRight = parentSize.X * (1 - AnchorRight) + newSize.X - margin;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
+            }
+
+            // Bottom Anchor.
+            switch (preset)
+            {
+                case LayoutPreset.TopWide:
+                case LayoutPreset.TopLeft:
+                case LayoutPreset.TopRight:
+                case LayoutPreset.CenterTop:
+                    _marginBottom = parentSize.Y * (0 - AnchorBottom) + newSize.Y + margin;
+                    break;
+                case LayoutPreset.CenterLeft:
+                case LayoutPreset.CenterRight:
+                case LayoutPreset.Center:
+                case LayoutPreset.HorizontalCenterWide:
+                    _marginBottom = parentSize.Y * (0.5f - AnchorBottom) + newSize.Y;
+                    break;
+                case LayoutPreset.CenterBottom:
+                case LayoutPreset.BottomLeft:
+                case LayoutPreset.BottomRight:
+                case LayoutPreset.LeftWide:
+                case LayoutPreset.Wide:
+                case LayoutPreset.RightWide:
+                case LayoutPreset.VerticalCenterWide:
+                case LayoutPreset.BottomWide:
+                    _marginBottom = parentSize.Y * (1 - AnchorBottom) + newSize.Y - margin;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
+            }
+
+            _updateLayout();
         }
 
         public enum LayoutPreset : byte
@@ -1580,12 +1732,30 @@ namespace SS14.Client.UserInterface
             Wide = 15,
         }
 
+        /// <seealso cref="Control.SetMarginsPreset"/>
+        [Flags]
+        [PublicAPI]
         public enum LayoutPresetMode : byte
         {
-            Minsize = 0,
+            /// <summary>
+            ///     Reset control size to minimum size.
+            /// </summary>
+            MinSize = 0,
+
+            /// <summary>
+            ///     Reset height to minimum but keep width the same.
+            /// </summary>
             KeepWidth = 1,
+
+            /// <summary>
+            ///     Reset width to minimum but keep height the same.
+            /// </summary>
             KeepHeight = 2,
-            KeepSize = 3,
+
+            /// <summary>
+            ///     Do not modify control size at all.
+            /// </summary>
+            KeepSize = KeepWidth | KeepHeight,
         }
 
         /// <summary>

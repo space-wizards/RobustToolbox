@@ -1,4 +1,5 @@
 ﻿using SS14.Client.Graphics.Drawing;
+using SS14.Client.Utility;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
@@ -39,6 +40,16 @@ namespace SS14.Client.UserInterface.Controls
             {
                 var panel = _panelOverride ?? UserInterfaceManager.Theme.PanelPanel;
                 panel.Draw(handle, UIBox2.FromDimensions(Vector2.Zero, Size));
+            }
+        }
+
+        private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
+        {
+            base.SetGodotProperty(property, value, context);
+
+            if (property == "custom_styles/panel")
+            {
+                PanelOverride = GetGodotResource<StyleBox>(context, value);
             }
         }
     }

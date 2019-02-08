@@ -1,9 +1,11 @@
+using System.Collections.Generic;
 using SS14.Client;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Clyde;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface;
+using SS14.Client.Utility;
 
 namespace SS14.UnitTesting.Client
 {
@@ -60,6 +62,9 @@ namespace SS14.UnitTesting.Client
         {
             throw new System.NotImplementedException();
         }
+
+        public Dictionary<(GodotAsset asset, int resourceId), object> GodotResourceInstanceCache { get; } =
+            new Dictionary<(GodotAsset asset, int resourceId), object>();
 
         public void UnhandledKeyDown(KeyEventArgs args)
         {

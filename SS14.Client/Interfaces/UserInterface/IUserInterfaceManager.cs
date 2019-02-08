@@ -5,6 +5,7 @@ using SS14.Client.UserInterface.Controls;
 using System;
 using System.Collections.Generic;
 using SS14.Client.Graphics.Clyde;
+using SS14.Client.Utility;
 
 namespace SS14.Client.Interfaces.UserInterface
 {
@@ -54,5 +55,7 @@ namespace SS14.Client.Interfaces.UserInterface
         void PreKeyUp(KeyEventArgs args);
 
         void Render(IRenderHandle renderHandle);
+
+        Dictionary<(GodotAsset asset, int resourceId), object> GodotResourceInstanceCache { get; }
     }
 }

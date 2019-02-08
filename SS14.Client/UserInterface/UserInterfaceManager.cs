@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Clyde;
 using SS14.Client.Graphics.Drawing;
@@ -11,6 +12,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.ResourceManagement;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
+using SS14.Client.Utility;
 using SS14.Shared.Configuration;
 using SS14.Shared.Input;
 using SS14.Shared.Interfaces.Configuration;
@@ -38,6 +40,9 @@ namespace SS14.Client.UserInterface
         public DebugConsole DebugConsole { get; private set; }
         public IDebugMonitors DebugMonitors => _debugMonitors;
         private DebugMonitors _debugMonitors;
+
+        public Dictionary<(GodotAsset asset, int resourceId), object> GodotResourceInstanceCache { get; } =
+            new Dictionary<(GodotAsset asset, int resourceId), object>();
 
         public void PostInject()
         {
@@ -150,6 +155,7 @@ namespace SS14.Client.UserInterface
             {
                 return;
             }
+
             handle.SetTransform(position, Angle.Zero, Vector2.One);
             control.Draw(handle);
             foreach (var child in control.Children)

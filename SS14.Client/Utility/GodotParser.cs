@@ -11,6 +11,236 @@ using SS14.Shared.Utility;
 namespace SS14.Client.Utility
 {
     /// <summary>
+    ///     Represents a Godot .(t)res or .(t)scn resource file that we loaded manually.
+    /// </summary>
+    internal abstract class GodotAsset
+    {
+        protected GodotAsset(IReadOnlyDictionary<int, ResourceDef> subResources,
+            IReadOnlyList<ExtResourceRef> extResources)
+        {
+            ExtResources = extResources;
+            SubResources = subResources;
+        }
+
+        /// <summary>
+        ///     A list of all the external resources that are referenced by this resource.
+        /// </summary>
+        public IReadOnlyList<ExtResourceRef> ExtResources { get; }
+
+        public IReadOnlyDictionary<int, ResourceDef> SubResources { get; }
+
+        public ExtResourceRef GetExtResource(TokenExtResource token)
+        {
+            return ExtResources[(int) token.ResourceId - 1];
+        }
+
+        /// <summary>
+        ///     A token value to indicate "this is a reference to an external resource".
+        /// </summary>
+        public readonly struct TokenExtResource : IEquatable<TokenExtResource>
+        {
+            public readonly long ResourceId;
+
+            public TokenExtResource(long resourceId)
+            {
+                ResourceId = resourceId;
+            }
+
+            public bool Equals(TokenExtResource other)
+            {
+                return ResourceId == other.ResourceId;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                return obj is TokenExtResource other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                return ResourceId.GetHashCode();
+            }
+        }
+
+        /// <summary>
+        ///     A token value to indicate "this is a reference to a sub resource".
+        /// </summary>
+        public readonly struct TokenSubResource : IEquatable<TokenSubResource>
+        {
+            public readonly long ResourceId;
+
+            public TokenSubResource(long resourceId)
+            {
+                ResourceId = resourceId;
+            }
+
+            public bool Equals(TokenSubResource other)
+            {
+                return ResourceId == other.ResourceId;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                return obj is TokenSubResource other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                return ResourceId.GetHashCode();
+            }
+        }
+
+        /// <summary>
+        ///     A reference to an external resource.
+        /// </summary>
+        public sealed class ExtResourceRef
+        {
+            /// <summary>
+            ///     The godot file path of the external resource,
+            ///     usually prefixed with res://
+            /// </summary>
+            public string Path { get; }
+
+            /// <summary>
+            ///     The Godot type of the referenced resource.
+            ///     This is NOT a .NET type!
+            /// </summary>
+            public string Type { get; }
+
+            /// <summary>
+            ///     The ID of this external resource, so what <see cref="TokenExtResource"/> stores.
+            /// </summary>
+            public long Id { get; }
+
+            public ExtResourceRef(string path, string type, long id)
+            {
+                Path = path;
+                Type = type;
+                Id = id;
+            }
+        }
+
+        [PublicAPI]
+        public sealed class ResourceDef
+        {
+            public ResourceDef(string type, [NotNull] IReadOnlyDictionary<string, object> properties)
+            {
+                Type = type;
+                Properties = properties;
+            }
+
+            [NotNull] public IReadOnlyDictionary<string, object> Properties { get; }
+
+            public string Type { get; }
+        }
+    }
+
+    /// <inheritdoc />
+    /// <summary>
+    ///     This type is specifically a loaded .tscn file.
+    /// </summary>
+    internal sealed class GodotAssetScene : GodotAsset
+    {
+        public NodeDef RootNode => Nodes[0];
+        public IReadOnlyList<NodeDef> Nodes { get; }
+
+        public GodotAssetScene(IReadOnlyList<NodeDef> nodes, IReadOnlyDictionary<int, ResourceDef> subResources,
+            IReadOnlyList<ExtResourceRef> extResourceRefs) : base(subResources, extResourceRefs)
+        {
+            Nodes = nodes;
+        }
+
+        public class NodeDef
+        {
+            /// <summary>
+            ///     The name of this node.
+            /// </summary>
+            [NotNull]
+            public string Name { get; }
+
+            /// <summary>
+            ///     The type of this node.
+            ///     Can be null if this node is actually an instance (or part of one).
+            /// </summary>
+            [CanBeNull]
+            public string Type { get; }
+
+            /// <summary>
+            ///     The scene-relative parent of this node.
+            /// </summary>
+            [CanBeNull]
+            public string Parent { get; }
+
+            /// <summary>
+            ///     Index of this node among its siblings.
+            /// </summary>
+            public int Index { get; }
+
+            /// <summary>
+            ///     An external resource reference pointing to the scene we are instancing, if any.
+            /// </summary>
+            public TokenExtResource? Instance { get; }
+
+            [NotNull] public IReadOnlyDictionary<string, object> Properties { get; }
+
+            public NodeDef(string name, [CanBeNull] string type, [CanBeNull] string parent, int index,
+                TokenExtResource? instance, Dictionary<string, object> properties)
+            {
+                Name = name;
+                Type = type;
+                Parent = parent;
+                Index = index;
+                Instance = instance;
+                Properties = properties;
+            }
+
+            private sealed class FlattenedTreeComparerImpl : IComparer<NodeDef>
+            {
+                public int Compare(NodeDef x, NodeDef y)
+                {
+                    if (ReferenceEquals(x, y)) return 0;
+                    if (ReferenceEquals(null, y)) return 1;
+                    if (ReferenceEquals(null, x)) return -1;
+
+                    var parentComparison = ParentFieldWeight(x.Parent).CompareTo(ParentFieldWeight(y.Parent));
+                    if (parentComparison != 0) return parentComparison;
+                    var indexComparison = x.Index.CompareTo(y.Index);
+                    if (indexComparison != 0) return indexComparison;
+                    return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
+                }
+
+                private static int ParentFieldWeight(string parentField)
+                {
+                    switch (parentField)
+                    {
+                        case null:
+                            return 0;
+                        case ".":
+                            return 1;
+                        default:
+                            return parentField.Count(c => c == '/') + 2;
+                    }
+                }
+            }
+
+            public static IComparer<NodeDef> FlattenedTreeComparer { get; } = new FlattenedTreeComparerImpl();
+        }
+    }
+
+    internal sealed class GodotAssetRes : GodotAsset
+    {
+        public GodotAssetRes(ResourceDef mainResource, IReadOnlyDictionary<int, ResourceDef> subResources,
+            IReadOnlyList<ExtResourceRef> extResources) : base(subResources, extResources)
+        {
+            MainResource = mainResource;
+        }
+
+        public ResourceDef MainResource { get; }
+    }
+
+        /// <summary>
     ///     Parser for Godot asset files.
     /// </summary>
     internal class GodotParser
@@ -47,16 +277,34 @@ namespace SS14.Client.Utility
 
         private GodotAsset _parseInternal(TextReader reader)
         {
+            ResourceDefInParsing? mainResource = null;
             _parser = new TextParser(reader);
             _parser.NextLine();
             _parser.Parse('[');
             if (_parser.TryParse("gd_scene"))
             {
-                // nothing yet.
+                // Nothing yet, maybe nothing ever.
             }
             else if (_parser.TryParse("gd_resource"))
             {
-                throw new NotImplementedException("We only bother to read scenes right now.");
+                string resourceType;
+                while (true)
+                {
+                    _parser.EatWhitespace();
+                    if (_parser.Peek() == ']')
+                    {
+                        throw new TextParser.ParserException("Didn't find a resource type!");
+                    }
+
+                    var (key, value) = ParseKeyValue();
+                    if (key == "type")
+                    {
+                        resourceType = (string) value;
+                        break;
+                    }
+                }
+
+                mainResource = new ResourceDefInParsing(0, resourceType, new Dictionary<string, object>());
             }
             else
             {
@@ -64,9 +312,11 @@ namespace SS14.Client.Utility
             }
 
             var extResources = new List<GodotAsset.ExtResourceRef>();
+            var subResources = new List<ResourceDefInParsing>();
             var nodes = new List<NodeHeader>();
 
             NodeHeader? currentParsingHeader = null;
+            ResourceDefInParsing? currentParsingDef = null;
 
             // Go over all the [] headers in the file.
             while (!_parser.IsEOF())
@@ -80,12 +330,15 @@ namespace SS14.Client.Utility
 
                 if (!_parser.TryParse('['))
                 {
-                    if (!currentParsingHeader.HasValue)
+                    if (currentParsingDef.HasValue)
                     {
-                        continue;
+                        _parseProperty(currentParsingDef.Value.Properties);
                     }
-
-                    _parseProperty(ref currentParsingHeader);
+                    else
+                    {
+                        DebugTools.Assert(currentParsingHeader.HasValue);
+                        _parseProperty(currentParsingHeader.Value.Properties);
+                    }
                     continue;
                 }
 
@@ -93,15 +346,27 @@ namespace SS14.Client.Utility
 
                 if (_parser.TryParse("node"))
                 {
+                    DebugTools.Assert(!mainResource.HasValue);
+
                     currentParsingHeader = ParseNodeHeader();
                     nodes.Add(currentParsingHeader.Value);
+                    currentParsingDef = null;
                 }
-
                 else if (_parser.TryParse("ext_resource"))
                 {
                     extResources.Add(ParseExtResourceRef());
                 }
-
+                else if (_parser.TryParse("resource"))
+                {
+                    DebugTools.Assert(mainResource.HasValue);
+                    currentParsingDef = mainResource;
+                }
+                else if (_parser.TryParse("sub_resource"))
+                {
+                    currentParsingDef = ParseSubResourceHeader();
+                    subResources.Add(currentParsingDef.Value);
+                    currentParsingHeader = null;
+                }
                 else
                 {
                     // Probably something like sub_resource or whatever. Ignore it.
@@ -113,24 +378,30 @@ namespace SS14.Client.Utility
                 _parser.EnsureEOL();
             }
 
-            // Alright try to resolve tree graph.
-            // Sort based on tree depth by parsing parent path.
-            // This way, when doing straight iteration, we'll always have the parent.
+            var finalSubResources = subResources
+                .ToDictionary(s => s.Index, s => new GodotAsset.ResourceDef(s.Type, s.Properties));
 
+            if (mainResource.HasValue)
+            {
+                var mainResourceDef = new GodotAsset.ResourceDef(mainResource.Value.Type, mainResource.Value.Properties);
+                return new GodotAssetRes(mainResourceDef, finalSubResources, extResources);
+            }
 
             var finalNodes = nodes
                 .Select(n => new GodotAssetScene.NodeDef(n.Name, n.Type, n.Parent, n.Index, n.Instance, n.Properties))
                 .ToList();
 
+            // Alright try to resolve tree graph.
+            // Sort based on tree depth by parsing parent path.
+            // This way, when doing straight iteration, we'll always have the parent.
+
             finalNodes.Sort(GodotAssetScene.NodeDef.FlattenedTreeComparer);
 
-            return new GodotAssetScene(finalNodes, extResources);
+            return new GodotAssetScene(finalNodes, finalSubResources, extResources);
         }
 
-        private void _parseProperty(ref NodeHeader? currentParsingHeader)
+        private void _parseProperty(IDictionary<string, object> propertyDict)
         {
-            DebugTools.Assert(currentParsingHeader.HasValue);
-
             var key = _parser.EatUntilWhitespace();
             _parser.EatWhitespace();
             _parser.Parse('=');
@@ -139,15 +410,16 @@ namespace SS14.Client.Utility
             try
             {
                 var value = ParseGodotValue();
-                if (currentParsingHeader.Value.Properties.ContainsKey(key))
+                if (propertyDict.ContainsKey(key))
                 {
                     Logger.WarningS("gdparse", "Duplicate property key: {0}", key);
                 }
-                currentParsingHeader.Value.Properties[key] = value;
+
+                propertyDict[key] = value;
             }
             catch (NotImplementedException e)
             {
-                Logger.WarningS("gdparse","Can't parse Godot property value: {0}", e.Message);
+                Logger.WarningS("gdparse", "Can't parse Godot property value: {0}", e.Message);
             }
         }
 
@@ -189,6 +461,34 @@ namespace SS14.Client.Utility
 
             return new NodeHeader(name, type, index == null ? 0 : int.Parse(index, CultureInfo.InvariantCulture),
                 parent, instance);
+        }
+
+        private ResourceDefInParsing ParseSubResourceHeader()
+        {
+            _parser.EatWhitespace();
+
+            string type = null;
+            var index = 0L;
+
+            while (_parser.Peek() != ']')
+            {
+                var (keyName, value) = ParseKeyValue();
+
+                switch (keyName)
+                {
+                    case "type":
+                        type = (string) value;
+                        break;
+                    case "id":
+                        index = (long) value;
+                        break;
+                }
+
+                _parser.EatWhitespace();
+            }
+
+            DebugTools.AssertNotNull(index);
+            return new ResourceDefInParsing((int)index, type, new Dictionary<string, object>());
         }
 
         private GodotAsset.ExtResourceRef ParseExtResourceRef()
@@ -338,7 +638,7 @@ namespace SS14.Client.Utility
             if (_parser.TryParse("SubResource("))
             {
                 _parser.EatWhitespace();
-                var val = new GodotAsset.TokenExtResource((long) ParseGodotNumber());
+                var val = new GodotAsset.TokenSubResource((long) ParseGodotNumber());
                 _parser.EatWhitespace();
                 _parser.Parse(')');
                 return val;
@@ -451,6 +751,20 @@ namespace SS14.Client.Utility
                 Parent = parent;
                 Instance = instance;
                 Properties = new Dictionary<string, object>();
+            }
+        }
+
+        private readonly struct ResourceDefInParsing
+        {
+            public readonly int Index;
+            public readonly string Type;
+            public readonly Dictionary<string, object> Properties;
+
+            public ResourceDefInParsing(int index, string type, Dictionary<string, object> properties)
+            {
+                Index = index;
+                Type = type;
+                Properties = properties;
             }
         }
 
@@ -632,207 +946,6 @@ namespace SS14.Client.Utility
                 {
                 }
             }
-        }
-    }
-
-    /// <summary>
-    ///     Represents a Godot .(t)res or .(t)scn resource file that we loaded manually.
-    /// </summary>
-    internal abstract class GodotAsset
-    {
-        protected GodotAsset(IList<ExtResourceRef> extResources)
-        {
-            ExtResources = extResources;
-        }
-
-        /// <summary>
-        ///     A list of all the external resources that are referenced by this resource.
-        /// </summary>
-        public IList<ExtResourceRef> ExtResources { get; }
-
-        public ExtResourceRef GetExtResource(TokenExtResource token)
-        {
-            return ExtResources[(int) token.ResourceId - 1];
-        }
-
-        /// <summary>
-        ///     A token value to indicate "this is a reference to an external resource".
-        /// </summary>
-        public readonly struct TokenExtResource : IEquatable<TokenExtResource>
-        {
-            public readonly long ResourceId;
-
-            public TokenExtResource(long resourceId)
-            {
-                ResourceId = resourceId;
-            }
-
-            public bool Equals(TokenExtResource other)
-            {
-                return ResourceId == other.ResourceId;
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                return obj is TokenExtResource other && Equals(other);
-            }
-
-            public override int GetHashCode()
-            {
-                return ResourceId.GetHashCode();
-            }
-        }
-
-        /// <summary>
-        ///     A token value to indicate "this is a reference to a sub resource".
-        /// </summary>
-        public readonly struct TokenSubResource : IEquatable<TokenSubResource>
-        {
-            public readonly long ResourceId;
-
-            public TokenSubResource(long resourceId)
-            {
-                ResourceId = resourceId;
-            }
-
-            public bool Equals(TokenSubResource other)
-            {
-                return ResourceId == other.ResourceId;
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                return obj is TokenSubResource other && Equals(other);
-            }
-
-            public override int GetHashCode()
-            {
-                return ResourceId.GetHashCode();
-            }
-        }
-
-        /// <summary>
-        ///     A reference to an external resource.
-        /// </summary>
-        public class ExtResourceRef
-        {
-            /// <summary>
-            ///     The godot file path of the external resource,
-            ///     usually prefixed with res://
-            /// </summary>
-            public string Path { get; }
-
-            /// <summary>
-            ///     The Godot type of the referenced resource.
-            ///     This is NOT a .NET type!
-            /// </summary>
-            public string Type { get; }
-
-            /// <summary>
-            ///     The ID of this external resource, so what <see cref="TokenExtResource"/> stores.
-            /// </summary>
-            public long Id { get; }
-
-            public ExtResourceRef(string path, string type, long id)
-            {
-                Path = path;
-                Type = type;
-                Id = id;
-            }
-        }
-    }
-
-    /// <inheritdoc />
-    /// <summary>
-    ///     This type is specifically a loaded .tscn file.
-    /// </summary>
-    internal class GodotAssetScene : GodotAsset
-    {
-        public NodeDef RootNode => Nodes[0];
-        public List<NodeDef> Nodes { get; }
-
-        public GodotAssetScene(List<NodeDef> nodes, List<ExtResourceRef> extResourceRefs) : base(extResourceRefs)
-        {
-            Nodes = nodes;
-        }
-
-        public class NodeDef
-        {
-            /// <summary>
-            ///     The name of this node.
-            /// </summary>
-            [NotNull]
-            public string Name { get; }
-
-            /// <summary>
-            ///     The type of this node.
-            ///     Can be null if this node is actually an instance (or part of one).
-            /// </summary>
-            [CanBeNull]
-            public string Type { get; }
-
-            /// <summary>
-            ///     The scene-relative parent of this node.
-            /// </summary>
-            [CanBeNull]
-            public string Parent { get; }
-
-            /// <summary>
-            ///     Index of this node among its siblings.
-            /// </summary>
-            public int Index { get; }
-
-            /// <summary>
-            ///     An external resource reference pointing to the scene we are instancing, if any.
-            /// </summary>
-            public TokenExtResource? Instance { get; }
-
-            [NotNull]
-            public IReadOnlyDictionary<string, object> Properties { get; }
-
-            public NodeDef(string name, [CanBeNull] string type, [CanBeNull] string parent, int index,
-                TokenExtResource? instance, Dictionary<string, object> properties)
-            {
-                Name = name;
-                Type = type;
-                Parent = parent;
-                Index = index;
-                Instance = instance;
-                Properties = properties;
-            }
-
-            private sealed class FlattenedTreeComparerImpl : IComparer<NodeDef>
-            {
-                public int Compare(NodeDef x, NodeDef y)
-                {
-                    if (ReferenceEquals(x, y)) return 0;
-                    if (ReferenceEquals(null, y)) return 1;
-                    if (ReferenceEquals(null, x)) return -1;
-
-                    var parentComparison = ParentFieldWeight(x.Parent).CompareTo(ParentFieldWeight(y.Parent));
-                    if (parentComparison != 0) return parentComparison;
-                    var indexComparison = x.Index.CompareTo(y.Index);
-                    if (indexComparison != 0) return indexComparison;
-                    return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
-                }
-
-                private static int ParentFieldWeight(string parentField)
-                {
-                    switch (parentField)
-                    {
-                        case null:
-                            return 0;
-                        case ".":
-                            return 1;
-                        default:
-                            return parentField.Count(c => c == '/') + 2;
-                    }
-                }
-            }
-
-            public static IComparer<NodeDef> FlattenedTreeComparer { get; } = new FlattenedTreeComparerImpl();
         }
     }
 }

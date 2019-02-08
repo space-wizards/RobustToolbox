@@ -920,6 +920,66 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        /// <summary>
+        ///     Retrieves and instances the object pointed to by either a
+        ///     sub resource or ext resource reference in a godot asset.
+        /// </summary>
+        /// <param name="context">The asset in which said object is referenced.</param>
+        /// <param name="value">
+        ///     The <see cref="GodotAsset.TokenSubResource"/> or <see cref="GodotAsset.TokenExtResource"/>
+        /// </param>
+        /// <typeparam name="T">
+        ///     The expected type of the resource. This is not a godot type but our equivalent.
+        /// </typeparam>
+        private protected T GetGodotResource<T>(GodotAsset context, object value)
+        {
+            GodotAsset.ResourceDef def;
+            (GodotAsset, int) defContext;
+            // Retrieve the actual ResourceDef for the resource requested.
+            if (value is GodotAsset.TokenExtResource ext)
+            {
+                var extRef = context.GetExtResource(ext);
+                var resPath = GodotPathUtility.GodotPathToResourcePath(extRef.Path);
+                var res = IoCManager.Resolve<IResourceCache>().GetResource<GodotAssetResource>(resPath);
+                def = ((GodotAssetRes) res.Asset).MainResource;
+                defContext = (res.Asset, 0);
+            }
+            else if (value is GodotAsset.TokenSubResource sub)
+            {
+                def = context.SubResources[(int)sub.ResourceId];
+                defContext = (context, (int)sub.ResourceId);
+            }
+            else
+            {
+                throw new ArgumentException("Value must be a TokenExtResource or a TokenSubResource", nameof(value));
+            }
+
+            // See if we've cached it.
+            if (UserInterfaceManagerInternal.GodotResourceInstanceCache.TryGetValue(defContext, out var result))
+            {
+                return (T) result;
+            }
+
+            // If not, here comes the mess of turning that into a native sane type.
+            if (def.Type == "StyleBoxFlat")
+            {
+                var box = new StyleBoxFlat();
+                if (def.Properties.TryGetValue("bg_color", out var val))
+                {
+                    box.BackgroundColor = (Color) val;
+                }
+
+                result = box;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+
+            UserInterfaceManagerInternal.GodotResourceInstanceCache[defContext] = result;
+            return (T)result;
+        }
+
         private void DoDraw()
         {
             using (var handle = new DrawingHandleScreen(SceneControl.GetCanvasItem()))

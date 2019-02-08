@@ -155,7 +155,7 @@ namespace SS14.Client.UserInterface
             control.Draw(handle);
             foreach (var child in control.Children)
             {
-                _render(handle, child, position + child.Position);
+                _render(handle, child, position + child.Position.Rounded());
             }
         }
 

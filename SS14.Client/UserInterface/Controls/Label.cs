@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using JetBrains.Annotations;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Utility;
@@ -61,14 +59,19 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
+        private AlignMode _align;
         public AlignMode Align
         {
-            get => GameController.OnGodot ? (AlignMode) SceneControl.Get("align") : default;
+            get => GameController.OnGodot ? (AlignMode) SceneControl.Get("align") : _align;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.Set("align", (Godot.Label.AlignEnum) value);
+                }
+                else
+                {
+                    _align = value;
                 }
             }
         }
@@ -130,22 +133,44 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
+            if (!_textDimensionCache.HasValue)
+            {
+                _calculateTextDimension();
+                DebugTools.Assert(_textDimensionCache.HasValue);
+            }
+
+            float hOffset;
+            switch (Align)
+            {
+                case AlignMode.Left:
+                    hOffset = 0;
+                    break;
+                case AlignMode.Center:
+                case AlignMode.Fill:
+                    // ReSharper disable once PossibleLossOfFraction
+                    hOffset = (int)(Size.X - _textDimensionCache.Value.X) / 2;
+                    break;
+                case AlignMode.Right:
+                    hOffset = Size.X - _textDimensionCache.Value.X;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
             var newlines = 0;
             var font = _fontOverride ?? UserInterfaceManager.Theme.LabelFont;
-            var baseLine = new Vector2(0, font.Ascent);
+            var baseLine = new Vector2(hOffset, font.Ascent);
             foreach (var chr in _text)
             {
                 if (chr == '\n')
                 {
                     newlines += 1;
-                    baseLine = new Vector2(0, font.Ascent + font.Height * newlines);
+                    baseLine = new Vector2(hOffset, font.Ascent + font.Height * newlines);
                 }
 
                 var advance = font.DrawChar(handle, chr, baseLine, Color.White);
                 baseLine += new Vector2(advance, 0);
             }
         }
-
 
         public enum AlignMode
         {
@@ -211,9 +236,14 @@ namespace SS14.Client.UserInterface.Controls
         {
             base.SetGodotProperty(property, value, context);
 
-            if (property == "text")
+            switch (property)
             {
-                Text = (string) value;
+                case "text":
+                    Text = (string) value;
+                    break;
+                case "align":
+                    Align = (AlignMode)(long) value;
+                    break;
             }
         }
     }

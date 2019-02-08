@@ -10,7 +10,7 @@ using SS14.Shared.Utility;
 namespace SS14.Client.UserInterface.CustomControls
 {
     [ControlWrap("res://Engine/Scenes/SS14Window/SS14Window.tscn")]
-    public class SS14Window : Control
+    public class SS14Window : Panel
     {
         public SS14Window() : base()
         {

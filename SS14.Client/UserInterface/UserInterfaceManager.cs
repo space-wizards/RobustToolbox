@@ -15,7 +15,6 @@ using SS14.Shared.Configuration;
 using SS14.Shared.Input;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface
@@ -28,7 +27,7 @@ namespace SS14.Client.UserInterface
         [Dependency] private readonly IDisplayManager _displayManager;
         [Dependency] private readonly IResourceCache _resourceCache;
 
-        public Font DefaultFont { get; private set; }
+        public UITheme Theme { get; private set; }
         public Control Focused { get; private set; }
 
         private Godot.CanvasLayer CanvasLayer;
@@ -47,7 +46,7 @@ namespace SS14.Client.UserInterface
 
         public void Initialize()
         {
-            DefaultFont = new VectorFont(_resourceCache.GetResource<FontResource>("/Fonts/CALIBRI.TTF"), 12);
+            Theme = new UIThemeDefault();
 
             if (GameController.OnGodot)
             {

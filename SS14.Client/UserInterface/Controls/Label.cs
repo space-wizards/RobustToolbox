@@ -72,7 +72,6 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
-        private Font ActiveFont => _fontOverride ?? UserInterfaceManager.DefaultFont;
         private Font _fontOverride;
 
         public Font FontOverride
@@ -131,16 +130,17 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             var newlines = 0;
-            var baseLine = new Vector2(0, ActiveFont.Ascent);
+            var font = _fontOverride ?? UserInterfaceManager.Theme.LabelFont;
+            var baseLine = new Vector2(0, font.Ascent);
             foreach (var chr in _text)
             {
                 if (chr == '\n')
                 {
                     newlines += 1;
-                    baseLine = new Vector2(0, ActiveFont.Ascent + ActiveFont.Height * newlines);
+                    baseLine = new Vector2(0, font.Ascent + font.Height * newlines);
                 }
 
-                var advance = ActiveFont.DrawChar(handle, chr, baseLine, Color.White);
+                var advance = font.DrawChar(handle, chr, baseLine, Color.White);
                 baseLine += new Vector2(advance, 0);
             }
         }
@@ -178,7 +178,8 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
-            var height = ActiveFont.Ascent;
+            var font = _fontOverride ?? UserInterfaceManager.Theme.LabelFont;
+            var height = font.Ascent;
             var maxLineSize = 0;
             var currentLineSize = 0;
             foreach (var chr in _text)
@@ -187,11 +188,11 @@ namespace SS14.Client.UserInterface.Controls
                 {
                     maxLineSize = Math.Max(currentLineSize, maxLineSize);
                     currentLineSize = 0;
-                    height += ActiveFont.Height;
+                    height += font.Height;
                 }
                 else
                 {
-                    var metrics = ActiveFont.GetCharMetrics(chr);
+                    var metrics = font.GetCharMetrics(chr);
                     if (!metrics.HasValue)
                     {
                         continue;

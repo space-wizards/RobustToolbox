@@ -10,7 +10,7 @@ namespace SS14.Client.Interfaces.UserInterface
 {
     public interface IUserInterfaceManager
     {
-        Font DefaultFont { get; }
+        UITheme Theme { get; }
 
         Control Focused { get; }
 

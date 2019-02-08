@@ -212,6 +212,7 @@
     <Compile Include="UserInterface\Controls\VScrollBar.cs" />
     <Compile Include="UserInterface\CustomControls\Chatbox.cs" />
     <Compile Include="UserInterface\CustomControls\DebugTimePanel.cs" />
+    <Compile Include="UserInterface\UITheme.cs" />
     <Compile Include="Utility\DirExt.cs" />
     <Compile Include="Utility\GodotParser.cs" />
     <Compile Include="Utility\GodotPathUtility.cs" />

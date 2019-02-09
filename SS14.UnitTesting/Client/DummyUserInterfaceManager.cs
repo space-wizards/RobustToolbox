@@ -6,6 +6,7 @@ using SS14.Client.Input;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface;
 using SS14.Client.Utility;
+using SS14.Shared.Maths;
 
 namespace SS14.UnitTesting.Client
 {
@@ -28,12 +29,12 @@ namespace SS14.UnitTesting.Client
             throw new System.NotImplementedException();
         }
 
-        public void FocusEntered(Control control)
+        public void GDFocusEntered(Control control)
         {
             throw new System.NotImplementedException();
         }
 
-        public void FocusExited(Control control)
+        public void GDFocusExited(Control control)
         {
             throw new System.NotImplementedException();
         }
@@ -48,12 +49,17 @@ namespace SS14.UnitTesting.Client
             throw new System.NotImplementedException();
         }
 
-        public void PreKeyDown(KeyEventArgs args)
+        public Control MouseGetControl(Vector2 coordinates)
         {
             throw new System.NotImplementedException();
         }
 
-        public void PreKeyUp(KeyEventArgs args)
+        public void GDPreKeyDown(KeyEventArgs args)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void GDPreKeyUp(KeyEventArgs args)
         {
             throw new System.NotImplementedException();
         }
@@ -76,12 +82,12 @@ namespace SS14.UnitTesting.Client
             throw new System.NotImplementedException();
         }
 
-        public void UnhandledMouseDown(MouseButtonEventArgs args)
+        public void GDUnhandledMouseDown(MouseButtonEventArgs args)
         {
             throw new System.NotImplementedException();
         }
 
-        public void UnhandledMouseUp(MouseButtonEventArgs args)
+        public void GDUnhandledMouseUp(MouseButtonEventArgs args)
         {
             throw new System.NotImplementedException();
         }

@@ -352,14 +352,20 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        private MouseFilterMode _mouseFilter;
+
         public MouseFilterMode MouseFilter
         {
-            get => GameController.OnGodot ? (MouseFilterMode) SceneControl.MouseFilter : default;
+            get => GameController.OnGodot ? (MouseFilterMode) SceneControl.MouseFilter : _mouseFilter;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.MouseFilter = (Godot.Control.MouseFilterEnum) value;
+                }
+                else
+                {
+                    _mouseFilter = value;
                 }
             }
         }
@@ -917,6 +923,9 @@ namespace SS14.Client.UserInterface
                 case "anchor_top":
                     AnchorTop = (float) value;
                     break;
+                case "mouse_filter":
+                    MouseFilter = (MouseFilterMode) (long) value;
+                    break;
             }
         }
 
@@ -946,8 +955,8 @@ namespace SS14.Client.UserInterface
             }
             else if (value is GodotAsset.TokenSubResource sub)
             {
-                def = context.SubResources[(int)sub.ResourceId];
-                defContext = (context, (int)sub.ResourceId);
+                def = context.SubResources[(int) sub.ResourceId];
+                defContext = (context, (int) sub.ResourceId);
             }
             else
             {
@@ -977,7 +986,7 @@ namespace SS14.Client.UserInterface
             }
 
             UserInterfaceManagerInternal.GodotResourceInstanceCache[defContext] = result;
-            return (T)result;
+            return (T) result;
         }
 
         private void DoDraw()
@@ -1203,7 +1212,7 @@ namespace SS14.Client.UserInterface
             OnMinimumSizeChanged?.Invoke(this);
         }
 
-        protected virtual bool HasPoint(Vector2 point)
+        internal protected virtual bool HasPoint(Vector2 point)
         {
             // This is effectively the same implementation as the default Godot one in Control.cpp.
             // That one gets ignored because to Godot it looks like we're ALWAYS implementing a custom HasPoint.
@@ -1322,7 +1331,6 @@ namespace SS14.Client.UserInterface
         /// </summary>
         protected virtual void FocusEntered()
         {
-            UserInterfaceManagerInternal.FocusEntered(this);
         }
 
         /// <summary>
@@ -1330,7 +1338,6 @@ namespace SS14.Client.UserInterface
         /// </summary>
         protected virtual void FocusExited()
         {
-            UserInterfaceManagerInternal.FocusExited(this);
         }
 
         public bool HasFocus()

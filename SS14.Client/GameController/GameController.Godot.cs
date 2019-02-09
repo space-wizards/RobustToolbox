@@ -166,11 +166,11 @@ namespace SS14.Client
                 {
                     // TODO: these hacks are in right now for toggling the debug console.
                     // Somehow find a way to make the console use the key binds system?
-                    _userInterfaceManager.PreKeyDown(keyEventArgs);
+                    _userInterfaceManager.GDPreKeyDown(keyEventArgs);
                 }
                 else
                 {
-                    _userInterfaceManager.PreKeyUp(keyEventArgs);
+                    _userInterfaceManager.GDPreKeyUp(keyEventArgs);
                 }
             }
         }

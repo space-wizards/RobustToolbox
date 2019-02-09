@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Clyde;
 using SS14.Client.Graphics.Drawing;
@@ -17,6 +18,7 @@ using SS14.Shared.Configuration;
 using SS14.Shared.Input;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
+using SS14.Shared.Map;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface
@@ -129,7 +131,12 @@ namespace SS14.Client.UserInterface
             PopupControl.OpenMinimum();
         }
 
-        public void PreKeyDown(KeyEventArgs args)
+        public Control MouseGetControl(Vector2 coordinates)
+        {
+            return _mouseFindControlAtPos(RootControl, coordinates);
+        }
+
+        public void GDPreKeyDown(KeyEventArgs args)
         {
             if (args.Key == Keyboard.Key.Quote)
             {
@@ -138,7 +145,7 @@ namespace SS14.Client.UserInterface
             }
         }
 
-        public void PreKeyUp(KeyEventArgs args)
+        public void GDPreKeyUp(KeyEventArgs args)
         {
         }
 
@@ -164,27 +171,50 @@ namespace SS14.Client.UserInterface
             }
         }
 
-        public void UnhandledMouseDown(MouseButtonEventArgs args)
+        public void GDUnhandledMouseDown(MouseButtonEventArgs args)
         {
             Focused?.ReleaseFocus();
         }
 
-        public void UnhandledMouseUp(MouseButtonEventArgs args)
+        public void GDUnhandledMouseUp(MouseButtonEventArgs args)
         {
             //throw new System.NotImplementedException();
         }
 
-        public void FocusEntered(Control control)
+        public void GDFocusEntered(Control control)
         {
             Focused = control;
         }
 
-        public void FocusExited(Control control)
+        public void GDFocusExited(Control control)
         {
             if (Focused == control)
             {
                 Focused = null;
             }
+        }
+
+        private Control _mouseFindControlAtPos(Control control, Vector2 position)
+        {
+            foreach (var child in control.Children.Reverse())
+            {
+                if (!child.Visible)
+                {
+                    continue;
+                }
+                var maybeFoundOnChild = _mouseFindControlAtPos(child, position - child.Position);
+                if (maybeFoundOnChild != null)
+                {
+                    return maybeFoundOnChild;
+                }
+            }
+
+            if (control.MouseFilter != Control.MouseFilterMode.Ignore && control.HasPoint(position))
+            {
+                return control;
+            }
+
+            return null;
         }
     }
 }

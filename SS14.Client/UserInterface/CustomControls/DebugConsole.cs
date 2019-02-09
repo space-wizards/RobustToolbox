@@ -78,7 +78,7 @@ namespace SS14.Client.UserInterface.CustomControls
             {
                 // We manually need to call this.
                 // See https://github.com/godotengine/godot/pull/15074
-                UserInterfaceManagerInternal.FocusExited(CommandBar);
+                UserInterfaceManagerInternal.GDFocusExited(CommandBar);
             }
         }
 

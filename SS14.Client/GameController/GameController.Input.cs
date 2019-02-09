@@ -25,7 +25,7 @@ namespace SS14.Client
         /// </summary>
         public void MouseDown(MouseButtonEventArgs mouseEvent)
         {
-            _userInterfaceManager.UnhandledMouseDown(mouseEvent);
+            _userInterfaceManager.GDUnhandledMouseDown(mouseEvent);
             _stateManager.MouseDown(mouseEvent);
         }
 
@@ -34,7 +34,7 @@ namespace SS14.Client
         /// </summary>
         public void MouseUp(MouseButtonEventArgs mouseButtonEventArgs)
         {
-            _userInterfaceManager.UnhandledMouseUp(mouseButtonEventArgs);
+            _userInterfaceManager.GDUnhandledMouseUp(mouseButtonEventArgs);
             _stateManager.MouseUp(mouseButtonEventArgs);
         }
 

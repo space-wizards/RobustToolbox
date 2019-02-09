@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using SS14.Client.Graphics.Clyde;
 using SS14.Client.Utility;
+using SS14.Shared.Map;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.UserInterface
 {
@@ -28,6 +30,8 @@ namespace SS14.Client.Interfaces.UserInterface
         IDebugMonitors DebugMonitors { get; }
 
         void Popup(string contents, string title = "Alert!");
+
+        Control MouseGetControl(Vector2 coordinates);
     }
 
     internal interface IUserInterfaceManagerInternal : IUserInterfaceManager
@@ -42,20 +46,21 @@ namespace SS14.Client.Interfaces.UserInterface
 
         void Update(ProcessFrameEventArgs args);
 
-        void UnhandledMouseDown(MouseButtonEventArgs args);
+        void GDUnhandledMouseDown(MouseButtonEventArgs args);
 
-        void UnhandledMouseUp(MouseButtonEventArgs args);
+        void GDUnhandledMouseUp(MouseButtonEventArgs args);
 
-        void FocusEntered(Control control);
+        void GDFocusEntered(Control control);
 
-        void FocusExited(Control control);
+        void GDFocusExited(Control control);
 
-        void PreKeyDown(KeyEventArgs args);
+        void GDPreKeyDown(KeyEventArgs args);
 
-        void PreKeyUp(KeyEventArgs args);
+        void GDPreKeyUp(KeyEventArgs args);
 
         void Render(IRenderHandle renderHandle);
 
         Dictionary<(GodotAsset asset, int resourceId), object> GodotResourceInstanceCache { get; }
     }
 }
+

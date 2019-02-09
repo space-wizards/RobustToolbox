@@ -63,9 +63,14 @@ namespace SS14.Client.UserInterface.CustomControls
             {
                 return;
             }
+
+            var mouseScreenPos = inputManager.MouseScreenPosition;
+
             if (playerManager.LocalPlayer?.ControlledEntity == null)
             {
-                contents.Text = "No attached entity.";
+                contents.Text = $@"No attached entity.
+
+GUI: Hovered: {UserInterfaceManager.MouseGetControl(mouseScreenPos)}";
                 MinimumSizeChanged();
                 return;
             }
@@ -74,7 +79,6 @@ namespace SS14.Client.UserInterface.CustomControls
             var playerWorldOffset = entityTransform.WorldPosition;
             var playerScreen = eyeManager.WorldToScreen(playerWorldOffset);
 
-            var mouseScreenPos = inputManager.MouseScreenPosition;
             int mouseWorldMap;
             int mouseWorldGrid;
             GridCoordinates mouseWorldPos;
@@ -113,7 +117,10 @@ Mouse Pos:
     W2S: {worldToScreen.Position}
     Grid: {mouseWorldGrid}
     Map: {mouseWorldMap}
-    Entity: {mouseEntity}";
+    Entity: {mouseEntity}
+
+GUI:
+    Hovered: {UserInterfaceManager.MouseGetControl(mouseScreenPos)}";
 
             MinimumSizeChanged();
         }

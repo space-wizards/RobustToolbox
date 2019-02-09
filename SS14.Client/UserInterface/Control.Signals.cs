@@ -121,12 +121,14 @@ namespace SS14.Client.UserInterface
 
         private void __focusExitedHook()
         {
+            UserInterfaceManagerInternal.GDFocusExited(this);
             FocusExited();
         }
 
         private void __treeExitedHook()
         {
             // Eh maybe make a separate event later.
+            UserInterfaceManagerInternal.GDFocusEntered(this);
             FocusExited();
         }
 

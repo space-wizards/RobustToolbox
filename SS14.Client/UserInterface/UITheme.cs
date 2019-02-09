@@ -34,4 +34,12 @@ namespace SS14.Client.UserInterface
             ButtonStyleNormal.SetContentMarginOverride(StyleBox.Margin.All, 5);
         }
     }
+
+    public sealed class UIThemeDummy : UITheme
+    {
+        public override Font DefaultFont { get; } = new DummyFont();
+        public override Font LabelFont { get; } = new DummyFont();
+        public override StyleBox PanelPanel { get; } = new StyleBoxFlat();
+        public override StyleBox ButtonStyleNormal { get; } = new StyleBoxFlat();
+    }
 }

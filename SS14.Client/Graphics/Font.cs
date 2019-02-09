@@ -123,4 +123,20 @@ namespace SS14.Client.Graphics
             throw new NotImplementedException();
         }
     }
+
+    public sealed class DummyFont : Font
+    {
+        internal override Godot.Font GodotFont => null;
+        public override float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color)
+        {
+            // Nada, it's a dummy after all.
+            return 0;
+        }
+
+        public override CharMetrics? GetCharMetrics(char chr)
+        {
+            // Nada, it's a dummy after all.
+            return null;
+        }
+    }
 }

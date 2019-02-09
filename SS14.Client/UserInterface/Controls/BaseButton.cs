@@ -1,12 +1,14 @@
 ﻿using SS14.Client.GodotGlue;
 using System;
+using JetBrains.Annotations;
 
 namespace SS14.Client.UserInterface.Controls
 {
+    [PublicAPI]
     [ControlWrap(typeof(Godot.BaseButton))]
     public abstract class BaseButton : Control
     {
-        public BaseButton() : base()
+        public BaseButton()
         {
         }
 
@@ -18,50 +20,70 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
+        private ActionMode _mode;
         public ActionMode Mode
         {
-            get => GameController.OnGodot ? (ActionMode)SceneControl.Get("action_mode") : default;
+            get => GameController.OnGodot ? (ActionMode)SceneControl.Get("action_mode") : _mode;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.Set("action_mode", (Godot.BaseButton.ActionModeEnum) value);
                 }
+                else
+                {
+                    _mode = value;
+                }
             }
         }
 
+        private bool _disabled;
         public bool Disabled
         {
-            get => GameController.OnGodot ? (bool)SceneControl.Get("disabled") : default;
+            get => GameController.OnGodot ? (bool)SceneControl.Get("disabled") : _disabled;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.Set("disabled", value);
                 }
+                else
+                {
+                    _disabled = value;
+                }
             }
         }
 
+        private bool _pressed;
         public bool Pressed
         {
-            get => GameController.OnGodot ? (bool)SceneControl.Get("pressed") : default;
+            get => GameController.OnGodot ? (bool)SceneControl.Get("pressed") : _pressed;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.Set("pressed", value);
                 }
+                else
+                {
+                    _pressed = value;
+                }
             }
         }
 
+        private bool _toggleMode;
         public bool ToggleMode
         {
-            get => GameController.OnGodot ? (bool)SceneControl.Get("toggle_mode") : default;
+            get => GameController.OnGodot ? (bool)SceneControl.Get("toggle_mode") : _toggleMode;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.Set("toggle_mode", value);
+                }
+                else
+                {
+                    _toggleMode = value;
                 }
             }
         }
@@ -72,12 +94,38 @@ namespace SS14.Client.UserInterface.Controls
             Release = 1,
         }
 
-        public bool IsHovered => GameController.OnGodot ? (bool)SceneControl.Call("is_hovered") : default;
-        public DrawModeEnum DrawMode => GameController.OnGodot ? (DrawModeEnum)SceneControl.Call("get_draw_mode") : default;
+        public bool IsHovered => GameController.OnGodot && (bool)SceneControl.Call("is_hovered");
+        public DrawModeEnum DrawMode
+        {
+            get
+            {
+                if (GameController.OnGodot)
+                {
+                    return (DrawModeEnum) SceneControl.Call("get_draw_mode");
+                }
 
+                if (Disabled)
+                {
+                    return DrawModeEnum.Disabled;
+                }
+
+                if (Pressed)
+                {
+                    return DrawModeEnum.Pressed;
+                }
+
+                // TODO: Hover.
+
+                return DrawModeEnum.Normal;
+            }
+        }
+
+        private ButtonGroup _buttonGroup;
         public ButtonGroup ButtonGroup
         {
-            get => GameController.OnGodot ? new ButtonGroup((Godot.ButtonGroup)SceneControl.Call("get_button_group")) : default;
+            get => _buttonGroup ?? (GameController.OnGodot
+                       ? new ButtonGroup((Godot.ButtonGroup) SceneControl.Call("get_button_group"))
+                       : null);
             set
             {
                 if (GameController.OnGodot)
@@ -206,7 +254,7 @@ namespace SS14.Client.UserInterface.Controls
         }
     }
 
-    public class ButtonGroup
+    public sealed class ButtonGroup
     {
         public Godot.ButtonGroup GodotGroup { get; }
 
@@ -221,6 +269,43 @@ namespace SS14.Client.UserInterface.Controls
         public ButtonGroup(Godot.ButtonGroup group)
         {
             GodotGroup = group;
+        }
+
+        private bool Equals(ButtonGroup other)
+        {
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            if (GameController.OnGodot)
+            {
+                return Equals(GodotGroup, other.GodotGroup);
+            }
+
+            return false;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is ButtonGroup grp && Equals(grp);
+        }
+
+        public override int GetHashCode()
+        {
+            return GodotGroup != null ? GodotGroup.GetHashCode() : 0;
+        }
+
+        public static bool operator ==(ButtonGroup left, ButtonGroup right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(ButtonGroup left, ButtonGroup right)
+        {
+            return !Equals(left, right);
         }
     }
 }

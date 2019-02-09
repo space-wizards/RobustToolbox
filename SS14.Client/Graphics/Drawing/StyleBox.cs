@@ -204,6 +204,44 @@ namespace SS14.Client.Graphics.Drawing
             return marginData ?? GetDefaultContentMargin(margin);
         }
 
+        public UIBox2 GetContentBox(UIBox2 baseBox)
+        {
+            var left = baseBox.Left + GetContentMargin(Margin.Left);
+            var top = baseBox.Top + GetContentMargin(Margin.Top);
+            var right = baseBox.Right - GetContentMargin(Margin.Right);
+            var bottom = baseBox.Bottom - GetContentMargin(Margin.Bottom);
+
+            if (left > right || top > bottom)
+            {
+                throw new ArgumentException("Box is too small!", nameof(baseBox));
+            }
+
+            return new UIBox2(left, top, right, bottom);
+        }
+
+        public void SetContentMarginOverride(Margin margin, float value)
+        {
+            if ((margin & Margin.Left) != 0)
+            {
+                ContentMarginLeftOverride = value;
+            }
+
+            if ((margin & Margin.Top) != 0)
+            {
+                ContentMarginTopOverride = value;
+            }
+
+            if ((margin & Margin.Right) != 0)
+            {
+                ContentMarginRightOverride = value;
+            }
+
+            if ((margin & Margin.Bottom) != 0)
+            {
+                ContentMarginBottomOverride = value;
+            }
+        }
+
         protected abstract void DoDraw(DrawingHandleScreen handle, UIBox2 box);
 
         protected virtual float GetDefaultContentMargin(Margin margin)

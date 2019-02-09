@@ -1990,19 +1990,7 @@ namespace SS14.Client.UserInterface
             var bottom = _anchorBottom * pSizeY + _marginBottom;
 
             _position = new Vector2(left, top);
-            _size = new Vector2(right - left, bottom - top);
-            var (minX, minY) = CombinedMinimumSize;
-            if (_size.X < minX)
-            {
-                _marginRight += minX - _size.X;
-                _size = new Vector2(minX, _size.Y);
-            }
-
-            if (_size.Y < minY)
-            {
-                _marginBottom += minY - _size.Y;
-                _size = new Vector2(_size.Y, minY);
-            }
+            _size = Vector2.ComponentMax(new Vector2(right - left, bottom - top), CombinedMinimumSize);
 
             foreach (var child in _orderedChildren)
             {

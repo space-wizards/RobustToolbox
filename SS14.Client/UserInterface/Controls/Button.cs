@@ -232,6 +232,11 @@ namespace SS14.Client.UserInterface.Controls
             {
                 Text = (string) value;
             }
+
+            if (property == "align")
+            {
+                TextAlign = (AlignMode) (long) value;
+            }
         }
     }
 }

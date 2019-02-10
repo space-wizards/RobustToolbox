@@ -170,11 +170,11 @@ namespace SS14.Client.UserInterface.Controls
                 UIBox2 targetBox;
                 if (Vertical)
                 {
-                    targetBox = new UIBox2(0, offset, Size.X, size);
+                    targetBox = new UIBox2(0, offset, Size.X, offset+size);
                 }
                 else
                 {
-                    targetBox = new UIBox2(offset, 0, size, Size.Y);
+                    targetBox = new UIBox2(offset, 0, offset+size, Size.Y);
                 }
 
                 FitChildInBox(control, targetBox);

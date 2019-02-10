@@ -39,6 +39,7 @@ namespace SS14.Client.UserInterface.Controls
                 }
 
                 _texture = value;
+                MinimumSizeChanged();
             }
         }
 
@@ -78,6 +79,16 @@ namespace SS14.Client.UserInterface.Controls
                     .GetResource<TextureResource>(godotPathToResourcePath);
                 Texture = _texture;
             }
+        }
+
+        protected override Vector2 CalculateMinimumSize()
+        {
+            if (GameController.OnGodot || _texture == null)
+            {
+                return Vector2.Zero;
+            }
+
+            return Texture.Size;
         }
     }
 }

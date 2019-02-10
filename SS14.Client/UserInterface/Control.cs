@@ -2038,6 +2038,11 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        public override string ToString()
+        {
+            return $"{Name} ({GetType().Name})";
+        }
+
         /// <summary>
         ///     Mode that will be tested when testing controls to invoke mouse button events on.
         /// </summary>

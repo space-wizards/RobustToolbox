@@ -167,17 +167,17 @@ namespace SS14.Client.UserInterface.Controls
 
                 first = false;
 
-                var controlMinSize = control.CombinedMinimumSize;
+                UIBox2 targetBox;
                 if (Vertical)
                 {
-                    control.Position = new Vector2(0, offset);
-                    control.Size = new Vector2(controlMinSize.X, size);
+                    targetBox = new UIBox2(0, offset, Size.X, size);
                 }
                 else
                 {
-                    control.Position = new Vector2(offset, 0);
-                    control.Size = new Vector2(size, controlMinSize.Y);
+                    targetBox = new UIBox2(offset, 0, size, Size.Y);
                 }
+
+                FitChildInBox(control, targetBox);
 
                 offset += size;
             }

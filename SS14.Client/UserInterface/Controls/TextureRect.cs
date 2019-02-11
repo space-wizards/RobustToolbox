@@ -77,7 +77,7 @@ namespace SS14.Client.UserInterface.Controls
                 }
                 var texture = IoCManager.Resolve<IResourceCache>()
                     .GetResource<TextureResource>(godotPathToResourcePath);
-                Texture = _texture;
+                Texture = texture;
             }
         }
 

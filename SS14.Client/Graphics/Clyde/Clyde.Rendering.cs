@@ -175,9 +175,9 @@ namespace SS14.Client.Graphics.Clyde
                 }
 
                 BatchVBO.Use();
-                BatchVBO.WriteSubData(0, new Span<Vertex2D>(BatchVertexData, 0, nth * 4));
+                BatchVBO.Reallocate(new Span<Vertex2D>(BatchVertexData, 0, nth * 4));
                 BatchEBO.Use();
-                BatchEBO.WriteSubData(0, new Span<ushort>(BatchIndexData, 0, nth * 5));
+                BatchEBO.Reallocate(new Span<ushort>(BatchIndexData, 0, nth * 5));
 
                 GL.DrawElements(PrimitiveType.TriangleStrip, nth * 5, DrawElementsType.UnsignedShort, 0);
             }
@@ -460,9 +460,9 @@ namespace SS14.Client.Graphics.Clyde
             }
 
             BatchVBO.Use();
-            BatchVBO.WriteSubData(0, new Span<Vertex2D>(BatchVertexData, 0, quadIndex * 4));
+            BatchVBO.Reallocate(new Span<Vertex2D>(BatchVertexData, 0, quadIndex * 4));
             BatchEBO.Use();
-            BatchEBO.WriteSubData(0, new Span<ushort>(BatchIndexData, 0, quadIndex * 5));
+            BatchEBO.Reallocate(new Span<ushort>(BatchIndexData, 0, quadIndex * 5));
 
             // Bind atlas texture.
             GL.ActiveTexture(TextureUnit.Texture0);

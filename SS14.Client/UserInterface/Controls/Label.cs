@@ -160,7 +160,7 @@ namespace SS14.Client.UserInterface.Controls
                 DebugTools.Assert(_textDimensionCache.HasValue);
             }
 
-            float hOffset;
+            int hOffset;
             switch (Align)
             {
                 case AlignMode.Left:
@@ -168,17 +168,16 @@ namespace SS14.Client.UserInterface.Controls
                     break;
                 case AlignMode.Center:
                 case AlignMode.Fill:
-                    // ReSharper disable once PossibleLossOfFraction
                     hOffset = (int) (Size.X - _textDimensionCache.Value.X) / 2;
                     break;
                 case AlignMode.Right:
-                    hOffset = Size.X - _textDimensionCache.Value.X;
+                    hOffset = (int) (Size.X - _textDimensionCache.Value.X);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
 
-            float vOffset;
+            int vOffset;
             switch (VAlign)
             {
                 case VAlignMode.Top:
@@ -186,11 +185,10 @@ namespace SS14.Client.UserInterface.Controls
                     break;
                 case VAlignMode.Fill:
                 case VAlignMode.Center:
-                    // ReSharper disable once PossibleLossOfFraction
                     vOffset = (int) (Size.Y - _textDimensionCache.Value.Y) / 2;
                     break;
                 case VAlignMode.Bottom:
-                    vOffset = Size.Y - _textDimensionCache.Value.Y;
+                    vOffset = (int) (Size.Y - _textDimensionCache.Value.Y);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

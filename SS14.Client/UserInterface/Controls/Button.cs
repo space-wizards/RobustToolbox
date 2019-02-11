@@ -181,13 +181,12 @@ namespace SS14.Client.UserInterface.Controls
                     throw new ArgumentOutOfRangeException();
             }
 
-            // ReSharper disable once PossibleLossOfFraction
-            var baseLine = new Vector2(drawOffset, (int)(contentBox.Height + font.Ascent)/2) + contentBox.TopLeft;
+            var baseLine = new Vector2i(drawOffset, (int)(contentBox.Height + font.Ascent)/2) + contentBox.TopLeft;
 
             foreach (var chr in _text)
             {
-                var advance = font.DrawChar(handle, chr, baseLine, Color.White);
-                baseLine += new Vector2(advance, 0);
+                var advance = (int)font.DrawChar(handle, chr, baseLine, Color.White);
+                baseLine += new Vector2i(advance, 0);
             }
         }
 

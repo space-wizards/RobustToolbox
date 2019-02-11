@@ -1,4 +1,5 @@
-﻿using SS14.Client.Graphics;
+﻿using System.Text;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.UserInterface.Controls;
@@ -10,6 +11,7 @@ using SS14.Shared.Maths;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Client.Graphics.Drawing;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Player;
 using SS14.Client.State.States;
@@ -20,16 +22,13 @@ namespace SS14.Client.UserInterface.CustomControls
 {
     internal class DebugCoordsPanel : Panel
     {
-        [Dependency]
-        readonly IPlayerManager playerManager;
-        [Dependency]
-        readonly IEyeManager eyeManager;
-        [Dependency]
-        readonly IInputManager inputManager;
-        [Dependency]
-        readonly IResourceCache resourceCache;
-        [Dependency]
-        readonly IStateManager stateManager;
+        [Dependency] readonly IPlayerManager playerManager;
+        [Dependency] readonly IEyeManager eyeManager;
+        [Dependency] readonly IInputManager inputManager;
+        [Dependency] readonly IResourceCache resourceCache;
+        [Dependency] readonly IStateManager stateManager;
+
+        [Dependency] private readonly IDisplayManager _displayManager;
 
         private Label contents;
 
@@ -42,7 +41,8 @@ namespace SS14.Client.UserInterface.CustomControls
 
             contents = new Label
             {
-                FontOverride = new VectorFont(resourceCache.GetResource<FontResource>(new ResourcePath("/Fonts/CALIBRI.TTF")), 12),
+                FontOverride =
+                    new VectorFont(resourceCache.GetResource<FontResource>(new ResourcePath("/Fonts/CALIBRI.TTF")), 12),
                 FontColorShadowOverride = Color.Black,
                 MarginTop = 5,
                 MarginLeft = 5
@@ -57,27 +57,17 @@ namespace SS14.Client.UserInterface.CustomControls
             MouseFilter = contents.MouseFilter = MouseFilterMode.Ignore;
         }
 
-        protected override void Update(ProcessFrameEventArgs args)
+        protected override void FrameUpdate(RenderFrameEventArgs args)
         {
             if (!Visible)
             {
                 return;
             }
 
+            var stringBuilder = new StringBuilder();
+
             var mouseScreenPos = inputManager.MouseScreenPosition;
-
-            if (playerManager.LocalPlayer?.ControlledEntity == null)
-            {
-                contents.Text = $@"No attached entity.
-
-GUI: Hovered: {UserInterfaceManager.MouseGetControl(mouseScreenPos)}";
-                MinimumSizeChanged();
-                return;
-            }
-
-            var entityTransform = playerManager.LocalPlayer.ControlledEntity.Transform;
-            var playerWorldOffset = entityTransform.WorldPosition;
-            var playerScreen = eyeManager.WorldToScreen(playerWorldOffset);
+            var screenSize = _displayManager.ScreenSize;
 
             int mouseWorldMap;
             int mouseWorldGrid;
@@ -87,8 +77,8 @@ GUI: Hovered: {UserInterfaceManager.MouseGetControl(mouseScreenPos)}";
             try
             {
                 var coords = eyeManager.ScreenToWorld(new ScreenCoordinates(mouseScreenPos));
-                mouseWorldMap = (int)coords.MapID;
-                mouseWorldGrid = (int)coords.GridID;
+                mouseWorldMap = (int) coords.MapID;
+                mouseWorldGrid = (int) coords.GridID;
                 mouseWorldPos = coords;
                 worldToScreen = eyeManager.WorldToScreen(coords);
                 if (stateManager.CurrentState is GameScreen gameScreen)
@@ -104,24 +94,38 @@ GUI: Hovered: {UserInterfaceManager.MouseGetControl(mouseScreenPos)}";
                 worldToScreen = new ScreenCoordinates();
             }
 
-            contents.Text = $@"Positioning Debug:
-Character Pos:
-    World: {playerWorldOffset}
-    Screen: {playerScreen}
-    Grid: {entityTransform.GridID}
-    Map: {entityTransform.MapID}
-
+            stringBuilder.AppendFormat(@"Positioning Debug:
+Screen Size: {0}
 Mouse Pos:
-    Screen: {mouseScreenPos}
-    World: {mouseWorldPos}
-    W2S: {worldToScreen.Position}
-    Grid: {mouseWorldGrid}
-    Map: {mouseWorldMap}
-    Entity: {mouseEntity}
+    Screen: {1}
+    World: {2}
+    W2S: {3}
+    Grid: {4}
+    Map: {5}
+    Entity: {6}
+    GUI: {7}
+", screenSize, mouseScreenPos, mouseWorldPos, worldToScreen, mouseWorldGrid, mouseWorldMap, mouseEntity,
+                UserInterfaceManager.CurrentlyHovered);
 
-GUI:
-    Hovered: {UserInterfaceManager.MouseGetControl(mouseScreenPos)}";
+            stringBuilder.AppendLine("\nAttached Entity:");
+            if (playerManager.LocalPlayer?.ControlledEntity == null)
+            {
+                stringBuilder.AppendLine("No attached entity.");
 
+            }
+            else
+            {
+                var entityTransform = playerManager.LocalPlayer.ControlledEntity.Transform;
+                var playerWorldOffset = entityTransform.WorldPosition;
+                var playerScreen = eyeManager.WorldToScreen(playerWorldOffset);
+
+                stringBuilder.AppendFormat(@"    World: {0}
+    Screen: {1}
+    Grid: {2}
+    Map: {3}", playerWorldOffset, playerScreen, entityTransform.GridID, entityTransform.MapID);
+            }
+
+            contents.Text = stringBuilder.ToString();
             MinimumSizeChanged();
         }
 

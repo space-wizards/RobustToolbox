@@ -115,7 +115,7 @@ namespace SS14.Client.UserInterface.CustomControls
             }
         }
 
-        protected override void MouseDown(GUIMouseButtonEventArgs args)
+        protected internal override void MouseDown(GUIMouseButtonEventArgs args)
         {
             base.MouseDown(args);
 
@@ -130,7 +130,7 @@ namespace SS14.Client.UserInterface.CustomControls
             MoveToFront();
         }
 
-        protected override void MouseUp(GUIMouseButtonEventArgs args)
+        protected internal override void MouseUp(GUIMouseButtonEventArgs args)
         {
             base.MouseUp(args);
 
@@ -141,7 +141,7 @@ namespace SS14.Client.UserInterface.CustomControls
             UserInterfaceManager.Focused?.ReleaseFocus();
         }
 
-        protected override void MouseMove(GUIMouseMoveEventArgs args)
+        protected internal override void MouseMove(GUIMouseMoveEventArgs args)
         {
             base.MouseMove(args);
 

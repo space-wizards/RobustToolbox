@@ -140,7 +140,7 @@ namespace SS14.Client.ViewVariables
             return box;
         }
 
-        protected override void MouseDown(GUIMouseButtonEventArgs args)
+        protected internal override void MouseDown(GUIMouseButtonEventArgs args)
         {
             base.MouseDown(args);
 

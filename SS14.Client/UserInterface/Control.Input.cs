@@ -7,45 +7,45 @@ namespace SS14.Client.UserInterface
 {
     public partial class Control
     {
-        protected virtual void MouseEntered()
+        protected internal virtual void MouseEntered()
         {
         }
 
-        protected virtual void MouseExited()
+        protected internal virtual void MouseExited()
         {
         }
 
-        protected virtual void MouseWheel(GUIMouseWheelEventArgs args)
+        protected internal virtual void MouseWheel(GUIMouseWheelEventArgs args)
         {
         }
 
         public event Action<GUIMouseButtonEventArgs> OnMouseDown;
 
-        protected virtual void MouseDown(GUIMouseButtonEventArgs args)
+        protected internal virtual void MouseDown(GUIMouseButtonEventArgs args)
         {
             OnMouseDown?.Invoke(args);
         }
 
-        protected virtual void MouseUp(GUIMouseButtonEventArgs args)
+        protected internal virtual void MouseUp(GUIMouseButtonEventArgs args)
         {
         }
 
-        protected virtual void MouseMove(GUIMouseMoveEventArgs args)
+        protected internal virtual void MouseMove(GUIMouseMoveEventArgs args)
         {
         }
 
         public event Action<GUIKeyEventArgs> OnKeyDown;
 
-        protected virtual void KeyDown(GUIKeyEventArgs args)
+        protected internal virtual void KeyDown(GUIKeyEventArgs args)
         {
             OnKeyDown?.Invoke(args);
         }
 
-        protected virtual void KeyUp(GUIKeyEventArgs args)
+        protected internal virtual void KeyUp(GUIKeyEventArgs args)
         {
         }
 
-        protected virtual void KeyHeld(GUIKeyEventArgs args)
+        protected internal virtual void KeyHeld(GUIKeyEventArgs args)
         {
         }
 

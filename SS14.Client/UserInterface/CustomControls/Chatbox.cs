@@ -61,7 +61,7 @@ namespace SS14.Client.UserInterface.CustomControls
             contents = GetChild<RichTextLabel>("VBoxContainer/Contents");
         }
 
-        protected override void MouseDown(GUIMouseButtonEventArgs e)
+        protected internal override void MouseDown(GUIMouseButtonEventArgs e)
         {
             base.MouseDown(e);
 

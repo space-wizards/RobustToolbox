@@ -25,7 +25,14 @@ namespace SS14.Client
         /// </summary>
         public void MouseDown(MouseButtonEventArgs mouseEvent)
         {
-            _userInterfaceManager.GDUnhandledMouseDown(mouseEvent);
+            if (GameController.OnGodot)
+            {
+                _userInterfaceManager.GDUnhandledMouseDown(mouseEvent);
+            }
+            else
+            {
+                _userInterfaceManager.MouseDown(mouseEvent);
+            }
             _stateManager.MouseDown(mouseEvent);
         }
 
@@ -34,7 +41,14 @@ namespace SS14.Client
         /// </summary>
         public void MouseUp(MouseButtonEventArgs mouseButtonEventArgs)
         {
-            _userInterfaceManager.GDUnhandledMouseUp(mouseButtonEventArgs);
+            if (GameController.OnGodot)
+            {
+                _userInterfaceManager.GDUnhandledMouseUp(mouseButtonEventArgs);
+            }
+            else
+            {
+                _userInterfaceManager.MouseUp(mouseButtonEventArgs);
+            }
             _stateManager.MouseUp(mouseButtonEventArgs);
         }
 

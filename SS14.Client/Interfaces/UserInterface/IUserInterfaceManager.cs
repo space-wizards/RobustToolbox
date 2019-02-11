@@ -46,6 +46,10 @@ namespace SS14.Client.Interfaces.UserInterface
 
         void Update(ProcessFrameEventArgs args);
 
+        void MouseDown(MouseButtonEventArgs args);
+
+        void MouseUp(MouseButtonEventArgs args);
+
         void GDUnhandledMouseDown(MouseButtonEventArgs args);
 
         void GDUnhandledMouseUp(MouseButtonEventArgs args);

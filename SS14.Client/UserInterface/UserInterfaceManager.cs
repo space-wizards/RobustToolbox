@@ -33,6 +33,9 @@ namespace SS14.Client.UserInterface
 
         public UITheme Theme { get; private set; }
         public Control Focused { get; private set; }
+        // When a control receives a mouse down it must also receive a mouse up and mouse moves, always.
+        // So we keep track of which control is "focused" by the mouse.
+        private Control _mouseFocused;
 
         private Godot.CanvasLayer CanvasLayer;
         public Control StateRoot { get; private set; }
@@ -119,6 +122,33 @@ namespace SS14.Client.UserInterface
             RootControl.DoUpdate(args);
         }
 
+        public void MouseDown(MouseButtonEventArgs args)
+        {
+            var control = MouseGetControl(args.Position);
+
+            _mouseFocused = control;
+
+            var guiArgs = new GUIMouseButtonEventArgs(args.Button, args.DoubleClick, control, Mouse.ButtonMask.None,
+                args.Position, args.Position - control.GlobalMousePosition, args.Alt, args.Control, args.Shift,
+                args.System);
+            control.MouseDown(guiArgs);
+        }
+
+        public void MouseUp(MouseButtonEventArgs args)
+        {
+            if (_mouseFocused == null)
+            {
+                return;
+            }
+
+            var guiArgs = new GUIMouseButtonEventArgs(args.Button, args.DoubleClick, _mouseFocused, Mouse.ButtonMask.None,
+                args.Position, args.Position - _mouseFocused.GlobalMousePosition, args.Alt, args.Control, args.Shift,
+                args.System);
+
+            _mouseFocused.MouseUp(guiArgs);
+            _mouseFocused = null;
+        }
+
         public void DisposeAllComponents()
         {
             RootControl.DisposeAllChildren();
@@ -202,6 +232,7 @@ namespace SS14.Client.UserInterface
                 {
                     continue;
                 }
+
                 var maybeFoundOnChild = _mouseFindControlAtPos(child, position - child.Position);
                 if (maybeFoundOnChild != null)
                 {

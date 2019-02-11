@@ -1,6 +1,7 @@
 ﻿using SS14.Client.GodotGlue;
 using System;
 using JetBrains.Annotations;
+using SS14.Shared.Log;
 
 namespace SS14.Client.UserInterface.Controls
 {
@@ -139,6 +140,53 @@ namespace SS14.Client.UserInterface.Controls
         public event Action<ButtonEventArgs> OnButtonUp;
         public event Action<ButtonEventArgs> OnPressed;
         public event Action<ButtonToggledEventArgs> OnToggled;
+
+        protected internal override void MouseDown(GUIMouseButtonEventArgs args)
+        {
+            base.MouseDown(args);
+
+            if (GameController.OnGodot)
+            {
+                return;
+            }
+
+            if (Mode == ActionMode.Release)
+            {
+                throw new NotImplementedException();
+            }
+
+            var buttonEventArgs = new ButtonEventArgs(this);
+            OnButtonDown?.Invoke(buttonEventArgs);
+
+            if (ToggleMode)
+            {
+                Pressed = !Pressed;
+                OnPressed?.Invoke(buttonEventArgs);
+                OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this));
+            }
+            else
+            {
+                Pressed = true;
+                OnPressed?.Invoke(buttonEventArgs);
+            }
+        }
+
+        protected internal override void MouseUp(GUIMouseButtonEventArgs args)
+        {
+            base.MouseUp(args);
+
+            if (GameController.OnGodot)
+            {
+                return;
+            }
+
+            if (Mode == ActionMode.Release)
+            {
+                throw new NotImplementedException();
+            }
+
+            OnButtonUp?.Invoke(new ButtonEventArgs(this));
+        }
 
         public enum DrawModeEnum
         {

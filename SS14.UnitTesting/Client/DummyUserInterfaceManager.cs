@@ -82,6 +82,11 @@ namespace SS14.UnitTesting.Client
             throw new System.NotImplementedException();
         }
 
+        public void MouseUp(MouseButtonEventArgs args)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public void GDUnhandledMouseDown(MouseButtonEventArgs args)
         {
             throw new System.NotImplementedException();
@@ -93,6 +98,11 @@ namespace SS14.UnitTesting.Client
         }
 
         public void Update(ProcessFrameEventArgs args)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void MouseDown(MouseButtonEventArgs args)
         {
             throw new System.NotImplementedException();
         }

@@ -138,5 +138,13 @@ namespace SS14.Shared.Maths
         {
             return new Vector2i((int) vector.X, (int) vector.Y);
         }
+
+        /// <summary>
+        ///     Returns a string that represents the current Vector2i.
+        /// </summary>
+        public override string ToString()
+        {
+            return $"({X}, {Y})";
+        }
     }
 }

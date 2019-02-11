@@ -16,6 +16,7 @@ namespace SS14.Client.UserInterface
         public abstract StyleBox ButtonStylePressed { get; }
         public abstract StyleBox ButtonStyleDisabled { get; }
         public abstract StyleBox ButtonStyleHovered { get; }
+        public abstract StyleBox LineEditBox { get; }
     }
 
     public sealed class UIThemeDefault : UITheme
@@ -27,6 +28,7 @@ namespace SS14.Client.UserInterface
         public override StyleBox ButtonStylePressed { get; }
         public override StyleBox ButtonStyleDisabled { get; }
         public override StyleBox ButtonStyleHovered { get; }
+        public override StyleBox LineEditBox { get; }
 
         public UIThemeDefault()
         {
@@ -44,6 +46,8 @@ namespace SS14.Client.UserInterface
             ButtonStyleDisabled.SetContentMarginOverride(StyleBox.Margin.All, 5);
             ButtonStyleHovered = new StyleBoxFlat {BackgroundColor = new Color(128, 128, 140)};
             ButtonStyleHovered.SetContentMarginOverride(StyleBox.Margin.All, 5);
+            LineEditBox = new StyleBoxFlat {BackgroundColor = Color.Blue};
+            LineEditBox.SetContentMarginOverride(StyleBox.Margin.All, 5);
         }
     }
 
@@ -56,5 +60,6 @@ namespace SS14.Client.UserInterface
         public override StyleBox ButtonStylePressed { get; } = new StyleBoxFlat();
         public override StyleBox ButtonStyleDisabled { get; } = new StyleBoxFlat();
         public override StyleBox ButtonStyleHovered { get; } = new StyleBoxFlat();
+        public override StyleBox LineEditBox { get; } = new StyleBoxFlat();
     }
 }

@@ -1,6 +1,7 @@
 ﻿using SS14.Client.GodotGlue;
 using System;
 using JetBrains.Annotations;
+using SS14.Client.Utility;
 using SS14.Shared.Log;
 
 namespace SS14.Client.UserInterface.Controls
@@ -156,7 +157,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             base.MouseDown(args);
 
-            if (GameController.OnGodot)
+            if (GameController.OnGodot || Disabled)
             {
                 return;
             }
@@ -188,7 +189,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             base.MouseUp(args);
 
-            if (GameController.OnGodot)
+            if (GameController.OnGodot || Disabled)
             {
                 return;
             }
@@ -198,7 +199,15 @@ namespace SS14.Client.UserInterface.Controls
 
             if (Mode == ActionMode.Release && _attemptingPress)
             {
+                if (ToggleMode)
+                {
+                    Pressed = !Pressed;
+                }
                 OnPressed?.Invoke(buttonEventArgs);
+                if (ToggleMode)
+                {
+                    OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this));
+                }
             }
 
             _attemptingPress = false;
@@ -315,6 +324,21 @@ namespace SS14.Client.UserInterface.Controls
         private void __toggledHook(object state)
         {
             OnToggled?.Invoke(new ButtonToggledEventArgs((bool) state, this));
+        }
+
+        private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
+        {
+            base.SetGodotProperty(property, value, context);
+
+            switch (property)
+            {
+                case "toggle_mode":
+                    ToggleMode = (bool) value;
+                    break;
+                case "disabled":
+                    Disabled = (bool) value;
+                    break;
+            }
         }
     }
 

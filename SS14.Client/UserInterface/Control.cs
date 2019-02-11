@@ -444,6 +444,31 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        private readonly HashSet<string> _styleClasses = new HashSet<string>();
+        public IReadOnlyCollection<string> StyleClasses => _styleClasses;
+
+        private string _styleIdentifier;
+        public string StyleIdentifier
+        {
+            get => _styleIdentifier;
+            set => _styleIdentifier = value;
+        }
+
+        public bool HasStyleClass(string className)
+        {
+            return _styleClasses.Contains(className);
+        }
+
+        public void AddStyleClass(string className)
+        {
+            _styleClasses.Add(className);
+        }
+
+        public void RemoveStyleClass(string className)
+        {
+            _styleClasses.Remove(className);
+        }
+
         public Color Modulate
         {
             get => SceneControl.Modulate.Convert();

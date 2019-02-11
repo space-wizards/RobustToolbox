@@ -106,6 +106,7 @@
     <Compile Include="Client\DummyUserInterfaceManager.cs" />
     <Compile Include="Client\GameControllerProxyDummy.cs" />
     <Compile Include="Client\UserInterface\ControlTest.cs" />
+    <Compile Include="Client\UserInterface\StylesheetTest.cs" />
     <Compile Include="Client\Utility\GodotConversionsTest.cs" />
     <Compile Include="Client\Utility\GodotParserTest.cs" />
     <Compile Include="Client\Utility\GodotPathUtilityTest.cs" />

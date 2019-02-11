@@ -60,6 +60,7 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         private AlignMode _align;
+
         public AlignMode Align
         {
             get => GameController.OnGodot ? (AlignMode) SceneControl.Get("align") : _align;
@@ -72,6 +73,26 @@ namespace SS14.Client.UserInterface.Controls
                 else
                 {
                     _align = value;
+                }
+            }
+        }
+
+        private VAlignMode _vAlign;
+
+        public VAlignMode VAlign
+        {
+            // ReSharper disable once StringLiteralTypo
+            get => GameController.OnGodot ? (VAlignMode) SceneControl.Get("valign") : _vAlign;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    // ReSharper disable once StringLiteralTypo
+                    SceneControl.Set("valign", (Godot.Label.VAlign) value);
+                }
+                else
+                {
+                    _vAlign = value;
                 }
             }
         }
@@ -148,7 +169,7 @@ namespace SS14.Client.UserInterface.Controls
                 case AlignMode.Center:
                 case AlignMode.Fill:
                     // ReSharper disable once PossibleLossOfFraction
-                    hOffset = (int)(Size.X - _textDimensionCache.Value.X) / 2;
+                    hOffset = (int) (Size.X - _textDimensionCache.Value.X) / 2;
                     break;
                 case AlignMode.Right:
                     hOffset = Size.X - _textDimensionCache.Value.X;
@@ -156,9 +177,28 @@ namespace SS14.Client.UserInterface.Controls
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            float vOffset;
+            switch (VAlign)
+            {
+                case VAlignMode.Top:
+                    vOffset = 0;
+                    break;
+                case VAlignMode.Fill:
+                case VAlignMode.Center:
+                    // ReSharper disable once PossibleLossOfFraction
+                    vOffset = (int) (Size.Y - _textDimensionCache.Value.Y) / 2;
+                    break;
+                case VAlignMode.Bottom:
+                    vOffset = Size.Y - _textDimensionCache.Value.Y;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
             var newlines = 0;
             var font = _fontOverride ?? UserInterfaceManager.Theme.LabelFont;
-            var baseLine = new Vector2(hOffset, font.Ascent);
+            var baseLine = new Vector2(hOffset, font.Ascent + vOffset);
             foreach (var chr in _text)
             {
                 if (chr == '\n')
@@ -177,6 +217,14 @@ namespace SS14.Client.UserInterface.Controls
             Left = 0,
             Center = 1,
             Right = 2,
+            Fill = 3,
+        }
+
+        public enum VAlignMode
+        {
+            Top = 0,
+            Center = 1,
+            Bottom = 2,
             Fill = 3,
         }
 
@@ -227,6 +275,7 @@ namespace SS14.Client.UserInterface.Controls
                     currentLineSize += metrics.Value.Advance;
                 }
             }
+
             maxLineSize = Math.Max(currentLineSize, maxLineSize);
 
             _textDimensionCache = new Vector2i(maxLineSize, height);
@@ -242,7 +291,11 @@ namespace SS14.Client.UserInterface.Controls
                     Text = (string) value;
                     break;
                 case "align":
-                    Align = (AlignMode)(long) value;
+                    Align = (AlignMode) (long) value;
+                    break;
+                // ReSharper disable once StringLiteralTypo
+                case "valign":
+                    VAlign = (VAlignMode) (long) value;
                     break;
             }
         }

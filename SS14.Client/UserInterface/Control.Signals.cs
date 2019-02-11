@@ -101,11 +101,13 @@ namespace SS14.Client.UserInterface
 
         private void __mouseEnteredHook()
         {
+            UserInterfaceManagerInternal.GDMouseEntered(this);
             MouseEntered();
         }
 
         private void __mouseExitedHook()
         {
+            UserInterfaceManagerInternal.GDMouseExited(this);
             MouseExited();
         }
 

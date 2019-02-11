@@ -21,6 +21,8 @@ namespace SS14.Client.Interfaces.UserInterface
 
         Control WindowRoot { get; }
 
+        Control CurrentlyHovered { get; }
+
         /// <summary>
         ///     The "root" control to which all other controls are parented,
         ///     potentially indirectly.
@@ -59,6 +61,10 @@ namespace SS14.Client.Interfaces.UserInterface
         void GDFocusEntered(Control control);
 
         void GDFocusExited(Control control);
+
+        void GDMouseEntered(Control control);
+
+        void GDMouseExited(Control control);
 
         void GDPreKeyDown(KeyEventArgs args);
 

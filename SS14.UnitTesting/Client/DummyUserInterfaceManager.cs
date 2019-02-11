@@ -20,6 +20,8 @@ namespace SS14.UnitTesting.Client
 
         public Control WindowRoot => throw new System.NotImplementedException();
 
+        public Control CurrentlyHovered => throw new System.NotImplementedException();
+
         public Control RootControl => throw new System.NotImplementedException();
 
         public IDebugMonitors DebugMonitors => throw new System.NotImplementedException();
@@ -35,6 +37,16 @@ namespace SS14.UnitTesting.Client
         }
 
         public void GDFocusExited(Control control)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void GDMouseEntered(Control control)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void GDMouseExited(Control control)
         {
             throw new System.NotImplementedException();
         }

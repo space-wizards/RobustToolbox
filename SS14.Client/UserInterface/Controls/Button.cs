@@ -135,7 +135,24 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             var uiTheme = UserInterfaceManager.Theme;
-            var style = uiTheme.ButtonStyleNormal;
+            StyleBox style;
+            switch (DrawMode)
+            {
+                case DrawModeEnum.Normal:
+                    style = uiTheme.ButtonStyleNormal;
+                    break;
+                case DrawModeEnum.Pressed:
+                    style = uiTheme.ButtonStylePressed;
+                    break;
+                case DrawModeEnum.Disabled:
+                    style = uiTheme.ButtonStyleDisabled;
+                    break;
+                case DrawModeEnum.Hover:
+                    style = uiTheme.ButtonStyleHovered;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
             var font = uiTheme.DefaultFont;
             var drawBox = UIBox2.FromDimensions(Vector2.Zero, Size);
             style.Draw(handle, drawBox);

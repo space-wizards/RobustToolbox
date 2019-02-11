@@ -9,6 +9,8 @@ namespace SS14.Client.UserInterface.Controls
     [ControlWrap(typeof(Godot.BaseButton))]
     public abstract class BaseButton : Control
     {
+        private bool _attemptingPress;
+
         public BaseButton()
         {
         }
@@ -21,10 +23,11 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        private ActionMode _mode;
+        private ActionMode _mode = ActionMode.Release;
+
         public ActionMode Mode
         {
-            get => GameController.OnGodot ? (ActionMode)SceneControl.Get("action_mode") : _mode;
+            get => GameController.OnGodot ? (ActionMode) SceneControl.Get("action_mode") : _mode;
             set
             {
                 if (GameController.OnGodot)
@@ -39,9 +42,10 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         private bool _disabled;
+
         public bool Disabled
         {
-            get => GameController.OnGodot ? (bool)SceneControl.Get("disabled") : _disabled;
+            get => GameController.OnGodot ? (bool) SceneControl.Get("disabled") : _disabled;
             set
             {
                 if (GameController.OnGodot)
@@ -56,9 +60,13 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         private bool _pressed;
+
+        /// <summary>
+        ///     Whether the button is currently toggled down. Only applies when <see cref="ToggleMode"/> is true.
+        /// </summary>
         public bool Pressed
         {
-            get => GameController.OnGodot ? (bool)SceneControl.Get("pressed") : _pressed;
+            get => GameController.OnGodot ? (bool) SceneControl.Get("pressed") : _pressed;
             set
             {
                 if (GameController.OnGodot)
@@ -73,9 +81,10 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         private bool _toggleMode;
+
         public bool ToggleMode
         {
-            get => GameController.OnGodot ? (bool)SceneControl.Get("toggle_mode") : _toggleMode;
+            get => GameController.OnGodot ? (bool) SceneControl.Get("toggle_mode") : _toggleMode;
             set
             {
                 if (GameController.OnGodot)
@@ -95,7 +104,8 @@ namespace SS14.Client.UserInterface.Controls
             Release = 1,
         }
 
-        public bool IsHovered => GameController.OnGodot && (bool)SceneControl.Call("is_hovered");
+        public bool IsHovered => GameController.OnGodot && (bool) SceneControl.Call("is_hovered");
+
         public DrawModeEnum DrawMode
         {
             get
@@ -110,7 +120,7 @@ namespace SS14.Client.UserInterface.Controls
                     return DrawModeEnum.Disabled;
                 }
 
-                if (Pressed)
+                if (Pressed || _attemptingPress)
                 {
                     return DrawModeEnum.Pressed;
                 }
@@ -122,6 +132,7 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         private ButtonGroup _buttonGroup;
+
         public ButtonGroup ButtonGroup
         {
             get => _buttonGroup ?? (GameController.OnGodot
@@ -150,24 +161,26 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
-            if (Mode == ActionMode.Release)
-            {
-                throw new NotImplementedException();
-            }
-
             var buttonEventArgs = new ButtonEventArgs(this);
             OnButtonDown?.Invoke(buttonEventArgs);
 
-            if (ToggleMode)
+            if (Mode == ActionMode.Release)
             {
-                Pressed = !Pressed;
-                OnPressed?.Invoke(buttonEventArgs);
-                OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this));
+                _attemptingPress = true;
             }
             else
             {
-                Pressed = true;
-                OnPressed?.Invoke(buttonEventArgs);
+                if (ToggleMode)
+                {
+                    Pressed = !Pressed;
+                    OnPressed?.Invoke(buttonEventArgs);
+                    OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this));
+                }
+                else
+                {
+                    _attemptingPress = true;
+                    OnPressed?.Invoke(buttonEventArgs);
+                }
             }
         }
 
@@ -180,12 +193,15 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
-            if (Mode == ActionMode.Release)
+            var buttonEventArgs = new ButtonEventArgs(this);
+            OnButtonUp?.Invoke(buttonEventArgs);
+
+            if (Mode == ActionMode.Release && _attemptingPress)
             {
-                throw new NotImplementedException();
+                OnPressed?.Invoke(buttonEventArgs);
             }
 
-            OnButtonUp?.Invoke(new ButtonEventArgs(this));
+            _attemptingPress = false;
         }
 
         public enum DrawModeEnum

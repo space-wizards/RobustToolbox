@@ -13,6 +13,9 @@ namespace SS14.Client.UserInterface
         public abstract Font LabelFont { get; }
         public abstract StyleBox PanelPanel { get; }
         public abstract StyleBox ButtonStyleNormal { get; }
+        public abstract StyleBox ButtonStylePressed { get; }
+        public abstract StyleBox ButtonStyleDisabled { get; }
+        public abstract StyleBox ButtonStyleHovered { get; }
     }
 
     public sealed class UIThemeDefault : UITheme
@@ -21,6 +24,9 @@ namespace SS14.Client.UserInterface
         public override Font LabelFont { get; }
         public override StyleBox PanelPanel { get; }
         public override StyleBox ButtonStyleNormal { get; }
+        public override StyleBox ButtonStylePressed { get; }
+        public override StyleBox ButtonStyleDisabled { get; }
+        public override StyleBox ButtonStyleHovered { get; }
 
         public UIThemeDefault()
         {
@@ -32,6 +38,12 @@ namespace SS14.Client.UserInterface
 
             ButtonStyleNormal = new StyleBoxFlat {BackgroundColor = Color.Gray};
             ButtonStyleNormal.SetContentMarginOverride(StyleBox.Margin.All, 5);
+            ButtonStylePressed = new StyleBoxFlat {BackgroundColor = new Color(100, 100, 100)};
+            ButtonStylePressed.SetContentMarginOverride(StyleBox.Margin.All, 5);
+            ButtonStyleDisabled = new StyleBoxFlat {BackgroundColor = new Color(75, 75, 75)};
+            ButtonStyleDisabled.SetContentMarginOverride(StyleBox.Margin.All, 5);
+            ButtonStyleHovered = new StyleBoxFlat {BackgroundColor = new Color(128, 128, 140)};
+            ButtonStyleHovered.SetContentMarginOverride(StyleBox.Margin.All, 5);
         }
     }
 
@@ -41,5 +53,8 @@ namespace SS14.Client.UserInterface
         public override Font LabelFont { get; } = new DummyFont();
         public override StyleBox PanelPanel { get; } = new StyleBoxFlat();
         public override StyleBox ButtonStyleNormal { get; } = new StyleBoxFlat();
+        public override StyleBox ButtonStylePressed { get; } = new StyleBoxFlat();
+        public override StyleBox ButtonStyleDisabled { get; } = new StyleBoxFlat();
+        public override StyleBox ButtonStyleHovered { get; } = new StyleBoxFlat();
     }
 }

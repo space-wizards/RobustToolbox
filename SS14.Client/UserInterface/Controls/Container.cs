@@ -64,7 +64,7 @@ namespace SS14.Client.UserInterface.Controls
             {
                 newPosX += (box.Width - minX);
             }
-            else if (child.SizeFlagsHorizontal == SizeFlags.ShrinkEnd)
+            else if (child.SizeFlagsHorizontal == SizeFlags.ShrinkCenter)
             {
                 newPosX += (box.Width - minX) / 2;
             }
@@ -76,15 +76,15 @@ namespace SS14.Client.UserInterface.Controls
             var newPosY = box.Top;
             var newSizeY = minY;
 
-            if (child.SizeFlagsHorizontal == SizeFlags.ShrinkEnd)
+            if (child.SizeFlagsVertical == SizeFlags.ShrinkEnd)
             {
                 newPosX += (box.Height - minY);
             }
-            else if (child.SizeFlagsHorizontal == SizeFlags.ShrinkEnd)
+            else if (child.SizeFlagsVertical == SizeFlags.ShrinkCenter)
             {
                 newPosX += (box.Height - minY) / 2;
             }
-            else if ((child.SizeFlagsHorizontal & SizeFlags.Fill) != 0)
+            else if ((child.SizeFlagsVertical & SizeFlags.Fill) != 0)
             {
                 newSizeY = box.Height;
             }

@@ -220,7 +220,7 @@ namespace SS14.Client.UserInterface.CustomControls
             }
         }
 
-        protected override void MouseExited()
+        protected internal override void MouseExited()
         {
             if (Resizable && CurrentDrag == DragMode.None)
             {

@@ -46,6 +46,8 @@ namespace SS14.Client.Interfaces.UserInterface
 
         void Update(ProcessFrameEventArgs args);
 
+        void FrameUpdate(RenderFrameEventArgs args);
+
         void MouseDown(MouseButtonEventArgs args);
 
         void MouseUp(MouseButtonEventArgs args);

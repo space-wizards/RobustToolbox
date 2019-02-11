@@ -11,6 +11,7 @@ namespace SS14.Client.UserInterface.Controls
     public abstract class BaseButton : Control
     {
         private bool _attemptingPress;
+        private bool _beingHovered;
 
         public BaseButton()
         {
@@ -105,7 +106,7 @@ namespace SS14.Client.UserInterface.Controls
             Release = 1,
         }
 
-        public bool IsHovered => GameController.OnGodot && (bool) SceneControl.Call("is_hovered");
+        public bool IsHovered => GameController.OnGodot ? (bool) SceneControl.Call("is_hovered") : _beingHovered;
 
         public DrawModeEnum DrawMode
         {
@@ -126,7 +127,10 @@ namespace SS14.Client.UserInterface.Controls
                     return DrawModeEnum.Pressed;
                 }
 
-                // TODO: Hover.
+                if (IsHovered)
+                {
+                    return DrawModeEnum.Hover;
+                }
 
                 return DrawModeEnum.Normal;
             }
@@ -211,6 +215,30 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             _attemptingPress = false;
+        }
+
+        protected internal override void MouseEntered()
+        {
+            base.MouseEntered();
+
+            if (GameController.OnGodot)
+            {
+                return;
+            }
+
+            _beingHovered = true;
+        }
+
+        protected internal override void MouseExited()
+        {
+            base.MouseExited();
+
+            if (GameController.OnGodot)
+            {
+                return;
+            }
+
+            _beingHovered = false;
         }
 
         public enum DrawModeEnum

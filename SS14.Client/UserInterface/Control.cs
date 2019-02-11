@@ -1964,7 +1964,7 @@ namespace SS14.Client.UserInterface
             return font == null ? null : new GodotWrapFont(font);
         }
 
-        public void DoUpdate(ProcessFrameEventArgs args)
+        internal void DoUpdate(ProcessFrameEventArgs args)
         {
             Update(args);
             foreach (var child in Children)
@@ -1973,7 +1973,27 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        /// <summary>
+        ///     This is called every process frame.
+        /// </summary>
         protected virtual void Update(ProcessFrameEventArgs args)
+        {
+        }
+
+        internal void DoFrameUpdate(RenderFrameEventArgs args)
+        {
+            FrameUpdate(args);
+            foreach (var child in Children)
+            {
+                child.DoFrameUpdate(args);
+            }
+        }
+
+        /// <summary>
+        ///     This is called before every render frame.
+        /// </summary>
+        /// <param name="args"></param>
+        protected virtual void FrameUpdate(RenderFrameEventArgs args)
         {
         }
 

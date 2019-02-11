@@ -102,6 +102,11 @@ namespace SS14.UnitTesting.Client
             throw new System.NotImplementedException();
         }
 
+        public void FrameUpdate(RenderFrameEventArgs args)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public void MouseDown(MouseButtonEventArgs args)
         {
             throw new System.NotImplementedException();

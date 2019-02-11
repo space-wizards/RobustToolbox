@@ -77,6 +77,7 @@ namespace SS14.Client
             _lightManager.FrameUpdate(eventArgs);
             _stateManager.FrameUpdate(eventArgs);
             _overlayManager.FrameUpdate(eventArgs);
+            _userInterfaceManager.FrameUpdate(eventArgs);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePostEngine, eventArgs.Elapsed);
         }
 

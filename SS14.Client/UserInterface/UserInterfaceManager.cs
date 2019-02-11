@@ -36,6 +36,7 @@ namespace SS14.Client.UserInterface
         // When a control receives a mouse down it must also receive a mouse up and mouse moves, always.
         // So we keep track of which control is "focused" by the mouse.
         private Control _mouseFocused;
+        private Control _currentlyHovered;
 
         private Godot.CanvasLayer CanvasLayer;
         public Control StateRoot { get; private set; }
@@ -120,6 +121,22 @@ namespace SS14.Client.UserInterface
         public void Update(ProcessFrameEventArgs args)
         {
             RootControl.DoUpdate(args);
+        }
+
+        public void FrameUpdate(RenderFrameEventArgs args)
+        {
+            RootControl.DoFrameUpdate(args);
+
+            // Update which control is considered hovered.
+            var newHovered = MouseGetControl(_inputManager.MouseScreenPosition);
+            if (newHovered == _currentlyHovered)
+            {
+                return;
+            }
+
+            _currentlyHovered?.MouseExited();
+            _currentlyHovered = newHovered;
+            _currentlyHovered?.MouseEntered();
         }
 
         public void MouseDown(MouseButtonEventArgs args)

@@ -125,6 +125,10 @@ namespace SS14.Client.UserInterface
         public void MouseDown(MouseButtonEventArgs args)
         {
             var control = MouseGetControl(args.Position);
+            if (control == null)
+            {
+                return;
+            }
 
             _mouseFocused = control;
 

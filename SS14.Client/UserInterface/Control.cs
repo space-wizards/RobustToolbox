@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Input;
 using SS14.Client.ResourceManagement.ResourceTypes;
 using SS14.Client.UserInterface.Controls;
 
@@ -555,7 +556,7 @@ namespace SS14.Client.UserInterface
         }
 
         public Vector2 GlobalMousePosition =>
-            GameController.OnGodot ? SceneControl.GetGlobalMousePosition().Convert() : default;
+            GameController.OnGodot ? SceneControl.GetGlobalMousePosition().Convert() : IoCManager.Resolve<IInputManager>().MouseScreenPosition;
 
         private readonly Dictionary<string, (Control, int orderedIndex)> _children =
             new Dictionary<string, (Control, int)>();

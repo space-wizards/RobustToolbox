@@ -205,7 +205,7 @@ namespace SS14.Client.UserInterface.Controls
                     baseLine = new Vector2(hOffset, font.Ascent + font.Height * newlines);
                 }
 
-                var advance = font.DrawChar(handle, chr, baseLine, Color.White);
+                var advance = font.DrawChar(handle, chr, baseLine, FontColorOverride ?? Color.White);
                 baseLine += new Vector2(advance, 0);
             }
         }
@@ -251,7 +251,7 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             var font = _fontOverride ?? UserInterfaceManager.Theme.LabelFont;
-            var height = font.Ascent;
+            var height = font.Height;
             var maxLineSize = 0;
             var currentLineSize = 0;
             foreach (var chr in _text)

@@ -15,6 +15,7 @@ namespace SS14.Client.UserInterface.Controls
     public class TextureButton : BaseButton
     {
         private Texture _textureNormal;
+        private Texture _textureHover;
 
         public TextureButton()
         {
@@ -44,6 +45,22 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
+        public Texture TextureHover
+        {
+            get => _textureHover ?? (GameController.OnGodot
+                       ? new GodotTextureSource((Godot.Texture) SceneControl.Get("texture_hover"))
+                       : null);
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Set("texture_hover", value.GodotTexture);
+                }
+
+                _textureHover = value;
+            }
+        }
+
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.TextureButton();
@@ -57,6 +74,11 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             var texture = TextureNormal;
+
+            if (IsHovered && TextureHover != null)
+            {
+                texture = TextureHover;
+            }
 
             if (texture == null)
             {

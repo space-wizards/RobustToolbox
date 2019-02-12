@@ -54,6 +54,8 @@ namespace SS14.Client.Interfaces.UserInterface
 
         void MouseUp(MouseButtonEventArgs args);
 
+        void MouseMove(MouseMoveEventArgs mouseMoveEventArgs);
+
         void GDUnhandledMouseDown(MouseButtonEventArgs args);
 
         void GDUnhandledMouseUp(MouseButtonEventArgs args);

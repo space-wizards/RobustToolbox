@@ -32,7 +32,9 @@ namespace SS14.Client.UserInterface
         [Dependency] private readonly IResourceCache _resourceCache;
 
         public UITheme Theme { get; private set; }
+
         public Control Focused { get; private set; }
+
         // When a control receives a mouse down it must also receive a mouse up and mouse moves, always.
         // So we keep track of which control is "focused" by the mouse.
         private Control _mouseFocused;
@@ -126,17 +128,6 @@ namespace SS14.Client.UserInterface
         public void FrameUpdate(RenderFrameEventArgs args)
         {
             RootControl.DoFrameUpdate(args);
-
-            // Update which control is considered hovered.
-            var newHovered = MouseGetControl(_inputManager.MouseScreenPosition);
-            if (newHovered == CurrentlyHovered)
-            {
-                return;
-            }
-
-            CurrentlyHovered?.MouseExited();
-            CurrentlyHovered = newHovered;
-            CurrentlyHovered?.MouseEntered();
         }
 
         public void MouseDown(MouseButtonEventArgs args)
@@ -150,7 +141,7 @@ namespace SS14.Client.UserInterface
             _mouseFocused = control;
 
             var guiArgs = new GUIMouseButtonEventArgs(args.Button, args.DoubleClick, control, Mouse.ButtonMask.None,
-                args.Position, args.Position - control.GlobalMousePosition, args.Alt, args.Control, args.Shift,
+                args.Position, args.Position - control.GlobalPosition, args.Alt, args.Control, args.Shift,
                 args.System);
             control.MouseDown(guiArgs);
         }
@@ -162,12 +153,34 @@ namespace SS14.Client.UserInterface
                 return;
             }
 
-            var guiArgs = new GUIMouseButtonEventArgs(args.Button, args.DoubleClick, _mouseFocused, Mouse.ButtonMask.None,
-                args.Position, args.Position - _mouseFocused.GlobalMousePosition, args.Alt, args.Control, args.Shift,
+            var guiArgs = new GUIMouseButtonEventArgs(args.Button, args.DoubleClick, _mouseFocused,
+                Mouse.ButtonMask.None,
+                args.Position, args.Position - _mouseFocused.GlobalPosition, args.Alt, args.Control, args.Shift,
                 args.System);
 
             _mouseFocused.MouseUp(guiArgs);
             _mouseFocused = null;
+        }
+
+        public void MouseMove(MouseMoveEventArgs mouseMoveEventArgs)
+        {
+            // Update which control is considered hovered.
+            var newHovered = _mouseFocused ?? MouseGetControl(mouseMoveEventArgs.Position);
+            if (newHovered != CurrentlyHovered)
+            {
+                CurrentlyHovered?.MouseExited();
+                CurrentlyHovered = newHovered;
+                CurrentlyHovered?.MouseEntered();
+            }
+
+            if (newHovered != null)
+            {
+                var guiArgs = new GUIMouseMoveEventArgs(mouseMoveEventArgs.Relative, mouseMoveEventArgs.Speed, newHovered,
+                    mouseMoveEventArgs.ButtonMask, mouseMoveEventArgs.Position,
+                    mouseMoveEventArgs.Position - newHovered.GlobalPosition, mouseMoveEventArgs.Alt,
+                    mouseMoveEventArgs.Control, mouseMoveEventArgs.Shift, mouseMoveEventArgs.System);
+                newHovered.MouseMove(guiArgs);
+            }
         }
 
         public void DisposeAllComponents()

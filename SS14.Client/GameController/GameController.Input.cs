@@ -57,6 +57,10 @@ namespace SS14.Client
         /// </summary>
         public void MouseMove(MouseMoveEventArgs mouseMoveEventArgs)
         {
+            if (!GameController.OnGodot)
+            {
+                _userInterfaceManager.MouseMove(mouseMoveEventArgs);
+            }
             _stateManager.MouseMove(mouseMoveEventArgs);
         }
 

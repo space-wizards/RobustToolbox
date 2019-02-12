@@ -1,10 +1,8 @@
 ﻿using SS14.Client.UserInterface.Controls;
-using SS14.Client.UserInterface.CustomControls;
-using SS14.Client.Utility;
-using SS14.Shared.Log;
 using SS14.Shared.Maths;
-using SS14.Shared.Reflection;
 using System;
+using SS14.Client.Interfaces.Graphics;
+using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
@@ -12,6 +10,8 @@ namespace SS14.Client.UserInterface.CustomControls
     [ControlWrap("res://Engine/Scenes/SS14Window/SS14Window.tscn")]
     public class SS14Window : Panel
     {
+        [Dependency] private readonly IDisplayManager _displayManager;
+
         public SS14Window() : base()
         {
         }
@@ -79,6 +79,8 @@ namespace SS14.Client.UserInterface.CustomControls
         protected override void Initialize()
         {
             base.Initialize();
+
+            IoCManager.InjectDependencies(this);
 
             var header = GetChild("Header");
             CloseButton = header.GetChild<TextureButton>("CloseButton");
@@ -148,7 +150,7 @@ namespace SS14.Client.UserInterface.CustomControls
             if (CurrentDrag == DragMode.Move)
             {
                 var globalPos = args.GlobalPosition;
-                globalPos = Vector2.Clamp(globalPos, Vector2.Zero, Godot.OS.GetWindowSize().Convert());
+                globalPos = Vector2.Clamp(globalPos, Vector2.Zero, _displayManager.ScreenSize);
                 Position = globalPos - DragOffsetTopLeft;
                 return;
             }
@@ -359,7 +361,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 return;
             }
 
-            var windowSize = Godot.OS.GetWindowSize().Convert();
+            var windowSize = _displayManager.ScreenSize;
             if (Position.Y > windowSize.Y)
             {
                 Position = new Vector2(Position.X, windowSize.Y - HEADER_SIZE_Y);

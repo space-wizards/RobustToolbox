@@ -319,7 +319,7 @@ namespace SS14.Client.UserInterface
                     _marginTop += diffY;
                     _marginBottom += diffY;
                     _marginLeft += diffX;
-                    _marginRight += diffY;
+                    _marginRight += diffX;
                     _position = value;
                     _updateLayout();
                 }

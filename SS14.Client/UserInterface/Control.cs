@@ -326,6 +326,27 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        public Vector2 GlobalPosition
+        {
+            get
+            {
+                if (GameController.OnGodot)
+                {
+                    return SceneControl.GetPosition().Convert();
+                }
+
+                var offset = Position;
+                var parent = Parent;
+                while (parent != null)
+                {
+                    offset += parent.Position;
+                    parent = parent.Parent;
+                }
+
+                return offset;
+            }
+        }
+
         public UIBox2 Rect => UIBox2.FromDimensions(_position, _size);
 
         public Vector2 Scale

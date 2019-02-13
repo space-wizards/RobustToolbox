@@ -134,6 +134,36 @@ namespace SS14.UnitTesting.Client.UserInterface
             Assert.That(child.Size, Is.EqualTo(new Vector2(80, 80)));
         }
 
+        [Test]
+        public void TestLayoutSet()
+        {
+            var control = new Control {Size = new Vector2(100, 100)};
+            var child = new Control();
+
+            control.AddChild(child);
+
+            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
+            Assert.That(child.Size, Is.EqualTo(Vector2.Zero));
+
+            child.Size = new Vector2(50, 50);
+            Assert.That(child.Size, Is.EqualTo(new Vector2(50, 50)));
+            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
+
+            Assert.That(child.MarginTop, Is.EqualTo(0));
+            Assert.That(child.MarginLeft, Is.EqualTo(0));
+            Assert.That(child.MarginRight, Is.EqualTo(50));
+            Assert.That(child.MarginBottom, Is.EqualTo(50));
+
+            child.Position = new Vector2(50, 50);
+            Assert.That(child.Size, Is.EqualTo(new Vector2(50, 50)));
+            Assert.That(child.Position, Is.EqualTo(new Vector2(50, 50)));
+
+            Assert.That(child.MarginTop, Is.EqualTo(50));
+            Assert.That(child.MarginLeft, Is.EqualTo(50));
+            Assert.That(child.MarginRight, Is.EqualTo(100));
+            Assert.That(child.MarginBottom, Is.EqualTo(100));
+        }
+
         private class TestControl : Control
         {
             protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Test/TestScene.tscn");

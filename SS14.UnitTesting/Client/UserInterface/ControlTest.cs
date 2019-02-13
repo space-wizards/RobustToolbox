@@ -6,11 +6,13 @@ using SS14.Client.UserInterface.Controls;
 using SS14.Client.Utility;
 using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 
 namespace SS14.UnitTesting.Client.UserInterface
 {
     [TestFixture]
+    [TestOf(typeof(Control))]
     public class ControlTest : SS14UnitTest
     {
         public override UnitTestProject Project => UnitTestProject.Client;
@@ -36,7 +38,7 @@ namespace SS14.UnitTesting.Client.UserInterface
         [Test]
         public void TestManualSpawn()
         {
-            var asset = (GodotAssetScene)GodotParser.Parse(new StringReader(Data));
+            var asset = (GodotAssetScene) GodotParser.Parse(new StringReader(Data));
             var control = Control.ManualSpawnFromScene(asset);
 
             Assert.That(control.Name, Is.EqualTo("Root"));
@@ -57,6 +59,79 @@ namespace SS14.UnitTesting.Client.UserInterface
             var child12 = child1.GetChild<LineEdit>("Child12");
             var child2 = control.GetChild<Label>("Child2");
             var child21 = child2.GetChild<Button>("Child21");
+        }
+
+        [Test]
+        public void TestMarginLayoutBasic()
+        {
+            var control = new Control {Size = new Vector2(100, 100)};
+            var child = new Control
+            {
+                MarginRight = 5,
+                MarginBottom = 5,
+            };
+            control.AddChild(child);
+            Assert.That(child.Size, Is.EqualTo(new Vector2(5, 5)));
+            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
+
+            child.MarginTop = 3;
+            child.MarginLeft = 3;
+            Assert.That(child.Size, Is.EqualTo(new Vector2(2, 2)));
+            Assert.That(child.Position, Is.EqualTo(new Vector2(3, 3)));
+        }
+
+        [Test]
+        public void TestAnchorLayoutBasic()
+        {
+            var control = new Control {Size = new Vector2(100, 100)};
+            var child = new Control {AnchorRight = 1, AnchorBottom = 1};
+            control.AddChild(child);
+            Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
+            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
+
+            child.AnchorLeft = 0.5f;
+            Assert.That(child.Position, Is.EqualTo(new Vector2(50, 0)));
+            Assert.That(child.Size, Is.EqualTo(new Vector2(50, 100)));
+            child.AnchorTop = 0.5f;
+
+            Assert.That(child.Position, Is.EqualTo(new Vector2(50, 50)));
+            Assert.That(child.Size, Is.EqualTo(new Vector2(50, 50)));
+        }
+
+        [Test]
+        public void TestMarginLayoutMinimumSize()
+        {
+            var control = new Control {Size = new Vector2(100, 100)};
+            var child = new Control
+            {
+                CustomMinimumSize = new Vector2(50, 50),
+                MarginRight = 20,
+                MarginBottom = 20
+            };
+
+            control.AddChild(child);
+            Assert.That(child.Size, Is.EqualTo(new Vector2(50, 50)));
+            Assert.That(child.MarginRight, Is.EqualTo(20));
+            Assert.That(child.MarginBottom, Is.EqualTo(20));
+        }
+
+        [Test]
+        public void TestMarginAnchorLayout()
+        {
+            var control = new Control {Size = new Vector2(100, 100)};
+            var child = new Control
+            {
+                MarginRight = -10,
+                MarginBottom = -10,
+                MarginTop = 10,
+                MarginLeft = 10,
+                AnchorRight = 1,
+                AnchorBottom = 1
+            };
+
+            control.AddChild(child);
+            Assert.That(child.Position, Is.EqualTo(new Vector2(10, 10)));
+            Assert.That(child.Size, Is.EqualTo(new Vector2(80, 80)));
         }
 
         private class TestControl : Control

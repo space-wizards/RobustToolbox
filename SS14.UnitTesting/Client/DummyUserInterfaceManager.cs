@@ -99,6 +99,11 @@ namespace SS14.UnitTesting.Client
             throw new System.NotImplementedException();
         }
 
+        public void MouseMove(MouseMoveEventArgs mouseMoveEventArgs)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public void GDUnhandledMouseDown(MouseButtonEventArgs args)
         {
             throw new System.NotImplementedException();

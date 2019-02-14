@@ -16,9 +16,26 @@ namespace SS14.Client.Graphics
     {
         internal abstract Godot.Font GodotFont { get; }
 
+        /// <summary>
+        ///     The maximum amount a glyph goes above the baseline.
+        /// </summary>
         public virtual int Ascent => (int?)GodotFont?.GetAscent() ?? default;
+
+        /// <summary>
+        ///     The maximum glyph height of a line of text, not relative to the baseline.
+        /// </summary>
         public virtual int Height => (int?)GodotFont?.GetHeight() ?? default;
+
+        /// <summary>
+        ///     The maximum amount a glyph drops below the baseline.
+        /// </summary>
         public virtual int Descent => (int?)GodotFont?.GetDescent() ?? default;
+
+        /// <summary>
+        ///     The distance between the baselines of two consecutive lines.
+        ///     Basically, if you encounter a new line, this is how much you need to move down the cursor.
+        /// </summary>
+        public virtual int LineHeight => Height;
 
         public static implicit operator Godot.Font(Font font)
         {
@@ -59,6 +76,7 @@ namespace SS14.Client.Graphics
         public override int Ascent => Handle?.Ascent ?? base.Ascent;
         public override int Descent => Handle?.Descent ?? base.Descent;
         public override int Height => Handle?.Height ?? base.Height;
+        public override int LineHeight => Handle?.LineHeight ?? base.LineHeight;
 
         public VectorFont(FontResource res, int size)
         {

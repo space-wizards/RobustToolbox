@@ -57,7 +57,7 @@ namespace SS14.Client.Graphics
             var face = fontFaceHandle.Face;
             var (atlasData, glyphMap, metricsMap) = _generateAtlas(face, size);
             var ascent = face.Size.Metrics.Ascender.ToInt32();
-            var descent = face.Size.Metrics.Descender.ToInt32();
+            var descent = -face.Size.Metrics.Descender.ToInt32();
             var height = face.Size.Metrics.Height.ToInt32();
             var instanceHandle = new FontInstanceHandle(this, atlasData, size, fontFaceHandle.Face, glyphMap, ascent,
                 descent, height, metricsMap);
@@ -240,11 +240,12 @@ namespace SS14.Client.Graphics
             public int Ascent { get; }
             public int Descent { get; }
             public int Height { get; }
+            public int LineHeight { get; }
             private readonly FontManager _fontManager;
 
             public FontInstanceHandle(FontManager manager, FontTextureAtlas atlas, int size, Face face,
                 Dictionary<char, uint> glyphMap,
-                int ascent, int descent, int height, Dictionary<uint, CharMetrics> metricsMap)
+                int ascent, int descent, int lineHeight, Dictionary<uint, CharMetrics> metricsMap)
             {
                 _fontManager = manager;
                 Atlas = atlas;
@@ -253,7 +254,8 @@ namespace SS14.Client.Graphics
                 _glyphMap = glyphMap;
                 Ascent = ascent;
                 Descent = descent;
-                Height = height;
+                LineHeight = lineHeight;
+                Height = ascent + descent;
                 _metricsMap = metricsMap;
             }
 

@@ -201,7 +201,7 @@ namespace SS14.Client.UserInterface.Controls
             var style = uiTheme.ButtonStyleNormal;
             var font = uiTheme.DefaultFont;
 
-            var fontHeight = font.Ascent;
+            var fontHeight = font.Height;
 
             var width = _ensureWidthCache();
 

@@ -242,7 +242,7 @@ namespace SS14.Client.UserInterface.Controls
                 if (chr == '\n')
                 {
                     newlines += 1;
-                    baseLine = new Vector2(hOffset, font.Ascent + font.Height * newlines);
+                    baseLine = new Vector2(hOffset, font.Ascent + font.LineHeight * newlines);
                 }
 
                 var advance = font.DrawChar(handle, chr, baseLine, actualFontColor);
@@ -300,7 +300,7 @@ namespace SS14.Client.UserInterface.Controls
                 {
                     maxLineSize = Math.Max(currentLineSize, maxLineSize);
                     currentLineSize = 0;
-                    height += font.Height;
+                    height += font.LineHeight;
                 }
                 else
                 {
@@ -317,6 +317,13 @@ namespace SS14.Client.UserInterface.Controls
             maxLineSize = Math.Max(currentLineSize, maxLineSize);
 
             _textDimensionCache = new Vector2i(maxLineSize, height);
+        }
+
+        protected override void StylePropertiesChanged()
+        {
+            _textDimensionCache = null;
+
+            base.StylePropertiesChanged();
         }
 
         private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)

@@ -27,6 +27,7 @@ namespace SS14.Client.Interfaces.Graphics
         int Ascent { get; }
         int Descent { get; }
         int Height { get; }
+        int LineHeight { get; }
     }
 
     public readonly struct CharMetrics

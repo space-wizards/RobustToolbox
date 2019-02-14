@@ -1,18 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading;
-using OpenTK.Graphics.OpenGL;
+using OpenTK.Graphics.OpenGL4;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
-using ObjectLabelIdentifier = OpenTK.Graphics.OpenGL4.ObjectLabelIdentifier;
-using PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
+using OGLTextureWrapMode = OpenTK.Graphics.OpenGL4.TextureWrapMode;
 
 namespace SS14.Client.Graphics.Clyde
 {
@@ -21,17 +17,19 @@ namespace SS14.Client.Graphics.Clyde
         private readonly Dictionary<int, LoadedTexture> _loadedTextures = new Dictionary<int, LoadedTexture>();
         private int _nextTextureId;
 
-        public Texture LoadTextureFromPNGStream(Stream stream, string name = null)
+        public Texture LoadTextureFromPNGStream(Stream stream, string name = null,
+            TextureLoadParameters? loadParams = null)
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
 
             using (var image = Image.Load(stream))
             {
-                return LoadTextureFromImage(image, name);
+                return LoadTextureFromImage(image, name, loadParams);
             }
         }
 
-        public Texture LoadTextureFromImage<T>(Image<T> image, string name = null) where T : unmanaged, IPixel<T>
+        public Texture LoadTextureFromImage<T>(Image<T> image, string name = null,
+            TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
 
@@ -39,14 +37,45 @@ namespace SS14.Client.Graphics.Clyde
 
             var texture = new OGLHandle(GL.GenTexture());
             GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
-                (int) TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
-                (int) TextureMagFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
-                (int) TextureWrapMode.ClampToEdge);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
-                (int) TextureWrapMode.ClampToEdge);
+            var actualParams = loadParams ?? TextureLoadParameters.Default;
+            if (actualParams.SampleParameters.Filter)
+            {
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
+                    (int) TextureMinFilter.Linear);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
+                    (int) TextureMagFilter.Linear);
+            }
+            else
+            {
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
+                    (int) TextureMinFilter.Nearest);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
+                    (int) TextureMagFilter.Nearest);
+            }
+
+            switch (actualParams.SampleParameters.WrapMode)
+            {
+                case TextureWrapMode.None:
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
+                        (int) OGLTextureWrapMode.ClampToEdge);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
+                        (int) OGLTextureWrapMode.ClampToEdge);
+                    break;
+                case TextureWrapMode.Repeat:
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
+                        (int) OGLTextureWrapMode.Repeat);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
+                        (int) OGLTextureWrapMode.Repeat);
+                    break;
+                case TextureWrapMode.MirroredRepeat:
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
+                        (int) OGLTextureWrapMode.MirroredRepeat);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
+                        (int) OGLTextureWrapMode.MirroredRepeat);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
 
             PixelInternalFormat internalFormat;
             PixelFormat pixelDataFormat;
@@ -84,7 +113,6 @@ namespace SS14.Client.Graphics.Clyde
                     GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, image.Width, image.Height, 0,
                         pixelDataFormat, pixelDataType, (IntPtr) ptr);
                 }
-
             }
 
             if (name != null)
@@ -107,7 +135,8 @@ namespace SS14.Client.Graphics.Clyde
             return new OpenGLTexture(id, image.Width, image.Height);
         }
 
-        public TextureArray LoadArrayFromImages<T>(ICollection<Image<T>> images, string name = null)
+        public TextureArray LoadArrayFromImages<T>(ICollection<Image<T>> images, string name = null,
+            TextureLoadParameters? loadParams = null)
             where T : unmanaged, IPixel<T>
         {
             DebugTools.Assert(images.Count != 0);
@@ -137,14 +166,46 @@ namespace SS14.Client.Graphics.Clyde
             var (width, height) = size.Value;
             GL.TexImage3D(TextureTarget.Texture2DArray, 0, PixelInternalFormat.Rgba8, width, height, images.Count, 0,
                 PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
-            GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMinFilter,
-                (int) TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMagFilter,
-                (int) TextureMagFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapS,
-                (int) TextureWrapMode.ClampToEdge);
-            GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapT,
-                (int) TextureWrapMode.ClampToEdge);
+            var actualParams = loadParams ?? TextureLoadParameters.Default;
+            if (actualParams.SampleParameters.Filter)
+            {
+                GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMinFilter,
+                    (int) TextureMinFilter.Linear);
+                GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMagFilter,
+                    (int) TextureMagFilter.Linear);
+            }
+            else
+            {
+                GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMinFilter,
+                    (int) TextureMinFilter.Nearest);
+                GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMagFilter,
+                    (int) TextureMagFilter.Nearest);
+            }
+
+            switch (actualParams.SampleParameters.WrapMode)
+            {
+                case TextureWrapMode.None:
+                    GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapS,
+                        (int) OGLTextureWrapMode.ClampToEdge);
+                    GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapT,
+                        (int) OGLTextureWrapMode.ClampToEdge);
+                    break;
+                case TextureWrapMode.Repeat:
+                    GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapS,
+                        (int) OGLTextureWrapMode.Repeat);
+                    GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapT,
+                        (int) OGLTextureWrapMode.Repeat);
+                    break;
+                case TextureWrapMode.MirroredRepeat:
+                    GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapS,
+                        (int) OGLTextureWrapMode.MirroredRepeat);
+                    GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapT,
+                        (int) OGLTextureWrapMode.MirroredRepeat);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
             var index = 0;
             var refTextureList = new List<OpenGLTexture>();
             foreach (var image in images)

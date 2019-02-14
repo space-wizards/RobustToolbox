@@ -11,6 +11,7 @@ using SS14.Client.Utility;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.Graphics
 {
@@ -47,8 +48,13 @@ namespace SS14.Client.Graphics
         /// </summary>
         /// <param name="image">The image to load.</param>
         /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
+        /// <param name="loadParameters">
+        ///     Parameters that influence the loading of textures.
+        ///     Defaults to <see cref="TextureLoadParameters.Default"/> if <c>null</c>.
+        /// </param>
         /// <typeparam name="T">The type of pixels of the image. At the moment, images must be <see cref="Rgba32"/>.</typeparam>
-        public static Texture LoadFromImage<T>(Image<T> image, string name = null) where T : unmanaged, IPixel<T>
+        public static Texture LoadFromImage<T>(Image<T> image, string name = null,
+            TextureLoadParameters? loadParameters = null) where T : unmanaged, IPixel<T>
         {
             switch (GameController.Mode)
             {
@@ -72,6 +78,7 @@ namespace SS14.Client.Graphics
                         // Godot does not provide a way to load from memory directly so we turn it into a PNG I guess.
                         var texture = new Godot.ImageTexture();
                         texture.CreateFromImage(gdImage);
+                        (loadParameters ?? TextureLoadParameters.Default).SampleParameters.ApplyToGodotTexture(texture);
                         return new GodotTextureSource(texture);
                     }
                     finally
@@ -94,7 +101,12 @@ namespace SS14.Client.Graphics
         /// </summary>
         /// <param name="stream">The stream to load the image from.</param>
         /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
-        public static Texture LoadFromPNGStream(Stream stream, string name = null)
+        /// <param name="loadParameters">
+        ///     Parameters that influence the loading of textures.
+        ///     Defaults to <see cref="TextureLoadParameters.Default"/> if <c>null</c>.
+        /// </param>
+        public static Texture LoadFromPNGStream(Stream stream, string name = null,
+            TextureLoadParameters? loadParameters = null)
         {
             switch (GameController.Mode)
             {
@@ -115,19 +127,21 @@ namespace SS14.Client.Graphics
 
                         var texture = new Godot.ImageTexture();
                         texture.CreateFromImage(gdImage);
+                        (loadParameters ?? TextureLoadParameters.Default).SampleParameters.ApplyToGodotTexture(texture);
                         return new GodotTextureSource(texture);
                     }
                 case GameController.DisplayMode.OpenGL:
                 {
                     var manager = IoCManager.Resolve<IDisplayManagerOpenGL>();
-                    return manager.LoadTextureFromPNGStream(stream, name);
+                    return manager.LoadTextureFromPNGStream(stream, name, loadParameters);
                 }
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
 
-        public static TextureArray LoadArrayFromImages<T>(ICollection<Image<T>> images, string name = null)
+        public static TextureArray LoadArrayFromImages<T>(ICollection<Image<T>> images, string name = null,
+            TextureLoadParameters? loadParameters = null)
             where T : unmanaged, IPixel<T>
         {
             if (GameController.Mode != GameController.DisplayMode.OpenGL)
@@ -136,7 +150,7 @@ namespace SS14.Client.Graphics
             }
 
             var manager = IoCManager.Resolve<IDisplayManagerOpenGL>();
-            return manager.LoadArrayFromImages(images, name);
+            return manager.LoadArrayFromImages(images, name, loadParameters);
         }
 
         Texture IDirectionalTextureProvider.Default => this;
@@ -224,6 +238,143 @@ namespace SS14.Client.Graphics
 
         public override int Width => (int) SubRegion.Width;
         public override int Height => (int) SubRegion.Height;
+    }
+
+    /// <summary>
+    ///     Flags for loading of textures.
+    /// </summary>
+    [PublicAPI]
+    public struct TextureLoadParameters
+    {
+        /// <summary>
+        ///     The default sampling parameters for the texture.
+        /// </summary>
+        public TextureSampleParameters SampleParameters { get; set; }
+
+        public static TextureLoadParameters FromYaml(YamlMappingNode yaml)
+        {
+            var sample = (YamlMappingNode) yaml["sample"];
+            return new TextureLoadParameters {SampleParameters = TextureSampleParameters.FromYaml(sample)};
+        }
+
+        public static readonly TextureLoadParameters Default = new TextureLoadParameters
+        {
+            SampleParameters = TextureSampleParameters.Default
+        };
+    }
+
+    /// <summary>
+    ///     Sample flags for textures.
+    ///     These are separate from <see cref="TextureLoadParameters"/>,
+    ///     because it is possible to create "proxies" to existing textures
+    ///     with different sampling parameters than the base texture.
+    /// </summary>
+    [PublicAPI]
+    public struct TextureSampleParameters
+    {
+        // NOTE: If somebody is gonna add support for 3D/1D textures, change this doc comment.
+        // See the note on this page for why: https://www.khronos.org/opengl/wiki/Sampler_Object#Filtering
+        /// <summary>
+        ///     If true, use bi-linear texture filtering if the texture cannot be rendered 1:1
+        /// </summary>
+        public bool Filter { get; set; }
+
+        /// <summary>
+        ///     Controls how to wrap the texture if texture coordinates outside 0-1 are accessed.
+        /// </summary>
+        public TextureWrapMode WrapMode { get; set; }
+
+        internal void ApplyToGodotTexture(Godot.Texture texture)
+        {
+            var flags = texture.Flags;
+            if (Filter)
+            {
+                flags |= (int) Godot.Texture.FlagsEnum.Filter;
+            }
+            else
+            {
+                flags &= ~(int) Godot.Texture.FlagsEnum.Filter;
+            }
+
+            switch (WrapMode)
+            {
+                case TextureWrapMode.None:
+                    flags &= ~(int) Godot.Texture.FlagsEnum.Repeat;
+                    flags &= ~(int) Godot.Texture.FlagsEnum.MirroredRepeat;
+                    break;
+                case TextureWrapMode.Repeat:
+                    flags |= (int) Godot.Texture.FlagsEnum.Repeat;
+                    flags &= ~(int) Godot.Texture.FlagsEnum.MirroredRepeat;
+                    break;
+                case TextureWrapMode.MirroredRepeat:
+                    flags &= ~(int) Godot.Texture.FlagsEnum.Repeat;
+                    flags |= (int) Godot.Texture.FlagsEnum.MirroredRepeat;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            texture.Flags = flags;
+        }
+
+        public static TextureSampleParameters FromYaml(YamlMappingNode node)
+        {
+            var wrap = TextureWrapMode.None;
+            var filter = false;
+
+            if (node.TryGetNode("filter", out var filterNode))
+            {
+                filter = filterNode.AsBool();
+            }
+
+            if (node.TryGetNode("wrap", out var wrapNode))
+            {
+                switch (wrapNode.AsString())
+                {
+                    case "none":
+                        wrap = TextureWrapMode.None;
+                        break;
+                    case "repeat":
+                        wrap = TextureWrapMode.Repeat;
+                        break;
+                    case "mirrored_repeat":
+                        wrap = TextureWrapMode.MirroredRepeat;
+                        break;
+                    default:
+                        throw new ArgumentException("Not a valid wrap mode.");
+                }
+            }
+
+            return new TextureSampleParameters {Filter = filter, WrapMode = wrap};
+        }
+
+        public static readonly TextureSampleParameters Default = new TextureSampleParameters
+        {
+            Filter = false,
+            WrapMode = TextureWrapMode.None
+        };
+    }
+
+    /// <summary>
+    ///     Controls behavior when reading texture coordinates outside 0-1, which usually wraps the texture somehow.
+    /// </summary>
+    [PublicAPI]
+    public enum TextureWrapMode
+    {
+        /// <summary>
+        ///     Do not wrap, instead clamp to edge.
+        /// </summary>
+        None = 0,
+
+        /// <summary>
+        ///     Repeat the texture.
+        /// </summary>
+        Repeat,
+
+        /// <summary>
+        ///     Repeat the texture mirrored.
+        /// </summary>
+        MirroredRepeat,
     }
 
     internal class OpenGLTexture : Texture

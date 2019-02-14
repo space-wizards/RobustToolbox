@@ -4,8 +4,10 @@ using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Shared.Log;
 using SS14.Shared.Utility;
 using System.IO;
+using System.Text;
 using SS14.Client.Interfaces.Graphics;
 using SS14.Shared.IoC;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.ResourceManagement
 {
@@ -25,23 +27,43 @@ namespace SS14.Client.ResourceManagement
             // Primarily for tracking down iCCP sRGB errors in the image files.
             Logger.DebugS("res.tex", $"Loading texture {path}.");
 
+            var loadParameters = _tryLoadTextureParameters(cache, path) ?? TextureLoadParameters.Default;
+
             switch (GameController.Mode)
             {
                 case GameController.DisplayMode.Headless:
                     Texture = new DummyTexture();
                     break;
                 case GameController.DisplayMode.Godot:
-                    _loadGodot(cache, path);
+                    _loadGodot(cache, path, loadParameters);
                     break;
                 case GameController.DisplayMode.OpenGL:
-                    _loadOpenGL(cache, path);
+                    _loadOpenGL(cache, path, loadParameters);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
 
-        private void _loadGodot(IResourceCache cache, ResourcePath path)
+        private static TextureLoadParameters? _tryLoadTextureParameters(IResourceCache cache, ResourcePath path)
+        {
+            var metaPath = path.WithName(path.Filename + ".yml");
+            if (cache.TryContentFileRead(metaPath, out var stream))
+            {
+                YamlDocument yamlData;
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    var yamlStream = new YamlStream();
+                    yamlStream.Load(reader);
+                    yamlData = yamlStream.Documents[0];
+                }
+
+                return TextureLoadParameters.FromYaml((YamlMappingNode)yamlData.RootNode);
+            }
+            return null;
+        }
+
+        private void _loadGodot(IResourceCache cache, ResourcePath path, TextureLoadParameters? parameters)
         {
             DebugTools.Assert(GameController.Mode == GameController.DisplayMode.Godot);
 
@@ -59,17 +81,17 @@ namespace SS14.Client.ResourceManagement
             }
 
             // Disable filter by default because pixel art.
-            godotTexture.SetFlags(godotTexture.GetFlags() & ~(int) Godot.Texture.FlagsEnum.Filter);
+            (parameters ?? TextureLoadParameters.Default).SampleParameters.ApplyToGodotTexture(godotTexture);
             Texture = new GodotTextureSource(godotTexture);
         }
 
-        private void _loadOpenGL(IResourceCache cache, ResourcePath path)
+        private void _loadOpenGL(IResourceCache cache, ResourcePath path, TextureLoadParameters? parameters)
         {
             DebugTools.Assert(GameController.Mode == GameController.DisplayMode.OpenGL);
 
             var manager = IoCManager.Resolve<IDisplayManagerOpenGL>();
 
-            Texture = manager.LoadTextureFromPNGStream(cache.ContentFileRead(path), path.ToString());
+            Texture = manager.LoadTextureFromPNGStream(cache.ContentFileRead(path), path.ToString(), parameters);
         }
 
         public static implicit operator Texture(TextureResource res)

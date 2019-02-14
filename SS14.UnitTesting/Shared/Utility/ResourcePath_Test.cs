@@ -216,5 +216,26 @@ namespace SS14.UnitTesting.Shared.Utility
             var basePath = new ResourcePath("b/a");
             Assert.That(() => path.CommonBase(basePath), Throws.ArgumentException);
         }
+
+        [Test]
+        public void WithNameTest()
+        {
+            var path = new ResourcePath("/a/b");
+            var modified = path.WithName("foo");
+            Assert.That(modified.Filename, Is.EqualTo("foo"));
+            modified = path.WithName("foo.exe");
+            Assert.That(modified.Filename, Is.EqualTo("foo.exe"));
+            Assert.That(modified.Extension, Is.EqualTo("exe"));
+        }
+
+        [Test]
+        public void WithNameExceptionTest()
+        {
+            var path = new ResourcePath("/a/b");
+            Assert.That(() => path.WithName("/foo"), Throws.ArgumentException);
+            Assert.That(() => path.WithName("."), Throws.ArgumentException);
+            Assert.That(() => path.WithName(""), Throws.ArgumentException);
+            Assert.That(() => path.WithName(null), Throws.ArgumentException);
+        }
     }
 }

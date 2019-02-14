@@ -514,6 +514,39 @@ namespace SS14.Shared.Utility
             return new ResourcePath(segments, Separator);
         }
 
+        /// <summary>
+        ///     Return a copy of this resource path with the file name changed.
+        /// </summary>
+        /// <param name="name">
+        ///     The new file name.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        ///     Thrown if <paramref name="name"/> is null, empty,
+        ///     contains <see cref="Separator"/> or is equal to <c>.</c>
+        /// </exception>
+        public ResourcePath WithName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException("New file name cannot be null or empty.");
+            }
+
+            if (name.Contains(Separator))
+            {
+                throw new ArgumentException("New file name cannot contain the separator.");
+            }
+
+            if (name == ".")
+            {
+                throw new ArgumentException("New file name cannot be '.'");
+            }
+
+            var newSegments = (string[])Segments.Clone();
+            newSegments[newSegments.Length - 1] = name;
+
+            return new ResourcePath(newSegments, Separator);
+        }
+
         /// <inheritdoc />
         public override int GetHashCode()
         {

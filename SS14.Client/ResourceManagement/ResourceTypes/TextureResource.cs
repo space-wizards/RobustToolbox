@@ -55,6 +55,11 @@ namespace SS14.Client.ResourceManagement
                 {
                     var yamlStream = new YamlStream();
                     yamlStream.Load(reader);
+                    if (yamlStream.Documents.Count == 0)
+                    {
+                        return null;
+                    }
+
                     yamlData = yamlStream.Documents[0];
                 }
 

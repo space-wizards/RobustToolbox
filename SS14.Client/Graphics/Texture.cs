@@ -253,8 +253,12 @@ namespace SS14.Client.Graphics
 
         public static TextureLoadParameters FromYaml(YamlMappingNode yaml)
         {
-            var sample = (YamlMappingNode) yaml["sample"];
-            return new TextureLoadParameters {SampleParameters = TextureSampleParameters.FromYaml(sample)};
+            if (yaml.TryGetNode("sample", out YamlMappingNode sampleNode))
+            {
+                return new TextureLoadParameters {SampleParameters = TextureSampleParameters.FromYaml(sampleNode)};
+            }
+
+            return Default;
         }
 
         public static readonly TextureLoadParameters Default = new TextureLoadParameters

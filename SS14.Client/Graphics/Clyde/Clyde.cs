@@ -367,24 +367,54 @@ namespace SS14.Client.Graphics.Clyde
         private static void _debugMessageCallback(DebugSource source, DebugType type, int id, DebugSeverity severity,
             int length, IntPtr message, IntPtr userParam)
         {
-            var contents = $"{source}: {type}: " + Marshal.PtrToStringAnsi(message, length);
+            var contents = $"{source}: " + Marshal.PtrToStringAnsi(message, length);
+
+            var category = "ogl.debug";
+            switch (type)
+            {
+                case DebugType.DebugTypePerformance:
+                    category += ".performance";
+                    break;
+                case DebugType.DebugTypeOther:
+                    category += ".other";
+                    break;
+                case DebugType.DebugTypeError:
+                    category += ".error";
+                    break;
+                case DebugType.DebugTypeDeprecatedBehavior:
+                    category += ".deprecated";
+                    break;
+                case DebugType.DebugTypeUndefinedBehavior:
+                    category += ".ub";
+                    break;
+                case DebugType.DebugTypePortability:
+                    category += ".portability";
+                    break;
+                case DebugType.DebugTypeMarker:
+                case DebugType.DebugTypePushGroup:
+                case DebugType.DebugTypePopGroup:
+                    // These are inserted by our own code so I imagine they're not necessary to log?
+                    return;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
 
             switch (severity)
             {
                 case DebugSeverity.DontCare:
-                    Logger.InfoS("ogl.debug", contents);
+                    Logger.InfoS(category, contents);
                     break;
                 case DebugSeverity.DebugSeverityNotification:
-                    Logger.InfoS("ogl.debug", contents);
+                    Logger.InfoS(category, contents);
                     break;
                 case DebugSeverity.DebugSeverityHigh:
-                    Logger.ErrorS("ogl.debug", contents);
+                    Logger.ErrorS(category, contents);
                     break;
                 case DebugSeverity.DebugSeverityMedium:
-                    Logger.ErrorS("ogl.debug", contents);
+                    Logger.ErrorS(category, contents);
                     break;
                 case DebugSeverity.DebugSeverityLow:
-                    Logger.WarningS("ogl.debug", contents);
+                    Logger.WarningS(category, contents);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(severity), severity, null);

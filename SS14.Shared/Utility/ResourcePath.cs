@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace SS14.Shared.Utility
 {
@@ -10,7 +11,8 @@ namespace SS14.Shared.Utility
     ///     Provides object-oriented path manipulation for resource paths.
     ///     ResourcePaths are immutable.
     /// </summary>
-    public class ResourcePath : IEquatable<ResourcePath>
+    [PublicAPI]
+    public sealed class ResourcePath : IEquatable<ResourcePath>
     {
         /// <summary>
         ///     The separator for the file system of the system we are compiling to.
@@ -74,16 +76,16 @@ namespace SS14.Shared.Utility
             }
 
             var segments = new List<string>();
-            var splitsegments = path.Split(new string[] { separator }, StringSplitOptions.None);
+            var splitSegments = path.Split(new string[] { separator }, StringSplitOptions.None);
             var i = 0;
-            if (splitsegments[0] == "")
+            if (splitSegments[0] == "")
             {
                 i = 1;
                 segments.Add(separator);
             }
-            for (; i < splitsegments.Length; i++)
+            for (; i < splitSegments.Length; i++)
             {
-                var segment = splitsegments[i];
+                var segment = splitSegments[i];
                 if (segment == "" || (segment == "." && segments.Count != 0))
                 {
                     continue;
@@ -405,9 +407,10 @@ namespace SS14.Shared.Utility
         ///     Converts a relative disk path back into a resource path.
         /// </summary>
         /// <exception cref="ArgumentNullException">Thrown if either argument is null.</exception>
-        public static ResourcePath FromRelativeSystemPath(string path, string newseparator = "/")
+        public static ResourcePath FromRelativeSystemPath(string path, string newSeparator = "/")
         {
-            return new ResourcePath(path, SYSTEM_SEPARATOR).ChangeSeparator(newseparator);
+            // ReSharper disable once RedundantArgumentDefaultValue
+            return new ResourcePath(path, SYSTEM_SEPARATOR).ChangeSeparator(newSeparator);
         }
 
         /// <summary>
@@ -433,8 +436,9 @@ namespace SS14.Shared.Utility
         }
 
         /// <summary>
-        ///     Try pattern version of <see cref="RelativeTo(ResourcePath)"/>
+        ///     Try pattern version of <see cref="RelativeTo(ResourcePath)"/>.
         /// </summary>
+        /// <param name="basePath">The base path which we can be made relative to.</param>
         /// <param name="relative">The path of how we are relative to <paramref name="basePath"/>, if at all.</param>
         /// <returns>True if we are relative to <paramref name="basePath"/>, false otherwise.</returns>
         /// <exception cref="ArgumentException">Thrown if the separators are not the same.</exception>
@@ -462,8 +466,7 @@ namespace SS14.Shared.Utility
                     return false;
                 }
             }
-            var i = 0;
-            for (; i < basePath.Segments.Length; i++)
+            for (var i = 0; i < basePath.Segments.Length; i++)
             {
                 if (Segments[i] != basePath.Segments[i])
                 {
@@ -569,15 +572,15 @@ namespace SS14.Shared.Utility
         ///     This method does NOT clean the paths beforehand, so paths that point to the same location may fail if they are not cleaned beforehand.
         ///     Paths are never equal if they do not have the same separator.
         /// </summary>
-        /// <param name="path">The path to check equality with.</param>
+        /// <param name="other">The path to check equality with.</param>
         /// <returns>True if the paths are equal, false otherwise.</returns>
-        public bool Equals(ResourcePath path)
+        public bool Equals(ResourcePath other)
         {
-            if (path == null)
+            if (other == null)
             {
                 return false;
             }
-            return path.Separator == Separator && Segments.SequenceEqual(path.Segments);
+            return other.Separator == Separator && Segments.SequenceEqual(other.Segments);
         }
 
         public static bool operator ==(ResourcePath a, ResourcePath b)

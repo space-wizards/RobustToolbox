@@ -12,7 +12,8 @@ namespace SS14.UnitTesting.Client
 {
     internal class DummyUserInterfaceManager : IUserInterfaceManagerInternal
     {
-        public UITheme Theme { get; } = new UIThemeDummy();
+        public UITheme ThemeDefaults { get; } = new UIThemeDummy();
+        public Stylesheet Stylesheet { get; set; }
 
         public Control Focused => throw new System.NotImplementedException();
 

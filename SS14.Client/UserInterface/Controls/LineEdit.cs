@@ -161,11 +161,11 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
-            var styleBox = UserInterfaceManager.Theme.LineEditBox;
+            var styleBox = UserInterfaceManager.ThemeDefaults.LineEditBox;
             var drawBox = new UIBox2(Vector2.Zero, Size);
             var contentBox = styleBox.GetContentBox(drawBox);
             styleBox.Draw(handle, drawBox);
-            var font = UserInterfaceManager.Theme.DefaultFont;
+            var font = UserInterfaceManager.ThemeDefaults.DefaultFont;
 
             var baseLine = new Vector2i(0, (int)(contentBox.Height + font.Ascent)/2) + contentBox.TopLeft;
 
@@ -200,8 +200,8 @@ namespace SS14.Client.UserInterface.Controls
                 return Vector2.Zero;
             }
 
-            var font = UserInterfaceManager.Theme.DefaultFont;
-            return new Vector2(0, font.Height) + UserInterfaceManager.Theme.LineEditBox.MinimumSize;
+            var font = UserInterfaceManager.ThemeDefaults.DefaultFont;
+            return new Vector2(0, font.Height) + UserInterfaceManager.ThemeDefaults.LineEditBox.MinimumSize;
         }
 
         public enum AlignMode

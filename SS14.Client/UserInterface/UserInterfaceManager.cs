@@ -31,8 +31,8 @@ namespace SS14.Client.UserInterface
         [Dependency] private readonly IDisplayManager _displayManager;
         [Dependency] private readonly IResourceCache _resourceCache;
 
-        public UITheme Theme { get; private set; }
-
+        public UITheme ThemeDefaults { get; private set; }
+        public Stylesheet Stylesheet { get; set; }
         public Control Focused { get; private set; }
 
         // When a control receives a mouse down it must also receive a mouse up and mouse moves, always.
@@ -59,7 +59,7 @@ namespace SS14.Client.UserInterface
 
         public void Initialize()
         {
-            Theme = new UIThemeDefault();
+            ThemeDefaults = new UIThemeDefault();
 
             if (GameController.OnGodot)
             {

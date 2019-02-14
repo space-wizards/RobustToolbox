@@ -197,6 +197,7 @@
     <Compile Include="ResourceManagement\ResourceTypes\RSIResource.cs" />
     <Compile Include="ResourceManagement\ResourceTypes\TextureResource.cs" />
     <Compile Include="SceneTreeHolder.cs" />
+    <Compile Include="UserInterface\Control.Styling.cs" />
     <Compile Include="UserInterface\Controls\BaseButton.cs" />
     <Compile Include="UserInterface\Controls\Button.cs" />
     <Compile Include="UserInterface\Controls\CheckBox.cs" />

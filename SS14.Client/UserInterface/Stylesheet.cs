@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface
 {
@@ -9,7 +11,7 @@ namespace SS14.Client.UserInterface
     /// </summary>
     public sealed class Stylesheet
     {
-        private IReadOnlyList<StyleRule> Rules { get; }
+        public IReadOnlyList<StyleRule> Rules { get; }
 
         public Stylesheet(IReadOnlyList<StyleRule> rules)
         {
@@ -26,10 +28,65 @@ namespace SS14.Client.UserInterface
         {
             Selector = selector;
             Properties = properties;
+            Specificity = selector.CalculateSpecificity();
         }
 
+        public StyleSpecificity Specificity { get; }
         public Selector Selector { get; }
         public IReadOnlyList<StyleProperty> Properties { get; }
+    }
+
+    // https://specifishity.com/
+    public struct StyleSpecificity : IComparable<StyleSpecificity>, IComparable
+    {
+        public readonly int IdSelectors;
+        public readonly int ClassSelectors;
+        public readonly int TypeSelectors;
+
+        public StyleSpecificity(int idSelectors, int classSelectors, int typeSelectors)
+        {
+            IdSelectors = idSelectors;
+            ClassSelectors = classSelectors;
+            TypeSelectors = typeSelectors;
+        }
+
+        public static StyleSpecificity operator +(StyleSpecificity a, StyleSpecificity b)
+        {
+            return new StyleSpecificity(
+                a.IdSelectors + b.IdSelectors,
+                a.ClassSelectors + b.ClassSelectors,
+                a.TypeSelectors + b.TypeSelectors);
+        }
+
+        public int CompareTo(StyleSpecificity other)
+        {
+            var idSelectorsComparison = IdSelectors.CompareTo(other.IdSelectors);
+            if (idSelectorsComparison != 0)
+            {
+                return idSelectorsComparison;
+            }
+
+            var classSelectorsComparison = ClassSelectors.CompareTo(other.ClassSelectors);
+            if (classSelectorsComparison != 0)
+            {
+                return classSelectorsComparison;
+            }
+
+            return TypeSelectors.CompareTo(other.TypeSelectors);
+        }
+
+        public int CompareTo(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return 1;
+            return obj is StyleSpecificity other
+                ? CompareTo(other)
+                : throw new ArgumentException($"Object must be of type {nameof(StyleSpecificity)}");
+        }
+
+        public override string ToString()
+        {
+            return $"({IdSelectors}-{ClassSelectors}-{TypeSelectors})";
+        }
     }
 
     /// <summary>
@@ -50,6 +107,7 @@ namespace SS14.Client.UserInterface
     public abstract class Selector
     {
         public abstract bool Matches(Control control);
+        public abstract StyleSpecificity CalculateSpecificity();
     }
 
     public sealed class SelectorElement : Selector
@@ -57,16 +115,19 @@ namespace SS14.Client.UserInterface
         public SelectorElement(
             string elementType,
             IReadOnlyCollection<string> elementClasses,
-            string elementId)
+            string elementId,
+            string pseudoClass)
         {
             ElementType = elementType;
             ElementClasses = elementClasses;
             ElementId = elementId;
+            PseudoClass = pseudoClass;
         }
 
         public string ElementType { get; }
         public IReadOnlyCollection<string> ElementClasses { get; }
         public string ElementId { get; }
+        public string PseudoClass { get; }
 
         public override bool Matches(Control control)
         {
@@ -93,9 +154,19 @@ namespace SS14.Client.UserInterface
 
             return true;
         }
+
+        public override StyleSpecificity CalculateSpecificity()
+        {
+            var countId = ElementId == null ? 0 : 1;
+            var countClasses = (ElementClasses?.Count ?? 0) + (PseudoClass == null ? 0 : 1);
+            var countTypes = ElementType == null ? 0 : 1;
+            return new StyleSpecificity(countId, countClasses, countTypes);
+        }
     }
 
-    public sealed class SelectorDescendant : Selector
+    // Temporarily hidden due to performance concerns.
+    // Like seriously this thing is O(n!)
+    internal sealed class SelectorDescendant : Selector
     {
         public SelectorDescendant([NotNull] Selector ascendant, [NotNull] Selector descendant)
         {
@@ -128,8 +199,14 @@ namespace SS14.Client.UserInterface
 
             return found;
         }
+
+        public override StyleSpecificity CalculateSpecificity()
+        {
+            return Ascendant.CalculateSpecificity() + Descendant.CalculateSpecificity();
+        }
     }
 
+    // Temporarily hidden due to performance concerns.
     public sealed class SelectorChild : Selector
     {
         public SelectorChild(Selector parent, Selector child)
@@ -149,6 +226,11 @@ namespace SS14.Client.UserInterface
             }
 
             return Parent.Matches(control.Parent) && Child.Matches(control);
+        }
+
+        public override StyleSpecificity CalculateSpecificity()
+        {
+            return Parent.CalculateSpecificity() + Child.CalculateSpecificity();
         }
     }
 }

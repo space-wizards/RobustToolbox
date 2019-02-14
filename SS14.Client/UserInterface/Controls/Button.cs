@@ -134,7 +134,7 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
-            var uiTheme = UserInterfaceManager.Theme;
+            var uiTheme = UserInterfaceManager.ThemeDefaults;
             StyleBox style;
             switch (DrawMode)
             {
@@ -197,7 +197,7 @@ namespace SS14.Client.UserInterface.Controls
                 return base.CalculateMinimumSize();
             }
 
-            var uiTheme = UserInterfaceManager.Theme;
+            var uiTheme = UserInterfaceManager.ThemeDefaults;
             var style = uiTheme.ButtonStyleNormal;
             var font = uiTheme.DefaultFont;
 
@@ -221,7 +221,7 @@ namespace SS14.Client.UserInterface.Controls
                 return 0;
             }
 
-            var uiTheme = UserInterfaceManager.Theme;
+            var uiTheme = UserInterfaceManager.ThemeDefaults;
             var font = uiTheme.DefaultFont;
 
             var textWidth = 0;

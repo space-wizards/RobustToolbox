@@ -13,7 +13,8 @@ namespace SS14.Client.Interfaces.UserInterface
 {
     public interface IUserInterfaceManager
     {
-        UITheme Theme { get; }
+        UITheme ThemeDefaults { get; }
+        Stylesheet Stylesheet { get; set; }
 
         Control Focused { get; }
 

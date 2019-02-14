@@ -7,6 +7,9 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface
 {
+    /// <summary>
+    ///     Fallback theme system for GUI.
+    /// </summary>
     public abstract class UITheme
     {
         public abstract Font DefaultFont { get; }

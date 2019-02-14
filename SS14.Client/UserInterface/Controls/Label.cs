@@ -13,6 +13,9 @@ namespace SS14.Client.UserInterface.Controls
     [ControlWrap(typeof(Godot.Label))]
     public class Label : Control
     {
+        public const string StylePropertyFontColor = "font-color";
+        public const string StylePropertyFont = "font";
+
         private Vector2i? _textDimensionCache;
 
         public Label(string name) : base(name)
@@ -105,12 +108,48 @@ namespace SS14.Client.UserInterface.Controls
             set => SetFontOverride("font", _fontOverride = value);
         }
 
+        private Font ActualFont
+        {
+            get
+            {
+                if (_fontOverride != null)
+                {
+                    return _fontOverride;
+                }
+
+                if (TryGetStyleProperty<Font>(StylePropertyFont, out var font))
+                {
+                    return font;
+                }
+
+                return UserInterfaceManager.ThemeDefaults.LabelFont;
+            }
+        }
+
         private Color? _fontColorShadowOverride;
 
         public Color? FontColorShadowOverride
         {
             get => _fontColorShadowOverride ?? GetColorOverride("font_color_shadow");
             set => SetColorOverride("font_color_shadow", _fontColorShadowOverride = value);
+        }
+
+        private Color ActualFontColor
+        {
+            get
+            {
+                if (_fontColorOverride.HasValue)
+                {
+                    return _fontColorOverride.Value;
+                }
+
+                if (TryGetStyleProperty<Color>(StylePropertyFontColor, out var color))
+                {
+                    return color;
+                }
+
+                return Color.White;
+            }
         }
 
         private Color? _fontColorOverride;
@@ -195,8 +234,9 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             var newlines = 0;
-            var font = _fontOverride ?? UserInterfaceManager.Theme.LabelFont;
+            var font = ActualFont;
             var baseLine = new Vector2(hOffset, font.Ascent + vOffset);
+            var actualFontColor = ActualFontColor;
             foreach (var chr in _text)
             {
                 if (chr == '\n')
@@ -205,7 +245,7 @@ namespace SS14.Client.UserInterface.Controls
                     baseLine = new Vector2(hOffset, font.Ascent + font.Height * newlines);
                 }
 
-                var advance = font.DrawChar(handle, chr, baseLine, FontColorOverride ?? Color.White);
+                var advance = font.DrawChar(handle, chr, baseLine, actualFontColor);
                 baseLine += new Vector2(advance, 0);
             }
         }
@@ -250,7 +290,7 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
-            var font = _fontOverride ?? UserInterfaceManager.Theme.LabelFont;
+            var font = ActualFont;
             var height = font.Height;
             var maxLineSize = 0;
             var currentLineSize = 0;

@@ -21,7 +21,7 @@ namespace SS14.Client.ResourceManagement
         {
             if (!cache.ContentFileExists(path))
             {
-                throw new FileNotFoundException("Content file does not exist for texture");
+                throw new FileNotFoundException("Content file does not exist for font");
             }
 
             switch (GameController.Mode)

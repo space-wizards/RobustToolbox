@@ -38,7 +38,7 @@ namespace SS14.Client.UserInterface.Controls
 
             if (!GameController.OnGodot)
             {
-                var panel = _panelOverride ?? UserInterfaceManager.Theme.PanelPanel;
+                var panel = _panelOverride ?? UserInterfaceManager.ThemeDefaults.PanelPanel;
                 panel.Draw(handle, UIBox2.FromDimensions(Vector2.Zero, Size));
             }
         }

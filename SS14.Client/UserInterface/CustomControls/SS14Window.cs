@@ -10,6 +10,8 @@ namespace SS14.Client.UserInterface.CustomControls
     [ControlWrap("res://Engine/Scenes/SS14Window/SS14Window.tscn")]
     public class SS14Window : Panel
     {
+        public const string StyleClassWindowTitle = "windowTitle";
+
         [Dependency] private readonly IDisplayManager _displayManager;
 
         public SS14Window() : base()
@@ -87,6 +89,8 @@ namespace SS14.Client.UserInterface.CustomControls
             CloseButton.OnPressed += CloseButtonPressed;
 
             Contents = GetChild("Contents");
+
+            TitleLabel.AddStyleClass(StyleClassWindowTitle);
         }
 
         protected override void Dispose(bool disposing)

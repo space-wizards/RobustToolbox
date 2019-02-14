@@ -466,31 +466,6 @@ namespace SS14.Client.UserInterface
             }
         }
 
-        private readonly HashSet<string> _styleClasses = new HashSet<string>();
-        public IReadOnlyCollection<string> StyleClasses => _styleClasses;
-
-        private string _styleIdentifier;
-        public string StyleIdentifier
-        {
-            get => _styleIdentifier;
-            set => _styleIdentifier = value;
-        }
-
-        public bool HasStyleClass(string className)
-        {
-            return _styleClasses.Contains(className);
-        }
-
-        public void AddStyleClass(string className)
-        {
-            _styleClasses.Add(className);
-        }
-
-        public void RemoveStyleClass(string className)
-        {
-            _styleClasses.Remove(className);
-        }
-
         public Color Modulate
         {
             get => SceneControl.Modulate.Convert();
@@ -586,6 +561,7 @@ namespace SS14.Client.UserInterface
             Name = GetType().Name;
             Initialize();
             _applyPropertyMap();
+            Restyle();
         }
 
         /// <param name="name">The name the component will have.</param>
@@ -610,6 +586,7 @@ namespace SS14.Client.UserInterface
             Name = name;
             Initialize();
             _applyPropertyMap();
+            Restyle();
         }
 
 
@@ -625,6 +602,7 @@ namespace SS14.Client.UserInterface
             SetupSignalHooks();
             //Logger.Debug($"Wrapping control {Name} ({GetType()} -> {control.GetType()})");
             Initialize();
+            Restyle();
         }
 
         /// <summary>
@@ -1184,6 +1162,7 @@ namespace SS14.Client.UserInterface
         protected virtual void Parented(Control newParent)
         {
             MinimumSizeChanged();
+            Restyle();
         }
 
         /// <summary>
@@ -1230,6 +1209,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         protected virtual void Deparented()
         {
+            Restyle();
         }
 
         /// <summary>

@@ -11,6 +11,9 @@ namespace SS14.Client.UserInterface.CustomControls
     public class SS14Window : Panel
     {
         public const string StyleClassWindowTitle = "windowTitle";
+        public const string StyleClassWindowPanel = "windowPanel";
+        public const string StyleClassWindowHeader = "windowHeader";
+        public const string StyleClassWindowCloseButton = "windowCloseButton";
 
         [Dependency] private readonly IDisplayManager _displayManager;
 
@@ -84,13 +87,22 @@ namespace SS14.Client.UserInterface.CustomControls
 
             IoCManager.InjectDependencies(this);
 
-            var header = GetChild("Header");
+            var header = GetChild<Panel>("Header");
             CloseButton = header.GetChild<TextureButton>("CloseButton");
             CloseButton.OnPressed += CloseButtonPressed;
 
             Contents = GetChild("Contents");
 
             TitleLabel.AddStyleClass(StyleClassWindowTitle);
+            AddStyleClass(StyleClassWindowPanel);
+            header.AddStyleClass(StyleClassWindowHeader);
+            // TODO: Remove this check by making UI in Godot also use CSS.
+            if (!GameController.OnGodot)
+            {
+                header.PanelOverride = null;
+                CloseButton.TextureNormal = null;
+                CloseButton.AddStyleClass(StyleClassWindowCloseButton);
+            }
         }
 
         protected override void Dispose(bool disposing)

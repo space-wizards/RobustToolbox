@@ -7,6 +7,8 @@ namespace SS14.Client.UserInterface.Controls
     [ControlWrap(typeof(Godot.Panel))]
     public class Panel : Control
     {
+        public const string StylePropertyPanel = "panel";
+
         public Panel(string name) : base(name)
         {
         }
@@ -32,13 +34,31 @@ namespace SS14.Client.UserInterface.Controls
             set => SetStyleBoxOverride("panel", _panelOverride = value);
         }
 
+        private StyleBox ActualPanel
+        {
+            get
+            {
+                if (_panelOverride != null)
+                {
+                    return _panelOverride;
+                }
+
+                if (TryGetStyleProperty(StylePropertyPanel, out StyleBox panel))
+                {
+                    return panel;
+                }
+
+                return UserInterfaceManager.ThemeDefaults.PanelPanel;
+            }
+        }
+
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
 
             if (!GameController.OnGodot)
             {
-                var panel = _panelOverride ?? UserInterfaceManager.ThemeDefaults.PanelPanel;
+                var panel = ActualPanel;
                 panel.Draw(handle, UIBox2.FromDimensions(Vector2.Zero, Size));
             }
         }
@@ -51,6 +71,16 @@ namespace SS14.Client.UserInterface.Controls
             {
                 PanelOverride = GetGodotResource<StyleBox>(context, value);
             }
+        }
+
+        protected override Vector2 CalculateMinimumSize()
+        {
+            if (GameController.OnGodot)
+            {
+                return Vector2.Zero;
+            }
+
+            return ActualPanel.MinimumSize;
         }
     }
 }

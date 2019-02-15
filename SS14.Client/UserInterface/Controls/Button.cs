@@ -1,22 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using SS14.Client.Graphics;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
-using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.Controls
 {
     [ControlWrap(typeof(Godot.Button))]
     public class Button : BaseButton
     {
+        public const string StylePropertyStyleBox = "stylebox";
+        public const string StylePseudoClassNormal = "normal";
+        public const string StylePseudoClassHover = "hover";
+        public const string StylePseudoClassDisabled = "disabled";
+        public const string StylePseudoClassPressed = "pressed";
         private int? _textWidthCache;
 
-        public Button() : base()
+        public Button()
         {
         }
 
@@ -86,6 +86,32 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
+        private StyleBox ActualStyleBox
+        {
+            get
+            {
+                if (TryGetStyleProperty(StylePropertyStyleBox, out StyleBox box))
+                {
+                    return box;
+                }
+
+                return UserInterfaceManager.ThemeDefaults.ButtonStyle;
+            }
+        }
+
+        public Font ActualFont
+        {
+            get
+            {
+                if (TryGetStyleProperty("font", out Font font))
+                {
+                    return font;
+                }
+
+                return UserInterfaceManager.ThemeDefaults.DefaultFont;
+            }
+        }
+
         private Color? _fontColorOverride;
 
         public Color? FontColorOverride
@@ -135,25 +161,8 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             var uiTheme = UserInterfaceManager.ThemeDefaults;
-            StyleBox style;
-            switch (DrawMode)
-            {
-                case DrawModeEnum.Normal:
-                    style = uiTheme.ButtonStyleNormal;
-                    break;
-                case DrawModeEnum.Pressed:
-                    style = uiTheme.ButtonStylePressed;
-                    break;
-                case DrawModeEnum.Disabled:
-                    style = uiTheme.ButtonStyleDisabled;
-                    break;
-                case DrawModeEnum.Hover:
-                    style = uiTheme.ButtonStyleHovered;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            var font = uiTheme.DefaultFont;
+            var style = ActualStyleBox;
+            var font = ActualFont;
             var drawBox = UIBox2.FromDimensions(Vector2.Zero, Size);
             style.Draw(handle, drawBox);
 
@@ -181,7 +190,8 @@ namespace SS14.Client.UserInterface.Controls
                     throw new ArgumentOutOfRangeException();
             }
 
-            var baseLine = new Vector2i(drawOffset, (int)(contentBox.Height + font.Ascent)/2) + contentBox.TopLeft;
+            var offsetY = (int) (contentBox.Height - font.Height) / 2;
+            var baseLine = new Vector2i(drawOffset, offsetY+font.Ascent) + contentBox.TopLeft;
 
             foreach (var chr in _text)
             {
@@ -198,14 +208,42 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             var uiTheme = UserInterfaceManager.ThemeDefaults;
-            var style = uiTheme.ButtonStyleNormal;
-            var font = uiTheme.DefaultFont;
+            var style = ActualStyleBox;
+            var font = ActualFont;
 
             var fontHeight = font.Height;
 
             var width = _ensureWidthCache();
 
             return new Vector2(width, fontHeight) + style.MinimumSize;
+        }
+
+        protected override void Initialize()
+        {
+            base.Initialize();
+
+            DrawModeChanged();
+        }
+
+        protected override void DrawModeChanged()
+        {
+            switch (DrawMode)
+            {
+                case DrawModeEnum.Normal:
+                    StylePseudoClass = StylePseudoClassNormal;
+                    break;
+                case DrawModeEnum.Pressed:
+                    StylePseudoClass = StylePseudoClassPressed;
+                    break;
+                case DrawModeEnum.Hover:
+                    StylePseudoClass = StylePseudoClassHover;
+                    break;
+                case DrawModeEnum.Disabled:
+                    StylePseudoClass = StylePseudoClassDisabled;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         private int _ensureWidthCache()

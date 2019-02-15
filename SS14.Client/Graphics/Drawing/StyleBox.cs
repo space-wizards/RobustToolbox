@@ -294,6 +294,75 @@ namespace SS14.Client.Graphics.Drawing
             Modulate = copy.Modulate;
         }
 
+        private float _expandMarginLeft;
+        private float _expandMarginRight;
+        private float _expandMarginTop;
+        private float _expandMarginBottom;
+
+        public float ExpandMarginLeft
+        {
+            get => GameController.OnGodot ? gdStyleBox.ExpandMarginLeft : _expandMarginLeft;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    gdStyleBox.ExpandMarginLeft = value;
+                }
+                else
+                {
+                    _expandMarginLeft = value;
+                }
+            }
+        }
+
+        public float ExpandMarginTop
+        {
+            get => GameController.OnGodot ? gdStyleBox.ExpandMarginTop : _expandMarginTop;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    gdStyleBox.ExpandMarginTop = value;
+                }
+                else
+                {
+                    _expandMarginTop = value;
+                }
+            }
+        }
+
+        public float ExpandMarginBottom
+        {
+            get => GameController.OnGodot ? gdStyleBox.ExpandMarginBottom : _expandMarginBottom;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    gdStyleBox.ExpandMarginBottom = value;
+                }
+                else
+                {
+                    _expandMarginBottom = value;
+                }
+            }
+        }
+
+        public float ExpandMarginRight
+        {
+            get => GameController.OnGodot ? gdStyleBox.ExpandMarginRight : _expandMarginRight;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    gdStyleBox.ExpandMarginRight = value;
+                }
+                else
+                {
+                    _expandMarginRight = value;
+                }
+            }
+        }
+
         private float _patchMarginLeft;
 
         public float PatchMarginLeft
@@ -448,6 +517,12 @@ namespace SS14.Client.Graphics.Drawing
 
         protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box)
         {
+            box = new UIBox2(
+                box.Left - ExpandMarginLeft,
+                box.Top - ExpandMarginTop,
+                box.Right + ExpandMarginRight,
+                box.Bottom + ExpandMarginBottom);
+
             if (PatchMarginLeft > 0)
             {
                 if (PatchMarginTop > 0)

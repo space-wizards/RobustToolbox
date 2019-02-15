@@ -14,6 +14,12 @@ namespace SS14.Client.UserInterface.Controls
     [ControlWrap(typeof(Godot.TextureButton))]
     public class TextureButton : BaseButton
     {
+        public const string StylePropertyTexture = "texture";
+        public const string StylePseudoClassNormal = "normal";
+        public const string StylePseudoClassHover = "hover";
+        public const string StylePseudoClassDisabled = "disabled";
+        public const string StylePseudoClassPressed = "pressed";
+
         private Texture _textureNormal;
         private Texture _textureHover;
 
@@ -61,6 +67,34 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
+        protected override void Initialize()
+        {
+            base.Initialize();
+
+            DrawModeChanged();
+        }
+
+        protected override void DrawModeChanged()
+        {
+            switch (DrawMode)
+            {
+                case DrawModeEnum.Normal:
+                    StylePseudoClass = StylePseudoClassNormal;
+                    break;
+                case DrawModeEnum.Pressed:
+                    StylePseudoClass = StylePseudoClassPressed;
+                    break;
+                case DrawModeEnum.Hover:
+                    StylePseudoClass = StylePseudoClassHover;
+                    break;
+                case DrawModeEnum.Disabled:
+                    StylePseudoClass = StylePseudoClassDisabled;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.TextureButton();
@@ -82,7 +116,11 @@ namespace SS14.Client.UserInterface.Controls
 
             if (texture == null)
             {
-                return;
+                TryGetStyleProperty(StylePropertyTexture, out texture);
+                if (texture == null)
+                {
+                    return;
+                }
             }
 
             handle.DrawTextureRect(texture, new UIBox2(Vector2.Zero, Size), false);

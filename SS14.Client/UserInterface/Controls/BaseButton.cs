@@ -56,7 +56,13 @@ namespace SS14.Client.UserInterface.Controls
                 }
                 else
                 {
+                    var old = _disabled;
                     _disabled = value;
+
+                    if (old != value)
+                    {
+                        DrawModeChanged();
+                    }
                 }
             }
         }
@@ -157,6 +163,10 @@ namespace SS14.Client.UserInterface.Controls
         public event Action<ButtonEventArgs> OnPressed;
         public event Action<ButtonToggledEventArgs> OnToggled;
 
+        protected virtual void DrawModeChanged()
+        {
+        }
+
         protected internal override void MouseDown(GUIMouseButtonEventArgs args)
         {
             base.MouseDown(args);
@@ -169,6 +179,7 @@ namespace SS14.Client.UserInterface.Controls
             var buttonEventArgs = new ButtonEventArgs(this);
             OnButtonDown?.Invoke(buttonEventArgs);
 
+            var drawMode = DrawMode;
             if (Mode == ActionMode.Release)
             {
                 _attemptingPress = true;
@@ -187,6 +198,11 @@ namespace SS14.Client.UserInterface.Controls
                     OnPressed?.Invoke(buttonEventArgs);
                 }
             }
+
+            if (drawMode != DrawMode)
+            {
+                DrawModeChanged();
+            }
         }
 
         protected internal override void MouseUp(GUIMouseButtonEventArgs args)
@@ -201,12 +217,14 @@ namespace SS14.Client.UserInterface.Controls
             var buttonEventArgs = new ButtonEventArgs(this);
             OnButtonUp?.Invoke(buttonEventArgs);
 
+            var drawMode = DrawMode;
             if (Mode == ActionMode.Release && _attemptingPress)
             {
                 if (ToggleMode)
                 {
                     Pressed = !Pressed;
                 }
+
                 OnPressed?.Invoke(buttonEventArgs);
                 if (ToggleMode)
                 {
@@ -215,6 +233,10 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             _attemptingPress = false;
+            if (drawMode != DrawMode)
+            {
+                DrawModeChanged();
+            }
         }
 
         protected internal override void MouseEntered()
@@ -226,7 +248,12 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
+            var drawMode = DrawMode;
             _beingHovered = true;
+            if (drawMode != DrawMode)
+            {
+                DrawModeChanged();
+            }
         }
 
         protected internal override void MouseExited()
@@ -238,7 +265,12 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
+            var drawMode = DrawMode;
             _beingHovered = false;
+            if (drawMode != DrawMode)
+            {
+                DrawModeChanged();
+            }
         }
 
         public enum DrawModeEnum

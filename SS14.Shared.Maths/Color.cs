@@ -841,6 +841,17 @@ namespace SS14.Shared.Maths
             return new Color(ret.X, ret.Y, ret.Z, Math.Min(1, dstColor.A + dstColor.A * srcColor.A));
         }
 
+        /// <summary>
+        ///     Component wise multiplication of two colors.
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static Color operator *(Color a, Color b)
+        {
+            return new Color(a.R * b.R, a.G * b.G, a.B * b.B, a.A * b.A);
+        }
+
         public string ToHex()
         {
             return $"#{RByte:X2}{GByte:X2}{BByte:X2}{AByte:X2}";

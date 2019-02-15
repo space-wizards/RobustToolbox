@@ -620,6 +620,23 @@ namespace SS14.Client.Graphics.Drawing
                         Texture.Height - PatchMarginBottom), Modulate);
             }
         }
+
+        protected override float GetDefaultContentMargin(Margin margin)
+        {
+            switch (margin)
+            {
+                case Margin.Top:
+                    return PatchMarginTop;
+                case Margin.Bottom:
+                    return PatchMarginBottom;
+                case Margin.Right:
+                    return PatchMarginRight;
+                case Margin.Left:
+                    return PatchMarginLeft;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(margin), margin, null);
+            }
+        }
     }
 
     public class StyleBoxFlat : StyleBox

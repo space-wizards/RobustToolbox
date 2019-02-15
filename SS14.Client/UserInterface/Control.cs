@@ -466,10 +466,30 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        public Color? ModulateSelfOverride { get; set; }
+
         public Color Modulate
         {
             get => SceneControl.Modulate.Convert();
             set => SceneControl.Modulate = value.Convert();
+        }
+
+        public Color ActualModulateSelf
+        {
+            get
+            {
+                if (ModulateSelfOverride.HasValue)
+                {
+                    return ModulateSelfOverride.Value;
+                }
+
+                if (TryGetStyleProperty(StylePropertyModulateSelf, out Color modulate))
+                {
+                    return modulate;
+                }
+
+                return Color.White;
+            }
         }
 
         /// <summary>

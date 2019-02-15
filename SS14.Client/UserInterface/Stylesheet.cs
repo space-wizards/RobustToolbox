@@ -152,6 +152,11 @@ namespace SS14.Client.UserInterface
                 }
             }
 
+            if (PseudoClass != null && PseudoClass != control.StylePseudoClass)
+            {
+                return false;
+            }
+
             return true;
         }
 

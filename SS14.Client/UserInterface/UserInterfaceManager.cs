@@ -217,10 +217,10 @@ namespace SS14.Client.UserInterface
         {
             var drawHandle = renderHandle.CreateHandleScreen();
 
-            _render(drawHandle, RootControl, Vector2.Zero);
+            _render(drawHandle, RootControl, Vector2.Zero, Color.White);
         }
 
-        private static void _render(DrawingHandleScreen handle, Control control, Vector2 position)
+        private static void _render(DrawingHandleScreen handle, Control control, Vector2 position, Color modulate)
         {
             if (!control.Visible)
             {
@@ -228,10 +228,11 @@ namespace SS14.Client.UserInterface
             }
 
             handle.SetTransform(position, Angle.Zero, Vector2.One);
+            handle.Modulate = modulate * control.ActualModulateSelf;
             control.Draw(handle);
             foreach (var child in control.Children)
             {
-                _render(handle, child, position + child.Position.Rounded());
+                _render(handle, child, position + child.Position.Rounded(), modulate);
             }
         }
 

@@ -5,6 +5,8 @@ namespace SS14.Client.UserInterface
     // ReSharper disable once RequiredBaseTypesIsNotInherited
     public partial class Control
     {
+        public const string StylePropertyModulateSelf = "modulate-self";
+
         private readonly Dictionary<string, object> _styleProperties = new Dictionary<string, object>();
         private readonly HashSet<string> _styleClasses = new HashSet<string>();
         public IReadOnlyCollection<string> StyleClasses => _styleClasses;
@@ -16,6 +18,17 @@ namespace SS14.Client.UserInterface
             set
             {
                 _styleIdentifier = value;
+                Restyle();
+            }
+        }
+
+        private string _stylePseudoClass;
+        public string StylePseudoClass
+        {
+            get => _stylePseudoClass;
+            protected set
+            {
+                _stylePseudoClass = value;
                 Restyle();
             }
         }

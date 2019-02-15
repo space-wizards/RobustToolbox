@@ -20,6 +20,7 @@ namespace SS14.Client.Graphics.Drawing
         private protected IRenderHandle _renderHandle;
         private protected readonly int _handleId;
         public bool Disposed { get; private set; }
+        public Color Modulate { get; set; } = Color.White;
 
         internal DrawingHandle(Godot.RID item)
         {
@@ -120,7 +121,7 @@ namespace SS14.Client.Graphics.Drawing
         public override void DrawCircle(Vector2 position, float radius, Color color)
         {
             CheckDisposed();
-            VS.CanvasItemAddCircle(Item, ToPixelCoords(position), radius * PPM, color.Convert());
+            VS.CanvasItemAddCircle(Item, ToPixelCoords(position), radius * PPM, (Modulate * color).Convert());
         }
 
         public override void DrawLine(Vector2 from, Vector2 to, Color color, float width = 1, bool antiAliased = false)
@@ -131,7 +132,7 @@ namespace SS14.Client.Graphics.Drawing
             }
 
             CheckDisposed();
-            VS.CanvasItemAddLine(Item, ToPixelCoords(from), ToPixelCoords(to), color.Convert(), width, antiAliased);
+            VS.CanvasItemAddLine(Item, ToPixelCoords(from), ToPixelCoords(to), (Modulate * color).Convert(), width, antiAliased);
         }
 
         public override void DrawTexture(Texture texture, Vector2 position, Color? modulate = null,
@@ -139,14 +140,15 @@ namespace SS14.Client.Graphics.Drawing
         {
             CheckDisposed();
 
+            var actualModulate = (modulate ?? Color.White) * Modulate;
             if (_renderHandle != null)
             {
                 _renderHandle.DrawTextureRect(texture, position,
-                    position + (texture.Size / (float) EyeManager.PIXELSPERMETER), modulate, null, _handleId);
+                    position + (texture.Size / (float) EyeManager.PIXELSPERMETER), actualModulate, null, _handleId);
             }
             else if (Item != null)
             {
-                texture.GodotTexture.Draw(Item, ToPixelCoords(position), modulate?.Convert(), false, normalMap);
+                texture.GodotTexture.Draw(Item, ToPixelCoords(position), actualModulate.Convert(), false, normalMap);
             }
         }
 
@@ -154,14 +156,15 @@ namespace SS14.Client.Graphics.Drawing
             bool transpose = false, Texture normalMap = null)
         {
             CheckDisposed();
+            var actualModulate = (modulate ?? Color.White) * Modulate;
             if (_renderHandle != null)
             {
-                _renderHandle.DrawTextureRect(texture, rect.BottomLeft, rect.TopRight, modulate, null,
+                _renderHandle.DrawTextureRect(texture, rect.BottomLeft, rect.TopRight, actualModulate, null,
                     _handleId);
             }
             else if (Item != null)
             {
-                texture.GodotTexture.DrawRect(Item, ToPixelCoords(rect), tile, modulate?.Convert(), transpose,
+                texture.GodotTexture.DrawRect(Item, ToPixelCoords(rect), tile, actualModulate.Convert(), transpose,
                     normalMap);
             }
         }
@@ -169,6 +172,7 @@ namespace SS14.Client.Graphics.Drawing
         public void DrawRect(Box2 rect, Color color, bool filled = true)
         {
             CheckDisposed();
+            color *= Modulate;
             if (filled)
             {
                 if (_renderHandle != null)
@@ -223,7 +227,7 @@ namespace SS14.Client.Graphics.Drawing
             }
 
             CheckDisposed();
-            VS.CanvasItemAddCircle(Item, position.Convert(), radius, color.Convert());
+            VS.CanvasItemAddCircle(Item, position.Convert(), radius, (color * Modulate).Convert());
         }
 
         public void DrawStyleBox(StyleBox styleBox, UIBox2 box)
@@ -252,12 +256,13 @@ namespace SS14.Client.Graphics.Drawing
             }
 
             CheckDisposed();
-            VS.CanvasItemAddLine(Item, from.Convert(), to.Convert(), color.Convert(), width, antiAliased);
+            VS.CanvasItemAddLine(Item, from.Convert(), to.Convert(), (Modulate * color).Convert(), width, antiAliased);
         }
 
         public void DrawRect(UIBox2 rect, Color color, bool filled = true)
         {
             CheckDisposed();
+            color *= Modulate;
             if (filled)
             {
                 if (_renderHandle != null)
@@ -282,13 +287,16 @@ namespace SS14.Client.Graphics.Drawing
             Texture normalMap = null)
         {
             CheckDisposed();
+
+            var actualModulate = (modulate ?? Color.White) * Modulate;
+
             if (_renderHandle != null)
             {
-                _renderHandle.DrawTextureRect(texture, position, position + texture.Size, modulate, null, _handleId);
+                _renderHandle.DrawTextureRect(texture, position, position + texture.Size, actualModulate, null, _handleId);
             }
             else if (Item != null)
             {
-                texture.GodotTexture.Draw(Item, position.Convert(), modulate?.Convert(), false, normalMap);
+                texture.GodotTexture.Draw(Item, position.Convert(), actualModulate.Convert(), false, normalMap);
             }
         }
 
@@ -296,26 +304,28 @@ namespace SS14.Client.Graphics.Drawing
             bool transpose = false, Texture normalMap = null)
         {
             CheckDisposed();
+            var actualModulate = (modulate ?? Color.White) * Modulate;
             if (_renderHandle != null)
             {
-                _renderHandle.DrawTextureRect(texture, rect.TopLeft, rect.BottomRight, modulate, null, _handleId);
+                _renderHandle.DrawTextureRect(texture, rect.TopLeft, rect.BottomRight, actualModulate, null, _handleId);
             }
             else if (Item != null)
             {
-                texture.GodotTexture.DrawRect(Item, rect.Convert(), tile, modulate?.Convert(), transpose, normalMap);
+                texture.GodotTexture.DrawRect(Item, rect.Convert(), tile, actualModulate.Convert(), transpose, normalMap);
             }
         }
 
         public void DrawTextureRectRegion(Texture texture, UIBox2 rect, UIBox2 subRegion, Color? modulate = null)
         {
             CheckDisposed();
+            var actualModulate = (modulate ?? Color.White) * Modulate;
             if (_renderHandle != null)
             {
-                _renderHandle.DrawTextureRect(texture, rect.TopLeft, rect.BottomRight, modulate, subRegion, _handleId);
+                _renderHandle.DrawTextureRect(texture, rect.TopLeft, rect.BottomRight, actualModulate, subRegion, _handleId);
             }
             else if (Item != null)
             {
-                texture.GodotTexture.DrawRect(Item, rect.Convert(), false, modulate?.Convert());
+                texture.GodotTexture.DrawRect(Item, rect.Convert(), false, actualModulate.Convert());
             }
         }
     }

@@ -6,9 +6,7 @@ using SS14.Client.GameObjects;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Graphics.Overlays;
-using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
-using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 
@@ -556,7 +554,7 @@ namespace SS14.Client.Graphics.Clyde
                 list.Commands.Add(command);
             }
 
-            public void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color? modulate, UIBox2? subRegion,
+            public void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion,
                 int handleId)
             {
                 _assertNotDisposed();
@@ -589,7 +587,7 @@ namespace SS14.Client.Graphics.Clyde
                 command.ArrayIndex = openGLTexture.ArrayIndex;
                 command.PositionA = a;
                 command.PositionB = b;
-                command.Modulate = modulate ?? Color.White;
+                command.Modulate = modulate;
                 command.SubRegion = subRegion;
                 list.Commands.Add(command);
             }
@@ -650,6 +648,6 @@ namespace SS14.Client.Graphics.Clyde
         DrawingHandleScreen CreateHandleScreen();
 
         void SetModelTransform(ref Matrix3 matrix, int handleId);
-        void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color? modulate, UIBox2? subRegion, int handleId);
+        void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion, int handleId);
     }
 }

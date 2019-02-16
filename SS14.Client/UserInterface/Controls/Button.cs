@@ -260,7 +260,7 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             var uiTheme = UserInterfaceManager.ThemeDefaults;
-            var font = uiTheme.DefaultFont;
+            var font = ActualFont;
 
             var textWidth = 0;
             foreach (var chr in _text)
@@ -276,6 +276,13 @@ namespace SS14.Client.UserInterface.Controls
 
             _textWidthCache = textWidth;
             return textWidth;
+        }
+
+        protected override void StylePropertiesChanged()
+        {
+            _textWidthCache = null;
+
+            base.StylePropertiesChanged();
         }
 
         private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)

@@ -12,6 +12,7 @@ namespace SS14.Client.UserInterface
         public IReadOnlyCollection<string> StyleClasses => _styleClasses;
 
         private string _styleIdentifier;
+
         public string StyleIdentifier
         {
             get => _styleIdentifier;
@@ -23,6 +24,7 @@ namespace SS14.Client.UserInterface
         }
 
         private string _stylePseudoClass;
+
         public string StylePseudoClass
         {
             get => _stylePseudoClass;
@@ -50,7 +52,7 @@ namespace SS14.Client.UserInterface
             Restyle();
         }
 
-        private void Restyle()
+        private void Restyle(bool doChildren = true)
         {
             _styleProperties.Clear();
 
@@ -102,6 +104,14 @@ namespace SS14.Client.UserInterface
             }
 
             StylePropertiesChanged();
+
+            if (doChildren)
+            {
+                foreach (var child in _orderedChildren)
+                {
+                    child.Restyle(false);
+                }
+            }
         }
 
         protected virtual void StylePropertiesChanged()

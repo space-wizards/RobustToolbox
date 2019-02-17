@@ -112,6 +112,19 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
+        public Color ActualFontColor
+        {
+            get
+            {
+                if (TryGetStyleProperty("font-color", out Color fontColor))
+                {
+                    return fontColor;
+                }
+
+                return _fontColorOverride ?? Color.White;
+            }
+        }
+
         private Color? _fontColorOverride;
 
         public Color? FontColorOverride
@@ -190,12 +203,13 @@ namespace SS14.Client.UserInterface.Controls
                     throw new ArgumentOutOfRangeException();
             }
 
+            var color = ActualFontColor;
             var offsetY = (int) (contentBox.Height - font.Height) / 2;
             var baseLine = new Vector2i(drawOffset, offsetY+font.Ascent) + contentBox.TopLeft;
 
             foreach (var chr in _text)
             {
-                var advance = (int)font.DrawChar(handle, chr, baseLine, Color.White);
+                var advance = (int)font.DrawChar(handle, chr, baseLine, color);
                 baseLine += new Vector2i(advance, 0);
             }
         }

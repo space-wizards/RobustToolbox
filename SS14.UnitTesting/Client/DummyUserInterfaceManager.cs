@@ -57,6 +57,11 @@ namespace SS14.UnitTesting.Client
             throw new System.NotImplementedException();
         }
 
+        public void InitializeTesting()
+        {
+            throw new System.NotImplementedException();
+        }
+
         public void Popup(string contents, string title = "Alert!")
         {
             throw new System.NotImplementedException();

@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using NUnit.Framework;
+using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.Utility;
@@ -33,6 +34,7 @@ namespace SS14.UnitTesting.Client.UserInterface
             var data = Encoding.UTF8.GetBytes(Data);
             var stream = new MemoryStream(data);
             cache.MountStreamAt(stream, new ResourcePath("/Scenes/Test/TestScene.tscn"));
+            IoCManager.Resolve<IUserInterfaceManagerInternal>().InitializeTesting();
         }
 
         [Test]

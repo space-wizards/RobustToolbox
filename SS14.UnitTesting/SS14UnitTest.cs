@@ -23,6 +23,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Reflection;
 using SS14.Client.ResourceManagement;
 using SS14.Client.State;
+using SS14.Client.UserInterface;
 using SS14.Client.ViewVariables;
 using SS14.Server;
 using SS14.Server.Chat;
@@ -204,8 +205,8 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IBaseClient, BaseClient>();
                     IoCManager.Register<IPlayerManager, SS14.Client.Player.PlayerManager>();
                     IoCManager.Register<IStateManager, StateManager>();
-                    IoCManager.Register<IUserInterfaceManager, DummyUserInterfaceManager>();
-                    IoCManager.Register<IUserInterfaceManagerInternal, DummyUserInterfaceManager>();
+                    IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
+                    IoCManager.Register<IUserInterfaceManagerInternal, UserInterfaceManager>();
                     IoCManager.Register<IGameControllerProxy, GameControllerProxyDummy>();
                     IoCManager.Register<IGameControllerProxyInternal, GameControllerProxyDummy>();
                     IoCManager.Register<IInputManager, InputManager>();

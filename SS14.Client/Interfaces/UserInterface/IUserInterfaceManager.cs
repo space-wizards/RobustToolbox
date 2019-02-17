@@ -46,6 +46,7 @@ namespace SS14.Client.Interfaces.UserInterface
         void DisposeAllComponents();
 
         void Initialize();
+        void InitializeTesting();
 
         void Update(ProcessFrameEventArgs args);
 

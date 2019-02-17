@@ -61,6 +61,21 @@ namespace SS14.Client.UserInterface
         {
             ThemeDefaults = new UIThemeDefault();
 
+            _initializeCommon();
+
+            DebugConsole = new DebugConsole();
+            RootControl.AddChild(DebugConsole);
+
+            _debugMonitors = new DebugMonitors();
+            RootControl.AddChild(_debugMonitors);
+
+            _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugMonitors,
+                InputCmdHandler.FromDelegate(enabled: session => { DebugMonitors.Visible = true; },
+                    disabled: session => { DebugMonitors.Visible = false; }));
+        }
+
+        private void _initializeCommon()
+        {
             if (GameController.OnGodot)
             {
                 CanvasLayer = new Godot.CanvasLayer
@@ -103,16 +118,13 @@ namespace SS14.Client.UserInterface
             PopupControl = new AcceptDialog("RootPopup");
             PopupControl.Resizable = true;
             RootControl.AddChild(PopupControl);
+        }
 
-            DebugConsole = new DebugConsole();
-            RootControl.AddChild(DebugConsole);
+        public void InitializeTesting()
+        {
+            ThemeDefaults = new UIThemeDummy();
 
-            _debugMonitors = new DebugMonitors();
-            RootControl.AddChild(_debugMonitors);
-
-            _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugMonitors,
-                InputCmdHandler.FromDelegate(enabled: session => { DebugMonitors.Visible = true; },
-                    disabled: session => { DebugMonitors.Visible = false; }));
+            _initializeCommon();
         }
 
         public void Dispose()

@@ -15,14 +15,14 @@ namespace SS14.UnitTesting.Client.UserInterface
         [Test]
         public void TestSelectors()
         {
-            var selectorElementLabel = new SelectorElement("Label", null, null, null);
+            var selectorElementLabel = new SelectorElement(typeof(Label), null, null, null);
 
             var label = new Label();
             var panel = new Panel {StyleIdentifier = "bar"};
             Assert.That(selectorElementLabel.Matches(label), Is.True);
             Assert.That(selectorElementLabel.Matches(panel), Is.False);
 
-            selectorElementLabel = new SelectorElement("Label", new []{"foo"}, null, null);
+            selectorElementLabel = new SelectorElement(typeof(Label), new []{"foo"}, null, null);
             Assert.That(selectorElementLabel.Matches(label), Is.False);
             Assert.That(selectorElementLabel.Matches(panel), Is.False);
 
@@ -48,15 +48,15 @@ namespace SS14.UnitTesting.Client.UserInterface
         {
             var sheet = new Stylesheet(new []
             {
-                new StyleRule(new SelectorElement("Label", null, "baz", null), new []
+                new StyleRule(new SelectorElement(typeof(Label), null, "baz", null), new []
                 {
                     new StyleProperty("foo", "honk"),
                 }),
-                new StyleRule(new SelectorElement("Label", null, null, null), new []
+                new StyleRule(new SelectorElement(typeof(Label), null, null, null), new []
                 {
                     new StyleProperty("foo", "heh"),
                 }),
-                new StyleRule(new SelectorElement("Label", null, null, null), new []
+                new StyleRule(new SelectorElement(typeof(Label), null, null, null), new []
                 {
                     new StyleProperty("foo", "bar"),
                 }),

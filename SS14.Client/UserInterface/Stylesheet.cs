@@ -113,18 +113,31 @@ namespace SS14.Client.UserInterface
     public sealed class SelectorElement : Selector
     {
         public SelectorElement(
-            string elementType,
+            Type elementType,
             IReadOnlyCollection<string> elementClasses,
             string elementId,
             string pseudoClass)
         {
+            if (elementType != null)
+            {
+                if (!typeof(Control).IsAssignableFrom(elementType))
+                {
+                    throw new ArgumentException("elementType must inherit Control.", nameof(elementType));
+                }
+
+                if (elementType == typeof(Control))
+                {
+                    throw new ArgumentException("elementType may not be Control itself.", nameof(elementType));
+                }
+            }
+
             ElementType = elementType;
             ElementClasses = elementClasses;
             ElementId = elementId;
             PseudoClass = pseudoClass;
         }
 
-        public string ElementType { get; }
+        public Type ElementType { get; }
         public IReadOnlyCollection<string> ElementClasses { get; }
         public string ElementId { get; }
         public string PseudoClass { get; }
@@ -136,7 +149,7 @@ namespace SS14.Client.UserInterface
                 return false;
             }
 
-            if (ElementType != null && control.GetType().Name != ElementType)
+            if (ElementType != null && !ElementType.IsInstanceOfType(control))
             {
                 return false;
             }
@@ -164,7 +177,17 @@ namespace SS14.Client.UserInterface
         {
             var countId = ElementId == null ? 0 : 1;
             var countClasses = (ElementClasses?.Count ?? 0) + (PseudoClass == null ? 0 : 1);
-            var countTypes = ElementType == null ? 0 : 1;
+            var countTypes = 0;
+            if (ElementType != null)
+            {
+                var type = ElementType;
+                while (type != typeof(Control))
+                {
+                    DebugTools.AssertNotNull(type);
+                    type = type.BaseType;
+                    countTypes += 1;
+                }
+            }
             return new StyleSpecificity(countId, countClasses, countTypes);
         }
     }

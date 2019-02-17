@@ -139,11 +139,11 @@ namespace SS14.Client.UserInterface
             }
 
             _mouseFocused = control;
-
             var guiArgs = new GUIMouseButtonEventArgs(args.Button, args.DoubleClick, control, Mouse.ButtonMask.None,
                 args.Position, args.Position - control.GlobalPosition, args.Alt, args.Control, args.Shift,
                 args.System);
-            control.MouseDown(guiArgs);
+
+            _doMouseGuiInput(control, guiArgs, (c, ev) => c.MouseDown(ev));
         }
 
         public void MouseUp(MouseButtonEventArgs args)
@@ -158,6 +158,7 @@ namespace SS14.Client.UserInterface
                 args.Position, args.Position - _mouseFocused.GlobalPosition, args.Alt, args.Control, args.Shift,
                 args.System);
 
+            _doMouseGuiInput(_mouseFocused, guiArgs, (c, ev) => c.MouseUp(ev));
             _mouseFocused.MouseUp(guiArgs);
             _mouseFocused = null;
         }
@@ -179,7 +180,8 @@ namespace SS14.Client.UserInterface
                     mouseMoveEventArgs.ButtonMask, mouseMoveEventArgs.Position,
                     mouseMoveEventArgs.Position - newHovered.GlobalPosition, mouseMoveEventArgs.Alt,
                     mouseMoveEventArgs.Control, mouseMoveEventArgs.Shift, mouseMoveEventArgs.System);
-                newHovered.MouseMove(guiArgs);
+
+                _doMouseGuiInput(_mouseFocused, guiArgs, (c, ev) => c.MouseMove(ev));
             }
         }
 
@@ -294,6 +296,26 @@ namespace SS14.Client.UserInterface
             }
 
             return null;
+        }
+
+        private void _doMouseGuiInput<T>(Control control, T guiEvent, Action<Control, T> action) where T : GUIMouseEventArgs
+        {
+            while (control != null)
+            {
+                if (control.MouseFilter != Control.MouseFilterMode.Ignore)
+                {
+                    action(control, guiEvent);
+
+                    if (guiEvent.Handled || control.MouseFilter == Control.MouseFilterMode.Stop)
+                    {
+                        break;
+                    }
+                }
+
+                guiEvent.RelativePosition -= control.Position;
+                control = control.Parent;
+                guiEvent.SourceControl = control;
+            }
         }
     }
 }

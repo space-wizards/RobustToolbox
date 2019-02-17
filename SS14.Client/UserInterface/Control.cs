@@ -374,7 +374,7 @@ namespace SS14.Client.UserInterface
             }
         }
 
-        private MouseFilterMode _mouseFilter;
+        private MouseFilterMode _mouseFilter = MouseFilterMode.Stop;
 
         public MouseFilterMode MouseFilter
         {
@@ -551,7 +551,9 @@ namespace SS14.Client.UserInterface
         }
 
         public Vector2 GlobalMousePosition =>
-            GameController.OnGodot ? SceneControl.GetGlobalMousePosition().Convert() : IoCManager.Resolve<IInputManager>().MouseScreenPosition;
+            GameController.OnGodot
+                ? SceneControl.GetGlobalMousePosition().Convert()
+                : IoCManager.Resolve<IInputManager>().MouseScreenPosition;
 
         private readonly Dictionary<string, (Control, int orderedIndex)> _children =
             new Dictionary<string, (Control, int)>();
@@ -573,9 +575,13 @@ namespace SS14.Client.UserInterface
                 SetupSceneControl();
             }
 
-            else if (ScenePath != null)
+            else
             {
-                _manualNodeSetup();
+                SetDefaults();
+                if (ScenePath != null)
+                {
+                    _manualNodeSetup();
+                }
             }
 
             Name = GetType().Name;
@@ -598,9 +604,13 @@ namespace SS14.Client.UserInterface
             {
                 SetupSceneControl();
             }
-            else if (ScenePath != null)
+            else
             {
-                _manualNodeSetup();
+                SetDefaults();
+                if (ScenePath != null)
+                {
+                    _manualNodeSetup();
+                }
             }
 
             Name = name;
@@ -630,6 +640,10 @@ namespace SS14.Client.UserInterface
         ///     Ranging from spawning children to prefetching them for later referencing.
         /// </summary>
         protected virtual void Initialize()
+        {
+        }
+
+        protected virtual void SetDefaults()
         {
         }
 

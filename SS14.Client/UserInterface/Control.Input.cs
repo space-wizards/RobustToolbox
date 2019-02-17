@@ -141,6 +141,8 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public Control SourceControl { get; }
 
+        public bool Handled { get; private set; }
+
         /// <summary>
         ///     Mark this event as "handled",
         ///     so it stops propagating to other controls or entities.
@@ -151,6 +153,8 @@ namespace SS14.Client.UserInterface
             {
                 SourceControl.SceneControl.AcceptEvent();
             }
+
+            Handled = true;
         }
 
         public GUIKeyEventArgs(Control sourceControl,
@@ -171,7 +175,7 @@ namespace SS14.Client.UserInterface
         /// <summary>
         ///     The control spawning this event.
         /// </summary>
-        public Control SourceControl { get; }
+        public Control SourceControl { get; internal set; }
 
         /// <summary>
         ///     <c>InputEventMouse.button_mask</c> in Godot.
@@ -187,7 +191,9 @@ namespace SS14.Client.UserInterface
         /// <summary>
         ///     Position of the mouse, relative to the current control.
         /// </summary>
-        public Vector2 RelativePosition { get; }
+        public Vector2 RelativePosition { get; internal set; }
+
+        public bool Handled { get; private set; }
 
         /// <summary>
         ///     Mark this event as "handled",
@@ -199,6 +205,8 @@ namespace SS14.Client.UserInterface
             {
                 SourceControl.SceneControl.AcceptEvent();
             }
+
+            Handled = true;
         }
 
         protected GUIMouseEventArgs(Control sourceControl,

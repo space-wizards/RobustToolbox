@@ -344,5 +344,11 @@ namespace SS14.Client.UserInterface.Controls
                     break;
             }
         }
+
+        protected override void SetDefaults()
+        {
+            base.SetDefaults();
+            MouseFilter = MouseFilterMode.Ignore;
+        }
     }
 }

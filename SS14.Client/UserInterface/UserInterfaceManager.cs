@@ -312,7 +312,7 @@ namespace SS14.Client.UserInterface
                     }
                 }
 
-                guiEvent.RelativePosition -= control.Position;
+                guiEvent.RelativePosition += control.Position;
                 control = control.Parent;
                 guiEvent.SourceControl = control;
             }

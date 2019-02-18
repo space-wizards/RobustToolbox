@@ -32,6 +32,8 @@ namespace SS14.Client.Input
         /// </summary>
         public bool System { get; }
 
+        public bool Handled { get; private set; }
+
         protected ModifierInputEventArgs(bool alt, bool control, bool shift, bool system)
         {
             Alt = alt;
@@ -45,13 +47,13 @@ namespace SS14.Client.Input
         /// </summary>
         public void Handle()
         {
-            if (!GameController.OnGodot)
+            if (GameController.OnGodot)
             {
-                return;
+                var tree = IoCManager.Resolve<ISceneTreeHolder>();
+                tree.SceneTree.SetInputAsHandled();
             }
 
-            var tree = IoCManager.Resolve<ISceneTreeHolder>();
-            tree.SceneTree.SetInputAsHandled();
+            Handled = true;
         }
     }
 

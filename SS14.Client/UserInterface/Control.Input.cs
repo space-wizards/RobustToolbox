@@ -141,22 +141,6 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public Control SourceControl { get; }
 
-        public bool Handled { get; private set; }
-
-        /// <summary>
-        ///     Mark this event as "handled",
-        ///     so it stops propagating to other controls or entities.
-        /// </summary>
-        public new void Handle()
-        {
-            if (GameController.OnGodot)
-            {
-                SourceControl.SceneControl.AcceptEvent();
-            }
-
-            Handled = true;
-        }
-
         public GUIKeyEventArgs(Control sourceControl,
             Keyboard.Key key,
             uint unicode,
@@ -192,22 +176,6 @@ namespace SS14.Client.UserInterface
         ///     Position of the mouse, relative to the current control.
         /// </summary>
         public Vector2 RelativePosition { get; internal set; }
-
-        public bool Handled { get; private set; }
-
-        /// <summary>
-        ///     Mark this event as "handled",
-        ///     so it stops propagating to other controls or entities.
-        /// </summary>
-        public new void Handle()
-        {
-            if (GameController.OnGodot)
-            {
-                SourceControl.SceneControl.AcceptEvent();
-            }
-
-            Handled = true;
-        }
 
         protected GUIMouseEventArgs(Control sourceControl,
             Mouse.ButtonMask buttonMask,

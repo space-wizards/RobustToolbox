@@ -154,13 +154,21 @@ namespace SS14.Client.Graphics.Clyde
             };
             _window.MouseDown += (sender, eventArgs) =>
             {
-                _gameController.GameController.KeyDown((KeyEventArgs) eventArgs);
-                _gameController.GameController.MouseDown((MouseButtonEventArgs) eventArgs);
+                var mouseButtonEventArgs = (MouseButtonEventArgs) eventArgs;
+                _gameController.GameController.MouseDown(mouseButtonEventArgs);
+                if (!mouseButtonEventArgs.Handled)
+                {
+                    _gameController.GameController.KeyDown((KeyEventArgs) eventArgs);
+                }
             };
             _window.MouseUp += (sender, eventArgs) =>
             {
-                _gameController.GameController.KeyUp((KeyEventArgs) eventArgs);
-                _gameController.GameController.MouseUp((MouseButtonEventArgs) eventArgs);
+                var mouseButtonEventArgs = (MouseButtonEventArgs) eventArgs;
+                _gameController.GameController.MouseUp(mouseButtonEventArgs);
+                if (!mouseButtonEventArgs.Handled)
+                {
+                    _gameController.GameController.KeyUp((KeyEventArgs) eventArgs);
+                }
             };
             _window.MouseMove += (sender, eventArgs) =>
             {

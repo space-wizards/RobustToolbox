@@ -156,6 +156,11 @@ namespace SS14.Client.UserInterface
                 args.System);
 
             _doMouseGuiInput(control, guiArgs, (c, ev) => c.MouseDown(ev));
+
+            // Always mark this as handled.
+            // The only case it should not be is if we do not have a control to click on,
+            // in which case we never reach this.
+            args.Handle();
         }
 
         public void MouseUp(MouseButtonEventArgs args)
@@ -171,8 +176,12 @@ namespace SS14.Client.UserInterface
                 args.System);
 
             _doMouseGuiInput(_mouseFocused, guiArgs, (c, ev) => c.MouseUp(ev));
-            _mouseFocused.MouseUp(guiArgs);
             _mouseFocused = null;
+
+            // Always mark this as handled.
+            // The only case it should not be is if we do not have a control to click on,
+            // in which case we never reach this.
+            args.Handle();
         }
 
         public void MouseMove(MouseMoveEventArgs mouseMoveEventArgs)
@@ -188,7 +197,8 @@ namespace SS14.Client.UserInterface
 
             if (newHovered != null)
             {
-                var guiArgs = new GUIMouseMoveEventArgs(mouseMoveEventArgs.Relative, mouseMoveEventArgs.Speed, newHovered,
+                var guiArgs = new GUIMouseMoveEventArgs(mouseMoveEventArgs.Relative, mouseMoveEventArgs.Speed,
+                    newHovered,
                     mouseMoveEventArgs.ButtonMask, mouseMoveEventArgs.Position,
                     mouseMoveEventArgs.Position - newHovered.GlobalPosition, mouseMoveEventArgs.Alt,
                     mouseMoveEventArgs.Control, mouseMoveEventArgs.Shift, mouseMoveEventArgs.System);
@@ -310,7 +320,8 @@ namespace SS14.Client.UserInterface
             return null;
         }
 
-        private void _doMouseGuiInput<T>(Control control, T guiEvent, Action<Control, T> action) where T : GUIMouseEventArgs
+        private void _doMouseGuiInput<T>(Control control, T guiEvent, Action<Control, T> action)
+            where T : GUIMouseEventArgs
         {
             while (control != null)
             {

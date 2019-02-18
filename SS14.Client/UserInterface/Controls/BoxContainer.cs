@@ -7,6 +7,8 @@ namespace SS14.Client.UserInterface.Controls
     [ControlWrap(typeof(BoxContainer))]
     public abstract class BoxContainer : Container
     {
+        public const string StylePropertySeparation = "separation";
+
         private const int DefaultSeparation = 1;
         private protected abstract bool Vertical { get; }
 
@@ -40,6 +42,19 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
+        private int ActualSeparation
+        {
+            get
+            {
+                if (TryGetStyleProperty(StylePropertySeparation, out int separation))
+                {
+                    return separation;
+                }
+
+                return _separationOverride ?? 1;
+            }
+        }
+
         private int? _separationOverride;
 
         public int? SeparationOverride
@@ -50,8 +65,7 @@ namespace SS14.Client.UserInterface.Controls
 
         protected override void SortChildren()
         {
-            var separation = _separationOverride ?? DefaultSeparation;
-
+            var separation = ActualSeparation;
 
             // Step one: figure out the sizes of all our children and whether they want to stretch.
             var sizeList = new List<(Control control, int minSize, int finalSize, bool stretch)>();
@@ -189,7 +203,7 @@ namespace SS14.Client.UserInterface.Controls
             {
                 return base.CalculateMinimumSize();
             }
-            var separation = _separationOverride ?? DefaultSeparation;
+            var separation = ActualSeparation;
 
             var minWidth = 0f;
             var minHeight = 0f;

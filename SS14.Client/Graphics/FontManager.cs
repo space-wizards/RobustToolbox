@@ -110,6 +110,11 @@ namespace SS14.Client.Graphics
             for (var i = startIndex; i <= endIndex; i++)
             {
                 var glyphIndex = face.GetCharIndex(i);
+                if (glyphIndex == 0)
+                {
+                    count += 1;
+                    continue;
+                }
                 glyphMap.Add((char) i, glyphIndex);
                 face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
                 face.Glyph.RenderGlyph(RenderMode.Normal);

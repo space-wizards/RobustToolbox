@@ -11,6 +11,7 @@ namespace SS14.Client.Interfaces
     {
         void KeyDown(KeyEventArgs keyEvent);
         void KeyUp(KeyEventArgs keyEvent);
+        void TextEntered(TextEventArgs textEvent);
         void MouseDown(MouseButtonEventArgs mouseEvent);
         void MouseUp(MouseButtonEventArgs mouseButtonEventArgs);
         void MouseMove(MouseMoveEventArgs mouseMoveEventArgs);

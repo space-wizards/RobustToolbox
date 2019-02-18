@@ -179,6 +179,10 @@ namespace SS14.Client.Graphics.Clyde
             {
                 _gameController.GameController.MouseWheel((MouseWheelEventArgs) eventArgs);
             };
+            _window.KeyPress += (sender, eventArgs) =>
+            {
+                _gameController.GameController.TextEntered(new TextEventArgs(eventArgs.KeyChar));
+            };
 
             _initOpenGL();
         }

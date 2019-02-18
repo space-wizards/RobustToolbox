@@ -49,6 +49,10 @@ namespace SS14.Client.UserInterface
         {
         }
 
+        protected internal virtual void TextEntered(GUITextEventArgs args)
+        {
+        }
+
         private void HandleGuiInput(Godot.InputEvent input)
         {
             switch (input)
@@ -147,6 +151,21 @@ namespace SS14.Client.UserInterface
             bool shift,
             bool system)
             : base(key, alt, control, shift, system)
+        {
+            SourceControl = sourceControl;
+        }
+    }
+
+    public class GUITextEventArgs : TextEventArgs
+    {
+        /// <summary>
+        ///     The control spawning this event.
+        /// </summary>
+        public Control SourceControl { get; }
+
+        public GUITextEventArgs(Control sourceControl,
+            uint codePoint)
+            : base(codePoint)
         {
             SourceControl = sourceControl;
         }

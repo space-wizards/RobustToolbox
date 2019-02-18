@@ -57,6 +57,16 @@ namespace SS14.Client.Input
         }
     }
 
+    public class TextEventArgs : EventArgs
+    {
+        public TextEventArgs(uint codePoint)
+        {
+            CodePoint = codePoint;
+        }
+
+        public uint CodePoint { get; }
+    }
+
     public class KeyEventArgs : ModifierInputEventArgs
     {
         /// <summary>

@@ -219,6 +219,17 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        public void TextEntered(TextEventArgs textEvent)
+        {
+            if (KeyboardFocused == null)
+            {
+                return;
+            }
+
+            var guiArgs = new GUITextEventArgs(KeyboardFocused, textEvent.CodePoint);
+            KeyboardFocused.TextEntered(guiArgs);
+        }
+
         public void DisposeAllComponents()
         {
             RootControl.DisposeAllChildren();

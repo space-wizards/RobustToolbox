@@ -20,6 +20,11 @@ namespace SS14.Client
             _inputManager.KeyUp(keyEvent);
         }
 
+        public void TextEntered(TextEventArgs textEvent)
+        {
+            _userInterfaceManager.TextEntered(textEvent);
+        }
+
         /// <summary>
         ///     Invoked when a button on the mouse is pressed down.
         /// </summary>

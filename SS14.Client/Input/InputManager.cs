@@ -273,7 +273,7 @@ namespace SS14.Client.Input
         // So if we didn't do this, the DebugConsole wouldn't block movement (for example).
         private bool UIBlocked()
         {
-            return _uiManager.Focused is LineEdit;
+            return _uiManager.KeyboardFocused is LineEdit;
         }
 
         private void RegisterBinding(KeyBinding binding)

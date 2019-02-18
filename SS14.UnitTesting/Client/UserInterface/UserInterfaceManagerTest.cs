@@ -128,5 +128,55 @@ namespace SS14.UnitTesting.Client.UserInterface
                 Assert.That(control3Fired, Is.True);
             });
         }
+
+        [Test]
+        public void TestGrabKeyboardFocus()
+        {
+            Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+            var control1 = new Control("Control1");
+            var control2 = new Control("Control2");
+
+            control1.GrabKeyboardFocus();
+            Assert.That(_userInterfaceManager.KeyboardFocused, Is.EqualTo(control1));
+            Assert.That(control1.HasKeyboardFocus(), Is.EqualTo(true));
+
+            control1.ReleaseKeyboardFocus();
+            Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+        }
+
+        [Test]
+        public void TestGrabKeyboardFocusSteal()
+        {
+            Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+            var control1 = new Control("Control1");
+            var control2 = new Control("Control2");
+
+            control1.GrabKeyboardFocus();
+            control2.GrabKeyboardFocus();
+            Assert.That(_userInterfaceManager.KeyboardFocused, Is.EqualTo(control2));
+            control2.ReleaseKeyboardFocus();
+            Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+        }
+
+        [Test]
+        public void TestGrabKeyboardFocusOtherRelease()
+        {
+            Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+            var control1 = new Control("Control1");
+            var control2 = new Control("Control2");
+
+            control1.GrabKeyboardFocus();
+            control2.ReleaseKeyboardFocus();
+            Assert.That(_userInterfaceManager.KeyboardFocused, Is.EqualTo(control1));
+            _userInterfaceManager.ReleaseKeyboardFocus();
+            Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+        }
+
+        [Test]
+        public void TestGrabKeyboardFocusNull()
+        {
+            Assert.That(() => _userInterfaceManager.GrabKeyboardFocus(null), Throws.ArgumentNullException);
+            Assert.That(() => _userInterfaceManager.ReleaseKeyboardFocus(null), Throws.ArgumentNullException);
+        }
     }
 }

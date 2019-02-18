@@ -33,7 +33,7 @@ namespace SS14.Client.UserInterface
 
         public UITheme ThemeDefaults { get; private set; }
         public Stylesheet Stylesheet { get; set; }
-        public Control Focused { get; private set; }
+        public Control KeyboardFocused { get; private set; }
 
         // When a control receives a mouse down it must also receive a mouse up and mouse moves, always.
         // So we keep track of which control is "focused" by the mouse.
@@ -102,6 +102,18 @@ namespace SS14.Client.UserInterface
             {
                 CanvasLayer.AddChild(RootControl.SceneControl);
             }
+
+            var testPanel = new Panel
+            {
+                PanelOverride = new StyleBoxFlat {BackgroundColor = Color.Red},
+                AnchorRight = 1, AnchorBottom = 1,
+                MarginLeft = 1,
+                MarginTop = 1,
+                MarginRight = -1,
+                MarginBottom = -1,
+                MouseFilter = Control.MouseFilterMode.Stop,
+            };
+            RootControl.AddChild(testPanel);
 
             StateRoot = new Control("StateRoot")
             {
@@ -224,6 +236,45 @@ namespace SS14.Client.UserInterface
             return _mouseFindControlAtPos(RootControl, coordinates);
         }
 
+        public void GrabKeyboardFocus(Control control)
+        {
+            if (control == null)
+            {
+                throw new ArgumentNullException(nameof(control));
+            }
+
+            if (control == KeyboardFocused)
+            {
+                return;
+            }
+
+            ReleaseKeyboardFocus();
+
+            KeyboardFocused = control;
+
+            KeyboardFocused.FocusEntered();
+        }
+
+        public void ReleaseKeyboardFocus()
+        {
+            var oldFocused = KeyboardFocused;
+            oldFocused?.FocusExited();
+            KeyboardFocused = null;
+        }
+
+        public void ReleaseKeyboardFocus(Control ifControl)
+        {
+            if (ifControl == null)
+            {
+                throw new ArgumentNullException(nameof(ifControl));
+            }
+
+            if (ifControl == KeyboardFocused)
+            {
+                ReleaseKeyboardFocus();
+            }
+        }
+
         public void GDPreKeyDown(KeyEventArgs args)
         {
             if (args.Key == Keyboard.Key.Quote)
@@ -262,7 +313,7 @@ namespace SS14.Client.UserInterface
 
         public void GDUnhandledMouseDown(MouseButtonEventArgs args)
         {
-            Focused?.ReleaseFocus();
+            KeyboardFocused?.ReleaseKeyboardFocus();
         }
 
         public void GDUnhandledMouseUp(MouseButtonEventArgs args)
@@ -272,14 +323,14 @@ namespace SS14.Client.UserInterface
 
         public void GDFocusEntered(Control control)
         {
-            Focused = control;
+            KeyboardFocused = control;
         }
 
         public void GDFocusExited(Control control)
         {
-            if (Focused == control)
+            if (KeyboardFocused == control)
             {
-                Focused = null;
+                KeyboardFocused = null;
             }
         }
 

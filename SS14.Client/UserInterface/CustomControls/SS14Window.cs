@@ -156,7 +156,7 @@ namespace SS14.Client.UserInterface.CustomControls
             CurrentDrag = DragMode.None;
 
             // If this is done in MouseDown, Godot won't fire MouseUp as you need focus to receive MouseUps.
-            UserInterfaceManager.Focused?.ReleaseFocus();
+            UserInterfaceManager.KeyboardFocused?.ReleaseKeyboardFocus();
         }
 
         protected internal override void MouseMove(GUIMouseMoveEventArgs args)

@@ -68,11 +68,11 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public void Toggle()
         {
-            var focus = CommandBar.HasFocus();
+            var focus = CommandBar.HasKeyboardFocus();
             Visible = !Visible;
             if (Visible)
             {
-                CommandBar.GrabFocus();
+                CommandBar.GrabKeyboardFocus();
             }
             else if (focus)
             {

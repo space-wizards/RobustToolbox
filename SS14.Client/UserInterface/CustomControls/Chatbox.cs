@@ -65,14 +65,14 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             base.MouseDown(e);
 
-            Input.GrabFocus();
+            Input.GrabKeyboardFocus();
         }
 
         private void InputKeyDown(GUIKeyEventArgs e)
         {
             if (e.Key == Keyboard.Key.Escape)
             {
-                Input.ReleaseFocus();
+                Input.ReleaseKeyboardFocus();
                 e.Handle();
                 return;
             }
@@ -170,7 +170,7 @@ namespace SS14.Client.UserInterface.CustomControls
             _inputIndex = -1;
 
             Input.Clear();
-            Input.ReleaseFocus();
+            Input.ReleaseKeyboardFocus();
         }
 
         public void AddLine(object sender, AddStringArgs e)

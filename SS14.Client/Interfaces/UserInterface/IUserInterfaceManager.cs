@@ -16,7 +16,7 @@ namespace SS14.Client.Interfaces.UserInterface
         UITheme ThemeDefaults { get; }
         Stylesheet Stylesheet { get; set; }
 
-        Control Focused { get; }
+        Control KeyboardFocused { get; }
 
         Control StateRoot { get; }
 
@@ -35,6 +35,23 @@ namespace SS14.Client.Interfaces.UserInterface
         void Popup(string contents, string title = "Alert!");
 
         Control MouseGetControl(Vector2 coordinates);
+
+        /// <summary>
+        ///     Give a control keyboard focus, releasing focus on the currently focused control (if any).
+        /// </summary>
+        /// <param name="control">The control to give keyboard focus to.</param>
+        void GrabKeyboardFocus(Control control);
+
+        /// <summary>
+        ///     Release keyboard focus from the currently focused control, if any.
+        /// </summary>
+        void ReleaseKeyboardFocus();
+
+        /// <summary>
+        ///     Conditionally release keyboard focus if <see cref="ifControl"/> has keyboard focus.
+        /// </summary>
+        /// <seealso cref="ReleaseKeyboardFocus()"/>
+        void ReleaseKeyboardFocus(Control ifControl);
     }
 
     internal interface IUserInterfaceManagerInternal : IUserInterfaceManager

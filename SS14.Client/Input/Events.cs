@@ -64,24 +64,15 @@ namespace SS14.Client.Input
         /// </summary>
         public Keyboard.Key Key { get; }
 
-        // Going with UInt32 instead of uint to make it clear we need 32 bits!
-        // We're not some prehistoric UTF-16 savage.
-        /// <summary>
-        ///     Unicode code point of the pressed key, if relevant.
-        /// </summary>
-        public UInt32 Unicode { get; }
-
-        public KeyEventArgs(Keyboard.Key key, UInt32 unicode, bool alt, bool control, bool shift, bool system)
+        public KeyEventArgs(Keyboard.Key key, bool alt, bool control, bool shift, bool system)
             : base(alt, control, shift, system)
         {
             Key = key;
-            Unicode = unicode;
         }
 
         public static explicit operator KeyEventArgs(Godot.InputEventKey args)
         {
             return new KeyEventArgs(Keyboard.ConvertGodotKey(args.Scancode),
-                (UInt32) args.Unicode,
                 args.Alt,
                 args.Control,
                 args.Shift,
@@ -91,19 +82,18 @@ namespace SS14.Client.Input
         public static explicit operator KeyEventArgs(Godot.InputEventMouseButton args)
         {
             var key = Mouse.MouseButtonToKey((Mouse.Button) args.ButtonIndex);
-            return new KeyEventArgs(key, 0, false, false, false, false);
+            return new KeyEventArgs(key, false, false, false, false);
         }
 
         public static explicit operator KeyEventArgs(OpenTK.Input.KeyboardKeyEventArgs args)
         {
-            return new KeyEventArgs(Keyboard.ConvertOpenTKKey(args.Key),
-                0, args.Alt, args.Control, args.Shift, false);
+            return new KeyEventArgs(Keyboard.ConvertOpenTKKey(args.Key), args.Alt, args.Control, args.Shift, false);
         }
 
         public static explicit operator KeyEventArgs(OpenTK.Input.MouseButtonEventArgs args)
         {
             return new KeyEventArgs(Mouse.MouseButtonToKey(Mouse.ConvertOpenTKButton(args.Button)),
-                0, false, false, false, false);
+                false, false, false, false);
         }
     }
 

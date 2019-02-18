@@ -56,7 +56,6 @@ namespace SS14.Client.UserInterface
                 case Godot.InputEventKey keyEvent:
                     var keyEventArgs = new GUIKeyEventArgs(this,
                         Keyboard.ConvertGodotKey(keyEvent.Scancode),
-                        (UInt32) keyEvent.Unicode,
                         keyEvent.Alt,
                         keyEvent.Control,
                         keyEvent.Shift,
@@ -143,12 +142,11 @@ namespace SS14.Client.UserInterface
 
         public GUIKeyEventArgs(Control sourceControl,
             Keyboard.Key key,
-            uint unicode,
             bool alt,
             bool control,
             bool shift,
             bool system)
-            : base(key, unicode, alt, control, shift, system)
+            : base(key, alt, control, shift, system)
         {
             SourceControl = sourceControl;
         }

@@ -1390,35 +1390,43 @@ namespace SS14.Client.UserInterface
         /// <summary>
         ///     Called when this control receives focus.
         /// </summary>
-        protected virtual void FocusEntered()
+        protected internal virtual void FocusEntered()
         {
         }
 
         /// <summary>
         ///     Called when this control loses focus.
         /// </summary>
-        protected virtual void FocusExited()
+        protected internal virtual void FocusExited()
         {
         }
 
-        public bool HasFocus()
+        public bool HasKeyboardFocus()
         {
-            return GameController.OnGodot ? SceneControl.HasFocus() : default;
+            return GameController.OnGodot ? SceneControl.HasFocus() : UserInterfaceManager.KeyboardFocused == this;
         }
 
-        public void GrabFocus()
+        public void GrabKeyboardFocus()
         {
             if (GameController.OnGodot)
             {
                 SceneControl.GrabFocus();
             }
+            else
+            {
+                UserInterfaceManager.GrabKeyboardFocus(this);
+            }
         }
 
-        public void ReleaseFocus()
+        public void ReleaseKeyboardFocus()
         {
             if (GameController.OnGodot)
             {
                 SceneControl?.ReleaseFocus();
+            }
+            else
+            {
+                UserInterfaceManager.ReleaseKeyboardFocus(this);
             }
         }
 

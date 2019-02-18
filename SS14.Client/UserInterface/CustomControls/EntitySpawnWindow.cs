@@ -31,7 +31,7 @@ namespace SS14.Client.UserInterface.CustomControls
         private OptionButton OverrideMenu;
         private Button ClearButton;
         private Button EraseButton;
-        protected override Vector2 ContentsMinimumSize => HSplitContainer.CombinedMinimumSize;
+        protected override Vector2 ContentsMinimumSize => HSplitContainer?.CombinedMinimumSize ?? Vector2.Zero;
 
         private static readonly string[] initOpts = new string[]
         {

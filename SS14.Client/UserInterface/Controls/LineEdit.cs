@@ -1,6 +1,8 @@
 ﻿using System;
+using JetBrains.Annotations;
 using SS14.Client.GodotGlue;
 using SS14.Client.Graphics.Drawing;
+using SS14.Client.Input;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
 
@@ -9,12 +11,14 @@ namespace SS14.Client.UserInterface.Controls
     [ControlWrap(typeof(Godot.LineEdit))]
     public class LineEdit : Control
     {
-        private string _text = "";
+        [NotNull] private string _text = "";
         private AlignMode _textAlign;
         private bool _editable;
-        private string _placeHolder;
+        [CanBeNull] private string _placeHolder;
         private int _cursorPosition;
-        private int? _selectionEnd;
+        private float _cursorBlinkTimer;
+        private bool _cursorCurrentlyLit;
+        private const float BlinkTime = 0.5f;
 
         public LineEdit()
         {
@@ -35,7 +39,7 @@ namespace SS14.Client.UserInterface.Controls
 
         public AlignMode TextAlign
         {
-            get => GameController.OnGodot ? (AlignMode)SceneControl.Get("align") : _textAlign;
+            get => GameController.OnGodot ? (AlignMode) SceneControl.Get("align") : _textAlign;
             set
             {
                 if (GameController.OnGodot)
@@ -51,7 +55,7 @@ namespace SS14.Client.UserInterface.Controls
 
         public string Text
         {
-            get => GameController.OnGodot ? (string)SceneControl.Get("text") : _text;
+            get => GameController.OnGodot ? (string) SceneControl.Get("text") : _text;
             set
             {
                 if (GameController.OnGodot)
@@ -60,14 +64,21 @@ namespace SS14.Client.UserInterface.Controls
                 }
                 else
                 {
+                    if (value == null)
+                    {
+                        value = "";
+                    }
+
                     _text = value;
+                    _cursorPosition = 0;
+                    OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
                 }
             }
         }
 
         public bool Editable
         {
-            get => GameController.OnGodot ? (bool)SceneControl.Get("editable") : _editable;
+            get => GameController.OnGodot ? (bool) SceneControl.Get("editable") : _editable;
             set
             {
                 if (GameController.OnGodot)
@@ -83,7 +94,7 @@ namespace SS14.Client.UserInterface.Controls
 
         public string PlaceHolder
         {
-            get => GameController.OnGodot ? (string)SceneControl.Get("placeholder_text") : _placeHolder;
+            get => GameController.OnGodot ? (string) SceneControl.Get("placeholder_text") : _placeHolder;
             set
             {
                 if (GameController.OnGodot)
@@ -125,7 +136,7 @@ namespace SS14.Client.UserInterface.Controls
 
         public int CursorPosition
         {
-            get => GameController.OnGodot ? (int)SceneControl.Get("caret_position") : default;
+            get => GameController.OnGodot ? (int) SceneControl.Get("caret_position") : default;
             set
             {
                 if (GameController.OnGodot)
@@ -167,29 +178,75 @@ namespace SS14.Client.UserInterface.Controls
             styleBox.Draw(handle, drawBox);
             var font = UserInterfaceManager.ThemeDefaults.DefaultFont;
 
-            var baseLine = new Vector2i(0, (int)(contentBox.Height + font.Ascent)/2) + contentBox.TopLeft;
+            var baseLine = new Vector2i(0, (int) (contentBox.Height + font.Ascent) / 2) + contentBox.TopLeft;
 
-            if (string.IsNullOrEmpty(_text))
+            string renderedText;
+            Color renderedTextColor;
+
+            if (string.IsNullOrEmpty(_text) && _placeHolder != null)
             {
-                // Try to draw placeholder.
-                if (_placeHolder == null)
-                {
-                    return;
-                }
-
-                foreach (var chr in _placeHolder)
-                {
-                    var advance = (int) font.DrawChar(handle, chr, baseLine, Color.Red);
-                    baseLine += new Vector2(advance, 0);
-                }
+                renderedText = _placeHolder;
+                renderedTextColor = Color.Gray;
             }
             else
             {
-                foreach (var chr in _text)
+                renderedText = _text;
+                renderedTextColor = Color.White;
+            }
+
+            float? actualCursorPosition = null;
+
+            if (_cursorPosition == 0)
+            {
+                actualCursorPosition = contentBox.Left;
+            }
+
+            var count = 0;
+            foreach (var chr in renderedText)
+            {
+                if (!font.TryGetCharMetrics(chr, out var metrics))
                 {
-                    var advance = (int) font.DrawChar(handle, chr, baseLine, Color.White);
-                    baseLine += new Vector2(advance, 0);
+                    count += 1;
+                    continue;
                 }
+
+                // Glyph would be outside the bounding box, abort.
+                if (baseLine.X + metrics.Width + metrics.BearingX > contentBox.Right)
+                {
+                    break;
+                }
+
+                font.DrawChar(handle, chr, baseLine, renderedTextColor);
+                baseLine += new Vector2(metrics.Advance, 0);
+                count += 1;
+                if (count == _cursorPosition)
+                {
+                    actualCursorPosition = baseLine.X;
+                }
+            }
+
+            if (_cursorCurrentlyLit && actualCursorPosition.HasValue && HasKeyboardFocus())
+            {
+                handle.DrawRect(
+                    new UIBox2(actualCursorPosition.Value, contentBox.Top, actualCursorPosition.Value + 1,
+                        contentBox.Bottom), Color.White);
+            }
+        }
+
+        protected override void FrameUpdate(RenderFrameEventArgs args)
+        {
+            base.FrameUpdate(args);
+
+            if (GameController.OnGodot)
+            {
+                return;
+            }
+
+            _cursorBlinkTimer -= args.Elapsed;
+            if (_cursorBlinkTimer <= 0)
+            {
+                _cursorBlinkTimer += BlinkTime;
+                _cursorCurrentlyLit = !_cursorCurrentlyLit;
             }
         }
 
@@ -202,6 +259,141 @@ namespace SS14.Client.UserInterface.Controls
 
             var font = UserInterfaceManager.ThemeDefaults.DefaultFont;
             return new Vector2(0, font.Height) + UserInterfaceManager.ThemeDefaults.LineEditBox.MinimumSize;
+        }
+
+        protected internal override void TextEntered(GUITextEventArgs args)
+        {
+            base.TextEntered(args);
+
+            if (GameController.OnGodot)
+            {
+                return;
+            }
+
+            _text = _text.Insert(_cursorPosition, ((char) args.CodePoint).ToString());
+            OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
+            _cursorPosition += 1;
+        }
+
+        protected internal override void KeyDown(GUIKeyEventArgs args)
+        {
+            base.KeyDown(args);
+
+            if (GameController.OnGodot)
+            {
+                return;
+            }
+
+            // Just eat all keyboard input.
+            args.Handle();
+
+            switch (args.Key)
+            {
+                case Keyboard.Key.BackSpace:
+                    if (_cursorPosition == 0)
+                    {
+                        return;
+                    }
+
+                    _text = _text.Remove(_cursorPosition - 1, 1);
+                    OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
+                    _cursorPosition -= 1;
+                    break;
+
+                case Keyboard.Key.Left:
+                    if (_cursorPosition == 0)
+                    {
+                        return;
+                    }
+
+                    _cursorPosition -= 1;
+                    break;
+
+                case Keyboard.Key.Right:
+                    if (_cursorPosition == _text.Length)
+                    {
+                        return;
+                    }
+
+                    _cursorPosition += 1;
+                    break;
+
+                case Keyboard.Key.NumpadEnter:
+                case Keyboard.Key.Return:
+                    OnTextEntered?.Invoke(new LineEditEventArgs(this, _text));
+                    break;
+            }
+        }
+
+        protected internal override void MouseDown(GUIMouseButtonEventArgs args)
+        {
+            base.MouseDown(args);
+
+            if (GameController.OnGodot)
+            {
+                return;
+            }
+
+            // Find closest cursor position under mouse.
+            var style = UserInterfaceManager.ThemeDefaults.LineEditBox;
+            var contentBox = style.GetContentBox(new UIBox2(Vector2.Zero, Size));
+
+            var clickPosX = args.RelativePosition.X;
+
+            var font = UserInterfaceManager.ThemeDefaults.DefaultFont;
+            var index = 0;
+            var chrPosX = contentBox.Left;
+            foreach (var chr in _text)
+            {
+                if (!font.TryGetCharMetrics(chr, out var metrics))
+                {
+                    index += 1;
+                    continue;
+                }
+
+                if (chrPosX > clickPosX)
+                {
+                    break;
+                }
+
+                chrPosX += metrics.Advance;
+                index += 1;
+
+                if (chrPosX > contentBox.Right)
+                {
+                    break;
+                }
+            }
+
+            _cursorPosition = index;
+
+            // Reset this so the cursor is always visible immediately after a click.
+            _cursorCurrentlyLit = true;
+            _cursorBlinkTimer = BlinkTime;
+        }
+
+        protected internal override void FocusEntered()
+        {
+            base.FocusEntered();
+
+
+            if (GameController.OnGodot)
+            {
+                return;
+            }
+
+            // Reset this so the cursor is always visible immediately after gaining focus..
+            _cursorCurrentlyLit = true;
+            _cursorBlinkTimer = BlinkTime;
+        }
+
+        protected override void SetDefaults()
+        {
+            base.SetDefaults();
+
+            MouseFilter = MouseFilterMode.Stop;
+            CanKeyboardFocus = true;
+            KeyboardFocusOnClick = true;
         }
 
         public enum AlignMode

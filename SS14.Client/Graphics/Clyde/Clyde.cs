@@ -464,6 +464,27 @@ namespace SS14.Client.Graphics.Clyde
             _objectLabelMaybe(identifier, name.Handle, label);
         }
 
+        [Conditional("DEBUG")]
+        private void _pushDebugGroupMaybe(in (uint, string) group)
+        {
+            if (!HasKHRDebug)
+            {
+                return;
+            }
+            var (id, name) = group;
+            GL.PushDebugGroup(DebugSourceExternal.DebugSourceApplication, id, name.Length, name);
+        }
+
+        [Conditional("DEBUG")]
+        private void _popDebugGroupMaybe()
+        {
+            if (!HasKHRDebug)
+            {
+                return;
+            }
+            GL.PopDebugGroup();
+        }
+
         public void Dispose()
         {
             _window.Dispose();
@@ -558,6 +579,7 @@ namespace SS14.Client.Graphics.Clyde
             [FieldOffset(12 * sizeof(float))] public Vector3 ViewMatrixC0;
             [FieldOffset(16 * sizeof(float))] public Vector3 ViewMatrixC1;
             [FieldOffset(20 * sizeof(float))] public Vector3 ViewMatrixC2;
+
             // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
             [FieldOffset(24 * sizeof(float))] private readonly Vector4 _pad;
 

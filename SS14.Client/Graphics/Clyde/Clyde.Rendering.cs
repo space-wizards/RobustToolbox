@@ -14,6 +14,12 @@ namespace SS14.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
+        // ReSharper disable once IdentifierTypo
+        private static readonly (uint, string) DbgGroupSSBW = (1, "Overlays: Screen Space Below World");
+        private static readonly (uint, string) DbgGroupGrids = (2, "Grids");
+        private static readonly (uint, string) DbgGroupEntities = (3, "Entities");
+        private static readonly (uint, string) DbgGroupUI = (4, "User Interface");
+
         /// <summary>
         ///     The current model matrix we would use.
         ///     Necessary since certain drawing operations mess with it still.
@@ -109,6 +115,8 @@ namespace SS14.Client.Graphics.Clyde
 
             var combinedMatricesWorld = new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
 
+            _pushDebugGroupMaybe(DbgGroupSSBW);
+
             // Render ScreenSpaceBelowWorld overlays.
             foreach (var overlay in _overlayManager.AllOverlays
                 .Where(o => o.Space == OverlaySpace.ScreenSpaceBelowWorld)
@@ -118,6 +126,10 @@ namespace SS14.Client.Graphics.Clyde
             }
 
             _flushRenderHandle(renderHandle);
+
+            _popDebugGroupMaybe();
+
+            _pushDebugGroupMaybe(DbgGroupGrids);
 
             _currentSpace = CurrentSpace.WorldSpace;
             // Render grids. Very hardcoded right now.
@@ -182,6 +194,10 @@ namespace SS14.Client.Graphics.Clyde
 
             GL.Disable(EnableCap.PrimitiveRestart);
 
+            _popDebugGroupMaybe();
+
+            _pushDebugGroupMaybe(DbgGroupEntities);
+
             // Use a SINGLE drawing handle for all entities.
             var drawingHandle = renderHandle.CreateHandleWorld();
 
@@ -208,6 +224,10 @@ namespace SS14.Client.Graphics.Clyde
 
             _flushRenderHandle(renderHandle);
 
+            _popDebugGroupMaybe();
+
+            _pushDebugGroupMaybe(DbgGroupUI);
+
             ProjViewUBO.Use();
             ProjViewUBO.Reallocate(combinedMatricesScreen);
 
@@ -216,6 +236,8 @@ namespace SS14.Client.Graphics.Clyde
             _userInterfaceManager.Render(renderHandle);
 
             _flushRenderHandle(renderHandle);
+
+            _popDebugGroupMaybe();
 
             _window.SwapBuffers();
         }

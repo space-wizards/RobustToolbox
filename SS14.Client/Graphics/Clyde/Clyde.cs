@@ -176,6 +176,9 @@ namespace SS14.Client.Graphics.Clyde
             };
             _window.KeyPress += (sender, eventArgs) =>
             {
+                // If this is a surrogate it has to be specifically handled and I'm not doing that yet.
+                DebugTools.Assert(!char.IsSurrogate(eventArgs.KeyChar));
+
                 _gameController.GameController.TextEntered(new TextEventArgs(eventArgs.KeyChar));
             };
 

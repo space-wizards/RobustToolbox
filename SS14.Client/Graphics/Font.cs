@@ -57,7 +57,32 @@ namespace SS14.Client.Graphics
         /// <returns>How much to advance the cursor to draw the next character.</returns>
         public abstract float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color);
 
+        /// <summary>
+        ///     Gets metrics describing the dimensions and positioning of a single glyph in the font.
+        /// </summary>
+        /// <param name="chr">The character to fetch the glyph metrics for.</param>
+        /// <returns>
+        ///     <c>null</c> if this font does not have a glyph for the specified character,
+        ///     otherwise the metrics you asked for.
+        /// </returns>
+        /// <seealso cref="TryGetCharMetrics"/>
         public abstract CharMetrics? GetCharMetrics(char chr);
+
+        /// <summary>
+        ///     Try-pattern version of <see cref="GetCharMetrics"/>.
+        /// </summary>
+        public bool TryGetCharMetrics(char chr, out CharMetrics metrics)
+        {
+            var maybe = GetCharMetrics(chr);
+            if (maybe.HasValue)
+            {
+                metrics = maybe.Value;
+                return true;
+            }
+
+            metrics = default;
+            return false;
+        }
     }
 
     /// <summary>

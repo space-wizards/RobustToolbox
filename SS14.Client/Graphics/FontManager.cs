@@ -121,7 +121,9 @@ namespace SS14.Client.Graphics
                 var glyphMetrics = face.Glyph.Metrics;
                 var metrics = new CharMetrics(glyphMetrics.HorizontalBearingX.ToInt32(),
                     glyphMetrics.HorizontalBearingY.ToInt32(),
-                    glyphMetrics.HorizontalAdvance.ToInt32());
+                    glyphMetrics.HorizontalAdvance.ToInt32(),
+                    glyphMetrics.Width.ToInt32(),
+                    glyphMetrics.Height.ToInt32());
                 metricsMap.Add(glyphIndex, metrics);
 
                 var bitmap = face.Glyph.Bitmap;

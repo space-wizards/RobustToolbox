@@ -224,6 +224,43 @@ namespace SS14.Client.UserInterface
             KeyboardFocused.TextEntered(guiArgs);
         }
 
+        public void KeyDown(KeyEventArgs keyEvent)
+        {
+            // TODO: This is ugly.
+            if (keyEvent.Key == Keyboard.Key.Tilde)
+            {
+                keyEvent.Handle();
+                DebugConsole.Toggle();
+                return;
+            }
+
+            if (KeyboardFocused == null)
+            {
+                return;
+            }
+
+            var guiArgs = new GUIKeyEventArgs(KeyboardFocused, keyEvent.Key, keyEvent.IsRepeat, keyEvent.Alt,
+                keyEvent.Control, keyEvent.Shift, keyEvent.System);
+            KeyboardFocused.KeyDown(guiArgs);
+
+            if (guiArgs.Handled)
+            {
+                keyEvent.Handle();
+            }
+        }
+
+        public void KeyUp(KeyEventArgs keyEvent)
+        {
+            if (KeyboardFocused == null)
+            {
+                return;
+            }
+
+            var guiArgs = new GUIKeyEventArgs(KeyboardFocused, keyEvent.Key, keyEvent.IsRepeat, keyEvent.Alt,
+                keyEvent.Control, keyEvent.Shift, keyEvent.System);
+            KeyboardFocused.KeyUp(guiArgs);
+        }
+
         public void DisposeAllComponents()
         {
             RootControl.DisposeAllChildren();

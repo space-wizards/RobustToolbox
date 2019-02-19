@@ -84,6 +84,10 @@ namespace SS14.Client.Interfaces.UserInterface
 
         void TextEntered(TextEventArgs textEvent);
 
+        void KeyDown(KeyEventArgs keyEvent);
+
+        void KeyUp(KeyEventArgs keyEvent);
+
         void GDUnhandledMouseDown(MouseButtonEventArgs args);
 
         void GDUnhandledMouseUp(MouseButtonEventArgs args);

@@ -60,15 +60,12 @@ namespace SS14.Client.UserInterface
                 case Godot.InputEventKey keyEvent:
                     var keyEventArgs = new GUIKeyEventArgs(this,
                         Keyboard.ConvertGodotKey(keyEvent.Scancode),
+                        keyEvent.Echo,
                         keyEvent.Alt,
                         keyEvent.Control,
                         keyEvent.Shift,
                         keyEvent.Command);
-                    if (keyEvent.Echo)
-                    {
-                        KeyHeld(keyEventArgs);
-                    }
-                    else if (keyEvent.Pressed)
+                    if (keyEvent.Pressed)
                     {
                         KeyDown(keyEventArgs);
                     }
@@ -146,11 +143,12 @@ namespace SS14.Client.UserInterface
 
         public GUIKeyEventArgs(Control sourceControl,
             Keyboard.Key key,
+            bool repeat,
             bool alt,
             bool control,
             bool shift,
             bool system)
-            : base(key, alt, control, shift, system)
+            : base(key, repeat, alt, control, shift, system)
         {
             SourceControl = sourceControl;
         }

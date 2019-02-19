@@ -78,7 +78,7 @@ namespace SS14.Client.Input
         /// <inheritdoc />
         public void KeyDown(KeyEventArgs args)
         {
-            if (!Enabled || UIBlocked() || args.Key == Keyboard.Key.Unknown)
+            if (!Enabled || UIBlocked() || args.Key == Keyboard.Key.Unknown || args.IsRepeat)
             {
                 return;
             }

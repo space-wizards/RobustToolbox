@@ -135,11 +135,6 @@ namespace SS14.Client.Graphics.Clyde
 
             _window.KeyDown += (sender, eventArgs) =>
             {
-                if (eventArgs.IsRepeat)
-                {
-                    return;
-                }
-
                 _gameController.GameController.KeyDown((KeyEventArgs) eventArgs);
             };
 

@@ -74,15 +74,22 @@ namespace SS14.Client.Input
         /// </summary>
         public Keyboard.Key Key { get; }
 
-        public KeyEventArgs(Keyboard.Key key, bool alt, bool control, bool shift, bool system)
+        /// <summary>
+        ///     If true, this key is being held down and another key event is being fired by the OS.
+        /// </summary>
+        public bool IsRepeat { get; }
+
+        public KeyEventArgs(Keyboard.Key key, bool repeat, bool alt, bool control, bool shift, bool system)
             : base(alt, control, shift, system)
         {
             Key = key;
+            IsRepeat = repeat;
         }
 
         public static explicit operator KeyEventArgs(Godot.InputEventKey args)
         {
             return new KeyEventArgs(Keyboard.ConvertGodotKey(args.Scancode),
+                args.Echo,
                 args.Alt,
                 args.Control,
                 args.Shift,
@@ -92,17 +99,17 @@ namespace SS14.Client.Input
         public static explicit operator KeyEventArgs(Godot.InputEventMouseButton args)
         {
             var key = Mouse.MouseButtonToKey((Mouse.Button) args.ButtonIndex);
-            return new KeyEventArgs(key, false, false, false, false);
+            return new KeyEventArgs(key, false, false, false, false, false);
         }
 
         public static explicit operator KeyEventArgs(OpenTK.Input.KeyboardKeyEventArgs args)
         {
-            return new KeyEventArgs(Keyboard.ConvertOpenTKKey(args.Key), args.Alt, args.Control, args.Shift, false);
+            return new KeyEventArgs(Keyboard.ConvertOpenTKKey(args.Key), args.IsRepeat, args.Alt, args.Control, args.Shift, false);
         }
 
         public static explicit operator KeyEventArgs(OpenTK.Input.MouseButtonEventArgs args)
         {
-            return new KeyEventArgs(Mouse.MouseButtonToKey(Mouse.ConvertOpenTKButton(args.Button)),
+            return new KeyEventArgs(Mouse.MouseButtonToKey(Mouse.ConvertOpenTKButton(args.Button)), false,
                 false, false, false, false);
         }
     }

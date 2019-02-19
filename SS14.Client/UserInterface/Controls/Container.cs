@@ -34,7 +34,8 @@ namespace SS14.Client.UserInterface.Controls
 
             if (!GameController.OnGodot)
             {
-                newChild.OnMinimumSizeChanged += _childMinSizeChanged;
+                newChild.OnMinimumSizeChanged += _childChanged;
+                newChild.OnVisibilityChanged += _childChanged;
                 MinimumSizeChanged();
                 SortChildren();
             }
@@ -46,7 +47,8 @@ namespace SS14.Client.UserInterface.Controls
 
             if (!GameController.OnGodot)
             {
-                child.OnMinimumSizeChanged -= _childMinSizeChanged;
+                child.OnMinimumSizeChanged -= _childChanged;
+                child.OnVisibilityChanged -= _childChanged;
                 MinimumSizeChanged();
                 SortChildren();
             }
@@ -93,7 +95,7 @@ namespace SS14.Client.UserInterface.Controls
             child.Size = new Vector2(newSizeX, newSizeY);
         }
 
-        private void _childMinSizeChanged(Control child)
+        private void _childChanged(Control child)
         {
             MinimumSizeChanged();
             SortChildren();

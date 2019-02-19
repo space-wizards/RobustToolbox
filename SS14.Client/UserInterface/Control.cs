@@ -277,6 +277,7 @@ namespace SS14.Client.UserInterface
                 else
                 {
                     _visible = value;
+                    OnVisibilityChanged?.Invoke(this);
                 }
             }
         }
@@ -584,6 +585,7 @@ namespace SS14.Client.UserInterface
         private readonly List<Control> _orderedChildren = new List<Control>();
 
         public event Action<Control> OnMinimumSizeChanged;
+        public event Action<Control> OnVisibilityChanged;
 
         /// <summary>
         ///     Default constructor.

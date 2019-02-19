@@ -75,6 +75,10 @@ namespace SS14.Client.UserInterface.Controls
 
             foreach (var child in Children)
             {
+                if (!child.Visible)
+                {
+                    continue;
+                }
                 var childMinSize = child.CombinedMinimumSize;
                 int minSize;
                 bool stretch;

@@ -204,6 +204,21 @@ namespace SS14.Client.Graphics.Drawing
             return marginData ?? GetDefaultContentMargin(margin);
         }
 
+        /// <summary>
+        ///     Returns the offsets of the content region of this box,
+        ///     if this box is drawn from the given position.
+        /// </summary>
+        public Vector2 GetContentOffset(Vector2 basePosition)
+        {
+            return new Vector2(GetContentMargin(Margin.Left), GetContentMargin(Margin.Top));
+        }
+
+        /// <summary>
+        ///     Gets the box considered the "contents" of this style box, when drawn at a specific size.
+        /// </summary>
+        /// <exception cref="ArgumentException">
+        ///     <paramref name="baseBox"/> is too small and the resultant box would have negative dimensions.
+        /// </exception>
         public UIBox2 GetContentBox(UIBox2 baseBox)
         {
             var left = baseBox.Left + GetContentMargin(Margin.Left);

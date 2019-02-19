@@ -343,6 +343,7 @@ namespace SS14.Client.UserInterface.Controls
             var font = UserInterfaceManager.ThemeDefaults.DefaultFont;
             var index = 0;
             var chrPosX = contentBox.Left;
+            var lastChrPostX = contentBox.Left;
             foreach (var chr in _text)
             {
                 if (!font.TryGetCharMetrics(chr, out var metrics))
@@ -356,6 +357,7 @@ namespace SS14.Client.UserInterface.Controls
                     break;
                 }
 
+                lastChrPostX = chrPosX;
                 chrPosX += metrics.Advance;
                 index += 1;
 
@@ -363,6 +365,16 @@ namespace SS14.Client.UserInterface.Controls
                 {
                     break;
                 }
+            }
+
+            // Distance between the right side of the glyph overlapping the mouse and the mouse.
+            var distanceRight = chrPosX - clickPosX;
+            // Same but left side.
+            var distanceLeft = clickPosX - lastChrPostX;
+            // If the mouse is closer to the left of the glyph we lower the index one, so we select before that glyph.
+            if (distanceRight > distanceLeft)
+            {
+                index -= 1;
             }
 
             _cursorPosition = index;

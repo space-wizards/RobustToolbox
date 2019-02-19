@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
 using NUnit.Framework;
 using SS14.Client.Input;
@@ -127,14 +126,19 @@ namespace SS14.UnitTesting.Client.UserInterface
                 Assert.That(control2Fired, Is.True);
                 Assert.That(control3Fired, Is.True);
             });
+
+            control1.Dispose();
+            control2.Dispose();
+            control3.Dispose();
+            control4.Dispose();
         }
 
         [Test]
         public void TestGrabKeyboardFocus()
         {
             Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
-            var control1 = new Control("Control1");
-            var control2 = new Control("Control2");
+            var control1 = new Control("Control1") {CanKeyboardFocus = true};
+            var control2 = new Control("Control2") {CanKeyboardFocus = true};
 
             control1.GrabKeyboardFocus();
             Assert.That(_userInterfaceManager.KeyboardFocused, Is.EqualTo(control1));
@@ -142,34 +146,43 @@ namespace SS14.UnitTesting.Client.UserInterface
 
             control1.ReleaseKeyboardFocus();
             Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+
+            control1.Dispose();
+            control2.Dispose();
         }
 
         [Test]
         public void TestGrabKeyboardFocusSteal()
         {
             Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
-            var control1 = new Control("Control1");
-            var control2 = new Control("Control2");
+            var control1 = new Control("Control1") {CanKeyboardFocus = true};
+            var control2 = new Control("Control2") {CanKeyboardFocus = true};
 
             control1.GrabKeyboardFocus();
             control2.GrabKeyboardFocus();
             Assert.That(_userInterfaceManager.KeyboardFocused, Is.EqualTo(control2));
             control2.ReleaseKeyboardFocus();
             Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+
+            control1.Dispose();
+            control2.Dispose();
         }
 
         [Test]
         public void TestGrabKeyboardFocusOtherRelease()
         {
             Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
-            var control1 = new Control("Control1");
-            var control2 = new Control("Control2");
+            var control1 = new Control("Control1") {CanKeyboardFocus = true};
+            var control2 = new Control("Control2") {CanKeyboardFocus = true};
 
             control1.GrabKeyboardFocus();
             control2.ReleaseKeyboardFocus();
             Assert.That(_userInterfaceManager.KeyboardFocused, Is.EqualTo(control1));
             _userInterfaceManager.ReleaseKeyboardFocus();
             Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+
+            control1.Dispose();
+            control2.Dispose();
         }
 
         [Test]
@@ -177,6 +190,62 @@ namespace SS14.UnitTesting.Client.UserInterface
         {
             Assert.That(() => _userInterfaceManager.GrabKeyboardFocus(null), Throws.ArgumentNullException);
             Assert.That(() => _userInterfaceManager.ReleaseKeyboardFocus(null), Throws.ArgumentNullException);
+        }
+
+        [Test]
+        public void TestGrabKeyboardFocusBlocked()
+        {
+            var control = new Control();
+            Assert.That(() => _userInterfaceManager.GrabKeyboardFocus(control), Throws.ArgumentException);
+        }
+
+        [Test]
+        public void TestGrabKeyboardFocusOnClick()
+        {
+            var control = new Control
+            {
+                CanKeyboardFocus = true,
+                KeyboardFocusOnClick = true,
+                CustomMinimumSize = new Vector2(50, 50),
+                MouseFilter = Control.MouseFilterMode.Stop
+            };
+
+            _userInterfaceManager.RootControl.AddChild(control);
+
+            var mouseEvent = new MouseButtonEventArgs(Mouse.Button.Left, false, Mouse.ButtonMask.None,
+                new Vector2(30, 30), false, false, false, false);
+
+            _userInterfaceManager.MouseDown(mouseEvent);
+
+            Assert.That(_userInterfaceManager.KeyboardFocused, Is.EqualTo(control));
+            _userInterfaceManager.ReleaseKeyboardFocus();
+            Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+
+            control.Dispose();
+        }
+
+        /// <summary>
+        ///     Assert that indeed nothing happens when the control has focus modes off.
+        /// </summary>
+        [Test]
+        public void TestNotGrabKeyboardFocusOnClick()
+        {
+            var control = new Control
+            {
+                CustomMinimumSize = new Vector2(50, 50),
+                MouseFilter = Control.MouseFilterMode.Stop
+            };
+
+            _userInterfaceManager.RootControl.AddChild(control);
+
+            var mouseEvent = new MouseButtonEventArgs(Mouse.Button.Left, false, Mouse.ButtonMask.None,
+                new Vector2(30, 30), false, false, false, false);
+
+            _userInterfaceManager.MouseDown(mouseEvent);
+
+            Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+
+            control.Dispose();
         }
     }
 }

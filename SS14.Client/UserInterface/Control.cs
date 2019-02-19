@@ -392,6 +392,29 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        private bool _canKeyboardFocus;
+
+        public bool CanKeyboardFocus
+        {
+            get => _canKeyboardFocus;
+            set
+            {
+                if (_canKeyboardFocus == value)
+                {
+                    return;
+                }
+
+                _canKeyboardFocus = value;
+
+                if (!value)
+                {
+                    ReleaseKeyboardFocus();
+                }
+            }
+        }
+
+        public bool KeyboardFocusOnClick { get; set; }
+
         private SizeFlags _sizeFlagsH = SizeFlags.Fill;
 
         public SizeFlags SizeFlagsHorizontal

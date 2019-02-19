@@ -40,6 +40,10 @@ namespace SS14.Client.Interfaces.UserInterface
         ///     Give a control keyboard focus, releasing focus on the currently focused control (if any).
         /// </summary>
         /// <param name="control">The control to give keyboard focus to.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <see cref="control"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">
+        ///     Thrown if <see cref="control"/> has <see cref="Control.CanKeyboardFocus"/> <c>false</c>.
+        /// </exception>
         void GrabKeyboardFocus(Control control);
 
         /// <summary>
@@ -50,6 +54,9 @@ namespace SS14.Client.Interfaces.UserInterface
         /// <summary>
         ///     Conditionally release keyboard focus if <see cref="ifControl"/> has keyboard focus.
         /// </summary>
+        /// <exception cref="ArgumentNullException">
+        ///     Thrown if <see cref="ifControl"/> is <c>null</c>.
+        /// </exception>
         /// <seealso cref="ReleaseKeyboardFocus()"/>
         void ReleaseKeyboardFocus(Control ifControl);
     }

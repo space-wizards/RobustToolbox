@@ -103,18 +103,6 @@ namespace SS14.Client.UserInterface
                 CanvasLayer.AddChild(RootControl.SceneControl);
             }
 
-            var testPanel = new Panel
-            {
-                PanelOverride = new StyleBoxFlat {BackgroundColor = Color.Red},
-                AnchorRight = 1, AnchorBottom = 1,
-                MarginLeft = 1,
-                MarginTop = 1,
-                MarginRight = -1,
-                MarginBottom = -1,
-                MouseFilter = Control.MouseFilterMode.Stop,
-            };
-            RootControl.AddChild(testPanel);
-
             StateRoot = new Control("StateRoot")
             {
                 MouseFilter = Control.MouseFilterMode.Ignore
@@ -163,6 +151,12 @@ namespace SS14.Client.UserInterface
             }
 
             _mouseFocused = control;
+
+            if (_mouseFocused.CanKeyboardFocus && _mouseFocused.KeyboardFocusOnClick)
+            {
+                _mouseFocused.GrabKeyboardFocus();
+            }
+
             var guiArgs = new GUIMouseButtonEventArgs(args.Button, args.DoubleClick, control, Mouse.ButtonMask.None,
                 args.Position, args.Position - control.GlobalPosition, args.Alt, args.Control, args.Shift,
                 args.System);
@@ -252,6 +246,11 @@ namespace SS14.Client.UserInterface
             if (control == null)
             {
                 throw new ArgumentNullException(nameof(control));
+            }
+
+            if (!control.CanKeyboardFocus)
+            {
+                throw new ArgumentException("Control cannot get keyboard focus.", nameof(control));
             }
 
             if (control == KeyboardFocused)

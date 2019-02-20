@@ -15,7 +15,7 @@ namespace SS14.Shared.Utility
         ///     Creates a shallow clone of a list.
         ///     Basically a new list with all the same elements.
         /// </summary>
-        /// <param name="list">The list to shallow clone.</param>
+        /// <param name="self">The list to shallow clone.</param>
         /// <typeparam name="T">The type of the list's elements.</typeparam>
         /// <returns>A new list with the same elements as <paramref name="list" />.</returns>
         public static List<T> ShallowClone<T>(this List<T> self)

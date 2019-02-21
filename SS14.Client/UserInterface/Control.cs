@@ -1584,6 +1584,13 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        public void SetAnchorAndMarginPreset(LayoutPreset preset, LayoutPresetMode mode = LayoutPresetMode.MinSize,
+            int margin = 0)
+        {
+            SetAnchorPreset(preset);
+            SetMarginsPreset(preset, mode, margin);
+        }
+
         /// <summary>
         ///     Changes all the anchors of a node at once to common presets.
         /// </summary>

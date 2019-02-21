@@ -504,10 +504,13 @@ namespace SS14.Client.Graphics.Drawing
             }
         }
 
-        /// <summary>
-        ///     Allows setting multiple margins at once.
-        /// </summary>
+        [Obsolete("Use SetPatchMargin")]
         public void SetMargin(Margin margin, float value)
+        {
+            SetPatchMargin(margin, value);
+        }
+
+        public void SetPatchMargin(Margin margin, float value)
         {
             if ((margin & Margin.Top) != 0)
             {
@@ -527,6 +530,29 @@ namespace SS14.Client.Graphics.Drawing
             if ((margin & Margin.Left) != 0)
             {
                 PatchMarginLeft = value;
+            }
+        }
+
+        public void SetExpandMargin(Margin margin, float value)
+        {
+            if ((margin & Margin.Top) != 0)
+            {
+                ExpandMarginTop = value;
+            }
+
+            if ((margin & Margin.Bottom) != 0)
+            {
+                ExpandMarginBottom = value;
+            }
+
+            if ((margin & Margin.Right) != 0)
+            {
+                ExpandMarginRight = value;
+            }
+
+            if ((margin & Margin.Left) != 0)
+            {
+                ExpandMarginLeft = value;
             }
         }
 

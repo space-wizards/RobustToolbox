@@ -171,8 +171,10 @@ namespace SS14.UnitTesting.Shared.IoC
 
     public class TestUnregisteredInjection
     {
+        #pragma warning disable CS0169
         [Dependency]
         private readonly IIoCFailInterface FailInterface;
+        #pragma warning restore CS0169
     }
 
     public class TestFailImplementation : IIoCFailInterface { }

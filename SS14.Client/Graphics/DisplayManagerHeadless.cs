@@ -24,6 +24,8 @@ namespace SS14.Client.Graphics
             // Do nothing.
         }
 
+        #pragma warning disable CS0067
         public override event Action<WindowResizedEventArgs> OnWindowResized;
+        #pragma warning restore CS0067
     }
 }

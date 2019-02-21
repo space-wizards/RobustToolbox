@@ -288,36 +288,25 @@ namespace SS14.Client.UserInterface.CustomControls
                     "Window is not a child of the window root! You need to call AddToScreen first!");
             }
 
-            if (GameController.OnGodot)
-            {
-                root.SceneControl.MoveChild(SceneControl, root.SceneControl.GetChildCount());
-            }
+            SetPositionLast();
         }
 
         public bool IsAtFront()
         {
-            if (!GameController.OnGodot)
-            {
-                return false;
-            }
-
             if (Parent != UserInterfaceManager.WindowRoot)
             {
                 throw new InvalidOperationException(
                     "Window is not a child of the window root! You need to call AddToScreen first!");
             }
 
-            var siblings = Parent.SceneControl.GetChildren();
-            var ourPos = SceneControl.GetPositionInParent();
-            for (var i = ourPos + 1; i < siblings.Count; i++)
+            var siblingCount = Parent.ChildCount;
+            var ourPos = GetPositionInParent();
+            for (var i = ourPos + 1; i < siblingCount; i++)
             {
-                if (siblings[i] is Godot.Control control)
+                if (Parent.GetChild(i).Visible)
                 {
-                    if (control.Visible)
-                    {
-                        // If we find a control after us that's visible, we're NOT in front.
-                        return false;
-                    }
+                    // If we find a control after us that's visible, we're NOT in front.
+                    return false;
                 }
             }
 
@@ -372,11 +361,6 @@ namespace SS14.Client.UserInterface.CustomControls
         // Prevent window headers from getting off screen due to game window resizes.
         protected override void Update(ProcessFrameEventArgs args)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             var windowSize = _displayManager.ScreenSize;
             if (Position.Y > windowSize.Y)
             {

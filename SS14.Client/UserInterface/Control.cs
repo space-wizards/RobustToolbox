@@ -1238,15 +1238,9 @@ namespace SS14.Client.UserInterface
 
             var index = _children[child.Name].orderedIndex;
             _orderedChildren.RemoveAt(index);
-            foreach (var (reOrderChild, childIndex) in _children.Values.ToList())
-            {
-                if (childIndex > index)
-                {
-                    _children[reOrderChild.Name] = (reOrderChild, childIndex - 1);
-                }
-            }
-
             _children.Remove(child.Name);
+            _updateChildIndices();
+
             child.Parent = null;
             if (GameController.OnGodot)
             {
@@ -1296,7 +1290,7 @@ namespace SS14.Client.UserInterface
             OnMinimumSizeChanged?.Invoke(this);
         }
 
-        internal protected virtual bool HasPoint(Vector2 point)
+        protected internal virtual bool HasPoint(Vector2 point)
         {
             // This is effectively the same implementation as the default Godot one in Control.cpp.
             // That one gets ignored because to Godot it looks like we're ALWAYS implementing a custom HasPoint.
@@ -1310,6 +1304,11 @@ namespace SS14.Client.UserInterface
         }
 
         private static readonly char[] SectionSplitDelimiter = {'/'};
+
+        public Control GetChild(int index)
+        {
+            return _orderedChildren[index];
+        }
 
         public Control GetChild(string name)
         {
@@ -1361,25 +1360,62 @@ namespace SS14.Client.UserInterface
             return _children.ContainsKey(name);
         }
 
-        // TODO: Expose this as public.
-        // The problem is that non-Control nodes such as timers mess up the position so it isn't consistent.
+        public int GetPositionInParent()
+        {
+            if (Parent == null)
+            {
+                throw new InvalidOperationException("This control has no parent!");
+            }
+
+            return Parent._children[Name].orderedIndex;
+        }
+
         /// <summary>
-        ///     Sets the index of this control in Godot's scene tree.
+        ///     Sets the index of this control in the parent.
         ///     This pretty much corresponds to layout and drawing order in relation to its siblings.
         /// </summary>
         /// <param name="position"></param>
         /// <exception cref="InvalidOperationException">This control has no parent.</exception>
-        internal void SetPositionInParent(int position)
+        public void SetPositionInParent(int position)
         {
             if (Parent == null)
             {
                 throw new InvalidOperationException("No parent to change position in.");
             }
 
+            var posInParent = GetPositionInParent();
+            if (posInParent == position)
+            {
+                return;
+            }
+
             if (GameController.OnGodot)
             {
-                Parent.SceneControl.MoveChild(SceneControl, 0);
+                // Because some controls spawn other sub nodes like timers,
+                // This position doesn't map to the scene tree.
+                var parentScene = Parent.SceneControl;
+                var siblingCount = parentScene.GetChildCount();
+                var counter = 0;
+                for (var i = 0; i < siblingCount; i++)
+                {
+                    var sibling = parentScene.GetChild(i);
+                    // Use a counter that counts the controls to figure out the position to move to.
+                    if (sibling is Godot.Control)
+                    {
+                        if (counter == position)
+                        {
+                            parentScene.MoveChild(SceneControl, counter);
+                            break;
+                        }
+
+                        counter += 1;
+                    }
+                }
             }
+
+            Parent._orderedChildren.RemoveAt(posInParent);
+            Parent._orderedChildren.Insert(position, this);
+            Parent._updateChildIndices();
         }
 
         /// <summary>
@@ -1399,15 +1435,7 @@ namespace SS14.Client.UserInterface
         /// <exception cref="InvalidOperationException">This control has no parent.</exception>
         public void SetPositionLast()
         {
-            if (Parent == null)
-            {
-                throw new InvalidOperationException("No parent to change position in.");
-            }
-
-            if (GameController.OnGodot)
-            {
-                SetPositionInParent(Parent.SceneControl.GetChildCount());
-            }
+            SetPositionInParent(Parent.ChildCount-1);
         }
 
         /// <summary>
@@ -2127,6 +2155,18 @@ namespace SS14.Client.UserInterface
             foreach (var child in _orderedChildren)
             {
                 child._doUpdateLayout();
+            }
+        }
+
+        /// <summary>
+        ///     Updates the indices stored inside <see cref="_children"/>.
+        /// </summary>
+        private void _updateChildIndices()
+        {
+            for (var i = 0; i < _orderedChildren.Count; i++)
+            {
+                var child = _orderedChildren[i];
+                _children[child._name] = (child, i);
             }
         }
 

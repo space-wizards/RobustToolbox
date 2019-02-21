@@ -89,6 +89,11 @@ namespace SS14.Client
         /// </summary>
         public void MouseWheel(MouseWheelEventArgs mouseWheelEventArgs)
         {
+            _userInterfaceManager.MouseWheel(mouseWheelEventArgs);
+            if (mouseWheelEventArgs.Handled)
+            {
+                return;
+            }
             _stateManager.MouseWheelMove(mouseWheelEventArgs);
         }
     }

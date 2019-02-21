@@ -213,6 +213,22 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        public void MouseWheel(MouseWheelEventArgs args)
+        {
+            var control = MouseGetControl(args.Position);
+            if (control == null)
+            {
+                return;
+            }
+
+            args.Handle();
+
+            var guiArgs = new GUIMouseWheelEventArgs(args.WheelDirection, control, Mouse.ButtonMask.None, args.Position,
+                args.Position - control.GlobalPosition, args.Alt, args.Control, args.Shift, args.System);
+
+            _doMouseGuiInput(control, guiArgs, (c, ev) => c.MouseWheel(ev));
+        }
+
         public void TextEntered(TextEventArgs textEvent)
         {
             if (KeyboardFocused == null)

@@ -82,6 +82,8 @@ namespace SS14.Client.Interfaces.UserInterface
 
         void MouseMove(MouseMoveEventArgs mouseMoveEventArgs);
 
+        void MouseWheel(MouseWheelEventArgs args);
+
         void TextEntered(TextEventArgs textEvent);
 
         void KeyDown(KeyEventArgs keyEvent);

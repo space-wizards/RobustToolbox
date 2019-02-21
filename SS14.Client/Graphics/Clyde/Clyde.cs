@@ -18,6 +18,7 @@ using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.ResourceManagement;
+using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
@@ -70,6 +71,14 @@ namespace SS14.Client.Graphics.Clyde
         // OpenGL is allergic to multi threading so we need to check this.
         private Thread _mainThread;
         private bool _drawingSplash;
+
+        private ShaderProgram _currentProgram;
+
+        // Following fields are performance tweaks mostly.
+        /// <summary>
+        ///     If true, re-allocate buffer objects with BufferData instead of using BufferSubData.
+        /// </summary>
+        private bool _reallocateBuffers = false;
 
         public override Vector2i ScreenSize => new Vector2i(_window.Width, _window.Height);
         private readonly HashSet<string> OpenGLExtensions = new HashSet<string>();
@@ -271,6 +280,10 @@ namespace SS14.Client.Graphics.Clyde
             GL.EnableVertexAttribArray(2);
 
             ProjViewUBO = new Buffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw, "ProjViewUBO");
+            unsafe
+            {
+                ProjViewUBO.Reallocate(sizeof(ProjViewMatrices));
+            }
             GL.BindBufferBase(BufferRangeTarget.UniformBuffer, ProjViewBindingIndex, ProjViewUBO.Handle);
 
             _drawingSplash = true;

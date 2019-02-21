@@ -77,6 +77,30 @@ namespace SS14.Client.Graphics.Clyde
                 }
             }
 
+            public void WriteSubData<T>(Span<T> data) where T : unmanaged
+            {
+                var byteSpan = MemoryMarshal.AsBytes(data);
+
+                unsafe
+                {
+                    fixed (byte* ptr = byteSpan)
+                    {
+                        GL.BufferSubData(Type, IntPtr.Zero, byteSpan.Length, (IntPtr) ptr);
+                    }
+                }
+            }
+
+            public void WriteSubData<T>(in T data) where T : unmanaged
+            {
+                unsafe
+                {
+                    fixed (T* ptr = &data)
+                    {
+                        GL.BufferSubData(Type, IntPtr.Zero, sizeof(T), (IntPtr)ptr);
+                    }
+                }
+            }
+
             public void Reallocate<T>(Span<T> data) where T : unmanaged
             {
                 var byteSpan = MemoryMarshal.AsBytes(data);

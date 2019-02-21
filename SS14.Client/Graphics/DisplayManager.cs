@@ -23,13 +23,13 @@ namespace SS14.Client.Graphics
         private const string CVarVSync = "display.vsync";
         private const string CVarWindowMode = "display.windowmode";
 
-        [Dependency] private readonly IConfigurationManager _configurationManager;
+        [Dependency] protected readonly IConfigurationManager _configurationManager;
         [Dependency] protected readonly IGameControllerProxyInternal _gameController;
 
         protected WindowMode WindowMode { get; private set; } = WindowMode.Windowed;
         protected bool VSync { get; private set; }
 
-        void IPostInjectInit.PostInject()
+        public virtual void PostInject()
         {
             _configurationManager.RegisterCVar(CVarVSync, VSync, CVar.ARCHIVE);
             _configurationManager.RegisterCVar(CVarWindowMode, (int) WindowMode, CVar.ARCHIVE);
@@ -41,12 +41,12 @@ namespace SS14.Client.Graphics
 
         public virtual void ReloadConfig()
         {
-            _readConfig();
+            ReadConfig();
         }
 
         public abstract event Action<WindowResizedEventArgs> OnWindowResized;
 
-        protected void _readConfig()
+        protected virtual void ReadConfig()
         {
             WindowMode = (WindowMode) _configurationManager.GetCVar<int>(CVarWindowMode);
             VSync = _configurationManager.GetCVar<bool>(CVarVSync);

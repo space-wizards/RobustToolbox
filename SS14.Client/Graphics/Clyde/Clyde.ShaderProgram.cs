@@ -76,6 +76,12 @@ namespace SS14.Client.Graphics.Clyde
             {
                 DebugTools.Assert(_handle != -1);
 
+                if (_clyde._currentProgram == this)
+                {
+                    return;
+                }
+
+                _clyde._currentProgram = this;
                 GL.UseProgram(_handle);
             }
 

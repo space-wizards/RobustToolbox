@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using OpenTK.Graphics.OpenGL4;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics.ClientEye;
@@ -89,7 +90,14 @@ namespace SS14.Client.Graphics.Clyde
             var combinedMatricesScreen = new ProjViewMatrices(projMatrixScreen, viewMatrixScreen);
 
             ProjViewUBO.Use();
-            ProjViewUBO.Reallocate(combinedMatricesScreen);
+            if (_reallocateBuffers)
+            {
+                ProjViewUBO.Reallocate(combinedMatricesScreen);
+            }
+            else
+            {
+                ProjViewUBO.WriteSubData(combinedMatricesScreen);
+            }
 
             if (_drawingSplash)
             {
@@ -143,7 +151,14 @@ namespace SS14.Client.Graphics.Clyde
             GL.BindVertexArray(BatchVAO.Handle);
 
             ProjViewUBO.Use();
-            ProjViewUBO.Reallocate(combinedMatricesWorld);
+            if (_reallocateBuffers)
+            {
+                ProjViewUBO.Reallocate(combinedMatricesWorld);
+            }
+            else
+            {
+                ProjViewUBO.WriteSubData(combinedMatricesWorld);
+            }
 
             GL.Enable(EnableCap.PrimitiveRestart);
             GL.PrimitiveRestartIndex(ushort.MaxValue);
@@ -185,9 +200,19 @@ namespace SS14.Client.Graphics.Clyde
                 }
 
                 BatchVBO.Use();
-                BatchVBO.Reallocate(new Span<Vertex2D>(BatchVertexData, 0, nth * 4));
                 BatchEBO.Use();
-                BatchEBO.Reallocate(new Span<ushort>(BatchIndexData, 0, nth * 5));
+                var vertexData = new Span<Vertex2D>(BatchVertexData, 0, nth * 4);
+                var indexData = new Span<ushort>(BatchIndexData, 0, nth * 5);
+                if (_reallocateBuffers)
+                {
+                    BatchVBO.Reallocate(vertexData);
+                    BatchEBO.Reallocate(indexData);
+                }
+                else
+                {
+                    BatchVBO.WriteSubData(vertexData);
+                    BatchEBO.WriteSubData(indexData);
+                }
 
                 GL.DrawElements(PrimitiveType.TriangleStrip, nth * 5, DrawElementsType.UnsignedShort, 0);
             }
@@ -229,7 +254,14 @@ namespace SS14.Client.Graphics.Clyde
             _pushDebugGroupMaybe(DbgGroupUI);
 
             ProjViewUBO.Use();
-            ProjViewUBO.Reallocate(combinedMatricesScreen);
+            if (_reallocateBuffers)
+            {
+                ProjViewUBO.Reallocate(combinedMatricesScreen);
+            }
+            else
+            {
+                ProjViewUBO.WriteSubData(combinedMatricesScreen);
+            }
 
             // Render UI.
             _currentSpace = CurrentSpace.ScreenSpace;
@@ -480,9 +512,19 @@ namespace SS14.Client.Graphics.Clyde
             }
 
             BatchVBO.Use();
-            BatchVBO.Reallocate(new Span<Vertex2D>(BatchVertexData, 0, quadIndex * 4));
             BatchEBO.Use();
-            BatchEBO.Reallocate(new Span<ushort>(BatchIndexData, 0, quadIndex * 5));
+            var vertexData = new Span<Vertex2D>(BatchVertexData, 0, quadIndex * 4);
+            var indexData = new Span<ushort>(BatchIndexData, 0, quadIndex * 5);
+            if (_reallocateBuffers)
+            {
+                BatchVBO.Reallocate(vertexData);
+                BatchEBO.Reallocate(indexData);
+            }
+            else
+            {
+                BatchVBO.WriteSubData(vertexData);
+                BatchEBO.WriteSubData(indexData);
+            }
 
             // Bind atlas texture.
             GL.ActiveTexture(TextureUnit.Texture0);

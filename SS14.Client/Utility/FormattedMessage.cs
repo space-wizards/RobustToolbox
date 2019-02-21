@@ -1,4 +1,4 @@
-using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using JetBrains.Annotations;
@@ -14,7 +14,7 @@ namespace SS14.Client.Utility
     [PublicAPI]
     public sealed class FormattedMessage
     {
-        public IReadOnlyList<Tag> Tags => _tags;
+        public TagList Tags => new TagList(_tags);
         private readonly List<Tag> _tags;
 
         public FormattedMessage()
@@ -93,6 +93,35 @@ namespace SS14.Client.Utility
 
         public class TagPop : Tag
         {
+        }
+
+        public readonly struct TagList : IReadOnlyList<Tag>
+        {
+            private readonly List<Tag> _tags;
+
+            public TagList(List<Tag> tags)
+            {
+                _tags = tags;
+            }
+
+            public List<Tag>.Enumerator GetEnumerator()
+            {
+                return _tags.GetEnumerator();
+            }
+
+            IEnumerator<Tag> IEnumerable<Tag>.GetEnumerator()
+            {
+                return _tags.GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return _tags.GetEnumerator();
+            }
+
+            public int Count => _tags.Count;
+
+            public Tag this[int index] => _tags[index];
         }
     }
 }

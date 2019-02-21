@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using OpenTK.Graphics.OpenGL4;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics.ClientEye;
@@ -59,6 +58,8 @@ namespace SS14.Client.Graphics.Clyde
         // Yes this can be optimized later.
         private Color? BatchingModulate;
 
+        private RenderHandle _renderHandle;
+
         public void Render(FrameEventArgs args)
         {
             if (GameController.Mode != GameController.DisplayMode.OpenGL)
@@ -74,7 +75,7 @@ namespace SS14.Client.Graphics.Clyde
             _currentModelMatrix = Matrix3.Identity;
 
             // We hand out this handle so external code can generate command lists for us.
-            var renderHandle = new RenderHandle(this);
+            _renderHandle._drawingHandles.Clear();
             _currentSpace = CurrentSpace.ScreenSpace;
 
             // Screen view matrix is identity. Easy huh.
@@ -101,8 +102,8 @@ namespace SS14.Client.Graphics.Clyde
 
             if (_drawingSplash)
             {
-                _displaySplash(renderHandle);
-                _flushRenderHandle(renderHandle);
+                _displaySplash(_renderHandle);
+                _flushRenderHandle(_renderHandle);
                 _window.SwapBuffers();
                 return;
             }
@@ -130,10 +131,10 @@ namespace SS14.Client.Graphics.Clyde
                 .Where(o => o.Space == OverlaySpace.ScreenSpaceBelowWorld)
                 .OrderBy(o => o.ZIndex))
             {
-                overlay.OpenGLRender(renderHandle);
+                overlay.OpenGLRender(_renderHandle);
             }
 
-            _flushRenderHandle(renderHandle);
+            _flushRenderHandle(_renderHandle);
 
             _popDebugGroupMaybe();
 
@@ -224,7 +225,7 @@ namespace SS14.Client.Graphics.Clyde
             _pushDebugGroupMaybe(DbgGroupEntities);
 
             // Use a SINGLE drawing handle for all entities.
-            var drawingHandle = renderHandle.CreateHandleWorld();
+            var drawingHandle = _renderHandle.CreateHandleWorld();
 
             var entityList = new List<SpriteComponent>(100);
 
@@ -247,7 +248,7 @@ namespace SS14.Client.Graphics.Clyde
                 entity.OpenGLRender(drawingHandle);
             }
 
-            _flushRenderHandle(renderHandle);
+            _flushRenderHandle(_renderHandle);
 
             _popDebugGroupMaybe();
 
@@ -265,9 +266,9 @@ namespace SS14.Client.Graphics.Clyde
 
             // Render UI.
             _currentSpace = CurrentSpace.ScreenSpace;
-            _userInterfaceManager.Render(renderHandle);
+            _userInterfaceManager.Render(_renderHandle);
 
-            _flushRenderHandle(renderHandle);
+            _flushRenderHandle(_renderHandle);
 
             _popDebugGroupMaybe();
 

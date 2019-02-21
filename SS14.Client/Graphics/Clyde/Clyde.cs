@@ -287,6 +287,9 @@ namespace SS14.Client.Graphics.Clyde
             GL.BindBufferBase(BufferRangeTarget.UniformBuffer, ProjViewBindingIndex, ProjViewUBO.Handle);
 
             _drawingSplash = true;
+
+            _renderHandle = new RenderHandle(this);
+
             Render(null);
         }
 

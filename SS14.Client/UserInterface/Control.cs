@@ -2,6 +2,7 @@
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using SS14.Shared.Log;
 using SS14.Shared.Interfaces.Reflection;
@@ -90,7 +91,7 @@ namespace SS14.Client.UserInterface
         /// <summary>
         ///     Gets an enumerable over all the children of this control.
         /// </summary>
-        public IEnumerable<Control> Children => _orderedChildren;
+        public OrderedChildEnumerable Children => new OrderedChildEnumerable(this);
 
         public int ChildCount => _orderedChildren.Count;
 
@@ -2241,6 +2242,31 @@ namespace SS14.Client.UserInterface
         {
             var scene2 = (Godot.PackedScene) Godot.ResourceLoader.Load(path);
             return (Godot.Control) scene2.Instance();
+        }
+
+        public readonly struct OrderedChildEnumerable : IEnumerable<Control>
+        {
+            private readonly Control Owner;
+
+            public OrderedChildEnumerable(Control owner)
+            {
+                Owner = owner;
+            }
+
+            public List<Control>.Enumerator GetEnumerator()
+            {
+                return Owner._orderedChildren.GetEnumerator();
+            }
+
+            IEnumerator<Control> IEnumerable<Control>.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
         }
 
         [AttributeUsage(AttributeTargets.Class, Inherited = false)]

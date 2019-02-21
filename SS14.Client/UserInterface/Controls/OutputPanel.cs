@@ -111,6 +111,11 @@ namespace SS14.Client.UserInterface.Controls
 
             var entryOffset = 0;
 
+            // A stack for format tags.
+            // This stack contains the format tag to RETURN TO when popped off.
+            // So when a new color tag gets hit this stack gets the previous color pushed on.
+            var formatStack = new Stack<FormattedMessage.Tag>(2);
+
             foreach (var entry in _entries)
             {
                 if (entryOffset - _mouseWheelOffset < 0)
@@ -119,12 +124,10 @@ namespace SS14.Client.UserInterface.Controls
                     continue;
                 }
 
-                if (entryOffset + entry.Height - _mouseWheelOffset > contentBox.Height) break;
-
-                // A stack for format tags.
-                // This stack contains the format tag to RETURN TO when popped off.
-                // So when a new color tag gets hit this stack gets the previous color pushed on.
-                var formatStack = new Stack<FormattedMessage.Tag>(2);
+                if (entryOffset + entry.Height - _mouseWheelOffset > contentBox.Height)
+                {
+                    break;
+                }
 
                 // The tag currently doing color.
                 var currentColorTag = TagWhite;
@@ -132,7 +135,9 @@ namespace SS14.Client.UserInterface.Controls
                 var globalBreakCounter = 0;
                 var lineBreakIndex = 0;
                 var baseLine = contentBox.TopLeft + new Vector2(0, font.Ascent + entryOffset - _mouseWheelOffset);
+                formatStack.Clear();
                 foreach (var tag in entry.Message.Tags)
+                {
                     switch (tag)
                     {
                         case FormattedMessage.TagColor tagColor:
@@ -171,6 +176,7 @@ namespace SS14.Client.UserInterface.Controls
                             break;
                         }
                     }
+                }
 
                 entryOffset += entry.Height + font.LineSeparation;
             }

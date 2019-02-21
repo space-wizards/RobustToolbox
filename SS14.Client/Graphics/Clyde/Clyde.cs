@@ -74,12 +74,6 @@ namespace SS14.Client.Graphics.Clyde
 
         private ShaderProgram _currentProgram;
 
-        // Following fields are performance tweaks mostly.
-        /// <summary>
-        ///     If true, re-allocate buffer objects with BufferData instead of using BufferSubData.
-        /// </summary>
-        private bool _reallocateBuffers = false;
-
         public override Vector2i ScreenSize => new Vector2i(_window.Width, _window.Height);
         private readonly HashSet<string> OpenGLExtensions = new HashSet<string>();
 

@@ -7,6 +7,7 @@ using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Graphics.Overlays;
 using SS14.Client.ResourceManagement;
+using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 
@@ -59,6 +60,16 @@ namespace SS14.Client.Graphics.Clyde
         private Color? BatchingModulate;
 
         private RenderHandle _renderHandle;
+
+        /// <summary>
+        ///     If true, re-allocate buffer objects with BufferData instead of using BufferSubData.
+        /// </summary>
+        private bool _reallocateBuffers = false;
+
+        /// <summary>
+        ///     Log when the command pools go dry and we need to re-allocate objects.
+        /// </summary>
+        private bool _logPoolOverdraw = false;
 
         public void Render(FrameEventArgs args)
         {
@@ -565,6 +576,16 @@ namespace SS14.Client.Graphics.Clyde
             BatchBuffer.Clear();
             BatchingTexture = null;
             BatchingModulate = null;
+
+            if (_logPoolOverdraw && (_poolListCreated > 0 || _poolTextureCreated > 0 || _poolTransformCreated > 0))
+            {
+                Logger.DebugS("ogl", "pool overdraw: l: {0}, tex: {1}, trans: {2}", _poolListCreated,
+                    _poolTextureCreated, _poolTransformCreated);
+            }
+
+            _poolListCreated = 0;
+            _poolTextureCreated = 0;
+            _poolTransformCreated = 0;
         }
 
         private class RenderHandle : IRenderHandle, IDisposable
@@ -591,7 +612,7 @@ namespace SS14.Client.Graphics.Clyde
                 }
 
                 var handle = new DrawingHandleWorld(this, _drawingHandles.Count);
-                _drawingHandles.Add((handle, _getFromPool(_manager._poolCommandList)));
+                _drawingHandles.Add((handle, _manager._getNewCommandList()));
                 return handle;
             }
 

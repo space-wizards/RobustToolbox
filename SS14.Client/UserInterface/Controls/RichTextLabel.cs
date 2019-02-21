@@ -1,11 +1,10 @@
-﻿using System;
-using SS14.Client.Utility;
+﻿using SS14.Client.Utility;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
     [ControlWrap(typeof(Godot.RichTextLabel))]
-    public class RichTextLabel : Control
+    internal class RichTextLabel : Control
     {
         public RichTextLabel() : base()
         {
@@ -95,8 +94,16 @@ namespace SS14.Client.UserInterface.Controls
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.Call("set_scroll_following", value);
+                    SceneControl.Call("set_scroll_follow", value);
                 }
+            }
+        }
+
+        public void RemoveLine(int line)
+        {
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("remove_line", line);
             }
         }
     }

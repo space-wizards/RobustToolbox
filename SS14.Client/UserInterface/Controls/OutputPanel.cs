@@ -37,6 +37,8 @@ namespace SS14.Client.UserInterface.Controls
             else
             {
                 _entries.Clear();
+                _totalContentHeight = 0;
+                _mouseWheelOffset = 0;
             }
         }
 

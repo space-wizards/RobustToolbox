@@ -298,7 +298,6 @@ namespace SS14.Client.UserInterface
                     var (diffX, diffY) = value - _size;
                     _marginRight += diffX;
                     _marginBottom += diffY;
-                    _size = value;
                     _updateLayout();
                 }
             }
@@ -322,7 +321,6 @@ namespace SS14.Client.UserInterface
                     _marginBottom += diffY;
                     _marginLeft += diffX;
                     _marginRight += diffX;
-                    _position = value;
                     _updateLayout();
                 }
             }
@@ -2111,7 +2109,13 @@ namespace SS14.Client.UserInterface
             var bottom = _anchorBottom * pSizeY + _marginBottom;
 
             _position = new Vector2(left, top);
+            var oldSize = _size;
             _size = Vector2.ComponentMax(new Vector2(right - left, bottom - top), CombinedMinimumSize);
+
+            if (_size != oldSize)
+            {
+                Resized();
+            }
 
             foreach (var child in _orderedChildren)
             {

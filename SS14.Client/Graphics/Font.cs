@@ -37,6 +37,11 @@ namespace SS14.Client.Graphics
         /// </summary>
         public virtual int LineHeight => Height;
 
+        /// <summary>
+        ///     The distance between the edges of two consecutive lines.
+        /// </summary>
+        public int LineSeparation => LineHeight - Height;
+
         public static implicit operator Godot.Font(Font font)
         {
             return font?.GodotFont;

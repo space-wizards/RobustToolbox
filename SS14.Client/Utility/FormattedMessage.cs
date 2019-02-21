@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
+using JetBrains.Annotations;
 using SS14.Shared.Maths;
-using SS14.Shared.Serialization;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.Utility
 {
@@ -9,10 +11,11 @@ namespace SS14.Client.Utility
     ///     Represents a formatted message in the form of a list of "tags".
     ///     Does not do any concrete formatting, simply useful as an API surface.
     /// </summary>
-    public class FormattedMessage
+    [PublicAPI]
+    public sealed class FormattedMessage
     {
-        public IEnumerable<Tag> Tags => _tags;
-        readonly List<Tag> _tags;
+        public IReadOnlyList<Tag> Tags => _tags;
+        private readonly List<Tag> _tags;
 
         public FormattedMessage()
         {
@@ -22,6 +25,15 @@ namespace SS14.Client.Utility
         public FormattedMessage(int capacity)
         {
             _tags = new List<Tag>(capacity);
+        }
+
+        /// <summary>
+        ///     Create a new <c>FormattedMessage</c> by copying another one.
+        /// </summary>
+        /// <param name="toCopy">The message to copy.</param>
+        public FormattedMessage(FormattedMessage toCopy)
+        {
+            _tags = toCopy._tags.ShallowClone();
         }
 
         public void AddText(string text)
@@ -39,13 +51,30 @@ namespace SS14.Client.Utility
             _tags.Add(new TagPop());
         }
 
+        public override string ToString()
+        {
+            var builder = new StringBuilder();
+            foreach (var tag in _tags)
+            {
+                if (!(tag is TagText text))
+                {
+                    continue;
+                }
+
+                builder.Append(text.Text);
+            }
+
+            return builder.ToString();
+        }
 
         public abstract class Tag
-        { }
+        {
+        }
 
         public class TagText : Tag
         {
             public readonly string Text;
+
             public TagText(string text)
             {
                 Text = text;
@@ -55,6 +84,7 @@ namespace SS14.Client.Utility
         public class TagColor : Tag
         {
             public readonly Color Color;
+
             public TagColor(Color color)
             {
                 Color = color;
@@ -63,7 +93,6 @@ namespace SS14.Client.Utility
 
         public class TagPop : Tag
         {
-
         }
     }
 }

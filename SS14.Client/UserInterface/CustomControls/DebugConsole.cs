@@ -27,9 +27,10 @@ namespace SS14.Client.UserInterface.CustomControls
     {
         [Dependency] readonly IClientConsole console;
 
-        private bool firstLine = true;
         private LineEdit CommandBar;
-        private RichTextLabel Contents;
+
+        // This one is used outside Godot.
+        private OutputPanel Output;
 
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => console.Commands;
         private readonly ConcurrentQueue<FormattedMessage> _messageQueue = new ConcurrentQueue<FormattedMessage>();
@@ -48,8 +49,14 @@ namespace SS14.Client.UserInterface.CustomControls
 
             CommandBar = GetChild<LineEdit>("CommandBar");
             CommandBar.OnKeyDown += CommandBarOnOnKeyDown;
-            Contents = GetChild<RichTextLabel>("Contents");
-            Contents.ScrollFollowing = true;
+
+            GetChild<RichTextLabel>("Contents").Dispose();
+
+            var output = new OutputPanel {Name = "Contents"};
+            output.SetAnchorAndMarginPreset(LayoutPreset.Wide, margin: 5);
+            output.MarginBottom = -30;
+            Output = output;
+            AddChild(output);
 
             CommandBar.OnTextEntered += CommandEntered;
             CommandBar.OnTextChanged += CommandBarOnOnTextChanged;
@@ -99,29 +106,11 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public void AddLine(string text, ChatChannel channel, Color color)
         {
-            if (!ThreadUtility.IsOnMainThread())
-            {
-                var formatted = new FormattedMessage(3);
-                formatted.PushColor(color);
-                formatted.AddText(text);
-                formatted.Pop();
-                _messageQueue.Enqueue(formatted);
-                return;
-            }
-
-            _flushQueue();
-            if (!firstLine)
-            {
-                Contents.NewLine();
-            }
-            else
-            {
-                firstLine = false;
-            }
-
-            Contents.PushColor(color);
-            Contents.AddText(text);
-            Contents.Pop(); // Pop the color off.
+            var formatted = new FormattedMessage(3);
+            formatted.PushColor(color);
+            formatted.AddText(text);
+            formatted.Pop();
+            AddFormattedLine(formatted);
         }
 
         public void AddLine(string text, Color color)
@@ -142,57 +131,18 @@ namespace SS14.Client.UserInterface.CustomControls
                 return;
             }
 
+            _flushQueue();
             _addFormattedLineInternal(message);
         }
 
         public void Clear()
         {
-            lock (Contents)
-            {
-                Contents.Clear();
-                firstLine = true;
-            }
+            Output.Clear();
         }
 
         private void _addFormattedLineInternal(FormattedMessage message)
         {
-            if (!firstLine)
-            {
-                Contents.NewLine();
-            }
-            else
-            {
-                firstLine = false;
-            }
-
-            var pushCount = 0;
-            foreach (var tag in message.Tags)
-            {
-                switch (tag)
-                {
-                    case FormattedMessage.TagText text:
-                        Contents.AddText(text.Text);
-                        break;
-                    case FormattedMessage.TagColor color:
-                        Contents.PushColor(color.Color);
-                        pushCount++;
-                        break;
-                    case FormattedMessage.TagPop _:
-                        if (pushCount <= 0)
-                        {
-                            throw new InvalidOperationException();
-                        }
-
-                        Contents.Pop();
-                        pushCount--;
-                        break;
-                }
-            }
-
-            for (; pushCount > 0; pushCount--)
-            {
-                Contents.Pop();
-            }
+            Output.AddMessage(message);
         }
 
         private void _flushQueue()
@@ -237,13 +187,19 @@ namespace SS14.Client.UserInterface.CustomControls
                         return;
                     }
 
-                    if (_historyPosition >= CommandHistory.Count-1)
+                    if (_historyPosition >= CommandHistory.Count - 1)
                     {
                         CommandBar.Text = "";
                         return;
                     }
 
                     CommandBar.Text = CommandHistory[++_historyPosition];
+                    break;
+                }
+                case Keyboard.Key.PageDown:
+                {
+                    obj.Handle();
+                    Output.ScrollToBottom();
                     break;
                 }
             }

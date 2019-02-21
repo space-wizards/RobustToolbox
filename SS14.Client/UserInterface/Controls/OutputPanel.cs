@@ -7,7 +7,6 @@ using SS14.Client.Input;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
-using Color = SS14.Shared.Maths.Color;
 
 namespace SS14.Client.UserInterface.Controls
 {
@@ -18,17 +17,37 @@ namespace SS14.Client.UserInterface.Controls
     {
         private static readonly FormattedMessage.TagColor TagWhite = new FormattedMessage.TagColor(Color.White);
         private readonly List<Entry> _entries = new List<Entry>();
-        private int _mouseWheelOffset;
-        private int _totalContentHeight;
         private bool _isAtBottom = true;
+        private int _mouseWheelOffset;
+        private RichTextLabel _richTextLabel;
+        private int _totalContentHeight;
+        private bool rtlFirstLine = true;
+
+        public bool ScrollFollowing { get; set; } = true;
+
+        private int ScrollLimit => _totalContentHeight - (int) Size.Y + 1;
 
         public void Clear()
         {
-            _entries.Clear();
+            if (GameController.OnGodot)
+            {
+                _richTextLabel.Clear();
+                rtlFirstLine = true;
+            }
+            else
+            {
+                _entries.Clear();
+            }
         }
 
         public void RemoveLine(int line)
         {
+            if (GameController.OnGodot)
+            {
+                _richTextLabel.RemoveLine(line);
+                return;
+            }
+
             var entry = _entries[line];
             _entries.RemoveAt(line);
 
@@ -38,6 +57,12 @@ namespace SS14.Client.UserInterface.Controls
 
         public void AddMessage(FormattedMessage message)
         {
+            if (GameController.OnGodot)
+            {
+                _addMessageGodot(message);
+                return;
+            }
+
             var entry = new Entry(message);
 
             _updateEntry(ref entry);
@@ -51,11 +76,33 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
-        public bool ScrollFollowing { get; set; } = true;
+        public void ScrollToBottom()
+        {
+            _mouseWheelOffset = ScrollLimit;
+            _isAtBottom = true;
+        }
+
+        protected override void Initialize()
+        {
+            base.Initialize();
+
+            if (GameController.OnGodot)
+            {
+                _richTextLabel = new RichTextLabel();
+                AddChild(_richTextLabel);
+                _richTextLabel.SetAnchorAndMarginPreset(LayoutPreset.Wide);
+                _richTextLabel.ScrollFollowing = true;
+            }
+        }
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
+
+            if (GameController.OnGodot)
+            {
+                return;
+            }
 
             var font = _getFont();
             var contentBox = UIBox2.FromDimensions(Vector2.Zero, Size);
@@ -70,10 +117,8 @@ namespace SS14.Client.UserInterface.Controls
                     continue;
                 }
 
-                if (entryOffset + entry.Height - _mouseWheelOffset > contentBox.Height)
-                {
-                    break;
-                }
+                if (entryOffset + entry.Height - _mouseWheelOffset > contentBox.Height) break;
+
                 // A stack for format tags.
                 // This stack contains the format tag to RETURN TO when popped off.
                 // So when a new color tag gets hit this stack gets the previous color pushed on.
@@ -86,7 +131,6 @@ namespace SS14.Client.UserInterface.Controls
                 var lineBreakIndex = 0;
                 var baseLine = contentBox.TopLeft + new Vector2(0, font.Ascent + entryOffset - _mouseWheelOffset);
                 foreach (var tag in entry.Message.Tags)
-                {
                     switch (tag)
                     {
                         case FormattedMessage.TagColor tagColor:
@@ -103,6 +147,7 @@ namespace SS14.Client.UserInterface.Controls
                                 default:
                                     throw new InvalidOperationException();
                             }
+
                             break;
                         case FormattedMessage.TagText tagText:
                         {
@@ -124,7 +169,6 @@ namespace SS14.Client.UserInterface.Controls
                             break;
                         }
                     }
-                }
 
                 entryOffset += entry.Height + font.LineSeparation;
             }
@@ -133,6 +177,11 @@ namespace SS14.Client.UserInterface.Controls
         protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
         {
             base.MouseWheel(args);
+
+            if (GameController.OnGodot)
+            {
+                return;
+            }
 
             if (args.WheelDirection == Mouse.Wheel.Up)
             {
@@ -150,13 +199,50 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
-        private int ScrollLimit => _totalContentHeight - (int)Size.Y + 1;
+        private void _addMessageGodot(FormattedMessage message)
+        {
+            DebugTools.Assert(GameController.OnGodot);
+
+            if (!rtlFirstLine)
+            {
+                _richTextLabel.NewLine();
+            }
+            else
+            {
+                rtlFirstLine = false;
+            }
+
+            var pushCount = 0;
+            foreach (var tag in message.Tags)
+                switch (tag)
+                {
+                    case FormattedMessage.TagText text:
+                        _richTextLabel.AddText(text.Text);
+                        break;
+                    case FormattedMessage.TagColor color:
+                        _richTextLabel.PushColor(color.Color);
+                        pushCount++;
+                        break;
+                    case FormattedMessage.TagPop _:
+                        if (pushCount <= 0) throw new InvalidOperationException();
+
+                        _richTextLabel.Pop();
+                        pushCount--;
+                        break;
+                }
+
+            for (; pushCount > 0; pushCount--)
+            {
+                _richTextLabel.Pop();
+            }
+        }
 
         /// <summary>
         ///     Recalculate line dimensions and where it has line breaks for word wrapping.
         /// </summary>
         private void _updateEntry(ref Entry entry)
         {
+            DebugTools.Assert(!GameController.OnGodot);
             // This method is gonna suck due to complexity.
             // Bear with me here.
             // I am so deeply sorry for the person adding stuff to this in the future.
@@ -186,9 +272,6 @@ namespace SS14.Client.UserInterface.Controls
             {
                 if (!(tag is FormattedMessage.TagText tagText))
                 {
-                    // TODO: We definitely will have to support other tags eventually.
-                    // for example bold text changes glyph metrics.
-                    // For now color is pretty irrelevant though. Yay!
                     continue;
                 }
 
@@ -249,10 +332,6 @@ namespace SS14.Client.UserInterface.Controls
                     {
                         if (!forceSplitData.HasValue)
                         {
-                            // If this character put us over the sizeX,
-                            // this is where we'll break if the word itself ends up being larger than sizeX.
-                            // Also keep track of the word size of the new split word so
-                            // we can re-calculate the size of the second part of the split.
                             forceSplitData = (breakIndexCounter, oldWordSizePixels);
                         }
 
@@ -260,14 +339,7 @@ namespace SS14.Client.UserInterface.Controls
                         if (wordSizePixels > sizeX)
                         {
                             var (breakIndex, splitWordSize) = forceSplitData.Value;
-                            if (splitWordSize == 0)
-                            {
-                                // Uh I'm just gonna bail as there's clearly too little room to reasonably render this.
-                                // This happens when a single glyph is too large for a line which...
-                                // If somebody wants to "improve" this so it renders the glyph by going over size,
-                                // fine by me. As long as it doesn't crash.
-                                return;
-                            }
+                            if (splitWordSize == 0) return;
 
                             // Reset forceSplitData so that we can split again if necessary.
                             forceSplitData = null;
@@ -296,6 +368,11 @@ namespace SS14.Client.UserInterface.Controls
         protected override void Resized()
         {
             base.Resized();
+
+            if (GameController.OnGodot)
+            {
+                return;
+            }
 
             _invalidateEntries();
         }

@@ -1,54 +1,32 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace SS14.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
         private int _poolListCreated;
-        private int _poolTextureCreated;
-        private int _poolTransformCreated;
 
         // We use pooling to store command list related objects.
         // These command lists are causing GC overhead over my dead body.
 
         // Pooling capacities here are arbitrary. Tweak them if you want.
         private readonly Pool<RenderCommandList> _poolCommandList = new Pool<RenderCommandList>(200);
-        private readonly Pool<RenderCommandTexture> _poolCommandTexture = new Pool<RenderCommandTexture>(1000);
-        private readonly Pool<RenderCommandTransform> _poolCommandTransform = new Pool<RenderCommandTransform>(1000);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private RenderCommandList _getNewCommandList()
         {
             return _getFromPool(_poolCommandList, ref _poolListCreated);
         }
 
-        private RenderCommandTexture _getNewCommandTexture()
-        {
-            var item = _getFromPool(_poolCommandTexture, ref _poolTextureCreated);
-            item.SubRegion = null;
-            return item;
-        }
-
-        private RenderCommandTransform _getNewCommandTransform()
-        {
-            return _getFromPool(_poolCommandTransform, ref _poolTransformCreated);
-        }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _returnCommandList(RenderCommandList list)
         {
-            list.Commands.Clear();
+            list.RenderCommands.Clear();
             _storeInPool(_poolCommandList, list);
         }
 
-        private void _returnCommandTexture(RenderCommandTexture texture)
-        {
-            _storeInPool(_poolCommandTexture, texture);
-        }
-
-        private void _returnCommandTransform(RenderCommandTransform transform)
-        {
-            _storeInPool(_poolCommandTransform, transform);
-        }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static T _getFromPool<T>(Pool<T> pool, ref int counter) where T : new()
         {
             if (pool.Count == 0)
@@ -60,6 +38,7 @@ namespace SS14.Client.Graphics.Clyde
             return pool.Pop();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void _storeInPool<T>(Pool<T> pool, T item)
         {
             // If the pool is full just drop the value.

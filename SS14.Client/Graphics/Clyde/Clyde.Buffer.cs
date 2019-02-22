@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL4;
 using SS14.Shared.Utility;
@@ -64,6 +65,7 @@ namespace SS14.Client.Graphics.Clyde
                 Handle = -1;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void WriteSubData<T>(int start, Span<T> data) where T : unmanaged
             {
                 var byteSpan = MemoryMarshal.AsBytes(data);
@@ -77,6 +79,7 @@ namespace SS14.Client.Graphics.Clyde
                 }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void WriteSubData<T>(Span<T> data) where T : unmanaged
             {
                 var byteSpan = MemoryMarshal.AsBytes(data);
@@ -90,6 +93,7 @@ namespace SS14.Client.Graphics.Clyde
                 }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void WriteSubData<T>(in T data) where T : unmanaged
             {
                 unsafe
@@ -101,6 +105,7 @@ namespace SS14.Client.Graphics.Clyde
                 }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reallocate<T>(Span<T> data) where T : unmanaged
             {
                 var byteSpan = MemoryMarshal.AsBytes(data);
@@ -114,6 +119,7 @@ namespace SS14.Client.Graphics.Clyde
                 }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reallocate<T>(in T data) where T : unmanaged
             {
                 unsafe
@@ -125,6 +131,7 @@ namespace SS14.Client.Graphics.Clyde
                 }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reallocate(int size)
             {
                 GL.BufferData(Type, size, IntPtr.Zero, UsageHint);

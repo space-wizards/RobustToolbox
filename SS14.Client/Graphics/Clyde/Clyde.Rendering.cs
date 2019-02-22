@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL4;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics.ClientEye;
@@ -27,6 +29,8 @@ namespace SS14.Client.Graphics.Clyde
         /// </summary>
         private Matrix3 _currentModelMatrix = Matrix3.Identity;
 
+        private bool _batchModelMatricesNeedsUpdate = true;
+
         /// <summary>
         ///     Are we current rendering screen space or world space? Some code works differently between the two.
         /// </summary>
@@ -48,8 +52,8 @@ namespace SS14.Client.Graphics.Clyde
         // Need 5 indices per quad: 4 to draw the quad with triangle strips and another one as primitive restart.
         private readonly ushort[] BatchIndexData = new ushort[MaxBatchQuads * 5];
 
-        private readonly List<(RenderCommandTexture, Matrix3)>
-            BatchBuffer = new List<(RenderCommandTexture, Matrix3)>();
+        private readonly RefList<BatchCommand> BatchBuffer = new RefList<BatchCommand>();
+        private readonly RefList<Matrix3> BatchModelMatrices = new RefList<Matrix3>();
 
         private int? BatchingTexture;
 
@@ -84,6 +88,7 @@ namespace SS14.Client.Graphics.Clyde
             Vertex2DProgram.Use();
 
             _currentModelMatrix = Matrix3.Identity;
+            _batchModelMatricesNeedsUpdate = true;
 
             // We hand out this handle so external code can generate command lists for us.
             _renderHandle._drawingHandles.Clear();
@@ -288,24 +293,23 @@ namespace SS14.Client.Graphics.Clyde
 
         private void _processCommandList(RenderCommandList list)
         {
-            foreach (var command in list.Commands)
+            foreach (ref var command in list.RenderCommands)
             {
-                switch (command)
+                switch (command.Type)
                 {
-                    case RenderCommandTexture renderCommandTexture:
-                    {
-                        _drawCommandTexture(renderCommandTexture, true, ref _currentModelMatrix);
+                    case RenderCommandType.Texture:
+                        _drawCommandTexture(ref command, true, ref _currentModelMatrix);
                         break;
-                    }
-                    case RenderCommandTransform renderCommandTransform:
-                        _currentModelMatrix = renderCommandTransform.Matrix;
+                    case RenderCommandType.Transform:
+                        _currentModelMatrix = command.Matrix;
+                        _batchModelMatricesNeedsUpdate = true;
                         break;
                 }
             }
         }
 
         private void _drawCommandTexture(
-            RenderCommandTexture renderCommandTexture,
+            ref RenderCommand renderCommandTexture,
             bool doBatching,
             ref Matrix3 modelMatrix)
         {
@@ -328,7 +332,20 @@ namespace SS14.Client.Graphics.Clyde
                     BatchingModulate = renderCommandTexture.Modulate;
                 }
 
-                BatchBuffer.Add((renderCommandTexture, _currentModelMatrix));
+                ref var batchCommand = ref BatchBuffer.AllocAdd();
+                batchCommand.PositionA = renderCommandTexture.PositionA;
+                batchCommand.PositionB = renderCommandTexture.PositionB;
+                batchCommand.SubRegion = renderCommandTexture.SubRegion;
+                batchCommand.HasSubRegion = renderCommandTexture.HasSubRegion;
+                batchCommand.ArrayIndex = renderCommandTexture.ArrayIndex;
+                if (_batchModelMatricesNeedsUpdate)
+                {
+                    _batchModelMatricesNeedsUpdate = false;
+                    ref var model = ref BatchModelMatrices.AllocAdd();
+                    model = _currentModelMatrix;
+                }
+                batchCommand.TransformIndex = BatchModelMatrices.Count-1;
+
                 return;
             }
 
@@ -352,11 +369,11 @@ namespace SS14.Client.Graphics.Clyde
 
             GL.BindVertexArray(QuadVAO.Handle);
             // Use QuadVBO to render a single quad and modify the model matrix to position it where we need it.
-            if (renderCommandTexture.SubRegion.HasValue)
+            if (renderCommandTexture.HasSubRegion)
             {
                 // If the texture is in an atlas we have to set modifyUV in the shader,
                 // so that the shader translated the quad VBO 0->1 tex coords to the sub region needed.
-                var subRegion = renderCommandTexture.SubRegion.Value;
+                var subRegion = renderCommandTexture.SubRegion;
                 var (w, h) = loadedTexture.Size;
                 if (_currentSpace == CurrentSpace.ScreenSpace)
                 {
@@ -422,22 +439,6 @@ namespace SS14.Client.Graphics.Clyde
             {
                 drawHandle.Dispose();
                 _processCommandList(commandList);
-
-                // TODO: Would it make sense to merge this into the same loop in _processCommandList?
-                // Seems like a waste to iterate twice.
-                foreach (var command in commandList.Commands)
-                {
-                    // Note: Texture commands are not re-pooled here.
-                    // They're always at least tried for batching which is responsible for pooling them.
-                    switch (command)
-                    {
-                        case RenderCommandTransform renderCommandTransform:
-                            _returnCommandTransform(renderCommandTransform);
-                            break;
-                    }
-                }
-
-                commandList.Commands.Clear();
                 _returnCommandList(commandList);
             }
 
@@ -451,14 +452,27 @@ namespace SS14.Client.Graphics.Clyde
             // Pretty much just look at _drawCommandTexture and see what's missing.
             if (BatchBuffer.Count < TextureBatchThreshold)
             {
-                foreach (var (command, modelMatrix) in BatchBuffer)
+                foreach (ref var batchCommand in BatchBuffer)
                 {
-                    var transform = modelMatrix;
-                    _drawCommandTexture(command, false, ref transform);
-                    _returnCommandTexture(command);
+                    var textureCommand = new RenderCommand
+                    {
+                        // ReSharper disable once PossibleInvalidOperationException
+                        TextureId = BatchingTexture.Value,
+                        PositionA = batchCommand.PositionA,
+                        PositionB = batchCommand.PositionB,
+                        SubRegion = batchCommand.SubRegion,
+                        HasSubRegion = batchCommand.HasSubRegion,
+                        // ReSharper disable once PossibleInvalidOperationException
+                        Modulate = BatchingModulate.Value,
+                        ArrayIndex = batchCommand.ArrayIndex,
+                    };
+                    ref var transform = ref BatchModelMatrices[batchCommand.TransformIndex];
+                    _drawCommandTexture(ref textureCommand, false, ref transform);
                 }
 
                 BatchBuffer.Clear();
+                BatchModelMatrices.Clear();
+                _batchModelMatricesNeedsUpdate = true;
                 BatchingTexture = null;
                 BatchingModulate = null;
                 return;
@@ -468,13 +482,14 @@ namespace SS14.Client.Graphics.Clyde
             var loadedTexture = _loadedTextures[BatchingTexture.Value];
             var arrayed = loadedTexture.Type == LoadedTextureType.Array2D;
             ushort quadIndex = 0;
-            foreach (var (command, transform) in BatchBuffer)
+            foreach (ref var command in BatchBuffer)
             {
+                ref var transform = ref BatchModelMatrices[command.TransformIndex];
                 UIBox2 sr;
-                if (command.SubRegion.HasValue)
+                if (command.HasSubRegion)
                 {
                     var (w, h) = loadedTexture.Size;
-                    var csr = command.SubRegion.Value;
+                    var csr = command.SubRegion;
                     if (_currentSpace == CurrentSpace.WorldSpace)
                     {
                         sr = new UIBox2(csr.Left / w, csr.Top / h, csr.Right / w, csr.Bottom / h);
@@ -507,7 +522,6 @@ namespace SS14.Client.Graphics.Clyde
                 BatchIndexData[nIdx + 3] = (ushort) (tIdx + 3);
                 BatchIndexData[nIdx + 4] = ushort.MaxValue;
                 quadIndex += 1;
-                _returnCommandTexture(command);
                 if (quadIndex >= MaxBatchQuads)
                 {
                     throw new NotImplementedException("Can't batch things this big yet sorry.");
@@ -574,18 +588,17 @@ namespace SS14.Client.Graphics.Clyde
 
             // Reset batch buffer.
             BatchBuffer.Clear();
+            BatchModelMatrices.Clear();
+            _batchModelMatricesNeedsUpdate = true;
             BatchingTexture = null;
             BatchingModulate = null;
 
-            if (_logPoolOverdraw && (_poolListCreated > 0 || _poolTextureCreated > 0 || _poolTransformCreated > 0))
+            if (_logPoolOverdraw && _poolListCreated > 0)
             {
-                Logger.DebugS("ogl", "pool overdraw: l: {0}, tex: {1}, trans: {2}", _poolListCreated,
-                    _poolTextureCreated, _poolTransformCreated);
+                Logger.DebugS("ogl", "pool overdraw: l: {0}", _poolListCreated);
             }
 
             _poolListCreated = 0;
-            _poolTextureCreated = 0;
-            _poolTransformCreated = 0;
         }
 
         private class RenderHandle : IRenderHandle, IDisposable
@@ -634,10 +647,10 @@ namespace SS14.Client.Graphics.Clyde
             {
                 _assertNotDisposed();
 
-                var command = _manager._getNewCommandTransform();
                 var list = _drawingHandles[handleId].Item2;
+                ref var command = ref list.RenderCommands.AllocAdd();
+                command.Type = RenderCommandType.Transform;
                 command.Matrix = matrix;
-                list.Commands.Add(command);
             }
 
             public void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion,
@@ -645,7 +658,9 @@ namespace SS14.Client.Graphics.Clyde
             {
                 _assertNotDisposed();
 
-                var command = _manager._getNewCommandTexture();
+                var list = _drawingHandles[handleId].Item2;
+                ref var command = ref list.RenderCommands.AllocAdd();
+                command.Type = RenderCommandType.Texture;
                 switch (texture)
                 {
                     case AtlasTexture atlas:
@@ -667,15 +682,21 @@ namespace SS14.Client.Graphics.Clyde
                     }
                 }
 
-                var list = _drawingHandles[handleId].Item2;
                 var openGLTexture = (OpenGLTexture) texture;
                 command.TextureId = openGLTexture.OpenGLTextureId;
                 command.ArrayIndex = openGLTexture.ArrayIndex;
                 command.PositionA = a;
                 command.PositionB = b;
                 command.Modulate = modulate;
-                command.SubRegion = subRegion;
-                list.Commands.Add(command);
+                if (subRegion.HasValue)
+                {
+                    command.SubRegion = subRegion.Value;
+                    command.HasSubRegion = true;
+                }
+                else
+                {
+                    command.HasSubRegion = false;
+                }
             }
 
             public void Dispose()
@@ -683,6 +704,7 @@ namespace SS14.Client.Graphics.Clyde
                 _disposed = true;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void _assertNotDisposed()
             {
                 DebugTools.Assert(!_disposed);
@@ -695,33 +717,51 @@ namespace SS14.Client.Graphics.Clyde
             WorldSpace,
         }
 
+        // Use a tagged union to store all render commands.
+        // This significantly improves performance vs doing sum types via inheritance.
+        [StructLayout(LayoutKind.Explicit)]
+        private struct RenderCommand
+        {
+            [FieldOffset(0)] public RenderCommandType Type;
+
+            // Texture command fields.
+            [FieldOffset(4)] public int TextureId;
+            [FieldOffset(8)] public Vector2 PositionA;
+            [FieldOffset(16)] public Vector2 PositionB;
+
+            [FieldOffset(24)] public UIBox2 SubRegion;
+
+            // UIBox2 is 4 floats
+            [FieldOffset(40)] public bool HasSubRegion;
+            [FieldOffset(44)] public Color Modulate;
+            [FieldOffset(60)] public int ArrayIndex;
+
+            // Transform command fields.
+            [FieldOffset(4)] public Matrix3 Matrix;
+        }
+
+        private struct BatchCommand
+        {
+            public Vector2 PositionA;
+            public Vector2 PositionB;
+            public UIBox2 SubRegion;
+            public bool HasSubRegion;
+            public int ArrayIndex;
+            public int TransformIndex;
+        }
+
+        private enum RenderCommandType : int
+        {
+            Texture,
+            Transform,
+        }
+
         /// <summary>
         ///     A list of rendering commands to execute in order. Pooled.
         /// </summary>
         private class RenderCommandList
         {
-            public List<RenderCommand> Commands { get; } = new List<RenderCommand>();
-        }
-
-        private abstract class RenderCommand
-        {
-        }
-
-        // ReSharper disable once ClassNeverInstantiated.Local
-        private class RenderCommandTexture : RenderCommand
-        {
-            public int TextureId { get; set; }
-            public Vector2 PositionA { get; set; }
-            public Vector2 PositionB { get; set; }
-            public UIBox2? SubRegion { get; set; }
-            public Color Modulate { get; set; }
-            public int ArrayIndex { get; set; }
-        }
-
-        // ReSharper disable once ClassNeverInstantiated.Local
-        private class RenderCommandTransform : RenderCommand
-        {
-            public Matrix3 Matrix { get; set; }
+            public RefList<RenderCommand> RenderCommands = new RefList<RenderCommand>();
         }
     }
 

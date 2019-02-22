@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
@@ -18,10 +19,8 @@ using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.ResourceManagement;
-using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
-using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
@@ -29,6 +28,7 @@ using Matrix3 = SS14.Shared.Maths.Matrix3;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using Vector3 = SS14.Shared.Maths.Vector3;
 using Vector4 = SS14.Shared.Maths.Vector4;
+using DependencyAttribute = SS14.Shared.IoC.DependencyAttribute;
 
 namespace SS14.Client.Graphics.Clyde
 {
@@ -195,8 +195,13 @@ namespace SS14.Client.Graphics.Clyde
             GL.Enable(EnableCap.Blend);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
-            Logger.DebugS("ogl", "OpenGL Vendor: {0}", GL.GetString(StringName.Vendor));
-            Logger.DebugS("ogl", "OpenGL Version: {0}", GL.GetString(StringName.Version));
+            var vendor = GL.GetString(StringName.Vendor);
+            var renderer = GL.GetString(StringName.Renderer);
+            var version = GL.GetString(StringName.Version);
+            Logger.DebugS("ogl", "OpenGL Vendor: {0}", vendor);
+            Logger.DebugS("ogl", "OpenGL Renderer: {0}", renderer);
+            Logger.DebugS("ogl", "OpenGL Version: {0}", version);
+            _loadVendorSettings(vendor, renderer, version);
 
 #if DEBUG
             _hijackDebugCallback();
@@ -285,6 +290,15 @@ namespace SS14.Client.Graphics.Clyde
             _renderHandle = new RenderHandle(this);
 
             Render(null);
+        }
+
+        private void _loadVendorSettings(string vendor, string renderer, string version)
+        {
+            if (vendor.IndexOf("intel", StringComparison.InvariantCultureIgnoreCase) != -1)
+            {
+                // Intel specific settings.
+                _reallocateBuffers = true;
+            }
         }
 
         private void _displaySplash(IRenderHandle handle)
@@ -521,6 +535,7 @@ namespace SS14.Client.Graphics.Clyde
                 }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public Vertex2D(Vector2 position, Vector2 textureCoordinates, int arrayIndex)
             {
                 Position = position;
@@ -528,11 +543,13 @@ namespace SS14.Client.Graphics.Clyde
                 ArrayIndex = arrayIndex;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public Vertex2D(float x, float y, float u, float v, int arrayIndex)
                 : this(new Vector2(x, y), new Vector2(u, v), arrayIndex)
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public Vertex2D(Vector2 position, float u, float v, int arrayIndex)
                 : this(position, new Vector2(u, v), arrayIndex)
             {
@@ -596,6 +613,7 @@ namespace SS14.Client.Graphics.Clyde
             // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
             [FieldOffset(24 * sizeof(float))] private readonly Vector4 _pad;
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ProjViewMatrices(in Matrix3 projMatrix, in Matrix3 viewMatrix)
             {
                 _pad = Vector4.Zero;

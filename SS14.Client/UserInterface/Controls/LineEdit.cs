@@ -176,7 +176,7 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             var styleBox = _getStyleBox();
-            var drawBox = new UIBox2(Vector2.Zero, Size);
+            var drawBox = SizeBox;
             var contentBox = styleBox.GetContentBox(drawBox);
             styleBox.Draw(handle, drawBox);
             var font = _getFont();
@@ -341,7 +341,7 @@ namespace SS14.Client.UserInterface.Controls
 
             // Find closest cursor position under mouse.
             var style = _getStyleBox();
-            var contentBox = style.GetContentBox(new UIBox2(Vector2.Zero, Size));
+            var contentBox = style.GetContentBox(SizeBox);
 
             var clickPosX = args.RelativePosition.X;
 

@@ -107,7 +107,7 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             var font = _getFont();
-            var contentBox = UIBox2.FromDimensions(Vector2.Zero, Size);
+            var contentBox = SizeBox;
 
             var entryOffset = 0;
 
@@ -255,7 +255,7 @@ namespace SS14.Client.UserInterface.Controls
             // Bear with me here.
             // I am so deeply sorry for the person adding stuff to this in the future.
             var font = _getFont();
-            var contentBox = UIBox2.FromDimensions(Vector2.Zero, Size);
+            var contentBox = SizeBox;
             // Horizontal size we have to work with here.
             var sizeX = contentBox.Width;
             entry.Height = font.Height;

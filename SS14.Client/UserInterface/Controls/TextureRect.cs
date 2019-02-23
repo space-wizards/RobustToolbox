@@ -128,7 +128,7 @@ namespace SS14.Client.UserInterface.Controls
                     var texSize = _texture.Size * scale;
                     // Offset inside the actual texture.
                     var offset = (_texture.Size - Size) / scale / 2f;
-                    handle.DrawTextureRectRegion(_texture, UIBox2.FromDimensions(Vector2.Zero, Size), UIBox2.FromDimensions(offset, Size / scale));
+                    handle.DrawTextureRectRegion(_texture, SizeBox, UIBox2.FromDimensions(offset, Size / scale));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

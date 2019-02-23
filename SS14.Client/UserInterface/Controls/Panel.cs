@@ -59,7 +59,7 @@ namespace SS14.Client.UserInterface.Controls
             if (!GameController.OnGodot)
             {
                 var panel = ActualPanel;
-                panel.Draw(handle, UIBox2.FromDimensions(Vector2.Zero, Size));
+                panel.Draw(handle, SizeBox);
             }
         }
 

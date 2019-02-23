@@ -123,7 +123,7 @@ namespace SS14.Client.UserInterface.Controls
                 }
             }
 
-            handle.DrawTextureRect(texture, new UIBox2(Vector2.Zero, Size), false);
+            handle.DrawTextureRect(texture, SizeBox, false);
         }
 
         private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)

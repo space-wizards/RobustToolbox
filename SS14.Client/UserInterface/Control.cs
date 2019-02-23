@@ -1,4 +1,4 @@
-using SS14.Client.GodotGlue;
+﻿using SS14.Client.GodotGlue;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using System;
@@ -303,6 +303,10 @@ namespace SS14.Client.UserInterface
                 }
             }
         }
+
+        public UIBox2 SizeBox => new UIBox2(Vector2.Zero, Size);
+        public float Height => Size.Y;
+        public float Width => Size.Y;
 
         private Vector2 _position;
 

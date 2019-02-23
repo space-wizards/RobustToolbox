@@ -176,7 +176,7 @@ namespace SS14.Client.UserInterface.Controls
             var uiTheme = UserInterfaceManager.ThemeDefaults;
             var style = ActualStyleBox;
             var font = ActualFont;
-            var drawBox = UIBox2.FromDimensions(Vector2.Zero, Size);
+            var drawBox = SizeBox;
             style.Draw(handle, drawBox);
 
             if (_text == null)

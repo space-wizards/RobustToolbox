@@ -1037,6 +1037,12 @@ namespace SS14.Client.UserInterface
                 case "mouse_filter":
                     MouseFilter = (MouseFilterMode) (long) value;
                     break;
+                case "size_flags_horizontal":
+                    SizeFlagsHorizontal = (SizeFlags) (long) value;
+                    break;
+                case "size_flags_vertical":
+                    SizeFlagsVertical = (SizeFlags) (long) value;
+                    break;
             }
         }
 

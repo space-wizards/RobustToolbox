@@ -1,4 +1,4 @@
-using SS14.Client.GodotGlue;
+﻿using SS14.Client.GodotGlue;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using System;
@@ -304,6 +304,9 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        // _marginSetSize is the size calculated by the margins,
+        // but it's different from _size if min size is higher.
+        private Vector2 _sizeByMargins;
         private Vector2 _size;
 
         public Vector2 Size
@@ -317,7 +320,7 @@ namespace SS14.Client.UserInterface
                 }
                 else
                 {
-                    var (diffX, diffY) = value - _size;
+                    var (diffX, diffY) = value - _sizeByMargins;
                     _marginRight += diffX;
                     _marginBottom += diffY;
                     _updateLayout();
@@ -2184,7 +2187,8 @@ namespace SS14.Client.UserInterface
 
             _position = new Vector2(left, top);
             var oldSize = _size;
-            _size = Vector2.ComponentMax(new Vector2(right - left, bottom - top), CombinedMinimumSize);
+            _sizeByMargins = new Vector2(right - left, bottom - top);
+            _size = Vector2.ComponentMax(_sizeByMargins, CombinedMinimumSize);
 
             if (_size != oldSize)
             {

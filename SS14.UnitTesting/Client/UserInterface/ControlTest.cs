@@ -166,6 +166,21 @@ namespace SS14.UnitTesting.Client.UserInterface
             Assert.That(child.MarginBottom, Is.EqualTo(100));
         }
 
+        [Test]
+        public void TestLayoutSetMinSizeConstrained()
+        {
+            // Test changing a Control Size to a new value,
+            // when the old value was minsize (due to margins trying to go lower)
+            var control = new Control {Size = new Vector2(100, 100)};
+            var child = new Control {CustomMinimumSize = new Vector2(30, 30)};
+            control.AddChild(child);
+
+            Assert.That(child.Size, Is.EqualTo(new Vector2(30, 30)));
+
+            child.Size = new Vector2(50, 50);
+            Assert.That(child.Size, Is.EqualTo(new Vector2(50, 50)));
+        }
+
         /// <summary>
         ///     Test that you can't parent a control to its (grand)child.
         /// </summary>

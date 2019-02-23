@@ -50,14 +50,12 @@ namespace SS14.Client.UserInterface.CustomControls
                 BackgroundColor = Color.Gray.WithAlpha(0.5f),
             };
             styleBox.SetContentMarginOverride(StyleBox.Margin.All, 3);
-            var outputWrapPanel = new PanelContainer
+            Output = new OutputPanel
             {
-                PanelOverride = styleBox,
-                SizeFlagsVertical = SizeFlags.FillExpand
+                SizeFlagsVertical = SizeFlags.FillExpand,
+                StyleBoxOverride = styleBox
             };
-            boxContainer.AddChild(outputWrapPanel);
-            Output = new OutputPanel();
-            outputWrapPanel.AddChild(Output);
+            boxContainer.AddChild(Output);
 
             CommandBar = new LineEdit {PlaceHolder = "Command Here"};
             boxContainer.AddChild(CommandBar);

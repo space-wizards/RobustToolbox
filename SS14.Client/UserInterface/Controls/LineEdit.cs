@@ -1,6 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using SS14.Client.GodotGlue;
+using SS14.Client.Graphics;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Input;
 using SS14.Client.Utility;
@@ -11,6 +12,8 @@ namespace SS14.Client.UserInterface.Controls
     [ControlWrap(typeof(Godot.LineEdit))]
     public class LineEdit : Control
     {
+        public const string StylePropertyStyleBox = "stylebox";
+
         [NotNull] private string _text = "";
         private AlignMode _textAlign;
         private bool _editable;
@@ -172,13 +175,14 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
-            var styleBox = UserInterfaceManager.ThemeDefaults.LineEditBox;
+            var styleBox = _getStyleBox();
             var drawBox = new UIBox2(Vector2.Zero, Size);
             var contentBox = styleBox.GetContentBox(drawBox);
             styleBox.Draw(handle, drawBox);
-            var font = UserInterfaceManager.ThemeDefaults.DefaultFont;
+            var font = _getFont();
 
-            var baseLine = new Vector2i(0, (int) (contentBox.Height + font.Ascent) / 2) + contentBox.TopLeft;
+            var offsetY = (int) (contentBox.Height - font.Height) / 2;
+            var baseLine = new Vector2i(0, offsetY+font.Ascent) + contentBox.TopLeft;
 
             string renderedText;
             Color renderedTextColor;
@@ -257,8 +261,9 @@ namespace SS14.Client.UserInterface.Controls
                 return Vector2.Zero;
             }
 
-            var font = UserInterfaceManager.ThemeDefaults.DefaultFont;
-            return new Vector2(0, font.Height) + UserInterfaceManager.ThemeDefaults.LineEditBox.MinimumSize;
+            var font = _getFont();
+            var style = _getStyleBox();
+            return new Vector2(0, font.Height) + style.MinimumSize;
         }
 
         protected internal override void TextEntered(GUITextEventArgs args)
@@ -335,12 +340,12 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             // Find closest cursor position under mouse.
-            var style = UserInterfaceManager.ThemeDefaults.LineEditBox;
+            var style = _getStyleBox();
             var contentBox = style.GetContentBox(new UIBox2(Vector2.Zero, Size));
 
             var clickPosX = args.RelativePosition.X;
 
-            var font = UserInterfaceManager.ThemeDefaults.DefaultFont;
+            var font = _getFont();
             var index = 0;
             var chrPosX = contentBox.Left;
             var lastChrPostX = contentBox.Left;
@@ -406,6 +411,28 @@ namespace SS14.Client.UserInterface.Controls
             MouseFilter = MouseFilterMode.Stop;
             CanKeyboardFocus = true;
             KeyboardFocusOnClick = true;
+        }
+
+        [Pure]
+        private Font _getFont()
+        {
+            if (TryGetStyleProperty("font", out Font font))
+            {
+                return font;
+            }
+
+            return UserInterfaceManager.ThemeDefaults.DefaultFont;
+        }
+
+        [Pure]
+        private StyleBox _getStyleBox()
+        {
+            if (TryGetStyleProperty(StylePropertyStyleBox, out StyleBox box))
+            {
+                return box;
+            }
+
+            return UserInterfaceManager.ThemeDefaults.LineEditBox;
         }
 
         public enum AlignMode

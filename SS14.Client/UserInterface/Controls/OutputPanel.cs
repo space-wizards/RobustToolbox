@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Input;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
+using PureAttribute = System.Diagnostics.Contracts.PureAttribute;
 
 namespace SS14.Client.UserInterface.Controls
 {
@@ -15,23 +16,46 @@ namespace SS14.Client.UserInterface.Controls
     /// </summary>
     public class OutputPanel : Control
     {
+        public const string StylePropertyStyleBox = "stylebox";
+
         private static readonly FormattedMessage.TagColor TagWhite = new FormattedMessage.TagColor(Color.White);
         private readonly List<Entry> _entries = new List<Entry>();
         private bool _isAtBottom = true;
         private int _mouseWheelOffset;
-        private RichTextLabel _richTextLabel;
+        // These two are used to implement this on Godot.
+        private PanelContainer _godotPanelContainer;
+        private RichTextLabel _godotRichTextLabel;
         private int _totalContentHeight;
         private bool rtlFirstLine = true;
+        private StyleBox _styleBoxOverride;
 
         public bool ScrollFollowing { get; set; } = true;
 
         private int ScrollLimit => _totalContentHeight - (int) Size.Y + 1;
 
+        public StyleBox StyleBoxOverride
+        {
+            get => _styleBoxOverride;
+            set
+            {
+                _styleBoxOverride = value;
+                if (GameController.OnGodot)
+                {
+                    _godotPanelContainer.PanelOverride = value;
+                }
+                else
+                {
+                    _invalidateEntries();
+                    MinimumSizeChanged();
+                }
+            }
+        }
+
         public void Clear()
         {
             if (GameController.OnGodot)
             {
-                _richTextLabel.Clear();
+                _godotRichTextLabel.Clear();
                 rtlFirstLine = true;
             }
             else
@@ -46,7 +70,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (GameController.OnGodot)
             {
-                _richTextLabel.RemoveLine(line);
+                _godotRichTextLabel.RemoveLine(line);
                 return;
             }
 
@@ -90,10 +114,11 @@ namespace SS14.Client.UserInterface.Controls
 
             if (GameController.OnGodot)
             {
-                _richTextLabel = new RichTextLabel();
-                AddChild(_richTextLabel);
-                _richTextLabel.SetAnchorAndMarginPreset(LayoutPreset.Wide);
-                _richTextLabel.ScrollFollowing = true;
+                _godotPanelContainer = new PanelContainer();
+                _godotPanelContainer.SetAnchorPreset(LayoutPreset.Wide);
+                AddChild(_godotPanelContainer);
+                _godotRichTextLabel = new RichTextLabel {ScrollFollowing = true};
+                _godotPanelContainer.AddChild(_godotRichTextLabel);
             }
         }
 
@@ -106,8 +131,10 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
+            var style = _getStyleBox();
             var font = _getFont();
-            var contentBox = SizeBox;
+            var contentBox = style?.GetContentBox(SizeBox) ?? SizeBox;
+            style?.Draw(handle, SizeBox);
 
             var entryOffset = 0;
 
@@ -213,7 +240,7 @@ namespace SS14.Client.UserInterface.Controls
 
             if (!rtlFirstLine)
             {
-                _richTextLabel.NewLine();
+                _godotRichTextLabel.NewLine();
             }
             else
             {
@@ -225,23 +252,23 @@ namespace SS14.Client.UserInterface.Controls
                 switch (tag)
                 {
                     case FormattedMessage.TagText text:
-                        _richTextLabel.AddText(text.Text);
+                        _godotRichTextLabel.AddText(text.Text);
                         break;
                     case FormattedMessage.TagColor color:
-                        _richTextLabel.PushColor(color.Color);
+                        _godotRichTextLabel.PushColor(color.Color);
                         pushCount++;
                         break;
                     case FormattedMessage.TagPop _:
                         if (pushCount <= 0) throw new InvalidOperationException();
 
-                        _richTextLabel.Pop();
+                        _godotRichTextLabel.Pop();
                         pushCount--;
                         break;
                 }
 
             for (; pushCount > 0; pushCount--)
             {
-                _richTextLabel.Pop();
+                _godotRichTextLabel.Pop();
             }
         }
 
@@ -255,7 +282,7 @@ namespace SS14.Client.UserInterface.Controls
             // Bear with me here.
             // I am so deeply sorry for the person adding stuff to this in the future.
             var font = _getFont();
-            var contentBox = SizeBox;
+            var contentBox = _getStyleBox()?.GetContentBox(SizeBox) ?? SizeBox;
             // Horizontal size we have to work with here.
             var sizeX = contentBox.Width;
             entry.Height = font.Height;
@@ -385,6 +412,11 @@ namespace SS14.Client.UserInterface.Controls
             _invalidateEntries();
         }
 
+        protected override Vector2 CalculateMinimumSize()
+        {
+            return _getStyleBox()?.MinimumSize ?? Vector2.Zero;
+        }
+
         private void _invalidateEntries()
         {
             _totalContentHeight = 0;
@@ -418,6 +450,18 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             return UserInterfaceManager.ThemeDefaults.DefaultFont;
+        }
+
+        [Pure]
+        [CanBeNull]
+        private StyleBox _getStyleBox()
+        {
+            if (StyleBoxOverride != null)
+            {
+                return StyleBoxOverride;
+            }
+            TryGetStyleProperty(StylePropertyStyleBox, out StyleBox box);
+            return box;
         }
 
         [Pure]

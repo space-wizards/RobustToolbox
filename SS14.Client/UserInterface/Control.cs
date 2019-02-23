@@ -1,4 +1,4 @@
-﻿using SS14.Client.GodotGlue;
+using SS14.Client.GodotGlue;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using System;
@@ -261,6 +261,27 @@ namespace SS14.Client.UserInterface
                     _marginBottom = value;
                     _updateLayout();
                 }
+            }
+        }
+
+        public bool VisibleInTree
+        {
+            get
+            {
+                for (var parent = this; parent != null; parent = parent.Parent)
+                {
+                    if (!parent.Visible)
+                    {
+                        return false;
+                    }
+
+                    if (parent == UserInterfaceManager.RootControl)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
             }
         }
 

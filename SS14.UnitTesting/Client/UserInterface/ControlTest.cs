@@ -185,6 +185,42 @@ namespace SS14.UnitTesting.Client.UserInterface
             Assert.That(() => control3.AddChild(control1), Throws.ArgumentException);
         }
 
+        [Test]
+        public void TestVisibleInTree()
+        {
+            var control1 = new Control();
+
+            // Not visible because not parented to root control.
+            Assert.That(control1.Visible, Is.True);
+            Assert.That(control1.VisibleInTree, Is.False);
+
+            control1.UserInterfaceManager.RootControl.AddChild(control1);
+            Assert.That(control1.Visible, Is.True);
+            Assert.That(control1.VisibleInTree, Is.True);
+
+            control1.Visible = false;
+            Assert.That(control1.Visible, Is.False);
+            Assert.That(control1.VisibleInTree, Is.False);
+            control1.Visible = true;
+
+            var control2 = new Control();
+            Assert.That(control2.VisibleInTree, Is.False);
+
+            control1.AddChild(control2);
+            Assert.That(control2.VisibleInTree, Is.True);
+
+            control1.Visible = false;
+            Assert.That(control2.VisibleInTree, Is.False);
+
+            control2.Visible = false;
+            Assert.That(control2.VisibleInTree, Is.False);
+
+            control1.Visible = true;
+            Assert.That(control2.VisibleInTree, Is.False);
+
+            control1.Dispose();
+        }
+
         private class TestControl : Control
         {
             protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Test/TestScene.tscn");

@@ -1,4 +1,4 @@
-﻿using SS14.Client.GodotGlue;
+using SS14.Client.GodotGlue;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using System;
@@ -1179,6 +1179,19 @@ namespace SS14.Client.UserInterface
             if (child.Parent != null)
             {
                 throw new InvalidOperationException("This component is still parented. Deparent it before adding it.");
+            }
+
+            // Ensure this control isn't a parent of ours.
+            // Doesn't need to happen if the control has no children of course.
+            if (child.ChildCount != 0)
+            {
+                for (var parent = Parent; parent != null; parent = parent.Parent)
+                {
+                    if (parent == child)
+                    {
+                        throw new ArgumentException("This control is one of our parents!", nameof(child));
+                    }
+                }
             }
 
             var i = 0;

@@ -166,6 +166,25 @@ namespace SS14.UnitTesting.Client.UserInterface
             Assert.That(child.MarginBottom, Is.EqualTo(100));
         }
 
+        /// <summary>
+        ///     Test that you can't parent a control to its (grand)child.
+        /// </summary>
+        [Test]
+        public void TestNoRecursion()
+        {
+            var control1 = new Control();
+            var control2 = new Control();
+            var control3 = new Control();
+
+            control1.AddChild(control2);
+            // Test direct parent/child.
+            Assert.That(() => control2.AddChild(control1), Throws.ArgumentException);
+
+            control2.AddChild(control3);
+            // Test grand child.
+            Assert.That(() => control3.AddChild(control1), Throws.ArgumentException);
+        }
+
         private class TestControl : Control
         {
             protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Test/TestScene.tscn");

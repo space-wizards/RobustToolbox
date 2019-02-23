@@ -1,4 +1,4 @@
-﻿using SS14.Shared.Maths;
+using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.Controls
@@ -80,11 +80,11 @@ namespace SS14.Client.UserInterface.Controls
 
             if (child.SizeFlagsVertical == SizeFlags.ShrinkEnd)
             {
-                newPosX += (box.Height - minY);
+                newPosY += (box.Height - minY);
             }
             else if (child.SizeFlagsVertical == SizeFlags.ShrinkCenter)
             {
-                newPosX += (box.Height - minY) / 2;
+                newPosY += (box.Height - minY) / 2;
             }
             else if ((child.SizeFlagsVertical & SizeFlags.Fill) != 0)
             {

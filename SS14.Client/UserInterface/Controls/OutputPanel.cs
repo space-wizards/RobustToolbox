@@ -193,13 +193,13 @@ namespace SS14.Client.UserInterface.Controls
 
             if (args.WheelDirection == Mouse.Wheel.Up)
             {
-                _mouseWheelOffset = Math.Max(0, _mouseWheelOffset - 10);
+                _mouseWheelOffset = Math.Max(0, _mouseWheelOffset - _getScrollSpeed());
                 _isAtBottom = false;
             }
             else if (args.WheelDirection == Mouse.Wheel.Down)
             {
                 var limit = ScrollLimit;
-                _mouseWheelOffset = Math.Min(_mouseWheelOffset + 10, limit);
+                _mouseWheelOffset = Math.Min(_mouseWheelOffset + _getScrollSpeed(), limit);
                 if (limit == _mouseWheelOffset)
                 {
                     _isAtBottom = true;
@@ -418,6 +418,13 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             return UserInterfaceManager.ThemeDefaults.DefaultFont;
+        }
+
+        [Pure]
+        private int _getScrollSpeed()
+        {
+            var font = _getFont();
+            return font.Height * 2;
         }
 
         private struct Entry

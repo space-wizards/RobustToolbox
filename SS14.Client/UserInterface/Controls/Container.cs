@@ -1,4 +1,4 @@
-using SS14.Shared.Maths;
+﻿using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.Controls
@@ -98,6 +98,18 @@ namespace SS14.Client.UserInterface.Controls
         private void _childChanged(Control child)
         {
             MinimumSizeChanged();
+            SortChildren();
+        }
+
+        protected override void Resized()
+        {
+            base.Resized();
+
+            if (GameController.OnGodot)
+            {
+                return;
+            }
+
             SortChildren();
         }
     }

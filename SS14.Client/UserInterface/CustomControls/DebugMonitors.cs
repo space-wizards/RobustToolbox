@@ -8,12 +8,12 @@ namespace SS14.Client.UserInterface.CustomControls
     {
         public bool ShowFPS { get => FPSCounter.Visible; set => FPSCounter.Visible = value; }
         public bool ShowCoords { get => DebugCoordsPanel.Visible; set => DebugCoordsPanel.Visible = value; }
-        public bool ShowNet { get => NetDebugPanel.Visible; set => NetDebugPanel.Visible = value; }
+        public bool ShowNet { get => _debugNetPanel.Visible; set => _debugNetPanel.Visible = value; }
         public bool ShowTime { get => _timeDebug.Visible; set => _timeDebug.Visible = value; }
 
         private FPSCounter FPSCounter;
         private DebugCoordsPanel DebugCoordsPanel;
-        private NetDebugPanel NetDebugPanel;
+        private DebugNetPanel _debugNetPanel;
         private DebugTimePanel _timeDebug;
 
         protected override void Initialize()
@@ -33,8 +33,8 @@ namespace SS14.Client.UserInterface.CustomControls
             DebugCoordsPanel = new DebugCoordsPanel();
             AddChild(DebugCoordsPanel);
 
-            NetDebugPanel = new NetDebugPanel();
-            AddChild(NetDebugPanel);
+            _debugNetPanel = new DebugNetPanel();
+            AddChild(_debugNetPanel);
 
             _timeDebug = new DebugTimePanel
             {

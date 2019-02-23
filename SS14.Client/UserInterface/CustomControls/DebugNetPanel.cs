@@ -11,7 +11,7 @@ using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
-    public class NetDebugPanel : Panel
+    public class DebugNetPanel : Panel
     {
         // Float so I don't have to cast it to prevent integer division down below.
         const float ONE_KIBIBYTE = 1024;

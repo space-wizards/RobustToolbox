@@ -59,7 +59,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         protected override void FrameUpdate(RenderFrameEventArgs args)
         {
-            if (!Visible)
+            if (!VisibleInTree)
             {
                 return;
             }

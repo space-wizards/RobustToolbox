@@ -65,7 +65,7 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             base.Update(args);
 
-            if ((GameTiming.RealTime - LastUpdate).Seconds < 1 || !Visible)
+            if ((GameTiming.RealTime - LastUpdate).Seconds < 1 || !VisibleInTree)
             {
                 return;
             }

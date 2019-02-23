@@ -21,7 +21,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         protected override void Update(ProcessFrameEventArgs args)
         {
-            if (!Visible)
+            if (!VisibleInTree)
             {
                 return;
             }

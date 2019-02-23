@@ -48,7 +48,7 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             base.Update(args);
 
-            if (!Visible)
+            if (!VisibleInTree)
             {
                 return;
             }

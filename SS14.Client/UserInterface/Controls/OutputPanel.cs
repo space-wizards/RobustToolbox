@@ -31,7 +31,7 @@ namespace SS14.Client.UserInterface.Controls
 
         public bool ScrollFollowing { get; set; } = true;
 
-        private int ScrollLimit => _totalContentHeight - (int) Size.Y + 1;
+        private int ScrollLimit => Math.Max(0, _totalContentHeight - (int) Size.Y + 1);
 
         public StyleBox StyleBoxOverride
         {

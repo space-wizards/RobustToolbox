@@ -9,11 +9,12 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(GodotGlue.SpriteView))]
+    [ControlWrap(typeof(GodotGlue.SpriteView), "res://Engine/Scenes/SpriteMirror/SpriteView.tscn")]
     public class SpriteView : Control
     {
         ISpriteProxy Mirror;
         ISpriteComponent _sprite;
+
         public ISpriteComponent Sprite
         {
             get => _sprite;
@@ -37,17 +38,14 @@ namespace SS14.Client.UserInterface.Controls
 
         public SpriteView() : base()
         {
-
         }
 
         public SpriteView(string name) : base(name)
         {
-
         }
 
-        public SpriteView(GodotGlue.SpriteView control) : base(control)
+        public SpriteView(Godot.Control control) : base(control)
         {
-
         }
 
         protected override void Initialize()

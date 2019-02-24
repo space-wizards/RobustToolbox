@@ -1,21 +1,25 @@
-﻿using SS14.Client.Graphics;
-using SS14.Client.Interfaces;
+﻿using SS14.Client.Interfaces;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using SS14.Client.Graphics;
 
 namespace SS14.Client
 {
-    public class SceneTreeHolder : ISceneTreeHolder
+    internal class SceneTreeHolder : ISceneTreeHolder
     {
+        public Godot.CanvasLayer BelowWorldScreenSpace { get; private set; }
         public Godot.SceneTree SceneTree { get; private set; }
         public Godot.Node2D WorldRoot { get; private set; }
 
         public void Initialize(Godot.SceneTree tree)
         {
             SceneTree = tree ?? throw new ArgumentNullException(nameof(tree));
+
+            BelowWorldScreenSpace = new Godot.CanvasLayer
+            {
+                Name = "ScreenSubWorld",
+                Layer = CanvasLayers.LAYER_SCREEN_BELOW_WORLD
+            };
+            SceneTree.GetRoot().AddChild(BelowWorldScreenSpace);
 
             WorldRoot = new Godot.Node2D
             {

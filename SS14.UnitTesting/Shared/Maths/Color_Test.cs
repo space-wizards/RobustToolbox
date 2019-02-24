@@ -206,7 +206,7 @@ namespace SS14.UnitTesting.Shared.Maths
             const string name = "Definitely not a color name";
 
             Assert.Throws<KeyNotFoundException>(() => Color.FromName(name));
-            Assert.DoesNotThrow(() => Color.TryFromName(name, out Color color));
+            Assert.DoesNotThrow(() => Color.TryFromName(name, out _));
         }
 
         [Test]

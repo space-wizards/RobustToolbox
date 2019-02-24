@@ -1,4 +1,5 @@
-﻿using SS14.Client.Graphics;
+﻿using System;
+using SS14.Client.Graphics;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
 
@@ -7,113 +8,161 @@ namespace SS14.Client.UserInterface.Controls
     [ControlWrap(typeof(Godot.ItemList))]
     public class ItemList : Control
     {
-        new Godot.ItemList SceneControl;
+        public int ItemCount => GameController.OnGodot ? (int)SceneControl.Call("get_item_count") : default;
 
-        public int ItemCount => SceneControl.GetItemCount();
+        public ItemList()
+        {
+        }
 
-        public ItemList() : base() { }
-        public ItemList(string name) : base(name) { }
-        internal ItemList(Godot.ItemList control) : base(control) { }
+        public ItemList(string name) : base(name)
+        {
+        }
+
+        internal ItemList(Godot.ItemList control) : base(control)
+        {
+        }
 
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.ItemList();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.ItemList)control;
-        }
-
         public void AddItem(string text, Texture icon = null, bool selectable = true)
         {
-            SceneControl.AddItem(text, icon, selectable);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("add_item", text, icon, selectable);
+            }
         }
 
         public void AddIconItem(Texture icon, bool selectable = true)
         {
-            SceneControl.AddIconItem(icon, selectable);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("add_icon_item", icon, selectable);
+            }
         }
 
         public void Clear()
         {
-            SceneControl.Clear();
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("clear");
+            }
         }
 
         public void EnsureCurrentIsVisible()
         {
-            SceneControl.EnsureCurrentIsVisible();
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("ensure_current_is_visible");
+            }
         }
 
         public int GetItemAtPosition(Vector2 position, bool exact = false)
         {
-            return SceneControl.GetItemAtPosition(position.Convert(), exact);
+            return GameController.OnGodot ? (int)SceneControl.Call("get_item_at_position", position.Convert(), exact) : default;
         }
 
         public bool IsSelected(int idx)
         {
-            return SceneControl.IsSelected(idx);
+            return GameController.OnGodot ? (bool)SceneControl.Call("is_selected", idx) : default;
         }
 
         public void RemoveItem(int idx)
         {
-            SceneControl.RemoveItem(idx);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("remove_item", idx);
+            }
         }
 
         public void Select(int idx, bool single = true)
         {
-            SceneControl.Select(idx, single);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("select", idx, single);
+            }
         }
 
         public void SetItemCustomBgColor(int idx, Color color)
         {
-            SceneControl.SetItemCustomBgColor(idx, color.Convert());
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("set_icon_custom_bg_color", idx, color.Convert());
+            }
         }
 
         public void SetItemDisabled(int idx, bool disabled)
         {
-            SceneControl.SetItemDisabled(idx, disabled);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("set_item_disabled", idx, disabled);
+            }
         }
 
         public void SetItemIcon(int idx, Texture icon)
         {
-            SceneControl.SetItemIcon(idx, icon);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("set_item_icon", idx, icon);
+            }
         }
 
         public void SetItemIconRegion(int idx, UIBox2 region)
         {
-            SceneControl.SetItemIconRegion(idx, region.Convert());
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("set_item_icon_region", idx, region.Convert());
+            }
         }
 
         public void SetItemSelectable(int idx, bool selectable)
         {
-            SceneControl.SetItemSelectable(idx, selectable);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("set_item_selectable", idx, selectable);
+            }
         }
 
         public void SetItemText(int idx, string text)
         {
-            SceneControl.SetItemText(idx, text);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("set_item_text", idx, text);
+            }
         }
 
         public void SetItemTooltip(int idx, string tooltip)
         {
-            SceneControl.SetItemTooltip(idx, tooltip);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("set_item_tooltip", idx, tooltip);
+            }
         }
 
         public void SetItemTooltipEnabled(int idx, bool enabled)
         {
-            SceneControl.SetItemTooltipEnabled(idx, enabled);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("set_item_tooltip_enabled", idx, enabled);
+            }
         }
 
         public void SortItemsByText()
         {
-            SceneControl.SortItemsByText();
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("sort_items_by_text");
+            }
         }
 
         public void Unselect(int idx)
         {
-            SceneControl.Unselect(idx);
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("unselect", idx);
+            }
         }
     }
 }

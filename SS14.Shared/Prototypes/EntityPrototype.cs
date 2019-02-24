@@ -278,14 +278,50 @@ namespace SS14.Shared.GameObjects
                     {
                         break;
                     }
-                    foreach (EntityPrototype child in Children)
-                    {
-                        PushInheritance(this, child);
-                    }
-
+                    PushInheritanceAll();
                     break;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Iteratively pushes inheritance down to all children, children's children, etc. breadth-first.
+        /// </summary>
+        private void PushInheritanceAll()
+        {
+            if (Children == null)
+            {
+                return;
+            }
+
+            var sourceTargets = new List<(EntityPrototype, List<EntityPrototype>)> {(this, Children)};
+            var newSources = new List<EntityPrototype>();
+            while (true)
+            {
+                foreach (var (source, targetList) in sourceTargets)
+                {
+                    if (targetList == null)
+                    {
+                        continue;
+                    }
+                    foreach (var target in targetList)
+                    {
+                        PushInheritance(source, target);
+                    }
+                    newSources.AddRange(targetList);
+                }
+
+                if (newSources.Count == 0)
+                {
+                    break;
+                }
+                sourceTargets.Clear();
+                foreach (var newSource in newSources)
+                {
+                    sourceTargets.Add((newSource, newSource.Children));
+                }
+                newSources.Clear();
+            }
         }
 
         private static void PushInheritance(EntityPrototype source, EntityPrototype target)
@@ -364,12 +400,6 @@ namespace SS14.Shared.GameObjects
             if (target.Children == null)
             {
                 return;
-            }
-
-            // TODO: remove recursion somehow.
-            foreach (EntityPrototype child in target.Children)
-            {
-                PushInheritance(target, child);
             }
         }
 

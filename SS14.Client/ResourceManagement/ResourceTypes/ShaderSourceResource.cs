@@ -20,6 +20,10 @@ namespace SS14.Client.ResourceManagement.ResourceTypes
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
             using (var stream = cache.ContentFileRead(path))
             using (var reader = new StreamReader(stream, Encoding.UTF8))
             {
@@ -44,6 +48,10 @@ namespace SS14.Client.ResourceManagement.ResourceTypes
 
         private ShaderParamType DetectParamType(IDictionary<object, object> dict)
         {
+            if (!GameController.OnGodot)
+            {
+                throw new NotImplementedException();
+            }
             var type = (Godot.Variant.Type)dict["type"];
             var hint = (Godot.PropertyHint)dict["hint"];
             var hint_string = (string)dict["hint_string"];

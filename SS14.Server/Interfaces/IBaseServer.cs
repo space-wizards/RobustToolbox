@@ -9,16 +9,6 @@ namespace SS14.Server.Interfaces
     public interface IBaseServer
     {
         /// <summary>
-        ///     Current RunLevel that the server is at.
-        /// </summary>
-        ServerRunLevel RunLevel { get; set; }
-
-        /// <summary>
-        ///     The name of the current running map.
-        /// </summary>
-        string MapName { get; }
-
-        /// <summary>
         ///     The maximum number of players allowed in the server.
         /// </summary>
         int MaxPlayers { get; }
@@ -27,16 +17,6 @@ namespace SS14.Server.Interfaces
         ///     The displayed name of our server.
         /// </summary>
         string ServerName { get; }
-
-        /// <summary>
-        ///     The MOTD displayed when joining the server.
-        /// </summary>
-        string Motd { get; }
-
-        /// <summary>
-        ///     The name of the game mode displayed to clients.
-        /// </summary>
-        string GameModeName { get; set; }
 
         /// <summary>
         ///     Sets up the server, loads the game, gets ready for client connections.
@@ -59,10 +39,5 @@ namespace SS14.Server.Interfaces
         ///     Enters the main loop of the server. This functions blocks until the server is shut down.
         /// </summary>
         void MainLoop();
-
-        /// <summary>
-        ///     Raised when the server RunLevel is changed.
-        /// </summary>
-        event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
     }
 }

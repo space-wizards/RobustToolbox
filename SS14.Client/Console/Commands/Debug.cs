@@ -37,7 +37,7 @@ namespace SS14.Client.Console.Commands
 
             foreach (IEntity e in entitymanager.GetEntities(new ComponentEntityQuery()))
             {
-                console.AddLine($"entity {e.Uid}, {e.Prototype.ID}, {e.GetComponent<ITransformComponent>().LocalPosition}.", ChatChannel.Default, Color.White);
+                console.AddLine($"entity {e.Uid}, {e.Prototype.ID}, {e.Transform.GridPosition}.", ChatChannel.Default, Color.White);
             }
 
             return false;
@@ -161,8 +161,6 @@ namespace SS14.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
-
             var window = new EntitySpawnWindow();
             window.AddToScreen();
             return false;

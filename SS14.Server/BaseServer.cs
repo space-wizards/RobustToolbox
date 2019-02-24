@@ -32,6 +32,7 @@ using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Map;
 using SS14.Server.Interfaces.Maps;
+using SS14.Server.Interfaces.ServerStatus;
 using SS14.Server.Player;
 using SS14.Server.ViewVariables;
 using SS14.Shared.Asynchronous;
@@ -81,7 +82,6 @@ namespace SS14.Server
 
         private FileLogHandler fileLogHandler;
         private GameLoop _mainLoop;
-        private ServerRunLevel _runLevel;
 
         [Dependency]
         private IRuntimeLog runtimeLog;
@@ -91,29 +91,10 @@ namespace SS14.Server
         private int _lastSentBytes;
 
         /// <inheritdoc />
-        public ServerRunLevel RunLevel
-        {
-            get => _runLevel;
-            set => OnRunLevelChanged(value);
-        }
-
-        /// <inheritdoc />
-        public string MapName => _config.GetCVar<string>("game.mapname");
-
-        /// <inheritdoc />
         public int MaxPlayers => _config.GetCVar<int>("game.maxplayers");
 
         /// <inheritdoc />
         public string ServerName => _config.GetCVar<string>("game.hostname");
-
-        /// <inheritdoc />
-        public string Motd => _config.GetCVar<string>("game.welcomemsg");
-
-        /// <inheritdoc />
-        public string GameModeName { get; set; } = string.Empty;
-
-        /// <inheritdoc />
-        public event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
 
         /// <inheritdoc />
         public void Restart()
@@ -166,26 +147,19 @@ namespace SS14.Server
             // Has to be done early because this guy's in charge of the main thread Synchronization Context.
             _taskManager.Initialize();
 
-            OnRunLevelChanged(ServerRunLevel.Init);
-
             LoadSettings();
 
             var netMan = IoCManager.Resolve<IServerNetManager>();
             try
             {
                 netMan.Initialize(true);
-                netMan.Startup();
-            }
-            catch (System.Net.Sockets.SocketException)
-            {
-                var port = netMan.Port;
-                Logger.Fatal($"Unable to setup networking manager. Check port {port} is not already in use!, shutting down...");
-                Environment.Exit(1);
+                netMan.StartServer();
             }
             catch (Exception e)
             {
-                Logger.Fatal($"Unable to setup networking manager. Unknown exception: {e}, shutting down...");
-                Environment.Exit(1);
+                var port = netMan.Port;
+                Logger.Fatal("Unable to setup networking manager. Check port {0} is not already in use and that all binding addresses are correct!\n{1}", port, e);
+                return true;
             }
 
             // Set up the VFS
@@ -197,7 +171,7 @@ namespace SS14.Server
             // Load from the resources dir in the repo root instead.
             // It's a debug build so this is fine.
             _resources.MountContentDirectory(@"../../Resources/");
-            _resources.MountContentDirectory(@"Resources/Assemblies", new ResourcePath("/Assemblies/"));
+            _resources.MountContentDirectory(@"../../../bin/Content.Server/", new ResourcePath("/Assemblies/"));
 #endif
 
             //mount the engine content pack
@@ -244,7 +218,10 @@ namespace SS14.Server
             IoCManager.Resolve<IConsoleShell>().Initialize();
             IoCManager.Resolve<IConGroupController>().Initialize();
 
-            OnRunLevelChanged(ServerRunLevel.PreGame);
+            AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.PostInit);
+
+            _entities.Startup();
+            IoCManager.Resolve<IStatusHost>().Start();
 
             return false;
         }
@@ -292,40 +269,14 @@ namespace SS14.Server
             cfgMgr.RegisterCVar("net.tickrate", 66, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
             cfgMgr.RegisterCVar("game.hostname", "MyServer", CVar.ARCHIVE);
-            cfgMgr.RegisterCVar("game.mapname", "SavedEntities.xml", CVar.ARCHIVE);
             cfgMgr.RegisterCVar("game.maxplayers", 32, CVar.ARCHIVE);
             cfgMgr.RegisterCVar("game.type", GameType.Game);
-            cfgMgr.RegisterCVar("game.welcomemsg", "Welcome to the server!", CVar.ARCHIVE);
 
             _time.TickRate = _config.GetCVar<int>("net.tickrate");
 
             Logger.InfoS("srv", $"Name: {ServerName}");
             Logger.InfoS("srv", $"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
-            Logger.InfoS("srv", $"Map: {MapName}");
             Logger.InfoS("srv", $"Max players: {MaxPlayers}");
-            Logger.InfoS("srv", $"Welcome message: {Motd}");
-        }
-
-        /// <summary>
-        ///     Switches the run level of the BaseServer to the desired value.
-        /// </summary>
-        private void OnRunLevelChanged(ServerRunLevel level)
-        {
-            if (level == _runLevel)
-                return;
-
-            Logger.Debug($"[ENG] Runlevel changed to: {level}");
-            var args = new RunLevelChangedEventArgs(_runLevel, level);
-            _runLevel = level;
-            RunLevelChanged?.Invoke(this, args);
-
-            // positive edge triggers
-            switch (level)
-            {
-                case ServerRunLevel.PreGame:
-                    _entities.Startup();
-                    break;
-            }
         }
 
         // called right before main loop returns, do all saving/cleanup in here
@@ -343,15 +294,6 @@ namespace SS14.Server
             System.IO.File.WriteAllText(pathToWrite, runtimeLog.Display());
 
             //TODO: This should prob shutdown all managers in a loop.
-
-            // remove all maps
-            if (_runLevel == ServerRunLevel.Game)
-            {
-                var mapMgr = IoCManager.Resolve<IMapManager>();
-
-                // TODO: Unregister all maps.
-                mapMgr.DeleteMap(new MapId(1));
-            }
         }
 
         private string UpdateBps()
@@ -377,28 +319,14 @@ namespace SS14.Server
 
             timerManager.UpdateTimers(frameTime);
             _taskManager.ProcessPendingTasks();
-            if (_runLevel >= ServerRunLevel.PreGame)
-            {
-                _components.CullRemovedComponents();
-                _entities.Update(frameTime);
-            }
+
+            _components.CullRemovedComponents();
+            _entities.Update(frameTime);
+
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, frameTime);
 
             _stateManager.SendGameStateUpdate();
         }
-    }
-
-    /// <summary>
-    ///     Enumeration of the run levels of the BaseServer.
-    /// </summary>
-    public enum ServerRunLevel
-    {
-        Error = 0,
-        Init,
-        PreGame,
-        Game,
-        PostGame,
-        MapChange,
     }
 
     /// <summary>
@@ -408,30 +336,5 @@ namespace SS14.Server
     {
         MapEditor = 0,
         Game,
-    }
-
-    /// <summary>
-    ///     Event arguments for when the RunLevel has changed in the BaseServer.
-    /// </summary>
-    public class RunLevelChangedEventArgs : EventArgs
-    {
-        /// <summary>
-        ///     RunLevel that the BaseServer switched from.
-        /// </summary>
-        public ServerRunLevel OldLevel { get; }
-
-        /// <summary>
-        ///     RunLevel that the BaseServers switched to.
-        /// </summary>
-        public ServerRunLevel NewLevel { get; }
-
-        /// <summary>
-        ///     Constructs a new instance of the class.
-        /// </summary>
-        public RunLevelChangedEventArgs(ServerRunLevel oldLevel, ServerRunLevel newLevel)
-        {
-            OldLevel = oldLevel;
-            NewLevel = newLevel;
-        }
     }
 }

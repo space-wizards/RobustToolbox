@@ -87,7 +87,7 @@ namespace SS14.Server.Placement
                 return;
 
             // get the MapID the player is on
-            var plyTransform = plyEntity.GetComponent<ITransformComponent>();
+            var plyTransform = plyEntity.Transform;
             var mapIndex = plyTransform.MapID;
 
             // no building in null space!
@@ -99,7 +99,7 @@ namespace SS14.Server.Placement
             // get the grid under the worldCoords.
 
             var grid = _mapManager.GetMap(mapIndex).GetGrid(plyTransform.GridID);
-            var coordinates = new GridLocalCoordinates(xValue, yValue, grid);
+            var coordinates = new GridCoordinates(xValue, yValue, grid);
 
 
             /* TODO: Redesign permission system, or document what this is supposed to be doing
@@ -125,11 +125,10 @@ namespace SS14.Server.Placement
             */
             if (!isTile)
             {
-                if (!_entityManager.TrySpawnEntityAt(entityTemplateName, coordinates, out IEntity created))
+                if (!_entityManager.TrySpawnEntityAt(entityTemplateName, coordinates, out var created))
                     return;
-                
-                if (created.TryGetComponent<ITransformComponent>(out var component))
-                    component.LocalRotation = dirRcv.ToAngle();
+
+                created.Transform.LocalRotation = dirRcv.ToAngle();
             }
             else
             {
@@ -297,7 +296,7 @@ namespace SS14.Server.Placement
                 .Where(permission => permission.MobUid == mob.Uid)
                 .ToList();
 
-            if (mobPermissions.Any())
+            if (mobPermissions.Count != 0)
                 BuildPermissions.RemoveAll(x => mobPermissions.Contains(x));
         }
 
@@ -305,11 +304,15 @@ namespace SS14.Server.Placement
 
         private PlacementInformation GetPermission(EntityUid uid, string alignOpt)
         {
-            var permission = BuildPermissions
-                .Where(p => p.MobUid == uid && p.PlacementOption.Equals(alignOpt))
-                .ToList();
+            foreach (var buildPermission in BuildPermissions)
+            {
+                if (buildPermission.MobUid == uid && buildPermission.PlacementOption == alignOpt)
+                {
+                    return buildPermission;
+                }
+            }
 
-            return permission.Any() ? permission.First() : null;
+            return null;
         }
     }
 }

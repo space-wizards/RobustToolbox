@@ -9,7 +9,6 @@ namespace SS14.Client.Interfaces.Graphics.Overlays
         OverlaySpace Space { get; }
 
         void FrameUpdate(RenderFrameEventArgs args);
-
         void AssignCanvasItem(Godot.RID canvasItem);
     }
 
@@ -27,5 +26,10 @@ namespace SS14.Client.Interfaces.Graphics.Overlays
         ///     This overlay will be drawn in the world root, thus being in world space.
         /// </summary>
         WorldSpace = 1,
+
+        /// <summary>
+        ///     Drawn in screen coordinates, but behind the world.
+        /// </summary>
+        ScreenSpaceBelowWorld = 2,
     }
 }

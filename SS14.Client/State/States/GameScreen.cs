@@ -36,8 +36,6 @@ namespace SS14.Client.State.States
         [Dependency]
         readonly IUserInterfaceManager userInterfaceManager;
         [Dependency]
-        readonly IClientChatConsole console;
-        [Dependency]
         readonly IPlacementManager placementManager;
         [Dependency]
         readonly IEyeManager eyeManager;
@@ -47,9 +45,6 @@ namespace SS14.Client.State.States
         private readonly IGameTiming timing;
 
         private EscapeMenu escapeMenu;
-
-        private Chatbox _gameChat;
-
         private IEntity lastHoveredEntity;
 
         public override void Startup()
@@ -83,30 +78,17 @@ namespace SS14.Client.State.States
                 }
             });
             inputManager.SetInputCommand(EngineKeyFunctions.EscapeMenu, escapeMenuCommand);
-            inputManager.SetInputCommand(EngineKeyFunctions.FocusChat, InputCmdHandler.FromDelegate(session =>
-            {
-                _gameChat.Input.GrabFocus();
-            }));
-
-            _gameChat = new Chatbox();
-            userInterfaceManager.StateRoot.AddChild(_gameChat);
-            _gameChat.TextSubmitted += console.ParseChatMessage;
-            console.AddString += _gameChat.AddLine;
-            _gameChat.DefaultChatFormat = "say \"{0}\"";
         }
 
         public override void Shutdown()
         {
             escapeMenu.Dispose();
-            _gameChat.TextSubmitted -= console.ParseChatMessage;
-            console.AddString -= _gameChat.AddLine;
 
             playerManager.LocalPlayer.DetachEntity();
 
             userInterfaceManager.StateRoot.DisposeAllChildren();
 
             inputManager.SetInputCommand(EngineKeyFunctions.EscapeMenu, null);
-            inputManager.SetInputCommand(EngineKeyFunctions.FocusChat, null);
 
             inputManager.KeyBindStateChanged -= OnKeyBindStateChanged;
         }
@@ -159,7 +141,7 @@ namespace SS14.Client.State.States
             clickable.DispatchClick(playerManager.LocalPlayer.ControlledEntity, eventargs.ClickType);
         }
 
-        public IEntity GetEntityUnderPosition(GridLocalCoordinates coordinates)
+        public IEntity GetEntityUnderPosition(GridCoordinates coordinates)
         {
             var entitiesUnderPosition = GetEntitiesUnderPosition(coordinates);
             return entitiesUnderPosition.Count > 0 ? entitiesUnderPosition[0] : null;
@@ -175,13 +157,13 @@ namespace SS14.Client.State.States
             return GetEntitiesUnderPosition(mousePosWorld);
         }
 
-        public IList<IEntity> GetEntitiesUnderPosition(GridLocalCoordinates coordinates)
+        public IList<IEntity> GetEntitiesUnderPosition(GridCoordinates coordinates)
         {
             return GetEntitiesUnderPosition(_entityManager, coordinates);
         }
 
         private static IList<IEntity> GetEntitiesUnderPosition(IClientEntityManager entityMan,
-            GridLocalCoordinates coordinates)
+            GridCoordinates coordinates)
         {
             // Find all the entities intersecting our click
             var entities = entityMan.GetEntitiesIntersecting(coordinates.MapID, coordinates.Position);
@@ -191,7 +173,7 @@ namespace SS14.Client.State.States
             foreach (var entity in entities)
             {
                 if (entity.TryGetComponent<IClientClickableComponent>(out var component)
-                    && entity.GetComponent<ITransformComponent>().IsMapTransform
+                    && entity.Transform.IsMapTransform
                     && component.CheckClick(coordinates, out var drawDepthClicked))
                 {
                     foundEntities.Add((entity, drawDepthClicked));
@@ -216,9 +198,9 @@ namespace SS14.Client.State.States
                 {
                     return val;
                 }
-                var transx = x.clicked.GetComponent<ITransformComponent>();
-                var transy = y.clicked.GetComponent<ITransformComponent>();
-                return transx.LocalPosition.Y.CompareTo(transy.LocalPosition.Y);
+                var transx = x.clicked.Transform;
+                var transy = y.clicked.Transform;
+                return transx.GridPosition.Y.CompareTo(transy.GridPosition.Y);
             }
         }
 

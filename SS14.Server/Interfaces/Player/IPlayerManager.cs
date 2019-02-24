@@ -18,6 +18,7 @@ namespace SS14.Server.Interfaces.Player
     {
         /// <summary>
         ///     Number of players currently connected to this server.
+        ///     Fetching this is thread safe.
         /// </summary>
         int PlayerCount { get; }
 
@@ -36,7 +37,6 @@ namespace SS14.Server.Interfaces.Player
         /// <summary>
         ///     Initializes the manager.
         /// </summary>
-        /// <param name="baseServer">The server that instantiated this manager.</param>
         /// <param name="maxPlayers">Maximum number of players that can connect to this server at one time.</param>
         void Initialize(int maxPlayers);
 
@@ -59,12 +59,10 @@ namespace SS14.Server.Interfaces.Player
         bool TryGetPlayerData(NetSessionId sessionId, out IPlayerData data);
         bool HasPlayerData(NetSessionId sessionId);
 
-        void SendJoinGameToAll();
-        void SendJoinLobbyToAll();
+        IEnumerable<IPlayerData> GetAllPlayerData();
 
         void DetachAll();
-        List<IPlayerSession> GetPlayersInLobby();
-        List<IPlayerSession> GetPlayersInRange(GridLocalCoordinates worldPos, int range);
+        List<IPlayerSession> GetPlayersInRange(GridCoordinates worldPos, int range);
         List<IPlayerSession> GetAllPlayers();
         List<PlayerState> GetPlayerStates();
     }

@@ -8,7 +8,7 @@
     <OutputPath>.mono\temp\bin\$(Configuration)</OutputPath>
     <RootNamespace>SS14.Client.Godot</RootNamespace>
     <AssemblyName>SS14.Client.Godot</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <BaseIntermediateOutputPath>.mono\temp\obj</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)</IntermediateOutputPath>
     <ErrorReport>prompt</ErrorReport>
@@ -44,7 +44,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Scenes\SpriteMirror\SpriteView.cs" />
+    <Compile Include="SpriteView.cs" />
     <Compile Include="SS14Loader.cs" />
     <Compile Include="ControlWrap.cs" />
     <Compile Include="SignalSubscriber\BaseGodotSignalSubscriber.cs" />

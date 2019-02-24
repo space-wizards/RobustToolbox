@@ -30,7 +30,7 @@ namespace SS14.Client.GameObjects
             serializer.DataFieldCached(ref _selectionShader, "selectionshader", "selection_outline");
         }
 
-        public bool CheckClick(GridLocalCoordinates worldPos, out int drawdepth)
+        public bool CheckClick(GridCoordinates worldPos, out int drawdepth)
         {
             var component = Owner.GetComponent<IClickTargetComponent>();
 
@@ -42,10 +42,6 @@ namespace SS14.Client.GameObjects
         {
             var message = new ClientEntityClickMsg(user.Uid, clickType);
             SendMessage(message);
-            if (!IsClientSide)
-            {
-                SendNetworkMessage(message);
-            }
         }
 
         public void OnMouseEnter()

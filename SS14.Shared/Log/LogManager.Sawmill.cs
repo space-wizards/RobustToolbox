@@ -1,6 +1,7 @@
 ﻿using SS14.Shared.Interfaces.Log;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace SS14.Shared.Log
 {
@@ -26,7 +27,8 @@ namespace SS14.Shared.Log
             }
             private LogLevel? _level = null;
 
-            private List<ILogHandler> handlers = new List<ILogHandler>();
+            private readonly List<ILogHandler> _handlers = new List<ILogHandler>();
+            private readonly ReaderWriterLockSlim _handlerLock = new ReaderWriterLockSlim();
 
             public Sawmill(Sawmill parent, string name)
             {
@@ -36,12 +38,28 @@ namespace SS14.Shared.Log
 
             public void AddHandler(ILogHandler handler)
             {
-                handlers.Add(handler);
+                _handlerLock.EnterWriteLock();
+                try
+                {
+                    _handlers.Add(handler);
+                }
+                finally
+                {
+                    _handlerLock.ExitWriteLock();
+                }
             }
 
             public void RemoveHandler(ILogHandler handler)
             {
-                handlers.Remove(handler);
+                _handlerLock.EnterWriteLock();
+                try
+                {
+                    _handlers.Remove(handler);
+                }
+                finally
+                {
+                    _handlerLock.ExitWriteLock();
+                }
             }
 
             public void Log(LogLevel level, string message, params object[] args)
@@ -52,22 +70,30 @@ namespace SS14.Shared.Log
             public void Log(LogLevel level, string message)
             {
                 var msg = new LogMessage(message, level, Name);
-                LogInternal(ref msg);
+                LogInternal(msg);
             }
 
-            private void LogInternal(ref LogMessage message)
+            private void LogInternal(in LogMessage message)
             {
                 if (message.Level < GetPracticalLevel())
                 {
                     return;
                 }
 
-                foreach (var handler in handlers)
+                _handlerLock.EnterReadLock();
+                try
                 {
-                    handler.Log(message);
+                    foreach (var handler in _handlers)
+                    {
+                        handler.Log(message);
+                    }
+                }
+                finally
+                {
+                    _handlerLock.ExitReadLock();
                 }
 
-                Parent?.LogInternal(ref message);
+                Parent?.LogInternal(message);
             }
 
             private LogLevel GetPracticalLevel()

@@ -73,4 +73,15 @@ namespace SS14.Shared.ViewVariables
         /// </remarks>
         public object[] PropertyIndex { get; }
     }
+
+    [Serializable, NetSerializable]
+    public class ViewVariablesIoCSelector : ViewVariablesObjectSelector
+    {
+        public ViewVariablesIoCSelector(string typeName)
+        {
+            TypeName = typeName;
+        }
+
+        public string TypeName { get; }
+    }
 }

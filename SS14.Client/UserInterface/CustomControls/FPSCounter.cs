@@ -4,7 +4,6 @@ using SS14.Shared.Reflection;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
-    [Reflect(false)]
     public class FPSCounter : Label
     {
         protected override void Initialize()
@@ -24,6 +23,7 @@ namespace SS14.Client.UserInterface.CustomControls
             {
                 return;
             }
+
             var fps = Godot.Performance.GetMonitor(Godot.Performance.Monitor.TimeFps);
             Text = $"FPS: {fps}";
         }

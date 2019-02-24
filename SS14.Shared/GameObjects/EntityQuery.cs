@@ -43,7 +43,7 @@ namespace SS14.Shared.GameObjects
                 return false;
             }
 
-            if (OneSet.Any() && !OneSet.Any(hasComponent))
+            if (OneSet.Count != 0 && !OneSet.Any(hasComponent))
             {
                 return false;
             }

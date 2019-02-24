@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using SS14.Client.Graphics;
 using SS14.Shared.Maths;
 
@@ -13,29 +14,49 @@ namespace SS14.Client.UserInterface.Controls
         public Label(string name) : base(name)
         {
         }
+
         public Label() : base()
         {
         }
+
         internal Label(Godot.Label control) : base(control)
         {
         }
 
         public string Text
         {
-            get => SceneControl.Text;
-            set => SceneControl.Text = value;
+            get => GameController.OnGodot ? (string)SceneControl.Get("text") : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Set("text", value);
+                }
+            }
         }
 
         public bool AutoWrap
         {
-            get => SceneControl.Autowrap;
-            set => SceneControl.Autowrap = value;
+            get => GameController.OnGodot ? (bool)SceneControl.Get("autowrap") : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Set("autowrap", value);
+                }
+            }
         }
 
         public AlignMode Align
         {
-            get => (AlignMode) SceneControl.Align;
-            set => SceneControl.Align = (Godot.Label.AlignEnum) value;
+            get => GameController.OnGodot ? (AlignMode) SceneControl.Get("align") : default;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Set("align", (Godot.Label.AlignEnum) value);
+                }
+            }
         }
 
         private Font _fontOverride;
@@ -78,25 +99,17 @@ namespace SS14.Client.UserInterface.Controls
             set => SetConstantOverride("shadow_offset_y", _shadowOffsetYOverride = value);
         }
 
-        new private Godot.Label SceneControl;
-
         private protected override Godot.Control SpawnSceneControl()
         {
             return new Godot.Label();
         }
 
-        private protected override void SetSceneControl(Godot.Control control)
-        {
-            base.SetSceneControl(control);
-            SceneControl = (Godot.Label)control;
-        }
-
         public enum AlignMode
         {
-            Left = Godot.Label.AlignEnum.Left,
-            Center = Godot.Label.AlignEnum.Center,
-            Right = Godot.Label.AlignEnum.Right,
-            Fill = Godot.Label.AlignEnum.Fill,
+            Left = 0,
+            Center = 1,
+            Right = 2,
+            Fill = 3,
         }
     }
 }

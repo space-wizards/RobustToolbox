@@ -3,9 +3,17 @@
     [ControlWrap(typeof(Godot.VBoxContainer))]
     public class VBoxContainer : BoxContainer
     {
-        public VBoxContainer() : base() { }
-        public VBoxContainer(string name) : base(name) { }
-        internal VBoxContainer(Godot.VBoxContainer sceneControl) : base(sceneControl) { }
+        public VBoxContainer() : base()
+        {
+        }
+
+        public VBoxContainer(string name) : base(name)
+        {
+        }
+
+        internal VBoxContainer(Godot.VBoxContainer sceneControl) : base(sceneControl)
+        {
+        }
 
         private protected override Godot.Control SpawnSceneControl()
         {

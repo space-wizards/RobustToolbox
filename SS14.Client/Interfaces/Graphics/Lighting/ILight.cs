@@ -4,6 +4,7 @@ using SS14.Shared;
 using SS14.Shared.Maths;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.Enums;
+using SS14.Shared.Interfaces.GameObjects.Components;
 
 namespace SS14.Client.Interfaces.Graphics.Lighting
 {
@@ -19,7 +20,7 @@ namespace SS14.Client.Interfaces.Graphics.Lighting
         Texture Texture { get; set; }
         bool Enabled { get; set; }
 
-        void ParentTo(IGodotTransformComponent node);
+        void ParentTo(ITransformComponent node);
         void DeParent();
     }
 }

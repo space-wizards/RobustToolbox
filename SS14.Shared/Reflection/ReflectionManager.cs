@@ -82,17 +82,29 @@ namespace SS14.Shared.Reflection
         /// <inheritdoc />
         public Type LooseGetType(string name)
         {
+            if (TryLooseGetType(name, out var ret))
+            {
+                return ret;
+            }
+            throw new ArgumentException("Unable to find type.");
+        }
+
+        public bool TryLooseGetType(string name, out Type type)
+        {
             foreach (var assembly in assemblies)
             {
-                foreach (var type in assembly.DefinedTypes)
+                foreach (var tryType in assembly.DefinedTypes)
                 {
-                    if (type.FullName.EndsWith(name))
+                    if (tryType.FullName.EndsWith(name))
                     {
-                        return type;
+                        type = tryType;
+                        return true;
                     }
                 }
             }
-            throw new ArgumentException("Unable to find type.");
+
+            type = default;
+            return false;
         }
 
         /// <inheritdoc />

@@ -1,8 +1,10 @@
 ﻿using SS14.Server.Interfaces.Player;
+using SS14.Server.Interfaces.Timing;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Systems;
 using SS14.Shared.Input;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Players;
 
@@ -10,9 +12,12 @@ namespace SS14.Server.GameObjects.EntitySystems
 {
     class MoverSystem : EntitySystem
     {
+        private IPauseManager _pauseManager;
+
         /// <inheritdoc />
         public override void Initialize()
         {
+            _pauseManager = IoCManager.Resolve<IPauseManager>();
             EntityQuery = new TypeEntityQuery(typeof(PlayerInputMoverComponent));
             
             var moveUpCmdHandler = InputCmdHandler.FromDelegate(
@@ -60,6 +65,10 @@ namespace SS14.Server.GameObjects.EntitySystems
         {
             foreach (var entity in RelevantEntities)
             {
+                if (_pauseManager.IsEntityPaused(entity))
+                {
+                    continue;
+                }
                 var mover = entity.GetComponent<PlayerInputMoverComponent>();
                 var physics = entity.GetComponent<PhysicsComponent>();
 

@@ -46,7 +46,7 @@ namespace SS14.Shared.GameObjects
         {
             get
             {
-                var trans = Owner.GetComponent<ITransformComponent>();
+                var trans = Owner.Transform;
                 return AABB.Translated(trans.WorldPosition);
             }
         }

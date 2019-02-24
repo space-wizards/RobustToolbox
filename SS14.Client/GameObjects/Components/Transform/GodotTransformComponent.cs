@@ -64,7 +64,7 @@ namespace SS14.Client.GameObjects
                 return;
             }
 
-            ((IGodotTransformComponent)Parent).SceneNode.RemoveChild(SceneNode);
+            ((IGodotTransformComponent)Parent)?.SceneNode?.RemoveChild(SceneNode);
             base.DetachParent();
             var holder = IoCManager.Resolve<ISceneTreeHolder>();
             holder.WorldRoot.AddChild(SceneNode);
@@ -86,6 +86,11 @@ namespace SS14.Client.GameObjects
         public override void OnRemove()
         {
             base.OnRemove();
+
+            foreach (var child in SceneNode.GetChildren())
+            {
+                SceneNode.RemoveChild((Godot.Node)child);
+            }
 
             SceneNode.QueueFree();
             SceneNode.Dispose();

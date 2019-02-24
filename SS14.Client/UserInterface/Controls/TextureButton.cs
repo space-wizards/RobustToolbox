@@ -6,9 +6,11 @@
         public TextureButton() : base()
         {
         }
+
         public TextureButton(string name) : base(name)
         {
         }
+
         internal TextureButton(Godot.TextureButton button) : base(button)
         {
         }

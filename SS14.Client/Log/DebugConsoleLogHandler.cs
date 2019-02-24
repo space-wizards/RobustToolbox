@@ -18,7 +18,7 @@ namespace SS14.Client.Log
             Console = console;
         }
 
-        public void Log(LogMessage message)
+        public void Log(in LogMessage message)
         {
             var formatted = new FormattedMessage(8);
             formatted.PushColor(Color.DarkGray);

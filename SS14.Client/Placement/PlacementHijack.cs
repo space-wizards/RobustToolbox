@@ -7,7 +7,7 @@ namespace SS14.Client.Placement
     {
         public PlacementManager Manager { get; internal set; }
 
-        public virtual bool HijackPlacementRequest(GridLocalCoordinates coords)
+        public virtual bool HijackPlacementRequest(GridCoordinates coords)
         {
             return false;
         }

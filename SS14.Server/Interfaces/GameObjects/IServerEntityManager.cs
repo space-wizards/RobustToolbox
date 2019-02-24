@@ -27,7 +27,7 @@ namespace SS14.Server.Interfaces.GameObjects
         /// Gets entities with a bounding box that intersects this point in coordinate form
         /// </summary>
         /// <param name="position"></param>
-        IEnumerable<IEntity> GetEntitiesIntersecting(GridLocalCoordinates position);
+        IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position);
 
         /// <summary>
         /// Gets entities that intersect with this entity
@@ -40,7 +40,7 @@ namespace SS14.Server.Interfaces.GameObjects
         /// </summary>
         /// <param name="position"></param>
         /// <param name="range"></param>
-        IEnumerable<IEntity> GetEntitiesInRange(GridLocalCoordinates position, float range);
+        IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range);
 
         /// <summary>
         /// Gets entities within a certain *square* range of this entity
@@ -65,7 +65,7 @@ namespace SS14.Server.Interfaces.GameObjects
         /// <param name="direction"></param>
         /// <param name="arcwidth"></param>
         /// <returns></returns>
-        IEnumerable<IEntity> GetEntitiesInArc(GridLocalCoordinates coordinates, float range, Angle direction, float arcwidth);
+        IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction, float arcwidth);
 
         /// <summary>
         ///     Gets all entity states that have been modified after and including the provided tick.

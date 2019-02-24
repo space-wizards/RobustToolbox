@@ -28,8 +28,7 @@ namespace SS14.Client.GameObjects
         public override Type StateType => typeof(PointLightComponentState);
 
         private ILight Light;
-        [Dependency]
-        private ILightManager lightManager;
+        [Dependency] private ILightManager lightManager;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public Color Color
@@ -46,6 +45,7 @@ namespace SS14.Client.GameObjects
         }
 
         private LightState state = LightState.On;
+
         [ViewVariables(VVAccess.ReadWrite)]
         public LightState State
         {
@@ -91,13 +91,23 @@ namespace SS14.Client.GameObjects
                 if (value)
                 {
                     if (Owner.Transform.Parent == null) return;
-                    Light.ParentTo((GodotTransformComponent) Owner.Transform.Parent);
+
+                    if (GameController.OnGodot)
+                    {
+                        Light.ParentTo((GodotTransformComponent) Owner.Transform.Parent);
+                    }
+
                     _lightOnParent = true;
                 }
                 else
                 {
                     if (!_lightOnParent) return;
-                    Light.ParentTo((GodotTransformComponent) Owner.Transform);
+
+                    if (GameController.OnGodot)
+                    {
+                        Light.ParentTo((GodotTransformComponent) Owner.Transform);
+                    }
+
                     _lightOnParent = false;
                 }
             }
@@ -118,9 +128,16 @@ namespace SS14.Client.GameObjects
             {
                 radius = FloatMath.Clamp(value, 2, 10);
                 var mgr = IoCManager.Resolve<IResourceCache>();
-                var tex = mgr.GetResource<TextureResource>(new ResourcePath("/Textures/Effects/Light/") / $"lighting_falloff_{(int)radius}.png");
-                // TODO: Maybe editing the global texture resource is not a good idea.
-                tex.Texture.GodotTexture.SetFlags(tex.Texture.GodotTexture.GetFlags() | (int)Godot.Texture.FlagsEnum.Filter);
+                var tex = mgr.GetResource<TextureResource>(new ResourcePath("/Textures/Effects/Light/") /
+                                                           $"lighting_falloff_{(int) radius}.png");
+
+                if (GameController.OnGodot)
+                {
+                    // TODO: Maybe editing the global texture resource is not a good idea.
+                    tex.Texture.GodotTexture.SetFlags(tex.Texture.GodotTexture.GetFlags() |
+                                                      (int) Godot.Texture.FlagsEnum.Filter);
+                }
+
                 Light.Texture = tex.Texture;
             }
         }
@@ -129,7 +146,11 @@ namespace SS14.Client.GameObjects
         {
             base.Initialize();
 
-            Light.ParentTo((GodotTransformComponent)Owner.Transform);
+            if (GameController.OnGodot)
+            {
+                Light.ParentTo((GodotTransformComponent) Owner.Transform);
+            }
+
             Owner.Transform.OnParentChanged += TransformOnOnParentChanged;
         }
 
@@ -143,12 +164,20 @@ namespace SS14.Client.GameObjects
 
             if (obj.New.IsValid() && Owner.EntityManager.TryGetEntity(obj.New, out var entity))
             {
-                Light.ParentTo((GodotTransformComponent) entity.Transform);
+                if (GameController.OnGodot)
+                {
+                    Light.ParentTo((GodotTransformComponent) entity.Transform);
+                }
+
                 _lightOnParent = true;
             }
             else
             {
-                Light.ParentTo((GodotTransformComponent) Owner.Transform);
+                if (GameController.OnGodot)
+                {
+                    Light.ParentTo((GodotTransformComponent) Owner.Transform);
+                }
+
                 _lightOnParent = false;
             }
         }
@@ -183,7 +212,7 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState state)
         {
-            var newState = (PointLightComponentState)state;
+            var newState = (PointLightComponentState) state;
             State = newState.State;
             Color = newState.Color;
             Light.ModeClass = newState.Mode;

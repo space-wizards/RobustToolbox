@@ -95,7 +95,7 @@ namespace SS14.Client.Player
             }
             eye.Current = true;
 
-            var transform = ControlledEntity.GetComponent<IGodotTransformComponent>();
+            var transform = ControlledEntity.Transform;
             transform.OnMove += OnPlayerMoved;
 
             EntityAttached?.Invoke(this, EventArgs.Empty);
@@ -114,7 +114,7 @@ namespace SS14.Client.Player
             {
                 ControlledEntity.RemoveComponent<PlayerInputMoverComponent>();
                 ControlledEntity.GetComponent<EyeComponent>().Current = false;
-                var transform = ControlledEntity.GetComponent<ITransformComponent>();
+                var transform = ControlledEntity.Transform;
                 if (transform != null)
                     transform.OnMove -= OnPlayerMoved;
                 ControlledEntity.SendMessage(null, new PlayerDetachedMsg());

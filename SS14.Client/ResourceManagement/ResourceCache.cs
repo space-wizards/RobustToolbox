@@ -23,7 +23,7 @@ namespace SS14.Client.ResourceManagement
             MountContentDirectory(@"Resources/");
 #else
             MountContentDirectory(@"../../Resources/");
-            MountContentDirectory(@"Resources/Assemblies", new ResourcePath("/Assemblies/"));
+            MountContentDirectory(@"../../../bin/Content.Client/", new ResourcePath("/Assemblies/"));
 #endif
             //_resources.MountContentPack(@"./EngineContentPack.zip");
         }

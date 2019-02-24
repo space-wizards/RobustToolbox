@@ -2,7 +2,7 @@
 
 namespace SS14.Client.Utility
 {
-    public static class GodotConversions
+    internal static class GodotConversions
     {
         public static Vector2 Convert(this Godot.Vector2 vector2)
         {

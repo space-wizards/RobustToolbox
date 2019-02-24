@@ -15,11 +15,6 @@ namespace SS14.Shared.Interfaces.Map
         ushort ChunkSize { get; }
 
         /// <summary>
-        ///     The supported version of the chunk format.
-        /// </summary>
-        uint Version { get; }
-
-        /// <summary>
         ///     The X index of this chunk.
         /// </summary>
         int X { get; }

@@ -10,6 +10,7 @@ namespace SS14.Client.Interfaces.GameObjects.Components
     public interface IGodotTransformComponent : ITransformComponent
     {
         new IGodotTransformComponent Parent { get; }
+
         Godot.Node2D SceneNode { get; }
     }
 }

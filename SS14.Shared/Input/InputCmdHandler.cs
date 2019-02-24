@@ -71,7 +71,7 @@ namespace SS14.Shared.Input
         }
     }
 
-    public delegate void PointerInputCmdDelegate(ICommonSession session, GridLocalCoordinates coords, EntityUid uid);
+    public delegate void PointerInputCmdDelegate(ICommonSession session, GridCoordinates coords, EntityUid uid);
 
     public delegate void PointerInputCmdDelegate2(in PointerInputCmdHandler.PointerInputCmdArgs args);
 
@@ -102,11 +102,11 @@ namespace SS14.Shared.Input
         public readonly struct PointerInputCmdArgs
         {
             public readonly ICommonSession Session;
-            public readonly GridLocalCoordinates Coordinates;
+            public readonly GridCoordinates Coordinates;
             public readonly ScreenCoordinates ScreenCoordinates;
             public readonly EntityUid EntityUid;
 
-            public PointerInputCmdArgs(ICommonSession session, GridLocalCoordinates coordinates,
+            public PointerInputCmdArgs(ICommonSession session, GridCoordinates coordinates,
                 ScreenCoordinates screenCoordinates, EntityUid entityUid)
             {
                 Session = session;

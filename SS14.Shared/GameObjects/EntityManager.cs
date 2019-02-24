@@ -69,7 +69,6 @@ namespace SS14.Shared.GameObjects
         protected bool EntitiesInitialized;
 
         public bool Started { get; protected set; }
-        public bool MapsInitialized { get; set; } = false;
 
         #region IEntityManager Members
 
@@ -92,24 +91,15 @@ namespace SS14.Shared.GameObjects
 
         public virtual void Update(float frameTime)
         {
-            // for some 'special' reason entities require the map they are on to exist before they can
-            // be initialized. This should stop the EntitySystems from updating over the uninitialized entities.
-            if(MapsInitialized || _network.IsServer)
-            {
-                EntitySystemManager.Update(frameTime);
-
-                // dispatching events to systems will usually cause them to interact
-                // with entities, we don't want that to happen if the maps are not initialized.
-                ProcessEventQueue();
-            }
-
+            ProcessMsgBuffer();
+            EntitySystemManager.Update(frameTime);
+            ProcessEventQueue();
             CullDeletedEntities();
         }
 
         public virtual void FrameUpdate(float frameTime)
         {
-            if (MapsInitialized || _network.IsServer)
-                EntitySystemManager.FrameUpdate(frameTime);
+            EntitySystemManager.FrameUpdate(frameTime);
         }
 
         /// <summary>
@@ -126,10 +116,10 @@ namespace SS14.Shared.GameObjects
 
         public abstract IEntity CreateEntity(string protoName);
         public abstract Entity SpawnEntity(string protoName);
-        public abstract IEntity ForceSpawnEntityAt(string entityType, GridLocalCoordinates coordinates);
+        public abstract IEntity ForceSpawnEntityAt(string entityType, GridCoordinates coordinates);
         public abstract IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap);
         public abstract bool TrySpawnEntityAt(string entityType, Vector2 position, MapId argMap, out IEntity entity);
-        public abstract bool TrySpawnEntityAt(string entityType, GridLocalCoordinates coordinates, out IEntity entity);
+        public abstract bool TrySpawnEntityAt(string entityType, GridCoordinates coordinates, out IEntity entity);
 
         /// <summary>
         /// Returns an entity by id
@@ -169,8 +159,8 @@ namespace SS14.Shared.GameObjects
         {
             foreach (var entity in GetEntities())
             {
-                var transform = entity.GetComponent<ITransformComponent>();
-                if (FloatMath.CloseTo(transform.LocalPosition.X, position.X) && FloatMath.CloseTo(transform.LocalPosition.Y, position.Y))
+                var transform = entity.Transform;
+                if (FloatMath.CloseTo(transform.GridPosition.X, position.X) && FloatMath.CloseTo(transform.GridPosition.Y, position.Y))
                 {
                     yield return entity;
                 }
@@ -251,6 +241,10 @@ namespace SS14.Shared.GameObjects
             entity.Prototype.FinishEntity((Entity)entity, ComponentFactory, context);
             Entities[entity.Uid] = entity;
             _allEntities.Add((Entity)entity);
+            if (EntitiesInitialized)
+            {
+                InitializeEntity((Entity)entity);
+            }
         }
 
         protected static void InitializeEntity(Entity entity)
@@ -360,7 +354,7 @@ namespace SS14.Shared.GameObjects
 
         private void ProcessEventQueue()
         {
-            while (_eventQueue.Any())
+            while (_eventQueue.Count != 0)
             {
                 var current = _eventQueue.Dequeue();
                 ProcessSingleEvent(current);
@@ -388,32 +382,34 @@ namespace SS14.Shared.GameObjects
         protected void ProcessMsgBuffer()
         {
             if (!Started)
+            {
                 return;
-            if (!MessageBuffer.Any()) return;
+            }
+
+            if (MessageBuffer.Count == 0)
+            {
+                return;
+            }
+
             var misses = new List<IncomingEntityMessage>();
 
-            while (MessageBuffer.Any())
+            while (MessageBuffer.Count != 0)
             {
-                IncomingEntityMessage incomingEntity = MessageBuffer.Dequeue();
-                if (!Entities.ContainsKey(incomingEntity.Message.EntityUid))
+                var incomingEntity = MessageBuffer.Dequeue();
+                if (!Entities.TryGetValue(incomingEntity.Message.EntityUid, out var entity))
                 {
                     incomingEntity.LastProcessingAttempt = DateTime.Now;
                     if ((incomingEntity.LastProcessingAttempt - incomingEntity.ReceivedTime).TotalSeconds > incomingEntity.Expires)
                         misses.Add(incomingEntity);
                 }
                 else
-                    Entities[incomingEntity.Message.EntityUid].HandleNetworkMessage(incomingEntity);
+                {
+                    entity.HandleNetworkMessage(incomingEntity);
+                }
             }
 
-            foreach (IncomingEntityMessage miss in misses)
+            foreach (var miss in misses)
                 MessageBuffer.Enqueue(miss);
-
-            MessageBuffer.Clear(); //Should be empty at this point anyway.
-        }
-
-        protected IncomingEntityMessage ProcessNetMessage(MsgEntity msg)
-        {
-            return EntityNetworkManager.HandleEntityNetworkMessage(msg);
         }
 
         /// <summary>
@@ -421,29 +417,29 @@ namespace SS14.Shared.GameObjects
         /// and handling the parsed result.
         /// </summary>
         /// <param name="msg">Incoming raw network message</param>
-        public void HandleEntityNetworkMessage(MsgEntity msg)
+        private void HandleEntityNetworkMessage(MsgEntity msg)
         {
+            var incomingEntity = EntityNetworkManager.HandleEntityNetworkMessage(msg);
+            // bad message or handled by something else
+            if (incomingEntity == null)
+                return;
+
             if (!Started)
             {
-                var incomingEntity = ProcessNetMessage(msg);
                 if (incomingEntity.Message.Type != EntityMessageType.Error)
-                    MessageBuffer.Enqueue(incomingEntity);
-            }
-            else
-            {
-                ProcessMsgBuffer();
-                var incomingEntity = ProcessNetMessage(msg);
-
-                // bad message or handled by something else
-                if (incomingEntity == null)
-                    return;
-
-                if (!Entities.ContainsKey(incomingEntity.Message.EntityUid))
                 {
                     MessageBuffer.Enqueue(incomingEntity);
                 }
-                else
-                    Entities[incomingEntity.Message.EntityUid].HandleNetworkMessage(incomingEntity);
+                return;
+            }
+
+            if (!Entities.TryGetValue(incomingEntity.Message.EntityUid, out var entity))
+            {
+                MessageBuffer.Enqueue(incomingEntity);
+            }
+            else
+            {
+                entity.HandleNetworkMessage(incomingEntity);
             }
         }
 

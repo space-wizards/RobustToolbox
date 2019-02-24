@@ -81,7 +81,7 @@ namespace SS14.Shared.Input
         /// <summary>
         ///     Local Coordinates of the pointer when the command was created.
         /// </summary>
-        public GridLocalCoordinates Coordinates { get; }
+        public GridCoordinates Coordinates { get; }
 
         /// <summary>
         ///     Entity that was under the pointer when the command was created (if any).
@@ -94,7 +94,7 @@ namespace SS14.Shared.Input
         /// <param name="tick">Client tick this was created.</param>
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
-        public PointerInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, GridLocalCoordinates coordinates)
+        public PointerInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, GridCoordinates coordinates)
             : this(tick, inputFunctionId, coordinates, EntityUid.Invalid) { }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace SS14.Shared.Input
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
         /// <param name="uid">Entity that was under the pointer when the command was created.</param>
-        public PointerInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, GridLocalCoordinates coordinates, EntityUid uid)
+        public PointerInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, GridCoordinates coordinates, EntityUid uid)
             : base(tick, inputFunctionId)
         {
             Coordinates = coordinates;
@@ -126,7 +126,7 @@ namespace SS14.Shared.Input
         /// <summary>
         ///     Local Coordinates of the pointer when the command was created.
         /// </summary>
-        public GridLocalCoordinates Coordinates { get; }
+        public GridCoordinates Coordinates { get; }
 
         /// <summary>
         ///     Screen Coordinates of the pointer when the command was created.
@@ -145,7 +145,7 @@ namespace SS14.Shared.Input
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="state">New state of the Input Function.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
-        public FullInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, BoundKeyState state, GridLocalCoordinates coordinates, ScreenCoordinates screenCoordinates)
+        public FullInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, BoundKeyState state, GridCoordinates coordinates, ScreenCoordinates screenCoordinates)
             : this(tick, inputFunctionId, state, coordinates, screenCoordinates, EntityUid.Invalid) { }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace SS14.Shared.Input
         /// <param name="state">New state of the Input Function.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
         /// <param name="uid">Entity that was under the pointer when the command was created.</param>
-        public FullInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, BoundKeyState state, GridLocalCoordinates coordinates, ScreenCoordinates screenCoordinates, EntityUid uid)
+        public FullInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, BoundKeyState state, GridCoordinates coordinates, ScreenCoordinates screenCoordinates, EntityUid uid)
             : base(tick, inputFunctionId)
         {
             State = state;

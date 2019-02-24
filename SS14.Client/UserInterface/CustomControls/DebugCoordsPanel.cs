@@ -17,8 +17,7 @@ using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
-    [Reflect(false)]
-    class DebugCoordsPanel : Panel
+    internal class DebugCoordsPanel : Panel
     {
         [Dependency]
         readonly IPlayerManager playerManager;
@@ -70,14 +69,14 @@ namespace SS14.Client.UserInterface.CustomControls
                 return;
             }
 
-            var entityTransform = playerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>();
+            var entityTransform = playerManager.LocalPlayer.ControlledEntity.Transform;
             var playerWorldOffset = entityTransform.WorldPosition;
             var playerScreen = eyeManager.WorldToScreen(playerWorldOffset);
 
             var mouseScreenPos = inputManager.MouseScreenPosition;
             int mouseWorldMap;
             int mouseWorldGrid;
-            GridLocalCoordinates mouseWorldPos;
+            GridCoordinates mouseWorldPos;
             ScreenCoordinates worldToScreen;
             IEntity mouseEntity = null;
             try

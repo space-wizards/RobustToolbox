@@ -1,5 +1,6 @@
 ﻿using System;
 using SS14.Client.Interfaces.GameObjects.Components;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Graphics.Lighting
@@ -11,16 +12,16 @@ namespace SS14.Client.Interfaces.Graphics.Lighting
         OccluderCullMode CullMode { get; set; }
 
         void SetPolygon(Vector2[] polygon);
-        void SetGodotPolygon(Godot.Vector2[] polygon);
 
-        void ParentTo(IGodotTransformComponent node);
+        void ParentTo(ITransformComponent node);
         void DeParent();
     }
 
     public enum OccluderCullMode
     {
-        Disabled = Godot.OccluderPolygon2D.CullModeEnum.Disabled,
-        Clockwise = Godot.OccluderPolygon2D.CullModeEnum.Clockwise,
-        CounterClockwise = Godot.OccluderPolygon2D.CullModeEnum.CounterClockwise,
+        // These match Godot's OccluderPolygon2D.CullMode
+        Disabled = 0,
+        Clockwise = 1,
+        CounterClockwise = 2
     }
 }

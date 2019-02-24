@@ -308,7 +308,7 @@ namespace SS14.Client.Graphics
 
         void IPostInjectInit.PostInject()
         {
-            _configuration.RegisterCVar("display.fontdpi", 72);
+            _configuration.RegisterCVar("display.fontdpi", 96);
         }
     }
 }

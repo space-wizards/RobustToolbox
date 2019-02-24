@@ -1,4 +1,4 @@
-using SS14.Client.GodotGlue;
+﻿using SS14.Client.GodotGlue;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using System;
@@ -298,6 +298,10 @@ namespace SS14.Client.UserInterface
                 }
                 else
                 {
+                    if (_visible == value)
+                    {
+                        return;
+                    }
                     _visible = value;
                     OnVisibilityChanged?.Invoke(this);
                 }

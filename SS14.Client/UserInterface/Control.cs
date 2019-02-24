@@ -1,4 +1,4 @@
-﻿using SS14.Client.GodotGlue;
+using SS14.Client.GodotGlue;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using System;
@@ -1311,6 +1311,11 @@ namespace SS14.Client.UserInterface
             Restyle();
         }
 
+        protected virtual void ChildMoved(Control child, int oldIndex, int newIndex)
+        {
+
+        }
+
         /// <summary>
         ///     Override this to calculate a minimum size for this control.
         ///     Do NOT call this directly to get the minimum size for layout purposes!
@@ -1464,6 +1469,7 @@ namespace SS14.Client.UserInterface
             Parent._orderedChildren.RemoveAt(posInParent);
             Parent._orderedChildren.Insert(position, this);
             Parent._updateChildIndices();
+            Parent.ChildMoved(this, posInParent, position);
         }
 
         /// <summary>

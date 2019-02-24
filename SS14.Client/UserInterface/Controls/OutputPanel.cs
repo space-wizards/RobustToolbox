@@ -26,12 +26,12 @@ namespace SS14.Client.UserInterface.Controls
         private PanelContainer _godotPanelContainer;
         private RichTextLabel _godotRichTextLabel;
         private int _totalContentHeight;
-        private bool rtlFirstLine = true;
+        private bool _firstLine = true;
         private StyleBox _styleBoxOverride;
 
         public bool ScrollFollowing { get; set; } = true;
 
-        private int ScrollLimit => Math.Max(0, _totalContentHeight - (int) Size.Y + 1);
+        private int ScrollLimit => Math.Max(0, _totalContentHeight - (int) _getContentBox().Height + 1);
 
         public StyleBox StyleBoxOverride
         {
@@ -46,18 +46,18 @@ namespace SS14.Client.UserInterface.Controls
                 }
                 else
                 {
-                    _invalidateEntries();
                     MinimumSizeChanged();
+                    _invalidateEntries();
                 }
             }
         }
 
         public void Clear()
         {
+            _firstLine = true;
             if (GameController.OnGodot)
             {
                 _godotRichTextLabel.Clear();
-                rtlFirstLine = true;
             }
             else
             {
@@ -80,6 +80,10 @@ namespace SS14.Client.UserInterface.Controls
 
             var font = _getFont();
             _totalContentHeight -= entry.Height + font.LineSeparation;
+            if (_entries.Count == 0)
+            {
+                Clear();
+            }
         }
 
         public void AddMessage(FormattedMessage message)
@@ -96,7 +100,15 @@ namespace SS14.Client.UserInterface.Controls
 
             _entries.Add(entry);
             var font = _getFont();
-            _totalContentHeight += font.LineSeparation + entry.Height;
+            _totalContentHeight += entry.Height;
+            if (_firstLine)
+            {
+                _firstLine = false;
+            }
+            else
+            {
+                _totalContentHeight += font.LineSeparation;
+            }
             if (_isAtBottom && ScrollFollowing)
             {
                 _mouseWheelOffset = ScrollLimit;
@@ -134,7 +146,7 @@ namespace SS14.Client.UserInterface.Controls
 
             var style = _getStyleBox();
             var font = _getFont();
-            var contentBox = style?.GetContentBox(SizeBox) ?? SizeBox;
+            var contentBox = _getContentBox();
             style?.Draw(handle, SizeBox);
 
             var entryOffset = 0;
@@ -146,13 +158,13 @@ namespace SS14.Client.UserInterface.Controls
 
             foreach (var entry in _entries)
             {
-                if (entryOffset - _mouseWheelOffset < 0)
+                if (entryOffset + entry.Height - _mouseWheelOffset < 0)
                 {
                     entryOffset += entry.Height + font.LineSeparation;
                     continue;
                 }
 
-                if (entryOffset + entry.Height - _mouseWheelOffset > contentBox.Height)
+                if (entryOffset - _mouseWheelOffset > contentBox.Height)
                 {
                     break;
                 }
@@ -239,13 +251,13 @@ namespace SS14.Client.UserInterface.Controls
         {
             DebugTools.Assert(GameController.OnGodot);
 
-            if (!rtlFirstLine)
+            if (!_firstLine)
             {
                 _godotRichTextLabel.NewLine();
             }
             else
             {
-                rtlFirstLine = false;
+                _firstLine = false;
             }
 
             var pushCount = 0;
@@ -273,6 +285,13 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
+        protected override void SetDefaults()
+        {
+            base.SetDefaults();
+
+            RectClipContent = true;
+        }
+
         /// <summary>
         ///     Recalculate line dimensions and where it has line breaks for word wrapping.
         /// </summary>
@@ -283,7 +302,7 @@ namespace SS14.Client.UserInterface.Controls
             // Bear with me here.
             // I am so deeply sorry for the person adding stuff to this in the future.
             var font = _getFont();
-            var contentBox = _getStyleBox()?.GetContentBox(SizeBox) ?? SizeBox;
+            var contentBox = _getContentBox();
             // Horizontal size we have to work with here.
             var sizeX = contentBox.Width;
             entry.Height = font.Height;
@@ -470,6 +489,13 @@ namespace SS14.Client.UserInterface.Controls
         {
             var font = _getFont();
             return font.Height * 2;
+        }
+
+        [Pure]
+        private UIBox2 _getContentBox()
+        {
+            var style = _getStyleBox();
+            return style?.GetContentBox(SizeBox) ?? SizeBox;
         }
 
         private struct Entry

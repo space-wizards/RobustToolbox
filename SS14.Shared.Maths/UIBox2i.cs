@@ -62,6 +62,31 @@ namespace SS14.Shared.Maths
             return new UIBox2i(Left + point.X, Top + point.Y, Right + point.X, Bottom + point.Y);
         }
 
+        /// <summary>
+        ///     Calculates the "intersection" of this and another box.
+        ///     Basically, the smallest region that fits in both boxes.
+        /// </summary>
+        /// <param name="other">The box to calculate the intersection with.</param>
+        /// <returns>
+        ///     <c>null</c> if there is no intersection, otherwise the smallest region that fits in both boxes.
+        /// </returns>
+        public UIBox2i? Intersection(in UIBox2i other)
+        {
+            if (!Intersects(other))
+            {
+                return null;
+            }
+            return new UIBox2i(
+                Vector2i.ComponentMax(TopLeft, other.TopLeft),
+                Vector2i.ComponentMin(BottomRight, other.BottomRight));
+        }
+
+        public bool Intersects(in UIBox2i other)
+        {
+            return other.Bottom >= this.Top && other.Top <= this.Bottom && other.Right >= this.Left &&
+                   other.Left <= this.Right;
+        }
+
         // override object.Equals
         public override bool Equals(object obj)
         {

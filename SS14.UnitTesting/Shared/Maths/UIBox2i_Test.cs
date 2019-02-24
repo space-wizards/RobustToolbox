@@ -65,6 +65,15 @@ namespace SS14.UnitTesting.Shared.Maths
             10
         };
 
+        private static IEnumerable<(UIBox2i a, UIBox2i b, UIBox2i? expected)> Intersections =>
+            new (UIBox2i, UIBox2i, UIBox2i?)[]
+            {
+                (new UIBox2i(0, 0, 5, 5), new UIBox2i(2, 2, 4, 4), new UIBox2i(2, 2, 4, 4)),
+                (new UIBox2i(0, 0, 5, 5), new UIBox2i(3, 3, 7, 7), new UIBox2i(3, 3, 5, 5)),
+                (new UIBox2i(2, 0, 5, 5), new UIBox2i(0, 3, 4, 7), new UIBox2i(2, 3, 4, 5)),
+                (new UIBox2i(2, 0, 5, 5), new UIBox2i(6, 6, 10, 10), null),
+            };
+
         [Test]
         public void Box2iVectorConstructor([ValueSource(nameof(Sources))] (int, int, int, int) test)
         {
@@ -177,7 +186,8 @@ namespace SS14.UnitTesting.Shared.Maths
         }
 
         [Test]
-        public void Box2iContains([ValueSource(nameof(SmallTranslations))] (int, int) test)
+        public void Box2iContains([ValueSource(nameof(SmallTranslations))]
+            (int, int) test)
         {
             var (x, y) = test;
             var vec = new Vector2i(x, y);
@@ -190,7 +200,8 @@ namespace SS14.UnitTesting.Shared.Maths
         }
 
         [Test]
-        public void Box2iNotContains([ValueSource(nameof(LargeTranslations))] (int, int) test)
+        public void Box2iNotContains([ValueSource(nameof(LargeTranslations))]
+            (int, int) test)
         {
             var (x, y) = test;
             var vec = new Vector2i(x, y);
@@ -203,7 +214,8 @@ namespace SS14.UnitTesting.Shared.Maths
         }
 
         [Test]
-        public void Box2iTranslated([ValueSource(nameof(LargeTranslations))] (int, int) test)
+        public void Box2iTranslated([ValueSource(nameof(LargeTranslations))]
+            (int, int) test)
         {
             var (x, y) = test;
             var vec = new Vector2i(x, y);
@@ -235,6 +247,17 @@ namespace SS14.UnitTesting.Shared.Maths
             Assert.That(controlBox.Equals(sameBoxAsObject));
             Assert.That(controlBox.Equals(nullBox), Is.False);
             Assert.That(controlBox.Equals(notBox), Is.False);
+        }
+
+        [Test]
+        public void UIBox2iIntersection(
+            [ValueSource(nameof(Intersections))] (UIBox2i a, UIBox2i b, UIBox2i? expected) value)
+        {
+            var (a, b, expected) = value;
+
+            // This should be a symmetric operation.
+            Assert.That(a.Intersection(b), Is.EqualTo(expected));
+            Assert.That(b.Intersection(a), Is.EqualTo(expected));
         }
     }
 }

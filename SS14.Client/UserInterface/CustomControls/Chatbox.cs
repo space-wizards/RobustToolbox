@@ -1,16 +1,16 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using SS14.Client.Console;
+using SS14.Client.Graphics.Drawing;
 using SS14.Client.Input;
 using SS14.Client.UserInterface.Controls;
+using SS14.Client.Utility;
 using SS14.Shared.Console;
 using SS14.Shared.Maths;
-using SS14.Shared.Reflection;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
-    public class Chatbox : Panel
+    public class Chatbox : PanelContainer
     {
         protected override ResourcePath ScenePath => new ResourcePath("/Scenes/ChatBox/ChatBox.tscn");
 
@@ -20,9 +20,8 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private readonly IList<string> _inputHistory = new List<string>();
 
-        private bool firstLine = true;
         public LineEdit Input { get; private set; }
-        private RichTextLabel contents;
+        private OutputPanel contents;
 
         /// <summary>
         ///     Index while cycling through the input history. -1 means not going through history.
@@ -47,10 +46,6 @@ namespace SS14.Client.UserInterface.CustomControls
             ChatChannel.Default,
         };
 
-        public Chatbox() : base()
-        {
-        }
-
         protected override void Initialize()
         {
             base.Initialize();
@@ -58,7 +53,19 @@ namespace SS14.Client.UserInterface.CustomControls
             Input = GetChild<LineEdit>("VBoxContainer/Input");
             Input.OnKeyDown += InputKeyDown;
             Input.OnTextEntered += Input_OnTextEntered;
-            contents = GetChild<RichTextLabel>("VBoxContainer/Contents");
+            GetChild<RichTextLabel>("VBoxContainer/Contents").Dispose();
+
+            contents = new OutputPanel
+            {
+                SizeFlagsVertical = SizeFlags.FillExpand,
+            };
+            GetChild("VBoxContainer").AddChild(contents);
+            contents.SetPositionInParent(0);
+
+            if (!GameController.OnGodot)
+            {
+                PanelOverride = new StyleBoxFlat { BackgroundColor = Color.Gray.WithAlpha(0.5f)};
+            }
         }
 
         protected internal override void MouseDown(GUIMouseButtonEventArgs e)
@@ -113,7 +120,6 @@ namespace SS14.Client.UserInterface.CustomControls
                 }
 
                 e.Handle();
-                return;
             }
         }
 
@@ -141,17 +147,11 @@ namespace SS14.Client.UserInterface.CustomControls
             if (ChannelBlacklist.Contains(channel))
                 return;
 
-            if (!firstLine)
-            {
-                contents.NewLine();
-            }
-            else
-            {
-                firstLine = false;
-            }
-            contents.PushColor(color);
-            contents.AddText(message);
-            contents.Pop(); // Pop the color off.
+            var formatted = new FormattedMessage(3);
+            formatted.PushColor(color);
+            formatted.AddText(message);
+            formatted.Pop();
+            contents.AddMessage(formatted);
         }
 
         public void AddLine(string text, Color color)

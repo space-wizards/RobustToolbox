@@ -7,7 +7,6 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.Primitives;
 using SS14.Client.Interfaces.Graphics;
-using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
@@ -33,17 +32,12 @@ namespace SS14.Client.Graphics
 
         public IFontFaceHandle Load(ReadOnlySpan<byte> data)
         {
-            Face face;
             unsafe
             {
-                fixed (byte* ptr = data)
-                {
-                    face = new Face(_library, (IntPtr) ptr, data.Length, 0);
-                }
+                var face = new Face(_library, data.ToArray(), 0);
+                var handle = new FontFaceHandle(face);
+                return handle;
             }
-
-            var handle = new FontFaceHandle(face);
-            return handle;
         }
 
         public IFontInstanceHandle MakeInstance(IFontFaceHandle handle, int size)

@@ -234,6 +234,24 @@ namespace SS14.Client.Graphics.Drawing
             return new UIBox2(left, top, right, bottom);
         }
 
+        /// <summary>
+        ///     Gets the draw box, positioned at <paramref name="position"/>,
+        ///     that envelops a box with the given dimensions perfectly given this box's content margins.
+        /// </summary>
+        /// <remarks>
+        ///     It's basically a reverse <see cref="GetContentBox"/>.
+        /// </remarks>
+        /// <param name="position">The position at which the new box should be drawn.</param>
+        /// <param name="dimensions">The dimensions of the content box inside this new box.</param>
+        /// <returns>
+        ///     A box that, when ran through <see cref="GetContentBox"/>,
+        ///     has a content box of size <paramref name="dimensions"/>
+        /// </returns>
+        public UIBox2 GetEnvelopBox(Vector2 position, Vector2 dimensions)
+        {
+            return UIBox2.FromDimensions(position, dimensions + MinimumSize);
+        }
+
         public void SetContentMarginOverride(Margin margin, float value)
         {
             if ((margin & Margin.Left) != 0)

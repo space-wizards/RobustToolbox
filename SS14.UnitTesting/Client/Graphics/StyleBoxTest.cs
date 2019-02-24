@@ -25,7 +25,11 @@ namespace SS14.UnitTesting.Client.Graphics
 
             Assert.That(
                 styleBox.GetEnvelopBox(Vector2.Zero, new Vector2(50, 50)),
-                Is.EqualTo(new UIBox2(3, 5, 60, 66)));
+                Is.EqualTo(new UIBox2(0, 0, 60, 66)));
+
+            Assert.That(
+                styleBox.GetEnvelopBox(new Vector2(10, 10), new Vector2(50, 50)),
+                Is.EqualTo(new UIBox2(10, 10, 70, 76)));
         }
     }
 }

@@ -351,10 +351,11 @@ namespace SS14.Client.UserInterface
         {
             var drawHandle = renderHandle.CreateHandleScreen();
 
-            _render(drawHandle, RootControl, Vector2.Zero, Color.White);
+            _render(drawHandle, RootControl, Vector2.Zero, Color.White, null);
         }
 
-        private static void _render(DrawingHandleScreen handle, Control control, Vector2 position, Color modulate)
+        private static void _render(DrawingHandleScreen handle, Control control, Vector2 position, Color modulate,
+            UIBox2i? scissorBox)
         {
             if (!control.Visible)
             {
@@ -363,10 +364,36 @@ namespace SS14.Client.UserInterface
 
             handle.SetTransform(position, Angle.Zero, Vector2.One);
             handle.Modulate = modulate * control.ActualModulateSelf;
+            var clip = control.RectClipContent;
+            var scissorRegion = scissorBox;
+            if (clip)
+            {
+                scissorRegion = UIBox2i.FromDimensions((Vector2i)position, (Vector2i)control.Size);
+                if (scissorBox != null)
+                {
+                    // Make the final scissor region a sub region of scissorBox
+                    var s = scissorBox.Value;
+                    var result = s.Intersection(scissorRegion.Value);
+                    if (result == null)
+                    {
+                        // Uhm... No intersection so... don't draw anything at all?
+                        return;
+                    }
+
+                    scissorRegion = result.Value;
+                }
+
+                handle.SetScissor(scissorRegion);
+            }
             control.Draw(handle);
             foreach (var child in control.Children)
             {
-                _render(handle, child, position + child.Position.Rounded(), modulate);
+                _render(handle, child, position + child.Position.Rounded(), modulate, scissorRegion);
+            }
+
+            if (clip)
+            {
+                handle.SetScissor(scissorBox);
             }
         }
 

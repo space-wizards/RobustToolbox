@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Clyde;
 using SS14.Client.Utility;
@@ -327,6 +327,13 @@ namespace SS14.Client.Graphics.Drawing
             {
                 texture.GodotTexture.DrawRect(Item, rect.Convert(), false, actualModulate.Convert());
             }
+        }
+
+        public void SetScissor(in UIBox2i? scissorBox)
+        {
+            CheckDisposed();
+            _renderHandle?.SetScissor(scissorBox, _handleId);
+            // TODO: uh... How even to go about implementing this on Godot?
         }
     }
 }

@@ -75,6 +75,8 @@ namespace SS14.Client.Graphics.Clyde
         /// </summary>
         private bool _logPoolOverdraw = false;
 
+        private bool _isScissoring = false;
+
         public void Render(FrameEventArgs args)
         {
             if (GameController.Mode != GameController.DisplayMode.OpenGL)
@@ -304,6 +306,27 @@ namespace SS14.Client.Graphics.Clyde
                         _currentModelMatrix = command.Matrix;
                         _batchModelMatricesNeedsUpdate = true;
                         break;
+                    case RenderCommandType.Scissor:
+                        _flushBatchBuffer();
+                        var oldIsScissoring = _isScissoring;
+                        _isScissoring = command.EnableScissor;
+                        if (_isScissoring)
+                        {
+                            if (!oldIsScissoring)
+                            {
+                                GL.Enable(EnableCap.ScissorTest);
+                            }
+
+                            ref var s = ref command.Scissor;
+                            // Don't forget to flip it, these coordinates have bottom left as origin.
+                            GL.Scissor(s.Left, _window.Height - s.Bottom, s.Width, s.Height);
+                        }
+                        else if (oldIsScissoring)
+                        {
+                            GL.Disable(EnableCap.ScissorTest);
+                        }
+
+                        break;
                 }
             }
         }
@@ -344,7 +367,8 @@ namespace SS14.Client.Graphics.Clyde
                     ref var model = ref BatchModelMatrices.AllocAdd();
                     model = _currentModelMatrix;
                 }
-                batchCommand.TransformIndex = BatchModelMatrices.Count-1;
+
+                batchCommand.TransformIndex = BatchModelMatrices.Count - 1;
 
                 return;
             }
@@ -444,6 +468,7 @@ namespace SS14.Client.Graphics.Clyde
 
             handle._drawingHandles.Clear();
             _flushBatchBuffer();
+            _disableScissor();
         }
 
         private void _flushBatchBuffer()
@@ -601,6 +626,16 @@ namespace SS14.Client.Graphics.Clyde
             _poolListCreated = 0;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void _disableScissor()
+        {
+            if (_isScissoring)
+            {
+                GL.Disable(EnableCap.ScissorTest);
+            }
+            _isScissoring = false;
+        }
+
         private class RenderHandle : IRenderHandle, IDisposable
         {
             private readonly Clyde _manager;
@@ -699,6 +734,19 @@ namespace SS14.Client.Graphics.Clyde
                 }
             }
 
+            public void SetScissor(in UIBox2i? scissorBox, int handleId)
+            {
+                var list = _drawingHandles[handleId].Item2;
+                ref var command = ref list.RenderCommands.AllocAdd();
+
+                command.Type = RenderCommandType.Scissor;
+                command.EnableScissor = scissorBox.HasValue;
+                if (scissorBox.HasValue)
+                {
+                    command.Scissor = scissorBox.Value;
+                }
+            }
+
             public void Dispose()
             {
                 _disposed = true;
@@ -738,6 +786,10 @@ namespace SS14.Client.Graphics.Clyde
 
             // Transform command fields.
             [FieldOffset(4)] public Matrix3 Matrix;
+
+            // Scissor command fields.
+            [FieldOffset(4)] public bool EnableScissor;
+            [FieldOffset(8)] public UIBox2i Scissor;
         }
 
         private struct BatchCommand
@@ -754,11 +806,13 @@ namespace SS14.Client.Graphics.Clyde
         {
             Texture,
             Transform,
+            Scissor,
         }
 
         /// <summary>
         ///     A list of rendering commands to execute in order. Pooled.
         /// </summary>
+        // ReSharper disable once ClassNeverInstantiated.Local
         private class RenderCommandList
         {
             public RefList<RenderCommand> RenderCommands = new RefList<RenderCommand>();
@@ -775,5 +829,6 @@ namespace SS14.Client.Graphics.Clyde
 
         void SetModelTransform(ref Matrix3 matrix, int handleId);
         void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion, int handleId);
+        void SetScissor(in UIBox2i? scissorBox, int handleId);
     }
 }

@@ -509,14 +509,19 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        private bool _rectClipContent = false;
         public bool RectClipContent
         {
-            get => GameController.OnGodot ? SceneControl.RectClipContent : default;
+            get => GameController.OnGodot ? SceneControl.RectClipContent : _rectClipContent;
             set
             {
                 if (GameController.OnGodot)
                 {
-                    SceneControl.RectClipContent = value;
+                    SceneControl.RectClipContent = _rectClipContent;
+                }
+                else
+                {
+                    _rectClipContent = value;
                 }
             }
         }

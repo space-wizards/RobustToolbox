@@ -819,6 +819,26 @@ namespace SS14.Client.Graphics.Drawing
         }
     }
 
+    public class StyleBoxEmpty : StyleBox
+    {
+        internal override Godot.StyleBox GodotStyleBox { get; }
+
+        public StyleBoxEmpty()
+        {
+            if (!GameController.OnGodot)
+            {
+                return;
+            }
+
+            GodotStyleBox = new Godot.StyleBoxEmpty();
+        }
+
+        protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box)
+        {
+            // It's empty what more do you want?
+        }
+    }
+
     internal class GodotStyleBoxWrap : StyleBox
     {
         public GodotStyleBoxWrap(Godot.StyleBox godotStyleBox)

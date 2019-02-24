@@ -41,7 +41,8 @@ namespace SS14.Client.UserInterface.Controls
                 _styleBoxOverride = value;
                 if (GameController.OnGodot)
                 {
-                    _godotPanelContainer.PanelOverride = value;
+                    // Have to set this to empty so Godot doesn't set it to that ugly default one.
+                    _godotPanelContainer.PanelOverride = value ?? new StyleBoxEmpty();
                 }
                 else
                 {
@@ -114,7 +115,7 @@ namespace SS14.Client.UserInterface.Controls
 
             if (GameController.OnGodot)
             {
-                _godotPanelContainer = new PanelContainer();
+                _godotPanelContainer = new PanelContainer {PanelOverride = new StyleBoxEmpty()};
                 _godotPanelContainer.SetAnchorPreset(LayoutPreset.Wide);
                 AddChild(_godotPanelContainer);
                 _godotRichTextLabel = new RichTextLabel {ScrollFollowing = true};

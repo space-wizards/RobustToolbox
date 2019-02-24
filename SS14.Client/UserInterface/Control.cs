@@ -333,8 +333,8 @@ namespace SS14.Client.UserInterface
         }
 
         public UIBox2 SizeBox => new UIBox2(Vector2.Zero, Size);
+        public float Width => Size.X;
         public float Height => Size.Y;
-        public float Width => Size.Y;
 
         private Vector2 _position;
 

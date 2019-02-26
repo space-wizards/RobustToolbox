@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.Graphics;
@@ -106,13 +106,17 @@ namespace SS14.Client.UserInterface
             StateRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             RootControl.AddChild(StateRoot);
 
-            WindowRoot = new Control("WindowRoot");
-            WindowRoot.MouseFilter = Control.MouseFilterMode.Ignore;
+            WindowRoot = new Control("WindowRoot")
+            {
+                MouseFilter = Control.MouseFilterMode.Ignore
+            };
             WindowRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             RootControl.AddChild(WindowRoot);
 
-            PopupControl = new AcceptDialog("RootPopup");
-            PopupControl.Resizable = true;
+            PopupControl = new AcceptDialog("RootPopup")
+            {
+                Resizable = true
+            };
             RootControl.AddChild(PopupControl);
         }
 
@@ -197,15 +201,16 @@ namespace SS14.Client.UserInterface
                 CurrentlyHovered?.MouseEntered();
             }
 
-            if (newHovered != null)
+            var target = _mouseFocused ?? newHovered;
+            if (target != null)
             {
                 var guiArgs = new GUIMouseMoveEventArgs(mouseMoveEventArgs.Relative, mouseMoveEventArgs.Speed,
-                    newHovered,
+                    target,
                     mouseMoveEventArgs.ButtonMask, mouseMoveEventArgs.Position,
-                    mouseMoveEventArgs.Position - newHovered.GlobalPosition, mouseMoveEventArgs.Alt,
+                    mouseMoveEventArgs.Position - target.GlobalPosition, mouseMoveEventArgs.Alt,
                     mouseMoveEventArgs.Control, mouseMoveEventArgs.Shift, mouseMoveEventArgs.System);
 
-                _doMouseGuiInput(_mouseFocused, guiArgs, (c, ev) => c.MouseMove(ev));
+                _doMouseGuiInput(target, guiArgs, (c, ev) => c.MouseMove(ev));
             }
         }
 

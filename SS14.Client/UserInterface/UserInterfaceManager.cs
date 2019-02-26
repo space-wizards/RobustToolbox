@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.Graphics;
@@ -222,7 +222,7 @@ namespace SS14.Client.UserInterface
             var guiArgs = new GUIMouseWheelEventArgs(args.WheelDirection, control, Mouse.ButtonMask.None, args.Position,
                 args.Position - control.GlobalPosition, args.Alt, args.Control, args.Shift, args.System);
 
-            _doMouseGuiInput(control, guiArgs, (c, ev) => c.MouseWheel(ev));
+            _doMouseGuiInput(control, guiArgs, (c, ev) => c.MouseWheel(ev), true);
         }
 
         public void TextEntered(TextEventArgs textEvent)
@@ -457,7 +457,7 @@ namespace SS14.Client.UserInterface
             return null;
         }
 
-        private void _doMouseGuiInput<T>(Control control, T guiEvent, Action<Control, T> action)
+        private void _doMouseGuiInput<T>(Control control, T guiEvent, Action<Control, T> action, bool ignoreStop=false)
             where T : GUIMouseEventArgs
         {
             while (control != null)
@@ -466,7 +466,7 @@ namespace SS14.Client.UserInterface
                 {
                     action(control, guiEvent);
 
-                    if (guiEvent.Handled || control.MouseFilter == Control.MouseFilterMode.Stop)
+                    if (guiEvent.Handled || (!ignoreStop && control.MouseFilter == Control.MouseFilterMode.Stop))
                     {
                         break;
                     }

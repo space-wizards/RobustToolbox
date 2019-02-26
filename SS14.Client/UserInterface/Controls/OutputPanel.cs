@@ -21,13 +21,14 @@ namespace SS14.Client.UserInterface.Controls
         private static readonly FormattedMessage.TagColor TagWhite = new FormattedMessage.TagColor(Color.White);
         private readonly List<Entry> _entries = new List<Entry>();
         private bool _isAtBottom = true;
-        private int _mouseWheelOffset;
+
         // These two are used to implement this on Godot.
         private PanelContainer _godotPanelContainer;
         private RichTextLabel _godotRichTextLabel;
         private int _totalContentHeight;
         private bool _firstLine = true;
         private StyleBox _styleBoxOverride;
+        private VScrollBar _scrollBar;
 
         public bool ScrollFollowing { get; set; } = true;
 
@@ -63,7 +64,8 @@ namespace SS14.Client.UserInterface.Controls
             {
                 _entries.Clear();
                 _totalContentHeight = 0;
-                _mouseWheelOffset = 0;
+                _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
+                _scrollBar.Value = 0;
             }
         }
 
@@ -84,6 +86,7 @@ namespace SS14.Client.UserInterface.Controls
             {
                 Clear();
             }
+            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
         }
 
         public void AddMessage(FormattedMessage message)
@@ -109,15 +112,17 @@ namespace SS14.Client.UserInterface.Controls
             {
                 _totalContentHeight += font.LineSeparation;
             }
+
+            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
             if (_isAtBottom && ScrollFollowing)
             {
-                _mouseWheelOffset = ScrollLimit;
+                _scrollBar.Value = ScrollLimit;
             }
         }
 
         public void ScrollToBottom()
         {
-            _mouseWheelOffset = ScrollLimit;
+            _scrollBar.Value = ScrollLimit;
             _isAtBottom = true;
         }
 
@@ -132,6 +137,13 @@ namespace SS14.Client.UserInterface.Controls
                 AddChild(_godotPanelContainer);
                 _godotRichTextLabel = new RichTextLabel {ScrollFollowing = true};
                 _godotPanelContainer.AddChild(_godotRichTextLabel);
+            }
+            else
+            {
+                _scrollBar = new VScrollBar {Name = "_v_scroll"};
+                AddChild(_scrollBar);
+                _scrollBar.SetAnchorAndMarginPreset(LayoutPreset.RightWide);
+                _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
             }
         }
 
@@ -158,13 +170,13 @@ namespace SS14.Client.UserInterface.Controls
 
             foreach (var entry in _entries)
             {
-                if (entryOffset + entry.Height - _mouseWheelOffset < 0)
+                if (entryOffset + entry.Height - _scrollBar.Value < 0)
                 {
                     entryOffset += entry.Height + font.LineSeparation;
                     continue;
                 }
 
-                if (entryOffset - _mouseWheelOffset > contentBox.Height)
+                if (entryOffset - _scrollBar.Value > contentBox.Height)
                 {
                     break;
                 }
@@ -174,7 +186,7 @@ namespace SS14.Client.UserInterface.Controls
 
                 var globalBreakCounter = 0;
                 var lineBreakIndex = 0;
-                var baseLine = contentBox.TopLeft + new Vector2(0, font.Ascent + entryOffset - _mouseWheelOffset);
+                var baseLine = contentBox.TopLeft + new Vector2(0, font.Ascent + entryOffset - _scrollBar.Value);
                 formatStack.Clear();
                 foreach (var tag in entry.Message.Tags)
                 {
@@ -233,14 +245,14 @@ namespace SS14.Client.UserInterface.Controls
 
             if (args.WheelDirection == Mouse.Wheel.Up)
             {
-                _mouseWheelOffset = Math.Max(0, _mouseWheelOffset - _getScrollSpeed());
+                _scrollBar.Value = _scrollBar.Value - _getScrollSpeed();
                 _isAtBottom = false;
             }
             else if (args.WheelDirection == Mouse.Wheel.Down)
             {
                 var limit = ScrollLimit;
-                _mouseWheelOffset = Math.Min(_mouseWheelOffset + _getScrollSpeed(), limit);
-                if (limit == _mouseWheelOffset)
+                _scrollBar.Value = _scrollBar.Value + _getScrollSpeed();
+                if (_scrollBar.IsAtEnd)
                 {
                     _isAtBottom = true;
                 }
@@ -429,6 +441,9 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
+            var styleBoxSize = _getStyleBox()?.MinimumSize.Y ?? 0;
+
+            _scrollBar.Page = Size.Y - styleBoxSize;
             _invalidateEntries();
         }
 
@@ -449,9 +464,10 @@ namespace SS14.Client.UserInterface.Controls
                 _totalContentHeight += entry.Height + font.LineSeparation;
             }
 
+            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
             if (_isAtBottom && ScrollFollowing)
             {
-                _mouseWheelOffset = ScrollLimit;
+                _scrollBar.Value = ScrollLimit;
             }
         }
 
@@ -480,6 +496,7 @@ namespace SS14.Client.UserInterface.Controls
             {
                 return StyleBoxOverride;
             }
+
             TryGetStyleProperty(StylePropertyStyleBox, out StyleBox box);
             return box;
         }

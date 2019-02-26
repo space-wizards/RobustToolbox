@@ -30,6 +30,10 @@ namespace SS14.Client.UserInterface
             get => _stylePseudoClass;
             protected set
             {
+                if (_stylePseudoClass == value)
+                {
+                    return;
+                }
                 _stylePseudoClass = value;
                 Restyle();
             }

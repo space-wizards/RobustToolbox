@@ -203,6 +203,7 @@
     <Compile Include="UserInterface\Controls\Button.cs" />
     <Compile Include="UserInterface\Controls\CheckBox.cs" />
     <Compile Include="UserInterface\Controls\GridContainer.cs" />
+    <Compile Include="UserInterface\Controls\HScrollBar.cs" />
     <Compile Include="UserInterface\Controls\MarginContainer.cs" />
     <Compile Include="UserInterface\Controls\OutputPanel.cs" />
     <Compile Include="UserInterface\Controls\PanelContainer.cs" />

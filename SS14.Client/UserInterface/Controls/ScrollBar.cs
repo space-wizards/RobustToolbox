@@ -31,7 +31,7 @@ namespace SS14.Client.UserInterface.Controls
             get
             {
                 var offset = Value + Page;
-                return FloatMath.CloseTo(offset, MaxValue);
+                return offset > MaxValue || FloatMath.CloseTo(offset, MaxValue);
             }
         }
 

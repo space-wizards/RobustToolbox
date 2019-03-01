@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SS14.Client.UserInterface
 {
@@ -111,7 +112,7 @@ namespace SS14.Client.UserInterface
 
             if (doChildren)
             {
-                foreach (var child in _orderedChildren)
+                foreach (var child in _orderedChildren.ToList())
                 {
                     child.Restyle(false);
                 }

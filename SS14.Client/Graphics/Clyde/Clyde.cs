@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -288,6 +288,8 @@ namespace SS14.Client.Graphics.Clyde
             _drawingSplash = true;
 
             _renderHandle = new RenderHandle(this);
+
+            GL.Viewport(0, 0, _window.Width, _window.Height);
 
             Render(null);
         }

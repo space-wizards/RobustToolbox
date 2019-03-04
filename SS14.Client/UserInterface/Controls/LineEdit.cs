@@ -74,7 +74,6 @@ namespace SS14.Client.UserInterface.Controls
 
                     _text = value;
                     _cursorPosition = 0;
-                    OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
                 }
             }
         }
@@ -110,6 +109,8 @@ namespace SS14.Client.UserInterface.Controls
                 }
             }
         }
+
+        public bool IgnoreNext { get; set; }
 
         // TODO:
         // I decided to not implement the entire LineEdit API yet,
@@ -272,6 +273,12 @@ namespace SS14.Client.UserInterface.Controls
 
             if (GameController.OnGodot)
             {
+                return;
+            }
+
+            if (IgnoreNext)
+            {
+                IgnoreNext = false;
                 return;
             }
 

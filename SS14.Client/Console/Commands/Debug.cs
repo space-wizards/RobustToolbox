@@ -1,31 +1,36 @@
-﻿using SS14.Client.Interfaces;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text;
+using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.Debugging;
-using SS14.Client.Interfaces.UserInterface;
-using SS14.Client.UserInterface.CustomControls;
+using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.State;
+using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.State.States;
+using SS14.Client.UserInterface;
+using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Console;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.IoC;
-using SS14.Shared.Maths;
-using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.Map;
-using System.Globalization;
-using SS14.Shared.Interfaces.Map;
 using SS14.Shared.GameObjects.Components.Transform;
-using System.Linq;
-using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.Interfaces.Resources;
+using SS14.Shared.IoC;
+using SS14.Shared.Map;
+using SS14.Shared.Maths;
 using SS14.Shared.Utility;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.Console.Commands
 {
-    class DumpEntitiesCommand : IConsoleCommand
+    internal class DumpEntitiesCommand : IConsoleCommand
     {
         public string Command => "dumpentities";
         public string Help => "Dump entity list";
@@ -35,16 +40,17 @@ namespace SS14.Client.Console.Commands
         {
             var entitymanager = IoCManager.Resolve<IEntityManager>();
 
-            foreach (IEntity e in entitymanager.GetEntities(new ComponentEntityQuery()))
+            foreach (var e in entitymanager.GetEntities(new ComponentEntityQuery()))
             {
-                console.AddLine($"entity {e.Uid}, {e.Prototype.ID}, {e.Transform.GridPosition}.", ChatChannel.Default, Color.White);
+                console.AddLine($"entity {e.Uid}, {e.Prototype.ID}, {e.Transform.GridPosition}.", ChatChannel.Default,
+                    Color.White);
             }
 
             return false;
         }
     }
 
-    class GetComponentRegistrationCommand : IConsoleCommand
+    internal class GetComponentRegistrationCommand : IConsoleCommand
     {
         public string Command => "getcomponentregistration";
         public string Help => "";
@@ -54,9 +60,10 @@ namespace SS14.Client.Console.Commands
         {
             if (args.Length < 1)
             {
-                console.AddLine($"Not enough arguments.", Color.Red);
+                console.AddLine("Not enough arguments.", Color.Red);
                 return false;
             }
+
             var componentFactory = IoCManager.Resolve<IComponentFactory>();
 
             try
@@ -72,11 +79,12 @@ namespace SS14.Client.Console.Commands
                 {
                     message.Append($"net ID: {registration.NetID}");
                 }
+
                 message.Append($", NSE: {registration.NetworkSynchronizeExistence}, references:");
 
                 console.AddLine(message.ToString(), Color.White);
 
-                foreach (Type type in registration.References)
+                foreach (var type in registration.References)
                 {
                     console.AddLine($"  {type}", Color.White);
                 }
@@ -90,7 +98,7 @@ namespace SS14.Client.Console.Commands
         }
     }
 
-    class ToggleMonitorCommand : IConsoleCommand
+    internal class ToggleMonitorCommand : IConsoleCommand
     {
         public string Command => "monitor";
         public string Help => "Usage: monitor <name>\nPossible monitors are: fps, net, coord, time";
@@ -102,6 +110,7 @@ namespace SS14.Client.Console.Commands
             {
                 throw new InvalidOperationException("Must have exactly 1 argument.");
             }
+
             var monitor = IoCManager.Resolve<IUserInterfaceManager>().DebugMonitors;
 
             switch (args[0])
@@ -127,7 +136,7 @@ namespace SS14.Client.Console.Commands
         }
     }
 
-    class ExceptionCommand : IConsoleCommand
+    internal class ExceptionCommand : IConsoleCommand
     {
         public string Command => "fuck";
         public string Help => "Throws an exception";
@@ -139,7 +148,7 @@ namespace SS14.Client.Console.Commands
         }
     }
 
-    class ShowBoundingBoxesCommand : IConsoleCommand
+    internal class ShowBoundingBoxesCommand : IConsoleCommand
     {
         public string Command => "showbb";
         public string Help => "";
@@ -153,7 +162,7 @@ namespace SS14.Client.Console.Commands
         }
     }
 
-    class SpawnWindowCommand : IConsoleCommand
+    internal class SpawnWindowCommand : IConsoleCommand
     {
         public string Command => "spawnwindow";
         public string Help => "";
@@ -167,7 +176,7 @@ namespace SS14.Client.Console.Commands
         }
     }
 
-    class DumpDeferredLightingCommand : IConsoleCommand
+    internal class DumpDeferredLightingCommand : IConsoleCommand
     {
         public string Command => "dumpdeferredlighting";
         public string Help => "";
@@ -175,14 +184,15 @@ namespace SS14.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            var viewport = IoCManager.Resolve<ISceneTreeHolder>().SceneTree.Root.GetNode("LightingViewport") as Godot.Viewport;
+            var viewport =
+                IoCManager.Resolve<ISceneTreeHolder>().SceneTree.Root.GetNode("LightingViewport") as Godot.Viewport;
             var tex = viewport.GetTexture().GetData();
             tex.SavePng("res://deferredlightingdump.png");
             return false;
         }
     }
 
-    class GetRootViewportTransformCommand : IConsoleCommand
+    internal class GetRootViewportTransformCommand : IConsoleCommand
     {
         public string Command => "rootvptransform";
         public string Help => "";
@@ -191,12 +201,13 @@ namespace SS14.Client.Console.Commands
         public bool Execute(IDebugConsole console, params string[] args)
         {
             var vp = IoCManager.Resolve<ISceneTreeHolder>().SceneTree.Root;
-            console.AddLine($"canvas_transform: {vp.CanvasTransform}, global_canvas_transform: {vp.GlobalCanvasTransform}, size: {vp.Size}");
+            console.AddLine(
+                $"canvas_transform: {vp.CanvasTransform}, global_canvas_transform: {vp.GlobalCanvasTransform}, size: {vp.Size}");
             return false;
         }
     }
 
-    class DisconnectCommand : IConsoleCommand
+    internal class DisconnectCommand : IConsoleCommand
     {
         public string Command => "disconnect";
         public string Help => "";
@@ -210,10 +221,13 @@ namespace SS14.Client.Console.Commands
         }
     }
 
-    class EntityInfoCommand : IConsoleCommand
+    internal class EntityInfoCommand : IConsoleCommand
     {
         public string Command => "entfo";
-        public string Help => "entfo <entityuid>\nThe entity UID can be prefixed with 'c' to convert it to a client entity UID.";
+
+        public string Help =>
+            "entfo <entityuid>\nThe entity UID can be prefixed with 'c' to convert it to a client entity UID.";
+
         public string Description => "Displays verbose diagnostics for an entity.";
 
         public bool Execute(IDebugConsole console, params string[] args)
@@ -223,6 +237,7 @@ namespace SS14.Client.Console.Commands
                 console.AddLine("Must pass exactly 1 argument", Color.Red);
                 return false;
             }
+
             var uid = EntityUid.Parse(args[0]);
             var entmgr = IoCManager.Resolve<IEntityManager>();
             if (!entmgr.TryGetEntity(uid, out var entity))
@@ -244,6 +259,7 @@ namespace SS14.Client.Console.Commands
                         {
                             continue;
                         }
+
                         console.AddLine("\t" + line);
                     }
                 }
@@ -253,7 +269,7 @@ namespace SS14.Client.Console.Commands
         }
     }
 
-    class SnapGridGetCell : IConsoleCommand
+    internal class SnapGridGetCell : IConsoleCommand
     {
         public string Command => "sggcell";
         public string Help => "sggcell <gridID> <mapIndices> [offset]\nThat mapindices param is in the form x,y.";
@@ -272,10 +288,10 @@ namespace SS14.Client.Console.Commands
             var x = int.Parse(indexSplit[0], CultureInfo.InvariantCulture);
             var y = int.Parse(indexSplit[1], CultureInfo.InvariantCulture);
             var indices = new MapIndices(x, y);
-            SnapGridOffset offset = SnapGridOffset.Center;
+            var offset = SnapGridOffset.Center;
             if (args.Length == 3)
             {
-                offset = (SnapGridOffset)Enum.Parse(typeof(SnapGridOffset), args[2]);
+                offset = (SnapGridOffset) Enum.Parse(typeof(SnapGridOffset), args[2]);
             }
 
             var mapMan = IoCManager.Resolve<IMapManager>();
@@ -289,7 +305,7 @@ namespace SS14.Client.Console.Commands
         }
     }
 
-    class SetPlayerName : IConsoleCommand
+    internal class SetPlayerName : IConsoleCommand
     {
         public string Command => "overrideplayername";
         public string Description => "Changes the name used when attempting to connect to the server.";
@@ -306,7 +322,7 @@ namespace SS14.Client.Console.Commands
         }
     }
 
-    class LoadResource : IConsoleCommand
+    internal class LoadResource : IConsoleCommand
     {
         public string Command => "ldrsc";
         public string Description => "Pre-caches a resource.";
@@ -318,7 +334,8 @@ namespace SS14.Client.Console.Commands
             var reflection = IoCManager.Resolve<IReflectionManager>();
 
             var type = reflection.LooseGetType(args[1]);
-            var getResourceMethod = resourceCache.GetType().GetMethod("GetResource", new [] {typeof(string), typeof(bool)});
+            var getResourceMethod =
+                resourceCache.GetType().GetMethod("GetResource", new[] {typeof(string), typeof(bool)});
             DebugTools.Assert(getResourceMethod != null);
             var generic = getResourceMethod.MakeGenericMethod(type);
             generic.Invoke(resourceCache, new object[] {args[0], true});
@@ -326,7 +343,7 @@ namespace SS14.Client.Console.Commands
         }
     }
 
-    class ReloadResource : IConsoleCommand
+    internal class ReloadResource : IConsoleCommand
     {
         public string Command => "rldrsc";
         public string Description => "Reloads a resource.";
@@ -338,7 +355,7 @@ namespace SS14.Client.Console.Commands
             var reflection = IoCManager.Resolve<IReflectionManager>();
 
             var type = reflection.LooseGetType(args[1]);
-            var getResourceMethod = resourceCache.GetType().GetMethod("ReloadResource", new [] {typeof(string)});
+            var getResourceMethod = resourceCache.GetType().GetMethod("ReloadResource", new[] {typeof(string)});
             DebugTools.Assert(getResourceMethod != null);
             var generic = getResourceMethod.MakeGenericMethod(type);
             generic.Invoke(resourceCache, new object[] {args[0]});
@@ -346,7 +363,7 @@ namespace SS14.Client.Console.Commands
         }
     }
 
-    class GridTileCount : IConsoleCommand
+    internal class GridTileCount : IConsoleCommand
     {
         public string Command => "gridtc";
         public string Description => "Gets the tile count of a grid";

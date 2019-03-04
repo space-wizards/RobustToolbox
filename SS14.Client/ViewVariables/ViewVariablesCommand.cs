@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using JetBrains.Annotations;
 using SS14.Client.Interfaces.Console;
+using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Reflection;
@@ -43,6 +44,13 @@ namespace SS14.Client.ViewVariables
                     var type = IoCManager.Resolve<IReflectionManager>().LooseGetType(valArg);
                     var obj = IoCManager.ResolveType(type);
                     vvm.OpenVV(obj);
+                    return false;
+                }
+
+                if (valArg.StartsWith("gui/"))
+                {
+                    var obj = IoCManager.Resolve<IUserInterfaceManager>().RootControl;
+                    vvm.OpenVV(obj.GetChild(valArg.Substring(4)));
                     return false;
                 }
 

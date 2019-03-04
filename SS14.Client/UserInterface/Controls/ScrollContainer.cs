@@ -207,11 +207,11 @@ namespace SS14.Client.UserInterface.Controls
             {
                 if (up)
                 {
-                    _vScrollBar.Value -= 10;
+                    _vScrollBar.Value -= 50;
                 }
                 else
                 {
-                    _vScrollBar.Value += 10;
+                    _vScrollBar.Value += 50;
                 }
             }
         }

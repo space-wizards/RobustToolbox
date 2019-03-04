@@ -1,4 +1,4 @@
-﻿using SS14.Client.GodotGlue;
+using SS14.Client.GodotGlue;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using System;
@@ -1931,7 +1931,7 @@ namespace SS14.Client.UserInterface
                 case LayoutPreset.BottomWide:
                 case LayoutPreset.RightWide:
                 case LayoutPreset.BottomRight:
-                    _marginRight = parentSize.X * (1 - AnchorRight) + newSize.X - margin;
+                    _marginRight = parentSize.X * (1 - AnchorRight) - margin;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
@@ -1960,7 +1960,7 @@ namespace SS14.Client.UserInterface
                 case LayoutPreset.RightWide:
                 case LayoutPreset.VerticalCenterWide:
                 case LayoutPreset.BottomWide:
-                    _marginBottom = parentSize.Y * (1 - AnchorBottom) + newSize.Y - margin;
+                    _marginBottom = parentSize.Y * (1 - AnchorBottom) - margin;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(preset), preset, null);

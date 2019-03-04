@@ -1,14 +1,18 @@
-﻿using SS14.Client.Console;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using Newtonsoft.Json;
+using SS14.Client.Console;
+using SS14.Client.Graphics.Drawing;
+using SS14.Client.Input;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.Utility;
 using SS14.Shared.Console;
+using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using SS14.Client.Graphics.Drawing;
-using SS14.Client.Input;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
@@ -21,7 +25,12 @@ namespace SS14.Client.UserInterface.CustomControls
     // (At least from the main thread, which is what's throwing the exceptions..)
     public class DebugConsole : Control, IDebugConsole
     {
-        [Dependency] readonly IClientConsole console;
+        private const int MaxHistorySize = 100;
+
+        [Dependency] private readonly IClientConsole console;
+        [Dependency] private readonly IResourceManager _resourceManager;
+
+        private static readonly ResourcePath HistoryPath = new ResourcePath("/debug_console_history.json");
 
         private LineEdit CommandBar;
         private OutputPanel Output;
@@ -66,6 +75,8 @@ namespace SS14.Client.UserInterface.CustomControls
             console.AddString += (_, args) => AddLine(args.Text, args.Channel, args.Color);
             console.AddFormatted += (_, args) => AddFormattedLine(args.Message);
             console.ClearText += (_, args) => Clear();
+
+            _loadHistoryFromDisk();
         }
 
         protected override void Update(ProcessFrameEventArgs args)
@@ -81,6 +92,7 @@ namespace SS14.Client.UserInterface.CustomControls
             Visible = !Visible;
             if (Visible)
             {
+                CommandBar.IgnoreNext = true;
                 CommandBar.GrabKeyboardFocus();
             }
             else if (focus)
@@ -101,7 +113,12 @@ namespace SS14.Client.UserInterface.CustomControls
                 {
                     _currentCommandEdited = false;
                     CommandHistory.Add(args.Text);
+                    if (CommandHistory.Count > MaxHistorySize)
+                    {
+                        CommandHistory.RemoveAt(0);
+                    }
                     _historyPosition = CommandHistory.Count;
+                    _flushHistoryToDisk();
                 }
             }
         }
@@ -189,13 +206,14 @@ namespace SS14.Client.UserInterface.CustomControls
                         return;
                     }
 
-                    if (_historyPosition >= CommandHistory.Count - 1)
+                    if (++_historyPosition >= CommandHistory.Count)
                     {
                         CommandBar.Text = "";
+                        _historyPosition = CommandHistory.Count;
                         return;
                     }
 
-                    CommandBar.Text = CommandHistory[++_historyPosition];
+                    CommandBar.Text = CommandHistory[_historyPosition];
                     break;
                 }
                 case Keyboard.Key.PageDown:
@@ -216,6 +234,47 @@ namespace SS14.Client.UserInterface.CustomControls
             else
             {
                 _currentCommandEdited = true;
+            }
+        }
+
+        private void _loadHistoryFromDisk()
+        {
+            CommandHistory.Clear();
+            Stream stream;
+            try
+            {
+                stream = _resourceManager.UserData.Open(HistoryPath, FileMode.Open);
+            }
+            catch (FileNotFoundException)
+            {
+                // Nada, nothing to load in that case.
+                return;
+            }
+
+            try
+            {
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    var data = JsonConvert.DeserializeObject<List<string>>(reader.ReadToEnd());
+                    CommandHistory.Clear();
+                    CommandHistory.AddRange(data);
+                    _historyPosition = CommandHistory.Count;
+                }
+            }
+            finally
+            {
+                stream?.Dispose();
+            }
+        }
+
+        private void _flushHistoryToDisk()
+        {
+            using (var stream = _resourceManager.UserData.Open(HistoryPath, FileMode.Create))
+            using (var writer = new StreamWriter(stream, Encoding.UTF8))
+            {
+                var data = JsonConvert.SerializeObject(CommandHistory);
+                _historyPosition = CommandHistory.Count;
+                writer.Write(data);
             }
         }
     }

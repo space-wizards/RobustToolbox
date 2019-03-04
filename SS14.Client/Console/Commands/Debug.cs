@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -376,6 +376,71 @@ namespace SS14.Client.Console.Commands
 
             console.AddLine(grid.GetAllTiles().Count().ToString());
             return false;
+        }
+    }
+
+    internal class GuiDumpCommand : IConsoleCommand
+    {
+        public string Command => "guidump";
+        public string Description => "Dump GUI tree to /guidump.txt in user data.";
+        public string Help => "guidump";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var root = IoCManager.Resolve<IUserInterfaceManager>().RootControl;
+            var res = IoCManager.Resolve<IResourceManager>();
+
+            using (var stream = res.UserData.Open(new ResourcePath("/guidump.txt"), FileMode.Create))
+            using (var writer = new StreamWriter(stream, Encoding.UTF8))
+            {
+                _writeNode(root, 0, writer);
+            }
+
+            return false;
+        }
+
+        private static void _writeNode(Control control, int indents, TextWriter writer)
+        {
+            var indentation = new string(' ', indents * 2);
+            writer.WriteLine("{0}{1}", indentation, control.Name);
+            foreach (var (key, value) in _propertyValuesFor(control))
+            {
+                writer.WriteLine("{2} * {0}: {1}", key, value, indentation);
+            }
+
+            foreach (var child in control.Children)
+            {
+                _writeNode(child, indents + 1, writer);
+            }
+        }
+
+        private static List<(string, string)> _propertyValuesFor(Control control)
+        {
+            var members = new List<(string, string)>();
+            var type = control.GetType();
+
+            foreach (var fieldInfo in type.GetAllFields())
+            {
+                if (fieldInfo.GetCustomAttribute<ViewVariablesAttribute>() == null)
+                {
+                    continue;
+                }
+
+                members.Add((fieldInfo.Name, fieldInfo.GetValue(control)?.ToString() ?? "null"));
+            }
+
+            foreach (var propertyInfo in type.GetAllProperties())
+            {
+                if (propertyInfo.GetCustomAttribute<ViewVariablesAttribute>() == null)
+                {
+                    continue;
+                }
+
+                members.Add((propertyInfo.Name, propertyInfo.GetValue(control)?.ToString() ?? "null"));
+            }
+
+            members.Sort((a, b) => string.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
+            return members;
         }
     }
 }

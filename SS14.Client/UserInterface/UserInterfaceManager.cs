@@ -442,7 +442,7 @@ namespace SS14.Client.UserInterface
         {
             foreach (var child in control.Children.Reverse())
             {
-                if (!child.Visible)
+                if (!child.Visible || (child.RectClipContent && !child.Rect.Contains(position)))
                 {
                     continue;
                 }

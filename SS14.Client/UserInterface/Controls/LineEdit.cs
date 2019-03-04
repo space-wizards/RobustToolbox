@@ -13,15 +13,19 @@ namespace SS14.Client.UserInterface.Controls
     public class LineEdit : Control
     {
         public const string StylePropertyStyleBox = "stylebox";
+        public const string StyleClassLineEditNotEditable = "notEditable";
+        public const string StylePseudoClassPlaceholder = "placeholder";
 
         [NotNull] private string _text = "";
         private AlignMode _textAlign;
-        private bool _editable;
+        private bool _editable = true;
         [CanBeNull] private string _placeHolder;
         private int _cursorPosition;
         private float _cursorBlinkTimer;
         private bool _cursorCurrentlyLit;
         private const float BlinkTime = 0.5f;
+
+        private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
 
         public LineEdit()
         {
@@ -74,6 +78,7 @@ namespace SS14.Client.UserInterface.Controls
 
                     _text = value;
                     _cursorPosition = 0;
+                    _updatePseudoClass();
                 }
             }
         }
@@ -90,6 +95,14 @@ namespace SS14.Client.UserInterface.Controls
                 else
                 {
                     _editable = value;
+                    if (!_editable)
+                    {
+                        AddStyleClass(StyleClassLineEditNotEditable);
+                    }
+                    else
+                    {
+                        RemoveStyleClass(StyleClassLineEditNotEditable);
+                    }
                 }
             }
         }
@@ -181,22 +194,20 @@ namespace SS14.Client.UserInterface.Controls
             var contentBox = styleBox.GetContentBox(drawBox);
             styleBox.Draw(handle, drawBox);
             var font = _getFont();
+            var renderedTextColor = _getFontColor();
 
             var offsetY = (int) (contentBox.Height - font.Height) / 2;
-            var baseLine = new Vector2i(0, offsetY+font.Ascent) + contentBox.TopLeft;
+            var baseLine = new Vector2i(0, offsetY + font.Ascent) + contentBox.TopLeft;
 
             string renderedText;
-            Color renderedTextColor;
 
-            if (string.IsNullOrEmpty(_text) && _placeHolder != null)
+            if (IsPlaceHolderVisible)
             {
                 renderedText = _placeHolder;
-                renderedTextColor = Color.Gray;
             }
             else
             {
                 renderedText = _text;
-                renderedTextColor = Color.White;
             }
 
             float? actualCursorPosition = null;
@@ -271,7 +282,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             base.TextEntered(args);
 
-            if (GameController.OnGodot)
+            if (GameController.OnGodot || !Editable)
             {
                 return;
             }
@@ -285,6 +296,7 @@ namespace SS14.Client.UserInterface.Controls
             _text = _text.Insert(_cursorPosition, ((char) args.CodePoint).ToString());
             OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
             _cursorPosition += 1;
+            _updatePseudoClass();
         }
 
         protected internal override void KeyDown(GUIKeyEventArgs args)
@@ -302,7 +314,7 @@ namespace SS14.Client.UserInterface.Controls
             switch (args.Key)
             {
                 case Keyboard.Key.BackSpace:
-                    if (_cursorPosition == 0)
+                    if (_cursorPosition == 0 || !Editable)
                     {
                         return;
                     }
@@ -310,6 +322,7 @@ namespace SS14.Client.UserInterface.Controls
                     _text = _text.Remove(_cursorPosition - 1, 1);
                     OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
                     _cursorPosition -= 1;
+                    _updatePseudoClass();
                     break;
 
                 case Keyboard.Key.Left:
@@ -332,7 +345,11 @@ namespace SS14.Client.UserInterface.Controls
 
                 case Keyboard.Key.NumpadEnter:
                 case Keyboard.Key.Return:
-                    OnTextEntered?.Invoke(new LineEditEventArgs(this, _text));
+                    if (Editable)
+                    {
+                        OnTextEntered?.Invoke(new LineEditEventArgs(this, _text));
+                    }
+
                     break;
             }
         }
@@ -440,6 +457,22 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             return UserInterfaceManager.ThemeDefaults.LineEditBox;
+        }
+
+        [Pure]
+        private Color _getFontColor()
+        {
+            if (TryGetStyleProperty("font-color", out Color color))
+            {
+                return color;
+            }
+
+            return Color.White;
+        }
+
+        private void _updatePseudoClass()
+        {
+            StylePseudoClass = IsPlaceHolderVisible ? StylePseudoClassPlaceholder : null;
         }
 
         public enum AlignMode

@@ -354,6 +354,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             base.SetDefaults();
             MouseFilter = MouseFilterMode.Ignore;
+            SizeFlagsVertical = SizeFlags.ShrinkCenter;
         }
     }
 }

@@ -134,9 +134,6 @@ namespace SS14.Client.UserInterface.Controls
                 _suppressScrollValueChanged = false;
             }
 
-            _vScrollBar.SetPositionLast();
-            _hScrollBar.SetPositionLast();
-
             foreach (var child in Children)
             {
                 if (child == _vScrollBar || child == _hScrollBar)
@@ -217,6 +214,20 @@ namespace SS14.Client.UserInterface.Controls
                     _vScrollBar.Value += 10;
                 }
             }
+        }
+
+        protected override void ChildAdded(Control newChild)
+        {
+            base.ChildAdded(newChild);
+
+            if (_vScrollBar?.Parent == null || _hScrollBar?.Parent == null)
+            {
+                // Just don't run this before we're properly initialized.
+                return;
+            }
+
+            _vScrollBar?.SetPositionLast();
+            _hScrollBar?.SetPositionLast();
         }
 
         [Pure]

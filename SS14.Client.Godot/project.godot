@@ -17,10 +17,6 @@ boot_splash/image="res://Art/bootsplash.png"
 boot_splash/fullsize=false
 config/icon="res://logo.png"
 
-[autoload]
-
-SS14Loader="*res://SS14Loader.cs"
-
 [gdnative]
 
 singletons=[  ]

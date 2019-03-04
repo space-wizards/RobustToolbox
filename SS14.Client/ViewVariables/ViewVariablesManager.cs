@@ -191,7 +191,7 @@ namespace SS14.Client.ViewVariables
                 instance = new ViewVariablesInstanceObject(this);
             }
 
-            var window = new SS14Window {Title = "View Variables"};
+            var window = new SS14Window("VV") {Title = "View Variables"};
             instance.Initialize(window, obj);
             window.AddToScreen();
             window.OnClose += () => _closeInstance(instance, false);
@@ -200,7 +200,7 @@ namespace SS14.Client.ViewVariables
 
         public async void OpenVV(ViewVariablesObjectSelector selector)
         {
-            var window = new SS14Window {Title = "View Variables"};
+            var window = new SS14Window("VV") {Title = "View Variables"};
             var loadingLabel = new Label {Text = "Retrieving remote object data from server..."};
             window.Contents.AddChild(loadingLabel);
             window.AddToScreen();

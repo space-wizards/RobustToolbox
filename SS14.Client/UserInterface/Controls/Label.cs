@@ -4,6 +4,7 @@ using SS14.Client.Graphics.Drawing;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.UserInterface.Controls
 {
@@ -32,6 +33,7 @@ namespace SS14.Client.UserInterface.Controls
 
         private string _text;
 
+        [ViewVariables]
         public string Text
         {
             get => GameController.OnGodot ? (string) SceneControl.Get("text") : _text;
@@ -50,6 +52,7 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
+        [ViewVariables]
         public bool AutoWrap
         {
             get => GameController.OnGodot ? (bool) SceneControl.Get("autowrap") : default;
@@ -64,6 +67,7 @@ namespace SS14.Client.UserInterface.Controls
 
         private AlignMode _align;
 
+        [ViewVariables]
         public AlignMode Align
         {
             get => GameController.OnGodot ? (AlignMode) SceneControl.Get("align") : _align;
@@ -82,6 +86,7 @@ namespace SS14.Client.UserInterface.Controls
 
         private VAlignMode _vAlign;
 
+        [ViewVariables]
         public VAlignMode VAlign
         {
             // ReSharper disable once StringLiteralTypo

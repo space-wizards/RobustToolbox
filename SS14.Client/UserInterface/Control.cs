@@ -1,4 +1,4 @@
-using SS14.Client.GodotGlue;
+﻿using SS14.Client.GodotGlue;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using System;
@@ -19,6 +19,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.ResourceManagement.ResourceTypes;
 using SS14.Client.UserInterface.Controls;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.UserInterface
 {
@@ -36,6 +37,7 @@ namespace SS14.Client.UserInterface
         ///     The name of this control.
         ///     Names must be unique between the control's siblings.
         /// </summary>
+        [ViewVariables]
         public string Name
         {
             get => _name;
@@ -79,6 +81,7 @@ namespace SS14.Client.UserInterface
 
         private string _name;
 
+        [ViewVariables]
         public Control Parent { get; private set; }
 
         internal IUserInterfaceManagerInternal UserInterfaceManagerInternal { get; }
@@ -91,8 +94,10 @@ namespace SS14.Client.UserInterface
         /// <summary>
         ///     Gets an enumerable over all the children of this control.
         /// </summary>
+        [ViewVariables]
         public OrderedChildEnumerable Children => new OrderedChildEnumerable(this);
 
+        [ViewVariables]
         public int ChildCount => _orderedChildren.Count;
 
         /// <summary>
@@ -114,6 +119,7 @@ namespace SS14.Client.UserInterface
 
         private float _anchorBottom;
 
+        [ViewVariables]
         public float AnchorBottom
         {
             get => GameController.OnGodot ? SceneControl.AnchorBottom : _anchorBottom;
@@ -133,6 +139,7 @@ namespace SS14.Client.UserInterface
 
         private float _anchorLeft;
 
+        [ViewVariables]
         public float AnchorLeft
         {
             get => GameController.OnGodot ? SceneControl.AnchorLeft : _anchorLeft;
@@ -152,6 +159,7 @@ namespace SS14.Client.UserInterface
 
         private float _anchorRight;
 
+        [ViewVariables]
         public float AnchorRight
         {
             get => GameController.OnGodot ? SceneControl.AnchorRight : _anchorRight;
@@ -171,6 +179,7 @@ namespace SS14.Client.UserInterface
 
         private float _anchorTop;
 
+        [ViewVariables]
         public float AnchorTop
         {
             get => GameController.OnGodot ? SceneControl.AnchorTop : _anchorTop;
@@ -190,6 +199,7 @@ namespace SS14.Client.UserInterface
 
         private float _marginRight;
 
+        [ViewVariables]
         public float MarginRight
         {
             get => GameController.OnGodot ? SceneControl.MarginRight : _marginRight;
@@ -209,6 +219,7 @@ namespace SS14.Client.UserInterface
 
         private float _marginLeft;
 
+        [ViewVariables]
         public float MarginLeft
         {
             get => GameController.OnGodot ? SceneControl.MarginLeft : _marginLeft;
@@ -228,6 +239,7 @@ namespace SS14.Client.UserInterface
 
         private float _marginTop;
 
+        [ViewVariables]
         public float MarginTop
         {
             get => GameController.OnGodot ? SceneControl.MarginTop : _marginTop;
@@ -247,6 +259,7 @@ namespace SS14.Client.UserInterface
 
         private float _marginBottom;
 
+        [ViewVariables]
         public float MarginBottom
         {
             get => GameController.OnGodot ? SceneControl.MarginBottom : _marginBottom;
@@ -264,6 +277,7 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        [ViewVariables]
         public bool VisibleInTree
         {
             get
@@ -287,6 +301,7 @@ namespace SS14.Client.UserInterface
 
         private bool _visible = true;
 
+        [ViewVariables]
         public bool Visible
         {
             get => GameController.OnGodot ? SceneControl.Visible : _visible;
@@ -313,6 +328,7 @@ namespace SS14.Client.UserInterface
         private Vector2 _sizeByMargins;
         private Vector2 _size;
 
+        [ViewVariables]
         public Vector2 Size
         {
             get => GameController.OnGodot ? SceneControl.GetSize().Convert() : _size;
@@ -338,6 +354,7 @@ namespace SS14.Client.UserInterface
 
         private Vector2 _position;
 
+        [ViewVariables]
         public Vector2 Position
         {
             get => GameController.OnGodot ? SceneControl.GetPosition().Convert() : _position;
@@ -359,6 +376,7 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        [ViewVariables]
         public Vector2 GlobalPosition
         {
             get
@@ -408,6 +426,7 @@ namespace SS14.Client.UserInterface
 
         private MouseFilterMode _mouseFilter = MouseFilterMode.Stop;
 
+        [ViewVariables]
         public MouseFilterMode MouseFilter
         {
             get => GameController.OnGodot ? (MouseFilterMode) SceneControl.MouseFilter : _mouseFilter;
@@ -426,6 +445,7 @@ namespace SS14.Client.UserInterface
 
         private bool _canKeyboardFocus;
 
+        [ViewVariables]
         public bool CanKeyboardFocus
         {
             get => _canKeyboardFocus;
@@ -449,6 +469,7 @@ namespace SS14.Client.UserInterface
 
         private SizeFlags _sizeFlagsH = SizeFlags.Fill;
 
+        [ViewVariables]
         public SizeFlags SizeFlagsHorizontal
         {
             get => GameController.OnGodot ? (SizeFlags) SceneControl.SizeFlagsHorizontal : _sizeFlagsH;
@@ -468,6 +489,7 @@ namespace SS14.Client.UserInterface
 
         private float _sizeFlagsStretchRatio = 1;
 
+        [ViewVariables]
         public float SizeFlagsStretchRatio
         {
             get => GameController.OnGodot ? SceneControl.SizeFlagsStretchRatio : _sizeFlagsStretchRatio;
@@ -492,6 +514,7 @@ namespace SS14.Client.UserInterface
 
         private SizeFlags _sizeFlagsV = SizeFlags.Fill;
 
+        [ViewVariables]
         public SizeFlags SizeFlagsVertical
         {
             get => GameController.OnGodot ? (SizeFlags) SceneControl.SizeFlagsVertical : _sizeFlagsV;
@@ -510,6 +533,7 @@ namespace SS14.Client.UserInterface
         }
 
         private bool _rectClipContent = false;
+        [ViewVariables]
         public bool RectClipContent
         {
             get => GameController.OnGodot ? SceneControl.RectClipContent : _rectClipContent;
@@ -557,6 +581,7 @@ namespace SS14.Client.UserInterface
         ///     Whichever is greater.
         ///     Use this for whenever you need the *actual* minimum size of something.
         /// </summary>
+        [ViewVariables]
         public Vector2 CombinedMinimumSize
         {
             get
@@ -586,6 +611,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         /// <seealso cref="CalculateMinimumSize" />
         /// <seealso cref="CombinedMinimumSize" />
+        [ViewVariables]
         public Vector2 CustomMinimumSize
         {
             get => GameController.OnGodot ? SceneControl.RectMinSize.Convert() : _customMinimumSize;

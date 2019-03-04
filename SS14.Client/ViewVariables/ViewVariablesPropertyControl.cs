@@ -135,8 +135,8 @@ namespace SS14.Client.ViewVariables
         {
             var box = new StyleBoxFlat();
             box.BackgroundColor = other ? Color.Transparent : Color.Black.WithAlpha(0.25f);
-            box.SetContentMargin(StyleBox.Margin.Vertical, 1);
-            box.SetContentMargin(StyleBox.Margin.Horizontal, 5);
+            box.SetContentMarginOverride(StyleBox.Margin.Vertical, 1);
+            box.SetContentMarginOverride(StyleBox.Margin.Horizontal, 5);
             return box;
         }
 

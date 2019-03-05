@@ -241,6 +241,12 @@ namespace SS14.Shared.Maths
             y = Y;
         }
 
+        public static implicit operator Vector2((float x, float y) tuple)
+        {
+            var (x, y) = tuple;
+            return new Vector2(x, y);
+        }
+
         /// <summary>
         ///     Returns a string that represents the current Vector2.
         /// </summary>

@@ -25,7 +25,9 @@ namespace SS14.Client.ViewVariables.Editors
 
             var button = new Button
             {
-                Text = $"Reference: {value}"
+                Text = $"Reference: {value}",
+                ClipText = true,
+                SizeFlagsHorizontal = Control.SizeFlags.FillExpand
             };
             button.OnPressed += _ =>
             {

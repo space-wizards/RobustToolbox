@@ -262,7 +262,7 @@ namespace SS14.Server
         {
             var cfgMgr = IoCManager.Resolve<IConfigurationManager>();
 
-            cfgMgr.RegisterCVar("net.tickrate", 66, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+            cfgMgr.RegisterCVar("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
             cfgMgr.RegisterCVar("game.hostname", "MyServer", CVar.ARCHIVE);
             cfgMgr.RegisterCVar("game.maxplayers", 32, CVar.ARCHIVE);

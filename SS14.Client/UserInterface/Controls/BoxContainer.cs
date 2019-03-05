@@ -245,6 +245,13 @@ namespace SS14.Client.UserInterface.Controls
             return new Vector2(minWidth, minHeight);
         }
 
+        protected override void SetDefaults()
+        {
+            base.SetDefaults();
+
+            MouseFilter = MouseFilterMode.Pass;
+        }
+
         public enum AlignMode
         {
             Begin = 0,

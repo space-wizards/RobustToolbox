@@ -100,7 +100,7 @@ namespace SS14.Client.UserInterface.Controls
                 }
                 else
                 {
-                    totalStretchRatio = child.SizeFlagsStretchRatio;
+                    totalStretchRatio += child.SizeFlagsStretchRatio;
                 }
 
                 sizeList.Add((child, minSize, minSize, stretch));

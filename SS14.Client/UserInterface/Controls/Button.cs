@@ -209,8 +209,16 @@ namespace SS14.Client.UserInterface.Controls
 
             foreach (var chr in _text)
             {
-                var advance = (int)font.DrawChar(handle, chr, baseLine, color);
-                baseLine += new Vector2i(advance, 0);
+                if (!font.TryGetCharMetrics(chr, out var metrics))
+                {
+                    continue;
+                }
+
+                if (!(ClipText && (baseLine.X < contentBox.Left || baseLine.X + metrics.Advance > contentBox.Right)))
+                {
+                    font.DrawChar(handle, chr, baseLine, color);
+                }
+                baseLine += (metrics.Advance, 0);
             }
         }
 
@@ -226,6 +234,11 @@ namespace SS14.Client.UserInterface.Controls
             var font = ActualFont;
 
             var fontHeight = font.Height;
+
+            if (ClipText)
+            {
+                return (0, fontHeight) + style.MinimumSize;
+            }
 
             var width = _ensureWidthCache();
 

@@ -14,7 +14,9 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        internal Container(Godot.Container sceneControl) : base(sceneControl)
+        // So for SOME REASON Godot.TabContainer wasn't a Container until 3.1.
+        // ???
+        internal Container(Godot.Control sceneControl) : base(sceneControl)
         {
         }
 

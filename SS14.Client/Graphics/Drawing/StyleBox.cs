@@ -510,7 +510,10 @@ namespace SS14.Client.Graphics.Drawing
 
         public Texture Texture
         {
-            get => _texture ?? (GameController.OnGodot ? new GodotTextureSource(gdStyleBox.Texture) : null);
+            // In Godot 3.0, StyleBoxTexture.Texture is a plain resource.
+            // So we need this cast.
+            // ReSharper disable once RedundantCast
+            get => _texture ?? (GameController.OnGodot ? new GodotTextureSource((Godot.Texture)gdStyleBox.Texture) : null);
             // Woo implicit casts.
             set
             {

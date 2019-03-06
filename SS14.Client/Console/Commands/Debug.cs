@@ -402,7 +402,7 @@ namespace SS14.Client.Console.Commands
         private static void _writeNode(Control control, int indents, TextWriter writer)
         {
             var indentation = new string(' ', indents * 2);
-            writer.WriteLine("{0}{1}", indentation, control.Name);
+            writer.WriteLine("{0}{1}", indentation, control);
             foreach (var (key, value) in _propertyValuesFor(control))
             {
                 writer.WriteLine("{2} * {0}: {1}", key, value, indentation);

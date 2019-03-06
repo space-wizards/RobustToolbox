@@ -1078,6 +1078,12 @@ namespace SS14.Client.UserInterface
                 case "size_flags_vertical":
                     SizeFlagsVertical = (SizeFlags) (long) value;
                     break;
+                case "rect_clip_content":
+                    RectClipContent = (bool) value;
+                    break;
+                case "rect_min_size":
+                    CustomMinimumSize = (Vector2) value;
+                    break;
             }
         }
 

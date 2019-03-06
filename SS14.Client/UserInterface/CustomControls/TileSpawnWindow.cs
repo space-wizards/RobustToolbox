@@ -91,7 +91,7 @@ namespace SS14.Client.UserInterface.CustomControls
             }
         }
 
-        private class TileSpawnButton : Control
+        private class TileSpawnButton : PanelContainer
         {
             public string TileDef { get; set; }
             public Button ActualButton { get; private set; }

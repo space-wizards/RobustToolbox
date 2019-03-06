@@ -200,7 +200,7 @@ namespace SS14.Client.UserInterface.CustomControls
             SelectedButton = item;
         }
 
-        private class EntitySpawnButton : Control
+        private class EntitySpawnButton : PanelContainer
         {
             public string PrototypeID => Prototype.ID;
             public EntityPrototype Prototype { get; set; }

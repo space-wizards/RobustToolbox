@@ -148,6 +148,7 @@ namespace SS14.Client.UserInterface
             var control = MouseGetControl(args.Position);
             if (control == null)
             {
+                ReleaseKeyboardFocus();
                 return;
             }
 

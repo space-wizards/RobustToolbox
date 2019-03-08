@@ -318,9 +318,72 @@ namespace SS14.Client.UserInterface
                         return;
                     }
                     _visible = value;
-                    OnVisibilityChanged?.Invoke(this);
+
+                    _propagateVisibilityChanged(value);
                 }
             }
+        }
+
+        private void _propagateVisibilityChanged(bool newVisible)
+        {
+            OnVisibilityChanged?.Invoke(this);
+            if (!VisibleInTree)
+            {
+                UserInterfaceManagerInternal.ControlHidden(this);
+            }
+
+            foreach (var child in _orderedChildren)
+            {
+                if (newVisible || child._visible)
+                {
+                    child._propagateVisibilityChanged(newVisible);
+                }
+            }
+        }
+
+        public bool IsInsideTree { get; internal set; }
+
+        private void _propagateExitTree()
+        {
+            IsInsideTree = false;
+            _exitedTree();
+
+            foreach (var child in _orderedChildren)
+            {
+                child._propagateExitTree();
+            }
+        }
+
+        protected virtual void ExitedTree()
+        {
+
+        }
+
+        private void _exitedTree()
+        {
+            ExitedTree();
+            UserInterfaceManagerInternal.ControlRemovedFromTree(this);
+        }
+
+        private void _propagateEnterTree()
+        {
+            IsInsideTree = true;
+            _enteredTree();
+
+            foreach (var child in _orderedChildren)
+            {
+                child._propagateEnterTree();
+            }
+        }
+
+        protected virtual void EnteredTree()
+        {
+
+        }
+
+        private void _enteredTree()
+        {
+            EnteredTree();
         }
 
         // _marginSetSize is the size calculated by the margins,
@@ -1304,6 +1367,10 @@ namespace SS14.Client.UserInterface
             _orderedChildren.Add(child);
 
             child.Parented(this);
+            if (IsInsideTree)
+            {
+                child._propagateEnterTree();
+            }
             ChildAdded(child);
         }
 
@@ -1347,6 +1414,11 @@ namespace SS14.Client.UserInterface
             }
 
             child.Deparented();
+            if (IsInsideTree)
+            {
+                child._propagateExitTree();
+            }
+
             ChildRemoved(child);
         }
 

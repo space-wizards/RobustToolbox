@@ -85,7 +85,8 @@ namespace SS14.Client.UserInterface
 
             RootControl = new Control("UIRoot")
             {
-                MouseFilter = Control.MouseFilterMode.Ignore
+                MouseFilter = Control.MouseFilterMode.Ignore,
+                IsInsideTree = true
             };
             RootControl.SetAnchorPreset(Control.LayoutPreset.Wide);
             if (!GameController.OnGodot)
@@ -350,6 +351,27 @@ namespace SS14.Client.UserInterface
 
         public void GDPreKeyUp(KeyEventArgs args)
         {
+        }
+
+        public void ControlHidden(Control control)
+        {
+            // Does the same thing but it could later be changed so..
+            ControlRemovedFromTree(control);
+        }
+
+        public void ControlRemovedFromTree(Control control)
+        {
+            ReleaseKeyboardFocus(control);
+            if (control == CurrentlyHovered)
+            {
+                control.MouseExited();
+                CurrentlyHovered = null;
+            }
+
+            if (control == _mouseFocused)
+            {
+                _mouseFocused = null;
+            }
         }
 
         public void Render(IRenderHandle renderHandle)

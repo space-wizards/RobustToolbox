@@ -106,6 +106,10 @@ namespace SS14.Client.Interfaces.UserInterface
 
         void GDPreKeyUp(KeyEventArgs args);
 
+        void ControlHidden(Control control);
+
+        void ControlRemovedFromTree(Control control);
+
         void Render(IRenderHandle renderHandle);
 
         Dictionary<(GodotAsset asset, int resourceId), object> GodotResourceInstanceCache { get; }

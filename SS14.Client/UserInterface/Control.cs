@@ -550,6 +550,16 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        /// <summary>
+        ///     A margin around this control. If this control + this margin is outside its parent's <see cref="RectClipContent" />,
+        ///     it will not be drawn.
+        /// </summary>
+        /// <remarks>
+        ///     A control rectangle does not necessarily have to be listened to for drawing.
+        ///     So the problem is, how do we know where to stop trying to draw the control if it's clipped away?
+        /// </remarks>
+        public int RectDrawClipMargin { get; set; } = 10;
+
         public Color? ModulateSelfOverride { get; set; }
 
         public Color Modulate

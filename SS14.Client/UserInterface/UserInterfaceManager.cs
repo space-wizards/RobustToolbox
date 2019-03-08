@@ -367,13 +367,28 @@ namespace SS14.Client.UserInterface
                 return;
             }
 
+            // Manual clip test with scissor region as optimization.
+            var controlBox = UIBox2i.FromDimensions((Vector2i)position, (Vector2i)control.Size);
+
+            if (scissorBox != null)
+            {
+                var clipMargin = control.RectDrawClipMargin;
+                var clipTestBox = new UIBox2i(controlBox.Left - clipMargin, controlBox.Top - clipMargin,
+                    controlBox.Right + clipMargin, controlBox.Bottom + clipMargin);
+
+                if (!scissorBox.Value.Intersects(clipTestBox))
+                {
+                    return;
+                }
+            }
+
             handle.SetTransform(position, Angle.Zero, Vector2.One);
             handle.Modulate = modulate * control.ActualModulateSelf;
             var clip = control.RectClipContent;
             var scissorRegion = scissorBox;
             if (clip)
             {
-                scissorRegion = UIBox2i.FromDimensions((Vector2i)position, (Vector2i)control.Size);
+                scissorRegion = controlBox;
                 if (scissorBox != null)
                 {
                     // Make the final scissor region a sub region of scissorBox

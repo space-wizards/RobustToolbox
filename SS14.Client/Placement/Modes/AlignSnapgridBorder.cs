@@ -1,5 +1,6 @@
 ﻿using System;
 using SS14.Client.Graphics.ClientEye;
+using SS14.Client.Graphics.Drawing;
 using SS14.Client.Utility;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
@@ -18,12 +19,12 @@ namespace SS14.Client.Placement.Modes
         {
         }
 
-        public override void Render()
+        public override void Render(DrawingHandleWorld handle)
         {
-            if (GameController.OnGodot && onGrid)
+            if (onGrid)
             {
                 const int ppm = EyeManager.PIXELSPERMETER;
-                var viewportSize = pManager.sceneTree.SceneTree.Root.Size.Convert();
+                var viewportSize = (Vector2)pManager.DisplayManager.ScreenSize;
                 var position = pManager.eyeManager.ScreenToWorld(Vector2.Zero);
                 var gridstartx = (float) Math.Round(position.X / snapSize, MidpointRounding.AwayFromZero) * snapSize;
                 var gridstarty = (float) Math.Round(position.Y / snapSize, MidpointRounding.AwayFromZero) * snapSize;
@@ -31,26 +32,25 @@ namespace SS14.Client.Placement.Modes
                     new Vector2( //Find snap grid closest to screen origin and convert back to screen coords
                         gridstartx,
                         gridstarty));
-                var flip = new Godot.Vector2(1, -1);
                 for (var a = gridstart.X;
                     a < viewportSize.X;
                     a += snapSize * ppm) //Iterate through screen creating gridlines
                 {
-                    var from = ScreenToWorld(new Vector2(a, 0)).Convert() * ppm * flip;
-                    var to = ScreenToWorld(new Vector2(a, viewportSize.Y)).Convert() * ppm * flip;
-                    pManager.DrawNode.DrawLine(from, to, new Godot.Color(0, 0, 1), 0.5f);
+                    var from = ScreenToWorld(new Vector2(a, 0));
+                    var to = ScreenToWorld(new Vector2(a, viewportSize.Y));
+                    handle.DrawLine(from, to, new Color(0, 0, 1f), 0.5f);
                 }
 
                 for (var a = gridstart.Y; a < viewportSize.Y; a += snapSize * ppm)
                 {
-                    var from = ScreenToWorld(new Vector2(0, a)).Convert() * ppm * flip;
-                    var to = ScreenToWorld(new Vector2(viewportSize.X, a)).Convert() * ppm * flip;
-                    pManager.DrawNode.DrawLine(from, to, new Godot.Color(0, 0, 1), 0.5f);
+                    var from = ScreenToWorld(new Vector2(0, a));
+                    var to = ScreenToWorld(new Vector2(viewportSize.X, a));
+                    handle.DrawLine(from, to, new Color(0, 0, 1f), 0.5f);
                 }
             }
 
             // Draw grid BELOW the ghost.
-            base.Render();
+            base.Render(handle);
         }
 
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)

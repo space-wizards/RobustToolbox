@@ -18,7 +18,6 @@ namespace SS14.Client.Interfaces.Placement
         event EventHandler PlacementCanceled;
 
         void BeginPlacing(PlacementInformation info);
-        void Render();
         void Clear();
         void ToggleEraser();
 

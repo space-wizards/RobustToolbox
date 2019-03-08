@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.ClientEye;
+using SS14.Client.Graphics.Drawing;
 using SS14.Client.ResourceManagement;
 using SS14.Client.Utility;
 using SS14.Shared.Interfaces.GameObjects.Components;
@@ -83,17 +84,12 @@ namespace SS14.Client.Placement
         /// <returns></returns>
         public abstract bool IsValidPosition(GridCoordinates position);
 
-        public virtual void Render()
+        public virtual void Render(DrawingHandleWorld handle)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
             if (SpriteToDraw == null)
             {
                 SetSprite();
             }
-
 
             IEnumerable<GridCoordinates> locationcollection;
             switch (pManager.PlacementType)
@@ -115,9 +111,9 @@ namespace SS14.Client.Placement
             var size = SpriteToDraw.Size;
             foreach (var coordinate in locationcollection)
             {
-                var pos = coordinate.Position * EyeManager.PIXELSPERMETER * new Vector2(1, -1) - size / 2f;
+                var pos = coordinate.Position - (size/EyeManager.PIXELSPERMETER) / 2f;
                 var color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
-                pManager.DrawNode.DrawTexture(SpriteToDraw.GodotTexture, pos.Convert(), color.Convert());
+                handle.DrawTexture(SpriteToDraw, pos, color);
             }
         }
 

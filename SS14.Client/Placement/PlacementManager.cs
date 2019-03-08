@@ -27,6 +27,9 @@ using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics;
 using SS14.Client.GameObjects;
 using SS14.Client.GameObjects.EntitySystems;
+using SS14.Client.Graphics.Drawing;
+using SS14.Client.Interfaces.Graphics;
+using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Player;
 using SS14.Shared.Input;
 using SS14.Shared.Utility;
@@ -34,7 +37,7 @@ using SS14.Shared.Serialization;
 
 namespace SS14.Client.Placement
 {
-    public class PlacementManager : IPlacementManager, IDisposable
+    public partial class PlacementManager : IPlacementManager, IDisposable
     {
         [Dependency]
         public readonly IPhysicsManager PhysicsManager;
@@ -64,6 +67,10 @@ namespace SS14.Client.Placement
         private readonly IPrototypeManager _prototypeManager;
         [Dependency]
         private readonly IBaseClient _baseClient;
+        [Dependency]
+        private readonly IOverlayManager _overlayManager;
+        [Dependency]
+        public readonly IDisplayManager DisplayManager;
 
         /// <summary>
         ///     How long before a pending tile change is dropped.
@@ -171,8 +178,7 @@ namespace SS14.Client.Placement
         /// </summary>
         public Direction Direction { get; set; } = Direction.South;
 
-        public Godot.Node2D DrawNode { get; set; }
-        private GodotGlue.GodotSignalSubscriber0 drawNodeDrawSubscriber;
+        private PlacementOverlay _drawOverlay;
         private bool _isActive;
 
         public void Initialize()
@@ -187,24 +193,8 @@ namespace SS14.Client.Placement
 
             _mapMan.TileChanged += HandleTileChanged;
 
-            if (GameController.OnGodot)
-            {
-                var unshadedMaterial = new Godot.CanvasItemMaterial()
-                {
-                    LightMode = Godot.CanvasItemMaterial.LightModeEnum.Unshaded
-                };
-
-                DrawNode = new Godot.Node2D()
-                {
-                    Name = "Placement Manager Sprite",
-                    ZIndex = 100,
-                    Material = unshadedMaterial
-                };
-                sceneTree.WorldRoot.AddChild(DrawNode);
-                drawNodeDrawSubscriber = new GodotGlue.GodotSignalSubscriber0();
-                drawNodeDrawSubscriber.Connect(DrawNode, "draw");
-                drawNodeDrawSubscriber.Signal += Render;
-            }
+            _drawOverlay = new PlacementOverlay(this);
+            _overlayManager.AddOverlay(_drawOverlay);
 
             // a bit ugly, oh well
             _baseClient.PlayerJoinedServer += (sender, args) => SetupInput(_entitySystemManager);
@@ -308,15 +298,7 @@ namespace SS14.Client.Placement
 
         public void Dispose()
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
-            drawNodeDrawSubscriber.Disconnect(DrawNode, "draw");
-            drawNodeDrawSubscriber.Dispose();
-            DrawNode.QueueFree();
-            DrawNode.Dispose();
+            _drawOverlay.Dispose();
         }
 
         private void HandlePlacementMessage(MsgPlacement msg)
@@ -353,12 +335,6 @@ namespace SS14.Client.Placement
             IsActive = false;
             Eraser = false;
             PlacementOffset = Vector2i.Zero;
-            // Make it draw again to remove the drawn things.
-
-            if (GameController.OnGodot)
-            {
-                DrawNode?.Update();
-            }
         }
 
         public void Rotate()
@@ -511,11 +487,6 @@ namespace SS14.Client.Placement
             // continues tile placement but placement of entities only occurs on mouseUp
             if (_placenextframe && CurrentPermission.IsTile)
                 HandlePlacement();
-
-            if (GameController.OnGodot)
-            {
-                DrawNode.Update();
-            }
         }
 
         private void ActivateLineMode()
@@ -553,24 +524,19 @@ namespace SS14.Client.Placement
             return true;
         }
 
-        public void Render()
+        private void Render(DrawingHandleWorld handle)
         {
             if (CurrentMode == null || !IsActive)
                 return;
 
-            CurrentMode.Render();
+            CurrentMode.Render(handle);
 
             if (CurrentPermission == null || CurrentPermission.Range <= 0 || !CurrentMode.RangeRequired)
                 return;
 
-            var pos = PlayerManager.LocalPlayer.ControlledEntity.Transform.WorldPosition;
-            const int ppm = EyeManager.PIXELSPERMETER;
+            var worldPos = PlayerManager.LocalPlayer.ControlledEntity.Transform.WorldPosition;
 
-            if (GameController.OnGodot)
-            {
-                DrawNode.DrawCircle(pos.Convert() * new Godot.Vector2(1, -1) * ppm, CurrentPermission.Range * ppm,
-                    new Godot.Color(1, 1, 1, 0.25f));
-            }
+            handle.DrawCircle(worldPos, CurrentPermission.Range, new Color(1, 1, 1, 0.25f));
         }
 
         private void HandleStartPlacement(MsgPlacement msg)

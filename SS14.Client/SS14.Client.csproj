@@ -176,6 +176,7 @@
     <Compile Include="Interfaces\IBaseClient.cs" />
     <Compile Include="Interfaces\ISceneTreeHolder.cs" />
     <Compile Include="Interfaces\Map\IClientTileDefinitionManager.cs" />
+    <Compile Include="Placement\PlacementOverlay.cs" />
     <Compile Include="Player\IPlayerManager.cs" />
     <Compile Include="Player\IPlayerSession.cs" />
     <Compile Include="Interfaces\State\IStateManager.cs" />

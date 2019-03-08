@@ -13,6 +13,7 @@ using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.State.States;
 using SS14.Client.UserInterface;
+using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Console;
 using SS14.Shared.GameObjects;
@@ -441,6 +442,28 @@ namespace SS14.Client.Console.Commands
 
             members.Sort((a, b) => string.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
             return members;
+        }
+    }
+
+    internal class UITestCommand : IConsoleCommand
+    {
+        public string Command => "uitest";
+        public string Description => "Open a dummy UI testing window";
+        public string Help => "uitest";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var window = new SS14Window("UITest");
+            window.AddToScreen();
+            var scroll = new ScrollContainer();
+            window.Contents.AddChild(scroll);
+            scroll.SetAnchorAndMarginPreset(Control.LayoutPreset.Wide);
+            var vBox = new VBoxContainer();
+            scroll.AddChild(vBox);
+
+            var progressBar = new ProgressBar {MaxValue=10, Value=5};
+            vBox.AddChild(progressBar);
+            return false;
         }
     }
 }

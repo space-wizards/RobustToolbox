@@ -119,6 +119,7 @@ namespace SS14.Client.UserInterface.Controls
                 else
                 {
                     _placeHolder = value;
+                    _updatePseudoClass();
                 }
             }
         }

@@ -148,11 +148,11 @@ namespace SS14.Client
             _prototypeManager.Resync();
             _tileDefinitionManager.Initialize();
             _mapManager.Initialize();
-            _placementManager.Initialize();
             _lightManager.Initialize();
             _entityManager.Initialize();
             _gameStateManager.Initialize();
             _overlayManager.Initialize();
+            _placementManager.Initialize();
             _viewVariablesManager.Initialize();
 
             _client.Initialize();

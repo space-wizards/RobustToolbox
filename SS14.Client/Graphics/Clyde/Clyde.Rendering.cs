@@ -22,6 +22,7 @@ namespace SS14.Client.Graphics.Clyde
         private static readonly (uint, string) DbgGroupGrids = (2, "Grids");
         private static readonly (uint, string) DbgGroupEntities = (3, "Entities");
         private static readonly (uint, string) DbgGroupUI = (4, "User Interface");
+        private static readonly (uint, string) DbgGroupWorldOverlay = (5, "Overlays: World");
 
         /// <summary>
         ///     The current model matrix we would use.
@@ -270,6 +271,20 @@ namespace SS14.Client.Graphics.Clyde
 
             _popDebugGroupMaybe();
 
+            _pushDebugGroupMaybe(DbgGroupWorldOverlay);
+
+            // Render ScreenSpaceBelowWorld overlays.
+            foreach (var overlay in _overlayManager.AllOverlays
+                .Where(o => o.Space == OverlaySpace.WorldSpace)
+                .OrderBy(o => o.ZIndex))
+            {
+                overlay.OpenGLRender(_renderHandle);
+            }
+
+            _flushRenderHandle(_renderHandle);
+
+            _popDebugGroupMaybe();
+
             _pushDebugGroupMaybe(DbgGroupUI);
 
             ProjViewUBO.Use();
@@ -464,10 +479,11 @@ namespace SS14.Client.Graphics.Clyde
                 drawHandle.Dispose();
                 _processCommandList(commandList);
                 _returnCommandList(commandList);
+                _flushBatchBuffer();
+                _currentModelMatrix = Matrix3.Identity;
             }
 
             handle._drawingHandles.Clear();
-            _flushBatchBuffer();
             _disableScissor();
         }
 

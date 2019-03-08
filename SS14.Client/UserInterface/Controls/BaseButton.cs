@@ -3,6 +3,7 @@ using System;
 using JetBrains.Annotations;
 using SS14.Client.Utility;
 using SS14.Shared.Log;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.UserInterface.Controls
 {
@@ -27,6 +28,7 @@ namespace SS14.Client.UserInterface.Controls
 
         private ActionMode _mode = ActionMode.Release;
 
+        [ViewVariables]
         public ActionMode Mode
         {
             get => GameController.OnGodot ? (ActionMode) SceneControl.Get("action_mode") : _mode;
@@ -45,6 +47,7 @@ namespace SS14.Client.UserInterface.Controls
 
         private bool _disabled;
 
+        [ViewVariables]
         public bool Disabled
         {
             get => GameController.OnGodot ? (bool) SceneControl.Get("disabled") : _disabled;
@@ -72,6 +75,7 @@ namespace SS14.Client.UserInterface.Controls
         /// <summary>
         ///     Whether the button is currently toggled down. Only applies when <see cref="ToggleMode"/> is true.
         /// </summary>
+        [ViewVariables]
         public bool Pressed
         {
             get => GameController.OnGodot ? (bool) SceneControl.Get("pressed") : _pressed;
@@ -83,13 +87,19 @@ namespace SS14.Client.UserInterface.Controls
                 }
                 else
                 {
-                    _pressed = value;
+                    if (_pressed != value)
+                    {
+                        _pressed = value;
+
+                        DrawModeChanged();
+                    }
                 }
             }
         }
 
         private bool _toggleMode;
 
+        [ViewVariables]
         public bool ToggleMode
         {
             get => GameController.OnGodot ? (bool) SceneControl.Get("toggle_mode") : _toggleMode;
@@ -112,8 +122,10 @@ namespace SS14.Client.UserInterface.Controls
             Release = 1,
         }
 
+        [ViewVariables]
         public bool IsHovered => GameController.OnGodot ? (bool) SceneControl.Call("is_hovered") : _beingHovered;
 
+        [ViewVariables]
         public DrawModeEnum DrawMode
         {
             get
@@ -188,7 +200,7 @@ namespace SS14.Client.UserInterface.Controls
             {
                 if (ToggleMode)
                 {
-                    Pressed = !Pressed;
+                    _pressed = !_pressed;
                     OnPressed?.Invoke(buttonEventArgs);
                     OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this));
                 }
@@ -222,7 +234,7 @@ namespace SS14.Client.UserInterface.Controls
             {
                 if (ToggleMode)
                 {
-                    Pressed = !Pressed;
+                    _pressed = !_pressed;
                 }
 
                 OnPressed?.Invoke(buttonEventArgs);

@@ -3,6 +3,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.UserInterface.Controls
 {
@@ -34,6 +35,7 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         private AlignMode _textAlign;
+        [ViewVariables]
         public AlignMode TextAlign
         {
             get => GameController.OnGodot ? (AlignMode)SceneControl.Get("align") : _textAlign;
@@ -51,6 +53,7 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         private bool _clipText;
+        [ViewVariables]
         public bool ClipText
         {
             get => GameController.OnGodot ? (bool)SceneControl.Get("clip_text") : _clipText;
@@ -68,6 +71,7 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         private string _text;
+        [ViewVariables]
         public string Text
         {
             get => GameController.OnGodot ? (string)SceneControl.Get("text") : _text;

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.UserInterface
 {
@@ -14,6 +15,7 @@ namespace SS14.Client.UserInterface
 
         private string _styleIdentifier;
 
+        [ViewVariables]
         public string StyleIdentifier
         {
             get => _styleIdentifier;
@@ -26,6 +28,7 @@ namespace SS14.Client.UserInterface
 
         private string _stylePseudoClass;
 
+        [ViewVariables]
         public string StylePseudoClass
         {
             get => _stylePseudoClass;

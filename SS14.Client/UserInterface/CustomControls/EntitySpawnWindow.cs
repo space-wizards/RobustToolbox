@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using SS14.Client.GameObjects;
-using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Placement;
-using SS14.Client.Interfaces.ResourceManagement;
-using SS14.Client.ResourceManagement;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
-using SS14.Shared.Reflection;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
@@ -20,10 +16,8 @@ namespace SS14.Client.UserInterface.CustomControls
     {
         protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Placement/EntitySpawnPanel.tscn");
 
-        [Dependency]
-        private readonly IPlacementManager placementManager;
-        [Dependency]
-        private readonly IPrototypeManager prototypeManager;
+        [Dependency] private readonly IPlacementManager placementManager;
+        [Dependency] private readonly IPrototypeManager prototypeManager;
 
         private Control HSplitContainer;
         private Control PrototypeList;
@@ -133,14 +127,25 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             PrototypeList.DisposeAllChildren();
             SelectedButton = null;
-            if (searchStr != null)
+            searchStr = searchStr?.ToLowerInvariant();
+
+            var prototypes = new List<EntityPrototype>();
+            foreach (var prototype in prototypeManager.EnumeratePrototypes<EntityPrototype>())
             {
-                searchStr = searchStr.ToLower();
+                if (prototype.Abstract)
+                {
+                    continue;
+                }
+
+                if (searchStr != null && !_doesPrototypeMatchSearch(prototype, searchStr))
+                {
+                    continue;
+                }
+
+                prototypes.Add(prototype);
             }
 
-            var prototypes = prototypeManager.EnumeratePrototypes<EntityPrototype>()
-                .Where(prototype => !prototype.Abstract && (searchStr == null || prototype.ID.ToLower().Contains(searchStr)))
-                .OrderBy(prototype => prototype.Name);
+            prototypes.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
 
             foreach (var prototype in prototypes)
             {
@@ -158,7 +163,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 {
                     rect.Texture = tex.Default;
                     // Ok I can't find a way to make this TextureRect scale down sanely so let's do this.
-                    var scale = (float)TARGET_ICON_HEIGHT / tex.Default.Height;
+                    var scale = (float) TARGET_ICON_HEIGHT / tex.Default.Height;
                     rect.Scale = new Vector2(scale, scale);
                 }
                 else
@@ -170,9 +175,24 @@ namespace SS14.Client.UserInterface.CustomControls
             }
         }
 
+        private static bool _doesPrototypeMatchSearch(EntityPrototype prototype, string searchStr)
+        {
+            if (prototype.ID.ToLowerInvariant().Contains(searchStr))
+            {
+                return true;
+            }
+
+            if (prototype.Name.ToLowerInvariant().Contains(searchStr))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         private void OnItemButtonToggled(BaseButton.ButtonToggledEventArgs args)
         {
-            var item = (EntitySpawnButton)args.Button.Parent;
+            var item = (EntitySpawnButton) args.Button.Parent;
             if (SelectedButton == item)
             {
                 SelectedButton = null;
@@ -223,6 +243,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 SelectedButton.ActualButton.Pressed = false;
                 SelectedButton = null;
             }
+
             EraseButton.Pressed = false;
         }
     }

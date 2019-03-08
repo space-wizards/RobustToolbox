@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using SS14.Client.Utility;
 using SS14.Shared.Maths;
+using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.UserInterface.Controls
 {
     [ControlWrap(typeof(Godot.Range))]
     public abstract class Range : Control
     {
-        private float _maxValue;
+        private float _maxValue = 100;
         private float _minValue;
         private float _value;
         private float _page;
@@ -36,6 +38,7 @@ namespace SS14.Client.UserInterface.Controls
             return (_value - _minValue) / (_maxValue - _minValue);
         }
 
+        [ViewVariables]
         public float Page
         {
             get => GameController.OnGodot ? (float)SceneControl.Get("page") : _page;
@@ -53,6 +56,7 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
+        [ViewVariables]
         public float MaxValue
         {
             get => GameController.OnGodot ? (float)SceneControl.Get("max_value") : _maxValue;
@@ -70,6 +74,7 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
+        [ViewVariables]
         public float MinValue
         {
             get => GameController.OnGodot ? (float)SceneControl.Get("min_value") : _minValue;
@@ -87,6 +92,7 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
+        [ViewVariables]
         public float Value
         {
             get => GameController.OnGodot ? (float) SceneControl.Get("value") : _value;
@@ -122,6 +128,31 @@ namespace SS14.Client.UserInterface.Controls
         protected float ClampValue(float value)
         {
             return value.Clamp(_minValue, _maxValue-_page);
+        }
+
+        private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
+        {
+            base.SetGodotProperty(property, value, context);
+
+            if (property == "max_value")
+            {
+                MaxValue = (float) value;
+            }
+
+            if (property == "min_value")
+            {
+                MinValue = (float) value;
+            }
+
+            if (property == "value")
+            {
+                Value = (float) value;
+            }
+
+            if (property == "page")
+            {
+                Page = (float) value;
+            }
         }
     }
 }

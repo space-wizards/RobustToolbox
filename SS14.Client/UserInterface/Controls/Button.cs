@@ -177,9 +177,7 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
-            var uiTheme = UserInterfaceManager.ThemeDefaults;
             var style = ActualStyleBox;
-            var font = ActualFont;
             var drawBox = SizeBox;
             style.Draw(handle, drawBox);
 
@@ -188,8 +186,14 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
-            var width = _ensureWidthCache();
             var contentBox = style.GetContentBox(drawBox);
+            DrawTextInternal(handle, contentBox);
+        }
+
+        protected void DrawTextInternal(DrawingHandleScreen handle, UIBox2 box)
+        {
+            var width = EnsureWidthCache();
+            var font = ActualFont;
             int drawOffset;
 
             switch (TextAlign)
@@ -198,18 +202,18 @@ namespace SS14.Client.UserInterface.Controls
                     drawOffset = 0;
                     break;
                 case AlignMode.Center:
-                    drawOffset = (int)(contentBox.Width - width) / 2;
+                    drawOffset = (int)(box.Width - width) / 2;
                     break;
                 case AlignMode.Right:
-                    drawOffset = (int)(contentBox.Width - width);
+                    drawOffset = (int)(box.Width - width);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
 
             var color = ActualFontColor;
-            var offsetY = (int) (contentBox.Height - font.Height) / 2;
-            var baseLine = new Vector2i(drawOffset, offsetY+font.Ascent) + contentBox.TopLeft;
+            var offsetY = (int) (box.Height - font.Height) / 2;
+            var baseLine = new Vector2i(drawOffset, offsetY+font.Ascent) + box.TopLeft;
 
             foreach (var chr in _text)
             {
@@ -218,7 +222,7 @@ namespace SS14.Client.UserInterface.Controls
                     continue;
                 }
 
-                if (!(ClipText && (baseLine.X < contentBox.Left || baseLine.X + metrics.Advance > contentBox.Right)))
+                if (!(ClipText && (baseLine.X < box.Left || baseLine.X + metrics.Advance > box.Right)))
                 {
                     font.DrawChar(handle, chr, baseLine, color);
                 }
@@ -244,7 +248,7 @@ namespace SS14.Client.UserInterface.Controls
                 return (0, fontHeight) + style.MinimumSize;
             }
 
-            var width = _ensureWidthCache();
+            var width = EnsureWidthCache();
 
             return new Vector2(width, fontHeight) + style.MinimumSize;
         }
@@ -277,7 +281,7 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
-        private int _ensureWidthCache()
+        protected int EnsureWidthCache()
         {
             if (_textWidthCache.HasValue)
             {
@@ -290,7 +294,6 @@ namespace SS14.Client.UserInterface.Controls
                 return 0;
             }
 
-            var uiTheme = UserInterfaceManager.ThemeDefaults;
             var font = ActualFont;
 
             var textWidth = 0;

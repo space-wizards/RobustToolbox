@@ -64,8 +64,8 @@ namespace SS14.Client.Input
         private static readonly Dictionary<Button, Keyboard.Key> _mouseKeyMap = new Dictionary<Button, Keyboard.Key>
         {
             {Button.Left, Keyboard.Key.MouseLeft},
-            {Button.Middle, Keyboard.Key.MouseLeft},
-            {Button.Right, Keyboard.Key.MouseLeft},
+            {Button.Middle, Keyboard.Key.MouseMiddle},
+            {Button.Right, Keyboard.Key.MouseRight},
             {Button.Button4, Keyboard.Key.MouseButton4},
             {Button.Button5, Keyboard.Key.MouseButton5},
             {Button.Button6, Keyboard.Key.MouseButton6},

@@ -34,13 +34,15 @@ namespace SS14.Client.UserInterface.Controls
             {
                 SceneControl.Call("popup", box?.Convert());
             }
-        }
-
-        public void OpenCentered()
-        {
-            if (GameController.OnGodot)
+            else
             {
-                SceneControl.Call("popup_centered");
+                if (box != null)
+                {
+                    Position = box.Value.TopLeft;
+                    Size = box.Value.Size;
+                }
+
+                Visible = true;
             }
         }
 

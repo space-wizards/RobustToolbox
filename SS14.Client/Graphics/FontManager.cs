@@ -82,6 +82,7 @@ namespace SS14.Client.Graphics
             for (var i = startIndex; i <= endIndex; i++)
             {
                 face.LoadChar(i, LoadFlags.Default, LoadTarget.Normal);
+                face.Glyph.RenderGlyph(RenderMode.Normal);
 
                 maxGlyphSize = Vector2i.ComponentMax(maxGlyphSize,
                     new Vector2i(face.Glyph.Bitmap.Width, face.Glyph.Bitmap.Rows));

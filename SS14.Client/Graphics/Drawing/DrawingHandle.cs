@@ -2,6 +2,7 @@ using System;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Clyde;
 using SS14.Client.Utility;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using VS = Godot.VisualServer;
@@ -334,6 +335,13 @@ namespace SS14.Client.Graphics.Drawing
             CheckDisposed();
             _renderHandle?.SetScissor(scissorBox, _handleId);
             // TODO: uh... How even to go about implementing this on Godot?
+        }
+
+        internal void DrawEntity(IEntity entity, Vector2 screenPosition)
+        {
+            CheckDisposed();
+
+            _renderHandle?.DrawEntity(entity, screenPosition, _handleId);
         }
     }
 }

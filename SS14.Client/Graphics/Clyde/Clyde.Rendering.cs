@@ -8,7 +8,9 @@ using SS14.Client.GameObjects;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Graphics.Overlays;
+using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.ResourceManagement;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
@@ -78,6 +80,9 @@ namespace SS14.Client.Graphics.Clyde
 
         private bool _isScissoring = false;
 
+        private ProjViewMatrices _combinedDefaultMatricesWorld;
+        private ProjViewMatrices _combinedDefaultMatricesScreen;
+
         public void Render(FrameEventArgs args)
         {
             if (GameController.Mode != GameController.DisplayMode.OpenGL)
@@ -107,17 +112,9 @@ namespace SS14.Client.Graphics.Clyde
             projMatrixScreen.R0C2 = -1;
             projMatrixScreen.R1C2 = 1;
 
-            var combinedMatricesScreen = new ProjViewMatrices(projMatrixScreen, viewMatrixScreen);
+            _combinedDefaultMatricesScreen = new ProjViewMatrices(projMatrixScreen, viewMatrixScreen);
 
-            ProjViewUBO.Use();
-            if (_reallocateBuffers)
-            {
-                ProjViewUBO.Reallocate(combinedMatricesScreen);
-            }
-            else
-            {
-                ProjViewUBO.WriteSubData(combinedMatricesScreen);
-            }
+            _setProjViewMatrices(_combinedDefaultMatricesScreen);
 
             if (_drawingSplash)
             {
@@ -141,7 +138,7 @@ namespace SS14.Client.Graphics.Clyde
             viewMatrixWorld.R0C2 = -eye.Position.X / eye.Zoom.X;
             viewMatrixWorld.R1C2 = -eye.Position.Y / eye.Zoom.Y;
 
-            var combinedMatricesWorld = new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
+            _combinedDefaultMatricesWorld = new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
 
             _pushDebugGroupMaybe(DbgGroupSSBW);
 
@@ -170,15 +167,7 @@ namespace SS14.Client.Graphics.Clyde
 
             GL.BindVertexArray(BatchVAO.Handle);
 
-            ProjViewUBO.Use();
-            if (_reallocateBuffers)
-            {
-                ProjViewUBO.Reallocate(combinedMatricesWorld);
-            }
-            else
-            {
-                ProjViewUBO.WriteSubData(combinedMatricesWorld);
-            }
+            _setProjViewMatrices(_combinedDefaultMatricesWorld);
 
             GL.Enable(EnableCap.PrimitiveRestart);
             GL.PrimitiveRestartIndex(ushort.MaxValue);
@@ -287,15 +276,7 @@ namespace SS14.Client.Graphics.Clyde
 
             _pushDebugGroupMaybe(DbgGroupUI);
 
-            ProjViewUBO.Use();
-            if (_reallocateBuffers)
-            {
-                ProjViewUBO.Reallocate(combinedMatricesScreen);
-            }
-            else
-            {
-                ProjViewUBO.WriteSubData(combinedMatricesScreen);
-            }
+            _setProjViewMatrices(_combinedDefaultMatricesScreen);
 
             // Render UI.
             _currentSpace = CurrentSpace.ScreenSpace;
@@ -308,6 +289,19 @@ namespace SS14.Client.Graphics.Clyde
             _window.SwapBuffers();
         }
 
+        private void _setProjViewMatrices(in ProjViewMatrices matrices)
+        {
+            ProjViewUBO.Use();
+            if (_reallocateBuffers)
+            {
+                ProjViewUBO.Reallocate(matrices);
+            }
+            else
+            {
+                ProjViewUBO.WriteSubData(matrices);
+            }
+        }
+
         private void _processCommandList(RenderCommandList list)
         {
             foreach (ref var command in list.RenderCommands)
@@ -318,7 +312,7 @@ namespace SS14.Client.Graphics.Clyde
                         _drawCommandTexture(ref command, true, ref _currentModelMatrix);
                         break;
                     case RenderCommandType.Transform:
-                        _currentModelMatrix = command.Matrix;
+                        _currentModelMatrix = command.TransformMatrix;
                         _batchModelMatricesNeedsUpdate = true;
                         break;
                     case RenderCommandType.Scissor:
@@ -341,6 +335,42 @@ namespace SS14.Client.Graphics.Clyde
                             GL.Disable(EnableCap.ScissorTest);
                         }
 
+                        break;
+                    case RenderCommandType.SwitchSpace:
+                        _flushBatchBuffer();
+                        _currentSpace = command.NewSpace;
+                        break;
+                    case RenderCommandType.ChangeViewMatrix:
+                        _flushBatchBuffer();
+                        ProjViewMatrices matrices;
+                        switch (_currentSpace)
+                        {
+                            case CurrentSpace.ScreenSpace:
+                                matrices = new ProjViewMatrices(_combinedDefaultMatricesScreen, command.ViewMatrix);
+                                break;
+                            case CurrentSpace.WorldSpace:
+                                matrices = new ProjViewMatrices(_combinedDefaultMatricesWorld, command.ViewMatrix);
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+
+                        _setProjViewMatrices(matrices);
+                        break;
+                    case RenderCommandType.ResetViewMatrix:
+                        _flushBatchBuffer();
+
+                        switch (_currentSpace)
+                        {
+                            case CurrentSpace.ScreenSpace:
+                                _setProjViewMatrices(_combinedDefaultMatricesScreen);
+                                break;
+                            case CurrentSpace.WorldSpace:
+                                _setProjViewMatrices(_combinedDefaultMatricesWorld);
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
                         break;
                 }
             }
@@ -474,16 +504,21 @@ namespace SS14.Client.Graphics.Clyde
         /// </summary>
         private void _flushRenderHandle(RenderHandle handle)
         {
-            foreach (var (drawHandle, commandList) in handle._drawingHandles)
+            foreach (var commandList in handle._commandLists)
             {
-                drawHandle.Dispose();
                 _processCommandList(commandList);
                 _returnCommandList(commandList);
                 _flushBatchBuffer();
                 _currentModelMatrix = Matrix3.Identity;
             }
 
+            foreach (var (drawingHandle, _) in handle._drawingHandles)
+            {
+                drawingHandle.Dispose();
+            }
+
             handle._drawingHandles.Clear();
+            handle._commandLists.Clear();
             _disableScissor();
         }
 
@@ -656,6 +691,7 @@ namespace SS14.Client.Graphics.Clyde
         {
             private readonly Clyde _manager;
 
+            public readonly List<RenderCommandList> _commandLists = new List<RenderCommandList>();
             public readonly List<(DrawingHandle, RenderCommandList)> _drawingHandles =
                 new List<(DrawingHandle, RenderCommandList)>();
 
@@ -676,7 +712,9 @@ namespace SS14.Client.Graphics.Clyde
                 }
 
                 var handle = new DrawingHandleWorld(this, _drawingHandles.Count);
-                _drawingHandles.Add((handle, _manager._getNewCommandList()));
+                var commandList = _manager._getNewCommandList();
+                _drawingHandles.Add((handle, commandList));
+                _commandLists.Add(commandList);
                 return handle;
             }
 
@@ -690,7 +728,9 @@ namespace SS14.Client.Graphics.Clyde
                 }
 
                 var handle = new DrawingHandleScreen(this, _drawingHandles.Count);
-                _drawingHandles.Add((handle, _manager._getNewCommandList()));
+                var commandList = _manager._getNewCommandList();
+                _drawingHandles.Add((handle, commandList));
+                _commandLists.Add(commandList);
                 return handle;
             }
 
@@ -701,7 +741,7 @@ namespace SS14.Client.Graphics.Clyde
                 var list = _drawingHandles[handleId].Item2;
                 ref var command = ref list.RenderCommands.AllocAdd();
                 command.Type = RenderCommandType.Transform;
-                command.Matrix = matrix;
+                command.TransformMatrix = matrix;
             }
 
             public void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion,
@@ -752,6 +792,8 @@ namespace SS14.Client.Graphics.Clyde
 
             public void SetScissor(in UIBox2i? scissorBox, int handleId)
             {
+                _assertNotDisposed();
+
                 var list = _drawingHandles[handleId].Item2;
                 ref var command = ref list.RenderCommands.AllocAdd();
 
@@ -760,6 +802,55 @@ namespace SS14.Client.Graphics.Clyde
                 if (scissorBox.HasValue)
                 {
                     command.Scissor = scissorBox.Value;
+                }
+            }
+
+            public void DrawEntity(IEntity entity, in Vector2 position, int handleId)
+            {
+                _assertNotDisposed();
+                DebugTools.Assert(_manager._currentSpace == CurrentSpace.ScreenSpace);
+
+                var sprite = entity.GetComponent<SpriteComponent>();
+
+                var list = _drawingHandles[handleId].Item2;
+                // Switch rendering to world space.
+                {
+                    ref var commandWorldSpace = ref list.RenderCommands.AllocAdd();
+                    commandWorldSpace.Type = RenderCommandType.SwitchSpace;
+                    commandWorldSpace.NewSpace = CurrentSpace.WorldSpace;
+                }
+
+                {
+                    // Change view matrix to put entity where we need.
+                    ref var commandViewMatrix = ref list.RenderCommands.AllocAdd();
+                    commandViewMatrix.Type = RenderCommandType.ChangeViewMatrix;
+
+                    var viewMatrix = Matrix3.Identity;
+                    var ofsX = position.X - _manager._window.Width / 2f;
+                    var ofsY = position.Y - _manager._window.Height / 2f;
+                    viewMatrix.R0C2 = ofsX / EyeManager.PIXELSPERMETER;
+                    viewMatrix.R1C2 = -ofsY / EyeManager.PIXELSPERMETER;
+                    commandViewMatrix.ViewMatrix = viewMatrix;
+                }
+
+                // Create drawing handle for entity.
+                var drawingHandle = new DrawingHandleWorld(this, _drawingHandles.Count);
+                _drawingHandles.Add((drawingHandle, list));
+
+                // Draw the entity.
+                sprite.OpenGLRender(drawingHandle, false);
+
+                // Reset to screen space
+                {
+                    ref var commandScreenSpace = ref list.RenderCommands.AllocAdd();
+                    commandScreenSpace.Type = RenderCommandType.SwitchSpace;
+                    commandScreenSpace.NewSpace = CurrentSpace.ScreenSpace;
+                }
+
+                // Reset view matrix.
+                {
+                    ref var commandScreenSpace = ref list.RenderCommands.AllocAdd();
+                    commandScreenSpace.Type = RenderCommandType.ResetViewMatrix;
                 }
             }
 
@@ -775,10 +866,10 @@ namespace SS14.Client.Graphics.Clyde
             }
         }
 
-        private enum CurrentSpace
+        private enum CurrentSpace : byte
         {
-            ScreenSpace,
-            WorldSpace,
+            ScreenSpace = 0,
+            WorldSpace = 1,
         }
 
         // Use a tagged union to store all render commands.
@@ -801,11 +892,17 @@ namespace SS14.Client.Graphics.Clyde
             [FieldOffset(60)] public int ArrayIndex;
 
             // Transform command fields.
-            [FieldOffset(4)] public Matrix3 Matrix;
+            [FieldOffset(4)] public Matrix3 TransformMatrix;
 
             // Scissor command fields.
             [FieldOffset(4)] public bool EnableScissor;
             [FieldOffset(8)] public UIBox2i Scissor;
+
+            // Switch Space command fields.
+            [FieldOffset(4)] public CurrentSpace NewSpace;
+
+            // Change view matrix command fields.
+            [FieldOffset(4)] public Matrix3 ViewMatrix;
         }
 
         private struct BatchCommand
@@ -823,6 +920,9 @@ namespace SS14.Client.Graphics.Clyde
             Texture,
             Transform,
             Scissor,
+            SwitchSpace,
+            ChangeViewMatrix,
+            ResetViewMatrix,
         }
 
         /// <summary>
@@ -846,5 +946,6 @@ namespace SS14.Client.Graphics.Clyde
         void SetModelTransform(ref Matrix3 matrix, int handleId);
         void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion, int handleId);
         void SetScissor(in UIBox2i? scissorBox, int handleId);
+        void DrawEntity(IEntity entity, in Vector2 position, int handleId);
     }
 }

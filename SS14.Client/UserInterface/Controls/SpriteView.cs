@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SS14.Client.Graphics.Drawing;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
@@ -83,6 +84,16 @@ namespace SS14.Client.UserInterface.Controls
             base.Dispose(disposing);
 
             Mirror?.Dispose();
+        }
+
+        protected internal override void Draw(DrawingHandleScreen handle)
+        {
+            if (GameController.OnGodot || _sprite == null)
+            {
+                return;
+            }
+
+            handle.DrawEntity(_sprite.Owner, GlobalPosition + Size / 2);
         }
     }
 }

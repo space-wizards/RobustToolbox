@@ -1134,7 +1134,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        internal void OpenGLRender(DrawingHandleWorld drawingHandle)
+        internal void OpenGLRender(DrawingHandleWorld drawingHandle, bool useWorldTransform=true)
         {
             foreach (var layer in Layers)
             {
@@ -1144,7 +1144,7 @@ namespace SS14.Client.GameObjects
                 }
 
                 var texture = layer.Texture ?? resourceCache.GetFallback<TextureResource>();
-                drawingHandle.SetTransform(Owner.Transform.WorldPosition, Angle.Zero, Vector2.One);
+                drawingHandle.SetTransform(useWorldTransform ? Owner.Transform.WorldPosition : Vector2.Zero, Angle.Zero, Vector2.One);
                 drawingHandle.DrawTexture(texture, -(Vector2)texture.Size/(2f*EyeManager.PIXELSPERMETER), color);
             }
         }

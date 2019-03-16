@@ -61,7 +61,7 @@ namespace SS14.Client.UserInterface.Controls
             var left = _marginLeftOverride ?? 0;
             var right = _marginRightOverride ?? 0;
 
-            var box = new UIBox2(left, top, Width - right, Height - bottom);
+            var box = new UIBox2(left, top, Width - right - left, Height - bottom - top);
 
             foreach (var child in Children)
             {
@@ -81,7 +81,14 @@ namespace SS14.Client.UserInterface.Controls
             var left = _marginLeftOverride ?? 0;
             var right = _marginRightOverride ?? 0;
 
-            return (left + right, top + bottom);
+            var childMinSize = Vector2.Zero;
+
+            foreach (var child in Children)
+            {
+                childMinSize = Vector2.ComponentMax(child.CombinedMinimumSize, childMinSize);
+            }
+
+            return (childMinSize.X + left + right, childMinSize.Y + top + bottom);
         }
     }
 }

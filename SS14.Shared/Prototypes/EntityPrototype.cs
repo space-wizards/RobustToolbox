@@ -66,7 +66,7 @@ namespace SS14.Shared.GameObjects
         /// The Placement mode used for client-initiated placement. This is used for admin and editor placement. The serverside version controls what type the server assigns in normal gameplay.
         /// </summary>
         [ViewVariables]
-        public string PlacementMode { get; protected set; } = "PlaceNearby";
+        public string PlacementMode { get; protected set; } = "PlaceFree";
 
         /// <summary>
         /// The Range this entity can be placed from. This is only used serverside since the server handles normal gameplay. The client uses unlimited range since it handles things like admin spawning and editing.

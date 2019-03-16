@@ -29,6 +29,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private static readonly string[] initOpts = new string[]
         {
+            "Default",
             "PlaceFree",
             "PlaceNearby",
             "SnapgridCenter",
@@ -209,7 +210,7 @@ namespace SS14.Client.UserInterface.CustomControls
             var overrideMode = initOpts[OverrideMenu.SelectedId];
             var newObjInfo = new PlacementInformation
             {
-                PlacementOption = overrideMode.Length > 0 ? overrideMode : item.Prototype.PlacementMode,
+                PlacementOption = overrideMode != "Default" ? overrideMode : item.Prototype.PlacementMode,
                 EntityType = item.PrototypeID,
                 Range = 2,
                 IsTile = false

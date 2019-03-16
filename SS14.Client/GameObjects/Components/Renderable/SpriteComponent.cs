@@ -998,11 +998,24 @@ namespace SS14.Client.GameObjects
             // TODO: This could throw exceptions which shouldn't happen I think.
             var state = (theLayer.RSI ?? BaseRSI)[theLayer.State];
             var correctDir = CorrectLayerDir(ref theLayer, state);
-            // Basically the same code as the "re-calculate animations when direction changes" code in FrameUpdate.
+            if (animationTime > theLayer.AnimationTime)
+            {
+                // Handle advancing differently from going backwards.
+                theLayer.AnimationTimeLeft -= (animationTime - theLayer.AnimationTime);
+            }
+            else
+            {
+                // Going backwards we re-calculate from zero.
+                // Definitely possible to optimize this for going backwards but I'm too lazy to figure that out.
+                theLayer.AnimationTimeLeft = -animationTime;
+                theLayer.AnimationFrame = 0;
+            }
+
             theLayer.AnimationTime = animationTime;
-            theLayer.AnimationTimeLeft = -animationTime;
-            theLayer.AnimationFrame = 0;
+            // After setting timing data correctly, run advance to get to the correct frame.
             _advanceFrameAnimation(ref theLayer, state, correctDir);
+            // And set to said frame.
+            theLayer.Texture = state.GetFrame(correctDir, theLayer.AnimationFrame).icon;
             Layers[layer] = theLayer;
         }
 

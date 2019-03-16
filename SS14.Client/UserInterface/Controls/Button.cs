@@ -35,10 +35,11 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         private AlignMode _textAlign;
+
         [ViewVariables]
         public AlignMode TextAlign
         {
-            get => GameController.OnGodot ? (AlignMode)SceneControl.Get("align") : _textAlign;
+            get => GameController.OnGodot ? (AlignMode) SceneControl.Get("align") : _textAlign;
             set
             {
                 if (GameController.OnGodot)
@@ -53,10 +54,11 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         private bool _clipText;
+
         [ViewVariables]
         public bool ClipText
         {
-            get => GameController.OnGodot ? (bool)SceneControl.Get("clip_text") : _clipText;
+            get => GameController.OnGodot ? (bool) SceneControl.Get("clip_text") : _clipText;
             set
             {
                 if (GameController.OnGodot)
@@ -71,10 +73,11 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         private string _text;
+
         [ViewVariables]
         public string Text
         {
-            get => GameController.OnGodot ? (string)SceneControl.Get("text") : _text;
+            get => GameController.OnGodot ? (string) SceneControl.Get("text") : _text;
             set
             {
                 if (GameController.OnGodot)
@@ -196,24 +199,31 @@ namespace SS14.Client.UserInterface.Controls
             var font = ActualFont;
             int drawOffset;
 
-            switch (TextAlign)
+            if (box.Width < width)
             {
-                case AlignMode.Left:
-                    drawOffset = 0;
-                    break;
-                case AlignMode.Center:
-                    drawOffset = (int)(box.Width - width) / 2;
-                    break;
-                case AlignMode.Right:
-                    drawOffset = (int)(box.Width - width);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                drawOffset = 0;
+            }
+            else
+            {
+                switch (TextAlign)
+                {
+                    case AlignMode.Left:
+                        drawOffset = 0;
+                        break;
+                    case AlignMode.Center:
+                        drawOffset = (int) (box.Width - width) / 2;
+                        break;
+                    case AlignMode.Right:
+                        drawOffset = (int) (box.Width - width);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
 
             var color = ActualFontColor;
             var offsetY = (int) (box.Height - font.Height) / 2;
-            var baseLine = new Vector2i(drawOffset, offsetY+font.Ascent) + box.TopLeft;
+            var baseLine = new Vector2i(drawOffset, offsetY + font.Ascent) + box.TopLeft;
 
             foreach (var chr in _text)
             {
@@ -226,6 +236,7 @@ namespace SS14.Client.UserInterface.Controls
                 {
                     font.DrawChar(handle, chr, baseLine, color);
                 }
+
                 baseLine += (metrics.Advance, 0);
             }
         }
@@ -331,6 +342,11 @@ namespace SS14.Client.UserInterface.Controls
             if (property == "align")
             {
                 TextAlign = (AlignMode) (long) value;
+            }
+
+            if (property == "clip_text")
+            {
+                ClipText = (bool) value;
             }
         }
     }

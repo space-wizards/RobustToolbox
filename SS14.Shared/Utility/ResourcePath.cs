@@ -389,6 +389,12 @@ namespace SS14.Shared.Utility
                 return this;
             }
 
+            if (Segments.Length == 1)
+            {
+                // This path is literally just "/"
+                return new ResourcePath(".", Separator);
+            }
+
             var segments = new string[Segments.Length - 1];
             Array.Copy(Segments, 1, segments, 0, Segments.Length - 1);
             return new ResourcePath(segments, Separator);

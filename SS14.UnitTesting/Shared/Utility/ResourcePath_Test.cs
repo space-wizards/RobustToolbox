@@ -237,5 +237,13 @@ namespace SS14.UnitTesting.Shared.Utility
             Assert.That(() => path.WithName(""), Throws.ArgumentException);
             Assert.That(() => path.WithName(null), Throws.ArgumentException);
         }
+
+        [Test]
+        public void RootToRelativeTest()
+        {
+            var path = new ResourcePath("/");
+
+            Assert.That(path.ToRelativePath(), Is.EqualTo(new ResourcePath(".")));
+        }
     }
 }

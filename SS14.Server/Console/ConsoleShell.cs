@@ -146,7 +146,7 @@ namespace SS14.Server.Console
             catch (Exception e)
             {
                 _logMan.GetSawmill(SawmillName).Warning($"{FormatPlayerString(session)}: ExecuteError - {command}");
-                SendText(session, $"There was an error while executing the command: {e.Message}");
+                SendText(session, $"There was an error while executing the command: {e}");
             }
         }
 

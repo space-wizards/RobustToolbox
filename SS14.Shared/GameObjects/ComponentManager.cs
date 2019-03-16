@@ -262,7 +262,14 @@ namespace SS14.Shared.GameObjects
         public IComponent GetComponent(EntityUid uid, Type type)
         {
             var typeDict = _dictComponents[type];
-            return typeDict[uid];
+            try
+            {
+                return typeDict[uid];
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");
+            }
         }
 
         /// <inheritdoc />

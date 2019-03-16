@@ -108,6 +108,7 @@
     <Compile Include="Client\Graphics\StyleBoxTest.cs" />
     <Compile Include="Client\Graphics\TextureLoadParametersTest.cs" />
     <Compile Include="Client\UserInterface\Controls\BoxContainerTest.cs" />
+    <Compile Include="Client\UserInterface\Controls\CenterContainerTest.cs" />
     <Compile Include="Client\UserInterface\ControlTest.cs" />
     <Compile Include="Client\UserInterface\StylesheetTest.cs" />
     <Compile Include="Client\UserInterface\UserInterfaceManagerTest.cs" />

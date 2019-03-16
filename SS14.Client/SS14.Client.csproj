@@ -202,6 +202,7 @@
     <Compile Include="UserInterface\Control.Styling.cs" />
     <Compile Include="UserInterface\Controls\BaseButton.cs" />
     <Compile Include="UserInterface\Controls\Button.cs" />
+    <Compile Include="UserInterface\Controls\CenterContainer.cs" />
     <Compile Include="UserInterface\Controls\CheckBox.cs" />
     <Compile Include="UserInterface\Controls\CheckButton.cs" />
     <Compile Include="UserInterface\Controls\GridContainer.cs" />

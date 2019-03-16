@@ -342,6 +342,11 @@ namespace SS14.Shared.Maths
 
         public static Matrix3 CreateRotation(float angle)
         {
+            return CreateRotation(new Angle(angle));
+        }
+
+        public static Matrix3 CreateRotation(Angle angle)
+        {
             var cos = (float) Math.Cos(angle);
             var sin = (float) Math.Sin(angle);
 

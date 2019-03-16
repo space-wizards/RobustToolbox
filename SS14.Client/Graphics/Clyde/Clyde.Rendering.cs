@@ -734,7 +734,7 @@ namespace SS14.Client.Graphics.Clyde
                 return handle;
             }
 
-            public void SetModelTransform(ref Matrix3 matrix, int handleId)
+            public void SetModelTransform(in Matrix3 matrix, int handleId)
             {
                 _assertNotDisposed();
 
@@ -943,7 +943,7 @@ namespace SS14.Client.Graphics.Clyde
         DrawingHandleWorld CreateHandleWorld();
         DrawingHandleScreen CreateHandleScreen();
 
-        void SetModelTransform(ref Matrix3 matrix, int handleId);
+        void SetModelTransform(in Matrix3 matrix, int handleId);
         void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion, int handleId);
         void SetScissor(in UIBox2i? scissorBox, int handleId);
         void DrawEntity(IEntity entity, in Vector2 position, int handleId);

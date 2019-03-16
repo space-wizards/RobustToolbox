@@ -55,7 +55,7 @@ namespace SS14.Client.Graphics.Drawing
                 matrix.Rotate(rotation);
                 matrix.R0C2 += position.X;
                 matrix.R1C2 += position.Y;
-                _renderHandle.SetModelTransform(ref matrix, _handleId);
+                _renderHandle.SetModelTransform(matrix, _handleId);
             }
             else if (Item != null)
             {
@@ -66,12 +66,12 @@ namespace SS14.Client.Graphics.Drawing
             }
         }
 
-        public void SetTransform(Matrix3 matrix)
+        public void SetTransform(in Matrix3 matrix)
         {
             CheckDisposed();
             if (_renderHandle != null)
             {
-                _renderHandle.SetModelTransform(ref matrix, _handleId);
+                _renderHandle.SetModelTransform(matrix, _handleId);
             }
             else if (Item != null)
             {

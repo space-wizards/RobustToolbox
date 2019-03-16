@@ -122,7 +122,10 @@ namespace SS14.Client.Graphics.Drawing
         public override void DrawCircle(Vector2 position, float radius, Color color)
         {
             CheckDisposed();
-            VS.CanvasItemAddCircle(Item, ToPixelCoords(position), radius * PPM, (Modulate * color).Convert());
+            if (Item != null)
+            {
+                VS.CanvasItemAddCircle(Item, ToPixelCoords(position), radius * PPM, (Modulate * color).Convert());
+            }
         }
 
         public override void DrawLine(Vector2 from, Vector2 to, Color color, float width = 1, bool antiAliased = false)

@@ -44,22 +44,37 @@ namespace SS14.Server.Console.Commands
 
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
-            if (args.Length < 1)
+            if (args.Length < 2)
+            {
+                shell.SendText(player, "Not enough arguments.");
                 return;
+            }
 
             if (!int.TryParse(args[0], out var intGridId))
+            {
+                shell.SendText(player, "Not a valid grid ID.");
                 return;
+            }
 
             var gridId = new GridId(intGridId);
 
             var mapManager = IoCManager.Resolve<IMapManager>();
 
             // no saving default grid
-            if (!mapManager.TryGetGrid(gridId, out var grid) || grid.IsDefaultGrid)
+            if (!mapManager.TryGetGrid(gridId, out var grid))
+            {
+                shell.SendText(player, "That grid does not exist.");
                 return;
+            }
 
-            // TODO: Parse path
-            IoCManager.Resolve<IMapLoader>().SaveBlueprint(gridId, "Maps/Demo/DemoGrid.yaml");
+            if (grid.IsDefaultGrid)
+            {
+                shell.SendText(player, "Cannot save a default grid.");
+                return;
+            }
+
+            IoCManager.Resolve<IMapLoader>().SaveBlueprint(gridId, args[1]);
+            shell.SendText(player, "Save successful. Look in the user data directory.");
         }
     }
 

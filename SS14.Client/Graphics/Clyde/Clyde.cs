@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -110,13 +110,24 @@ namespace SS14.Client.Graphics.Clyde
             _window.WindowState = WindowMode == WindowMode.Fullscreen ? WindowState.Fullscreen : WindowState.Normal;
         }
 
+        public override void PostInject()
+        {
+            base.PostInject();
+
+            _configurationManager.RegisterCVar("display.width", 1280);
+            _configurationManager.RegisterCVar("display.height", 720);
+        }
+
         public override event Action<WindowResizedEventArgs> OnWindowResized;
 
         private void _initWindow()
         {
+            var width = _configurationManager.GetCVar<int>("display.width");
+            var height = _configurationManager.GetCVar<int>("display.height");
+
             _window = new GameWindow(
-                800,
-                600,
+                width,
+                height,
                 GraphicsMode.Default,
                 "Space Station 14",
                 GameWindowFlags.Default,

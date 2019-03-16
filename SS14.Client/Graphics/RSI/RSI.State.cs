@@ -1,4 +1,5 @@
-﻿using SS14.Shared.Maths;
+﻿using System;
+using SS14.Shared.Maths;
 using SS14.Client.Utility;
 using System.Collections.Generic;
 
@@ -15,6 +16,7 @@ namespace SS14.Client.Graphics
             public StateId StateId { get; }
             public DirectionType Directions { get; }
             public Texture Frame0 => Icons[0][0].icon;
+            public float? AnimationLength { get; }
             private readonly (Texture icon, float delay)[][] Icons;
 
             internal State(Vector2u size, StateId stateId, DirectionType direction, (Texture icon, float delay)[][] icons)
@@ -23,6 +25,32 @@ namespace SS14.Client.Graphics
                 StateId = stateId;
                 Directions = direction;
                 Icons = icons;
+
+                float? animLength = null;
+                foreach (var dirFrames in icons)
+                {
+                    if (dirFrames.Length <= 1)
+                    {
+                        continue;
+                    }
+
+                    var length = 0f;
+                    foreach (var (_, delay) in dirFrames)
+                    {
+                        length += delay;
+                    }
+
+                    if (animLength == null)
+                    {
+                        animLength = length;
+                    }
+                    else
+                    {
+                        animLength = Math.Max(animLength.Value, length);
+                    }
+                }
+
+                AnimationLength = animLength;
             }
 
             public enum DirectionType : byte

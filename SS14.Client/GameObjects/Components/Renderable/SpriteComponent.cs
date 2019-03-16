@@ -980,6 +980,70 @@ namespace SS14.Client.GameObjects
             LayerSetDirOffset(layer, offset);
         }
 
+        public void LayerSetAnimationTime(int layer, float animationTime)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set animation time! Trace:\n{1}",
+                    layer, Environment.StackTrace);
+                return;
+            }
+
+            var theLayer = Layers[layer];
+            if (theLayer.State == null)
+            {
+                return;
+            }
+
+            // TODO: This could throw exceptions which shouldn't happen I think.
+            var state = (theLayer.RSI ?? BaseRSI)[theLayer.State];
+            var correctDir = CorrectLayerDir(ref theLayer, state);
+            // Basically the same code as the "re-calculate animations when direction changes" code in FrameUpdate.
+            theLayer.AnimationTime = animationTime;
+            theLayer.AnimationTimeLeft = -animationTime;
+            theLayer.AnimationFrame = 0;
+            _advanceFrameAnimation(ref theLayer, state, correctDir);
+            Layers[layer] = theLayer;
+        }
+
+        public void LayerSetAnimationTime(object layerKey, float animationTime)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set animation time! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetAnimationTime(layer, animationTime);
+        }
+
+        public void LayerSetAutoAnimated(int layer, bool autoAnimated)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set auto animated! Trace:\n{1}",
+                    layer, Environment.StackTrace);
+                return;
+            }
+
+            var theLayer = Layers[layer];
+            theLayer.AutoAnimated = autoAnimated;
+            Layers[layer] = theLayer;
+        }
+
+        public void LayerSetAutoAnimated(object layerKey, bool autoAnimated)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set auto animated! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetAutoAnimated(layer, autoAnimated);
+        }
+
         /// <inheritdoc />
         public RSI.StateId LayerGetState(int layer)
         {

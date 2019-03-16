@@ -644,6 +644,7 @@ namespace SS14.Client.GameObjects
                 if (rsi.TryGetState(stateId, out var state))
                 {
                     thelayer.AnimationFrame = 0;
+                    thelayer.AnimationTime = 0;
                     (thelayer.Texture, thelayer.AnimationTimeLeft) =
                         state.GetFrame(CorrectLayerDir(ref thelayer, state), 0);
                 }
@@ -694,6 +695,7 @@ namespace SS14.Client.GameObjects
                 if (actualrsi.TryGetState(stateId, out var state))
                 {
                     thelayer.AnimationFrame = 0;
+                    thelayer.AnimationTime = 0;
                     (thelayer.Texture, thelayer.AnimationTimeLeft) =
                         state.GetFrame(CorrectLayerDir(ref thelayer, state), 0);
                 }
@@ -1365,26 +1367,21 @@ namespace SS14.Client.GameObjects
         {
             // TODO: This entire method is a hotspot of redundant code.
             // This is definitely gonna deserve some optimizations later down the line.
-            RSI.State.Direction dirWeAreFacing;
-            var dirChanged = false;
-            if (Directional)
-            {
-                if (GameController.OnGodot)
-                {
-                    SceneNode.Rotation = (float) (Owner.Transform.WorldRotation - Rotation) - MathHelper.PiOver2;
-                }
 
-                dirWeAreFacing = GetDir();
-                if (LastDir != dirWeAreFacing || _recalcDirections)
-                {
-                    dirChanged = true;
-                    LastDir = dirWeAreFacing;
-                    _recalcDirections = false;
-                }
-            }
-            else
+            // Counteract world rotation so this thing gets rendered straight.
+            if (Directional && GameController.OnGodot)
             {
-                dirWeAreFacing = RSI.State.Direction.South;
+                SceneNode.Rotation = (float) (Owner.Transform.WorldRotation - Rotation) - MathHelper.PiOver2;
+            }
+
+            var dirWeAreFacing = GetDir();
+            var dirChanged = false;
+
+            if (LastDir != dirWeAreFacing || _recalcDirections)
+            {
+                dirChanged = true;
+                LastDir = dirWeAreFacing;
+                _recalcDirections = false;
             }
 
             for (var i = 0; i < Layers.Count; i++)
@@ -1407,10 +1404,11 @@ namespace SS14.Client.GameObjects
                     layerSpecificDir = OffsetRsiDir(dirWeAreFacing, layer.DirOffset);
                 }
 
+                layer.AnimationTime += delta;
                 if (!dirChanged)
                 {
                     var delayCount = state.DelayCount(layerSpecificDir);
-                    if (delayCount < 2)
+                    if (delayCount < 2 || !layer.AutoAnimated)
                     {
                         // Don't bother animating this.
                         // There's no animation frames!
@@ -1418,26 +1416,17 @@ namespace SS14.Client.GameObjects
                     }
 
                     layer.AnimationTimeLeft -= delta;
-                    while (layer.AnimationTimeLeft < 0)
-                    {
-                        if (++layer.AnimationFrame >= delayCount)
-                        {
-                            layer.AnimationFrame = 0;
-                        }
-
-                        layer.AnimationTimeLeft += state.GetFrame(layerSpecificDir, layer.AnimationFrame).delay;
-                    }
-
-                    layer.Texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame).icon;
                 }
                 else
                 {
-                    // For simplicity, turning causes the animation to reset FOR NOW.
-                    // This might be changed.
-                    // Not sure how you'd go about it.
+                    // Mess with animation data so _advanceFrameAnimation fixes the position to where it should be.
+                    // So cross-direction animations are synced so long as they have the same total length.
                     layer.AnimationFrame = 0;
-                    (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(layerSpecificDir, 0);
+                    layer.AnimationTimeLeft = -layer.AnimationTime;
                 }
+
+                _advanceFrameAnimation(ref layer, state, layerSpecificDir);
+                layer.Texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame).icon;
 
                 RedrawQueued = true;
                 Layers[i] = layer;
@@ -1447,6 +1436,21 @@ namespace SS14.Client.GameObjects
             {
                 Redraw();
                 RedrawQueued = false;
+            }
+        }
+
+        private static void _advanceFrameAnimation(ref Layer layer, RSI.State state, RSI.State.Direction layerSpecificDir)
+        {
+            var delayCount = state.DelayCount(layerSpecificDir);
+            while (layer.AnimationTimeLeft < 0)
+            {
+                if (++layer.AnimationFrame >= delayCount)
+                {
+                    layer.AnimationFrame = 0;
+                    layer.AnimationTime = -layer.AnimationTimeLeft;
+                }
+
+                layer.AnimationTimeLeft += state.GetFrame(layerSpecificDir, layer.AnimationFrame).delay;
             }
         }
 
@@ -1683,20 +1687,23 @@ namespace SS14.Client.GameObjects
             public RSI RSI;
             public RSI.StateId State;
             public float AnimationTimeLeft;
+            public float AnimationTime;
             public int AnimationFrame;
             public Vector2 Scale;
             public Angle Rotation;
             public bool Visible;
             public Color Color;
             public DirectionOffset DirOffset;
+            public bool AutoAnimated;
 
             public static Layer New()
             {
-                return new Layer()
+                return new Layer
                 {
                     Scale = Vector2.One,
                     Visible = true,
-                    Color = Color.White
+                    Color = Color.White,
+                    AutoAnimated = true,
                 };
             }
         }

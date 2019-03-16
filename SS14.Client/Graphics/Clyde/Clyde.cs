@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -121,7 +121,7 @@ namespace SS14.Client.Graphics.Clyde
                 "Space Station 14",
                 GameWindowFlags.Default,
                 DisplayDevice.Default,
-                4, 1,
+                3, 3,
 #if DEBUG
                 GraphicsContextFlags.Debug | GraphicsContextFlags.ForwardCompatible
 #else

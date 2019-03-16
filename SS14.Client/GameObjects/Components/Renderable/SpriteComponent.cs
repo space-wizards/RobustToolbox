@@ -1136,6 +1136,27 @@ namespace SS14.Client.GameObjects
 
         internal void OpenGLRender(DrawingHandleWorld drawingHandle, bool useWorldTransform=true)
         {
+            Matrix3 transform;
+            if (useWorldTransform)
+            {
+                Angle angle;
+                if (Directional)
+                {
+                    angle = -Owner.Transform.WorldRotation;
+                }
+                else
+                {
+                    angle = -new Angle(MathHelper.PiOver2);
+                }
+                transform = Matrix3.CreateRotation(angle);
+                var worldTransform = Owner.Transform.WorldMatrix;
+                transform.Multiply(ref worldTransform);
+            }
+            else
+            {
+                transform = Matrix3.Identity;
+            }
+            drawingHandle.SetTransform(transform);
             foreach (var layer in Layers)
             {
                 if (!layer.Visible)
@@ -1143,8 +1164,8 @@ namespace SS14.Client.GameObjects
                     continue;
                 }
 
+                // TODO: Implement layer-specific rotation and scale.
                 var texture = layer.Texture ?? resourceCache.GetFallback<TextureResource>();
-                drawingHandle.SetTransform(useWorldTransform ? Owner.Transform.WorldPosition : Vector2.Zero, Angle.Zero, Vector2.One);
                 drawingHandle.DrawTexture(texture, -(Vector2)texture.Size/(2f*EyeManager.PIXELSPERMETER), color);
             }
         }

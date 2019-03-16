@@ -93,6 +93,8 @@ namespace SS14.Client.UserInterface.Controls
                 newSizeY = box.Height;
             }
 
+            child.SetAnchorPreset(LayoutPreset.TopLeft, true);
+
             child.Position = new Vector2(newPosX, newPosY);
             child.Size = new Vector2(newSizeX, newSizeY);
         }

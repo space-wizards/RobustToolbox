@@ -241,7 +241,7 @@ namespace SS14.Client.Graphics.Clyde
             foreach (var entity in _entityManager.GetEntities())
             {
                 if (!entity.Transform.IsMapTransform || entity.Transform.MapID != map ||
-                    !entity.TryGetComponent(out SpriteComponent sprite))
+                    !entity.TryGetComponent(out SpriteComponent sprite) || !sprite.Visible)
                 {
                     continue;
                 }

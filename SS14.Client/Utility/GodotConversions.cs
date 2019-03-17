@@ -52,7 +52,7 @@ namespace SS14.Client.Utility
         {
             return new Godot.Transform2D
             {
-                o = new Godot.Vector2(matrix.R0C2, matrix.R1C2),
+                origin = new Godot.Vector2(matrix.R0C2, matrix.R1C2),
                 x = new Godot.Vector2(matrix.R0C0, matrix.R1C0),
                 y = new Godot.Vector2(matrix.R0C1, matrix.R1C1),
             };
@@ -66,8 +66,8 @@ namespace SS14.Client.Utility
         {
             return new Matrix3
             {
-                R0C0 = transform.x.x, R0C1 = transform.y.x, R0C2 = transform.o.x,
-                R1C0 = transform.x.y, R1C1 = transform.y.y, R1C2 = transform.o.y,
+                R0C0 = transform.x.x, R0C1 = transform.y.x, R0C2 = transform.origin.x,
+                R1C0 = transform.x.y, R1C1 = transform.y.y, R1C2 = transform.origin.y,
                 R2C0 = 0, R2C1 = 0, R2C2 = 1
             };
         }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace SS14.Shared.Maths
 {
@@ -19,6 +20,12 @@ namespace SS14.Shared.Maths
             var randStdNormal = Math.Sqrt(-2.0 * Math.Log(α)) * Math.Sin(2.0 * Math.PI * β);
 
             return μ + σ * randStdNormal;
+        }
+
+        public static T Pick<T>(this Random random, IReadOnlyList<T> list)
+        {
+            var index = random.Next(list.Count);
+            return list[index];
         }
     }
 }

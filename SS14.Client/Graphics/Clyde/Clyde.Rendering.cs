@@ -249,7 +249,16 @@ namespace SS14.Client.Graphics.Clyde
                 entityList.Add(sprite);
             }
 
-            entityList.Sort((a, b) => ((int) a.DrawDepth).CompareTo((int) b.DrawDepth));
+            entityList.Sort((a, b) =>
+            {
+                var cmp = ((int) a.DrawDepth).CompareTo((int) b.DrawDepth);
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
+
+                return a.Owner.Uid.CompareTo(b.Owner.Uid);
+            });
 
             foreach (var entity in entityList)
             {

@@ -91,6 +91,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Animations\Animation.cs" />
     <Compile Include="Audio\AudioStream.cs" />
     <Compile Include="BaseClient.cs" />
     <Compile Include="Console\ClientChatConsole.cs" />
@@ -104,9 +105,11 @@
     <Compile Include="GameController\GameController.Standalone.cs" />
     <Compile Include="GameController\GameController.Input.cs" />
     <Compile Include="GameController\GameController.IoC.cs" />
+    <Compile Include="GameObjects\Components\Animations\AnimationPlayerComponent.cs" />
     <Compile Include="GameObjects\Components\Appearance\AppearanceComponent.cs" />
     <Compile Include="GameObjects\Components\Input\InputComponent.cs" />
     <Compile Include="GameObjects\Components\UserInterface\ClientUserInterfaceComponent.cs" />
+    <Compile Include="GameObjects\EntitySystems\AnimationPlayerSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\AppearanceSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\AppearanceTestSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\AudioSystem.cs" />

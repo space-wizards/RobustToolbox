@@ -1,4 +1,5 @@
 ﻿using SS14.Client.GameObjects.Components;
+using SS14.Client.GameObjects.Components.Animations;
 using SS14.Client.GameObjects.Components.UserInterface;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
@@ -51,6 +52,8 @@ namespace SS14.Client.GameObjects
             RegisterReference<ClientUserInterfaceComponent, SharedUserInterfaceComponent>();
 
             RegisterIgnore("IgnorePause");
+
+            Register<AnimationPlayerComponent>();
         }
     }
 }

@@ -52,6 +52,8 @@ namespace SS14.Server.GameObjects
             RegisterReference<ServerUserInterfaceComponent, SharedUserInterfaceComponent>();
 
             Register<IgnorePauseComponent>();
+
+            RegisterIgnore("AnimationPlayer");
         }
     }
 }

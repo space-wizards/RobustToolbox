@@ -172,7 +172,22 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         void LayerSetDirOffset(int layer, SpriteComponent.DirectionOffset offset);
         void LayerSetDirOffset(object layerKey, SpriteComponent.DirectionOffset offset);
 
+        void LayerSetAnimationTime(int layer, float animationTime);
+        void LayerSetAnimationTime(object layerKey, float animationTime);
+        void LayerSetAutoAnimated(int layer, bool autoAnimated);
+        void LayerSetAutoAnimated(object layerKey, bool autoAnimated);
+
         RSI.StateId LayerGetState(int layer);
+
+        /// <summary>
+        ///     Get the RSI used by a layer.
+        /// </summary>
+        RSI LayerGetActualRSI(int layer);
+
+        /// <summary>
+        ///     Get the RSI used by a layer.
+        /// </summary>
+        RSI LayerGetActualRSI(object layerKey);
 
         ISpriteProxy CreateProxy();
     }

@@ -90,7 +90,7 @@ namespace SS14.Shared.Timers
         /// <returns>The task that can be awaited.</returns>
         public static Task Delay(TimeSpan duration)
         {
-            return Delay(duration.Milliseconds);
+            return Delay((int)duration.TotalMilliseconds);
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace SS14.Shared.Timers
         /// <param name="onFired">The action to fire.</param>
         public static void Spawn(TimeSpan duration, Action onFired)
         {
-            Spawn(duration.Milliseconds, onFired);
+            Spawn((int)duration.TotalMilliseconds, onFired);
         }
     }
 }

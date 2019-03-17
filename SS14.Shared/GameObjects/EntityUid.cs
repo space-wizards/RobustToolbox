@@ -50,6 +50,20 @@ namespace SS14.Shared.GameObjects
             }
         }
 
+        public static bool TryParse(string uid, out EntityUid entityUid)
+        {
+            try
+            {
+                entityUid = Parse(uid);
+                return true;
+            }
+            catch (FormatException)
+            {
+                entityUid = Invalid;
+                return false;
+            }
+        }
+
         /// <summary>
         ///     Checks if the ID value is valid. Does not check if it identifies
         ///     a valid Entity.

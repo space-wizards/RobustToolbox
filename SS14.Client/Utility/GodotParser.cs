@@ -179,6 +179,11 @@ namespace SS14.Client.Utility
             public int Index { get; }
 
             /// <summary>
+            ///     Index of this node definition in the scene file.
+            /// </summary>
+            public int DefinitionIndex { get; }
+
+            /// <summary>
             ///     An external resource reference pointing to the scene we are instancing, if any.
             /// </summary>
             public TokenExtResource? Instance { get; }
@@ -186,7 +191,7 @@ namespace SS14.Client.Utility
             [NotNull] public IReadOnlyDictionary<string, object> Properties { get; }
 
             public NodeDef(string name, [CanBeNull] string type, [CanBeNull] string parent, int index,
-                TokenExtResource? instance, Dictionary<string, object> properties)
+                TokenExtResource? instance, Dictionary<string, object> properties, int definitionIndex)
             {
                 Name = name;
                 Type = type;
@@ -194,6 +199,7 @@ namespace SS14.Client.Utility
                 Index = index;
                 Instance = instance;
                 Properties = properties;
+                DefinitionIndex = definitionIndex;
             }
 
             private sealed class FlattenedTreeComparerImpl : IComparer<NodeDef>
@@ -208,7 +214,7 @@ namespace SS14.Client.Utility
                     if (parentComparison != 0) return parentComparison;
                     var indexComparison = x.Index.CompareTo(y.Index);
                     if (indexComparison != 0) return indexComparison;
-                    return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
+                    return x.DefinitionIndex.CompareTo(y.DefinitionIndex);
                 }
 
                 private static int ParentFieldWeight(string parentField)
@@ -281,6 +287,7 @@ namespace SS14.Client.Utility
             _parser = new TextParser(reader);
             _parser.NextLine();
             _parser.Parse('[');
+            var nodeCount = 0;
             if (_parser.TryParse("gd_scene"))
             {
                 // Nothing yet, maybe nothing ever.
@@ -348,7 +355,7 @@ namespace SS14.Client.Utility
                 {
                     DebugTools.Assert(!mainResource.HasValue);
 
-                    currentParsingHeader = ParseNodeHeader();
+                    currentParsingHeader = ParseNodeHeader(nodeCount++);
                     nodes.Add(currentParsingHeader.Value);
                     currentParsingDef = null;
                 }
@@ -388,7 +395,7 @@ namespace SS14.Client.Utility
             }
 
             var finalNodes = nodes
-                .Select(n => new GodotAssetScene.NodeDef(n.Name, n.Type, n.Parent, n.Index, n.Instance, n.Properties))
+                .Select(n => new GodotAssetScene.NodeDef(n.Name, n.Type, n.Parent, n.Index, n.Instance, n.Properties, n.DefIndex))
                 .ToList();
 
             // Alright try to resolve tree graph.
@@ -423,7 +430,7 @@ namespace SS14.Client.Utility
             }
         }
 
-        private NodeHeader ParseNodeHeader()
+        private NodeHeader ParseNodeHeader(int defIndex)
         {
             _parser.EatWhitespace();
 
@@ -460,7 +467,7 @@ namespace SS14.Client.Utility
             }
 
             return new NodeHeader(name, type, index == null ? 0 : int.Parse(index, CultureInfo.InvariantCulture),
-                parent, instance);
+                parent, instance, defIndex);
         }
 
         private ResourceDefInParsing ParseSubResourceHeader()
@@ -740,10 +747,11 @@ namespace SS14.Client.Utility
             public readonly string Type;
             public readonly int Index;
             public readonly string Parent;
+            public readonly int DefIndex;
             public readonly GodotAsset.TokenExtResource? Instance;
             public readonly Dictionary<string, object> Properties;
 
-            public NodeHeader(string name, string type, int index, string parent, GodotAsset.TokenExtResource? instance)
+            public NodeHeader(string name, string type, int index, string parent, GodotAsset.TokenExtResource? instance, int defIndex)
             {
                 Name = name;
                 Type = type;
@@ -751,6 +759,7 @@ namespace SS14.Client.Utility
                 Parent = parent;
                 Instance = instance;
                 Properties = new Dictionary<string, object>();
+                DefIndex = defIndex;
             }
         }
 

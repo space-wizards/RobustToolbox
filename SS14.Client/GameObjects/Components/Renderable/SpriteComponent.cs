@@ -1007,7 +1007,7 @@ namespace SS14.Client.GameObjects
             {
                 // Going backwards we re-calculate from zero.
                 // Definitely possible to optimize this for going backwards but I'm too lazy to figure that out.
-                theLayer.AnimationTimeLeft = -animationTime;
+                theLayer.AnimationTimeLeft = -animationTime + state.GetFrame(correctDir, 0).delay;
                 theLayer.AnimationFrame = 0;
             }
 
@@ -1017,6 +1017,7 @@ namespace SS14.Client.GameObjects
             // And set to said frame.
             theLayer.Texture = state.GetFrame(correctDir, theLayer.AnimationFrame).icon;
             Layers[layer] = theLayer;
+            RedrawQueued = true;
         }
 
         public void LayerSetAnimationTime(object layerKey, float animationTime)
@@ -1069,6 +1070,27 @@ namespace SS14.Client.GameObjects
 
             var thelayer = Layers[layer];
             return thelayer.State;
+        }
+
+        public RSI LayerGetActualRSI(int layer)
+        {
+            if (Layers.Count <= layer)
+            {
+                throw new ArgumentOutOfRangeException(nameof(layer), $"Layer '{layer}' does not exist.");
+            }
+
+            var theLayer = Layers[layer];
+            return BaseRSI ?? theLayer.RSI;
+        }
+
+        public RSI LayerGetActualRSI(object layerKey)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                throw new KeyNotFoundException($"Layer '{layerKey}' does not exist.");
+            }
+
+            return LayerGetActualRSI(layer);
         }
 
         public ISpriteProxy CreateProxy()

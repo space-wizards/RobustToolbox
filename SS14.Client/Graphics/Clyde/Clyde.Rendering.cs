@@ -407,8 +407,8 @@ namespace SS14.Client.Graphics.Clyde
                             break;
                         }
 
+                        _flushBatchBuffer();
                         _currentShader = command.ShaderHandle;
-
                         break;
                 }
             }
@@ -503,8 +503,8 @@ namespace SS14.Client.Graphics.Clyde
                 }
             }
 
-            // Handle modulate.
             program.SetUniformMaybe(UniModulate, renderCommandTexture.Modulate);
+            program.SetUniformMaybe(UniTexturePixelSize, Vector2.One/loadedTexture.Size);
 
             var rectTransform = Matrix3.Identity;
             (rectTransform.R0C0, rectTransform.R1C1) = renderCommandTexture.PositionB - renderCommandTexture.PositionA;
@@ -656,6 +656,7 @@ namespace SS14.Client.Graphics.Clyde
             // Set modulate.
             DebugTools.Assert(BatchingModulate.HasValue);
             program.SetUniformMaybe(UniModulate, BatchingModulate.Value);
+            program.SetUniformMaybe(UniTexturePixelSize, Vector2.One/loadedTexture.Size);
             // Enable primitive restart & do that draw.
             GL.Enable(EnableCap.PrimitiveRestart);
             GL.PrimitiveRestartIndex(ushort.MaxValue);

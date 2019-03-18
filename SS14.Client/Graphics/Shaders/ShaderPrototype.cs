@@ -54,7 +54,7 @@ namespace SS14.Client.Graphics.Shaders
                 case ShaderKind.Source:
                     return new Shader(Source.ClydeHandle);
                 case ShaderKind.Canvas:
-                    return new Shader();
+                    return new Shader(0);
                 default:
                     throw new ArgumentOutOfRangeException();
             }

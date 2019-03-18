@@ -16,13 +16,26 @@ layout (std140) uniform projectionViewMatrices
     mat3 projectionMatrix;
     mat3 viewMatrix;
 };
+
+layout (std140) uniform uniformConstants
+{
+    vec2 SCREEN_PIXEL_SIZE;
+    float TIME;
+};
+
 // Allows us to do texture atlassing with texture coordinates 0->1
 // Input texture coordinates get mapped to this range.
 uniform vec4 modifyUV;
 
+[SHADER_HEADER_CODE]
+
 void main()
 {
     vec3 transformed = projectionMatrix * viewMatrix * modelMatrix * vec3(aPos, 1.0);
-    gl_Position = vec4(transformed.xy, 0.0, 1.0);
+    vec2 VERTEX = transformed.xy;
+
+    [SHADER_CODE]
+
+    gl_Position = vec4(VERTEX, 0.0, 1.0);
     UV = mix(modifyUV.xy, modifyUV.zw, tCoord);
 }

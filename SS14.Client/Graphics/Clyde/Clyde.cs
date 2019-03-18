@@ -62,9 +62,9 @@ namespace SS14.Client.Graphics.Clyde
         private OGLHandle QuadVAO;
 
         private const string UniModUV = "modifyUV";
-        private const string UniModArrayIndex = "modifyArrayIndex";
         private const string UniModelMatrix = "modelMatrix";
         private const string UniModulate = "modulate";
+        private const string UniTexturePixelSize = "TEXTURE_PIXEL_SIZE";
 
         // Thread the window is instantiated on.
         // OpenGL is allergic to multi threading so we need to check this.

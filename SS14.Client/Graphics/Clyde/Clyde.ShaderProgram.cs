@@ -22,7 +22,7 @@ namespace SS14.Client.Graphics.Clyde
             public string Name { get; }
             private readonly Clyde _clyde;
 
-            public ShaderProgram(Clyde clyde, string name=null)
+            public ShaderProgram(Clyde clyde, string name = null)
             {
                 _clyde = clyde;
                 Name = name;
@@ -147,7 +147,7 @@ namespace SS14.Client.Graphics.Clyde
                 {
                     fixed (Matrix3* ptr = &matrix)
                     {
-                        GL.UniformMatrix3(uniformId, 1, true, (float*)ptr);
+                        GL.UniformMatrix3(uniformId, 1, true, (float*) ptr);
                     }
                 }
             }
@@ -159,7 +159,7 @@ namespace SS14.Client.Graphics.Clyde
                 {
                     fixed (Matrix4* ptr = &matrix)
                     {
-                        GL.UniformMatrix4(uniformId, 1, true, (float*)ptr);
+                        GL.UniformMatrix4(uniformId, 1, true, (float*) ptr);
                     }
                 }
             }
@@ -171,7 +171,7 @@ namespace SS14.Client.Graphics.Clyde
                 {
                     fixed (Vector4* ptr = &vector)
                     {
-                        GL.Uniform4(uniformId, 1, (float*)ptr);
+                        GL.Uniform4(uniformId, 1, (float*) ptr);
                     }
                 }
             }
@@ -183,7 +183,7 @@ namespace SS14.Client.Graphics.Clyde
                 {
                     fixed (Color* ptr = &color)
                     {
-                        GL.Uniform4(uniformId, 1, (float*)ptr);
+                        GL.Uniform4(uniformId, 1, (float*) ptr);
                     }
                 }
             }
@@ -195,7 +195,7 @@ namespace SS14.Client.Graphics.Clyde
                 {
                     fixed (Vector3* ptr = &vector)
                     {
-                        GL.Uniform3(uniformId, 1, (float*)ptr);
+                        GL.Uniform3(uniformId, 1, (float*) ptr);
                     }
                 }
             }
@@ -207,7 +207,7 @@ namespace SS14.Client.Graphics.Clyde
                 {
                     fixed (Vector2* ptr = &vector)
                     {
-                        GL.Uniform2(uniformId, 1, (float*)ptr);
+                        GL.Uniform2(uniformId, 1, (float*) ptr);
                     }
                 }
             }
@@ -235,6 +235,14 @@ namespace SS14.Client.Graphics.Clyde
             }
 
             public void SetUniformMaybe(string uniformName, in Matrix3 value)
+            {
+                if (HasUniform(uniformName))
+                {
+                    SetUniform(uniformName, value);
+                }
+            }
+
+            public void SetUniformMaybe(string uniformName, in Vector2 value)
             {
                 if (HasUniform(uniformName))
                 {

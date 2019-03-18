@@ -25,14 +25,15 @@ namespace SS14.Client.Graphics.Clyde
 
         public int LoadShader(ParsedShader shader, string name = null)
         {
-            // TODO: vertex.
             var vertexSource = _shaderWrapCodeSpriteVert;
             var fragmentSource = _shaderWrapCodeSpriteFrag;
 
-            var (header, body) = _getShaderCode(shader);
+            var (header, vertBody, fragBody) = _getShaderCode(shader);
 
+            vertexSource = vertexSource.Replace("[SHADER_HEADER_CODE]", header);
+            vertexSource = vertexSource.Replace("[SHADER_CODE]", vertBody);
             fragmentSource = fragmentSource.Replace("[SHADER_HEADER_CODE]", header);
-            fragmentSource = fragmentSource.Replace("[SHADER_CODE]", body);
+            fragmentSource = fragmentSource.Replace("[SHADER_CODE]", fragBody);
 
             var program = _compileProgram(vertexSource, fragmentSource, name);
 
@@ -118,7 +119,8 @@ namespace SS14.Client.Graphics.Clyde
             }
         }
 
-        private static (string header, string body) _getShaderCode(ParsedShader shader)
+        private static (string header, string vertBody, string fragBody)
+            _getShaderCode(ParsedShader shader)
         {
             var header = new StringBuilder();
 
@@ -138,6 +140,7 @@ namespace SS14.Client.Graphics.Clyde
             // TODO: Varyings.
 
             ShaderFunctionDefinition fragmentMain = null;
+            ShaderFunctionDefinition vertexMain = null;
 
             foreach (var function in shader.Functions)
             {
@@ -146,6 +149,13 @@ namespace SS14.Client.Graphics.Clyde
                     fragmentMain = function;
                     continue;
                 }
+
+                if (function.Name == "vertex")
+                {
+                    vertexMain = function;
+                    continue;
+                }
+
                 header.AppendFormat("{0} {1}(", function.ReturnType.GetNativeType(), function.Name);
                 var first = true;
                 foreach (var parameter in function.Parameters)
@@ -164,7 +174,7 @@ namespace SS14.Client.Graphics.Clyde
                 header.AppendFormat(") {{\n{0}\n}}\n", function.Body);
             }
 
-            return (header.ToString(), fragmentMain?.Body ?? "");
+            return (header.ToString(), vertexMain?.Body ?? "", fragmentMain?.Body ?? "");
         }
     }
 }

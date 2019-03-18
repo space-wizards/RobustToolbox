@@ -1267,7 +1267,15 @@ namespace SS14.Client.GameObjects
 
                 // TODO: Implement layer-specific rotation and scale.
                 var texture = layer.Texture ?? resourceCache.GetFallback<TextureResource>();
+                if (layer.Shader != null)
+                {
+                    drawingHandle.UseShader(layer.Shader);
+                }
                 drawingHandle.DrawTexture(texture, -(Vector2)texture.Size/(2f*EyeManager.PIXELSPERMETER), color);
+                if (layer.Shader != null)
+                {
+                    drawingHandle.UseShader(null);
+                }
             }
         }
 
@@ -1697,13 +1705,13 @@ namespace SS14.Client.GameObjects
             foreach (var layer in Layers)
             {
                 builder.AppendFormat(
-                    "shad/tex/rsi/state/ant/anf/scl/rot/vis/col/dofs: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}/{8}/{9}/{10}\n",
+                    "shad/shcly/tex/rsi/state/ant/anf/scl/rot/vis/col/dofs: {0}/{11}/{1}/{2}/{3}/{4}/{5}/{6}/{7}/{8}/{9}/{10}\n",
                     // These are references and don't include useful data for knowing where they came from, sadly.
                     // "is one set" is better than nothing at least.
                     layer.Shader != null, layer.Texture != null, layer.RSI != null,
                     layer.State,
                     layer.AnimationTimeLeft, layer.AnimationFrame, layer.Scale, layer.Rotation, layer.Visible,
-                    layer.Color, layer.DirOffset
+                    layer.Color, layer.DirOffset, layer.Shader?.ClydeHandle ?? -1
                 );
             }
 

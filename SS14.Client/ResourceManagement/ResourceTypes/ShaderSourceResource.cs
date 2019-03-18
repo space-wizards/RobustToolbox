@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using SS14.Client.Graphics.Shaders;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.ResourceManagement.ResourceTypes
@@ -15,110 +17,94 @@ namespace SS14.Client.ResourceManagement.ResourceTypes
     public class ShaderSourceResource : BaseResource
     {
         internal Godot.Shader GodotShader { get; private set; }
-
-        private readonly Dictionary<string, ShaderParamType> Parameters = new Dictionary<string, ShaderParamType>();
+        internal int ClydeHandle { get; private set; } = -1;
+        internal ParsedShader ParsedShader { get; private set; }
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
             using (var stream = cache.ContentFileRead(path))
             using (var reader = new StreamReader(stream, Encoding.UTF8))
             {
-                var code = reader.ReadToEnd();
+                ParsedShader = ShaderParser.Parse(reader);
+            }
+
+            switch (GameController.Mode)
+            {
+                case GameController.DisplayMode.Headless:
+                    return;
+                case GameController.DisplayMode.Godot:
+                    GodotShader = new Godot.Shader
+                    {
+                        Code = _getGodotCode(),
+                    };
+                    break;
+                case GameController.DisplayMode.OpenGL:
+                    ClydeHandle = IoCManager.Resolve<IDisplayManagerOpenGL>().LoadShader(ParsedShader);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            if (GameController.OnGodot)
+            {
                 GodotShader = new Godot.Shader
                 {
-                    Code = code,
+                    Code = _getGodotCode(),
                 };
             }
-
-            var properties = Godot.VisualServer.ShaderGetParamList(GodotShader.GetRid());
-            foreach (var dict in properties.Cast<IDictionary<object, object>>())
+            else
             {
-                Parameters.Add((string)dict["name"], DetectParamType(dict));
+                var clyde = IoCManager.Resolve<IDisplayManagerOpenGL>();
+                // TODO: vertex shaders.
+                ClydeHandle = clyde.LoadShader(ParsedShader, path.ToString());
             }
         }
 
-        internal bool TryGetShaderParamType(string paramName, out ShaderParamType shaderParamType)
+        private string _getGodotCode()
         {
-            return Parameters.TryGetValue(paramName, out shaderParamType);
-        }
+            var output = new StringBuilder();
 
-        private ShaderParamType DetectParamType(IDictionary<object, object> dict)
-        {
-            if (!GameController.OnGodot)
-            {
-                throw new NotImplementedException();
-            }
-            var type = (Godot.Variant.Type)dict["type"];
-            var hint = (Godot.PropertyHint)dict["hint"];
-            var hint_string = (string)dict["hint_string"];
+            output.Append("shader_type canvas_item;\n");
 
-            switch (type)
+            foreach (var uniform in ParsedShader.Uniforms.Values)
             {
-                // See RasterizerStorageGLES3::shader_get_param_list for how I figured this out.
-                case Godot.Variant.Type.Nil:
-                    return ShaderParamType.Void;
-                case Godot.Variant.Type.Bool:
-                    return ShaderParamType.Bool;
-                case Godot.Variant.Type.Int:
-                    if (hint == Godot.PropertyHint.Flags)
-                    {
-                        // The bvecs are a flags variable,
-                        // Hint string is in the form x,y,z,w,
-                        // So these length matches check WHICH it is.
-                        if (hint_string.Length == 3)
-                        {
-                            return ShaderParamType.BVec2;
-                        }
-                        else if (hint_string.Length == 5)
-                        {
-                            return ShaderParamType.BVec3;
-                        }
-                        else if (hint_string.Length == 7)
-                        {
-                            return ShaderParamType.BVec4;
-                        }
-                        else
-                        {
-                            throw new NotImplementedException("Hint string is not the right length?");
-                        }
-                    }
-                    else
-                    {
-                        return ShaderParamType.Int;
-                    }
-                case Godot.Variant.Type.Real:
-                    return ShaderParamType.Float;
-                case Godot.Variant.Type.Vector2:
-                    return ShaderParamType.Vec2;
-                case Godot.Variant.Type.Vector3:
-                    return ShaderParamType.Vec3;
-                case Godot.Variant.Type.Transform:
-                case Godot.Variant.Type.Basis:
-                case Godot.Variant.Type.Transform2d:
-                    throw new NotImplementedException("Matrices are not implemented yet.");
-                case Godot.Variant.Type.Plane:
-                case Godot.Variant.Type.Color:
-                    return ShaderParamType.Vec4;
-                case Godot.Variant.Type.Object:
-                    if (hint_string == "Texture")
-                    {
-                        return ShaderParamType.Sampler2D;
-                    }
-                    else
-                    {
-                        throw new NotImplementedException();
-                    }
-                case Godot.Variant.Type.IntArray:
-                    // Godot merges all the integral vectors into this.
-                    // Can't be more specific sadly.
-                    return ShaderParamType.IntVec;
-                default:
-                    throw new NotSupportedException($"Unknown variant type: {type}");
+                if (uniform.DefaultValue != null)
+                {
+                    output.AppendFormat("uniform {0} {1} = {2};", uniform.Type.GetNativeType(), uniform.Name,
+                        uniform.DefaultValue);
+                }
+                else
+                {
+                    output.AppendFormat("uniform {0} {1};", uniform.Type.GetNativeType(), uniform.Name);
+                }
             }
+
+            foreach (var varying in ParsedShader.Varyings.Values)
+            {
+                output.AppendFormat("varying {0} {1};", varying.Type.GetNativeType(), varying.Name);
+            }
+
+            foreach (var function in ParsedShader.Functions)
+            {
+                output.AppendFormat("{0} {1}(", function.ReturnType.GetNativeType(), function.Name);
+                var first = true;
+                foreach (var parameter in function.Parameters)
+                {
+                    if (!first)
+                    {
+                        output.Append(", ");
+                    }
+
+                    first = false;
+
+                    output.AppendFormat("{0} {1} {2}", parameter.Qualifiers.GetString(), parameter.Type.GetNativeType(),
+                        parameter.Name);
+                }
+
+                output.AppendFormat(") {{\n{0}\n}}\n", function.Body);
+            }
+
+            return output.ToString();
         }
     }
 }

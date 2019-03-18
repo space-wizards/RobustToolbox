@@ -248,6 +248,10 @@ namespace SS14.Client.Graphics.Overlays
                 Drawing = true;
 
                 var handle = NewHandle();
+                if (Shader != null)
+                {
+                    handle.UseShader(Shader);
+                }
                 Draw(handle);
             }
             finally

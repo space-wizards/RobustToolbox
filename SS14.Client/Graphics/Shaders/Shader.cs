@@ -5,6 +5,7 @@ namespace SS14.Client.Graphics.Shaders
     public sealed class Shader
     {
         internal readonly Godot.Material GodotMaterial;
+        internal readonly int ClydeHandle = -1;
 
         // We intentionally leak shaders to work around Godot issue #24108
         // ReSharper disable once CollectionNeverQueried.Local
@@ -19,6 +20,11 @@ namespace SS14.Client.Graphics.Shaders
         {
             LeakyLeaky.Add(this);
             GodotMaterial = godotMaterial;
+        }
+
+        internal Shader(int clydeHandle)
+        {
+            ClydeHandle = clydeHandle;
         }
 
         internal void ApplyToCanvasItem(Godot.RID item)

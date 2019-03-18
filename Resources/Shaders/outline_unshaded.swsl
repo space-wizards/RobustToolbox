@@ -1,7 +1,9 @@
-shader_type canvas_item;
-render_mode unshaded;
+//shader_type canvas_item;
+//render_mode unshaded;
 uniform float outline_width = 2.0;
-uniform vec4 outline_color: hint_color;
+// TODO: implement that hint_color thingy.
+//uniform vec4 outline_color: hint_color;
+uniform vec4 outline_color;
 
 void fragment() {
 	// I, for some reason, cannot put this comment in the top of the file.

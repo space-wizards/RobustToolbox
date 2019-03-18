@@ -48,7 +48,9 @@ namespace SS14.Client.Graphics.Clyde
         private GameWindow _window;
 
         private const int ProjViewBindingIndex = 0;
+        private const int UniformConstantsBindingIndex = 1;
         private Buffer ProjViewUBO;
+        private Buffer UniformConstantsUBO;
 
         private Buffer BatchVBO;
         private Buffer BatchEBO;
@@ -58,9 +60,6 @@ namespace SS14.Client.Graphics.Clyde
         // VBO to draw a single quad.
         private Buffer QuadVBO;
         private OGLHandle QuadVAO;
-
-        private ShaderProgram Vertex2DProgram;
-        private ShaderProgram Vertex2DArrayProgram;
 
         private const string UniModUV = "modifyUV";
         private const string UniModArrayIndex = "modifyArrayIndex";
@@ -219,20 +218,7 @@ namespace SS14.Client.Graphics.Clyde
 #endif
 
             _loadStockTextures();
-
-            Vertex2DProgram = _compileProgram(
-                new ResourcePath("/Shaders/Internal/sprite.vert"),
-                new ResourcePath("/Shaders/Internal/sprite.frag"),
-                "Vertex2DProgram");
-
-            Vertex2DProgram.BindBlock("projectionViewMatrices", ProjViewBindingIndex);
-
-            Vertex2DArrayProgram = _compileProgram(
-                new ResourcePath("/Shaders/Internal/sprite-arrayed.vert"),
-                new ResourcePath("/Shaders/Internal/sprite-arrayed.frag"),
-                "Vertex2DArrayProgram");
-
-            Vertex2DArrayProgram.BindBlock("projectionViewMatrices", ProjViewBindingIndex);
+            _loadStockShaders();
 
             var quadVertices = new[]
             {
@@ -294,7 +280,16 @@ namespace SS14.Client.Graphics.Clyde
             {
                 ProjViewUBO.Reallocate(sizeof(ProjViewMatrices));
             }
+
             GL.BindBufferBase(BufferRangeTarget.UniformBuffer, ProjViewBindingIndex, ProjViewUBO.Handle);
+
+            UniformConstantsUBO = new Buffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw, nameof(UniformConstantsUBO));
+            unsafe
+            {
+                UniformConstantsUBO.Reallocate(sizeof(UniformConstants));
+            }
+
+            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, UniformConstantsBindingIndex, UniformConstantsUBO.Handle);
 
             _drawingSplash = true;
 
@@ -341,71 +336,6 @@ namespace SS14.Client.Graphics.Clyde
             var ep = entryPoints[184];
             var d = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(ep);
             d(_debugMessageCallbackInstance, new IntPtr(0x3005));
-        }
-
-        private ShaderProgram _compileProgram(ResourcePath vertex, ResourcePath fragment, string name = null)
-        {
-            string vertexSource;
-            string fragmentSource;
-
-            using (var vertexReader = new StreamReader(_resourceCache.ContentFileRead(vertex), Encoding.UTF8))
-            {
-                vertexSource = vertexReader.ReadToEnd();
-            }
-
-            using (var fragmentReader = new StreamReader(_resourceCache.ContentFileRead(fragment), Encoding.UTF8))
-            {
-                fragmentSource = fragmentReader.ReadToEnd();
-            }
-
-            Shader vertexShader = null;
-            Shader fragmentShader = null;
-
-            try
-            {
-                try
-                {
-                    vertexShader = new Shader(this, ShaderType.VertexShader, vertexSource, vertex.ToString());
-                }
-                catch (ShaderCompilationException e)
-                {
-                    throw new ShaderCompilationException(
-                        $"Failed to compile vertex shader {vertex}, see inner for details.", e);
-                }
-
-                try
-                {
-                    fragmentShader = new Shader(this, ShaderType.FragmentShader, fragmentSource, fragment.ToString());
-                }
-                catch (ShaderCompilationException e)
-                {
-                    throw new ShaderCompilationException(
-                        $"Failed to compile fragment shader {fragment}, see inner for details.", e);
-                }
-
-                var program = new ShaderProgram(this, name);
-                program.Add(vertexShader);
-                program.Add(fragmentShader);
-
-                try
-                {
-                    program.Link();
-                }
-                catch (ShaderCompilationException e)
-                {
-                    program.Delete();
-
-                    throw new ShaderCompilationException(
-                        $"Failed to link shaders. vert: {vertex}, frag: {fragment}, see inner for details.", e);
-                }
-
-                return program;
-            }
-            finally
-            {
-                vertexShader?.Delete();
-                fragmentShader?.Delete();
-            }
         }
 
         private delegate void DebugMessageCallbackDelegate([MarshalAs(UnmanagedType.FunctionPtr)] DebugProc proc,
@@ -511,6 +441,7 @@ namespace SS14.Client.Graphics.Clyde
             {
                 return;
             }
+
             var (id, name) = group;
             GL.PushDebugGroup(DebugSourceExternal.DebugSourceApplication, id, name.Length, name);
         }
@@ -522,6 +453,7 @@ namespace SS14.Client.Graphics.Clyde
             {
                 return;
             }
+
             GL.PopDebugGroup();
         }
 
@@ -651,6 +583,20 @@ namespace SS14.Client.Graphics.Clyde
                 ViewMatrixC0 = new Vector3(viewMatrix.R0C0, viewMatrix.R1C0, viewMatrix.R2C0);
                 ViewMatrixC1 = new Vector3(viewMatrix.R0C1, viewMatrix.R1C1, viewMatrix.R2C1);
                 ViewMatrixC2 = new Vector3(viewMatrix.R0C2, viewMatrix.R1C2, viewMatrix.R2C2);
+            }
+        }
+
+        [StructLayout(LayoutKind.Explicit, Size = sizeof(float) * 4)]
+        [PublicAPI]
+        private struct UniformConstants
+        {
+            [FieldOffset(0)] public Vector2 ScreenPixelSize;
+            [FieldOffset(2 * sizeof(float))] public float Time;
+
+            public UniformConstants(Vector2 screenPixelSize, float time)
+            {
+                ScreenPixelSize = screenPixelSize;
+                Time = time;
             }
         }
     }

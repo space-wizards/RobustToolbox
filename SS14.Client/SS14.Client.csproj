@@ -143,6 +143,7 @@
     <Compile Include="Graphics\Clyde\Clyde.Rendering.cs" />
     <Compile Include="Graphics\Clyde\Clyde.Shader.cs" />
     <Compile Include="Graphics\Clyde\Clyde.ShaderProgram.cs" />
+    <Compile Include="Graphics\Clyde\Clyde.Shaders.cs" />
     <Compile Include="Graphics\Clyde\Clyde.Textures.cs" />
     <Compile Include="Graphics\DisplayManagerGodot.cs" />
     <Compile Include="Graphics\DisplayManagerHeadless.cs" />
@@ -154,6 +155,9 @@
     <Compile Include="Graphics\Lighting\LightMode\LightModeConstant.cs" />
     <Compile Include="Graphics\Overlays\Overlay.cs" />
     <Compile Include="Graphics\Overlays\OverlayManager.cs" />
+    <Compile Include="Graphics\Shaders\ParsedShader.cs" />
+    <Compile Include="Graphics\Shaders\ShaderParser.cs" />
+    <Compile Include="Graphics\Shaders\ShaderParser.Tokenizer.cs" />
     <Compile Include="Graphics\Shaders\ShaderPrototype.cs" />
     <Compile Include="Graphics\Shaders\Shader.cs" />
     <Compile Include="Input\EngineContexts.cs" />

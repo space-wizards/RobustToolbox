@@ -1,6 +1,7 @@
 using System;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Clyde;
+using SS14.Client.Graphics.Shaders;
 using SS14.Client.Utility;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Maths;
@@ -77,6 +78,12 @@ namespace SS14.Client.Graphics.Drawing
             {
                 VS.CanvasItemAddSetTransform(Item, matrix.Convert());
             }
+        }
+
+        internal void UseShader(Shader shader)
+        {
+            CheckDisposed();
+            _renderHandle?.UseShader(shader, _handleId);
         }
 
         // Effectively equivalent to Godot's internal Transform2D::set_rotation_and_scale defined in math_2d.h.

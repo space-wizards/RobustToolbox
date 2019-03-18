@@ -34,11 +34,34 @@ namespace SS14.Client.Graphics.Shaders
         /// </summary>
         public Shader Instance()
         {
-            if (!GameController.OnGodot)
+            switch (GameController.Mode)
             {
-                return new Shader();
+                case GameController.DisplayMode.Headless:
+                    return new Shader();
+                case GameController.DisplayMode.Godot:
+                    return _instanceGodot();
+                case GameController.DisplayMode.OpenGL:
+                    return _instanceOpenGL();
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
+        }
 
+        private Shader _instanceOpenGL()
+        {
+            switch (Kind)
+            {
+                case ShaderKind.Source:
+                    return new Shader(Source.ClydeHandle);
+                case ShaderKind.Canvas:
+                    return new Shader();
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private Shader _instanceGodot()
+        {
             Godot.Material mat;
 
             switch (Kind)
@@ -105,14 +128,16 @@ namespace SS14.Client.Graphics.Shaders
                 foreach (var item in paramMapping)
                 {
                     var name = item.Key.AsString();
-                    if (!Source.TryGetShaderParamType(name, out var type))
+                    // TODO: This.
+                    if (true)
+                    //if (!Source.TryGetShaderParamType(name, out var type))
                     {
                         Logger.ErrorS("shader", "Shader param '{0}' does not exist on shader '{1}'", name, path);
                         continue;
                     }
 
-                    var value = ParseShaderParamFor(item.Value, type);
-                    ShaderParams.Add(name, value);
+                    //var value = ParseShaderParamFor(item.Value, type);
+                    //ShaderParams.Add(name, value);
                 }
             }
         }

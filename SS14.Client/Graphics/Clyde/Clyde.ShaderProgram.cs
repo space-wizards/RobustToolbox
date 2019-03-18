@@ -98,22 +98,29 @@ namespace SS14.Client.Graphics.Clyde
 
             public int GetUniform(string name)
             {
-                DebugTools.Assert(_handle != -1);
-
-                if (_uniformCache.TryGetValue(name, out var result))
-                {
-                    return result;
-                }
-
-                result = GL.GetUniformLocation(_handle, name);
-                if (result == -1)
+                if (!TryGetUniform(name, out var result))
                 {
                     throw new ArgumentException("Could not get uniform!");
                 }
 
-                _uniformCache.Add(name, result);
                 return result;
             }
+
+            public bool TryGetUniform(string name, out int index)
+            {
+                DebugTools.Assert(_handle != -1);
+
+                if (_uniformCache.TryGetValue(name, out index))
+                {
+                    return true;
+                }
+
+                index = GL.GetUniformLocation(_handle, name);
+                _uniformCache.Add(name, index);
+                return index != -1;
+            }
+
+            public bool HasUniform(string name) => TryGetUniform(name, out _);
 
             public void BindBlock(string blockName, int blockBinding)
             {
@@ -209,6 +216,30 @@ namespace SS14.Client.Graphics.Clyde
             {
                 var uniformId = GetUniform(uniformName);
                 GL.Uniform1(uniformId, textureUnit - TextureUnit.Texture0);
+            }
+
+            public void SetUniformMaybe(string uniformName, in Vector4 value)
+            {
+                if (HasUniform(uniformName))
+                {
+                    SetUniform(uniformName, value);
+                }
+            }
+
+            public void SetUniformMaybe(string uniformName, in Color value)
+            {
+                if (HasUniform(uniformName))
+                {
+                    SetUniform(uniformName, value);
+                }
+            }
+
+            public void SetUniformMaybe(string uniformName, in Matrix3 value)
+            {
+                if (HasUniform(uniformName))
+                {
+                    SetUniform(uniformName, value);
+                }
             }
         }
     }

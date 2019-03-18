@@ -8,6 +8,7 @@ using SS14.Client.GameObjects;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Graphics.Overlays;
+using SS14.Client.Graphics.Shaders;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.Interfaces.GameObjects;
@@ -83,6 +84,10 @@ namespace SS14.Client.Graphics.Clyde
         private ProjViewMatrices _combinedDefaultMatricesWorld;
         private ProjViewMatrices _combinedDefaultMatricesScreen;
 
+        private int _currentShader;
+
+        private float _renderTime;
+
         public void Render(FrameEventArgs args)
         {
             if (GameController.Mode != GameController.DisplayMode.OpenGL)
@@ -94,6 +99,19 @@ namespace SS14.Client.Graphics.Clyde
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             Vertex2DProgram.Use();
+
+            // Update uniform constants UBO.
+            _renderTime += args?.Elapsed ?? 0;
+            var constants = new UniformConstants(Vector2.One / ScreenSize, _renderTime);
+            UniformConstantsUBO.Use();
+            if (_reallocateBuffers)
+            {
+                UniformConstantsUBO.Reallocate(constants);
+            }
+            else
+            {
+                UniformConstantsUBO.WriteSubData(constants);
+            }
 
             _currentModelMatrix = Matrix3.Identity;
             _batchModelMatricesNeedsUpdate = true;
@@ -173,6 +191,8 @@ namespace SS14.Client.Graphics.Clyde
             GL.PrimitiveRestartIndex(ushort.MaxValue);
 
             Vertex2DProgram.Use();
+            Vertex2DProgram.SetUniform(UniModUV, new Vector4(0, 0, 1, 1));
+            Vertex2DProgram.SetUniform(UniModulate, Color.White);
             foreach (var grid in _mapManager.GetMap(map).GetAllGrids())
             {
                 ushort nth = 0;
@@ -381,6 +401,15 @@ namespace SS14.Client.Graphics.Clyde
                                 throw new ArgumentOutOfRangeException();
                         }
                         break;
+                    case RenderCommandType.UseShader:
+                        if (command.ShaderHandle == _currentShader)
+                        {
+                            break;
+                        }
+
+                        _currentShader = command.ShaderHandle;
+
+                        break;
                 }
             }
         }
@@ -428,22 +457,10 @@ namespace SS14.Client.Graphics.Clyde
             }
 
             var loadedTexture = _loadedTextures[renderCommandTexture.TextureId];
-            var arrayed = loadedTexture.Type == LoadedTextureType.Array2D;
-            ShaderProgram program;
-            if (arrayed)
-            {
-                program = Vertex2DArrayProgram;
-            }
-            else
-            {
-                program = Vertex2DProgram;
-            }
+            var loaded = _loadedShaders[_currentShader];
+            var program = loaded.Program;
 
             program.Use();
-            if (arrayed)
-            {
-                program.SetUniform(UniModArrayIndex, (float) renderCommandTexture.ArrayIndex - 1);
-            }
 
             GL.BindVertexArray(QuadVAO.Handle);
             // Use QuadVBO to render a single quad and modify the model matrix to position it where we need it.
@@ -461,7 +478,7 @@ namespace SS14.Client.Graphics.Clyde
                         subRegion.Bottom / h,
                         subRegion.Right / w,
                         subRegion.Top / h);
-                    program.SetUniform(UniModUV, vec);
+                    program.SetUniformMaybe(UniModUV, vec);
                 }
                 else
                 {
@@ -470,7 +487,7 @@ namespace SS14.Client.Graphics.Clyde
                         subRegion.Top / h,
                         subRegion.Right / w,
                         subRegion.Bottom / h);
-                    program.SetUniform(UniModUV, vec);
+                    program.SetUniformMaybe(UniModUV, vec);
                 }
             }
             else
@@ -478,32 +495,25 @@ namespace SS14.Client.Graphics.Clyde
                 if (_currentSpace == CurrentSpace.ScreenSpace)
                 {
                     // Flip Y texture coordinates to fix screen space flipping.
-                    program.SetUniform(UniModUV, new Vector4(0, 1, 1, 0));
+                    program.SetUniformMaybe(UniModUV, new Vector4(0, 1, 1, 0));
                 }
                 else
                 {
-                    program.SetUniform(UniModUV, new Vector4(0, 0, 1, 1));
+                    program.SetUniformMaybe(UniModUV, new Vector4(0, 0, 1, 1));
                 }
             }
 
             // Handle modulate.
-            program.SetUniform(UniModulate, renderCommandTexture.Modulate);
+            program.SetUniformMaybe(UniModulate, renderCommandTexture.Modulate);
 
             var rectTransform = Matrix3.Identity;
             (rectTransform.R0C0, rectTransform.R1C1) = renderCommandTexture.PositionB - renderCommandTexture.PositionA;
             (rectTransform.R0C2, rectTransform.R1C2) = renderCommandTexture.PositionA;
             rectTransform.Multiply(ref modelMatrix);
-            program.SetUniform(UniModelMatrix, rectTransform);
+            program.SetUniformMaybe(UniModelMatrix, rectTransform);
 
             GL.ActiveTexture(TextureUnit.Texture0);
-            if (arrayed)
-            {
-                GL.BindTexture(TextureTarget.Texture2DArray, loadedTexture.OpenGLObject.Handle);
-            }
-            else
-            {
-                GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
-            }
+            GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
 
             GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
         }
@@ -518,6 +528,7 @@ namespace SS14.Client.Graphics.Clyde
                 _processCommandList(commandList);
                 _returnCommandList(commandList);
                 _flushBatchBuffer();
+                _currentShader = _defaultShader;
                 _currentModelMatrix = Matrix3.Identity;
             }
 
@@ -528,6 +539,7 @@ namespace SS14.Client.Graphics.Clyde
 
             handle._drawingHandles.Clear();
             handle._commandLists.Clear();
+            _currentShader = _defaultShader;
             _disableScissor();
         }
 
@@ -565,7 +577,6 @@ namespace SS14.Client.Graphics.Clyde
 
             DebugTools.Assert(BatchingTexture.HasValue);
             var loadedTexture = _loadedTextures[BatchingTexture.Value];
-            var arrayed = loadedTexture.Type == LoadedTextureType.Array2D;
             ushort quadIndex = 0;
             foreach (ref var command in BatchBuffer)
             {
@@ -613,14 +624,7 @@ namespace SS14.Client.Graphics.Clyde
                 }
             }
 
-            if (arrayed)
-            {
-                GL.BindVertexArray(BatchArrayedVAO.Handle);
-            }
-            else
-            {
-                GL.BindVertexArray(BatchVAO.Handle);
-            }
+            GL.BindVertexArray(BatchVAO.Handle);
 
             BatchVBO.Use();
             BatchEBO.Use();
@@ -637,34 +641,21 @@ namespace SS14.Client.Graphics.Clyde
                 BatchEBO.WriteSubData(indexData);
             }
 
-            // Bind atlas texture.
+            var loaded = _loadedShaders[_currentShader];
+            var program = loaded.Program;
+
             GL.ActiveTexture(TextureUnit.Texture0);
-            ShaderProgram program;
-            if (arrayed)
-            {
-                GL.BindTexture(TextureTarget.Texture2DArray, loadedTexture.OpenGLObject.Handle);
-                program = Vertex2DArrayProgram;
-            }
-            else
-            {
-                GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
-                program = Vertex2DProgram;
-            }
+            GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
 
             program.Use();
 
-            if (arrayed)
-            {
-                program.SetUniform(UniModArrayIndex, 1f);
-            }
-
             // Model matrix becomes identity since it's built into the batch mesh.
-            program.SetUniform(UniModelMatrix, Matrix3.Identity);
+            program.SetUniformMaybe(UniModelMatrix, Matrix3.Identity);
             // Reset ModUV to ensure it's identity and doesn't touch anything.
-            program.SetUniform(UniModUV, new Vector4(0, 0, 1, 1));
+            program.SetUniformMaybe(UniModUV, new Vector4(0, 0, 1, 1));
             // Set modulate.
             DebugTools.Assert(BatchingModulate.HasValue);
-            program.SetUniform(UniModulate, BatchingModulate.Value);
+            program.SetUniformMaybe(UniModulate, BatchingModulate.Value);
             // Enable primitive restart & do that draw.
             GL.Enable(EnableCap.PrimitiveRestart);
             GL.PrimitiveRestartIndex(ushort.MaxValue);
@@ -863,6 +854,21 @@ namespace SS14.Client.Graphics.Clyde
                 }
             }
 
+            public void UseShader(Shaders.Shader shader, int handleId)
+            {
+                _assertNotDisposed();
+
+                var list = _drawingHandles[handleId].Item2;
+                ref var command = ref list.RenderCommands.AllocAdd();
+
+                command.Type = RenderCommandType.UseShader;
+                command.ShaderHandle = shader?.ClydeHandle ?? _manager._defaultShader;
+                if (command.ShaderHandle == -1)
+                {
+                    command.ShaderHandle = _manager._defaultShader;
+                }
+            }
+
             public void Dispose()
             {
                 _disposed = true;
@@ -912,6 +918,9 @@ namespace SS14.Client.Graphics.Clyde
 
             // Change view matrix command fields.
             [FieldOffset(4)] public Matrix3 ViewMatrix;
+
+            // UseShader command fields.
+            [FieldOffset(4)] public int ShaderHandle;
         }
 
         private struct BatchCommand
@@ -932,6 +941,7 @@ namespace SS14.Client.Graphics.Clyde
             SwitchSpace,
             ChangeViewMatrix,
             ResetViewMatrix,
+            UseShader,
         }
 
         /// <summary>
@@ -956,5 +966,6 @@ namespace SS14.Client.Graphics.Clyde
         void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion, int handleId);
         void SetScissor(in UIBox2i? scissorBox, int handleId);
         void DrawEntity(IEntity entity, in Vector2 position, int handleId);
+        void UseShader(Shader shader, int handleId);
     }
 }

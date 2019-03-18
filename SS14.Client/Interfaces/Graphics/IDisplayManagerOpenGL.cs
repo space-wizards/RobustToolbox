@@ -4,6 +4,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Clyde;
+using SS14.Client.Graphics.Shaders;
 using SS14.Client.Interfaces.Input;
 using SS14.Shared.Maths;
 
@@ -21,6 +22,8 @@ namespace SS14.Client.Interfaces.Graphics
         TextureArray LoadArrayFromImages<T>(ICollection<Image<T>> images, string name = null,
             TextureLoadParameters? loadParams = null)
             where T : unmanaged, IPixel<T>;
+
+        int LoadShader(ParsedShader shader, string name = null);
 
         void Ready();
 

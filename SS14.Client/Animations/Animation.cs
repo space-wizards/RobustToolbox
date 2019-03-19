@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using SS14.Client.GameObjects.Components.Animations;
+using SS14.Client.GameObjects.EntitySystems;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.Animations
@@ -79,9 +81,9 @@ namespace SS14.Client.Animations
             var playingTime = prevPlayingTime + frameTime;
             var keyFrameIndex = prevKeyFrameIndex;
             // Advance to the correct key frame.
-            while (keyFrameIndex != KeyFrames.Count-1 && KeyFrames[keyFrameIndex+1].KeyTime < playingTime)
+            while (keyFrameIndex != KeyFrames.Count - 1 && KeyFrames[keyFrameIndex + 1].KeyTime < playingTime)
             {
-                playingTime -= KeyFrames[keyFrameIndex+1].KeyTime;
+                playingTime -= KeyFrames[keyFrameIndex + 1].KeyTime;
                 keyFrameIndex += 1;
             }
 
@@ -92,7 +94,7 @@ namespace SS14.Client.Animations
                 var rsi = sprite.LayerGetActualRSI(LayerKey);
                 var state = rsi[keyFrame.State];
                 DebugTools.Assert(state.AnimationLength != null, "state.AnimationLength != null");
-                var animationTime = Math.Min(state.AnimationLength.Value-0.01f, playingTime);
+                var animationTime = Math.Min(state.AnimationLength.Value - 0.01f, playingTime);
                 sprite.LayerSetAutoAnimated(LayerKey, false);
                 // TODO: Doesn't setting the state explicitly reset the animation
                 // so it's slightly more inefficient?
@@ -118,6 +120,63 @@ namespace SS14.Client.Animations
             public KeyFrame(RSI.StateId state, float keyTime)
             {
                 State = state;
+                KeyTime = keyTime;
+            }
+        }
+    }
+
+    /// <summary>
+    ///     An animation track that plays RSI state animations manually, so they can be precisely controlled etc.
+    /// </summary>
+    public sealed class AnimationTrackPlaySound : AnimationTrack
+    {
+        /// <summary>
+        ///     A list of key frames for when to fire flicks.
+        /// </summary>
+        public readonly List<KeyFrame> KeyFrames = new List<KeyFrame>();
+
+        public override (int KeyFrameIndex, float FramePlayingTime) InitPlayback()
+        {
+            return (-1, 0);
+        }
+
+        public override (int KeyFrameIndex, float FramePlayingTime)
+            AdvancePlayback(object context, int prevKeyFrameIndex, float prevPlayingTime, float frameTime)
+        {
+            var entity = (IEntity) context;
+
+            var playingTime = prevPlayingTime + frameTime;
+            var keyFrameIndex = prevKeyFrameIndex;
+            // Advance to the correct key frame.
+            while (keyFrameIndex != KeyFrames.Count - 1 && KeyFrames[keyFrameIndex + 1].KeyTime < playingTime)
+            {
+                playingTime -= KeyFrames[keyFrameIndex + 1].KeyTime;
+                keyFrameIndex += 1;
+
+                var keyFrame = KeyFrames[keyFrameIndex];
+
+                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<AudioSystem>()
+                    .Play(keyFrame.Resource, entity);
+            }
+
+            return (keyFrameIndex, playingTime);
+        }
+
+        public struct KeyFrame
+        {
+            /// <summary>
+            ///     The RSI state to play when this keyframe gets triggered.
+            /// </summary>
+            public readonly string Resource;
+
+            /// <summary>
+            ///     The time between this keyframe and the last.
+            /// </summary>
+            public readonly float KeyTime;
+
+            public KeyFrame(string resource, float keyTime)
+            {
+                Resource = resource;
                 KeyTime = keyTime;
             }
         }

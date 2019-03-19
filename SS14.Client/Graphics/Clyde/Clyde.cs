@@ -86,6 +86,7 @@ namespace SS14.Client.Graphics.Clyde
         public override void Initialize()
         {
             _initWindow();
+            _initializeAudio();
             ReloadConfig();
         }
 
@@ -115,6 +116,7 @@ namespace SS14.Client.Graphics.Clyde
 
             _configurationManager.RegisterCVar("display.width", 1280);
             _configurationManager.RegisterCVar("display.height", 720);
+            _configurationManager.RegisterCVar("audio.device", null);
         }
 
         public override event Action<WindowResizedEventArgs> OnWindowResized;
@@ -460,6 +462,7 @@ namespace SS14.Client.Graphics.Clyde
         public void Dispose()
         {
             _window.Dispose();
+            _shutdownAudio();
         }
 
         [StructLayout(LayoutKind.Sequential)]

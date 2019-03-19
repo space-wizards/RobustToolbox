@@ -137,6 +137,9 @@
     <Compile Include="Console\Commands\Debug.cs" />
     <Compile Include="GameStates\ClientGameStateManager.cs" />
     <Compile Include="Graphics\CanvasLayers.cs" />
+    <Compile Include="Graphics\Clyde\Clyde.Audio.cs" />
+    <Compile Include="Graphics\Clyde\Clyde.AudioFormats.OggVorbis.cs" />
+    <Compile Include="Graphics\Clyde\Clyde.AudioFormats.Wav.cs" />
     <Compile Include="Graphics\Clyde\Clyde.Buffer.cs" />
     <Compile Include="Graphics\Clyde\Clyde.cs" />
     <Compile Include="Graphics\Clyde\Clyde.Pool.cs" />
@@ -233,6 +236,7 @@
     <Compile Include="Utility\GodotPathUtility.cs" />
     <Compile Include="Utility\GodotResourceCopy.cs" />
     <Compile Include="Utility\ImageSharpExt.cs" />
+    <Compile Include="Utility\LibVorbisFile.cs" />
     <Compile Include="Utility\OpenTKConversions.cs" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Utility\GodotConversions.cs" />

@@ -144,13 +144,16 @@ namespace SS14.Client.Graphics.Clyde
             var buffer = AL.GenBuffer();
 
             ALFormat format;
+            // NVorbis only supports loading into floats.
+            // If this becomes a problem due to missing extension support (doubt it but ok),
+            // check the git history, I originally used libvorbisfile which worked and loaded 16 bit LPCM.
             if (vorbis.Channels == 1)
             {
-                format = ALFormat.Mono16;
+                format = ALFormat.MonoFloat32Ext;
             }
             else if (vorbis.Channels == 2)
             {
-                format = ALFormat.Stereo16;
+                format = ALFormat.StereoFloat32Ext;
             }
             else
             {
@@ -159,11 +162,13 @@ namespace SS14.Client.Graphics.Clyde
 
             unsafe
             {
-                fixed (byte* ptr = vorbis.Data.Span)
+                fixed (float* ptr = vorbis.Data.Span)
                 {
-                    AL.BufferData(buffer, format, (IntPtr)ptr, vorbis.Data.Length, (int)vorbis.SampleRate);
+                    AL.BufferData(buffer, format, (IntPtr)ptr, vorbis.Data.Length * sizeof(float), (int)vorbis.SampleRate);
                 }
             }
+
+            _checkAlError();
 
             var handle = new Handle(_audioSampleBuffers.Count);
             _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
@@ -220,6 +225,7 @@ namespace SS14.Client.Graphics.Clyde
                     AL.BufferData(buffer, format, (IntPtr)ptr, wav.Data.Length, wav.SampleRate);
                 }
             }
+            _checkAlError();
 
             var handle = new Handle(_audioSampleBuffers.Count);
             _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
@@ -229,7 +235,7 @@ namespace SS14.Client.Graphics.Clyde
 
         private sealed class LoadedAudioSample
         {
-            public int BufferHandle;
+            public readonly int BufferHandle;
 
             public LoadedAudioSample(int bufferHandle)
             {
@@ -298,6 +304,7 @@ namespace SS14.Client.Graphics.Clyde
             private void Dispose(bool disposing)
             {
                 AL.DeleteSource(SourceHandle);
+                _checkAlError();
                 SourceHandle = -1;
             }
 

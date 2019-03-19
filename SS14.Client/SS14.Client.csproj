@@ -62,6 +62,7 @@
   <Import Project="..\MSBuild\SS14.DefineConstants.targets" />
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
+    <PackageReference Include="NVorbis" Version="0.8.6" />
     <PackageReference Include="SharpZipLib" Version="1.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="NJsonSchema" Version="9.10.73" />
@@ -236,7 +237,6 @@
     <Compile Include="Utility\GodotPathUtility.cs" />
     <Compile Include="Utility\GodotResourceCopy.cs" />
     <Compile Include="Utility\ImageSharpExt.cs" />
-    <Compile Include="Utility\LibVorbisFile.cs" />
     <Compile Include="Utility\OpenTKConversions.cs" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Utility\GodotConversions.cs" />

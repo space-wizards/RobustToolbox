@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using SS14.Client.Audio;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Clyde;
 using SS14.Client.Graphics.Shaders;
@@ -13,6 +15,7 @@ namespace SS14.Client.Interfaces.Graphics
     internal interface IClyde : IDisplayManager
     {
         void Render(FrameEventArgs args);
+        void FrameProcess(RenderFrameEventArgs eventArgs);
         void ProcessInput(FrameEventArgs frameEventArgs);
 
         Texture LoadTextureFromPNGStream(Stream stream, string name=null,
@@ -31,5 +34,20 @@ namespace SS14.Client.Interfaces.Graphics
         ///     This is purely a hook for <see cref="IInputManager"/>, use that instead.
         /// </summary>
         Vector2 MouseScreenPosition { get; }
+
+        // AUDIO SYSTEM DOWN BELOW.
+        AudioStream LoadAudioOggVorbis(Stream stream);
+        AudioStream LoadAudioWav(Stream stream);
+
+        IClydeAudioSource CreateAudioSource(AudioStream stream);
+    }
+
+    internal interface IClydeAudioSource : IDisposable
+    {
+        void StartPlaying();
+        bool IsPlaying { get; }
+        void SetPosition(Vector2 position);
+        void SetPitch(float pitch);
+        void SetGlobal();
     }
 }

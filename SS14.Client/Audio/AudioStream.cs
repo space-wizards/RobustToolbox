@@ -1,21 +1,32 @@
 ﻿using System;
+using SS14.Client.Graphics.Clyde;
 
 namespace SS14.Client.Audio
 {
-    public abstract class AudioStream
+    public sealed class AudioStream
     {
-        internal abstract Godot.AudioStream GodotAudioStream { get; }
+        public TimeSpan Length { get; }
+        internal Godot.AudioStream GodotAudioStream { get; }
+        internal Clyde.Handle? ClydeHandle { get; }
 
-        public TimeSpan Length => TimeSpan.FromSeconds(GodotAudioStream?.GetLength() ?? 0);
-    }
-
-    internal class GodotAudioStreamSource : AudioStream
-    {
-        internal override Godot.AudioStream GodotAudioStream { get; }
-
-        public GodotAudioStreamSource(Godot.AudioStream godotAudioStream)
+        // Constructor used on headless.
+        internal AudioStream()
         {
-            GodotAudioStream = godotAudioStream;
+            Length = TimeSpan.Zero;
+        }
+
+        // Constructor used on Clyde.
+        internal AudioStream(Clyde.Handle handle, TimeSpan length)
+        {
+            ClydeHandle = handle;
+            Length = length;
+        }
+
+        // Constructor used on Godot.
+        internal AudioStream(Godot.AudioStream godotStream)
+        {
+            GodotAudioStream = godotStream;
+            Length = TimeSpan.FromSeconds(godotStream.GetLength());
         }
     }
 }

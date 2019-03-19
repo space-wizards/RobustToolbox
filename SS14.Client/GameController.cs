@@ -205,6 +205,18 @@ namespace SS14.Client
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, eventArgs.Elapsed);
         }
 
+        private void _frameProcessMain(float delta)
+        {
+            var eventArgs = new RenderFrameEventArgs(delta);
+            _clyde?.FrameProcess(eventArgs);
+            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePreEngine, eventArgs.Elapsed);
+            _lightManager.FrameUpdate(eventArgs);
+            _stateManager.FrameUpdate(eventArgs);
+            _overlayManager.FrameUpdate(eventArgs);
+            _userInterfaceManager.FrameUpdate(eventArgs);
+            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePostEngine, eventArgs.Elapsed);
+        }
+
         private void SetupLogging()
         {
             if (OnGodot)

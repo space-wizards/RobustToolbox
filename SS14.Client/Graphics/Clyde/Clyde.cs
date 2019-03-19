@@ -12,6 +12,7 @@ using JetBrains.Annotations;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL4;
+using SS14.Client.Audio;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.Graphics.ClientEye;
@@ -88,6 +89,11 @@ namespace SS14.Client.Graphics.Clyde
             _initWindow();
             _initializeAudio();
             ReloadConfig();
+        }
+
+        public void FrameProcess(RenderFrameEventArgs eventArgs)
+        {
+            _updateAudio();
         }
 
         public void ProcessInput(FrameEventArgs frameEventArgs)
@@ -600,6 +606,16 @@ namespace SS14.Client.Graphics.Clyde
             {
                 ScreenPixelSize = screenPixelSize;
                 Time = time;
+            }
+        }
+
+        public readonly struct Handle
+        {
+            internal readonly int ClydeHandle;
+
+            public Handle(int clydeHandle)
+            {
+                ClydeHandle = clydeHandle;
             }
         }
     }

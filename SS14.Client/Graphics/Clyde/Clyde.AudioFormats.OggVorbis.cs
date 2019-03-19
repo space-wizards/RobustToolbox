@@ -97,7 +97,7 @@ namespace SS14.Client.Graphics.Clyde
                 {
                     fixed (byte* bufPtr = buffer)
                     {
-                        var ret = LibV.ov_read(file, bufPtr+readBytes, buffer.Length-readBytes, 0, 2, 0, &bitStream);
+                        var ret = LibV.ov_read(file, bufPtr+readBytes, buffer.Length-readBytes, 0, 2, 1, &bitStream);
                         if (ret < 0)
                         {
                             throw new InvalidOperationException();

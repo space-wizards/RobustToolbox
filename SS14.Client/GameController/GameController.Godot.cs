@@ -70,17 +70,6 @@ namespace SS14.Client
             _frameProcessMain(delta);
         }
 
-        private void _frameProcessMain(float delta)
-        {
-            var eventArgs = new RenderFrameEventArgs(delta);
-            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePreEngine, eventArgs.Elapsed);
-            _lightManager.FrameUpdate(eventArgs);
-            _stateManager.FrameUpdate(eventArgs);
-            _overlayManager.FrameUpdate(eventArgs);
-            _userInterfaceManager.FrameUpdate(eventArgs);
-            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePostEngine, eventArgs.Elapsed);
-        }
-
         public override void HandleException(Exception exception)
         {
             try

@@ -15,25 +15,34 @@ using SS14.Shared.Log;
 using SS14.Shared.Map;
 using System.Collections.Generic;
 using System.IO;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
     public class AudioSystem : EntitySystem
     {
-        [Dependency]
-        ISceneTreeHolder sceneTree;
+        [Dependency] ISceneTreeHolder sceneTree;
 
-        [Dependency]
-        IResourceCache resourceCache;
+        [Dependency] IResourceCache resourceCache;
+
+        private IClyde _clyde;
 
         private uint LastPlayKey = 0;
-        private readonly Dictionary<uint, PlayingStream> PlayingStreams = new Dictionary<uint, PlayingStream>();
+
+        private readonly Dictionary<uint, PlayingGodotStream> PlayingGodotStreams =
+            new Dictionary<uint, PlayingGodotStream>();
+
+        private readonly List<PlayingClydeStream> PlayingClydeStreams = new List<PlayingClydeStream>();
 
         public override void Initialize()
         {
             base.Initialize();
             IoCManager.InjectDependencies(this);
+            if (GameController.Mode == GameController.DisplayMode.Clyde)
+            {
+                _clyde = IoCManager.Resolve<IClyde>();
+            }
         }
 
         public override void RegisterMessageTypes()
@@ -43,6 +52,36 @@ namespace SS14.Client.GameObjects.EntitySystems
             RegisterMessageType<PlayAudioEntityMessage>();
             RegisterMessageType<PlayAudioGlobalMessage>();
             RegisterMessageType<PlayAudioPositionalMessage>();
+        }
+
+        public override void FrameUpdate(float frameTime)
+        {
+            if (GameController.Mode != GameController.DisplayMode.Clyde)
+            {
+                return;
+            }
+
+            // Update positions of streams every frame.
+            foreach (var stream in PlayingClydeStreams)
+            {
+                if (!stream.Source.IsPlaying)
+                {
+                    stream.Source.Dispose();
+                    stream.Done = true;
+                    continue;
+                }
+
+                if (stream.TrackingCoordinates != null)
+                {
+                    stream.Source.SetPosition(stream.TrackingCoordinates.Value.ToWorld().Position);
+                }
+                else if (stream.TrackingEntity != null)
+                {
+                    stream.Source.SetPosition(stream.TrackingEntity.Transform.WorldPosition);
+                }
+            }
+
+            PlayingClydeStreams.RemoveAll(p => p.Done);
         }
 
         /// <summary>
@@ -60,10 +99,24 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// <param name="stream">The audio stream to play.</param>
         public void Play(AudioStream stream, AudioParams? audioParams = null)
         {
-            if (!GameController.OnGodot)
+            if (GameController.Mode == GameController.DisplayMode.Clyde)
+            {
+                var source = _clyde.CreateAudioSource(stream);
+                source.SetGlobal();
+                source.StartPlaying();
+                var playing = new PlayingClydeStream
+                {
+                    Source = source,
+                };
+                PlayingClydeStreams.Add(playing);
+                return;
+            }
+
+            if (GameController.Mode != GameController.DisplayMode.Godot)
             {
                 return;
             }
+
             var player = new Godot.AudioStreamPlayer()
             {
                 Stream = stream.GodotAudioStream,
@@ -75,10 +128,11 @@ namespace SS14.Client.GameObjects.EntitySystems
                 player.Bus = val.BusName;
                 player.VolumeDb = val.Volume;
                 //player.PitchScale = val.PitchScale;
-                player.MixTarget = (Godot.AudioStreamPlayer.MixTargetEnum)val.MixTarget;
+                player.MixTarget = (Godot.AudioStreamPlayer.MixTargetEnum) val.MixTarget;
             }
+
             sceneTree.WorldRoot.AddChild(player);
-            TrackAudioPlayer(player);
+            TrackGodotPlayer(player);
         }
 
         /// <summary>
@@ -98,10 +152,25 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// <param name="entity">The entity "emitting" the audio.</param>
         public void Play(AudioStream stream, IEntity entity, AudioParams? audioParams = null)
         {
-            if (!GameController.OnGodot)
+            if (GameController.Mode == GameController.DisplayMode.Clyde)
+            {
+                var source = _clyde.CreateAudioSource(stream);
+                source.SetPosition(entity.Transform.WorldPosition);
+                source.StartPlaying();
+                var playing = new PlayingClydeStream
+                {
+                    Source = source,
+                    TrackingEntity = entity,
+                };
+                PlayingClydeStreams.Add(playing);
+                return;
+            }
+
+            if (GameController.Mode != GameController.DisplayMode.Godot)
             {
                 return;
             }
+
             var parent = entity.GetComponent<IGodotTransformComponent>().SceneNode;
             var player = new Godot.AudioStreamPlayer2D()
             {
@@ -117,8 +186,9 @@ namespace SS14.Client.GameObjects.EntitySystems
                 player.Attenuation = val.Attenuation;
                 player.MaxDistance = EyeManager.PIXELSPERMETER * val.MaxDistance;
             }
+
             parent.AddChild(player);
-            TrackAudioPlayer(player);
+            TrackGodotPlayer(player);
         }
 
         /// <summary>
@@ -138,10 +208,25 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         public void Play(AudioStream stream, GridCoordinates coordinates, AudioParams? audioParams = null)
         {
-            if (!GameController.OnGodot)
+            if (GameController.Mode == GameController.DisplayMode.Clyde)
+            {
+                var source = _clyde.CreateAudioSource(stream);
+                source.SetPosition(coordinates.ToWorld().Position);
+                source.StartPlaying();
+                var playing = new PlayingClydeStream
+                {
+                    Source = source,
+                    TrackingCoordinates = coordinates
+                };
+                PlayingClydeStreams.Add(playing);
+                return;
+            }
+
+            if (GameController.Mode != GameController.DisplayMode.Godot)
             {
                 return;
             }
+
             var player = new Godot.AudioStreamPlayer2D()
             {
                 Stream = stream.GodotAudioStream,
@@ -158,8 +243,9 @@ namespace SS14.Client.GameObjects.EntitySystems
                 player.Attenuation = val.Attenuation;
                 player.MaxDistance = EyeManager.PIXELSPERMETER * val.MaxDistance;
             }
+
             sceneTree.WorldRoot.AddChild(player);
-            TrackAudioPlayer(player);
+            TrackGodotPlayer(player);
         }
 
         public override void HandleNetMessage(INetChannel channel, EntitySystemMessage message)
@@ -182,9 +268,11 @@ namespace SS14.Client.GameObjects.EntitySystems
                     case PlayAudioEntityMessage entitymsg:
                         if (!EntityManager.TryGetEntity(entitymsg.EntityUid, out var entity))
                         {
-                            Logger.Error($"Server tried to play audio file {entitymsg.FileName} on entity {entitymsg.EntityUid} which does not exist.");
+                            Logger.Error(
+                                $"Server tried to play audio file {entitymsg.FileName} on entity {entitymsg.EntityUid} which does not exist.");
                             break;
                         }
+
                         Play(entitymsg.FileName, entity, entitymsg.AudioParams);
                         break;
 
@@ -199,16 +287,13 @@ namespace SS14.Client.GameObjects.EntitySystems
             }
         }
 
-        private void TrackAudioPlayer(Godot.Node player)
+        private void TrackGodotPlayer(Godot.Node player)
         {
             var key = LastPlayKey++;
             var signal = new GodotGlue.GodotSignalSubscriber0();
             signal.Connect(player, "finished");
-            signal.Signal += () =>
-            {
-                CleanupAudioPlayer(key);
-            };
-            PlayingStreams[key] = new PlayingStream()
+            signal.Signal += () => { CleanupAudioPlayer(key); };
+            PlayingGodotStreams[key] = new PlayingGodotStream()
             {
                 Player = player,
                 Signal = signal
@@ -217,18 +302,26 @@ namespace SS14.Client.GameObjects.EntitySystems
 
         private void CleanupAudioPlayer(uint key)
         {
-            var stream = PlayingStreams[key];
+            var stream = PlayingGodotStreams[key];
             stream.Signal.Disconnect(stream.Player, "finished");
             stream.Signal.Dispose();
             stream.Player.QueueFree();
             stream.Player.Dispose();
-            PlayingStreams.Remove(key);
+            PlayingGodotStreams.Remove(key);
         }
 
-        private struct PlayingStream
+        private struct PlayingGodotStream
         {
             public Godot.Node Player;
             public GodotGlue.GodotSignalSubscriber0 Signal;
+        }
+
+        private class PlayingClydeStream
+        {
+            public IClydeAudioSource Source;
+            public IEntity TrackingEntity;
+            public GridCoordinates? TrackingCoordinates;
+            public bool Done;
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using OpenTK;
 using OpenTK.Audio.OpenAL;
@@ -17,6 +18,7 @@ namespace SS14.Client.Graphics.Clyde
         private ContextHandle _openALContext;
 
         private readonly List<LoadedAudioSample> _audioSampleBuffers = new List<LoadedAudioSample>();
+        private readonly Dictionary<int, WeakReference<AudioSource>> _audioSources = new Dictionary<int, WeakReference<AudioSource>>();
 
         private readonly HashSet<string> _alcExtensions = new HashSet<string>();
         private readonly HashSet<string> _alContextExtensions = new HashSet<string>();
@@ -30,10 +32,6 @@ namespace SS14.Client.Graphics.Clyde
 
             // Create OpenAL context.
             _audioCreateContext();
-
-            //var orientation = new OpenTK.Vector3(0, 0, 1);
-            //var orientationUp = new OpenTK.Vector3(0, 1, 0);
-            //AL.Listener(ALListenerfv.Orientation, ref orientation, ref orientationUp);
         }
 
         private void _audioCreateContext()
@@ -91,6 +89,14 @@ namespace SS14.Client.Graphics.Clyde
 
         private void _shutdownAudio()
         {
+            foreach (var source in _audioSources.Values.ToArray())
+            {
+                if (source.TryGetTarget(out var target))
+                {
+                    target.Dispose();
+                }
+            }
+
             if (_openALContext != ContextHandle.Zero)
             {
                 Alc.DestroyContext(_openALContext);
@@ -112,8 +118,11 @@ namespace SS14.Client.Graphics.Clyde
         public IClydeAudioSource CreateAudioSource(AudioStream stream)
         {
             var source = AL.GenSource();
+            // ReSharper disable once PossibleInvalidOperationException
             AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[stream.ClydeHandle.Value.ClydeHandle].BufferHandle);
-            return new AudioSource(source);
+            var audioSource = new AudioSource(this, source);
+            _audioSources.Add(source, new WeakReference<AudioSource>(audioSource));
+            return audioSource;
         }
 
         private static void _checkAlcError(IntPtr device,
@@ -245,10 +254,12 @@ namespace SS14.Client.Graphics.Clyde
 
         private sealed class AudioSource : IClydeAudioSource
         {
+            public Clyde Master;
             public int SourceHandle;
 
-            public AudioSource(int sourceHandle)
+            public AudioSource(Clyde master, int sourceHandle)
             {
+                Master = master;
                 SourceHandle = sourceHandle;
             }
 
@@ -304,6 +315,7 @@ namespace SS14.Client.Graphics.Clyde
             private void Dispose(bool disposing)
             {
                 AL.DeleteSource(SourceHandle);
+                Master._audioSources.Remove(SourceHandle);
                 _checkAlError();
                 SourceHandle = -1;
             }

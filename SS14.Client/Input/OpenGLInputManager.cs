@@ -6,8 +6,8 @@ namespace SS14.Client.Input
 {
     internal class OpenGLInputManager : InputManager
     {
-        [Dependency] private readonly IDisplayManagerOpenGL _displayManagerOpenGL;
+        [Dependency] private readonly IClyde _clyde;
 
-        public override Vector2 MouseScreenPosition => _displayManagerOpenGL.MouseScreenPosition;
+        public override Vector2 MouseScreenPosition => _clyde.MouseScreenPosition;
     }
 }

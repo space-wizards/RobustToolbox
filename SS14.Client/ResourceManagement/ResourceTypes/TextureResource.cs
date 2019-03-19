@@ -37,7 +37,7 @@ namespace SS14.Client.ResourceManagement
                 case GameController.DisplayMode.Godot:
                     _loadGodot(cache, path, loadParameters);
                     break;
-                case GameController.DisplayMode.OpenGL:
+                case GameController.DisplayMode.Clyde:
                     _loadOpenGL(cache, path, loadParameters);
                     break;
                 default:
@@ -92,9 +92,9 @@ namespace SS14.Client.ResourceManagement
 
         private void _loadOpenGL(IResourceCache cache, ResourcePath path, TextureLoadParameters? parameters)
         {
-            DebugTools.Assert(GameController.Mode == GameController.DisplayMode.OpenGL);
+            DebugTools.Assert(GameController.Mode == GameController.DisplayMode.Clyde);
 
-            var manager = IoCManager.Resolve<IDisplayManagerOpenGL>();
+            var manager = IoCManager.Resolve<IClyde>();
 
             Texture = manager.LoadTextureFromPNGStream(cache.ContentFileRead(path), path.ToString(), parameters);
         }

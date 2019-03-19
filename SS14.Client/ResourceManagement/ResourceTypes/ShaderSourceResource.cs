@@ -38,8 +38,8 @@ namespace SS14.Client.ResourceManagement.ResourceTypes
                         Code = _getGodotCode(),
                     };
                     break;
-                case GameController.DisplayMode.OpenGL:
-                    ClydeHandle = IoCManager.Resolve<IDisplayManagerOpenGL>().LoadShader(ParsedShader);
+                case GameController.DisplayMode.Clyde:
+                    ClydeHandle = IoCManager.Resolve<IClyde>().LoadShader(ParsedShader);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -54,7 +54,7 @@ namespace SS14.Client.ResourceManagement.ResourceTypes
             }
             else
             {
-                var clyde = IoCManager.Resolve<IDisplayManagerOpenGL>();
+                var clyde = IoCManager.Resolve<IClyde>();
                 // TODO: vertex shaders.
                 ClydeHandle = clyde.LoadShader(ParsedShader, path.ToString());
             }

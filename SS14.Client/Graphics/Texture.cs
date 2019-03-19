@@ -86,9 +86,9 @@ namespace SS14.Client.Graphics
                         stream.Dispose();
                     }
                 }
-                case GameController.DisplayMode.OpenGL:
+                case GameController.DisplayMode.Clyde:
                 {
-                    var manager = IoCManager.Resolve<IDisplayManagerOpenGL>();
+                    var manager = IoCManager.Resolve<IClyde>();
                     return manager.LoadTextureFromImage(image, name);
                 }
                 default:
@@ -130,9 +130,9 @@ namespace SS14.Client.Graphics
                         (loadParameters ?? TextureLoadParameters.Default).SampleParameters.ApplyToGodotTexture(texture);
                         return new GodotTextureSource(texture);
                     }
-                case GameController.DisplayMode.OpenGL:
+                case GameController.DisplayMode.Clyde:
                 {
-                    var manager = IoCManager.Resolve<IDisplayManagerOpenGL>();
+                    var manager = IoCManager.Resolve<IClyde>();
                     return manager.LoadTextureFromPNGStream(stream, name, loadParameters);
                 }
                 default:
@@ -144,12 +144,12 @@ namespace SS14.Client.Graphics
             TextureLoadParameters? loadParameters = null)
             where T : unmanaged, IPixel<T>
         {
-            if (GameController.Mode != GameController.DisplayMode.OpenGL)
+            if (GameController.Mode != GameController.DisplayMode.Clyde)
             {
                 throw new NotImplementedException();
             }
 
-            var manager = IoCManager.Resolve<IDisplayManagerOpenGL>();
+            var manager = IoCManager.Resolve<IClyde>();
             return manager.LoadArrayFromImages(images, name, loadParameters);
         }
 

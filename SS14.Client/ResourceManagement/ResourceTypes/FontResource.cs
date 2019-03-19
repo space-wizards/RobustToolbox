@@ -42,7 +42,7 @@ namespace SS14.Client.ResourceManagement
 
                     FontData = fontData;
                     break;
-                case GameController.DisplayMode.OpenGL:
+                case GameController.DisplayMode.Clyde:
                     FontFaceHandle = IoCManager.Resolve<IFontManagerInternal>().Load(cache.ContentFileRead(path).ToArray());
                     break;
                 default:

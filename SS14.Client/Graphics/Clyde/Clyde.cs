@@ -35,7 +35,7 @@ namespace SS14.Client.Graphics.Clyde
     /// <summary>
     ///     Responsible for most things rendering on OpenGL mode.
     /// </summary>
-    internal sealed partial class Clyde : DisplayManager, IDisplayManagerOpenGL, IDisposable
+    internal sealed partial class Clyde : DisplayManager, IClyde, IDisposable
     {
         [Dependency] private readonly IResourceCache _resourceCache;
         [Dependency] private readonly IEyeManager _eyeManager;

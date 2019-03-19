@@ -40,7 +40,7 @@ namespace SS14.Client.Graphics.Shaders
                     return new Shader();
                 case GameController.DisplayMode.Godot:
                     return _instanceGodot();
-                case GameController.DisplayMode.OpenGL:
+                case GameController.DisplayMode.Clyde:
                     return _instanceOpenGL();
                 default:
                     throw new ArgumentOutOfRangeException();

@@ -90,7 +90,7 @@ namespace SS14.Client.Graphics.Clyde
 
         public void Render(FrameEventArgs args)
         {
-            if (GameController.Mode != GameController.DisplayMode.OpenGL)
+            if (GameController.Mode != GameController.DisplayMode.Clyde)
             {
                 return;
             }

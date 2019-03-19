@@ -136,9 +136,9 @@ namespace SS14.Client
                     IoCManager.Register<IDisplayManager, DisplayManagerGodot>();
                     IoCManager.Register<IInputManager, GodotInputManager>();
                     break;
-                case DisplayMode.OpenGL:
+                case DisplayMode.Clyde:
                     IoCManager.Register<IDisplayManager, Clyde>();
-                    IoCManager.Register<IDisplayManagerOpenGL, Clyde>();
+                    IoCManager.Register<IClyde, Clyde>();
                     IoCManager.Register<IInputManager, OpenGLInputManager>();
                     IoCManager.Register<IFontManager, FontManager>();
                     IoCManager.Register<IFontManagerInternal, FontManager>();

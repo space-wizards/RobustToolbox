@@ -10,7 +10,7 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Graphics
 {
-    internal interface IDisplayManagerOpenGL : IDisplayManager
+    internal interface IClyde : IDisplayManager
     {
         void Render(FrameEventArgs args);
         void ProcessInput(FrameEventArgs frameEventArgs);

@@ -51,7 +51,7 @@ namespace SS14.Client
         {
             Headless,
             Godot,
-            OpenGL
+            Clyde
         }
 
         internal static DisplayMode Mode { get; private set; } = DisplayMode.Headless;
@@ -88,7 +88,7 @@ namespace SS14.Client
         [Dependency] private readonly ILogManager _logManager;
         [Dependency] private readonly ITaskManager _taskManager;
         [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager;
-        private IDisplayManagerOpenGL _displayManagerOpenGL;
+        private IClyde _clyde;
         private IFontManagerInternal _fontManager;
 
         private void Startup()
@@ -104,9 +104,9 @@ namespace SS14.Client
             // Load config.
             _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
 
-            if (Mode == DisplayMode.OpenGL)
+            if (Mode == DisplayMode.Clyde)
             {
-                _displayManagerOpenGL = IoCManager.Resolve<IDisplayManagerOpenGL>();
+                _clyde = IoCManager.Resolve<IClyde>();
             }
 
             // Init resources.
@@ -118,7 +118,7 @@ namespace SS14.Client
             _displayManager.Initialize();
             _displayManager.SetWindowTitle("Space Station 14");
 
-            if (Mode == DisplayMode.OpenGL)
+            if (Mode == DisplayMode.Clyde)
             {
                 _fontManager = IoCManager.Resolve<IFontManagerInternal>();
                 _fontManager.Initialize();
@@ -161,7 +161,7 @@ namespace SS14.Client
 
             _stateManager.RequestStateChange<MainScreen>();
 
-            _displayManagerOpenGL?.Ready();
+            _clyde?.Ready();
 
             var args = GetCommandLineArgs();
             if (args.Contains("--connect"))

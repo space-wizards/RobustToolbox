@@ -139,7 +139,7 @@ namespace SS14.Client.Graphics.Overlays
                     TempHandles.Add(handle);
                     return handle;
                 }
-                case GameController.DisplayMode.OpenGL:
+                case GameController.DisplayMode.Clyde:
                 {
                     DrawingHandle handle;
                     switch (Space)
@@ -240,7 +240,7 @@ namespace SS14.Client.Graphics.Overlays
 
         internal void OpenGLRender(IRenderHandle renderHandle)
         {
-            DebugTools.Assert(GameController.Mode == GameController.DisplayMode.OpenGL);
+            DebugTools.Assert(GameController.Mode == GameController.DisplayMode.Clyde);
 
             try
             {

@@ -176,7 +176,7 @@
     <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IRenderableComponent.cs" />
     <Compile Include="Interfaces\GameStates\IClientGameStateManager.cs" />
-    <Compile Include="Interfaces\Graphics\IDisplayManagerOpenGL.cs" />
+    <Compile Include="Interfaces\Graphics\IClyde.cs" />
     <Compile Include="Interfaces\Graphics\IFontManager.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILight.cs" />
     <Compile Include="Interfaces\Graphics\Lighting\ILightManager.cs" />

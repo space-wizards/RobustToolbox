@@ -30,7 +30,7 @@ namespace SS14.Client
             }
             else
             {
-                Mode = DisplayMode.OpenGL;
+                Mode = DisplayMode.Clyde;
             }
 
             var gc = new GameController();
@@ -52,7 +52,7 @@ namespace SS14.Client
             */
 
             _mainLoop.Tick += (sender, args) => Update(args.DeltaSeconds);
-            if (Mode == DisplayMode.OpenGL)
+            if (Mode == DisplayMode.Clyde)
             {
                 _mainLoop.Render += (sender, args) =>
                 {
@@ -65,9 +65,9 @@ namespace SS14.Client
                         frames = 0;
                     }
                     */
-                    _displayManagerOpenGL.Render(new FrameEventArgs(args.DeltaSeconds));
+                    _clyde.Render(new FrameEventArgs(args.DeltaSeconds));
                 };
-                _mainLoop.Input += (sender, args) => _displayManagerOpenGL.ProcessInput(new FrameEventArgs(args.DeltaSeconds));
+                _mainLoop.Input += (sender, args) => _clyde.ProcessInput(new FrameEventArgs(args.DeltaSeconds));
             }
 
             _mainLoop.Update += (sender, args) =>

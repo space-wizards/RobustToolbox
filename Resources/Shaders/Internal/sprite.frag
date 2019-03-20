@@ -1,4 +1,3 @@
-// This is the main fragment shader used for rendering of 2D sprites.
 #version 330 core
 
 out vec4 FragColor;
@@ -6,6 +5,7 @@ out vec4 FragColor;
 in vec2 UV;
 
 uniform sampler2D TEXTURE;
+uniform sampler2D lightMap;
 uniform vec4 modulate;
 
 layout (std140) uniform uniformConstants
@@ -26,5 +26,8 @@ void main()
 
     [SHADER_CODE]
 
-    FragColor = COLOR * modulate;
+    vec2 lightSampleUv = (FRAGCOORD.xy * SCREEN_PIXEL_SIZE);
+    vec3 lightSample = texture(lightMap, lightSampleUv).rgb;
+
+    FragColor = COLOR * modulate * vec4(lightSample, 1);
 }

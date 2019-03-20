@@ -218,6 +218,14 @@ namespace SS14.Client.Graphics.Clyde
                 GL.Uniform1(uniformId, textureUnit - TextureUnit.Texture0);
             }
 
+            public void SetUniformTextureMaybe(string uniformName, TextureUnit textureUnit)
+            {
+                if (HasUniform(uniformName))
+                {
+                    SetUniformTexture(uniformName, textureUnit);
+                }
+            }
+
             public void SetUniformMaybe(string uniformName, in Vector4 value)
             {
                 if (HasUniform(uniformName))

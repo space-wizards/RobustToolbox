@@ -66,6 +66,11 @@ namespace SS14.Client.ResourceManagement.ResourceTypes
 
             output.Append("shader_type canvas_item;\n");
 
+            if ((ParsedShader.RenderMode & ShaderRenderMode.Unshaded) != 0)
+            {
+                output.Append("render_mode unshaded;\n");
+            }
+
             foreach (var uniform in ParsedShader.Uniforms.Values)
             {
                 if (uniform.DefaultValue != null)

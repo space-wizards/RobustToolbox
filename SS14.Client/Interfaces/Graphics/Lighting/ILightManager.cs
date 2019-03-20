@@ -1,4 +1,5 @@
-﻿using SS14.Shared;
+﻿using System.Collections.Generic;
+using SS14.Shared;
 
 namespace SS14.Client.Interfaces.Graphics.Lighting
 {

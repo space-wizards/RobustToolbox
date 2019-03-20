@@ -11,9 +11,11 @@ using SS14.Client.Graphics.Overlays;
 using SS14.Client.Graphics.Shaders;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.ResourceManagement;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
+using SS14.Shared.Timers;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.Graphics.Clyde
@@ -26,6 +28,7 @@ namespace SS14.Client.Graphics.Clyde
         private static readonly (uint, string) DbgGroupEntities = (3, "Entities");
         private static readonly (uint, string) DbgGroupUI = (4, "User Interface");
         private static readonly (uint, string) DbgGroupWorldOverlay = (5, "Overlays: World");
+        private static readonly (uint, string) DbgGroupLighting = (6, "Lighting");
 
         /// <summary>
         ///     The current model matrix we would use.
@@ -39,6 +42,8 @@ namespace SS14.Client.Graphics.Clyde
         ///     Are we current rendering screen space or world space? Some code works differently between the two.
         /// </summary>
         private CurrentSpace _currentSpace;
+
+        private bool _lightingReady = false;
 
         // The minimum amount of consecutive textures that have to be batch-able before we actually bother to batch them.
         // BufferSubData has a non zero overhead and a few draw calls is much better.
@@ -97,8 +102,6 @@ namespace SS14.Client.Graphics.Clyde
 
             GL.ClearColor(0, 0, 0, 1);
             GL.Clear(ClearBufferMask.ColorBufferBit);
-
-            Vertex2DProgram.Use();
 
             // Update uniform constants UBO.
             _renderTime += args?.Elapsed ?? 0;
@@ -172,34 +175,48 @@ namespace SS14.Client.Graphics.Clyde
 
             _popDebugGroupMaybe();
 
+            _currentSpace = CurrentSpace.WorldSpace;
+            _setProjViewMatrices(_combinedDefaultMatricesWorld);
+
+            _pushDebugGroupMaybe(DbgGroupLighting);
+
+            _drawLights();
+
+            _lightingReady = true;
+
+            _popDebugGroupMaybe();
+
             _pushDebugGroupMaybe(DbgGroupGrids);
 
-            _currentSpace = CurrentSpace.WorldSpace;
             // Render grids. Very hardcoded right now.
             var map = _eyeManager.CurrentMap;
 
             var tex = _resourceCache.GetResource<TextureResource>("/Textures/Tiles/floor_steel.png");
             var loadedTex = _loadedTextures[((OpenGLTexture) tex.Texture).OpenGLTextureId];
+
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, loadedTex.OpenGLObject.Handle);
+            GL.ActiveTexture(TextureUnit.Texture1);
+            GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
 
             GL.BindVertexArray(BatchVAO.Handle);
-
-            _setProjViewMatrices(_combinedDefaultMatricesWorld);
 
             GL.Enable(EnableCap.PrimitiveRestart);
             GL.PrimitiveRestartIndex(ushort.MaxValue);
 
-            Vertex2DProgram.Use();
-            Vertex2DProgram.SetUniform(UniModUV, new Vector4(0, 0, 1, 1));
-            Vertex2DProgram.SetUniform(UniModulate, Color.White);
+            var gridProgram = _loadedShaders[_defaultShader].Program;
+            gridProgram.Use();
+            gridProgram.SetUniformTextureMaybe(UniMainTexture, TextureUnit.Texture0);
+            gridProgram.SetUniformTextureMaybe(UniLightTexture, TextureUnit.Texture1);
+            gridProgram.SetUniform(UniModUV, new Vector4(0, 0, 1, 1));
+            gridProgram.SetUniform(UniModulate, Color.White);
             foreach (var grid in _mapManager.GetMap(map).GetAllGrids())
             {
                 ushort nth = 0;
                 var model = Matrix3.Identity;
                 model.R0C2 = grid.WorldPosition.X;
                 model.R1C2 = grid.WorldPosition.Y;
-                Vertex2DProgram.SetUniform(UniModelMatrix, model);
+                gridProgram.SetUniform(UniModelMatrix, model);
 
                 foreach (var tileRef in grid.GetAllTiles())
                 {
@@ -303,6 +320,8 @@ namespace SS14.Client.Graphics.Clyde
 
             _popDebugGroupMaybe();
 
+            _lightingReady = false;
+
             _pushDebugGroupMaybe(DbgGroupUI);
 
             _setProjViewMatrices(_combinedDefaultMatricesScreen);
@@ -316,6 +335,47 @@ namespace SS14.Client.Graphics.Clyde
             _popDebugGroupMaybe();
 
             _window.SwapBuffers();
+        }
+
+        private void _drawLights()
+        {
+            void DrawLight(Vector2 pos, float range, float power, Color color)
+            {
+                _lightShader.SetUniform("lightCenter", pos);
+                _lightShader.SetUniform("lightRange", range);
+                _lightShader.SetUniform("lightPower", power);
+                _lightShader.SetUniform("lightColor", color);
+
+                var a = pos - new Vector2(range, range);
+                var b = pos + new Vector2(range, range);
+
+                var matrix = Matrix3.Identity;
+
+                _drawQuad(a, b, ref matrix, _lightShader);
+            }
+
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, LightFBO.Handle);
+            var complete = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+            GL.ClearColor(0, 0, 0, 1);
+            GL.Clear(ClearBufferMask.ColorBufferBit);
+
+            _lightShader.Use();
+
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
+
+            foreach (var component in _componentManager.GetAllComponents<PointLightComponent>())
+            {
+                if (component.State != LightState.On)
+                {
+                    continue;
+                }
+                var lightPos = component.Owner.Transform.WorldMatrix.Transform(component.Offset);
+                DrawLight(lightPos, component.Radius, component.Energy, component.Color);
+            }
+
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         }
 
         private void _setProjViewMatrices(in ProjViewMatrices matrices)
@@ -506,14 +566,33 @@ namespace SS14.Client.Graphics.Clyde
             program.SetUniformMaybe(UniModulate, renderCommandTexture.Modulate);
             program.SetUniformMaybe(UniTexturePixelSize, Vector2.One/loadedTexture.Size);
 
-            var rectTransform = Matrix3.Identity;
-            (rectTransform.R0C0, rectTransform.R1C1) = renderCommandTexture.PositionB - renderCommandTexture.PositionA;
-            (rectTransform.R0C2, rectTransform.R1C2) = renderCommandTexture.PositionA;
-            rectTransform.Multiply(ref modelMatrix);
-            program.SetUniformMaybe(UniModelMatrix, rectTransform);
-
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
+
+            GL.ActiveTexture(TextureUnit.Texture1);
+            if (_lightingReady && loaded.HasLighting)
+            {
+                GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
+            }
+            else
+            {
+                var white = _loadedTextures[((OpenGLTexture) Texture.White).OpenGLTextureId].OpenGLObject;
+                GL.BindTexture(TextureTarget.Texture2D, white.Handle);
+            }
+
+            program.SetUniformTextureMaybe(UniMainTexture, TextureUnit.Texture0);
+            program.SetUniformTextureMaybe(UniLightTexture, TextureUnit.Texture1);
+
+            _drawQuad(renderCommandTexture.PositionA, renderCommandTexture.PositionB, ref modelMatrix, program);
+        }
+
+        private static void _drawQuad(Vector2 a, Vector2 b, ref Matrix3 modelMatrix, ShaderProgram program)
+        {
+            var rectTransform = Matrix3.Identity;
+            (rectTransform.R0C0, rectTransform.R1C1) = b - a;
+            (rectTransform.R0C2, rectTransform.R1C2) = a;
+            rectTransform.Multiply(ref modelMatrix);
+            program.SetUniformMaybe(UniModelMatrix, rectTransform);
 
             GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
         }
@@ -647,7 +726,21 @@ namespace SS14.Client.Graphics.Clyde
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
 
+            GL.ActiveTexture(TextureUnit.Texture1);
+            if (_lightingReady && loaded.HasLighting)
+            {
+                GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
+            }
+            else
+            {
+                var white = _loadedTextures[((OpenGLTexture) Texture.White).OpenGLTextureId].OpenGLObject;
+                GL.BindTexture(TextureTarget.Texture2D, white.Handle);
+            }
+
             program.Use();
+
+            program.SetUniformTextureMaybe(UniMainTexture, TextureUnit.Texture0);
+            program.SetUniformTextureMaybe(UniLightTexture, TextureUnit.Texture1);
 
             // Model matrix becomes identity since it's built into the batch mesh.
             program.SetUniformMaybe(UniModelMatrix, Matrix3.Identity);

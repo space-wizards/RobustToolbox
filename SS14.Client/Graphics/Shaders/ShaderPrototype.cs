@@ -8,6 +8,7 @@ using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using SS14.Client.Interfaces.Graphics;
 using YamlDotNet.RepresentationModel;
 using BlendModeEnum = Godot.CanvasItemMaterial.BlendModeEnum;
 using LightModeEnum = Godot.CanvasItemMaterial.LightModeEnum;
@@ -28,6 +29,8 @@ namespace SS14.Client.Graphics.Shaders
         // Canvas shader variables.
         private LightModeEnum LightMode;
         private BlendModeEnum BlendMode;
+
+        private Shader _canvasKindInstance;
 
         /// <summary>
         ///     Creates a new instance of this shader.
@@ -54,7 +57,27 @@ namespace SS14.Client.Graphics.Shaders
                 case ShaderKind.Source:
                     return new Shader(Source.ClydeHandle);
                 case ShaderKind.Canvas:
-                    return new Shader(0);
+                    if (_canvasKindInstance != null)
+                    {
+                        return _canvasKindInstance;
+                    }
+
+                    string source;
+                    if (LightMode == LightModeEnum.Unshaded)
+                    {
+                        source = SourceUnshaded;
+                    }
+                    else
+                    {
+                        source = SourceShaded;
+                    }
+
+                    var parsed = ShaderParser.Parse(source);
+                    var clyde = IoCManager.Resolve<IClyde>();
+                    var instance = new Shader(clyde.LoadShader(parsed));
+                    _canvasKindInstance = instance;
+                    return instance;
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -144,11 +167,6 @@ namespace SS14.Client.Graphics.Shaders
 
         private void ReadCanvasKind(YamlMappingNode mapping)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             if (mapping.TryGetNode("light_mode", out var node))
             {
                 switch (node.AsString())
@@ -248,5 +266,18 @@ namespace SS14.Client.Graphics.Shaders
             Source,
             Canvas
         }
+
+        private const string SourceUnshaded = @"
+render_mode unshaded;
+void fragment() {
+    COLOR = texture(TEXTURE, UV);
+}
+";
+
+        private const string SourceShaded = @"
+void fragment() {
+    COLOR = texture(TEXTURE, UV);
+}
+";
     }
 }

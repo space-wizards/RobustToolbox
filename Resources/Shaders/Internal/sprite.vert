@@ -1,4 +1,3 @@
-// This is the main vertex shader used for rendering of 2D sprites.
 #version 330 core
 
 // Vertex position.

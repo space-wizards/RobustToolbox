@@ -40,9 +40,11 @@ namespace SS14.Client.Graphics.Shaders
         {
             _tokenize();
 
+            var renderMode = ShaderRenderMode.None;
+
+            var token = _peekToken();
             {
                 // Parse render_mode maybe.
-                var token = _peekToken();
                 if (!(token is TokenWord word))
                 {
                     throw new ShaderParseException("Expected 'render_mode', 'uniform', 'varying' or type.",
@@ -51,14 +53,28 @@ namespace SS14.Client.Graphics.Shaders
 
                 if (word.Word == "render_mode")
                 {
-                    throw new NotImplementedException();
+                    _takeToken();
+                    token = _takeToken();
+                    if (!(token is TokenWord unshadedWord) || unshadedWord.Word != "unshaded")
+                    {
+                        throw new ShaderParseException("Expected 'unshaded'", token.Position);
+                    }
+
+                    renderMode |= ShaderRenderMode.Unshaded;
+
+                    token = _takeToken();
+                    if (!(token is TokenSymbol semicolonUnshadedSymbol) || semicolonUnshadedSymbol.Symbol != Symbols.Semicolon)
+                    {
+                        throw new ShaderParseException("Expected ';'", token.Position);
+                    }
+
                 }
             }
 
             // Main loop for parsing of structures in the root of the shader file.
             while (_tokenIndex < _tokens.Count)
             {
-                var token = _peekToken();
+                token = _peekToken();
                 if (token == null)
                 {
                     // EOF.
@@ -89,7 +105,7 @@ namespace SS14.Client.Graphics.Shaders
             return new ParsedShader(
                 _uniformsParsing.ToDictionary(p => p.Name, p => p),
                 _varyingsParsing.ToDictionary(p => p.Name, p => p),
-                _functionsParsing, ShaderRenderMode.None);
+                _functionsParsing, renderMode);
         }
 
         private void _parseFunction()

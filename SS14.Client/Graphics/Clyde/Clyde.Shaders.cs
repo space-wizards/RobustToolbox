@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using OpenTK.Graphics.OpenGL4;
 using SS14.Client.Graphics.Shaders;
+using SS14.Client.ResourceManagement.ResourceTypes;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.Graphics.Clyde
@@ -11,16 +12,17 @@ namespace SS14.Client.Graphics.Clyde
     {
         private int _defaultShader;
 
-        private ShaderProgram Vertex2DProgram;
-
         private string _shaderWrapCodeSpriteFrag;
         private string _shaderWrapCodeSpriteVert;
 
         private readonly List<LoadedShader> _loadedShaders = new List<LoadedShader>();
 
+        private ShaderProgram _lightShader;
+
         private class LoadedShader
         {
             public ShaderProgram Program;
+            public bool HasLighting = true;
         }
 
         public int LoadShader(ParsedShader shader, string name = null)
@@ -40,7 +42,11 @@ namespace SS14.Client.Graphics.Clyde
             program.BindBlock("projectionViewMatrices", ProjViewBindingIndex);
             program.BindBlock("uniformConstants", UniformConstantsBindingIndex);
 
-            var loaded = new LoadedShader {Program = program};
+            var loaded = new LoadedShader
+            {
+                Program = program,
+                HasLighting = (shader.RenderMode & ShaderRenderMode.Unshaded) == 0
+            };
             var ret = _loadedShaders.Count;
             _loadedShaders.Add(loaded);
             return ret;
@@ -48,24 +54,26 @@ namespace SS14.Client.Graphics.Clyde
 
         private void _loadStockShaders()
         {
-            string ReadFile(string path)
-            {
-                using (var reader = new StreamReader(_resourceCache.ContentFileRead(path), Encoding.UTF8))
-                {
-                    return reader.ReadToEnd();
-                }
-            }
+            _shaderWrapCodeSpriteFrag = _readFile("/Shaders/Internal/sprite.frag");
+            _shaderWrapCodeSpriteVert = _readFile("/Shaders/Internal/sprite.vert");
 
-            _shaderWrapCodeSpriteFrag = ReadFile("/Shaders/Internal/sprite.frag");
-            _shaderWrapCodeSpriteVert = ReadFile("/Shaders/Internal/sprite.vert");
+            _defaultShader =
+                _resourceCache.GetResource<ShaderSourceResource>("/Shaders/Internal/default-sprite.swsl").ClydeHandle;
 
-            var parsed = ShaderParser.Parse(ReadFile("/Shaders/Internal/default-sprite.swsl"));
-
-            _defaultShader = LoadShader(parsed, "Vertex2DProgram");
-            Vertex2DProgram = _loadedShaders[_defaultShader].Program;
-
-            Vertex2DProgram.Use();
             _currentShader = _defaultShader;
+
+            var lightVert = _readFile("/Shaders/Internal/light.vert");
+            var lightFrag = _readFile("/Shaders/Internal/light.frag");
+
+            _lightShader = _compileProgram(lightVert, lightFrag, "_lightShader");
+        }
+
+        private string _readFile(string path)
+        {
+            using (var reader = new StreamReader(_resourceCache.ContentFileRead(path), Encoding.UTF8))
+            {
+                return reader.ReadToEnd();
+            }
         }
 
         private ShaderProgram _compileProgram(string vertexSource, string fragmentSource, string name = null)

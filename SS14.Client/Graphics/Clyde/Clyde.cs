@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -43,6 +43,7 @@ namespace SS14.Client.Graphics.Clyde
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IOverlayManager _overlayManager;
         [Dependency] private readonly IEntityManager _entityManager;
+        [Dependency] private readonly IComponentManager _componentManager;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
 
         private Vector2i _windowSize;
@@ -57,6 +58,8 @@ namespace SS14.Client.Graphics.Clyde
         private Buffer BatchEBO;
         private OGLHandle BatchVAO;
         private OGLHandle BatchArrayedVAO;
+        private OGLHandle LightFBO;
+        private OGLHandle LightTexture;
 
         // VBO to draw a single quad.
         private Buffer QuadVBO;
@@ -66,6 +69,8 @@ namespace SS14.Client.Graphics.Clyde
         private const string UniModelMatrix = "modelMatrix";
         private const string UniModulate = "modulate";
         private const string UniTexturePixelSize = "TEXTURE_PIXEL_SIZE";
+        private const string UniMainTexture = "TEXTURE";
+        private const string UniLightTexture = "lightMap";
 
         // Thread the window is instantiated on.
         // OpenGL is allergic to multi threading so we need to check this.
@@ -166,6 +171,9 @@ namespace SS14.Client.Graphics.Clyde
                 var oldSize = _windowSize;
                 _windowSize = new Vector2i(_window.Width, _window.Height);
                 GL.Viewport(0, 0, _window.Width, _window.Height);
+                GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, _window.Width, _window.Height, 0,
+                    PixelFormat.Rgba, PixelType.Float, IntPtr.Zero);
                 OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _windowSize));
             };
             _window.MouseDown += (sender, eventArgs) =>
@@ -291,13 +299,37 @@ namespace SS14.Client.Graphics.Clyde
 
             GL.BindBufferBase(BufferRangeTarget.UniformBuffer, ProjViewBindingIndex, ProjViewUBO.Handle);
 
-            UniformConstantsUBO = new Buffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw, nameof(UniformConstantsUBO));
+            UniformConstantsUBO = new Buffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw,
+                nameof(UniformConstantsUBO));
             unsafe
             {
                 UniformConstantsUBO.Reallocate(sizeof(UniformConstants));
             }
 
-            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, UniformConstantsBindingIndex, UniformConstantsUBO.Handle);
+            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, UniformConstantsBindingIndex,
+                UniformConstantsUBO.Handle);
+
+            LightFBO = new OGLHandle(GL.GenFramebuffer());
+            LightTexture = new OGLHandle(GL.GenTexture());
+
+            GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, _window.Width, _window.Height, 0,
+                PixelFormat.Rgba, PixelType.Float, IntPtr.Zero);
+
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMagFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)OpenTK.Graphics.OpenGL.TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)OpenTK.Graphics.OpenGL.TextureWrapMode.ClampToEdge);
+
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, LightFBO.Handle);
+
+            _objectLabelMaybe(ObjectLabelIdentifier.Framebuffer, LightFBO, "LightFBO");
+            _objectLabelMaybe(ObjectLabelIdentifier.Texture, LightTexture, "LightTexture");
+
+            GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+                LightTexture.Handle, 0);
+
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
             _drawingSplash = true;
 

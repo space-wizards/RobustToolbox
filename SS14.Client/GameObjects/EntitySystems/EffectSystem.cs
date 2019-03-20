@@ -1,7 +1,6 @@
 ﻿using SS14.Client.Graphics;
 using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Drawing;
-using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
@@ -11,82 +10,38 @@ using SS14.Shared.GameObjects.Systems;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
+using SS14.Client.Graphics.Overlays;
+using SS14.Client.Graphics.Shaders;
+using SS14.Client.Interfaces.Graphics.Overlays;
+using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
-using VS = Godot.VisualServer;
 
 namespace SS14.Client.GameObjects
 {
     public class EffectSystem : EntitySystem
     {
-        [Dependency]
-        IGameTiming gameTiming;
+        [Dependency] IGameTiming gameTiming;
 
-        [Dependency]
-        IResourceCache resourceCache;
+        [Dependency] IResourceCache resourceCache;
 
-        [Dependency]
-        ISceneTreeHolder sceneTree;
+        [Dependency] IEyeManager eyeManager;
 
-        [Dependency]
-        IEyeManager eyeManager;
+        [Dependency] IOverlayManager overlayManager;
 
         private readonly List<Effect> _Effects = new List<Effect>();
         private TimeSpan lasttimeprocessed = TimeSpan.Zero;
-
-        private Godot.Node2D DrawingNode;
-        private Godot.RID ShadedCanvasItem;
-        private Godot.RID UnshadedCanvasItem;
-        private Godot.CanvasItemMaterial UnshadedMaterial;
-        private Godot.CanvasItemMaterial ShadedMaterial;
 
         public override void Initialize()
         {
             base.Initialize();
             IoCManager.InjectDependencies(this);
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-            DrawingNode = new Godot.Node2D()
-            {
-                Name = "EffectSystem",
-            };
-            sceneTree.WorldRoot.AddChild(DrawingNode);
 
-            UnshadedMaterial = new Godot.CanvasItemMaterial()
-            {
-                LightMode = Godot.CanvasItemMaterial.LightModeEnum.Unshaded
-            };
-
-            ShadedMaterial = new Godot.CanvasItemMaterial();
-
-            ShadedCanvasItem = VS.CanvasItemCreate();
-            VS.CanvasItemSetParent(ShadedCanvasItem, DrawingNode.GetCanvasItem());
-            VS.CanvasItemSetMaterial(ShadedCanvasItem, ShadedMaterial.GetRid());
-
-            UnshadedCanvasItem = VS.CanvasItemCreate();
-            VS.CanvasItemSetParent(UnshadedCanvasItem, DrawingNode.GetCanvasItem());
-            VS.CanvasItemSetMaterial(UnshadedCanvasItem, UnshadedMaterial.GetRid());
-        }
-
-        public override void Shutdown()
-        {
-            base.Shutdown();
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-            VS.FreeRid(ShadedCanvasItem);
-            VS.FreeRid(UnshadedCanvasItem);
-            UnshadedMaterial.Dispose();
-            ShadedMaterial.Dispose();
-            DrawingNode.QueueFree();
-            DrawingNode.Dispose();
+            var overlay = new EffectOverlay(this);
+            overlayManager.AddOverlay(overlay);
         }
 
         public override void RegisterMessageTypes()
@@ -136,10 +91,6 @@ namespace SS14.Client.GameObjects
 
         public override void FrameUpdate(float frameTime)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
             lasttimeprocessed = IoCManager.Resolve<IGameTiming>().CurTime;
 
             for (int i = 0; i < _Effects.Count; i++)
@@ -155,40 +106,6 @@ namespace SS14.Client.GameObjects
                     //Remove from the effects list and decrement the iterator
                     _Effects.Remove(effect);
                     i--;
-                }
-            }
-
-            Redraw();
-        }
-
-        private void Redraw()
-        {
-            var map = eyeManager.CurrentMap;
-
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-            VS.CanvasItemClear(ShadedCanvasItem);
-            VS.CanvasItemClear(UnshadedCanvasItem);
-            using (var shadedHandle = new DrawingHandleScreen(ShadedCanvasItem))
-            using (var unshadedHandle = new DrawingHandleScreen(UnshadedCanvasItem))
-            {
-                foreach (var effect in _Effects)
-                {
-                    if (effect.Coordinates.MapID != map)
-                    {
-                        continue;
-                    }
-
-                    // NOTE TO FUTURE READERS:
-                    // Yes, due to how this is implemented, unshaded is always on top of shaded.
-                    // If you want to rework it to be properly defined, be my guest.
-                    var handle = effect.Shaded ? shadedHandle : unshadedHandle;
-
-                    handle.SetTransform(effect.Coordinates.ToWorld().Position * EyeManager.PIXELSPERMETER * new Vector2(1, -1), new Angle(-effect.Rotation), effect.Size);
-                    var effectSprite = effect.EffectSprite;
-                    handle.DrawTexture(effectSprite, -((Vector2)effectSprite.Size) / 2, ToColor(effect.Color));
                 }
             }
         }
@@ -288,7 +205,8 @@ namespace SS14.Client.GameObjects
 
             public Effect(EffectSystemMessage effectcreation, IResourceCache resourceCache)
             {
-                EffectSprite = resourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/") / effectcreation.EffectSprite).Texture;
+                EffectSprite = resourceCache
+                    .GetResource<TextureResource>(new ResourcePath("/Textures/") / effectcreation.EffectSprite).Texture;
                 Coordinates = effectcreation.Coordinates;
                 EmitterCoordinates = effectcreation.EmitterCoordinates;
                 Velocity = effectcreation.Velocity;
@@ -324,7 +242,8 @@ namespace SS14.Client.GameObjects
                 if (EmitterCoordinates.IsValidLocation())
                 {
                     //Calculate delta p due to radial velocity
-                    var positionRelativeToEmitter = Coordinates.ToWorld().Position - EmitterCoordinates.ToWorld().Position;
+                    var positionRelativeToEmitter =
+                        Coordinates.ToWorld().Position - EmitterCoordinates.ToWorld().Position;
                     var deltaRadial = RadialVelocity * frameTime;
                     deltaPosition = positionRelativeToEmitter * (deltaRadial / positionRelativeToEmitter.Length);
 
@@ -332,9 +251,9 @@ namespace SS14.Client.GameObjects
                     var radius = positionRelativeToEmitter.Length;
                     if (radius > 0)
                     {
-                        var theta = (float)Math.Atan2(positionRelativeToEmitter.Y, positionRelativeToEmitter.X);
+                        var theta = (float) Math.Atan2(positionRelativeToEmitter.Y, positionRelativeToEmitter.X);
                         theta += TangentialVelocity * frameTime;
-                        deltaPosition += new Vector2(radius * (float)Math.Cos(theta), radius * (float)Math.Sin(theta))
+                        deltaPosition += new Vector2(radius * (float) Math.Cos(theta), radius * (float) Math.Sin(theta))
                                          - positionRelativeToEmitter;
                     }
                 }
@@ -350,16 +269,53 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        private Color ToColor(Vector4 color)
+        private static Color ToColor(Vector4 color)
         {
-            color = Limit(color);
+            color = Vector4.Clamp(color / 255f, Vector4.Zero, Vector4.One);
 
-            return new Color((byte)color.X, (byte)color.Y, (byte)color.Z, (byte)color.W);
+            return new Color(color.X, color.Y, color.Z, color.W);
         }
 
-        private Vector4 Limit(Vector4 color)
+        private sealed class EffectOverlay : Overlay
         {
-            return new Vector4(FloatMath.Clamp(color.X, 0f, 255f), FloatMath.Clamp(color.Y, 0f, 255f), FloatMath.Clamp(color.Z, 0f, 255f), FloatMath.Clamp(color.W, 0f, 255f));
+            public override bool AlwaysDirty => true;
+            public override OverlaySpace Space => OverlaySpace.WorldSpace;
+
+            private readonly Shader _unshadedShader;
+            private readonly EffectSystem _owner;
+
+            public EffectOverlay(EffectSystem owner) : base("EffectSystem")
+            {
+                _owner = owner;
+                _unshadedShader = IoCManager.Resolve<IPrototypeManager>().Index<ShaderPrototype>("unshaded").Instance();
+            }
+
+            protected override void Draw(DrawingHandle handle)
+            {
+                var map = _owner.eyeManager.CurrentMap;
+
+                var shaded = (DrawingHandleWorld) handle;
+                var unshaded = (DrawingHandleWorld) NewHandle(_unshadedShader);
+
+                foreach (var effect in _owner._Effects)
+                {
+                    if (effect.Coordinates.MapID != map)
+                    {
+                        continue;
+                    }
+
+                    // NOTE TO FUTURE READERS:
+                    // Yes, due to how this is implemented, unshaded is always on top of shaded.
+                    // If you want to rework it to be properly defined, be my guest.
+                    var usingHandle = effect.Shaded ? shaded : unshaded;
+
+                    usingHandle.SetTransform(
+                        effect.Coordinates.ToWorld().Position,
+                        new Angle(-effect.Rotation), effect.Size);
+                    var effectSprite = effect.EffectSprite;
+                    usingHandle.DrawTexture(effectSprite, -((Vector2) effectSprite.Size / EyeManager.PIXELSPERMETER) / 2, ToColor(effect.Color));
+                }
+            }
         }
     }
 }

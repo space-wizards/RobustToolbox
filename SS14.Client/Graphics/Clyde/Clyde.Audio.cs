@@ -63,7 +63,7 @@ namespace SS14.Client.Graphics.Clyde
             var preferredDevice = _configurationManager.GetCVar<string>("audio.device");
 
             // Open device.
-            if (preferredDevice != null)
+            if (!string.IsNullOrEmpty(preferredDevice))
             {
                 _openALDevice = Alc.OpenDevice(preferredDevice);
                 if (_openALDevice == IntPtr.Zero)

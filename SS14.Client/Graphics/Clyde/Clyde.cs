@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -122,7 +122,7 @@ namespace SS14.Client.Graphics.Clyde
 
             _configurationManager.RegisterCVar("display.width", 1280);
             _configurationManager.RegisterCVar("display.height", 720);
-            _configurationManager.RegisterCVar("audio.device", null);
+            _configurationManager.RegisterCVar("audio.device", "");
         }
 
         public override event Action<WindowResizedEventArgs> OnWindowResized;

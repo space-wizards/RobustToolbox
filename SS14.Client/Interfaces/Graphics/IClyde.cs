@@ -49,5 +49,6 @@ namespace SS14.Client.Interfaces.Graphics
         void SetPosition(Vector2 position);
         void SetPitch(float pitch);
         void SetGlobal();
+        void SetVolume(float decibels);
     }
 }

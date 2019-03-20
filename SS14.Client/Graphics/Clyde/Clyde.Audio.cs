@@ -284,6 +284,14 @@ namespace SS14.Client.Graphics.Clyde
             {
                 _checkDisposed();
                 AL.Source(SourceHandle, ALSourceb.SourceRelative, true);
+                _checkAlError();
+            }
+
+            public void SetVolume(float decibels)
+            {
+                _checkDisposed();
+                AL.Source(SourceHandle, ALSourcef.Gain, (float)Math.Pow(10, decibels/10));
+                _checkAlError();
             }
 
             public void SetPosition(Vector2 position)

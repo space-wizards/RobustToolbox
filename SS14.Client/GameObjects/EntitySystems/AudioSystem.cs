@@ -102,6 +102,12 @@ namespace SS14.Client.GameObjects.EntitySystems
             if (GameController.Mode == GameController.DisplayMode.Clyde)
             {
                 var source = _clyde.CreateAudioSource(stream);
+                if (audioParams.HasValue)
+                {
+                    source.SetPitch(audioParams.Value.PitchScale);
+                    source.SetVolume(audioParams.Value.Volume);
+                }
+
                 source.SetGlobal();
                 source.StartPlaying();
                 var playing = new PlayingClydeStream
@@ -156,6 +162,12 @@ namespace SS14.Client.GameObjects.EntitySystems
             {
                 var source = _clyde.CreateAudioSource(stream);
                 source.SetPosition(entity.Transform.WorldPosition);
+                if (audioParams.HasValue)
+                {
+                    source.SetPitch(audioParams.Value.PitchScale);
+                    source.SetVolume(audioParams.Value.Volume);
+                }
+
                 source.StartPlaying();
                 var playing = new PlayingClydeStream
                 {
@@ -212,6 +224,12 @@ namespace SS14.Client.GameObjects.EntitySystems
             {
                 var source = _clyde.CreateAudioSource(stream);
                 source.SetPosition(coordinates.ToWorld().Position);
+                if (audioParams.HasValue)
+                {
+                    source.SetPitch(audioParams.Value.PitchScale);
+                    source.SetVolume(audioParams.Value.Volume);
+                }
+
                 source.StartPlaying();
                 var playing = new PlayingClydeStream
                 {

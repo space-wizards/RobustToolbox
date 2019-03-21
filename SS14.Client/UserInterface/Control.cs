@@ -625,10 +625,22 @@ namespace SS14.Client.UserInterface
 
         public Color? ModulateSelfOverride { get; set; }
 
+        private Color _modulate = Color.White;
+
         public Color Modulate
         {
-            get => SceneControl.Modulate.Convert();
-            set => SceneControl.Modulate = value.Convert();
+            get => GameController.OnGodot ? SceneControl.Modulate.Convert() : _modulate;
+            set
+            {
+                if (GameController.OnGodot)
+                {
+                    SceneControl.Modulate = value.Convert();
+                }
+                else
+                {
+                    _modulate = value;
+                }
+            }
         }
 
         public Color ActualModulateSelf

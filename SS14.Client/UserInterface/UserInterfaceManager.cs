@@ -406,6 +406,7 @@ namespace SS14.Client.UserInterface
             }
 
             handle.SetTransform(position, Angle.Zero, Vector2.One);
+            modulate *= control.Modulate;
             handle.Modulate = modulate * control.ActualModulateSelf;
             var clip = control.RectClipContent;
             var scissorRegion = scissorBox;

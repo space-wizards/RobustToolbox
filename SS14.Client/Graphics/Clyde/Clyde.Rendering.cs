@@ -356,7 +356,7 @@ namespace SS14.Client.Graphics.Clyde
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, LightFBO.Handle);
             var complete = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
-            GL.ClearColor(0, 0, 0, 1);
+            GL.ClearColor(0.1f, 0.1f, 0.1f, 1);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             _lightShader.Use();

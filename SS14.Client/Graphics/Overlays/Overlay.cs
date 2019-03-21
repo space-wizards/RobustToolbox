@@ -155,6 +155,11 @@ namespace SS14.Client.Graphics.Overlays
                             throw new ArgumentOutOfRangeException();
                     }
 
+                    if (shader != null)
+                    {
+                        handle.UseShader(shader);
+                    }
+
                     return handle;
                 }
                 case GameController.DisplayMode.Godot:

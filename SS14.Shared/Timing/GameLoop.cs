@@ -42,9 +42,12 @@ namespace SS14.Shared.Timing
         /// </summary>
         public SleepMode SleepMode { get; set; } = SleepMode.Yield;
 
+        private readonly IRuntimeLog _runtimeLog;
+
         public GameLoop(IGameTiming timing)
         {
             _timing = timing;
+            _runtimeLog = IoCManager.Resolve<IRuntimeLog>();
         }
 
         /// <summary>
@@ -100,8 +103,7 @@ namespace SS14.Shared.Timing
                 }
                 catch (Exception exp)
                 {
-                    IRuntimeLog runtimeLog = IoCManager.Resolve<IRuntimeLog>();
-                    runtimeLog.AddException(exp, DateTime.Now);
+                    _runtimeLog.LogException(exp, "GameLoop Input");
                 }
                 _timing.InSimulation = true;
 
@@ -123,8 +125,7 @@ namespace SS14.Shared.Timing
                     }
                     catch (Exception exp)
                     {
-                        IRuntimeLog runtimeLog = IoCManager.Resolve<IRuntimeLog>();
-                        runtimeLog.AddException(exp, DateTime.Now);
+                        _runtimeLog.LogException(exp, "GameLoop Tick");
                     }
                     _timing.CurTick++;
 
@@ -144,10 +145,9 @@ namespace SS14.Shared.Timing
                 {
                     Update?.Invoke(this, simFrameEvent);
                 }
-                catch (Exception)
+                catch (Exception exp)
                 {
-
-                    throw;
+                    _runtimeLog.LogException(exp, "GameLoop Update");
                 }
 
                 // render the simulation
@@ -157,8 +157,7 @@ namespace SS14.Shared.Timing
                 }
                 catch (Exception exp)
                 {
-                    IRuntimeLog runtimeLog = IoCManager.Resolve<IRuntimeLog>();
-                    runtimeLog.AddException(exp, DateTime.Now);
+                    _runtimeLog.LogException(exp, "GameLoop Render");
                 }
                 // Set sleep to 1 if you want to be nice and give the rest of the timeslice up to the os scheduler.
                 // Set sleep to 0 if you want to use 100% cpu, but still cooperate with the scheduler.

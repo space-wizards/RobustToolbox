@@ -8,7 +8,7 @@ using SS14.Shared.Utility;
 
 namespace SS14.Shared.Exceptions
 {
-    public class RuntimeLog : IRuntimeLog
+    internal sealed class RuntimeLog : IRuntimeLog
     {
         private readonly Dictionary<Type, List<LoggedException>> exceptions = new Dictionary<Type, List<LoggedException>>();
 
@@ -74,6 +74,13 @@ namespace SS14.Shared.Exceptions
         }
     }
 
+    /// <summary>
+    ///     The runtime log is responsible for the logging of exceptions, to prevent the game crashing entirely.
+    /// </summary>
+    /// <remarks>
+    ///     The term "runtime" dates back to BYOND, in which an exception is called a "runtime error".
+    ///     As such, what we call exceptions is called a "runtime" in BYOND.
+    /// </remarks>
     public interface IRuntimeLog
     {
         void LogException(Exception exception, string catcher=null);

@@ -20,10 +20,17 @@ namespace SS14.Shared.Serialization
         public void Initialize()
         {
             var types = reflectionManager.FindTypesWithAttribute<NetSerializableAttribute>().ToList();
-            var settings = new Settings()
+            #if DEBUG
+            foreach (var type in types)
             {
-                CustomTypeSerializers = new ITypeSerializer[] { new OpenTKTypeSerializer() }
-            };
+                if (type.Assembly.FullName.Contains("Server") || type.Assembly.FullName.Contains("Client"))
+                {
+                    throw new InvalidOperationException($"Type {type} is server/client specific but has a NetSerializableAttribute!");
+                }
+            }
+            #endif
+
+            var settings = new Settings();
             Serializer = new Serializer(types, settings);
         }
 
@@ -42,54 +49,4 @@ namespace SS14.Shared.Serialization
             return Serializer.Deserialize(stream);
         }
     }
-
-    // Do all the dang work ourselves because they can't be bothered to put [Serializable] on their structs.
-    public class OpenTKTypeSerializer : IStaticTypeSerializer, ITypeSerializer
-    {
-        private static HashSet<Type> handledTypes = new HashSet<Type>
-        {
-            typeof(UIBox2)
-        };
-
-        public bool Handles(Type type) => handledTypes.Contains(type);
-        public IEnumerable<Type> GetSubtypes(Type type) => Enumerable.Empty<Type>();
-
-        public MethodInfo GetStaticWriter(Type type)
-        {
-            return typeof(OpenTKTypeSerializer).GetMethod("Write", new Type[] { typeof(Stream), type });
-        }
-
-        public MethodInfo GetStaticReader(Type type)
-        {
-            return typeof(OpenTKTypeSerializer).GetMethod("Read", new Type[] { typeof(Stream), type.MakeByRefType() });
-        }
-
-        #region UIBox2
-
-        public static void Write(Stream stream, UIBox2 value)
-        {
-            stream.Write(BitConverter.GetBytes(value.Left), 0, sizeof(float));
-            stream.Write(BitConverter.GetBytes(value.Right), 0, sizeof(float));
-            stream.Write(BitConverter.GetBytes(value.Top), 0, sizeof(float));
-            stream.Write(BitConverter.GetBytes(value.Bottom), 0, sizeof(float));
-        }
-
-        public static void Read(Stream stream, out UIBox2 value)
-        {
-            var buffer = new byte[sizeof(float)];
-
-            stream.Read(buffer, 0, buffer.Length);
-            var left = BitConverter.ToSingle(buffer, 0);
-            stream.Read(buffer, 0, buffer.Length);
-            var right = BitConverter.ToSingle(buffer, 0);
-            stream.Read(buffer, 0, buffer.Length);
-            var top = BitConverter.ToSingle(buffer, 0);
-            stream.Read(buffer, 0, buffer.Length);
-            var bottom = BitConverter.ToSingle(buffer, 0);
-
-            value = new UIBox2(left, top, right, bottom);
-        }
-        #endregion
-    }
-
 }

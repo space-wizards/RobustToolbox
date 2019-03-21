@@ -2,6 +2,8 @@
 using System.Threading;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Log;
+using SS14.Shared.Exceptions;
+using SS14.Shared.IoC;
 
 namespace SS14.Shared.Timing
 {
@@ -66,6 +68,7 @@ namespace SS14.Shared.Timing
 
             while (Running)
             {
+
                 var accumulator = _timing.RealTime - _lastTick;
 
                 // If the game can't keep up, limit time.
@@ -90,9 +93,16 @@ namespace SS14.Shared.Timing
 
                 realFrameEvent.SetDeltaSeconds((float)_timing.RealFrameTime.TotalSeconds);
 
-                // process Net/KB/Mouse input
-                Input?.Invoke(this, realFrameEvent);
-
+                try
+                {
+                    // process Net/KB/Mouse input
+                    Input?.Invoke(this, realFrameEvent);
+                }
+                catch (Exception exp)
+                {
+                    IRuntimeLog runtimeLog = IoCManager.Resolve<IRuntimeLog>();
+                    runtimeLog.AddException(exp, DateTime.Now);
+                }
                 _timing.InSimulation = true;
 
                 // run the simulation for every accumulated tick
@@ -107,7 +117,15 @@ namespace SS14.Shared.Timing
 
                     // update the simulation
                     simFrameEvent.SetDeltaSeconds((float)_timing.FrameTime.TotalSeconds);
-                    Tick?.Invoke(this, simFrameEvent);
+                    try
+                    {
+                        Tick?.Invoke(this, simFrameEvent);
+                    }
+                    catch (Exception exp)
+                    {
+                        IRuntimeLog runtimeLog = IoCManager.Resolve<IRuntimeLog>();
+                        runtimeLog.AddException(exp, DateTime.Now);
+                    }
                     _timing.CurTick++;
 
                     if (SingleStep)
@@ -122,11 +140,26 @@ namespace SS14.Shared.Timing
 
                 // update out of the simulation
                 simFrameEvent.SetDeltaSeconds((float)_timing.FrameTime.TotalSeconds);
-                Update?.Invoke(this, simFrameEvent);
+                try
+                {
+                    Update?.Invoke(this, simFrameEvent);
+                }
+                catch (Exception)
+                {
+
+                    throw;
+                }
 
                 // render the simulation
-                Render?.Invoke(this, realFrameEvent);
-
+                try
+                {
+                    Render?.Invoke(this, realFrameEvent);
+                }
+                catch (Exception exp)
+                {
+                    IRuntimeLog runtimeLog = IoCManager.Resolve<IRuntimeLog>();
+                    runtimeLog.AddException(exp, DateTime.Now);
+                }
                 // Set sleep to 1 if you want to be nice and give the rest of the timeslice up to the os scheduler.
                 // Set sleep to 0 if you want to use 100% cpu, but still cooperate with the scheduler.
                 // do not call sleep if you want to be 'that thread' and hog 100% cpu.

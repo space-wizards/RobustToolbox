@@ -42,6 +42,7 @@ using SS14.Shared.Timing;
 using SS14.Shared.Utility;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Resources;
+using SS14.Shared.Exceptions;
 
 namespace SS14.Server
 {
@@ -82,6 +83,9 @@ namespace SS14.Server
         private FileLogHandler fileLogHandler;
         private GameLoop _mainLoop;
 
+        [Dependency]
+        private IRuntimeLog runtimeLog;
+
         private TimeSpan _lastTitleUpdate;
         private int _lastReceivedBytes;
         private int _lastSentBytes;
@@ -117,6 +121,7 @@ namespace SS14.Server
         /// <inheritdoc />
         public bool Start()
         {
+
             //Sets up the configMgr
             _config.LoadFromFile(_commandLine.ConfigFile);
 
@@ -233,7 +238,6 @@ namespace SS14.Server
 
             // set GameLoop.Running to false to return from this function.
             _mainLoop.Run();
-
             Cleanup();
         }
 
@@ -283,6 +287,11 @@ namespace SS14.Server
 
             // shutdown entities
             _entities.Shutdown();
+
+            // Wrtie down exception log
+            var logPath = _config.GetCVar<string>("log.path");
+            var pathToWrite = System.IO.Path.Combine(PathHelpers.ExecutableRelativeFile(logPath), "/Runtime-", DateTime.Now.ToShortDateString());
+            System.IO.File.WriteAllText(pathToWrite, runtimeLog.Display());
 
             //TODO: This should prob shutdown all managers in a loop.
         }

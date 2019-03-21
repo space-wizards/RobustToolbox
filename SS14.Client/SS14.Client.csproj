@@ -371,8 +371,12 @@
     <Compile Include="Placement\PlacementHijack.cs" />
     <Compile Include="Utility\SpriteSpecifierExt.cs" />
     <Compile Include="Utility\FormattedMessage.cs" />
+    <Content Include="$(SolutionDir)\packages\opentk\3.0.1\content\OpenTK.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\MSBuild\SS14.Engine.targets" />
-  <Target Name="AfterBuild" DependsOnTargets="CopySS14Noise" />
+  <Target Name="AfterBuild" DependsOnTargets="CopySS14Noise;CopyMiscDependencies" />
 </Project>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using SS14.Server.Console;
 using SS14.Server.GameStates;
@@ -290,8 +291,8 @@ namespace SS14.Server
 
             // Wrtie down exception log
             var logPath = _config.GetCVar<string>("log.path");
-            var pathToWrite = System.IO.Path.Combine(PathHelpers.ExecutableRelativeFile(logPath), "/Runtime-", DateTime.Now.ToShortDateString());
-            System.IO.File.WriteAllText(pathToWrite, runtimeLog.Display());
+            var pathToWrite = Path.Combine(PathHelpers.ExecutableRelativeFile(logPath), "Runtime-", DateTime.Now.ToShortDateString());
+            File.WriteAllText(pathToWrite, runtimeLog.Display(), Encoding.UTF8);
 
             //TODO: This should prob shutdown all managers in a loop.
         }

@@ -167,7 +167,7 @@ namespace SS14.Shared.Physics
             {
                 if (ray.Intersects(body.WorldAABB, out var dist, out var hitPos) && dist < minDist)
                 {
-                    if (ignoredEnt != null && ignoredEnt == body.Owner)
+                    if (!body.IsHardCollidable || ignoredEnt != null && ignoredEnt == body.Owner)
                         continue;
 
                     entity = body.Owner;

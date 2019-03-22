@@ -36,11 +36,10 @@ namespace SS14.Client.Graphics.Clyde
 
         private void _audioCreateContext()
         {
-            // https://github.com/kcat/openal-soft/issues/278
-            // This seems to fix that.
-            // If it causes problems be sure to experiment.
-            var parameters = new[] {(int) AlcContextAttributes.Frequency, 80000};
-            _openALContext = Alc.CreateContext(_openALDevice, parameters);
+            unsafe
+            {
+                _openALContext = Alc.CreateContext(_openALDevice, (int*)0);
+            }
             Alc.MakeContextCurrent(_openALContext);
             _checkAlcError(_openALDevice);
             _checkAlError();

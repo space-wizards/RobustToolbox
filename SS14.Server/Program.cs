@@ -48,6 +48,7 @@ using SS14.Server.ServerStatus;
 using SS14.Server.Timing;
 using SS14.Server.ViewVariables;
 using SS14.Shared.Asynchronous;
+using SS14.Shared.Exceptions;
 
 namespace SS14.Server
 {
@@ -115,6 +116,7 @@ namespace SS14.Server
             IoCManager.Register<ITimerManager, TimerManager>();
             IoCManager.Register<ILogManager, LogManager>();
             IoCManager.Register<ITaskManager, TaskManager>();
+            IoCManager.Register<IRuntimeLog, RuntimeLog>();
 
             // Server stuff.
             IoCManager.Register<IEntityManager, ServerEntityManager>();

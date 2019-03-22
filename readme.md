@@ -2,7 +2,7 @@
 
 Space Station 14 is a revived attempt at an SS13 remake.
 
-**This repository is the *engine* section of SS14. This is the base engine all SS14 servers will be built on. As such, it does not start on its own: it needs the [content repo](https://github.com/space-wizards/space-station-14-content). Use said repo for actual development, even if you're modifying the engine itself.**
+# This repository is the *engine* section of SS14. This is the base engine all SS14 servers will be built on. As such, it does not start on its own: it needs the [content repo](https://github.com/space-wizards/space-station-14-content). Use said repo for actual development, even if you're modifying the engine itself.**
 
 ## Getting in Touch
 
@@ -11,7 +11,7 @@ Space Station 14 is a revived attempt at an SS13 remake.
 * IRC: `irc.rizon.net#spacebus`
 * Project Management Board: [Waffle](https://waffle.io/space-wizards/space-station-14)
 * Code Analysis: [Sonar Cloud](https://sonarcloud.io/dashboard?id=ss14)
-* Automatic Content Builds: [builds.spacestation14.io](https://builds.spacestation14.io)
+* Automatic Content Builds: [builds.spacestation14.io](https://builds.spacestation14.io/jenkins/)
 
 The IRC is setup to relay back and forth to the Discord server so [IRC nerds](https://xkcd.com/1782/) will not be left out.
 

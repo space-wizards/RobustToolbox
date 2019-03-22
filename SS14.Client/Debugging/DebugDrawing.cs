@@ -69,7 +69,7 @@ namespace SS14.Client.Debugging
                     var transform = boundingBox.Owner.Transform;
 
                     // if not on the same map, continue
-                    if (transform.MapID != _eyeManager.CurrentMap)
+                    if (transform.MapID != _eyeManager.CurrentMap || !transform.IsMapTransform)
                         continue;
 
                     var colorEdge = boundingBox.DebugColor.WithAlpha(0.33f);

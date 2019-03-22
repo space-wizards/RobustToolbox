@@ -309,6 +309,10 @@ namespace SS14.Client.GameObjects
         {
             if (!resourceCache.TryGetResource<TextureResource>(TextureRoot / texturePath, out var texture))
             {
+                if (texturePath.Extension == "rsi")
+                {
+                    Logger.ErrorS(LogCategory, "Expected texture but got rsi '{0}', did you mean 'sprite:' instead of 'texture:'?", texturePath);
+                }
                 Logger.ErrorS(LogCategory, "Unable to load texture '{0}'. Trace:\n{1}", texturePath,
                     Environment.StackTrace);
             }
@@ -598,6 +602,10 @@ namespace SS14.Client.GameObjects
         {
             if (!resourceCache.TryGetResource<TextureResource>(TextureRoot / texturePath, out var texture))
             {
+                if (texturePath.Extension == "rsi")
+                {
+                    Logger.ErrorS(LogCategory, "Expected texture but got rsi '{0}', did you mean 'sprite:' instead of 'texture:'?", texturePath);
+                }
                 Logger.ErrorS(LogCategory, "Unable to load texture '{0}'. Trace:\n{1}", texturePath,
                     Environment.StackTrace);
             }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -210,6 +211,11 @@ namespace SS14.Client.Graphics.Clyde
 
                 _gameController.GameController.TextEntered(new TextEventArgs(eventArgs.KeyChar));
             };
+
+            using (var iconFile = _resourceCache.ContentFileRead("/Textures/Logo/icon.ico"))
+            {
+                _window.Icon = new Icon(iconFile);
+            }
 
             _initOpenGL();
         }

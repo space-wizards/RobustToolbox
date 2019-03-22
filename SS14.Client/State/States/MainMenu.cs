@@ -5,12 +5,14 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
+using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Log;
 using SS14.Client.Interfaces.State;
+using SS14.Client.ResourceManagement;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Utility;
@@ -152,6 +154,21 @@ namespace SS14.Client.State.States
         private class MainMenuControl : Control
         {
             protected override ResourcePath ScenePath => new ResourcePath("/Scenes/MainMenu/MainMenu.tscn");
+
+            protected override void Initialize()
+            {
+                base.Initialize();
+
+                if (GameController.OnGodot)
+                {
+                    return;
+                }
+
+                GetChild<TextureRect>("VBoxContainer/Logo").Texture = IoCManager.Resolve<IResourceCache>()
+                    .GetResource<TextureResource>("/Textures/Logo/logo.png");
+
+                GetChild("VBoxContainer").StyleIdentifier = "mainMenuVBox";
+            }
         }
     }
 }

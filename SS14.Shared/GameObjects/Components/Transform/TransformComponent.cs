@@ -398,6 +398,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
             var newState = (TransformComponentState)state;
 
             var newParentId = newState.ParentID;
+            var rebuildMatrices = false;
             if (Parent?.Owner?.Uid != newParentId)
             {
                 DetachParent();
@@ -407,9 +408,10 @@ namespace SS14.Shared.GameObjects.Components.Transform
                     var newParent = Owner.EntityManager.GetEntity(newParentId.Value);
                     AttachParent(newParent.Transform);
                 }
+
+                rebuildMatrices = true;
             }
 
-            var rebuildMatrices = false;
             if (LocalRotation != newState.Rotation)
             {
                 SetRotation(newState.Rotation);

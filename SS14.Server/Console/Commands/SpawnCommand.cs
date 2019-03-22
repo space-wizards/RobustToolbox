@@ -15,7 +15,14 @@ namespace SS14.Server.Console.Commands
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             var ent = IoCManager.Resolve<IServerEntityManager>();
-            ent.ForceSpawnEntityAt(args[0], player.AttachedEntity.Transform.GridPosition);
+            if (player?.AttachedEntity == null)
+            {
+                ent.SpawnEntity(args[0]);
+            }
+            else
+            {
+                ent.ForceSpawnEntityAt(args[0], player.AttachedEntity.Transform.GridPosition);
+            }
         }
     }
 }

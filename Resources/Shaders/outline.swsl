@@ -2,7 +2,7 @@
 uniform float outline_width = 2.0;
 // TODO: implement that hint_color thingy.
 //uniform vec4 outline_color: hint_color;
-uniform vec4 outline_color;
+uniform vec4 outline_color=vec4(1,0,0,0.33);
 
 void fragment() {
 	// I, for some reason, cannot put this comment in the top of the file.
@@ -57,5 +57,5 @@ void fragment() {
 	maxa = max(a, maxa);
 	mina = min(a, mina);
 
-	COLOR = mix(col, outline_color, maxa-mina);
+	COLOR = mix(col, outline_color, maxa-col.a);
 }

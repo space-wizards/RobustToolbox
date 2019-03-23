@@ -2,6 +2,7 @@
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
 using SS14.Shared.ViewVariables;
@@ -17,6 +18,7 @@ namespace SS14.Client.GameObjects
         // Horrible hack to get around ordering issues.
         private bool setCurrentOnInitialize = false;
         private Vector2 setZoomOnInitialize = Vector2.One;
+        private Vector2 offset = Vector2.Zero;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Current
@@ -48,6 +50,17 @@ namespace SS14.Client.GameObjects
                 {
                     eye.Zoom = value;
                 }
+            }
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public Vector2 Offset
+        {
+            get => offset;
+            set
+            {
+                offset = value;
+                _updateCameraPosition();
             }
         }
 
@@ -91,7 +104,13 @@ namespace SS14.Client.GameObjects
 
         private void Transform_OnMove(object sender, Shared.Enums.MoveEventArgs e)
         {
-            eye.Position = transform.MapPosition;
+            _updateCameraPosition();
+        }
+
+        private void _updateCameraPosition()
+        {
+            var pos = transform.MapPosition.Position + offset;
+            eye.Position = new MapCoordinates(pos, transform.MapPosition.MapId);
         }
     }
 }

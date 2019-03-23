@@ -509,6 +509,11 @@ namespace SS14.Client.Graphics.Clyde
             _shutdownAudio();
         }
 
+        public IntPtr GetNativeWindowHandle()
+        {
+            return _window.WindowInfo.Handle;
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         [PublicAPI]
         private readonly struct Vertex2D

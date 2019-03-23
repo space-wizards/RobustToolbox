@@ -214,6 +214,7 @@
     <Compile Include="UserInterface\ClipboardManagerGodot.cs" />
     <Compile Include="UserInterface\ClipboardManagerLinux.cs" />
     <Compile Include="UserInterface\ClipboardManagerUnsupported.cs" />
+    <Compile Include="UserInterface\ClipboardManagerWindows.cs" />
     <Compile Include="UserInterface\Control.Styling.cs" />
     <Compile Include="UserInterface\Controls\BaseButton.cs" />
     <Compile Include="UserInterface\Controls\Button.cs" />

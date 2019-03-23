@@ -172,11 +172,13 @@ namespace SS14.Client
             }
             else
             {
-                #if LINUX
+#if LINUX
                 IoCManager.Register<IClipboardManager, ClipboardManagerLinux>();
-                #else
+#elif WINDOWS
+                IoCManager.Register<IClipboardManager, ClipboardManagerWindows>();
+#else
                 IoCManager.Register<IClipboardManager, ClipboardManagerUnsupported>();
-                #endif
+#endif
             }
 
             IoCManager.BuildGraph();

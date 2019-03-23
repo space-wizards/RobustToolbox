@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using SixLabors.ImageSharp;
@@ -40,6 +40,12 @@ namespace SS14.Client.Interfaces.Graphics
         AudioStream LoadAudioWav(Stream stream);
 
         IClydeAudioSource CreateAudioSource(AudioStream stream);
+
+        /// <summary>
+        ///     Gets the platform specific window handle exposed by OpenTK.
+        ///     Seriously please avoid using this unless absolutely necessary.
+        /// </summary>
+        IntPtr GetNativeWindowHandle();
     }
 
     internal interface IClydeAudioSource : IDisposable

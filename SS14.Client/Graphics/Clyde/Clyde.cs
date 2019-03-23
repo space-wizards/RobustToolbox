@@ -173,7 +173,7 @@ namespace SS14.Client.Graphics.Clyde
                 _windowSize = new Vector2i(_window.Width, _window.Height);
                 GL.Viewport(0, 0, _window.Width, _window.Height);
                 GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb32f, _window.Width, _window.Height, 0,
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, _window.Width, _window.Height, 0,
                     PixelFormat.Rgba, PixelType.Float, IntPtr.Zero);
                 OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _windowSize));
             };
@@ -319,7 +319,7 @@ namespace SS14.Client.Graphics.Clyde
             LightTexture = new OGLHandle(GL.GenTexture());
 
             GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb32f, _window.Width, _window.Height, 0,
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, _window.Width, _window.Height, 0,
                 PixelFormat.Rgba, PixelType.Float, IntPtr.Zero);
 
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMagFilter.Nearest);

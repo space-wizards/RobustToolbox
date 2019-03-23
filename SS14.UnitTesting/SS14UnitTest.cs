@@ -222,6 +222,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IOverlayManager, OverlayManager>();
                     IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
                     IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();
+                    IoCManager.Register<IClipboardManager, ClipboardManagerUnsupported>();
                     break;
 
                 case UnitTestProject.Server:

@@ -187,6 +187,7 @@
     <Compile Include="Interfaces\IBaseClient.cs" />
     <Compile Include="Interfaces\ISceneTreeHolder.cs" />
     <Compile Include="Interfaces\Map\IClientTileDefinitionManager.cs" />
+    <Compile Include="Interfaces\UserInterface\IClipboardManager.cs" />
     <Compile Include="Placement\PlacementOverlay.cs" />
     <Compile Include="Player\IPlayerManager.cs" />
     <Compile Include="Player\IPlayerSession.cs" />
@@ -210,6 +211,9 @@
     <Compile Include="ResourceManagement\ResourceTypes\RSIResource.cs" />
     <Compile Include="ResourceManagement\ResourceTypes\TextureResource.cs" />
     <Compile Include="SceneTreeHolder.cs" />
+    <Compile Include="UserInterface\ClipboardManagerGodot.cs" />
+    <Compile Include="UserInterface\ClipboardManagerLinux.cs" />
+    <Compile Include="UserInterface\ClipboardManagerUnsupported.cs" />
     <Compile Include="UserInterface\Control.Styling.cs" />
     <Compile Include="UserInterface\Controls\BaseButton.cs" />
     <Compile Include="UserInterface\Controls\Button.cs" />

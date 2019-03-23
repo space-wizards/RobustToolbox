@@ -166,6 +166,19 @@ namespace SS14.Client
             IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();
             IoCManager.Register<IViewVariablesManagerInternal, ViewVariablesManager>();
 
+            if (OnGodot)
+            {
+                IoCManager.Register<IClipboardManager, ClipboardManagerGodot>();
+            }
+            else
+            {
+                #if LINUX
+                IoCManager.Register<IClipboardManager, ClipboardManagerLinux>();
+                #else
+                IoCManager.Register<IClipboardManager, ClipboardManagerUnsupported>();
+                #endif
+            }
+
             IoCManager.BuildGraph();
         }
 

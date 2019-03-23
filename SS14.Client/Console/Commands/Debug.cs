@@ -466,4 +466,44 @@ namespace SS14.Client.Console.Commands
             return false;
         }
     }
+
+    internal class SetClipboardCommand : IConsoleCommand
+    {
+        public string Command => "setclipboard";
+        public string Description => "Sets the system clipboard";
+        public string Help => "setclipboard <text>";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var mgr = IoCManager.Resolve<IClipboardManager>();
+            if (!mgr.Available)
+            {
+                console.AddLine(mgr.NotAvailableReason, Color.Red);
+                return false;
+            }
+
+            mgr.SetText(args[0]);
+            return false;
+        }
+    }
+
+    internal class GetClipboardCommand : IConsoleCommand
+    {
+        public string Command => "getclipboard";
+        public string Description => "Gets the system clipboard";
+        public string Help => "getclipboard";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var mgr = IoCManager.Resolve<IClipboardManager>();
+            if (!mgr.Available)
+            {
+                console.AddLine(mgr.NotAvailableReason, Color.Red);
+                return false;
+            }
+
+            console.AddLine(mgr.GetText());
+            return false;
+        }
+    }
 }

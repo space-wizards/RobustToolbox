@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using SS14.Client.GodotGlue;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Input;
+using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Utility;
+using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
@@ -183,6 +186,36 @@ namespace SS14.Client.UserInterface.Controls
         public event Action<LineEditEventArgs> OnTextChanged;
         public event Action<LineEditEventArgs> OnTextEntered;
 
+        public void InsertAtCursor(string text)
+        {
+            if (GameController.OnGodot)
+            {
+                SceneControl.Call("append_at_cursor", text);
+                return;
+            }
+
+            // Strip newlines.
+            var chars = new List<char>(text.Length);
+            foreach (var chr in text)
+            {
+                if (chr == '\n')
+                {
+                    continue;
+                }
+                chars.Add(chr);
+            }
+
+            if (chars.Count == 0)
+            {
+                return;
+            }
+
+            _text = _text.Insert(_cursorPosition, new string(chars.ToArray()));
+            _cursorPosition += chars.Count;
+            OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
+            _updatePseudoClass();
+        }
+
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             if (GameController.OnGodot)
@@ -295,8 +328,8 @@ namespace SS14.Client.UserInterface.Controls
             }
 
             _text = _text.Insert(_cursorPosition, ((char) args.CodePoint).ToString());
-            OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
             _cursorPosition += 1;
+            OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
             _updatePseudoClass();
         }
 
@@ -349,6 +382,21 @@ namespace SS14.Client.UserInterface.Controls
                     if (Editable)
                     {
                         OnTextEntered?.Invoke(new LineEditEventArgs(this, _text));
+                    }
+
+                    break;
+
+                case Keyboard.Key.V:
+                    if (Editable && args.Control)
+                    {
+                        var clipboard = IoCManager.Resolve<IClipboardManager>();
+                        if (!clipboard.Available)
+                        {
+                            UserInterfaceManager.Popup(clipboard.NotAvailableReason, "Clipboard not available!");
+                            return;
+                        }
+
+                        InsertAtCursor(clipboard.GetText());
                     }
 
                     break;

@@ -262,8 +262,6 @@
     <Compile Include="UserInterface\Controls\Panel.cs" />
     <Compile Include="UserInterface\Controls\LineEdit.cs" />
     <Compile Include="UserInterface\Controls\Popup.cs" />
-    <Compile Include="UserInterface\Controls\WindowDialog.cs" />
-    <Compile Include="UserInterface\Controls\AcceptDialog.cs" />
     <Compile Include="UserInterface\Controls\RichTextLabel.cs" />
     <Compile Include="UserInterface\Controls\TextureButton.cs" />
     <Compile Include="UserInterface\Controls\OptionButton.cs" />

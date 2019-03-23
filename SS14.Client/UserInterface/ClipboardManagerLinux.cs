@@ -78,6 +78,8 @@ namespace SS14.Client.UserInterface
             {
                 Available = false;
             }
+
+            Available = false;
         }
     }
 }

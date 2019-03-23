@@ -40,7 +40,6 @@ namespace SS14.Client.UserInterface
         public Control CurrentlyHovered { get; private set; }
         public Control RootControl { get; private set; }
         public Control WindowRoot { get; private set; }
-        public AcceptDialog PopupControl { get; private set; }
         public DebugConsole DebugConsole { get; private set; }
         public IDebugMonitors DebugMonitors => _debugMonitors;
         private DebugMonitors _debugMonitors;
@@ -113,12 +112,6 @@ namespace SS14.Client.UserInterface
             };
             WindowRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             RootControl.AddChild(WindowRoot);
-
-            PopupControl = new AcceptDialog("RootPopup")
-            {
-                Resizable = true
-            };
-            RootControl.AddChild(PopupControl);
         }
 
         public void InitializeTesting()
@@ -287,9 +280,9 @@ namespace SS14.Client.UserInterface
 
         public void Popup(string contents, string title = "Alert!")
         {
-            PopupControl.DialogText = contents;
-            PopupControl.Title = title;
-            PopupControl.OpenMinimum();
+            var popup = new SS14Window {Title = title};
+            popup.Contents.AddChild(new Label {Text = contents});
+            popup.AddToScreen();
         }
 
         public Control MouseGetControl(Vector2 coordinates)

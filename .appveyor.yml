@@ -15,7 +15,6 @@ install:
     if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER -And $env:APPVEYOR_REPO_BRANCH -Eq "master")
     {
       cinst msbuild-sonarqube-runner;
-      cinst opencover.portable;
     }
 
 before_build:
@@ -26,7 +25,7 @@ before_build:
 - ps: >
     if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER -And $env:APPVEYOR_REPO_BRANCH -Eq "master")
     {
-      SonarScanner.MSBuild.exe begin /k:"ss14" /d:"sonar.host.url=https://sonarqube.com" /d:"sonar.login=$env:sonarqubekey" /o:"space-wizards" /d:"sonar.exclusions=SFML/**" /d:sonar.cs.nunit.reportsPaths="$(Get-Location)\nunitTestResult.xml" /d:sonar.cs.opencover.reportsPaths="$(Get-Location)\coverage_report.xml";
+      SonarScanner.MSBuild.exe begin /k:"ss14" /d:"sonar.host.url=https://sonarqube.com" /d:"sonar.login=$env:sonarqubekey" /o:"space-wizards" /d:"sonar.exclusions=SFML/**" /d:sonar.cs.nunit.reportsPaths="$(Get-Location)\nunitTestResult.xml";
     }
 
 platform: x64
@@ -47,15 +46,9 @@ build_script:
 - ps: msbuild SpaceStation14.sln /verbosity:minimal /nologo /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Platform=x64 /p:Configuration=Debug /p:AppVeyor=yes
 
 test_script:
-- ps: >
-    if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER -And $env:APPVEYOR_REPO_BRANCH -Eq "master")
-    {
-      OpenCover.Console.exe -register:user -target:"nunit3-console.exe" -targetargs:".\bin\UnitTesting\SS14.UnitTesting.dll --result:nunitTestResult.xml" -output:".\coverage_report.xml";
-    }
-    else
-    {
-      nunit3-console.exe .\bin\UnitTesting\SS14.UnitTesting.dll;
-    }
+- ps: nunit3-console.exe .\bin\UnitTesting\SS14.UnitTesting.dll;
+
+
 
 after_test:
 - ps: >

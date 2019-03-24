@@ -49,7 +49,7 @@ namespace SS14.Client.Map
             const int tileSize = EyeManager.PIXELSPERMETER;
 
             var dimensionX = (int) Math.Ceiling(Math.Sqrt(defList.Count));
-            var dimensionY = (int) Math.Ceiling((float) dimensionX / dimensionX);
+            var dimensionY = (int) Math.Ceiling((float) defList.Count / dimensionX);
 
             var sheet = new Image<Rgba32>(dimensionX * tileSize, dimensionY * tileSize);
 

@@ -25,8 +25,6 @@ namespace SS14.Client.UserInterface
                 throw new Win32Exception(Marshal.GetLastWin32Error());
             }
 
-            var count = CountClipboardFormats();
-
             try
             {
                 if (IsClipboardFormatAvailable(CF_UNICODETEXT))
@@ -204,8 +202,5 @@ namespace SS14.Client.UserInterface
         
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr GetClipboardData(uint uFormat);
-        
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern int CountClipboardFormats();
     }
 }

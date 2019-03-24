@@ -68,6 +68,8 @@ namespace SS14.Client.UserInterface
                     {
                         FileName = "xclip",
                         Arguments = "-version",
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false
                     }
                 };
                 process.Start();

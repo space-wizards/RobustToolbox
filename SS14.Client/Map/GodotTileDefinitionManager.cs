@@ -12,7 +12,7 @@ namespace SS14.Client.Map
     /// <summary>
     ///     Special TileDefinitionManager that makes a Godot TileSet for usage by TileMaps.
     /// </summary>
-    public class ClientTileDefinitionManager : TileDefinitionManager, IClientTileDefinitionManager
+    internal sealed class GodotTileDefinitionManager : TileDefinitionManager, IGodotTileDefinitionManager
     {
         [Dependency] readonly IResourceCache resourceCache;
 
@@ -20,21 +20,13 @@ namespace SS14.Client.Map
 
         private Dictionary<ushort, TextureResource> Textures = new Dictionary<ushort, TextureResource>();
 
-        public ClientTileDefinitionManager()
+        public GodotTileDefinitionManager()
         {
-            if (GameController.OnGodot)
-            {
-                TileSet = new Godot.TileSet();
-            }
+            TileSet = new Godot.TileSet();
         }
 
         public override ushort Register(ITileDefinition tileDef)
         {
-            if (!GameController.OnGodot)
-            {
-                return base.Register(tileDef);
-            }
-
             var ret = base.Register(tileDef);
 
             TileSet.CreateTile(ret);

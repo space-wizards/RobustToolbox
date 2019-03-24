@@ -143,6 +143,7 @@
     <Compile Include="Graphics\Clyde\Clyde.AudioFormats.Wav.cs" />
     <Compile Include="Graphics\Clyde\Clyde.Buffer.cs" />
     <Compile Include="Graphics\Clyde\Clyde.cs" />
+    <Compile Include="Graphics\Clyde\Clyde.GridRendering.cs" />
     <Compile Include="Graphics\Clyde\Clyde.Pool.cs" />
     <Compile Include="Graphics\Clyde\Clyde.Rendering.cs" />
     <Compile Include="Graphics\Clyde\Clyde.Shader.cs" />
@@ -186,8 +187,10 @@
     <Compile Include="Interfaces\Graphics\Overlays\IOverlayManager.cs" />
     <Compile Include="Interfaces\IBaseClient.cs" />
     <Compile Include="Interfaces\ISceneTreeHolder.cs" />
-    <Compile Include="Interfaces\Map\IClientTileDefinitionManager.cs" />
+    <Compile Include="Interfaces\Map\IClydeTileDefinitionManager.cs" />
+    <Compile Include="Interfaces\Map\IGodotTileDefinitionManager.cs" />
     <Compile Include="Interfaces\UserInterface\IClipboardManager.cs" />
+    <Compile Include="Map\ClydeTileDefinitionManager.cs" />
     <Compile Include="Placement\PlacementOverlay.cs" />
     <Compile Include="Player\IPlayerManager.cs" />
     <Compile Include="Player\IPlayerSession.cs" />
@@ -195,7 +198,7 @@
     <Compile Include="Interfaces\Utility\IRand.cs" />
     <Compile Include="Log\DebugConsoleLogHandler.cs" />
     <Compile Include="Log\GodotLogHandler.cs" />
-    <Compile Include="Map\ClientTileDefinitionManager.cs" />
+    <Compile Include="Map\GodotTileDefinitionManager.cs" />
     <Compile Include="Map\GodotMapManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reflection\ClientReflectionManager.cs" />

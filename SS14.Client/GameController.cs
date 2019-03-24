@@ -69,7 +69,7 @@ namespace SS14.Client
         [Dependency] private readonly IResourceManager _resourceManager;
         [Dependency] private readonly ISS14Serializer _serializer;
         [Dependency] private readonly IPrototypeManager _prototypeManager;
-        [Dependency] private readonly IClientTileDefinitionManager _tileDefinitionManager;
+        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
         [Dependency] private readonly IClientNetManager _networkManager;
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IStateManager _stateManager;

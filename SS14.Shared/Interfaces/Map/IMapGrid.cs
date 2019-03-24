@@ -183,6 +183,11 @@ namespace SS14.Shared.Interfaces.Map
         /// <returns></returns>
         bool IndicesToTile(MapIndices indices, out TileRef tile);
 
+        /// <summary>
+        /// Transforms grid tile indices to grid chunk indices.
+        /// </summary>
+        MapIndices GridTileToGridChunk(MapIndices gridTile);
+
         #endregion Transforms
     }
 }

@@ -7,12 +7,12 @@ using SS14.Shared.Prototypes;
 
 namespace SS14.Shared.Map
 {
-    public class TileDefinitionManager : ITileDefinitionManager
+    internal class TileDefinitionManager : ITileDefinitionManager
     {
         [Dependency]
         IPrototypeManager PrototypeManager;
 
-        private readonly List<ITileDefinition> _tileDefs;
+        protected readonly List<ITileDefinition> TileDefs;
         private readonly Dictionary<string, ITileDefinition> _tileNames;
         private readonly Dictionary<ITileDefinition, ushort> _tileIds;
 
@@ -21,12 +21,12 @@ namespace SS14.Shared.Map
         /// </summary>
         public TileDefinitionManager()
         {
-            _tileDefs = new List<ITileDefinition>();
+            TileDefs = new List<ITileDefinition>();
             _tileNames = new Dictionary<string, ITileDefinition>();
             _tileIds = new Dictionary<ITileDefinition, ushort>();
         }
 
-        public void Initialize()
+        public virtual void Initialize()
         {
             foreach (var prototype in PrototypeManager.EnumeratePrototypes<PrototypeTileDefinition>().OrderBy(p => p.FutureID))
             {
@@ -47,8 +47,8 @@ namespace SS14.Shared.Map
                 throw new ArgumentException("Another tile definition with the same name has already been registered.", nameof(tileDef));
             }
 
-            id = checked((ushort) _tileDefs.Count);
-            _tileDefs.Add(tileDef);
+            id = checked((ushort) TileDefs.Count);
+            TileDefs.Add(tileDef);
             _tileNames[name] = tileDef;
             _tileIds[tileDef] = id;
             return id;
@@ -56,13 +56,13 @@ namespace SS14.Shared.Map
 
         public ITileDefinition this[string name] => _tileNames[name];
 
-        public ITileDefinition this[int id] => _tileDefs[id];
+        public ITileDefinition this[int id] => TileDefs[id];
 
-        public int Count => _tileDefs.Count;
+        public int Count => TileDefs.Count;
 
         public IEnumerator<ITileDefinition> GetEnumerator()
         {
-            return _tileDefs.GetEnumerator();
+            return TileDefs.GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()

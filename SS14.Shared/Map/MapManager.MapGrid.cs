@@ -332,11 +332,6 @@ namespace SS14.Shared.Map
                 return new MapIndices(x, y);
             }
 
-            /// <summary>
-            /// Transforms grid tile indices to grid chunk indices.
-            /// </summary>
-            /// <param name="gridTile"></param>
-            /// <returns></returns>
             public MapIndices GridTileToGridChunk(MapIndices gridTile)
             {
                 var x = (int)Math.Floor(gridTile.X / (float)ChunkSize);

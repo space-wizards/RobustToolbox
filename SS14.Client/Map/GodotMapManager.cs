@@ -12,7 +12,7 @@ namespace SS14.Client.Map
     public class GodotMapManager : MapManager
     {
         [Dependency]
-        private IClientTileDefinitionManager tileDefinitionManager;
+        private IGodotTileDefinitionManager tileDefinitionManager;
         [Dependency]
         private ISceneTreeHolder sceneTree;
 

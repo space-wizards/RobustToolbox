@@ -278,7 +278,7 @@ namespace SS14.Shared.Map
     }
 
     /// <summary>
-    ///     Arguments for when a tile is changed locally or remotely.
+    ///     Arguments for when a single tile on a grid is changed locally or remotely.
     /// </summary>
     public class TileChangedEventArgs : EventArgs
     {
@@ -303,7 +303,7 @@ namespace SS14.Shared.Map
     }
 
     /// <summary>
-    ///     Arguments for when a Grid is changed locally or remotely.
+    ///     Arguments for when a one or more tiles on a grid is changed at once.
     /// </summary>
     public class GridChangedEventArgs : EventArgs
     {

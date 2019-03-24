@@ -52,6 +52,8 @@ namespace SS14.Shared.Map
             /// <inheritdoc />
             public int Y => _gridIndices.Y;
 
+            public MapIndices Index => new MapIndices(X, Y);
+
             /// <summary>
             ///     Returns the tile at the given indices. The tile indices are relative locations to the chunk origin,
             ///     NOT local to the grid.

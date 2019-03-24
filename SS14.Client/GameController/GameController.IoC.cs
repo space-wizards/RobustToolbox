@@ -86,7 +86,6 @@ namespace SS14.Client
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
             IoCManager.Register<ISS14Serializer, SS14Serializer>();
             IoCManager.Register<IPrototypeManager, PrototypeManager>();
-            IoCManager.Register<ITileDefinitionManager, ClientTileDefinitionManager>();
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
@@ -94,12 +93,15 @@ namespace SS14.Client
             {
                 IoCManager.Register<IComponentFactory, GodotComponentFactory>();
                 IoCManager.Register<IMapManager, GodotMapManager>();
+                IoCManager.Register<ITileDefinitionManager, GodotTileDefinitionManager>();
+                IoCManager.Register<IGodotTileDefinitionManager, GodotTileDefinitionManager>();
             }
             else
             {
                 IoCManager.Register<IComponentFactory, ClientComponentFactory>();
                 IoCManager.Register<IMapManager, MapManager>();
-
+                IoCManager.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
+                IoCManager.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
             }
             IoCManager.Register<IComponentManager, ComponentManager>();
             IoCManager.Register<IPhysicsManager, PhysicsManager>();
@@ -112,7 +114,6 @@ namespace SS14.Client
             IoCManager.Register<IResourceManager, ResourceCache>();
             IoCManager.Register<IResourceManagerInternal, ResourceCache>();
             IoCManager.Register<IResourceCache, ResourceCache>();
-            IoCManager.Register<IClientTileDefinitionManager, ClientTileDefinitionManager>();
             IoCManager.Register<IClientNetManager, NetManager>();
             IoCManager.Register<IClientEntityManager, ClientEntityManager>();
             IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();

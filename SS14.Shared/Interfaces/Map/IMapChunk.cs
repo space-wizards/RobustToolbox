@@ -24,6 +24,8 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         int Y { get; }
 
+        MapIndices Index { get; }
+
         /// <summary>
         ///     Returns the tile at the given indices. The tile indices are relative locations to the
         ///     chunk origin, NOT the grid origin.

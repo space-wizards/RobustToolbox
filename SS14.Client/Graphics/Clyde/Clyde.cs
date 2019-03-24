@@ -18,11 +18,14 @@ using SS14.Client.Input;
 using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Graphics.Overlays;
+using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.Map;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
@@ -46,6 +49,7 @@ namespace SS14.Client.Graphics.Clyde
         [Dependency] private readonly IEntityManager _entityManager;
         [Dependency] private readonly IComponentManager _componentManager;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
+        [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager;
 
         private Vector2i _windowSize;
         private GameWindow _window;
@@ -58,7 +62,6 @@ namespace SS14.Client.Graphics.Clyde
         private Buffer BatchVBO;
         private Buffer BatchEBO;
         private OGLHandle BatchVAO;
-        private OGLHandle BatchArrayedVAO;
         private OGLHandle LightFBO;
         private OGLHandle LightTexture;
 
@@ -129,6 +132,11 @@ namespace SS14.Client.Graphics.Clyde
             _configurationManager.RegisterCVar("display.width", 1280);
             _configurationManager.RegisterCVar("display.height", 720);
             _configurationManager.RegisterCVar("audio.device", "");
+
+            _mapManager.TileChanged += _updateTileMapOnUpdate;
+            _mapManager.OnGridCreated += _updateOnGridCreated;
+            _mapManager.OnGridRemoved += _updateOnGridRemoved;
+            _mapManager.GridChanged += _updateOnGridModified;
         }
 
         public override event Action<WindowResizedEventArgs> OnWindowResized;
@@ -244,10 +252,10 @@ namespace SS14.Client.Graphics.Clyde
 
             var quadVertices = new[]
             {
-                new Vertex2D(1, 0, 1, 1, 1),
-                new Vertex2D(0, 0, 0, 1, 1),
-                new Vertex2D(1, 1, 1, 0, 1),
-                new Vertex2D(0, 1, 0, 0, 1),
+                new Vertex2D(1, 0, 1, 1),
+                new Vertex2D(0, 0, 0, 1),
+                new Vertex2D(1, 1, 1, 0),
+                new Vertex2D(0, 1, 0, 0),
             };
 
             QuadVBO = new Buffer<Vertex2D>(this, BufferTarget.ArrayBuffer, BufferUsageHint.StaticDraw, quadVertices,
@@ -281,21 +289,6 @@ namespace SS14.Client.Graphics.Clyde
 
             BatchEBO = new Buffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
                 sizeof(ushort) * BatchIndexData.Length, "BatchEBO");
-
-            BatchArrayedVAO = new OGLHandle(GL.GenVertexArray());
-            BatchVBO.Use();
-            BatchEBO.Use();
-            GL.BindVertexArray(BatchArrayedVAO.Handle);
-            _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, BatchArrayedVAO, "BatchArrayedVAO");
-            // Vertex Coords
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
-            GL.EnableVertexAttribArray(0);
-            // Texture Coords.
-            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
-            GL.EnableVertexAttribArray(1);
-            // Texture Array Index.
-            GL.VertexAttribPointer(2, 1, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 4 * sizeof(float));
-            GL.EnableVertexAttribArray(2);
 
             ProjViewUBO = new Buffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw, "ProjViewUBO");
             unsafe
@@ -522,7 +515,6 @@ namespace SS14.Client.Graphics.Clyde
 
             public readonly Vector2 Position;
             public readonly Vector2 TextureCoordinates;
-            public readonly float ArrayIndex;
 
             static Vertex2D()
             {
@@ -533,22 +525,21 @@ namespace SS14.Client.Graphics.Clyde
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Vertex2D(Vector2 position, Vector2 textureCoordinates, int arrayIndex)
+            public Vertex2D(Vector2 position, Vector2 textureCoordinates)
             {
                 Position = position;
                 TextureCoordinates = textureCoordinates;
-                ArrayIndex = arrayIndex;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Vertex2D(float x, float y, float u, float v, int arrayIndex)
-                : this(new Vector2(x, y), new Vector2(u, v), arrayIndex)
+            public Vertex2D(float x, float y, float u, float v)
+                : this(new Vector2(x, y), new Vector2(u, v))
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Vertex2D(Vector2 position, float u, float v, int arrayIndex)
-                : this(position, new Vector2(u, v), arrayIndex)
+            public Vertex2D(Vector2 position, float u, float v)
+                : this(position, new Vector2(u, v))
             {
             }
 

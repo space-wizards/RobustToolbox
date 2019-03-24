@@ -14,6 +14,7 @@ using SS14.Client.ResourceManagement;
 using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Log;
+using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Timers;
 using SS14.Shared.Utility;
@@ -188,82 +189,7 @@ namespace SS14.Client.Graphics.Clyde
 
             _pushDebugGroupMaybe(DbgGroupGrids);
 
-            // Render grids. Very hardcoded right now.
-            var map = _eyeManager.CurrentMap;
-
-            var tex = _resourceCache.GetResource<TextureResource>("/Textures/Tiles/floor_steel.png");
-            var loadedTex = _loadedTextures[((OpenGLTexture) tex.Texture).OpenGLTextureId];
-
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, loadedTex.OpenGLObject.Handle);
-            GL.ActiveTexture(TextureUnit.Texture1);
-            GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
-
-            GL.BindVertexArray(BatchVAO.Handle);
-
-            GL.Enable(EnableCap.PrimitiveRestart);
-            GL.PrimitiveRestartIndex(ushort.MaxValue);
-
-            var gridProgram = _loadedShaders[_defaultShader].Program;
-            gridProgram.Use();
-            gridProgram.SetUniformTextureMaybe(UniMainTexture, TextureUnit.Texture0);
-            gridProgram.SetUniformTextureMaybe(UniLightTexture, TextureUnit.Texture1);
-            gridProgram.SetUniform(UniModUV, new Vector4(0, 0, 1, 1));
-            gridProgram.SetUniform(UniModulate, Color.White);
-            foreach (var grid in _mapManager.GetMap(map).GetAllGrids())
-            {
-                ushort nth = 0;
-                var model = Matrix3.Identity;
-                model.R0C2 = grid.WorldPosition.X;
-                model.R1C2 = grid.WorldPosition.Y;
-                gridProgram.SetUniform(UniModelMatrix, model);
-
-                foreach (var tileRef in grid.GetAllTiles())
-                {
-                    var vIdx = nth * 4;
-                    BatchVertexData[vIdx + 0] = new Vertex2D(tileRef.X + 1, tileRef.Y, 1, 0, 0);
-                    BatchVertexData[vIdx + 1] = new Vertex2D(tileRef.X, tileRef.Y, 0, 0, 0);
-                    BatchVertexData[vIdx + 2] = new Vertex2D(tileRef.X + 1, tileRef.Y - 1f, 1, 1, 0);
-                    BatchVertexData[vIdx + 3] = new Vertex2D(tileRef.X, tileRef.Y - 1f, 0, 1, 0);
-                    var nIdx = nth * 5;
-                    var tIdx = (ushort) (nth * 4);
-                    BatchIndexData[nIdx + 0] = tIdx;
-                    BatchIndexData[nIdx + 1] = (ushort) (tIdx + 1);
-                    BatchIndexData[nIdx + 2] = (ushort) (tIdx + 2);
-                    BatchIndexData[nIdx + 3] = (ushort) (tIdx + 3);
-                    // Use primitive restart to shave off one single index per quad.
-                    // Whew.
-                    BatchIndexData[nIdx + 4] = ushort.MaxValue;
-                    if (++nth >= MaxBatchQuads)
-                    {
-                        throw new NotImplementedException("Can't render grids that are that big yet sorry.");
-                    }
-                }
-
-                if (nth == 0)
-                {
-                    continue;
-                }
-
-                BatchVBO.Use();
-                BatchEBO.Use();
-                var vertexData = new Span<Vertex2D>(BatchVertexData, 0, nth * 4);
-                var indexData = new Span<ushort>(BatchIndexData, 0, nth * 5);
-                if (_reallocateBuffers)
-                {
-                    BatchVBO.Reallocate(vertexData);
-                    BatchEBO.Reallocate(indexData);
-                }
-                else
-                {
-                    BatchVBO.WriteSubData(vertexData);
-                    BatchEBO.WriteSubData(indexData);
-                }
-
-                GL.DrawElements(PrimitiveType.TriangleStrip, nth * 5, DrawElementsType.UnsignedShort, 0);
-            }
-
-            GL.Disable(EnableCap.PrimitiveRestart);
+            _drawGrids();
 
             _popDebugGroupMaybe();
 
@@ -273,6 +199,7 @@ namespace SS14.Client.Graphics.Clyde
             var drawingHandle = _renderHandle.CreateHandleWorld();
 
             var entityList = new List<SpriteComponent>(100);
+            var map = _eyeManager.CurrentMap;
 
             // Draw entities.
             foreach (var entity in _entityManager.GetEntities())
@@ -503,7 +430,6 @@ namespace SS14.Client.Graphics.Clyde
                 batchCommand.PositionB = renderCommandTexture.PositionB;
                 batchCommand.SubRegion = renderCommandTexture.SubRegion;
                 batchCommand.HasSubRegion = renderCommandTexture.HasSubRegion;
-                batchCommand.ArrayIndex = renderCommandTexture.ArrayIndex;
                 if (_batchModelMatricesNeedsUpdate)
                 {
                     _batchModelMatricesNeedsUpdate = false;
@@ -640,7 +566,6 @@ namespace SS14.Client.Graphics.Clyde
                         HasSubRegion = batchCommand.HasSubRegion,
                         // ReSharper disable once PossibleInvalidOperationException
                         Modulate = BatchingModulate.Value,
-                        ArrayIndex = batchCommand.ArrayIndex,
                     };
                     ref var transform = ref BatchModelMatrices[batchCommand.TransformIndex];
                     _drawCommandTexture(ref textureCommand, false, ref transform);
@@ -679,16 +604,15 @@ namespace SS14.Client.Graphics.Clyde
                     sr = new UIBox2(0, 0, 1, 1);
                 }
 
-                var arrayIndex = command.ArrayIndex - 1;
                 var bl = transform.Transform(command.PositionA);
                 var br = transform.Transform(new Vector2(command.PositionB.X, command.PositionA.Y));
                 var tr = transform.Transform(command.PositionB);
                 var tl = transform.Transform(new Vector2(command.PositionA.X, command.PositionB.Y));
                 var vIdx = quadIndex * 4;
-                BatchVertexData[vIdx + 0] = new Vertex2D(bl, sr.BottomLeft, arrayIndex);
-                BatchVertexData[vIdx + 1] = new Vertex2D(br, sr.BottomRight, arrayIndex);
-                BatchVertexData[vIdx + 2] = new Vertex2D(tl, sr.TopLeft, arrayIndex);
-                BatchVertexData[vIdx + 3] = new Vertex2D(tr, sr.TopRight, arrayIndex);
+                BatchVertexData[vIdx + 0] = new Vertex2D(bl, sr.BottomLeft);
+                BatchVertexData[vIdx + 1] = new Vertex2D(br, sr.BottomRight);
+                BatchVertexData[vIdx + 2] = new Vertex2D(tl, sr.TopLeft);
+                BatchVertexData[vIdx + 3] = new Vertex2D(tr, sr.TopRight);
                 var nIdx = quadIndex * 5;
                 var tIdx = (ushort) (quadIndex * 4);
                 BatchIndexData[nIdx + 0] = tIdx;
@@ -869,7 +793,6 @@ namespace SS14.Client.Graphics.Clyde
 
                 var openGLTexture = (OpenGLTexture) texture;
                 command.TextureId = openGLTexture.OpenGLTextureId;
-                command.ArrayIndex = openGLTexture.ArrayIndex;
                 command.PositionA = a;
                 command.PositionB = b;
                 command.Modulate = modulate;
@@ -998,7 +921,6 @@ namespace SS14.Client.Graphics.Clyde
             // UIBox2 is 4 floats
             [FieldOffset(40)] public bool HasSubRegion;
             [FieldOffset(44)] public Color Modulate;
-            [FieldOffset(60)] public int ArrayIndex;
 
             // Transform command fields.
             [FieldOffset(4)] public Matrix3 TransformMatrix;
@@ -1023,7 +945,6 @@ namespace SS14.Client.Graphics.Clyde
             public Vector2 PositionB;
             public UIBox2 SubRegion;
             public bool HasSubRegion;
-            public int ArrayIndex;
             public int TransformIndex;
         }
 

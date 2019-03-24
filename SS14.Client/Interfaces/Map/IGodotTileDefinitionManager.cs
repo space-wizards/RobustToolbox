@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace SS14.Client.Interfaces.Map
 {
-    public interface IClientTileDefinitionManager : ITileDefinitionManager
+    internal interface IGodotTileDefinitionManager : ITileDefinitionManager
     {
         Godot.TileSet TileSet { get; }
     }

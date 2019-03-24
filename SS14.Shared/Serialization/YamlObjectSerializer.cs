@@ -19,6 +19,7 @@ namespace SS14.Shared.Serialization
     public class YamlObjectSerializer : ObjectSerializer
     {
         private static readonly Dictionary<Type, TypeSerializer> _typeSerializers;
+		public static IReadOnlyDictionary<Type, TypeSerializer> TypeSerializers => _typeSerializers;
         private static readonly StructSerializer _structSerializer;
 
         private YamlMappingNode WriteMap;

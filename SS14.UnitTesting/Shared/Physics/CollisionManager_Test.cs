@@ -171,6 +171,7 @@ namespace SS14.UnitTesting.Shared.Physics
             mock.Setup(foo => foo.CollisionEnabled).Returns(true);
             mock.Setup(foo => foo.CollisionLayer).Returns(0x4);
             mock.Setup(foo => foo.CollisionMask).Returns(0x04);
+            mock.Setup(foo => foo.IsHardCollidable).Returns(true);
             manager.AddCollidable(mock.Object);
 
             // Act

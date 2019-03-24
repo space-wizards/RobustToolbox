@@ -68,6 +68,9 @@ namespace SS14.Client.ResourceManagement
 
             var rsi = new RSI(size);
 
+            var images = new List<Image<Rgba32>>();
+            var directionFramesList = new List<(Texture, float)[]>();
+
             // Do every state.
             foreach (var stateObject in manifestJson["states"].Cast<JObject>())
             {
@@ -122,8 +125,8 @@ namespace SS14.Client.ResourceManagement
                 }
 
                 var texPath = path / (stateName + ".png");
-                var texture = cache.GetResource<TextureResource>(texPath).Texture;
-                var sheetSize = texture.Size;
+                var image = Image.Load(cache.ContentFileRead(texPath));
+                var sheetSize = new Vector2i(image.Width, image.Height);
 
                 if (sheetSize.X % size.X != 0 || sheetSize.Y % size.Y != 0)
                 {
@@ -139,16 +142,16 @@ namespace SS14.Client.ResourceManagement
                 {
                     var delayList = delays[j];
                     var directionFrames = new (Texture, float)[delayList.Length];
-
+                    directionFramesList.Add(directionFrames);
                     for (var i = 0; i < delayList.Length; i++)
                     {
                         var posX = (int) ((counter % sheetWidth) * size.X);
                         var posY = (int) ((counter / sheetWidth) * size.Y);
 
-                        var atlasTexture = new AtlasTexture(
-                            texture, UIBox2.FromDimensions(posX, posY, size.X, size.Y));
+                        var rect = new Rectangle(posX, posY, (int) size.X, (int) size.Y);
+                        images.Add(image.Clone(x => x.Crop(rect)));
 
-                        directionFrames[i] = (atlasTexture, delayList[i]);
+                        directionFrames[i] = (null, delayList[i]);
                         counter++;
                     }
 
@@ -157,6 +160,49 @@ namespace SS14.Client.ResourceManagement
 
                 var state = new RSI.State(size, stateName, directions, iconFrames);
                 rsi.AddState(state);
+            }
+
+            // Poorly hacked in texture atlas support here.
+            {
+                // Generate atlas.
+                var dimensionX = (int) Math.Ceiling(Math.Sqrt(images.Count));
+                var dimensionY = (int) Math.Ceiling((float) images.Count / dimensionX);
+
+                var sheet = new Image<Rgba32>((int) (dimensionX * size.X), (int) (dimensionY * size.Y));
+
+                var i = 0;
+                foreach (var list in directionFramesList)
+                {
+                    for (var j = 0; j < list.Length; j++, i++)
+                    {
+                        var column = i % dimensionX;
+                        var row = i / dimensionX;
+
+                        var point = new Point((int) (column * size.X), (int) (row * size.Y));
+
+                        sheet.Mutate(p => p.DrawImage(images[i], point, PixelColorBlendingMode.Overlay, 1));
+                    }
+                }
+
+                // Load atlas.
+                var texture = Texture.LoadFromImage(sheet, path.ToString());
+
+                // Assign AtlasTexture instances.
+                i = 0;
+                foreach (var list in directionFramesList)
+                {
+                    for (var j = 0; j < list.Length; j++, i++)
+                    {
+                        ref var tuple = ref list[j];
+                        var column = i % dimensionX;
+                        var row = i / dimensionX;
+
+                        var pX = (int) (column * size.X);
+                        var pY = (int) (row * size.Y);
+
+                        tuple.Item1 = new AtlasTexture(texture, UIBox2.FromDimensions(pX, pY, size.X, size.Y));
+                    }
+                }
             }
 
             RSI = rsi;

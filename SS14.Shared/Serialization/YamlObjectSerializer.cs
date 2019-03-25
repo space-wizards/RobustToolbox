@@ -785,7 +785,7 @@ namespace SS14.Shared.Serialization
             public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 var vec = (Vector2)obj;
-                return new YamlScalarNode($"{vec.X},{vec.Y}");
+                return new YamlScalarNode($"{vec..ToString(CultureInfo.InvariantCulture)},{vec.Y.ToString(CultureInfo.InvariantCulture)}");
             }
         }
 
@@ -825,7 +825,7 @@ namespace SS14.Shared.Serialization
             public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 var box = (UIBox2)obj;
-                return new YamlScalarNode($"{box.Top},{box.Left},{box.Bottom},{box.Right}");
+                return new YamlScalarNode($"{box.Top.ToString(CultureInfo.InvariantCulture)},{box.Left.ToString(CultureInfo.InvariantCulture)},{box.Bottom.ToString(CultureInfo.InvariantCulture)},{box.Right.ToString(CultureInfo.InvariantCulture)}");
             }
         }
 
@@ -846,7 +846,7 @@ namespace SS14.Shared.Serialization
             public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 var box = (Box2)obj;
-                return new YamlScalarNode($"{box.Bottom},{box.Left},{box.Top},{box.Right}");
+                return new YamlScalarNode($"{box.Bottom.ToString(CultureInfo.InvariantCulture)},{box.Left.ToString(CultureInfo.InvariantCulture)},{box.Top.ToString(CultureInfo.InvariantCulture)},{box.Right.ToString(CultureInfo.InvariantCulture)}");
             }
         }
 

@@ -100,10 +100,10 @@ namespace SS14.Client.Graphics.Clyde
                     var region = regionMaybe.Value;
 
                     var vIdx = i * 4;
-                    vertexBuffer[vIdx + 0] = new Vertex2D(tile.X + 1, tile.Y, region.Right, region.Top);
-                    vertexBuffer[vIdx + 1] = new Vertex2D(tile.X, tile.Y, region.Left, region.Top);
-                    vertexBuffer[vIdx + 2] = new Vertex2D(tile.X + 1, tile.Y - 1f, region.Right, region.Bottom);
-                    vertexBuffer[vIdx + 3] = new Vertex2D(tile.X, tile.Y - 1f, region.Left, region.Bottom);
+                    vertexBuffer[vIdx + 0] = new Vertex2D(tile.X + 1, tile.Y + 1, region.Right, region.Top);
+                    vertexBuffer[vIdx + 1] = new Vertex2D(tile.X, tile.Y + 1, region.Left, region.Top);
+                    vertexBuffer[vIdx + 2] = new Vertex2D(tile.X + 1, tile.Y, region.Right, region.Bottom);
+                    vertexBuffer[vIdx + 3] = new Vertex2D(tile.X, tile.Y, region.Left, region.Bottom);
                     var nIdx = i * 5;
                     var tIdx = (ushort) (i * 4);
                     indexBuffer[nIdx + 0] = tIdx;

@@ -785,7 +785,7 @@ namespace SS14.Shared.Serialization
             public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 var vec = (Vector2)obj;
-                return new YamlScalarNode($"{vec..ToString(CultureInfo.InvariantCulture)},{vec.Y.ToString(CultureInfo.InvariantCulture)}");
+                return new YamlScalarNode($"{vec.X.ToString(CultureInfo.InvariantCulture)},{vec.Y.ToString(CultureInfo.InvariantCulture)}");
             }
         }
 

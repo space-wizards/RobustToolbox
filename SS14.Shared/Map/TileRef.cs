@@ -49,7 +49,7 @@ namespace SS14.Shared.Map
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"TileRef: {X},{Y}";
+            return $"TileRef: {X},{Y} ({Tile})";
         }
 
         public bool GetStep(Direction dir, out TileRef steptile)

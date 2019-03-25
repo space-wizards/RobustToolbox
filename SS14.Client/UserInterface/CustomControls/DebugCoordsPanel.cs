@@ -74,6 +74,7 @@ namespace SS14.Client.UserInterface.CustomControls
             GridCoordinates mouseWorldPos;
             ScreenCoordinates worldToScreen;
             IEntity mouseEntity = null;
+            TileRef tile;
             try
             {
                 var coords = eyeManager.ScreenToWorld(new ScreenCoordinates(mouseScreenPos));
@@ -85,6 +86,8 @@ namespace SS14.Client.UserInterface.CustomControls
                 {
                     mouseEntity = gameScreen.GetEntityUnderPosition(coords);
                 }
+
+                tile = coords.Grid.GetTile(coords);
             }
             catch
             {
@@ -92,6 +95,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 mouseWorldGrid = 0;
                 mouseWorldMap = 0;
                 worldToScreen = new ScreenCoordinates();
+                tile = new TileRef();
             }
 
             stringBuilder.AppendFormat(@"Positioning Debug:
@@ -101,11 +105,12 @@ Mouse Pos:
     World: {2}
     W2S: {3}
     Grid: {4}
+    Tile: {8}
     Map: {5}
     Entity: {6}
     GUI: {7}
 ", screenSize, mouseScreenPos, mouseWorldPos, worldToScreen, mouseWorldGrid, mouseWorldMap, mouseEntity,
-                UserInterfaceManager.CurrentlyHovered);
+                UserInterfaceManager.CurrentlyHovered, tile);
 
             stringBuilder.AppendLine("\nAttached Entity:");
             if (playerManager.LocalPlayer?.ControlledEntity == null)

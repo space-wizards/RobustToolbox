@@ -489,7 +489,12 @@ namespace SS14.Shared.Serialization
 
             // val primitives and val enums
             if (type.IsPrimitive || type == typeof(Enum))
-                return obj.ToString();
+            {
+                // All primitives and enums implement IConvertible.
+                // Need it for the culture overload.
+                var convertible = (IConvertible) obj;
+                return convertible.ToString(CultureInfo.InvariantCulture);
+            }
 
             // List<T>
             if (TryGenericListType(type, out var listType))

@@ -111,7 +111,7 @@ namespace SS14.Client.Placement
             var size = SpriteToDraw.Size;
             foreach (var coordinate in locationcollection)
             {
-                var pos = coordinate.Position - (size/EyeManager.PIXELSPERMETER) / 2f;
+                var pos = coordinate.Position - (size/(float)EyeManager.PIXELSPERMETER) / 2f;
                 var color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
                 handle.DrawTexture(SpriteToDraw, pos, color);
             }

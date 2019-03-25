@@ -169,7 +169,19 @@ namespace SS14.Shared.GameObjects
 
         public IEnumerable<IEntity> GetEntities()
         {
-            return _allEntities.Where(e => !e.Deleted);
+            // Manual index loop to allow adding to the list while iterating.
+            // ReSharper disable once ForCanBeConvertedToForeach
+            // ReSharper disable once LoopCanBeConvertedToQuery
+            for (var i = 0; i < _allEntities.Count; i++)
+            {
+                var entity = _allEntities[i];
+                if (entity.Deleted)
+                {
+                    continue;
+                }
+
+                yield return entity;
+            }
         }
 
         /// <summary>

@@ -44,6 +44,13 @@ namespace SS14.Client.GameObjects
             overlayManager.AddOverlay(overlay);
         }
 
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            overlayManager.RemoveOverlay("EffectSystem");
+        }
+
         public override void RegisterMessageTypes()
         {
             base.RegisterMessageTypes();

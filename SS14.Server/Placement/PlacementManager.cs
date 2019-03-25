@@ -75,8 +75,6 @@ namespace SS14.Server.Placement
             if (isTile) tileType = msg.TileType;
             else entityTemplateName = msg.EntityTemplateName;
 
-            var xValue = msg.XValue;
-            var yValue = msg.YValue;
             var dirRcv = msg.DirRcv;
 
             var session = _playerManager.GetSessionByChannel(msg.MsgChannel);
@@ -86,20 +84,9 @@ namespace SS14.Server.Placement
             if (plyEntity == null)
                 return;
 
-            // get the MapID the player is on
-            var plyTransform = plyEntity.Transform;
-            var mapIndex = plyTransform.MapID;
-
-            // no building in null space!
-            if (mapIndex == MapId.Nullspace)
-                return;
-
             //TODO: Distance check, so you can't place things off of screen.
 
-            // get the grid under the worldCoords.
-
-            var grid = _mapManager.GetMap(mapIndex).GetGrid(plyTransform.GridID);
-            var coordinates = new GridCoordinates(xValue, yValue, grid);
+            var coordinates = msg.GridCoordinates;
 
 
             /* TODO: Redesign permission system, or document what this is supposed to be doing

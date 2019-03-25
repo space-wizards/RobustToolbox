@@ -3,6 +3,7 @@ using Lidgren.Network;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Map;
 using SS14.Shared.Maths;
 
 namespace SS14.Shared.Network.Messages
@@ -20,8 +21,7 @@ namespace SS14.Shared.Network.Messages
         public bool IsTile { get; set; }
         public ushort TileType { get; set; }
         public string EntityTemplateName { get; set; }
-        public float XValue { get; set; }
-        public float YValue { get; set; }
+        public GridCoordinates GridCoordinates { get; set; }
         public Direction DirRcv { get; set; }
         public EntityUid EntityUid { get; set; }
 
@@ -41,8 +41,7 @@ namespace SS14.Shared.Network.Messages
                     if (IsTile) TileType = buffer.ReadUInt16();
                     else EntityTemplateName = buffer.ReadString();
 
-                    XValue = buffer.ReadFloat();
-                    YValue = buffer.ReadFloat();
+                    GridCoordinates = buffer.ReadGridLocalCoordinates();
                     DirRcv = (Direction)buffer.ReadByte();
                     break;
                 case PlacementManagerMessage.StartPlacement:
@@ -72,8 +71,7 @@ namespace SS14.Shared.Network.Messages
                     if(IsTile) buffer.Write(TileType);
                     else buffer.Write(EntityTemplateName);
 
-                    buffer.Write(XValue);
-                    buffer.Write(YValue);
+                    buffer.Write(GridCoordinates);
                     buffer.Write((byte)DirRcv);
                     break;
                 case PlacementManagerMessage.StartPlacement:

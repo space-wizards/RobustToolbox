@@ -580,22 +580,20 @@ namespace SS14.Client.Placement
 
             if (CurrentPermission.IsTile)
             {
-                var grid = _mapMan.GetMap(coordinates.MapID).GetGrid(coordinates.GridID);
-                var worldPos = coordinates.ToWorld();
-                var localPos = worldPos.ConvertToGrid(grid);
+                var grid = _mapMan.GetGrid(coordinates.GridID);
 
                 // no point changing the tile to the same thing.
-                if (grid.GetTile(localPos).Tile.TileId == CurrentPermission.TileType)
+                if (grid.GetTile(coordinates).Tile.TileId == CurrentPermission.TileType)
                     return;
 
                 foreach (var tileChange in _pendingTileChanges)
                 {
                     // if change already pending, ignore it
-                    if (tileChange.Item1 == localPos)
+                    if (tileChange.Item1 == coordinates)
                         return;
                 }
 
-                var tuple = new Tuple<GridCoordinates, TimeSpan>(localPos, _time.RealTime + _pendingTileTimeout);
+                var tuple = new Tuple<GridCoordinates, TimeSpan>(coordinates, _time.RealTime + _pendingTileTimeout);
                 _pendingTileChanges.Add(tuple);
             }
 
@@ -611,8 +609,7 @@ namespace SS14.Client.Placement
                 message.EntityTemplateName = CurrentPermission.EntityType;
 
             // world x and y
-            message.XValue = coordinates.X;
-            message.YValue = coordinates.Y;
+            message.GridCoordinates = coordinates;
 
             message.DirRcv = Direction;
 

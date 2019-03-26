@@ -54,8 +54,7 @@ namespace SS14.Server.GameObjects.Components.Container
 
             foreach (var entity in ContainerList)
             {
-                var transform = entity.Transform;
-                transform.DetachParent();
+                entity.Delete();
             }
         }
     }

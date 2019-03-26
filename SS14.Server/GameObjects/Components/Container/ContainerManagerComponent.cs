@@ -120,9 +120,10 @@ namespace SS14.Server.GameObjects.Components.Container
             return false;
         }
 
-        public override void Shutdown()
+        public override void OnRemove()
         {
-            base.Shutdown();
+            base.OnRemove();
+
             foreach(var container in EntityContainers.Values)
             {
                 container.Shutdown();

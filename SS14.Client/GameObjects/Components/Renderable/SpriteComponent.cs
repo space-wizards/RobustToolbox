@@ -92,7 +92,7 @@ namespace SS14.Client.GameObjects
 
         private Angle rotation;
 
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public Angle Rotation
         {
             get => rotation;
@@ -1248,14 +1248,14 @@ namespace SS14.Client.GameObjects
             Matrix3 transform;
             if (useWorldTransform)
             {
-                Angle angle;
+                var angle = Rotation;
                 if (Directional)
                 {
-                    angle = -Owner.Transform.WorldRotation;
+                    angle -= Owner.Transform.WorldRotation;
                 }
                 else
                 {
-                    angle = -new Angle(MathHelper.PiOver2);
+                    angle -= new Angle(MathHelper.PiOver2);
                 }
                 transform = Matrix3.CreateRotation(angle);
                 var worldTransform = Owner.Transform.WorldMatrix;

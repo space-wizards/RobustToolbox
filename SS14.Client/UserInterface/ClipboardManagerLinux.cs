@@ -62,17 +62,21 @@ namespace SS14.Client.UserInterface
         {
             try
             {
-                var process = new Process
-                {
-                    StartInfo = new ProcessStartInfo
+                var process = Process.Start(
+                    new ProcessStartInfo
                     {
                         FileName = "xclip",
                         Arguments = "-version",
                         RedirectStandardOutput = true,
+                        RedirectStandardError = true,
                         UseShellExecute = false
-                    }
-                };
-                process.Start();
+                    });
+                if (process == null)
+                {
+                    Available = false;
+                    return;
+                }
+
                 process.WaitForExit();
                 Available = process.ExitCode == 0;
             }
@@ -80,8 +84,6 @@ namespace SS14.Client.UserInterface
             {
                 Available = false;
             }
-
-            Available = false;
         }
     }
 }

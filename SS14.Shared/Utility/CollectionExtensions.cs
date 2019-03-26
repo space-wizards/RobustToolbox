@@ -59,5 +59,26 @@ namespace SS14.Shared.Utility
         public static void Deconstruct<TKey, TValue>(this KeyValuePair<TKey, TValue> k, out TKey t, out TValue u) {
             t = k.Key; u = k.Value;
         }
+
+        /// <summary>
+        ///     Pop an element from the end of a list, removing it from the list and returning it.
+        /// </summary>
+        /// <param name="list">The list to pop from.</param>
+        /// <typeparam name="T">The type of the elements of the list.</typeparam>
+        /// <returns>The popped off element.</returns>
+        /// <exception cref="InvalidOperationException">
+        ///     Thrown if the list is empty.
+        /// </exception>
+        public static T Pop<T>(this IList<T> list)
+        {
+            if (list.Count == 0)
+            {
+                throw new InvalidOperationException();
+            }
+
+            var t = list[list.Count - 1];
+            list.RemoveAt(list.Count-1);
+            return t;
+        }
     }
 }

@@ -88,6 +88,8 @@ namespace SS14.Client.Graphics.Clyde
 
         private bool HasKHRDebug => HasExtension("GL_KHR_debug");
 
+        private bool _quartResLights = false;
+
         public override void SetWindowTitle(string title)
         {
             _window.Title = title;
@@ -181,7 +183,8 @@ namespace SS14.Client.Graphics.Clyde
                 _windowSize = new Vector2i(_window.Width, _window.Height);
                 GL.Viewport(0, 0, _window.Width, _window.Height);
                 GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, _window.Width, _window.Height, 0,
+                var (lightW, lightH) = _lightMapSize();
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, lightW, lightH, 0,
                     PixelFormat.Rgba, PixelType.Float, IntPtr.Zero);
                 OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _windowSize));
             };
@@ -311,12 +314,13 @@ namespace SS14.Client.Graphics.Clyde
             LightFBO = new OGLHandle(GL.GenFramebuffer());
             LightTexture = new OGLHandle(GL.GenTexture());
 
+            var (lightW, lightH) = _lightMapSize();
             GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, _window.Width, _window.Height, 0,
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, lightW, lightH, 0,
                 PixelFormat.Rgba, PixelType.Float, IntPtr.Zero);
 
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMagFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMagFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)OpenTK.Graphics.OpenGL.TextureWrapMode.ClampToEdge);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)OpenTK.Graphics.OpenGL.TextureWrapMode.ClampToEdge);
 
@@ -345,7 +349,21 @@ namespace SS14.Client.Graphics.Clyde
             {
                 // Intel specific settings.
                 _reallocateBuffers = true;
+                _quartResLights = true;
             }
+        }
+
+        private (int, int) _lightMapSize()
+        {
+            if (!_quartResLights)
+            {
+                return (_window.Width, _window.Height);
+            }
+
+            var w = (int) Math.Ceiling(_window.Width / 2f);
+            var h = (int) Math.Ceiling(_window.Height / 2f);
+
+            return (w, h);
         }
 
         private void _displaySplash(IRenderHandle handle)

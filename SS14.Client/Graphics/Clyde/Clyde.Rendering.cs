@@ -286,6 +286,9 @@ namespace SS14.Client.Graphics.Clyde
             GL.ClearColor(0.1f, 0.1f, 0.1f, 1);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
+            var (lightW, lightH) = _lightMapSize();
+            GL.Viewport(0, 0, lightW, lightH);
+
             _lightShader.Use();
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
@@ -303,6 +306,7 @@ namespace SS14.Client.Graphics.Clyde
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            GL.Viewport(0, 0, _window.Width, _window.Height);
         }
 
         private void _setProjViewMatrices(in ProjViewMatrices matrices)

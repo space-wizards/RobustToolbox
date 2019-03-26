@@ -17,6 +17,7 @@ using SS14.Client.Audio;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.Graphics.ClientEye;
+using SS14.Client.Interfaces.Graphics.Lighting;
 using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.ResourceManagement;
@@ -50,6 +51,7 @@ namespace SS14.Client.Graphics.Clyde
         [Dependency] private readonly IComponentManager _componentManager;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
         [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager;
+        [Dependency] private readonly ILightManager _lightManager;
 
         private Vector2i _windowSize;
         private GameWindow _window;

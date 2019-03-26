@@ -183,8 +183,6 @@ namespace SS14.Client.Graphics.Clyde
 
             _drawLights();
 
-            _lightingReady = true;
-
             _popDebugGroupMaybe();
 
             _pushDebugGroupMaybe(DbgGroupGrids);
@@ -266,6 +264,10 @@ namespace SS14.Client.Graphics.Clyde
 
         private void _drawLights()
         {
+            if (!_lightManager.Enabled)
+            {
+                return;
+            }
             void DrawLight(Vector2 pos, float range, float power, Color color)
             {
                 _lightShader.SetUniform("lightCenter", pos);
@@ -307,6 +309,8 @@ namespace SS14.Client.Graphics.Clyde
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.Viewport(0, 0, _window.Width, _window.Height);
+
+            _lightingReady = true;
         }
 
         private void _setProjViewMatrices(in ProjViewMatrices matrices)

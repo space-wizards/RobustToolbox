@@ -8,6 +8,7 @@ using System.Text;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.Debugging;
+using SS14.Client.Interfaces.Graphics.Lighting;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
@@ -511,6 +512,20 @@ namespace SS14.Client.Console.Commands
             }
 
             console.AddLine(mgr.GetText());
+            return false;
+        }
+    }
+
+    internal class ToggleLight : IConsoleCommand
+    {
+        public string Command => "togglelight";
+        public string Description => "Toggles light rendering.";
+        public string Help => "togglelight";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var mgr = IoCManager.Resolve<ILightManager>();
+            mgr.Enabled = !mgr.Enabled;
             return false;
         }
     }

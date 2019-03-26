@@ -30,8 +30,15 @@ namespace SS14.Client.Graphics.Clyde
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, loadedTex.OpenGLObject.Handle);
             GL.ActiveTexture(TextureUnit.Texture1);
-            GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
-
+            if (_lightingReady)
+            {
+                GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
+            }
+            else
+            {
+                var white = _loadedTextures[((OpenGLTexture) Texture.White).OpenGLTextureId].OpenGLObject;
+                GL.BindTexture(TextureTarget.Texture2D, white.Handle);
+            }
             var gridProgram = _loadedShaders[_defaultShader].Program;
             gridProgram.Use();
             gridProgram.SetUniformTextureMaybe(UniMainTexture, TextureUnit.Texture0);

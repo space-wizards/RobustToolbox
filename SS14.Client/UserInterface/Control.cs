@@ -1252,6 +1252,10 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        protected internal virtual void ModalRemoved()
+        {
+        }
+
         /// <summary>
         ///     Overriden by child classes to change the Godot control type.
         ///     ONLY spawn the control in here. Use <see cref="SetSceneControl" /> for holding references to it.

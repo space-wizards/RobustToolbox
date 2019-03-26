@@ -110,6 +110,10 @@ namespace SS14.Client.Interfaces.UserInterface
 
         void ControlRemovedFromTree(Control control);
 
+        void PushModal(Control modal);
+
+        void RemoveModal(Control modal);
+
         void Render(IRenderHandle renderHandle);
 
         Dictionary<(GodotAsset asset, int resourceId), object> GodotResourceInstanceCache { get; }

@@ -12,7 +12,7 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        public Popup(string name) : base()
+        public Popup(string name) : base(name)
         {
         }
 
@@ -26,7 +26,6 @@ namespace SS14.Client.UserInterface.Controls
         {
             return new Godot.Popup();
         }
-
 
         public void Open(UIBox2? box = null)
         {
@@ -43,15 +42,16 @@ namespace SS14.Client.UserInterface.Controls
                 }
 
                 Visible = true;
+                UserInterfaceManagerInternal.PushModal(this);
             }
         }
 
-        public void OpenMinimum()
+        protected internal override void ModalRemoved()
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("popup_centered_minsize");
-            }
+            base.ModalRemoved();
+
+            Visible = false;
+            OnPopupHide?.Invoke();
         }
 
         private GodotSignalSubscriber0 __popupHideSubscriber;

@@ -47,6 +47,8 @@ namespace SS14.Client.UserInterface
         public Dictionary<(GodotAsset asset, int resourceId), object> GodotResourceInstanceCache { get; } =
             new Dictionary<(GodotAsset asset, int resourceId), object>();
 
+        private readonly List<Control> _modalStack = new List<Control>();
+
         public void PostInject()
         {
             _config.RegisterCVar("key.keyboard.console", Keyboard.Key.Tilde, CVar.ARCHIVE);
@@ -138,6 +140,19 @@ namespace SS14.Client.UserInterface
 
         public void MouseDown(MouseButtonEventArgs args)
         {
+            // If we have a modal open and the mouse down was outside it, close said modal.
+            if (_modalStack.Count != 0)
+            {
+                var top = _modalStack[_modalStack.Count - 1];
+                var offset = args.Position - top.GlobalPosition;
+                if (!top.HasPoint(offset))
+                {
+                    RemoveModal(top);
+                    args.Handle();
+                    return;
+                }
+            }
+
             var control = MouseGetControl(args.Position);
             if (control == null)
             {
@@ -356,6 +371,7 @@ namespace SS14.Client.UserInterface
         public void ControlRemovedFromTree(Control control)
         {
             ReleaseKeyboardFocus(control);
+            RemoveModal(control);
             if (control == CurrentlyHovered)
             {
                 control.MouseExited();
@@ -365,6 +381,19 @@ namespace SS14.Client.UserInterface
             if (control == _mouseFocused)
             {
                 _mouseFocused = null;
+            }
+        }
+
+        public void PushModal(Control modal)
+        {
+            _modalStack.Add(modal);
+        }
+
+        public void RemoveModal(Control modal)
+        {
+            if (_modalStack.Remove(modal))
+            {
+                modal.ModalRemoved();
             }
         }
 

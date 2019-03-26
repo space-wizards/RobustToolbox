@@ -224,6 +224,10 @@ namespace SS14.Client.Placement
 
                     if (Eraser)
                     {
+                        if (uid == EntityUid.Invalid)
+                        {
+                            return;
+                        }
                         HandleDeletion(_entityManager.GetEntity(uid));
                     }
                     else

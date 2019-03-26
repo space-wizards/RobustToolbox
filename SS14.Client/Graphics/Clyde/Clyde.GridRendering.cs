@@ -41,6 +41,10 @@ namespace SS14.Client.Graphics.Clyde
 
             foreach (var grid in _mapManager.GetMap(map).GetAllGrids())
             {
+                if (!_mapChunkData.ContainsKey(grid.Index))
+                {
+                    continue;
+                }
                 var model = Matrix3.Identity;
                 model.R0C2 = grid.WorldPosition.X;
                 model.R1C2 = grid.WorldPosition.Y;

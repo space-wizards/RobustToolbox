@@ -78,5 +78,12 @@ namespace SS14.Client.UserInterface.Controls
         {
             OnPopupHide?.Invoke();
         }
+
+        protected override void SetDefaults()
+        {
+            base.SetDefaults();
+
+            Visible = false;
+        }
     }
 }

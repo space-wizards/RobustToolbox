@@ -50,6 +50,12 @@ namespace SS14.Server.GameObjects
         [ViewVariables]
         public Vector2 VelocityDir { get; private set; }
 
+        /// <summary>
+        ///     Blocks entity's movement
+        /// </summary>
+        [ViewVariables]
+        public bool Disabled { get; set; } = false;
+
         /// <inheritdoc />
         public override void OnAdd()
         {

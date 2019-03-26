@@ -463,6 +463,14 @@ namespace SS14.Client.Console.Commands
 
             var progressBar = new ProgressBar {MaxValue=10, Value=5};
             vBox.AddChild(progressBar);
+
+            var optionButton = new OptionButton();
+            optionButton.AddItem("Honk");
+            optionButton.AddItem("Foo");
+            optionButton.AddItem("Bar");
+            optionButton.AddItem("Baz");
+            optionButton.OnItemSelected += eventArgs => optionButton.SelectId(eventArgs.Id);
+            vBox.AddChild(optionButton);
             return false;
         }
     }

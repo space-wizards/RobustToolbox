@@ -17,6 +17,11 @@ namespace SS14.Client.Input
             common.AddFunction(EngineKeyFunctions.EscapeMenu);
             common.AddFunction(EngineKeyFunctions.FocusChat);
             common.AddFunction(EngineKeyFunctions.ShowDebugMonitors);
+            common.AddFunction(EngineKeyFunctions.MoveUp);
+            common.AddFunction(EngineKeyFunctions.MoveDown);
+            common.AddFunction(EngineKeyFunctions.MoveLeft);
+            common.AddFunction(EngineKeyFunctions.MoveRight);
+            common.AddFunction(EngineKeyFunctions.Run);
 
             var editor = contexts.New("editor", common);
             editor.AddFunction(EngineKeyFunctions.EditorLinePlace);
@@ -26,11 +31,6 @@ namespace SS14.Client.Input
             editor.AddFunction(EngineKeyFunctions.EditorRotateObject);
 
             var human = contexts.New("human", common);
-            human.AddFunction(EngineKeyFunctions.MoveUp);
-            human.AddFunction(EngineKeyFunctions.MoveDown);
-            human.AddFunction(EngineKeyFunctions.MoveLeft);
-            human.AddFunction(EngineKeyFunctions.MoveRight);
-            human.AddFunction(EngineKeyFunctions.Run);
         }
     }
 }

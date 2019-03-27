@@ -463,7 +463,6 @@ namespace SS14.Client.Graphics.Clyde
 
             program.Use();
 
-            GL.BindVertexArray(QuadVAO.Handle);
             // Use QuadVBO to render a single quad and modify the model matrix to position it where we need it.
             if (renderCommandTexture.HasSubRegion)
             {
@@ -527,8 +526,9 @@ namespace SS14.Client.Graphics.Clyde
             _drawQuad(renderCommandTexture.PositionA, renderCommandTexture.PositionB, ref modelMatrix, program);
         }
 
-        private static void _drawQuad(Vector2 a, Vector2 b, ref Matrix3 modelMatrix, ShaderProgram program)
+        private void _drawQuad(Vector2 a, Vector2 b, ref Matrix3 modelMatrix, ShaderProgram program)
         {
+            GL.BindVertexArray(QuadVAO.Handle);
             var rectTransform = Matrix3.Identity;
             (rectTransform.R0C0, rectTransform.R1C1) = b - a;
             (rectTransform.R0C2, rectTransform.R1C2) = a;

@@ -3,6 +3,9 @@ binds:
 - function: ShowDebugMonitors
   key: F3
   type: Toggle
+- function: HideUI
+  key: F4
+  type: Toggle
 - function: MoveUp
   key: W
   type: State

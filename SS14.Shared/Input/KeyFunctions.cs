@@ -19,6 +19,7 @@ namespace SS14.Shared.Input
         public static readonly BoundKeyFunction Run = "Run";
 
         public static readonly BoundKeyFunction ShowDebugMonitors = "ShowDebugMonitors";
+        public static readonly BoundKeyFunction HideUI = "HideUI";
         public static readonly BoundKeyFunction EscapeMenu = "ShowEscapeMenu";
         public static readonly BoundKeyFunction FocusChat = "FocusChatWindow";
 

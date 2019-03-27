@@ -49,6 +49,8 @@ namespace SS14.Client.UserInterface
 
         private readonly List<Control> _modalStack = new List<Control>();
 
+        private bool _rendering = true;
+
         public void PostInject()
         {
             _config.RegisterCVar("key.keyboard.console", Keyboard.Key.Tilde, CVar.ARCHIVE);
@@ -69,6 +71,11 @@ namespace SS14.Client.UserInterface
             _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugMonitors,
                 InputCmdHandler.FromDelegate(enabled: session => { DebugMonitors.Visible = true; },
                     disabled: session => { DebugMonitors.Visible = false; }));
+
+            _inputManager.SetInputCommand(EngineKeyFunctions.HideUI,
+                InputCmdHandler.FromDelegate(
+                    enabled: session => _rendering = false,
+                    disabled: session => _rendering = true));
         }
 
         private void _initializeCommon()
@@ -399,6 +406,10 @@ namespace SS14.Client.UserInterface
 
         public void Render(IRenderHandle renderHandle)
         {
+            if (!_rendering)
+            {
+                return;
+            }
             var drawHandle = renderHandle.CreateHandleScreen();
 
             _render(drawHandle, RootControl, Vector2.Zero, Color.White, null);

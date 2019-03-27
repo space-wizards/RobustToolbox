@@ -235,6 +235,7 @@ namespace SS14.Client
             _logManager.GetSawmill("ogl.debug.performance").Level = LogLevel.Fatal;
             // Stupid nvidia driver spams buffer info on DebugTypeOther every time you re-allocate a buffer.
             _logManager.GetSawmill("ogl.debug.other").Level = LogLevel.Warning;
+            _logManager.GetSawmill("gdparse").Level = LogLevel.Error;
         }
 
         public static ICollection<string> GetCommandLineArgs()

@@ -1,6 +1,7 @@
 ﻿using SS14.Shared.Serialization;
 using System;
 using System.Diagnostics.Contracts;
+using SS14.Shared.Interfaces.Serialization;
 
 namespace SS14.Shared.Audio
 {
@@ -8,7 +9,7 @@ namespace SS14.Shared.Audio
     ///     Contains common audio parameters for audio playback on the client.
     /// </summary>
     [Serializable, NetSerializable]
-    public struct AudioParams
+    public struct AudioParams : IExposeData
     {
         /// <summary>
         ///     Base volume to play the audio at, in dB.
@@ -49,6 +50,16 @@ namespace SS14.Shared.Audio
         ///     The "default" audio configuration.
         /// </summary>
         public static readonly AudioParams Default = new AudioParams(0, 1, "Master", 62.5f, 1, AudioMixTarget.Stereo);
+
+        public void ExposeData(ObjectSerializer serializer)
+        {
+            Volume = serializer.ReadDataField("volume", 0f);
+            PitchScale = serializer.ReadDataField("pitchscale", 1f);
+            BusName = serializer.ReadDataField("busname", "Master");
+            MaxDistance = serializer.ReadDataField("maxdistance", 62.5f);
+            Attenuation = serializer.ReadDataField("attenuation", 1f);
+            MixTarget = serializer.ReadDataField("mixtarget", AudioMixTarget.Stereo);
+        }
 
         public AudioParams(float volume, float pitchScale, string busName, float maxDistance, float attenuation, AudioMixTarget mixTarget) : this()
         {

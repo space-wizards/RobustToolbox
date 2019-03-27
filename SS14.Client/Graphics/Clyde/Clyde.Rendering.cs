@@ -154,11 +154,15 @@ namespace SS14.Client.Graphics.Clyde
             projMatrixWorld.R1C1 = EyeManager.PIXELSPERMETER * 2f / _window.Height;
 
             // World view matrix.
+            var toScreen = _eyeManager.WorldToScreen(eye.Position.Position);
+            // Round camera position to a screen pixel to avoid weird issues on odd screen sizes.
+            toScreen = ((float) Math.Floor(toScreen.X), (float) Math.Floor(toScreen.Y));
+            var cameraWorldAdjusted = _eyeManager.ScreenToWorld(toScreen);
             var viewMatrixWorld = Matrix3.Identity;
             viewMatrixWorld.R0C0 = 1 / eye.Zoom.X;
             viewMatrixWorld.R1C1 = 1 / eye.Zoom.Y;
-            viewMatrixWorld.R0C2 = -eye.Position.X / eye.Zoom.X;
-            viewMatrixWorld.R1C2 = -eye.Position.Y / eye.Zoom.Y;
+            viewMatrixWorld.R0C2 = -cameraWorldAdjusted.X / eye.Zoom.X;
+            viewMatrixWorld.R1C2 = -cameraWorldAdjusted.Y / eye.Zoom.Y;
 
             _combinedDefaultMatricesWorld = new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
 
@@ -268,6 +272,7 @@ namespace SS14.Client.Graphics.Clyde
             {
                 return;
             }
+
             void DrawLight(Vector2 pos, float range, float power, Color color)
             {
                 _lightShader.SetUniform("lightCenter", pos);
@@ -301,6 +306,7 @@ namespace SS14.Client.Graphics.Clyde
                 {
                     continue;
                 }
+
                 var lightPos = component.Owner.Transform.WorldMatrix.Transform(component.Offset);
                 DrawLight(lightPos, component.Radius, component.Energy, component.Color);
             }
@@ -395,6 +401,7 @@ namespace SS14.Client.Graphics.Clyde
                             default:
                                 throw new ArgumentOutOfRangeException();
                         }
+
                         break;
                     case RenderCommandType.UseShader:
                         if (command.ShaderHandle == _currentShader)
@@ -498,7 +505,7 @@ namespace SS14.Client.Graphics.Clyde
             }
 
             program.SetUniformMaybe(UniModulate, renderCommandTexture.Modulate);
-            program.SetUniformMaybe(UniTexturePixelSize, Vector2.One/loadedTexture.Size);
+            program.SetUniformMaybe(UniTexturePixelSize, Vector2.One / loadedTexture.Size);
 
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
@@ -681,7 +688,7 @@ namespace SS14.Client.Graphics.Clyde
             // Set modulate.
             DebugTools.Assert(BatchingModulate.HasValue);
             program.SetUniformMaybe(UniModulate, BatchingModulate.Value);
-            program.SetUniformMaybe(UniTexturePixelSize, Vector2.One/loadedTexture.Size);
+            program.SetUniformMaybe(UniTexturePixelSize, Vector2.One / loadedTexture.Size);
             // Enable primitive restart & do that draw.
             GL.Enable(EnableCap.PrimitiveRestart);
             GL.PrimitiveRestartIndex(ushort.MaxValue);
@@ -710,6 +717,7 @@ namespace SS14.Client.Graphics.Clyde
             {
                 GL.Disable(EnableCap.ScissorTest);
             }
+
             _isScissoring = false;
         }
 
@@ -718,6 +726,7 @@ namespace SS14.Client.Graphics.Clyde
             private readonly Clyde _manager;
 
             public readonly List<RenderCommandList> _commandLists = new List<RenderCommandList>();
+
             public readonly List<(DrawingHandle, RenderCommandList)> _drawingHandles =
                 new List<(DrawingHandle, RenderCommandList)>();
 

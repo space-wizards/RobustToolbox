@@ -35,6 +35,13 @@ void main()
 
     [SHADER_CODE]
 
+    // Pixel snapping to avoid sampling issues on nvidia.
+    VERTEX += 1;
+    VERTEX /= SCREEN_PIXEL_SIZE*2;
+    VERTEX = floor(VERTEX + 0.5);
+    VERTEX *= SCREEN_PIXEL_SIZE*2;
+    VERTEX -= 1;
+
     gl_Position = vec4(VERTEX, 0.0, 1.0);
     UV = mix(modifyUV.xy, modifyUV.zw, tCoord);
 }

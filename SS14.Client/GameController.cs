@@ -155,6 +155,8 @@ namespace SS14.Client
             _placementManager.Initialize();
             _viewVariablesManager.Initialize();
 
+            RichPresenceClient presence = new RichPresenceClient();
+
             _client.Initialize();
 
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.PostInit);

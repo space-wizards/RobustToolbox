@@ -61,6 +61,9 @@
   </PropertyGroup>
   <Import Project="..\MSBuild\SS14.DefineConstants.targets" />
   <ItemGroup>
+    <PackageReference Include="DiscordRichPresence">
+      <Version>1.0.77</Version>
+    </PackageReference>
     <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
     <PackageReference Include="NVorbis" Version="0.8.6" />
     <PackageReference Include="SharpZipLib" Version="1.0.0" />
@@ -319,6 +322,7 @@
     <Compile Include="UserInterface\CustomControls\DebugCoordsPanel.cs" />
     <Compile Include="Graphics\Drawing\StyleBox.cs" />
     <Compile Include="Graphics\Drawing\DrawingHandle.cs" />
+    <Compile Include="Utility\RichPresenceClient.cs" />
     <Compile Include="Utility\ThreadUtility.cs" />
     <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorAngle.cs" />
     <Compile Include="ViewVariables\Editors\ViewVariablesPropertyEditorBoolean.cs" />

@@ -78,6 +78,9 @@
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="1.9.71" />
     <PackageReference Include="ConcurrentDataStructures" Version="0.2.0" />
+    <PackageReference Include="DiscordRichPresence">
+      <Version>1.0.77</Version>
+    </PackageReference>
     <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="YamlDotNet" Version="5.0.1" />

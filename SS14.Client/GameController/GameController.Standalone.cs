@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Runtime.Remoting.Channels;
 using SS14.Client.Interfaces;
@@ -46,25 +46,13 @@ namespace SS14.Client
                 SleepMode = Mode == DisplayMode.Headless ? SleepMode.Delay : SleepMode.None
             };
 
-            /*
-            var start = DateTime.Now;
-            var frames = 0;
-            */
-
             _mainLoop.Tick += (sender, args) => Update(args.DeltaSeconds);
+
             if (Mode == DisplayMode.Clyde)
             {
                 _mainLoop.Render += (sender, args) =>
                 {
-                    /*
-                    frames++;
-                    if ((DateTime.Now - start).TotalSeconds >= 1)
-                    {
-                        Logger.Info(frames.ToString());
-                        start = DateTime.Now;
-                        frames = 0;
-                    }
-                    */
+                    _gameTimingHeadless.CurFrame++;
                     _clyde.Render(new FrameEventArgs(args.DeltaSeconds));
                 };
                 _mainLoop.Input += (sender, args) => _clyde.ProcessInput(new FrameEventArgs(args.DeltaSeconds));

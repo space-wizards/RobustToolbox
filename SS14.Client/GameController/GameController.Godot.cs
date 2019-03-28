@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Godot;
 using SS14.Client.GodotGlue;
@@ -211,6 +211,7 @@ namespace SS14.Client
             public TimeSpan TickPeriod => TimeSpan.FromTicks((long)(1.0 / TickRate * TimeSpan.TicksPerSecond));
 
             public TimeSpan TickRemainder { get; set; }
+            public uint CurFrame { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
             public void ResetRealTime()
             {

@@ -28,8 +28,6 @@ namespace SS14.Server.Placement
         private readonly IPlayerManager _playerManager;
         [Dependency]
         private readonly IServerEntityManager _entityManager;
-        [Dependency]
-        private readonly IMapManager _mapManager;
 
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).

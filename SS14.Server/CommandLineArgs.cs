@@ -24,6 +24,17 @@ namespace SS14.Server
             }
         }
 
+        [Option("data-dir", Required = false, HelpText = "Data directory to read/write to.")]
+        public string dataDir { get; set; }
+
+        public string DataDir
+        {
+            get
+            {
+                return dataDir ?? PathHelpers.ExecutableRelativeFile("data");
+            }
+        }
+
         [HelpOption]
         public string GetUsage()
         {

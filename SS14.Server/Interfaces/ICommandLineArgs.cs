@@ -1,6 +1,4 @@
-﻿using SS14.Shared.IoC;
-
-namespace SS14.Server.Interfaces
+﻿namespace SS14.Server.Interfaces
 {
     public interface ICommandLineArgs
     {
@@ -10,6 +8,9 @@ namespace SS14.Server.Interfaces
         /// </summary>
         /// <returns>True if the arguments were parsed correctly, false if the program should terminate immediately (parse error, help used).</returns>
         bool Parse();
+
         string ConfigFile { get; }
+
+        string DataDir { get; }
     }
 }

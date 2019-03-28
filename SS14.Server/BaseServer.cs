@@ -171,7 +171,7 @@ namespace SS14.Server
             }
 
             exeDir = Path.GetDirectoryName(exeDir);
-            var dataDir = Path.Combine(exeDir ?? throw new InvalidOperationException(), "user_data");
+            var dataDir = _commandLine.DataDir;
 
             // Set up the VFS
             _resources.Initialize(dataDir);

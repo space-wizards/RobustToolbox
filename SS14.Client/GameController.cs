@@ -32,6 +32,8 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
+using System.Reflection;
 using System.Threading;
 using JetBrains.Annotations;
 using SS14.Client.ResourceManagement;
@@ -65,7 +67,7 @@ namespace SS14.Client
         public static bool ShuttingDownHard { get; private set; } = false;
 
         [Dependency] private readonly IConfigurationManager _configurationManager;
-        [Dependency] private readonly IResourceCache _resourceCache;
+        [Dependency] private readonly IResourceCacheInternal _resourceCache;
         [Dependency] private readonly IResourceManager _resourceManager;
         [Dependency] private readonly ISS14Serializer _serializer;
         [Dependency] private readonly IPrototypeManager _prototypeManager;
@@ -97,22 +99,34 @@ namespace SS14.Client
             InitIoC();
             SetupLogging();
 
+            var args = GetCommandLineArgs();
+
             // Set up custom synchronization context.
             // Sorry Godot.
             _taskManager.Initialize();
 
-            // Load config.
-            _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
+            // Figure out user data directory.
+            var userDataDir = _getUserDataDir(args);
+
+            var configFile = Path.Combine(userDataDir, "client_config.toml");
+            if (File.Exists(configFile))
+            {
+                // Load config from user data if available.
+                _configurationManager.LoadFromFile(configFile);
+            }
+            else
+            {
+                // Else we just use code-defined defaults and let it save to file when the user changes things.
+                _configurationManager.SetSaveFile(configFile);
+            }
 
             if (Mode == DisplayMode.Clyde)
             {
                 _clyde = IoCManager.Resolve<IClyde>();
             }
 
-            // Init resources.
-            // Doesn't do anything right now because TODO Godot asset management is a bit ad-hoc.
+            _resourceCache.Initialize(userDataDir);
             _resourceCache.LoadBaseResources();
-            _resourceCache.LoadLocalResources();
 
             // Bring display up as soon as resources are mounted.
             _displayManager.Initialize();
@@ -163,7 +177,6 @@ namespace SS14.Client
 
             _clyde?.Ready();
 
-            var args = GetCommandLineArgs();
             if (args.Contains("--connect"))
             {
                 _client.ConnectToServer("127.0.0.1", 1212);
@@ -185,6 +198,7 @@ namespace SS14.Client
             {
                 _mainLoop.Running = false;
             }
+
             Logger.Debug("Goodbye");
             IoCManager.Clear();
             ShuttingDownHard = true;
@@ -241,6 +255,54 @@ namespace SS14.Client
         public static ICollection<string> GetCommandLineArgs()
         {
             return OnGodot ? Godot.OS.GetCmdlineArgs() : Environment.GetCommandLineArgs();
+        }
+
+        private static string _getUserDataDir(ICollection<string> commandLineArgs)
+        {
+            if (commandLineArgs.Contains("--self-contained"))
+            {
+                // Self contained mode. Data is stored in a directory called user_data next to SS14.Client.exe.
+                var exeDir = Assembly.GetExecutingAssembly().Location;
+                if (string.IsNullOrEmpty(exeDir))
+                {
+                    throw new Exception("Unable to locate client exe");
+                }
+
+                exeDir = Path.GetDirectoryName(exeDir);
+                return Path.Combine(exeDir ?? throw new InvalidOperationException(), "user_data");
+            }
+
+            string appDataDir;
+
+#if LINUX
+            var xdgDataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
+            if (xdgDataHome == null)
+            {
+                var home = Environment.GetEnvironmentVariable("HOME");
+                if (home == null)
+                {
+                    throw new Exception("$HOME should always be set on a POSIX system.");
+                }
+
+                appDataDir = Path.Combine(home, ".local", "share");
+            }
+            else
+            {
+                appDataDir = xdgDataHome;
+            }
+#elif MACOS
+            var home = Environment.GetEnvironmentVariable("HOME");
+            if (home == null)
+            {
+                throw new Exception("$HOME should always be set on a POSIX system.");
+            }
+
+            appDataDir = Path.Combine(home, "Library", "Application Support");
+#else
+            appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+#endif
+
+            return Path.Combine(appDataDir, "Space Station 14");
         }
     }
 }

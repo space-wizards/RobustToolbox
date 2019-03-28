@@ -14,6 +14,11 @@ namespace SS14.Shared.Interfaces.Configuration
         void LoadFromFile(string configFile);
 
         /// <summary>
+        ///     Specifies the location where the config file should be saved, without trying to load from it.
+        /// </summary>
+        void SetSaveFile(string configFile);
+
+        /// <summary>
         /// Saves the configuration file to disk.
         /// </summary>
         void SaveToFile();

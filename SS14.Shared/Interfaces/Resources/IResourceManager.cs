@@ -16,11 +16,6 @@ namespace SS14.Shared.Interfaces.Resources
         IWritableDirProvider UserData { get; }
 
         /// <summary>
-        ///     Sets the manager up so that the base game can run.
-        /// </summary>
-        void Initialize();
-
-        /// <summary>
         ///     Loads the default content pack from the configuration file into the VFS.
         /// </summary>
         void MountDefaultContentPack();
@@ -139,6 +134,12 @@ namespace SS14.Shared.Interfaces.Resources
 
     internal interface IResourceManagerInternal : IResourceManager
     {
+        /// <summary>
+        ///     Sets the manager up so that the base game can run.
+        /// </summary>
+        /// <param name="userData">The directory to use for user data.</param>
+        void Initialize(string userData);
+
         /// <summary>
         ///     Mounts a single stream as a content file. Useful for unit testing.
         /// </summary>

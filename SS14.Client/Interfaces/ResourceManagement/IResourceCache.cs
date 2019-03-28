@@ -6,11 +6,6 @@ namespace SS14.Client.Interfaces.ResourceManagement
 {
     public interface IResourceCache : IResourceManager
     {
-        // For convenience.
-
-        void LoadLocalResources();
-        void LoadBaseResources();
-
         T GetResource<T>(string path, bool useFallback = true)
             where T : BaseResource, new();
 
@@ -37,5 +32,10 @@ namespace SS14.Client.Interfaces.ResourceManagement
 
         T GetFallback<T>()
             where T : BaseResource, new();
+    }
+
+    internal interface IResourceCacheInternal : IResourceCache, IResourceManagerInternal
+    {
+        void LoadBaseResources();
     }
 }

@@ -14,15 +14,13 @@ using SS14.Client.UserInterface.CustomControls;
 using SS14.Client.Utility;
 using SS14.Shared.Configuration;
 using SS14.Shared.Input;
-using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface
 {
-    internal sealed class UserInterfaceManager : IPostInjectInit, IDisposable, IUserInterfaceManagerInternal
+    internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal
     {
-        [Dependency] private readonly IConfigurationManager _config;
         [Dependency] private readonly ISceneTreeHolder _sceneTreeHolder;
         [Dependency] private readonly IInputManager _inputManager;
         [Dependency] private readonly IDisplayManager _displayManager;
@@ -50,11 +48,6 @@ namespace SS14.Client.UserInterface
         private readonly List<Control> _modalStack = new List<Control>();
 
         private bool _rendering = true;
-
-        public void PostInject()
-        {
-            _config.RegisterCVar("key.keyboard.console", Keyboard.Key.Tilde, CVar.ARCHIVE);
-        }
 
         public void Initialize()
         {

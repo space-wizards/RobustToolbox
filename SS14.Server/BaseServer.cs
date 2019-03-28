@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using SS14.Server.Console;
@@ -67,7 +68,7 @@ namespace SS14.Server
         [Dependency]
         private readonly IGameTiming _time;
         [Dependency]
-        private readonly IResourceManager _resources;
+        private readonly IResourceManagerInternal _resources;
         [Dependency]
         private readonly IMapManager _mapManager;
         [Dependency]
@@ -163,8 +164,17 @@ namespace SS14.Server
                 return true;
             }
 
+            var exeDir = Assembly.GetExecutingAssembly().Location;
+            if (string.IsNullOrEmpty(exeDir))
+            {
+                throw new Exception("Unable to locate client exe");
+            }
+
+            exeDir = Path.GetDirectoryName(exeDir);
+            var dataDir = Path.Combine(exeDir ?? throw new InvalidOperationException(), "user_data");
+
             // Set up the VFS
-            _resources.Initialize();
+            _resources.Initialize(dataDir);
 
 #if RELEASE
             _resources.MountContentDirectory(@"./Resources/");

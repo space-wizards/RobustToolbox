@@ -114,6 +114,7 @@ namespace SS14.Client
             IoCManager.Register<IResourceManager, ResourceCache>();
             IoCManager.Register<IResourceManagerInternal, ResourceCache>();
             IoCManager.Register<IResourceCache, ResourceCache>();
+            IoCManager.Register<IResourceCacheInternal, ResourceCache>();
             IoCManager.Register<IClientNetManager, NetManager>();
             IoCManager.Register<IClientEntityManager, ClientEntityManager>();
             IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();

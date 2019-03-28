@@ -345,11 +345,6 @@
     <Compile Include="ViewVariables\ViewVariablesTrait.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="client_config.toml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Project>{59250baf-0000-0000-0000-000000000000}</Project>
       <Name>Lidgren.Network</Name>

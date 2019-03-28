@@ -34,12 +34,17 @@ namespace SS14.Shared.Configuration
                 ProcessTomlObject(tblRoot);
 
                 _configFile = configFile;
-                Logger.Info($"[CFG] Configuration Loaded from '{Path.GetFullPath(configFile)}'");
+                Logger.InfoS("cfg", $"Configuration Loaded from '{Path.GetFullPath(configFile)}'");
             }
             catch (Exception e)
             {
-                Logger.Warning("[CFG] Unable to load configuration file:\n{0}", e);
+                Logger.WarningS("cfg", "Unable to load configuration file:\n{0}", e);
             }
+        }
+
+        public void SetSaveFile(string configFile)
+        {
+            _configFile = configFile;
         }
 
         /// <summary>
@@ -85,7 +90,7 @@ namespace SS14.Shared.Configuration
         {
             if (_configFile == null)
             {
-                Logger.Warning("[CFG] Cannot save the config file, because one was never loaded.");
+                Logger.WarningS("cfg", "Cannot save the config file, because one was never loaded.");
                 return;
             }
 
@@ -106,7 +111,7 @@ namespace SS14.Shared.Configuration
 
                     if (value == null)
                     {
-                        Logger.Error($"[CFG] CVar {name} has no value or default value, was the default value registered as null?");
+                        Logger.ErrorS("cfg", $"CVar {name} has no value or default value, was the default value registered as null?");
                         continue;
                     }
 
@@ -150,17 +155,17 @@ namespace SS14.Shared.Configuration
                             table.Add(keyName, val);
                             break;
                         default:
-                            Logger.Warning($"[CFG] Cannot serialize '{name}', unsupported type.");
+                            Logger.WarningS("cfg", $"Cannot serialize '{name}', unsupported type.");
                             break;
                     }
                 }
 
                 Toml.WriteFile(tblRoot, _configFile);
-                Logger.Info($"[CFG] Server config saved to '{_configFile}'.");
+                Logger.InfoS("cfg", $"config saved to '{_configFile}'.");
             }
             catch (Exception e)
             {
-                Logger.Warning($"[CFG] Cannot save the config file '{_configFile}'.\n {e.Message}");
+                Logger.WarningS("cfg", $"Cannot save the config file '{_configFile}'.\n {e.Message}");
             }
         }
 
@@ -170,7 +175,7 @@ namespace SS14.Shared.Configuration
             if (_configVars.TryGetValue(name, out ConfigVar cVar))
             {
                 if (cVar.Registered)
-                    Logger.Error($"[CVar] The variable '{name}' has already been registered.");
+                    Logger.ErrorS("cfg", $"The variable '{name}' has already been registered.");
 
                 cVar.DefaultValue = defaultValue;
                 cVar.Flags = flags;
@@ -194,7 +199,7 @@ namespace SS14.Shared.Configuration
             if (_configVars.TryGetValue(name, out ConfigVar cVar) && cVar.Registered)
                 cVar.Value = value;
             else
-                throw new InvalidConfigurationException($"[CVar] Trying to set unregistered variable '{name}'");
+                throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
         }
 
         /// <inheritdoc />
@@ -204,7 +209,7 @@ namespace SS14.Shared.Configuration
                 //TODO: Make flags work, required non-derpy net system.
                 return (T)(cVar.Value ?? cVar.DefaultValue);
 
-            throw new InvalidConfigurationException($"[CVar] Trying to get unregistered variable '{name}'");
+            throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
         }
 
         /// <summary>
@@ -230,7 +235,7 @@ namespace SS14.Shared.Configuration
                     return obj.Get<string>();
 
                 default:
-                    throw new InvalidConfigurationException($"[CFG] Cannot convert {tmlType}.");
+                    throw new InvalidConfigurationException($"Cannot convert {tmlType}.");
             }
         }
 

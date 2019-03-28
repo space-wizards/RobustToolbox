@@ -27,14 +27,9 @@ namespace SS14.Shared.ContentPack
         public IWritableDirProvider UserData { get; private set; }
 
         /// <inheritdoc />
-        public void Initialize()
+        public void Initialize(string userData)
         {
-            _config.RegisterCVar("resource.pack", "ResourcePack.zip", CVar.ARCHIVE);
-
-            var configRoot = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            configRoot = Path.Combine(configRoot, DataFolderName);
-            configRoot = Path.GetFullPath(configRoot);
-            _configRoot = Directory.CreateDirectory(configRoot);
+            _configRoot = Directory.CreateDirectory(userData);
 
             UserData = new WritableDirProvider(_configRoot);
         }

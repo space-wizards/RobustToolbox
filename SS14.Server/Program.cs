@@ -112,6 +112,7 @@ namespace SS14.Server
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IGameTiming, GameTiming>();
             IoCManager.Register<IResourceManager, ResourceManager>();
+            IoCManager.Register<IResourceManagerInternal, ResourceManager>();
             IoCManager.Register<IPhysicsManager, PhysicsManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
             IoCManager.Register<ILogManager, LogManager>();

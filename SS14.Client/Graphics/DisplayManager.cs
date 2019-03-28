@@ -27,7 +27,7 @@ namespace SS14.Client.Graphics
         [Dependency] protected readonly IGameControllerProxyInternal _gameController;
 
         protected WindowMode WindowMode { get; private set; } = WindowMode.Windowed;
-        protected bool VSync { get; private set; }
+        protected bool VSync { get; private set; } = true;
 
         public virtual void PostInject()
         {

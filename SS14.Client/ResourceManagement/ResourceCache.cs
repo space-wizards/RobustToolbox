@@ -7,14 +7,12 @@ using System.Collections.Generic;
 
 namespace SS14.Client.ResourceManagement
 {
-    public partial class ResourceCache : ResourceManager, IResourceCache, IDisposable
+    public partial class ResourceCache : ResourceManager, IResourceCacheInternal, IDisposable
     {
         private Dictionary<(ResourcePath, Type), BaseResource> CachedResources = new Dictionary<(ResourcePath, Type), BaseResource>();
 
         public void LoadBaseResources()
         {
-            Initialize();
-
             // TODO: Godot RIGHT NOW doesn't make it easy to load files from non-disk.
             // AFAICT Godot has an internal system for this (PackedData/PackSource) but it's not exposed enough for us to use it at the moment.
             // Specifically: Godot does use its pack system for exported projects, but there's no way to load new packs at runtime manually.
@@ -26,11 +24,6 @@ namespace SS14.Client.ResourceManagement
             MountContentDirectory(@"../../../bin/Content.Client/", new ResourcePath("/Assemblies/"));
 #endif
             //_resources.MountContentPack(@"./EngineContentPack.zip");
-        }
-
-        public void LoadLocalResources()
-        {
-            //_resources.MountDefaultContentPack();
         }
 
         public T GetResource<T>(string path, bool useFallback = true) where T : BaseResource, new()

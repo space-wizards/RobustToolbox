@@ -2,6 +2,7 @@
 using SS14.Shared.Maths;
 using System;
 using SS14.Client.Interfaces.Graphics;
+using SS14.Client.Utility;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 
@@ -16,6 +17,8 @@ namespace SS14.Client.UserInterface.CustomControls
         public const string StyleClassWindowCloseButton = "windowCloseButton";
 
         [Dependency] private readonly IDisplayManager _displayManager;
+
+        protected virtual Vector2? CustomSize => null;
 
         public SS14Window() : base()
         {
@@ -102,6 +105,11 @@ namespace SS14.Client.UserInterface.CustomControls
                 header.PanelOverride = null;
                 CloseButton.TextureNormal = null;
                 CloseButton.AddStyleClass(StyleClassWindowCloseButton);
+            }
+
+            if (CustomSize != null)
+            {
+                Size = CustomSize.Value;
             }
         }
 
@@ -372,6 +380,19 @@ namespace SS14.Client.UserInterface.CustomControls
                 // 50 is arbitrary here. As long as it's bumped back into view.
                 Position = new Vector2(windowSize.X - 50, Position.Y);
             }
+        }
+
+        private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
+        {
+            if (CustomSize.HasValue && (property == "margin_left" ||
+                 property == "margin_right" ||
+                 property == "margin_bottom" ||
+                 property == "margin_top"))
+            {
+                return;
+            }
+
+            base.SetGodotProperty(property, value, context);
         }
     }
 }

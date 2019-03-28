@@ -94,7 +94,7 @@ namespace SS14.Client.Graphics.Clyde
 
         private bool HasKHRDebug => HasExtension("GL_KHR_debug");
 
-        private bool _quartResLights = false;
+        private bool _quartResLights = true;
 
         public override void SetWindowTitle(string title)
         {
@@ -131,6 +131,8 @@ namespace SS14.Client.Graphics.Clyde
 
             _window.VSync = VSync ? VSyncMode.On : VSyncMode.Off;
             _window.WindowState = WindowMode == WindowMode.Fullscreen ? WindowState.Fullscreen : WindowState.Normal;
+            _quartResLights = _configurationManager.GetCVar<bool>("display.highreslights");
+            _regenerateLightTexture();
         }
 
         public override void PostInject()
@@ -139,6 +141,7 @@ namespace SS14.Client.Graphics.Clyde
 
             _configurationManager.RegisterCVar("display.width", 1280);
             _configurationManager.RegisterCVar("display.height", 720);
+            _configurationManager.RegisterCVar("display.highreslights", false);
             _configurationManager.RegisterCVar("audio.device", "");
 
             _mapManager.TileChanged += _updateTileMapOnUpdate;
@@ -188,10 +191,6 @@ namespace SS14.Client.Graphics.Clyde
                 var oldSize = _windowSize;
                 _windowSize = new Vector2i(_window.Width, _window.Height);
                 GL.Viewport(0, 0, _window.Width, _window.Height);
-                GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
-                var (lightW, lightH) = _lightMapSize();
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, lightW, lightH, 0,
-                    PixelFormat.Rgba, PixelType.Float, IntPtr.Zero);
                 OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _windowSize));
             };
             _window.MouseDown += (sender, eventArgs) =>
@@ -342,10 +341,7 @@ namespace SS14.Client.Graphics.Clyde
             LightFBO = new OGLHandle(GL.GenFramebuffer());
             LightTexture = new OGLHandle(GL.GenTexture());
 
-            var (lightW, lightH) = _lightMapSize();
-            GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, lightW, lightH, 0,
-                PixelFormat.Rgba, PixelType.Float, IntPtr.Zero);
+            _regenerateLightTexture();
 
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMagFilter.Linear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
@@ -354,8 +350,8 @@ namespace SS14.Client.Graphics.Clyde
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, LightFBO.Handle);
 
-            _objectLabelMaybe(ObjectLabelIdentifier.Framebuffer, LightFBO, "LightFBO");
-            _objectLabelMaybe(ObjectLabelIdentifier.Texture, LightTexture, "LightTexture");
+            _objectLabelMaybe(ObjectLabelIdentifier.Framebuffer, LightFBO, nameof(LightFBO));
+            _objectLabelMaybe(ObjectLabelIdentifier.Texture, LightTexture, nameof(LightTexture));
 
             GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
                 LightTexture.Handle, 0);
@@ -377,7 +373,6 @@ namespace SS14.Client.Graphics.Clyde
             {
                 // Intel specific settings.
                 _reallocateBuffers = true;
-                _quartResLights = true;
             }
         }
 
@@ -551,6 +546,14 @@ namespace SS14.Client.Graphics.Clyde
         public IntPtr GetNativeWindowHandle()
         {
             return _window.WindowInfo.Handle;
+        }
+
+        private void _regenerateLightTexture()
+        {
+            GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
+            var (lightW, lightH) = _lightMapSize();
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, lightW, lightH, 0,
+                PixelFormat.Rgba, PixelType.Float, IntPtr.Zero);
         }
 
         [StructLayout(LayoutKind.Sequential)]

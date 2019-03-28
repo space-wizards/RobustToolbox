@@ -12,13 +12,13 @@ namespace SS14.Client.Utility
 {
     class RichPresenceClient
     {
+        DiscordRpcClient client;
+        System.Timers.Timer timer;
+
         private void BasicClient()
         {
             //Create a new client
-            var client = new DiscordRpcClient("560482798364917789")
-            {
-
-            };
+            var client = new DiscordRpcClient("560482798364917789");
 
             //Create some events so we know things are happening
             //Create a timer that will regularly call invoke
@@ -35,10 +35,13 @@ namespace SS14.Client.Utility
                 Details = "A Basic Example",
                 State = "In Game",
                 Timestamps = Timestamps.FromTimeSpan(10)
-            });
-            //At the very end we need to dispose of it
-            timer.Dispose();
+            });       
+        }
+
+        public void Free()
+        {
             client.Dispose();
+            timer.Dispose();
         }
 
         public RichPresenceClient()

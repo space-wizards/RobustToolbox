@@ -56,6 +56,8 @@ namespace SS14.Client
 
         internal static DisplayMode Mode { get; private set; } = DisplayMode.Headless;
 
+        internal RichPresenceClient presence;
+
         internal static bool OnGodot => Mode == DisplayMode.Godot;
 
         /// <summary>
@@ -187,6 +189,7 @@ namespace SS14.Client
             {
                 _mainLoop.Running = false;
             }
+            presence.Free();
             Logger.Debug("Goodbye");
             IoCManager.Clear();
             ShuttingDownHard = true;

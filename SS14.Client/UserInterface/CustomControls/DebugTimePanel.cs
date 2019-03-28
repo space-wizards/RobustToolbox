@@ -1,4 +1,4 @@
-using SS14.Client.Graphics.Drawing;
+﻿using SS14.Client.Graphics.Drawing;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Client.UserInterface.Controls;
@@ -54,7 +54,7 @@ namespace SS14.Client.UserInterface.CustomControls
             }
 
             _contents.Text = $@"Paused: {_gameTiming.Paused}, CurTick: {_gameTiming.CurTick},
-CurTime: {_gameTiming.CurTime}, RealTime: {_gameTiming.RealTime}";
+CurTime: {_gameTiming.CurTime}, RealTime: {_gameTiming.RealTime}, CurFrame: {_gameTiming.CurFrame}";
 
             MinimumSizeChanged();
         }

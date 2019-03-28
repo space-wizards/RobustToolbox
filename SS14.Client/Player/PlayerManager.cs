@@ -64,7 +64,7 @@ namespace SS14.Client.Player
         {
             _sessions = new Dictionary<NetSessionId, IPlayerSession>();
 
-            _config.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
+            _config.RegisterCVar("player.name", "JoeGenero", CVar.ARCHIVE);
 
             _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME);
             _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, HandlePlayerList);

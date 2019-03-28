@@ -70,6 +70,10 @@ namespace SS14.Client.Graphics.Clyde
         // VBO to draw a single quad.
         private Buffer QuadVBO;
         private OGLHandle QuadVAO;
+        // VBO to draw a single line.
+        private Buffer LineVBO;
+        private OGLHandle LineVAO;
+
 
         private const string UniModUV = "modifyUV";
         private const string UniModelMatrix = "modelMatrix";
@@ -255,29 +259,51 @@ namespace SS14.Client.Graphics.Clyde
             _loadStockTextures();
             _loadStockShaders();
 
-            var quadVertices = new[]
+            // Quad drawing.
             {
-                new Vertex2D(1, 0, 1, 1),
-                new Vertex2D(0, 0, 0, 1),
-                new Vertex2D(1, 1, 1, 0),
-                new Vertex2D(0, 1, 0, 0),
-            };
+                var quadVertices = new[]
+                {
+                    new Vertex2D(1, 0, 1, 1),
+                    new Vertex2D(0, 0, 0, 1),
+                    new Vertex2D(1, 1, 1, 0),
+                    new Vertex2D(0, 1, 0, 0),
+                };
 
-            QuadVBO = new Buffer<Vertex2D>(this, BufferTarget.ArrayBuffer, BufferUsageHint.StaticDraw, quadVertices,
-                "QuadVBO");
+                QuadVBO = new Buffer<Vertex2D>(this, BufferTarget.ArrayBuffer, BufferUsageHint.StaticDraw, quadVertices,
+                    "QuadVBO");
 
-            QuadVAO = new OGLHandle(GL.GenVertexArray());
-            GL.BindVertexArray(QuadVAO.Handle);
-            _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, QuadVAO, "QuadVAO");
-            // Vertex Coords
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
-            GL.EnableVertexAttribArray(0);
-            // Texture Coords.
-            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
-            GL.EnableVertexAttribArray(1);
-            // Texture Array Index.
-            GL.VertexAttribPointer(2, 1, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 4 * sizeof(float));
-            GL.EnableVertexAttribArray(2);
+                QuadVAO = new OGLHandle(GL.GenVertexArray());
+                GL.BindVertexArray(QuadVAO.Handle);
+                _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, QuadVAO, "QuadVAO");
+                // Vertex Coords
+                GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
+                GL.EnableVertexAttribArray(0);
+                // Texture Coords.
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
+                GL.EnableVertexAttribArray(1);
+            }
+
+            // Line drawing.
+            {
+                var lineVertices = new[]
+                {
+                    new Vertex2D(0, 0, 0, 0),
+                    new Vertex2D(1, 1, 1, 1),
+                };
+
+                LineVBO = new Buffer<Vertex2D>(this, BufferTarget.ArrayBuffer, BufferUsageHint.StaticDraw, lineVertices,
+                    nameof(LineVBO));
+
+                LineVAO = new OGLHandle(GL.GenVertexArray());
+                GL.BindVertexArray(LineVAO.Handle);
+                _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, LineVAO, nameof(LineVAO));
+                // Vertex Coords
+                GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
+                GL.EnableVertexAttribArray(0);
+                // Texture Coords.
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
+                GL.EnableVertexAttribArray(1);
+            }
 
             BatchVBO = new Buffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
                 Vertex2D.SizeOf * BatchVertexData.Length, "BatchVBO");

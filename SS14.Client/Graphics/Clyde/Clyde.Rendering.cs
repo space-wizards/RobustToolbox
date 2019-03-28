@@ -341,6 +341,10 @@ namespace SS14.Client.Graphics.Clyde
                     case RenderCommandType.Texture:
                         _drawCommandTexture(ref command, true, ref _currentModelMatrix);
                         break;
+                    case RenderCommandType.Line:
+                        _flushBatchBuffer();
+                        _drawCommandLine(ref command);
+                        break;
                     case RenderCommandType.Transform:
                         _currentModelMatrix = command.TransformMatrix;
                         _batchModelMatricesNeedsUpdate = true;
@@ -524,6 +528,44 @@ namespace SS14.Client.Graphics.Clyde
             program.SetUniformTextureMaybe(UniLightTexture, TextureUnit.Texture1);
 
             _drawQuad(renderCommandTexture.PositionA, renderCommandTexture.PositionB, ref modelMatrix, program);
+        }
+
+        private void _drawCommandLine(ref RenderCommand renderCommandLine)
+        {
+            var loaded = _loadedShaders[_currentShader];
+            var program = loaded.Program;
+
+            program.Use();
+            program.SetUniformMaybe(UniModUV, new Vector4(0, 0, 1, 1));
+            program.SetUniformMaybe(UniModulate, renderCommandLine.LineColor);
+
+            var white = _loadedTextures[((OpenGLTexture) Texture.White).OpenGLTextureId].OpenGLObject;
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, white.Handle);
+
+            GL.ActiveTexture(TextureUnit.Texture1);
+            if (_lightingReady && loaded.HasLighting)
+            {
+                GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
+            }
+            else
+            {
+                GL.BindTexture(TextureTarget.Texture2D, white.Handle);
+            }
+
+            program.SetUniformTextureMaybe(UniMainTexture, TextureUnit.Texture0);
+            program.SetUniformTextureMaybe(UniLightTexture, TextureUnit.Texture1);
+
+            var a = renderCommandLine.LinePositionA;
+            var b = renderCommandLine.LinePositionB;
+
+            GL.BindVertexArray(LineVAO.Handle);
+            var rectTransform = Matrix3.Identity;
+            (rectTransform.R0C0, rectTransform.R1C1) = b - a;
+            (rectTransform.R0C2, rectTransform.R1C2) = a;
+            rectTransform.Multiply(ref _currentModelMatrix);
+            program.SetUniformMaybe(UniModelMatrix, rectTransform);
+            GL.DrawArrays(PrimitiveType.Lines, 0, 2);
         }
 
         private void _drawQuad(Vector2 a, Vector2 b, ref Matrix3 modelMatrix, ShaderProgram program)
@@ -888,6 +930,19 @@ namespace SS14.Client.Graphics.Clyde
                 }
             }
 
+            public void DrawLine(Vector2 a, Vector2 b, Color color, int handleId)
+            {
+                _assertNotDisposed();
+
+                var list = _drawingHandles[handleId].Item2;
+                ref var command = ref list.RenderCommands.AllocAdd();
+
+                command.Type = RenderCommandType.Line;
+                command.LinePositionA = a;
+                command.LinePositionB = b;
+                command.LineColor = color;
+            }
+
             public void UseShader(Shaders.Shader shader, int handleId)
             {
                 _assertNotDisposed();
@@ -954,6 +1009,12 @@ namespace SS14.Client.Graphics.Clyde
 
             // UseShader command fields.
             [FieldOffset(4)] public int ShaderHandle;
+
+            // Line command fields.
+            [FieldOffset(4)] public Vector2 LinePositionA;
+            [FieldOffset(12)] public Vector2 LinePositionB;
+
+            [FieldOffset(20)] public Color LineColor;
         }
 
         private struct BatchCommand
@@ -974,6 +1035,7 @@ namespace SS14.Client.Graphics.Clyde
             ChangeViewMatrix,
             ResetViewMatrix,
             UseShader,
+            Line,
         }
 
         /// <summary>
@@ -998,6 +1060,7 @@ namespace SS14.Client.Graphics.Clyde
         void DrawTextureRect(Texture texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion, int handleId);
         void SetScissor(in UIBox2i? scissorBox, int handleId);
         void DrawEntity(IEntity entity, in Vector2 position, int handleId);
+        void DrawLine(Vector2 a, Vector2 b, Color color, int handleId);
         void UseShader(Shader shader, int handleId);
     }
 }

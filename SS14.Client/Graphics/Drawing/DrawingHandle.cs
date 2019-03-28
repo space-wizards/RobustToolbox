@@ -137,13 +137,16 @@ namespace SS14.Client.Graphics.Drawing
 
         public override void DrawLine(Vector2 from, Vector2 to, Color color, float width = 1, bool antiAliased = false)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             CheckDisposed();
-            VS.CanvasItemAddLine(Item, ToPixelCoords(from), ToPixelCoords(to), (Modulate * color).Convert(), width, antiAliased);
+            if (_renderHandle != null)
+            {
+                _renderHandle.DrawLine(from, to, color, _handleId);
+            }
+            else if (Item != null)
+            {
+                VS.CanvasItemAddLine(Item, ToPixelCoords(from), ToPixelCoords(to), (Modulate * color).Convert(), width,
+                    antiAliased);
+            }
         }
 
         public override void DrawTexture(Texture texture, Vector2 position, Color? modulate = null,
@@ -188,7 +191,8 @@ namespace SS14.Client.Graphics.Drawing
             {
                 if (_renderHandle != null)
                 {
-                    _renderHandle.DrawTextureRect(Texture.White, rect.BottomLeft, rect.TopRight, color, null, _handleId);
+                    _renderHandle.DrawTextureRect(Texture.White, rect.BottomLeft, rect.TopRight, color, null,
+                        _handleId);
                 }
                 else if (Item != null)
                 {
@@ -261,13 +265,16 @@ namespace SS14.Client.Graphics.Drawing
 
         public override void DrawLine(Vector2 from, Vector2 to, Color color, float width = 1, bool antiAliased = false)
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
             CheckDisposed();
-            VS.CanvasItemAddLine(Item, from.Convert(), to.Convert(), (Modulate * color).Convert(), width, antiAliased);
+            if (_renderHandle != null)
+            {
+                _renderHandle.DrawLine(from, to, color, _handleId);
+            }
+            else if (Item != null)
+            {
+                VS.CanvasItemAddLine(Item, from.Convert(), to.Convert(), (Modulate * color).Convert(), width,
+                    antiAliased);
+            }
         }
 
         public void DrawRect(UIBox2 rect, Color color, bool filled = true)
@@ -278,7 +285,8 @@ namespace SS14.Client.Graphics.Drawing
             {
                 if (_renderHandle != null)
                 {
-                    _renderHandle.DrawTextureRect(Texture.White, rect.TopLeft, rect.BottomRight, color, null, _handleId);
+                    _renderHandle.DrawTextureRect(Texture.White, rect.TopLeft, rect.BottomRight, color, null,
+                        _handleId);
                 }
                 else if (Item != null)
                 {
@@ -303,7 +311,8 @@ namespace SS14.Client.Graphics.Drawing
 
             if (_renderHandle != null)
             {
-                _renderHandle.DrawTextureRect(texture, position, position + texture.Size, actualModulate, null, _handleId);
+                _renderHandle.DrawTextureRect(texture, position, position + texture.Size, actualModulate, null,
+                    _handleId);
             }
             else if (Item != null)
             {
@@ -322,7 +331,8 @@ namespace SS14.Client.Graphics.Drawing
             }
             else if (Item != null)
             {
-                texture.GodotTexture.DrawRect(Item, rect.Convert(), tile, actualModulate.Convert(), transpose, normalMap);
+                texture.GodotTexture.DrawRect(Item, rect.Convert(), tile, actualModulate.Convert(), transpose,
+                    normalMap);
             }
         }
 
@@ -332,7 +342,8 @@ namespace SS14.Client.Graphics.Drawing
             var actualModulate = (modulate ?? Color.White) * Modulate;
             if (_renderHandle != null)
             {
-                _renderHandle.DrawTextureRect(texture, rect.TopLeft, rect.BottomRight, actualModulate, subRegion, _handleId);
+                _renderHandle.DrawTextureRect(texture, rect.TopLeft, rect.BottomRight, actualModulate, subRegion,
+                    _handleId);
             }
             else if (Item != null)
             {

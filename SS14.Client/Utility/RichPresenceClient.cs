@@ -32,12 +32,12 @@ namespace SS14.Client.Utility
             //Send a presence. Do this as many times as you want
             client.SetPresence(new RichPresence()
             {
-                Details = "A Basic Example",
-                State = "In Game",
+                Details = "Gamemode: Valid Hunt Racing",
+                State = "/vg/station",
                 Assets = new Assets()
                 {
-                    LargeImageKey = "logo",
-                    LargeImageText =  "Roleplaying",
+                    LargeImageKey = "vgstation-logo2",
+                    LargeImageText = "Meta Station",
                     SmallImageKey = "logo",
                 },
                 Timestamps = Timestamps.FromTimeSpan(10)

@@ -18,7 +18,7 @@ namespace SS14.Client.Utility
         private void BasicClient()
         {
             //Create a new client
-            var client = new DiscordRpcClient("560482798364917789");
+            var client = new DiscordRpcClient("5604995522731704739");
 
             //Create some events so we know things are happening
             //Create a timer that will regularly call invoke
@@ -34,6 +34,12 @@ namespace SS14.Client.Utility
             {
                 Details = "A Basic Example",
                 State = "In Game",
+                Assets = new Assets()
+                {
+                    LargeImageKey = "logo",
+                    LargeImageText =  "Roleplaying",
+                    SmallImageKey = "logo",
+                },
                 Timestamps = Timestamps.FromTimeSpan(10)
             });       
         }

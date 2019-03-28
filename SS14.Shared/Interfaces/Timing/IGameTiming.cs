@@ -50,7 +50,7 @@ namespace SS14.Shared.Interfaces.Timing
 
         /// <summary>
         ///     Current graphics frame since init OpenGL which is taken as frame 1. Useful to set a conditional breakpoint on specific frames, and
-        ///     syncrhonize with OGL debugging tools that capture frames. Depending on the tools used, this frame
+        ///     synchronize with OGL debugging tools that capture frames. Depending on the tools used, this frame
         ///     number will vary between 1 frame more or less due to how that tool is counting frames,
         ///     i.e. starting from 0 or 1, having a separate counter, etc. Available in timing debug panel.
         /// </summary>

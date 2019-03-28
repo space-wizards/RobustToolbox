@@ -2344,11 +2344,11 @@ namespace SS14.Client.UserInterface
             if (_size != oldSize)
             {
                 Resized();
-            }
 
-            foreach (var child in _orderedChildren)
-            {
-                child._doUpdateLayout();
+                foreach (var child in _orderedChildren)
+                {
+                    child._doUpdateLayout();
+                }
             }
         }
 

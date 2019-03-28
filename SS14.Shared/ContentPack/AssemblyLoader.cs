@@ -219,6 +219,7 @@ namespace SS14.Shared.ContentPack
         {
             var dllPath = new ResourcePath($@"/Assemblies/{assemblyName}.dll");
             // To prevent breaking debugging on Rider, try to load from disk if possible.
+            #if DEBUG
             if (resMan.TryGetDiskFilePath(dllPath, out var path))
             {
                 Logger.DebugS("srv", $"Loading {assemblyName} DLL");
@@ -233,10 +234,12 @@ namespace SS14.Shared.ContentPack
                     return false;
                 }
             }
-            else if (resMan.TryContentFileRead(dllPath, out var gameDll))
+            #endif
+            if (resMan.TryContentFileRead(dllPath, out var gameDll))
             {
                 Logger.DebugS("srv", $"Loading {assemblyName} DLL");
 
+                #if DEBUG
                 // see if debug info is present
                 if (resMan.TryContentFileRead(new ResourcePath($@"/Assemblies/{assemblyName}.pdb") , out var gamePdb))
                 {
@@ -252,19 +255,18 @@ namespace SS14.Shared.ContentPack
                         return false;
                     }
                 }
-                else
+                #endif
+
+                try
                 {
-                    try
-                    {
-                        // load the assembly into the process, and bootstrap the GameServer entry point.
-                        LoadGameAssembly<T>(gameDll.ToArray());
-                        return true;
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.ErrorS("srv", $"Exception loading DLL {assemblyName}.dll: {e}");
-                        return false;
-                    }
+                    // load the assembly into the process, and bootstrap the GameServer entry point.
+                    LoadGameAssembly<T>(gameDll.ToArray());
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorS("srv", $"Exception loading DLL {assemblyName}.dll: {e}");
+                    return false;
                 }
             }
             else

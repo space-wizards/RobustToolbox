@@ -62,6 +62,12 @@ namespace SS14.Shared.GameObjects.Systems
             EntityManager.SubscribeEvent<T>(evh, this);
         }
 
+        protected void SubscribeEvent<T>(EntityEventHandler<T> evh)
+            where T : EntitySystemMessage
+        {
+            EntityManager.SubscribeEvent<T>(evh, this);
+        }
+
         protected void UnsubscribeEvent<T>()
             where T : EntitySystemMessage
         {

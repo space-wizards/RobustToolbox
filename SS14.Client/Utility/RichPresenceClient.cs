@@ -18,7 +18,7 @@ namespace SS14.Client.Utility
         private void BasicClient()
         {
             //Create a new client
-            var client = new DiscordRpcClient("5604995522731704739");
+            var client = new DiscordRpcClient("560482798364917789");
 
             //Create some events so we know things are happening
             //Create a timer that will regularly call invoke

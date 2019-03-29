@@ -2,7 +2,7 @@
 
 Space Station 14 is a revived attempt at an SS13 remake.
 
-# This repository is the *engine* section of SS14. This is the base engine all SS14 servers will be built on. As such, it does not start on its own: it needs the [content repo](https://github.com/space-wizards/space-station-14-content). Use said repo for actual development, even if you're modifying the engine itself.**
+# This repository is the *engine* section of SS14. This is the base engine all SS14 servers will be built on. As such, it does not start on its own: it needs the [content repo](https://github.com/space-wizards/space-station-14). Use said repo for actual development, even if you're modifying the engine itself.**
 
 ## Getting in Touch
 
@@ -26,8 +26,6 @@ We are happy to accept contributions from anybody. Get in Discord or IRC if you 
 ## Building
 
 **In practice, you usually don't build this repository directly.**
-
-If for some reason you want to anyways, [we have a wiki page on it.](https://github.com/space-wizards/space-station-14/wiki/Getting-Started)
 
 ## Legal Info
 

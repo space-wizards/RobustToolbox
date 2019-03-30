@@ -58,6 +58,7 @@ namespace SS14.Shared.Network
         ///     The list of network peers we are listening on.
         /// </summary>
         private readonly List<NetPeer> _netPeers = new List<NetPeer>();
+        private readonly List<NetPeer> _toCleanNetPeers = new List<NetPeer>();
 
         /// <inheritdoc />
         public int Port => _config.GetCVar<int>("net.port");
@@ -280,6 +281,14 @@ namespace SS14.Shared.Network
                     {
                         peer.Recycle(msg);
                     }
+                }
+            }
+
+            if (_toCleanNetPeers.Count != 0)
+            {
+                foreach (var peer in _toCleanNetPeers)
+                {
+                    _netPeers.Remove(peer);
                 }
             }
         }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Lidgren.Network;
 using SS14.Shared.Log;
 using SS14.Shared.Utility;
+using Timer = SS14.Shared.Timers.Timer;
 
 namespace SS14.Shared.Network
 {
@@ -155,7 +156,7 @@ namespace SS14.Shared.Network
                             if (secondPeer != null)
                             {
                                 secondPeer.Shutdown("First connection attempt won.");
-                                _netPeers.Remove(secondPeer);
+                                _toCleanNetPeers.Add(secondPeer);
                             }
 
                             winningPeer = firstPeer;
@@ -166,8 +167,8 @@ namespace SS14.Shared.Network
                             // First peer failed, try the second one I guess.
                             Logger.DebugS("net", "First peer failed.");
                             firstPeer.Shutdown("You failed.");
+                            _toCleanNetPeers.Add(firstPeer);
                             firstReason = firstPeerChanged.Result;
-                            _netPeers.Remove(firstPeer);
                             await secondPeerChanged;
                             winningPeer = secondPeer;
                             winningConnection = secondConnection;
@@ -181,7 +182,6 @@ namespace SS14.Shared.Network
                             Logger.DebugS("net", "Second peer succeeded.");
                             cancellation.Cancel();
                             firstPeer.Shutdown("Second connection attempt won.");
-                            _netPeers.Remove(firstPeer);
                             winningPeer = secondPeer;
                             winningConnection = secondConnection;
                         }
@@ -190,7 +190,7 @@ namespace SS14.Shared.Network
                             // First peer failed, try the second one I guess.
                             Logger.DebugS("net", "Second peer failed.");
                             secondPeer.Shutdown("You failed.");
-                            _netPeers.Remove(secondPeer);
+                            _toCleanNetPeers.Add(secondPeer);
                             firstReason = await firstPeerChanged;
                             winningPeer = firstPeer;
                             winningConnection = firstConnection;
@@ -208,12 +208,12 @@ namespace SS14.Shared.Network
             catch (TaskCanceledException)
             {
                 firstPeer.Shutdown("Cancelled");
-                _netPeers.Remove(firstPeer);
+                _toCleanNetPeers.Add(firstPeer);
                 if (secondPeer != null)
                 {
                     // ReSharper disable once PossibleNullReferenceException
                     secondPeer.Shutdown("Cancelled");
-                    _netPeers.Remove(secondPeer);
+                    _toCleanNetPeers.Add(secondPeer);
                 }
 
                 _clientConnectionState = ClientConnectionState.NotConnecting;
@@ -225,7 +225,7 @@ namespace SS14.Shared.Network
             if (winningConnection.Status != NetConnectionStatus.Connected)
             {
                 winningPeer.Shutdown("You failed");
-                _netPeers.Remove(winningPeer);
+                _toCleanNetPeers.Add(winningPeer);
                 OnConnectFailed(secondReason ?? firstReason);
                 _clientConnectionState = ClientConnectionState.NotConnecting;
                 return;
@@ -252,7 +252,7 @@ namespace SS14.Shared.Network
             catch (TaskCanceledException)
             {
                 winningPeer.Shutdown("Cancelled");
-                _netPeers.Remove(winningPeer);
+                _toCleanNetPeers.Add(secondPeer);
                 _clientConnectionState = ClientConnectionState.NotConnecting;
                 return;
             }
@@ -261,7 +261,7 @@ namespace SS14.Shared.Network
                 OnConnectFailed(e.Message);
                 Logger.ErrorS("net", "Exception during handshake: {0}", e);
                 winningPeer.Shutdown("Something happened.");
-                _netPeers.Remove(winningPeer);
+                _toCleanNetPeers.Add(secondPeer);
                 _clientConnectionState = ClientConnectionState.NotConnecting;
                 return;
             }

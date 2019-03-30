@@ -5,7 +5,7 @@ import urllib.request
 import shutil
 
 CURRENT_VERSION = "noise_0.0.1"
-RELEASES_ROOT = "https://github.com/space-wizards/space-station-14/releases/download/" \
+RELEASES_ROOT = "https://github.com/space-wizards/RobustToolbox/releases/download/" \
                 + CURRENT_VERSION + "/"
 WINDOWS_FILENAME = "ss14_noise-x86_64-pc-windows-msvc.dll"
 MACOS_FILENAME = "libss14_noise-x86_64-apple-darwin.dylib"

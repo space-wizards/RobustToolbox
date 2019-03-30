@@ -34,6 +34,7 @@ namespace SS14.Shared.Interfaces.Network
         /// <summary>
         ///     Disconnects from the server. This does not Restart() the client networking. Make sure
         ///     to Initialize(true) networking before calling this.
+        ///     Also cancels in-progress connection attempts.
         /// </summary>
         /// <param name="reason">The reason why disconnect was called.</param>
         void ClientDisconnect(string reason);

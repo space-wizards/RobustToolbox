@@ -13,9 +13,10 @@ namespace SS14.Shared.Network
 {
     public partial class NetManager
     {
-        private readonly Dictionary<NetConnection, (CancellationTokenRegistration, TaskCompletionSource<object>)>
-            _awaitingStatusChange
-                = new Dictionary<NetConnection, (CancellationTokenRegistration, TaskCompletionSource<object>)>();
+        private CancellationTokenSource _cancelConnectTokenSource;
+
+        private readonly Dictionary<NetConnection, (CancellationTokenRegistration reg, TaskCompletionSource<string> tcs)> _awaitingStatusChange
+                = new Dictionary<NetConnection, (CancellationTokenRegistration, TaskCompletionSource<string>)>();
 
         private readonly
             Dictionary<NetConnection, (CancellationTokenRegistration, TaskCompletionSource<NetIncomingMessage>)>
@@ -27,8 +28,18 @@ namespace SS14.Shared.Network
         public async void ClientConnect(string host, int port, string userNameRequest)
         {
             DebugTools.Assert(!IsServer, "Should never be called on the server.");
-            DebugTools.Assert(_clientConnectionState == ClientConnectionState.NotConnecting);
+            if (_clientConnectionState == ClientConnectionState.Connected)
+            {
+                throw new InvalidOperationException("The client is already connected to a server.");
+            }
 
+            if (_clientConnectionState != ClientConnectionState.NotConnecting)
+            {
+                throw new InvalidOperationException("A connect attempt is already in progress. Cancel it first.");
+            }
+
+            _cancelConnectTokenSource = new CancellationTokenSource();
+            var mainCancelToken = _cancelConnectTokenSource.Token;
             _clientConnectionState = ClientConnectionState.ResolvingHost;
 
             Logger.DebugS("net", "Attempting to connect to {0} port {1}", host, port);
@@ -36,10 +47,17 @@ namespace SS14.Shared.Network
             // Get list of potential IP addresses for the domain.
             var endPoints = await NetUtility.ResolveAsync(host);
 
+            if (mainCancelToken.IsCancellationRequested)
+            {
+                _clientConnectionState = ClientConnectionState.NotConnecting;
+                return;
+            }
+
             if (endPoints == null)
             {
-                // TODO: Don't crash but inform the user.
-                throw new InvalidOperationException();
+                OnConnectFailed($"Unable to resolve domain '{host}'");
+                _clientConnectionState = ClientConnectionState.NotConnecting;
+                return;
             }
 
             // Try to get an IPv6 and IPv4 address.
@@ -48,8 +66,9 @@ namespace SS14.Shared.Network
 
             if (ipv4 == null && ipv6 == null)
             {
-                // TODO: Don't crash but inform the user.
-                throw new InvalidOperationException();
+                OnConnectFailed($"Domain '{host}' has no associated IP addresses");
+                _clientConnectionState = ClientConnectionState.NotConnecting;
+                return;
             }
 
             _clientConnectionState = ClientConnectionState.EstablishingConnection;
@@ -92,12 +111,13 @@ namespace SS14.Shared.Network
             var firstConnection = firstPeer.Connect(new IPEndPoint(first, port));
             NetPeer secondPeer = null;
             NetConnection secondConnection = null;
+            string secondReason = null;
 
             async Task ConnectSecondDelayed(CancellationToken cancellationToken)
             {
                 DebugTools.AssertNotNull(second);
                 // Connecting via second peer is delayed by 25ms to give an advantage to IPv6, if it works.
-                await Task.Delay(25);
+                await Task.Delay(25, cancellationToken);
                 if (cancellationToken.IsCancellationRequested)
                 {
                     return;
@@ -106,86 +126,109 @@ namespace SS14.Shared.Network
                 secondPeer = CreatePeerForIp(second);
                 secondConnection = secondPeer.Connect(new IPEndPoint(second, port));
 
-                await AwaitStatusChange(secondConnection, cancellationToken);
+                secondReason = await AwaitStatusChange(secondConnection, cancellationToken);
             }
 
             NetPeer winningPeer;
             NetConnection winningConnection;
-            if (second != null)
+            string firstReason = null;
+            try
             {
-                // We have two addresses to try.
-                var cancellation = new CancellationTokenSource();
-                var firstPeerChanged = AwaitStatusChange(firstConnection, cancellation.Token);
-                var secondPeerChanged = ConnectSecondDelayed(cancellation.Token);
-
-                var firstChange = await Task.WhenAny(firstPeerChanged, secondPeerChanged);
-
-                if (firstChange == firstPeerChanged)
+                if (second != null)
                 {
-                    Logger.DebugS("net", "First peer status changed.");
-                    // First peer responded first.
-                    if (firstConnection.Status == NetConnectionStatus.Connected)
+                    // We have two addresses to try.
+                    var cancellation = CancellationTokenSource.CreateLinkedTokenSource(mainCancelToken);
+                    var firstPeerChanged = AwaitStatusChange(firstConnection, cancellation.Token);
+                    var secondPeerChanged = ConnectSecondDelayed(cancellation.Token);
+
+                    var firstChange = await Task.WhenAny(firstPeerChanged, secondPeerChanged);
+
+                    if (firstChange == firstPeerChanged)
                     {
-                        // First peer won!
-                        Logger.DebugS("net", "First peer succeeded.");
-                        cancellation.Cancel();
-                        if (secondPeer != null)
+                        Logger.DebugS("net", "First peer status changed.");
+                        // First peer responded first.
+                        if (firstConnection.Status == NetConnectionStatus.Connected)
                         {
-                            secondPeer.Shutdown("First connection attempt won.");
-                            _netPeers.Remove(secondPeer);
+                            // First peer won!
+                            Logger.DebugS("net", "First peer succeeded.");
+                            cancellation.Cancel();
+                            if (secondPeer != null)
+                            {
+                                secondPeer.Shutdown("First connection attempt won.");
+                                _netPeers.Remove(secondPeer);
+                            }
+
+                            winningPeer = firstPeer;
+                            winningConnection = firstConnection;
                         }
-                        winningPeer = firstPeer;
-                        winningConnection = firstConnection;
+                        else
+                        {
+                            // First peer failed, try the second one I guess.
+                            Logger.DebugS("net", "First peer failed.");
+                            firstPeer.Shutdown("You failed.");
+                            firstReason = firstPeerChanged.Result;
+                            _netPeers.Remove(firstPeer);
+                            await secondPeerChanged;
+                            winningPeer = secondPeer;
+                            winningConnection = secondConnection;
+                        }
                     }
                     else
                     {
-                        // First peer failed, try the second one I guess.
-                        Logger.DebugS("net", "First peer failed.");
-                        firstPeer.Shutdown("You failed.");
-                        _netPeers.Remove(firstPeer);
-                        await secondPeerChanged;
-                        winningPeer = secondPeer;
-                        winningConnection = secondConnection;
+                        if (secondConnection.Status == NetConnectionStatus.Connected)
+                        {
+                            // Second peer won!
+                            Logger.DebugS("net", "Second peer succeeded.");
+                            cancellation.Cancel();
+                            firstPeer.Shutdown("Second connection attempt won.");
+                            _netPeers.Remove(firstPeer);
+                            winningPeer = secondPeer;
+                            winningConnection = secondConnection;
+                        }
+                        else
+                        {
+                            // First peer failed, try the second one I guess.
+                            Logger.DebugS("net", "Second peer failed.");
+                            secondPeer.Shutdown("You failed.");
+                            _netPeers.Remove(secondPeer);
+                            firstReason = await firstPeerChanged;
+                            winningPeer = firstPeer;
+                            winningConnection = firstConnection;
+                        }
                     }
                 }
                 else
                 {
-                    if (secondConnection.Status == NetConnectionStatus.Connected)
-                    {
-                        // Second peer won!
-                        Logger.DebugS("net", "Second peer succeeded.");
-                        cancellation.Cancel();
-                        firstPeer.Shutdown("Second connection attempt won.");
-                        _netPeers.Remove(firstPeer);
-                        winningPeer = secondPeer;
-                        winningConnection = secondConnection;
-                    }
-                    else
-                    {
-                        // First peer failed, try the second one I guess.
-                        Logger.DebugS("net", "Second peer failed.");
-                        secondPeer.Shutdown("You failed.");
-                        _netPeers.Remove(secondPeer);
-                        await firstPeerChanged;
-                        winningPeer = firstPeer;
-                        winningConnection = firstConnection;
-                    }
+                    // Only one address to try. Pretty straight forward.
+                    firstReason = await AwaitStatusChange(firstConnection, mainCancelToken);
+                    winningPeer = firstPeer;
+                    winningConnection = firstConnection;
                 }
             }
-            else
+            catch (TaskCanceledException)
             {
-                // Only one address to try. Pretty straight forward.
-                await AwaitStatusChange(firstConnection);
-                winningPeer = firstPeer;
-                winningConnection = firstConnection;
+                firstPeer.Shutdown("Cancelled");
+                _netPeers.Remove(firstPeer);
+                if (secondPeer != null)
+                {
+                    // ReSharper disable once PossibleNullReferenceException
+                    secondPeer.Shutdown("Cancelled");
+                    _netPeers.Remove(secondPeer);
+                }
+
+                _clientConnectionState = ClientConnectionState.NotConnecting;
+                return;
             }
 
             // winningPeer can still be failed at this point.
             // If it is, neither succeeded. RIP.
             if (winningConnection.Status != NetConnectionStatus.Connected)
             {
-                // TODO: Don't crash but inform the user.
-                throw new InvalidOperationException();
+                winningPeer.Shutdown("You failed");
+                _netPeers.Remove(winningPeer);
+                OnConnectFailed(secondReason ?? firstReason);
+                _clientConnectionState = ClientConnectionState.NotConnecting;
+                return;
             }
 
             _clientConnectionState = ClientConnectionState.Handshake;
@@ -195,27 +238,46 @@ namespace SS14.Shared.Network
             var userNameRequestMsg = winningPeer.CreateMessage(userNameRequest);
             winningPeer.SendMessage(userNameRequestMsg, winningConnection, NetDeliveryMethod.ReliableOrdered);
 
-            // Await response.
-            var response = await AwaitData(winningConnection);
-            var receivedUsername = response.ReadString();
-            var channel = new NetChannel(this, winningConnection, new NetSessionId(receivedUsername));
-            _channels.Add(winningConnection, channel);
+            try
+            {
+                // Await response.
+                var response = await AwaitData(winningConnection, mainCancelToken);
+                var receivedUsername = response.ReadString();
+                var channel = new NetChannel(this, winningConnection, new NetSessionId(receivedUsername));
+                _channels.Add(winningConnection, channel);
 
-            var confirmConnectionMsg = winningPeer.CreateMessage("ok");
-            winningPeer.SendMessage(userNameRequestMsg, winningConnection, NetDeliveryMethod.ReliableOrdered);
+                var confirmConnectionMsg = winningPeer.CreateMessage("ok");
+                winningPeer.SendMessage(confirmConnectionMsg, winningConnection, NetDeliveryMethod.ReliableOrdered);
+            }
+            catch (TaskCanceledException)
+            {
+                winningPeer.Shutdown("Cancelled");
+                _netPeers.Remove(winningPeer);
+                _clientConnectionState = ClientConnectionState.NotConnecting;
+                return;
+            }
+            catch (Exception e)
+            {
+                OnConnectFailed(e.Message);
+                Logger.ErrorS("net", "Exception during handshake: {0}", e);
+                winningPeer.Shutdown("Something happened.");
+                _netPeers.Remove(winningPeer);
+                _clientConnectionState = ClientConnectionState.NotConnecting;
+                return;
+            }
 
             _clientConnectionState = ClientConnectionState.Connected;
             Logger.DebugS("net", "Handshake completed, connection established.");
         }
 
-        private Task AwaitStatusChange(NetConnection connection, CancellationToken cancellationToken = default)
+        private Task<string> AwaitStatusChange(NetConnection connection, CancellationToken cancellationToken = default)
         {
             if (_awaitingStatusChange.ContainsKey(connection))
             {
                 throw new InvalidOperationException();
             }
 
-            var tcs = new TaskCompletionSource<object>();
+            var tcs = new TaskCompletionSource<string>();
             CancellationTokenRegistration reg = default;
             if (cancellationToken != default)
             {

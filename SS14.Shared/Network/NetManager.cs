@@ -225,6 +225,7 @@ namespace SS14.Shared.Network
 
             _strings.Reset();
 
+            _cancelConnectTokenSource.Cancel();
             _clientConnectionState = ClientConnectionState.NotConnecting;
         }
 
@@ -335,7 +336,7 @@ namespace SS14.Shared.Network
             if (_awaitingStatusChange.TryGetValue(sender, out var resume))
             {
                 resume.Item1.Dispose();
-                resume.Item2.SetResult(null);
+                resume.Item2.SetResult(reason);
                 _awaitingStatusChange.Remove(sender);
                 return;
             }
@@ -355,17 +356,13 @@ namespace SS14.Shared.Network
                     {
                         awaitInfo.Item1.Dispose();
                         awaitInfo.Item2.TrySetException(
-                            new Exception("Connection disconnected before data was received"));
+                            new Exception($"Disconnected: {reason}"));
                         _awaitingData.Remove(sender);
                     }
 
                     if (_channels.ContainsKey(sender))
-                        HandleDisconnect(msg);
-                    else if (sender.RemoteUniqueIdentifier == 0
-                    ) // is this the best way to detect an unsuccessful connect?
                     {
-                        Logger.InfoS("net", $"{sender.RemoteEndPoint}: Failed to connect");
-                        OnConnectFailed();
+                        HandleDisconnect(msg);
                     }
 
                     break;
@@ -647,9 +644,9 @@ namespace SS14.Shared.Network
             return !args.Deny;
         }
 
-        protected virtual void OnConnectFailed()
+        protected virtual void OnConnectFailed(string reason)
         {
-            var args = new NetConnectFailArgs();
+            var args = new NetConnectFailArgs(reason);
             ConnectFailed?.Invoke(this, args);
         }
 

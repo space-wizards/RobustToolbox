@@ -51,19 +51,6 @@
     <DebugType>portable</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|NoGodotx64' ">
-    <PlatformTarget>x64</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>portable</DebugType>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <Godot>false</Godot>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Godot)' == 'false'">
-    <DefineConstants>$(DefineConstants);NOGODOT</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Godot)' == 'true'">
-    <DefineConstants>$(DefineConstants);GODOT</DefineConstants>
-  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Castle.Core" Version="4.3.1" />
     <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
@@ -89,8 +76,11 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Drawing" />
-    <Reference Include="GodotSharp" Condition="'$(Godot)' == 'true'">
+    <Reference Include="GodotSharp" Condition="Exists('..\SS14.Client.Godot\.mono\assemblies\GodotSharp.dll')">
       <HintPath>..\SS14.Client.Godot\.mono\assemblies\GodotSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="GodotSharp" Condition="!Exists('..\SS14.Client.Godot\.mono\assemblies\GodotSharp.dll')">
+      <HintPath>..\Dependencies\godot\GodotSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Choose>

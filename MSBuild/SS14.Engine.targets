@@ -14,4 +14,7 @@
     <Exec Condition="'$(Platform)' == 'x64'" Command="$(Python) ../Tools/download_misc_dependencies.py $(Platform) $(TargetOS) $(OutputPath)" CustomErrorRegularExpression="^Error" />
     <Warning Condition="'$(Platform)' != 'x64'" Text="Did not download misc dependencies because the platform is not set to x64. Only use this build for unit testing!" />
   </Target>
+  <Target Name="DownloadGodotSharp">
+    <Exec Command="$(Python) ../Tools/download_godotsharp.py" CustomErrorRegularExpression="^Error" />
+  </Target>
 </Project>

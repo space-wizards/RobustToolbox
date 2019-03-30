@@ -1,54 +1,42 @@
 #!/usr/bin/env python3
+
 import os
-import requests
+import sys
+import urllib.request
+import shutil
 
-GODOTSHARP_URL = "https://changelog.ss13.moe/static/GodotSharp.dll"
-
+FILES = [
+    ("GODOT", "1", "GodotSharp.dll", "https://changelog.ss13.moe/static/GodotSharp.dll"),
+]
 
 def main():
-    print("Downloading GodotSharp.dll maybe...")
     repo_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    godotsharp_dir = os.path.join(
-        repo_dir, "SS14.Client.Godot", ".mono", "assemblies")
-    os.makedirs(godotsharp_dir, exist_ok=True)
-    godotsharp_filename = os.path.join(godotsharp_dir, "GodotSharp.dll")
-    last_modified_filename = os.path.join(godotsharp_dir, "LAST_MODIFIED")
+    dependencies_dir = os.path.join(repo_dir, "Dependencies", "godot")
+    os.makedirs(dependencies_dir, exist_ok=True)
 
-    headers = {
-        "User-Agent": "GodotSharp fetcher"
-    }
+    for n, v, f, c in FILES:
+        download_dependency(dependencies_dir, n, v, f, c)
 
-    if os.path.exists(godotsharp_filename) and os.path.exists(last_modified_filename):
-        with open(last_modified_filename, "r") as f:
-            last_modified = f.read().strip()
-        headers["If-Modified-Since"] = last_modified
-        # print(headers)
+def download_dependency(dependencies_dir, name, version, filename, currentURL):
+    version_file = os.path.join(dependencies_dir, name + "_VERSION")
 
-    r = requests.get(GODOTSHARP_URL, headers=headers)
-    # print(r.headers)
+    existing_version = "?"
+    if os.path.exists(version_file):
+        with open(version_file, "r") as f:
+            existing_version = f.read().strip()
 
-    if not r.ok:
-        if os.path.exists(godotsharp_filename):
-            print("WARNING: Builds server is down, using cached GodotSharp.dll!")
-            print(r.status_code)
-            exit(0)
-        else:
-            print("ERROR: Bad status code from GodotSharp download!")
-            print(r.status_code)
-            exit(1)
+    dependency_path = os.path.join(dependencies_dir, filename)
 
-    # Not modified!
-    if r.status_code == 304:
-        print("File not modified. Not downloading.")
-        exit(0)
+    if existing_version != version and os.path.exists(dependency_path):
+        os.remove(dependency_path)
 
-    print("File modified. Downloading.")
-    with open(godotsharp_filename, "wb") as f:
-        f.write(r.content)
+    with open(version_file, "w") as f:
+        f.write(version)
 
-    with open(last_modified_filename, "w") as f:
-        f.write(r.headers["Last-Modified"])
+    if not os.path.exists(dependency_path):
+        urllib.request.urlretrieve(currentURL, dependency_path)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
+

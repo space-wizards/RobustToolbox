@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\MSBuild\SS14.Properties.targets" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -26,15 +27,13 @@
     <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Tools|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>portable</DebugType>
-    <Optimize>false</Optimize>
-    <DefineConstants>DEBUG;TOOLS;</DefineConstants>
-  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GodotSharp">
+    <Reference Include="GodotSharp" Condition="Exists('$(ProjectDir)\.mono\assemblies\GodotSharp.dll')">
       <HintPath>$(ProjectDir)\.mono\assemblies\GodotSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="GodotSharp" Condition="!Exists('$(ProjectDir)\.mono\assemblies\GodotSharp.dll')">
+      <HintPath>$(ProjectDir)\..\Dependencies\godot\GodotSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="GodotSharpEditor" Condition=" '$(Configuration)' == 'Tools' ">
@@ -57,4 +56,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\MSBuild\SS14.Engine.targets" />
+  <Target Name="BeforeBuild" DependsOnTargets="DownloadGodotSharp" />
 </Project>

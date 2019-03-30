@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using Lidgren.Network;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
@@ -29,7 +30,7 @@ namespace SS14.Shared.Network
     /// <summary>
     ///     Manages all network connections and packet IO.
     /// </summary>
-    public class NetManager : IClientNetManager, IServerNetManager, IDisposable
+    public partial class NetManager : IClientNetManager, IServerNetManager, IDisposable
     {
         private readonly Dictionary<Type, ProcessMessage> _callbacks = new Dictionary<Type, ProcessMessage>();
 
@@ -57,6 +58,7 @@ namespace SS14.Shared.Network
         ///     The list of network peers we are listening on.
         /// </summary>
         private readonly List<NetPeer> _netPeers = new List<NetPeer>();
+        private readonly List<NetPeer> _toCleanNetPeers = new List<NetPeer>();
 
         /// <inheritdoc />
         public int Port => _config.GetCVar<int>("net.port");
@@ -71,6 +73,8 @@ namespace SS14.Shared.Network
         public bool IsConnected => _netPeers.Any(p => p.ConnectionsCount > 0);
 
         public bool IsRunning => _netPeers.Count != 0;
+
+        private ClientConnectionState _clientConnectionState;
 
         public NetworkStats Statistics
         {
@@ -221,6 +225,9 @@ namespace SS14.Shared.Network
             }
 
             _strings.Reset();
+
+            _cancelConnectTokenSource.Cancel();
+            _clientConnectionState = ClientConnectionState.NotConnecting;
         }
 
         public void ProcessPackets()
@@ -228,6 +235,7 @@ namespace SS14.Shared.Network
             foreach (var peer in _netPeers)
             {
                 NetIncomingMessage msg;
+                var recycle = true;
                 while ((msg = peer.ReadMessage()) != null)
                 {
                     switch (msg.MessageType)
@@ -253,7 +261,7 @@ namespace SS14.Shared.Network
                             break;
 
                         case NetIncomingMessageType.Data:
-                            DispatchNetMessage(msg);
+                            recycle = DispatchNetMessage(msg);
                             break;
 
                         case NetIncomingMessageType.StatusChanged:
@@ -269,43 +277,20 @@ namespace SS14.Shared.Network
                             break;
                     }
 
-                    peer.Recycle(msg);
+                    if (recycle)
+                    {
+                        peer.Recycle(msg);
+                    }
                 }
             }
-        }
 
-        /// <inheritdoc />
-        public void ClientConnect(string host, int port, string userNameRequest)
-        {
-            DebugTools.Assert(!IsServer, "Should never be called on the server.");
-            DebugTools.Assert(!IsConnected);
-
-            if (IsRunning)
+            if (_toCleanNetPeers.Count != 0)
             {
-                ClientDisconnect("Client left server.");
+                foreach (var peer in _toCleanNetPeers)
+                {
+                    _netPeers.Remove(peer);
+                }
             }
-
-            // Set up NetPeer.
-            var endPoint = NetUtility.Resolve(host, port);
-
-            Logger.InfoS("net", $"Connecting to {endPoint}...");
-
-            var config = _getBaseNetPeerConfig();
-            if (endPoint.AddressFamily == AddressFamily.InterNetworkV6)
-            {
-                config.LocalAddress = IPAddress.IPv6Any;
-            }
-            else
-            {
-                config.LocalAddress = IPAddress.Any;
-            }
-
-            var peer = new NetPeer(config);
-            peer.Start();
-            _netPeers.Add(peer);
-            var hail = peer.CreateMessage();
-            hail.Write(userNameRequest);
-            peer.Connect(host, port, hail);
         }
 
         /// <inheritdoc />
@@ -353,22 +338,40 @@ namespace SS14.Shared.Network
         private void HandleStatusChanged(NetIncomingMessage msg)
         {
             var sender = msg.SenderConnection;
+            msg.ReadByte();
+            var reason = msg.ReadString();
             Logger.DebugS("net", $"{sender.RemoteEndPoint}: Status changed to {sender.Status}");
+
+            if (_awaitingStatusChange.TryGetValue(sender, out var resume))
+            {
+                resume.Item1.Dispose();
+                resume.Item2.SetResult(reason);
+                _awaitingStatusChange.Remove(sender);
+                return;
+            }
 
             switch (sender.Status)
             {
                 case NetConnectionStatus.Connected:
-                    HandleConnected(sender);
+                    if (IsServer)
+                    {
+                        HandleHandshake(sender);
+                    }
+
                     break;
 
                 case NetConnectionStatus.Disconnected:
-                    if (_channels.ContainsKey(sender))
-                        HandleDisconnect(msg);
-                    else if (sender.RemoteUniqueIdentifier == 0
-                    ) // is this the best way to detect an unsuccessful connect?
+                    if (_awaitingData.TryGetValue(sender, out var awaitInfo))
                     {
-                        Logger.InfoS("net", $"{sender.RemoteEndPoint}: Failed to connect");
-                        OnConnectFailed();
+                        awaitInfo.Item1.Dispose();
+                        awaitInfo.Item2.TrySetException(
+                            new Exception($"Disconnected: {reason}"));
+                        _awaitingData.Remove(sender);
+                    }
+
+                    if (_channels.ContainsKey(sender))
+                    {
+                        HandleDisconnect(msg);
                     }
 
                     break;
@@ -377,18 +380,33 @@ namespace SS14.Shared.Network
 
         private void HandleApproval(NetIncomingMessage message)
         {
-            var sender = message.SenderConnection;
-            var ip = sender.RemoteEndPoint;
-            var name = message.ReadString();
+            // TODO: Maybe preemptively refuse connections here in some cases?
+            if (message.SenderConnection.Status != NetConnectionStatus.RespondedAwaitingApproval)
+            {
+                // This can happen if the approval message comes in after the state changes to disconnected.
+                // In that case just ignore it.
+                return;
+            }
+            message.SenderConnection.Approve();
+        }
+
+        private async void HandleHandshake(NetConnection connection)
+        {
+            var userNamePacket = await AwaitData(connection);
+            var requestedUsername = userNamePacket.ReadString();
+
+            if (!UsernameHelpers.IsNameValid(requestedUsername))
+            {
+                connection.Disconnect("Username is invalid (contains illegal characters/too long).");
+                return;
+            }
+
+            var endPoint = connection.RemoteEndPoint;
+            var name = requestedUsername;
             var origName = name;
             var iterations = 1;
 
-            if (!UsernameHelpers.IsNameValid(name))
-            {
-                sender.Deny("Username is invalid (contains illegal characters/too long).");
-            }
-
-            while (_assignedSessions.Values.Any(u => u.Username == name))
+            while (_assignedSessions.Values.Any(u => u.Username == requestedUsername))
             {
                 // This is shit but I don't care.
                 name = $"{origName}_{++iterations}";
@@ -396,30 +414,33 @@ namespace SS14.Shared.Network
 
             var session = new NetSessionId(name);
 
-            if (OnConnecting(ip, session))
+            if (OnConnecting(endPoint, session))
             {
-                _assignedSessions.Add(sender, session);
-                var msg = message.SenderConnection.Peer.CreateMessage();
+                _assignedSessions.Add(connection, session);
+                var msg = connection.Peer.CreateMessage();
                 msg.Write(name);
-                sender.Approve(msg);
+                connection.Peer.SendMessage(msg, connection, NetDeliveryMethod.ReliableOrdered);
             }
             else
             {
-                sender.Deny("Server is full.");
+                connection.Disconnect("Sorry, denied. Why? Couldn't tell you, I didn't implement a deny reason.");
+                return;
             }
+
+            var okMsg = await AwaitData(connection);
+            if (okMsg.ReadString() != "ok")
+            {
+                connection.Disconnect("You should say ok.");
+                return;
+            }
+
+            // Handshake complete!
+            HandleInitialHandshakeComplete(connection);
         }
 
-        private void HandleConnected(NetConnection sender)
+        private void HandleInitialHandshakeComplete(NetConnection sender)
         {
-            NetSessionId session;
-            if (IsClient)
-            {
-                session = new NetSessionId(sender.RemoteHailMessage.ReadString());
-            }
-            else
-            {
-                session = _assignedSessions[sender];
-            }
+            var session = _assignedSessions[sender];
 
             var channel = new NetChannel(this, sender, session);
             _channels.Add(sender, channel);
@@ -428,9 +449,7 @@ namespace SS14.Shared.Network
 
             Logger.InfoS("net", $"{channel.RemoteEndPoint}: Connected");
 
-            // client is connected after string packet get received
-            if (IsServer)
-                OnConnected(channel);
+            OnConnected(channel);
         }
 
         private void HandleDisconnect(NetIncomingMessage message)
@@ -465,22 +484,31 @@ namespace SS14.Shared.Network
             channel.Disconnect(reason);
         }
 
-        private void DispatchNetMessage(NetIncomingMessage msg)
+        private bool DispatchNetMessage(NetIncomingMessage msg)
         {
             var peer = msg.SenderConnection.Peer;
             if (peer.Status == NetPeerStatus.ShutdownRequested)
-                return;
+                return true;
 
             if (peer.Status == NetPeerStatus.NotRunning)
-                return;
+                return true;
 
             if (!IsConnected)
-                return;
+                return true;
+
+            if (_awaitingData.TryGetValue(msg.SenderConnection, out var info))
+            {
+                var (cancel, tcs) = info;
+                _awaitingData.Remove(msg.SenderConnection);
+                cancel.Dispose();
+                tcs.TrySetResult(msg);
+                return false;
+            }
 
             if (msg.LengthBytes < 1)
             {
                 Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: Received empty packet.");
-                return;
+                return true;
             }
 
             var id = msg.ReadByte();
@@ -488,13 +516,13 @@ namespace SS14.Shared.Network
             if (!_strings.TryGetString(id, out string name))
             {
                 Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}:  No string in table with ID {id}.");
-                return;
+                return true;
             }
 
             if (!_messages.TryGetValue(name, out Type packetType))
             {
                 Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: No message with Name {name}.");
-                return;
+                return true;
             }
 
             var channel = GetChannel(msg.SenderConnection);
@@ -515,10 +543,11 @@ namespace SS14.Shared.Network
             {
                 Logger.WarningS("net",
                     $"{msg.SenderConnection.RemoteEndPoint}: Received packet {id}:{name}, but callback was not registered.");
-                return;
+                return true;
             }
 
             callback?.Invoke(instance);
+            return true;
         }
 
         #region NetMessages
@@ -571,6 +600,7 @@ namespace SS14.Shared.Network
                 {
                     continue;
                 }
+
                 peer.SendMessage(packet, peer.Connections, method, 0);
             }
         }
@@ -629,9 +659,9 @@ namespace SS14.Shared.Network
             return !args.Deny;
         }
 
-        protected virtual void OnConnectFailed()
+        protected virtual void OnConnectFailed(string reason)
         {
-            var args = new NetConnectFailArgs();
+            var args = new NetConnectFailArgs(reason);
             ConnectFailed?.Invoke(this, args);
         }
 
@@ -672,6 +702,34 @@ namespace SS14.Shared.Network
                 default:
                     throw new ArgumentOutOfRangeException(nameof(group), group, null);
             }
+        }
+
+        private enum ClientConnectionState
+        {
+            /// <summary>
+            ///     We are not connected and not trying to get connected either. Quite lonely huh.
+            /// </summary>
+            NotConnecting,
+
+            /// <summary>
+            ///     Resolving the DNS query for the address of the server.
+            /// </summary>
+            ResolvingHost,
+
+            /// <summary>
+            ///     Attempting to establish a connection to the server.
+            /// </summary>
+            EstablishingConnection,
+
+            /// <summary>
+            ///     Connection established, going through regular handshake business.
+            /// </summary>
+            Handshake,
+
+            /// <summary>
+            ///     Connection is solid and handshake is done go wild.
+            /// </summary>
+            Connected
         }
     }
 

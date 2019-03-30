@@ -27,6 +27,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Lidgren.Network
 {
@@ -153,6 +154,34 @@ namespace Lidgren.Network
 				{
 					throw;
 				}
+			}
+		}
+
+		public static async Task<IPAddress[]> ResolveAsync(string ipOrHost)
+		{
+			if (string.IsNullOrEmpty(ipOrHost))
+				throw new ArgumentException("Supplied string must not be empty", "ipOrHost");
+
+			ipOrHost = ipOrHost.Trim();
+
+			if (IPAddress.TryParse(ipOrHost, out var ipAddress))
+			{
+				if (ipAddress.AddressFamily == AddressFamily.InterNetwork
+				    || ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
+				{
+					return new[] {ipAddress};
+				}
+				throw new ArgumentException("This method will not currently resolve other than IPv4 or IPv6 addresses");
+			}
+
+			try
+			{
+				var entry = await Task.Factory.FromAsync(Dns.BeginGetHostEntry, Dns.EndGetHostEntry, ipOrHost, null);
+				return entry.AddressList;
+			}
+			catch (SocketException ex)
+			{
+				return null;
 			}
 		}
 

@@ -15,6 +15,8 @@ using SS14.Client.Interfaces.State;
 using SS14.Client.ResourceManagement;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.State.States
@@ -25,16 +27,15 @@ namespace SS14.Client.State.States
     // Instantiated dynamically through the StateManager.
     public class MainScreen : State
     {
-        [Dependency]
-        readonly IBaseClient _client;
-        [Dependency]
-        readonly IUserInterfaceManager userInterfaceManager;
-        [Dependency]
-        readonly IStateManager stateManager;
+        [Dependency] private readonly IBaseClient _client;
+        [Dependency] private readonly IUserInterfaceManager userInterfaceManager;
+        [Dependency] private readonly IStateManager stateManager;
+        [Dependency] private readonly IClientNetManager _netManager;
 
         private MainMenuControl _mainMenuControl;
 
         private OptionsMenu OptionsMenu;
+        private Button ConnectButton;
 
         // ReSharper disable once InconsistentNaming
         private static readonly Regex IPv6Regex = new Regex(@"\[(.*:.*:.*)](?::(\d+))?");
@@ -50,7 +51,8 @@ namespace SS14.Client.State.States
             var VBox = _mainMenuControl.GetChild("VBoxContainer");
             VBox.GetChild<Button>("ExitButton").OnPressed += ExitButtonPressed;
             VBox.GetChild<Button>("OptionsButton").OnPressed += OptionsButtonPressed;
-            VBox.GetChild<Button>("ConnectButton").OnPressed += ConnectButtonPressed;
+            ConnectButton = VBox.GetChild<Button>("ConnectButton");
+            ConnectButton.OnPressed += ConnectButtonPressed;
             VBox.GetChild<LineEdit>("IPBox").OnTextEntered += IPBoxEntered;
 
             _client.RunLevelChanged += RunLevelChanged;
@@ -66,6 +68,7 @@ namespace SS14.Client.State.States
         public override void Shutdown()
         {
             _client.RunLevelChanged -= RunLevelChanged;
+            _netManager.ConnectFailed -= _onConnectFailed;
 
             _mainMenuControl.Dispose();
             OptionsMenu.Dispose();
@@ -94,6 +97,8 @@ namespace SS14.Client.State.States
 
         private void TryConnect(string address)
         {
+            ConnectButton.Disabled = true;
+            _netManager.ConnectFailed += _onConnectFailed;
             try
             {
                 ParseAddress(address, out var ip, out var port);
@@ -103,6 +108,7 @@ namespace SS14.Client.State.States
             {
                 userInterfaceManager.Popup($"Unable to connect: {e.Message}", "Connection error.");
                 Logger.Warning(e.ToString());
+                _netManager.ConnectFailed -= _onConnectFailed;
             }
         }
 
@@ -111,6 +117,11 @@ namespace SS14.Client.State.States
             if (args.NewLevel == ClientRunLevel.InGame)
             {
                 stateManager.RequestStateChange<GameScreen>();
+            }
+            else if (args.NewLevel == ClientRunLevel.Initialize)
+            {
+                ConnectButton.Disabled = false;
+                _netManager.ConnectFailed -= _onConnectFailed;
             }
         }
 
@@ -131,6 +142,7 @@ namespace SS14.Client.State.States
 
                 return;
             }
+
             // See if the IP includes a port.
             var split = address.Split(':');
             ip = address;
@@ -149,6 +161,12 @@ namespace SS14.Client.State.States
                     throw new ArgumentException("Not a valid port.");
                 }
             }
+        }
+
+        private void _onConnectFailed(object _, NetConnectFailArgs args)
+        {
+            userInterfaceManager.Popup($"Failed to connect:\n{args.Reason}");
+            _netManager.ConnectFailed -= _onConnectFailed;
         }
 
         private class MainMenuControl : Control

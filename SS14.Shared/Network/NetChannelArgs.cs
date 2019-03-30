@@ -57,6 +57,11 @@ namespace SS14.Shared.Network
     /// </summary>
     public class NetConnectFailArgs : EventArgs
     {
-        
+        public NetConnectFailArgs(string reason)
+        {
+            Reason = reason;
+        }
+
+        public string Reason { get; }
     }
 }

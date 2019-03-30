@@ -208,6 +208,7 @@
     <Compile Include="Network\Messages\MsgViewVariablesReqData.cs" />
     <Compile Include="Network\Messages\MsgViewVariablesReqSession.cs" />
     <Compile Include="Network\NetChannelArgs.cs" />
+    <Compile Include="Network\NetManager.ClientConnect.cs" />
     <Compile Include="Network\NetMessageArgs.cs" />
     <Compile Include="Network\Messages\MsgChat.cs" />
     <Compile Include="Network\Messages\MsgConCmd.cs" />

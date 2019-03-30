@@ -381,6 +381,12 @@ namespace SS14.Shared.Network
         private void HandleApproval(NetIncomingMessage message)
         {
             // TODO: Maybe preemptively refuse connections here in some cases?
+            if (message.SenderConnection.Status != NetConnectionStatus.RespondedAwaitingApproval)
+            {
+                // This can happen if the approval message comes in after the state changes to disconnected.
+                // In that case just ignore it.
+                return;
+            }
             message.SenderConnection.Approve();
         }
 

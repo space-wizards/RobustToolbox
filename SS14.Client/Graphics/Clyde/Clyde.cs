@@ -131,7 +131,7 @@ namespace SS14.Client.Graphics.Clyde
 
             _window.VSync = VSync ? VSyncMode.On : VSyncMode.Off;
             _window.WindowState = WindowMode == WindowMode.Fullscreen ? WindowState.Fullscreen : WindowState.Normal;
-            _quartResLights = _configurationManager.GetCVar<bool>("display.highreslights");
+            _quartResLights = !_configurationManager.GetCVar<bool>("display.highreslights");
             _regenerateLightTexture();
         }
 
@@ -191,6 +191,7 @@ namespace SS14.Client.Graphics.Clyde
                 var oldSize = _windowSize;
                 _windowSize = new Vector2i(_window.Width, _window.Height);
                 GL.Viewport(0, 0, _window.Width, _window.Height);
+                _regenerateLightTexture();
                 OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _windowSize));
             };
             _window.MouseDown += (sender, eventArgs) =>

@@ -1,24 +1,20 @@
 ﻿using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
-using SS14.Shared;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Interfaces.Serialization;
-using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
-using System.Collections.Generic;
-using System.Linq;
 using SS14.Client.Player;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Timing;
 
 namespace SS14.Client.GameStates
 {
     public class ClientGameStateManager : IClientGameStateManager
     {
-        private uint GameSequence;
+        private GameTick GameSequence;
 
         [Dependency]
         private readonly IClientNetManager networkManager;
@@ -44,7 +40,7 @@ namespace SS14.Client.GameStates
         {
             if (args.NewLevel == ClientRunLevel.Initialize)
             {
-                GameSequence = 0;
+                GameSequence = GameTick.Zero;
             }
         }
 
@@ -66,7 +62,7 @@ namespace SS14.Client.GameStates
             ApplyGameState(state);
         }
 
-        private void AckGameState(uint sequence)
+        private void AckGameState(GameTick sequence)
         {
             var msg = networkManager.CreateNetMessage<MsgStateAck>();
             msg.Sequence = sequence;

@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Reflection;
 using SS14.Shared.Serialization;
+using SS14.Shared.Timing;
 using SS14.Shared.ViewVariables;
-using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
 {
@@ -60,7 +59,7 @@ namespace SS14.Shared.GameObjects
         public bool Deleted { get; private set; }
 
         [ViewVariables]
-        public uint LastModifiedTick { get; private set; }
+        public GameTick LastModifiedTick { get; private set; }
 
         /// <inheritdoc />
         public virtual void OnRemove()

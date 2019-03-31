@@ -5,6 +5,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Timing;
 using SS14.Shared.ViewVariables;
 
 namespace SS14.Shared.GameObjects
@@ -47,7 +48,7 @@ namespace SS14.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public uint LastModifiedTick { get; private set; }
+        public GameTick LastModifiedTick { get; private set; }
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -412,7 +413,7 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public EntityState GetEntityState(uint fromTick)
+        public EntityState GetEntityState(GameTick fromTick)
         {
             var compStates = GetComponentStates(fromTick);
 
@@ -433,7 +434,7 @@ namespace SS14.Shared.GameObjects
         ///     Server-side method to get the state of all our components
         /// </summary>
         /// <returns></returns>
-        private List<ComponentState> GetComponentStates(uint fromTick)
+        private List<ComponentState> GetComponentStates(GameTick fromTick)
         {
             return GetComponentInstances()
                 .Where(c => c.NetID != null && c.NetSyncEnabled && c.LastModifiedTick >= fromTick)

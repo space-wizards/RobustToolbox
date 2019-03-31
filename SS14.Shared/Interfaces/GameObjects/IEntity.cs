@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Interfaces.Serialization;
+using SS14.Shared.Timing;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
     public interface IEntity
     {
-        uint LastModifiedTick { get; }
+        GameTick LastModifiedTick { get; }
 
         IEntityManager EntityManager { get; }
 
@@ -204,7 +204,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     Serverside method to prepare an entity state object
         /// </summary>
         /// <returns></returns>
-        EntityState GetEntityState(uint fromTick);
+        EntityState GetEntityState(GameTick fromTick);
 
         void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s)
             where T : EntityEventArgs;

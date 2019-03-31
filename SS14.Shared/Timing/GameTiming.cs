@@ -78,7 +78,7 @@ namespace SS14.Shared.Timing
         /// <summary>
         ///     The current simulation tick being processed.
         /// </summary>
-        public uint CurTick { get; set; }
+        public GameTick CurTick { get; set; }
 
         /// <summary>
         ///     The target ticks/second of the simulation.
@@ -135,7 +135,7 @@ namespace SS14.Shared.Timing
         private TimeSpan CalcCurTime()
         {
             // calculate simulation CurTime
-            var time = TimeSpan.FromTicks(TickPeriod.Ticks * CurTick);
+            var time = TimeSpan.FromTicks(TickPeriod.Ticks * CurTick.Value);
 
             if (!InSimulation) // rendering can draw frames between ticks
                 return time + TickRemainder;

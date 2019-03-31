@@ -1,4 +1,5 @@
 ﻿using System;
+using SS14.Shared.Timing;
 
 namespace SS14.Shared.Interfaces.Timing
 {
@@ -64,7 +65,7 @@ namespace SS14.Shared.Interfaces.Timing
         /// <summary>
         ///     The current simulation tick being processed.
         /// </summary>
-        uint CurTick { get; set; }
+        GameTick CurTick { get; set; }
 
         /// <summary>
         ///     The target ticks/second of the simulation.

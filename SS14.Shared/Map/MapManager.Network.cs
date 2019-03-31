@@ -10,6 +10,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Timing;
 using SS14.Shared.Utility;
 
 namespace SS14.Shared.Map
@@ -18,7 +19,7 @@ namespace SS14.Shared.Map
     {
         [Dependency] private readonly INetManager _netManager;
 
-        public GameStateMapData GetStateData(uint fromTick)
+        public GameStateMapData GetStateData(GameTick fromTick)
         {
             var gridDatums = new Dictionary<GridId, GameStateMapData.GridDatum>();
             foreach (var grid in _grids.Values)
@@ -67,7 +68,7 @@ namespace SS14.Shared.Map
             return new GameStateMapData(gridDatums, gridDeletionsData, mapDeletionsData, mapCreations, gridCreations);
         }
 
-        public void CullDeletionHistory(uint uptoTick)
+        public void CullDeletionHistory(GameTick uptoTick)
         {
             _mapDeletionHistory.RemoveAll(t => t.tick < uptoTick);
             _gridDeletionHistory.RemoveAll(t => t.tick < uptoTick);

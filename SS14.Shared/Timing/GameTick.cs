@@ -1,13 +1,17 @@
 ﻿using System;
+using SS14.Shared.Serialization;
 
 namespace SS14.Shared.Timing
 {
     /// <summary>
     ///     Wraps a game tick value.
     /// </summary>
-    [Serializable]
+    [Serializable, NetSerializable]
     public readonly struct GameTick : IEquatable<GameTick>, IComparable<GameTick>
     {
+        public static readonly GameTick Zero = new GameTick(0);
+        public static readonly GameTick MaxValue = new GameTick(uint.MaxValue);
+
         public readonly uint Value;
 
         /// <summary>
@@ -59,5 +63,10 @@ namespace SS14.Shared.Timing
         {
             return Value.CompareTo(other.Value);
         }
+
+        public static bool operator >(GameTick a, GameTick b) => a.Value > b.Value;
+        public static bool operator >=(GameTick a, GameTick b) => a.Value >= b.Value;
+        public static bool operator <(GameTick a, GameTick b) => a.Value < b.Value;
+        public static bool operator <=(GameTick a, GameTick b) => a.Value <= b.Value;
     }
 }

@@ -35,7 +35,7 @@ namespace SS14.UnitTesting.Shared.Timing
 
             // Assert
             Assert.That(callCount, Is.EqualTo(1));
-            Assert.That(gameTiming.CurTick, Is.EqualTo(1));
+            Assert.That(gameTiming.CurTick, Is.EqualTo(new GameTick(1)));
             Assert.That(gameTiming.Paused, Is.True); // it will pause itself after running each tick
             Assert.That(loop.SingleStep, Is.True); // still true
         }

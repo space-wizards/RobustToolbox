@@ -4,6 +4,7 @@ using SS14.Shared.Map;
 using System.Collections.Generic;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
+using SS14.Shared.Timing;
 
 namespace SS14.Server.Interfaces.GameObjects
 {
@@ -70,18 +71,18 @@ namespace SS14.Server.Interfaces.GameObjects
         /// <summary>
         ///     Gets all entity states that have been modified after and including the provided tick.
         /// </summary>
-        List<EntityState> GetEntityStates(uint fromTick);
+        List<EntityState> GetEntityStates(GameTick fromTick);
 
         // Keep track of deleted entities so we can sync deletions with the client.
         /// <summary>
         ///     Gets a list of all entity UIDs that were deleted between <paramref name="fromTick" /> and now.
         /// </summary>
-        List<EntityUid> GetDeletedEntities(uint fromTick);
+        List<EntityUid> GetDeletedEntities(GameTick fromTick);
 
         /// <summary>
         ///     Remove deletion history.
         /// </summary>
         /// <param name="toTick">The last tick to delete the history for. Inclusive.</param>
-        void CullDeletionHistory(uint toTick);
+        void CullDeletionHistory(GameTick toTick);
     }
 }

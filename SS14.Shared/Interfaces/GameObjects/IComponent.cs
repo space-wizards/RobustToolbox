@@ -2,6 +2,7 @@
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Serialization;
+using SS14.Shared.Timing;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Interfaces.GameObjects
@@ -76,7 +77,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <summary>
         ///     This is the last game tick Dirty() was called.
         /// </summary>
-        uint LastModifiedTick { get; }
+        GameTick LastModifiedTick { get; }
 
         /// <summary>
         ///     Called when the component is removed from an entity.

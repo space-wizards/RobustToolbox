@@ -1,5 +1,4 @@
-﻿using SS14.Client.Console;
-using SS14.Client.Input;
+﻿using SS14.Client.Input;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Graphics.ClientEye;
@@ -10,7 +9,6 @@ using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Input;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using System.Collections.Generic;

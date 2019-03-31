@@ -1,6 +1,5 @@
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Serialization;
 
 namespace SS14.Server.Interfaces.GameObjects
 {

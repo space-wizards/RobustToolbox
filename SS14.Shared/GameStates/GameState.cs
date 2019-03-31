@@ -2,6 +2,7 @@
 using SS14.Shared.Serialization;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Timing;
 
 namespace SS14.Shared.GameStates
 {
@@ -19,7 +20,7 @@ namespace SS14.Shared.GameStates
         /// <summary>
         /// Constructor!
         /// </summary>
-        public GameState(uint fromSequence, uint toSequence, List<EntityState> entities, List<PlayerState> players, List<EntityUid> deletions, GameStateMapData mapData)
+        public GameState(GameTick fromSequence, GameTick toSequence, List<EntityState> entities, List<PlayerState> players, List<EntityUid> deletions, GameStateMapData mapData)
         {
             FromSequence = fromSequence;
             ToSequence = toSequence;
@@ -29,8 +30,8 @@ namespace SS14.Shared.GameStates
             MapData = mapData;
         }
 
-        public readonly uint FromSequence;
-        public readonly uint ToSequence;
+        public readonly GameTick FromSequence;
+        public readonly GameTick ToSequence;
 
         public readonly List<EntityState> EntityStates;
         public readonly List<PlayerState> PlayerStates;

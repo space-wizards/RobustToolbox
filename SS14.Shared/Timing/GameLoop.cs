@@ -127,7 +127,7 @@ namespace SS14.Shared.Timing
                     {
                         _runtimeLog.LogException(exp, "GameLoop Tick");
                     }
-                    _timing.CurTick++;
+                    _timing.CurTick = new GameTick(_timing.CurTick.Value + 1);
 
                     if (SingleStep)
                         _timing.Paused = true;

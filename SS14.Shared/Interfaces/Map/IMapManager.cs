@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using SS14.Shared.GameStates;
-using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
+using SS14.Shared.Timing;
 
 namespace SS14.Shared.Interfaces.Map
 {
@@ -100,8 +100,8 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         event EventHandler<MapEventArgs> MapDestroyed;
 
-        GameStateMapData GetStateData(uint fromTick);
-        void CullDeletionHistory(uint uptoTick);
+        GameStateMapData GetStateData(GameTick fromTick);
+        void CullDeletionHistory(GameTick uptoTick);
 
         // Two methods here, so that new grids etc can be made BEFORE entities get states applied,
         // but old ones can be deleted after.

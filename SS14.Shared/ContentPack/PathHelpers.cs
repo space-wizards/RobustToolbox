@@ -23,7 +23,12 @@ namespace SS14.Shared.ContentPack
             var assembly = AppDomain.CurrentDomain.GetAssemblyByName("SS14.Client")
                            ?? Assembly.GetEntryAssembly()
                            ?? Assembly.GetExecutingAssembly();
-            var path = new Uri(assembly.CodeBase).LocalPath;
+            var PathURI = new Uri(assembly.CodeBase);
+            var path = PathURI.LocalPath;
+            if (PathURI.Fragment != "")
+            {
+                path += PathURI.Fragment;
+            }
             return Path.GetDirectoryName(path);
         }
 

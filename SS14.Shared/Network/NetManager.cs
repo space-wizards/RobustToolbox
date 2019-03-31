@@ -226,7 +226,7 @@ namespace SS14.Shared.Network
 
             _strings.Reset();
 
-            _cancelConnectTokenSource.Cancel();
+            _cancelConnectTokenSource?.Cancel();
             _clientConnectionState = ClientConnectionState.NotConnecting;
         }
 
@@ -371,7 +371,7 @@ namespace SS14.Shared.Network
 
                     if (_channels.ContainsKey(sender))
                     {
-                        HandleDisconnect(msg);
+                        HandleDisconnect(sender, reason);
                     }
 
                     break;
@@ -452,27 +452,15 @@ namespace SS14.Shared.Network
             OnConnected(channel);
         }
 
-        private void HandleDisconnect(NetIncomingMessage message)
+        private void HandleDisconnect(NetConnection connection, string reason)
         {
-            string reason;
-            try
-            {
-                message.ReadByte(); // status
-                reason = message.ReadString();
-            }
-            catch (NetException)
-            {
-                reason = String.Empty;
-            }
-
-            var conn = message.SenderConnection;
-            var channel = _channels[conn];
+            var channel = _channels[connection];
 
             Logger.InfoS("net", $"{channel.RemoteEndPoint}: Disconnected ({reason})");
-            _assignedSessions.Remove(conn);
+            _assignedSessions.Remove(connection);
 
             OnDisconnected(channel);
-            _channels.Remove(conn);
+            _channels.Remove(connection);
 
             if (IsClient)
                 _strings.Reset();

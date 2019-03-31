@@ -83,7 +83,7 @@ namespace SS14.Shared.Timing
         /// <summary>
         ///     The target ticks/second of the simulation.
         /// </summary>
-        public int TickRate { get; set; }
+        public byte TickRate { get; set; }
 
         /// <summary>
         ///     The length of a tick at the current TickRate. 1/TickRate.

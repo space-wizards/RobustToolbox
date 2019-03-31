@@ -9,6 +9,7 @@ using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network;
@@ -33,10 +34,17 @@ namespace SS14.Client
         [Dependency]
         private readonly IConfigurationManager _configManager;
 
-        [Dependency] private readonly IClientEntityManager _entityManager;
+        [Dependency]
+        private readonly IClientEntityManager _entityManager;
 
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IDiscordRichPresence _discord;
+        [Dependency]
+        private readonly IMapManager _mapManager;
+
+        [Dependency]
+        private readonly IDiscordRichPresence _discord;
+
+        [Dependency]
+        private readonly IGameTiming _timing;
 
         /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;
@@ -167,6 +175,9 @@ namespace SS14.Client
             info.ServerName = msg.ServerName;
             info.ServerMaxPlayers = msg.ServerMaxPlayers;
             info.SessionId = msg.PlayerSessionId;
+            info.TickRate = msg.TickRate;
+            _timing.TickRate = msg.TickRate;
+            Logger.InfoS("client", $"Tickrate changed to: {msg.TickRate}");
 
             _discord.Update(info.ServerName, info.SessionId.Username, info.ServerMaxPlayers.ToString());
             // start up player management
@@ -272,6 +283,8 @@ namespace SS14.Client
         ///     Max number of players that are allowed in the server at one time.
         /// </summary>
         public int ServerMaxPlayers { get; set; }
+
+        public byte TickRate { get; internal set; }
 
         public NetSessionId SessionId { get; set; }
     }

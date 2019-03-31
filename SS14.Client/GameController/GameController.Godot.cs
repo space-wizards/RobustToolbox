@@ -200,9 +200,10 @@ namespace SS14.Client
             public double FramesPerSecondAvg => Godot.Performance.GetMonitor(Performance.Monitor.TimeFps);
 
             public GameTick CurTick { get; set; }
-            public int TickRate
+
+            public byte TickRate
             {
-                get => Godot.Engine.IterationsPerSecond;
+                get => (byte) Godot.Engine.IterationsPerSecond;
                 set => Godot.Engine.IterationsPerSecond = value;
             }
 

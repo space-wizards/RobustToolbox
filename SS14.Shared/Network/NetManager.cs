@@ -406,7 +406,7 @@ namespace SS14.Shared.Network
             var origName = name;
             var iterations = 1;
 
-            while (_assignedSessions.Values.Any(u => u.Username == requestedUsername))
+            while (_assignedSessions.Values.Any(u => u.Username == name))
             {
                 // This is shit but I don't care.
                 name = $"{origName}_{++iterations}";

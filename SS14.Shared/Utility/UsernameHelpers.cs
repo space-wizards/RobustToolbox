@@ -25,6 +25,12 @@ namespace SS14.Shared.Utility
         /// <returns>True if the name is acceptable, false otherwise.</returns>
         public static bool IsNameValid(string name)
         {
+            // No empty username.
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return false;
+            }
+
             // TODO: This length check is crap and doesn't work correctly.
             // This checks the UTF-16 (LE, because Microsoft neglects the existance of endianness reliably)
             //   encoding of the string, which depending on the code points is too much.

@@ -278,26 +278,15 @@ namespace SS14.Client
             var xdgDataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
             if (xdgDataHome == null)
             {
-                var home = Environment.GetEnvironmentVariable("HOME");
-                if (home == null)
-                {
-                    throw new Exception("$HOME should always be set on a POSIX system.");
-                }
-
-                appDataDir = Path.Combine(home, ".local", "share");
+                appDataDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share");
             }
             else
             {
                 appDataDir = xdgDataHome;
             }
 #elif MACOS
-            var home = Environment.GetEnvironmentVariable("HOME");
-            if (home == null)
-            {
-                throw new Exception("$HOME should always be set on a POSIX system.");
-            }
-
-            appDataDir = Path.Combine(home, "Library", "Application Support");
+            appDataDir = Path.Combine(Environment.SpecialFolder.UserProfile), "Library", "Application Support");
 #else
             appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 #endif

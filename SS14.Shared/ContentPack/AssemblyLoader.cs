@@ -271,7 +271,7 @@ namespace SS14.Shared.ContentPack
             }
             else
             {
-                Logger.Warning("eng", $"Could not load {assemblyName} DLL.");
+                Logger.WarningS("eng", $"Could not load {assemblyName} DLL.");
                 return false;
             }
         }

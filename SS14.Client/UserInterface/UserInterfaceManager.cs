@@ -48,6 +48,9 @@ namespace SS14.Client.UserInterface
         private readonly List<Control> _modalStack = new List<Control>();
 
         private bool _rendering = true;
+        private float _tooltipTimer;
+        private Tooltip _tooltip;
+        private const float TooltipDelay = 1;
 
         public void Initialize()
         {
@@ -114,6 +117,10 @@ namespace SS14.Client.UserInterface
             };
             WindowRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             RootControl.AddChild(WindowRoot);
+
+            _tooltip = new Tooltip();
+            RootControl.AddChild(_tooltip);
+            _tooltip.Visible = false;
         }
 
         public void InitializeTesting()
@@ -136,6 +143,12 @@ namespace SS14.Client.UserInterface
         public void FrameUpdate(RenderFrameEventArgs args)
         {
             RootControl.DoFrameUpdate(args);
+
+            _tooltipTimer -= args.Elapsed;
+            if (_tooltipTimer <= 0)
+            {
+                _showTooltip();
+            }
         }
 
         public void MouseDown(MouseButtonEventArgs args)
@@ -202,10 +215,12 @@ namespace SS14.Client.UserInterface
 
         public void MouseMove(MouseMoveEventArgs mouseMoveEventArgs)
         {
+            _resetTooltipTimer();
             // Update which control is considered hovered.
             var newHovered = _mouseFocused ?? MouseGetControl(mouseMoveEventArgs.Position);
             if (newHovered != CurrentlyHovered)
             {
+                _clearTooltip();
                 CurrentlyHovered?.MouseExited();
                 CurrentlyHovered = newHovered;
                 CurrentlyHovered?.MouseEntered();
@@ -545,6 +560,43 @@ namespace SS14.Client.UserInterface
                 guiEvent.RelativePosition += control.Position;
                 control = control.Parent;
                 guiEvent.SourceControl = control;
+            }
+        }
+
+        private void _clearTooltip()
+        {
+            _tooltip.Visible = false;
+            _resetTooltipTimer();
+        }
+
+        private void _resetTooltipTimer()
+        {
+            _tooltipTimer = TooltipDelay;
+        }
+
+        private void _showTooltip()
+        {
+            var hovered = CurrentlyHovered;
+            if (hovered == null)
+            {
+                return;
+            }
+
+            _tooltip.Visible = true;
+            _tooltip.Text = hovered.ToolTip;
+            _tooltip.Position = _inputManager.MouseScreenPosition;
+            _tooltip.Size = _tooltip.CustomMinimumSize;
+
+            var (right, bottom) = _tooltip.Position + _tooltip.Size;
+
+            if (right > RootControl.Size.X)
+            {
+                _tooltip.Position = (RootControl.Size.X - _tooltip.Size.X, _tooltip.Position.Y);
+            }
+
+            if (bottom > RootControl.Size.Y)
+            {
+                _tooltip.Position = (_tooltip.Position.X, RootControl.Size.Y - _tooltip.Size.Y);
             }
         }
     }

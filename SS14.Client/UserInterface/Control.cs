@@ -475,14 +475,20 @@ namespace SS14.Client.UserInterface
             }
         }
 
+        private string _tooltip;
+
         public string ToolTip
         {
-            get => GameController.OnGodot ? SceneControl.GetTooltip() : default;
+            get => GameController.OnGodot ? SceneControl.GetTooltip() : _tooltip;
             set
             {
                 if (GameController.OnGodot)
                 {
                     SceneControl.SetTooltip(value);
+                }
+                else
+                {
+                    _tooltip = value;
                 }
             }
         }

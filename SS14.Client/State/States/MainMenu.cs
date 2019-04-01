@@ -253,7 +253,8 @@ namespace SS14.Client.State.States
                     Text = "Join Public Server",
                     TextAlign = Button.AlignMode.Center,
 #if !RELEASE
-                    Disabled = true
+                    Disabled = true,
+                    ToolTip = "Cannot connect to public server with a debug build."
 #endif
                 };
 

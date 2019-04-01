@@ -286,7 +286,8 @@ namespace SS14.Client
                 appDataDir = xdgDataHome;
             }
 #elif MACOS
-            appDataDir = Path.Combine(Environment.SpecialFolder.UserProfile), "Library", "Application Support");
+            appDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                                      "Library", "Application Support");
 #else
             appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 #endif

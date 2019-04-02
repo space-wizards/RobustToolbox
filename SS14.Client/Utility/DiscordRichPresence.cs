@@ -50,10 +50,16 @@ namespace SS14.Client.Utility
 
         public void Update(string serverName, string Username, string maxUser)
         {
-            //TODO: Update presence with data
+            //TODO: tests
             _presence.Details = serverName;
             _presence.State = Username;
             _presence.Assets.LargeImageText = Username;
+            _client.SetPresence(_presence);
+        }
+
+        public void Restore()
+        {
+            _presence = default;
             _client.SetPresence(_presence);
         }
 

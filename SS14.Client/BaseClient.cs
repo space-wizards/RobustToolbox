@@ -84,7 +84,7 @@ namespace SS14.Client
         {
             DebugTools.Assert(RunLevel > ClientRunLevel.Initialize);
             DebugTools.Assert(_net.IsConnected);
-
+            _discord.Restore();
             // run level changed in OnNetDisconnect()
             // are both of these *really* needed?
             _net.ClientDisconnect(reason);

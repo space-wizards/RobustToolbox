@@ -6,5 +6,6 @@ namespace SS14.Client.Interfaces.Utility
     {
         void Connect();
         void Update(string serverName, string Username, string maxUser);
+        void Restore();
     }
 }

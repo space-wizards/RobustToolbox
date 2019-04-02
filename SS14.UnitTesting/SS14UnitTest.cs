@@ -20,11 +20,13 @@ using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.Interfaces.Utility;
 using SS14.Client.Reflection;
 using SS14.Client.ResourceManagement;
 using SS14.Client.State;
 using SS14.Client.UserInterface;
 using SS14.Client.ViewVariables;
+using SS14.Client.Utility;
 using SS14.Server;
 using SS14.Server.Chat;
 using SS14.Server.Console;
@@ -223,6 +225,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
                     IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();
                     IoCManager.Register<IClipboardManager, ClipboardManagerUnsupported>();
+                    IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
                     break;
 
                 case UnitTestProject.Server:

@@ -92,6 +92,7 @@ namespace SS14.Client
         [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager;
         private IClyde _clyde;
         private IFontManagerInternal _fontManager;
+        private DiscordRichPresence _discord;
 
         private void Startup()
         {
@@ -170,7 +171,7 @@ namespace SS14.Client
             _viewVariablesManager.Initialize();
 
             _client.Initialize();
-
+            _discord = new DiscordRichPresence();
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.PostInit);
 
             _stateManager.RequestStateChange<MainScreen>();

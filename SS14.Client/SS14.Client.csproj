@@ -60,6 +60,9 @@
   </PropertyGroup>
   <Import Project="..\MSBuild\SS14.DefineConstants.targets" />
   <ItemGroup>
+    <PackageReference Include="DiscordRichPresence">
+      <Version>1.0.95</Version>
+    </PackageReference>
     <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
     <PackageReference Include="NVorbis" Version="0.8.6" />
     <PackageReference Include="SharpZipLib" Version="1.0.0" />
@@ -75,6 +78,9 @@
     <PackageReference Include="SharpFont" Version="4.0.1" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="GodotSharp">
+      <HintPath>..\SS14.Client.Godot\.mono\assemblies\GodotSharp.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Net" />
@@ -86,9 +92,6 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Drawing" />
-    <Reference Include="GodotSharp" Condition="Exists('..\SS14.Client.Godot\.mono\assemblies\GodotSharp.dll')">
-      <HintPath>..\SS14.Client.Godot\.mono\assemblies\GodotSharp.dll</HintPath>
-    </Reference>
     <Reference Include="GodotSharp" Condition="!Exists('..\SS14.Client.Godot\.mono\assemblies\GodotSharp.dll')">
       <HintPath>..\Dependencies\godot\GodotSharp.dll</HintPath>
     </Reference>
@@ -244,9 +247,11 @@
     <Compile Include="UserInterface\Stylesheet.cs" />
     <Compile Include="UserInterface\UITheme.cs" />
     <Compile Include="Utility\DirExt.cs" />
+    <Compile Include="Utility\DiscordRichPresence.cs" />
     <Compile Include="Utility\GodotParser.cs" />
     <Compile Include="Utility\GodotPathUtility.cs" />
     <Compile Include="Utility\GodotResourceCopy.cs" />
+    <Compile Include="Interfaces\Utility\IDiscordRichPresence.cs" />
     <Compile Include="Utility\ImageSharpExt.cs" />
     <Compile Include="Utility\OpenTKConversions.cs" />
     <Compile Include="Utility\Rand.cs" />

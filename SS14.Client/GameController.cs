@@ -12,6 +12,7 @@ using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.Interfaces.Utility;
 using SS14.Client.Log;
 using SS14.Client.State.States;
 using SS14.Shared.ContentPack;
@@ -90,9 +91,10 @@ namespace SS14.Client
         [Dependency] private readonly ILogManager _logManager;
         [Dependency] private readonly ITaskManager _taskManager;
         [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager;
+        [Dependency] private readonly IDiscordRichPresence _discord;
         private IClyde _clyde;
         private IFontManagerInternal _fontManager;
-        private DiscordRichPresence _discord;
+        
 
         private void Startup()
         {
@@ -171,7 +173,7 @@ namespace SS14.Client
             _viewVariablesManager.Initialize();
 
             _client.Initialize();
-            _discord = new DiscordRichPresence();
+            _discord.Connect();
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.PostInit);
 
             _stateManager.RequestStateChange<MainScreen>();

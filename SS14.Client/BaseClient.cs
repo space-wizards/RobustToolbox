@@ -2,6 +2,7 @@
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.State;
+using SS14.Client.Interfaces.Utility;
 using SS14.Client.Player;
 using SS14.Client.State.States;
 using SS14.Shared.Enums;
@@ -35,6 +36,7 @@ namespace SS14.Client
         [Dependency] private readonly IClientEntityManager _entityManager;
 
         [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IDiscordRichPresence _discord;
 
         /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;
@@ -58,7 +60,6 @@ namespace SS14.Client
             _net.Disconnect += OnNetDisconnect;
 
             _playMan.Initialize();
-
             Reset();
         }
 
@@ -75,6 +76,7 @@ namespace SS14.Client
 
             OnRunLevelChanged(ClientRunLevel.Connecting);
             _net.ClientConnect(ip, port, PlayerNameOverride ?? _configManager.GetCVar<string>("player.name"));
+            _discord.Update(GameInfo.ServerName, GameInfo.SessionId.Username, GameInfo.ServerMaxPlayers.ToString());
         }
 
         /// <inheritdoc />

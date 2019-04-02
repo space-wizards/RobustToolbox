@@ -400,8 +400,6 @@ namespace SS14.Shared.GameObjects
 
             foreach (var compState in state.ComponentStates)
             {
-                compState.ReceivedTime = state.ReceivedTime;
-
                 if (!TryGetComponent(compState.NetID, out var component))
                     continue;
 

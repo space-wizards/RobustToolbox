@@ -118,14 +118,18 @@ namespace SS14.Shared.Timing
 
                     // update the simulation
                     simFrameEvent.SetDeltaSeconds((float)_timing.FrameTime.TotalSeconds);
+#if RELEASE
                     try
                     {
+#endif
                         Tick?.Invoke(this, simFrameEvent);
+#if RELEASE
                     }
                     catch (Exception exp)
                     {
                         _runtimeLog.LogException(exp, "GameLoop Tick");
                     }
+#endif
                     _timing.CurTick = new GameTick(_timing.CurTick.Value + 1);
 
                     if (SingleStep)

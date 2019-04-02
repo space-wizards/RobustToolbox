@@ -9,13 +9,12 @@ namespace SS14.Shared.GameStates
     [Serializable, NetSerializable]
     public class GameState
     {
-        [NonSerialized] private float _gameTime;
-
-        public float GameTime
-        {
-            get => _gameTime;
-            set => _gameTime = value;
-        }
+        /// <summary>
+        ///     An extrapolated state that was created artificially by the client.
+        ///     It does not contain any real data from the server.
+        /// </summary>
+        [field:NonSerialized]
+        public bool Extrapolated { get; set; }
 
         /// <summary>
         /// Constructor!

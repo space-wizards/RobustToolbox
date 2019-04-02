@@ -68,5 +68,11 @@ namespace SS14.Shared.Timing
         public static bool operator >=(GameTick a, GameTick b) => a.Value >= b.Value;
         public static bool operator <(GameTick a, GameTick b) => a.Value < b.Value;
         public static bool operator <=(GameTick a, GameTick b) => a.Value <= b.Value;
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return Value.ToString();
+        }
     }
 }

@@ -191,6 +191,7 @@ namespace SS14.Client
         private void OnLocalStatusChanged(object obj, StatusEventArgs eventArgs)
         {
             // player finished fully connecting to the server.
+            // OldStatus is used here because it can go from connecting-> connected or connecting-> ingame
             if (eventArgs.OldStatus == SessionStatus.Connecting)
             {
                 OnPlayerJoinedServer(_playMan.LocalPlayer.Session);
@@ -206,7 +207,7 @@ namespace SS14.Client
 
         private void OnRunLevelChanged(ClientRunLevel newRunLevel)
         {
-            Logger.Debug($"[ENG] Runlevel changed to: {newRunLevel}");
+            Logger.DebugS("client", $"Runlevel changed to: {newRunLevel}");
             var args = new RunLevelChangedEventArgs(RunLevel, newRunLevel);
             RunLevel = newRunLevel;
             RunLevelChanged?.Invoke(this, args);
@@ -219,9 +220,25 @@ namespace SS14.Client
     public enum ClientRunLevel
     {
         Error = 0,
+
+        /// <summary>
+        ///     The client has not started connecting to a server (on main menu).
+        /// </summary>
         Initialize,
+
+        /// <summary>
+        ///     The client started connecting to the server, and is in the process of building the session.
+        /// </summary>
         Connecting,
+
+        /// <summary>
+        ///     The client has successfully finished connecting to the server.
+        /// </summary>
         Connected,
+
+        /// <summary>
+        ///     The client is now in the game, moving around.
+        /// </summary>
         InGame,
     }
 

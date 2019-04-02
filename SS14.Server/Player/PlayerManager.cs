@@ -335,6 +335,12 @@ namespace SS14.Server.Player
             var channel = message.MsgChannel;
             var players = GetAllPlayers().ToArray();
             var netMsg = channel.CreateNetMessage<MsgPlayerList>();
+            
+            // client session is complete, set their status accordingly.
+            // This is done before the packet is built, so that the client
+            // can see themselves Connected.
+            var session = GetSessionByChannel(channel);
+            session.Status = SessionStatus.Connected;
 
             var list = new List<PlayerState>();
             foreach (var client in players)
@@ -355,10 +361,6 @@ namespace SS14.Server.Player
             netMsg.PlyCount = (byte)list.Count;
 
             channel.SendMessage(netMsg);
-
-            // client session is complete
-            var session = GetSessionByChannel(channel);
-            session.Status = SessionStatus.Connected;
         }
 
         public void Dirty()

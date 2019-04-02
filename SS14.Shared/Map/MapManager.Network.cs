@@ -78,6 +78,10 @@ namespace SS14.Shared.Map
         {
             DebugTools.Assert(_netManager.IsClient, "Only the client should call this.");
 
+            // There was no map data this tick, so nothing to do.
+            if(data == null)
+                return;
+
             // First we need to figure out all the NEW MAPS.
             // And make their default grids too.
             foreach (var (mapId, gridId) in data.CreatedMaps)
@@ -150,6 +154,9 @@ namespace SS14.Shared.Map
         public void ApplyGameStatePost(GameStateMapData data)
         {
             DebugTools.Assert(_netManager.IsClient, "Only the client should call this.");
+
+            if(data == null) // if there is no data, there is nothing to do!
+                return;
 
             foreach (var grid in data.DeletedGrids)
             {

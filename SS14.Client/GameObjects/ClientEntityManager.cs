@@ -111,14 +111,13 @@ namespace SS14.Client.GameObjects
             Started = true;
         }
 
-        public void ApplyEntityStates(IEnumerable<EntityState> entityStates, IEnumerable<EntityUid> deletions, float serverTime)
+        public void ApplyEntityStates(IEnumerable<EntityState> entityStates, IEnumerable<EntityUid> deletions)
         {
             var toApply = new List<(Entity, EntityState)>();
             var toInitialize = new List<Entity>();
             foreach (var es in entityStates)
             {
                 //Todo defer component state result processing until all entities are loaded and initialized...
-                es.ReceivedTime = serverTime;
                 //Known entities
                 if (Entities.TryGetValue(es.StateData.Uid, out var entity))
                 {

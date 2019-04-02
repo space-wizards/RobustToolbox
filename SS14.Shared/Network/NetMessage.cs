@@ -55,6 +55,11 @@ namespace SS14.Shared.Network
         public INetChannel MsgChannel { get; set; }
 
         /// <summary>
+        ///     The size of this packet in bytes.
+        /// </summary>
+        public int MsgSize { get; set; }
+
+        /// <summary>
         /// Constructs an instance of the NetMessage.
         /// </summary>
         /// <param name="name">String identifier of the message type.</param>

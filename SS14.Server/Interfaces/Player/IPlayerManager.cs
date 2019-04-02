@@ -8,6 +8,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
 using SS14.Shared.Network;
 using SS14.Shared.Players;
+using SS14.Shared.Timing;
 
 namespace SS14.Server.Interfaces.Player
 {
@@ -64,6 +65,6 @@ namespace SS14.Server.Interfaces.Player
         void DetachAll();
         List<IPlayerSession> GetPlayersInRange(GridCoordinates worldPos, int range);
         List<IPlayerSession> GetAllPlayers();
-        List<PlayerState> GetPlayerStates();
+        List<PlayerState> GetPlayerStates(GameTick fromTick);
     }
 }

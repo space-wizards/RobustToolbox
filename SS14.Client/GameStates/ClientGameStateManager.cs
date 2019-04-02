@@ -8,7 +8,6 @@ using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
 using SS14.Client.Player;
-using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Timing;
@@ -21,7 +20,7 @@ namespace SS14.Client.GameStates
         private readonly List<GameState> _stateBuffer = new List<GameState>();
         private GameState _lastFullState;
         private bool _waitingForFull = true;
-        
+
         [Dependency]
         private readonly IClientEntityManager _entities;
         [Dependency]
@@ -65,7 +64,7 @@ namespace SS14.Client.GameStates
                 if(_lastFullState == null || (_lastFullState != null && _lastFullState.ToSequence < state.ToSequence))
                 {
                     _lastFullState = state;
-                    Logger.InfoS("net", $"Received Full GameState: to={state.ToSequence}, sz={0}");
+                    Logger.InfoS("net", $"Received Full GameState: to={state.ToSequence}, sz={message.MsgSize}");
                     return;
                 }
             }
@@ -75,10 +74,11 @@ namespace SS14.Client.GameStates
 
             if (state.ToSequence <= lastTick && !_waitingForFull) // CurTick isn't set properly when WaitingForFull
             {
-                Logger.DebugS("net.state", $"Received Old GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={0}, buf={_stateBuffer.Count}");
+                Logger.DebugS("net.state", $"Received Old GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={message.MsgSize}, buf={_stateBuffer.Count}");
                 return;
             }
-            
+
+            // lets check for a duplicate state now.
             for (var i = 0; i < _stateBuffer.Count; i++)
             {
                 var iState = _stateBuffer[i];
@@ -92,12 +92,13 @@ namespace SS14.Client.GameStates
                     break; // break from the loop, add the new state normally
                 }
 
-                Logger.DebugS("net.state", $"Received Dupe GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={0}, buf={_stateBuffer.Count}");
+                Logger.DebugS("net.state", $"Received Dupe GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={message.MsgSize}, buf={_stateBuffer.Count}");
                 return;
             }
-            
+
+            // this is a good state that we will be using.
             _stateBuffer.Add(state);
-            Logger.DebugS("net.state", $"Received New GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={0}, buf={_stateBuffer.Count}");
+            Logger.DebugS("net.state", $"Received New GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={message.MsgSize}, buf={_stateBuffer.Count}");
         }
 
         public void ApplyGameState()
@@ -105,7 +106,7 @@ namespace SS14.Client.GameStates
             //TODO: completely skip this tick and freeze the sim if false
             if(CalculateNextStates(_timing.CurTick, out var curState, out var nextState))
             {
-                Logger.DebugS("net.state", $"Applying State: cTick={_timing.CurTick}, ext={curState.Extrapolated} fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, sz={0}, buf={_stateBuffer.Count}");
+                Logger.DebugS("net.state", $"Applying State:  ext={curState.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
                 ApplyGameState(curState);
             }
         }
@@ -161,17 +162,14 @@ namespace SS14.Client.GameStates
                 {
                     var state = _stateBuffer[i];
 
-                    if (state.FromSequence == lastTick && state.ToSequence == curTick)
+                    // remember there are no duplicate ToSequence states in the list.
+                    if (state.ToSequence == curTick)
                     {
                         curState = state;
-                        _stateBuffer.RemoveSwap(i);
-                        i--;
                     }
-                    else if (state.FromSequence == curTick && state.ToSequence == nextTick)
+                    else if (state.ToSequence == nextTick)
                     {
                         nextState = state;
-                        _stateBuffer.RemoveSwap(i);
-                        i--;
                     }
                     else if(state.ToSequence < lastTick) // remove any old states we find to keep the buffer clean
                     {
@@ -200,6 +198,9 @@ namespace SS14.Client.GameStates
             }
         }
 
+        /// <summary>
+        ///     Generates a completely fake GameState.
+        /// </summary>
         private GameState ExtrapolateState(GameTick fromSequence, GameTick toSequence)
         {
             //TODO: Make me work!

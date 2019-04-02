@@ -14,6 +14,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Timing;
 using SS14.Shared.Utility;
 
 namespace SS14.Server.Player
@@ -34,7 +35,7 @@ namespace SS14.Server.Player
 
         public BoundKeyMap KeyMap { get; private set; }
 
-        private bool NeedsStateUpdate;
+        private GameTick _lastStateUpdate;
 
         private readonly ReaderWriterLockSlim _sessionsLock = new ReaderWriterLockSlim();
 
@@ -234,14 +235,15 @@ namespace SS14.Server.Player
         /// <summary>
         ///     Gets all player states in the server.
         /// </summary>
+        /// <param name="fromTick"></param>
         /// <returns></returns>
-        public List<PlayerState> GetPlayerStates()
+        public List<PlayerState> GetPlayerStates(GameTick fromTick)
         {
-            if (!NeedsStateUpdate)
+            if (_lastStateUpdate < fromTick)
             {
                 return null;
             }
-            NeedsStateUpdate = false;
+
             _sessionsLock.EnterReadLock();
             try
             {
@@ -365,7 +367,7 @@ namespace SS14.Server.Player
 
         public void Dirty()
         {
-            NeedsStateUpdate = true;
+            _lastStateUpdate = _timing.CurTick;
         }
 
         public IPlayerData GetPlayerData(NetSessionId sessionId)

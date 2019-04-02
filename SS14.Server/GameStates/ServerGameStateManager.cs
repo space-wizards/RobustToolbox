@@ -78,7 +78,7 @@ namespace SS14.Server.GameStates
             }
 
             var entities = _entityManager.GetEntityStates(oldestAck);
-            var players = _playerManager.GetPlayerStates();
+            var players = _playerManager.GetPlayerStates(oldestAck);
             var deletions = _entityManager.GetDeletedEntities(oldestAck);
             var mapData = _mapManager.GetStateData(oldestAck);
 

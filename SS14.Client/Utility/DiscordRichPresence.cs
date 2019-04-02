@@ -19,8 +19,7 @@ namespace SS14.Client.Utility
                 LargeImageKey = "devstation",
                 LargeImageText = "I think coolsville SUCKS",
                 SmallImageKey = "logo"
-            },
-            Timestamps = Timestamps.FromTimeSpan(10),
+            }
         };
 
         public void Connect()
@@ -51,9 +50,9 @@ namespace SS14.Client.Utility
         public void Update(string serverName, string Username, string maxUser)
         {
             //TODO: tests
-            _presence.Details = serverName;
-            _presence.State = Username;
-            _presence.Assets.LargeImageText = Username;
+            _presence.Details = "On server: " + serverName;
+            _presence.State = "Max players: " + maxUser;
+            _presence.Assets.LargeImageText = "Character: " + Username;
             _client.SetPresence(_presence);
         }
 

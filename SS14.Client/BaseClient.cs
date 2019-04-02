@@ -76,7 +76,7 @@ namespace SS14.Client
 
             OnRunLevelChanged(ClientRunLevel.Connecting);
             _net.ClientConnect(ip, port, PlayerNameOverride ?? _configManager.GetCVar<string>("player.name"));
-            _discord.Update(GameInfo.ServerName, GameInfo.SessionId.Username, GameInfo.ServerMaxPlayers.ToString());
+            
         }
 
         /// <inheritdoc />
@@ -168,6 +168,7 @@ namespace SS14.Client
             info.ServerMaxPlayers = msg.ServerMaxPlayers;
             info.SessionId = msg.PlayerSessionId;
 
+            _discord.Update(info.ServerName, info.SessionId.Username, info.ServerMaxPlayers.ToString());
             // start up player management
             _playMan.Startup(_net.ServerChannel);
 

@@ -69,6 +69,13 @@ namespace SS14.Shared.Interfaces.Map
         TileRef GetTile(GridCoordinates worldPos);
 
         /// <summary>
+        ///     Gets a tile a the given tile coordinates. This will not create a new chunk.
+        /// </summary>
+        /// <param name="tileCoordinates">The location of the tile in coordinates.</param>
+        /// <returns>The tile at the tile coordinates.</returns>
+        TileRef GetTile(MapIndices tileCoordinates);
+
+        /// <summary>
         ///     Returns all tiles in the grid, in row-major order [xTileIndex, yTileIndex].
         /// </summary>
         /// <returns>All tiles in the chunk.</returns>

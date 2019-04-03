@@ -104,16 +104,21 @@ namespace SS14.Shared.Map
             /// <inheritdoc />
             public TileRef GetTile(GridCoordinates worldPos)
             {
-                var chunkIndices = WorldToChunk(worldPos);
-                var gridTileIndices = WorldToTile(worldPos);
+                return GetTile(WorldToTile(worldPos));
+            }
 
-                Chunk output;
-                if (_chunks.TryGetValue(chunkIndices, out output))
+            public TileRef GetTile(MapIndices tileCoordinates)
+            {
+                var chunkIndices = GridTileToGridChunk(tileCoordinates);
+
+                if (!_chunks.TryGetValue(chunkIndices, out var output))
                 {
-                    var chunkTileIndices = output.GridTileToChunkTile(gridTileIndices);
-                    return output.GetTile((ushort)chunkTileIndices.X, (ushort)chunkTileIndices.Y);
+                    // Chunk doesn't exist, return a tileRef to an empty (space) tile.
+                    return new TileRef(MapID, Index, tileCoordinates.X, tileCoordinates.Y, default);
                 }
-                return new TileRef(MapID, Index, gridTileIndices.X, gridTileIndices.Y, default);
+
+                var chunkTileIndices = output.GridTileToChunkTile(tileCoordinates);
+                return output.GetTile((ushort)chunkTileIndices.X, (ushort)chunkTileIndices.Y);
             }
 
             /// <inheritdoc />

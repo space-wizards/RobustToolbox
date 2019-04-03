@@ -1,14 +1,12 @@
 ﻿using DiscordRPC;
+using DiscordRPC.Logging;
 using SS14.Client.Interfaces.Utility;
-using SS14.Shared.Log;
 
 namespace SS14.Client.Utility
 {
     class DiscordRichPresence : IDiscordRichPresence
     {
         private DiscordRpcClient _client;
-
-        private readonly DiscordRPC.Logging.LogLevel logLevel = DiscordRPC.Logging.LogLevel.Info;
 
         private RichPresence _presence = new RichPresence()
         {
@@ -27,17 +25,17 @@ namespace SS14.Client.Utility
             // Create the client
             _client = new DiscordRpcClient("560499552273170473")
             {
-                Logger = new DiscordRPC.Logging.ConsoleLogger(logLevel, true)
+                Logger = new NativeLogger()
             };
             // == Subscribe to some events
             _client.OnReady += (sender, msg) =>
             {
-                Logger.Info("Connected to discord with user {0}", msg.User.Username);
+                _client.Logger.Info("Connected to discord with user {0}", msg.User.Username);
             };
 
             _client.OnPresenceUpdate += (sender, msg) =>
             {
-                Logger.Info("Presence has been updated! ");
+                _client.Logger.Info("Presence has been updated! ");
             };
 
             // == Initialize
@@ -67,5 +65,41 @@ namespace SS14.Client.Utility
             _client.Dispose();
         }
 
+        private class NativeLogger : ILogger
+        {
+            public void Trace(string message, params object[] args)
+            {
+                if (Level > LogLevel.Trace)
+                {
+                    return;
+                }
+                Shared.Log.Logger.DebugS("discord", message, args);
+            }
+
+            public void Info(string message, params object[] args)
+            {
+                if (Level > LogLevel.Info)
+                {
+                    return;
+                }
+                Shared.Log.Logger.InfoS("discord", message, args);
+            }
+
+            public void Warning(string message, params object[] args)
+            {
+                if (Level > LogLevel.Warning)
+                {
+                    return;
+                }
+                Shared.Log.Logger.WarningS("discord", message, args);
+            }
+
+            public void Error(string message, params object[] args)
+            {
+                Shared.Log.Logger.ErrorS("discord", message, args);
+            }
+
+            public LogLevel Level { get; set; } = LogLevel.Info;
+        }
     }
 }

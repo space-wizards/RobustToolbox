@@ -179,6 +179,11 @@ namespace SS14.Server.Maps
         /// </summary>
         private class MapContext : YamlObjectSerializer.Context, IEntityFinishContext
         {
+            [Dependency]
+            private readonly IMapManager _mapManager;
+            [Dependency]
+            private readonly ITileDefinitionManager _tileDefinitionManager;
+
             public readonly Dictionary<GridId, int> GridIDMap = new Dictionary<GridId, int>();
             public readonly List<IMapGrid> Grids = new List<IMapGrid>();
 
@@ -194,13 +199,17 @@ namespace SS14.Server.Maps
             string CurrentWritingComponent;
             IEntity CurrentWritingEntity;
 
+            private Dictionary<ushort, string> _tileMap;
+
             public MapContext()
             {
+                IoCManager.InjectDependencies(this);
                 RootNode = new YamlMappingNode();
             }
 
             public MapContext(YamlMappingNode node, IMap targetMap)
             {
+                IoCManager.InjectDependencies(this);
                 RootNode = node;
                 TargetMap = targetMap;
             }
@@ -209,6 +218,7 @@ namespace SS14.Server.Maps
             public void Deserialize()
             {
                 ReadMetaSection();
+                ReadTileMapSection();
                 ReadGridSection();
 
                 // Entities are allocated in a separate step so entity UID cross references can be resolved.
@@ -226,21 +236,35 @@ namespace SS14.Server.Maps
                 }
             }
 
+            void ReadTileMapSection()
+            {
+                _tileMap = new Dictionary<ushort, string>();
+
+                var tileMap = RootNode.GetNode<YamlMappingNode>("tilemap");
+                foreach (var (key, value) in tileMap)
+                {
+                    var tileId = (ushort) key.AsInt();
+                    var tileDefName = value.AsString();
+                    _tileMap.Add(tileId, tileDefName);
+                }
+            }
+
             void ReadGridSection()
             {
                 var grids = RootNode.GetNode<YamlSequenceNode>("grids");
-                var mapMan = IoCManager.Resolve<IMapManager>();
 
                 foreach (var grid in grids)
                 {
                     var newId = new GridId?();
                     YamlGridSerializer.DeserializeGrid(
-                        mapMan, TargetMap, ref newId,
+                        _mapManager, TargetMap, ref newId,
                         (YamlMappingNode)grid["settings"],
-                        (YamlSequenceNode)grid["chunks"]
+                        (YamlSequenceNode)grid["chunks"],
+                        _tileMap,
+                        _tileDefinitionManager
                     );
 
-                    Grids.Add(mapMan.GetGrid(newId.Value));
+                    Grids.Add(_mapManager.GetGrid(newId.Value));
                 }
             }
 
@@ -296,6 +320,7 @@ namespace SS14.Server.Maps
             public YamlNode Serialize()
             {
                 WriteMetaSection();
+                WriteTileMapSection();
                 WriteGridSection();
 
                 PopulateEntityList();
@@ -312,6 +337,16 @@ namespace SS14.Server.Maps
                 // TODO: Make these values configurable.
                 meta.Add("name", "DemoStation");
                 meta.Add("author", "Space-Wizards");
+            }
+
+            void WriteTileMapSection()
+            {
+                var tileMap = new YamlMappingNode();
+                RootNode.Add("tilemap", tileMap);
+                foreach (var tileDefinition in _tileDefinitionManager)
+                {
+                    tileMap.Add(tileDefinition.TileId.ToString(CultureInfo.InvariantCulture), tileDefinition.Name);
+                }
             }
 
             void WriteGridSection()

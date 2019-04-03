@@ -28,30 +28,21 @@ namespace SS14.Shared.Map
 
         public virtual void Initialize()
         {
-            foreach (var prototype in PrototypeManager.EnumeratePrototypes<PrototypeTileDefinition>().OrderBy(p => p.FutureID))
-            {
-                prototype.Register(this);
-            }
         }
 
-        public virtual ushort Register(ITileDefinition tileDef)
+        public virtual void Register(ITileDefinition tileDef)
         {
-            if (_tileIds.TryGetValue(tileDef, out ushort id))
-            {
-                throw new InvalidOperationException($"TileDefinition is already registered: {tileDef.GetType()}, id: {id}");
-            }
-
             var name = tileDef.Name;
             if (_tileNames.ContainsKey(name))
             {
                 throw new ArgumentException("Another tile definition with the same name has already been registered.", nameof(tileDef));
             }
 
-            id = checked((ushort) TileDefs.Count);
+            var id = checked((ushort) TileDefs.Count);
+            tileDef.AssignTileId(id);
             TileDefs.Add(tileDef);
             _tileNames[name] = tileDef;
             _tileIds[tileDef] = id;
-            return id;
         }
 
         public ITileDefinition this[string name] => _tileNames[name];

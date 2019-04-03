@@ -71,7 +71,6 @@ namespace SS14.Client
         [Dependency] private readonly IResourceManager _resourceManager;
         [Dependency] private readonly ISS14Serializer _serializer;
         [Dependency] private readonly IPrototypeManager _prototypeManager;
-        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
         [Dependency] private readonly IClientNetManager _networkManager;
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IStateManager _stateManager;
@@ -160,7 +159,6 @@ namespace SS14.Client
             _console.Initialize();
             _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
             _prototypeManager.Resync();
-            _tileDefinitionManager.Initialize();
             _mapManager.Initialize();
             _lightManager.Initialize();
             _entityManager.Initialize();

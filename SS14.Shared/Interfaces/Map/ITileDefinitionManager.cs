@@ -33,7 +33,6 @@ namespace SS14.Shared.Interfaces.Map
         ///     Register a definition with this manager.
         /// </summary>
         /// <param name="tileDef">THe definition to register.</param>
-        /// <returns>The internal id of the registered definition.</returns>
-        ushort Register(ITileDefinition tileDef);
+        void Register(ITileDefinition tileDef);
     }
 }

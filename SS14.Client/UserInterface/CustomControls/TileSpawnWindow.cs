@@ -71,7 +71,7 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             TileList.DisposeAllChildren();
 
-            var tileDefs = tileDefinitionManager.Select(td => td.Name);
+            var tileDefs = tileDefinitionManager.Select(td => td.DisplayName);
 
             if (!string.IsNullOrEmpty(searchStr))
             {

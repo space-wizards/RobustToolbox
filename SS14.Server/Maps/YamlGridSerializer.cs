@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -77,7 +78,7 @@ namespace SS14.Server.Maps
             return Convert.ToBase64String(barr);
         }
 
-        public static void DeserializeGrid(IMapManager mapMan, IMap map, ref GridId? gridId, YamlMappingNode info, YamlSequenceNode chunks)
+        public static void DeserializeGrid(IMapManager mapMan, IMap map, ref GridId? gridId, YamlMappingNode info, YamlSequenceNode chunks, IReadOnlyDictionary<ushort, string> tileDefMapping, ITileDefinitionManager tileDefinitionManager)
         {
             ushort csz = 0;
             ushort tsz = 0;
@@ -104,11 +105,11 @@ namespace SS14.Server.Maps
 
             foreach (YamlMappingNode chunkNode in chunks.Cast<YamlMappingNode>())
             {
-                DeserializeChunk(mapMan, grid, chunkNode);
+                DeserializeChunk(mapMan, grid, chunkNode, tileDefMapping, tileDefinitionManager);
             }
         }
 
-        private static void DeserializeChunk(IMapManager mapMan, IMapGrid grid, YamlMappingNode chunk)
+        private static void DeserializeChunk(IMapManager mapMan, IMapGrid grid, YamlMappingNode chunk, IReadOnlyDictionary<ushort, string> tileDefMapping, ITileDefinitionManager tileDefinitionManager)
         {
             var indNode = chunk["ind"];
             var tileNode = chunk["tiles"];
@@ -127,6 +128,9 @@ namespace SS14.Server.Maps
                         {
                             var id = reader.ReadUInt16();
                             var data = reader.ReadUInt16();
+
+                            var defName = tileDefMapping[id];
+                            id = tileDefinitionManager[defName].TileId;
 
                             var tile = new Tile(id, data);
                             grid.SetTile(new GridCoordinates(x + indices.X, y + indices.Y, grid), tile);

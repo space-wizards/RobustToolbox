@@ -225,7 +225,6 @@ namespace SS14.Server
             prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes"));
             prototypeManager.Resync();
 
-            IoCManager.Resolve<ITileDefinitionManager>().Initialize();
             IoCManager.Resolve<IConsoleShell>().Initialize();
             IoCManager.Resolve<IConGroupController>().Initialize();
 

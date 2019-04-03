@@ -11,13 +11,13 @@ namespace SS14.Shared.Map
     {
         public readonly MapId MapIndex;
         public readonly GridId GridIndex;
+        public readonly MapIndices GridTile;
         private readonly Tile _tile;
-        private readonly MapIndices _gridTile;
 
         internal TileRef(MapId argMap, GridId gridIndex, int xIndex, int yIndex, Tile tile)
         {
             MapIndex = argMap;
-            _gridTile = new MapIndices(xIndex, yIndex);
+            GridTile = new MapIndices(xIndex, yIndex);
             GridIndex = gridIndex;
             _tile = tile;
         }
@@ -25,14 +25,14 @@ namespace SS14.Shared.Map
         internal TileRef(MapId argMap, GridId gridIndex, MapIndices gridTile, Tile tile)
         {
             MapIndex = argMap;
-            _gridTile = gridTile;
+            GridTile = gridTile;
             GridIndex = gridIndex;
             _tile = tile;
         }
 
-        public int X => _gridTile.X;
-        public int Y => _gridTile.Y;
-        public GridCoordinates LocalPos => IoCManager.Resolve<IMapManager>().GetMap(MapIndex).GetGrid(GridIndex).GridTileToLocal(_gridTile);
+        public int X => GridTile.X;
+        public int Y => GridTile.Y;
+        public GridCoordinates LocalPos => IoCManager.Resolve<IMapManager>().GetMap(MapIndex).GetGrid(GridIndex).GridTileToLocal(GridTile);
         public ushort TileSize => IoCManager.Resolve<IMapManager>().GetMap(MapIndex).GetGrid(GridIndex).TileSize;
         public Tile Tile
         {
@@ -40,7 +40,7 @@ namespace SS14.Shared.Map
             set
             {
                 IMapGrid grid = IoCManager.Resolve<IMapManager>().GetMap(MapIndex).GetGrid(GridIndex);
-                grid.SetTile(new GridCoordinates(_gridTile.X, _gridTile.Y, grid), value);
+                grid.SetTile(new GridCoordinates(GridTile.X, GridTile.Y, grid), value);
             }
         }
 
@@ -54,7 +54,7 @@ namespace SS14.Shared.Map
 
         public bool GetStep(Direction dir, out TileRef steptile)
         {
-            MapIndices currenttile = _gridTile;
+            MapIndices currenttile = GridTile;
             MapIndices shift;
             switch (dir)
             {

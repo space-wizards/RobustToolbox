@@ -25,21 +25,22 @@ namespace SS14.Client.Map
             TileSet = new Godot.TileSet();
         }
 
-        public override ushort Register(ITileDefinition tileDef)
+        public override void Register(ITileDefinition tileDef)
         {
-            var ret = base.Register(tileDef);
+            base.Register(tileDef);
 
-            TileSet.CreateTile(ret);
-            if (!string.IsNullOrEmpty(tileDef.SpriteName))
+            var id = tileDef.TileId;
+            TileSet.CreateTile(id);
+            if (string.IsNullOrEmpty(tileDef.SpriteName))
             {
-                var texture =
-                    resourceCache.GetResource<TextureResource>(
-                        new ResourcePath("/Textures/Tiles/") / $@"{tileDef.SpriteName}.png");
-                TileSet.TileSetTexture(ret, texture.Texture.GodotTexture);
-                Textures[ret] = texture;
+                return;
             }
 
-            return ret;
+            var texture =
+                resourceCache.GetResource<TextureResource>(
+                    new ResourcePath("/Textures/Tiles/") / $@"{tileDef.SpriteName}.png");
+            TileSet.TileSetTexture(id, texture.Texture.GodotTexture);
+            Textures[id] = texture;
         }
     }
 }

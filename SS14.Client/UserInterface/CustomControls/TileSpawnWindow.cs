@@ -5,6 +5,7 @@ using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Reflection;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Utility;
 
@@ -71,11 +72,11 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             TileList.DisposeAllChildren();
 
-            var tileDefs = tileDefinitionManager.Select(td => td.Name);
+            IEnumerable<ITileDefinition> tileDefs = tileDefinitionManager;
 
             if (!string.IsNullOrEmpty(searchStr))
             {
-                tileDefs = tileDefs.Where(s => s.IndexOf(searchStr, StringComparison.InvariantCultureIgnoreCase) >= 0);
+                tileDefs = tileDefs.Where(s => s.DisplayName.IndexOf(searchStr, StringComparison.InvariantCultureIgnoreCase) >= 0);
             }
 
             foreach (var entry in tileDefs)
@@ -84,7 +85,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 {
                     TileDef = entry,
                 };
-                button.ActualButton.Text = entry;
+                button.ActualButton.Text = entry.DisplayName;
                 button.ActualButton.OnToggled += OnItemButtonToggled;
 
                 TileList.AddChild(button);
@@ -93,7 +94,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private class TileSpawnButton : PanelContainer
         {
-            public string TileDef { get; set; }
+            public ITileDefinition TileDef { get; set; }
             public Button ActualButton { get; private set; }
 
             protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Placement/TileSpawnItem.tscn");
@@ -134,7 +135,7 @@ namespace SS14.Client.UserInterface.CustomControls
             var newObjInfo = new PlacementInformation
             {
                 PlacementOption = "AlignTileAny",
-                TileType = tileDefinitionManager[item.TileDef].TileId,
+                TileType = item.TileDef.TileId,
                 Range = 400,
                 IsTile = true
             };

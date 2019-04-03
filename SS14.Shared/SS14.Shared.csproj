@@ -192,11 +192,9 @@
     <Compile Include="Map\GridId.cs" />
     <Compile Include="Map\Coordinates.cs" />
     <Compile Include="Map\MapId.cs" />
-    <Compile Include="Map\DefaultTileDefinitions.cs" />
     <Compile Include="Map\MapManager.cs" />
     <Compile Include="Map\MapManager.Network.cs" />
     <Compile Include="Map\Tile.cs" />
-    <Compile Include="Map\TileDefinition.cs" />
     <Compile Include="Map\TileDefinitionManager.cs" />
     <Compile Include="Map\TileRef.cs" />
     <Compile Include="Network\Messages\MsgState.cs" />

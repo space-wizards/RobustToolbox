@@ -20,6 +20,12 @@ Fields:
 * `name`: A name. Simple huh. Can be left out.
 * `author`: Authorship info. Also simple. Can be left out.
 
+### The `tilemap` section
+
+Numeric tile IDs are not guaranteed to be consistent between different versions of the game. As such, each map file that contains grids must also contain a `tilemap` section, mapping tile definition names to the tile IDs used to encode them in the `grids` section.
+
+The section is a map of numeric ID: tile definition name.
+
 ### The `grids` Section
 
 Contains data for all the grids. The section is an ordered sequence. Each sequence is made up of a single grid's data. That data:
@@ -48,6 +54,8 @@ Each entry into the `chunks` sequence is a mapping for a single chunk of the gri
 Tile data is a binary array of the tile data of a chunk. Tiles are ordered without gaps, x coords being more significant, so x will increase per row, then every y coordinate is iterated, then x increases again, etc..
 
 Tiles are 4 bytes in size (`ushort` for Tile ID, `ushort` for tile metadata field, little endian) Thus, since the amount of tiles is equal to `chunksize * chunksize`, the tile data per chunk is exactly `chunksize * chunksize * 4` bytes long.
+
+Tile IDs should be mapped to tile definitions via the `tilemap` section.
 
 ## Blueprints
 

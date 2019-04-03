@@ -1,6 +1,7 @@
 ﻿using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Globalization;
 using System.Linq;
@@ -12,26 +13,31 @@ namespace SS14.Shared.Utility
     {
         // Easy conversions for YamlScalarNodes.
         // All of these take regular nodes, to make the API easier and less copy paste.
+        [Pure]
         public static int AsInt(this YamlNode node)
         {
             return int.Parse(((YamlScalarNode)node).Value, CultureInfo.InvariantCulture);
         }
 
+        [Pure]
         public static string AsString(this YamlNode node)
         {
             return ((YamlScalarNode)node).Value;
         }
 
+        [Pure]
         public static float AsFloat(this YamlNode node)
         {
             return float.Parse(((YamlScalarNode)node).Value, CultureInfo.InvariantCulture);
         }
 
+        [Pure]
         public static bool AsBool(this YamlNode node)
         {
             return bool.Parse(((YamlScalarNode)node).Value);
         }
 
+        [Pure]
         public static Vector2 AsVector2(this YamlNode node)
         {
             string raw = AsString(node);
@@ -45,6 +51,7 @@ namespace SS14.Shared.Utility
                                 float.Parse(args[1], CultureInfo.InvariantCulture));
         }
 
+        [Pure]
         public static Vector2i AsVector2i(this YamlNode node)
         {
             string raw = AsString(node);
@@ -58,6 +65,7 @@ namespace SS14.Shared.Utility
                                 int.Parse(args[1], CultureInfo.InvariantCulture));
         }
 
+        [Pure]
         public static Vector3 AsVector3(this YamlNode node)
         {
             string raw = AsString(node);
@@ -72,6 +80,7 @@ namespace SS14.Shared.Utility
                                 float.Parse(args[2], CultureInfo.InvariantCulture));
         }
 
+        [Pure]
         public static Vector4 AsVector4(this YamlNode node)
         {
             string raw = AsString(node);
@@ -87,16 +96,19 @@ namespace SS14.Shared.Utility
                                 float.Parse(args[3], CultureInfo.InvariantCulture));
         }
 
+        [Pure]
         public static T AsEnum<T>(this YamlNode node)
         {
             return (T)Enum.Parse(typeof(T), node.AsString(), true);
         }
 
+        [Pure]
         public static Color AsHexColor(this YamlNode node, Color? fallback = null)
         {
             return Color.FromHex(node.AsString(), fallback);
         }
 
+        [Pure]
         public static Color AsColor(this YamlNode node, Color? fallback = null)
         {
             if (Color.TryFromName(node.AsString(), out var color))
@@ -106,6 +118,7 @@ namespace SS14.Shared.Utility
             return node.AsHexColor(fallback);
         }
 
+        [Pure]
         public static ResourcePath AsResourcePath(this YamlNode node)
         {
             return new ResourcePath(node.ToString());
@@ -118,7 +131,7 @@ namespace SS14.Shared.Utility
         /// attempting to cast it to <typeparamref name="T" />.
         /// </summary>
         /// <param name="mapping">The mapping to retrieve the node from.</param>
-        /// <param name="name">The value of the scalar node that will be looked up.</param>
+        /// <param name="key">The value of the scalar node that will be looked up.</param>
         /// <returns>The corresponding node casted to <typeparamref name="T" />.</returns>
         /// <exception cref="KeyNotFoundException">
         /// Thrown if <paramref name="mapping" /> does not contain a scalar with value <paramref name="key" />.
@@ -128,6 +141,7 @@ namespace SS14.Shared.Utility
         /// </exception>
         /// <seealso cref="GetNode" />
         /// <seealso cref="TryGetNode{T}" />
+        [Pure]
         public static T GetNode<T>(this YamlMappingNode mapping, string key) where T : YamlNode
         {
             return (T)mapping[new YamlScalarNode(key)];
@@ -142,6 +156,7 @@ namespace SS14.Shared.Utility
         /// Thrown if <paramref name="mapping" /> does not contain a scalar with value <paramref name="key" />.
         /// </exception>
         /// <returns>The node found.</returns>
+        [Pure]
         public static YamlNode GetNode(this YamlMappingNode mapping, string key)
         {
             return mapping.GetNode<YamlNode>(key);
@@ -156,10 +171,11 @@ namespace SS14.Shared.Utility
         /// <param name="key">The value of the scalar node that will be looked up.</param>
         /// <param name="returnNode">The node casted to <typeparamref name="T" />, <c>null</c> if the node could not be found.</param>
         /// <returns>True if the value could be found, false otherwise.</returns>
-        /// <exception cref="InvalidCastException" />
+        /// <exception cref="InvalidCastException">
         /// Thrown if the node could be found, but was the wrong type.
         /// This is intentional, as this most of the time means user error in the prototype definition.
         /// </exception>
+        [Pure]
         public static bool TryGetNode<T>(this YamlMappingNode mapping, string key, out T returnNode) where T : YamlNode
         {
             var dummy = new YamlScalarNode(key);
@@ -187,6 +203,7 @@ namespace SS14.Shared.Utility
             return mapping.Children.TryGetValue(new YamlScalarNode(key), out returnNode);
         }
 
+        [Pure]
         public static bool HasNode(this YamlMappingNode mapping, string key)
         {
             return mapping.TryGetNode(key, out var _);
@@ -197,6 +214,7 @@ namespace SS14.Shared.Utility
         /// </summary>
         /// <param name="mapping">The mapping to copy from.</param>
         /// <returns>The dictionary.</returns>
+        [Pure]
         public static Dictionary<string, YamlNode> YamlMappingToDict(YamlMappingNode mapping)
         {
             return mapping.ToDictionary(p => p.Key.AsString(), p => p.Value);

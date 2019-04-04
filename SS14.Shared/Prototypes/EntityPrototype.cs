@@ -403,7 +403,7 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        internal Entity AllocEntity(EntityUid uid, IEntityManager manager, IEntityNetworkManager networkManager)
+        internal Entity AllocEntity(EntityUid uid, IEntityManager manager)
         {
             var entity = (Entity)Activator.CreateInstance(ClassType ?? typeof(Entity));
 
@@ -415,7 +415,7 @@ namespace SS14.Shared.GameObjects
             return entity;
         }
 
-        internal void FinishEntity(Entity entity, IComponentFactory factory, IEntityFinishContext context)
+        internal void LoadEntity(Entity entity, IComponentFactory factory, IEntityLoadContext context)
         {
             YamlObjectSerializer.Context defaultContext = null;
             if (context == null)

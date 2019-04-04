@@ -114,6 +114,7 @@ namespace SS14.Client.GameObjects
         public void ApplyEntityStates(IEnumerable<EntityState> entityStates, IEnumerable<EntityUid> deletions, float serverTime)
         {
             var toApply = new List<(Entity, EntityState)>();
+            var toInitialize = new List<Entity>();
             foreach (var es in entityStates)
             {
                 //Todo defer component state result processing until all entities are loaded and initialized...
@@ -125,14 +126,10 @@ namespace SS14.Client.GameObjects
                 }
                 else //Unknown entities
                 {
-                    var newEntity = InternalCreateEntity(es.StateData.TemplateName, es.StateData.Uid);
-                    if (EntitiesInitialized)
-                    {
-                        InitializeEntity(newEntity);
-                    }
-
+                    var newEntity = CreateEntity(es.StateData.TemplateName, es.StateData.Uid);
                     newEntity.Name = es.StateData.Name;
                     toApply.Add((newEntity, es));
+                    toInitialize.Add(newEntity);
                 }
             }
 
@@ -147,10 +144,14 @@ namespace SS14.Client.GameObjects
                 DeleteEntity(id);
             }
 
-            // After the first set of states comes in we do the startup.
-            if (!EntitiesInitialized)
+            foreach (var entity in toInitialize)
             {
-                InitializeEntities();
+                InitializeEntity(entity);
+            }
+
+            foreach (var entity in toInitialize)
+            {
+                StartEntity(entity);
             }
         }
 
@@ -159,36 +160,18 @@ namespace SS14.Client.GameObjects
             Shutdown();
         }
 
-        public override void Shutdown()
+        public override IEntity SpawnEntity(string protoName)
         {
-            base.Shutdown();
-
-            EntitiesInitialized = false;
-        }
-
-        public override IEntity CreateEntity(string protoName)
-        {
-            return InternalCreateEntity(protoName, NewClientEntityUid());
-        }
-
-        public override Entity SpawnEntity(string protoName)
-        {
-            var ent = InternalCreateEntity(protoName, NewClientEntityUid());
-            if (EntitiesInitialized)
-            {
-                InitializeEntity(ent);
-            }
+            var ent = CreateEntity(protoName, NewClientEntityUid());
+            InitializeAndStartEntity(ent);
             return ent;
         }
 
         public override IEntity ForceSpawnEntityAt(string entityType, GridCoordinates coordinates)
         {
-            Entity entity = SpawnEntity(entityType);
+            var entity = CreateEntity(entityType);
             entity.Transform.GridPosition = coordinates;
-            if (EntitiesInitialized)
-            {
-                InitializeEntity(entity);
-            }
+            InitializeAndStartEntity(entity);
 
             return entity;
         }

@@ -227,10 +227,10 @@ namespace SS14.Server
 
             IoCManager.Resolve<IConsoleShell>().Initialize();
             IoCManager.Resolve<IConGroupController>().Initialize();
+            _entities.Startup();
 
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.PostInit);
 
-            _entities.Startup();
             IoCManager.Resolve<IStatusHost>().Start();
 
             return false;

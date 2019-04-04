@@ -177,12 +177,14 @@ namespace SS14.Server.Maps
         /// <summary>
         ///     Handles the primary bulk of state during the map serialization process.
         /// </summary>
-        private class MapContext : YamlObjectSerializer.Context, IEntityFinishContext
+        private class MapContext : YamlObjectSerializer.Context, IEntityLoadContext
         {
             [Dependency]
             private readonly IMapManager _mapManager;
             [Dependency]
             private readonly ITileDefinitionManager _tileDefinitionManager;
+            [Dependency]
+            private readonly IServerEntityManagerInternal _serverEntityManager;
 
             public readonly Dictionary<GridId, int> GridIDMap = new Dictionary<GridId, int>();
             public readonly List<IMapGrid> Grids = new List<IMapGrid>();
@@ -217,13 +219,25 @@ namespace SS14.Server.Maps
             // Deserialization
             public void Deserialize()
             {
+                // First we load map meta data like version.
                 ReadMetaSection();
+
+                // Load grids.
                 ReadTileMapSection();
                 ReadGridSection();
 
-                // Entities are allocated in a separate step so entity UID cross references can be resolved.
+                // Entities are first allocated. This allows us to know the future UID of all entities on the map before
+                // even ExposeData is loaded. This allows us to resolve serialized EntityUid instances correctly.
                 AllocEntities();
-                FinishEntities();
+
+                // Actually instance components and run ExposeData on them.
+                FinishEntitiesLoad();
+
+                // Run Initialize on all components.
+                FinishEntitiesInitialization();
+
+                // Run Startup on all components.
+                FinishEntitiesStartup();
             }
 
             void ReadMetaSection()
@@ -238,6 +252,7 @@ namespace SS14.Server.Maps
 
             void ReadTileMapSection()
             {
+                // Load tile mapping so that we can map the stored tile IDs into the ones actually used at runtime.
                 _tileMap = new Dictionary<ushort, string>();
 
                 var tileMap = RootNode.GetNode<YamlMappingNode>("tilemap");
@@ -271,12 +286,10 @@ namespace SS14.Server.Maps
             void AllocEntities()
             {
                 var entities = RootNode.GetNode<YamlSequenceNode>("entities");
-                var entityMan = IoCManager.Resolve<IServerEntityManagerInternal>();
-
                 foreach (var entityDef in entities.Cast<YamlMappingNode>())
                 {
                     var type = entityDef.GetNode("type").AsString();
-                    var entity = entityMan.AllocEntity(type);
+                    var entity = _serverEntityManager.AllocEntity(type);
                     Entities.Add(entity);
                     if (entityDef.TryGetNode("name", out var nameNode))
                     {
@@ -285,14 +298,13 @@ namespace SS14.Server.Maps
                 }
             }
 
-            void FinishEntities()
+            void FinishEntitiesLoad()
             {
-                var entities = RootNode.GetNode<YamlSequenceNode>("entities");
-                var entityMan = IoCManager.Resolve<IServerEntityManagerInternal>();
+                var entityData = RootNode.GetNode<YamlSequenceNode>("entities");
 
-                foreach (var (entity, data) in Entities.Zip(entities, (a, b) => (a, (YamlMappingNode)b)))
+                foreach (var (entity, data) in Entities.Zip(entityData, (a, b) => (a, (YamlMappingNode)b)))
                 {
-                    CurrentReadingEntity = (YamlMappingNode)data;
+                    CurrentReadingEntity = data;
                     CurrentReadingEntityComponents = new Dictionary<string, YamlMappingNode>();
                     if (data.TryGetNode("components", out YamlSequenceNode componentList))
                     {
@@ -301,7 +313,24 @@ namespace SS14.Server.Maps
                             CurrentReadingEntityComponents[compData["type"].AsString()] = (YamlMappingNode)compData;
                         }
                     }
-                    entityMan.FinishEntity(entity, this);
+
+                    _serverEntityManager.FinishEntityLoad(entity, this);
+                }
+            }
+
+            void FinishEntitiesInitialization()
+            {
+                foreach (var entity in Entities)
+                {
+                    _serverEntityManager.FinishEntityInitialization(entity);
+                }
+            }
+
+            void FinishEntitiesStartup()
+            {
+                foreach (var entity in Entities)
+                {
+                    _serverEntityManager.FinishEntityStartup(entity);
                 }
             }
 
@@ -363,8 +392,7 @@ namespace SS14.Server.Maps
 
             void PopulateEntityList()
             {
-                var entMgr = IoCManager.Resolve<IEntityManager>();
-                foreach (var entity in entMgr.GetEntities())
+                foreach (var entity in _serverEntityManager.GetEntities())
                 {
                     if (IsMapSavable(entity))
                     {
@@ -507,7 +535,8 @@ namespace SS14.Server.Maps
                 return false;
             }
 
-            ObjectSerializer IEntityFinishContext.GetComponentSerializer(string componentName, YamlMappingNode protoData)
+            // Create custom object serializers that will correctly allow data to be overriden by the map file.
+            ObjectSerializer IEntityLoadContext.GetComponentSerializer(string componentName, YamlMappingNode protoData)
             {
                 if (CurrentReadingEntityComponents == null)
                 {

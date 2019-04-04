@@ -3,7 +3,6 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Serialization;
 using SS14.Shared.Timing;
-using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
@@ -129,7 +128,8 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <summary>
         ///     Handles an incoming component state from the server.
         /// </summary>
-        /// <param name="state"></param>
-        void HandleComponentState(ComponentState state);
+        /// <param name="curState"></param>
+        /// <param name="nextState"></param>
+        void HandleComponentState(ComponentState curState, ComponentState nextState);
     }
 }

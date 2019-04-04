@@ -380,11 +380,11 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         ///     Applies an entity state to this entity.
         /// </summary>
-        /// <param name="state">State to apply.</param>
-        internal void HandleEntityState(EntityState state)
+        /// <param name="curState">State to apply.</param>
+        internal void HandleEntityState(EntityState curState, EntityState nextState)
         {
-            Name = state.StateData.Name;
-            var synchedComponentTypes = state.StateData.SynchedComponentTypes;
+            Name = curState.StateData.Name;
+            var synchedComponentTypes = curState.StateData.SynchedComponentTypes;
             foreach (var t in synchedComponentTypes)
             {
                 if (HasComponent(t.Item1) && GetComponent(t.Item1).Name != t.Item2)
@@ -398,7 +398,7 @@ namespace SS14.Shared.GameObjects
                 }
             }
 
-            foreach (var compState in state.ComponentStates)
+            foreach (var compState in curState.ComponentStates)
             {
                 if (!TryGetComponent(compState.NetID, out var component))
                     continue;
@@ -406,7 +406,8 @@ namespace SS14.Shared.GameObjects
                 if (compState.GetType() != component.StateType)
                     throw new InvalidOperationException($"Incorrect component state type: {component.StateType}, component: {component.GetType()}");
 
-                component.HandleComponentState(compState);
+                var nextCompState = nextState?.ComponentStates?.Find(s => s.NetID == compState.NetID);
+                component.HandleComponentState(compState, nextCompState);
             }
         }
 

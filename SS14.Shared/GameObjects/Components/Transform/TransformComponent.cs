@@ -6,24 +6,29 @@ using SS14.Shared.GameObjects.EntitySystemMessages;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
-using SS14.Shared.IoC;
+ using SS14.Shared.Interfaces.Timing;
+ using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
-using SS14.Shared.ViewVariables;
+ using SS14.Shared.Utility;
+ using SS14.Shared.ViewVariables;
 
 namespace SS14.Shared.GameObjects.Components.Transform
 {
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
         private EntityUid _parent;
-        [ViewVariables]
-        private Vector2 _position; // holds offset from grid, or offset from parent
-        private Angle _rotation; // local rotation
+        private Vector2 _localPosition; // holds offset from grid, or offset from parent
+        private Angle _localRotation; // local rotation
         private GridId _gridID;
 
         private Matrix3 _worldMatrix;
         private Matrix3 _invWorldMatrix;
+
+        private Vector2 _nextPosition;
+        private Angle _nextRotation;
+
         [ViewVariables]
         private readonly List<EntityUid> _children = new List<EntityUid>();
 
@@ -31,12 +36,9 @@ namespace SS14.Shared.GameObjects.Components.Transform
         public event EventHandler<MoveEventArgs> OnMove;
 
         public event Action<ParentChangedEventArgs> OnParentChanged;
-
+        
         /// <inheritdoc />
-        public event Action<Angle> OnRotate;
-
-        /// <inheritdoc />
-        public sealed override string Name => "Transform";
+        public override string Name => "Transform";
         /// <inheritdoc />
         public sealed override uint? NetID => NetIDs.TRANSFORM;
         /// <inheritdoc />
@@ -70,12 +72,12 @@ namespace SS14.Shared.GameObjects.Components.Transform
         [ViewVariables(VVAccess.ReadWrite)]
         public Angle LocalRotation
         {
-            get => _rotation;
+            get => GetLocalRotation();
             set
             {
+                DebugTools.Assert(IoCManager.Resolve<IGameTiming>().InSimulation);
                 SetRotation(value);
                 RebuildMatrices();
-                OnRotate?.Invoke(value);
                 Dirty();
             }
         }
@@ -88,12 +90,13 @@ namespace SS14.Shared.GameObjects.Components.Transform
             {
                 if (_parent.IsValid())
                 {
-                    return Parent.WorldRotation + LocalRotation;
+                    return Parent.WorldRotation + GetLocalRotation();
                 }
-                return _rotation;
+                return GetLocalRotation();
             }
             set
             {
+                DebugTools.Assert(IoCManager.Resolve<IGameTiming>().InSimulation);
                 var current = WorldRotation;
                 var diff = value - current;
                 LocalRotation += diff;
@@ -126,10 +129,11 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 if (_parent.IsValid())
                 {
                     var parentMatrix = Parent.WorldMatrix;
-                    Matrix3.Multiply(ref _worldMatrix, ref parentMatrix, out var result);
+                    var myMatrix = GetWorldMatrix();
+                    Matrix3.Multiply(ref myMatrix, ref parentMatrix, out var result);
                     return result;
                 }
-                return _worldMatrix;
+                return GetWorldMatrix();
             }
         }
 
@@ -141,10 +145,11 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 if (_parent.IsValid())
                 {
                     var matP = Parent.InvWorldMatrix;
-                    Matrix3.Multiply(ref matP, ref _invWorldMatrix, out var result);
+                    var myMatrix = GetWorldMatrixInv();
+                    Matrix3.Multiply(ref matP, ref myMatrix, out var result);
                     return result;
                 }
-                return _invWorldMatrix;
+                return GetWorldMatrixInv();
             }
         }
 
@@ -162,16 +167,17 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 if (Parent != null)
                 {
                     // transform _position from parent coords to world coords
-                    var worldPos = Parent.WorldMatrix.Transform(_position);
+                    var worldPos = Parent.WorldMatrix.Transform(GetLocalPosition());
                     return new GridCoordinates(worldPos, _gridID);
                 }
                 else
                 {
-                    return new GridCoordinates(_position, _gridID);
+                    return new GridCoordinates(GetLocalPosition(), _gridID);
                 }
             }
             set
             {
+                DebugTools.Assert(IoCManager.Resolve<IGameTiming>().InSimulation);
                 if (_parent.IsValid())
                 {
                     if (value.GridID != _gridID)
@@ -185,7 +191,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                     var newPos = Parent.InvWorldMatrix.Transform(worldCoords.Position);
 
                     // float rounding error guard, if the offset is less than 1mm ignore it
-                    if ((newPos - _position).LengthSquared < 10.0E-3)
+                    if ((newPos - GetLocalPosition()).LengthSquared < 10.0E-3)
                         return;
 
                     SetPosition(newPos);
@@ -213,7 +219,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 if (Parent != null)
                 {
                     // parent coords to world coords
-                    return Parent.WorldMatrix.Transform(_position);
+                    return Parent.WorldMatrix.Transform(GetLocalPosition());
                 }
                 else
                 {
@@ -222,20 +228,21 @@ namespace SS14.Shared.GameObjects.Components.Transform
                     // Eh.
                     if (IoCManager.Resolve<IMapManager>().TryGetGrid(GridID, out var grid))
                     {
-                        return grid.ConvertToWorld(_position);
+                        return grid.ConvertToWorld(GetLocalPosition());
                     }
-                    return _position;
+                    return GetLocalPosition();
                 }
             }
             set
             {
+                DebugTools.Assert(IoCManager.Resolve<IGameTiming>().InSimulation);
                 if (_parent.IsValid())
                 {
                     // world coords to parent coords
                     var newPos = Parent.InvWorldMatrix.Transform(value);
 
                     // float rounding error guard, if the offset is less than 1mm ignore it
-                    if ((newPos - _position).LengthSquared < 10.0E-3)
+                    if ((newPos - GetLocalPosition()).LengthSquared < 10.0E-3)
                         return;
 
                     SetPosition(newPos);
@@ -243,13 +250,13 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 else
                 {
                     SetPosition(value);
-                    _recurseSetGridId(IoCManager.Resolve<IMapManager>().GetMap(MapID).FindGridAt(_position).Index);
+                    _recurseSetGridId(IoCManager.Resolve<IMapManager>().GetMap(MapID).FindGridAt(GetLocalPosition()).Index);
                 }
 
                 Dirty();
 
                 RebuildMatrices();
-                OnMove?.Invoke(this, new MoveEventArgs(GridPosition, new GridCoordinates(_position, GridID)));
+                OnMove?.Invoke(this, new MoveEventArgs(GridPosition, new GridCoordinates(GetLocalPosition(), GridID)));
             }
         }
 
@@ -259,7 +266,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
         [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 LocalPosition
         {
-            get => _position;
+            get => GetLocalPosition();
             set
             {
                 var oldPos = GridPosition;
@@ -272,10 +279,12 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
         [ViewVariables]
         public IEnumerable<ITransformComponent> Children => _children.Select(u => Owner.EntityManager.GetEntity(u).Transform);
-
+        
         /// <inheritdoc />
         public override void OnRemove()
         {
+            DebugTools.Assert(IoCManager.Resolve<IGameTiming>().InSimulation);
+
             DetachParent();
 
             foreach (var child in _children.ToArray())
@@ -293,6 +302,8 @@ namespace SS14.Shared.GameObjects.Components.Transform
         /// </summary>
         public virtual void DetachParent()
         {
+            DebugTools.Assert(IoCManager.Resolve<IGameTiming>().InSimulation);
+
             // nothing to do
             if (Parent == null)
                 return;
@@ -332,7 +343,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
             _recurseSetGridId(parent.GridID);
 
             // offset position from world to parent
-            SetPosition(parent.InvWorldMatrix.Transform(_position));
+            SetPosition(parent.InvWorldMatrix.Transform(GetLocalPosition()));
             RebuildMatrices();
             Dirty();
         }
@@ -382,20 +393,20 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
             serializer.DataField(ref _parent, "parent", new EntityUid());
             serializer.DataField(ref _gridID, "grid", GridId.Nullspace);
-            serializer.DataField(ref _position, "pos", Vector2.Zero);
-            serializer.DataField(ref _rotation, "rot", new Angle());
+            serializer.DataField(ref _localPosition, "pos", Vector2.Zero);
+            serializer.DataField(ref _localRotation, "rot", new Angle());
         }
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new TransformComponentState(_position, GridID, LocalRotation, Parent?.Owner?.Uid);
+            return new TransformComponentState(_localPosition, GridID, LocalRotation, Parent?.Owner?.Uid);
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState state)
+        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
-            var newState = (TransformComponentState)state;
+            var newState = (TransformComponentState)curState;
 
             var newParentId = newState.ParentID;
             var rebuildMatrices = false;
@@ -415,14 +426,13 @@ namespace SS14.Shared.GameObjects.Components.Transform
             if (LocalRotation != newState.Rotation)
             {
                 SetRotation(newState.Rotation);
-                OnRotate?.Invoke(newState.Rotation);
                 rebuildMatrices = true;
             }
 
-            if (_position != newState.LocalPosition || (!_parent.IsValid() && GridID != newState.GridID))
+            if (_localPosition != newState.LocalPosition || (!_parent.IsValid() && GridID != newState.GridID))
             {
                 var oldPos = GridPosition;
-                if (_position != newState.LocalPosition)
+                if (_localPosition != newState.LocalPosition)
                 {
                     SetPosition(newState.LocalPosition);
                 }
@@ -440,23 +450,52 @@ namespace SS14.Shared.GameObjects.Components.Transform
             {
                 RebuildMatrices();
             }
+
+            if (nextState != null)
+                _nextPosition = ((TransformComponentState) nextState).LocalPosition;
+            else
+                _nextPosition = _localPosition; // this should cause the lerp to do nothing
         }
 
         // Hooks for GodotTransformComponent go here.
         protected virtual void SetPosition(Vector2 position)
         {
-            _position = position;
+            _localPosition = position;
         }
 
         protected virtual void SetRotation(Angle rotation)
         {
-            _rotation = rotation;
+            _localRotation = rotation;
+        }
+
+        protected virtual Vector2 GetLocalPosition()
+        {
+            IGameTiming timing = IoCManager.Resolve<IGameTiming>();
+            if(timing.InSimulation)
+                return _localPosition;
+
+            return Vector2.Lerp(_localPosition, _nextPosition, (float) (timing.TickRemainder.TotalSeconds / timing.TickPeriod.TotalSeconds));
+        }
+
+        protected virtual Angle GetLocalRotation()
+        {
+            return _localRotation;
+        }
+
+        protected virtual Matrix3 GetWorldMatrix()
+        {
+            return _worldMatrix;
+        }
+
+        protected virtual Matrix3 GetWorldMatrixInv()
+        {
+            return _invWorldMatrix;
         }
 
         private void RebuildMatrices()
         {
-            var pos = _position;
-            var rot = _rotation.Theta;
+            var pos = _localPosition;
+            var rot = _localRotation.Theta;
 
             var posMat = Matrix3.CreateTranslation(pos);
             var rotMat = Matrix3.CreateRotation((float)rot);

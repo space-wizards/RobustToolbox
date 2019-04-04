@@ -107,7 +107,7 @@ namespace SS14.Client.GameStates
             if(CalculateNextStates(_timing.CurTick, out var curState, out var nextState))
             {
                 Logger.DebugS("net.state", $"Applying State:  ext={curState.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
-                ApplyGameState(curState);
+                ApplyGameState(curState, nextState);
             }
         }
 
@@ -216,12 +216,12 @@ namespace SS14.Client.GameStates
             _network.ClientSendMessage(msg);
         }
 
-        private void ApplyGameState(GameState gameState)
+        private void ApplyGameState(GameState curState, GameState nextState)
         {
-            _mapManager.ApplyGameStatePre(gameState.MapData);
-            _entities.ApplyEntityStates(gameState.EntityStates, gameState.EntityDeletions);
-            _players.ApplyPlayerStates(gameState.PlayerStates);
-            _mapManager.ApplyGameStatePost(gameState.MapData);
+            _mapManager.ApplyGameStatePre(curState.MapData);
+            _entities.ApplyEntityStates(curState.EntityStates, curState.EntityDeletions, nextState.EntityStates);
+            _players.ApplyPlayerStates(curState.PlayerStates);
+            _mapManager.ApplyGameStatePost(curState.MapData);
         }
     }
 }

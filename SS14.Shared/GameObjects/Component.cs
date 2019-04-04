@@ -181,8 +181,6 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void HandleComponentState(ComponentState state)
-        {
-        }
+        public virtual void HandleComponentState(ComponentState curState, ComponentState nextState) { }
     }
 }

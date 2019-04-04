@@ -10,7 +10,6 @@ using SS14.Client.Utility;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
@@ -23,7 +22,6 @@ using System.Linq;
 using System.Text;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.ViewVariables;
-using YamlDotNet.RepresentationModel;
 using VS = Godot.VisualServer;
 
 namespace SS14.Client.GameObjects
@@ -1573,9 +1571,9 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override void HandleComponentState(ComponentState state)
+        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
-            var thestate = (SpriteComponentState) state;
+            var thestate = (SpriteComponentState) curState;
 
             Visible = thestate.Visible;
             DrawDepth = thestate.DrawDepth;

@@ -37,11 +37,6 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         MapCoordinates MapPosition { get; }
 
         /// <summary>
-        ///     Invoked when the entity is rotated.
-        /// </summary>
-        event Action<Angle> OnRotate;
-
-        /// <summary>
         ///     Current rotation offset of the entity.
         /// </summary>
         Angle LocalRotation { get; set; }

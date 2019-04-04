@@ -111,31 +111,32 @@ namespace SS14.Client.GameObjects
             Started = true;
         }
 
-        public void ApplyEntityStates(IEnumerable<EntityState> entityStates, IEnumerable<EntityUid> deletions)
+        public void ApplyEntityStates(IEnumerable<EntityState> curEntStates, IEnumerable<EntityUid> deletions, List<EntityState> nextEntStates)
         {
-            var toApply = new List<(Entity, EntityState)>();
+            var toApply = new List<(Entity, EntityState, EntityState)>();
             var toInitialize = new List<Entity>();
-            foreach (var es in entityStates)
+            foreach (var es in curEntStates)
             {
+                var nextState = nextEntStates?.Find(s => s.StateData.Uid == es.StateData.Uid);
                 //Todo defer component state result processing until all entities are loaded and initialized...
                 //Known entities
                 if (Entities.TryGetValue(es.StateData.Uid, out var entity))
                 {
-                    toApply.Add(((Entity)entity, es));
+                    toApply.Add(((Entity)entity, es, nextState));
                 }
                 else //Unknown entities
                 {
                     var newEntity = CreateEntity(es.StateData.TemplateName, es.StateData.Uid);
                     newEntity.Name = es.StateData.Name;
-                    toApply.Add((newEntity, es));
+                    toApply.Add((newEntity, es, nextState));
                     toInitialize.Add(newEntity);
                 }
             }
 
             // Make sure this is done after all entities have been instantiated.
-            foreach (var (entity, es) in toApply)
+            foreach (var (entity, es, nextState) in toApply)
             {
-                entity.HandleEntityState(es);
+                entity.HandleEntityState(es, nextState);
             }
 
             foreach (var id in deletions)

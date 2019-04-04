@@ -172,6 +172,19 @@ namespace SS14.Shared.Maths
         }
 
         /// <summary>
+        ///     Similar to Lerp but makes sure the angle wraps around to 360 degrees.
+        /// </summary>
+        public static Angle Lerp(in Angle a, in Angle b, float factor)
+        {
+            var degA = FloatMath.RadToDeg * Angle.Reduce(a);
+            var degB = FloatMath.RadToDeg * Angle.Reduce(b);
+            var delta = FloatMath.Repeat((float) (degB - degA), 360);
+            if (delta > 180)
+                delta -= 360;
+            return new Angle(FloatMath.DegToRad * (degA + delta * FloatMath.Clamp01(factor)));
+        }
+
+        /// <summary>
         ///     Constructs a new angle, from degrees instead of radians.
         /// </summary>
         /// <param name="degrees">The angle in degrees.</param>

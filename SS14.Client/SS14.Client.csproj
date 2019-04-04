@@ -141,6 +141,7 @@
     <Compile Include="Console\Commands\QuitCommand.cs" />
     <Compile Include="Console\Commands\Debug.cs" />
     <Compile Include="GameStates\ClientGameStateManager.cs" />
+    <Compile Include="GameStates\NetGraphOverlay.cs" />
     <Compile Include="Graphics\CanvasLayers.cs" />
     <Compile Include="Graphics\Clyde\Clyde.Audio.cs" />
     <Compile Include="Graphics\Clyde\Clyde.AudioFormats.OggVorbis.cs" />

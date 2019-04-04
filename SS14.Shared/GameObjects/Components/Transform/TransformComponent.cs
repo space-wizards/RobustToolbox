@@ -455,6 +455,11 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 _nextPosition = ((TransformComponentState) nextState).LocalPosition;
             else
                 _nextPosition = _localPosition; // this should cause the lerp to do nothing
+
+            if (nextState != null)
+                _nextRotation = ((TransformComponentState)nextState).Rotation;
+            else
+                _nextRotation = _localRotation; // this should cause the lerp to do nothing
         }
 
         // Hooks for GodotTransformComponent go here.
@@ -471,7 +476,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
         protected virtual Vector2 GetLocalPosition()
         {
             IGameTiming timing = IoCManager.Resolve<IGameTiming>();
-            if(timing.InSimulation)
+            if(timing.InSimulation || _localPosition == _nextPosition)
                 return _localPosition;
 
             return Vector2.Lerp(_localPosition, _nextPosition, (float) (timing.TickRemainder.TotalSeconds / timing.TickPeriod.TotalSeconds));
@@ -479,17 +484,49 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
         protected virtual Angle GetLocalRotation()
         {
-            return _localRotation;
+            IGameTiming timing = IoCManager.Resolve<IGameTiming>();
+            if (timing.InSimulation || _localRotation == _nextRotation)
+                return _localRotation;
+
+            return Angle.Lerp(_localRotation, _nextRotation, (float)(timing.TickRemainder.TotalSeconds / timing.TickPeriod.TotalSeconds));
         }
 
         protected virtual Matrix3 GetWorldMatrix()
         {
-            return _worldMatrix;
+            IGameTiming timing = IoCManager.Resolve<IGameTiming>();
+            if (timing.InSimulation)
+                return _worldMatrix;
+
+            // there really is no point trying to cache this because it will only be used in one frame
+            var pos = GetLocalPosition();
+            var rot = GetLocalRotation().Theta;
+
+            var posMat = Matrix3.CreateTranslation(pos);
+            var rotMat = Matrix3.CreateRotation((float)rot);
+
+            Matrix3.Multiply(ref rotMat, ref posMat, out var transMat);
+
+            return transMat;
         }
 
         protected virtual Matrix3 GetWorldMatrixInv()
         {
-            return _invWorldMatrix;
+            IGameTiming timing = IoCManager.Resolve<IGameTiming>();
+            if (timing.InSimulation)
+                return _invWorldMatrix;
+
+            // there really is no point trying to cache this because it will only be used in one frame
+            var pos = GetLocalPosition();
+            var rot = GetLocalRotation().Theta;
+
+            var posMat = Matrix3.CreateTranslation(pos);
+            var rotMat = Matrix3.CreateRotation((float)rot);
+            var posImat = Matrix3.Invert(posMat);
+            var rotImap = Matrix3.Invert(rotMat);
+
+            Matrix3.Multiply(ref posImat, ref rotImap, out var itransMat);
+
+            return itransMat;
         }
 
         private void RebuildMatrices()

@@ -139,6 +139,11 @@ namespace SS14.Shared.Map
             return InRange(localpos, (float) range);
         }
 
+        public float Distance(GridCoordinates other)
+        {
+            return (ToWorld().Position - other.ToWorld().Position).Length;
+        }
+
         public GridCoordinates Translated(Vector2 offset)
         {
             return new GridCoordinates(Position + offset, GridID);

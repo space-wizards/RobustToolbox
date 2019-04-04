@@ -26,19 +26,11 @@ namespace SS14.Shared.Interfaces.GameObjects
         #region Entity Management
 
         /// <summary>
-        /// Creates an uninitialized entity.
-        /// </summary>
-        /// <param name="protoName">Prototype template to use. If this is null, the entity will only have an
-        /// uninitialized TransformComponent inside.</param>
-        /// <returns>Newly created entity.</returns>
-        IEntity CreateEntity(string protoName);
-
-        /// <summary>
         /// Spawns an initialized entity at the default location.
         /// </summary>
         /// <param name="protoName"></param>
         /// <returns></returns>
-        Entity SpawnEntity(string protoName);
+        IEntity SpawnEntity(string protoName);
 
         /// <summary>
         /// Spawns an entity at a specific position

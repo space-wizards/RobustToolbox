@@ -66,8 +66,6 @@ namespace SS14.Shared.GameObjects
         private readonly Queue<Tuple<object, EntityEventArgs>> _eventQueue
             = new Queue<Tuple<object, EntityEventArgs>>();
 
-        protected bool EntitiesInitialized;
-
         public bool Started { get; protected set; }
 
         #region IEntityManager Members
@@ -114,8 +112,7 @@ namespace SS14.Shared.GameObjects
 
         #region Entity Management
 
-        public abstract IEntity CreateEntity(string protoName);
-        public abstract Entity SpawnEntity(string protoName);
+        public abstract IEntity SpawnEntity(string protoName);
         public abstract IEntity ForceSpawnEntityAt(string entityType, GridCoordinates coordinates);
         public abstract IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap);
         public abstract bool TrySpawnEntityAt(string entityType, Vector2 position, MapId argMap, out IEntity entity);
@@ -220,19 +217,9 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <summary>
-        /// Creates an entity and adds it to the entity dictionary
+        ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        /// <param name="prototypeName">name of entity template to execute</param>
-        /// <param name="uid">UID to give to the new entity.</param>
-        /// <returns>spawned entity</returns>
-        protected Entity InternalCreateEntity(string prototypeName, EntityUid? uid)
-        {
-            var entity = AllocEntity(prototypeName, uid);
-            FinishEntity(entity);
-            return entity;
-        }
-
-        internal Entity AllocEntity(string prototypeName, EntityUid? uid = null)
+        private protected Entity AllocEntity(string prototypeName, EntityUid? uid = null)
         {
             if (uid == null)
             {
@@ -244,45 +231,43 @@ namespace SS14.Shared.GameObjects
                 throw new InvalidOperationException($"UID already taken: {uid}");
             }
 
-            EntityPrototype prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
-            return prototype.AllocEntity(uid.Value, this, EntityNetworkManager);
-        }
-
-        internal void FinishEntity(IEntity entity, IEntityFinishContext context = null)
-        {
-            entity.Prototype.FinishEntity((Entity)entity, ComponentFactory, context);
+            var prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
+            var entity = prototype.AllocEntity(uid.Value, this);
             Entities[entity.Uid] = entity;
-            _allEntities.Add((Entity)entity);
-            if (EntitiesInitialized)
-            {
-                InitializeEntity((Entity)entity);
-            }
-        }
-
-        protected static void InitializeEntity(Entity entity)
-        {
-            entity.InitializeComponents();
-            entity.Initialize();
-
-            entity.StartAllComponents();
+            _allEntities.Add(entity);
+            return entity;
         }
 
         /// <summary>
-        /// Initializes all entities that haven't been initialized yet.
+        ///     Allocates and entity and loads components but does not do initialization.
         /// </summary>
-        protected void InitializeEntities()
+        private protected Entity CreateEntity(string prototypeName, EntityUid? uid = null)
         {
-            for (var i = 0; i < _allEntities.Count; i++)
-            {
-                var ent = _allEntities[i];
+            var entity = AllocEntity(prototypeName, uid);
+            entity.Prototype.LoadEntity(entity, ComponentFactory, null);
+            return entity;
+        }
 
-                if (ent.Deleted || ent.Initialized)
-                    continue;
+        private protected void LoadEntity(Entity entity, IEntityLoadContext context)
+        {
+            entity.Prototype.LoadEntity(entity, ComponentFactory, context);
+        }
 
-                InitializeEntity(ent);
-            }
+        private protected static void InitializeAndStartEntity(Entity entity)
+        {
+            InitializeEntity(entity);
+            StartEntity(entity);
+        }
 
-            EntitiesInitialized = true;
+        private protected static void InitializeEntity(Entity entity)
+        {
+            entity.InitializeComponents();
+            entity.Initialize();
+        }
+
+        private protected static void StartEntity(Entity entity)
+        {
+            entity.StartAllComponents();
         }
 
         #endregion Entity Management

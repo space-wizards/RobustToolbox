@@ -4,7 +4,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
-    interface IEntityFinishContext
+    interface IEntityLoadContext
     {
         ObjectSerializer GetComponentSerializer(string componentName, YamlMappingNode protoData);
         IEnumerable<string> GetExtraComponentTypes();

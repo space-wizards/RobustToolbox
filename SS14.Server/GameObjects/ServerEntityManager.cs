@@ -27,17 +27,10 @@ namespace SS14.Server.GameObjects
 
         private readonly List<(uint tick, EntityUid uid)> DeletionHistory = new List<(uint, EntityUid)>();
 
-        /// <inheritdoc />
-        public override IEntity CreateEntity(string protoName)
+        public override IEntity SpawnEntity(string protoName)
         {
-            return InternalCreateEntity(protoName, null);
-        }
-
-        /// <inheritdoc />
-        public override Entity SpawnEntity(string protoName)
-        {
-            var newEnt = (Entity)CreateEntity(protoName);
-            InitializeEntity(newEnt);
+            var newEnt = CreateEntity(protoName);
+            InitializeAndStartEntity(newEnt);
             return newEnt;
         }
 
@@ -47,13 +40,9 @@ namespace SS14.Server.GameObjects
             var prototype = _protoManager.Index<EntityPrototype>(entityType);
             if (prototype.CanSpawnAt(coordinates.Grid, coordinates.Position))
             {
-                Entity result = SpawnEntity(entityType);
+                var result = CreateEntity(entityType);
                 result.Transform.GridPosition = coordinates;
-                if (Started)
-                {
-                    InitializeEntity(result);
-                }
-
+                InitializeAndStartEntity(result);
                 entity = result;
                 return true;
             }
@@ -72,13 +61,9 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public override IEntity ForceSpawnEntityAt(string entityType, GridCoordinates coordinates)
         {
-            Entity entity = SpawnEntity(entityType);
+            var entity = CreateEntity(entityType);
             entity.Transform.GridPosition = coordinates;
-            if (Started)
-            {
-                InitializeEntity(entity);
-            }
-
+            InitializeAndStartEntity(entity);
             return entity;
         }
 
@@ -254,9 +239,19 @@ namespace SS14.Server.GameObjects
             return AllocEntity(prototypeName, uid);
         }
 
-        void IServerEntityManagerInternal.FinishEntity(IEntity entity, IEntityFinishContext context)
+        void IServerEntityManagerInternal.FinishEntityLoad(IEntity entity, IEntityLoadContext context)
         {
-            FinishEntity(entity, context);
+            LoadEntity((Entity) entity, context);
+        }
+
+        void IServerEntityManagerInternal.FinishEntityInitialization(IEntity entity)
+        {
+            InitializeEntity((Entity)entity);
+        }
+
+        void IServerEntityManagerInternal.FinishEntityStartup(IEntity entity)
+        {
+            StartEntity((Entity)entity);
         }
 
         /// <inheritdoc />
@@ -265,7 +260,6 @@ namespace SS14.Server.GameObjects
             base.Startup();
             EntitySystemManager.Initialize();
             Started = true;
-            InitializeEntities();
         }
     }
 }

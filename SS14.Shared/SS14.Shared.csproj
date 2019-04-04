@@ -375,7 +375,7 @@
     <Compile Include="Interfaces\Serialization\IExposeData.cs" />
     <Compile Include="Serialization\ObjectSerializer.cs" />
     <Compile Include="Serialization\YamlObjectSerializer.cs" />
-    <Compile Include="Interfaces\GameObjects\IEntityFinishContext.cs" />
+    <Compile Include="Interfaces\GameObjects\IEntityLoadContext.cs" />
     <Compile Include="GameObjects\Components\Transform\TransformComponent.cs" />
     <Compile Include="GameObjects\Systems\EntitySystem.cs" />
     <Compile Include="Interfaces\GameObjects\Systems\IEntitySystem.cs" />

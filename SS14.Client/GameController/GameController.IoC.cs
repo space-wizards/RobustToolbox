@@ -54,6 +54,8 @@ using SS14.Client.Graphics.Clyde;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Placement;
 using SS14.Client.Interfaces.Graphics.Overlays;
+using SS14.Client.Interfaces.Utility;
+using SS14.Client.Utility;
 using SS14.Client.Graphics.Overlays;
 using SS14.Client.ViewVariables;
 using SS14.Shared.Asynchronous;
@@ -130,6 +132,7 @@ namespace SS14.Client
             IoCManager.Register<IClientConsole, ClientChatConsole>();
             IoCManager.Register<IClientChatConsole, ClientChatConsole>();
             IoCManager.Register<ILightManager, LightManager>();
+            IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
             switch (Mode)
             {
                 case DisplayMode.Headless:

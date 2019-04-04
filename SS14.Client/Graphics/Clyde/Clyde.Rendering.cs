@@ -30,6 +30,7 @@ namespace SS14.Client.Graphics.Clyde
         private static readonly (uint, string) DbgGroupUI = (4, "User Interface");
         private static readonly (uint, string) DbgGroupWorldOverlay = (5, "Overlays: World");
         private static readonly (uint, string) DbgGroupLighting = (6, "Lighting");
+        private static readonly (uint, string) DbgGroupScreenOverlay = (7, "Overlays: Screen");
 
         /// <summary>
         ///     The current model matrix we would use.
@@ -237,7 +238,7 @@ namespace SS14.Client.Graphics.Clyde
 
             _pushDebugGroupMaybe(DbgGroupWorldOverlay);
 
-            // Render ScreenSpaceBelowWorld overlays.
+            // Render WorldSpace overlays.
             foreach (var overlay in _overlayManager.AllOverlays
                 .Where(o => o.Space == OverlaySpace.WorldSpace)
                 .OrderBy(o => o.ZIndex))
@@ -251,12 +252,25 @@ namespace SS14.Client.Graphics.Clyde
 
             _lightingReady = false;
 
-            _pushDebugGroupMaybe(DbgGroupUI);
-
+            _currentSpace = CurrentSpace.ScreenSpace;
             _setProjViewMatrices(_combinedDefaultMatricesScreen);
 
+            _pushDebugGroupMaybe(DbgGroupScreenOverlay);
+
+            // Render ScreenSpace overlays.
+            foreach (var overlay in _overlayManager.AllOverlays
+                .Where(o => o.Space == OverlaySpace.ScreenSpace)
+                .OrderBy(o => o.ZIndex))
+            {
+                overlay.OpenGLRender(_renderHandle);
+            }
+
+            _flushRenderHandle(_renderHandle);
+
+            _popDebugGroupMaybe();
+
             // Render UI.
-            _currentSpace = CurrentSpace.ScreenSpace;
+            _pushDebugGroupMaybe(DbgGroupUI);
             _userInterfaceManager.Render(_renderHandle);
 
             _flushRenderHandle(_renderHandle);

@@ -1,4 +1,4 @@
-![Robust Toolbox](https://raw.githubusercontent.com/space-wizards/asset-dump/master/robust.png)
+![Robust Toolbox](https://raw.githubusercontent.com/space-wizards/asset-dump/3dd3078e49e3a7e06709a6e0fc6e3223d8d44ca2/robust.png)
 
 [![Build status](https://ci.appveyor.com/api/projects/status/ygb7t8hsj3wt7pnm/branch/master?svg=true)](https://ci.appveyor.com/project/Silvertorch5/space-station-14/branch/master) [![Build Status](https://travis-ci.org/space-wizards/space-station-14.svg?branch=master)](https://travis-ci.org/space-wizards/space-station-14) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ss14&metric=coverage)](https://sonarcloud.io/dashboard?id=ss14)
 

@@ -241,6 +241,7 @@
     <Compile Include="UserInterface\Controls\VScrollBar.cs" />
     <Compile Include="UserInterface\CustomControls\Chatbox.cs" />
     <Compile Include="UserInterface\CustomControls\DebugTimePanel.cs" />
+    <Compile Include="UserInterface\CustomControls\FrameGraph.cs" />
     <Compile Include="UserInterface\CustomControls\Tooltip.cs" />
     <Compile Include="UserInterface\Stylesheet.cs" />
     <Compile Include="UserInterface\UITheme.cs" />

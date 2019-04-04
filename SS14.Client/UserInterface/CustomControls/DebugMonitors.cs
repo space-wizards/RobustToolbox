@@ -10,11 +10,13 @@ namespace SS14.Client.UserInterface.CustomControls
         public bool ShowCoords { get => DebugCoordsPanel.Visible; set => DebugCoordsPanel.Visible = value; }
         public bool ShowNet { get => _debugNetPanel.Visible; set => _debugNetPanel.Visible = value; }
         public bool ShowTime { get => _timeDebug.Visible; set => _timeDebug.Visible = value; }
+        public bool ShowFrameGraph { get => _frameGraph.Visible; set => _frameGraph.Visible = value; }
 
         private FPSCounter FPSCounter;
         private DebugCoordsPanel DebugCoordsPanel;
         private DebugNetPanel _debugNetPanel;
         private DebugTimePanel _timeDebug;
+        private FrameGraph _frameGraph;
 
         protected override void Initialize()
         {
@@ -41,6 +43,9 @@ namespace SS14.Client.UserInterface.CustomControls
                 Visible = false,
             };
             AddChild(_timeDebug);
+
+            _frameGraph = new FrameGraph();
+            AddChild(_frameGraph);
         }
     }
 }

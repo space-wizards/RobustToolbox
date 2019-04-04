@@ -130,7 +130,7 @@ namespace SS14.Client.Console.Commands
                     monitor.ShowTime = !monitor.ShowTime;
                     break;
                 case "frames":
-                    monitor.ShowTime = !monitor.ShowTime;
+                    monitor.ShowFrameGraph = !monitor.ShowFrameGraph;
                     break;
                 default:
                     console.AddLine($"Invalid key: {args[0]}");

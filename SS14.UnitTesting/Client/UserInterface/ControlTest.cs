@@ -31,7 +31,7 @@ namespace SS14.UnitTesting.Client.UserInterface
         public void Setup()
         {
             var cache = IoCManager.Resolve<IResourceManagerInternal>();
-            var data = Encoding.UTF8.GetBytes(Data);
+            var data = EncodingHelpers.UTF8.GetBytes(Data);
             var stream = new MemoryStream(data);
             cache.MountStreamAt(stream, new ResourcePath("/Scenes/Test/TestScene.tscn"));
             IoCManager.Resolve<IUserInterfaceManagerInternal>().InitializeTesting();

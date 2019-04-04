@@ -20,7 +20,7 @@ namespace SS14.Shared.Utility
                   new DeflateStream(output, CompressionMode.Compress))
                 {
                     using (StreamWriter writer =
-                      new StreamWriter(gzip, System.Text.Encoding.UTF8))
+                      new StreamWriter(gzip, EncodingHelpers.UTF8))
                     {
                         writer.Write(str);
                     }
@@ -41,7 +41,7 @@ namespace SS14.Shared.Utility
                   new DeflateStream(inputStream, CompressionMode.Decompress))
                 {
                     using (StreamReader reader =
-                      new StreamReader(gzip, System.Text.Encoding.UTF8))
+                      new StreamReader(gzip, EncodingHelpers.UTF8))
                     {
                         return reader.ReadToEnd();
                     }

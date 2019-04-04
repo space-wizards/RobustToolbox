@@ -12,6 +12,7 @@ using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Utility;
 
 // This entire file is NIHing a REST server because pulling in libraries is effort.
 // Also it was fun to write.
@@ -131,7 +132,7 @@ namespace SS14.Server.ServerStatus
                     response.StatusCode = (int) HttpStatusCode.OK;
                     response.StatusDescription = "OK";
                     response.ContentType = "application/json";
-                    response.ContentEncoding = Encoding.UTF8;
+                    response.ContentEncoding = EncodingHelpers.UTF8;
 
                     if (head)
                     {
@@ -141,7 +142,7 @@ namespace SS14.Server.ServerStatus
 
                     var jObject = new JObject();
                     OnStatusRequest?.Invoke(jObject);
-                    using (var streamWriter = new StreamWriter(response.OutputStream, Encoding.UTF8))
+                    using (var streamWriter = new StreamWriter(response.OutputStream, EncodingHelpers.UTF8))
                     using (var jsonWriter = new JsonTextWriter(streamWriter))
                     {
                         var serializer = new JsonSerializer();
@@ -171,14 +172,14 @@ namespace SS14.Server.ServerStatus
 
         private static void _respondText(HttpListenerResponse response, string contents, bool head)
         {
-            response.ContentEncoding = Encoding.UTF8;
+            response.ContentEncoding = EncodingHelpers.UTF8;
             if (head)
             {
                 response.OutputStream.Close();
                 return;
             }
 
-            using (var writer = new StreamWriter(response.OutputStream, Encoding.UTF8))
+            using (var writer = new StreamWriter(response.OutputStream, EncodingHelpers.UTF8))
             {
                 writer.Write(contents);
             }

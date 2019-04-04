@@ -2,6 +2,7 @@
 using System.IO;
 using NUnit.Framework;
 using SS14.Shared.Serialization;
+using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.UnitTesting.Shared.Serialization
@@ -97,7 +98,7 @@ namespace SS14.UnitTesting.Shared.Serialization
                     var yamlStream = new YamlStream(document);
                     yamlStream.Save(writer);
                     writer.Flush();
-                    return System.Text.Encoding.UTF8.GetString(stream.ToArray());
+                    return EncodingHelpers.UTF8.GetString(stream.ToArray());
                 }
             }
         }

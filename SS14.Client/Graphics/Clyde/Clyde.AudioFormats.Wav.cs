@@ -13,7 +13,7 @@ namespace SS14.Client.Graphics.Clyde
         /// </summary>
         private static WavData _readWav(Stream stream)
         {
-            var reader = new BinaryReader(stream, Encoding.UTF8, true);
+            var reader = new BinaryReader(stream, EncodingHelpers.UTF8, true);
 
             void SkipChunk()
             {

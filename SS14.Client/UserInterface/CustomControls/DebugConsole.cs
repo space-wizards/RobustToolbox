@@ -253,7 +253,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
             try
             {
-                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
                 {
                     var data = JsonConvert.DeserializeObject<List<string>>(reader.ReadToEnd());
                     CommandHistory.Clear();
@@ -270,7 +270,7 @@ namespace SS14.Client.UserInterface.CustomControls
         private void _flushHistoryToDisk()
         {
             using (var stream = _resourceManager.UserData.Open(HistoryPath, FileMode.Create))
-            using (var writer = new StreamWriter(stream, Encoding.UTF8))
+            using (var writer = new StreamWriter(stream, EncodingHelpers.UTF8))
             {
                 var data = JsonConvert.SerializeObject(CommandHistory);
                 _historyPosition = CommandHistory.Count;

@@ -235,7 +235,7 @@ namespace SS14.Client.Input
             YamlDocument document;
 
             using (var stream = _resourceMan.ContentFileRead(yamlFile))
-            using (var reader = new StreamReader(stream, Encoding.UTF8))
+            using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
             {
                 var yamlStream = new YamlStream();
                 yamlStream.Load(reader);

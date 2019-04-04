@@ -23,7 +23,7 @@ namespace SS14.Client.ResourceManagement.ResourceTypes
         public override void Load(IResourceCache cache, ResourcePath path)
         {
             using (var stream = cache.ContentFileRead(path))
-            using (var reader = new StreamReader(stream, Encoding.UTF8))
+            using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
             {
                 ParsedShader = ShaderParser.Parse(reader);
             }

@@ -204,7 +204,7 @@ namespace SS14.Shared.Prototypes
         {
             foreach (var filePath in _resources.ContentFindFiles(path))
             {
-                using (var reader = new StreamReader(_resources.ContentFileRead(filePath), Encoding.UTF8))
+                using (var reader = new StreamReader(_resources.ContentFileRead(filePath), EncodingHelpers.UTF8))
                 {
                     try
                     {

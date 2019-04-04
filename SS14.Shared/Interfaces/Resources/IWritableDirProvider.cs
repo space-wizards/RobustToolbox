@@ -78,7 +78,7 @@ namespace SS14.Shared.Interfaces.Resources
         public static void Append(this IWritableDirProvider provider, ResourcePath path, string content)
         {
             using (var stream = provider.Open(path, FileMode.Append))
-            using (var writer = new StreamWriter(stream, Encoding.UTF8))
+            using (var writer = new StreamWriter(stream, EncodingHelpers.UTF8))
             {
                 writer.Write(content);
             }
@@ -93,7 +93,7 @@ namespace SS14.Shared.Interfaces.Resources
         public static string Read(this IWritableDirProvider provider, ResourcePath path)
         {
             using (var stream = provider.Open(path, FileMode.Open))
-            using (var reader = new StreamReader(stream, Encoding.UTF8))
+            using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
             {
                 return reader.ReadToEnd();
             }
@@ -119,7 +119,7 @@ namespace SS14.Shared.Interfaces.Resources
         public static void Write(this IWritableDirProvider provider, ResourcePath path, string content)
         {
             using (var stream = provider.Open(path, FileMode.Create))
-            using (var writer = new StreamWriter(stream, Encoding.UTF8))
+            using (var writer = new StreamWriter(stream, EncodingHelpers.UTF8))
             {
                 writer.Write(content);
             }

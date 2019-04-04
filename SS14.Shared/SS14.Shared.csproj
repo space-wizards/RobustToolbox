@@ -239,6 +239,7 @@
     <Compile Include="Timing\IStopwatch.cs" />
     <Compile Include="Timing\Stopwatch.cs" />
     <Compile Include="Utility\DebugTools.cs" />
+    <Compile Include="Utility\EncodingHelpers.cs" />
     <Compile Include="Utility\RefList.cs" />
     <Compile Include="Utility\ResourcePath.cs" />
     <Compile Include="Utility\QuadTree.cs" />

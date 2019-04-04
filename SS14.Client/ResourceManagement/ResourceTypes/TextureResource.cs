@@ -51,7 +51,7 @@ namespace SS14.Client.ResourceManagement
             if (cache.TryContentFileRead(metaPath, out var stream))
             {
                 YamlDocument yamlData;
-                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
                 {
                     var yamlStream = new YamlStream();
                     yamlStream.Load(reader);

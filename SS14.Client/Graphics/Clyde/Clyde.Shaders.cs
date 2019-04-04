@@ -70,7 +70,7 @@ namespace SS14.Client.Graphics.Clyde
 
         private string _readFile(string path)
         {
-            using (var reader = new StreamReader(_resourceCache.ContentFileRead(path), Encoding.UTF8))
+            using (var reader = new StreamReader(_resourceCache.ContentFileRead(path), EncodingHelpers.UTF8))
             {
                 return reader.ReadToEnd();
             }

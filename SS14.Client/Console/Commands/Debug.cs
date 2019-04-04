@@ -396,7 +396,7 @@ namespace SS14.Client.Console.Commands
             var res = IoCManager.Resolve<IResourceManager>();
 
             using (var stream = res.UserData.Open(new ResourcePath("/guidump.txt"), FileMode.Create))
-            using (var writer = new StreamWriter(stream, Encoding.UTF8))
+            using (var writer = new StreamWriter(stream, EncodingHelpers.UTF8))
             {
                 _writeNode(root, 0, writer);
             }

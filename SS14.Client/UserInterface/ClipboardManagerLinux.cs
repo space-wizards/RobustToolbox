@@ -26,7 +26,7 @@ namespace SS14.Client.UserInterface
                 FileName = "xclip",
                 Arguments = "-o -selection clipboard",
                 RedirectStandardOutput = true,
-                StandardOutputEncoding = Encoding.UTF8,
+                StandardOutputEncoding = EncodingHelpers.UTF8,
                 UseShellExecute = false,
             };
 

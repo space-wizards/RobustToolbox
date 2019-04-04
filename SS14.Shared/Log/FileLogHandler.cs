@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Text;
+using SS14.Shared.Utility;
 
 namespace SS14.Shared.Log
 {
@@ -12,7 +13,7 @@ namespace SS14.Shared.Log
         public FileLogHandler(string path)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(path));
-            writer = TextWriter.Synchronized(new StreamWriter(path, true, Encoding.UTF8));
+            writer = TextWriter.Synchronized(new StreamWriter(path, true, EncodingHelpers.UTF8));
         }
 
         public void Dispose()

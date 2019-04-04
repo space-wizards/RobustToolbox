@@ -130,7 +130,6 @@
     <Compile Include="GameObjects\Components\Icon\IconComponent.cs" />
     <Compile Include="GameObjects\Components\Input\ClickableComponent.cs" />
     <Compile Include="GameObjects\Components\Light\PointLightComponent.cs" />
-    <Compile Include="GameObjects\Components\Mover\PlayerInputMoverComponent.cs" />
     <Compile Include="GameObjects\Components\Occluder\OccluderComponent.cs" />
     <Compile Include="GameObjects\Components\Physics\PhysicsComponent.cs" />
     <Compile Include="GameObjects\Components\Transform\GodotTransformComponent.cs" />
@@ -179,7 +178,6 @@
     <Compile Include="Interfaces\GameObjects\Components\ISpriteComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IClickTargetComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IClientEntityManager.cs" />
-    <Compile Include="Interfaces\GameObjects\IMoverComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IRenderableComponent.cs" />
     <Compile Include="Interfaces\GameStates\IClientGameStateManager.cs" />

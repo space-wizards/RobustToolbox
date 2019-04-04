@@ -84,11 +84,6 @@ namespace SS14.Client.Player
 
             ControlledEntity = entity;
 
-            if (ControlledEntity.HasComponent<IMoverComponent>())
-                ControlledEntity.RemoveComponent<IMoverComponent>();
-
-            ControlledEntity.AddComponent<PlayerInputMoverComponent>();
-
             if (!ControlledEntity.TryGetComponent<EyeComponent>(out var eye))
             {
                 eye = ControlledEntity.AddComponent<EyeComponent>();
@@ -112,7 +107,6 @@ namespace SS14.Client.Player
         {
             if (ControlledEntity != null && ControlledEntity.Initialized)
             {
-                ControlledEntity.RemoveComponent<PlayerInputMoverComponent>();
                 ControlledEntity.GetComponent<EyeComponent>().Current = false;
                 var transform = ControlledEntity.Transform;
                 if (transform != null)

@@ -25,9 +25,6 @@ namespace SS14.Client.GameObjects
 
             Register<InputComponent>();
 
-            Register<PlayerInputMoverComponent>();
-            RegisterReference<PlayerInputMoverComponent, IMoverComponent>();
-
             Register<ClientBoundingBoxComponent>();
             RegisterReference<ClientBoundingBoxComponent, BoundingBoxComponent>();
 
@@ -42,7 +39,6 @@ namespace SS14.Client.GameObjects
             Register<OccluderComponent>();
 
             Register<EyeComponent>();
-            RegisterIgnore("AiController");
 
             Register<AppearanceComponent>();
             Register<AppearanceTestComponent>();

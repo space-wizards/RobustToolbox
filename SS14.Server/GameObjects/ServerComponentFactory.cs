@@ -28,9 +28,6 @@ namespace SS14.Server.GameObjects
 
             RegisterIgnore("Input");
 
-            Register<PlayerInputMoverComponent>();
-            RegisterReference<PlayerInputMoverComponent, IMoverComponent>();
-
             Register<ParticleSystemComponent>();
             Register<PhysicsComponent>();
             Register<SpriteComponent>();
@@ -43,7 +40,6 @@ namespace SS14.Server.GameObjects
             Register<ContainerManagerComponent>();
             RegisterReference<ContainerManagerComponent, IContainerManager>();
 
-            Register<AiControllerComponent>();
             Register<AppearanceComponent>();
             Register<SnapGridComponent>();
 

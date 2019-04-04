@@ -2,6 +2,7 @@
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.ViewVariables;
 
 namespace SS14.Server.GameObjects
@@ -40,5 +41,27 @@ namespace SS14.Server.GameObjects
         {
             OldPlayer = oldPlayer;
         }
+    }
+
+    public class PlayerAttachSystemMessage : EntitySystemMessage
+    {
+        public PlayerAttachSystemMessage(IEntity entity, IPlayerSession newPlayer)
+        {
+            Entity = entity;
+            NewPlayer = newPlayer;
+        }
+
+        public IEntity Entity { get; }
+        public IPlayerSession NewPlayer { get; }
+    }
+
+    public class PlayerDetachedSystemMessage : EntitySystemMessage
+    {
+        public PlayerDetachedSystemMessage(IEntity entity)
+        {
+            Entity = entity;
+        }
+
+        public IEntity Entity { get; }
     }
 }

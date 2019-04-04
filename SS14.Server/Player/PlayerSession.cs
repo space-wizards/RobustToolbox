@@ -96,16 +96,10 @@ namespace SS14.Server.Player
             }
 
             var actorComponent = a.AddComponent<BasicActorComponent>();
-            if (a.HasComponent<IMoverComponent>())
-            {
-                a.RemoveComponent<IMoverComponent>();
-            }
-            a.AddComponent<PlayerInputMoverComponent>();
-
             actorComponent.playerSession = this;
-
             AttachedEntity = a;
             a.SendMessage(actorComponent, new PlayerAttachedMsg(this));
+            a.EntityManager.RaiseEvent(this, new PlayerAttachSystemMessage(a, this));
             SetAttachedEntityName();
             UpdatePlayerState();
         }
@@ -119,7 +113,7 @@ namespace SS14.Server.Player
             }
 
             AttachedEntity.SendMessage(AttachedEntity.GetComponent<BasicActorComponent>(), new PlayerDetachedMsg(this));
-            AttachedEntity.RemoveComponent<PlayerInputMoverComponent>();
+            AttachedEntity.EntityManager.RaiseEvent(this, new PlayerDetachedSystemMessage(AttachedEntity));
             AttachedEntity.RemoveComponent<BasicActorComponent>();
             AttachedEntity = null;
             UpdatePlayerState();

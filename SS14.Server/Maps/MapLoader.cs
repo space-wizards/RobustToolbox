@@ -219,14 +219,24 @@ namespace SS14.Server.Maps
             // Deserialization
             public void Deserialize()
             {
+                // First we load map meta data like version.
                 ReadMetaSection();
+
+                // Load grids.
                 ReadTileMapSection();
                 ReadGridSection();
 
-                // Entities are allocated in a separate step so entity UID cross references can be resolved.
+                // Entities are first allocated. This allows us to know the future UID of all entities on the map before
+                // even ExposeData is loaded. This allows us to resolve serialized EntityUid instances correctly.
                 AllocEntities();
+
+                // Actually instance components and run ExposeData on them.
                 FinishEntitiesLoad();
+
+                // Run Initialize on all components.
                 FinishEntitiesInitialization();
+
+                // Run Startup on all components.
                 FinishEntitiesStartup();
             }
 
@@ -242,6 +252,7 @@ namespace SS14.Server.Maps
 
             void ReadTileMapSection()
             {
+                // Load tile mapping so that we can map the stored tile IDs into the ones actually used at runtime.
                 _tileMap = new Dictionary<ushort, string>();
 
                 var tileMap = RootNode.GetNode<YamlMappingNode>("tilemap");
@@ -524,6 +535,7 @@ namespace SS14.Server.Maps
                 return false;
             }
 
+            // Create custom object serializers that will correctly allow data to be overriden by the map file.
             ObjectSerializer IEntityLoadContext.GetComponentSerializer(string componentName, YamlMappingNode protoData)
             {
                 if (CurrentReadingEntityComponents == null)

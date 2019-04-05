@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Drawing;
+using SS14.Client.Input;
 using SS14.Client.Utility;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
@@ -17,25 +18,25 @@ namespace SS14.Client.UserInterface.Controls
         public const string StylePropertyDisabledItemBackground = "disabled-item-background";
 
         public int ItemCount => GameController.OnGodot ? (int)SceneControl.Call("get_item_count") : _itemList.Count;
-        public VScrollBar ScrollBar;
+        public ItemListSelectMode SelectMode = ItemListSelectMode.Single;
+
         private readonly List<Item> _itemList = new List<Item>();
 
         public ItemList()
         {
-            if (!GameController.OnGodot)
-                ScrollBar = new VScrollBar();
         }
 
         public ItemList(string name) : base(name)
         {
-            if (!GameController.OnGodot)
-                ScrollBar = new VScrollBar();
         }
 
         internal ItemList(Godot.ItemList control) : base(control)
         {
-            if (!GameController.OnGodot)
-                ScrollBar = new VScrollBar();
+        }
+
+        protected override void SetDefaults()
+        {
+            RectClipContent = true;
         }
 
         private protected override Godot.Control SpawnSceneControl()
@@ -132,6 +133,27 @@ namespace SS14.Client.UserInterface.Controls
 
                 if (i.Selectable)
                     i.Selected = true;
+            }
+        }
+
+        public void Select(Item item, bool single = true)
+        {
+            if (GameController.OnGodot)
+            {
+                return;
+            }
+            else
+            {
+                if (single)
+                {
+                    foreach (var i in _itemList)
+                    {
+                        i.Selected = false;
+                    }
+                }
+
+                if (item.Selectable)
+                    item.Selected = true;
             }
         }
 
@@ -255,6 +277,19 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
+        public void Unselect(Item item)
+        {
+            if (GameController.OnGodot)
+            {
+                return;
+            }
+            else
+            {
+                if (_itemList.Contains(item))
+                    item.Selected = false;
+            }
+        }
+
         public Font ActualFont
         {
             get
@@ -347,7 +382,7 @@ namespace SS14.Client.UserInterface.Controls
             var iconSelectedBg = ActualSelectedItemBackground;
             var iconDisabledBg = ActualDisabledItemBackground;
 
-            var separation = 0f;
+            Vector2 separation = (0, 0);
 
             listBg.Draw(handle, SizeBox);
 
@@ -365,30 +400,30 @@ namespace SS14.Client.UserInterface.Controls
                     ? Math.Max(item.IconSize.Y, font.Height) + bg.MinimumSize.Y
                     : font.Height + bg.MinimumSize.Y;
 
-                bg.Draw(handle, UIBox2.FromDimensions(Position, (SizeBox.Width, itemHeight)));
+                item.Region = UIBox2.FromDimensions(Position + separation, (SizeBox.Width, itemHeight));
+
+                bg.Draw(handle, item.Region.Value);
 
                 if (item.Icon != null)
                 {
                     if (item.IconRegion.Size == Vector2.Zero)
                     {
-                        handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(Position + (0, separation), item.Icon.Size), false, item.IconModulate, item.IconTranspose);
+                        handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(Position + separation, item.Icon.Size), false, item.IconModulate, item.IconTranspose);
                     }
                     else
                     {
-                        handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(Position + (0, separation), item.Icon.Size), item.IconRegion, item.IconModulate);
+                        handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(Position + separation, item.Icon.Size), item.IconRegion, item.IconModulate);
                     }
                 }
 
                 if (item.Text != null)
                 {
-                    Logger.Info(Rect.ToString() + SizeBox.ToString());
-
                     DrawTextInternal(handle, item.Text,
-                        UIBox2.FromDimensions(Position + (item.IconSize.X, separation + (item.IconSize.Y/2)), (SizeBox.Width-item.IconSize.X,font.Height*2))
+                        UIBox2.FromDimensions(Position + (item.IconSize.X, separation.Y), (SizeBox.Width-item.IconSize.X,font.Height*2))
                         );
                 }
 
-                separation += itemHeight;
+                separation += (0, itemHeight);
             }
         }
 
@@ -416,6 +451,28 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
+        protected internal override void MouseDown(GUIMouseButtonEventArgs args)
+        {
+            base.MouseDown(args);
+
+            if (GameController.OnGodot || SelectMode == ItemListSelectMode.None || args.Button != Mouse.Button.Left)
+            {
+                return;
+            }
+
+            foreach (var item in _itemList)
+            {
+                if (item.Region == null) continue;
+                if (!item.Region.Value.Contains(args.RelativePosition)) continue;
+                if (item.Selectable && !item.Disabled)
+                    if (item.Selected)
+                        Unselect(item);
+                    else
+                        Select(item, SelectMode == ItemListSelectMode.Single);
+                break;
+            }
+        }
+
         public sealed class Item : IDisposable
         {
             public string Text = null;
@@ -428,6 +485,8 @@ namespace SS14.Client.UserInterface.Controls
             public bool Selectable = true;
             public bool TooltipEnabled = true;
             public bool Disabled = false;
+
+            public UIBox2? Region = null;
 
             public Vector2 IconSize
             {
@@ -443,6 +502,13 @@ namespace SS14.Client.UserInterface.Controls
             {
                 Icon = null;
             }
+        }
+
+        public enum ItemListSelectMode
+        {
+            None,
+            Single,
+            Multiple,
         }
     }
 }

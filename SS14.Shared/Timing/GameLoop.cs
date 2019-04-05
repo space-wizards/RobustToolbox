@@ -106,11 +106,20 @@ namespace SS14.Shared.Timing
                 }
                 _timing.InSimulation = true;
 
+                var extraTick = _timing.FastForward;
+
                 // run the simulation for every accumulated tick
                 while (accumulator >= _timing.TickPeriod)
                 {
-                    accumulator -= _timing.TickPeriod;
-                    _lastTick += _timing.TickPeriod;
+                    if(!extraTick)
+                    {
+                        accumulator -= _timing.TickPeriod;
+                        _lastTick += _timing.TickPeriod;
+                    }
+                    else
+                    {
+                        extraTick = false;
+                    }
 
                     // only run the simulation if unpaused, but still use up the accumulated time
                     if (_timing.Paused)

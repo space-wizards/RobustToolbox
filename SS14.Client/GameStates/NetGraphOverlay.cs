@@ -1,7 +1,10 @@
-﻿using SS14.Client.Graphics.Drawing;
+﻿using SS14.Client.Graphics;
+using SS14.Client.Graphics.Drawing;
 using SS14.Client.Graphics.Overlays;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.Graphics.Overlays;
+using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Client.ResourceManagement;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
@@ -11,14 +14,30 @@ namespace SS14.Client.GameStates
     {
         public override OverlaySpace Space => OverlaySpace.ScreenSpace;
 
+        private Font _font;
+
         public NetGraphOverlay() : base(nameof(NetGraphOverlay))
         {
             IoCManager.InjectDependencies(this);
+            var cache = IoCManager.Resolve<IResourceCache>();
+            _font = new VectorFont(cache.GetResource<FontResource>("/Nano/NotoSans/NotoSans-Regular.ttf"), 10);
         }
 
         protected override void Draw(DrawingHandle handle)
         {
             handle.DrawLine(new Vector2(50,50), new Vector2(100,100), Color.Green);
+            DrawString((DrawingHandleScreen)handle, _font, new Vector2(60, 50), "Hello World!");
+        }
+
+        private void DrawString(DrawingHandleScreen handle, Font font, Vector2 pos, string str)
+        {
+            var baseLine = new Vector2(pos.X, font.Ascent + pos.Y);
+
+            foreach (var chr in str)
+            {
+                var advance = font.DrawChar(handle, chr, baseLine, Color.White);
+                baseLine += new Vector2(advance, 0);
+            }
         }
 
         private class NetShowGraph : IConsoleCommand

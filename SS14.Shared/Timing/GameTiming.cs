@@ -103,6 +103,9 @@ namespace SS14.Shared.Timing
         /// </summary>
         public uint CurFrame { get; set; } = 1;
 
+        /// <inheritdoc />
+        public bool FastForward { get; set; }
+
         /// <summary>
         ///     Ends the 'lap' of the timer, updating frame time info.
         /// </summary>

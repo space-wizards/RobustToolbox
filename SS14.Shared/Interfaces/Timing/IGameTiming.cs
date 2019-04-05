@@ -83,6 +83,14 @@ namespace SS14.Shared.Interfaces.Timing
         TimeSpan TickRemainder { get; set; }
 
         /// <summary>
+        /// If the client simulation has lagged and the states are backed up in the queue, the
+        /// the RealTime between ticks needs to temporarily increase to clean out the queue. This allows the
+        /// client to catch up with the server, otherwise it will forever run behind the server.
+        /// Note that this does no change any in-simulation timing.
+        /// </summary>
+        bool FastForward { get; set; }
+
+        /// <summary>
         ///     Ends the 'lap' of the timer, updating frame time info.
         /// </summary>
         void StartFrame();

@@ -8,6 +8,8 @@ using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
 using SS14.Client.Player;
+using SS14.Shared.Configuration;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Timing;
@@ -33,12 +35,17 @@ namespace SS14.Client.GameStates
         private readonly IMapManager _mapManager;
         [Dependency]
         private readonly IGameTiming _timing;
+        [Dependency]
+        private readonly IConfigurationManager _config;
 
         public void Initialize()
         {
             _network.RegisterNetMessage<MsgState>(MsgState.NAME, HandleStateMessage);
             _network.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME);
             _client.RunLevelChanged += RunLevelChanged;
+
+            if(!_config.IsCVarRegistered("net.state_buffer"))
+                _config.RegisterCVar("net.state_buffer", 1, CVar.ARCHIVE);
         }
 
         private void RunLevelChanged(object sender, RunLevelChangedEventArgs args)
@@ -108,6 +115,20 @@ namespace SS14.Client.GameStates
             {
                 Logger.DebugS("net.state", $"Applying State:  ext={curState.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
                 ApplyGameState(curState, nextState);
+            }
+
+            // detect that we have too many states in the buffer, and speed up the clock if needed
+            // CalcNextState should have just cleaned out any old states, so the buffer contains [t-1(last), t+0(cur), t+1(next), t+2, t+3, ..., t+n]
+            var ratio = _config.GetCVar<int>("net.state_buffer");
+            ratio = ratio < 0 ? 0 : ratio; // min bound, < 0 makes no sense
+
+            if(_stateBuffer.Count > 3 + ratio)
+            {
+                _timing.FastForward = true;
+            }
+            else if (_stateBuffer.Count <= 3 + ratio) // absolute minimum is 3 states in buffer for the system to work (last, cur, next)
+            {
+                _timing.FastForward = false;
             }
         }
 

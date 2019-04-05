@@ -211,6 +211,7 @@ namespace SS14.Client
 
             public TimeSpan TickRemainder { get; set; }
             public uint CurFrame { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public bool FastForward { get; set; } //TODO: Not implemented
 
             public void ResetRealTime()
             {

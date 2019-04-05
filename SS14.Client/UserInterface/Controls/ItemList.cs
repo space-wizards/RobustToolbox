@@ -12,6 +12,9 @@ namespace SS14.Client.UserInterface.Controls
     [ControlWrap(typeof(Godot.ItemList))]
     public class ItemList : Control
     {
+        public event Action<ItemListSelectedEventArgs> OnItemSelected;
+        public event Action<ItemListDeselectedEventArgs> OnItemDeselected;
+
         public const string StylePropertyBackground = "itemlist-background";
         public const string StylePropertyItemBackground = "item-background";
         public const string StylePropertySelectedItemBackground = "selected-item-background";
@@ -123,16 +126,19 @@ namespace SS14.Client.UserInterface.Controls
             {
                 if (single)
                 {
-                    foreach (var item in _itemList)
+                    for (var jdx = 0; jdx < _itemList.Count; jdx++)
                     {
-                        item.Selected = false;
+                        Unselect(jdx);
                     }
                 }
 
                 var i = _itemList[idx];
 
                 if (i.Selectable)
+                {
                     i.Selected = true;
+                    OnItemSelected?.Invoke(new ItemListSelectedEventArgs(idx, this));
+                }
             }
         }
 
@@ -144,16 +150,9 @@ namespace SS14.Client.UserInterface.Controls
             }
             else
             {
-                if (single)
-                {
-                    foreach (var i in _itemList)
-                    {
-                        i.Selected = false;
-                    }
-                }
-
-                if (item.Selectable)
-                    item.Selected = true;
+                var idx = _itemList.IndexOf(item);
+                if (idx != -1)
+                    Select(idx, single);
             }
         }
 
@@ -177,7 +176,9 @@ namespace SS14.Client.UserInterface.Controls
             }
             else
             {
-                _itemList[idx].Disabled = disabled;
+                Unselect(idx);
+                var i = _itemList[idx];
+                i.Disabled = disabled;
             }
         }
 
@@ -273,7 +274,10 @@ namespace SS14.Client.UserInterface.Controls
             }
             else
             {
-                _itemList[idx].Selected = false;
+                var i = _itemList[idx];
+                if (!i.Selected) return;
+                i.Selected = false;
+                OnItemDeselected?.Invoke(new ItemListDeselectedEventArgs(idx, this));
             }
         }
 
@@ -285,8 +289,9 @@ namespace SS14.Client.UserInterface.Controls
             }
             else
             {
-                if (_itemList.Contains(item))
-                    item.Selected = false;
+                var idx = _itemList.IndexOf(item);
+                if (idx == -1) return;
+                Unselect(idx);
             }
         }
 
@@ -501,6 +506,45 @@ namespace SS14.Client.UserInterface.Controls
             public void Dispose()
             {
                 Icon = null;
+            }
+        }
+
+        public class ItemListEventArgs : EventArgs
+        {
+            /// <summary>
+            ///     The ItemList this event originated from.
+            /// </summary>
+            public ItemList ItemList { get; }
+
+            public ItemListEventArgs(ItemList list)
+            {
+                ItemList = list;
+            }
+        }
+
+        public class ItemListSelectedEventArgs : ItemListEventArgs
+        {
+            /// <summary>
+            ///     The index of the item that was selected.
+            /// </summary>
+            public int ItemIndex;
+
+            public ItemListSelectedEventArgs(int itemIndex, ItemList list) : base(list)
+            {
+                ItemIndex = itemIndex;
+            }
+        }
+
+        public class ItemListDeselectedEventArgs : ItemListEventArgs
+        {
+            /// <summary>
+            ///     The index of the item that was selected.
+            /// </summary>
+            public int ItemIndex;
+
+            public ItemListDeselectedEventArgs(int itemIndex, ItemList list) : base(list)
+            {
+                ItemIndex = itemIndex;
             }
         }
 

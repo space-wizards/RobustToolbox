@@ -179,7 +179,7 @@ namespace Lidgren.Network
 				var entry = await Task.Factory.FromAsync(Dns.BeginGetHostEntry, Dns.EndGetHostEntry, ipOrHost, null);
 				return entry.AddressList;
 			}
-			catch (SocketException ex)
+			catch (SocketException)
 			{
 				return null;
 			}

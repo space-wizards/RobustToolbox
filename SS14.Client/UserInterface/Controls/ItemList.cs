@@ -4,7 +4,6 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Input;
 using SS14.Client.Utility;
-using SS14.Shared.Log;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls

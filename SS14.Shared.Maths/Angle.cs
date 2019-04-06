@@ -6,7 +6,7 @@ namespace SS14.Shared.Maths
     ///     A representation of an angle, in radians.
     /// </summary>
     [Serializable]
-    public readonly struct Angle : IApproxEquatable<Angle>
+    public readonly struct Angle : IApproxEquatable<Angle>, IEquatable<Angle>
     {
         public static Angle Zero { get; } = new Angle();
         public static Angle South { get; } = new Angle(-MathHelper.PiOver2);
@@ -127,6 +127,38 @@ namespace SS14.Shared.Maths
             // int truncates value (round to 0)
             var aTurns = (int) (theta / (2 * Math.PI));
             return theta - aTurns * (2 * Math.PI);
+        }
+
+        /// <inheritdoc />
+        public bool Equals(Angle other)
+        {
+            return this.Theta.Equals(other.Theta);
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            return obj is Angle angle == Equals(Theta);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Theta.GetHashCode() * 397) ^ Theta.GetHashCode();
+            }
+        }
+
+        public static bool operator ==(Angle a, Angle b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(Angle a, Angle b)
+        {
+            return !(a == b);
         }
 
         /// <summary>

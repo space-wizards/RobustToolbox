@@ -54,8 +54,7 @@ namespace SS14.Client.Input
 
             Contexts.ContextChanged += OnContextChanged;
 
-            LoadKeyFile(new ResourcePath("/keybinds.yml"));
-            var path = new ResourcePath("/keybinds_content.yml");
+            var path = new ResourcePath("/keybinds.yml");
             if (_resourceMan.ContentFileExists(path))
             {
                 LoadKeyFile(path);

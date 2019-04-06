@@ -408,7 +408,7 @@ namespace SS14.Client.UserInterface.Controls
                     ? Math.Max(item.IconSize.Y, font.Height) + bg.MinimumSize.Y
                     : font.Height + bg.MinimumSize.Y;
 
-                item.Region = UIBox2.FromDimensions(Position + separation, (SizeBox.Width, itemHeight));
+                item.Region = UIBox2.FromDimensions(separation, (SizeBox.Width, itemHeight));
 
                 bg.Draw(handle, item.Region.Value);
 
@@ -416,18 +416,18 @@ namespace SS14.Client.UserInterface.Controls
                 {
                     if (item.IconRegion.Size == Vector2.Zero)
                     {
-                        handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(Position + separation, item.Icon.Size), false, item.IconModulate, item.IconTranspose);
+                        handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(separation, item.Icon.Size), false, item.IconModulate, item.IconTranspose);
                     }
                     else
                     {
-                        handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(Position + separation, item.Icon.Size), item.IconRegion, item.IconModulate);
+                        handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(separation, item.Icon.Size), item.IconRegion, item.IconModulate);
                     }
                 }
 
                 if (item.Text != null)
                 {
                     DrawTextInternal(handle, item.Text,
-                        UIBox2.FromDimensions(Position + (item.IconSize.X, separation.Y), (SizeBox.Width-item.IconSize.X,font.Height*2))
+                        UIBox2.FromDimensions((item.IconSize.X, separation.Y), (SizeBox.Width-item.IconSize.X,font.Height*2))
                         );
                 }
 

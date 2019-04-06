@@ -115,9 +115,7 @@ namespace SS14.Client.UserInterface.Controls
             }
             else
             {
-                var i = _itemList[idx];
-                _itemList.Remove(i);
-                i.Dispose();
+                _itemList.RemoveAt(idx);
             }
         }
 

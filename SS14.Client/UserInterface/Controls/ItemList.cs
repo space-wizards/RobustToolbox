@@ -12,7 +12,6 @@ namespace SS14.Client.UserInterface.Controls
     public class ItemList : Control
     {
         private readonly List<Item> _itemList = new List<Item>();
-        private ItemListSelectMode _selectMode = ItemListSelectMode.Single;
         public event Action<ItemListSelectedEventArgs> OnItemSelected;
         public event Action<ItemListDeselectedEventArgs> OnItemDeselected;
 
@@ -23,11 +22,7 @@ namespace SS14.Client.UserInterface.Controls
 
         public int ItemCount => GameController.OnGodot ? (int)SceneControl.Call("get_item_count") : _itemList.Count;
 
-        public ItemListSelectMode SelectMode
-        {
-            get => _selectMode;
-            set => _selectMode = value;
-        }
+        public ItemListSelectMode SelectMode { get; set; } = ItemListSelectMode.Single;
 
         public ItemList()
         {

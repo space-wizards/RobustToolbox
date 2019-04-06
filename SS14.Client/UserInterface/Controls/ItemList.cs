@@ -481,7 +481,7 @@ namespace SS14.Client.UserInterface.Controls
             }
         }
 
-        public sealed class Item : IDisposable
+        public sealed class Item
         {
             public string Text = null;
             public string TooltipText = null;
@@ -504,11 +504,6 @@ namespace SS14.Client.UserInterface.Controls
                         return Vector2.Zero;
                     return IconRegion.Size != Vector2.Zero ? IconRegion.Size : Icon.Size;
                 }
-            }
-
-            public void Dispose()
-            {
-                Icon = null;
             }
         }
 

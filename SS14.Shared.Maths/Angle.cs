@@ -145,10 +145,9 @@ namespace SS14.Shared.Maths
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            unchecked
-            {
-                return (Theta.GetHashCode() * 397) ^ Theta.GetHashCode();
-            }
+
+            return Theta.GetHashCode();
+
         }
 
         public static bool operator ==(Angle a, Angle b)

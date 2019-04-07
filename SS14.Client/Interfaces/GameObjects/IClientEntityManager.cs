@@ -12,6 +12,6 @@ namespace SS14.Client.Interfaces.GameObjects
         IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position);
         IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position);
         bool AnyEntitiesIntersecting(MapId mapId, Box2 box);
-        void ApplyEntityStates(IEnumerable<EntityState> curEntStates, IEnumerable<EntityUid> deletions, List<EntityState> nextEntStates);
+        void ApplyEntityStates(List<EntityState> curEntStates, IEnumerable<EntityUid> deletions, List<EntityState> nextEntStates);
     }
 }

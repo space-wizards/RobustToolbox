@@ -8,7 +8,8 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
  using SS14.Shared.Interfaces.Timing;
  using SS14.Shared.IoC;
-using SS14.Shared.Map;
+ using SS14.Shared.Log;
+ using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
  using SS14.Shared.Utility;
@@ -415,49 +416,57 @@ namespace SS14.Shared.GameObjects.Components.Transform
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
-            var newState = (TransformComponentState)curState;
+            var curTrans = curState as TransformComponentState;
+            var nextTrans = nextState as TransformComponentState;
 
-            var newParentId = newState.ParentID;
-            var rebuildMatrices = false;
-            if (Parent?.Owner?.Uid != newParentId)
+            Logger.DebugS("ent", $"cTick={(curTrans != null? curTrans.LocalPosition.ToString():"-")}, nTick={(nextTrans!=null?nextTrans.LocalPosition.ToString():"-")}");
+
+            if (curState != null)
             {
-                DetachParent();
+                var newState = (TransformComponentState) curState;
 
-                if (newParentId.HasValue && newParentId.Value.IsValid())
+                var newParentId = newState.ParentID;
+                var rebuildMatrices = false;
+                if (Parent?.Owner?.Uid != newParentId)
                 {
-                    var newParent = Owner.EntityManager.GetEntity(newParentId.Value);
-                    AttachParent(newParent.Transform);
+                    DetachParent();
+
+                    if (newParentId.HasValue && newParentId.Value.IsValid())
+                    {
+                        var newParent = Owner.EntityManager.GetEntity(newParentId.Value);
+                        AttachParent(newParent.Transform);
+                    }
+
+                    rebuildMatrices = true;
                 }
 
-                rebuildMatrices = true;
-            }
-
-            if (LocalRotation != newState.Rotation)
-            {
-                SetRotation(newState.Rotation);
-                rebuildMatrices = true;
-            }
-
-            if (_localPosition != newState.LocalPosition || (!_parent.IsValid() && GridID != newState.GridID))
-            {
-                var oldPos = GridPosition;
-                if (_localPosition != newState.LocalPosition)
+                if (LocalRotation != newState.Rotation)
                 {
-                    SetPosition(newState.LocalPosition);
+                    SetRotation(newState.Rotation);
+                    rebuildMatrices = true;
                 }
 
-                if (!_parent.IsValid() && GridID != newState.GridID)
+                if (_localPosition != newState.LocalPosition || (!_parent.IsValid() && GridID != newState.GridID))
                 {
-                    _recurseSetGridId(newState.GridID);
+                    var oldPos = GridPosition;
+                    if (_localPosition != newState.LocalPosition)
+                    {
+                        SetPosition(newState.LocalPosition);
+                    }
+
+                    if (!_parent.IsValid() && GridID != newState.GridID)
+                    {
+                        _recurseSetGridId(newState.GridID);
+                    }
+
+                    OnMove?.Invoke(this, new MoveEventArgs(oldPos, GridPosition));
+                    rebuildMatrices = true;
                 }
 
-                OnMove?.Invoke(this, new MoveEventArgs(oldPos, GridPosition));
-                rebuildMatrices = true;
-            }
-
-            if (rebuildMatrices)
-            {
-                RebuildMatrices();
+                if (rebuildMatrices)
+                {
+                    RebuildMatrices();
+                }
             }
 
             if (nextState != null)

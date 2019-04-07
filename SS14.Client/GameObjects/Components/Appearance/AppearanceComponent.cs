@@ -79,6 +79,9 @@ namespace SS14.Client.GameObjects
 
         public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
+            if (curState == null)
+                return;
+
             var actualState = (AppearanceComponentState)curState;
             data = actualState.Data;
             AppearanceDirty = true;

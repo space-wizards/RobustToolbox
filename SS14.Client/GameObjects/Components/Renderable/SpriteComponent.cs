@@ -1573,6 +1573,9 @@ namespace SS14.Client.GameObjects
 
         public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
+            if (curState == null)
+                return;
+
             var thestate = (SpriteComponentState) curState;
 
             Visible = thestate.Visible;

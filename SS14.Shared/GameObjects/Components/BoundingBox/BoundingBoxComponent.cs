@@ -59,6 +59,9 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
+            if(curState == null)
+                return;
+
             AABB = ((BoundingBoxComponentState)curState).AABB;
         }
 

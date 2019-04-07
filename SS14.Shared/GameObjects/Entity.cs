@@ -377,37 +377,68 @@ namespace SS14.Shared.GameObjects
 
         #region GameState
 
+        private readonly Dictionary<uint, (ComponentState curState, ComponentState nextState)> _compStateWork
+            = new Dictionary<uint, (ComponentState curState, ComponentState nextState)>();
+
         /// <summary>
         ///     Applies an entity state to this entity.
         /// </summary>
         /// <param name="curState">State to apply.</param>
         internal void HandleEntityState(EntityState curState, EntityState nextState)
         {
-            Name = curState.StateData.Name;
-            var synchedComponentTypes = curState.StateData.SynchedComponentTypes;
-            foreach (var t in synchedComponentTypes)
-            {
-                if (HasComponent(t.Item1) && GetComponent(t.Item1).Name != t.Item2)
-                    RemoveComponent(GetComponent(t.Item1));
+            _compStateWork.Clear();
 
-                if (!HasComponent(t.Item1))
+            if (curState != null)
+            {
+                Name = curState.StateData.Name;
+                var synchedComponentTypes = curState.StateData.SynchedComponentTypes;
+                foreach (var t in synchedComponentTypes)
                 {
-                    var newComp = (Component)IoCManager.Resolve<IComponentFactory>().GetComponent(t.Item2);
-                    newComp.Owner = this;
-                    AddComponent(newComp, true);
+                    if (HasComponent(t.Item1) && GetComponent(t.Item1).Name != t.Item2)
+                        RemoveComponent(GetComponent(t.Item1));
+
+                    if (!HasComponent(t.Item1))
+                    {
+                        var newComp = (Component) IoCManager.Resolve<IComponentFactory>().GetComponent(t.Item2);
+                        newComp.Owner = this;
+                        AddComponent(newComp, true);
+                    }
+                }
+                
+                foreach (var compState in curState.ComponentStates)
+                {
+                    _compStateWork[compState.NetID] = (compState, null);
                 }
             }
 
-            foreach (var compState in curState.ComponentStates)
+            if(nextState?.ComponentStates != null)
             {
-                if (!TryGetComponent(compState.NetID, out var component))
-                    continue;
+                foreach (var compState in nextState.ComponentStates)
+                {
+                    if (_compStateWork.TryGetValue(compState.NetID, out var state))
+                    {
+                        _compStateWork[compState.NetID] = (state.curState, compState);
+                    }
+                    else
+                    {
+                        _compStateWork[compState.NetID] = (null, compState);
+                    }
+                }
+            }
 
-                if (compState.GetType() != component.StateType)
-                    throw new InvalidOperationException($"Incorrect component state type: {component.StateType}, component: {component.GetType()}");
-
-                var nextCompState = nextState?.ComponentStates?.Find(s => s.NetID == compState.NetID);
-                component.HandleComponentState(compState, nextCompState);
+            foreach (var kvStates in _compStateWork)
+            {
+                if (TryGetComponent(kvStates.Key, out var component))
+                {
+                    if (kvStates.Value.curState == null || kvStates.Value.curState.GetType() == component.StateType)
+                    {
+                        component.HandleComponentState(kvStates.Value.curState, kvStates.Value.nextState);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException($"Incorrect component state type: {component.StateType}, component: {component.GetType()}");
+                    }
+                }
             }
         }
 

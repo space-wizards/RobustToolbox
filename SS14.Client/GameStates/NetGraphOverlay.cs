@@ -40,7 +40,7 @@ namespace SS14.Client.GameStates
             }
         }
 
-        private class NetShowGraph : IConsoleCommand
+        private class NetShowGraphCommand : IConsoleCommand
         {
             public string Command => "net_graph";
             public string Help => "net_graph <0|1>";

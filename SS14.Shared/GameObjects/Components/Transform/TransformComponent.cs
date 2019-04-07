@@ -279,7 +279,16 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
         [ViewVariables]
         public IEnumerable<ITransformComponent> Children => _children.Select(u => Owner.EntityManager.GetEntity(u).Transform);
-        
+
+        /// <inheritdoc />
+        public Vector2 LerpDestination
+        {
+            get
+            {
+                return _nextPosition;
+            }
+        }
+
         /// <inheritdoc />
         public override void OnRemove()
         {

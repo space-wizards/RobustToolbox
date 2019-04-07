@@ -82,6 +82,11 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         bool VisibleWhileParented { get; set; }
 
         /// <summary>
+        ///
+        /// </summary>
+        Vector2 LerpDestination { get; }
+
+        /// <summary>
         ///     Finds the transform located on the map or in nullspace
         /// </summary>
         ITransformComponent GetMapTransform();

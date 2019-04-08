@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
@@ -115,6 +116,7 @@ namespace SS14.Client.GameObjects
         {
             var toApply = new Dictionary<IEntity, (EntityState, EntityState)>();
             var toInitialize = new List<Entity>();
+            deletions = deletions ?? new EntityUid[0];
 
             if (curEntStates != null && curEntStates.Count != 0)
             {

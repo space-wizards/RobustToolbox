@@ -76,7 +76,6 @@ namespace SS14.Shared.GameObjects.Components.Transform
             get => GetLocalRotation();
             set
             {
-                DebugTools.Assert(IoCManager.Resolve<IGameTiming>().InSimulation);
                 SetRotation(value);
                 RebuildMatrices();
                 Dirty();
@@ -97,7 +96,6 @@ namespace SS14.Shared.GameObjects.Components.Transform
             }
             set
             {
-                DebugTools.Assert(IoCManager.Resolve<IGameTiming>().InSimulation);
                 var current = WorldRotation;
                 var diff = value - current;
                 LocalRotation += diff;
@@ -178,7 +176,6 @@ namespace SS14.Shared.GameObjects.Components.Transform
             }
             set
             {
-                DebugTools.Assert(IoCManager.Resolve<IGameTiming>().InSimulation);
                 if (_parent.IsValid())
                 {
                     if (value.GridID != _gridID)
@@ -236,7 +233,6 @@ namespace SS14.Shared.GameObjects.Components.Transform
             }
             set
             {
-                DebugTools.Assert(IoCManager.Resolve<IGameTiming>().InSimulation);
                 if (_parent.IsValid())
                 {
                     // world coords to parent coords
@@ -282,19 +278,11 @@ namespace SS14.Shared.GameObjects.Components.Transform
         public IEnumerable<ITransformComponent> Children => _children.Select(u => Owner.EntityManager.GetEntity(u).Transform);
 
         /// <inheritdoc />
-        public Vector2 LerpDestination
-        {
-            get
-            {
-                return _nextPosition;
-            }
-        }
+        public Vector2 LerpDestination => _nextPosition;
 
         /// <inheritdoc />
         public override void OnRemove()
         {
-            DebugTools.Assert(IoCManager.Resolve<IGameTiming>().InSimulation);
-
             DetachParent();
 
             foreach (var child in _children.ToArray())
@@ -312,8 +300,6 @@ namespace SS14.Shared.GameObjects.Components.Transform
         /// </summary>
         public virtual void DetachParent()
         {
-            DebugTools.Assert(IoCManager.Resolve<IGameTiming>().InSimulation);
-
             // nothing to do
             if (Parent == null)
                 return;

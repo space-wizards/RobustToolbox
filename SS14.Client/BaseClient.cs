@@ -1,6 +1,7 @@
 ﻿using System;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.GameStates;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.Utility;
 using SS14.Client.Player;
@@ -45,6 +46,9 @@ namespace SS14.Client
 
         [Dependency]
         private readonly IGameTiming _timing;
+
+        [Dependency]
+        private readonly IClientGameStateManager _gameStates;
 
         /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;
@@ -159,6 +163,8 @@ namespace SS14.Client
 
             _stateManager.RequestStateChange<MainScreen>();
 
+            _timing.Paused = true;
+            _gameStates.Shutdown();
             _playMan.Shutdown();
             _entityManager.Shutdown();
             _mapManager.Shutdown();

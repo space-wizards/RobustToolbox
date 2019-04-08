@@ -38,6 +38,7 @@ namespace SS14.Client.GameStates
         [Dependency]
         private readonly IConfigurationManager _config;
 
+        /// <inheritdoc />
         public void Initialize()
         {
             _network.RegisterNetMessage<MsgState>(MsgState.NAME, HandleStateMessage);
@@ -46,6 +47,14 @@ namespace SS14.Client.GameStates
 
             if(!_config.IsCVarRegistered("net.state_buffer"))
                 _config.RegisterCVar("net.state_buffer", 1, CVar.ARCHIVE);
+        }
+
+        /// <inheritdoc />
+        public void Shutdown()
+        {
+            _stateBuffer.Clear();
+            _lastFullState = null;
+            _waitingForFull = true;
         }
 
         private void RunLevelChanged(object sender, RunLevelChangedEventArgs args)

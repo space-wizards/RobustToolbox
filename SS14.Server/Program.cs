@@ -118,6 +118,7 @@ namespace SS14.Server
             IoCManager.Register<ILogManager, LogManager>();
             IoCManager.Register<ITaskManager, TaskManager>();
             IoCManager.Register<IRuntimeLog, RuntimeLog>();
+            IoCManager.Register<IDynamicTypeFactory, DynamicTypeFactory>();
 
             // Server stuff.
             IoCManager.Register<IEntityManager, ServerEntityManager>();

@@ -15,6 +15,9 @@ namespace SS14.Shared.GameObjects
         [Dependency]
         private readonly IReflectionManager ReflectionManager;
 
+        [Dependency]
+        private readonly IDynamicTypeFactory _typeFactory;
+
         /// <summary>
         /// Maps system types to instances.
         /// </summary>
@@ -88,7 +91,7 @@ namespace SS14.Shared.GameObjects
             {
                 Logger.DebugS("go.sys", "Initializing entity system {0}", type);
                 //Force initialization of all systems
-                var instance = (IEntitySystem)Activator.CreateInstance(type);
+                var instance = (IEntitySystem)_typeFactory.CreateInstance(type);
                 AddSystem(instance);
                 instance.RegisterMessageTypes();
                 instance.SubscribeEvents();

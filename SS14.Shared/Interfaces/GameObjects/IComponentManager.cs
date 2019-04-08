@@ -182,9 +182,16 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     Returns ALL component instances of a specified type.
         /// </summary>
         /// <typeparam name="T">Type to filter.</typeparam>
-        /// <returns>All components that are a specified type.</returns>
+        /// <returns>All components that are the specified type.</returns>
         IEnumerable<T> GetAllComponents<T>()
             where T : IComponent;
+
+        /// <summary>
+        ///      Returns ALL component instances of a specified type.
+        /// </summary>
+        /// <param name="type">Type to filter.</param>
+        /// <returns>All components that are the specified type.</returns>
+        IEnumerable<IComponent> GetAllComponents(Type type);
 
         /// <summary>
         ///     Culls all components from the collection that are marked as deleted. This needs to be called often.

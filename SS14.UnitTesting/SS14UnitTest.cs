@@ -187,6 +187,7 @@ namespace SS14.UnitTesting
             IoCManager.Register<ILogManager, LogManager>();
             IoCManager.Register<ITaskManager, TaskManager>();
             IoCManager.Register<IRuntimeLog, RuntimeLog>();
+            IoCManager.Register<IDynamicTypeFactory, DynamicTypeFactory>();
 
             switch (Project)
             {

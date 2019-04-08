@@ -176,6 +176,14 @@ namespace SS14.Shared.IoC
                 // Not using Resolve<T>() because we're literally building it right now.
                 if (!_services.ContainsKey(field.FieldType))
                 {
+                    // A hard-coded special case so the DependencyCollection can inject itself.
+                    // This is not put into the services so it can be overridden if needed.
+                    if (field.FieldType == typeof(IDependencyCollection))
+                    {
+                        field.SetValue(obj, this);
+                        continue;
+                    }
+
                     throw new UnregisteredDependencyException(obj.GetType(), field.FieldType, field.Name);
                 }
 

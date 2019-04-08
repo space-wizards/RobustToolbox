@@ -53,15 +53,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         bool IsValid();
 
         /// <summary>
-        ///     "Matches" this entity with the provided entity query, returning whether or not the query matched.
-        ///     This is effectively equivalent to calling <see cref="IEntityQuery.Match(IEntity)" /> with this entity.
-        ///     The matching logic depends on the implementation of entity query used.
-        /// </summary>
-        /// <param name="query">The query to match this entity with.</param>
-        /// <returns>True if the query matched, false otherwise.</returns>
-        bool Match(IEntityQuery query);
-
-        /// <summary>
         ///     The entity's transform component.
         /// </summary>
         ITransformComponent Transform { get; }

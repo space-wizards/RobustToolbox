@@ -40,9 +40,9 @@ namespace SS14.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            var entitymanager = IoCManager.Resolve<IEntityManager>();
+            var entityManager = IoCManager.Resolve<IEntityManager>();
 
-            foreach (var e in entitymanager.GetEntities(new ComponentEntityQuery()))
+            foreach (var e in entityManager.GetEntities())
             {
                 console.AddLine($"entity {e.Uid}, {e.Prototype.ID}, {e.Transform.GridPosition}.", ChatChannel.Default,
                     Color.White);

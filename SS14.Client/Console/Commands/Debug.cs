@@ -465,7 +465,7 @@ namespace SS14.Client.Console.Commands
             var vBox = new VBoxContainer();
             scroll.AddChild(vBox);
 
-            var progressBar = new ProgressBar {MaxValue=10, Value=5};
+            var progressBar = new ProgressBar {MaxValue = 10, Value = 5};
             vBox.AddChild(progressBar);
 
             var optionButton = new OptionButton();
@@ -475,6 +475,19 @@ namespace SS14.Client.Console.Commands
             optionButton.AddItem("Baz");
             optionButton.OnItemSelected += eventArgs => optionButton.SelectId(eventArgs.Id);
             vBox.AddChild(optionButton);
+
+            var tree = new Tree {SizeFlagsVertical = Control.SizeFlags.FillExpand};
+            var root = tree.CreateItem();
+            root.Text = "Honk!";
+            var child = tree.CreateItem();
+            child.Text = "Foo";
+            for (var i = 0; i < 20; i++)
+            {
+                child = tree.CreateItem();
+                child.Text = $"Bar {i}";
+            }
+            vBox.AddChild(tree);
+
             return false;
         }
     }

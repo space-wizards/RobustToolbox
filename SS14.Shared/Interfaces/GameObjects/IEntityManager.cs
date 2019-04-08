@@ -8,6 +8,9 @@ namespace SS14.Shared.Interfaces.GameObjects
 {
     public interface IEntityManager
     {
+        /// <summary>
+        ///     The current simulation tick being processed.
+        /// </summary>
         uint CurrentTick { get; }
 
         void Initialize();

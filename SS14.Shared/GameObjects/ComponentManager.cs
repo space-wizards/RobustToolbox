@@ -130,9 +130,9 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void RemoveComponent(EntityUid uid, uint netID)
+        public void RemoveComponent(EntityUid uid, uint netId)
         {
-            var comp = GetComponent(uid, netID);
+            var comp = GetComponent(uid, netId);
             RemoveComponentDeferred(comp as Component);
         }
 
@@ -243,12 +243,12 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool HasComponent(EntityUid uid, uint netID)
+        public bool HasComponent(EntityUid uid, uint netId)
         {
             if (!_netComponents.TryGetValue(uid, out var comp))
                 return false;
 
-            return comp.ContainsKey(netID);
+            return comp.ContainsKey(netId);
         }
 
         /// <inheritdoc />
@@ -273,10 +273,10 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IComponent GetComponent(EntityUid uid, uint netID)
+        public IComponent GetComponent(EntityUid uid, uint netId)
         {
             var netDict = _netComponents[uid];
-            return netDict[netID];
+            return netDict[netId];
         }
 
         /// <inheritdoc />
@@ -310,11 +310,11 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent(EntityUid uid, uint netID, out IComponent component)
+        public bool TryGetComponent(EntityUid uid, uint netId, out IComponent component)
         {
             if (_netComponents.TryGetValue(uid, out var netDict))
             {
-                if (netDict != null && netDict.TryGetValue(netID, out var comp))
+                if (netDict != null && netDict.TryGetValue(netId, out var comp))
                 {
                     component = comp;
                     return true;
@@ -368,7 +368,6 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        [Obsolete]
         public IEnumerable<T> GetAllComponents<T>()
             where T : IComponent
         {
@@ -377,7 +376,15 @@ namespace SS14.Shared.GameObjects
 
             return Enumerable.Empty<T>();
         }
+        
+        /// <inheritdoc />
+        public IEnumerable<IComponent> GetAllComponents(Type type)
+        {
+            if (_dictComponents.TryGetValue(type, out var typeDict))
+                return typeDict.Values;
 
+            return Enumerable.Empty<IComponent>();
+        }
         #endregion
     }
 }

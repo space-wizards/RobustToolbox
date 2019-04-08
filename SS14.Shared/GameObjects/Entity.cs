@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.Serialization;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.Utility;
 using SS14.Shared.ViewVariables;
 
 namespace SS14.Shared.GameObjects
@@ -252,16 +250,6 @@ namespace SS14.Shared.GameObjects
 
         #endregion IEntity Members
 
-        #region Entity Systems
-
-        /// <inheritdoc />
-        public bool Match(IEntityQuery query)
-        {
-            return query.Match(this);
-        }
-
-        #endregion Entity Systems
-
         #region Components
 
         /// <summary>
@@ -327,9 +315,9 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IComponent GetComponent(uint netID)
+        public IComponent GetComponent(uint netId)
         {
-            return EntityManager.ComponentManager.GetComponent(Uid, netID);
+            return EntityManager.ComponentManager.GetComponent(Uid, netId);
         }
 
         /// <inheritdoc />
@@ -346,9 +334,9 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent(uint netID, out IComponent component)
+        public bool TryGetComponent(uint netId, out IComponent component)
         {
-            return EntityManager.ComponentManager.TryGetComponent(Uid, netID, out component);
+            return EntityManager.ComponentManager.TryGetComponent(Uid, netId, out component);
         }
 
         /// <inheritdoc />
@@ -388,6 +376,10 @@ namespace SS14.Shared.GameObjects
 
         #region GameState
 
+        /// <summary>
+        ///     Applies an entity state to this entity.
+        /// </summary>
+        /// <param name="state">State to apply.</param>
         internal void HandleEntityState(EntityState state)
         {
             Name = state.StateData.Name;
@@ -443,12 +435,15 @@ namespace SS14.Shared.GameObjects
         /// <returns></returns>
         private List<ComponentState> GetComponentStates(uint fromTick)
         {
-            return GetAllComponents()
+            return GetComponentInstances()
                 .Where(c => c.NetID != null && c.NetSyncEnabled && c.LastModifiedTick >= fromTick)
                 .Select(component => component.GetComponentState())
                 .ToList();
         }
 
+        /// <summary>
+        ///     Marks this entity as dirty so that the networking will sync it with clients.
+        /// </summary>
         public void Dirty()
         {
             LastModifiedTick = EntityManager.CurrentTick;
@@ -456,6 +451,7 @@ namespace SS14.Shared.GameObjects
 
         #endregion GameState
 
+        /// <inheritdoc />
         public override string ToString()
         {
             return $"{Name} ({Uid}, {Prototype.ID})";

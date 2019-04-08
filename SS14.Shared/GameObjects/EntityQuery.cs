@@ -2,91 +2,83 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace SS14.Shared.GameObjects
 {
     /// <summary>
-    /// An entity query that checks based on the components of an entity.
+    ///     An entity query that will let all entities pass.
+    ///     This is the same as matching <c>ITransformComponent</c>, but faster.
     /// </summary>
-    /// <remarks>
-    /// The query can be controlled with <see cref="AllSet" />, <see cref="ExclusionSet" /> and <see cref="OneSet" />.
-    /// If all of these are empty, the query is effectively equal to <see cref="AllEntityQuery" />.
-    /// </remarks>
-    public class ComponentEntityQuery : IEntityQuery
+    [PublicAPI]
+    public class AllEntityQuery : IEntityQuery
     {
-        /// <summary>
-        /// A list of component reference types, none of which an entity can have to pas.
-        /// If this is empty, it's ignored.
-        /// </summary>
-        public IList<Type> AllSet { get; set; } = new List<Type>();
-        /// <summary>
-        /// A list of component reference types, all of which an entity must not have to pass.
-        /// If this is empty, it's ignored.
-        /// </summary>
-        public IList<Type> ExclusionSet { get; set; } = new List<Type>();
-        /// <summary>
-        /// A list of component reference types, at least one of which the entity must have to pass.
-        /// If this is empty, it's ignored.
-        /// </summary>
-        public IList<Type> OneSet { get; set; } = new List<Type>();
+        /// <inheritdoc />
+        public bool Match(IEntity entity) => true;
 
-        public bool Match(IEntity entity)
+        /// <inheritdoc />
+        public IEnumerable<IEntity> Match(IEntityManager entityMan)
         {
-            Func<Type, bool> hasComponent = (t => entity.HasComponent(t));
-            if (ExclusionSet.Any(hasComponent))
-            {
-                return false;
-            }
-
-            if (!AllSet.All(hasComponent))
-            {
-                return false;
-            }
-
-            if (OneSet.Count != 0 && !OneSet.Any(hasComponent))
-            {
-                return false;
-            }
-
-            // Nobody complained so we're good here!
-            return true;
+            return entityMan.GetEntities();
         }
     }
 
     /// <summary>
-    /// An entity query that will let all entities pass.
+    ///     An entity query which will match entities based on a predicate.
+    ///     If you only want a single type of Component, use <c>TypeEntityQuery</c>.
     /// </summary>
-    public class AllEntityQuery : IEntityQuery
-    {
-        public bool Match(IEntity entity) => true;
-    }
-
-    /// <summary>
-    /// An entity query which will match entities based on a predicate.
-    /// </summary>
+    [PublicAPI]
     public class PredicateEntityQuery : IEntityQuery
     {
-        public readonly Func<IEntity, bool> Predicate;
-        public PredicateEntityQuery(Func<IEntity, bool> predicate)
+        private readonly Predicate<IEntity> Predicate;
+
+        /// <summary>
+        ///     Constructs a new instance of <c>PredicateEntityQuery</c>.
+        /// </summary>
+        /// <param name="predicate"></param>
+        public PredicateEntityQuery(Predicate<IEntity> predicate)
         {
+            if(Predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
             Predicate = predicate;
         }
 
+        /// <inheritdoc />
         public bool Match(IEntity entity) => Predicate(entity);
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> Match(IEntityManager entityMan)
+        {
+            return entityMan.GetEntities().Where(entity => Predicate(entity));
+        }
     }
 
     /// <summary>
-    ///     An entity query that will match all of one type of component.
+    ///     An entity query that will match one type of component.
+    ///     This the fastest and most common query, and should be the default choice.
     /// </summary>
+    [PublicAPI]
     public class TypeEntityQuery : IEntityQuery
     {
-        public Type ComponentType { get; }
+        private readonly Type ComponentType;
 
+        /// <summary>
+        ///     Constructs a new instance of <c>TypeEntityQuery</c>.
+        /// </summary>
+        /// <param name="componentType">Type of the component to match.</param>
         public TypeEntityQuery(Type componentType)
         {
             ComponentType = componentType;
         }
 
+        /// <inheritdoc />
         public bool Match(IEntity entity) => entity.HasComponent(ComponentType);
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> Match(IEntityManager entityMan)
+        {
+            return entityMan.ComponentManager.GetAllComponents(ComponentType).Select(component => component.Owner);
+        }
     }
 }

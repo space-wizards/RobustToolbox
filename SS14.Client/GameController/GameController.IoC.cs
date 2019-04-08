@@ -110,6 +110,7 @@ namespace SS14.Client
             IoCManager.Register<ITimerManager, TimerManager>();
             IoCManager.Register<ITaskManager, TaskManager>();
             IoCManager.Register<IRuntimeLog, RuntimeLog>();
+            IoCManager.Register<IDynamicTypeFactory, DynamicTypeFactory>();
 
             // Client stuff.
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();

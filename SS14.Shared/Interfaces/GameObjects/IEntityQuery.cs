@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
@@ -18,5 +14,12 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="entity">The entity to test.</param>
         /// <returns>True if the entity is included in this query, false otherwise</returns>
         bool Match(IEntity entity);
+
+        /// <summary>
+        /// Matches every entity in an EntityManager to see if it passes the criteria.
+        /// </summary>
+        /// <param name="entityMan">An EntityManager containing a set of entities.</param>
+        /// <returns>Enumeration of all entities that successfully matched the criteria.</returns>
+        IEnumerable<IEntity> Match(IEntityManager entityMan);
     }
 }

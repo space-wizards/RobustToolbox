@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
@@ -14,21 +13,22 @@ using SS14.Shared.Utility;
 
 namespace SS14.Shared.GameObjects
 {
+    /// <inheritdoc />
     public abstract class EntityManager : IEntityManager
     {
         #region Dependencies
 
         [Dependency]
-        protected readonly IEntityNetworkManager EntityNetworkManager;
+        private readonly IEntityNetworkManager EntityNetworkManager;
 
         [Dependency]
-        protected readonly IPrototypeManager PrototypeManager;
+        private readonly IPrototypeManager PrototypeManager;
 
         [Dependency]
         protected readonly IEntitySystemManager EntitySystemManager;
 
         [Dependency]
-        protected readonly IComponentFactory ComponentFactory;
+        private readonly IComponentFactory ComponentFactory;
 
         [Dependency]
         private readonly INetManager _network;
@@ -41,11 +41,18 @@ namespace SS14.Shared.GameObjects
 
         #endregion Dependencies
 
+        /// <inheritdoc />
         public uint CurrentTick => _gameTiming.CurTick;
 
+        /// <inheritdoc />
         public IComponentManager ComponentManager => _componentManager;
+
+        /// <inheritdoc />
         public IEntityNetworkManager EntityNetManager => EntityNetworkManager;
 
+        /// <summary>
+        ///     All entities currently stored in the manager.
+        /// </summary>
         protected readonly Dictionary<EntityUid, IEntity> Entities = new Dictionary<EntityUid, IEntity>();
 
         /// <summary>
@@ -149,7 +156,7 @@ namespace SS14.Shared.GameObjects
 
         public IEnumerable<IEntity> GetEntities(IEntityQuery query)
         {
-            return GetEntities().Where(e => e.Match(query));
+            return query.Match(this);
         }
 
         public IEnumerable<IEntity> GetEntitiesAt(Vector2 position)

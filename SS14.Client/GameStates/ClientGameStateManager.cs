@@ -129,6 +129,14 @@ namespace SS14.Client.GameStates
             else if (_stateBuffer.Count <= 3 + ratio) // absolute minimum is 3 states in buffer for the system to work (last, cur, next)
             {
                 _timing.FastForward = false;
+
+                if (!_waitingForFull && _stateBuffer.Count < 3 + ratio)
+                {
+                    // TODO: This is really bad, it causes the view and player to jerk back every so often. Come up with a better solution.
+                    // we are ahead of the target buffer size, delay a tick by replaying the last one
+                    // hopefully a new state will get processed soon!
+                    _timing.CurTick = new GameTick(_timing.CurTick.Value - 1);
+                }
             }
         }
 

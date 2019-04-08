@@ -169,7 +169,7 @@ namespace SS14.Client.GameObjects
 
         public override IEntity ForceSpawnEntityAt(string entityType, GridCoordinates coordinates)
         {
-            var entity = CreateEntity(entityType);
+            var entity = CreateEntity(entityType, NewClientEntityUid());
             entity.Transform.GridPosition = coordinates;
             InitializeAndStartEntity(entity);
 

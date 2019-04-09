@@ -3,6 +3,7 @@ using SS14.Client.Utility;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.Log
 {

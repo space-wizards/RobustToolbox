@@ -246,6 +246,7 @@
     <Compile Include="UserInterface\CustomControls\DebugTimePanel.cs" />
     <Compile Include="UserInterface\CustomControls\FrameGraph.cs" />
     <Compile Include="UserInterface\CustomControls\Tooltip.cs" />
+    <Compile Include="UserInterface\RichTextEntry.cs" />
     <Compile Include="UserInterface\Stylesheet.cs" />
     <Compile Include="UserInterface\UITheme.cs" />
     <Compile Include="Utility\DirExt.cs" />
@@ -381,7 +382,6 @@
     <Compile Include="UserInterface\Controls\ItemList.cs" />
     <Compile Include="Placement\PlacementHijack.cs" />
     <Compile Include="Utility\SpriteSpecifierExt.cs" />
-    <Compile Include="Utility\FormattedMessage.cs" />
     <Content Include="$(SolutionDir)\packages\opentk\3.0.1\content\OpenTK.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>false</Visible>

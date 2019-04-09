@@ -18,13 +18,12 @@ namespace SS14.Client.UserInterface.Controls
     {
         public const string StylePropertyStyleBox = "stylebox";
 
-        private static readonly FormattedMessage.TagColor TagWhite = new FormattedMessage.TagColor(Color.White);
-        private readonly List<Entry> _entries = new List<Entry>();
+        private readonly List<RichTextEntry> _entries = new List<RichTextEntry>();
         private bool _isAtBottom = true;
 
         // These two are used to implement this on Godot.
         private PanelContainer _godotPanelContainer;
-        private RichTextLabel _godotRichTextLabel;
+        private Godot.RichTextLabel _godotRichTextLabel;
         private int _totalContentHeight;
         private bool _firstLine = true;
         private StyleBox _styleBoxOverride;
@@ -97,9 +96,9 @@ namespace SS14.Client.UserInterface.Controls
                 return;
             }
 
-            var entry = new Entry(message);
+            var entry = new RichTextEntry(message);
 
-            _updateEntry(ref entry);
+            entry.Update(_getFont(), _getContentBox().Width);
 
             _entries.Add(entry);
             var font = _getFont();
@@ -135,8 +134,8 @@ namespace SS14.Client.UserInterface.Controls
                 _godotPanelContainer = new PanelContainer {PanelOverride = new StyleBoxEmpty()};
                 _godotPanelContainer.SetAnchorPreset(LayoutPreset.Wide);
                 AddChild(_godotPanelContainer);
-                _godotRichTextLabel = new RichTextLabel {ScrollFollowing = true};
-                _godotPanelContainer.AddChild(_godotRichTextLabel);
+                _godotRichTextLabel = new Godot.RichTextLabel {ScrollFollowing = true};
+                _godotPanelContainer.SceneControl.AddChild(_godotRichTextLabel);
             }
             else
             {
@@ -158,10 +157,10 @@ namespace SS14.Client.UserInterface.Controls
 
             var style = _getStyleBox();
             var font = _getFont();
-            var contentBox = _getContentBox();
             style?.Draw(handle, SizeBox);
+            var contentBox = _getContentBox();
 
-            var entryOffset = 0;
+            var entryOffset = -_scrollBar.Value;
 
             // A stack for format tags.
             // This stack contains the format tag to RETURN TO when popped off.
@@ -170,65 +169,18 @@ namespace SS14.Client.UserInterface.Controls
 
             foreach (var entry in _entries)
             {
-                if (entryOffset + entry.Height - _scrollBar.Value < 0)
+                if (entryOffset + entry.Height < 0)
                 {
                     entryOffset += entry.Height + font.LineSeparation;
                     continue;
                 }
 
-                if (entryOffset - _scrollBar.Value > contentBox.Height)
+                if (entryOffset > contentBox.Height)
                 {
                     break;
                 }
 
-                // The tag currently doing color.
-                var currentColorTag = TagWhite;
-
-                var globalBreakCounter = 0;
-                var lineBreakIndex = 0;
-                var baseLine = contentBox.TopLeft + new Vector2(0, font.Ascent + entryOffset - _scrollBar.Value);
-                formatStack.Clear();
-                foreach (var tag in entry.Message.Tags)
-                {
-                    switch (tag)
-                    {
-                        case FormattedMessage.TagColor tagColor:
-                            formatStack.Push(currentColorTag);
-                            currentColorTag = tagColor;
-                            break;
-                        case FormattedMessage.TagPop _:
-                            var popped = formatStack.Pop();
-                            switch (popped)
-                            {
-                                case FormattedMessage.TagColor tagColor:
-                                    currentColorTag = tagColor;
-                                    break;
-                                default:
-                                    throw new InvalidOperationException();
-                            }
-
-                            break;
-                        case FormattedMessage.TagText tagText:
-                        {
-                            var text = tagText.Text;
-                            for (var i = 0; i < text.Length; i++, globalBreakCounter++)
-                            {
-                                var chr = text[i];
-                                if (lineBreakIndex < entry.LineBreaks.Count &&
-                                    entry.LineBreaks[lineBreakIndex] == globalBreakCounter)
-                                {
-                                    baseLine = new Vector2(contentBox.Left, baseLine.Y + font.LineHeight);
-                                    lineBreakIndex += 1;
-                                }
-
-                                var advance = font.DrawChar(handle, chr, baseLine, currentColorTag.Color);
-                                baseLine += new Vector2(advance, 0);
-                            }
-
-                            break;
-                        }
-                    }
-                }
+                entry.Draw(handle, font, contentBox, entryOffset, formatStack);
 
                 entryOffset += entry.Height + font.LineSeparation;
             }
@@ -265,7 +217,7 @@ namespace SS14.Client.UserInterface.Controls
 
             if (!_firstLine)
             {
-                _godotRichTextLabel.NewLine();
+                _godotRichTextLabel.Newline();
             }
             else
             {
@@ -280,7 +232,7 @@ namespace SS14.Client.UserInterface.Controls
                         _godotRichTextLabel.AddText(text.Text);
                         break;
                     case FormattedMessage.TagColor color:
-                        _godotRichTextLabel.PushColor(color.Color);
+                        _godotRichTextLabel.PushColor(color.Color.Convert());
                         pushCount++;
                         break;
                     case FormattedMessage.TagPop _:
@@ -302,134 +254,6 @@ namespace SS14.Client.UserInterface.Controls
             base.SetDefaults();
 
             RectClipContent = true;
-        }
-
-        /// <summary>
-        ///     Recalculate line dimensions and where it has line breaks for word wrapping.
-        /// </summary>
-        private void _updateEntry(ref Entry entry)
-        {
-            DebugTools.Assert(!GameController.OnGodot);
-            // This method is gonna suck due to complexity.
-            // Bear with me here.
-            // I am so deeply sorry for the person adding stuff to this in the future.
-            var font = _getFont();
-            var contentBox = _getContentBox();
-            // Horizontal size we have to work with here.
-            var sizeX = contentBox.Width;
-            entry.Height = font.Height;
-            entry.LineBreaks.Clear();
-
-            // Index we put into the LineBreaks list when a line break should occur.
-            var breakIndexCounter = 0;
-            // If the CURRENT processing word ends up too long, this is the index to put a line break.
-            int? wordStartBreakIndex = null;
-            // Word size in pixels.
-            var wordSizePixels = 0;
-            // The horizontal position of the text cursor.
-            var posX = 0;
-            var lastChar = 'A';
-            // If a word is larger than sizeX, we split it.
-            // We need to keep track of some data to split it into two words.
-            (int breakIndex, int wordSizePixels)? forceSplitData = null;
-            // Go over every text tag.
-            // We treat multiple text tags as one continuous one.
-            // So changing color inside a single word doesn't create a word break boundary.
-            foreach (var tag in entry.Message.Tags)
-            {
-                if (!(tag is FormattedMessage.TagText tagText))
-                {
-                    continue;
-                }
-
-                var text = tagText.Text;
-                // And go over every character.
-                for (var i = 0; i < text.Length; i++, breakIndexCounter++)
-                {
-                    var chr = text[i];
-
-                    if (IsWordBoundary(lastChar, chr) || chr == '\n')
-                    {
-                        // Word boundary means we know where the word ends.
-                        if (posX > sizeX)
-                        {
-                            DebugTools.Assert(wordStartBreakIndex.HasValue,
-                                "wordStartBreakIndex can only be null if the word begins at a new line, in which case this branch shouldn't be reached as the word would be split due to being longer than a single line.");
-                            // We ran into a word boundary and the word is too big to fit the previous line.
-                            // So we insert the line break BEFORE the last word.
-                            entry.LineBreaks.Add(wordStartBreakIndex.Value);
-                            entry.Height += font.LineHeight;
-                            posX = wordSizePixels;
-                        }
-
-                        // Start a new word since we hit a word boundary.
-                        //wordSize = 0;
-                        wordSizePixels = 0;
-                        wordStartBreakIndex = breakIndexCounter;
-                        forceSplitData = null;
-
-                        // Just manually handle newlines.
-                        if (chr == '\n')
-                        {
-                            entry.LineBreaks.Add(breakIndexCounter);
-                            entry.Height += font.LineHeight;
-                            posX = 0;
-                            lastChar = chr;
-                            wordStartBreakIndex = null;
-                            continue;
-                        }
-                    }
-
-                    // Uh just skip unknown characters I guess.
-                    if (!font.TryGetCharMetrics(chr, out var metrics))
-                    {
-                        lastChar = chr;
-                        continue;
-                    }
-
-                    // Increase word size and such with the current character.
-                    var oldWordSizePixels = wordSizePixels;
-                    wordSizePixels += metrics.Advance;
-                    // TODO: Theoretically, does it make sense to break after the glyph's width instead of its advance?
-                    //   It might result in some more tight packing but I doubt it'd be noticeable.
-                    //   Also definitely even more complex to implement.
-                    posX += metrics.Advance;
-
-                    if (posX > sizeX)
-                    {
-                        if (!forceSplitData.HasValue)
-                        {
-                            forceSplitData = (breakIndexCounter, oldWordSizePixels);
-                        }
-
-                        // Oh hey we get to break a word that doesn't fit on a single line.
-                        if (wordSizePixels > sizeX)
-                        {
-                            var (breakIndex, splitWordSize) = forceSplitData.Value;
-                            if (splitWordSize == 0) return;
-
-                            // Reset forceSplitData so that we can split again if necessary.
-                            forceSplitData = null;
-                            entry.LineBreaks.Add(breakIndex);
-                            entry.Height += font.LineHeight;
-                            wordSizePixels -= splitWordSize;
-                            wordStartBreakIndex = null;
-                            posX = wordSizePixels;
-                        }
-                    }
-
-                    lastChar = chr;
-                }
-            }
-
-            // This needs to happen because word wrapping doesn't get checked for the last word.
-            if (posX > sizeX)
-            {
-                DebugTools.Assert(wordStartBreakIndex.HasValue,
-                    "wordStartBreakIndex can only be null if the word begins at a new line, in which case this branch shouldn't be reached as the word would be split due to being longer than a single line.");
-                entry.LineBreaks.Add(wordStartBreakIndex.Value);
-                entry.Height += font.LineHeight;
-            }
         }
 
         protected override void Resized()
@@ -456,10 +280,11 @@ namespace SS14.Client.UserInterface.Controls
         {
             _totalContentHeight = 0;
             var font = _getFont();
+            var sizeX = _getContentBox().Width;
             for (var i = 0; i < _entries.Count; i++)
             {
                 var entry = _entries[i];
-                _updateEntry(ref entry);
+                entry.Update(font, sizeX);
                 _entries[i] = entry;
                 _totalContentHeight += entry.Height + font.LineSeparation;
             }
@@ -469,12 +294,6 @@ namespace SS14.Client.UserInterface.Controls
             {
                 _scrollBar.Value = ScrollLimit;
             }
-        }
-
-        [Pure]
-        private static bool IsWordBoundary(char a, char b)
-        {
-            return a == ' ' || b == ' ' || a == '-' || b == '-';
         }
 
         [Pure]
@@ -513,28 +332,6 @@ namespace SS14.Client.UserInterface.Controls
         {
             var style = _getStyleBox();
             return style?.GetContentBox(SizeBox) ?? SizeBox;
-        }
-
-        private struct Entry
-        {
-            public readonly FormattedMessage Message;
-
-            /// <summary>
-            ///     The size of this line, in pixels.
-            /// </summary>
-            public int Height;
-
-            /// <summary>
-            ///     The combined text indices in the message's text tags to put line breaks.
-            /// </summary>
-            public readonly List<int> LineBreaks;
-
-            public Entry(FormattedMessage message)
-            {
-                Message = message;
-                Height = 0;
-                LineBreaks = new List<int>();
-            }
         }
     }
 }

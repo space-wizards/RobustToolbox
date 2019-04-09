@@ -1,17 +1,19 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using JetBrains.Annotations;
 using SS14.Shared.Maths;
-using SS14.Shared.Utility;
+using SS14.Shared.Serialization;
 
-namespace SS14.Client.Utility
+namespace SS14.Shared.Utility
 {
     /// <summary>
     ///     Represents a formatted message in the form of a list of "tags".
     ///     Does not do any concrete formatting, simply useful as an API surface.
     /// </summary>
     [PublicAPI]
+    [Serializable, NetSerializable]
     public sealed class FormattedMessage
     {
         public TagList Tags => new TagList(_tags);
@@ -51,6 +53,16 @@ namespace SS14.Client.Utility
             _tags.Add(new TagPop());
         }
 
+        public void AddMessage(FormattedMessage other)
+        {
+            _tags.AddRange(other.Tags);
+        }
+
+        public void Clear()
+        {
+            _tags.Clear();
+        }
+
         public override string ToString()
         {
             var builder = new StringBuilder();
@@ -67,10 +79,12 @@ namespace SS14.Client.Utility
             return builder.ToString();
         }
 
+        [Serializable, NetSerializable]
         public abstract class Tag
         {
         }
 
+        [Serializable, NetSerializable]
         public class TagText : Tag
         {
             public readonly string Text;
@@ -81,6 +95,7 @@ namespace SS14.Client.Utility
             }
         }
 
+        [Serializable, NetSerializable]
         public class TagColor : Tag
         {
             public readonly Color Color;
@@ -91,6 +106,7 @@ namespace SS14.Client.Utility
             }
         }
 
+        [Serializable, NetSerializable]
         public class TagPop : Tag
         {
         }

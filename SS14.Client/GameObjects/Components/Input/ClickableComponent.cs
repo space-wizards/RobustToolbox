@@ -34,6 +34,12 @@ namespace SS14.Client.GameObjects
         {
             var component = Owner.GetComponent<IClickTargetComponent>();
 
+            if (Owner.TryGetComponent(out ISpriteComponent sprite) && !sprite.Visible)
+            {
+                drawdepth = default;
+                return false;
+            }
+
             drawdepth = (int)component.DrawDepth;
             return true;
         }

@@ -143,12 +143,14 @@ namespace SS14.Client
             //identical code for server in baseserver
             if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))
             {
-                Logger.Warning($"[ENG] Could not load any Shared DLL.");
+                Logger.FatalS("eng", "Could not load any Shared DLL.");
+                throw new NotSupportedException("Cannot load client without content assembly");
             }
 
             if (!AssemblyLoader.TryLoadAssembly<GameClient>(_resourceManager, $"Content.Client"))
             {
-                Logger.Warning($"[ENG] Could not load any Client DLL.");
+                Logger.FatalS("eng", "Could not load any Client DLL.");
+                throw new NotSupportedException("Cannot load client without content assembly");
             }
 
             // Call Init in game assemblies.

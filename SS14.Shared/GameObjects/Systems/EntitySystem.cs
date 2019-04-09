@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Systems;
 using SS14.Shared.Interfaces.Network;
@@ -19,6 +22,10 @@ namespace SS14.Shared.GameObjects.Systems
         protected IEntityQuery EntityQuery;
 
         protected IEnumerable<IEntity> RelevantEntities => EntityManager.GetEntities(EntityQuery);
+
+        private readonly Dictionary<Type, (CancellationTokenRegistration, TaskCompletionSource<EntitySystemMessage>)>
+            _awaitingMessages
+                = new Dictionary<Type, (CancellationTokenRegistration, TaskCompletionSource<EntitySystemMessage>)>();
 
         protected EntitySystem()
         {
@@ -48,7 +55,16 @@ namespace SS14.Shared.GameObjects.Systems
         public virtual void Shutdown() { }
 
         /// <inheritdoc />
-        public virtual void HandleNetMessage(INetChannel channel, EntitySystemMessage message) { }
+        public virtual void HandleNetMessage(INetChannel channel, EntitySystemMessage message)
+        {
+            var type = message.GetType();
+            if (_awaitingMessages.TryGetValue(type, out var awaiting))
+            {
+                var (_, tcs) = awaiting;
+                tcs.TrySetResult(message);
+                _awaitingMessages.Remove(type);
+            }
+        }
 
         public void RegisterMessageType<T>()
             where T : EntitySystemMessage
@@ -87,6 +103,36 @@ namespace SS14.Shared.GameObjects.Systems
         protected void RaiseNetworkEvent(EntitySystemMessage message, INetChannel channel)
         {
             EntityNetworkManager.SendSystemNetworkMessage(message, channel);
+        }
+
+        protected Task<T> AwaitNetMessage<T>(CancellationToken cancellationToken = default)
+            where T : EntitySystemMessage
+        {
+            var type = typeof(T);
+            if (_awaitingMessages.ContainsKey(type))
+            {
+                throw new InvalidOperationException("Cannot await the same message type twice at once.");
+            }
+
+            var tcs = new TaskCompletionSource<EntitySystemMessage>();
+            CancellationTokenRegistration reg = default;
+            if (cancellationToken != default)
+            {
+                reg = cancellationToken.Register(() =>
+                {
+                    _awaitingMessages.Remove(type);
+                    tcs.TrySetCanceled();
+                });
+            }
+
+            // Tiny trick so we can return T while the tcs is passed an EntitySystemMessage.
+            async Task<T> DoCast(Task<EntitySystemMessage> task)
+            {
+                return (T) await task;
+            }
+
+            _awaitingMessages.Add(type, (reg, tcs));
+            return DoCast(tcs.Task);
         }
     }
 }

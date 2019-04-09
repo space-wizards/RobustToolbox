@@ -1351,6 +1351,11 @@ namespace SS14.Client.UserInterface
                 throw new InvalidOperationException("This component is still parented. Deparent it before adding it.");
             }
 
+            if (child == this)
+            {
+                throw new InvalidOperationException("You can't parent something to itself!");
+            }
+
             // Ensure this control isn't a parent of ours.
             // Doesn't need to happen if the control has no children of course.
             if (child.ChildCount != 0)

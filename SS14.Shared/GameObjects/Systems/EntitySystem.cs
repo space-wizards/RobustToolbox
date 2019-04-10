@@ -13,14 +13,17 @@ namespace SS14.Shared.GameObjects.Systems
     /// <summary>
     ///     A subsystem that acts on all components of a type at once.
     /// </summary>
+    /// <remarks>
+    ///     This class is instantiated by the <c>EntitySystemManager</c>, and any IoC Dependencies will be resolved.
+    /// </remarks>
     [Reflect(false)]
     public abstract class EntitySystem : IEntityEventSubscriber, IEntitySystem
     {
-        protected readonly IEntityManager EntityManager;
-        protected readonly IEntitySystemManager EntitySystemManager;
-        protected readonly IEntityNetworkManager EntityNetworkManager;
-        protected IEntityQuery EntityQuery;
+        [Dependency] protected readonly IEntityManager EntityManager;
+        [Dependency] protected readonly IEntitySystemManager EntitySystemManager;
+        [Dependency] protected readonly IEntityNetworkManager EntityNetworkManager;
 
+        protected IEntityQuery EntityQuery;
         protected IEnumerable<IEntity> RelevantEntities => EntityManager.GetEntities(EntityQuery);
 
         private readonly Dictionary<Type, (CancellationTokenRegistration, TaskCompletionSource<EntitySystemMessage>)>
@@ -29,9 +32,9 @@ namespace SS14.Shared.GameObjects.Systems
 
         protected EntitySystem()
         {
-            EntityManager = IoCManager.Resolve<IEntityManager>();
-            EntitySystemManager = IoCManager.Resolve<IEntitySystemManager>();
-            EntityNetworkManager = IoCManager.Resolve<IEntityNetworkManager>();
+            //EntityManager = IoCManager.Resolve<IEntityManager>();
+            //EntitySystemManager = IoCManager.Resolve<IEntitySystemManager>();
+            //EntityNetworkManager = IoCManager.Resolve<IEntityNetworkManager>();
         }
 
         public virtual void RegisterMessageTypes()

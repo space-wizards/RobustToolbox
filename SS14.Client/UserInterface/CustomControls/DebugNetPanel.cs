@@ -15,17 +15,12 @@ namespace SS14.Client.UserInterface.CustomControls
     {
         // Float so I don't have to cast it to prevent integer division down below.
         const float ONE_KIBIBYTE = 1024;
-
-        [Dependency]
+        
         private readonly IClientNetManager NetManager;
-
-        [Dependency]
         private readonly IGameTiming GameTiming;
-        [Dependency]
         private readonly IResourceCache resourceCache;
-
+        
         private TimeSpan LastUpdate;
-
         private Label contents;
 
         // These are ints in the stats.
@@ -36,11 +31,23 @@ namespace SS14.Client.UserInterface.CustomControls
         private long LastSentPackets;
         private long LastReceivedPackets;
 
+        public DebugNetPanel(IClientNetManager netMan, IGameTiming gameTiming, IResourceCache resCache)
+        {
+            NetManager = netMan;
+            GameTiming = gameTiming;
+            resourceCache = resCache;
+
+            PerformLayout();
+        }
         protected override void Initialize()
         {
             base.Initialize();
-            IoCManager.InjectDependencies(this);
 
+            contents = new Label();
+        }
+
+        private void PerformLayout()
+        {
             SizeFlagsHorizontal = SizeFlags.None;
 
             contents = new Label

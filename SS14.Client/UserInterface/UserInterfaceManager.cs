@@ -1,19 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Client.Console;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Clyde;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Graphics;
+using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Input;
+using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.Player;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Client.Utility;
-using SS14.Shared.Configuration;
 using SS14.Shared.Input;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Resources;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
@@ -24,6 +31,14 @@ namespace SS14.Client.UserInterface
         [Dependency] private readonly ISceneTreeHolder _sceneTreeHolder;
         [Dependency] private readonly IInputManager _inputManager;
         [Dependency] private readonly IDisplayManager _displayManager;
+        [Dependency] private readonly IClientConsole _console;
+        [Dependency] private readonly IResourceManager _resourceManager;
+        [Dependency] private readonly IGameTiming _gameTiming;
+        [Dependency] private readonly IPlayerManager _playerManager;
+        [Dependency] private readonly IEyeManager _eyeManager;
+        [Dependency] private readonly IResourceCache _resourceCache;
+        [Dependency] private readonly IStateManager _stateManager;
+        [Dependency] private readonly IClientNetManager _netManager;
 
         public UITheme ThemeDefaults { get; private set; }
         public Stylesheet Stylesheet { get; set; }
@@ -58,10 +73,11 @@ namespace SS14.Client.UserInterface
 
             _initializeCommon();
 
-            DebugConsole = new DebugConsole();
+            DebugConsole = new DebugConsole(_console, _resourceManager);
             RootControl.AddChild(DebugConsole);
 
-            _debugMonitors = new DebugMonitors();
+            _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager,
+                _resourceCache, _stateManager, _displayManager, _netManager);
             RootControl.AddChild(_debugMonitors);
 
             _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugMonitors,

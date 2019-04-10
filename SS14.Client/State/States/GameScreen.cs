@@ -1,5 +1,4 @@
-﻿using SS14.Client.Console;
-using SS14.Client.Input;
+﻿using SS14.Client.Input;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Graphics.ClientEye;
@@ -10,7 +9,6 @@ using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Input;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using System.Collections.Generic;
@@ -23,34 +21,24 @@ namespace SS14.Client.State.States
 {
     // OH GOD.
     // Ok actually it's fine.
+    // Instantiated dynamically through the StateManager, Dependencies will be resolved.
     public sealed partial class GameScreen : State
     {
-        [Dependency]
-        readonly IClientEntityManager _entityManager;
-        [Dependency]
-        readonly IComponentManager _componentManager;
-        [Dependency]
-        readonly IInputManager inputManager;
-        [Dependency]
-        readonly IPlayerManager playerManager;
-        [Dependency]
-        readonly IUserInterfaceManager userInterfaceManager;
-        [Dependency]
-        readonly IPlacementManager placementManager;
-        [Dependency]
-        readonly IEyeManager eyeManager;
-        [Dependency]
-        private readonly IEntitySystemManager entitySystemManager;
-        [Dependency]
-        private readonly IGameTiming timing;
+        [Dependency] private readonly IClientEntityManager _entityManager;
+        [Dependency] private readonly IComponentManager _componentManager;
+        [Dependency] private readonly IInputManager inputManager;
+        [Dependency] private readonly IPlayerManager playerManager;
+        [Dependency] private readonly IUserInterfaceManager userInterfaceManager;
+        [Dependency] private readonly IPlacementManager placementManager;
+        [Dependency] private readonly IEyeManager eyeManager;
+        [Dependency] private readonly IEntitySystemManager entitySystemManager;
+        [Dependency] private readonly IGameTiming timing;
 
         private EscapeMenu escapeMenu;
         private IEntity lastHoveredEntity;
 
         public override void Startup()
         {
-            IoCManager.InjectDependencies(this);
-
             inputManager.KeyBindStateChanged += OnKeyBindStateChanged;
 
             escapeMenu = new EscapeMenu

@@ -28,12 +28,12 @@ namespace SS14.Client.ViewVariables
         {
             _viewVariablesManager = viewVars;
             _resourceCache = resourceCache;
+
+            PerformLayout();
         }
 
-        protected override void Initialize()
+        private void PerformLayout()
         {
-            base.Initialize();
-
             MouseFilter = MouseFilterMode.Stop;
             ToolTip = "Click to expand";
             CustomMinimumSize = new Vector2(0, 25);

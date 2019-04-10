@@ -1,16 +1,9 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using SS14.Client.Graphics;
+﻿using System.Collections.Generic;
 using SS14.Client.Interfaces.ResourceManagement;
-using SS14.Client.ResourceManagement;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
-using SS14.Client.ViewVariables.Editors;
 using SS14.Client.ViewVariables.Traits;
-using SS14.Shared.IoC;
-using SS14.Shared.Utility;
 using SS14.Shared.ViewVariables;
 
 namespace SS14.Client.ViewVariables.Instances
@@ -18,16 +11,15 @@ namespace SS14.Client.ViewVariables.Instances
     internal class ViewVariablesInstanceObject : ViewVariablesInstance
     {
         private TabContainer _tabs;
-        private int _tabCount = 0;
+        private int _tabCount;
 
         private readonly List<ViewVariablesTrait> _traits = new List<ViewVariablesTrait>();
 
         public ViewVariablesRemoteSession Session { get; private set; }
         public object Object { get; private set; }
 
-        public ViewVariablesInstanceObject(IViewVariablesManagerInternal vvm) : base(vvm)
-        {
-        }
+        public ViewVariablesInstanceObject(IViewVariablesManagerInternal vvm, IResourceCache resCache)
+            : base(vvm, resCache) { }
 
         public override void Initialize(SS14Window window, object obj)
         {
@@ -113,12 +105,12 @@ namespace SS14.Client.ViewVariables.Instances
             }
         }
 
-        private static List<ViewVariablesTrait> TraitsFor(ICollection<object> traitData)
+        private List<ViewVariablesTrait> TraitsFor(ICollection<object> traitData)
         {
             var list = new List<ViewVariablesTrait>(traitData.Count);
             if (traitData.Contains(ViewVariablesTraits.Members))
             {
-                list.Add(new ViewVariablesTraitMembers());
+                list.Add(new ViewVariablesTraitMembers(ViewVariablesManager, _resourceCache));
             }
 
             if (traitData.Contains(ViewVariablesTraits.Enumerable))

@@ -104,7 +104,7 @@ namespace SS14.Shared.Timing
         public uint CurFrame { get; set; } = 1;
 
         /// <inheritdoc />
-        public bool FastForward { get; set; }
+        public float TickTimingAdjustment { get; set; } = 0;
 
         /// <summary>
         ///     Ends the 'lap' of the timer, updating frame time info.

@@ -83,12 +83,14 @@ namespace SS14.Shared.Interfaces.Timing
         TimeSpan TickRemainder { get; set; }
 
         /// <summary>
-        /// If the client simulation has lagged and the states are backed up in the queue, the
-        /// the RealTime between ticks needs to temporarily increase to clean out the queue. This allows the
-        /// client to catch up with the server, otherwise it will forever run behind the server.
-        /// Note that this does no change any in-simulation timing.
+        ///     If the client clock is a little behind or ahead of the server, you can
+        ///     use the to adjust the timing of the clock speed. The default value is 0,
+        ///     and you can run the clock from -1 (almost stopped) to 1 (almost no delay).
+        ///     This has no effect on in-simulation timing, and only changes the speed at which
+        ///     the simulation progresses in relation to Real time. Don't mess with this unless
+        ///     you know what you are doing. DO NOT TOUCH THIS ON SERVER.
         /// </summary>
-        bool FastForward { get; set; }
+        float TickTimingAdjustment { get; set; }
 
         /// <summary>
         ///     Ends the 'lap' of the timer, updating frame time info.

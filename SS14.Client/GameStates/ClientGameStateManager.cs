@@ -119,37 +119,31 @@ namespace SS14.Client.GameStates
 
         public void ApplyGameState()
         {
+            var bufSz = _config.GetCVar<int>("net.state_buffer");
+            bufSz = bufSz < 0 ? 0 : bufSz; // min bound, < 0 makes no sense
+            var targetBufferSize = 3 + bufSz; // absolute minimum is 3 states in buffer for the system to work (last, cur, next)
+            
             //TODO: completely skip this tick and freeze the sim if false
-            if(CalculateNextStates(_timing.CurTick, out var curState, out var nextState))
+            if (CalculateNextStates(_timing.CurTick, out var curState, out var nextState, targetBufferSize))
             {
                 Logger.DebugS("net.state", $"Applying State:  ext={curState.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
                 ApplyGameState(curState, nextState);
             }
 
-            // detect that we have too many states in the buffer, and speed up the clock if needed
-            // CalcNextState should have just cleaned out any old states, so the buffer contains [t-1(last), t+0(cur), t+1(next), t+2, t+3, ..., t+n]
-            var ratio = _config.GetCVar<int>("net.state_buffer");
-            ratio = ratio < 0 ? 0 : ratio; // min bound, < 0 makes no sense
-
-            if(_stateBuffer.Count > 3 + ratio)
+            if (!_waitingForFull)
             {
-                _timing.FastForward = true;
+                // This will slightly speed up or slow down the client tickrate based on the contents of the buffer.
+                // CalcNextState should have just cleaned out any old states, so the buffer contains [t-1(last), t+0(cur), t+1(next), t+2, t+3, ..., t+n]
+                // we can use this info to properly time our tickrate so it does not run fast or slow compared to the server.
+                _timing.TickTimingAdjustment = (_stateBuffer.Count - (float) targetBufferSize) * 0.10f;
             }
-            else if (_stateBuffer.Count <= 3 + ratio) // absolute minimum is 3 states in buffer for the system to work (last, cur, next)
+            else
             {
-                _timing.FastForward = false;
-
-                if (!_waitingForFull && _stateBuffer.Count < 3 + ratio)
-                {
-                    // TODO: This is really bad, it causes the view and player to jerk back every so often. Come up with a better solution.
-                    // we are ahead of the target buffer size, delay a tick by replaying the last one
-                    // hopefully a new state will get processed soon!
-                    _timing.CurTick = new GameTick(_timing.CurTick.Value - 1);
-                }
+                _timing.TickTimingAdjustment = 0f;
             }
         }
 
-        private bool CalculateNextStates(GameTick curTick, out GameState curState, out GameState nextState)
+        private bool CalculateNextStates(GameTick curTick, out GameState curState, out GameState nextState, int targetBufferSize)
         {
             if (_waitingForFull)
             {
@@ -157,13 +151,10 @@ namespace SS14.Client.GameStates
                 {
                     Logger.DebugS("net", $"Resync CurTick to: {_lastFullState.ToSequence}");
                     curTick = _timing.CurTick = _lastFullState.ToSequence;
-                }
 
-                var nextTick = new GameTick(curTick.Value + 1);
-
-                // we are waiting to get a full state, and the next state
-                if (_lastFullState != null)
-                {
+                    // look for the next state
+                    var lastTick = new GameTick(curTick.Value - 1);
+                    var nextTick = new GameTick(curTick.Value + 1);
                     nextState = null;
                     for (var i = 0; i < _stateBuffer.Count; i++)
                     {
@@ -171,11 +162,16 @@ namespace SS14.Client.GameStates
                         if (state.ToSequence == nextTick)
                         {
                             nextState = state;
-                            break;
+                        }
+                        else if (state.ToSequence < lastTick) // remove any old states we find to keep the buffer clean
+                        {
+                            _stateBuffer.RemoveSwap(i);
+                            i--;
                         }
                     }
 
-                    if (nextState != null)
+                    // we let the buffer fill up before starting to tick
+                    if (nextState != null && _stateBuffer.Count >= targetBufferSize)
                     {
                         curState = _lastFullState;
                         _waitingForFull = false;

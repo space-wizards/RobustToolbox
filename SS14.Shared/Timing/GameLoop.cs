@@ -4,6 +4,7 @@ using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Log;
 using SS14.Shared.Exceptions;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 
 namespace SS14.Shared.Timing
 {
@@ -91,8 +92,8 @@ namespace SS14.Shared.Timing
                         _lastKeepUp = _timing.RealTime;
                     }
                 }
+                
                 _timing.StartFrame();
-
                 realFrameEvent.SetDeltaSeconds((float)_timing.RealFrameTime.TotalSeconds);
 
                 try
@@ -105,21 +106,14 @@ namespace SS14.Shared.Timing
                     _runtimeLog.LogException(exp, "GameLoop Input");
                 }
                 _timing.InSimulation = true;
+                var tickPeriod = CalcTickPeriod();
 
-                var extraTick = _timing.FastForward;
 
                 // run the simulation for every accumulated tick
-                while (accumulator >= _timing.TickPeriod)
+                while (accumulator >= tickPeriod)
                 {
-                    if(!extraTick)
-                    {
-                        accumulator -= _timing.TickPeriod;
-                        _lastTick += _timing.TickPeriod;
-                    }
-                    else
-                    {
-                        extraTick = false;
-                    }
+                    accumulator -= tickPeriod;
+                    _lastTick += tickPeriod;
 
                     // only run the simulation if unpaused, but still use up the accumulated time
                     if (_timing.Paused)
@@ -140,6 +134,7 @@ namespace SS14.Shared.Timing
                     }
 #endif
                     _timing.CurTick = new GameTick(_timing.CurTick.Value + 1);
+                    tickPeriod = CalcTickPeriod();
 
                     if (SingleStep)
                         _timing.Paused = true;
@@ -177,6 +172,14 @@ namespace SS14.Shared.Timing
                 if (SleepMode != SleepMode.None)
                     Thread.Sleep((int)SleepMode);
             }
+        }
+
+        private TimeSpan CalcTickPeriod()
+        {
+            // ranges from -1 to 1, with 0 being 'default'
+            var ratio = FloatMath.Clamp(_timing.TickTimingAdjustment, -0.99f, 0.99f);
+            var diff = TimeSpan.FromTicks((long) (_timing.TickPeriod.Ticks * ratio));
+            return _timing.TickPeriod - diff;
         }
     }
 

@@ -1,10 +1,8 @@
-﻿using System.Linq;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Physics;
-using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
@@ -81,8 +79,6 @@ namespace SS14.Server.GameObjects
                 _anchored = value;
             }
         }
-
-        private IPhysicsManager _physicsManager => IoCManager.Resolve<IPhysicsManager>();
 
         /// <inheritdoc />
         public override void Initialize()

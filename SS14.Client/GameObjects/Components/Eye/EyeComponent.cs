@@ -16,7 +16,7 @@ namespace SS14.Client.GameObjects
         private Eye eye;
 
         // Horrible hack to get around ordering issues.
-        private bool setCurrentOnInitialize = false;
+        private bool setCurrentOnInitialize;
         private Vector2 setZoomOnInitialize = Vector2.One;
         private Vector2 offset = Vector2.Zero;
 

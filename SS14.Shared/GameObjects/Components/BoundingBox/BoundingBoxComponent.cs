@@ -1,5 +1,4 @@
 ﻿using System;
-using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
 using SS14.Shared.ViewVariables;

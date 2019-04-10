@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Placement;
+using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
@@ -18,6 +19,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         [Dependency] private readonly IPlacementManager placementManager;
         [Dependency] private readonly IPrototypeManager prototypeManager;
+        [Dependency] private readonly IResourceCache resourceCache;
 
         private Control HSplitContainer;
         private Control PrototypeList;
@@ -158,7 +160,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 button.ActualButton.OnToggled += OnItemButtonToggled;
                 container.GetChild<Label>("Label").Text = prototype.Name;
 
-                var tex = IconComponent.GetPrototypeIcon(prototype);
+                var tex = IconComponent.GetPrototypeIcon(prototype, resourceCache);
                 var rect = container.GetChild("TextureWrap").GetChild<TextureRect>("TextureRect");
                 if (tex != null)
                 {

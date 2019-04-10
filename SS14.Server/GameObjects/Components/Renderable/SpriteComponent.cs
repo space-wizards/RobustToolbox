@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
@@ -9,7 +8,6 @@ using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
 using SS14.Shared.Utility;
 using SS14.Shared.ViewVariables;
-using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {

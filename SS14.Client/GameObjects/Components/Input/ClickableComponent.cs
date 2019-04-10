@@ -1,5 +1,4 @@
-﻿using SS14.Client.Graphics.Shaders;
-using SS14.Client.Interfaces.GameObjects;
+﻿using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Input;

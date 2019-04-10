@@ -9,6 +9,7 @@ using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.Graphics.Lighting;
+using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
@@ -27,6 +28,7 @@ using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
+using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using SS14.Shared.ViewVariables;
 
@@ -175,7 +177,7 @@ namespace SS14.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            var window = new EntitySpawnWindow();
+            var window = new EntitySpawnWindow(IoCManager.Resolve<IPlacementManager>(), IoCManager.Resolve<IPrototypeManager>(), IoCManager.Resolve<IResourceCache>());
             window.AddToScreen();
             return false;
         }

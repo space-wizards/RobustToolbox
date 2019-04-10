@@ -13,9 +13,13 @@ using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Client.Console;
 using SS14.Client.GameObjects.EntitySystems;
+using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Player;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Timing;
+using SS14.Shared.Prototypes;
 
 namespace SS14.Client.State.States
 {
@@ -33,6 +37,10 @@ namespace SS14.Client.State.States
         [Dependency] private readonly IEyeManager eyeManager;
         [Dependency] private readonly IEntitySystemManager entitySystemManager;
         [Dependency] private readonly IGameTiming timing;
+        [Dependency] private readonly IClientConsole _console;
+        [Dependency] private readonly IPrototypeManager prototypeManager;
+        [Dependency] private readonly IResourceCache resourceCache;
+        [Dependency] private readonly ITileDefinitionManager __tileDefinitionManager;
 
         private EscapeMenu escapeMenu;
         private IEntity lastHoveredEntity;
@@ -41,7 +49,7 @@ namespace SS14.Client.State.States
         {
             inputManager.KeyBindStateChanged += OnKeyBindStateChanged;
 
-            escapeMenu = new EscapeMenu
+            escapeMenu = new EscapeMenu(_console, __tileDefinitionManager, placementManager, prototypeManager, resourceCache)
             {
                 Visible = false
             };

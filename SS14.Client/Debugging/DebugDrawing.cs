@@ -1,16 +1,13 @@
 ﻿using SS14.Client.GameObjects;
-using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Graphics.Overlays;
 using SS14.Client.Graphics.Shaders;
 using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Graphics.Overlays;
-using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
 
@@ -18,9 +15,12 @@ namespace SS14.Client.Debugging
 {
     public class DebugDrawing : IDebugDrawing
     {
-        [Dependency] readonly IOverlayManager _overlayManager;
+        [Dependency] private readonly IOverlayManager _overlayManager;
+        [Dependency] private readonly IComponentManager _componentManager;
+        [Dependency] private readonly IEyeManager _eyeManager;
+        [Dependency] private readonly IPrototypeManager _prototypeManager;
 
-        private bool _debugColliders = false;
+        private bool _debugColliders;
 
         public bool DebugColliders
         {
@@ -36,7 +36,7 @@ namespace SS14.Client.Debugging
 
                 if (value)
                 {
-                    _overlayManager.AddOverlay(new CollidableOverlay());
+                    _overlayManager.AddOverlay(new CollidableOverlay(_componentManager, _eyeManager, _prototypeManager));
                 }
                 else
                 {
@@ -47,15 +47,19 @@ namespace SS14.Client.Debugging
 
         private class CollidableOverlay : Overlay
         {
-            [Dependency] private readonly IComponentManager _componentManager;
-            [Dependency] private readonly IEyeManager _eyeManager;
-            [Dependency] private readonly IPrototypeManager _prototypeManager;
+            private readonly IComponentManager _componentManager;
+            private readonly IEyeManager _eyeManager;
+            private readonly IPrototypeManager _prototypeManager;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public CollidableOverlay() : base(nameof(CollidableOverlay))
+            public CollidableOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan)
+                : base(nameof(CollidableOverlay))
             {
-                IoCManager.InjectDependencies(this);
+                _componentManager = compMan;
+                _eyeManager = eyeMan;
+                _prototypeManager = protoMan;
+
                 Shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
             }
 

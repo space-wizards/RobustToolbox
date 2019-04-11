@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Maths;
@@ -30,6 +30,7 @@ namespace SS14.Shared.GameObjects.Components.Renderable
             public readonly bool Directional;
             public readonly string BaseRsiPath;
             public readonly List<PrototypeLayerData> Layers;
+            public readonly uint RenderOrder;
 
             public SpriteComponentState(
                 bool visible,
@@ -40,7 +41,8 @@ namespace SS14.Shared.GameObjects.Components.Renderable
                 Color color,
                 bool directional,
                 string baseRsiPath,
-                List<PrototypeLayerData> layers)
+                List<PrototypeLayerData> layers,
+                uint renderOrder)
                 : base(NetIDs.SPRITE)
             {
                 Visible = visible;
@@ -52,6 +54,7 @@ namespace SS14.Shared.GameObjects.Components.Renderable
                 Directional = directional;
                 BaseRsiPath = baseRsiPath;
                 Layers = layers;
+                RenderOrder = renderOrder;
             }
         }
 

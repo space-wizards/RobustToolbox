@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace SS14.Shared.Maths
@@ -26,6 +26,11 @@ namespace SS14.Shared.Maths
         {
             var index = random.Next(list.Count);
             return list[index];
+        }
+
+        public static float NextFloat(this Random random)
+        {
+            return (float)random.NextDouble();
         }
     }
 }

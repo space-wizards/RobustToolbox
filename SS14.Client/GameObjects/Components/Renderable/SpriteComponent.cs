@@ -220,6 +220,10 @@ namespace SS14.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)] RSI.State.Direction LastDir;
         [ViewVariables(VVAccess.ReadWrite)] private bool _recalcDirections = false;
 
+        public uint _renderOrder;
+        [ViewVariables(VVAccess.ReadWrite)]
+        public uint RenderOrder { get => _renderOrder; set => _renderOrder = value; }
+
         int NextMirrorKey;
 
         // Do not directly store mirror instances, so that they can be picked up by the GC is not disposed correctly.
@@ -1580,6 +1584,7 @@ namespace SS14.Client.GameObjects
             Offset = thestate.Offset;
             Color = thestate.Color;
             Directional = thestate.Directional;
+            RenderOrder = thestate.RenderOrder;
 
             if (thestate.BaseRsiPath != null && BaseRSI != null)
             {

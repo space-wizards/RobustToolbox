@@ -1,12 +1,19 @@
-﻿using SS14.Client.Utility;
+﻿using System.Collections.Generic;
+using JetBrains.Annotations;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Drawing;
+using SS14.Client.Utility;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.RichTextLabel))]
-    internal class RichTextLabel : Control
+    public class RichTextLabel : Control
     {
-        public RichTextLabel() : base()
+        private FormattedMessage _message;
+        private RichTextEntry _entry;
+
+        public RichTextLabel()
         {
         }
 
@@ -14,97 +21,66 @@ namespace SS14.Client.UserInterface.Controls
         {
         }
 
-        internal RichTextLabel(Godot.RichTextLabel button) : base(button)
+        public void SetMessage(FormattedMessage message)
         {
+            _message = message;
+            _entry = new RichTextEntry(_message);
+            _updateEntry();
         }
 
-        private protected override Godot.Control SpawnSceneControl()
+        protected override Vector2 CalculateMinimumSize()
         {
-            return new Godot.RichTextLabel();
-        }
-
-        public bool BBCodeEnabled
-        {
-            get => GameController.OnGodot ? (bool)SceneControl.Get("bbcode_enabled") : default;
-            set
+            if (_message == null)
             {
-                if (GameController.OnGodot)
+                return Vector2.Zero;
+            }
+
+            return (0, _entry.Height);
+        }
+
+        private void _updateEntry()
+        {
+            var font = _getFont();
+
+            if (_message != null)
+            {
+                var oldHeight = _entry.Height;
+                _entry.Update(font, Width);
+                if (oldHeight != _entry.Height)
                 {
-                    SceneControl.Set("bbcode_enabled", value);
+                    MinimumSizeChanged();
                 }
             }
         }
 
-        public void Clear()
+        protected internal override void Draw(DrawingHandleScreen handle)
         {
-            if (GameController.OnGodot)
+            base.Draw(handle);
+
+            if (GameController.OnGodot || _message == null)
             {
-                SceneControl.Call("clear");
+                return;
             }
+
+            _entry.Draw(handle, _getFont(), SizeBox, 0, new Stack<FormattedMessage.Tag>());
         }
 
-        public Godot.Error AppendBBCode(string code)
+        protected override void Resized()
         {
-            if (GameController.OnGodot)
-            {
-                return (Godot.Error)SceneControl.Call("append_bbcode", code);
-            }
-            else
-            {
-                return default;
-            }
+            base.Resized();
+
+            _updateEntry();
         }
 
-        public void PushColor(Color color)
+        [Pure]
+        private Font _getFont()
         {
-            if (GameController.OnGodot)
+            if (TryGetStyleProperty("font", out Font font))
             {
-                SceneControl.Call("push_color", color.Convert());
+                return font;
             }
-        }
 
-        public void AddText(string text)
-        {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("add_text", text);
-            }
-        }
-
-        public void Pop()
-        {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("pop");
-            }
-        }
-
-        public void NewLine()
-        {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("newline");
-            }
-        }
-
-        public bool ScrollFollowing
-        {
-            get => GameController.OnGodot ? (bool)SceneControl.Call("is_scroll_following") : default;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Call("set_scroll_follow", value);
-                }
-            }
-        }
-
-        public void RemoveLine(int line)
-        {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("remove_line", line);
-            }
+            return UserInterfaceManager.ThemeDefaults.DefaultFont;
         }
     }
 }

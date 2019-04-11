@@ -229,6 +229,7 @@
     <Compile Include="UserInterface\Controls\CheckButton.cs" />
     <Compile Include="UserInterface\Controls\GridContainer.cs" />
     <Compile Include="UserInterface\Controls\HScrollBar.cs" />
+    <Compile Include="UserInterface\Controls\HSplitContainer.cs" />
     <Compile Include="UserInterface\Controls\MarginContainer.cs" />
     <Compile Include="UserInterface\Controls\OutputPanel.cs" />
     <Compile Include="UserInterface\Controls\PanelContainer.cs" />
@@ -236,13 +237,16 @@
     <Compile Include="UserInterface\Controls\Range.cs" />
     <Compile Include="UserInterface\Controls\ScrollBar.cs" />
     <Compile Include="UserInterface\Controls\ScrollContainer.cs" />
+    <Compile Include="UserInterface\Controls\SplitContainer.cs" />
     <Compile Include="UserInterface\Controls\SpriteView.cs" />
     <Compile Include="UserInterface\Controls\TabContainer.cs" />
     <Compile Include="UserInterface\Controls\VScrollBar.cs" />
+    <Compile Include="UserInterface\Controls\VSplitContainer.cs" />
     <Compile Include="UserInterface\CustomControls\Chatbox.cs" />
     <Compile Include="UserInterface\CustomControls\DebugTimePanel.cs" />
     <Compile Include="UserInterface\CustomControls\FrameGraph.cs" />
     <Compile Include="UserInterface\CustomControls\Tooltip.cs" />
+    <Compile Include="UserInterface\RichTextEntry.cs" />
     <Compile Include="UserInterface\Stylesheet.cs" />
     <Compile Include="UserInterface\UITheme.cs" />
     <Compile Include="Utility\DirExt.cs" />
@@ -378,7 +382,6 @@
     <Compile Include="UserInterface\Controls\ItemList.cs" />
     <Compile Include="Placement\PlacementHijack.cs" />
     <Compile Include="Utility\SpriteSpecifierExt.cs" />
-    <Compile Include="Utility\FormattedMessage.cs" />
     <Content Include="$(SolutionDir)\packages\opentk\3.0.1\content\OpenTK.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>false</Visible>

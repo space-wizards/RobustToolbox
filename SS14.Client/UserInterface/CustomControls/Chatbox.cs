@@ -53,7 +53,7 @@ namespace SS14.Client.UserInterface.CustomControls
             Input = GetChild<LineEdit>("VBoxContainer/Input");
             Input.OnKeyDown += InputKeyDown;
             Input.OnTextEntered += Input_OnTextEntered;
-            GetChild<RichTextLabel>("VBoxContainer/Contents").Dispose();
+            GetChild<Control>("VBoxContainer/Contents").Dispose();
 
             contents = new OutputPanel
             {

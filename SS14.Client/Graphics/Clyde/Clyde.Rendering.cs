@@ -184,9 +184,11 @@ namespace SS14.Client.Graphics.Clyde
             _currentSpace = CurrentSpace.WorldSpace;
             _setProjViewMatrices(_combinedDefaultMatricesWorld);
 
+            var map = _eyeManager.CurrentMap;
+
             _pushDebugGroupMaybe(DbgGroupLighting);
 
-            _drawLights();
+            _drawLights(map);
 
             _popDebugGroupMaybe();
 
@@ -202,7 +204,6 @@ namespace SS14.Client.Graphics.Clyde
             var drawingHandle = _renderHandle.CreateHandleWorld();
 
             var entityList = new List<SpriteComponent>(100);
-            var map = _eyeManager.CurrentMap;
 
             // Draw entities.
             foreach (var entity in _entityManager.GetEntities())
@@ -280,7 +281,7 @@ namespace SS14.Client.Graphics.Clyde
             _window.SwapBuffers();
         }
 
-        private void _drawLights()
+        private void _drawLights(MapId map)
         {
             if (!_lightManager.Enabled)
             {
@@ -316,7 +317,7 @@ namespace SS14.Client.Graphics.Clyde
 
             foreach (var component in _componentManager.GetAllComponents<PointLightComponent>())
             {
-                if (component.State != LightState.On)
+                if (component.State != LightState.On || component.Owner.Transform.MapID != map)
                 {
                     continue;
                 }

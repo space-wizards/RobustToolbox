@@ -194,12 +194,14 @@ namespace SS14.Server
             //identical code in game controller for client
             if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
             {
-                Logger.Warning($"[ENG] Could not load any Shared DLL.");
+                Logger.FatalS("eng", "Could not load any Shared DLL.");
+                return true;
             }
 
             if (!AssemblyLoader.TryLoadAssembly<GameServer>(_resources, $"Content.Server"))
             {
-                Logger.Warning($"[ENG] Could not load any Server DLL.");
+                Logger.FatalS("eng", "Could not load any Server DLL.");
+                return true;
             }
 
             // HAS to happen after content gets loaded.

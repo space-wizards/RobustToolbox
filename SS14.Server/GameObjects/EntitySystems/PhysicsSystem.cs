@@ -49,6 +49,11 @@ namespace SS14.Server.GameObjects.EntitySystems
             {
                 return;
             }
+            if (transform.Parent != null)
+            {
+                transform.Parent.Owner.SendMessage(transform, new RelayMovementEntityMessage(entity));
+                return;
+            }
 
             //rotate entity
             float angImpulse = 0;

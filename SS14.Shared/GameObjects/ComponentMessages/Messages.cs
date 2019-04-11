@@ -55,4 +55,14 @@ namespace SS14.Shared.GameObjects
             Click = click;
         }
     }
+
+    public class RelayMovementEntityMessage : ComponentMessage
+    {
+        public IEntity Entity { get; set; }
+
+        public RelayMovementEntityMessage(IEntity entity)
+        {
+            Entity = entity;
+        }
+    }
 }

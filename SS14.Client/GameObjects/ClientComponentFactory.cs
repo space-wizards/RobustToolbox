@@ -7,6 +7,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.GameObjects.Components.UserInterface;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Interfaces.Physics;
 
 namespace SS14.Client.GameObjects
 {
@@ -15,6 +16,7 @@ namespace SS14.Client.GameObjects
         public ClientComponentFactory()
         {
             Register<CollidableComponent>();
+            RegisterReference<CollidableComponent, ICollidable>();
             RegisterReference<CollidableComponent, ICollidableComponent>();
             Register<IconComponent>();
             RegisterIgnore("KeyBindingInput");

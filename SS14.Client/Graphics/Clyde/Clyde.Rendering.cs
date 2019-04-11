@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -225,7 +225,7 @@ namespace SS14.Client.Graphics.Clyde
                     return cmp;
                 }
 
-                return a.Owner.Uid.CompareTo(b.Owner.Uid);
+                return a.Owner.LastModifiedTick.CompareTo(b.Owner.LastModifiedTick);
             });
 
             foreach (var entity in entityList)

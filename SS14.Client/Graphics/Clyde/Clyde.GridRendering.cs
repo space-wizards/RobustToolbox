@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL4;
@@ -238,56 +238,4 @@ namespace SS14.Client.Graphics.Clyde
             public int TileCount;
         }
     }
-
-    /*
-                ushort nth = 0;
-                var model = Matrix3.Identity;
-                model.R0C2 = grid.WorldPosition.X;
-                model.R1C2 = grid.WorldPosition.Y;
-                gridProgram.SetUniform(UniModelMatrix, model);
-
-                foreach (var tileRef in grid.GetAllTiles())
-                {
-                    var vIdx = nth * 4;
-                    BatchVertexData[vIdx + 0] = new Vertex2D(tileRef.X + 1, tileRef.Y, 1, 0, 0);
-                    BatchVertexData[vIdx + 1] = new Vertex2D(tileRef.X, tileRef.Y, 0, 0, 0);
-                    BatchVertexData[vIdx + 2] = new Vertex2D(tileRef.X + 1, tileRef.Y - 1f, 1, 1, 0);
-                    BatchVertexData[vIdx + 3] = new Vertex2D(tileRef.X, tileRef.Y - 1f, 0, 1, 0);
-                    var nIdx = nth * 5;
-                    var tIdx = (ushort) (nth * 4);
-                    BatchIndexData[nIdx + 0] = tIdx;
-                    BatchIndexData[nIdx + 1] = (ushort) (tIdx + 1);
-                    BatchIndexData[nIdx + 2] = (ushort) (tIdx + 2);
-                    BatchIndexData[nIdx + 3] = (ushort) (tIdx + 3);
-                    // Use primitive restart to shave off one single index per quad.
-                    // Whew.
-                    BatchIndexData[nIdx + 4] = ushort.MaxValue;
-                    if (++nth >= MaxBatchQuads)
-                    {
-                        throw new NotImplementedException("Can't render grids that are that big yet sorry.");
-                    }
-                }
-
-                if (nth == 0)
-                {
-                    continue;
-                }
-
-                BatchVBO.Use();
-                BatchEBO.Use();
-                var vertexData = new Span<Vertex2D>(BatchVertexData, 0, nth * 4);
-                var indexData = new Span<ushort>(BatchIndexData, 0, nth * 5);
-                if (_reallocateBuffers)
-                {
-                    BatchVBO.Reallocate(vertexData);
-                    BatchEBO.Reallocate(indexData);
-                }
-                else
-                {
-                    BatchVBO.WriteSubData(vertexData);
-                    BatchEBO.WriteSubData(indexData);
-                }
-
-                GL.DrawElements(PrimitiveType.TriangleStrip, nth * 5, DrawElementsType.UnsignedShort, 0);
-     */
 }

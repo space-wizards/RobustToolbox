@@ -225,7 +225,7 @@ namespace SS14.Client.Graphics.Clyde
                     return cmp;
                 }
 
-                return a.Owner.LastModifiedTick.CompareTo(b.Owner.LastModifiedTick);
+                return a.Owner.Transform.LastModifiedTick.CompareTo(b.Owner.Transform.LastModifiedTick);
             });
 
             foreach (var entity in entityList)

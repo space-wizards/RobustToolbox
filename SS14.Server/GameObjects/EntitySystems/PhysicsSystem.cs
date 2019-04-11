@@ -16,7 +16,6 @@ namespace SS14.Server.GameObjects.EntitySystems
         private IPauseManager _pauseManager;
         private IPhysicsManager _physicsManager;
         private const float Epsilon = 1.0e-6f;
-        private const float GlobalFriction = 0.01f;
 
         public PhysicsSystem()
         {
@@ -112,16 +111,6 @@ namespace SS14.Server.GameObjects.EntitySystems
         private static Vector2 CalculateMovement(PhysicsComponent velocity, float frameTime, IEntity entity)
         {
             var movement = velocity.LinearVelocity * frameTime;
-            //"space friction"
-            if (movement.LengthSquared > Epsilon)
-            {
-                movement -= movement * GlobalFriction;
-            }
-            else
-            {
-                return Vector2.Zero;
-            }
-
             //Check for collision
             if (movement.LengthSquared > Epsilon && entity.TryGetComponent(out CollidableComponent collider))
             {

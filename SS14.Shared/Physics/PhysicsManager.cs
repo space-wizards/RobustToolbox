@@ -71,8 +71,6 @@ namespace SS14.Shared.Physics
 
             var collided = TestSpecialCollisionAndBump(entity, bump, collisionmodifiers, collidedwith);
 
-            collidable.Bump(collidedwith);
-
             //TODO: This needs multi-grid support.
             return collided;
         }
@@ -117,16 +115,22 @@ namespace SS14.Shared.Physics
         {
             foreach (var body in _bodies)
             {
-                if(!body.CollisionEnabled)
+                if (!body.CollisionEnabled)
+                {
                     continue;
+                }
 
                 if ((collidable.CollisionMask & body.CollisionLayer) == 0x0)
+                {
                     continue;
+                }
 
                 if (collidable.MapID != body.MapID ||
                     collidable == body ||
                     !colliderAABB.Intersects(body.WorldAABB))
+                {
                     continue;
+                }
 
                 results.Add(body);
             }

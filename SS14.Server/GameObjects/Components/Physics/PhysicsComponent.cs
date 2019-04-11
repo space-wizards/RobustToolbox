@@ -169,6 +169,6 @@ namespace SS14.Server.GameObjects
             return velocityConsumers.Contains(physicsComponent);
         }
 
-        public bool DidMovement { get; set; } = false;
+        public bool DidMovementCalculations { get; set; } = false;
     }
 }

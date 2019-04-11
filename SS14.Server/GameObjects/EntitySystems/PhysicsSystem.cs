@@ -5,6 +5,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Systems;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
@@ -13,6 +14,7 @@ namespace SS14.Server.GameObjects.EntitySystems
     internal class PhysicsSystem : EntitySystem
     {
         private IPauseManager _pauseManager;
+        private IPhysicsManager _physicsManager;
         private const float Epsilon = 1.0e-6f;
         private const float GlobalFriction = 0.01f;
 
@@ -26,12 +28,14 @@ namespace SS14.Server.GameObjects.EntitySystems
             base.Initialize();
            
             _pauseManager = IoCManager.Resolve<IPauseManager>();
+            _physicsManager = IoCManager.Resolve<IPhysicsManager>();
         }
 
         /// <inheritdoc />
         public override void Update(float frameTime)
         {
             var entities = EntityManager.GetEntities(EntityQuery);
+            _physicsManager.BuildCollisionGrid();
             foreach (var entity in entities)
             {
                 if (_pauseManager.IsEntityPaused(entity))
@@ -40,14 +44,18 @@ namespace SS14.Server.GameObjects.EntitySystems
                 }
                 HandleMovement(entity, frameTime);
             }
+            foreach(var entity in entities)
+            {
+                DoMovement(entity, frameTime);
+            }
         }
 
         private static void HandleMovement(IEntity entity, float frameTime)
         {
             var velocity = entity.GetComponent<PhysicsComponent>();
-            if (velocity.DidMovement)
+            if (velocity.DidMovementCalculations)
             {
-                velocity.DidMovement = false;
+                velocity.DidMovementCalculations = false;
                 return;
             }
 
@@ -83,14 +91,14 @@ namespace SS14.Server.GameObjects.EntitySystems
             velocityConsumers.ForEach(velocityConsumer =>
             {
                 velocityConsumer.LinearVelocity = lowestMovement;
-                velocityConsumer.DidMovement = true;
-                DoMovement(velocityConsumer, velocityConsumer.Owner, frameTime);
+                velocityConsumer.DidMovementCalculations = true;
             });
-            velocity.DidMovement = false;
+            velocity.DidMovementCalculations = false;
         }
 
-        private static void DoMovement(PhysicsComponent velocity, IEntity entity, float frameTime)
+        private static void DoMovement(IEntity entity, float frameTime)
         {
+            var velocity = entity.GetComponent<PhysicsComponent>();
             float angImpulse = 0;
             if (velocity.AngularVelocity > Epsilon)
             {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
@@ -23,6 +24,7 @@ namespace SS14.Client.ViewVariables
         [Dependency] private readonly IClientNetManager _netManager;
         [Dependency] private readonly IResourceCache _resourceCache;
         [Dependency] private readonly IEntityManager _entityManager;
+        [Dependency] private readonly IDisplayManager _displayManager;
 
         private uint _nextReqId = 1;
 
@@ -187,7 +189,7 @@ namespace SS14.Client.ViewVariables
                 instance = new ViewVariablesInstanceObject(this, _resourceCache);
             }
 
-            var window = new SS14Window("VV") {Title = "View Variables"};
+            var window = new SS14Window(_displayManager, "VV") {Title = "View Variables"};
             instance.Initialize(window, obj);
             window.AddToScreen();
             window.OnClose += () => _closeInstance(instance, false);
@@ -196,7 +198,7 @@ namespace SS14.Client.ViewVariables
 
         public async void OpenVV(ViewVariablesObjectSelector selector)
         {
-            var window = new SS14Window("VV") {Title = "View Variables"};
+            var window = new SS14Window(_displayManager, "VV") {Title = "View Variables"};
             var loadingLabel = new Label {Text = "Retrieving remote object data from server..."};
             window.Contents.AddChild(loadingLabel);
             window.AddToScreen();

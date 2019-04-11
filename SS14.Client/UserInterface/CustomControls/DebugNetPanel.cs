@@ -5,7 +5,6 @@ using SS14.Client.ResourceManagement;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
-using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 

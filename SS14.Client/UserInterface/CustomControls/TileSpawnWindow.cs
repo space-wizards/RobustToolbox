@@ -5,6 +5,7 @@ using SS14.Shared.Interfaces.Map;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
@@ -22,7 +23,8 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private TileSpawnButton SelectedButton;
 
-        public TileSpawnWindow(ITileDefinitionManager tileDefinitionManager, IPlacementManager placementManager)
+        public TileSpawnWindow(ITileDefinitionManager tileDefinitionManager, IPlacementManager placementManager,
+            IDisplayManager displayManager) : base(displayManager)
         {
             __tileDefinitionManager = tileDefinitionManager;
             _placementManager = placementManager;

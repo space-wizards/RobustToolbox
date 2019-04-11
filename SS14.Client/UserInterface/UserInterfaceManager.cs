@@ -326,7 +326,8 @@ namespace SS14.Client.UserInterface
 
         public void Popup(string contents, string title = "Alert!")
         {
-            var popup = new SS14Window {Title = title};
+            var popup = new SS14Window(_displayManager)
+                {Title = title};
             popup.Contents.AddChild(new Label {Text = contents});
             popup.AddToScreen();
         }

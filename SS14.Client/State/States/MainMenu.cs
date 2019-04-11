@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using SS14.Client.Interfaces;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface;
@@ -31,6 +32,7 @@ namespace SS14.Client.State.States
         [Dependency] private readonly IConfigurationManager _configurationManager;
         [Dependency] private readonly IGameControllerProxy _controllerProxy;
         [Dependency] private readonly IResourceCache _resourceCache;
+        [Dependency] private readonly IDisplayManager _displayManager;
 
         private MainMenuControl _mainMenuControl;
         private OptionsMenu OptionsMenu;
@@ -53,7 +55,7 @@ namespace SS14.Client.State.States
 
             _client.RunLevelChanged += RunLevelChanged;
 
-            OptionsMenu = new OptionsMenu
+            OptionsMenu = new OptionsMenu(_displayManager, _configurationManager)
             {
                 Visible = false,
             };

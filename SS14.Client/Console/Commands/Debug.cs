@@ -8,6 +8,7 @@ using System.Text;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.Debugging;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.Graphics.Lighting;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.ResourceManagement;
@@ -177,7 +178,7 @@ namespace SS14.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            var window = new EntitySpawnWindow(IoCManager.Resolve<IPlacementManager>(), IoCManager.Resolve<IPrototypeManager>(), IoCManager.Resolve<IResourceCache>());
+            var window = new EntitySpawnWindow(IoCManager.Resolve<IDisplayManager>(), IoCManager.Resolve<IPlacementManager>(), IoCManager.Resolve<IPrototypeManager>(), IoCManager.Resolve<IResourceCache>());
             window.AddToScreen();
             return false;
         }
@@ -459,7 +460,7 @@ namespace SS14.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            var window = new SS14Window("UITest");
+            var window = new SS14Window(IoCManager.Resolve<IDisplayManager>(), "UITest");
             window.AddToScreen();
             var scroll = new ScrollContainer();
             window.Contents.AddChild(scroll);

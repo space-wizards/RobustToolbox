@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using SS14.Client.GameObjects;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.UserInterface.Controls;
@@ -47,7 +48,9 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private EntitySpawnButton SelectedButton;
 
-        public EntitySpawnWindow(IPlacementManager placementManager, IPrototypeManager prototypeManager, IResourceCache resourceCache)
+        public EntitySpawnWindow(IDisplayManager displayManager, IPlacementManager placementManager,
+            IPrototypeManager prototypeManager,
+            IResourceCache resourceCache) : base(displayManager)
         {
             this.placementManager = placementManager;
             this.prototypeManager = prototypeManager;

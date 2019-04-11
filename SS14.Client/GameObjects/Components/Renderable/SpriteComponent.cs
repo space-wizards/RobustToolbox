@@ -1584,7 +1584,7 @@ namespace SS14.Client.GameObjects
             Offset = thestate.Offset;
             Color = thestate.Color;
             Directional = thestate.Directional;
-            RenderOrder = RenderOrder;
+            RenderOrder = thestate.RenderOrder;
 
             if (thestate.BaseRsiPath != null && BaseRSI != null)
             {

@@ -72,7 +72,7 @@ namespace SS14.Client.UserInterface.CustomControls
             CommandBar.OnTextEntered += CommandEntered;
             CommandBar.OnTextChanged += CommandBarOnOnTextChanged;
 
-            console.AddString += (_, args) => AddLine(args.Text, args.Channel, args.Color);
+            console.AddString += (_, args) => AddLine(args.Text, args.Color);
             console.AddFormatted += (_, args) => AddFormattedLine(args.Message);
             console.ClearText += (_, args) => Clear();
 
@@ -123,7 +123,7 @@ namespace SS14.Client.UserInterface.CustomControls
             }
         }
 
-        public void AddLine(string text, ChatChannel channel, Color color)
+        public void AddLine(string text, Color color)
         {
             var formatted = new FormattedMessage(3);
             formatted.PushColor(color);
@@ -132,14 +132,9 @@ namespace SS14.Client.UserInterface.CustomControls
             AddFormattedLine(formatted);
         }
 
-        public void AddLine(string text, Color color)
-        {
-            AddLine(text, ChatChannel.Default, color);
-        }
-
         public void AddLine(string text)
         {
-            AddLine(text, ChatChannel.Default, Color.White);
+            AddLine(text, Color.White);
         }
 
         public void AddFormattedLine(FormattedMessage message)

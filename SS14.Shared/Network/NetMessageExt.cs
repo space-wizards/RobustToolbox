@@ -1,4 +1,5 @@
 using Lidgren.Network;
+using SS14.Shared.GameObjects;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 
@@ -32,6 +33,16 @@ namespace SS14.Shared.Network
         {
             message.Write(vector2.X);
             message.Write(vector2.Y);
+        }
+
+        public static EntityUid ReadEntityUid(this NetIncomingMessage message)
+        {
+            return new EntityUid(message.ReadInt32());
+        }
+
+        public static void Write(this NetOutgoingMessage message, EntityUid entityUid)
+        {
+            message.Write((int)entityUid);
         }
     }
 }

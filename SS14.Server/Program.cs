@@ -1,8 +1,6 @@
-﻿using SS14.Server.Chat;
-using SS14.Server.GameObjects;
+﻿using SS14.Server.GameObjects;
 using SS14.Server.GameStates;
 using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Maps;
@@ -124,7 +122,6 @@ namespace SS14.Server
             IoCManager.Register<IEntityManager, ServerEntityManager>();
             IoCManager.Register<IServerEntityManager, ServerEntityManager>();
             IoCManager.Register<IServerEntityManagerInternal, ServerEntityManager>();
-            IoCManager.Register<IChatManager, ChatManager>();
             IoCManager.Register<IServerNetManager, NetManager>();
             IoCManager.Register<IMapManager, MapManager>();
             IoCManager.Register<IPlacementManager, PlacementManager>();

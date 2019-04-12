@@ -21,13 +21,11 @@ namespace SS14.Client.Console
     {
         public string Text { get; }
         public Color Color { get; }
-        public ChatChannel Channel { get; }
 
-        public AddStringArgs(string text, Color color, ChatChannel channel)
+        public AddStringArgs(string text, Color color)
         {
             Text = text;
             Color = color;
-            Channel = channel;
         }
     }
 
@@ -41,7 +39,7 @@ namespace SS14.Client.Console
         }
     }
 
-    public class ClientConsole : IClientConsole, IDebugConsole
+    internal sealed class ClientConsole : IClientConsole, IDebugConsole
     {
         private static readonly Color MsgColor = new Color(65, 105, 225);
 
@@ -56,7 +54,7 @@ namespace SS14.Client.Console
         private bool _requestedCommands;
 
         /// <inheritdoc />
-        public virtual void Initialize()
+        public void Initialize()
         {
             _network.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, HandleConCmdReg);
             _network.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, HandleConCmdAck);
@@ -67,7 +65,7 @@ namespace SS14.Client.Console
         }
 
         /// <inheritdoc />
-        public virtual void Reset()
+        public void Reset()
         {
             _commands.Clear();
             _requestedCommands = false;
@@ -90,19 +88,14 @@ namespace SS14.Client.Console
 
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => _commands;
 
-        public void AddLine(string text, ChatChannel channel, Color color)
-        {
-            AddString?.Invoke(this, new AddStringArgs(text, color, channel));
-        }
-
         public void AddLine(string text, Color color)
         {
-            AddLine(text, ChatChannel.Default, color);
+            AddString?.Invoke(this, new AddStringArgs(text, color));
         }
 
         public void AddLine(string text)
         {
-            AddLine(text, ChatChannel.Default, Color.White);
+            AddLine(text, Color.White);
         }
 
         public void Clear()
@@ -116,7 +109,7 @@ namespace SS14.Client.Console
 
         private void HandleConCmdAck(MsgConCmdAck msg)
         {
-            AddLine("< " + msg.Text, ChatChannel.Default, MsgColor);
+            AddLine("< " + msg.Text, MsgColor);
         }
 
         private void HandleConCmdReg(MsgConCmdReg msg)
@@ -147,7 +140,7 @@ namespace SS14.Client.Console
                 return;
 
             // echo the command locally
-            AddLine("> " + text, ChatChannel.Default, Color.Lime);
+            AddLine("> " + text, Color.Lime);
 
             //Commands are processed locally and then sent to the server to be processed there again.
             var args = new List<string>();
@@ -165,7 +158,7 @@ namespace SS14.Client.Console
             }
             else if (!_network.IsConnected)
             {
-                AddLine("Unknown command: " + commandname, ChatChannel.Default, Color.Red);
+                AddLine("Unknown command: " + commandname, Color.Red);
                 return;
             }
 

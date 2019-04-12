@@ -7,19 +7,6 @@ using SS14.Shared.Serialization;
 namespace SS14.Shared.GameObjects
 {
     [Serializable, NetSerializable]
-    public class SaidSomethingMsg : ComponentMessage
-    {
-        public ChatChannel Channel { get; }
-        public string Text { get; }
-
-        public SaidSomethingMsg(ChatChannel channel, string text)
-        {
-            Channel = channel;
-            Text = text;
-        }
-    }
-    
-    [Serializable, NetSerializable]
     public class BumpedEntMsg : ComponentMessage
     {
         public IEntity Entity { get; }

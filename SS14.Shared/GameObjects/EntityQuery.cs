@@ -105,9 +105,9 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public bool Match(IEntity entity)
         {
-            if(Entity.TryGetComponent<ICollidableComponent>(out var collidable) && entity.TryGetComponent<ICollidableComponent>(out var otherCollidable))
+            if(Entity.TryGetComponent<ICollidableComponent>(out var collidable))
             {
-                return collidable.WorldAABB.Intersects(otherCollidable.WorldAABB);
+                return collidable.MapID == entity.Transform.MapID && collidable.WorldAABB.Contains(entity.Transform.WorldPosition);
             }
             return false;
         }

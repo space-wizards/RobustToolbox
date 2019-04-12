@@ -62,9 +62,11 @@ namespace SS14.Server.GameObjects.EntitySystems
             {
                 return;
             }
+            var transform = entity.Transform;
             if (transform.Parent != null)
             {
                 transform.Parent.Owner.SendMessage(transform, new RelayMovementEntityMessage(entity));
+                velocity.LinearVelocity = Vector2.Zero;
                 return;
             }
 

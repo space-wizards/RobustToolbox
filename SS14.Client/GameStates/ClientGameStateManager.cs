@@ -46,10 +46,10 @@ namespace SS14.Client.GameStates
             _client.RunLevelChanged += RunLevelChanged;
 
             if(!_config.IsCVarRegistered("net.interp"))
-                _config.RegisterCVar("net.interp", true, CVar.ARCHIVE);
+                _config.RegisterCVar("net.interp", false, CVar.ARCHIVE);
 
             if (!_config.IsCVarRegistered("net.interp_ratio"))
-                _config.RegisterCVar("net.interp_ratio", 1, CVar.ARCHIVE);
+                _config.RegisterCVar("net.interp_ratio", 0, CVar.ARCHIVE);
         }
 
         /// <inheritdoc />

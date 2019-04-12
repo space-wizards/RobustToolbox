@@ -45,8 +45,11 @@ namespace SS14.Client.GameStates
             _network.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME);
             _client.RunLevelChanged += RunLevelChanged;
 
-            if(!_config.IsCVarRegistered("net.state_buffer"))
-                _config.RegisterCVar("net.state_buffer", 1, CVar.ARCHIVE);
+            if(!_config.IsCVarRegistered("net.interp"))
+                _config.RegisterCVar("net.interp", true, CVar.ARCHIVE);
+
+            if (!_config.IsCVarRegistered("net.interp_ratio"))
+                _config.RegisterCVar("net.interp_ratio", 1, CVar.ARCHIVE);
         }
 
         /// <inheritdoc />
@@ -119,11 +122,20 @@ namespace SS14.Client.GameStates
 
         public void ApplyGameState()
         {
-            var bufSz = _config.GetCVar<int>("net.state_buffer");
+            var doInterp = _config.GetCVar<bool>("net.interp");
+            var bufSz = _config.GetCVar<int>("net.interp_ratio");
             bufSz = bufSz < 0 ? 0 : bufSz; // min bound, < 0 makes no sense
-            var targetBufferSize = 3 + bufSz; // absolute minimum is 3 states in buffer for the system to work (last, cur, next)
+
+            int targetBufferSize;
+            if(doInterp)
+            {
+                targetBufferSize = 3 + bufSz; // absolute minimum is 3 states in buffer for the system to work (last, cur, next)
+            }
+            else
+            {
+                targetBufferSize = 2 + bufSz; // only need to buffer last and cur
+            }
             
-            //TODO: completely skip this tick and freeze the sim if false
             if (CalculateNextStates(_timing.CurTick, out var curState, out var nextState, targetBufferSize))
             {
                 Logger.DebugS("net.state", $"Applying State:  ext={curState.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
@@ -145,6 +157,8 @@ namespace SS14.Client.GameStates
 
         private bool CalculateNextStates(GameTick curTick, out GameState curState, out GameState nextState, int targetBufferSize)
         {
+            var interpolate = targetBufferSize >= 3;
+
             if (_waitingForFull)
             {
                 if (_lastFullState != null)
@@ -152,28 +166,39 @@ namespace SS14.Client.GameStates
                     Logger.DebugS("net", $"Resync CurTick to: {_lastFullState.ToSequence}");
                     curTick = _timing.CurTick = _lastFullState.ToSequence;
 
-                    // look for the next state
-                    var lastTick = new GameTick(curTick.Value - 1);
-                    var nextTick = new GameTick(curTick.Value + 1);
-                    nextState = null;
-                    for (var i = 0; i < _stateBuffer.Count; i++)
+                    if(interpolate)
                     {
-                        var state = _stateBuffer[i];
-                        if (state.ToSequence == nextTick)
+                        // look for the next state
+                        var lastTick = new GameTick(curTick.Value - 1);
+                        var nextTick = new GameTick(curTick.Value + 1);
+                        nextState = null;
+                    
+                        for (var i = 0; i < _stateBuffer.Count; i++)
                         {
-                            nextState = state;
+                            var state = _stateBuffer[i];
+                            if (state.ToSequence == nextTick)
+                            {
+                                nextState = state;
+                            }
+                            else if (state.ToSequence < lastTick) // remove any old states we find to keep the buffer clean
+                            {
+                                _stateBuffer.RemoveSwap(i);
+                                i--;
+                            }
                         }
-                        else if (state.ToSequence < lastTick) // remove any old states we find to keep the buffer clean
+
+                        // we let the buffer fill up before starting to tick
+                        if (nextState != null && _stateBuffer.Count >= targetBufferSize)
                         {
-                            _stateBuffer.RemoveSwap(i);
-                            i--;
+                            curState = _lastFullState;
+                            _waitingForFull = false;
+                            return true;
                         }
                     }
-
-                    // we let the buffer fill up before starting to tick
-                    if (nextState != null && _stateBuffer.Count >= targetBufferSize)
+                    else
                     {
                         curState = _lastFullState;
+                        nextState = default;
                         _waitingForFull = false;
                         return true;
                     }
@@ -201,7 +226,7 @@ namespace SS14.Client.GameStates
                     {
                         curState = state;
                     }
-                    else if (state.ToSequence == nextTick)
+                    else if (interpolate && state.ToSequence == nextTick)
                     {
                         nextState = state;
                     }
@@ -213,19 +238,17 @@ namespace SS14.Client.GameStates
                 }
 
                 // we found both the states to lerp between, this should be true almost always.
-                if (curState != null && nextState != null)
+                if ((interpolate && curState != null) || (!interpolate && curState != null && nextState != null))
                     return true;
 
                 if (curState == null)
                 {
                     curState = ExtrapolateState(lastTick, curTick);
-                    _stateBuffer.Add(curState);
                 }
 
-                if (nextState == null)
+                if (nextState == null && interpolate)
                 {
                     nextState = ExtrapolateState(curTick, nextTick);
-                    _stateBuffer.Add(nextState);
                 }
 
                 return true;
@@ -253,7 +276,7 @@ namespace SS14.Client.GameStates
         private void ApplyGameState(GameState curState, GameState nextState)
         {
             _mapManager.ApplyGameStatePre(curState.MapData);
-            _entities.ApplyEntityStates(curState.EntityStates, curState.EntityDeletions, nextState.EntityStates);
+            _entities.ApplyEntityStates(curState.EntityStates, curState.EntityDeletions, nextState?.EntityStates);
             _players.ApplyPlayerStates(curState.PlayerStates);
             _mapManager.ApplyGameStatePost(curState.MapData);
         }

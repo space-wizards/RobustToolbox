@@ -147,7 +147,6 @@ namespace SS14.Shared.Network
                 _config.RegisterCVar("net.server", "127.0.0.1", CVar.ARCHIVE);
                 _config.RegisterCVar("net.updaterate", 20, CVar.ARCHIVE);
                 _config.RegisterCVar("net.cmdrate", 30, CVar.ARCHIVE);
-                _config.RegisterCVar("net.interpolation", 0.1f, CVar.ARCHIVE);
                 _config.RegisterCVar("net.rate", 10240, CVar.REPLICATED | CVar.ARCHIVE);
             }
             else

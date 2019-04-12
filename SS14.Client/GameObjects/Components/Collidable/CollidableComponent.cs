@@ -8,6 +8,7 @@ using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
+using SS14.Shared.Physics;
 
 namespace SS14.Client.GameObjects
 {
@@ -78,10 +79,10 @@ namespace SS14.Client.GameObjects
         public bool IsHardCollidable { get; set; }
 
         /// <inheritdoc />
-        public int CollisionLayer { get; set; }
+        public CollisionGroup CollisionLayer { get; set; }
 
         /// <inheritdoc />
-        public int CollisionMask { get; set; }
+        public CollisionGroup CollisionMask { get; set; }
 
         /// <summary>
         ///     gets the AABB from the sprite component and sends it to the CollisionManager.

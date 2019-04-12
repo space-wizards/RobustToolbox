@@ -3,11 +3,11 @@ using System.Linq;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
+using SS14.Shared.Physics;
 using SS14.Shared.Serialization;
 using SS14.Shared.ViewVariables;
 
@@ -17,8 +17,8 @@ namespace SS14.Server.GameObjects
     {
         private bool _collisionEnabled;
         private bool _isHardCollidable;
-        private int _collisionLayer; //bitfield
-        private int _collisionMask; //bitfield
+        private CollisionGroup _collisionLayer;
+        private CollisionGroup _collisionMask;
 
         private IPhysicsManager _physicsManager => IoCManager.Resolve<IPhysicsManager>();
 
@@ -38,9 +38,8 @@ namespace SS14.Server.GameObjects
 
             serializer.DataField(ref _collisionEnabled, "on", true);
             serializer.DataField(ref _isHardCollidable, "hard", true);
-            serializer.DataField(ref _collisionLayer, "layer", 0x1);
-            serializer.DataField(ref _collisionMask, "mask", 0x1);
-            serializer.DataField(ref _isInteractingWithFloor, "IsInteractingWithFloor", false);
+            serializer.DataField(ref _collisionLayer, "layer", CollisionGroup.Grid);
+            serializer.DataField(ref _collisionMask, "mask", CollisionGroup.Grid);
         }
 
         /// <inheritdoc />
@@ -77,7 +76,7 @@ namespace SS14.Server.GameObjects
         ///     Bitmask of the collision layers this component is a part of.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionLayer
+        public CollisionGroup CollisionLayer
         {
             get => _collisionLayer;
             set => _collisionLayer = value;
@@ -87,21 +86,10 @@ namespace SS14.Server.GameObjects
         ///     Bitmask of the layers this component collides with.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionMask
+        public CollisionGroup CollisionMask
         {
             get => _collisionMask;
             set => _collisionMask = value;
-        }
-
-        private bool _isInteractingWithFloor;
-        /// <summary>
-        ///     When this enity moves it is actively scraping against the floor tile it is on.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool IsInteractingWithFloor
-        {
-            get => _isInteractingWithFloor;
-            set => _isInteractingWithFloor = value;
         }
 
         /// <inheritdoc />
@@ -142,7 +130,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public bool TryCollision(Vector2 offset, bool bump = false)
         {
-            if (!_collisionEnabled || CollisionMask == 0x0)
+            if (!_collisionEnabled || CollisionMask == CollisionGroup.None)
                 return false;
 
             return _physicsManager.TryCollide(Owner, offset, bump);

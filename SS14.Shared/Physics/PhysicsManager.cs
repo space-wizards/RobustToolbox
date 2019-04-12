@@ -52,7 +52,7 @@ namespace SS14.Shared.Physics
 
             var collidable = (ICollidable) entity.GetComponent<ICollidableComponent>();
 
-            if (!collidable.CollisionEnabled || collidable.CollisionLayer == 0x0)
+            if (!collidable.CollisionEnabled || collidable.CollisionLayer == CollisionGroup.None)
                 return false;
 
             var colliderAABB = collidable.WorldAABB;
@@ -71,6 +71,8 @@ namespace SS14.Shared.Physics
 
             var collided = TestSpecialCollisionAndBump(entity, bump, collisionmodifiers, collidedwith);
 
+            collidable.Bump(collidedwith);
+
             //TODO: This needs multi-grid support.
             return collided;
         }
@@ -81,22 +83,28 @@ namespace SS14.Shared.Physics
             var collided = false;
             foreach (var otherCollidable in _results)
             {
+                if (!otherCollidable.IsHardCollidable)
+                {
+                    continue;
+                }
+
                 //Provides component level overrides for collision behavior based on the entity we are trying to collide with
                 var preventcollision = false;
-
                 foreach (var mods in collisionmodifiers)
+                {
                     preventcollision |= mods.PreventCollide(otherCollidable);
-
-                if (preventcollision) //We were prevented, bail
+                }
+                if (preventcollision)
+                {
                     continue;
-
-                if (!otherCollidable.IsHardCollidable)
-                    continue;
+                }
 
                 collided = true;
 
                 if (!bump)
+                {
                     continue;
+                }
 
                 otherCollidable.Bumped(entity);
                 collidedwith.Add(otherCollidable.Owner);
@@ -120,7 +128,7 @@ namespace SS14.Shared.Physics
                     continue;
                 }
 
-                if ((collidable.CollisionMask & body.CollisionLayer) == 0x0)
+                if ((collidable.CollisionMask & body.CollisionLayer) == CollisionGroup.None)
                 {
                     continue;
                 }

@@ -2,6 +2,7 @@
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
+using SS14.Shared.Physics;
 
 namespace SS14.Shared.Interfaces.Physics
 {
@@ -35,12 +36,12 @@ namespace SS14.Shared.Interfaces.Physics
         /// <summary>
         ///     Bitmask of the collision layers this component is a part of.
         /// </summary>
-        int CollisionLayer { get; set; }
+        CollisionGroup CollisionLayer { get; set; }
 
         /// <summary>
         ///     Bitmask of the layers this component collides with.
         /// </summary>
-        int CollisionMask { get; set; }
+        CollisionGroup CollisionMask { get; set; }
 
         /// <summary>
         /// Called when the collidable is bumped into by someone/something

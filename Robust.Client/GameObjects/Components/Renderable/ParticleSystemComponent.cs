@@ -1,18 +1,18 @@
-﻿using SS14.Client.Graphics;
-using SS14.Client.Interfaces.GameObjects;
-using SS14.Client.Interfaces.Resource;
-using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.IoC;
+﻿using Robust.Client.Graphics;
+using Robust.Client.Interfaces.GameObjects;
+using Robust.Client.Interfaces.Resource;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.Enums;
-using SS14.Shared.Map;
-using SS14.Shared.Maths;
+using Robust.Shared.Enums;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
 
-namespace SS14.Client.GameObjects
+namespace Robust.Client.GameObjects
 {
     public class ParticleSystemComponent : Component, IParticleSystemComponent, IRenderableComponent
     {

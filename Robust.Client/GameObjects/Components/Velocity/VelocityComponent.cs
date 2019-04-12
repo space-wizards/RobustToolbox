@@ -3,7 +3,7 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using System;
 
-namespace SS14.Client.GameObjects
+namespace Robust.Client.GameObjects
 {
     public class VelocityComponent : Component, IVelocityComponent
     {

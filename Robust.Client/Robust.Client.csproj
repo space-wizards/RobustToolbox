@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <Import Project="..\MSBuild\SS14.Properties.targets" />
+  <Import Project="..\MSBuild\Robust.Properties.targets" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
@@ -58,7 +58,7 @@
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
-  <Import Project="..\MSBuild\SS14.DefineConstants.targets" />
+  <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
     <PackageReference Include="DiscordRichPresence">
       <Version>1.0.95</Version>
@@ -388,6 +388,6 @@
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\MSBuild\SS14.Engine.targets" />
+  <Import Project="..\MSBuild\Robust.Engine.targets" />
   <Target Name="AfterBuild" DependsOnTargets="CopySS14Noise;CopyMiscDependencies" />
 </Project>

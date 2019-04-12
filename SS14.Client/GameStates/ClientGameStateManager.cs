@@ -22,6 +22,7 @@ namespace SS14.Client.GameStates
         private readonly List<GameState> _stateBuffer = new List<GameState>();
         private GameState _lastFullState;
         private bool _waitingForFull = true;
+        private bool _logging;
 
         [Dependency]
         private readonly IClientEntityManager _entities;
@@ -50,6 +51,11 @@ namespace SS14.Client.GameStates
 
             if (!_config.IsCVarRegistered("net.interp_ratio"))
                 _config.RegisterCVar("net.interp_ratio", 0, CVar.ARCHIVE);
+
+            if (!_config.IsCVarRegistered("net.logging"))
+                _config.RegisterCVar("net.logging", false, CVar.ARCHIVE);
+
+            _logging = _config.GetCVar<bool>("net.logging");
         }
 
         /// <inheritdoc />
@@ -83,7 +89,10 @@ namespace SS14.Client.GameStates
                 if(_lastFullState == null || (_lastFullState != null && _lastFullState.ToSequence < state.ToSequence))
                 {
                     _lastFullState = state;
-                    Logger.InfoS("net", $"Received Full GameState: to={state.ToSequence}, sz={message.MsgSize}");
+
+                    if(_logging)
+                        Logger.InfoS("net", $"Received Full GameState: to={state.ToSequence}, sz={message.MsgSize}");
+
                     return;
                 }
             }
@@ -93,7 +102,9 @@ namespace SS14.Client.GameStates
 
             if (state.ToSequence <= lastTick && !_waitingForFull) // CurTick isn't set properly when WaitingForFull
             {
-                Logger.DebugS("net.state", $"Received Old GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={message.MsgSize}, buf={_stateBuffer.Count}");
+                if (_logging)
+                    Logger.DebugS("net.state", $"Received Old GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={message.MsgSize}, buf={_stateBuffer.Count}");
+
                 return;
             }
 
@@ -111,13 +122,17 @@ namespace SS14.Client.GameStates
                     break; // break from the loop, add the new state normally
                 }
 
-                Logger.DebugS("net.state", $"Received Dupe GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={message.MsgSize}, buf={_stateBuffer.Count}");
+                if (_logging)
+                    Logger.DebugS("net.state", $"Received Dupe GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={message.MsgSize}, buf={_stateBuffer.Count}");
+
                 return;
             }
 
             // this is a good state that we will be using.
             _stateBuffer.Add(state);
-            Logger.DebugS("net.state", $"Received New GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={message.MsgSize}, buf={_stateBuffer.Count}");
+
+            if (_logging)
+                Logger.DebugS("net.state", $"Received New GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={message.MsgSize}, buf={_stateBuffer.Count}");
         }
 
         public void ApplyGameState()
@@ -138,7 +153,9 @@ namespace SS14.Client.GameStates
             
             if (CalculateNextStates(_timing.CurTick, out var curState, out var nextState, targetBufferSize))
             {
-                Logger.DebugS("net.state", $"Applying State:  ext={curState.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
+                if (_logging)
+                    Logger.DebugS("net.state", $"Applying State:  ext={curState.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
+
                 ApplyGameState(curState, nextState);
             }
 
@@ -163,7 +180,9 @@ namespace SS14.Client.GameStates
             {
                 if (_lastFullState != null)
                 {
-                    Logger.DebugS("net", $"Resync CurTick to: {_lastFullState.ToSequence}");
+                    if (_logging)
+                        Logger.DebugS("net", $"Resync CurTick to: {_lastFullState.ToSequence}");
+
                     curTick = _timing.CurTick = _lastFullState.ToSequence;
 
                     if(interpolate)
@@ -260,7 +279,6 @@ namespace SS14.Client.GameStates
         /// </summary>
         private GameState ExtrapolateState(GameTick fromSequence, GameTick toSequence)
         {
-            //TODO: Make me work!
            var state = new GameState(fromSequence, toSequence, null, null, null, null);
            state.Extrapolated = true;
            return state;

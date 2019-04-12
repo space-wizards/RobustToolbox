@@ -8,11 +8,9 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
  using SS14.Shared.Interfaces.Timing;
  using SS14.Shared.IoC;
- using SS14.Shared.Log;
  using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
- using SS14.Shared.Utility;
  using SS14.Shared.ViewVariables;
 
 namespace SS14.Shared.GameObjects.Components.Transform
@@ -402,11 +400,6 @@ namespace SS14.Shared.GameObjects.Components.Transform
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
-            var curTrans = curState as TransformComponentState;
-            var nextTrans = nextState as TransformComponentState;
-
-            Logger.DebugS("ent", $"cTick={(curTrans != null? curTrans.LocalPosition.ToString():"-")}, nTick={(nextTrans!=null?nextTrans.LocalPosition.ToString():"-")}");
-
             if (curState != null)
             {
                 var newState = (TransformComponentState) curState;
@@ -479,26 +472,25 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
         protected virtual Vector2 GetLocalPosition()
         {
-            IGameTiming timing = IoCManager.Resolve<IGameTiming>();
-            if(timing.InSimulation || _localPosition == _nextPosition)
+            IGameTiming gameTiming = IoCManager.Resolve<IGameTiming>();
+            if(gameTiming.InSimulation || _localPosition == _nextPosition)
                 return _localPosition;
 
-            return Vector2.Lerp(_localPosition, _nextPosition, (float) (timing.TickRemainder.TotalSeconds / timing.TickPeriod.TotalSeconds));
+            return Vector2.Lerp(_localPosition, _nextPosition, (float) (gameTiming.TickRemainder.TotalSeconds / gameTiming.TickPeriod.TotalSeconds));
         }
 
         protected virtual Angle GetLocalRotation()
         {
-            IGameTiming timing = IoCManager.Resolve<IGameTiming>();
-            if (timing.InSimulation || _localRotation == _nextRotation)
+            IGameTiming gameTiming = IoCManager.Resolve<IGameTiming>();
+            if (gameTiming.InSimulation || _localRotation == _nextRotation)
                 return _localRotation;
 
-            return Angle.Lerp(_localRotation, _nextRotation, (float)(timing.TickRemainder.TotalSeconds / timing.TickPeriod.TotalSeconds));
+            return Angle.Lerp(_localRotation, _nextRotation, (float)(gameTiming.TickRemainder.TotalSeconds / gameTiming.TickPeriod.TotalSeconds));
         }
 
         protected virtual Matrix3 GetWorldMatrix()
         {
-            IGameTiming timing = IoCManager.Resolve<IGameTiming>();
-            if (timing.InSimulation)
+            if (IoCManager.Resolve<IGameTiming>().InSimulation)
                 return _worldMatrix;
 
             // there really is no point trying to cache this because it will only be used in one frame
@@ -515,8 +507,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
         protected virtual Matrix3 GetWorldMatrixInv()
         {
-            IGameTiming timing = IoCManager.Resolve<IGameTiming>();
-            if (timing.InSimulation)
+            if (IoCManager.Resolve<IGameTiming>().InSimulation)
                 return _invWorldMatrix;
 
             // there really is no point trying to cache this because it will only be used in one frame

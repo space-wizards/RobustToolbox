@@ -8,7 +8,7 @@ namespace SS14.Shared.Maths
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     [Serializable]
-    public readonly struct Vector2 : IEquatable<Vector2>, IApproxEquatable<Vector2>, IComparable<Vector2>
+    public readonly struct Vector2 : IEquatable<Vector2>, IApproxEquatable<Vector2>
     {
         /// <summary>
         ///     The X component of the vector.
@@ -305,11 +305,6 @@ namespace SS14.Shared.Maths
         public bool EqualsApprox(Vector2 other, double tolerance)
         {
             return FloatMath.CloseTo(X, other.X, tolerance) && FloatMath.CloseTo(Y, other.Y, tolerance);
-        }
-
-        public int CompareTo(Vector2 other)
-        {
-            return LengthSquared.CompareTo(other.LengthSquared);
         }
     }
 }

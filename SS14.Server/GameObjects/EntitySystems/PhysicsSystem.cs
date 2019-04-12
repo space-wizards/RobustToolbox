@@ -81,7 +81,7 @@ namespace SS14.Server.GameObjects.EntitySystems
                     velocityConsumer.AngularVelocity = velocity.AngularVelocity;
                     velocityConsumer.LinearVelocity = movement;
                     return CalculateMovement(velocityConsumer, frameTime, velocityConsumer.Owner) / frameTime;
-                }).Min();
+                }).OrderBy(x=>x.LengthSquared).First();
                 velocityConsumers = velocity.GetVelocityConsumers();
             }
             while (velocityConsumers.Count != velocityConsumerCount);

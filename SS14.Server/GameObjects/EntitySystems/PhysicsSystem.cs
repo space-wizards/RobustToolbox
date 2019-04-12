@@ -72,7 +72,6 @@ namespace SS14.Server.GameObjects.EntitySystems
 
             var velocityConsumers = velocity.GetVelocityConsumers();
             var initialMovement = velocity.LinearVelocity;
-
             int velocityConsumerCount;
             float totalMass;
             Vector2 lowestMovement;

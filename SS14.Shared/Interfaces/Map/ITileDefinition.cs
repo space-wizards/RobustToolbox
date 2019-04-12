@@ -26,6 +26,11 @@
         string SpriteName { get; }
 
         /// <summary>
+        ///     Collidable objects that are interacting on this tile are slowed down by this float.
+        /// </summary>
+        float Friction { get; }
+
+        /// <summary>
         ///     Assign a new value to <see cref="TileId"/>, used when registering the tile definition.
         /// </summary>
         /// <param name="id">The new tile ID for this tile definition.</param>

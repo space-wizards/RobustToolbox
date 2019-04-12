@@ -236,6 +236,7 @@ namespace Robust.UnitTesting.Shared.Physics
             var testBody = mock1.Object;
             manager.AddCollidable(testBody);
 
+            manager.BuildCollisionGrid();
             // Act
             manager.DoCollisionTest(testBody, testBody.WorldAABB, results);
 

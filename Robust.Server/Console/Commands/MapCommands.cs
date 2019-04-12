@@ -1,0 +1,230 @@
+﻿using System.Globalization;
+using Robust.Server.Interfaces.Console;
+using Robust.Server.Interfaces.Maps;
+using Robust.Server.Interfaces.Player;
+using Robust.Server.Interfaces.Timing;
+using Robust.Shared.Interfaces.Map;
+using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Interfaces.GameObjects.Components;
+
+namespace Robust.Server.Console.Commands
+{
+    class AddMapCommand : IClientCommand
+    {
+        public string Command => "addmap";
+        public string Description => "Adds a new empty map to the round. If the mapID already exists, this command does nothing.";
+        public string Help => "addmap <mapID>";
+
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            if (args.Length < 1)
+                return;
+
+            var mapId = new MapId(int.Parse(args[0]));
+
+            var mapMgr = IoCManager.Resolve<IMapManager>();
+
+            if (!mapMgr.MapExists(mapId))
+            {
+                mapMgr.CreateMap(mapId);
+                shell.SendText(player, $"Map with ID {mapId} created.");
+                return;
+            }
+
+            shell.SendText(player, $"Map with ID {mapId} already exists!");
+        }
+    }
+
+    public class SaveBp : IClientCommand
+    {
+        public string Command => "savebp";
+        public string Description => "Serializes a grid to disk.";
+        public string Help => "savebp <gridID> <Path>";
+
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            if (args.Length < 2)
+            {
+                shell.SendText(player, "Not enough arguments.");
+                return;
+            }
+
+            if (!int.TryParse(args[0], out var intGridId))
+            {
+                shell.SendText(player, "Not a valid grid ID.");
+                return;
+            }
+
+            var gridId = new GridId(intGridId);
+
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
+            // no saving default grid
+            if (!mapManager.TryGetGrid(gridId, out var grid))
+            {
+                shell.SendText(player, "That grid does not exist.");
+                return;
+            }
+
+            if (grid.IsDefaultGrid)
+            {
+                shell.SendText(player, "Cannot save a default grid.");
+                return;
+            }
+
+            IoCManager.Resolve<IMapLoader>().SaveBlueprint(gridId, args[1]);
+            shell.SendText(player, "Save successful. Look in the user data directory.");
+        }
+    }
+
+    public class LoadBp : IClientCommand
+    {
+        public string Command => "loadbp";
+        public string Description => "Loads a blueprint from disk into the game.";
+        public string Help => "loadbp <MapID> <GridID> <Path>";
+
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            //TODO: Make me work after placement can create new grids.
+        }
+    }
+
+    public class SaveMap : IClientCommand
+    {
+        public string Command => "savemap";
+        public string Description => "Serializes a map to disk.";
+        public string Help => "savemap <MapID> <Path>";
+
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            if (args.Length < 1)
+                return;
+
+            if (!int.TryParse(args[0], out var intMapId))
+                return;
+
+            var mapID = new MapId(intMapId);
+
+            // no saving null space
+            if (mapID == MapId.Nullspace)
+                return;
+
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            if (!mapManager.TryGetMap(mapID, out var map))
+                return;
+
+            // TODO: Parse path
+            IoCManager.Resolve<IMapLoader>().SaveMap(map, "Maps/Demo/DemoMap.yaml");
+        }
+    }
+
+    public class LoadMap : IClientCommand
+    {
+        public string Command => "loadmap";
+        public string Description => "Loads a map from disk into the game.";
+        public string Help => "loadmap <MapID> <Path>";
+
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            if (args.Length < 1)
+                return;
+
+            if (!int.TryParse(args[0], out var intMapId))
+                return;
+
+            var mapID = new MapId(intMapId);
+
+            // no loading null space
+            if (mapID == MapId.Nullspace)
+                return;
+
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            if (mapManager.MapExists(mapID))
+                return;
+
+            // TODO: Parse path
+            IoCManager.Resolve<IMapLoader>().LoadMap(mapID, "Maps/Demo/DemoMap.yaml");
+        }
+    }
+
+    class LocationCommand : IClientCommand
+    {
+        public string Command => "loc";
+        public string Description => "Prints the absolute location of the player's entity to console.";
+        public string Help => "loc";
+
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            if(player.AttachedEntity == null)
+                return;
+
+            var pos = player.AttachedEntity.Transform.GridPosition;
+
+            shell.SendText(player, $"MapID:{pos.MapID} GridID:{pos.GridID} X:{pos.X:N2} Y:{pos.Y:N2}");
+        }
+    }
+
+    class PauseMapCommand : IClientCommand
+    {
+        public string Command => "pausemap";
+        public string Description => "Pauses a map, pausing all simulation processing on it.";
+        public string Help => "Usage: pausemap <map ID>";
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            var arg = args[0];
+            var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
+
+            var pauseManager = IoCManager.Resolve<IPauseManager>();
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            if (!mapManager.MapExists(mapId))
+            {
+                shell.SendText(player, "That map does not exist.");
+                return;
+            }
+            pauseManager.SetMapPaused(mapId, true);
+        }
+    }
+
+    class UnpauseMapCommand : IClientCommand
+    {
+        public string Command => "unpausemap";
+        public string Description => "unpauses a map, resuming all simulation processing on it.";
+        public string Help => "Usage: unpausemap <map ID>";
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            var arg = args[0];
+            var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
+
+            var pauseManager = IoCManager.Resolve<IPauseManager>();
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            if (!mapManager.MapExists(mapId))
+            {
+                shell.SendText(player, "That map does not exist.");
+                return;
+            }
+            pauseManager.SetMapPaused(mapId, false);
+        }
+    }
+
+    class QueryMapPausedCommand : IClientCommand
+    {
+        public string Command => "querymappaused";
+        public string Description => "Check whether a map is paused or not.";
+        public string Help => "Usage: querymappaused <map ID>";
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            var arg = args[0];
+            var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
+
+            var pauseManager = IoCManager.Resolve<IPauseManager>();
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            if (!mapManager.MapExists(mapId))
+            {
+                shell.SendText(player, "That map does not exist.");
+                return;
+            }
+            shell.SendText(player, pauseManager.IsMapPaused(mapId).ToString());
+        }
+    }
+}

@@ -71,8 +71,6 @@ namespace SS14.Shared.Physics
 
             var collided = TestSpecialCollisionAndBump(entity, bump, collisionmodifiers, collidedwith);
 
-            collidable.Bump(collidedwith);
-
             //TODO: This needs multi-grid support.
             return collided;
         }
@@ -115,18 +113,24 @@ namespace SS14.Shared.Physics
         /// <param name="results">An empty list that the function stores all colliding bodies inside of.</param>
         public void DoCollisionTest(ICollidable collidable, Box2 colliderAABB, List<ICollidable> results)
         {
-            foreach (var body in _bodies)
+            foreach (var body in GetCollidablesForLocation(colliderAABB))
             {
-                if(!body.CollisionEnabled)
+                if (!body.CollisionEnabled)
+                {
                     continue;
+                }
 
                 if ((collidable.CollisionMask & body.CollisionLayer) == 0x0)
+                {
                     continue;
+                }
 
                 if (collidable.MapID != body.MapID ||
                     collidable == body ||
                     !colliderAABB.Intersects(body.WorldAABB))
+                {
                     continue;
+                }
 
                 results.Add(body);
             }
@@ -180,6 +184,46 @@ namespace SS14.Shared.Physics
                 return new RayCastResults(minDist, hitPosition, entity);
 
             return default;
+        }
+
+        private Dictionary<Vector2, List<ICollidable>> _collisionGrid = new Dictionary<Vector2, List<ICollidable>>();
+        private float _collisionGridResolution = 5;
+
+        public void BuildCollisionGrid()
+        {
+            _collisionGrid.Clear();
+            _bodies.ForEach(body =>
+            {
+                var snappedLocation = SnapLocationToGrid(body.WorldAABB);
+                if (!_collisionGrid.ContainsKey(snappedLocation))
+                {
+                    _collisionGrid[snappedLocation] = new List<ICollidable>();
+                }
+                _collisionGrid[snappedLocation].Add(body);
+            });
+        }
+
+        private Vector2 SnapLocationToGrid(Box2 worldAAAB)
+        {
+            var result = worldAAAB.Center;
+            result /= _collisionGridResolution;
+            result = new Vector2((float)Math.Floor(result.X), (float)Math.Floor(result.Y));
+            return result;
+        }
+
+        public List<ICollidable> GetCollidablesForLocation(Box2 location)
+        {
+            var snappedLocation = SnapLocationToGrid(location);
+            var result = new List<ICollidable>();
+            for(int xOffset = -1; xOffset <= 1; xOffset++)
+            {
+                for (int yOffset = -1; yOffset <= 1; yOffset++)
+                {
+                    var offsetLocation = snappedLocation + new Vector2(xOffset, yOffset);
+                    result.AddRange(_collisionGrid.ContainsKey(offsetLocation) ? _collisionGrid[offsetLocation] : Enumerable.Empty<ICollidable>());
+                }
+            }
+            return result;
         }
     }
 }

@@ -114,6 +114,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Console\Commands\CVarCommand.cs" />
     <Compile Include="Console\Commands\DeleteCommand.cs" />
     <Compile Include="Console\ConGroup.cs" />
     <Compile Include="Console\ConGroupContainer.cs" />

@@ -11,7 +11,6 @@ namespace SS14.Client.Interfaces.Graphics
         Vector2i ScreenSize { get; }
         void SetWindowTitle(string title);
         void Initialize();
-        void ReloadConfig();
         event Action<WindowResizedEventArgs> OnWindowResized;
     }
 

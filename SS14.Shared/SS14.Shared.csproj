@@ -107,6 +107,7 @@
     <Compile Include="Asynchronous\SS14SynchronizationContext.cs" />
     <Compile Include="Asynchronous\TaskManager.cs" />
     <Compile Include="Audio\AudioParams.cs" />
+    <Compile Include="Configuration\ConfigurationCommands.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Configuration\CVar.cs" />
     <Compile Include="ContentPack\AssemblyLoader.cs" />

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Maths;
+using SS14.Shared.Timing;
 
 namespace SS14.Shared.Map
 {
@@ -10,8 +11,8 @@ namespace SS14.Shared.Map
     {
         public class MapGrid : IMapGrid
         {
-            public uint CreatedTick { get; }
-            public uint LastModifiedTick { get; internal set; }
+            public GameTick CreatedTick { get; }
+            public GameTick LastModifiedTick { get; internal set; }
             public bool IsDefaultGrid => Map.DefaultGrid == this;
             public IMap Map => _mapManager.GetMap(MapID);
             public MapId MapID { get; private set; }

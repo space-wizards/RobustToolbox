@@ -45,9 +45,12 @@ namespace SS14.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState state)
+        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
-            var newState = (PhysicsComponentState)state;
+            if (curState == null)
+                return;
+
+            var newState = (PhysicsComponentState)curState;
             Mass = newState.Mass;
             Velocity = newState.Velocity;
         }

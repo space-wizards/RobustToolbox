@@ -219,6 +219,12 @@ namespace SS14.Client
             _taskManager.ProcessPendingTasks();
             _userInterfaceManager.Update(eventArgs);
             _stateManager.Update(eventArgs);
+
+            if (_client.RunLevel >= ClientRunLevel.Connected)
+            {
+                _gameStateManager.ApplyGameState();
+            }
+
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, eventArgs.Elapsed);
         }
 

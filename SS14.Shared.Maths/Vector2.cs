@@ -235,6 +235,17 @@ namespace SS14.Shared.Maths
             );
         }
 
+        public static Vector2 LerpClamped(in Vector2 a, in Vector2 b, float factor)
+        {
+            if (factor <= 0)
+                return a;
+
+            if (factor >= 1)
+                return b;
+
+            return Lerp(a, b, factor);
+        }
+
         public void Deconstruct(out float x, out float y)
         {
             x = X;

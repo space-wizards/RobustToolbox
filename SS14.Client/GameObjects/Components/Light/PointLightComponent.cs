@@ -198,9 +198,12 @@ namespace SS14.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState state)
+        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
-            var newState = (PointLightComponentState) state;
+            if (curState == null)
+                return;
+
+            var newState = (PointLightComponentState) curState;
             State = newState.State;
             Color = newState.Color;
             Light.ModeClass = newState.Mode;

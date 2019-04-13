@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
-using SS14.Shared.Maths;
-using SS14.Shared.Network.Messages;
+using SS14.Shared.Timing;
 using SS14.Shared.Utility;
 
 namespace SS14.Shared.Map
@@ -53,8 +50,8 @@ namespace SS14.Shared.Map
 
         private readonly Dictionary<GridId, MapGrid> _grids = new Dictionary<GridId, MapGrid>();
 
-        private readonly List<(uint tick, GridId gridId)> _gridDeletionHistory = new List<(uint, GridId)>();
-        private readonly List<(uint tick, MapId mapId)> _mapDeletionHistory = new List<(uint, MapId)>();
+        private readonly List<(GameTick tick, GridId gridId)> _gridDeletionHistory = new List<(GameTick, GridId)>();
+        private readonly List<(GameTick tick, MapId mapId)> _mapDeletionHistory = new List<(GameTick, MapId)>();
 
         public void PostInject()
         {

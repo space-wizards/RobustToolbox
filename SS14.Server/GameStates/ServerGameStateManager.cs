@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Player;
@@ -10,6 +9,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Timing;
 using SS14.Shared.Utility;
 
 namespace SS14.Server.GameStates
@@ -17,9 +17,9 @@ namespace SS14.Server.GameStates
     public class ServerGameStateManager : IServerGameStateManager
     {
         // Mapping of net UID of clients -> last known acked state.
-        private readonly Dictionary<long, uint> ackedStates = new Dictionary<long, uint>();
+        private readonly Dictionary<long, GameTick> ackedStates = new Dictionary<long, GameTick>();
 
-        private uint lastOldestAck = 0;
+        private GameTick lastOldestAck = GameTick.Zero;
 
         [Dependency]
         private IServerEntityManager _entityManager;
@@ -41,7 +41,7 @@ namespace SS14.Server.GameStates
             _networkManager.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, HandleStateAck);
         }
 
-        private void Ack(long uniqueIdentifier, uint stateAcked)
+        private void Ack(long uniqueIdentifier, GameTick stateAcked)
         {
             ackedStates[uniqueIdentifier] = stateAcked;
         }
@@ -53,17 +53,17 @@ namespace SS14.Server.GameStates
             if (!_networkManager.IsConnected)
             {
                 // Prevent deletions piling up if we have no clients.
-                _entityManager.CullDeletionHistory(uint.MaxValue);
-                _mapManager.CullDeletionHistory(uint.MaxValue);
+                _entityManager.CullDeletionHistory(GameTick.MaxValue);
+                _mapManager.CullDeletionHistory(GameTick.MaxValue);
                 return;
             }
 
-            var oldestAck = uint.MaxValue;
+            var oldestAck = GameTick.MaxValue;
             foreach (var connection in _networkManager.Channels)
             {
                 if (!ackedStates.TryGetValue(connection.ConnectionId, out var ack))
                 {
-                    ackedStates.Add(connection.ConnectionId, 0);
+                    ackedStates.Add(connection.ConnectionId, GameTick.Zero);
                 }
                 else if (ack < oldestAck)
                 {
@@ -78,7 +78,7 @@ namespace SS14.Server.GameStates
             }
 
             var entities = _entityManager.GetEntityStates(oldestAck);
-            var players = _playerManager.GetPlayerStates();
+            var players = _playerManager.GetPlayerStates(oldestAck);
             var deletions = _entityManager.GetDeletedEntities(oldestAck);
             var mapData = _mapManager.GetStateData(oldestAck);
 

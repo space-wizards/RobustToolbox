@@ -78,9 +78,12 @@ namespace SS14.Client.GameObjects
             AppearanceDirty = true;
         }
 
-        public override void HandleComponentState(ComponentState state)
+        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
-            var actualState = (AppearanceComponentState)state;
+            if (curState == null)
+                return;
+
+            var actualState = (AppearanceComponentState)curState;
             data = actualState.Data;
             AppearanceDirty = true;
         }

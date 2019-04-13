@@ -2,13 +2,12 @@
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
-using SS14.Shared.Serialization;
+using SS14.Shared.Timing;
 
 namespace SS14.Server.GameObjects
 {
@@ -25,7 +24,7 @@ namespace SS14.Server.GameObjects
         [Dependency]
         private readonly IMapManager _mapManager;
 
-        private readonly List<(uint tick, EntityUid uid)> DeletionHistory = new List<(uint, EntityUid)>();
+        private readonly List<(GameTick tick, EntityUid uid)> DeletionHistory = new List<(GameTick, EntityUid)>();
 
         public override IEntity SpawnEntity(string protoName)
         {
@@ -79,7 +78,7 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public List<EntityState> GetEntityStates(uint fromTick)
+        public List<EntityState> GetEntityStates(GameTick fromTick)
         {
             var stateEntities = new List<EntityState>();
             foreach (IEntity entity in GetEntities())
@@ -103,7 +102,7 @@ namespace SS14.Server.GameObjects
             DeletionHistory.Add((CurrentTick, e.Uid));
         }
 
-        public List<EntityUid> GetDeletedEntities(uint fromTick)
+        public List<EntityUid> GetDeletedEntities(GameTick fromTick)
         {
             List<EntityUid> list = new List<EntityUid>();
             foreach ((var tick, var id) in DeletionHistory)
@@ -117,7 +116,7 @@ namespace SS14.Server.GameObjects
             return list;
         }
 
-        public void CullDeletionHistory(uint toTick)
+        public void CullDeletionHistory(GameTick toTick)
         {
             DeletionHistory.RemoveAll(hist => hist.tick <= toTick);
         }

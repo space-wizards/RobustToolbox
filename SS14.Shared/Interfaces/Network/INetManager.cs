@@ -30,7 +30,7 @@ namespace SS14.Shared.Interfaces.Network
         bool IsConnected { get; }
 
         /// <summary>
-        ///     Network traffic statistics for the locl NetChannel.
+        ///     Network traffic statistics for the local NetChannel.
         /// </summary>
         NetworkStats Statistics { get; }
 

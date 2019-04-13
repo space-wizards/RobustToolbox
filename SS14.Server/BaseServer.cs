@@ -284,7 +284,7 @@ namespace SS14.Server
             cfgMgr.RegisterCVar("game.maxplayers", 32, CVar.ARCHIVE);
             cfgMgr.RegisterCVar("game.type", GameType.Game);
 
-            _time.TickRate = _config.GetCVar<int>("net.tickrate");
+            _time.TickRate = (byte)_config.GetCVar<int>("net.tickrate");
 
             Logger.InfoS("srv", $"Name: {ServerName}");
             Logger.InfoS("srv", $"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");

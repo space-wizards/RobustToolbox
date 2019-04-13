@@ -80,7 +80,7 @@ namespace SS14.UnitTesting.Shared.Timing
             //NOTE: TickRate can cause a slight rounding error in TickPeriod reciprocal calculation from repeating decimals depending
             // on the value chosen.
             gameTiming.TickRate = 20;
-            gameTiming.CurTick = 60;
+            gameTiming.CurTick = new GameTick(60);
 
             // Act
             gameTiming.StartFrame();
@@ -107,7 +107,7 @@ namespace SS14.UnitTesting.Shared.Timing
             var gameTiming = GameTimingFactory(newStopwatch.Object);
             gameTiming.InSimulation = false;
             gameTiming.TickRate = 20;
-            gameTiming.CurTick = 60;
+            gameTiming.CurTick = new GameTick(60);
             gameTiming.TickRemainder = TimeSpan.FromTicks(TimeSpan.TicksPerSecond / 2); // half a second
 
             // Act
@@ -137,7 +137,7 @@ namespace SS14.UnitTesting.Shared.Timing
 
             // Act
             gameTiming.StartFrame();
-            gameTiming.CurTick++;
+            gameTiming.CurTick = new GameTick(gameTiming.CurTick.Value + 1);
             gameTiming.StartFrame();
             var result = gameTiming.FrameTime;
 

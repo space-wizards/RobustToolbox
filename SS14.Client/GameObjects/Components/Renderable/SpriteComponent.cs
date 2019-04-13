@@ -1567,9 +1567,12 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override void HandleComponentState(ComponentState state)
+        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
-            var thestate = (SpriteComponentState) state;
+            if (curState == null)
+                return;
+
+            var thestate = (SpriteComponentState) curState;
 
             Visible = thestate.Visible;
             DrawDepth = thestate.DrawDepth;

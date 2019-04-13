@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using Godot;
 using SS14.Client.GodotGlue;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Utility;
-using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Timing;
@@ -51,7 +49,7 @@ namespace SS14.Client
             {
                 if (!_gameTimingGodotGodot.Paused)
                 {
-                    _gameTimingGodotGodot.CurTick++;
+                    _gameTimingGodotGodot.CurTick = new GameTick(_gameTimingGodotGodot.CurTick.Value + 1);
                     Update(delta);
                 }
             }
@@ -201,10 +199,11 @@ namespace SS14.Client
 
             public double FramesPerSecondAvg => Godot.Performance.GetMonitor(Performance.Monitor.TimeFps);
 
-            public uint CurTick { get; set; }
-            public int TickRate
+            public GameTick CurTick { get; set; }
+
+            public byte TickRate
             {
-                get => Godot.Engine.IterationsPerSecond;
+                get => (byte) Godot.Engine.IterationsPerSecond;
                 set => Godot.Engine.IterationsPerSecond = value;
             }
 
@@ -212,6 +211,8 @@ namespace SS14.Client
 
             public TimeSpan TickRemainder { get; set; }
             public uint CurFrame { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public bool FastForward { get; set; } //TODO: Not implemented
+            public float TickTimingAdjustment { get; set; } = 1; //TODO: Not implemented
 
             public void ResetRealTime()
             {
@@ -226,7 +227,7 @@ namespace SS14.Client
             private TimeSpan CalcCurTime()
             {
                 // calculate simulation CurTime
-                var time = TimeSpan.FromTicks(TickPeriod.Ticks * CurTick);
+                var time = TimeSpan.FromTicks(TickPeriod.Ticks * CurTick.Value);
 
                 if (!InSimulation) // rendering can draw frames between ticks
                     return time + TickRemainder;

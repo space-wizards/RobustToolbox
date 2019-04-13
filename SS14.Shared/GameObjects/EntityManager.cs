@@ -9,6 +9,7 @@ using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
+using SS14.Shared.Timing;
 using SS14.Shared.Utility;
 
 namespace SS14.Shared.GameObjects
@@ -42,7 +43,7 @@ namespace SS14.Shared.GameObjects
         #endregion Dependencies
 
         /// <inheritdoc />
-        public uint CurrentTick => _gameTiming.CurTick;
+        public GameTick CurrentTick => _gameTiming.CurTick;
 
         /// <inheritdoc />
         public IComponentManager ComponentManager => _componentManager;

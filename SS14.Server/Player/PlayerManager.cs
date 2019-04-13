@@ -3,20 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Enums;
 using SS14.Shared.GameStates;
 using SS14.Shared.Input;
-using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
-using SS14.Shared.Players;
+using SS14.Shared.Timing;
 using SS14.Shared.Utility;
 
 namespace SS14.Server.Player
@@ -28,7 +26,8 @@ namespace SS14.Server.Player
     {
         [Dependency]
         private readonly IBaseServer _baseServer;
-
+        [Dependency]
+        private readonly IGameTiming _timing;
         [Dependency]
         private readonly IServerNetManager _network;
         [Dependency]
@@ -36,7 +35,7 @@ namespace SS14.Server.Player
 
         public BoundKeyMap KeyMap { get; private set; }
 
-        private bool NeedsStateUpdate;
+        private GameTick _lastStateUpdate;
 
         private readonly ReaderWriterLockSlim _sessionsLock = new ReaderWriterLockSlim();
 
@@ -236,14 +235,15 @@ namespace SS14.Server.Player
         /// <summary>
         ///     Gets all player states in the server.
         /// </summary>
+        /// <param name="fromTick"></param>
         /// <returns></returns>
-        public List<PlayerState> GetPlayerStates()
+        public List<PlayerState> GetPlayerStates(GameTick fromTick)
         {
-            if (!NeedsStateUpdate)
+            if (_lastStateUpdate < fromTick)
             {
                 return null;
             }
-            NeedsStateUpdate = false;
+
             _sessionsLock.EnterReadLock();
             try
             {
@@ -326,6 +326,7 @@ namespace SS14.Server.Player
 
             netMsg.ServerName = _baseServer.ServerName;
             netMsg.ServerMaxPlayers = _baseServer.MaxPlayers;
+            netMsg.TickRate = _timing.TickRate;
             netMsg.PlayerSessionId = session.SessionId;
 
             message.MsgChannel.SendMessage(netMsg);
@@ -336,6 +337,12 @@ namespace SS14.Server.Player
             var channel = message.MsgChannel;
             var players = GetAllPlayers().ToArray();
             var netMsg = channel.CreateNetMessage<MsgPlayerList>();
+            
+            // client session is complete, set their status accordingly.
+            // This is done before the packet is built, so that the client
+            // can see themselves Connected.
+            var session = GetSessionByChannel(channel);
+            session.Status = SessionStatus.Connected;
 
             var list = new List<PlayerState>();
             foreach (var client in players)
@@ -356,15 +363,11 @@ namespace SS14.Server.Player
             netMsg.PlyCount = (byte)list.Count;
 
             channel.SendMessage(netMsg);
-
-            // client session is complete
-            var session = GetSessionByChannel(channel);
-            session.Status = SessionStatus.Connected;
         }
 
         public void Dirty()
         {
-            NeedsStateUpdate = true;
+            _lastStateUpdate = _timing.CurTick;
         }
 
         public IPlayerData GetPlayerData(NetSessionId sessionId)

@@ -113,9 +113,12 @@ namespace SS14.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState state)
+        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
-            var newState = (CollidableComponentState) state;
+            if (curState == null)
+                return;
+
+            var newState = (CollidableComponentState) curState;
 
             // edge triggered
             if (newState.CollisionEnabled == _collisionEnabled)

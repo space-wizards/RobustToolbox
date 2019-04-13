@@ -5,6 +5,7 @@ using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
@@ -43,7 +44,7 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
             var manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(PROTOTYPES));
             manager.Resync();
-
+            
             // build the net dream
             MapA = MapManager.CreateMap();
             GridA = MapA.CreateGrid();
@@ -244,6 +245,8 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
         [Test]
         public void ParentRotationRoundingErrorTest()
         {
+            IoCManager.Resolve<IGameTiming>().InSimulation = true;
+
             // Arrange
             var node1 = EntityManager.SpawnEntity("dummy");
             var node2 = EntityManager.SpawnEntity("dummy");

@@ -1,18 +1,18 @@
 ﻿using DiscordRPC;
 using DiscordRPC.Logging;
 using SS14.Client.Interfaces.Utility;
+using SS14.Shared.Interfaces.Configuration;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.Utility
 {
-    class DiscordRichPresence : IDiscordRichPresence
+    internal sealed class DiscordRichPresence : IDiscordRichPresence, IPostInjectInit
     {
-        private DiscordRpcClient _client;
-
-        private RichPresence _presence = new RichPresence()
+        private static readonly RichPresence _defaultPresence = new RichPresence
         {
-            Details = "devstation",
-            State = "Testing Rich Presence",
-            Assets = new Assets()
+            Details = "In Main Menu",
+            State = "In Main Menu",
+            Assets = new Assets
             {
                 LargeImageKey = "devstation",
                 LargeImageText = "I think coolsville SUCKS",
@@ -20,59 +20,118 @@ namespace SS14.Client.Utility
             }
         };
 
-        public void Connect()
+        private RichPresence _activePresence;
+
+        private DiscordRpcClient _client;
+
+        [Dependency] private readonly IConfigurationManager _configurationManager;
+
+        private bool _initialized;
+
+        public void Initialize()
         {
+            if (_configurationManager.GetCVar<bool>("discord.enabled"))
+            {
+                _start();
+            }
+
+            _initialized = true;
+        }
+
+        private void _start()
+        {
+            _stop();
+
             // Create the client
             _client = new DiscordRpcClient("560499552273170473")
             {
-                Logger = new NativeLogger()
+                Logger = NativeLogger.Instance
             };
+
             // == Subscribe to some events
             _client.OnReady += (sender, msg) =>
             {
                 _client.Logger.Info("Connected to discord with user {0}", msg.User.Username);
             };
 
-            _client.OnPresenceUpdate += (sender, msg) =>
-            {
-                _client.Logger.Info("Presence has been updated! ");
-            };
+            _client.OnPresenceUpdate += (sender, msg) => _client.Logger.Info("Presence has been updated! ");
 
             // == Initialize
             _client.Initialize();
 
             // == Set the presence
-            _client.SetPresence(_presence);
+            _client.SetPresence(_activePresence ?? _defaultPresence);
         }
 
-        public void Update(string serverName, string Username, string maxUser)
+        private void _stop()
         {
-            //TODO: tests
-            _presence.Details = "On server: " + serverName;
-            _presence.State = "Max players: " + maxUser;
-            _presence.Assets.LargeImageText = "Character: " + Username;
-            _client.SetPresence(_presence);
+            _client?.Dispose();
+            _client = null;
         }
 
-        public void Restore()
+        public void Update(string serverName, string username, string maxUser)
         {
-            _presence = default;
-            _client.SetPresence(_presence);
+            _activePresence = new RichPresence
+            {
+                Details = $"On Server: {serverName}",
+                State = $"Max players: {maxUser}",
+                Assets = new Assets
+                {
+                    LargeImageKey = "devstation",
+                    LargeImageText = $"Character: {username}",
+                    SmallImageKey = "logo"
+                }
+            };
+            _client?.SetPresence(_activePresence);
+        }
+
+        public void ClearPresence()
+        {
+            _activePresence = null;
+            _client?.SetPresence(_defaultPresence);
         }
 
         public void Dispose()
         {
-            _client.Dispose();
+            _stop();
         }
 
-        private class NativeLogger : ILogger
+        public void PostInject()
         {
+            _configurationManager.RegisterCVar("discord.enabled", true, onValueChanged: newValue =>
+            {
+                if (!_initialized)
+                {
+                    return;
+                }
+
+                if (newValue)
+                {
+                    if (_client == null || _client.Disposed)
+                    {
+                        _start();
+                    }
+                }
+                else
+                {
+                    _stop();
+                }
+            });
+        }
+
+        private sealed class NativeLogger : ILogger
+        {
+            public static readonly NativeLogger Instance = new NativeLogger();
+
+            private NativeLogger() {}
+
             public void Trace(string message, params object[] args)
             {
                 if (Level > LogLevel.Trace)
                 {
                     return;
                 }
+
                 Shared.Log.Logger.DebugS("discord", message, args);
             }
 
@@ -82,6 +141,7 @@ namespace SS14.Client.Utility
                 {
                     return;
                 }
+
                 Shared.Log.Logger.InfoS("discord", message, args);
             }
 
@@ -91,6 +151,7 @@ namespace SS14.Client.Utility
                 {
                     return;
                 }
+
                 Shared.Log.Logger.WarningS("discord", message, args);
             }
 

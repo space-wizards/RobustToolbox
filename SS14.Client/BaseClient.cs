@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
@@ -96,7 +96,6 @@ namespace SS14.Client
         {
             DebugTools.Assert(RunLevel > ClientRunLevel.Initialize);
             DebugTools.Assert(_net.IsConnected);
-            _discord.Restore();
             // run level changed in OnNetDisconnect()
             // are both of these *really* needed?
             _net.ClientDisconnect(reason);
@@ -167,6 +166,7 @@ namespace SS14.Client
             _playMan.Shutdown();
             _entityManager.Shutdown();
             _mapManager.Shutdown();
+            _discord.ClearPresence();
             Reset();
         }
 

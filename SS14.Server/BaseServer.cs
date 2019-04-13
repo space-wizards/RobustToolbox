@@ -9,7 +9,6 @@ using System.Threading;
 using SS14.Server.Console;
 using SS14.Server.GameStates;
 using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
@@ -212,7 +211,6 @@ namespace SS14.Server
             // Initialize Tier 2 services
             _stateManager.Initialize();
             _entities.Initialize();
-            IoCManager.Resolve<IChatManager>().Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
             _mapManager.Initialize();
             IoCManager.Resolve<IPlacementManager>().Initialize();

@@ -14,8 +14,6 @@ namespace SS14.Client.Interfaces.Console
         /// <summary>
         /// Write a line with a specific color to the console window.
         /// </summary>
-        void AddLine(string text, ChatChannel channel, Color color);
-
         void AddLine(string text, Color color);
 
         void AddLine(string text);

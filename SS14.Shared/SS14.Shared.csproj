@@ -209,7 +209,6 @@
     <Compile Include="Network\NetChannelArgs.cs" />
     <Compile Include="Network\NetManager.ClientConnect.cs" />
     <Compile Include="Network\NetMessageArgs.cs" />
-    <Compile Include="Network\Messages\MsgChat.cs" />
     <Compile Include="Network\Messages\MsgConCmd.cs" />
     <Compile Include="Network\Messages\MsgConCmdAck.cs" />
     <Compile Include="Network\Messages\MsgConCmdReg.cs" />
@@ -271,7 +270,6 @@
     <Compile Include="Utility\CollectionExtensions.cs" />
     <Compile Include="Enums\NetworkEnums.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Console\ChatChannel.cs" />
     <Compile Include="Enums\VectorEventArgs.cs" />
     <Compile Include="IoC\IoCManager.cs" />
     <Compile Include="IoC\IPostInjectInit.cs" />

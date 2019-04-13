@@ -47,8 +47,7 @@ namespace SS14.Client.Console.Commands
 
             foreach (var e in entityManager.GetEntities())
             {
-                console.AddLine($"entity {e.Uid}, {e.Prototype.ID}, {e.Transform.GridPosition}.", ChatChannel.Default,
-                    Color.White);
+                console.AddLine($"entity {e.Uid}, {e.Prototype.ID}, {e.Transform.GridPosition}.", Color.White);
             }
 
             return false;

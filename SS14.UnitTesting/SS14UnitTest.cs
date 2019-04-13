@@ -30,12 +30,10 @@ using SS14.Client.UserInterface;
 using SS14.Client.ViewVariables;
 using SS14.Client.Utility;
 using SS14.Server;
-using SS14.Server.Chat;
 using SS14.Server.Console;
 using SS14.Server.GameObjects;
 using SS14.Server.GameStates;
 using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
@@ -218,8 +216,6 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IGameControllerProxyInternal, GameControllerProxyDummy>();
                     IoCManager.Register<IInputManager, InputManager>();
                     IoCManager.Register<IDebugDrawing, DebugDrawing>();
-                    IoCManager.Register<IClientConsole, ClientChatConsole>();
-                    IoCManager.Register<IClientChatConsole, ClientChatConsole>();
                     //IoCManager.Register<ILightManager, LightManager>();
                     IoCManager.Register<IDisplayManager, DisplayManagerHeadless>();
                     //IoCManager.Register<IEyeManager, EyeManager>();
@@ -230,6 +226,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IClipboardManager, ClipboardManagerUnsupported>();
                     IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
                     IoCManager.Register<IEyeManager, EyeManager>();
+                    IoCManager.Register<IClientConsole, ClientConsole>();
                     break;
 
                 case UnitTestProject.Server:
@@ -237,7 +234,6 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IResourceManagerInternal, ResourceManager>();
                     IoCManager.Register<IEntityManager, ServerEntityManager>();
                     IoCManager.Register<IServerEntityManager, ServerEntityManager>();
-                    IoCManager.Register<IChatManager, ChatManager>();
                     IoCManager.Register<IServerNetManager, NetManager>();
                     IoCManager.Register<IMapManager, MapManager>();
                     IoCManager.Register<IPlacementManager, PlacementManager>();

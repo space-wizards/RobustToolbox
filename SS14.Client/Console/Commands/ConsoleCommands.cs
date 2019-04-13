@@ -34,7 +34,7 @@ namespace SS14.Client.Console.Commands
             Random random = new Random();
             for (int x = 0; x < 50; x++)
             {
-                console.AddLine("filling...", ChatChannel.Default, colors[random.Next(0, colors.Length)]);
+                console.AddLine("filling...", colors[random.Next(0, colors.Length)]);
             }
             return false;
         }

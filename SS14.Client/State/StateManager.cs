@@ -2,12 +2,15 @@
 using SS14.Client.Interfaces.State;
 using SS14.Shared.Log;
 using System;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.State
 {
     public class StateManager : IStateManager
     {
-        public State CurrentState { get; private set; } = null;
+        [Dependency] private readonly IDynamicTypeFactory _typeFactory;
+
+        public State CurrentState { get; private set; }
 
         #region Updates & Statechanges
 
@@ -43,7 +46,7 @@ namespace SS14.Client.State
         {
             Logger.Debug($"Switching to state {type}");
 
-            State newState = (State)Activator.CreateInstance(type);
+            var newState = (State)_typeFactory.CreateInstance(type);
 
             CurrentState?.Shutdown();
 

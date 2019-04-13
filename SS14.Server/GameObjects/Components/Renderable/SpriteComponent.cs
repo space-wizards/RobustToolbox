@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
@@ -9,7 +8,6 @@ using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
 using SS14.Shared.Utility;
 using SS14.Shared.ViewVariables;
-using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
@@ -115,6 +113,18 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        public uint _renderOrder;
+        [ViewVariables(VVAccess.ReadWrite)]
+        public uint RenderOrder
+        {
+            get => _renderOrder;
+            set
+            {
+                _renderOrder = value;
+                Dirty();
+            }
+        }
+        
         public int AddLayerWithSprite(SpriteSpecifier specifier)
         {
             var layer = PrototypeLayerData.New();
@@ -431,7 +441,7 @@ namespace SS14.Server.GameObjects
         public override ComponentState GetComponentState()
         {
             return new SpriteComponentState(Visible, DrawDepth, Scale, Rotation, Offset, Color, Directional,
-                BaseRSIPath, Layers);
+                BaseRSIPath, Layers, RenderOrder);
         }
     }
 }

@@ -16,6 +16,8 @@ namespace SS14.Server.GameObjects.EntitySystems
     /// </summary>
     public class InputSystem : EntitySystem
     {
+        [Dependency] private readonly IPlayerManager _playerManager;
+
         private readonly Dictionary<IPlayerSession, IPlayerCommandStates> _playerInputs = new Dictionary<IPlayerSession, IPlayerCommandStates>();
         private readonly CommandBindMapping _bindMap = new CommandBindMapping();
 
@@ -33,13 +35,13 @@ namespace SS14.Server.GameObjects.EntitySystems
         /// <inheritdoc />
         public override void Initialize()
         {
-            IoCManager.Resolve<IPlayerManager>().PlayerStatusChanged += OnPlayerStatusChanged;
+            _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         }
 
         /// <inheritdoc />
         public override void Shutdown()
         {
-            IoCManager.Resolve<IPlayerManager>().PlayerStatusChanged -= OnPlayerStatusChanged;
+            _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
         }
 
         /// <inheritdoc />
@@ -49,10 +51,10 @@ namespace SS14.Server.GameObjects.EntitySystems
                 return;
 
             //Client Sanitization: out of bounds functionID
-            if (!IoCManager.Resolve<IPlayerManager>().KeyMap.TryGetKeyFunction(msg.InputFunctionId, out var function))
+            if (!_playerManager.KeyMap.TryGetKeyFunction(msg.InputFunctionId, out var function))
                 return;
 
-            var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(channel);
+            var session = _playerManager.GetSessionByChannel(channel);
 
             //Client Sanitization: bad enum key state value
             if (!Enum.IsDefined(typeof(BoundKeyState), msg.State))

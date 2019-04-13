@@ -2,13 +2,13 @@
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Serialization;
-using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
     /// <remarks>
     ///     Base component for the ECS system.
     ///     All discoverable implementations of IComponent must override the <see cref="Name" />.
+    ///     Instances are dynamically instantiated by a <c>ComponentFactory</c>, and will have their IoC Dependencies resolved.
     /// </remarks>
     public interface IComponent : IEntityEventSubscriber
     {

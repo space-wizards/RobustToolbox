@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -224,8 +224,7 @@ namespace SS14.Client.Graphics.Clyde
                 {
                     return cmp;
                 }
-
-                return a.Owner.Uid.CompareTo(b.Owner.Uid);
+                return a.RenderOrder.CompareTo(b.RenderOrder);
             });
 
             foreach (var entity in entityList)

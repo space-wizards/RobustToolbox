@@ -9,9 +9,9 @@ namespace SS14.Client.GameObjects
 {
     public class ClientEntityNetworkManager : IEntityNetworkManager
     {
-        [Dependency]
-        private readonly IClientNetManager _network;
-
+        [Dependency] private readonly IClientNetManager _network;
+        [Dependency] private readonly IEntitySystemManager _entitySystemManager;
+        
         /// <summary>
         /// Sends a message to the relevant system(s) server side.
         /// </summary>
@@ -74,9 +74,8 @@ namespace SS14.Client.GameObjects
                     // TODO: Handle this.
                     break;
 
-                case EntityMessageType.SystemMessage: //TODO: Not happy with this resolving the entmgr everytime a message comes in.
-                    var manager = IoCManager.Resolve<IEntitySystemManager>();
-                    manager.HandleSystemMessage(message);
+                case EntityMessageType.SystemMessage:
+                    _entitySystemManager.HandleSystemMessage(message);
                     break;
             }
             return null;

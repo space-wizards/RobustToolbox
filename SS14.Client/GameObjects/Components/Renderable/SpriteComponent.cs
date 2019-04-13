@@ -10,7 +10,6 @@ using SS14.Client.Utility;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
@@ -23,7 +22,6 @@ using System.Linq;
 using System.Text;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.ViewVariables;
-using YamlDotNet.RepresentationModel;
 using VS = Godot.VisualServer;
 
 namespace SS14.Client.GameObjects
@@ -214,11 +212,16 @@ namespace SS14.Client.GameObjects
 
         private Godot.Node2D SceneNode;
 
-        private IResourceCache resourceCache;
-        private IPrototypeManager prototypes;
+        [Dependency] private readonly IResourceCache resourceCache;
+        [Dependency] private readonly IPrototypeManager prototypes;
+        [Dependency] private readonly IReflectionManager reflectionManager;
 
         [ViewVariables(VVAccess.ReadWrite)] RSI.State.Direction LastDir;
         [ViewVariables(VVAccess.ReadWrite)] private bool _recalcDirections = false;
+
+        public uint _renderOrder;
+        [ViewVariables(VVAccess.ReadWrite)]
+        public uint RenderOrder { get => _renderOrder; set => _renderOrder = value; }
 
         int NextMirrorKey;
 
@@ -230,8 +233,8 @@ namespace SS14.Client.GameObjects
         private static Shader _defaultShader;
 
         [ViewVariables]
-        private static Shader DefaultShader => _defaultShader ??
-                                               (_defaultShader = IoCManager.Resolve<IPrototypeManager>()
+        private Shader DefaultShader => _defaultShader ??
+                                               (_defaultShader = prototypes
                                                    .Index<ShaderPrototype>("shaded")
                                                    .Instance());
 
@@ -1298,10 +1301,7 @@ namespace SS14.Client.GameObjects
             serializer.DataFieldCached(ref color, "color", Color.White);
             serializer.DataFieldCached(ref _directional, "directional", true);
             serializer.DataFieldCached(ref _visible, "visible", true);
-
-            prototypes = IoCManager.Resolve<IPrototypeManager>();
-            resourceCache = IoCManager.Resolve<IResourceCache>();
-
+            
             // TODO: Writing?
             if (!serializer.Reading)
             {
@@ -1357,8 +1357,6 @@ namespace SS14.Client.GameObjects
                     });
                 }
             }
-
-            var reflectionManager = IoCManager.Resolve<IReflectionManager>();
 
             foreach (var layerDatum in layerData)
             {
@@ -1580,6 +1578,7 @@ namespace SS14.Client.GameObjects
             Offset = thestate.Offset;
             Color = thestate.Color;
             Directional = thestate.Directional;
+            RenderOrder = thestate.RenderOrder;
 
             if (thestate.BaseRsiPath != null && BaseRSI != null)
             {

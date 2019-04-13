@@ -13,6 +13,8 @@ namespace SS14.Client.GameObjects
 {
     public class CollidableComponent : Component, ICollidableComponent
     {
+        [Dependency] private readonly IPhysicsManager _physicsManager;
+
         private bool _collisionIsActuallyEnabled;
         private bool _collisionEnabled;
 
@@ -92,8 +94,7 @@ namespace SS14.Client.GameObjects
 
             if (_collisionEnabled && !_collisionIsActuallyEnabled)
             {
-                var cm = IoCManager.Resolve<IPhysicsManager>();
-                cm.AddCollidable(this);
+                _physicsManager.AddCollidable(this);
                 _collisionIsActuallyEnabled = true;
             }
         }
@@ -105,8 +106,7 @@ namespace SS14.Client.GameObjects
         {
             if (_collisionEnabled)
             {
-                var cm = IoCManager.Resolve<IPhysicsManager>();
-                cm.RemoveCollidable(this);
+                _physicsManager.RemoveCollidable(this);
             }
 
             base.Shutdown();
@@ -130,7 +130,7 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public bool TryCollision(Vector2 offset, bool bump = false)
         {
-            return IoCManager.Resolve<IPhysicsManager>().TryCollide(Owner, offset, bump);
+            return _physicsManager.TryCollide(Owner, offset, bump);
         }
 
         /// <summary>
@@ -140,8 +140,7 @@ namespace SS14.Client.GameObjects
         {
             _collisionEnabled = true;
             _collisionIsActuallyEnabled = true;
-            var cm = IoCManager.Resolve<IPhysicsManager>();
-            cm.AddCollidable(this);
+            _physicsManager.AddCollidable(this);
         }
 
         /// <summary>
@@ -151,8 +150,7 @@ namespace SS14.Client.GameObjects
         {
             _collisionEnabled = false;
             _collisionIsActuallyEnabled = false;
-            var cm = IoCManager.Resolve<IPhysicsManager>();
-            cm.RemoveCollidable(this);
+            _physicsManager.RemoveCollidable(this);
         }
     }
 }

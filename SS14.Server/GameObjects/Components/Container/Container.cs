@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.IoC;
 using SS14.Shared.ViewVariables;
 
 namespace SS14.Server.GameObjects.Components.Container

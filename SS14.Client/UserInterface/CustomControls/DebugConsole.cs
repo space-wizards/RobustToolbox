@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using Newtonsoft.Json;
 using SS14.Client.Console;
 using SS14.Client.Graphics.Drawing;
@@ -11,7 +10,6 @@ using SS14.Client.UserInterface.Controls;
 using SS14.Client.Utility;
 using SS14.Shared.Console;
 using SS14.Shared.Interfaces.Resources;
-using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 
@@ -27,25 +25,31 @@ namespace SS14.Client.UserInterface.CustomControls
     {
         private const int MaxHistorySize = 100;
 
-        [Dependency] private readonly IClientConsole console;
-        [Dependency] private readonly IResourceManager _resourceManager;
+        private readonly IClientConsole _console;
+        private readonly IResourceManager _resourceManager;
 
         private static readonly ResourcePath HistoryPath = new ResourcePath("/debug_console_history.json");
 
         private LineEdit CommandBar;
         private OutputPanel Output;
 
-        public IReadOnlyDictionary<string, IConsoleCommand> Commands => console.Commands;
+        public IReadOnlyDictionary<string, IConsoleCommand> Commands => _console.Commands;
         private readonly ConcurrentQueue<FormattedMessage> _messageQueue = new ConcurrentQueue<FormattedMessage>();
 
         private readonly List<string> CommandHistory = new List<string>();
         private int _historyPosition;
         private bool _currentCommandEdited;
 
-        protected override void Initialize()
+        public DebugConsole(IClientConsole console, IResourceManager resMan)
         {
-            IoCManager.InjectDependencies(this);
+            _console = console;
+            _resourceManager = resMan;
 
+            PerformLayout();
+        }
+        
+        private void PerformLayout()
+        {
             Visible = false;
 
             AnchorRight = 1f;
@@ -72,9 +76,9 @@ namespace SS14.Client.UserInterface.CustomControls
             CommandBar.OnTextEntered += CommandEntered;
             CommandBar.OnTextChanged += CommandBarOnOnTextChanged;
 
-            console.AddString += (_, args) => AddLine(args.Text, args.Color);
-            console.AddFormatted += (_, args) => AddFormattedLine(args.Message);
-            console.ClearText += (_, args) => Clear();
+            _console.AddString += (_, args) => AddLine(args.Text, args.Color);
+            _console.AddFormatted += (_, args) => AddFormattedLine(args.Message);
+            _console.ClearText += (_, args) => Clear();
 
             _loadHistoryFromDisk();
         }
@@ -107,7 +111,7 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             if (!string.IsNullOrWhiteSpace(args.Text))
             {
-                console.ProcessCommand(args.Text);
+                _console.ProcessCommand(args.Text);
                 CommandBar.Clear();
                 if (CommandHistory.Count == 0 || CommandHistory[CommandHistory.Count - 1] != args.Text)
                 {

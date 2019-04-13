@@ -23,6 +23,7 @@ namespace SS14.Shared.Interfaces.Physics
 
         void AddCollidable(ICollidable collidable);
         void RemoveCollidable(ICollidable collidable);
+        void BuildCollisionGrid();
 
         /// <summary>
         ///     Casts a ray in the world and returns the first thing it hit.

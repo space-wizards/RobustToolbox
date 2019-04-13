@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Interfaces.GameObjects;
@@ -21,6 +21,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
         private bool IsSet;
         private SnapGridOffset _offset = SnapGridOffset.Center;
+        [Dependency] private readonly IMapManager _mapManager;
 
         public event Action OnPositionChanged;
 
@@ -43,8 +44,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
             Owner.Transform.OnMove -= OnTransformMove;
             if (IsSet)
             {
-                var mapMan = IoCManager.Resolve<IMapManager>();
-                if (!mapMan.TryGetGrid(Owner.Transform.GridID, out var grid))
+                if (!_mapManager.TryGetGrid(Owner.Transform.GridID, out var grid))
                 {
                     Logger.WarningS(LogCategory, "Entity {0} snapgrid didn't find grid {1}. Race condition?", Owner.Uid, Owner.Transform.GridID);
                     return;
@@ -69,8 +69,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
         /// </summary>
         public IEnumerable<IEntity> GetInDir(Direction dir)
         {
-            var mapMan = IoCManager.Resolve<IMapManager>();
-            var grid = mapMan.GetGrid(Owner.Transform.GridID);
+            var grid = _mapManager.GetGrid(Owner.Transform.GridID);
             var pos = SnapGridPosAt(dir);
 
             return grid.GetSnapGridCell(pos, Offset).Select(s => s.Owner);
@@ -109,8 +108,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
 
         private void UpdatePosition()
         {
-            var mapMan = IoCManager.Resolve<IMapManager>();
-            if (!mapMan.TryGetGrid(Owner.Transform.GridID, out var grid))
+            if (!_mapManager.TryGetGrid(Owner.Transform.GridID, out var grid))
             {
                 Logger.WarningS(LogCategory, "Entity {0} snapgrid didn't find grid {1}. Race condition?", Owner.Uid, Owner.Transform.GridID);
                 return;

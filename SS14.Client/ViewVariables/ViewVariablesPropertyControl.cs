@@ -1,6 +1,4 @@
-using System;
-using System.Net.Http.Headers;
-using System.Reflection;
+﻿using System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Drawing;
 using SS14.Client.Interfaces.ResourceManagement;
@@ -8,8 +6,6 @@ using SS14.Client.ResourceManagement;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.ViewVariables.Editors;
-using SS14.Shared.Interfaces.Reflection;
-using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using SS14.Shared.ViewVariables;
@@ -25,14 +21,19 @@ namespace SS14.Client.ViewVariables
 
         private Label _bottomLabel;
 
-        [Dependency] private IViewVariablesManagerInternal _viewVariablesManager;
+        private readonly IViewVariablesManagerInternal _viewVariablesManager;
+        private readonly IResourceCache _resourceCache;
 
-        protected override void Initialize()
+        public ViewVariablesPropertyControl(IViewVariablesManagerInternal viewVars, IResourceCache resourceCache)
         {
-            base.Initialize();
+            _viewVariablesManager = viewVars;
+            _resourceCache = resourceCache;
 
-            IoCManager.InjectDependencies(this);
+            PerformLayout();
+        }
 
+        private void PerformLayout()
+        {
             MouseFilter = MouseFilterMode.Stop;
             ToolTip = "Click to expand";
             CustomMinimumSize = new Vector2(0, 25);
@@ -49,8 +50,7 @@ namespace SS14.Client.ViewVariables
             };
             VBox.AddChild(BottomContainer);
 
-            var resc = IoCManager.Resolve<IResourceCache>();
-            var smallFont = new VectorFont(resc.GetResource<FontResource>("/Fonts/CALIBRI.TTF"), 10);
+            var smallFont = new VectorFont(_resourceCache.GetResource<FontResource>("/Fonts/CALIBRI.TTF"), 10);
 
             _bottomLabel = new Label
             {

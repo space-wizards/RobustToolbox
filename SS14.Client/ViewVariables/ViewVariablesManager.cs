@@ -1,14 +1,12 @@
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
+using SS14.Client.Interfaces.Graphics;
+using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Client.ViewVariables.Editors;
 using SS14.Client.ViewVariables.Instances;
-using SS14.Client.ViewVariables.Traits;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
@@ -16,7 +14,6 @@ using SS14.Shared.Log;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
-using SS14.Shared.Utility;
 using SS14.Shared.ViewVariables;
 using NumberType = SS14.Client.ViewVariables.Editors.ViewVariablesPropertyEditorNumeric.NumberType;
 
@@ -25,6 +22,9 @@ namespace SS14.Client.ViewVariables
     internal class ViewVariablesManager : ViewVariablesManagerShared, IViewVariablesManagerInternal
     {
         [Dependency] private readonly IClientNetManager _netManager;
+        [Dependency] private readonly IResourceCache _resourceCache;
+        [Dependency] private readonly IEntityManager _entityManager;
+        [Dependency] private readonly IDisplayManager _displayManager;
 
         private uint _nextReqId = 1;
 
@@ -39,8 +39,6 @@ namespace SS14.Client.ViewVariables
 
         private readonly Dictionary<uint, TaskCompletionSource<ViewVariablesBlob>> _requestedData
             = new Dictionary<uint, TaskCompletionSource<ViewVariablesBlob>>();
-
-        private readonly Dictionary<Type, HashSet<object>> _cachedTraits = new Dictionary<Type, HashSet<object>>();
 
         public void Initialize()
         {
@@ -184,14 +182,14 @@ namespace SS14.Client.ViewVariables
             ViewVariablesInstance instance;
             if (obj is IEntity entity && !entity.Deleted)
             {
-                instance = new ViewVariablesInstanceEntity(this);
+                instance = new ViewVariablesInstanceEntity(this, _resourceCache, _entityManager);
             }
             else
             {
-                instance = new ViewVariablesInstanceObject(this);
+                instance = new ViewVariablesInstanceObject(this, _resourceCache);
             }
 
-            var window = new SS14Window("VV") {Title = "View Variables"};
+            var window = new SS14Window(_displayManager, "VV") {Title = "View Variables"};
             instance.Initialize(window, obj);
             window.AddToScreen();
             window.OnClose += () => _closeInstance(instance, false);
@@ -200,7 +198,7 @@ namespace SS14.Client.ViewVariables
 
         public async void OpenVV(ViewVariablesObjectSelector selector)
         {
-            var window = new SS14Window("VV") {Title = "View Variables"};
+            var window = new SS14Window(_displayManager, "VV") {Title = "View Variables"};
             var loadingLabel = new Label {Text = "Retrieving remote object data from server..."};
             window.Contents.AddChild(loadingLabel);
             window.AddToScreen();
@@ -225,11 +223,11 @@ namespace SS14.Client.ViewVariables
             ViewVariablesInstance instance;
             if (type != null && typeof(IEntity).IsAssignableFrom(type))
             {
-                instance = new ViewVariablesInstanceEntity(this);
+                instance = new ViewVariablesInstanceEntity(this, _resourceCache, _entityManager);
             }
             else
             {
-                instance = new ViewVariablesInstanceObject(this);
+                instance = new ViewVariablesInstanceObject(this, _resourceCache);
             }
 
             loadingLabel.Dispose();

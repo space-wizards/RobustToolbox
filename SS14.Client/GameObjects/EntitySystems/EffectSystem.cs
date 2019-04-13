@@ -24,23 +24,19 @@ namespace SS14.Client.GameObjects
 {
     public class EffectSystem : EntitySystem
     {
-        [Dependency] IGameTiming gameTiming;
-
-        [Dependency] IResourceCache resourceCache;
-
-        [Dependency] IEyeManager eyeManager;
-
-        [Dependency] IOverlayManager overlayManager;
+        [Dependency] private readonly IGameTiming gameTiming;
+        [Dependency] private readonly IResourceCache resourceCache;
+        [Dependency] private readonly IEyeManager eyeManager;
+        [Dependency] private readonly IOverlayManager overlayManager;
+        [Dependency] private readonly IPrototypeManager prototypeManager;
 
         private readonly List<Effect> _Effects = new List<Effect>();
-        private TimeSpan lasttimeprocessed = TimeSpan.Zero;
 
         public override void Initialize()
         {
             base.Initialize();
-            IoCManager.InjectDependencies(this);
 
-            var overlay = new EffectOverlay(this);
+            var overlay = new EffectOverlay(this, prototypeManager);
             overlayManager.AddOverlay(overlay);
         }
 
@@ -98,8 +94,6 @@ namespace SS14.Client.GameObjects
 
         public override void FrameUpdate(float frameTime)
         {
-            lasttimeprocessed = IoCManager.Resolve<IGameTiming>().CurTime;
-
             for (int i = 0; i < _Effects.Count; i++)
             {
                 var effect = _Effects[i];
@@ -291,10 +285,10 @@ namespace SS14.Client.GameObjects
             private readonly Shader _unshadedShader;
             private readonly EffectSystem _owner;
 
-            public EffectOverlay(EffectSystem owner) : base("EffectSystem")
+            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan) : base("EffectSystem")
             {
                 _owner = owner;
-                _unshadedShader = IoCManager.Resolve<IPrototypeManager>().Index<ShaderPrototype>("unshaded").Instance();
+                _unshadedShader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
             }
 
             protected override void Draw(DrawingHandle handle)

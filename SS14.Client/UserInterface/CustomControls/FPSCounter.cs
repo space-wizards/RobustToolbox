@@ -1,13 +1,18 @@
 ﻿using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Interfaces.Timing;
-using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using SS14.Shared.Reflection;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
     public class FPSCounter : Label
     {
+        private readonly IGameTiming _gameTiming;
+
+        public FPSCounter(IGameTiming gameTiming)
+        {
+            _gameTiming = gameTiming;
+        }
+
         protected override void Initialize()
         {
             base.Initialize();
@@ -26,7 +31,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 return;
             }
 
-            var fps = IoCManager.Resolve<IGameTiming>().FramesPerSecondAvg;
+            var fps = _gameTiming.FramesPerSecondAvg;
             Text = $"FPS: {fps:N1}";
         }
     }

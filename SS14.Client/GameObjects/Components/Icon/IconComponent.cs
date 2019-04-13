@@ -15,6 +15,8 @@ namespace SS14.Client.GameObjects
         public IDirectionalTextureProvider Icon => _icon;
         private IDirectionalTextureProvider _icon;
 
+        [Dependency] private readonly IResourceCache _resourceCache;
+
         public const string LogCategory = "go.comp.icon";
         const string SerializationCache = "icon";
 
@@ -25,13 +27,12 @@ namespace SS14.Client.GameObjects
             // TODO: Does this need writing?
             if (serializer.Reading)
             {
-                _icon = TextureForConfig(serializer);
+                _icon = TextureForConfig(serializer, _resourceCache);
             }
         }
 
-        private static IDirectionalTextureProvider TextureForConfig(ObjectSerializer serializer)
+        private static IDirectionalTextureProvider TextureForConfig(ObjectSerializer serializer, IResourceCache resourceCache)
         {
-            var resc = IoCManager.Resolve<IResourceCache>();
             DebugTools.Assert(serializer.Reading);
 
             if (serializer.TryGetCacheData<IDirectionalTextureProvider>(SerializationCache, out var dirTex))
@@ -42,7 +43,7 @@ namespace SS14.Client.GameObjects
             var tex = serializer.ReadDataField<string>("texture", null);
             if (!string.IsNullOrWhiteSpace(tex))
             {
-                dirTex = resc.GetResource<TextureResource>(SpriteComponent.TextureRoot / tex).Texture;
+                dirTex = resourceCache.GetResource<TextureResource>(SpriteComponent.TextureRoot / tex).Texture;
                 serializer.SetCacheData(SerializationCache, dirTex);
                 return dirTex;
             }
@@ -53,7 +54,7 @@ namespace SS14.Client.GameObjects
 
             if (string.IsNullOrWhiteSpace(rsiPath))
             {
-                dirTex = resc.GetFallback<TextureResource>().Texture;
+                dirTex = resourceCache.GetFallback<TextureResource>().Texture;
                 serializer.SetCacheData(SerializationCache, dirTex);
                 return dirTex;
             }
@@ -62,11 +63,11 @@ namespace SS14.Client.GameObjects
 
             try
             {
-                rsi = resc.GetResource<RSIResource>(path).RSI;
+                rsi = resourceCache.GetResource<RSIResource>(path).RSI;
             }
             catch
             {
-                dirTex = resc.GetFallback<TextureResource>().Texture;
+                dirTex = resourceCache.GetFallback<TextureResource>().Texture;
                 serializer.SetCacheData(SerializationCache, dirTex);
                 return dirTex;
             }
@@ -75,7 +76,7 @@ namespace SS14.Client.GameObjects
             if (string.IsNullOrWhiteSpace(stateId))
             {
                 Logger.ErrorS(LogCategory, "No state specified.");
-                dirTex = resc.GetFallback<TextureResource>().Texture;
+                dirTex = resourceCache.GetFallback<TextureResource>().Texture;
                 serializer.SetCacheData(SerializationCache, dirTex);
                 return dirTex;
             }
@@ -88,17 +89,17 @@ namespace SS14.Client.GameObjects
             else
             {
                 Logger.ErrorS(LogCategory, "State '{0}' does not exist on RSI.", stateId);
-                return resc.GetFallback<TextureResource>().Texture;
+                return resourceCache.GetFallback<TextureResource>().Texture;
             }
         }
 
-        public static IDirectionalTextureProvider GetPrototypeIcon(EntityPrototype prototype)
+        public static IDirectionalTextureProvider GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             if (!prototype.Components.TryGetValue("Icon", out var mapping))
             {
-                return IoCManager.Resolve<IResourceCache>().GetFallback<TextureResource>().Texture;
+                return resourceCache.GetFallback<TextureResource>().Texture;
             }
-            return TextureForConfig(YamlObjectSerializer.NewReader(mapping));
+            return TextureForConfig(YamlObjectSerializer.NewReader(mapping), resourceCache);
         }
     }
 }

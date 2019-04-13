@@ -1,12 +1,8 @@
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Graphics;
 using SS14.Client.UserInterface.Controls;
-using SS14.Client.Utility;
 using SS14.Shared.Interfaces.Configuration;
-using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using SS14.Shared.Reflection;
-using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
@@ -16,9 +12,18 @@ namespace SS14.Client.UserInterface.CustomControls
         private CheckBox VSyncCheckBox;
         private CheckBox FullscreenCheckBox;
         private CheckBox HighResLightsCheckBox;
-        private IConfigurationManager configManager;
+        private readonly IConfigurationManager configManager;
+        private readonly IDisplayManager _displayManager;
 
         protected override Vector2? CustomSize => (180, 160);
+
+        public OptionsMenu(IDisplayManager displayMan, IConfigurationManager configMan) : base(displayMan)
+        {
+            _displayManager = displayMan;
+            configManager = configMan;
+
+            PerformLayout();
+        }
 
         protected override void Initialize()
         {
@@ -27,9 +32,10 @@ namespace SS14.Client.UserInterface.CustomControls
             HideOnClose = true;
 
             Title = "Options";
+        }
 
-            configManager = IoCManager.Resolve<IConfigurationManager>();
-
+        private void PerformLayout()
+        {
             var vBox = new VBoxContainer();
             Contents.AddChild(vBox);
             vBox.SetAnchorAndMarginPreset(LayoutPreset.Wide);
@@ -67,7 +73,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 (int) (FullscreenCheckBox.Pressed ? WindowMode.Fullscreen : WindowMode.Windowed));
             configManager.SaveToFile();
             UpdateApplyButton();
-            IoCManager.Resolve<IDisplayManager>().ReloadConfig();
+            _displayManager.ReloadConfig();
         }
 
         private void OnCheckBoxToggled(BaseButton.ButtonToggledEventArgs args)

@@ -3,7 +3,6 @@ using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Interfaces.Timing;
-using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 
@@ -11,19 +10,28 @@ namespace SS14.Client.UserInterface.CustomControls
 {
     public class DebugTimePanel : Panel
     {
-        [Dependency]
         private readonly IResourceCache _resourceCache;
-
-        [Dependency]
         private readonly IGameTiming _gameTiming;
 
         private Label _contents;
 
+        public DebugTimePanel(IResourceCache resourceCache, IGameTiming gameTiming)
+        {
+            _resourceCache = resourceCache;
+            _gameTiming = gameTiming;
+
+            PerformLayout();
+        }
+
         protected override void Initialize()
         {
             base.Initialize();
-            IoCManager.InjectDependencies(this);
 
+            _contents = new Label();
+        }
+
+        private void PerformLayout()
+        {
             _contents = new Label
             {
                 FontOverride = _resourceCache.GetResource<FontResource>(new ResourcePath("/Fonts/CALIBRI.TTF"))

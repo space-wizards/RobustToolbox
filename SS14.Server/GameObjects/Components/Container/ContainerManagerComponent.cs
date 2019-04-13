@@ -16,8 +16,9 @@ namespace SS14.Server.GameObjects.Components.Container
     {
         public override string Name => "ContainerContainer";
 
-        private readonly Dictionary<string, IContainer> EntityContainers = new Dictionary<string, IContainer>();
+        [Dependency] private readonly IReflectionManager _reflectionManager;
 
+        private readonly Dictionary<string, IContainer> EntityContainers = new Dictionary<string, IContainer>();
         private Dictionary<string, List<EntityUid>> _entitiesWaitingResolve;
 
         /// <summary>
@@ -140,10 +141,9 @@ namespace SS14.Server.GameObjects.Components.Container
                 if (serializer.TryReadDataField<Dictionary<string, ContainerPrototypeData>>("containers", out var data))
                 {
                     _entitiesWaitingResolve = new Dictionary<string, List<EntityUid>>();
-                    var reflectionManager = IoCManager.Resolve<IReflectionManager>();
                     foreach (var (key, datum) in data)
                     {
-                        var type = reflectionManager.LooseGetType(datum.Type);
+                        var type = _reflectionManager.LooseGetType(datum.Type);
                         MakeContainer(key, type);
 
                         if (datum.Entities.Count == 0)

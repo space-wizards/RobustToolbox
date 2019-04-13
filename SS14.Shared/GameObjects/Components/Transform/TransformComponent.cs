@@ -31,11 +31,13 @@ namespace SS14.Shared.GameObjects.Components.Transform
         [ViewVariables]
         private readonly List<EntityUid> _children = new List<EntityUid>();
 
+        [Dependency] private readonly IMapManager _mapManager;
+
         /// <inheritdoc />
         public event EventHandler<MoveEventArgs> OnMove;
 
         public event Action<ParentChangedEventArgs> OnParentChanged;
-        
+
         /// <inheritdoc />
         public override string Name => "Transform";
         /// <inheritdoc />
@@ -52,7 +54,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 // Work around a client-side race condition of the grids not being synced yet.
                 // Maybe it's better to fix the race condition instead.
                 // Eh.
-                if (IoCManager.Resolve<IMapManager>().TryGetGrid(GridID, out var grid))
+                if (_mapManager.TryGetGrid(GridID, out var grid))
                 {
                     return grid.MapID;
                 }
@@ -222,7 +224,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                     // Work around a client-side race condition of the grids not being synced yet.
                     // Maybe it's better to fix the race condition instead.
                     // Eh.
-                    if (IoCManager.Resolve<IMapManager>().TryGetGrid(GridID, out var grid))
+                    if (_mapManager.TryGetGrid(GridID, out var grid))
                     {
                         return grid.ConvertToWorld(GetLocalPosition());
                     }
@@ -245,7 +247,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
                 else
                 {
                     SetPosition(value);
-                    _recurseSetGridId(IoCManager.Resolve<IMapManager>().GetMap(MapID).FindGridAt(GetLocalPosition()).Index);
+                    _recurseSetGridId(_mapManager.GetMap(MapID).FindGridAt(GetLocalPosition()).Index);
                 }
 
                 Dirty();
@@ -553,7 +555,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
             {
                 // transform localPosition from parent coords to world coords
                 var worldPos = Parent.WorldMatrix.Transform(localPosition);
-                var grid = IoCManager.Resolve<IMapManager>().GetGrid(gridId);
+                var grid = _mapManager.GetGrid(gridId);
                 var lc = new GridCoordinates(worldPos, grid.MapID);
 
                 // then to parent grid coords

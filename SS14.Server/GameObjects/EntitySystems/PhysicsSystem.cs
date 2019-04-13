@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using SS14.Server.Interfaces.Timing;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Systems;
@@ -13,21 +12,14 @@ namespace SS14.Server.GameObjects.EntitySystems
 {
     internal class PhysicsSystem : EntitySystem
     {
-        private IPauseManager _pauseManager;
-        private IPhysicsManager _physicsManager;
+        [Dependency] private readonly IPauseManager _pauseManager;
+        [Dependency] private readonly IPhysicsManager _physicsManager;
+
         private const float Epsilon = 1.0e-6f;
 
         public PhysicsSystem()
         {
             EntityQuery = new TypeEntityQuery(typeof(PhysicsComponent));
-        }
-
-        public override void Initialize()
-        {
-            base.Initialize();
-           
-            _pauseManager = IoCManager.Resolve<IPauseManager>();
-            _physicsManager = IoCManager.Resolve<IPhysicsManager>();
         }
 
         /// <inheritdoc />

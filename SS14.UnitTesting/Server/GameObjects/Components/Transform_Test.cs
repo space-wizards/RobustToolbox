@@ -17,6 +17,8 @@ namespace SS14.UnitTesting.Server.GameObjects.Components
     [TestOf(typeof(TransformComponent))]
     class Transform_Test : SS14UnitTest
     {
+        public override UnitTestProject Project => UnitTestProject.Server;
+
         private IServerEntityManager EntityManager;
         private IMapManager MapManager;
 

@@ -20,7 +20,8 @@ namespace SS14.Client.GameObjects
         public override Type StateType => typeof(PointLightComponentState);
 
         private ILight Light;
-        [Dependency] private ILightManager lightManager;
+        [Dependency] private readonly ILightManager lightManager;
+        [Dependency] private readonly IResourceCache _resourceCache;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public Color Color
@@ -119,8 +120,7 @@ namespace SS14.Client.GameObjects
             set
             {
                 radius = FloatMath.Clamp(value, 2, 10);
-                var mgr = IoCManager.Resolve<IResourceCache>();
-                var tex = mgr.GetResource<TextureResource>(new ResourcePath("/Textures/Effects/Light/") /
+                var tex = _resourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/Effects/Light/") /
                                                            $"lighting_falloff_{(int) radius}.png");
 
                 if (GameController.OnGodot)
@@ -176,14 +176,10 @@ namespace SS14.Client.GameObjects
 
         public override void ExposeData(ObjectSerializer serializer)
         {
-            if (lightManager == null)
-            {
-                // First in the init stack so...
-                // FIXME: This is terrible.
-                lightManager = IoCManager.Resolve<ILightManager>();
-                Light = lightManager.MakeLight();
-            }
-
+            // First in the init stack so...
+            // FIXME: This is terrible.
+            Light?.Dispose();
+            Light = lightManager.MakeLight();
             serializer.DataReadWriteFunction("offset", Vector2.Zero, vec => Offset = vec, () => Offset);
             serializer.DataReadWriteFunction("radius", 5f, radius => Radius = radius, () => Radius);
             serializer.DataReadWriteFunction("color", Color.White, col => Color = col, () => Color);

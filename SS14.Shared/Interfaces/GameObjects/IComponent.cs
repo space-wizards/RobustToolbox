@@ -2,6 +2,7 @@
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Serialization;
+using SS14.Shared.Timing;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {

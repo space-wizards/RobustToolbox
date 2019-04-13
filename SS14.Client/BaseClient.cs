@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
@@ -163,7 +163,6 @@ namespace SS14.Client
 
             _stateManager.RequestStateChange<MainScreen>();
 
-            _timing.Paused = true;
             _gameStates.Shutdown();
             _playMan.Shutdown();
             _entityManager.Shutdown();

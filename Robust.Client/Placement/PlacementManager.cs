@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Interfaces;
-using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.Placement;
@@ -11,7 +10,6 @@ using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Physics;
@@ -22,8 +20,6 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Maths;
 using Robust.Shared.Map;
 using Robust.Shared.Network.Messages;
-using Robust.Client.Utility;
-using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics;
 using Robust.Client.GameObjects;
 using Robust.Client.GameObjects.EntitySystems;
@@ -320,7 +316,7 @@ namespace Robust.Client.Placement
 
         private void HandleTileChanged(object sender, TileChangedEventArgs args)
         {
-            var coords = args.NewTile.LocalPos;
+            var coords = _mapMan.GetMap(args.NewTile.MapIndex).GetGrid(args.NewTile.GridIndex).GridTileToLocal(args.NewTile.GridIndices);
             _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
         }
 

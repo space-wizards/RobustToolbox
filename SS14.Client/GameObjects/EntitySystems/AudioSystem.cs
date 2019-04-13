@@ -22,13 +22,12 @@ namespace SS14.Client.GameObjects.EntitySystems
 {
     public class AudioSystem : EntitySystem
     {
-        [Dependency] ISceneTreeHolder sceneTree;
-
-        [Dependency] IResourceCache resourceCache;
+        [Dependency] private readonly ISceneTreeHolder sceneTree;
+        [Dependency] private readonly IResourceCache resourceCache;
 
         private IClyde _clyde;
 
-        private uint LastPlayKey = 0;
+        private uint LastPlayKey;
 
         private readonly Dictionary<uint, PlayingGodotStream> PlayingGodotStreams =
             new Dictionary<uint, PlayingGodotStream>();
@@ -38,7 +37,6 @@ namespace SS14.Client.GameObjects.EntitySystems
         public override void Initialize()
         {
             base.Initialize();
-            IoCManager.InjectDependencies(this);
             if (GameController.Mode == GameController.DisplayMode.Clyde)
             {
                 _clyde = IoCManager.Resolve<IClyde>();
@@ -88,6 +86,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         ///     Play an audio file globally, without position.
         /// </summary>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
+        /// <param name="audioParams"></param>
         public void Play(string filename, AudioParams? audioParams = null)
         {
             Play(resourceCache.GetResource<AudioResource>(new ResourcePath(filename)), audioParams);
@@ -97,6 +96,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         ///     Play an audio stream globally, without position.
         /// </summary>
         /// <param name="stream">The audio stream to play.</param>
+        /// <param name="audioParams"></param>
         public void Play(AudioStream stream, AudioParams? audioParams = null)
         {
             if (GameController.Mode == GameController.DisplayMode.Clyde)
@@ -146,6 +146,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// </summary>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="entity">The entity "emitting" the audio.</param>
+        /// <param name="audioParams"></param>
         public void Play(string filename, IEntity entity, AudioParams? audioParams = null)
         {
             Play(resourceCache.GetResource<AudioResource>(new ResourcePath(filename)), entity, audioParams);
@@ -156,6 +157,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// </summary>
         /// <param name="stream">The audio stream to play.</param>
         /// <param name="entity">The entity "emitting" the audio.</param>
+        /// <param name="audioParams"></param>
         public void Play(AudioStream stream, IEntity entity, AudioParams? audioParams = null)
         {
             if (GameController.Mode == GameController.DisplayMode.Clyde)
@@ -208,6 +210,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// </summary>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
+        /// <param name="audioParams"></param>
         public void Play(string filename, GridCoordinates coordinates, AudioParams? audioParams = null)
         {
             Play(resourceCache.GetResource<AudioResource>(new ResourcePath(filename)), coordinates, audioParams);
@@ -216,8 +219,9 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// <summary>
         ///     Play an audio stream at a static position.
         /// </summary>
-        /// <param name="filename">The audio stream to play.</param>
+        /// <param name="stream">The audio stream to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
+        /// <param name="audioParams"></param>
         public void Play(AudioStream stream, GridCoordinates coordinates, AudioParams? audioParams = null)
         {
             if (GameController.Mode == GameController.DisplayMode.Clyde)

@@ -3,7 +3,6 @@ using SS14.Shared.Maths;
 using System;
 using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Utility;
-using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
@@ -16,16 +15,18 @@ namespace SS14.Client.UserInterface.CustomControls
         public const string StyleClassWindowHeader = "windowHeader";
         public const string StyleClassWindowCloseButton = "windowCloseButton";
 
-        [Dependency] private readonly IDisplayManager _displayManager;
+        private readonly IDisplayManager _displayManager;
 
         protected virtual Vector2? CustomSize => null;
 
-        public SS14Window() : base()
+        public SS14Window(IDisplayManager displayMan) : base()
         {
+            _displayManager = displayMan;
         }
 
-        public SS14Window(string name) : base(name)
+        public SS14Window(IDisplayManager displayMan, string name) : base(name)
         {
+            _displayManager = displayMan;
         }
 
         [Flags]
@@ -87,8 +88,6 @@ namespace SS14.Client.UserInterface.CustomControls
         protected override void Initialize()
         {
             base.Initialize();
-
-            IoCManager.InjectDependencies(this);
 
             var header = GetChild<Panel>("Header");
             CloseButton = header.GetChild<TextureButton>("CloseButton");

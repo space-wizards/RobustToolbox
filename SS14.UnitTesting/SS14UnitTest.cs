@@ -8,6 +8,7 @@ using SS14.Client.Debugging;
 using SS14.Client.GameObjects;
 using SS14.Client.GameStates;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Overlays;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
@@ -15,6 +16,7 @@ using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
 using SS14.Client.Interfaces.Graphics;
+using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.ResourceManagement;
@@ -227,6 +229,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();
                     IoCManager.Register<IClipboardManager, ClipboardManagerUnsupported>();
                     IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
+                    IoCManager.Register<IEyeManager, EyeManager>();
                     break;
 
                 case UnitTestProject.Server:
@@ -254,6 +257,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IConGroupController, ConGroupController>();
                     IoCManager.Register<IStatusHost, StatusHost>();
                     IoCManager.Register<IPauseManager, PauseManager>();
+                    IoCManager.Register<IServerEntityManagerInternal, ServerEntityManager>();
                     break;
 
                 default:

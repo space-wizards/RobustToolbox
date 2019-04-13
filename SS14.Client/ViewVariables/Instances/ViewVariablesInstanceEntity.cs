@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.ResourceManagement;
@@ -9,8 +9,6 @@ using SS14.Client.UserInterface.CustomControls;
 using SS14.Client.ViewVariables.Editors;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.IoC;
-using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.ViewVariables;
 
@@ -26,6 +24,8 @@ namespace SS14.Client.ViewVariables.Instances
 
     internal class ViewVariablesInstanceEntity : ViewVariablesInstance
     {
+        private readonly IEntityManager _entityManager;
+
         private const int TabClientVars = 0;
         private const int TabClientComponents = 1;
         private const int TabServerVars = 2;
@@ -43,8 +43,9 @@ namespace SS14.Client.ViewVariables.Instances
 
         private bool _serverLoaded;
 
-        public ViewVariablesInstanceEntity(IViewVariablesManagerInternal vvm) : base(vvm)
+        public ViewVariablesInstanceEntity(IViewVariablesManagerInternal vvm, IResourceCache resCache, IEntityManager entityManager) : base(vvm, resCache)
         {
+            _entityManager = entityManager;
         }
 
         public override void Initialize(SS14Window window, object obj)
@@ -69,8 +70,7 @@ namespace SS14.Client.ViewVariables.Instances
                 var stringified = obj.ToString();
                 if (type.FullName != stringified)
                 {
-                    var resourceCache = IoCManager.Resolve<IResourceCache>();
-                    var smallFont = new VectorFont(resourceCache.GetResource<FontResource>("/Fonts/CALIBRI.TTF"), 10);
+                    var smallFont = new VectorFont(_resourceCache.GetResource<FontResource>("/Fonts/CALIBRI.TTF"), 10);
                     // Custom ToString() implementation.
                     var headBox = new VBoxContainer {SeparationOverride = 0};
                     headBox.AddChild(new Label {Text = stringified});
@@ -105,7 +105,7 @@ namespace SS14.Client.ViewVariables.Instances
             _tabs.AddChild(clientVBox);
             _tabs.SetTabTitle(TabClientVars, "Client Variables");
 
-            foreach (var control in LocalPropertyList(obj, ViewVariablesManager))
+            foreach (var control in LocalPropertyList(obj, ViewVariablesManager, _resourceCache))
             {
                 clientVBox.AddChild(control);
             }
@@ -145,10 +145,9 @@ namespace SS14.Client.ViewVariables.Instances
 
             _membersBlob = await ViewVariablesManager.RequestData<ViewVariablesBlobMembers>(session, new ViewVariablesRequestMembers());
 
-            var entityManager = IoCManager.Resolve<IEntityManager>();
             var uid = (EntityUid) _membersBlob.Members.Single(p => p.Name == "Uid").Value;
 
-            var entity = entityManager.GetEntity(uid);
+            var entity = _entityManager.GetEntity(uid);
             Initialize(window, entity);
         }
 
@@ -193,7 +192,7 @@ namespace SS14.Client.ViewVariables.Instances
             var otherStyle = false;
             foreach (var propertyData in _membersBlob.Members)
             {
-                var propertyEdit = new ViewVariablesPropertyControl();
+                var propertyEdit = new ViewVariablesPropertyControl(ViewVariablesManager, _resourceCache);
                 propertyEdit.SetStyle(otherStyle = !otherStyle);
                 var editor = propertyEdit.SetProperty(propertyData);
                 editor.OnValueChanged += o =>

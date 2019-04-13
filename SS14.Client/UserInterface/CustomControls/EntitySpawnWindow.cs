@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using SS14.Client.GameObjects;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.Placement;
+using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Enums;
 using SS14.Shared.GameObjects;
-using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
@@ -16,8 +17,9 @@ namespace SS14.Client.UserInterface.CustomControls
     {
         protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Placement/EntitySpawnPanel.tscn");
 
-        [Dependency] private readonly IPlacementManager placementManager;
-        [Dependency] private readonly IPrototypeManager prototypeManager;
+        private readonly IPlacementManager placementManager;
+        private readonly IPrototypeManager prototypeManager;
+        private readonly IResourceCache resourceCache;
 
         private Control HSplitContainer;
         private Control PrototypeList;
@@ -46,12 +48,21 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private EntitySpawnButton SelectedButton;
 
+        public EntitySpawnWindow(IDisplayManager displayManager, IPlacementManager placementManager,
+            IPrototypeManager prototypeManager,
+            IResourceCache resourceCache) : base(displayManager)
+        {
+            this.placementManager = placementManager;
+            this.prototypeManager = prototypeManager;
+            this.resourceCache = resourceCache;
+
+            PerformLayout();
+        }
+
         protected override void Initialize()
         {
             base.Initialize();
-
-            IoCManager.InjectDependencies(this);
-
+            
             // Get all the controls.
             HSplitContainer = Contents.GetChild("HSplitContainer");
             PrototypeList = HSplitContainer.GetChild("PrototypeListScrollContainer").GetChild("PrototypeList");
@@ -73,7 +84,10 @@ namespace SS14.Client.UserInterface.CustomControls
 
             EraseButton = buttons.GetChild<Button>("EraseButton");
             EraseButton.OnToggled += OnEraseButtonToggled;
+        }
 
+        private void PerformLayout()
+        {
             BuildEntityList();
 
             placementManager.PlacementCanceled += OnPlacementCanceled;
@@ -158,7 +172,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 button.ActualButton.OnToggled += OnItemButtonToggled;
                 container.GetChild<Label>("Label").Text = prototype.Name;
 
-                var tex = IconComponent.GetPrototypeIcon(prototype);
+                var tex = IconComponent.GetPrototypeIcon(prototype, resourceCache);
                 var rect = container.GetChild("TextureWrap").GetChild<TextureRect>("TextureRect");
                 if (tex != null)
                 {

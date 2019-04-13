@@ -3,9 +3,6 @@ using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.UserInterface.Controls;
-using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.IoC;
-using SS14.Shared.Reflection;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Client.Interfaces.ResourceManagement;
@@ -22,21 +19,43 @@ namespace SS14.Client.UserInterface.CustomControls
 {
     internal class DebugCoordsPanel : Panel
     {
-        [Dependency] readonly IPlayerManager playerManager;
-        [Dependency] readonly IEyeManager eyeManager;
-        [Dependency] readonly IInputManager inputManager;
-        [Dependency] readonly IResourceCache resourceCache;
-        [Dependency] readonly IStateManager stateManager;
-
-        [Dependency] private readonly IDisplayManager _displayManager;
+        private readonly IPlayerManager playerManager;
+        private readonly IEyeManager eyeManager;
+        private readonly IInputManager inputManager;
+        private readonly IResourceCache resourceCache;
+        private readonly IStateManager stateManager;
+        private readonly IDisplayManager _displayManager;
 
         private Label contents;
+
+        //TODO: Think about a factory for this
+        public DebugCoordsPanel(
+            IPlayerManager playerMan,
+            IEyeManager eyeMan,
+            IInputManager inputMan,
+            IResourceCache resCache,
+            IStateManager stateMan,
+            IDisplayManager displayMan)
+        {
+            playerManager = playerMan;
+            eyeManager = eyeMan;
+            inputManager = inputMan;
+            resourceCache = resCache;
+            stateManager = stateMan;
+            _displayManager = displayMan;
+
+            PerformLayout();
+        }
 
         protected override void Initialize()
         {
             base.Initialize();
-            IoCManager.InjectDependencies(this);
 
+            contents = new Label();
+        }
+
+        private void PerformLayout()
+        {
             SizeFlagsHorizontal = SizeFlags.None;
 
             contents = new Label

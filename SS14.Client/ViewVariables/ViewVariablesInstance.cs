@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using SS14.Client.Graphics;
@@ -21,10 +21,12 @@ namespace SS14.Client.ViewVariables
     internal abstract class ViewVariablesInstance
     {
         public readonly IViewVariablesManagerInternal ViewVariablesManager;
+        protected readonly IResourceCache _resourceCache;
 
-        protected ViewVariablesInstance(IViewVariablesManagerInternal vvm)
+        protected ViewVariablesInstance(IViewVariablesManagerInternal vvm, IResourceCache resCache)
         {
             ViewVariablesManager = vvm;
+            _resourceCache = resCache;
         }
 
         /// <summary>
@@ -53,7 +55,8 @@ namespace SS14.Client.ViewVariables
         {
         }
 
-        protected internal static IEnumerable<Control> LocalPropertyList(object obj, IViewVariablesManagerInternal vvm)
+        protected internal static IEnumerable<Control> LocalPropertyList(object obj, IViewVariablesManagerInternal vvm,
+            IResourceCache resCache)
         {
             var styleOther = false;
             var type = obj.GetType();
@@ -97,7 +100,7 @@ namespace SS14.Client.ViewVariables
                     Value = value
                 };
 
-                var propertyEdit = new ViewVariablesPropertyControl();
+                var propertyEdit = new ViewVariablesPropertyControl(vvm, resCache);
                 propertyEdit.SetStyle(styleOther = !styleOther);
                 var editor = propertyEdit.SetProperty(data);
                 editor.OnValueChanged += onValueChanged;

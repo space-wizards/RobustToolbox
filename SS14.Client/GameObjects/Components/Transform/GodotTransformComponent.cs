@@ -1,5 +1,4 @@
-﻿using System;
-using SS14.Client.Graphics.ClientEye;
+﻿using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Utility;
@@ -16,7 +15,10 @@ namespace SS14.Client.GameObjects
 
         IGodotTransformComponent IGodotTransformComponent.Parent => (IGodotTransformComponent)Parent;
 
-        bool visibleWhileParented = false;
+        private bool visibleWhileParented;
+
+        [Dependency] private readonly ISceneTreeHolder _sceneTreeHolder;
+
         public override bool VisibleWhileParented
         {
             get => visibleWhileParented;
@@ -66,21 +68,19 @@ namespace SS14.Client.GameObjects
 
             ((IGodotTransformComponent)Parent)?.SceneNode?.RemoveChild(SceneNode);
             base.DetachParent();
-            var holder = IoCManager.Resolve<ISceneTreeHolder>();
-            holder.WorldRoot.AddChild(SceneNode);
+            _sceneTreeHolder.WorldRoot.AddChild(SceneNode);
             UpdateSceneVisibility();
         }
 
         public override void OnAdd()
         {
             base.OnAdd();
-            var holder = IoCManager.Resolve<ISceneTreeHolder>();
             SceneNode = new Godot.Node2D
             {
                 Name = $"Transform {Owner.Uid} ({Owner.Name})",
                 Rotation = MathHelper.PiOver2
             };
-            holder.WorldRoot.AddChild(SceneNode);
+            _sceneTreeHolder.WorldRoot.AddChild(SceneNode);
         }
 
         public override void OnRemove()

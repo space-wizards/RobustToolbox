@@ -19,9 +19,11 @@ namespace SS14.Server.GameObjects.Components.UserInterface
     /// <seealso cref="BoundUserInterface"/>
     public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent
     {
+        [Dependency] private readonly IPlayerManager _playerManager;
+
         private readonly Dictionary<object, BoundUserInterface> _interfaces =
             new Dictionary<object, BoundUserInterface>();
-
+        
         /// <summary>
         ///     Enumeration of all the interfaces this component provides.
         /// </summary>
@@ -76,7 +78,7 @@ namespace SS14.Server.GameObjects.Components.UserInterface
                         throw new ArgumentNullException(nameof(netChannel));
                     }
 
-                    var session = IoCManager.Resolve<IPlayerManager>().GetSessionById(netChannel.SessionId);
+                    var session = _playerManager.GetSessionById(netChannel.SessionId);
                     if (!_interfaces.TryGetValue(wrapped.UiKey, out var @interface))
                     {
                         Logger.DebugS("go.comp.ui", "Got BoundInterfaceMessageWrapMessage for unknown UI key: {0}",

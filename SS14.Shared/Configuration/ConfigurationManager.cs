@@ -75,6 +75,7 @@ namespace SS14.Shared.Configuration
                 {
                     // overwrite the value with the saved one
                     cfgVar.Value = TypeConvert(obj);
+                    cfgVar.ValueChanged?.Invoke(cfgVar.Value);
                 }
                 else
                 {
@@ -169,9 +170,13 @@ namespace SS14.Shared.Configuration
             }
         }
 
-        /// <inheritdoc />
-        public void RegisterCVar(string name, object defaultValue, CVar flags = CVar.NONE)
+        public void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T> onValueChanged = null)
         {
+            Action<object> valueChangedDelegate = null;
+            if (onValueChanged != null)
+            {
+                valueChangedDelegate = v => onValueChanged((T) v);
+            }
             if (_configVars.TryGetValue(name, out ConfigVar cVar))
             {
                 if (cVar.Registered)
@@ -180,10 +185,16 @@ namespace SS14.Shared.Configuration
                 cVar.DefaultValue = defaultValue;
                 cVar.Flags = flags;
                 cVar.Registered = true;
+                cVar.ValueChanged = valueChangedDelegate;
                 return;
             }
 
-            _configVars.Add(name, new ConfigVar(name, defaultValue, flags) { Registered = true, Value = defaultValue });
+            _configVars.Add(name, new ConfigVar(name, defaultValue, flags)
+            {
+                Registered = true,
+                Value = defaultValue,
+                ValueChanged = valueChangedDelegate
+            });
         }
 
         /// <inheritdoc />
@@ -197,7 +208,10 @@ namespace SS14.Shared.Configuration
         {
             //TODO: Make flags work, required non-derpy net system.
             if (_configVars.TryGetValue(name, out ConfigVar cVar) && cVar.Registered)
+            {
                 cVar.Value = value;
+                cVar.ValueChanged?.Invoke(value);
+            }
             else
                 throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
         }
@@ -210,6 +224,14 @@ namespace SS14.Shared.Configuration
                 return (T)(cVar.Value ?? cVar.DefaultValue);
 
             throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
+        }
+
+        public Type GetCVarType(string name)
+        {
+            var cVar = _configVars[name];
+
+            // If it's null it's a string, since the rest is primitives which aren't null.
+            return cVar?.Value.GetType() ?? typeof(string);
         }
 
         /// <summary>
@@ -283,6 +305,11 @@ namespace SS14.Shared.Configuration
             ///     Has this CVar been registered in code?
             /// </summary>
             public bool Registered { get; set; }
+
+            /// <summary>
+            ///     Invoked when the value of this CVar is changed.
+            /// </summary>
+            public Action<object> ValueChanged { get; set; }
         }
     }
 

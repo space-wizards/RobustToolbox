@@ -31,15 +31,15 @@ namespace SS14.Client.Graphics
 
         public virtual void PostInject()
         {
-            _configurationManager.RegisterCVar(CVarVSync, VSync, CVar.ARCHIVE);
-            _configurationManager.RegisterCVar(CVarWindowMode, (int) WindowMode, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar(CVarVSync, VSync, CVar.ARCHIVE, _vSyncChanged);
+            _configurationManager.RegisterCVar(CVarWindowMode, (int) WindowMode, CVar.ARCHIVE, _windowModeChanged);
         }
 
         public abstract Vector2i ScreenSize { get; }
         public abstract void SetWindowTitle(string title);
         public abstract void Initialize();
 
-        public virtual void ReloadConfig()
+        protected virtual void ReloadConfig()
         {
             ReadConfig();
         }
@@ -50,6 +50,26 @@ namespace SS14.Client.Graphics
         {
             WindowMode = (WindowMode) _configurationManager.GetCVar<int>(CVarWindowMode);
             VSync = _configurationManager.GetCVar<bool>(CVarVSync);
+        }
+
+        private void _vSyncChanged(bool newValue)
+        {
+            VSync = newValue;
+            VSyncChanged();
+        }
+
+        protected virtual void VSyncChanged()
+        {
+        }
+
+        private void _windowModeChanged(int newValue)
+        {
+            WindowMode = (Graphics.WindowMode)newValue;
+            WindowModeChanged();
+        }
+
+        protected virtual void WindowModeChanged()
+        {
         }
     }
 }

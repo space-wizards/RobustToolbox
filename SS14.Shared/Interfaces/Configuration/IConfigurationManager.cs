@@ -1,4 +1,5 @@
-﻿using SS14.Shared.Configuration;
+﻿using System;
+using SS14.Shared.Configuration;
 
 namespace SS14.Shared.Interfaces.Configuration
 {
@@ -31,7 +32,8 @@ namespace SS14.Shared.Interfaces.Configuration
         /// everything after is the CVar name in the TOML document.</param>
         /// <param name="defaultValue">The default Value of the CVar.</param>
         /// <param name="flags">Optional flags to change behavior of the CVar.</param>
-        void RegisterCVar(string name, object defaultValue, CVar flags = CVar.NONE);
+        /// <param name="onValueChanged">Invoked whenever the CVar value changes.</param>
+        void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T> onValueChanged=null);
 
         /// <summary>
         /// Is the named CVar already registered?
@@ -54,5 +56,11 @@ namespace SS14.Shared.Interfaces.Configuration
         /// <param name="name">The name of the CVar.</param>
         /// <returns></returns>
         T GetCVar<T>(string name);
+
+        /// <summary>
+        ///     Gets the type of a value stored in a CVar.
+        /// </summary>
+        /// <param name="name">The name of the CVar</param>
+        Type GetCVarType(string name);
     }
 }

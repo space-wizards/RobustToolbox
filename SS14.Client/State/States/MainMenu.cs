@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using SS14.Client.Interfaces;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface;
@@ -19,7 +20,7 @@ namespace SS14.Client.State.States
     /// <summary>
     ///     Main menu screen that is the first screen to be displayed when the game starts.
     /// </summary>
-    // Instantiated dynamically through the StateManager.
+    // Instantiated dynamically through the StateManager, Dependencies will be resolved.
     public class MainScreen : State
     {
         private const string PublicServerAddress = "server.spacestation14.io";
@@ -29,6 +30,9 @@ namespace SS14.Client.State.States
         [Dependency] private readonly IStateManager stateManager;
         [Dependency] private readonly IClientNetManager _netManager;
         [Dependency] private readonly IConfigurationManager _configurationManager;
+        [Dependency] private readonly IGameControllerProxy _controllerProxy;
+        [Dependency] private readonly IResourceCache _resourceCache;
+        [Dependency] private readonly IDisplayManager _displayManager;
 
         private MainMenuControl _mainMenuControl;
         private OptionsMenu OptionsMenu;
@@ -40,9 +44,7 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void Startup()
         {
-            IoCManager.InjectDependencies(this);
-
-            _mainMenuControl = new MainMenuControl();
+            _mainMenuControl = new MainMenuControl(_resourceCache, _configurationManager);
             userInterfaceManager.StateRoot.AddChild(_mainMenuControl);
 
             _mainMenuControl.QuitButton.OnPressed += QuitButtonPressed;
@@ -53,7 +55,7 @@ namespace SS14.Client.State.States
 
             _client.RunLevelChanged += RunLevelChanged;
 
-            OptionsMenu = new OptionsMenu
+            OptionsMenu = new OptionsMenu(_displayManager, _configurationManager)
             {
                 Visible = false,
             };
@@ -72,7 +74,7 @@ namespace SS14.Client.State.States
 
         private void QuitButtonPressed(BaseButton.ButtonEventArgs args)
         {
-            IoCManager.Resolve<IGameControllerProxy>().GameController.Shutdown();
+            _controllerProxy.GameController.Shutdown();
         }
 
         private void OptionsButtonPressed(BaseButton.ButtonEventArgs args)
@@ -193,8 +195,8 @@ namespace SS14.Client.State.States
 
         private sealed class MainMenuControl : Control
         {
-            [Dependency] private readonly IResourceCache _resourceCache;
-            [Dependency] private readonly IConfigurationManager _configurationManager;
+            private readonly IResourceCache _resourceCache;
+            private readonly IConfigurationManager _configurationManager;
 
             public LineEdit UserNameBox { get; private set; }
             public Button JoinPublicServerButton { get; private set; }
@@ -203,12 +205,16 @@ namespace SS14.Client.State.States
             public Button OptionsButton { get; private set; }
             public Button QuitButton { get; private set; }
 
-            protected override void Initialize()
+            public MainMenuControl(IResourceCache resCache, IConfigurationManager configMan)
             {
-                base.Initialize();
+                _resourceCache = resCache;
+                _configurationManager = configMan;
 
-                IoCManager.InjectDependencies(this);
-
+                PerformLayout();
+            }
+            
+            private void PerformLayout()
+            {
                 MouseFilter = MouseFilterMode.Ignore;
 
                 SetAnchorAndMarginPreset(LayoutPreset.Wide);
@@ -235,7 +241,7 @@ namespace SS14.Client.State.States
                 };
                 vBox.AddChild(logo);
 
-                var userNameHBox = new HBoxContainer { SeparationOverride = 4};
+                var userNameHBox = new HBoxContainer {SeparationOverride = 4};
                 vBox.AddChild(userNameHBox);
                 userNameHBox.AddChild(new Label {Text = "Username:"});
 

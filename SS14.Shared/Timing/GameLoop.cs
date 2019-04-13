@@ -4,6 +4,7 @@ using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Log;
 using SS14.Shared.Exceptions;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 
 namespace SS14.Shared.Timing
 {
@@ -61,9 +62,6 @@ namespace SS14.Shared.Timing
 
             Running = true;
 
-            // maximum number of ticks to queue before the loop slows down.
-            var maxTime = TimeSpan.FromTicks(_timing.TickPeriod.Ticks * MaxQueuedTicks);
-
             var realFrameEvent = new MutableFrameEventArgs(0);
             var simFrameEvent = new MutableFrameEventArgs(0);
 
@@ -71,6 +69,8 @@ namespace SS14.Shared.Timing
 
             while (Running)
             {
+                // maximum number of ticks to queue before the loop slows down.
+                var maxTime = TimeSpan.FromTicks(_timing.TickPeriod.Ticks * MaxQueuedTicks);
 
                 var accumulator = _timing.RealTime - _lastTick;
 
@@ -92,8 +92,8 @@ namespace SS14.Shared.Timing
                         _lastKeepUp = _timing.RealTime;
                     }
                 }
+                
                 _timing.StartFrame();
-
                 realFrameEvent.SetDeltaSeconds((float)_timing.RealFrameTime.TotalSeconds);
 
                 try
@@ -106,12 +106,14 @@ namespace SS14.Shared.Timing
                     _runtimeLog.LogException(exp, "GameLoop Input");
                 }
                 _timing.InSimulation = true;
+                var tickPeriod = CalcTickPeriod();
+
 
                 // run the simulation for every accumulated tick
-                while (accumulator >= _timing.TickPeriod)
+                while (accumulator >= tickPeriod)
                 {
-                    accumulator -= _timing.TickPeriod;
-                    _lastTick += _timing.TickPeriod;
+                    accumulator -= tickPeriod;
+                    _lastTick += tickPeriod;
 
                     // only run the simulation if unpaused, but still use up the accumulated time
                     if (_timing.Paused)
@@ -119,15 +121,20 @@ namespace SS14.Shared.Timing
 
                     // update the simulation
                     simFrameEvent.SetDeltaSeconds((float)_timing.FrameTime.TotalSeconds);
+#if RELEASE
                     try
                     {
+#endif
                         Tick?.Invoke(this, simFrameEvent);
+#if RELEASE
                     }
                     catch (Exception exp)
                     {
                         _runtimeLog.LogException(exp, "GameLoop Tick");
                     }
-                    _timing.CurTick++;
+#endif
+                    _timing.CurTick = new GameTick(_timing.CurTick.Value + 1);
+                    tickPeriod = CalcTickPeriod();
 
                     if (SingleStep)
                         _timing.Paused = true;
@@ -165,6 +172,14 @@ namespace SS14.Shared.Timing
                 if (SleepMode != SleepMode.None)
                     Thread.Sleep((int)SleepMode);
             }
+        }
+
+        private TimeSpan CalcTickPeriod()
+        {
+            // ranges from -1 to 1, with 0 being 'default'
+            var ratio = FloatMath.Clamp(_timing.TickTimingAdjustment, -0.99f, 0.99f);
+            var diff = TimeSpan.FromTicks((long) (_timing.TickPeriod.Ticks * ratio));
+            return _timing.TickPeriod - diff;
         }
     }
 

@@ -192,6 +192,9 @@ namespace SS14.Client.Player
                     if (state.SessionId == LocalPlayer.SessionId)
                     {
                         LocalPlayer.Session = newSession;
+
+                        // We just connected to the server, hurray!
+                        LocalPlayer.SwitchState(SessionStatus.Connecting, newSession.Status);
                     }
                 }
             }

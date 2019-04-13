@@ -1,16 +1,12 @@
 ﻿using System.IO;
 using NUnit.Framework;
-using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GameObjects;
-using SS14.Server.GameObjects;
-using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
-using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
 
@@ -75,16 +71,16 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
             var childTrans = child.Transform;
 
             var compState = new TransformComponent.TransformComponentState(new Vector2(5, 5), GridB.Index, new Angle(0), EntityUid.Invalid);
-            parentTrans.HandleComponentState(compState);
+            parentTrans.HandleComponentState(compState, null);
 
             compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), GridB.Index, new Angle(0), EntityUid.Invalid);
-            childTrans.HandleComponentState(compState);
+            childTrans.HandleComponentState(compState, null);
             // World pos should be 6, 6 now.
 
             // Act
             var oldWpos = childTrans.WorldPosition;
             compState = new TransformComponent.TransformComponentState(new Vector2(1, 1), GridB.Index, new Angle(0), parent.Uid);
-            childTrans.HandleComponentState(compState);
+            childTrans.HandleComponentState(compState, null);
             var newWpos = childTrans.WorldPosition;
 
             // Assert
@@ -111,11 +107,11 @@ namespace SS14.UnitTesting.Client.GameObjects.Components
             var node3Trans = node3.Transform;
 
             var compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), GridB.Index, Angle.FromDegrees(135), EntityUid.Invalid);
-            node1Trans.HandleComponentState(compState);
+            node1Trans.HandleComponentState(compState, null);
             compState = new TransformComponent.TransformComponentState(new Vector2(1, 1), GridB.Index, Angle.FromDegrees(45), node1.Uid);
-            node2Trans.HandleComponentState(compState);
+            node2Trans.HandleComponentState(compState, null);
             compState = new TransformComponent.TransformComponentState(new Vector2(0, 0), GridB.Index, Angle.FromDegrees(45), node2.Uid);
-            node3Trans.HandleComponentState(compState);
+            node3Trans.HandleComponentState(compState, null);
 
             // Act
             var result = node3Trans.WorldRotation;

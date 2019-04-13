@@ -17,6 +17,9 @@ namespace SS14.Client.GameObjects.EntitySystems
     /// </summary>
     public class InputSystem : EntitySystem
     {
+        [Dependency] private readonly IInputManager _inputManager;
+        [Dependency] private readonly IPlayerManager _playerManager;
+
         private readonly IPlayerCommandStates _cmdStates = new PlayerCommandStates();
         private readonly CommandBindMapping _bindMap = new CommandBindMapping();
 
@@ -60,20 +63,18 @@ namespace SS14.Client.GameObjects.EntitySystems
             SubscribeEvent<PlayerAttachSysMessage>(OnAttachedEntityChanged);
         }
 
-        private static void OnAttachedEntityChanged(object sender, EntitySystemMessage message)
+        private void OnAttachedEntityChanged(object sender, EntitySystemMessage message)
         {
             if(!(message is PlayerAttachSysMessage msg))
                 return;
 
-            var inputMan = IoCManager.Resolve<IInputManager>();
-
             if (msg.AttachedEntity != null) // attach
             {
-                SetEntityContextActive(inputMan, msg.AttachedEntity);
+                SetEntityContextActive(_inputManager, msg.AttachedEntity);
             }
             else // detach
             {
-                inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
+                _inputManager.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
             }
         }
 
@@ -103,10 +104,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// </summary>
         public void SetEntityContextActive()
         {
-            var inputMan = IoCManager.Resolve<IInputManager>();
-            var localPlayer = IoCManager.Resolve<IPlayerManager>().LocalPlayer;
-
-            SetEntityContextActive(inputMan, localPlayer.ControlledEntity);
+            SetEntityContextActive(_inputManager, _playerManager.LocalPlayer.ControlledEntity);
         }
     }
 

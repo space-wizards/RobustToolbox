@@ -1,6 +1,7 @@
 ﻿using System;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.GameStates;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.Utility;
 using SS14.Client.Player;
@@ -9,6 +10,7 @@ using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network;
@@ -33,10 +35,20 @@ namespace SS14.Client
         [Dependency]
         private readonly IConfigurationManager _configManager;
 
-        [Dependency] private readonly IClientEntityManager _entityManager;
+        [Dependency]
+        private readonly IClientEntityManager _entityManager;
 
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IDiscordRichPresence _discord;
+        [Dependency]
+        private readonly IMapManager _mapManager;
+
+        [Dependency]
+        private readonly IDiscordRichPresence _discord;
+
+        [Dependency]
+        private readonly IGameTiming _timing;
+
+        [Dependency]
+        private readonly IClientGameStateManager _gameStates;
 
         /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;
@@ -151,6 +163,8 @@ namespace SS14.Client
 
             _stateManager.RequestStateChange<MainScreen>();
 
+            _timing.Paused = true;
+            _gameStates.Shutdown();
             _playMan.Shutdown();
             _entityManager.Shutdown();
             _mapManager.Shutdown();
@@ -167,6 +181,9 @@ namespace SS14.Client
             info.ServerName = msg.ServerName;
             info.ServerMaxPlayers = msg.ServerMaxPlayers;
             info.SessionId = msg.PlayerSessionId;
+            info.TickRate = msg.TickRate;
+            _timing.TickRate = msg.TickRate;
+            Logger.InfoS("client", $"Tickrate changed to: {msg.TickRate}");
 
             _discord.Update(info.ServerName, info.SessionId.Username, info.ServerMaxPlayers.ToString());
             // start up player management
@@ -180,6 +197,7 @@ namespace SS14.Client
         private void OnLocalStatusChanged(object obj, StatusEventArgs eventArgs)
         {
             // player finished fully connecting to the server.
+            // OldStatus is used here because it can go from connecting-> connected or connecting-> ingame
             if (eventArgs.OldStatus == SessionStatus.Connecting)
             {
                 OnPlayerJoinedServer(_playMan.LocalPlayer.Session);
@@ -195,7 +213,7 @@ namespace SS14.Client
 
         private void OnRunLevelChanged(ClientRunLevel newRunLevel)
         {
-            Logger.Debug($"[ENG] Runlevel changed to: {newRunLevel}");
+            Logger.DebugS("client", $"Runlevel changed to: {newRunLevel}");
             var args = new RunLevelChangedEventArgs(RunLevel, newRunLevel);
             RunLevel = newRunLevel;
             RunLevelChanged?.Invoke(this, args);
@@ -208,9 +226,25 @@ namespace SS14.Client
     public enum ClientRunLevel
     {
         Error = 0,
+
+        /// <summary>
+        ///     The client has not started connecting to a server (on main menu).
+        /// </summary>
         Initialize,
+
+        /// <summary>
+        ///     The client started connecting to the server, and is in the process of building the session.
+        /// </summary>
         Connecting,
+
+        /// <summary>
+        ///     The client has successfully finished connecting to the server.
+        /// </summary>
         Connected,
+
+        /// <summary>
+        ///     The client is now in the game, moving around.
+        /// </summary>
         InGame,
     }
 
@@ -272,6 +306,8 @@ namespace SS14.Client
         ///     Max number of players that are allowed in the server at one time.
         /// </summary>
         public int ServerMaxPlayers { get; set; }
+
+        public byte TickRate { get; internal set; }
 
         public NetSessionId SessionId { get; set; }
     }

@@ -131,7 +131,15 @@ namespace SS14.Client.Player
         /// </summary>
         public void SwitchState(SessionStatus newStatus)
         {
-            var args = new StatusEventArgs(Session.Status, newStatus);
+            SwitchState(Session.Status, newStatus);
+        }
+
+        /// <summary>
+        ///     Changes the state of the session. This overload allows you to spoof the oldStatus, use with caution.
+        /// </summary>
+        public void SwitchState(SessionStatus oldStatus, SessionStatus newStatus)
+        {
+            var args = new StatusEventArgs(oldStatus, newStatus);
             Session.Status = newStatus;
             StatusChanged?.Invoke(this, args);
         }

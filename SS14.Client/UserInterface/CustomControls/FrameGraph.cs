@@ -1,13 +1,12 @@
-using SS14.Client.Graphics.Drawing;
+﻿using SS14.Client.Graphics.Drawing;
 using SS14.Shared.Interfaces.Timing;
-using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
     public sealed class FrameGraph : Control
     {
-        [Dependency] private readonly IGameTiming _gameTiming;
+        private readonly IGameTiming _gameTiming;
 
         /// <summary>
         ///     How many frames we show at once.
@@ -36,12 +35,15 @@ namespace SS14.Client.UserInterface.CustomControls
         // Position of the last frame in the ring buffer.
         private int _frameIndex;
 
+        public FrameGraph(IGameTiming gameTiming)
+        {
+            _gameTiming = gameTiming;
+        }
+
         protected override void Initialize()
         {
             base.Initialize();
-
-            IoCManager.InjectDependencies(this);
-
+            
             SizeFlagsHorizontal = SizeFlags.None;
         }
 

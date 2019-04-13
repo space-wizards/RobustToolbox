@@ -2,13 +2,14 @@
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Serialization;
-using YamlDotNet.RepresentationModel;
+using SS14.Shared.Timing;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
     /// <remarks>
     ///     Base component for the ECS system.
     ///     All discoverable implementations of IComponent must override the <see cref="Name" />.
+    ///     Instances are dynamically instantiated by a <c>ComponentFactory</c>, and will have their IoC Dependencies resolved.
     /// </remarks>
     public interface IComponent : IEntityEventSubscriber
     {
@@ -76,7 +77,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <summary>
         ///     This is the last game tick Dirty() was called.
         /// </summary>
-        uint LastModifiedTick { get; }
+        GameTick LastModifiedTick { get; }
 
         /// <summary>
         ///     Called when the component is removed from an entity.
@@ -128,7 +129,8 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <summary>
         ///     Handles an incoming component state from the server.
         /// </summary>
-        /// <param name="state"></param>
-        void HandleComponentState(ComponentState state);
+        /// <param name="curState"></param>
+        /// <param name="nextState"></param>
+        void HandleComponentState(ComponentState curState, ComponentState nextState);
     }
 }

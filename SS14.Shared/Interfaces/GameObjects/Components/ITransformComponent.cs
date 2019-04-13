@@ -37,11 +37,6 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         MapCoordinates MapPosition { get; }
 
         /// <summary>
-        ///     Invoked when the entity is rotated.
-        /// </summary>
-        event Action<Angle> OnRotate;
-
-        /// <summary>
         ///     Current rotation offset of the entity.
         /// </summary>
         Angle LocalRotation { get; set; }
@@ -85,6 +80,11 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         /// Whether or not this entity is visible while parented to another entity.
         /// </summary>
         bool VisibleWhileParented { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        Vector2 LerpDestination { get; }
 
         /// <summary>
         ///     Finds the transform located on the map or in nullspace

@@ -8,15 +8,7 @@ namespace SS14.Shared.GameObjects
     public class EntityState
     {
         public EntityStateData StateData { get; set; }
-        [NonSerialized]
-        private float _receivedTime;
         public List<ComponentState> ComponentStates { get; }
-
-        public float ReceivedTime
-        {
-            get => _receivedTime;
-            set => _receivedTime = value;
-        }
 
         public EntityState(EntityUid uid, List<ComponentState> componentStates, string templateName, string name, List<Tuple<uint, string>> synchedComponentTypes)
         {

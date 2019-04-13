@@ -15,12 +15,13 @@ namespace SS14.Client.GameObjects
     {
         private Dictionary<object, object> data = new Dictionary<object, object>();
         internal List<AppearanceVisualizer> Visualizers = new List<AppearanceVisualizer>();
+        [Dependency] private static readonly IReflectionManager _reflectionManager;
 
         public bool AppearanceDirty { get; internal set; } = false;
 
         static AppearanceComponent()
         {
-            YamlObjectSerializer.RegisterTypeSerializer(typeof(AppearanceVisualizer), new VisualizerTypeSerializer());
+            YamlObjectSerializer.RegisterTypeSerializer(typeof(AppearanceVisualizer), new VisualizerTypeSerializer(_reflectionManager));
         }
 
         public override void SetData(string key, object value)
@@ -77,9 +78,12 @@ namespace SS14.Client.GameObjects
             AppearanceDirty = true;
         }
 
-        public override void HandleComponentState(ComponentState state)
+        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
-            var actualState = (AppearanceComponentState)state;
+            if (curState == null)
+                return;
+
+            var actualState = (AppearanceComponentState)curState;
             data = actualState.Data;
             AppearanceDirty = true;
         }
@@ -101,9 +105,15 @@ namespace SS14.Client.GameObjects
 
         class VisualizerTypeSerializer : YamlObjectSerializer.TypeSerializer
         {
+            private readonly IReflectionManager _reflectionManager;
+
+            public VisualizerTypeSerializer(IReflectionManager reflectionManager)
+            {
+                _reflectionManager = reflectionManager;
+            }
+
             public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
-                var refl = IoCManager.Resolve<IReflectionManager>();
                 var mapping = (YamlMappingNode)node;
                 var nodeType = mapping.GetNode("type");
                 switch (nodeType.AsString())
@@ -111,7 +121,7 @@ namespace SS14.Client.GameObjects
                     case SpriteLayerToggle.NAME:
                         var keyString = mapping.GetNode("key").AsString();
                         object key;
-                        if (refl.TryParseEnumReference(keyString, out var @enum))
+                        if (_reflectionManager.TryParseEnumReference(keyString, out var @enum))
                         {
                             key = @enum;
                         }
@@ -123,7 +133,7 @@ namespace SS14.Client.GameObjects
                         return new SpriteLayerToggle(key, layer);
 
                     default:
-                        var visType = refl.LooseGetType(nodeType.AsString());
+                        var visType = _reflectionManager.LooseGetType(nodeType.AsString());
                         if (!typeof(AppearanceVisualizer).IsAssignableFrom(visType))
                         {
                             throw new InvalidOperationException();

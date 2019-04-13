@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Maps;
-using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Resources;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Map;
-using SS14.Shared.Prototypes;
 using YamlDotNet.RepresentationModel;
 using SS14.Shared.Utility;
 using SS14.Shared.Serialization;
@@ -17,7 +15,6 @@ using SS14.Shared.GameObjects;
 using System.Globalization;
 using SS14.Shared.Interfaces.GameObjects;
 using System.Linq;
-using SS14.Shared.Interfaces.GameObjects.Components;
 
 namespace SS14.Server.Maps
 {
@@ -29,17 +26,23 @@ namespace SS14.Server.Maps
         private const int MapFormatVersion = 2;
 
         [Dependency]
-        private IResourceManager _resMan;
+        private readonly IResourceManager _resMan;
 
         [Dependency]
         private readonly IMapManager _mapManager;
+
+        [Dependency]
+        private readonly ITileDefinitionManager _tileDefinitionManager;
+
+        [Dependency]
+        private readonly IServerEntityManagerInternal _serverEntityManager;
 
         /// <inheritdoc />
         public void SaveBlueprint(GridId gridId, string yamlPath)
         {
             var grid = _mapManager.GetGrid(gridId);
 
-            var context = new MapContext();
+            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager);
             context.RegisterGrid(grid);
             var root = context.Serialize();
             var document = new YamlDocument(root);
@@ -98,7 +101,7 @@ namespace SS14.Server.Maps
                     throw new InvalidDataException("Cannot instance map with multiple grids as blueprint.");
                 }
 
-                var context = new MapContext((YamlMappingNode)data.RootNode, map);
+                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, (YamlMappingNode)data.RootNode, map);
                 context.Deserialize();
                 return context.Grids[0];
             }
@@ -107,7 +110,7 @@ namespace SS14.Server.Maps
         /// <inheritdoc />
         public void SaveMap(IMap map, string yamlPath)
         {
-            var context = new MapContext();
+            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager);
             foreach (var grid in map.GetAllGrids())
             {
                 context.RegisterGrid(grid);
@@ -169,7 +172,7 @@ namespace SS14.Server.Maps
                     throw new InvalidDataException("Cannot instance map with multiple grids as blueprint.");
                 }
 
-                var context = new MapContext((YamlMappingNode)data.RootNode, _mapManager.GetMap(mapId));
+                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, (YamlMappingNode)data.RootNode, _mapManager.GetMap(mapId));
                 context.Deserialize();
             }
         }
@@ -179,39 +182,41 @@ namespace SS14.Server.Maps
         /// </summary>
         private class MapContext : YamlObjectSerializer.Context, IEntityLoadContext
         {
-            [Dependency]
             private readonly IMapManager _mapManager;
-            [Dependency]
             private readonly ITileDefinitionManager _tileDefinitionManager;
-            [Dependency]
             private readonly IServerEntityManagerInternal _serverEntityManager;
 
-            public readonly Dictionary<GridId, int> GridIDMap = new Dictionary<GridId, int>();
+            private readonly Dictionary<GridId, int> GridIDMap = new Dictionary<GridId, int>();
             public readonly List<IMapGrid> Grids = new List<IMapGrid>();
 
-            public readonly Dictionary<EntityUid, int> EntityUidMap = new Dictionary<EntityUid, int>();
-            public readonly List<IEntity> Entities = new List<IEntity>();
+            private readonly Dictionary<EntityUid, int> EntityUidMap = new Dictionary<EntityUid, int>();
+            private readonly List<IEntity> Entities = new List<IEntity>();
 
-            readonly YamlMappingNode RootNode;
-            readonly IMap TargetMap;
+            private readonly YamlMappingNode RootNode;
+            private readonly IMap TargetMap;
 
-            YamlMappingNode CurrentReadingEntity;
-            Dictionary<string, YamlMappingNode> CurrentReadingEntityComponents;
+            private Dictionary<string, YamlMappingNode> CurrentReadingEntityComponents;
 
-            string CurrentWritingComponent;
-            IEntity CurrentWritingEntity;
+            private string CurrentWritingComponent;
+            private IEntity CurrentWritingEntity;
 
             private Dictionary<ushort, string> _tileMap;
 
-            public MapContext()
+            public MapContext(IMapManager maps, ITileDefinitionManager tileDefs, IServerEntityManagerInternal entities)
             {
-                IoCManager.InjectDependencies(this);
+                _mapManager = maps;
+                _tileDefinitionManager = tileDefs;
+                _serverEntityManager = entities;
+
                 RootNode = new YamlMappingNode();
             }
 
-            public MapContext(YamlMappingNode node, IMap targetMap)
+            public MapContext(IMapManager maps, ITileDefinitionManager tileDefs, IServerEntityManagerInternal entities, YamlMappingNode node, IMap targetMap)
             {
-                IoCManager.InjectDependencies(this);
+                _mapManager = maps;
+                _tileDefinitionManager = tileDefs;
+                _serverEntityManager = entities;
+
                 RootNode = node;
                 TargetMap = targetMap;
             }
@@ -240,7 +245,7 @@ namespace SS14.Server.Maps
                 FinishEntitiesStartup();
             }
 
-            void ReadMetaSection()
+            private void ReadMetaSection()
             {
                 var meta = RootNode.GetNode<YamlMappingNode>("meta");
                 var ver = meta.GetNode("format").AsInt();
@@ -250,7 +255,7 @@ namespace SS14.Server.Maps
                 }
             }
 
-            void ReadTileMapSection()
+            private void ReadTileMapSection()
             {
                 // Load tile mapping so that we can map the stored tile IDs into the ones actually used at runtime.
                 _tileMap = new Dictionary<ushort, string>();
@@ -264,7 +269,7 @@ namespace SS14.Server.Maps
                 }
             }
 
-            void ReadGridSection()
+            private void ReadGridSection()
             {
                 var grids = RootNode.GetNode<YamlSequenceNode>("grids");
 
@@ -279,11 +284,14 @@ namespace SS14.Server.Maps
                         _tileDefinitionManager
                     );
 
-                    Grids.Add(_mapManager.GetGrid(newId.Value));
+                    if (newId != null)
+                    {
+                        Grids.Add(_mapManager.GetGrid(newId.Value));
+                    }
                 }
             }
 
-            void AllocEntities()
+            private void AllocEntities()
             {
                 var entities = RootNode.GetNode<YamlSequenceNode>("entities");
                 foreach (var entityDef in entities.Cast<YamlMappingNode>())
@@ -298,13 +306,12 @@ namespace SS14.Server.Maps
                 }
             }
 
-            void FinishEntitiesLoad()
+            private void FinishEntitiesLoad()
             {
                 var entityData = RootNode.GetNode<YamlSequenceNode>("entities");
 
                 foreach (var (entity, data) in Entities.Zip(entityData, (a, b) => (a, (YamlMappingNode)b)))
                 {
-                    CurrentReadingEntity = data;
                     CurrentReadingEntityComponents = new Dictionary<string, YamlMappingNode>();
                     if (data.TryGetNode("components", out YamlSequenceNode componentList))
                     {
@@ -318,7 +325,7 @@ namespace SS14.Server.Maps
                 }
             }
 
-            void FinishEntitiesInitialization()
+            private void FinishEntitiesInitialization()
             {
                 foreach (var entity in Entities)
                 {
@@ -326,7 +333,7 @@ namespace SS14.Server.Maps
                 }
             }
 
-            void FinishEntitiesStartup()
+            private void FinishEntitiesStartup()
             {
                 foreach (var entity in Entities)
                 {
@@ -358,7 +365,7 @@ namespace SS14.Server.Maps
                 return RootNode;
             }
 
-            void WriteMetaSection()
+            private void WriteMetaSection()
             {
                 var meta = new YamlMappingNode();
                 RootNode.Add("meta", meta);
@@ -368,7 +375,7 @@ namespace SS14.Server.Maps
                 meta.Add("author", "Space-Wizards");
             }
 
-            void WriteTileMapSection()
+            private void WriteTileMapSection()
             {
                 var tileMap = new YamlMappingNode();
                 RootNode.Add("tilemap", tileMap);
@@ -378,7 +385,7 @@ namespace SS14.Server.Maps
                 }
             }
 
-            void WriteGridSection()
+            private void WriteGridSection()
             {
                 var grids = new YamlSequenceNode();
                 RootNode.Add("grids", grids);
@@ -390,7 +397,7 @@ namespace SS14.Server.Maps
                 }
             }
 
-            void PopulateEntityList()
+            private void PopulateEntityList()
             {
                 foreach (var entity in _serverEntityManager.GetEntities())
                 {
@@ -402,7 +409,7 @@ namespace SS14.Server.Maps
                 }
             }
 
-            void WriteEntitySection()
+            private void WriteEntitySection()
             {
                 var entities = new YamlSequenceNode();
                 RootNode.Add("entities", entities);
@@ -573,12 +580,7 @@ namespace SS14.Server.Maps
                 {
                     if (value == null)
                     {
-                        if (prototypeVal == null)
-                        {
-                            return true;
-                        }
-
-                        return prototypeVal.Equals(value);
+                        return prototypeVal == null;
                     }
 
                     return value.Equals(prototypeVal);

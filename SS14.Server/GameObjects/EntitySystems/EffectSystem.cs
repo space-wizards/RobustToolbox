@@ -1,10 +1,8 @@
 ﻿using DataStructures;
-using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.EntitySystemMessages;
 using SS14.Shared.GameObjects.Systems;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
-using System;
 using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects.EntitySystems
@@ -14,6 +12,8 @@ namespace SS14.Server.GameObjects.EntitySystems
     /// </summary>
     public class EffectSystem : EntitySystem
     {
+        [Dependency] private readonly IGameTiming _timing;
+
         /// <summary>
         /// Priority queue sorted by how soon the effect will die, we remove messages from the front of the queue during update until caught up
         /// </summary>
@@ -30,10 +30,8 @@ namespace SS14.Server.GameObjects.EntitySystems
 
         public override void Update(float frameTime)
         {
-            var gametime = IoCManager.Resolve<IGameTiming>().CurTime;
-
             //Take elements from front of priority queue until they are old
-            while (_CurrentEffects.Count != 0 && _CurrentEffects.Peek().DeathTime < gametime)
+            while (_CurrentEffects.Count != 0 && _CurrentEffects.Peek().DeathTime < _timing.CurTime)
             {
                 _CurrentEffects.Take();
             }

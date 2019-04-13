@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Maths;
+using SS14.Shared.Timing;
 
 namespace SS14.Shared.Map
 {
@@ -15,7 +15,7 @@ namespace SS14.Shared.Map
         /// </summary>
         internal class Chunk : IMapChunk
         {
-            internal uint LastModifiedTick { get; private set; }
+            internal GameTick LastModifiedTick { get; private set; }
             private readonly MapGrid _grid;
             private readonly MapIndices _gridIndices;
             private readonly MapManager _mapManager;

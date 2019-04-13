@@ -1,6 +1,7 @@
 ﻿using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Maths;
 using System.Collections.Generic;
+using SS14.Shared.Timing;
 
 namespace SS14.Shared.Map
 {
@@ -8,7 +9,7 @@ namespace SS14.Shared.Map
     {
         class Map : IMap
         {
-            public uint CreatedTick { get; }
+            public GameTick CreatedTick { get; }
             public IMapGrid DefaultGrid { get; set; }
             public MapId Index { get; }
             private readonly MapManager _mapManager;

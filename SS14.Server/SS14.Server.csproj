@@ -134,7 +134,6 @@
     <Compile Include="Console\Commands\SpawnCommand.cs" />
     <Compile Include="AI\AiLogicProcessor.cs" />
     <Compile Include="AI\AiLogicProcessorAttribute.cs" />
-    <Compile Include="Console\Commands\ChatCommands.cs" />
     <Compile Include="Console\Commands\MapCommands.cs" />
     <Compile Include="Console\Commands\PlayerCommands.cs" />
     <Compile Include="Console\Commands\SysCommands.cs" />
@@ -164,7 +163,6 @@
     </Content>
     <None Include="app.config" />
     <Compile Include="CommandLineArgs.cs" />
-    <Compile Include="Chat\ChatManager.cs" />
     <Compile Include="Console\Commands\ListCommands.cs" />
     <Compile Include="Console\ConsoleShell.cs" />
     <Compile Include="GameObjects\ServerComponentFactory.cs" />
@@ -182,8 +180,6 @@
     <Compile Include="GameStates\ServerGameStateManager.cs" />
     <Compile Include="Interfaces\ICommandLineArgs.cs" />
     <Compile Include="Interfaces\IBaseServer.cs" />
-    <Compile Include="Interfaces\Chat\IChatCommand.cs" />
-    <Compile Include="Interfaces\Chat\IChatManager.cs" />
     <Compile Include="Interfaces\Console\IClientCommand.cs" />
     <Compile Include="Interfaces\Console\IConsoleShell.cs" />
     <Compile Include="Interfaces\GameObjects\IActorComponent.cs" />

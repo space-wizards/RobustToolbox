@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
+using SS14.Shared.Timing;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
@@ -11,7 +12,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <summary>
         ///     The current simulation tick being processed.
         /// </summary>
-        uint CurrentTick { get; }
+        GameTick CurrentTick { get; }
 
         void Initialize();
         void Startup();

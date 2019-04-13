@@ -1,5 +1,4 @@
-﻿using ICSharpCode.SharpZipLib.GZip;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Serialization;
@@ -20,6 +19,7 @@ namespace SS14.Shared.Network.Messages
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
+            MsgSize = buffer.LengthBytes;
             var length = buffer.ReadInt32();
             var stateData = buffer.ReadBytes(length);
             using (var stateStream = new MemoryStream(stateData))
@@ -38,6 +38,7 @@ namespace SS14.Shared.Network.Messages
                 buffer.Write((int)stateStream.Length);
                 buffer.Write(stateStream.ToArray());
             }
+            MsgSize = buffer.LengthBytes;
         }
     }
 }

@@ -15,12 +15,12 @@ namespace SS14.Server.GameObjects
 {
     public class CollidableComponent : Component, ICollidableComponent
     {
+        [Dependency] private readonly IPhysicsManager _physicsManager;
+
         private bool _collisionEnabled;
         private bool _isHardCollidable;
         private CollisionGroup _collisionLayer;
         private CollisionGroup _collisionMask;
-
-        private IPhysicsManager _physicsManager => IoCManager.Resolve<IPhysicsManager>();
 
         /// <inheritdoc />
         public override string Name => "Collidable";
@@ -114,15 +114,13 @@ namespace SS14.Server.GameObjects
         {
             base.Startup();
 
-            var cm = _physicsManager;
-            cm.AddCollidable(this);
+            _physicsManager.AddCollidable(this);
         }
 
         /// <inheritdoc />
         public override void Shutdown()
         {
-            var cm = _physicsManager;
-            cm.RemoveCollidable(this);
+            _physicsManager.RemoveCollidable(this);
 
             base.Shutdown();
         }

@@ -2,11 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using SS14.Shared.IoC;
 
 namespace SS14.Shared.GameObjects
 {
     public class ComponentFactory : IComponentFactory
     {
+        [Dependency] private readonly IDynamicTypeFactory _typeFactory;
+
         private class ComponentRegistration : IComponentRegistration
         {
             public string Name { get; }
@@ -177,7 +180,7 @@ namespace SS14.Shared.GameObjects
             {
                 throw new InvalidOperationException($"{componentType} is not a registered component.");
             }
-            return (IComponent)Activator.CreateInstance(types[componentType].Type);
+            return (IComponent)_typeFactory.CreateInstance(types[componentType].Type);
         }
 
         public T GetComponent<T>() where T : IComponent, new()
@@ -186,12 +189,12 @@ namespace SS14.Shared.GameObjects
             {
                 throw new InvalidOperationException($"{typeof(T)} is not a registered component.");
             }
-            return (T)Activator.CreateInstance(types[typeof(T)].Type);
+            return (T)_typeFactory.CreateInstance(types[typeof(T)].Type);
         }
 
         public IComponent GetComponent(string componentName)
         {
-            return (IComponent)Activator.CreateInstance(GetRegistration(componentName).Type);
+            return (IComponent)_typeFactory.CreateInstance(GetRegistration(componentName).Type);
         }
 
         public IComponentRegistration GetRegistration(string componentName)

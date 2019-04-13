@@ -130,10 +130,9 @@ namespace SS14.Client
             IoCManager.Register<IGameControllerProxy, GameControllerProxy>();
             IoCManager.Register<IGameControllerProxyInternal, GameControllerProxy>();
             IoCManager.Register<IDebugDrawing, DebugDrawing>();
-            IoCManager.Register<IClientConsole, ClientChatConsole>();
-            IoCManager.Register<IClientChatConsole, ClientChatConsole>();
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
+            IoCManager.Register<IClientConsole, ClientConsole>();
             switch (Mode)
             {
                 case DisplayMode.Headless:

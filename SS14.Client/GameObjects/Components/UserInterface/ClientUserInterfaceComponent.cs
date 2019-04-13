@@ -16,6 +16,7 @@ namespace SS14.Client.GameObjects.Components.UserInterface
             new Dictionary<object, BoundUserInterface>();
 
         private Dictionary<object, PrototypeData> _interfaceData;
+        [Dependency] private readonly IReflectionManager _reflectionManager;
 
         public override void ExposeData(ObjectSerializer serializer)
         {
@@ -79,9 +80,8 @@ namespace SS14.Client.GameObjects.Components.UserInterface
         private void OpenInterface(BoundInterfaceMessageWrapMessage wrapped)
         {
             var data = _interfaceData[wrapped.UiKey];
-            var reflectionManager = IoCManager.Resolve<IReflectionManager>();
             // TODO: This type should be cached, but I'm too lazy.
-            var type = reflectionManager.LooseGetType(data.ClientType);
+            var type = _reflectionManager.LooseGetType(data.ClientType);
             var boundInterface = (BoundUserInterface) Activator.CreateInstance(type, this, wrapped.UiKey);
             boundInterface.Open();
             _openInterfaces[wrapped.UiKey] = boundInterface;

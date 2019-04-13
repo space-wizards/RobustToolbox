@@ -78,7 +78,7 @@ namespace SS14.Client
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
         [Dependency] private readonly IBaseClient _client;
         [Dependency] private readonly IInputManager _inputManager;
-        [Dependency] private readonly IClientChatConsole _console;
+        [Dependency] private readonly IClientConsole _console;
         [Dependency] private readonly ILightManager _lightManager;
         [Dependency] private readonly IDisplayManager _displayManager;
         [Dependency] private readonly ITimerManager _timerManager;
@@ -219,6 +219,12 @@ namespace SS14.Client
             _taskManager.ProcessPendingTasks();
             _userInterfaceManager.Update(eventArgs);
             _stateManager.Update(eventArgs);
+
+            if (_client.RunLevel >= ClientRunLevel.Connected)
+            {
+                _gameStateManager.ApplyGameState();
+            }
+
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, eventArgs.Elapsed);
         }
 

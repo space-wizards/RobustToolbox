@@ -2,6 +2,7 @@
 using SS14.Shared.GameObjects;
 using SS14.Shared.Map;
 using SS14.Shared.Serialization;
+using SS14.Shared.Timing;
 
 namespace SS14.Shared.Input
 {
@@ -14,7 +15,7 @@ namespace SS14.Shared.Input
         /// <summary>
         ///     Client tick this was created.
         /// </summary>
-        public uint Tick { get; }
+        public GameTick Tick { get; }
 
         /// <summary>
         ///     The function this command is changing.
@@ -26,7 +27,7 @@ namespace SS14.Shared.Input
         /// </summary>
         /// <param name="tick">Client tick this was created.</param>
         /// <param name="inputFunctionId">Function this command is changing.</param>
-        public InputCmdMessage(uint tick, KeyFunctionId inputFunctionId)
+        public InputCmdMessage(GameTick tick, KeyFunctionId inputFunctionId)
         {
             Tick = tick;
             InputFunctionId = inputFunctionId;
@@ -50,7 +51,7 @@ namespace SS14.Shared.Input
         /// <param name="tick">Client tick this was created.</param>
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="state">New state of the Input Function.</param>
-        public StateInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, BoundKeyState state)
+        public StateInputCmdMessage(GameTick tick, KeyFunctionId inputFunctionId, BoundKeyState state)
             : base(tick, inputFunctionId)
         {
             State = state;
@@ -68,7 +69,7 @@ namespace SS14.Shared.Input
         /// </summary>
         /// <param name="tick">Client tick this was created.</param>
         /// <param name="inputFunctionId">Function this command is changing.</param>
-        public EventInputCmdMessage(uint tick, KeyFunctionId inputFunctionId)
+        public EventInputCmdMessage(GameTick tick, KeyFunctionId inputFunctionId)
             : base(tick, inputFunctionId) { }
     }
 
@@ -94,7 +95,7 @@ namespace SS14.Shared.Input
         /// <param name="tick">Client tick this was created.</param>
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
-        public PointerInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, GridCoordinates coordinates)
+        public PointerInputCmdMessage(GameTick tick, KeyFunctionId inputFunctionId, GridCoordinates coordinates)
             : this(tick, inputFunctionId, coordinates, EntityUid.Invalid) { }
 
         /// <summary>
@@ -104,7 +105,7 @@ namespace SS14.Shared.Input
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
         /// <param name="uid">Entity that was under the pointer when the command was created.</param>
-        public PointerInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, GridCoordinates coordinates, EntityUid uid)
+        public PointerInputCmdMessage(GameTick tick, KeyFunctionId inputFunctionId, GridCoordinates coordinates, EntityUid uid)
             : base(tick, inputFunctionId)
         {
             Coordinates = coordinates;
@@ -145,7 +146,8 @@ namespace SS14.Shared.Input
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="state">New state of the Input Function.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
-        public FullInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, BoundKeyState state, GridCoordinates coordinates, ScreenCoordinates screenCoordinates)
+        /// <param name="screenCoordinates"></param>
+        public FullInputCmdMessage(GameTick tick, KeyFunctionId inputFunctionId, BoundKeyState state, GridCoordinates coordinates, ScreenCoordinates screenCoordinates)
             : this(tick, inputFunctionId, state, coordinates, screenCoordinates, EntityUid.Invalid) { }
 
         /// <summary>
@@ -155,8 +157,9 @@ namespace SS14.Shared.Input
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="state">New state of the Input Function.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
+        /// <param name="screenCoordinates"></param>
         /// <param name="uid">Entity that was under the pointer when the command was created.</param>
-        public FullInputCmdMessage(uint tick, KeyFunctionId inputFunctionId, BoundKeyState state, GridCoordinates coordinates, ScreenCoordinates screenCoordinates, EntityUid uid)
+        public FullInputCmdMessage(GameTick tick, KeyFunctionId inputFunctionId, BoundKeyState state, GridCoordinates coordinates, ScreenCoordinates screenCoordinates, EntityUid uid)
             : base(tick, inputFunctionId)
         {
             State = state;

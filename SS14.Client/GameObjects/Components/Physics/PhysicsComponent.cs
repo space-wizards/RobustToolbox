@@ -1,6 +1,5 @@
 ﻿using System;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.ViewVariables;
@@ -46,9 +45,12 @@ namespace SS14.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState state)
+        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
-            var newState = (PhysicsComponentState)state;
+            if (curState == null)
+                return;
+
+            var newState = (PhysicsComponentState)curState;
             Mass = newState.Mass;
             Velocity = newState.Velocity;
         }

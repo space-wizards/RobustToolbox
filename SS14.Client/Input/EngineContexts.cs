@@ -15,7 +15,6 @@ namespace SS14.Client.Input
         {
             var common = contexts.GetContext(InputContextContainer.DefaultContextName);
             common.AddFunction(EngineKeyFunctions.EscapeMenu);
-            common.AddFunction(EngineKeyFunctions.FocusChat);
             common.AddFunction(EngineKeyFunctions.HideUI);
             common.AddFunction(EngineKeyFunctions.ShowDebugMonitors);
             common.AddFunction(EngineKeyFunctions.MoveUp);

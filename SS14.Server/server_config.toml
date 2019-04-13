@@ -6,7 +6,7 @@ level = 1
 enabled = false
 
 [net]
-tickrate = 60
+tickrate = 10
 port = 1212
 bindto = "::,0.0.0.0"
 

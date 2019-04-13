@@ -8,6 +8,7 @@ using SS14.Client.Debugging;
 using SS14.Client.GameObjects;
 using SS14.Client.GameStates;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.ClientEye;
 using SS14.Client.Graphics.Overlays;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
@@ -15,6 +16,7 @@ using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
 using SS14.Client.Interfaces.Graphics;
+using SS14.Client.Interfaces.Graphics.ClientEye;
 using SS14.Client.Interfaces.Graphics.Overlays;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.ResourceManagement;
@@ -28,12 +30,10 @@ using SS14.Client.UserInterface;
 using SS14.Client.ViewVariables;
 using SS14.Client.Utility;
 using SS14.Server;
-using SS14.Server.Chat;
 using SS14.Server.Console;
 using SS14.Server.GameObjects;
 using SS14.Server.GameStates;
 using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.Console;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
@@ -216,8 +216,6 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IGameControllerProxyInternal, GameControllerProxyDummy>();
                     IoCManager.Register<IInputManager, InputManager>();
                     IoCManager.Register<IDebugDrawing, DebugDrawing>();
-                    IoCManager.Register<IClientConsole, ClientChatConsole>();
-                    IoCManager.Register<IClientChatConsole, ClientChatConsole>();
                     //IoCManager.Register<ILightManager, LightManager>();
                     IoCManager.Register<IDisplayManager, DisplayManagerHeadless>();
                     //IoCManager.Register<IEyeManager, EyeManager>();
@@ -227,6 +225,8 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();
                     IoCManager.Register<IClipboardManager, ClipboardManagerUnsupported>();
                     IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
+                    IoCManager.Register<IEyeManager, EyeManager>();
+                    IoCManager.Register<IClientConsole, ClientConsole>();
                     break;
 
                 case UnitTestProject.Server:
@@ -234,7 +234,6 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IResourceManagerInternal, ResourceManager>();
                     IoCManager.Register<IEntityManager, ServerEntityManager>();
                     IoCManager.Register<IServerEntityManager, ServerEntityManager>();
-                    IoCManager.Register<IChatManager, ChatManager>();
                     IoCManager.Register<IServerNetManager, NetManager>();
                     IoCManager.Register<IMapManager, MapManager>();
                     IoCManager.Register<IPlacementManager, PlacementManager>();
@@ -254,6 +253,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IConGroupController, ConGroupController>();
                     IoCManager.Register<IStatusHost, StatusHost>();
                     IoCManager.Register<IPauseManager, PauseManager>();
+                    IoCManager.Register<IServerEntityManagerInternal, ServerEntityManager>();
                     break;
 
                 default:

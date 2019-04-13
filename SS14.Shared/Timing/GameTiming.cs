@@ -78,12 +78,12 @@ namespace SS14.Shared.Timing
         /// <summary>
         ///     The current simulation tick being processed.
         /// </summary>
-        public uint CurTick { get; set; }
+        public GameTick CurTick { get; set; }
 
         /// <summary>
         ///     The target ticks/second of the simulation.
         /// </summary>
-        public int TickRate { get; set; }
+        public byte TickRate { get; set; }
 
         /// <summary>
         ///     The length of a tick at the current TickRate. 1/TickRate.
@@ -102,6 +102,9 @@ namespace SS14.Shared.Timing
         ///     i.e. starting from 0 or 1, having a separate counter, etc. Available in timing debug panel.
         /// </summary>
         public uint CurFrame { get; set; } = 1;
+
+        /// <inheritdoc />
+        public float TickTimingAdjustment { get; set; } = 0;
 
         /// <summary>
         ///     Ends the 'lap' of the timer, updating frame time info.
@@ -135,7 +138,7 @@ namespace SS14.Shared.Timing
         private TimeSpan CalcCurTime()
         {
             // calculate simulation CurTime
-            var time = TimeSpan.FromTicks(TickPeriod.Ticks * CurTick);
+            var time = TimeSpan.FromTicks(TickPeriod.Ticks * CurTick.Value);
 
             if (!InSimulation) // rendering can draw frames between ticks
                 return time + TickRemainder;

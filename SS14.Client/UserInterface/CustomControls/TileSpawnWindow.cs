@@ -2,11 +2,10 @@
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Map;
-using SS14.Shared.IoC;
-using SS14.Shared.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.UserInterface.CustomControls
@@ -14,11 +13,9 @@ namespace SS14.Client.UserInterface.CustomControls
     internal class TileSpawnWindow : SS14Window
     {
         protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Placement/TileSpawnPanel.tscn");
-
-        [Dependency]
-        private readonly ITileDefinitionManager tileDefinitionManager;
-        [Dependency]
-        private readonly IPlacementManager placementManager;
+        
+        private readonly ITileDefinitionManager __tileDefinitionManager;
+        private readonly IPlacementManager _placementManager;
 
         private Control TileList;
         private LineEdit SearchBar;
@@ -26,12 +23,17 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private TileSpawnButton SelectedButton;
 
-        protected override void Initialize()
+        public TileSpawnWindow(ITileDefinitionManager tileDefinitionManager, IPlacementManager placementManager,
+            IDisplayManager displayManager) : base(displayManager)
         {
-            base.Initialize();
+            __tileDefinitionManager = tileDefinitionManager;
+            _placementManager = placementManager;
 
-            IoCManager.InjectDependencies(this);
+            PerformLayout();
+        }
 
+        private void PerformLayout()
+        {
             // Get all the controls.
             var HSplitContainer = Contents.GetChild("HSplitContainer");
             TileList = HSplitContainer.GetChild("TileListScrollContainer").GetChild("TileList");
@@ -44,7 +46,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
             BuildTileList();
 
-            placementManager.PlacementCanceled += OnPlacementCanceled;
+            _placementManager.PlacementCanceled += OnPlacementCanceled;
         }
 
         protected override void Dispose(bool disposing)
@@ -53,7 +55,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
             if (disposing)
             {
-                placementManager.PlacementCanceled -= OnPlacementCanceled;
+                _placementManager.PlacementCanceled -= OnPlacementCanceled;
             }
         }
 
@@ -72,7 +74,7 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             TileList.DisposeAllChildren();
 
-            IEnumerable<ITileDefinition> tileDefs = tileDefinitionManager;
+            IEnumerable<ITileDefinition> tileDefs = __tileDefinitionManager;
 
             if (!string.IsNullOrEmpty(searchStr))
             {
@@ -122,7 +124,7 @@ namespace SS14.Client.UserInterface.CustomControls
             if (SelectedButton == item)
             {
                 SelectedButton = null;
-                placementManager.Clear();
+                _placementManager.Clear();
                 return;
             }
             else if (SelectedButton != null)
@@ -140,7 +142,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 IsTile = true
             };
 
-            placementManager.BeginPlacing(newObjInfo);
+            _placementManager.BeginPlacing(newObjInfo);
             SelectedButton = item;
         }
     }

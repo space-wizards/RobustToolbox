@@ -62,6 +62,11 @@ namespace SS14.Shared.Maths
             return Math.Max(a, b);
         }
 
+        /// <summary>
+        /// Returns the largest integer smaller to or equal to f.
+        /// </summary>
+        public static float Floor(float f) => (float)Math.Floor(f);
+
         public const float Pi = (float) Math.PI;
 
         public static float ToDegrees(float radians)
@@ -120,6 +125,24 @@ namespace SS14.Shared.Maths
         public static float Lerp(float a, float b, float blend)
         {
             return a + (b - a) * blend;
+        }
+
+        // Clamps value between 0 and 1 and returns value
+        public static float Clamp01(float value)
+        {
+            if (value < 0F)
+                return 0F;
+
+            if (value > 1F)
+                return 1F;
+
+            return value;
+        }
+
+        // Loops the value t, so that it is never larger than length and never smaller than 0.
+        public static float Repeat(float t, float length)
+        {
+            return Clamp(t - Floor(t / length) * length, 0.0f, length);
         }
     }
 }

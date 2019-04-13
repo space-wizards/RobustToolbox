@@ -1,4 +1,5 @@
 ﻿using System;
+using SS14.Shared.Timing;
 
 namespace SS14.Shared.Interfaces.Timing
 {
@@ -64,12 +65,12 @@ namespace SS14.Shared.Interfaces.Timing
         /// <summary>
         ///     The current simulation tick being processed.
         /// </summary>
-        uint CurTick { get; set; }
+        GameTick CurTick { get; set; }
 
         /// <summary>
         ///     The target ticks/second of the simulation.
         /// </summary>
-        int TickRate { get; set; }
+        byte TickRate { get; set; }
 
         /// <summary>
         ///     The length of a tick at the current TickRate. 1/TickRate.
@@ -80,6 +81,16 @@ namespace SS14.Shared.Interfaces.Timing
         /// The remaining time left over after the last tick was ran.
         /// </summary>
         TimeSpan TickRemainder { get; set; }
+
+        /// <summary>
+        ///     If the client clock is a little behind or ahead of the server, you can
+        ///     use the to adjust the timing of the clock speed. The default value is 0,
+        ///     and you can run the clock from -1 (almost stopped) to 1 (almost no delay).
+        ///     This has no effect on in-simulation timing, and only changes the speed at which
+        ///     the simulation progresses in relation to Real time. Don't mess with this unless
+        ///     you know what you are doing. DO NOT TOUCH THIS ON SERVER.
+        /// </summary>
+        float TickTimingAdjustment { get; set; }
 
         /// <summary>
         ///     Ends the 'lap' of the timer, updating frame time info.

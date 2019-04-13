@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Graphics.Overlays;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
@@ -29,6 +30,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEyeManager eyeManager;
         [Dependency] private readonly IOverlayManager overlayManager;
         [Dependency] private readonly IPrototypeManager prototypeManager;
+        [Dependency] private readonly IMapManager _mapManager;
 
         private readonly List<Effect> _Effects = new List<Effect>();
 
@@ -80,7 +82,7 @@ namespace Robust.Client.GameObjects
             */
 
             //Create effect from creation message
-            var effect = new Effect(message, resourceCache);
+            var effect = new Effect(message, resourceCache, _mapManager);
 
             //Remove this
             effect.Age = gametime;
@@ -204,7 +206,9 @@ namespace Robust.Client.GameObjects
             /// </summary>
             public TimeSpan Deathtime = TimeSpan.FromSeconds(1);
 
-            public Effect(EffectSystemMessage effectcreation, IResourceCache resourceCache)
+            private readonly IMapManager _mapManager;
+
+            public Effect(EffectSystemMessage effectcreation, IResourceCache resourceCache, IMapManager mapManager)
             {
                 EffectSprite = resourceCache
                     .GetResource<TextureResource>(new ResourcePath("/Textures/") / effectcreation.EffectSprite).Texture;
@@ -225,6 +229,7 @@ namespace Robust.Client.GameObjects
                 Color = effectcreation.Color;
                 ColorDelta = effectcreation.ColorDelta;
                 Shaded = effectcreation.Shaded;
+                _mapManager = mapManager;
             }
 
             public void Update(float frameTime)
@@ -240,7 +245,7 @@ namespace Robust.Client.GameObjects
                 var deltaPosition = new Vector2(0f, 0f);
 
                 //If we have an emitter we can do special effects around that emitter position
-                if (EmitterCoordinates.IsValidLocation())
+                if (_mapManager.GridExists(EmitterCoordinates.GridID))
                 {
                     //Calculate delta p due to radial velocity
                     var positionRelativeToEmitter =

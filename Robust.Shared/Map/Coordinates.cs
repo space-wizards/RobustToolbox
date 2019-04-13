@@ -103,12 +103,6 @@ namespace Robust.Shared.Map
         {
         }
 
-        public bool IsValidLocation()
-        {
-            var mapMan = IoCManager.Resolve<IMapManager>();
-            return mapMan.GridExists(GridID);
-        }
-
         public GridCoordinates ConvertToGrid(IMapGrid argGrid)
         {
             return new GridCoordinates(Position + Grid.WorldPosition - argGrid.WorldPosition, argGrid);

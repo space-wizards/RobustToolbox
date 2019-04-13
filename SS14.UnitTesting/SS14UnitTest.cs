@@ -226,6 +226,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IClipboardManager, ClipboardManagerUnsupported>();
                     IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
                     IoCManager.Register<IEyeManager, EyeManager>();
+                    IoCManager.Register<IClientConsole, ClientConsole>();
                     break;
 
                 case UnitTestProject.Server:

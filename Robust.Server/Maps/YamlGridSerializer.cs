@@ -69,7 +69,7 @@ namespace Robust.Server.Maps
                     foreach (var tileRef in chunk)
                     {
                         // if you change these types, fix structSize!!!
-                        writer.Write(tileRef.Tile.TileId);
+                        writer.Write(tileRef.Tile.TypeId);
                         writer.Write(tileRef.Tile.Data);
                     }
                 }

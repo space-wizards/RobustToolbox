@@ -101,7 +101,7 @@ namespace Robust.Shared.Map
                     throw new ArgumentException("Tile indices out of bounds.");
 
                 // same tile, no point to continue
-                if (_tiles[xChunkTile, yChunkTile].TileId == tile.TileId)
+                if (_tiles[xChunkTile, yChunkTile].TypeId == tile.TypeId)
                     return;
 
                 var gridTile = ChunkTileToGridTile(new MapIndices(xChunkTile, yChunkTile));

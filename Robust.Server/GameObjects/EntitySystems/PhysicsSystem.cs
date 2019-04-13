@@ -141,7 +141,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                     var location = entity.Transform;
                     var grid = location.GridPosition.Grid;
                     var tile = grid.GetTile(location.GridPosition);
-                    var tileDef = _tileDefinitionManager[tile.Tile.TileId];
+                    var tileDef = _tileDefinitionManager[tile.Tile.TypeId];
                     if (tileDef.Friction != 0)
                     {
                         movement -= movement * tileDef.Friction;

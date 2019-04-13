@@ -583,7 +583,7 @@ namespace Robust.Client.Placement
                 var grid = _mapMan.GetGrid(coordinates.GridID);
 
                 // no point changing the tile to the same thing.
-                if (grid.GetTile(coordinates).Tile.TileId == CurrentPermission.TileType)
+                if (grid.GetTile(coordinates).Tile.TypeId == CurrentPermission.TileType)
                     return;
 
                 foreach (var tileChange in _pendingTileChanges)

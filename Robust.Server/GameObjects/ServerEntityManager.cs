@@ -176,7 +176,7 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position)
         {
-            return GetEntitiesIntersecting(position.MapID, position.ToWorld().Position);
+            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).Map.Index, position.ToWorld().Position);
         }
 
         /// <inheritdoc />
@@ -194,7 +194,7 @@ namespace Robust.Server.GameObjects
         public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range)
         {
             var aabb = new Box2(position.Position - new Vector2(range / 2, range / 2), position.Position + new Vector2(range / 2, range / 2));
-            return GetEntitiesIntersecting(position.MapID, aabb);
+            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).Map.Index, aabb);
         }
 
         /// <inheritdoc />

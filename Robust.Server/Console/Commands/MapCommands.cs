@@ -3,7 +3,6 @@ using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Maps;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Interfaces.Timing;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -161,7 +160,7 @@ namespace Robust.Server.Console.Commands
 
             var pos = player.AttachedEntity.Transform.GridPosition;
 
-            shell.SendText(player, $"MapID:{pos.MapID} GridID:{pos.GridID} X:{pos.X:N2} Y:{pos.Y:N2}");
+            shell.SendText(player, $"MapID:{IoCManager.Resolve<IMapManager>().GetGrid(pos.GridID).Map.Index} GridID:{pos.GridID} X:{pos.X:N2} Y:{pos.Y:N2}");
         }
     }
 

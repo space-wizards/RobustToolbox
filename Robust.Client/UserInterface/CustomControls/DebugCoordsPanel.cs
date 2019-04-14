@@ -100,7 +100,7 @@ namespace Robust.Client.UserInterface.CustomControls
             try
             {
                 var coords = eyeManager.ScreenToWorld(new ScreenCoordinates(mouseScreenPos));
-                mouseWorldMap = (int) coords.MapID;
+                mouseWorldMap = (int) _mapManager.GetGrid(coords.GridID).Map.Index;
                 mouseWorldGrid = (int) coords.GridID;
                 mouseWorldPos = coords;
                 worldToScreen = eyeManager.WorldToScreen(coords);

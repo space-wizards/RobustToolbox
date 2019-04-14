@@ -45,6 +45,7 @@ namespace Robust.Client.State.States
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
         [Dependency] private readonly IDisplayManager _displayManager;
         [Dependency] private readonly IConfigurationManager _configurationManager;
+        [Dependency] private static readonly IMapManager _mapManager;
 
         private EscapeMenu escapeMenu;
         private IEntity lastHoveredEntity;
@@ -160,14 +161,8 @@ namespace Robust.Client.State.States
 
         public IList<IEntity> GetEntitiesUnderPosition(GridCoordinates coordinates)
         {
-            return GetEntitiesUnderPosition(_entityManager, coordinates);
-        }
-
-        private static IList<IEntity> GetEntitiesUnderPosition(IClientEntityManager entityMan,
-            GridCoordinates coordinates)
-        {
             // Find all the entities intersecting our click
-            var entities = entityMan.GetEntitiesIntersecting(coordinates.MapID, coordinates.Position);
+            var entities = _entityManager.GetEntitiesIntersecting(_mapManager.GetGrid(coordinates.GridID).Map.Index, coordinates.Position);
 
             // Check the entities against whether or not we can click them
             var foundEntities = new List<(IEntity clicked, int drawDepth)>();

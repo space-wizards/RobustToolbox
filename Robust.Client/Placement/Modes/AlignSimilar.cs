@@ -16,7 +16,8 @@ namespace Robust.Client.Placement.Modes
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
             MouseCoords = ScreenToPlayerGrid(mouseScreen);
-            CurrentTile = pManager.MapManager.GetGrid(MouseCoords.GridID).GetTile(MouseCoords);
+            var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GridID);
+            CurrentTile = mapGrid.GetTile(MouseCoords);
 
             if (pManager.CurrentPermission.IsTile)
             {
@@ -31,7 +32,7 @@ namespace Robust.Client.Placement.Modes
             var manager = IoCManager.Resolve<IClientEntityManager>();
 
             var snapToEntities = manager.GetEntitiesInRange(MouseCoords, SnapToRange)
-                .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.Transform.MapID == MouseCoords.MapID)
+                .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.Transform.MapID == mapGrid.Map.Index)
                 .OrderBy(entity => (entity.Transform.WorldPosition - MouseCoords.ToWorld().Position).LengthSquared)
                 .ToList();
 

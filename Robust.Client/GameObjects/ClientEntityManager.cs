@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -17,15 +15,14 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed class ClientEntityManager : EntityManager, IClientEntityManager, IDisposable
     {
-        [Dependency]
-        readonly IMapManager _mapManager;
+        [Dependency] private readonly IMapManager _mapManager;
 
         private int NextClientEntityUid = EntityUid.ClientUid + 1;
 
         public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float Range)
         {
             var AABB = new Box2(position.Position - new Vector2(Range / 2, Range / 2), position.Position + new Vector2(Range / 2, Range / 2));
-            return GetEntitiesIntersecting(position.MapID, AABB);
+            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).Map.Index, AABB);
         }
 
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position)

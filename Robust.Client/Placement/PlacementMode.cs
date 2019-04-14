@@ -198,7 +198,7 @@ namespace Robust.Client.Placement
                 bounds.Width,
                 bounds.Height);
 
-            if (pManager.PhysicsManager.IsColliding(collisionbox, coordinates.MapID))
+            if (pManager.PhysicsManager.IsColliding(collisionbox, pManager.MapManager.GetGrid(coordinates.GridID).Map.Index))
                 return true;
 
             return false;

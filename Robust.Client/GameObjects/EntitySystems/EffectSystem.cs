@@ -38,7 +38,7 @@ namespace Robust.Client.GameObjects
         {
             base.Initialize();
 
-            var overlay = new EffectOverlay(this, prototypeManager);
+            var overlay = new EffectOverlay(this, prototypeManager, _mapManager);
             overlayManager.AddOverlay(overlay);
         }
 
@@ -289,11 +289,13 @@ namespace Robust.Client.GameObjects
 
             private readonly Shader _unshadedShader;
             private readonly EffectSystem _owner;
+            private readonly IMapManager _mapManager;
 
-            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan) : base("EffectSystem")
+            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IMapManager mapMan) : base("EffectSystem")
             {
                 _owner = owner;
                 _unshadedShader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
+                _mapManager = mapMan;
             }
 
             protected override void Draw(DrawingHandle handle)
@@ -305,7 +307,7 @@ namespace Robust.Client.GameObjects
 
                 foreach (var effect in _owner._Effects)
                 {
-                    if (effect.Coordinates.MapID != map)
+                    if (_mapManager.GetGrid(effect.Coordinates.GridID).Map.Index != map)
                     {
                         continue;
                     }

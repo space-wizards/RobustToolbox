@@ -23,11 +23,6 @@ namespace Robust.Shared.Map
         public static readonly GridCoordinates Nullspace = new GridCoordinates(0, 0, GridId.Nullspace);
 
         /// <summary>
-        ///     The map ID the grid is currently on. This value is not persistent and may change!
-        /// </summary>
-        public MapId MapID => IoCManager.Resolve<IMapManager>().GetGrid(GridID).Map.Index;
-
-        /// <summary>
         ///     True if these coordinates are relative to a map itself.
         /// </summary>
         public bool IsWorld
@@ -113,7 +108,7 @@ namespace Robust.Shared.Map
 
         public bool InRange(GridCoordinates localpos, float range)
         {
-            if (localpos.MapID != MapID)
+            if (IoCManager.Resolve<IMapManager>().GetGrid(localpos.GridID).Map.Index != IoCManager.Resolve<IMapManager>().GetGrid(GridID).Map.Index)
             {
                 return false;
             }

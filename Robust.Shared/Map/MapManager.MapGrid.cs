@@ -305,7 +305,7 @@ namespace Robust.Shared.Map
             /// <inheritdoc />
             public GridCoordinates LocalToWorld(GridCoordinates posLocal)
             {
-                return new GridCoordinates(posLocal.Position + WorldPosition, posLocal.MapID);
+                return new GridCoordinates(posLocal.Position + WorldPosition, _mapManager.GetGrid(posLocal.GridID).Map);
             }
 
             public Vector2 ConvertToWorld(Vector2 localpos)

@@ -23,14 +23,9 @@ namespace Robust.Shared.Map
         public static readonly GridCoordinates Nullspace = new GridCoordinates(0, 0, GridId.Nullspace);
 
         /// <summary>
-        ///     The map the grid is currently on. This value is not persistent and may change!
-        /// </summary>
-        public IMap Map => IoCManager.Resolve<IMapManager>().GetGrid(GridID).Map;
-
-        /// <summary>
         ///     The map ID the grid is currently on. This value is not persistent and may change!
         /// </summary>
-        public MapId MapID => Map.Index;
+        public MapId MapID => IoCManager.Resolve<IMapManager>().GetGrid(GridID).Map.Index;
 
         /// <summary>
         ///     True if these coordinates are relative to a map itself.
@@ -108,7 +103,7 @@ namespace Robust.Shared.Map
 
         public GridCoordinates ToWorld()
         {
-            return ConvertToGrid(Map.DefaultGrid);
+            return ConvertToGrid(IoCManager.Resolve<IMapManager>().GetGrid(GridID).Map.DefaultGrid);
         }
 
         public GridCoordinates Offset(Vector2 offset)

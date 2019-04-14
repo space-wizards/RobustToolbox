@@ -556,7 +556,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 // transform localPosition from parent coords to world coords
                 var worldPos = Parent.WorldMatrix.Transform(localPosition);
                 var grid = _mapManager.GetGrid(gridId);
-                var lc = new GridCoordinates(worldPos, grid.MapID);
+                var lc = new GridCoordinates(worldPos, grid.Map);
 
                 // then to parent grid coords
                 return lc.ConvertToGrid(_mapManager.GetGrid(Parent.GridPosition.GridID));

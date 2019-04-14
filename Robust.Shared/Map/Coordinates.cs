@@ -22,23 +22,8 @@ namespace Robust.Shared.Map
 
         public static readonly GridCoordinates Nullspace = new GridCoordinates(0, 0, GridId.Nullspace);
 
-        /// <summary>
-        ///     True if these coordinates are relative to a map itself.
-        /// </summary>
-        public bool IsWorld
-        {
-            get
-            {
-                var grid = IoCManager.Resolve<IMapManager>().GetGrid(GridID);
-                return grid == grid.Map.DefaultGrid;
-            }
-        }
-
         public GridCoordinates(Vector2 argPosition, IMapGrid argGrid)
-        {
-            Position = argPosition;
-            GridID = argGrid.Index;
-        }
+            : this(argPosition, argGrid.Index) { }
 
         public GridCoordinates(Vector2 argPosition, GridId argGrid)
         {
@@ -49,38 +34,16 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Construct new grid local coordinates relative to the default grid of a map.
         /// </summary>
-        public GridCoordinates(Vector2 argPosition, MapId argMap)
-        {
-            Position = argPosition;
-            var mapManager = IoCManager.Resolve<IMapManager>();
-            GridID = mapManager.GetMap(argMap).DefaultGrid.Index;
-        }
-
-        /// <summary>
-        ///     Construct new grid local coordinates relative to the default grid of a map.
-        /// </summary>
         public GridCoordinates(Vector2 argPosition, IMap argMap)
-        {
-            Position = argPosition;
-            GridID = argMap.DefaultGrid.Index;
-        }
+            : this(argPosition, argMap.DefaultGrid.Index) { }
 
         public GridCoordinates(float X, float Y, IMapGrid argGrid)
+        : this(new Vector2(X, Y), argGrid.Index)
         {
-            Position = new Vector2(X, Y);
-            GridID = argGrid.Index;
         }
 
         public GridCoordinates(float X, float Y, GridId argGrid)
-        {
-            Position = new Vector2(X, Y);
-            GridID = argGrid;
-        }
-
-        /// <summary>
-        ///     Construct new grid local coordinates relative to the default grid of a map.
-        /// </summary>
-        public GridCoordinates(float X, float Y, MapId argMap) : this(new Vector2(X, Y), argMap)
+        : this(new Vector2(X, Y), argGrid)
         {
         }
 

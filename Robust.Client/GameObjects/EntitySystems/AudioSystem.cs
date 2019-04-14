@@ -4,7 +4,6 @@ using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
-using Robust.Client.Utility;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
@@ -12,11 +11,13 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Client.Interfaces.Graphics;
+using Robust.Client.Utility;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Map;
+using Robust.Shared.Utility;
 using System.Collections.Generic;
 using System.IO;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects.EntitySystems
 {
@@ -24,6 +25,7 @@ namespace Robust.Client.GameObjects.EntitySystems
     {
         [Dependency] private readonly ISceneTreeHolder sceneTree;
         [Dependency] private readonly IResourceCache resourceCache;
+        [Dependency] private readonly IMapManager _mapManager;
 
         private IClyde _clyde;
 
@@ -71,7 +73,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
                 if (stream.TrackingCoordinates != null)
                 {
-                    stream.Source.SetPosition(stream.TrackingCoordinates.Value.ToWorld().Position);
+                    stream.Source.SetPosition(stream.TrackingCoordinates.Value.ToWorld(_mapManager).Position);
                 }
                 else if (stream.TrackingEntity != null)
                 {
@@ -227,7 +229,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             if (GameController.Mode == GameController.DisplayMode.Clyde)
             {
                 var source = _clyde.CreateAudioSource(stream);
-                source.SetPosition(coordinates.ToWorld().Position);
+                source.SetPosition(coordinates.ToWorld(_mapManager).Position);
                 if (audioParams.HasValue)
                 {
                     source.SetPitch(audioParams.Value.PitchScale);

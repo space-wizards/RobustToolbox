@@ -72,7 +72,7 @@ namespace Robust.Shared.Map
             /// <param name="gridTile">The new tile to check.</param>
             public void UpdateAABB(MapIndices gridTile)
             {
-                var worldPos = GridTileToLocal(gridTile).ToWorld();
+                var worldPos = GridTileToLocal(gridTile).ToWorld(_mapManager);
 
                 if (AABBWorld.Contains(worldPos.Position))
                     return;
@@ -251,7 +251,7 @@ namespace Robust.Shared.Map
 
             public MapIndices SnapGridCellFor(GridCoordinates worldPos, SnapGridOffset offset)
             {
-                var local = worldPos.ConvertToGrid(this);
+                var local = worldPos.ConvertToGrid(_mapManager, this);
                 if (offset == SnapGridOffset.Edge)
                 {
                     local = local.Offset(new Vector2(TileSize / 2f, TileSize / 2f));
@@ -319,7 +319,7 @@ namespace Robust.Shared.Map
             /// <returns></returns>
             public MapIndices WorldToTile(GridCoordinates posWorld)
             {
-                var local = posWorld.ConvertToGrid(this);
+                var local = posWorld.ConvertToGrid(_mapManager, this);
                 var x = (int)Math.Floor(local.X / TileSize);
                 var y = (int)Math.Floor(local.Y / TileSize);
                 return new MapIndices(x, y);
@@ -332,7 +332,7 @@ namespace Robust.Shared.Map
             /// <returns></returns>
             public MapIndices WorldToChunk(GridCoordinates posWorld)
             {
-                var local = posWorld.ConvertToGrid(this);
+                var local = posWorld.ConvertToGrid(_mapManager, this);
                 var x = (int)Math.Floor(local.X / (TileSize * ChunkSize));
                 var y = (int)Math.Floor(local.Y / (TileSize * ChunkSize));
                 return new MapIndices(x, y);

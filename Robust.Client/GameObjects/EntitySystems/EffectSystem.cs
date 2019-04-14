@@ -249,7 +249,7 @@ namespace Robust.Client.GameObjects
                 {
                     //Calculate delta p due to radial velocity
                     var positionRelativeToEmitter =
-                        Coordinates.ToWorld().Position - EmitterCoordinates.ToWorld().Position;
+                        Coordinates.ToWorld(_mapManager).Position - EmitterCoordinates.ToWorld(_mapManager).Position;
                     var deltaRadial = RadialVelocity * frameTime;
                     deltaPosition = positionRelativeToEmitter * (deltaRadial / positionRelativeToEmitter.Length);
 
@@ -318,7 +318,7 @@ namespace Robust.Client.GameObjects
                     var usingHandle = effect.Shaded ? shaded : unshaded;
 
                     usingHandle.SetTransform(
-                        effect.Coordinates.ToWorld().Position,
+                        effect.Coordinates.ToWorld(_mapManager).Position,
                         new Angle(-effect.Rotation), effect.Size);
                     var effectSprite = effect.EffectSprite;
                     usingHandle.DrawTexture(effectSprite, -((Vector2) effectSprite.Size / EyeManager.PIXELSPERMETER) / 2, ToColor(effect.Color));

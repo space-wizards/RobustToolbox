@@ -45,7 +45,7 @@ namespace Robust.Client.State.States
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
         [Dependency] private readonly IDisplayManager _displayManager;
         [Dependency] private readonly IConfigurationManager _configurationManager;
-        [Dependency] private static readonly IMapManager _mapManager;
+        [Dependency] private readonly IMapManager _mapManager;
 
         private EscapeMenu escapeMenu;
         private IEntity lastHoveredEntity;

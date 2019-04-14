@@ -18,11 +18,8 @@ namespace Robust.Server.GameObjects
     {
         #region IEntityManager Members
 
-        [Dependency]
-        private readonly IPrototypeManager _protoManager;
-
-        [Dependency]
-        private readonly IMapManager _mapManager;
+        [Dependency] private readonly IPrototypeManager _protoManager;
+        [Dependency] private readonly IMapManager _mapManager;
 
         private readonly List<(GameTick tick, EntityUid uid)> DeletionHistory = new List<(GameTick, EntityUid)>();
 
@@ -176,7 +173,7 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position)
         {
-            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).Map.Index, position.ToWorld().Position);
+            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).Map.Index, position.ToWorld(_mapManager).Position);
         }
 
         /// <inheritdoc />
@@ -225,7 +222,7 @@ namespace Robust.Server.GameObjects
 
             foreach (var entity in entities)
             {
-                var angle = new Angle(entity.Transform.WorldPosition - coordinates.ToWorld().Position);
+                var angle = new Angle(entity.Transform.WorldPosition - coordinates.ToWorld(_mapManager).Position);
                 if (angle.Degrees < direction.Degrees + arcwidth / 2 && angle.Degrees > direction.Degrees - arcwidth / 2)
                     yield return entity;
             }

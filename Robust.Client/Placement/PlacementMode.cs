@@ -120,7 +120,7 @@ namespace Robust.Client.Placement
 
         public IEnumerable<GridCoordinates> LineCoordinates()
         {
-            var placementdiff = MouseCoords.ToWorld().Position - pManager.StartPoint.ToWorld().Position;
+            var placementdiff = MouseCoords.ToWorld(pManager.MapManager).Position - pManager.StartPoint.ToWorld(pManager.MapManager).Position;
             var iterations = 0f;
             Vector2 distance;
             if (Math.Abs(placementdiff.X) > Math.Abs(placementdiff.Y))
@@ -142,7 +142,7 @@ namespace Robust.Client.Placement
 
         public IEnumerable<GridCoordinates> GridCoordinates()
         {
-            var placementdiff = MouseCoords.ToWorld().Position - pManager.StartPoint.ToWorld().Position;
+            var placementdiff = MouseCoords.ToWorld(pManager.MapManager).Position - pManager.StartPoint.ToWorld(pManager.MapManager).Position;
             var distanceX = new Vector2(placementdiff.X > 0 ? 1 : -1, 0) * GridDistancing;
             var distanceY = new Vector2(0, placementdiff.Y > 0 ? 1 : -1) * GridDistancing;
 
@@ -182,7 +182,7 @@ namespace Robust.Client.Placement
             if (!RangeRequired)
                 return true;
             var range = pManager.CurrentPermission.Range;
-            if (range > 0 && !pManager.PlayerManager.LocalPlayer.ControlledEntity.Transform.GridPosition.InRange(coordinates, range))
+            if (range > 0 && !pManager.PlayerManager.LocalPlayer.ControlledEntity.Transform.GridPosition.InRange(pManager.MapManager, coordinates, range))
                 return false;
             return true;
         }
@@ -190,7 +190,7 @@ namespace Robust.Client.Placement
         public bool IsColliding(GridCoordinates coordinates)
         {
             var bounds = pManager.ColliderAABB;
-            var worldcoords = coordinates.ToWorld();
+            var worldcoords = coordinates.ToWorld(pManager.MapManager);
 
             var collisionbox = Box2.FromDimensions(
                 bounds.Left + worldcoords.Position.X,

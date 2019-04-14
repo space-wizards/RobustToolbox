@@ -1,5 +1,4 @@
 ﻿using Robust.Shared.Interfaces.Map;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using System;
@@ -54,14 +53,14 @@ namespace Robust.Shared.Map
         {
         }
 
-        public GridCoordinates ConvertToGrid(IMapGrid argGrid)
+        public GridCoordinates ConvertToGrid(IMapManager mapManager, IMapGrid argGrid)
         {
-            return new GridCoordinates(Position + IoCManager.Resolve<IMapManager>().GetGrid(GridID).WorldPosition - argGrid.WorldPosition, argGrid);
+            return new GridCoordinates(Position + mapManager.GetGrid(GridID).WorldPosition - argGrid.WorldPosition, argGrid);
         }
 
-        public GridCoordinates ToWorld()
+        public GridCoordinates ToWorld(IMapManager mapManager)
         {
-            return ConvertToGrid(IoCManager.Resolve<IMapManager>().GetGrid(GridID).Map.DefaultGrid);
+            return ConvertToGrid(mapManager, mapManager.GetGrid(GridID).Map.DefaultGrid);
         }
 
         public GridCoordinates Offset(Vector2 offset)
@@ -69,24 +68,24 @@ namespace Robust.Shared.Map
             return new GridCoordinates(Position + offset, GridID);
         }
 
-        public bool InRange(GridCoordinates localpos, float range)
+        public bool InRange(IMapManager mapManager, GridCoordinates localpos, float range)
         {
-            if (IoCManager.Resolve<IMapManager>().GetGrid(localpos.GridID).Map.Index != IoCManager.Resolve<IMapManager>().GetGrid(GridID).Map.Index)
+            if (mapManager.GetGrid(localpos.GridID).Map != mapManager.GetGrid(GridID).Map)
             {
                 return false;
             }
 
-            return ((localpos.ToWorld().Position - ToWorld().Position).LengthSquared < range * range);
+            return ((localpos.ToWorld(mapManager).Position - ToWorld(mapManager).Position).LengthSquared < range * range);
         }
 
-        public bool InRange(GridCoordinates localpos, int range)
+        public bool InRange(IMapManager mapManager, GridCoordinates localpos, int range)
         {
-            return InRange(localpos, (float) range);
+            return InRange(mapManager, localpos, (float) range);
         }
 
-        public float Distance(GridCoordinates other)
+        public float Distance(IMapManager mapManager, GridCoordinates other)
         {
-            return (ToWorld().Position - other.ToWorld().Position).Length;
+            return (ToWorld(mapManager).Position - other.ToWorld(mapManager).Position).Length;
         }
 
         public GridCoordinates Translated(Vector2 offset)

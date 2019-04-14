@@ -96,7 +96,6 @@ namespace SS14.Client
         {
             DebugTools.Assert(RunLevel > ClientRunLevel.Initialize);
             DebugTools.Assert(_net.IsConnected);
-            _discord.Restore();
             // run level changed in OnNetDisconnect()
             // are both of these *really* needed?
             _net.ClientDisconnect(reason);
@@ -163,11 +162,11 @@ namespace SS14.Client
 
             _stateManager.RequestStateChange<MainScreen>();
 
-            _timing.Paused = true;
             _gameStates.Shutdown();
             _playMan.Shutdown();
             _entityManager.Shutdown();
             _mapManager.Shutdown();
+            _discord.ClearPresence();
             Reset();
         }
 

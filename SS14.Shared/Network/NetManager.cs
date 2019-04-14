@@ -156,10 +156,9 @@ namespace SS14.Shared.Network
             }
 
 #if DEBUG
-            _config.RegisterCVar("net.fakelag", false, CVar.CHEAT);
-            _config.RegisterCVar("net.fakeloss", 0.0f, CVar.CHEAT);
-            _config.RegisterCVar("net.fakelagmin", 0.0f, CVar.CHEAT);
-            _config.RegisterCVar("net.fakelagrand", 0.0f, CVar.CHEAT);
+            _config.RegisterCVar("net.fakeloss", 0.0f, CVar.CHEAT, _fakeLossChanged);
+            _config.RegisterCVar("net.fakelagmin", 0.0f, CVar.CHEAT, _fakeLagMinChanged);
+            _config.RegisterCVar("net.fakelagrand", 0.0f, CVar.CHEAT, _fakeLagRandomChanged);
 #endif
 
             _strings.Initialize(this, () => { OnConnected(ServerChannel); });
@@ -306,17 +305,40 @@ namespace SS14.Shared.Network
 
 #if DEBUG
             //Simulate Latency
-            if (_config.GetCVar<bool>("net.fakelag"))
-            {
-                netConfig.SimulatedLoss = _config.GetCVar<float>("net.fakeloss");
-                netConfig.SimulatedMinimumLatency = _config.GetCVar<float>("net.fakelagmin");
-                netConfig.SimulatedRandomLatency = _config.GetCVar<float>("net.fakelagrand");
-            }
+            netConfig.SimulatedLoss = _config.GetCVar<float>("net.fakeloss");
+            netConfig.SimulatedMinimumLatency = _config.GetCVar<float>("net.fakelagmin");
+            netConfig.SimulatedRandomLatency = _config.GetCVar<float>("net.fakelagrand");
 
             netConfig.ConnectionTimeout = 30000f;
 #endif
             return netConfig;
         }
+
+#if DEBUG
+        private void _fakeLossChanged(float newValue)
+        {
+            foreach (var peer in _netPeers)
+            {
+                peer.Configuration.SimulatedLoss = newValue;
+            }
+        }
+
+        private void _fakeLagMinChanged(float newValue)
+        {
+            foreach (var peer in _netPeers)
+            {
+                peer.Configuration.SimulatedMinimumLatency = newValue;
+            }
+        }
+
+        private void _fakeLagRandomChanged(float newValue)
+        {
+            foreach (var peer in _netPeers)
+            {
+                peer.Configuration.SimulatedRandomLatency = newValue;
+            }
+        }
+#endif
 
         /// <summary>
         ///     Gets the NetChannel of a peer NetConnection.

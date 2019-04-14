@@ -125,13 +125,16 @@ namespace SS14.Client.Graphics.Clyde
 
         public Vector2 MouseScreenPosition { get; private set; }
 
-        public override void ReloadConfig()
+        protected override void ReadConfig()
+        {
+            base.ReadConfig();
+            _quartResLights = !_configurationManager.GetCVar<bool>("display.highreslights");
+        }
+
+        protected override void ReloadConfig()
         {
             base.ReloadConfig();
 
-            _window.VSync = VSync ? VSyncMode.On : VSyncMode.Off;
-            _window.WindowState = WindowMode == WindowMode.Fullscreen ? WindowState.Fullscreen : WindowState.Normal;
-            _quartResLights = !_configurationManager.GetCVar<bool>("display.highreslights");
             _regenerateLightTexture();
         }
 
@@ -141,7 +144,7 @@ namespace SS14.Client.Graphics.Clyde
 
             _configurationManager.RegisterCVar("display.width", 1280);
             _configurationManager.RegisterCVar("display.height", 720);
-            _configurationManager.RegisterCVar("display.highreslights", false);
+            _configurationManager.RegisterCVar("display.highreslights", false, onValueChanged: _highResLightsChanged);
             _configurationManager.RegisterCVar("audio.device", "");
 
             _mapManager.TileChanged += _updateTileMapOnUpdate;
@@ -549,6 +552,35 @@ namespace SS14.Client.Graphics.Clyde
             return _window.WindowInfo.Handle;
         }
 
+        protected override void VSyncChanged()
+        {
+            if (_window == null)
+            {
+                return;
+            }
+            _window.VSync = VSync ? VSyncMode.On : VSyncMode.Off;
+        }
+
+        protected override void WindowModeChanged()
+        {
+            if (_window == null)
+            {
+                return;
+            }
+            _window.WindowState = WindowMode == WindowMode.Fullscreen ? WindowState.Fullscreen : WindowState.Normal;
+        }
+
+        private void _highResLightsChanged(bool newValue)
+        {
+            _quartResLights = !newValue;
+            if (LightTexture == default)
+            {
+                return;
+            }
+
+            _regenerateLightTexture();
+        }
+
         private void _regenerateLightTexture()
         {
             GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
@@ -633,6 +665,16 @@ namespace SS14.Client.Graphics.Clyde
             public override string ToString()
             {
                 return $"{nameof(Handle)}: {Handle}";
+            }
+
+            public static bool operator ==(OGLHandle a, OGLHandle b)
+            {
+                return a.Handle == b.Handle;
+            }
+
+            public static bool operator !=(OGLHandle a, OGLHandle b)
+            {
+                return a.Handle != b.Handle;
             }
         }
 

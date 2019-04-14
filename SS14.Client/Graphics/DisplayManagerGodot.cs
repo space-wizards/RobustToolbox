@@ -34,7 +34,7 @@ namespace SS14.Client.Graphics
             };
         }
 
-        public override void ReloadConfig()
+        protected override void ReloadConfig()
         {
             base.ReloadConfig();
 

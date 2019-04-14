@@ -15,14 +15,11 @@ namespace SS14.Client.GameObjects
     {
         private Dictionary<object, object> data = new Dictionary<object, object>();
         internal List<AppearanceVisualizer> Visualizers = new List<AppearanceVisualizer>();
-        [Dependency] private static readonly IReflectionManager _reflectionManager;
+        [Dependency] private readonly IReflectionManager _reflectionManager;
+
+        private static bool _didRegisterSerializer;
 
         public bool AppearanceDirty { get; internal set; } = false;
-
-        static AppearanceComponent()
-        {
-            YamlObjectSerializer.RegisterTypeSerializer(typeof(AppearanceVisualizer), new VisualizerTypeSerializer(_reflectionManager));
-        }
 
         public override void SetData(string key, object value)
         {
@@ -90,6 +87,12 @@ namespace SS14.Client.GameObjects
 
         public override void ExposeData(ObjectSerializer serializer)
         {
+            if (!_didRegisterSerializer)
+            {
+                YamlObjectSerializer.RegisterTypeSerializer(typeof(AppearanceVisualizer), new VisualizerTypeSerializer(_reflectionManager));
+                _didRegisterSerializer = true;
+            }
+
             serializer.DataField(ref Visualizers, "visuals", new List<AppearanceVisualizer>());
         }
 

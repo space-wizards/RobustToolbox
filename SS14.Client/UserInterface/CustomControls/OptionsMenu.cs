@@ -73,7 +73,6 @@ namespace SS14.Client.UserInterface.CustomControls
                 (int) (FullscreenCheckBox.Pressed ? WindowMode.Fullscreen : WindowMode.Windowed));
             configManager.SaveToFile();
             UpdateApplyButton();
-            _displayManager.ReloadConfig();
         }
 
         private void OnCheckBoxToggled(BaseButton.ButtonToggledEventArgs args)

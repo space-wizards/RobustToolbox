@@ -173,7 +173,7 @@ namespace SS14.Client
             _viewVariablesManager.Initialize();
 
             _client.Initialize();
-            _discord.Connect();
+            _discord.Initialize();
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.PostInit);
 
             _stateManager.RequestStateChange<MainScreen>();
@@ -259,6 +259,7 @@ namespace SS14.Client
             // Stupid nvidia driver spams buffer info on DebugTypeOther every time you re-allocate a buffer.
             _logManager.GetSawmill("ogl.debug.other").Level = LogLevel.Warning;
             _logManager.GetSawmill("gdparse").Level = LogLevel.Error;
+            _logManager.GetSawmill("discord").Level = LogLevel.Warning;
         }
 
         public static ICollection<string> GetCommandLineArgs()

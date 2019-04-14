@@ -101,6 +101,7 @@
     <Compile Include="Audio\AudioStream.cs" />
     <Compile Include="BaseClient.cs" />
     <Compile Include="Console\ClientConsole.cs" />
+    <Compile Include="Console\Commands\ConfigurationCommands.cs" />
     <Compile Include="Console\Commands\LogCommands.cs" />
     <Compile Include="Console\IClientConsole.cs" />
     <Compile Include="GameController.cs" />

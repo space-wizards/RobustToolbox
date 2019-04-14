@@ -136,7 +136,7 @@ namespace SS14.Server.GameObjects.EntitySystems
                     }
                 }
 
-                if (movement != Vector2.Zero && (collider.CollisionMask & CollisionGroup.Floor) != CollisionGroup.None)
+                if (movement != Vector2.Zero && collider.IsScrapingFloor)
                 {
                     var location = entity.Transform;
                     var grid = location.GridPosition.Grid;

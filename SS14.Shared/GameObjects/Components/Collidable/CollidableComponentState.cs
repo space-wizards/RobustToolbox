@@ -1,5 +1,4 @@
 ﻿using System;
-using SS14.Shared.Physics;
 using SS14.Shared.Serialization;
 
 namespace SS14.Shared.GameObjects
@@ -9,10 +8,10 @@ namespace SS14.Shared.GameObjects
     {
         public readonly bool CollisionEnabled;
         public readonly bool HardCollidable;
-        public readonly CollisionGroup CollisionLayer;
-        public readonly CollisionGroup CollisionMask;
+        public readonly int CollisionLayer;
+        public readonly int CollisionMask;
 
-        public CollidableComponentState(bool collisionEnabled, bool hardCollidable, CollisionGroup collisionLayer, CollisionGroup collisionMask)
+        public CollidableComponentState(bool collisionEnabled, bool hardCollidable, int collisionLayer, int collisionMask)
             : base(NetIDs.COLLIDABLE)
         {
             CollisionEnabled = collisionEnabled;

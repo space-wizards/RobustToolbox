@@ -7,7 +7,6 @@ using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
-using SS14.Shared.Physics;
 using SS14.Shared.Serialization;
 using SS14.Shared.ViewVariables;
 
@@ -19,8 +18,9 @@ namespace SS14.Server.GameObjects
 
         private bool _collisionEnabled;
         private bool _isHardCollidable;
-        private CollisionGroup _collisionLayer;
-        private CollisionGroup _collisionMask;
+        private int _collisionLayer;
+        private int _collisionMask;
+        private bool _isScrapingFloor;
 
         /// <inheritdoc />
         public override string Name => "Collidable";
@@ -38,8 +38,9 @@ namespace SS14.Server.GameObjects
 
             serializer.DataField(ref _collisionEnabled, "on", true);
             serializer.DataField(ref _isHardCollidable, "hard", true);
-            serializer.DataField(ref _collisionLayer, "layer", CollisionGroup.Grid);
-            serializer.DataField(ref _collisionMask, "mask", CollisionGroup.Grid);
+            serializer.DataField(ref _collisionLayer, "layer", 1);
+            serializer.DataField(ref _collisionMask, "mask", 1);
+            serializer.DataField(ref _isScrapingFloor, "IsScrapingFloor", false);
         }
 
         /// <inheritdoc />
@@ -76,7 +77,7 @@ namespace SS14.Server.GameObjects
         ///     Bitmask of the collision layers this component is a part of.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public CollisionGroup CollisionLayer
+        public int CollisionLayer
         {
             get => _collisionLayer;
             set => _collisionLayer = value;
@@ -86,10 +87,17 @@ namespace SS14.Server.GameObjects
         ///     Bitmask of the layers this component collides with.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public CollisionGroup CollisionMask
+        public int CollisionMask
         {
             get => _collisionMask;
             set => _collisionMask = value;
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool IsScrapingFloor
+        {
+            get => _isScrapingFloor;
+            set => _isScrapingFloor = value;
         }
 
         /// <inheritdoc />
@@ -128,7 +136,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public bool TryCollision(Vector2 offset, bool bump = false)
         {
-            if (!_collisionEnabled || CollisionMask == CollisionGroup.None)
+            if (!_collisionEnabled || CollisionMask == 0x0)
                 return false;
 
             return _physicsManager.TryCollide(Owner, offset, bump);

@@ -36,12 +36,12 @@ namespace SS14.Shared.Interfaces.Physics
         /// <summary>
         ///     Bitmask of the collision layers this component is a part of.
         /// </summary>
-        CollisionGroup CollisionLayer { get; set; }
+        int CollisionLayer { get; set; }
 
         /// <summary>
         ///     Bitmask of the layers this component collides with.
         /// </summary>
-        CollisionGroup CollisionMask { get; set; }
+        int CollisionMask { get; set; }
 
         /// <summary>
         /// Called when the collidable is bumped into by someone/something

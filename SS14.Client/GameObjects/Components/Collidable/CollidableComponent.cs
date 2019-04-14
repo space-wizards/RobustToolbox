@@ -81,10 +81,10 @@ namespace SS14.Client.GameObjects
         public bool IsHardCollidable { get; set; }
 
         /// <inheritdoc />
-        public CollisionGroup CollisionLayer { get; set; }
+        public int CollisionLayer { get; set; }
 
         /// <inheritdoc />
-        public CollisionGroup CollisionMask { get; set; }
+        public int CollisionMask { get; set; }
 
         /// <summary>
         ///     gets the AABB from the sprite component and sends it to the CollisionManager.

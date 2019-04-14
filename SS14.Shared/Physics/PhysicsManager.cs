@@ -52,7 +52,7 @@ namespace SS14.Shared.Physics
 
             var collidable = (ICollidable) entity.GetComponent<ICollidableComponent>();
 
-            if (!collidable.CollisionEnabled || collidable.CollisionLayer == CollisionGroup.None)
+            if (!collidable.CollisionEnabled || collidable.CollisionLayer == 0x0)
                 return false;
 
             var colliderAABB = collidable.WorldAABB;
@@ -128,7 +128,7 @@ namespace SS14.Shared.Physics
                     continue;
                 }
 
-                if ((collidable.CollisionMask & body.CollisionLayer) == CollisionGroup.None)
+                if ((collidable.CollisionMask & body.CollisionLayer) == 0x0)
                 {
                     continue;
                 }

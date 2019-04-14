@@ -94,7 +94,6 @@
     <Compile Include="Matrix4.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Quaternion.cs" />
-    <Compile Include="Ray.cs" />
     <Compile Include="Vector2.cs" />
     <Compile Include="Vector2d.cs" />
     <Compile Include="Vector2i.cs" />

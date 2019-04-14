@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using SS14.Shared.Map;
 using SS14.Shared.Maths;
 
 namespace SS14.UnitTesting.Shared.Maths
@@ -12,7 +13,7 @@ namespace SS14.UnitTesting.Shared.Maths
         public void RayIntersectsBoxTest()
         {
             var box = new Box2(new Vector2(5, 5), new Vector2(10, -5));
-            var ray = new Ray(new Vector2(0, 1), Vector2.UnitX);
+            var ray = new Ray(new Vector2(0, 1), Vector2.UnitX, 1);
 
             var result = ray.Intersects(box, out var dist, out var hitPos);
 

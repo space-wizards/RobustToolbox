@@ -177,6 +177,10 @@ namespace SS14.Shared.Physics
 
             foreach (var body in _bodies)
             {
+                if ((ray.CollisionMask & body.CollisionLayer) == 0x0)
+                {
+                    continue;
+                }
                 if (ray.Intersects(body.WorldAABB, out var dist, out var hitPos) && dist < minDist)
                 {
                     if (!body.IsHardCollidable || ignoredEnt != null && ignoredEnt == body.Owner)

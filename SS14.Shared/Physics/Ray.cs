@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SS14.Shared.Map;
+using System;
 
 namespace SS14.Shared.Maths
 {
@@ -10,6 +11,7 @@ namespace SS14.Shared.Maths
     {
         private readonly Vector2 _position;
         private readonly Vector2 _direction;
+        private readonly int _collisionMask;
 
         /// <summary>
         ///     Specifies the starting point of the ray.
@@ -21,15 +23,18 @@ namespace SS14.Shared.Maths
         /// </summary>
         public Vector2 Direction => _direction;
 
+        public int CollisionMask => _collisionMask;
+
         /// <summary>
         ///     Creates a new instance of a Ray.
         /// </summary>
         /// <param name="position">Starting position of the ray.</param>
         /// <param name="direction">Unit direction vector that the ray is pointing.</param>
-        public Ray(Vector2 position, Vector2 direction)
+        public Ray(Vector2 position, Vector2 direction, int collisionMask)
         {
             _position = position;
             _direction = direction;
+            _collisionMask = collisionMask;
         }
 
         #region Intersect Tests

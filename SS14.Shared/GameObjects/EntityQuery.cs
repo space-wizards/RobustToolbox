@@ -3,6 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using SS14.Shared.Interfaces.Physics;
+using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.GameObjects.Components;
 
 namespace SS14.Shared.GameObjects
 {
@@ -79,6 +82,39 @@ namespace SS14.Shared.GameObjects
         public IEnumerable<IEntity> Match(IEntityManager entityMan)
         {
             return entityMan.ComponentManager.GetAllComponents(ComponentType).Select(component => component.Owner);
+        }
+    }
+
+    /// <summary>
+    ///     An entity query that will match all entities that intersect with the argument entity.
+    /// </summary>
+    [PublicAPI]
+    public class IntersectingEntityQuery : IEntityQuery
+    {
+        private readonly IEntity Entity;
+
+        /// <summary>
+        ///     Constructs a new instance of <c>TypeEntityQuery</c>.
+        /// </summary>
+        /// <param name="componentType">Type of the component to match.</param>
+        public IntersectingEntityQuery(IEntity entity)
+        {
+            Entity = entity;
+        }
+
+        /// <inheritdoc />
+        public bool Match(IEntity entity)
+        {
+            if(Entity.TryGetComponent<ICollidableComponent>(out var collidable))
+            {
+                return collidable.MapID == entity.Transform.MapID && collidable.WorldAABB.Contains(entity.Transform.WorldPosition);
+            }
+            return false;
+        }
+
+        public IEnumerable<IEntity> Match(IEntityManager entityMan)
+        {
+            return entityMan.GetEntities().Where(entity => Match(entity));
         }
     }
 }

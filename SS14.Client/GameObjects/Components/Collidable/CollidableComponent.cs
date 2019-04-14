@@ -8,6 +8,7 @@ using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
+using SS14.Shared.Physics;
 
 namespace SS14.Client.GameObjects
 {

@@ -162,15 +162,15 @@ namespace SS14.UnitTesting.Shared.Physics
         {
             // Arrange
             var box = new Box2(5, -5, 10, 6);
-            var ray = new Ray(new Vector2(0, 1), Vector2.UnitX);
+            var ray = new Ray(new Vector2(0, 1), Vector2.UnitX, 1);
             var manager = new PhysicsManager();
 
             var mock = new Mock<ICollidable>();
             mock.Setup(foo => foo.WorldAABB).Returns(box);
             mock.Setup(foo => foo.Owner).Returns(new Entity()); // requires ICollidable not have null owner
             mock.Setup(foo => foo.CollisionEnabled).Returns(true);
-            mock.Setup(foo => foo.CollisionLayer).Returns(0x4);
-            mock.Setup(foo => foo.CollisionMask).Returns(0x04);
+            mock.Setup(foo => foo.CollisionLayer).Returns(1);
+            mock.Setup(foo => foo.CollisionMask).Returns(1);
             mock.Setup(foo => foo.IsHardCollidable).Returns(true);
             manager.AddCollidable(mock.Object);
 
@@ -189,15 +189,15 @@ namespace SS14.UnitTesting.Shared.Physics
         {
             // Arrange
             var box = new Box2(5, -5, 10, 6);
-            var ray = new Ray(new Vector2(4.99999f, 1), Vector2.UnitY);
+            var ray = new Ray(new Vector2(4.99999f, 1), Vector2.UnitY, 1);
             var manager = new PhysicsManager();
 
             var mock = new Mock<ICollidable>();
             mock.Setup(foo => foo.WorldAABB).Returns(box);
             mock.Setup(foo => foo.Owner).Returns(new Entity()); // requires ICollidable not have null owner
             mock.Setup(foo => foo.CollisionEnabled).Returns(true);
-            mock.Setup(foo => foo.CollisionLayer).Returns(0x4);
-            mock.Setup(foo => foo.CollisionMask).Returns(0x04);
+            mock.Setup(foo => foo.CollisionLayer).Returns(1);
+            mock.Setup(foo => foo.CollisionMask).Returns(1);
             manager.AddCollidable(mock.Object);
 
             // Act

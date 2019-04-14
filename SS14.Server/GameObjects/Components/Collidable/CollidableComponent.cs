@@ -3,7 +3,6 @@ using System.Linq;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
@@ -19,8 +18,9 @@ namespace SS14.Server.GameObjects
 
         private bool _collisionEnabled;
         private bool _isHardCollidable;
-        private int _collisionLayer; //bitfield
-        private int _collisionMask; //bitfield
+        private int _collisionLayer;
+        private int _collisionMask;
+        private bool _isScrapingFloor;
 
         /// <inheritdoc />
         public override string Name => "Collidable";
@@ -38,9 +38,9 @@ namespace SS14.Server.GameObjects
 
             serializer.DataField(ref _collisionEnabled, "on", true);
             serializer.DataField(ref _isHardCollidable, "hard", true);
-            serializer.DataField(ref _collisionLayer, "layer", 0x1);
-            serializer.DataField(ref _collisionMask, "mask", 0x1);
-            serializer.DataField(ref _isInteractingWithFloor, "IsInteractingWithFloor", false);
+            serializer.DataField(ref _collisionLayer, "layer", 1);
+            serializer.DataField(ref _collisionMask, "mask", 1);
+            serializer.DataField(ref _isScrapingFloor, "IsScrapingFloor", false);
         }
 
         /// <inheritdoc />
@@ -93,15 +93,11 @@ namespace SS14.Server.GameObjects
             set => _collisionMask = value;
         }
 
-        private bool _isInteractingWithFloor;
-        /// <summary>
-        ///     When this enity moves it is actively scraping against the floor tile it is on.
-        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool IsInteractingWithFloor
+        public bool IsScrapingFloor
         {
-            get => _isInteractingWithFloor;
-            set => _isInteractingWithFloor = value;
+            get => _isScrapingFloor;
+            set => _isScrapingFloor = value;
         }
 
         /// <inheritdoc />

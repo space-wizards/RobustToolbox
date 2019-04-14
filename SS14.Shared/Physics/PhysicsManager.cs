@@ -71,6 +71,8 @@ namespace SS14.Shared.Physics
 
             var collided = TestSpecialCollisionAndBump(entity, bump, collisionmodifiers, collidedwith);
 
+            collidable.Bump(collidedwith);
+
             //TODO: This needs multi-grid support.
             return collided;
         }
@@ -81,22 +83,28 @@ namespace SS14.Shared.Physics
             var collided = false;
             foreach (var otherCollidable in _results)
             {
+                if (!otherCollidable.IsHardCollidable)
+                {
+                    continue;
+                }
+
                 //Provides component level overrides for collision behavior based on the entity we are trying to collide with
                 var preventcollision = false;
-
                 foreach (var mods in collisionmodifiers)
+                {
                     preventcollision |= mods.PreventCollide(otherCollidable);
-
-                if (preventcollision) //We were prevented, bail
+                }
+                if (preventcollision)
+                {
                     continue;
-
-                if (!otherCollidable.IsHardCollidable)
-                    continue;
+                }
 
                 collided = true;
 
                 if (!bump)
+                {
                     continue;
+                }
 
                 otherCollidable.Bumped(entity);
                 collidedwith.Add(otherCollidable.Owner);
@@ -169,6 +177,10 @@ namespace SS14.Shared.Physics
 
             foreach (var body in _bodies)
             {
+                if ((ray.CollisionMask & body.CollisionLayer) == 0x0)
+                {
+                    continue;
+                }
                 if (ray.Intersects(body.WorldAABB, out var dist, out var hitPos) && dist < minDist)
                 {
                     if (!body.IsHardCollidable || ignoredEnt != null && ignoredEnt == body.Owner)

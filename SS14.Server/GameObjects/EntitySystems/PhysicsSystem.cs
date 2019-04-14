@@ -7,6 +7,7 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Physics;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
@@ -54,10 +55,16 @@ namespace SS14.Server.GameObjects.EntitySystems
             {
                 return;
             }
+            var transform = entity.Transform;
+            if (transform.Parent != null)
+            {
+                transform.Parent.Owner.SendMessage(transform, new RelayMovementEntityMessage(entity));
+                velocity.LinearVelocity = Vector2.Zero;
+                return;
+            }
 
             var velocityConsumers = velocity.GetVelocityConsumers();
             var initialMovement = velocity.LinearVelocity;
-
             int velocityConsumerCount;
             float totalMass;
             Vector2 lowestMovement;
@@ -103,8 +110,12 @@ namespace SS14.Server.GameObjects.EntitySystems
         private static Vector2 CalculateMovement(PhysicsComponent velocity, float frameTime, IEntity entity)
         {
             var movement = velocity.LinearVelocity * frameTime;
+            if(movement.LengthSquared <= Epsilon)
+            {
+                return Vector2.Zero;
+            }
             //Check for collision
-            if (movement.LengthSquared > Epsilon && entity.TryGetComponent(out CollidableComponent collider))
+            if (entity.TryGetComponent(out CollidableComponent collider))
             {
                 var collided = collider.TryCollision(movement, true);
 
@@ -125,8 +136,9 @@ namespace SS14.Server.GameObjects.EntitySystems
                     }
                 }
 
-                if (movement != Vector2.Zero && collider.IsInteractingWithFloor && entity.TryGetComponent<ITransformComponent>(out var location))
+                if (movement != Vector2.Zero && collider.IsScrapingFloor)
                 {
+                    var location = entity.Transform;
                     var grid = location.GridPosition.Grid;
                     var tile = grid.GetTile(location.GridPosition);
                     var tileDef = tile.TileDef;

@@ -1,5 +1,4 @@
-﻿using Robust.Server.GameObjects;
-using Robust.Server.Interfaces.GameObjects;
+﻿using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Server.Interfaces.Placement;
 using Robust.Server.Interfaces.Player;
@@ -10,24 +9,19 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Maths;
 using Robust.Shared.Network.Messages;
-using Vector2 = Robust.Shared.Maths.Vector2;
 
 namespace Robust.Server.Placement
 {
     public class PlacementManager : IPlacementManager
     {
-        [Dependency]
-        private readonly ITileDefinitionManager _tileDefinitionManager;
-        [Dependency]
-        private readonly IServerNetManager _networkManager;
-        [Dependency]
-        private readonly IPlayerManager _playerManager;
-        [Dependency]
-        private readonly IServerEntityManager _entityManager;
+        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
+        [Dependency] private readonly IServerNetManager _networkManager;
+        [Dependency] private readonly IPlayerManager _playerManager;
+        [Dependency] private readonly IServerEntityManager _entityManager;
+        [Dependency] private readonly IMapManager _mapManager;
 
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).
@@ -117,7 +111,7 @@ namespace Robust.Server.Placement
             }
             else
             {
-                coordinates.Grid.SetTile(coordinates, new Tile(tileType));
+                _mapManager.GetGrid(coordinates.GridID).SetTile(coordinates, new Tile(tileType));
             }
         }
 

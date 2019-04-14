@@ -15,6 +15,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         [Dependency] private readonly IPauseManager _pauseManager;
         [Dependency] private readonly IPhysicsManager _physicsManager;
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
+        [Dependency] private readonly IMapManager _mapManager;
 
         private const float Epsilon = 1.0e-6f;
 
@@ -139,7 +140,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                 if (movement != Vector2.Zero && collider.IsScrapingFloor)
                 {
                     var location = entity.Transform;
-                    var grid = location.GridPosition.Grid;
+                    var grid = _mapManager.GetGrid(location.GridPosition.GridID);
                     var tile = grid.GetTile(location.GridPosition);
                     var tileDef = _tileDefinitionManager[tile.Tile.TypeId];
                     if (tileDef.Friction != 0)

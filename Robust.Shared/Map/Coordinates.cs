@@ -20,14 +20,12 @@ namespace Robust.Shared.Map
 
         public float Y => Position.Y;
 
-        public IMapGrid Grid => IoCManager.Resolve<IMapManager>().GetGrid(GridID);
-
         public static readonly GridCoordinates Nullspace = new GridCoordinates(0, 0, GridId.Nullspace);
 
         /// <summary>
         ///     The map the grid is currently on. This value is not persistent and may change!
         /// </summary>
-        public IMap Map => Grid.Map;
+        public IMap Map => IoCManager.Resolve<IMapManager>().GetGrid(GridID).Map;
 
         /// <summary>
         ///     The map ID the grid is currently on. This value is not persistent and may change!
@@ -41,7 +39,7 @@ namespace Robust.Shared.Map
         {
             get
             {
-                var grid = Grid;
+                var grid = IoCManager.Resolve<IMapManager>().GetGrid(GridID);
                 return grid == grid.Map.DefaultGrid;
             }
         }
@@ -105,7 +103,7 @@ namespace Robust.Shared.Map
 
         public GridCoordinates ConvertToGrid(IMapGrid argGrid)
         {
-            return new GridCoordinates(Position + Grid.WorldPosition - argGrid.WorldPosition, argGrid);
+            return new GridCoordinates(Position + IoCManager.Resolve<IMapManager>().GetGrid(GridID).WorldPosition - argGrid.WorldPosition, argGrid);
         }
 
         public GridCoordinates ToWorld()

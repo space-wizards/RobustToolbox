@@ -13,6 +13,7 @@ using Robust.Client.Interfaces.State;
 using Robust.Client.Player;
 using Robust.Client.State.States;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
@@ -25,17 +26,18 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IResourceCache resourceCache;
         private readonly IStateManager stateManager;
         private readonly IDisplayManager _displayManager;
+        private readonly IMapManager _mapManager;
 
         private Label contents;
 
         //TODO: Think about a factory for this
-        public DebugCoordsPanel(
-            IPlayerManager playerMan,
+        public DebugCoordsPanel(IPlayerManager playerMan,
             IEyeManager eyeMan,
             IInputManager inputMan,
             IResourceCache resCache,
             IStateManager stateMan,
-            IDisplayManager displayMan)
+            IDisplayManager displayMan,
+            IMapManager mapMan)
         {
             playerManager = playerMan;
             eyeManager = eyeMan;
@@ -43,6 +45,7 @@ namespace Robust.Client.UserInterface.CustomControls
             resourceCache = resCache;
             stateManager = stateMan;
             _displayManager = displayMan;
+            _mapManager = mapMan;
 
             PerformLayout();
         }
@@ -106,7 +109,7 @@ namespace Robust.Client.UserInterface.CustomControls
                     mouseEntity = gameScreen.GetEntityUnderPosition(coords);
                 }
 
-                tile = coords.Grid.GetTile(coords);
+                tile = _mapManager.GetGrid(coords.GridID).GetTile(coords);
             }
             catch
             {

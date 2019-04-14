@@ -46,7 +46,7 @@ namespace Robust.Client.Placement
         [Dependency]
         private readonly IReflectionManager ReflectionManager;
         [Dependency]
-        private readonly IMapManager _mapMan;
+        public readonly IMapManager MapManager;
         [Dependency]
         private readonly IGameTiming _time;
         [Dependency]
@@ -187,7 +187,7 @@ namespace Robust.Client.Placement
                 _modeDictionary.Add(type.Name, type);
             }
 
-            _mapMan.TileChanged += HandleTileChanged;
+            MapManager.TileChanged += HandleTileChanged;
 
             _drawOverlay = new PlacementOverlay(this);
             _overlayManager.AddOverlay(_drawOverlay);
@@ -316,7 +316,7 @@ namespace Robust.Client.Placement
 
         private void HandleTileChanged(object sender, TileChangedEventArgs args)
         {
-            var coords = _mapMan.GetMap(args.NewTile.MapIndex).GetGrid(args.NewTile.GridIndex).GridTileToLocal(args.NewTile.GridIndices);
+            var coords = MapManager.GetMap(args.NewTile.MapIndex).GetGrid(args.NewTile.GridIndex).GridTileToLocal(args.NewTile.GridIndices);
             _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
         }
 
@@ -580,7 +580,7 @@ namespace Robust.Client.Placement
 
             if (CurrentPermission.IsTile)
             {
-                var grid = _mapMan.GetGrid(coordinates.GridID);
+                var grid = MapManager.GetGrid(coordinates.GridID);
 
                 // no point changing the tile to the same thing.
                 if (grid.GetTile(coordinates).Tile.TypeId == CurrentPermission.TileType)

@@ -37,7 +37,7 @@ namespace Robust.Server.GameObjects
         public override bool TrySpawnEntityAt(string entityType, GridCoordinates coordinates, out IEntity entity)
         {
             var prototype = _protoManager.Index<EntityPrototype>(entityType);
-            if (prototype.CanSpawnAt(coordinates.Grid, coordinates.Position))
+            if (prototype.CanSpawnAt(_mapManager.GetGrid(coordinates.GridID), coordinates.Position))
             {
                 var result = CreateEntity(entityType);
                 result.Transform.GridPosition = coordinates;

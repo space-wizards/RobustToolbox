@@ -559,7 +559,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 var lc = new GridCoordinates(worldPos, grid.MapID);
 
                 // then to parent grid coords
-                return lc.ConvertToGrid(Parent.GridPosition.Grid);
+                return lc.ConvertToGrid(_mapManager.GetGrid(Parent.GridPosition.GridID));
             }
             else
             {

@@ -266,7 +266,7 @@ namespace Robust.Client.GameObjects
 
                 //Calculate new position from our velocity as well as possible rotation/movement around emitter
                 deltaPosition += Velocity * frameTime;
-                Coordinates = new GridCoordinates(Coordinates.Position + deltaPosition, Coordinates.Grid);
+                Coordinates = new GridCoordinates(Coordinates.Position + deltaPosition, Coordinates.GridID);
 
                 //Finish calculating new rotation, size, color
                 Rotation += RotationRate * frameTime;

@@ -2,9 +2,7 @@
 {
     public enum DrawDepth
     {
-        /// <summary>
-        ///     Floors that are low and below wires, such as plating without floor tiles.
-        /// </summary>
+  
         LowFloors = 0,
         /// <summary>
         ///     Things that are beneath regular floors, such as wires.
@@ -15,12 +13,13 @@
         ///     Things that are actually right on the floor, like vents.
         /// </summary>
         FloorObjects = 3,
-        Objects = 4,
-        Items = 5,
-        Mobs = 6,
-        Walls = 7,
-        WallMountedItems = 8,
-        WallTops = 9,
+
+        Walls = 4,
+        WallTops = 5,
+        WallMountedItems = 6,
+        Objects = 7,
+        Mobs = 8,
+        Items = 9,
         Overlays = 10,
     }
 }

@@ -96,6 +96,8 @@ namespace Robust.Shared.Interfaces.Map
         /// <param name="tileData">The new data of the tile.</param>
         void SetTile(GridCoordinates worldPos, ushort tileId, ushort tileData = 0);
 
+        void SetTile(MapIndices gridIndices, Tile tile);
+
         /// <summary>
         ///     Returns all tiles inside the area that match the predicate.
         /// </summary>
@@ -175,6 +177,13 @@ namespace Robust.Shared.Interfaces.Map
         /// <param name="posLocal">The local vector with this grid as origin.</param>
         /// <returns>The world-space vector with global origin.</returns>
         Vector2 ConvertToWorld(Vector2 posLocal);
+
+        /// <summary>
+        ///     Transforms World position into grid tile indices.
+        /// </summary>
+        /// <param name="posWorld">Position in the world.</param>
+        /// <returns>Indices of a tile on the grid.</returns>
+        MapIndices WorldToTile(Vector2 posWorld);
 
         /// <summary>
         ///     Transforms grid-space tile indices to local coordinates.

@@ -186,6 +186,12 @@ namespace Robust.Shared.Map
                 SetTile(worldPos, new Tile(tileId, tileData));
             }
 
+            public void SetTile(MapIndices gridIndices, Tile tile)
+            {
+                var (chunk, chunkTile) = ChunkAndOffsetForTile(gridIndices);
+                chunk.SetTile((ushort)chunkTile.X, (ushort)chunkTile.Y, tile);
+            }
+
             /// <inheritdoc />
             public IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null)
             {
@@ -345,6 +351,14 @@ namespace Robust.Shared.Map
             public Vector2 ConvertToWorld(Vector2 posLocal)
             {
                 return posLocal + WorldPosition;
+            }
+
+            public MapIndices WorldToTile(Vector2 posWorld)
+            {
+                var local = WorldToLocal(posWorld);
+                var x = (int)Math.Floor(local.X / TileSize);
+                var y = (int)Math.Floor(local.Y / TileSize);
+                return new MapIndices(x, y);
             }
 
             /// <summary>

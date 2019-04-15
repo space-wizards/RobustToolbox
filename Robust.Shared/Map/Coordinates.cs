@@ -9,106 +9,184 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     Coordinates relative to a specific grid.
     /// </summary>
+    [PublicAPI]
     [Serializable, NetSerializable]
     public readonly struct GridCoordinates : IEquatable<GridCoordinates>
     {
+        /// <summary>
+        ///     Map grid that this position is relative to.
+        /// </summary>
         public readonly GridId GridID;
+
+        /// <summary>
+        ///     Local Position coordinates relative to the MapGrid.
+        /// </summary>
         public readonly Vector2 Position;
 
+        /// <summary>
+        ///     Location on the X axis relative to the MapGrid.
+        /// </summary>
         public float X => Position.X;
 
+        /// <summary>
+        ///     Location on the X axis relative to the MapGrid.
+        /// </summary>
         public float Y => Position.Y;
 
+        /// <summary>
+        ///     A set of coordinates that is at the origin of Nullspace.
+        ///     This is also the values of an uninitialized struct.
+        /// </summary>
         public static readonly GridCoordinates Nullspace = new GridCoordinates(0, 0, GridId.Nullspace);
 
-        public GridCoordinates(Vector2 argPosition, IMapGrid argGrid)
-            : this(argPosition, argGrid.Index) { }
+        /// <summary>
+        ///     Constructs new grid local coordinates.
+        /// </summary>
+        /// <param name="position">Position relative to the grid.</param>
+        /// <param name="grid">Grid the position is relative to.</param>
+        public GridCoordinates(Vector2 position, IMapGrid grid)
+            : this(position, grid.Index) { }
 
-        public GridCoordinates(Vector2 argPosition, GridId argGrid)
+        /// <summary>
+        ///     Constructs new grid local coordinates.
+        /// </summary>
+        /// <param name="position">Position relative to the grid.</param>
+        /// <param name="gridId">ID of the Grid the position is relative to.</param>
+        public GridCoordinates(Vector2 position, GridId gridId)
         {
-            Position = argPosition;
-            GridID = argGrid;
+            Position = position;
+            GridID = gridId;
         }
 
         /// <summary>
         ///     Construct new grid local coordinates relative to the default grid of a map.
         /// </summary>
-        public GridCoordinates(Vector2 argPosition, IMap argMap)
-            : this(argPosition, argMap.DefaultGrid.Index) { }
+        /// <param name="position">Position relative to the default grid.</param>
+        /// <param name="map">Map to use the default grid of.</param>
+        public GridCoordinates(Vector2 position, IMap map)
+            : this(position, map.DefaultGrid.Index) { }
 
-        public GridCoordinates(float X, float Y, IMapGrid argGrid)
-        : this(new Vector2(X, Y), argGrid.Index)
-        {
-        }
+        /// <summary>
+        ///     Constructs new grid local coordinates.
+        /// </summary>
+        /// <param name="x">X axis of the position.</param>
+        /// <param name="y">Y axis of the position.</param>
+        /// <param name="grid">Grid the position is relative to.</param>
+        public GridCoordinates(float x, float y, IMapGrid grid)
+            : this(new Vector2(x, y), grid.Index) { }
 
-        public GridCoordinates(float X, float Y, GridId argGrid)
-        : this(new Vector2(X, Y), argGrid)
-        {
-        }
+        /// <summary>
+        ///     Constructs new grid local coordinates.
+        /// </summary>
+        /// <param name="x">X axis of the position.</param>
+        /// <param name="y">Y axis of the position.</param>
+        /// <param name="gridId">ID of the Grid the position is relative to.</param>
+        public GridCoordinates(float x, float y, GridId gridId)
+            : this(new Vector2(x, y), gridId) { }
 
         /// <summary>
         ///     Construct new grid local coordinates relative to the default grid of a map.
         /// </summary>
-        public GridCoordinates(float X, float Y, IMap argMap) : this(new Vector2(X, Y), argMap)
-        {
-        }
+        /// <param name="x">X axis of the position.</param>
+        /// <param name="y">Y axis of the position.</param>
+        /// <param name="map">Map to use the default grid of.</param>
+        public GridCoordinates(float x, float y, IMap map)
+            : this(new Vector2(x, y), map) { }
 
+        /// <summary>
+        ///     Converts this set of coordinates to another grid, preserving the same world position.
+        /// </summary>
         public GridCoordinates ConvertToGrid(IMapManager mapManager, IMapGrid argGrid)
         {
             return new GridCoordinates(Position + mapManager.GetGrid(GridID).WorldPosition - argGrid.WorldPosition, argGrid);
         }
 
+        /// <summary>
+        ///     Converts this set of coordinates to the default grid on the map.
+        /// </summary>
         public GridCoordinates ToWorld(IMapManager mapManager)
         {
             return ConvertToGrid(mapManager, mapManager.GetGrid(GridID).Map.DefaultGrid);
         }
 
+        /// <summary>
+        ///     Offsets the position by a given vector.
+        /// </summary>
         public GridCoordinates Offset(Vector2 offset)
         {
             return new GridCoordinates(Position + offset, GridID);
         }
-
-        public bool InRange(IMapManager mapManager, GridCoordinates localpos, float range)
+        
+        /// <summary>
+        ///     Checks that these coordinates are within a certain distance of another set. 
+        /// </summary>
+        /// <param name="mapManager">Map manager containing the two GridIds.</param>
+        /// <param name="otherCoords">Other set of coordinates to use.</param>
+        /// <param name="range">maximum distance between the two sets of coordinates.</param>
+        /// <returns>True if the two points are within a given range.</returns>
+        public bool InRange(IMapManager mapManager, GridCoordinates otherCoords, float range)
         {
-            if (mapManager.GetGrid(localpos.GridID).Map != mapManager.GetGrid(GridID).Map)
+            if (mapManager.GetGrid(otherCoords.GridID).Map != mapManager.GetGrid(GridID).Map)
             {
                 return false;
             }
 
-            return ((localpos.ToWorld(mapManager).Position - ToWorld(mapManager).Position).LengthSquared < range * range);
+            return ((otherCoords.ToWorld(mapManager).Position - ToWorld(mapManager).Position).LengthSquared < range * range);
         }
 
-        public bool InRange(IMapManager mapManager, GridCoordinates localpos, int range)
+        /// <summary>
+        ///     Checks that these coordinates are within a certain distance of another set. 
+        /// </summary>
+        /// <param name="mapManager">Map manager containing the two GridIds.</param>
+        /// <param name="otherCoords">Other set of coordinates to use.</param>
+        /// <param name="range">maximum distance between the two sets of coordinates.</param>
+        /// <returns>True if the two points are within a given range.</returns>
+        public bool InRange(IMapManager mapManager, GridCoordinates otherCoords, int range)
         {
-            return InRange(mapManager, localpos, (float) range);
+            return InRange(mapManager, otherCoords, (float) range);
         }
 
-        public float Distance(IMapManager mapManager, GridCoordinates other)
+        /// <summary>
+        ///     Calculates the distance between two GirdCoordinates.
+        /// </summary>
+        /// <param name="mapManager">Map manager containing this GridId.</param>
+        /// <param name="otherCoords">Other set of coordinates to use.</param>
+        /// <returns>Distance between the two points.</returns>
+        public float Distance(IMapManager mapManager, GridCoordinates otherCoords)
         {
-            return (ToWorld(mapManager).Position - other.ToWorld(mapManager).Position).Length;
+            return (ToWorld(mapManager).Position - otherCoords.ToWorld(mapManager).Position).Length;
         }
 
+        /// <summary>
+        ///     Offsets the position by another vector.
+        /// </summary>
+        /// <param name="offset">Vector to translate by.</param>
+        /// <returns>Resulting translated coordinates.</returns>
         public GridCoordinates Translated(Vector2 offset)
         {
             return new GridCoordinates(Position + offset, GridID);
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             return $"Grid={GridID}, X={Position.X:N2}, Y={Position.Y:N2}";
         }
 
+        /// <inheritdoc />
         public bool Equals(GridCoordinates other)
         {
             return GridID.Equals(other.GridID) && Position.Equals(other.Position);
         }
 
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is GridCoordinates && Equals((GridCoordinates) obj);
+            return obj is GridCoordinates coords && Equals(coords);
         }
 
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked
@@ -132,7 +210,7 @@ namespace Robust.Shared.Map
         /// </summary>
         public static bool operator !=(GridCoordinates self, GridCoordinates other)
         {
-            return !(self == other);
+            return !self.Equals(other);
         }
     }
 

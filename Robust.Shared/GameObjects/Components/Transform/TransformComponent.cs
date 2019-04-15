@@ -57,7 +57,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 // Eh.
                 if (_mapManager.TryGetGrid(GridID, out var grid))
                 {
-                    return grid.MapID;
+                    return grid.ParentMapId;
                 }
                 return MapId.Nullspace;
             }
@@ -555,7 +555,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 // transform localPosition from parent coords to world coords
                 var worldPos = Parent.WorldMatrix.Transform(localPosition);
                 var grid = _mapManager.GetGrid(gridId);
-                var lc = new GridCoordinates(worldPos, grid.Map);
+                var lc = new GridCoordinates(worldPos, grid.ParentMap);
 
                 // then to parent grid coords
                 return lc.ConvertToGrid(_mapManager, _mapManager.GetGrid(Parent.GridPosition.GridID));

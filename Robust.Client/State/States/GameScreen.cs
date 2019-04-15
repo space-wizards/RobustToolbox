@@ -162,7 +162,7 @@ namespace Robust.Client.State.States
         public IList<IEntity> GetEntitiesUnderPosition(GridCoordinates coordinates)
         {
             // Find all the entities intersecting our click
-            var entities = _entityManager.GetEntitiesIntersecting(_mapManager.GetGrid(coordinates.GridID).Map.Index, coordinates.Position);
+            var entities = _entityManager.GetEntitiesIntersecting(_mapManager.GetGrid(coordinates.GridID).ParentMap.Index, coordinates.Position);
 
             // Check the entities against whether or not we can click them
             var foundEntities = new List<(IEntity clicked, int drawDepth)>();

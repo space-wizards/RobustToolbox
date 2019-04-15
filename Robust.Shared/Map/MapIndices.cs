@@ -1,72 +1,88 @@
 using System;
+using JetBrains.Annotations;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Map
 {
     /// <summary>
-    /// Internal structure to store 2 indices of a chunk or tile.
+    ///     Internal structure to store 2 indices of a chunk or tile.
     /// </summary>
+    [PublicAPI]
     [Serializable, NetSerializable]
-    public struct MapIndices : IEquatable<MapIndices>
+    public readonly struct MapIndices : IEquatable<MapIndices>
     {
         /// <summary>
-        /// The X index.
+        ///     The <see cref="X" /> index.
         /// </summary>
         public readonly int X;
 
         /// <summary>
-        /// The Y index.
+        ///     The <see cref="Y" /> index.
         /// </summary>
         public readonly int Y;
 
         /// <summary>
-        /// Public constructor.
+        ///     Public constructor.
         /// </summary>
-        /// <param name="x">The X index.</param>
-        /// <param name="y">The Y index.</param>
+        /// <param name="x">The <see cref="X" /> index.</param>
+        /// <param name="y">The <see cref="Y" /> index.</param>
         public MapIndices(int x, int y)
         {
             X = x;
             Y = y;
         }
 
-        //TODO: Fill out the rest of these.
+        /// <summary>
+        ///     Translates the indices by a given offset.
+        /// </summary>
         public static MapIndices operator +(MapIndices left, MapIndices right)
         {
             return new MapIndices(left.X + right.X, left.Y + right.Y);
         }
 
+        /// <summary>
+        ///     Scales the <paramref name="indices" /> by a scalar amount.
+        /// </summary>
         public static MapIndices operator *(MapIndices indices, int multiplier)
         {
             return new MapIndices(indices.X * multiplier, indices.Y * multiplier);
         }
 
+        /// <summary>
+        ///     Tests for value equality between two LocalCoordinates.
+        /// </summary>
         public static bool operator ==(MapIndices a, MapIndices b)
         {
             return a.Equals(b);
         }
 
+        /// <summary>
+        ///     Tests for value inequality between two LocalCoordinates.
+        /// </summary>
         public static bool operator !=(MapIndices a, MapIndices b)
         {
-            return !(a == b);
+            return !a.Equals(b);
         }
 
-
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             return obj is MapIndices idx && Equals(idx);
         }
 
+        /// <inheritdoc />
         public bool Equals(MapIndices other)
         {
             return other.X == X && other.Y == Y;
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             return $"{{{X},{Y}}}";
         }
 
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             return X ^ (Y * 23011);

@@ -15,12 +15,12 @@ namespace Robust.Shared.Interfaces.Map
         ///     True if we are the default grid of our map.
         /// </summary>
         bool IsDefaultGrid { get; }
-        IMap Map { get; }
+        IMap ParentMap { get; }
 
         /// <summary>
         ///     The integer ID of the map this grid is currently located within.
         /// </summary>
-        MapId MapID { get; }
+        MapId ParentMapId { get; }
 
         GridId Index { get; }
 
@@ -172,9 +172,9 @@ namespace Robust.Shared.Interfaces.Map
         /// <summary>
         ///     Transforms local vectors into world space vectors
         /// </summary>
-        /// <param name="localpos">The local vector with this grid as origin.</param>
+        /// <param name="posLocal">The local vector with this grid as origin.</param>
         /// <returns>The world-space vector with global origin.</returns>
-        Vector2 ConvertToWorld(Vector2 localpos);
+        Vector2 ConvertToWorld(Vector2 posLocal);
 
         /// <summary>
         ///     Transforms grid-space tile indices to local coordinates.

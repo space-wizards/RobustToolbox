@@ -41,11 +41,11 @@ namespace Robust.Server.Console.Commands
             if (args.Length == 3 && int.TryParse(args[2], out var mapId) && mapMgr.TryGetMap(new MapId(mapId), out var map))
                 grid = map.FindGridAt(position);
             else
-                grid = mapMgr.GetGrid(transform.GridPosition.GridID).Map.FindGridAt(position);
+                grid = mapMgr.GetGrid(transform.GridPosition.GridID).ParentMap.FindGridAt(position);
 
             transform.GridPosition = new GridCoordinates(position, grid);
 
-            shell.SendText(player, $"Teleported {player} to {grid.MapID}:{posX},{posY}.");
+            shell.SendText(player, $"Teleported {player} to {grid.ParentMapId}:{posX},{posY}.");
         }
     }
 

@@ -32,7 +32,7 @@ namespace Robust.Client.Placement.Modes
             var manager = IoCManager.Resolve<IClientEntityManager>();
 
             var snapToEntities = manager.GetEntitiesInRange(MouseCoords, SnapToRange)
-                .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.Transform.MapID == mapGrid.Map.Index)
+                .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.Transform.MapID == mapGrid.ParentMap.Index)
                 .OrderBy(entity => (entity.Transform.WorldPosition - MouseCoords.ToWorld(pManager.MapManager).Position).LengthSquared)
                 .ToList();
 

@@ -160,7 +160,7 @@ namespace Robust.Server.Console.Commands
 
             var pos = player.AttachedEntity.Transform.GridPosition;
 
-            shell.SendText(player, $"MapID:{IoCManager.Resolve<IMapManager>().GetGrid(pos.GridID).Map.Index} GridID:{pos.GridID} X:{pos.X:N2} Y:{pos.Y:N2}");
+            shell.SendText(player, $"MapID:{IoCManager.Resolve<IMapManager>().GetGrid(pos.GridID).ParentMap.Index} GridID:{pos.GridID} X:{pos.X:N2} Y:{pos.Y:N2}");
         }
     }
 

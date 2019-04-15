@@ -52,7 +52,7 @@ namespace Robust.Shared.Map
                 }
 
                 var gridDatum =
-                    new GameStateMapData.GridDatum(chunkData, new MapCoordinates(grid.WorldPosition, grid.MapID));
+                    new GameStateMapData.GridDatum(chunkData, new MapCoordinates(grid.WorldPosition, grid.ParentMapId));
 
                 gridDatums.Add(grid.Index, gridDatum);
             }
@@ -116,7 +116,7 @@ namespace Robust.Shared.Map
             foreach (var (gridId, gridDatum) in data.GridData)
             {
                 var grid = _grids[gridId];
-                if (grid.MapID != gridDatum.Coordinates.MapId)
+                if (grid.ParentMapId != gridDatum.Coordinates.MapId)
                 {
                     throw new NotImplementedException("Moving grids between maps is not yet implemented");
                 }

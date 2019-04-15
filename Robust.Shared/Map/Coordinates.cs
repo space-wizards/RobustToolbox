@@ -106,7 +106,7 @@ namespace Robust.Shared.Map
         /// </summary>
         public GridCoordinates ToWorld(IMapManager mapManager)
         {
-            return ConvertToGrid(mapManager, mapManager.GetGrid(GridID).Map.DefaultGrid);
+            return ConvertToGrid(mapManager, mapManager.GetGrid(GridID).ParentMap.DefaultGrid);
         }
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace Robust.Shared.Map
         /// <returns>True if the two points are within a given range.</returns>
         public bool InRange(IMapManager mapManager, GridCoordinates otherCoords, float range)
         {
-            if (mapManager.GetGrid(otherCoords.GridID).Map != mapManager.GetGrid(GridID).Map)
+            if (mapManager.GetGrid(otherCoords.GridID).ParentMap != mapManager.GetGrid(GridID).ParentMap)
             {
                 return false;
             }

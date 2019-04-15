@@ -68,7 +68,7 @@ namespace Robust.Shared.Map
                     throw new ArgumentOutOfRangeException("Tile indices out of bounds.");
 
                 var indices = ChunkTileToGridTile(new MapIndices(xTile, yTile));
-                return new TileRef(_grid.MapID, _grid.Index, indices.X, indices.Y, _tiles[xTile, yTile]);
+                return new TileRef(_grid.ParentMapId, _grid.Index, indices.X, indices.Y, _tiles[xTile, yTile]);
             }
             public TileRef GetTile(MapIndices indices)
             {
@@ -76,7 +76,7 @@ namespace Robust.Shared.Map
                 if (indices.X >= ChunkSize || indices.X < 0 || indices.Y >= ChunkSize || indices.Y < 0)
                     throw new ArgumentOutOfRangeException("Tile indices out of bounds.");
 
-                return new TileRef(_grid.MapID, _grid.Index, indices.X, indices.Y, _tiles[indices.X, indices.Y]);
+                return new TileRef(_grid.ParentMapId, _grid.Index, indices.X, indices.Y, _tiles[indices.X, indices.Y]);
             }
 
             /// <inheritdoc />
@@ -90,7 +90,7 @@ namespace Robust.Shared.Map
                             continue;
 
                         var indices = ChunkTileToGridTile(new MapIndices(x, y));
-                        yield return new TileRef(_grid.MapID, _grid.Index, indices.X, indices.Y, _tiles[x, y]);
+                        yield return new TileRef(_grid.ParentMapId, _grid.Index, indices.X, indices.Y, _tiles[x, y]);
                     }
             }
 
@@ -105,7 +105,7 @@ namespace Robust.Shared.Map
                     return;
 
                 var gridTile = ChunkTileToGridTile(new MapIndices(xChunkTile, yChunkTile));
-                var newTileRef = new TileRef(_grid.MapID, _grid.Index, gridTile.X, gridTile.Y, tile);
+                var newTileRef = new TileRef(_grid.ParentMapId, _grid.Index, gridTile.X, gridTile.Y, tile);
                 var oldTile = _tiles[xChunkTile, yChunkTile];
                 _grid.LastModifiedTick = LastModifiedTick = _mapManager._gameTiming.CurTick;
                 _mapManager.RaiseOnTileChanged(newTileRef, oldTile);
@@ -124,7 +124,7 @@ namespace Robust.Shared.Map
                     for (var y = 0; y < ChunkSize; y++)
                     {
                         var gridTile = ChunkTileToGridTile(new MapIndices(x, y));
-                        yield return new TileRef(_grid.MapID, _grid.Index, gridTile.X, gridTile.Y, _tiles[x, y]);
+                        yield return new TileRef(_grid.ParentMapId, _grid.Index, gridTile.X, gridTile.Y, _tiles[x, y]);
                     }
             }
 

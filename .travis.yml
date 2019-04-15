@@ -31,11 +31,11 @@ before_script:
 #- "python3.6 -m pip --v"
 #- "python3.6 -m pip install --user --upgrade requests"
 - "python3.5 -m pip install --user requests"
-- "nuget restore SpaceStation14.sln"
+- "nuget restore RobustToolbox.sln"
 - "python3.5 RUN_THIS.py --no-prompt"
 - "Tools/download_godotsharp.py"
 
 script:
-- "msbuild /p:Configuration=Debug /p:Platform=x64 /p:HEADLESS=1 /nologo /m /p:AllowMissingMacNatives=yes SpaceStation14.sln /p:Python=python3.5"
+- "msbuild /p:Configuration=Debug /p:Platform=x64 /p:HEADLESS=1 /nologo /m /p:AllowMissingMacNatives=yes RobustToolbox.sln /p:Python=python3.5"
 - "mono --debug packages/nunit.consolerunner/3.9.0/tools/nunit3-console.exe bin/UnitTesting/Robust.UnitTesting.dll"
 

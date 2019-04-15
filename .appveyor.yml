@@ -34,8 +34,8 @@ configuration: Debug
 cache:
 - packages -> **\packages.config
 - Dependencies
-- SS14.Client.Godot\.mono\assemblies\GodotSharp.dll
-- SS14.Client.Godot\.mono\assemblies\LAST_MODIFIED
+- Robust.Client.Godot\.mono\assemblies\GodotSharp.dll
+- Robust.Client.Godot\.mono\assemblies\LAST_MODIFIED
 
 build:
   project: SpaceStation14.sln
@@ -46,7 +46,7 @@ build_script:
 - ps: msbuild SpaceStation14.sln /verbosity:minimal /nologo /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Platform=x64 /p:Configuration=Debug /p:AppVeyor=yes
 
 test_script:
-- ps: nunit3-console.exe .\bin\UnitTesting\SS14.UnitTesting.dll;
+- ps: nunit3-console.exe .\bin\UnitTesting\Robust.UnitTesting.dll;
 
 
 

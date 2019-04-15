@@ -20,7 +20,7 @@ cache:
   directories:
   - packages/
   - Dependencies/
-  - SS14.Client.Godot/.mono/assemblies/
+  - Robust.Client.Godot/.mono/assemblies/
 
 #before_install:
 #  - if [ $TRAVIS_OS_NAME = osx ]; then brew update && brew upgrade python; fi
@@ -37,5 +37,5 @@ before_script:
 
 script:
 - "msbuild /p:Configuration=Debug /p:Platform=x64 /p:HEADLESS=1 /nologo /m /p:AllowMissingMacNatives=yes SpaceStation14.sln /p:Python=python3.5"
-- "mono --debug packages/nunit.consolerunner/3.9.0/tools/nunit3-console.exe bin/UnitTesting/SS14.UnitTesting.dll"
+- "mono --debug packages/nunit.consolerunner/3.9.0/tools/nunit3-console.exe bin/UnitTesting/Robust.UnitTesting.dll"
 

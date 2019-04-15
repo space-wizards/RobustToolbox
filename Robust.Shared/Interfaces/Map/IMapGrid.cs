@@ -20,7 +20,7 @@ namespace Robust.Shared.Interfaces.Map
         /// <summary>
         ///     The integer ID of the map this grid is currently located within.
         /// </summary>
-        MapId ParentMapId { get; }
+        MapId ParentMapId { get; set; }
 
         GridId Index { get; }
 

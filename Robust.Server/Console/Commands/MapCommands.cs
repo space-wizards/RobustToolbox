@@ -6,6 +6,7 @@ using Robust.Server.Interfaces.Timing;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 
 namespace Robust.Server.Console.Commands
 {
@@ -224,6 +225,37 @@ namespace Robust.Server.Console.Commands
                 return;
             }
             shell.SendText(player, pauseManager.IsMapPaused(mapId).ToString());
+        }
+    }
+
+    class TpGridCommand : IClientCommand
+    {
+        public string Command => "tpgrid";
+        public string Description => "Teleports a grid to a new location.";
+        public string Help => "tpgrid <gridId> <X> <Y> [<MapId>]";
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            if (args.Length < 3 || args.Length > 4)
+            {
+                shell.SendText(player, "Wrong number of args.");
+            }
+
+            var gridId = new GridId(int.Parse(args[0]));
+            var xpos = float.Parse(args[1]);
+            var ypos = float.Parse(args[2]);
+            
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
+            if (mapManager.TryGetGrid(gridId, out var grid))
+            {
+                var mapId = args.Length == 4 ? new MapId(int.Parse(args[3])) : grid.ParentMapId;
+
+                grid.ParentMapId = mapId;
+                grid.WorldPosition = new Vector2(xpos, ypos);
+
+                shell.SendText(player, "Grid was teleported.");
+            }
+
         }
     }
 }

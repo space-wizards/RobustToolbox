@@ -92,7 +92,8 @@ namespace Robust.Server.GameObjects
                 stateEntities.Add(entityState);
             }
 
-            return stateEntities;
+            // no point sending an empty collection
+            return stateEntities.Count == 0 ? default : stateEntities;
         }
 
         public override void DeleteEntity(IEntity e)
@@ -113,7 +114,8 @@ namespace Robust.Server.GameObjects
                 }
             }
 
-            return list;
+            // no point sending an empty collection
+            return list.Count == 0 ? default : list;
         }
 
         public void CullDeletionHistory(GameTick toTick)

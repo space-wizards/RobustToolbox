@@ -97,6 +97,10 @@ namespace Robust.Server.GameObjects.EntitySystems
         private static void DoMovement(IEntity entity, float frameTime)
         {
             var velocity = entity.GetComponent<PhysicsComponent>();
+
+            if(velocity.LinearVelocity.LengthSquared < Epsilon && velocity.AngularVelocity < Epsilon)
+                return;
+
             float angImpulse = 0;
             if (velocity.AngularVelocity > Epsilon)
             {

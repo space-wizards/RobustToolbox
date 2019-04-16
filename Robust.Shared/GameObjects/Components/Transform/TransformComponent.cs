@@ -76,6 +76,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => GetLocalRotation();
             set
             {
+                if (GetLocalRotation() == value)
+                    return;
+
                 SetRotation(value);
                 RebuildMatrices();
                 Dirty();
@@ -101,7 +104,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 LocalRotation += diff;
             }
         }
-
 
         /// <summary>
         ///     Current parent entity of this entity.
@@ -153,7 +155,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
 
         public bool IsMapTransform => Parent == null;
-
 
         public virtual bool VisibleWhileParented { set; get; }
 
@@ -242,10 +243,16 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     if ((newPos - GetLocalPosition()).LengthSquared < 10.0E-3)
                         return;
 
+                    if (_localPosition == newPos)
+                        return;
+
                     SetPosition(newPos);
                 }
                 else
                 {
+                    if (_localPosition == value)
+                        return;
+
                     SetPosition(value);
                     _recurseSetGridId(_mapManager.GetMap(MapID).FindGridAt(GetLocalPosition()).Index);
                 }

@@ -83,10 +83,8 @@ namespace Robust.Server.GameObjects
             var stateEntities = new List<EntityState>();
             foreach (IEntity entity in GetEntities())
             {
-                if (entity.LastModifiedTick < fromTick)
-                {
+                if (entity.LastModifiedTick <= fromTick)
                     continue;
-                }
 
                 EntityState entityState = entity.GetEntityState(fromTick);
                 stateEntities.Add(entityState);

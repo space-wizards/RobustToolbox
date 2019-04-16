@@ -48,7 +48,8 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public GameTick LastModifiedTick { get; private set; }
+        // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
+        public GameTick LastModifiedTick { get; private set; } = new GameTick(1);
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]

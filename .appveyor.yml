@@ -21,7 +21,7 @@ before_build:
 - cmd: py -3.5 -m pip install --user requests
 - cmd: py -3.5 Tools\download_godotsharp.py
 - cmd: py -3.5 RUN_THIS.py --no-prompt
-- cmd: nuget restore SpaceStation14.sln
+- cmd: nuget restore RobustToolbox.sln
 - ps: >
     if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER -And $env:APPVEYOR_REPO_BRANCH -Eq "master")
     {
@@ -34,19 +34,19 @@ configuration: Debug
 cache:
 - packages -> **\packages.config
 - Dependencies
-- SS14.Client.Godot\.mono\assemblies\GodotSharp.dll
-- SS14.Client.Godot\.mono\assemblies\LAST_MODIFIED
+- Robust.Client.Godot\.mono\assemblies\GodotSharp.dll
+- Robust.Client.Godot\.mono\assemblies\LAST_MODIFIED
 
 build:
-  project: SpaceStation14.sln
+  project: RobustToolbox.sln
   parallel: false
   verbosity: minimal
 
 build_script:
-- ps: msbuild SpaceStation14.sln /verbosity:minimal /nologo /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Platform=x64 /p:Configuration=Debug /p:AppVeyor=yes
+- ps: msbuild RobustToolbox.sln /verbosity:minimal /nologo /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Platform=x64 /p:Configuration=Debug /p:AppVeyor=yes
 
 test_script:
-- ps: nunit3-console.exe .\bin\UnitTesting\SS14.UnitTesting.dll;
+- ps: nunit3-console.exe .\bin\UnitTesting\Robust.UnitTesting.dll;
 
 
 

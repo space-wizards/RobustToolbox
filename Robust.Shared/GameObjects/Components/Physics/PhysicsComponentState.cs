@@ -11,9 +11,9 @@ namespace Robust.Shared.GameObjects
     public class PhysicsComponentState : ComponentState
     {
         /// <summary>
-        ///     Current mass of the entity.
+        ///     Current mass of the entity, stored in grams.
         /// </summary>
-        public readonly float Mass;
+        public readonly int Mass;
 
         /// <summary>
         ///     Current velocity of the entity.
@@ -28,7 +28,7 @@ namespace Robust.Shared.GameObjects
         public PhysicsComponentState(float mass, Vector2 velocity)
             : base(NetIDs.PHYSICS)
         {
-            Mass = mass;
+            Mass = (int) Math.Round(mass *1000); // rounds kg to nearest gram
             Velocity = velocity;
         }
     }

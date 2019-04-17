@@ -1,11 +1,17 @@
 using System;
+using System.Net;
+using System.Net.Http;
 using Newtonsoft.Json.Linq;
 
 namespace Robust.Server.Interfaces.ServerStatus
 {
+    public delegate bool StatusHostHandler(HttpMethod method, HttpListenerRequest request, HttpListenerResponse response);
+
     public interface IStatusHost
     {
         void Start();
+
+        void AddHandler(StatusHostHandler handler);
 
         /// <summary>
         ///     Invoked when a client queries a status request from the server.

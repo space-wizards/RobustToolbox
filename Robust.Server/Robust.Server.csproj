@@ -148,6 +148,7 @@
     <Compile Include="BaseServer.cs" />
     <Compile Include="Console\Commands\LogCommands.cs" />
     <Compile Include="ServerStatus\StatusHost.cs" />
+    <Compile Include="ServerStatus\StatusHostHelpers.cs" />
     <Compile Include="Signals.cs" />
     <Compile Include="Timing\PauseManager.cs" />
     <Compile Include="ViewVariables\IViewVariablesHost.cs" />

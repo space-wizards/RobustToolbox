@@ -1,12 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Security.Cryptography;
-using System.Text;
+using System.Net.Http;
 using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Robust.Server.Interfaces.Player;
 using Robust.Server.Interfaces.ServerStatus;
 using Robust.Shared.Configuration;
 using Robust.Shared.Interfaces.Configuration;
@@ -20,7 +19,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.ServerStatus
 {
-    public sealed class StatusHost : IStatusHost, IDisposable
+    internal sealed class StatusHost : IStatusHost, IDisposable
     {
         [Dependency] private IConfigurationManager _configurationManager;
 
@@ -29,6 +28,14 @@ namespace Robust.Server.ServerStatus
         private HttpListener _listener;
         private Thread _listenerThread;
         private ManualResetEventSlim _stop;
+        public event Action<JObject> OnStatusRequest;
+
+        private readonly List<StatusHostHandler> _handlers = new List<StatusHostHandler>();
+
+        public void AddHandler(StatusHostHandler handler)
+        {
+            _handlers.Add(handler);
+        }
 
         public void Start()
         {
@@ -51,9 +58,10 @@ namespace Robust.Server.ServerStatus
                 Priority = ThreadPriority.BelowNormal
             };
             _listenerThread.Start();
-        }
 
-        public event Action<JObject> OnStatusRequest;
+            AddHandler(_handleTeapot);
+            AddHandler(_handleStatus);
+        }
 
         public void Dispose()
         {
@@ -97,94 +105,79 @@ namespace Robust.Server.ServerStatus
         {
             var response = context.Response;
             var request = context.Request;
-            if (request.HttpMethod != "GET" && request.HttpMethod != "HEAD")
-            {
-                response.StatusCode = (int) HttpStatusCode.BadRequest;
-                response.StatusDescription = "Bad Request";
-                response.ContentType = "text/plain";
-                _respondText(response, "400 Bad Request", false);
-                return;
-            }
+            var method = new HttpMethod(request.HttpMethod);
 
-            var head = request.HttpMethod == "HEAD";
             try
             {
-                var uri = request.Url;
-                if (uri.AbsolutePath == "/teapot")
+                foreach (var handler in _handlers)
                 {
-                    response.StatusCode = 418; // >HttpStatusCode doesn't include 418.
-                    response.StatusDescription = "I'm a teapot";
-                    response.ContentType = "text/plain";
-                    _respondText(response, "The requested entity body is short and stout.", head);
-                }
-                else if (uri.AbsolutePath == "/status")
-                {
-                    if (OnStatusRequest == null)
+                    if (handler(method, request, response))
                     {
-                        response.StatusCode = (int) HttpStatusCode.NotImplemented;
-                        response.StatusDescription = "Not Implemented";
-                        response.ContentType = "text/plain";
-                        _respondText(response, "501 Not Implemented", head);
-                        Logger.WarningS("statushost", "OnStatusRequest is not set, responding with a 501.");
                         return;
                     }
-
-                    response.StatusCode = (int) HttpStatusCode.OK;
-                    response.StatusDescription = "OK";
-                    response.ContentType = "application/json";
-                    response.ContentEncoding = EncodingHelpers.UTF8;
-
-                    if (head)
-                    {
-                        response.OutputStream.Close();
-                        return;
-                    }
-
-                    var jObject = new JObject();
-                    OnStatusRequest?.Invoke(jObject);
-                    using (var streamWriter = new StreamWriter(response.OutputStream, EncodingHelpers.UTF8))
-                    using (var jsonWriter = new JsonTextWriter(streamWriter))
-                    {
-                        var serializer = new JsonSerializer();
-                        serializer.Serialize(jsonWriter, jObject);
-                        jsonWriter.Flush();
-                    }
-
-                    response.OutputStream.Close();
                 }
-                else
-                {
-                    response.StatusCode = (int) HttpStatusCode.NotFound;
-                    response.StatusDescription = "Not Found";
-                    response.ContentType = "text/plain";
-                    _respondText(response, "404 Not Found", head);
-                }
+
+                // No handler returned true, assume no handlers care about this.
+                // 404.
+                response.Respond(method, "404 Not Found", HttpStatusCode.NotFound, "text/plain");
             }
             catch (Exception e)
             {
-                response.StatusCode = (int) HttpStatusCode.InternalServerError;
-                response.StatusDescription = "Internal Server Error";
-                response.ContentType = "text/plain";
-                _respondText(response, "500 Internal Server Error", head);
+                response.Respond(method, "500 Internal Server Error", HttpStatusCode.InternalServerError, "text/plain");
                 Logger.ErrorS("statushost", "Exception in StatusHost: {0}", e);
             }
         }
 
-        private static void _respondText(HttpListenerResponse response, string contents, bool head)
+
+        private static bool _handleTeapot(HttpMethod method, HttpListenerRequest request, HttpListenerResponse response)
         {
+            if (!method.IsGetLike() || request.Url.AbsolutePath != "/teapot")
+            {
+                return false;
+            }
+
+            response.Respond(method, "The requested entity body is short and stout.", (HttpStatusCode) 418,
+                "text/plain");
+            return true;
+        }
+
+        private bool _handleStatus(HttpMethod method, HttpListenerRequest request, HttpListenerResponse response)
+        {
+            if (!method.IsGetLike() || request.Url.AbsolutePath != "/status")
+            {
+                return false;
+            }
+
+            if (OnStatusRequest == null)
+            {
+                Logger.WarningS("statushost", "OnStatusRequest is not set, responding with a 501.");
+                response.Respond(method, "", HttpStatusCode.NotImplemented, "text/plain");
+                return true;
+            }
+
+            response.StatusCode = (int) HttpStatusCode.OK;
+            response.StatusDescription = "OK";
+            response.ContentType = "application/json";
             response.ContentEncoding = EncodingHelpers.UTF8;
-            if (head)
+
+            if (method == HttpMethod.Head)
             {
-                response.OutputStream.Close();
-                return;
+                response.Close();
+                return true;
             }
 
-            using (var writer = new StreamWriter(response.OutputStream, EncodingHelpers.UTF8))
+            var jObject = new JObject();
+            OnStatusRequest.Invoke(jObject);
+            using (var streamWriter = new StreamWriter(response.OutputStream, EncodingHelpers.UTF8))
+            using (var jsonWriter = new JsonTextWriter(streamWriter))
             {
-                writer.Write(contents);
+                var serializer = new JsonSerializer();
+                serializer.Serialize(jsonWriter, jObject);
+                jsonWriter.Flush();
             }
+            response.Close();
 
-            response.OutputStream.Close();
+            return true;
         }
     }
 }

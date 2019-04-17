@@ -231,7 +231,7 @@ namespace Robust.Shared.Configuration
             var cVar = _configVars[name];
 
             // If it's null it's a string, since the rest is primitives which aren't null.
-            return cVar?.Value.GetType() ?? typeof(string);
+            return cVar.Value?.GetType() ?? typeof(string);
         }
 
         /// <summary>

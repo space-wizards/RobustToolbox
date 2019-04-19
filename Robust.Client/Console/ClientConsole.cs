@@ -44,7 +44,7 @@ namespace Robust.Client.Console
         private static readonly Color MsgColor = new Color(65, 105, 225);
 
         [Dependency]
-        protected readonly IClientNetManager _network;
+        private readonly IClientNetManager _network;
         [Dependency]
         private readonly IReflectionManager _reflectionManager;
         [Dependency]

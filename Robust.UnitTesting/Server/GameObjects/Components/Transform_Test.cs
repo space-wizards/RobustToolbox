@@ -53,6 +53,13 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             //NOTE: The grids have not moved, so we can assert worldpos == localpos for the test
         }
 
+        [SetUp]
+        public void ClearSimulation()
+        {
+            // One of the tests changes this so we use this to ensure it doesn't get passed to other tests.
+            IoCManager.Resolve<IGameTiming>().InSimulation = false;
+        }
+
         [Test]
         public void ParentMapSwitchTest()
         {
@@ -193,8 +200,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             //Assert
             var result = node4Trans.WorldPosition;
-            Assert.That(FloatMath.CloseTo(result.X, -2), result.ToString);
-            Assert.That(FloatMath.CloseTo(result.Y, 0), result.ToString);
+            Assert.That(result.X, new ApproxEqualityConstraint(-2f));
+            Assert.That(result.Y, new ApproxEqualityConstraint(0f));
         }
 
         /// <summary>

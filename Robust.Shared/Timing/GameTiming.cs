@@ -78,7 +78,7 @@ namespace Robust.Shared.Timing
         /// <summary>
         ///     The current simulation tick being processed.
         /// </summary>
-        public GameTick CurTick { get; set; }
+        public GameTick CurTick { get; set; } = new GameTick(1); // Time always starts on the first tick
 
         /// <summary>
         ///     The target ticks/second of the simulation.

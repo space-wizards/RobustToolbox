@@ -50,6 +50,9 @@ namespace Robust.Server.GameObjects
             get => _linVelocity;
             set
             {
+                if(_linVelocity == value)
+                    return;
+
                 _linVelocity = value;
                 Dirty();
             }
@@ -62,7 +65,14 @@ namespace Robust.Server.GameObjects
         public float AngularVelocity
         {
             get => _angVelocity;
-            set => _angVelocity = value;
+            set
+            {
+                if(_angVelocity.Equals(value))
+                    return;
+
+                _angVelocity = value;
+                Dirty();
+            }
         }
 
         [ViewVariables(VVAccess.ReadWrite)]

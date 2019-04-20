@@ -133,6 +133,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         void UnsubscribeEvent(Type eventType, Delegate evh, IEntityEventSubscriber s);
 
         void RaiseEvent(object sender, EntityEventArgs toRaise);
+        void QueueEvent(object sender, EntityEventArgs toRaise);
 
         void RemoveSubscribedEvents(IEntityEventSubscriber subscriber);
 

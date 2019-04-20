@@ -53,7 +53,7 @@ namespace Robust.Client.GameStates
                 _config.RegisterCVar("net.interp_ratio", 0, CVar.ARCHIVE);
 
             if (!_config.IsCVarRegistered("net.logging"))
-                _config.RegisterCVar("net.logging", false, CVar.ARCHIVE);
+                _config.RegisterCVar("net.logging", false, CVar.ARCHIVE, b => _logging = b);
 
             _logging = _config.GetCVar<bool>("net.logging");
         }

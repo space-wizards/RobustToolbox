@@ -8,6 +8,7 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -39,11 +40,20 @@ namespace Robust.Server.GameStates
         {
             _networkManager.RegisterNetMessage<MsgState>(MsgState.NAME);
             _networkManager.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, HandleStateAck);
+
+            _networkManager.Disconnect += HandleClientDisconnect;
+        }
+
+        private void HandleClientDisconnect(object sender, NetChannelArgs e)
+        {
+            if (ackedStates.ContainsKey(e.Channel.ConnectionId))
+                ackedStates.Remove(e.Channel.ConnectionId);
         }
 
         private void Ack(long uniqueIdentifier, GameTick stateAcked)
         {
-            ackedStates[uniqueIdentifier] = stateAcked;
+            if(ackedStates.ContainsKey(uniqueIdentifier))
+                ackedStates[uniqueIdentifier] = stateAcked;
         }
 
         public void SendGameStateUpdate()
@@ -69,6 +79,13 @@ namespace Robust.Server.GameStates
                 {
                     oldestAck = ack;
                 }
+            }
+
+            // If there are no clients FULLY connected to the server (no channels),
+            // or server has been running for 2.2 years
+            if (oldestAck == GameTick.MaxValue)
+            {
+                return; // don't need to worry about states.
             }
 
             if (oldestAck > lastOldestAck)

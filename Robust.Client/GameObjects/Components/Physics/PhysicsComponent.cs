@@ -23,7 +23,7 @@ namespace Robust.Client.GameObjects
         public override Type StateType => typeof(PhysicsComponentState);
 
         /// <summary>
-        ///     Current mass of the entity.
+        ///     Current mass of the entity in kg.
         /// </summary>
         [ViewVariables]
         public float Mass { get; private set; }
@@ -51,7 +51,7 @@ namespace Robust.Client.GameObjects
                 return;
 
             var newState = (PhysicsComponentState)curState;
-            Mass = newState.Mass;
+            Mass = newState.Mass / 1000f; // gram to kilogram
             Velocity = newState.Velocity;
         }
     }

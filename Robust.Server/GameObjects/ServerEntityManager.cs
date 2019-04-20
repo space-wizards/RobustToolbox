@@ -80,16 +80,15 @@ namespace Robust.Server.GameObjects
             var stateEntities = new List<EntityState>();
             foreach (IEntity entity in GetEntities())
             {
-                if (entity.LastModifiedTick < fromTick)
-                {
+                if (entity.LastModifiedTick <= fromTick)
                     continue;
-                }
 
                 EntityState entityState = entity.GetEntityState(fromTick);
                 stateEntities.Add(entityState);
             }
 
-            return stateEntities;
+            // no point sending an empty collection
+            return stateEntities.Count == 0 ? default : stateEntities;
         }
 
         public override void DeleteEntity(IEntity e)
@@ -110,7 +109,8 @@ namespace Robust.Server.GameObjects
                 }
             }
 
-            return list;
+            // no point sending an empty collection
+            return list.Count == 0 ? default : list;
         }
 
         public void CullDeletionHistory(GameTick toTick)

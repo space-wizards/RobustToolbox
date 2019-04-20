@@ -98,6 +98,11 @@ namespace Robust.Shared.GameObjects.Systems
             EntityManager.RaiseEvent(this, message);
         }
 
+        protected void QueueEvent(EntitySystemMessage message)
+        {
+            EntityManager.QueueEvent(this, message);
+        }
+
         protected void RaiseNetworkEvent(EntitySystemMessage message)
         {
             EntityNetworkManager.SendSystemNetworkMessage(message);

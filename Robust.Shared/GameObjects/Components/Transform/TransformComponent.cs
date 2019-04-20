@@ -6,12 +6,12 @@ using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
- using Robust.Shared.Interfaces.Timing;
- using Robust.Shared.IoC;
- using Robust.Shared.Map;
+using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
- using Robust.Shared.ViewVariables;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects.Components.Transform
 {
@@ -32,6 +32,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         private readonly List<EntityUid> _children = new List<EntityUid>();
 
         [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IGameTiming _gameTiming;
 
         /// <inheritdoc />
         public event EventHandler<MoveEventArgs> OnMove;
@@ -56,7 +57,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 // Eh.
                 if (_mapManager.TryGetGrid(GridID, out var grid))
                 {
-                    return grid.MapID;
+                    return grid.ParentMapId;
                 }
                 return MapId.Nullspace;
             }
@@ -184,7 +185,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                         throw new ArgumentException("Cannot change grid ID of parented entity.");
                     }
                     // grid coords to world coords
-                    var worldCoords = value.ToWorld();
+                    var worldCoords = value.ToWorld(_mapManager);
 
                     // world coords to parent coords
                     var newPos = Parent.InvWorldMatrix.Transform(worldCoords.Position);
@@ -481,25 +482,23 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         protected virtual Vector2 GetLocalPosition()
         {
-            IGameTiming gameTiming = IoCManager.Resolve<IGameTiming>();
-            if(gameTiming.InSimulation || _localPosition == _nextPosition)
+            if(_gameTiming.InSimulation || _localPosition == _nextPosition)
                 return _localPosition;
 
-            return Vector2.Lerp(_localPosition, _nextPosition, (float) (gameTiming.TickRemainder.TotalSeconds / gameTiming.TickPeriod.TotalSeconds));
+            return Vector2.Lerp(_localPosition, _nextPosition, (float) (_gameTiming.TickRemainder.TotalSeconds / _gameTiming.TickPeriod.TotalSeconds));
         }
 
         protected virtual Angle GetLocalRotation()
         {
-            IGameTiming gameTiming = IoCManager.Resolve<IGameTiming>();
-            if (gameTiming.InSimulation || _localRotation == _nextRotation)
+            if (_gameTiming.InSimulation || _localRotation == _nextRotation)
                 return _localRotation;
 
-            return Angle.Lerp(_localRotation, _nextRotation, (float)(gameTiming.TickRemainder.TotalSeconds / gameTiming.TickPeriod.TotalSeconds));
+            return Angle.Lerp(_localRotation, _nextRotation, (float)(_gameTiming.TickRemainder.TotalSeconds / _gameTiming.TickPeriod.TotalSeconds));
         }
 
         protected virtual Matrix3 GetWorldMatrix()
         {
-            if (IoCManager.Resolve<IGameTiming>().InSimulation)
+            if (_gameTiming.InSimulation)
                 return _worldMatrix;
 
             // there really is no point trying to cache this because it will only be used in one frame
@@ -516,7 +515,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         protected virtual Matrix3 GetWorldMatrixInv()
         {
-            if (IoCManager.Resolve<IGameTiming>().InSimulation)
+            if (_gameTiming.InSimulation)
                 return _invWorldMatrix;
 
             // there really is no point trying to cache this because it will only be used in one frame
@@ -563,10 +562,10 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 // transform localPosition from parent coords to world coords
                 var worldPos = Parent.WorldMatrix.Transform(localPosition);
                 var grid = _mapManager.GetGrid(gridId);
-                var lc = new GridCoordinates(worldPos, grid.MapID);
+                var lc = new GridCoordinates(worldPos, grid.ParentMap);
 
                 // then to parent grid coords
-                return lc.ConvertToGrid(Parent.GridPosition.Grid);
+                return lc.ConvertToGrid(_mapManager, _mapManager.GetGrid(Parent.GridPosition.GridID));
             }
             else
             {

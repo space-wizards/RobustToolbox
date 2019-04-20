@@ -239,7 +239,7 @@ namespace Robust.Shared.Map
         public void DeleteGrid(GridId gridID)
         {
             var grid = _grids[gridID];
-            var map = (Map)grid.Map;
+            var map = (Map)grid.ParentMap;
 
             grid.Dispose();
             map.RemoveGrid(grid);

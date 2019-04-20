@@ -67,7 +67,7 @@ namespace Robust.Shared.Map
             /// <inheritdoc />
             public IMapGrid FindGridAt(GridCoordinates worldPos)
             {
-                var pos = worldPos.ToWorld().Position;
+                var pos = worldPos.ToWorld(_mapManager).Position;
                 return FindGridAt(pos);
             }
 

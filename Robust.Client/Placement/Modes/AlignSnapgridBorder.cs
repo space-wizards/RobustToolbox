@@ -1,7 +1,6 @@
 ﻿using System;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Drawing;
-using Robust.Client.Utility;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -57,7 +56,7 @@ namespace Robust.Client.Placement.Modes
         {
             MouseCoords = ScreenToPlayerGrid(mouseScreen);
 
-            snapSize = MouseCoords.Grid.SnapSize; //Find snap size.
+            snapSize = pManager.MapManager.GetGrid(MouseCoords.GridID).SnapSize; //Find snap size.
             GridDistancing = snapSize;
             onGrid = true;
 
@@ -68,7 +67,7 @@ namespace Robust.Client.Placement.Modes
             //Convert back to original world and screen coordinates after applying offset
             MouseCoords =
                 new GridCoordinates(
-                    mouselocal + new Vector2(pManager.PlacementOffset.X, pManager.PlacementOffset.Y), MouseCoords.Grid);
+                    mouselocal + new Vector2(pManager.PlacementOffset.X, pManager.PlacementOffset.Y), MouseCoords.GridID);
         }
 
         public override bool IsValidPosition(GridCoordinates position)

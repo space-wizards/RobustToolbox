@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Robust.Shared.Maths;
@@ -184,6 +184,48 @@ namespace Robust.UnitTesting.Shared.Maths
             var translatedBox = box.Translated(new Vector2(x, y));
 
             Assert.That(box.Intersects(translatedBox), Is.False);
+        }
+
+        [Test]
+        public void Box2Intersect()
+        {
+            var boxOne = new Box2(-1,-1,1,1);
+            var boxTwo = new Box2(0,0,2,2);
+
+            var result = boxOne.Intersect(boxTwo);
+
+            Assert.That(result.Left, Is.EqualTo(0f));
+            Assert.That(result.Bottom, Is.EqualTo(0f));
+            Assert.That(result.Right, Is.EqualTo(1f));
+            Assert.That(result.Top, Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void Box2NotIntersect()
+        {
+            var boxOne = new Box2(-1, -1,0, 0);
+            var boxTwo = new Box2(0, 0, 2, 2);
+
+            var result = boxOne.Intersect(boxTwo);
+
+            Assert.That(result.Left, Is.EqualTo(0f));
+            Assert.That(result.Bottom, Is.EqualTo(0f));
+            Assert.That(result.Right, Is.EqualTo(0f));
+            Assert.That(result.Top, Is.EqualTo(0f));
+        }
+
+        [Test]
+        public void Box2Union()
+        {
+            var boxOne = new Box2(-1, -1, 1, 1);
+            var boxTwo = new Box2(0, 0, 2, 2);
+
+            var result = boxOne.Union(boxTwo);
+
+            Assert.That(result.Left, Is.EqualTo(-1f));
+            Assert.That(result.Bottom, Is.EqualTo(-1f));
+            Assert.That(result.Right, Is.EqualTo(2f));
+            Assert.That(result.Top, Is.EqualTo(2f));
         }
 
         [Test]

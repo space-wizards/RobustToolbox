@@ -6,9 +6,9 @@ using Robust.Client.Interfaces.State;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Player;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
-
 namespace Robust.Client.UserInterface.CustomControls
 {
     public class DebugMonitors : VBoxContainer, IDebugMonitors
@@ -33,9 +33,10 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IStateManager _stateManager;
         private readonly IDisplayManager _displayManager;
         private readonly IClientNetManager _netManager;
+        private readonly IMapManager _mapManager;
 
         //TODO: Think about a factory for this
-        public DebugMonitors(IGameTiming gameTiming, IPlayerManager playerManager, IEyeManager eyeManager, IInputManager inputManager, IResourceCache resourceCache, IStateManager stateManager, IDisplayManager displayManager, IClientNetManager netManager)
+        public DebugMonitors(IGameTiming gameTiming, IPlayerManager playerManager, IEyeManager eyeManager, IInputManager inputManager, IResourceCache resourceCache, IStateManager stateManager, IDisplayManager displayManager, IClientNetManager netManager, IMapManager mapManager)
         {
             _gameTiming = gameTiming;
             _playerManager = playerManager;
@@ -45,6 +46,7 @@ namespace Robust.Client.UserInterface.CustomControls
             _stateManager = stateManager;
             _displayManager = displayManager;
             _netManager = netManager;
+            _mapManager = mapManager;
 
             PerformLayout();
         }
@@ -67,7 +69,7 @@ namespace Robust.Client.UserInterface.CustomControls
             AddChild(_fpsCounter);
 
             _debugCoordsPanel = new DebugCoordsPanel(_playerManager, _eyeManager, _inputManager,
-                _resourceCache, _stateManager, _displayManager);
+                _resourceCache, _stateManager, _displayManager, _mapManager);
             AddChild(_debugCoordsPanel);
 
             _debugNetPanel = new DebugNetPanel(_netManager, _gameTiming, _resourceCache);

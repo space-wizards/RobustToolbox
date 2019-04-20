@@ -28,7 +28,7 @@ namespace Robust.Client.Map
 
         public UIBox2? TileAtlasRegion(Tile tile)
         {
-            if (_tileRegions.TryGetValue(tile.TileId, out var region))
+            if (_tileRegions.TryGetValue(tile.TypeId, out var region))
             {
                 return region;
             }

@@ -30,7 +30,7 @@ namespace Robust.Server.Timing
 
         public bool IsMapPaused(IMap map) => IsMapPaused(map.Index);
         public bool IsMapPaused(MapId mapId) => _pausedMaps.Contains(mapId);
-        public bool IsGridPaused(IMapGrid grid) => _pausedMaps.Contains(grid.MapID);
+        public bool IsGridPaused(IMapGrid grid) => _pausedMaps.Contains(grid.ParentMapId);
 
         public bool IsGridPaused(GridId gridId)
         {

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Interfaces;
-using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.Placement;
@@ -11,7 +10,6 @@ using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Physics;
@@ -22,8 +20,6 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Maths;
 using Robust.Shared.Map;
 using Robust.Shared.Network.Messages;
-using Robust.Client.Utility;
-using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics;
 using Robust.Client.GameObjects;
 using Robust.Client.GameObjects.EntitySystems;
@@ -50,7 +46,7 @@ namespace Robust.Client.Placement
         [Dependency]
         private readonly IReflectionManager ReflectionManager;
         [Dependency]
-        private readonly IMapManager _mapMan;
+        public readonly IMapManager MapManager;
         [Dependency]
         private readonly IGameTiming _time;
         [Dependency]
@@ -191,7 +187,7 @@ namespace Robust.Client.Placement
                 _modeDictionary.Add(type.Name, type);
             }
 
-            _mapMan.TileChanged += HandleTileChanged;
+            MapManager.TileChanged += HandleTileChanged;
 
             _drawOverlay = new PlacementOverlay(this);
             _overlayManager.AddOverlay(_drawOverlay);
@@ -320,7 +316,7 @@ namespace Robust.Client.Placement
 
         private void HandleTileChanged(object sender, TileChangedEventArgs args)
         {
-            var coords = args.NewTile.LocalPos;
+            var coords = MapManager.GetMap(args.NewTile.MapIndex).GetGrid(args.NewTile.GridIndex).GridTileToLocal(args.NewTile.GridIndices);
             _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
         }
 
@@ -577,17 +573,17 @@ namespace Robust.Client.Placement
 
         private void RequestPlacement(GridCoordinates coordinates)
         {
-            if (coordinates.MapID == MapId.Nullspace) return;
+            if (MapManager.GetGrid(coordinates.GridID).ParentMap.Index == MapId.Nullspace) return;
             if (CurrentPermission == null) return;
             if (!CurrentMode.IsValidPosition(coordinates)) return;
             if (Hijack != null && Hijack.HijackPlacementRequest(coordinates)) return;
 
             if (CurrentPermission.IsTile)
             {
-                var grid = _mapMan.GetGrid(coordinates.GridID);
+                var grid = MapManager.GetGrid(coordinates.GridID);
 
                 // no point changing the tile to the same thing.
-                if (grid.GetTile(coordinates).Tile.TileId == CurrentPermission.TileType)
+                if (grid.GetTile(coordinates).Tile.TypeId == CurrentPermission.TileType)
                     return;
 
                 foreach (var tileChange in _pendingTileChanges)

@@ -7,6 +7,7 @@ using Robust.Server.Interfaces.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
 using Robust.Shared.Input;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Timing;
@@ -24,14 +25,11 @@ namespace Robust.Server.Player
     /// </summary>
     internal class PlayerManager : IPlayerManager
     {
-        [Dependency]
-        private readonly IBaseServer _baseServer;
-        [Dependency]
-        private readonly IGameTiming _timing;
-        [Dependency]
-        private readonly IServerNetManager _network;
-        [Dependency]
-        private readonly IReflectionManager _reflectionManager;
+        [Dependency] private readonly IBaseServer _baseServer;
+        [Dependency] private readonly IGameTiming _timing;
+        [Dependency] private readonly IServerNetManager _network;
+        [Dependency] private readonly IReflectionManager _reflectionManager;
+        [Dependency] private readonly IMapManager _mapManager;
 
         public BoundKeyMap KeyMap { get; private set; }
 
@@ -203,9 +201,7 @@ namespace Robust.Server.Player
             {
                 return
                     _sessions.Values.Where(x => x.AttachedEntity != null &&
-                                                worldPos.InRange(
-                                                    x.AttachedEntity.Transform.GridPosition,
-                                                    range))
+                                                worldPos.InRange(_mapManager, x.AttachedEntity.Transform.GridPosition, range))
                         .Cast<IPlayerSession>()
                         .ToList();
             }

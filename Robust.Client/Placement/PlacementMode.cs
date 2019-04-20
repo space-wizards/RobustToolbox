@@ -4,10 +4,6 @@ using Robust.Client.Graphics;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.ResourceManagement;
-using Robust.Client.Utility;
-using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -124,7 +120,7 @@ namespace Robust.Client.Placement
 
         public IEnumerable<GridCoordinates> LineCoordinates()
         {
-            var placementdiff = MouseCoords.ToWorld().Position - pManager.StartPoint.ToWorld().Position;
+            var placementdiff = MouseCoords.ToWorld(pManager.MapManager).Position - pManager.StartPoint.ToWorld(pManager.MapManager).Position;
             var iterations = 0f;
             Vector2 distance;
             if (Math.Abs(placementdiff.X) > Math.Abs(placementdiff.Y))
@@ -140,13 +136,13 @@ namespace Robust.Client.Placement
 
             for (var i = 0; i <= iterations; i++)
             {
-                yield return new GridCoordinates(pManager.StartPoint.Position + distance * i, pManager.StartPoint.Grid);
+                yield return new GridCoordinates(pManager.StartPoint.Position + distance * i, pManager.StartPoint.GridID);
             }
         }
 
         public IEnumerable<GridCoordinates> GridCoordinates()
         {
-            var placementdiff = MouseCoords.ToWorld().Position - pManager.StartPoint.ToWorld().Position;
+            var placementdiff = MouseCoords.ToWorld(pManager.MapManager).Position - pManager.StartPoint.ToWorld(pManager.MapManager).Position;
             var distanceX = new Vector2(placementdiff.X > 0 ? 1 : -1, 0) * GridDistancing;
             var distanceY = new Vector2(0, placementdiff.Y > 0 ? 1 : -1) * GridDistancing;
 
@@ -157,7 +153,7 @@ namespace Robust.Client.Placement
             {
                 for (var y = 0; y <= iterationsY; y++)
                 {
-                    yield return new GridCoordinates(pManager.StartPoint.Position + distanceX * x + distanceY * y, pManager.StartPoint.Grid);
+                    yield return new GridCoordinates(pManager.StartPoint.Position + distanceX * x + distanceY * y, pManager.StartPoint.GridID);
                 }
             }
         }
@@ -186,7 +182,7 @@ namespace Robust.Client.Placement
             if (!RangeRequired)
                 return true;
             var range = pManager.CurrentPermission.Range;
-            if (range > 0 && !pManager.PlayerManager.LocalPlayer.ControlledEntity.Transform.GridPosition.InRange(coordinates, range))
+            if (range > 0 && !pManager.PlayerManager.LocalPlayer.ControlledEntity.Transform.GridPosition.InRange(pManager.MapManager, coordinates, range))
                 return false;
             return true;
         }
@@ -194,7 +190,7 @@ namespace Robust.Client.Placement
         public bool IsColliding(GridCoordinates coordinates)
         {
             var bounds = pManager.ColliderAABB;
-            var worldcoords = coordinates.ToWorld();
+            var worldcoords = coordinates.ToWorld(pManager.MapManager);
 
             var collisionbox = Box2.FromDimensions(
                 bounds.Left + worldcoords.Position.X,
@@ -202,7 +198,7 @@ namespace Robust.Client.Placement
                 bounds.Width,
                 bounds.Height);
 
-            if (pManager.PhysicsManager.IsColliding(collisionbox, coordinates.MapID))
+            if (pManager.PhysicsManager.IsColliding(collisionbox, pManager.MapManager.GetGrid(coordinates.GridID).ParentMap.Index))
                 return true;
 
             return false;

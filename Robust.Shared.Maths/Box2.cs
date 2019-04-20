@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Robust.Shared.Maths
 {
@@ -60,10 +60,42 @@ namespace Robust.Shared.Maths
             return FromDimensions(bottomLeft.X, bottomLeft.Y, size.X, size.Y);
         }
 
-        public bool Intersects(Box2 other)
+        public bool Intersects(in Box2 other)
         {
             return other.Bottom <= this.Top && other.Top >= this.Bottom && other.Right >= this.Left &&
                    other.Left <= this.Right;
+        }
+
+        /// <summary>
+        ///     Returns the intersection box created when two Boxes overlap.
+        /// </summary>
+        public Box2 Intersect(in Box2 other)
+        {
+            var left   = FloatMath.Max(Left,   other.Left);
+            var right  = FloatMath.Min(Right,  other.Right);
+            var bottom = FloatMath.Max(Bottom, other.Bottom);
+            var top    = FloatMath.Min(Top,    other.Top);
+
+            if (left <= right && bottom <= top)
+                return new Box2(left, bottom, right, top);
+
+            return new Box2();
+        }
+
+        /// <summary>
+        ///     Returns the smallest rectangle that contains both of the rectangles.
+        /// </summary>
+        public Box2 Union(in Box2 other)
+        {
+            var left   = FloatMath.Min(Left,   other.Left);
+            var right  = FloatMath.Max(Right,  other.Right);
+            var bottom = FloatMath.Min(Bottom, other.Bottom);
+            var top    = FloatMath.Max(Top,    other.Top);
+
+            if (left <= right && bottom <= top)
+                return new Box2(left, bottom, right, top);
+
+            return new Box2();
         }
 
         public bool IsEmpty()
@@ -71,7 +103,7 @@ namespace Robust.Shared.Maths
             return FloatMath.CloseTo(Width, 0.0f) && FloatMath.CloseTo(Height, 0.0f);
         }
 
-        public bool Encloses(Box2 inner)
+        public bool Encloses(in Box2 inner)
         {
             return this.Left < inner.Left && this.Bottom < inner.Bottom && this.Right > inner.Right &&
                    this.Top > inner.Top;

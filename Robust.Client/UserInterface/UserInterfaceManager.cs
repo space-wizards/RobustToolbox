@@ -18,6 +18,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.Utility;
 using Robust.Shared.Input;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Interfaces.Timing;
@@ -39,6 +40,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IResourceCache _resourceCache;
         [Dependency] private readonly IStateManager _stateManager;
         [Dependency] private readonly IClientNetManager _netManager;
+        [Dependency] private readonly IMapManager _mapManager;
 
         public UITheme ThemeDefaults { get; private set; }
         public Stylesheet Stylesheet { get; set; }
@@ -77,7 +79,7 @@ namespace Robust.Client.UserInterface
             RootControl.AddChild(DebugConsole);
 
             _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager,
-                _resourceCache, _stateManager, _displayManager, _netManager);
+                _resourceCache, _stateManager, _displayManager, _netManager, _mapManager);
             RootControl.AddChild(_debugMonitors);
 
             _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugMonitors,

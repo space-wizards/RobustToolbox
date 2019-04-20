@@ -18,11 +18,8 @@ namespace Robust.Server.GameObjects
     {
         #region IEntityManager Members
 
-        [Dependency]
-        private readonly IPrototypeManager _protoManager;
-
-        [Dependency]
-        private readonly IMapManager _mapManager;
+        [Dependency] private readonly IPrototypeManager _protoManager;
+        [Dependency] private readonly IMapManager _mapManager;
 
         private readonly List<(GameTick tick, EntityUid uid)> DeletionHistory = new List<(GameTick, EntityUid)>();
 
@@ -37,7 +34,7 @@ namespace Robust.Server.GameObjects
         public override bool TrySpawnEntityAt(string entityType, GridCoordinates coordinates, out IEntity entity)
         {
             var prototype = _protoManager.Index<EntityPrototype>(entityType);
-            if (prototype.CanSpawnAt(coordinates.Grid, coordinates.Position))
+            if (prototype.CanSpawnAt(_mapManager.GetGrid(coordinates.GridID), coordinates.Position))
             {
                 var result = CreateEntity(entityType);
                 result.Transform.GridPosition = coordinates;
@@ -176,7 +173,7 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position)
         {
-            return GetEntitiesIntersecting(position.MapID, position.ToWorld().Position);
+            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).ParentMap.Index, position.ToWorld(_mapManager).Position);
         }
 
         /// <inheritdoc />
@@ -194,7 +191,7 @@ namespace Robust.Server.GameObjects
         public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range)
         {
             var aabb = new Box2(position.Position - new Vector2(range / 2, range / 2), position.Position + new Vector2(range / 2, range / 2));
-            return GetEntitiesIntersecting(position.MapID, aabb);
+            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).ParentMap.Index, aabb);
         }
 
         /// <inheritdoc />
@@ -225,7 +222,7 @@ namespace Robust.Server.GameObjects
 
             foreach (var entity in entities)
             {
-                var angle = new Angle(entity.Transform.WorldPosition - coordinates.ToWorld().Position);
+                var angle = new Angle(entity.Transform.WorldPosition - coordinates.ToWorld(_mapManager).Position);
                 if (angle.Degrees < direction.Degrees + arcwidth / 2 && angle.Degrees > direction.Degrees - arcwidth / 2)
                     yield return entity;
             }

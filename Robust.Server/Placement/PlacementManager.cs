@@ -1,5 +1,4 @@
-﻿using Robust.Server.GameObjects;
-using Robust.Server.Interfaces.GameObjects;
+﻿using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Server.Interfaces.Placement;
 using Robust.Server.Interfaces.Player;
@@ -10,24 +9,19 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Maths;
 using Robust.Shared.Network.Messages;
-using Vector2 = Robust.Shared.Maths.Vector2;
 
 namespace Robust.Server.Placement
 {
     public class PlacementManager : IPlacementManager
     {
-        [Dependency]
-        private readonly ITileDefinitionManager _tileDefinitionManager;
-        [Dependency]
-        private readonly IServerNetManager _networkManager;
-        [Dependency]
-        private readonly IPlayerManager _playerManager;
-        [Dependency]
-        private readonly IServerEntityManager _entityManager;
+        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
+        [Dependency] private readonly IServerNetManager _networkManager;
+        [Dependency] private readonly IPlayerManager _playerManager;
+        [Dependency] private readonly IServerEntityManager _entityManager;
+        [Dependency] private readonly IMapManager _mapManager;
 
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).
@@ -117,7 +111,49 @@ namespace Robust.Server.Placement
             }
             else
             {
-                coordinates.Grid.SetTile(coordinates, new Tile(tileType));
+                PlaceNewTile(coordinates, tileType, _mapManager.GetGrid(coordinates.GridID).ParentMap, coordinates.ToWorld(_mapManager).Position);
+            }
+        }
+
+        private void PlaceNewTile(GridCoordinates coordinates, ushort tileType, IMap map, Vector2 position)
+        {
+            // tile can snap up to 0.75m away from grid
+            var gridSearchBox = new Box2(-0.5f, -0.5f, 0.5f, 0.5f)
+                .Scale(1.5f)
+                .Translated(position);
+
+            var gridsInArea = map.FindGridsIntersecting(gridSearchBox);
+
+            IMapGrid closest = null;
+            float distance = float.PositiveInfinity;
+            Box2 intersect = new Box2();
+            foreach (var grid in gridsInArea)
+            {
+                // figure out closest intersect
+                var gridIntersect = gridSearchBox.Intersect(grid.AABBWorld);
+                var gridDist = (gridIntersect.Center - position).LengthSquared;
+
+                if (gridDist >= distance)
+                    continue;
+
+                distance = gridDist;
+                closest = grid;
+                intersect = gridIntersect;
+            }
+
+            if (closest != null) // stick to existing grid
+            {
+                var normal = new Angle(position - intersect.Center).GetCardinalDir().ToVec(); // round to nearest cardinal dir
+                var newTilePos = position + normal * closest.TileSize;
+                var pos = closest.WorldToTile(position);
+                closest.SetTile(pos, new Tile(tileType));
+            }
+            else // create a new grid
+            {
+                var newGrid = map.CreateGrid();
+                newGrid.WorldPosition = position;
+                var tilePos = newGrid.WorldToTile(position);
+                newGrid.SetTile(tilePos, new Tile(tileType));
             }
         }
 

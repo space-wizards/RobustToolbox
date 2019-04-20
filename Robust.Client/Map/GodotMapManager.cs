@@ -35,14 +35,14 @@ namespace Robust.Client.Map
             var tilemap = RenderTileMaps[args.Grid.Index];
             foreach (var (index, tile) in args.Modified)
             {
-                tilemap.SetCell(index.X, -1-index.Y, tile.TileId);
+                tilemap.SetCell(index.X, -1-index.Y, tile.TypeId);
             }
         }
 
         private void UpdateTileMapOnUpdate(object sender, TileChangedEventArgs args)
         {
             var tilemap = RenderTileMaps[args.NewTile.GridIndex];
-            tilemap.SetCell(args.NewTile.X, -1-args.NewTile.Y, args.NewTile.Tile.TileId);
+            tilemap.SetCell(args.NewTile.X, -1-args.NewTile.Y, args.NewTile.Tile.TypeId);
         }
 
         private void UpdateOnGridCreated(GridId gridId)

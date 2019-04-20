@@ -3,11 +3,10 @@ using Robust.Server.Interfaces.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
@@ -15,6 +14,8 @@ namespace Robust.Server.GameObjects.EntitySystems
     {
         [Dependency] private readonly IPauseManager _pauseManager;
         [Dependency] private readonly IPhysicsManager _physicsManager;
+        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
+        [Dependency] private readonly IMapManager _mapManager;
 
         private const float Epsilon = 1.0e-6f;
 
@@ -42,7 +43,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             }
         }
 
-        private static void HandleMovement(IEntity entity, float frameTime)
+        private void HandleMovement(IEntity entity, float frameTime)
         {
             var velocity = entity.GetComponent<PhysicsComponent>();
             if (velocity.DidMovementCalculations)
@@ -111,7 +112,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             transform.WorldPosition += velocity.LinearVelocity * frameTime;
         }
 
-        private static Vector2 CalculateMovement(PhysicsComponent velocity, float frameTime, IEntity entity)
+        private Vector2 CalculateMovement(PhysicsComponent velocity, float frameTime, IEntity entity)
         {
             var movement = velocity.LinearVelocity * frameTime;
             if(movement.LengthSquared <= Epsilon)
@@ -143,9 +144,9 @@ namespace Robust.Server.GameObjects.EntitySystems
                 if (movement != Vector2.Zero && collider.IsScrapingFloor)
                 {
                     var location = entity.Transform;
-                    var grid = location.GridPosition.Grid;
+                    var grid = _mapManager.GetGrid(location.GridPosition.GridID);
                     var tile = grid.GetTile(location.GridPosition);
-                    var tileDef = tile.TileDef;
+                    var tileDef = _tileDefinitionManager[tile.Tile.TypeId];
                     if (tileDef.Friction != 0)
                     {
                         movement -= movement * tileDef.Friction;

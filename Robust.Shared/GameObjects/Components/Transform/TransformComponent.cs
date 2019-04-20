@@ -22,8 +22,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
         private Angle _localRotation; // local rotation
         private GridId _gridID;
 
-        private Matrix3 _worldMatrix;
-        private Matrix3 _invWorldMatrix;
+        private Matrix3 _worldMatrix = Matrix3.Identity;
+        private Matrix3 _invWorldMatrix = Matrix3.Identity;
 
         private Vector2 _nextPosition;
         private Angle _nextRotation;

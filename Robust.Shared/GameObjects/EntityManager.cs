@@ -335,6 +335,11 @@ namespace Robust.Shared.GameObjects
 
         public void RaiseEvent(object sender, EntityEventArgs toRaise)
         {
+            ProcessSingleEvent(new Tuple<object, EntityEventArgs>(sender, toRaise));
+        }
+
+        public void QueueEvent(object sender, EntityEventArgs toRaise)
+        {
             _eventQueue.Enqueue(new Tuple<object, EntityEventArgs>(sender, toRaise));
         }
 

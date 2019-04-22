@@ -408,6 +408,7 @@ namespace Robust.Client.UserInterface.Controls
             var iconSelectedBg = ActualSelectedItemBackground;
             var iconDisabledBg = ActualDisabledItemBackground;
 
+            float _itemListHeight = 0f;
             Vector2 separation = (0, -_scrollBar.Value);
 
             listBg.Draw(handle, SizeBox);
@@ -450,14 +451,22 @@ namespace Robust.Client.UserInterface.Controls
                 }
 
                 separation += (0, itemHeight);
+                _itemListHeight += itemHeight;
             }
 
-            _itemListHeight = separation.Y + _scrollBar.Value;
             _totalContentHeight = (int)_itemListHeight;
 
-            _scrollBar.MaxValue = _itemListHeight;
+            if (_itemListHeight > Size.Y)
+            {
+                _scrollBar.MaxValue = _itemListHeight;
+                _scrollBar.Page = Size.Y - ActualBackground.MinimumSize.Y;
+            }
+            else
+            {
+                _scrollBar.MaxValue = 0f;
+                _scrollBar.Page = 0f;
+            }
 
-            _scrollBar.Visible = _itemListHeight > Size.Y;
         }
 
         protected void DrawTextInternal(DrawingHandleScreen handle, string text, UIBox2 box)

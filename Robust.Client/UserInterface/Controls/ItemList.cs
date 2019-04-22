@@ -59,6 +59,19 @@ namespace Robust.Client.UserInterface.Controls
             return new Godot.ItemList();
         }
 
+        private void RecalculateContentHeight()
+        {
+            _totalContentHeight = 0;
+            foreach (var item in _itemList)
+            {
+                var itemHeight = item.Icon != null
+                    ? Math.Max(item.IconSize.Y, ActualFont.Height) + ActualItemBackground.MinimumSize.Y
+                    : ActualFont.Height + ActualItemBackground.MinimumSize.Y;
+
+                _totalContentHeight += (int)itemHeight;
+            }
+        }
+
         public void AddItem(string text, Texture icon = null, bool selectable = true)
         {
             if (GameController.OnGodot)
@@ -67,11 +80,13 @@ namespace Robust.Client.UserInterface.Controls
             }
             else
             {
-                var i = new Item() {Text = text, Icon = icon, Selectable = selectable};
-                _itemList.Add(i);
+                var item = new Item() {Text = text, Icon = icon, Selectable = selectable};
+                _itemList.Add(item);
+                RecalculateContentHeight();
                 if (_isAtBottom && ScrollFollowing)
                 {
                     _scrollBar.Value = ScrollLimit;
+
                 }
             }
         }
@@ -97,6 +112,7 @@ namespace Robust.Client.UserInterface.Controls
             else
             {
                 _itemList.Clear();
+                _totalContentHeight = 0;
             }
         }
 
@@ -127,6 +143,7 @@ namespace Robust.Client.UserInterface.Controls
             else
             {
                 _itemList.RemoveAt(idx);
+                RecalculateContentHeight();
             }
         }
 
@@ -407,7 +424,7 @@ namespace Robust.Client.UserInterface.Controls
             var iconSelectedBg = ActualSelectedItemBackground;
             var iconDisabledBg = ActualDisabledItemBackground;
 
-            float _itemListHeight = 0f;
+            _itemListHeight = 0f;
             Vector2 separation = (0, -_scrollBar.Value);
 
             listBg.Draw(handle, SizeBox);
@@ -452,8 +469,6 @@ namespace Robust.Client.UserInterface.Controls
                 separation += (0, itemHeight);
                 _itemListHeight += itemHeight;
             }
-
-            _totalContentHeight = (int)_itemListHeight;
 
             if (_itemListHeight > Size.Y)
             {

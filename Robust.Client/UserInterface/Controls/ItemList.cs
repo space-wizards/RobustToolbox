@@ -509,9 +509,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            if (_itemListHeight > ActualBackground?.MinimumSize.Y)
-                return (ActualBackground?.MinimumSize.X ?? 0, _itemListHeight);
-            return ActualBackground?.MinimumSize ?? Vector2.Zero;
+            return (ActualBackground?.MinimumSize.X ?? 0, _itemListHeight + ActualBackground?.MinimumSize.Y ?? 0);
         }
 
         protected internal override void MouseMove(GUIMouseMoveEventArgs args)

@@ -552,6 +552,8 @@ namespace Robust.Client.UserInterface.Controls
                 var limit = ScrollLimit;
                 if (_scrollBar.Value + _getScrollSpeed() < limit)
                     _scrollBar.Value = _scrollBar.Value + _getScrollSpeed();
+                else
+                    ScrollToBottom();
                 if (_scrollBar.IsAtEnd)
                 {
                     _isAtBottom = true;

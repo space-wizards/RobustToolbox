@@ -1,19 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Input;
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
+using Color = Robust.Shared.Maths.Color;
+using Font = Robust.Client.Graphics.Font;
 
 namespace Robust.Client.UserInterface.Controls
 {
     [ControlWrap(typeof(Godot.ItemList))]
     public class ItemList : Control
     {
+        private bool _isAtBottom = true;
+        private int _totalContentHeight;
+        private float _itemListHeight;
+
+        private VScrollBar _scrollBar = new VScrollBar();
         private readonly List<Item> _itemList = new List<Item>();
         public event Action<ItemListSelectedEventArgs> OnItemSelected;
         public event Action<ItemListDeselectedEventArgs> OnItemDeselected;
+        public event Action<ItemListHoverEventArgs> OnItemHover;
 
         public const string StylePropertyBackground = "itemlist-background";
         public const string StylePropertyItemBackground = "item-background";
@@ -21,6 +30,10 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyDisabledItemBackground = "disabled-item-background";
 
         public int ItemCount => GameController.OnGodot ? (int)SceneControl.Call("get_item_count") : _itemList.Count;
+
+        public bool ScrollFollowing { get; set; } = true;
+
+        private int ScrollLimit => Math.Max(0, _totalContentHeight - (int) _getContentBox().Height + 1);
 
         public ItemListSelectMode SelectMode { get; set; } = ItemListSelectMode.Single;
 
@@ -46,6 +59,19 @@ namespace Robust.Client.UserInterface.Controls
             return new Godot.ItemList();
         }
 
+        private void RecalculateContentHeight()
+        {
+            _totalContentHeight = 0;
+            foreach (var item in _itemList)
+            {
+                var itemHeight = item.Icon != null
+                    ? Math.Max(item.IconSize.Y, ActualFont.Height) + ActualItemBackground.MinimumSize.Y
+                    : ActualFont.Height + ActualItemBackground.MinimumSize.Y;
+
+                _totalContentHeight += (int)itemHeight;
+            }
+        }
+
         public void AddItem(string text, Texture icon = null, bool selectable = true)
         {
             if (GameController.OnGodot)
@@ -54,8 +80,14 @@ namespace Robust.Client.UserInterface.Controls
             }
             else
             {
-                var i = new Item() {Text = text, Icon = icon, Selectable = selectable};
-                _itemList.Add(i);
+                var item = new Item() {Text = text, Icon = icon, Selectable = selectable};
+                _itemList.Add(item);
+                RecalculateContentHeight();
+                if (_isAtBottom && ScrollFollowing)
+                {
+                    _scrollBar.Value = ScrollLimit;
+
+                }
             }
         }
 
@@ -80,6 +112,7 @@ namespace Robust.Client.UserInterface.Controls
             else
             {
                 _itemList.Clear();
+                _totalContentHeight = 0;
             }
         }
 
@@ -110,6 +143,7 @@ namespace Robust.Client.UserInterface.Controls
             else
             {
                 _itemList.RemoveAt(idx);
+                RecalculateContentHeight();
             }
         }
 
@@ -369,6 +403,12 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        public void ScrollToBottom()
+        {
+            _scrollBar.Value = ScrollLimit;
+            _isAtBottom = true;
+        }
+
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
@@ -384,7 +424,8 @@ namespace Robust.Client.UserInterface.Controls
             var iconSelectedBg = ActualSelectedItemBackground;
             var iconDisabledBg = ActualDisabledItemBackground;
 
-            Vector2 separation = (0, 0);
+            _itemListHeight = 0f;
+            Vector2 separation = (0, -_scrollBar.Value);
 
             listBg.Draw(handle, SizeBox);
 
@@ -426,7 +467,20 @@ namespace Robust.Client.UserInterface.Controls
                 }
 
                 separation += (0, itemHeight);
+                _itemListHeight += itemHeight;
             }
+
+            if (_itemListHeight > Size.Y)
+            {
+                _scrollBar.MaxValue = _itemListHeight;
+                _scrollBar.Page = Size.Y - ActualBackground.MinimumSize.Y;
+            }
+            else
+            {
+                _scrollBar.MaxValue = 0f;
+                _scrollBar.Page = 0f;
+            }
+
         }
 
         protected void DrawTextInternal(DrawingHandleScreen handle, string text, UIBox2 box)
@@ -453,6 +507,58 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        protected override Vector2 CalculateMinimumSize()
+        {
+            return (ActualBackground?.MinimumSize.X ?? 0, _itemListHeight + ActualBackground?.MinimumSize.Y ?? 0);
+        }
+
+        protected internal override void MouseMove(GUIMouseMoveEventArgs args)
+        {
+            base.MouseMove(args);
+
+            if (GameController.OnGodot)
+            {
+                return;
+            }
+
+            for (var idx = 0; idx < _itemList.Count; idx++)
+            {
+                var item = _itemList[idx];
+                if (item.Region == null) continue;
+                if (!item.Region.Value.Contains(args.RelativePosition)) continue;
+                OnItemHover?.Invoke(new ItemListHoverEventArgs(idx, this));
+                break;
+            }
+        }
+
+        protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
+        {
+            base.MouseWheel(args);
+
+            if (GameController.OnGodot)
+            {
+                return;
+            }
+
+            if (args.WheelDirection == Mouse.Wheel.Up)
+            {
+                _scrollBar.Value = _scrollBar.Value - _getScrollSpeed();
+                _isAtBottom = false;
+            }
+            else if (args.WheelDirection == Mouse.Wheel.Down)
+            {
+                var limit = ScrollLimit;
+                if (_scrollBar.Value + _getScrollSpeed() < limit)
+                    _scrollBar.Value = _scrollBar.Value + _getScrollSpeed();
+                else
+                    ScrollToBottom();
+                if (_scrollBar.IsAtEnd)
+                {
+                    _isAtBottom = true;
+                }
+            }
+        }
+
         protected internal override void MouseDown(GUIMouseButtonEventArgs args)
         {
             base.MouseDown(args);
@@ -473,6 +579,32 @@ namespace Robust.Client.UserInterface.Controls
                         Select(item, SelectMode == ItemListSelectMode.Single);
                 break;
             }
+        }
+
+        protected override void Initialize()
+        {
+            base.Initialize();
+            if (GameController.OnGodot)
+                return;
+
+            _scrollBar = new VScrollBar {Name = "_v_scroll"};
+            AddChild(_scrollBar);
+            _scrollBar.SetAnchorAndMarginPreset(LayoutPreset.RightWide);
+            _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
+        }
+
+        [Pure]
+        private int _getScrollSpeed()
+        {
+            var font = ActualFont;
+            return font.Height * 2;
+        }
+
+        [Pure]
+        private UIBox2 _getContentBox()
+        {
+            var style = ActualBackground;
+            return style?.GetContentBox(SizeBox) ?? SizeBox;
         }
 
         public sealed class Item
@@ -535,6 +667,19 @@ namespace Robust.Client.UserInterface.Controls
             public int ItemIndex;
 
             public ItemListDeselectedEventArgs(int itemIndex, ItemList list) : base(list)
+            {
+                ItemIndex = itemIndex;
+            }
+        }
+
+        public class ItemListHoverEventArgs : ItemListEventArgs
+        {
+            /// <summary>
+            ///     The index of the item that was selected.
+            /// </summary>
+            public int ItemIndex;
+
+            public ItemListHoverEventArgs(int itemIndex, ItemList list) : base(list)
             {
                 ItemIndex = itemIndex;
             }

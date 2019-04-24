@@ -409,6 +409,10 @@ namespace Robust.Shared.GameObjects
 
             entity.SetManagers(manager);
             entity.SetUid(uid);
+
+            // allocate the required MetaDataComponent
+            manager.ComponentManager.AddComponent<MetaDataComponent>(entity);
+
             entity.Prototype = this;
             entity.Name = Name;
 

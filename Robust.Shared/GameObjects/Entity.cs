@@ -15,8 +15,6 @@ namespace Robust.Shared.GameObjects
     {
         #region Members
 
-        private string _name;
-
         /// <inheritdoc />
         public IEntityManager EntityManager { get; private set; }
 
@@ -26,25 +24,19 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public EntityPrototype Prototype { get; internal set; }
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public string Description
+        public EntityPrototype Prototype
         {
-            get
-            {
-                if (_description == null)
-                    return Prototype.Description;
-                return _description;
-            }
-            set => _description = value;
+            get => MetaData.EntityPrototype;
+            internal set => MetaData.EntityPrototype = value;
         }
 
-        /// <summary>
-        /// Private value which can override the prototype value for the description
-        /// </summary>
-        private string _description;
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
+        public string Description
+        {
+            get => MetaData.EntityDescription;
+            set => MetaData.EntityDescription = value;
+        }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -55,12 +47,8 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public string Name
         {
-            get => _name;
-            set
-            {
-                _name = value;
-                Dirty();
-            }
+            get => MetaData.EntityName;
+            set => MetaData.EntityName = value;
         }
 
         /// <inheritdoc />
@@ -75,6 +63,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [ViewVariables]
         public ITransformComponent Transform => _transform ?? (_transform = GetComponent<ITransformComponent>());
+
+        private IMetaDataComponent _metaData;
+        /// <inheritdoc />
+        [ViewVariables]
+        public IMetaDataComponent MetaData => _metaData ?? (_metaData = GetComponent<IMetaDataComponent>());
 
         #endregion Members
 

@@ -1,5 +1,4 @@
-﻿using Robust.Server.GameObjects.Components;
-using Robust.Server.GameObjects.Components.Container;
+﻿using Robust.Server.GameObjects.Components.Container;
 using Robust.Server.GameObjects.Components.Markers;
 using Robust.Server.GameObjects.Components.UserInterface;
 using Robust.Server.Interfaces.GameObjects;
@@ -14,6 +13,14 @@ namespace Robust.Server.GameObjects
     {
         public ServerComponentFactory()
         {
+            // Required for the engine to work
+            Register<MetaDataComponent>();
+            RegisterReference<MetaDataComponent, IMetaDataComponent>();
+
+            // Required for the engine to work
+            Register<TransformComponent>();
+            RegisterReference<TransformComponent, ITransformComponent>();
+
             RegisterIgnore("Icon");
             RegisterIgnore("Occluder");
             RegisterIgnore("Eye");
@@ -31,8 +38,6 @@ namespace Robust.Server.GameObjects
             Register<ParticleSystemComponent>();
             Register<PhysicsComponent>();
             Register<SpriteComponent>();
-            Register<TransformComponent>();
-            RegisterReference<TransformComponent, ITransformComponent>();
 
             Register<ClickableComponent>();
             RegisterReference<ClickableComponent, IClickableComponent>();

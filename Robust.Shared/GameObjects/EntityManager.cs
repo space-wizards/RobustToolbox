@@ -247,7 +247,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        ///     Allocates and entity and loads components but does not do initialization.
+        ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
         private protected Entity CreateEntity(string prototypeName, EntityUid? uid = null)
         {

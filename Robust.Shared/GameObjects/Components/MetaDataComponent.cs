@@ -6,14 +6,34 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
+    /// <summary>
+    ///     Serialized state of a <see cref="MetaDataComponent"/>.
+    /// </summary>
     [Serializable, NetSerializable]
     public class MetaDataComponentState : ComponentState
     {
+        /// <summary>
+        ///     The in-game name of this entity.
+        /// </summary>
         public string Name { get; }
+
+        /// <summary>
+        ///     The in-game description of this entity.
+        /// </summary>
         public string Description { get; }
+        /// <summary>
+        ///     The prototype this entity was created from, if any.
+        /// </summary>
         public string PrototypeId { get; }
 
-        public MetaDataComponentState(uint netID, string name, string description, string prototypeId) : base(netID)
+        /// <summary>
+        ///     Constructs a new instance of <see cref="MetaDataComponentState"/>.
+        /// </summary>
+        /// <param name="name">The in-game name of this entity.</param>
+        /// <param name="description">The in-game description of this entity.</param>
+        /// <param name="prototypeId">The prototype this entity was created from, if any.</param>
+        public MetaDataComponentState(string name, string description, string prototypeId)
+            : base(NetIDs.META_DATA)
         {
             Name = name;
             Description = description;
@@ -42,7 +62,8 @@ namespace Robust.Shared.GameObjects
         EntityPrototype EntityPrototype { get; set; }
     }
 
-    class MetaDataComponent : Component, IMetaDataComponent
+    /// <inheritdoc cref="IMetaDataComponent"/>
+    internal class MetaDataComponent : Component, IMetaDataComponent
     {
         [Dependency] private readonly IPrototypeManager _prototypes;
 
@@ -63,7 +84,12 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public string EntityName
         {
-            get => _entityName;
+            get
+            {
+                if (_entityName == null)
+                    return _entityPrototype != null ? _entityPrototype.Name : string.Empty;
+                return _entityName;
+            }
             set
             {
                 if(_entityName == value)
@@ -81,7 +107,7 @@ namespace Robust.Shared.GameObjects
             get
             {
                 if (_entityDescription == null)
-                    return EntityPrototype.Description;
+                    return _entityPrototype != null ? _entityPrototype.Description : string.Empty;
                 return _entityDescription;
             }
             set
@@ -109,9 +135,10 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new MetaDataComponentState(NetID.Value, _entityName, _entityDescription, EntityPrototype.ID);
+            return new MetaDataComponentState(_entityName, _entityDescription, EntityPrototype.ID);
         }
 
+        /// <inheritdoc />
         public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
             base.HandleComponentState(curState, nextState);
@@ -122,6 +149,16 @@ namespace Robust.Shared.GameObjects
             _entityName = state.Name;
             _entityDescription = state.Description;
             _entityPrototype = _prototypes.Index<EntityPrototype>(state.PrototypeId);
+        }
+
+        /// <inheritdoc />
+        public override void ExposeData(ObjectSerializer serializer)
+        {
+            base.ExposeData(serializer);
+
+            serializer.DataField(ref _entityName, "name", string.Empty);
+            serializer.DataField(ref _entityDescription, "desc", string.Empty);
+            serializer.DataField(ref _entityPrototype, "proto", null);
         }
     }
 }

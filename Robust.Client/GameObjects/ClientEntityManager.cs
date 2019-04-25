@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
@@ -120,14 +121,14 @@ namespace Robust.Client.GameObjects
                 foreach (var es in curEntStates)
                 {
                     //Known entities
-                    if (Entities.TryGetValue(es.StateData.Uid, out var entity))
+                    if (Entities.TryGetValue(es.Uid, out var entity))
                     {
                         toApply.Add(entity, (es, null));
                     }
                     else //Unknown entities
                     {
-                        var newEntity = CreateEntity(es.StateData.TemplateName, es.StateData.Uid);
-                        newEntity.Name = es.StateData.Name;
+                        var metaState = (MetaDataComponentState)es.ComponentStates.First(c => c.NetID == NetIDs.META_DATA);
+                        var newEntity = CreateEntity(metaState.PrototypeId, es.Uid);
                         toApply.Add(newEntity, (es, null));
                         toInitialize.Add(newEntity);
                     }
@@ -138,7 +139,7 @@ namespace Robust.Client.GameObjects
             {
                 foreach (var es in nextEntStates)
                 {
-                    if (Entities.TryGetValue(es.StateData.Uid, out var entity))
+                    if (Entities.TryGetValue(es.Uid, out var entity))
                     {
                         if (toApply.TryGetValue(entity, out var state))
                         {

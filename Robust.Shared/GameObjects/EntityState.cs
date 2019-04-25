@@ -7,35 +7,60 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     public class EntityState
     {
-        public EntityStateData StateData { get; set; }
+        public EntityUid Uid { get; }
+        public List<ComponentChanged> ComponentChanges { get; }
         public List<ComponentState> ComponentStates { get; }
 
-        public EntityState(EntityUid uid, List<ComponentState> componentStates, string templateName, string name, List<Tuple<uint, string>> synchedComponentTypes)
+        public EntityState(EntityUid uid, List<ComponentChanged> changedComponents, List<ComponentState> componentStates)
         {
-            SetStateData(new EntityStateData(uid, templateName, name, synchedComponentTypes));
-            ComponentStates = componentStates;
-        }
+            Uid = uid;
 
-        public void SetStateData(EntityStateData data)
-        {
-            StateData = data;
+            // empty lists are 5 bytes each
+            ComponentChanges = changedComponents == null || changedComponents.Count == 0 ? null : changedComponents;
+            ComponentStates = componentStates == null || componentStates.Count == 0 ? null : componentStates;
         }
     }
 
     [Serializable, NetSerializable]
-    public struct EntityStateData
+    public readonly struct ComponentChanged
     {
-        public string Name { get; set; }
-        public string TemplateName { get; set; }
-        public EntityUid Uid { get; set; }
-        public List<Tuple<uint, string>> SynchedComponentTypes { get; set; }
+        // 15ish bytes to create a component (strings are big), 5 bytes to remove one
 
-        public EntityStateData(EntityUid uid, string templateName, string name, List<Tuple<uint, string>> synchedComponentTypes) : this()
+        /// <summary>
+        ///     Was the component added or removed from the entity.
+        /// </summary>
+        public readonly bool Deleted;
+
+        /// <summary>
+        ///     The Network ID of the component to remove.
+        /// </summary>
+        public readonly uint NetID;
+
+        /// <summary>
+        ///     The prototype name of the component to add.
+        /// </summary>
+        public readonly string ComponentName;
+
+        public ComponentChanged(bool deleted, uint netId, string componentName)
         {
-            Uid = uid;
-            TemplateName = templateName;
-            Name = name;
-            SynchedComponentTypes = synchedComponentTypes;
+            Deleted = deleted;
+            NetID = netId;
+            ComponentName = componentName;
+        }
+
+        public override string ToString()
+        {
+            return $"{(Deleted ? "D" : "C")} {NetID} {ComponentName}";
+        }
+
+        public static ComponentChanged Added(uint netId, string componentName)
+        {
+            return new ComponentChanged(false, netId, componentName);
+        }
+
+        public static ComponentChanged Removed(uint netId)
+        {
+            return new ComponentChanged(true, netId, null);
         }
     }
 }

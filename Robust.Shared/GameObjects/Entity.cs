@@ -381,24 +381,32 @@ namespace Robust.Shared.GameObjects
         internal void HandleEntityState(EntityState curState, EntityState nextState)
         {
             _compStateWork.Clear();
-
-            if (curState != null)
+            
+            if(curState?.ComponentChanges != null)
             {
-                Name = curState.StateData.Name;
-                var synchedComponentTypes = curState.StateData.SynchedComponentTypes;
-                foreach (var t in synchedComponentTypes)
+                foreach (var compChange in curState.ComponentChanges)
                 {
-                    if (HasComponent(t.Item1) && GetComponent(t.Item1).Name != t.Item2)
-                        RemoveComponent(GetComponent(t.Item1));
-
-                    if (!HasComponent(t.Item1))
+                    if (compChange.Deleted)
                     {
-                        var newComp = (Component) IoCManager.Resolve<IComponentFactory>().GetComponent(t.Item2);
+                        if (TryGetComponent(compChange.NetID, out var comp))
+                        {
+                            RemoveComponent(comp);
+                        }
+                    }
+                    else
+                    {
+                        if (HasComponent(compChange.NetID))
+                            continue;
+
+                        var newComp = (Component) IoCManager.Resolve<IComponentFactory>().GetComponent(compChange.ComponentName);
                         newComp.Owner = this;
                         AddComponent(newComp, true);
                     }
                 }
+            }
 
+            if(curState?.ComponentStates != null)
+            {
                 foreach (var compState in curState.ComponentStates)
                 {
                     _compStateWork[compState.NetID] = (compState, null);
@@ -440,17 +448,21 @@ namespace Robust.Shared.GameObjects
         public EntityState GetEntityState(GameTick fromTick)
         {
             var compStates = GetComponentStates(fromTick);
+            
+            var addedComponents = EntityManager.ComponentManager.GetNetComponents(Uid)
+                .Where(c => c.CreationTick >= fromTick && !c.Deleted)
+                .Select(c => ComponentChanged.Added(c.NetID.Value, c.Name));
 
-            var synchedComponentTypes = EntityManager.ComponentManager.GetNetComponents(Uid)
-                .Select(t => new Tuple<uint, string>(t.NetID.Value, t.Name))
-                .ToList();
+            var removedComponents = EntityManager.ComponentManager.GetNetComponents(Uid)
+                .Where(c => c.Deleted && c.LastModifiedTick >= fromTick)
+                .Select(s => ComponentChanged.Removed(s.NetID.Value));
+
+            var changedComponents = addedComponents.Concat(removedComponents).ToList();
 
             var es = new EntityState(
                 Uid,
-                compStates,
-                Prototype.ID,
-                Name,
-                synchedComponentTypes);
+                changedComponents,
+                compStates);
             return es;
         }
 

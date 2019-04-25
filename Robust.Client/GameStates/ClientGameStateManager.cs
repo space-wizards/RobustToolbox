@@ -17,27 +17,29 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.GameStates
 {
+    /// <inheritdoc />
     public class ClientGameStateManager : IClientGameStateManager
     {
         private readonly List<GameState> _stateBuffer = new List<GameState>();
         private GameState _lastFullState;
         private bool _waitingForFull = true;
+        private bool _interpEnabled;
+        private int _interpRatio;
         private bool _logging;
 
-        [Dependency]
-        private readonly IClientEntityManager _entities;
-        [Dependency]
-        private readonly IPlayerManager _players;
-        [Dependency]
-        private readonly IClientNetManager _network;
-        [Dependency]
-        private readonly IBaseClient _client;
-        [Dependency]
-        private readonly IMapManager _mapManager;
-        [Dependency]
-        private readonly IGameTiming _timing;
-        [Dependency]
-        private readonly IConfigurationManager _config;
+        [Dependency] private readonly IClientEntityManager _entities;
+        [Dependency] private readonly IPlayerManager _players;
+        [Dependency] private readonly IClientNetManager _network;
+        [Dependency] private readonly IBaseClient _client;
+        [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IGameTiming _timing;
+        [Dependency] private readonly IConfigurationManager _config;
+
+        /// <inheritdoc />
+        public int MinBufferSize => _interpEnabled ? 3 : 2;
+
+        /// <inheritdoc />
+        public int TargetBufferSize => MinBufferSize + _interpRatio;
 
         /// <inheritdoc />
         public void Initialize()
@@ -47,19 +49,24 @@ namespace Robust.Client.GameStates
             _client.RunLevelChanged += RunLevelChanged;
 
             if(!_config.IsCVarRegistered("net.interp"))
-                _config.RegisterCVar("net.interp", false, CVar.ARCHIVE);
+                _config.RegisterCVar("net.interp", false, CVar.ARCHIVE, b => _interpEnabled = b);
 
             if (!_config.IsCVarRegistered("net.interp_ratio"))
-                _config.RegisterCVar("net.interp_ratio", 0, CVar.ARCHIVE);
+                _config.RegisterCVar("net.interp_ratio", 0, CVar.ARCHIVE, i => _interpRatio = i < 0 ? 0 : i);
 
             if (!_config.IsCVarRegistered("net.logging"))
                 _config.RegisterCVar("net.logging", false, CVar.ARCHIVE, b => _logging = b);
+
+            _interpEnabled = _config.GetCVar<bool>("net.interp");
+
+            _interpRatio = _config.GetCVar<int>("net.interp_ratio");
+            _interpRatio = _interpRatio < 0 ? 0 : _interpRatio; // min bound, < 0 makes no sense
 
             _logging = _config.GetCVar<bool>("net.logging");
         }
 
         /// <inheritdoc />
-        public void Shutdown()
+        public void Reset()
         {
             _stateBuffer.Clear();
             _lastFullState = null;
@@ -135,23 +142,10 @@ namespace Robust.Client.GameStates
                 Logger.DebugS("net.state", $"Received New GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={message.MsgSize}, buf={_stateBuffer.Count}");
         }
 
+        /// <inheritdoc />
         public void ApplyGameState()
         {
-            var doInterp = _config.GetCVar<bool>("net.interp");
-            var bufSz = _config.GetCVar<int>("net.interp_ratio");
-            bufSz = bufSz < 0 ? 0 : bufSz; // min bound, < 0 makes no sense
-
-            int targetBufferSize;
-            if(doInterp)
-            {
-                targetBufferSize = 3 + bufSz; // absolute minimum is 3 states in buffer for the system to work (last, cur, next)
-            }
-            else
-            {
-                targetBufferSize = 2 + bufSz; // only need to buffer last and cur
-            }
-
-            if (CalculateNextStates(_timing.CurTick, out var curState, out var nextState, targetBufferSize))
+            if (CalculateNextStates(_timing.CurTick, out var curState, out var nextState, TargetBufferSize))
             {
                 if (_logging)
                     Logger.DebugS("net.state", $"Applying State:  ext={curState.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
@@ -164,7 +158,7 @@ namespace Robust.Client.GameStates
                 // This will slightly speed up or slow down the client tickrate based on the contents of the buffer.
                 // CalcNextState should have just cleaned out any old states, so the buffer contains [t-1(last), t+0(cur), t+1(next), t+2, t+3, ..., t+n]
                 // we can use this info to properly time our tickrate so it does not run fast or slow compared to the server.
-                _timing.TickTimingAdjustment = (_stateBuffer.Count - (float) targetBufferSize) * 0.10f;
+                _timing.TickTimingAdjustment = (_stateBuffer.Count - (float) TargetBufferSize) * 0.10f;
             }
             else
             {
@@ -174,110 +168,121 @@ namespace Robust.Client.GameStates
 
         private bool CalculateNextStates(GameTick curTick, out GameState curState, out GameState nextState, int targetBufferSize)
         {
-            var interpolate = targetBufferSize >= 3;
-
             if (_waitingForFull)
             {
-                if (_lastFullState != null)
+                return CalculateFullState(out curState, out nextState, targetBufferSize);
+            }
+            else // this will be how almost all states are calculated
+            {
+                return CalculateDeltaState(curTick, out curState, out nextState);
+            }
+        }
+
+        private bool CalculateFullState(out GameState curState, out GameState nextState, int targetBufferSize)
+        {
+            if (_lastFullState != null)
+            {
+                if (_logging)
+                    Logger.DebugS("net", $"Resync CurTick to: {_lastFullState.ToSequence}");
+
+                var curTick = _timing.CurTick = _lastFullState.ToSequence;
+
+                if (_interpEnabled)
                 {
-                    if (_logging)
-                        Logger.DebugS("net", $"Resync CurTick to: {_lastFullState.ToSequence}");
+                    // look for the next state
+                    var lastTick = new GameTick(curTick.Value - 1);
+                    var nextTick = new GameTick(curTick.Value + 1);
+                    nextState = null;
 
-                    curTick = _timing.CurTick = _lastFullState.ToSequence;
-
-                    if(interpolate)
+                    for (var i = 0; i < _stateBuffer.Count; i++)
                     {
-                        // look for the next state
-                        var lastTick = new GameTick(curTick.Value - 1);
-                        var nextTick = new GameTick(curTick.Value + 1);
-                        nextState = null;
-
-                        for (var i = 0; i < _stateBuffer.Count; i++)
+                        var state = _stateBuffer[i];
+                        if (state.ToSequence == nextTick)
                         {
-                            var state = _stateBuffer[i];
-                            if (state.ToSequence == nextTick)
-                            {
-                                nextState = state;
-                            }
-                            else if (state.ToSequence < lastTick) // remove any old states we find to keep the buffer clean
-                            {
-                                _stateBuffer.RemoveSwap(i);
-                                i--;
-                            }
+                            nextState = state;
                         }
-
-                        // we let the buffer fill up before starting to tick
-                        if (nextState != null && _stateBuffer.Count >= targetBufferSize)
+                        else if (state.ToSequence < lastTick) // remove any old states we find to keep the buffer clean
                         {
-                            curState = _lastFullState;
-                            _waitingForFull = false;
-                            return true;
+                            _stateBuffer.RemoveSwap(i);
+                            i--;
                         }
                     }
-                    else
+
+                    // we let the buffer fill up before starting to tick
+                    if (nextState != null && _stateBuffer.Count >= targetBufferSize)
                     {
                         curState = _lastFullState;
-                        nextState = default;
                         _waitingForFull = false;
                         return true;
                     }
                 }
-
-                // We just have to wait...
-                curState = default;
-                nextState = default;
-                return false;
-            }
-            else // this will be how almost all states are calculated
-            {
-                var lastTick = new GameTick(curTick.Value - 1);
-                var nextTick = new GameTick(curTick.Value + 1);
-
-                curState = null;
-                nextState = null;
-
-                for (var i = 0; i < _stateBuffer.Count; i++)
+                else if (_stateBuffer.Count >= targetBufferSize)
                 {
-                    var state = _stateBuffer[i];
-
-                    // remember there are no duplicate ToSequence states in the list.
-                    if (state.ToSequence == curTick)
-                    {
-                        curState = state;
-                    }
-                    else if (interpolate && state.ToSequence == nextTick)
-                    {
-                        nextState = state;
-                    }
-                    else if(state.ToSequence < lastTick) // remove any old states we find to keep the buffer clean
-                    {
-                        _stateBuffer.RemoveSwap(i);
-                        i--;
-                    }
-                }
-
-                // we found both the states to lerp between, this should be true almost always.
-                if ((interpolate && curState != null) || (!interpolate && curState != null && nextState != null))
+                    curState = _lastFullState;
+                    nextState = default;
+                    _waitingForFull = false;
                     return true;
-
-                if (curState == null)
-                {
-                    curState = ExtrapolateState(lastTick, curTick);
                 }
-
-                if (nextState == null && interpolate)
-                {
-                    nextState = ExtrapolateState(curTick, nextTick);
-                }
-
-                return true;
             }
+
+            if (_logging)
+                Logger.DebugS("net", $"Have FullState, filling buffer... ({_stateBuffer.Count}/{targetBufferSize})");
+
+            // waiting for full state or buffer to fill
+            curState = default;
+            nextState = default;
+            return false;
+        }
+
+        private bool CalculateDeltaState(GameTick curTick, out GameState curState, out GameState nextState)
+        {
+            var lastTick = new GameTick(curTick.Value - 1);
+            var nextTick = new GameTick(curTick.Value + 1);
+
+            curState = null;
+            nextState = null;
+
+            for (var i = 0; i < _stateBuffer.Count; i++)
+            {
+                var state = _stateBuffer[i];
+
+                // remember there are no duplicate ToSequence states in the list.
+                if (state.ToSequence == curTick)
+                {
+                    curState = state;
+                }
+                else if (_interpEnabled && state.ToSequence == nextTick)
+                {
+                    nextState = state;
+                }
+                else if (state.ToSequence < lastTick) // remove any old states we find to keep the buffer clean
+                {
+                    _stateBuffer.RemoveSwap(i);
+                    i--;
+                }
+            }
+
+            // we found both the states to interpolate between, this should almost always be true.
+            if ((_interpEnabled && curState != null) || (!_interpEnabled && curState != null && nextState != null))
+                return true;
+
+            if (curState == null)
+            {
+                curState = ExtrapolateState(lastTick, curTick);
+            }
+
+            if (nextState == null && _interpEnabled)
+            {
+                nextState = ExtrapolateState(curTick, nextTick);
+            }
+
+            return true;
         }
 
         /// <summary>
         ///     Generates a completely fake GameState.
         /// </summary>
-        private GameState ExtrapolateState(GameTick fromSequence, GameTick toSequence)
+        private static GameState ExtrapolateState(GameTick fromSequence, GameTick toSequence)
         {
            var state = new GameState(fromSequence, toSequence, null, null, null, null);
            state.Extrapolated = true;

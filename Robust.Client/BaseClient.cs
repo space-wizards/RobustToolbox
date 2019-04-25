@@ -162,7 +162,7 @@ namespace Robust.Client
 
             _stateManager.RequestStateChange<MainScreen>();
 
-            _gameStates.Shutdown();
+            _gameStates.Reset();
             _playMan.Shutdown();
             _entityManager.Shutdown();
             _mapManager.Shutdown();

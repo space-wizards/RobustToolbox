@@ -92,10 +92,14 @@ namespace Robust.Shared.GameObjects
             }
             set
             {
-                if(_entityName == value)
+                var newValue = value;
+                if (_entityPrototype != null && _entityPrototype.Name == newValue)
+                    newValue = null;
+
+                if (_entityName == newValue)
                     return;
 
-                _entityName = value;
+                _entityName = newValue;
                 Dirty();
             }
         }
@@ -112,10 +116,14 @@ namespace Robust.Shared.GameObjects
             }
             set
             {
-                if(_entityDescription == value)
+                var newValue = value;
+                if (_entityPrototype != null && _entityPrototype.Description == newValue)
+                    newValue = null;
+
+                if(_entityDescription == newValue)
                     return;
 
-                _entityDescription = value;
+                _entityDescription = newValue;
                 Dirty();
             }
         }

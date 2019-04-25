@@ -414,7 +414,6 @@ namespace Robust.Shared.GameObjects
             manager.ComponentManager.AddComponent<MetaDataComponent>(entity);
 
             entity.Prototype = this;
-            entity.Name = Name;
 
             return entity;
         }

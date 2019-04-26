@@ -7,6 +7,7 @@ using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
@@ -105,16 +106,18 @@ namespace Robust.Client.Debugging
                     if (transform.MapID != _eyeManager.CurrentMap || !transform.IsMapTransform)
                         continue;
 
-                    var colorEdge = boundingBox.DebugColor.WithAlpha(0.33f);
+                    Color colorEdge;
                     var colorFill = boundingBox.DebugColor.WithAlpha(0.25f);
                     Box2 worldBox;
                     if (boundingBox.Owner.TryGetComponent<ICollidableComponent>(out var collision))
                     {
                         worldBox = collision.WorldAABB;
+                        colorEdge = Color.Green.WithAlpha(0.33f);
                     }
                     else
                     {
                         worldBox = boundingBox.WorldAABB;
+                        colorEdge = Color.Red.WithAlpha(0.33f);
                     }
 
                     // if not on screen, or too small, continue
@@ -122,7 +125,7 @@ namespace Robust.Client.Debugging
                         continue;
 
                     worldHandle.DrawRect(worldBox, colorFill);
-                    worldHandle.DrawRect(worldBox, colorEdge, filled: false);
+                    worldHandle.DrawRect(worldBox, colorEdge, false);
                 }
             }
         }

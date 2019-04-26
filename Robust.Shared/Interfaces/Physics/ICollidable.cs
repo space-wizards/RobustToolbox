@@ -23,6 +23,8 @@ namespace Robust.Shared.Interfaces.Physics
         /// </summary>
         Box2 AABB { get; }
 
+        IPhysShape PhysicsShape { get; }
+
         /// <summary>
         ///     Enables or disabled collision processing of this body.
         /// </summary>

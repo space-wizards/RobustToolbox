@@ -20,6 +20,7 @@ namespace Robust.Client.GameObjects
 
         private bool _collisionIsActuallyEnabled;
         private bool _collisionEnabled;
+        private PhysShapeAabbComp _physShapeAabb;
 
         /// <inheritdoc />
         public override string Name => "Collidable";
@@ -30,11 +31,33 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public override Type StateType => typeof(CollidableComponentState);
 
-        /// <inheritdoc />
-        Box2 ICollidable.WorldAABB => Owner.GetComponent<BoundingBoxComponent>().WorldAABB;
 
         /// <inheritdoc />
-        Box2 ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB;
+        Box2 ICollidable.WorldAABB
+        {
+            get
+            {
+                var angle = Owner.Transform.WorldRotation;
+                var pos = Owner.Transform.WorldPosition;
+                return _physShapeAabb.CalculateLocalBounds(angle).Translated(pos);
+            }
+        }
+
+        /// <inheritdoc />
+        Box2 ICollidable.AABB
+        {
+            get
+            {
+                var angle = Owner.Transform.WorldRotation;
+                return _physShapeAabb.CalculateLocalBounds(angle);
+            }
+        }
+
+        /// <inheritdoc />
+        public IPhysShape PhysicsShape
+        {
+            get => _physShapeAabb;
+        }
 
         /// <inheritdoc />
         public MapId MapID => Owner.Transform.MapID;
@@ -94,6 +117,9 @@ namespace Robust.Client.GameObjects
         public override void Initialize()
         {
             base.Initialize();
+
+            // normally ExposeData would create this
+            _physShapeAabb = new PhysShapeAabbComp(Owner);
 
             if (_collisionEnabled && !_collisionIsActuallyEnabled)
             {

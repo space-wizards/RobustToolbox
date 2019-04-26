@@ -8,6 +8,7 @@ using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -34,7 +35,7 @@ namespace Robust.Client.GameStates
         {
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = _eyeManager.GetWorldViewport();
-            foreach (var boundingBox in _componentManager.GetAllComponents<ClientBoundingBoxComponent>())
+            foreach (var boundingBox in _componentManager.GetAllComponents<CollidableComponent>())
             {
                 // all entities have a TransformComponent
                 var transform = boundingBox.Owner.Transform;
@@ -47,7 +48,7 @@ namespace Robust.Client.GameStates
                 if(transform.LocalPosition == transform.LerpDestination)
                     continue;
 
-                var aabb = boundingBox.AABB;
+                var aabb = ((ICollidable)boundingBox).AABB;
 
                 // if not on screen, or too small, continue
                 if (!aabb.Translated(transform.WorldPosition).Intersects(viewport) || aabb.IsEmpty())

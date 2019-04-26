@@ -119,7 +119,7 @@ namespace Robust.Shared.Physics
         /// <param name="collidable">Collidable being tested.</param>
         /// <param name="colliderAABB">The AABB of the collidable being tested. This can be ICollidable.WorldAABB, or a modified version of it.</param>
         /// <param name="results">An empty list that the function stores all colliding bodies inside of.</param>
-        public void DoCollisionTest(ICollidable collidable, Box2 colliderAABB, List<ICollidable> results)
+        internal void DoCollisionTest(ICollidable collidable, Box2 colliderAABB, List<ICollidable> results)
         {
             foreach (var body in GetCollidablesForLocation(colliderAABB))
             {

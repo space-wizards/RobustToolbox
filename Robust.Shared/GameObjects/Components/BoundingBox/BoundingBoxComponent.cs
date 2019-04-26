@@ -46,7 +46,7 @@ namespace Robust.Shared.GameObjects
             get
             {
                 var trans = Owner.Transform;
-                return AABB.Translated(trans.WorldPosition);
+                return _aabb.Translated(trans.WorldPosition);
             }
         }
 

@@ -7,6 +7,7 @@ using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -23,6 +24,7 @@ namespace Robust.Server.GameObjects
         private int _collisionLayer;
         private int _collisionMask;
         private bool _isScrapingFloor;
+        private PhysShapeAabbComp _physShapeAabb;
 
         /// <inheritdoc />
         public override string Name => "Collidable";
@@ -43,6 +45,7 @@ namespace Robust.Server.GameObjects
             serializer.DataField(ref _collisionLayer, "layer", 1);
             serializer.DataField(ref _collisionMask, "mask", 1);
             serializer.DataField(ref _isScrapingFloor, "IsScrapingFloor", false);
+            serializer.DataField(ref _physShapeAabb, "shape", new PhysShapeAabbComp(Owner));
         }
 
         /// <inheritdoc />
@@ -52,10 +55,27 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        Box2 ICollidable.WorldAABB => Owner.GetComponent<BoundingBoxComponent>().WorldAABB;
+        Box2 ICollidable.WorldAABB
+        {
+            get
+            {
+                var angle = Owner.Transform.WorldRotation;
+                var pos = Owner.Transform.WorldPosition;
+                return _physShapeAabb.CalculateLocalBounds(angle).Translated(pos);
+            }
+        }
 
         /// <inheritdoc />
-        Box2 ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB;
+        Box2 ICollidable.AABB
+        {
+            get
+            {
+                var angle = Owner.Transform.WorldRotation;
+                return _physShapeAabb.CalculateLocalBounds(angle);
+            }
+        }
+
+        public IPhysShape PhysicsShape => _physShapeAabb;
 
         /// <summary>
         ///     Enables or disabled collision processing of this component.
@@ -117,6 +137,13 @@ namespace Robust.Server.GameObjects
             {
                 collidecomponents[i].CollideWith(bumpedinto);
             }
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            _physShapeAabb.Entity = Owner;
         }
 
         /// <inheritdoc />

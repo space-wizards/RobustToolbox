@@ -10,30 +10,28 @@ namespace Robust.Shared.Map
     /// <inheritdoc />
     internal class MapChunk : IMapChunkInternal
     {
-        private readonly MapManager.MapGrid _grid;
+        private readonly IMapGridInternal _grid;
         private readonly MapIndices _gridIndices;
-        private readonly IMapManagerInternal _mapManager;
 
-        internal readonly Tile[,] _tiles;
+        private readonly Tile[,] _tiles;
         private readonly SnapGridCell[,] _snapGrid;
 
+        /// <inheritdoc />
         public GameTick LastModifiedTick { get; private set; }
 
         /// <summary>
         ///     Constructs an instance of a MapGrid chunk.
         /// </summary>
-        /// <param name="manager"></param>
         /// <param name="grid"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <param name="chunkSize"></param>
-        public MapChunk(IMapManagerInternal manager, MapManager.MapGrid grid, int x, int y, ushort chunkSize)
+        public MapChunk(IMapGridInternal grid, int x, int y, ushort chunkSize)
         {
-            _mapManager = manager;
-            LastModifiedTick = _mapManager.GameTiming.CurTick;
-            ChunkSize = chunkSize;
             _grid = grid;
+            LastModifiedTick = grid.CurTick;
             _gridIndices = new MapIndices(x, y);
+            ChunkSize = chunkSize;
 
             _tiles = new Tile[ChunkSize, ChunkSize];
             _snapGrid = new SnapGridCell[ChunkSize, ChunkSize];
@@ -48,42 +46,51 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public int Y => _gridIndices.Y;
 
-        public MapIndices Index => new MapIndices(X, Y);
-
-        /// <summary>
-        ///     Returns the tile at the given indices. The tile indices are relative locations to the chunk origin,
-        ///     NOT local to the grid.
-        /// </summary>
-        /// <param name="xTile">The X tile index relative to the chunk origin.</param>
-        /// <param name="yTile">The Y tile index relative to the chunk origin.</param>
-        /// <returns>A reference to a tile.</returns>
-        public TileRef GetTile(ushort xTile, ushort yTile)
+        /// <inheritdoc />
+        public MapIndices Indices => _gridIndices;
+        
+        /// <inheritdoc />
+        public TileRef GetTileRef(ushort xIndex, ushort yIndex)
         {
-            // array out of bounds
-            if (xTile >= ChunkSize || yTile >= ChunkSize)
-                throw new ArgumentOutOfRangeException("Tile indices out of bounds.");
+            if (xIndex >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(xIndex), "Tile indices out of bounds.");
 
-            var indices = ChunkTileToGridTile(new MapIndices(xTile, yTile));
-            return new TileRef(_grid.ParentMapId, _grid.Index, indices.X, indices.Y, _tiles[xTile, yTile]);
-        }
+            if (yIndex >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(yIndex), "Tile indices out of bounds.");
 
-        public TileRef GetTile(MapIndices indices)
-        {
-            // array out of bounds
-            if (indices.X >= ChunkSize || indices.X < 0 || indices.Y >= ChunkSize || indices.Y < 0)
-                throw new ArgumentOutOfRangeException("Tile indices out of bounds.");
-
-            return new TileRef(_grid.ParentMapId, _grid.Index, indices.X, indices.Y, _tiles[indices.X, indices.Y]);
+            var indices = ChunkTileToGridTile(new MapIndices(xIndex, yIndex));
+            return new TileRef(_grid.ParentMapId, _grid.Index, indices, _tiles[xIndex, yIndex]);
         }
 
         /// <inheritdoc />
-        [Obsolete("Enumerate over the chunk instead.")]
+        public TileRef GetTileRef(MapIndices indices)
+        {
+            if (indices.X >= ChunkSize || indices.X < 0 || indices.Y >= ChunkSize || indices.Y < 0)
+                throw new ArgumentOutOfRangeException(nameof(indices), "Tile indices out of bounds.");
+
+            var chunkIndices = ChunkTileToGridTile(indices);
+            return new TileRef(_grid.ParentMapId, _grid.Index, chunkIndices, _tiles[indices.X, indices.Y]);
+        }
+
+        /// <inheritdoc />
+        public Tile GetTile(ushort xIndex, ushort yIndex)
+        {
+            if (xIndex >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(xIndex), "Tile indices out of bounds.");
+
+            if (yIndex >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(yIndex), "Tile indices out of bounds.");
+
+            return _tiles[xIndex, yIndex];
+        }
+
+        /// <inheritdoc />
         public IEnumerable<TileRef> GetAllTiles(bool ignoreEmpty = true)
         {
             for (var x = 0; x < ChunkSize; x++)
             for (var y = 0; y < ChunkSize; y++)
             {
-                if (_tiles[x, y].IsEmpty)
+                if (ignoreEmpty && _tiles[x, y].IsEmpty)
                     continue;
 
                 var indices = ChunkTileToGridTile(new MapIndices(x, y));
@@ -92,23 +99,25 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void SetTile(ushort xChunkTile, ushort yChunkTile, Tile tile)
+        public void SetTile(ushort xIndex, ushort yIndex, Tile tile)
         {
-            if (xChunkTile >= ChunkSize || yChunkTile >= ChunkSize)
-                throw new ArgumentException("Tile indices out of bounds.");
+            if (xIndex >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(xIndex), "Tile indices out of bounds.");
+
+            if (yIndex >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(yIndex), "Tile indices out of bounds.");
 
             // same tile, no point to continue
-            if (_tiles[xChunkTile, yChunkTile].TypeId == tile.TypeId)
+            if (_tiles[xIndex, yIndex].TypeId == tile.TypeId)
                 return;
 
-            var gridTile = ChunkTileToGridTile(new MapIndices(xChunkTile, yChunkTile));
-            var newTileRef = new TileRef(_grid.ParentMapId, _grid.Index, gridTile.X, gridTile.Y, tile);
-            var oldTile = _tiles[xChunkTile, yChunkTile];
-            _grid.LastModifiedTick = LastModifiedTick = _mapManager.GameTiming.CurTick;
-            _mapManager.RaiseOnTileChanged(newTileRef, oldTile);
-            _grid.UpdateAABB(gridTile, tile.IsEmpty);
+            var gridTile = ChunkTileToGridTile(new MapIndices(xIndex, yIndex));
+            var newTileRef = new TileRef(_grid.ParentMapId, _grid.Index, gridTile, tile);
+            var oldTile = _tiles[xIndex, yIndex];
+            LastModifiedTick = _grid.CurTick;
+            _grid.NotifyTileChanged(newTileRef, oldTile);
 
-            _tiles[xChunkTile, yChunkTile] = tile;
+            _tiles[xIndex, yIndex] = tile;
         }
 
         /// <summary>
@@ -120,6 +129,9 @@ namespace Robust.Shared.Map
             for (var x = 0; x < ChunkSize; x++)
             for (var y = 0; y < ChunkSize; y++)
             {
+                if (_tiles[x, y].IsEmpty)
+                    continue;
+
                 var gridTile = ChunkTileToGridTile(new MapIndices(x, y));
                 yield return new TileRef(_grid.ParentMapId, _grid.Index, gridTile.X, gridTile.Y, _tiles[x, y]);
             }
@@ -140,36 +152,35 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void SetTile(ushort xChunkTile, ushort yChunkTile, ushort tileId, ushort tileData = 0)
-        {
-            SetTile(xChunkTile, yChunkTile, new Tile(tileId, tileData));
-        }
-
-
         public IEnumerable<SnapGridComponent> GetSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset)
         {
-            var cell = _snapGrid[xCell, yCell];
-            List<SnapGridComponent> list;
-            if (offset == SnapGridOffset.Center)
-            {
-                list = cell.Center;
-            }
-            else
-            {
-                list = cell.Edge;
-            }
+            if (xCell >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(xCell), "Tile indices out of bounds.");
 
-            if (list != null)
+            if (yCell >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(yCell), "Tile indices out of bounds.");
+
+            var cell = _snapGrid[xCell, yCell];
+            var list = offset == SnapGridOffset.Center ? cell.Center : cell.Edge;
+
+            if (list == null)
+                yield break;
+
+            foreach (var element in list)
             {
-                foreach (var element in list)
-                {
-                    yield return element;
-                }
+                yield return element;
             }
         }
 
+        /// <inheritdoc />
         public void AddToSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset, SnapGridComponent snap)
         {
+            if (xCell >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(xCell), "Tile indices out of bounds.");
+
+            if (yCell >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(yCell), "Tile indices out of bounds.");
+
             ref var cell = ref _snapGrid[xCell, yCell];
             if (offset == SnapGridOffset.Center)
             {
@@ -189,8 +200,15 @@ namespace Robust.Shared.Map
             }
         }
 
+        /// <inheritdoc />
         public void RemoveFromSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset, SnapGridComponent snap)
         {
+            if (xCell >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(xCell), "Tile indices out of bounds.");
+
+            if (yCell >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(yCell), "Tile indices out of bounds.");
+
             ref var cell = ref _snapGrid[xCell, yCell];
             if (offset == SnapGridOffset.Center)
             {
@@ -215,7 +233,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"Chunk {_gridIndices}, {ChunkSize}";
+            return $"Chunk {_gridIndices}";
         }
 
         private struct SnapGridCell

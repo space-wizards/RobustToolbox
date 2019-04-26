@@ -194,6 +194,7 @@
     <Compile Include="Map\Coordinates.cs" />
     <Compile Include="Map\IMapChunk.cs" />
     <Compile Include="Map\IMapChunkInternal.cs" />
+    <Compile Include="Map\IMapGridInternal.cs" />
     <Compile Include="Map\IMapManagerInternal.cs" />
     <Compile Include="Map\MapId.cs" />
     <Compile Include="Map\MapManager.cs" />

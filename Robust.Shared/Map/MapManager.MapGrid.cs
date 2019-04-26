@@ -11,7 +11,7 @@ namespace Robust.Shared.Map
     public partial class MapManager
     {
         /// <inheritdoc />
-        internal class MapGrid : IMapGrid
+        internal class MapGrid : IMapGridInternal
         {
             /// <summary>
             ///     Game tick that the map was created.
@@ -21,7 +21,9 @@ namespace Robust.Shared.Map
             /// <summary>
             ///     Last game tick that the map was modified.
             /// </summary>
-            public GameTick LastModifiedTick { get; internal set; }
+            public GameTick LastModifiedTick { get; set; }
+
+            public GameTick CurTick => _mapManager.GameTiming.CurTick;
 
             /// <inheritdoc />
             public bool IsDefaultGrid => ParentMap.DefaultGrid == this;
@@ -135,6 +137,14 @@ namespace Robust.Shared.Map
             }
 
             /// <inheritdoc />
+            public void NotifyTileChanged(in TileRef tileRef, in Tile oldTile)
+            {
+                LastModifiedTick = _mapManager.GameTiming.CurTick;
+                UpdateAABB(tileRef.GridIndices, tileRef.Tile.IsEmpty);
+                _mapManager.RaiseOnTileChanged(tileRef, oldTile);
+            }
+
+            /// <inheritdoc />
             public bool OnSnapCenter(Vector2 position)
             {
                 return (FloatMath.CloseTo(position.X % SnapSize, 0) && FloatMath.CloseTo(position.Y % SnapSize, 0));
@@ -166,7 +176,7 @@ namespace Robust.Shared.Map
                 }
 
                 var chunkTileIndices = output.GridTileToChunkTile(tileCoordinates);
-                return output.GetTile((ushort)chunkTileIndices.X, (ushort)chunkTileIndices.Y);
+                return output.GetTileRef((ushort)chunkTileIndices.X, (ushort)chunkTileIndices.Y);
             }
 
             /// <inheritdoc />
@@ -225,7 +235,7 @@ namespace Robust.Shared.Map
                         if (_chunks.TryGetValue(gridChunk, out var chunk))
                         {
                             var chunkTile = chunk.GridTileToChunkTile(new MapIndices(x, y));
-                            var tile = chunk.GetTile((ushort)chunkTile.X, (ushort)chunkTile.Y);
+                            var tile = chunk.GetTileRef((ushort)chunkTile.X, (ushort)chunkTile.Y);
 
                             if (ignoreEmpty && tile.Tile.IsEmpty)
                                 continue;
@@ -270,7 +280,7 @@ namespace Robust.Shared.Map
                 if (_chunks.TryGetValue(chunkIndices, out var output))
                     return output;
 
-                return _chunks[chunkIndices] = new MapChunk(_mapManager, this, chunkIndices.X, chunkIndices.Y, ChunkSize);
+                return _chunks[chunkIndices] = new MapChunk(this, chunkIndices.X, chunkIndices.Y, ChunkSize);
             }
 
             /// <inheritdoc />
@@ -423,7 +433,7 @@ namespace Robust.Shared.Map
                     return false;
                 }
                 var chunk = _chunks[chunkIndices];
-                tile = chunk.GetTile(new MapIndices(indices.X % ChunkSize, indices.Y % ChunkSize));
+                tile = chunk.GetTileRef(new MapIndices(indices.X % ChunkSize, indices.Y % ChunkSize));
                 return true;
             }
 

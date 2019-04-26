@@ -15,40 +15,52 @@ namespace Robust.Shared.Map
         ushort ChunkSize { get; }
 
         /// <summary>
-        ///     The X index of this chunk.
+        ///     The X index of this chunk inside the <see cref="IMapGrid"/>.
         /// </summary>
         int X { get; }
 
         /// <summary>
-        ///     The Y index of this chunk.
+        ///     The Y index of this chunk inside the <see cref="IMapGrid"/>.
         /// </summary>
         int Y { get; }
 
-        MapIndices Index { get; }
-
         /// <summary>
-        ///     Returns the tile at the given indices. The tile indices are relative locations to the
-        ///     chunk origin, NOT the grid origin.
+        ///     The positional indices of this chunk in the <see cref="IMapGrid"/>.
         /// </summary>
-        /// <param name="xTile">The X tile index relative to the chunk.</param>
-        /// <param name="yTile">The Y tile index relative to the chunk.</param>
-        /// <returns>A reference to a tile.</returns>
-        TileRef GetTile(ushort xTile, ushort yTile);
+        MapIndices Indices { get; }
 
         /// <summary>
-        ///     Returns all of the tiles in the chunk.
+        ///     Returns the tile at the given indices.
+        /// </summary>
+        /// <param name="xIndex">The X tile index relative to the chunk origin.</param>
+        /// <param name="yIndex">The Y tile index relative to the chunk origin.</param>
+        /// <returns>A reference to a tile.</returns>
+        TileRef GetTileRef(ushort xIndex, ushort yIndex);
+
+        /// <summary>
+        ///     Returns the tile reference at the given indices.
+        /// </summary>
+        /// <param name="indices">The tile indices relative to the chunk origin.</param>
+        /// <returns>A reference to a tile.</returns>
+        TileRef GetTileRef(MapIndices indices);
+
+        Tile GetTile(ushort xIndex, ushort yIndex);
+
+        /// <summary>
+        ///     Returns all of the tiles in the chunk, while optionally filtering empty files.
+        ///     Returned order is guaranteed to be row-major.
         /// </summary>
         /// <param name="ignoreEmpty">Will empty (space) tiles be added to the collection?</param>
         /// <returns></returns>
         IEnumerable<TileRef> GetAllTiles(bool ignoreEmpty = true);
-
+        
         /// <summary>
         ///     Replaces a single tile inside of the chunk.
         /// </summary>
-        /// <param name="xChunkTile">The X tile index relative to the chunk.</param>
-        /// <param name="yChunkTile">The Y tile index relative to the chunk.</param>
+        /// <param name="xIndex">The X tile index relative to the chunk.</param>
+        /// <param name="yIndex">The Y tile index relative to the chunk.</param>
         /// <param name="tile">The new tile to insert.</param>
-        void SetTile(ushort xChunkTile, ushort yChunkTile, Tile tile);
+        void SetTile(ushort xIndex, ushort yIndex, Tile tile);
 
         /// <summary>
         ///     Transforms Tile indices relative to the grid into tile indices relative to this chunk.

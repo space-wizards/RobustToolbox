@@ -18,7 +18,7 @@ namespace Robust.Shared.Map
             internal GameTick LastModifiedTick { get; private set; }
             private readonly MapGrid _grid;
             private readonly MapIndices _gridIndices;
-            private readonly MapManager _mapManager;
+            private readonly IMapManagerInternal _mapManager;
 
             internal readonly Tile[,] _tiles;
             private readonly SnapGridCell[,] _snapGrid;
@@ -31,10 +31,10 @@ namespace Robust.Shared.Map
             /// <param name="x"></param>
             /// <param name="y"></param>
             /// <param name="chunkSize"></param>
-            public Chunk(MapManager manager, MapGrid grid, int x, int y, ushort chunkSize)
+            public Chunk(IMapManagerInternal manager, MapGrid grid, int x, int y, ushort chunkSize)
             {
                 _mapManager = manager;
-                LastModifiedTick = _mapManager._gameTiming.CurTick;
+                LastModifiedTick = _mapManager.GameTiming.CurTick;
                 ChunkSize = chunkSize;
                 _grid = grid;
                 _gridIndices = new MapIndices(x, y);
@@ -107,7 +107,7 @@ namespace Robust.Shared.Map
                 var gridTile = ChunkTileToGridTile(new MapIndices(xChunkTile, yChunkTile));
                 var newTileRef = new TileRef(_grid.ParentMapId, _grid.Index, gridTile.X, gridTile.Y, tile);
                 var oldTile = _tiles[xChunkTile, yChunkTile];
-                _grid.LastModifiedTick = LastModifiedTick = _mapManager._gameTiming.CurTick;
+                _grid.LastModifiedTick = LastModifiedTick = _mapManager.GameTiming.CurTick;
                 _mapManager.RaiseOnTileChanged(newTileRef, oldTile);
                 _grid.UpdateAABB(gridTile);
 

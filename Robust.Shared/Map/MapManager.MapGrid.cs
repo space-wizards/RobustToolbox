@@ -37,7 +37,7 @@ namespace Robust.Shared.Map
             /// </summary>
             internal readonly Dictionary<MapIndices, Chunk> _chunks = new Dictionary<MapIndices, Chunk>();
 
-            private readonly MapManager _mapManager;
+            private readonly IMapManagerInternal _mapManager;
             private Vector2 _worldPosition;
 
             /// <summary>
@@ -48,14 +48,15 @@ namespace Robust.Shared.Map
             /// <param name="chunkSize">The dimension of this square chunk.</param>
             /// <param name="snapSize">Distance in world units between the lines on the conceptual snap grid.</param>
             /// <param name="parentMapId">Parent map identifier.</param>
-            internal MapGrid(MapManager mapManager, GridId gridIndex, ushort chunkSize, float snapSize, MapId parentMapId)
+            internal MapGrid(IMapManagerInternal mapManager, GridId gridIndex, ushort chunkSize, float snapSize,
+                MapId parentMapId)
             {
                 _mapManager = mapManager;
                 Index = gridIndex;
                 ChunkSize = chunkSize;
                 SnapSize = snapSize;
                 ParentMapId = parentMapId;
-                LastModifiedTick = CreatedTick = _mapManager._gameTiming.CurTick;
+                LastModifiedTick = CreatedTick = _mapManager.GameTiming.CurTick;
             }
 
             /// <summary>
@@ -67,7 +68,7 @@ namespace Robust.Shared.Map
             }
 
             /// <inheritdoc />
-            public Box2 AABBWorld { get; private set; }
+            public Box2 WorldBounds { get; private set; }
 
             /// <inheritdoc />
             public ushort ChunkSize { get; }
@@ -90,7 +91,7 @@ namespace Robust.Shared.Map
                 set
                 {
                     _worldPosition = value;
-                    LastModifiedTick = _mapManager._gameTiming.CurTick;
+                    LastModifiedTick = _mapManager.GameTiming.CurTick;
                 }
             }
 
@@ -103,11 +104,11 @@ namespace Robust.Shared.Map
             {
                 var worldPos = GridTileToLocal(gridTile).ToWorld(_mapManager);
 
-                if (AABBWorld.Contains(worldPos.Position))
+                if (WorldBounds.Contains(worldPos.Position))
                     return;
 
                 // rect union
-                var a = AABBWorld;
+                var a = WorldBounds;
                 var b = worldPos;
 
                 var minX = Math.Min(a.Left, b.X);
@@ -116,7 +117,7 @@ namespace Robust.Shared.Map
                 var minY = Math.Min(a.Bottom, b.Y);
                 var maxY = Math.Max(a.Top, b.Y);
 
-                AABBWorld = Box2.FromDimensions(minX, minY, maxX - minX, maxY - minY);
+                WorldBounds = Box2.FromDimensions(minX, minY, maxX - minX, maxY - minY);
             }
 
             /// <inheritdoc />

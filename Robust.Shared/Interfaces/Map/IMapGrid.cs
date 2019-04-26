@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -9,12 +10,17 @@ namespace Robust.Shared.Interfaces.Map
     /// <summary>
     ///     This is a collection of tiles in a grid format.
     /// </summary>
+    [PublicAPI]
     public interface IMapGrid : IDisposable
     {
         /// <summary>
         ///     True if we are the default grid of our map.
         /// </summary>
         bool IsDefaultGrid { get; }
+
+        /// <summary>
+        ///     The map that this grid exists inside of.
+        /// </summary>
         IMap ParentMap { get; }
 
         /// <summary>
@@ -22,6 +28,9 @@ namespace Robust.Shared.Interfaces.Map
         /// </summary>
         MapId ParentMapId { get; set; }
 
+        /// <summary>
+        ///     The identifier of this grid.
+        /// </summary>
         GridId Index { get; }
 
         /// <summary>
@@ -32,7 +41,7 @@ namespace Robust.Shared.Interfaces.Map
         /// <summary>
         ///     The bounding box of the grid in world coordinates.
         /// </summary>
-        Box2 AABBWorld { get; }
+        Box2 WorldBounds { get; }
 
         /// <summary>
         ///     The length of a side of the square chunk in number of tiles.
@@ -96,6 +105,11 @@ namespace Robust.Shared.Interfaces.Map
         /// <param name="tileData">The new data of the tile.</param>
         void SetTile(GridCoordinates worldPos, ushort tileId, ushort tileData = 0);
 
+        /// <summary>
+        ///     Modifies a single tile inside of the chunk.
+        /// </summary>
+        /// <param name="gridIndices"></param>
+        /// <param name="tile">The tile to insert at the coordinates.</param>
         void SetTile(MapIndices gridIndices, Tile tile);
 
         /// <summary>
@@ -187,15 +201,17 @@ namespace Robust.Shared.Interfaces.Map
 
         /// <summary>
         ///     Transforms grid-space tile indices to local coordinates.
+        ///     The resulting coordinates are centered on the tile.
         /// </summary>
         /// <param name="gridTile"></param>
         /// <returns></returns>
         GridCoordinates GridTileToLocal(MapIndices gridTile);
 
         /// <summary>
-        ///     Transforms grid indices into an outvar tile, returns false if no tile is found
+        ///     Transforms grid indices into a tile reference, returns false if no tile is found.
         /// </summary>
-        /// <param name="gridTile">The Grid Tile indices.</param>
+        /// <param name="indices">The Grid Tile indices.</param>
+        /// <param name="tile"></param>
         /// <returns></returns>
         bool IndicesToTile(MapIndices indices, out TileRef tile);
 

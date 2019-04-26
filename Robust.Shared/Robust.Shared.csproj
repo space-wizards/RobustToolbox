@@ -193,6 +193,7 @@
     <Compile Include="Log\LogManager.cs" />
     <Compile Include="Map\GridId.cs" />
     <Compile Include="Map\Coordinates.cs" />
+    <Compile Include="Map\IMapManagerInternal.cs" />
     <Compile Include="Map\MapId.cs" />
     <Compile Include="Map\MapManager.cs" />
     <Compile Include="Map\MapManager.Network.cs" />

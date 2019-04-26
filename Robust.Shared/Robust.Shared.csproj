@@ -126,6 +126,7 @@
     <Compile Include="GameObjects\ComponentMessage.cs" />
     <Compile Include="GameObjects\ComponentMessages\Messages.cs" />
     <Compile Include="GameObjects\Components\Appearance\SharedAppearanceComponent.cs" />
+    <Compile Include="GameObjects\Components\MetaDataComponent.cs" />
     <Compile Include="GameObjects\Components\UserInterface\SharedUserInterfaceComponent.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\AudioMessages.cs" />
     <Compile Include="GameObjects\EntitySystemMessages\EffectMessage.cs" />

@@ -75,6 +75,11 @@ namespace Robust.Shared.Interfaces.GameObjects
         void Dirty();
 
         /// <summary>
+        ///     This is the tick the component was created.
+        /// </summary>
+        GameTick CreationTick { get; }
+
+        /// <summary>
         ///     This is the last game tick Dirty() was called.
         /// </summary>
         GameTick LastModifiedTick { get; }

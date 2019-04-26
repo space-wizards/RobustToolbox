@@ -15,6 +15,14 @@ namespace Robust.Client.GameObjects
     {
         public ClientComponentFactory()
         {
+            // Required for the engine to work
+            Register<MetaDataComponent>();
+            RegisterReference<MetaDataComponent, IMetaDataComponent>();
+
+            // Required for the engine to work
+            Register<TransformComponent>();
+            RegisterReference<TransformComponent, ITransformComponent>();
+
             Register<CollidableComponent>();
             RegisterReference<CollidableComponent, ICollidable>();
             RegisterReference<CollidableComponent, ICollidableComponent>();
@@ -22,8 +30,6 @@ namespace Robust.Client.GameObjects
             RegisterIgnore("KeyBindingInput");
             Register<PointLightComponent>();
             Register<PhysicsComponent>();
-            Register<TransformComponent>();
-            RegisterReference<TransformComponent, ITransformComponent>();
 
             Register<InputComponent>();
 

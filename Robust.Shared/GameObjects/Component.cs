@@ -59,6 +59,9 @@ namespace Robust.Shared.GameObjects
         public bool Deleted { get; private set; }
 
         [ViewVariables]
+        public GameTick CreationTick { get; private set; }
+
+        [ViewVariables]
         public GameTick LastModifiedTick { get; private set; }
 
         /// <inheritdoc />
@@ -99,6 +102,8 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Cannot Initialize a Deleted component!");
 
             Initialized = true;
+
+            CreationTick = Owner.EntityManager.CurrentTick;
         }
 
         /// <inheritdoc />

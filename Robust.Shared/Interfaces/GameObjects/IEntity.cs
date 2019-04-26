@@ -58,6 +58,11 @@ namespace Robust.Shared.Interfaces.GameObjects
         ITransformComponent Transform { get; }
 
         /// <summary>
+        ///     The MetaData Component of this entity.
+        /// </summary>
+        IMetaDataComponent MetaData { get; }
+
+        /// <summary>
         ///     Public method to add a component to an entity.
         ///     Calls the component's onAdd method, which also adds it to the component manager.
         /// </summary>

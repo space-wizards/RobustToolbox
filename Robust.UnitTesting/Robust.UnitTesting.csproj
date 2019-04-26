@@ -108,6 +108,7 @@
     <Compile Include="Server\GameObjects\Components\Transform_Test.cs" />
     <Compile Include="Shared\ContentPack\ResourceManagerTest.cs" />
     <Compile Include="Shared\GameObjects\ComponentManager_Test.cs" />
+    <Compile Include="Shared\GameObjects\EntityState_Tests.cs" />
     <Compile Include="Shared\IoC\IoCManager_Test.cs" />
     <Compile Include="Shared\Maths\Angle_Test.cs" />
     <Compile Include="Shared\Maths\UIBox2i_Test.cs" />

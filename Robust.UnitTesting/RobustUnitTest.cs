@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using Robust.Client;
@@ -158,6 +159,15 @@ namespace Robust.UnitTesting
                 GetConfigurationManager = IoCManager.Resolve<IConfigurationManager>();
                 GetConfigurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("./client_config.toml"));
             }
+
+            // Required components for the engine to work
+            var compFactory = IoCManager.Resolve<IComponentFactory>();
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(MetaDataComponent)))
+            {
+                compFactory.Register<MetaDataComponent>();
+                compFactory.RegisterReference<MetaDataComponent, IMetaDataComponent>();
+            }
+
 
             /*
             if (NeedsResourcePack)

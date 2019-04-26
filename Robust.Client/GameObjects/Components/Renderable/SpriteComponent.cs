@@ -1506,7 +1506,12 @@ namespace Robust.Client.GameObjects
                     continue;
                 }
 
-                var state = (layer.RSI ?? BaseRSI)[layer.State];
+                var rsi = layer.RSI ?? BaseRSI;
+                if (rsi == null)
+                {
+                    continue;
+                }
+                var state = rsi[layer.State];
                 RSI.State.Direction layerSpecificDir;
                 if (state.Directions == RSI.State.DirectionType.Dir1)
                 {

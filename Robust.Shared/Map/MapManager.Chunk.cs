@@ -8,6 +8,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map
 {
+    /// <inheritdoc cref="IMapManager"/>
     public partial class MapManager
     {
         /// <summary>
@@ -109,7 +110,7 @@ namespace Robust.Shared.Map
                 var oldTile = _tiles[xChunkTile, yChunkTile];
                 _grid.LastModifiedTick = LastModifiedTick = _mapManager.GameTiming.CurTick;
                 _mapManager.RaiseOnTileChanged(newTileRef, oldTile);
-                _grid.UpdateAABB(gridTile);
+                _grid.UpdateAABB(gridTile, tile.IsEmpty);
 
                 _tiles[xChunkTile, yChunkTile] = tile;
             }

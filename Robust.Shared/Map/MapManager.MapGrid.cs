@@ -68,7 +68,9 @@ namespace Robust.Shared.Map
             }
 
             /// <inheritdoc />
-            public Box2 WorldBounds { get; private set; }
+            public Box2 WorldBounds => LocalBounds.Translated(WorldPosition);
+
+            private Box2 LocalBounds = new Box2();
 
             /// <inheritdoc />
             public ushort ChunkSize { get; }
@@ -100,24 +102,36 @@ namespace Robust.Shared.Map
             /// nothing happens. If it is outside, the AABB is expanded to fit the new tile.
             /// </summary>
             /// <param name="gridTile">The new tile to check.</param>
-            public void UpdateAABB(MapIndices gridTile)
+            /// <param name="empty"></param>
+            public void UpdateAABB(MapIndices gridTile, bool empty)
             {
-                var worldPos = GridTileToLocal(gridTile).ToWorld(_mapManager);
+                var tileBounds = Box2.UnitCentered;
+                var localTilePos = GridTileToLocal(gridTile).Position;
+                tileBounds = tileBounds.Scale(TileSize).Translated(localTilePos);
 
-                if (WorldBounds.Contains(worldPos.Position))
-                    return;
+                if (!empty)
+                    LocalBounds = LocalBounds.Union(tileBounds); // expand if needed
+                else
+                {
+                    // check if at corner of bounds, only corners would change the grid bounds
+                    bool atCorner =
+                        tileBounds.BottomLeft == LocalBounds.BottomLeft ||
+                        tileBounds.BottomRight == LocalBounds.BottomRight ||
+                        tileBounds.TopLeft == LocalBounds.TopLeft ||
+                        tileBounds.TopRight == LocalBounds.TopRight;
 
-                // rect union
-                var a = WorldBounds;
-                var b = worldPos;
+                    if (!atCorner) // removing did nothing
+                        return;
 
-                var minX = Math.Min(a.Left, b.X);
-                var maxX = Math.Max(a.Right, b.X);
+                    // get walk directions
 
-                var minY = Math.Min(a.Bottom, b.Y);
-                var maxY = Math.Max(a.Top, b.Y);
+                    // walk the direction to find if we are the only tile in the row/column
 
-                WorldBounds = Box2.FromDimensions(minX, minY, maxX - minX, maxY - minY);
+                    // if only one, shrink bound side
+
+                    // else, do nothing
+
+                }
             }
 
             /// <inheritdoc />
@@ -396,7 +410,7 @@ namespace Robust.Shared.Map
             /// <inheritdoc />
             public GridCoordinates GridTileToLocal(MapIndices gridTile)
             {
-                return new GridCoordinates(gridTile.X * TileSize + (TileSize / 2), gridTile.Y * TileSize + (TileSize / 2), this);
+                return new GridCoordinates(gridTile.X * TileSize + (TileSize / 2f), gridTile.Y * TileSize + (TileSize / 2f), this);
             }
 
             /// <inheritdoc />

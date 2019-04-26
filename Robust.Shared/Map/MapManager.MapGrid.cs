@@ -35,7 +35,7 @@ namespace Robust.Shared.Map
             /// <summary>
             ///     Grid chunks than make up this grid.
             /// </summary>
-            internal readonly Dictionary<MapIndices, Chunk> _chunks = new Dictionary<MapIndices, Chunk>();
+            internal readonly Dictionary<MapIndices, MapChunk> _chunks = new Dictionary<MapIndices, MapChunk>();
 
             private readonly IMapManagerInternal _mapManager;
             private Vector2 _worldPosition;
@@ -270,7 +270,7 @@ namespace Robust.Shared.Map
                 if (_chunks.TryGetValue(chunkIndices, out var output))
                     return output;
 
-                return _chunks[chunkIndices] = new Chunk(_mapManager, this, chunkIndices.X, chunkIndices.Y, ChunkSize);
+                return _chunks[chunkIndices] = new MapChunk(_mapManager, this, chunkIndices.X, chunkIndices.Y, ChunkSize);
             }
 
             /// <inheritdoc />

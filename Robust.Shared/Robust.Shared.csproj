@@ -170,7 +170,6 @@
     <Compile Include="Interfaces\Resources\IResourceManager.cs" />
     <Compile Include="Interfaces\Resources\IWritableDirProvider.cs" />
     <Compile Include="Interfaces\Serialization\IRobustSerializer.cs" />
-    <Compile Include="Interfaces\Map\IMapChunk.cs" />
     <Compile Include="Interfaces\Map\IMapGrid.cs" />
     <Compile Include="Interfaces\Map\IMapManager.cs" />
     <Compile Include="Interfaces\Map\ITileDefinition.cs" />
@@ -193,6 +192,8 @@
     <Compile Include="Log\LogManager.cs" />
     <Compile Include="Map\GridId.cs" />
     <Compile Include="Map\Coordinates.cs" />
+    <Compile Include="Map\IMapChunk.cs" />
+    <Compile Include="Map\IMapChunkInternal.cs" />
     <Compile Include="Map\IMapManagerInternal.cs" />
     <Compile Include="Map\MapId.cs" />
     <Compile Include="Map\MapManager.cs" />
@@ -374,7 +375,7 @@
       <ResourceRoot />
       <Visible>False</Visible>
     </Resources>
-    <Compile Include="Map\MapManager.Chunk.cs" />
+    <Compile Include="Map\MapChunk.cs" />
     <Compile Include="Map\MapIndices.cs" />
     <Compile Include="GameObjects\Components\Renderable\SharedSpriteComponent.cs" />
     <Compile Include="Interfaces\Serialization\IExposeData.cs" />

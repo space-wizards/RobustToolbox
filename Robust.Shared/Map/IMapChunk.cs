@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Map;
+using Robust.Shared.Interfaces.Map;
 
-namespace Robust.Shared.Interfaces.Map
+namespace Robust.Shared.Map
 {
     /// <summary>
-    /// This is a square 'chunk' of a MapGrid.
+    ///     A square section of a <see cref="IMapGrid"/>.
     /// </summary>
     public interface IMapChunk : IEnumerable<TileRef>
     {

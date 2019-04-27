@@ -107,32 +107,24 @@ namespace Robust.Shared.Map
             /// <param name="empty"></param>
             public void UpdateAABB(MapIndices gridTile, bool empty)
             {
-                var tileBounds = Box2.UnitCentered;
-                var localTilePos = GridTileToLocal(gridTile).Position;
-                tileBounds = tileBounds.Scale(TileSize).Translated(localTilePos);
-
-                if (!empty)
-                    LocalBounds = LocalBounds.Union(tileBounds); // expand if needed
-                else
+                LocalBounds = new Box2();
+                foreach (var chunk in _chunks.Values)
                 {
-                    // check if at corner of bounds, only corners would change the grid bounds
-                    bool atCorner =
-                        tileBounds.BottomLeft == LocalBounds.BottomLeft ||
-                        tileBounds.BottomRight == LocalBounds.BottomRight ||
-                        tileBounds.TopLeft == LocalBounds.TopLeft ||
-                        tileBounds.TopRight == LocalBounds.TopRight;
+                    var chunkBounds = chunk.CalcLocalBounds();
 
-                    if (!atCorner) // removing did nothing
-                        return;
+                    if(chunkBounds.Size.Equals(Vector2i.Zero))
+                        continue;
 
-                    // get walk directions
-
-                    // walk the direction to find if we are the only tile in the row/column
-
-                    // if only one, shrink bound side
-
-                    // else, do nothing
-
+                    if (LocalBounds.Size == Vector2.Zero)
+                    {
+                        var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
+                        LocalBounds = gridBounds;
+                    }
+                    else
+                    {
+                        var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
+                        LocalBounds = LocalBounds.Union(gridBounds);
+                    }
                 }
             }
 

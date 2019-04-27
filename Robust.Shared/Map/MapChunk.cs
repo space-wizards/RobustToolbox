@@ -16,7 +16,7 @@ namespace Robust.Shared.Map
         private readonly Tile[,] _tiles;
         private readonly SnapGridCell[,] _snapGrid;
 
-        private Box2i _cachedBounds = new Box2i();
+        private Box2i _cachedBounds;
 
         /// <inheritdoc />
         public GameTick LastModifiedTick { get; private set; }
@@ -119,9 +119,9 @@ namespace Robust.Shared.Map
             LastModifiedTick = _grid.CurTick;
 
             _tiles[xIndex, yIndex] = tile;
+            CheckBounds(new Vector2i(xIndex, yIndex), tile.IsEmpty);
 
             _grid.NotifyTileChanged(newTileRef, oldTile);
-            CheckBounds(new Vector2i(xIndex, yIndex), tile.IsEmpty);
         }
 
         /// <summary>
@@ -153,6 +153,12 @@ namespace Robust.Shared.Map
             var x = MathHelper.Mod(gridTile.X, size);
             var y = MathHelper.Mod(gridTile.Y, size);
             return new MapIndices(x, y);
+        }
+
+        /// <inheritdoc />
+        public MapIndices ChunkTileToGridTile(MapIndices chunkTile)
+        {
+            return chunkTile + _gridIndices * ChunkSize;
         }
 
         /// <inheritdoc />
@@ -226,69 +232,95 @@ namespace Robust.Shared.Map
 
         private void CheckBounds(in Vector2i indices, bool empty)
         {
-            var tileBounds = new Box2i(0,0,1, 1);
-            tileBounds = tileBounds.Translated(indices);
+            var tileBounds = new Box2i(0,0,1, 1).Translated(indices);
 
             if (!empty)
             {
                 // placing tiles can only expand the bounds, it is easier to just blind union
-                if (_cachedBounds.Size.Equals(Vector2i.Zero))
-                    _cachedBounds = tileBounds;
-                else
-                    _cachedBounds = _cachedBounds.Union(tileBounds);
+                _cachedBounds = _cachedBounds.Size.Equals(Vector2i.Zero) ? tileBounds : _cachedBounds.Union(tileBounds);
             }
             else
             {
                 // removing tiles can only shrink the bounds, this is not an easy thing to detect
-                TrimBoundsX(_tiles, ChunkSize, indices, tileBounds, ref _cachedBounds);
-                TrimBoundsY(_tiles, ChunkSize, indices, tileBounds, ref _cachedBounds);
+                ReduceBoundsX(_tiles, tileBounds, ref _cachedBounds);
+                ReduceBoundsY(_tiles, tileBounds, ref _cachedBounds);
             }
         }
 
-        private static void TrimBoundsX(in Tile[,] tiles, int size, in Vector2i indices, in Box2i tBounds, ref Box2i cBounds)
+        private static void ReduceBoundsX(in Tile[,] tiles, Box2i tBounds, ref Box2i cBounds)
         {
             if (tBounds.Left != cBounds.Left && tBounds.Right != cBounds.Right)
                 return; // nothing to do, we are not on an edge
 
-            // check if we are the only tile holding the side out
-            bool onlyTile = IsOnlyTileOnY(tiles, size, indices);
+            var left = tBounds.Left == cBounds.Left;
 
-            if(!onlyTile)
-                return; // our removal does not modify the edge
+            // removing a tile can shrink the side more than one tile
+            while (cBounds.Width > 0)
+            {
+                // check if we are the only tile holding the side out
+                if(!AnyTileOnY(tiles, new Vector2i(cBounds.Bottom, cBounds.Top), tBounds.BottomLeft))
+                    return; // our removal does not modify the edge, we are done here
 
-            // shrink the chunk bounds
-            var newLeft  = tBounds.Left ==  cBounds.Left ?  cBounds.Left  + 1 : cBounds.Left;
-            var newRight = tBounds.Right == cBounds.Right ? cBounds.Right - 1 : cBounds.Right;
-            cBounds = new Box2i(newLeft, cBounds.Bottom, newRight, cBounds.Top);
+                // shrink the chunk bounds
+                int newLeft;
+                int newRight;
+                if (left)
+                {
+                    newLeft = cBounds.Left + 1;
+                    newRight = cBounds.Right;
+                    tBounds = tBounds.Translated(new Vector2i(1, 0));
+                }
+                else
+                {
+                    newLeft = cBounds.Left;
+                    newRight = cBounds.Right - 1;
+                    tBounds = tBounds.Translated(new Vector2i(-1, 0));
+                }
+                
+                cBounds = new Box2i(newLeft, cBounds.Bottom, newRight, cBounds.Top);
+            }
         }
 
-        private static void TrimBoundsY(in Tile[,] tiles, int size, in Vector2i indices, in Box2i tBounds, ref Box2i cBounds)
+        private static void ReduceBoundsY(in Tile[,] tiles, Box2i tBounds, ref Box2i cBounds)
         {
             if (tBounds.Bottom != cBounds.Bottom && tBounds.Top != cBounds.Top)
                 return; // nothing to do, we are not on an edge
 
-            // check if we are the only tile holding the side out
-            bool onlyTile = IsOnlyTileOnX(tiles, size, indices);
+            var bottom = tBounds.Bottom == cBounds.Bottom; // which side we are moving
 
-            if (!onlyTile)
-                return; // our removal does not modify the edge
+            // removing a tile can shrink the side more than one tile
+            while (cBounds.Height > 0)
+            {
+                // check if we are the only tile holding the side out
+                if (!AnyTileOnX(tiles, new Vector2i(cBounds.Left, cBounds.Right), tBounds.BottomLeft))
+                    return; // our removal does not modify the edge
 
-            // shrink the chunk bounds
-            var newLeft = tBounds.Bottom == cBounds.Bottom ? cBounds.Bottom + 1 : cBounds.Bottom;
-            var newRight = tBounds.Top == cBounds.Top ? cBounds.Top - 1 : cBounds.Top;
-            cBounds = new Box2i(newLeft, cBounds.Bottom, newRight, cBounds.Top);
+                // shrink the chunk bounds
+                int newBottom;
+                int newTop;
+                if (bottom)
+                {
+                    newBottom = cBounds.Bottom + 1;
+                    newTop = cBounds.Top;
+                    tBounds = tBounds.Translated(new Vector2i(0, 1));
+                }
+                else
+                {
+                    newBottom = cBounds.Bottom;
+                    newTop = cBounds.Top - 1;
+                    tBounds = tBounds.Translated(new Vector2i(0, -1));
+                }
+                
+                cBounds = new Box2i(cBounds.Left, newBottom, cBounds.Right, newTop);
+            }
         }
         
-        private static bool IsOnlyTileOnX(in Tile[,] tiles, int size, in Vector2i indices)
+        private static bool AnyTileOnX(in Tile[,] tiles, Vector2i extents, in Vector2i indices)
         {
-            var myX = indices.X;
             var y = indices.Y;
-            for (var x = 0; x < size; x++)
+            for (var x = extents.X; x < extents.Y; x++)
             {
                 if(tiles[x, y].IsEmpty)
-                    continue;
-
-                if(x == myX) // skip over me
                     continue;
                 
                 return false;
@@ -297,38 +329,26 @@ namespace Robust.Shared.Map
             return true;
         }
 
-        private static bool IsOnlyTileOnY(in Tile[,] tiles, int size, in Vector2i indices)
+        private static bool AnyTileOnY(in Tile[,] tiles, Vector2i extents, in Vector2i indices)
         {
             var x = indices.X;
-            var myY = indices.Y;
-            for (var y = 0; y < size; y++)
+            for (var y = extents.X; y < extents.Y; y++)
             {
                 if(tiles[x, y].IsEmpty)
                     continue;
-
-                if(y == myY)
-                    continue;
-
+                
                 return false;
             }
 
             return true;
         }
 
+        /// <inheritdoc />
         public Box2i CalcLocalBounds()
         {
             return _cachedBounds;
         }
 
-        /// <summary>
-        ///     Translates chunk tile indices to grid tile indices.
-        /// </summary>
-        /// <param name="chunkTile">The indices relative to the chunk origin.</param>
-        /// <returns>The indices relative to the grid origin.</returns>
-        private MapIndices ChunkTileToGridTile(MapIndices chunkTile)
-        {
-            return chunkTile + _gridIndices * ChunkSize;
-        }
 
         /// <inheritdoc />
         public override string ToString()

@@ -70,6 +70,13 @@ namespace Robust.Shared.Map
         /// <returns>Tile indices relative to this chunk.</returns>
         MapIndices GridTileToChunkTile(MapIndices gridTile);
 
+        /// <summary>
+        ///     Translates chunk tile indices to grid tile indices.
+        /// </summary>
+        /// <param name="chunkTile">The indices relative to the chunk origin.</param>
+        /// <returns>The indices relative to the grid origin.</returns>
+        MapIndices ChunkTileToGridTile(MapIndices chunkTile);
+
         IEnumerable<SnapGridComponent> GetSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset);
 
         void AddToSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset, SnapGridComponent snap);

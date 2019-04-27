@@ -15,6 +15,7 @@ using Robust.Shared.GameObjects;
 using System.Globalization;
 using Robust.Shared.Interfaces.GameObjects;
 using System.Linq;
+using Robust.Server.Interfaces.Timing;
 
 namespace Robust.Server.Maps
 {
@@ -36,6 +37,8 @@ namespace Robust.Server.Maps
 
         [Dependency]
         private readonly IServerEntityManagerInternal _serverEntityManager;
+
+        [Dependency] private readonly IPauseManager _pauseManager;
 
         /// <inheritdoc />
         public void SaveBlueprint(GridId gridId, string yamlPath)
@@ -63,8 +66,10 @@ namespace Robust.Server.Maps
         }
 
         /// <inheritdoc />
-        public IMapGrid LoadBlueprint(IMap map, string path)
+        public IMapGrid LoadBlueprint(IMap map, string path, BlueprintLoadOptions options = null)
         {
+            options = options ?? new BlueprintLoadOptions();
+
             TextReader reader;
             var resPath = new ResourcePath(path).ToRootedPath();
 
@@ -90,6 +95,7 @@ namespace Robust.Server.Maps
                 reader = new StreamReader(file);
             }
 
+            IMapGrid grid;
             using (reader)
             {
                 Logger.InfoS("map", $"Loading Grid: {resPath}");
@@ -103,8 +109,15 @@ namespace Robust.Server.Maps
 
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, (YamlMappingNode)data.RootNode, map);
                 context.Deserialize();
-                return context.Grids[0];
+                grid = context.Grids[0];
             }
+
+            if (options.DoMapInit)
+            {
+                _pauseManager.MapInitializeGrid(grid);
+            }
+
+            return grid;
         }
 
         /// <inheritdoc />

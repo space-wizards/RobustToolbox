@@ -390,6 +390,40 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.Throws<ArgumentOutOfRangeException>((() => chunk.RemoveFromSnapGridCell(0, 8, SnapGridOffset.Edge, new SnapGridComponent())));
         }
 
+        [Test]
+        public void BoundsExpandWhenTileAdded()
+        {
+            var chunk = MapChunkFactory(7, 9);
+
+            chunk.SetTile(3, 5, new Tile(1));
+            chunk.SetTile(5, 7, new Tile(1));
+
+            var bounds = chunk.CalcLocalBounds();
+
+            Assert.That(bounds.Left, Is.EqualTo(3));
+            Assert.That(bounds.Bottom, Is.EqualTo(5));
+            Assert.That(bounds.Right, Is.EqualTo(6));
+            Assert.That(bounds.Top, Is.EqualTo(8));
+        }
+
+        [Test]
+        public void BoundsContractWhenTileRemoved()
+        {
+            var chunk = MapChunkFactory(7, 9);
+
+            chunk.SetTile(3, 5, new Tile(1));
+            chunk.SetTile(5, 7, new Tile(1));
+
+            chunk.SetTile(3, 5, Tile.Empty);
+
+            var bounds = chunk.CalcLocalBounds();
+
+            Assert.That(bounds.Left, Is.EqualTo(5));
+            Assert.That(bounds.Bottom, Is.EqualTo(7));
+            Assert.That(bounds.Right, Is.EqualTo(6));
+            Assert.That(bounds.Top, Is.EqualTo(8));
+        }
+
         public IMapChunkInternal MapChunkFactory(int xChunkIndex, int yChunkIndex)
         {
             var mapGrid = new Mock<IMapGridInternal>();

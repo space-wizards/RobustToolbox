@@ -16,6 +16,8 @@ namespace Robust.Shared.Map
         private readonly Tile[,] _tiles;
         private readonly SnapGridCell[,] _snapGrid;
 
+        private Box2i _cachedBounds = new Box2i();
+
         /// <inheritdoc />
         public GameTick LastModifiedTick { get; private set; }
 
@@ -115,9 +117,11 @@ namespace Robust.Shared.Map
             var newTileRef = new TileRef(_grid.ParentMapId, _grid.Index, gridTile, tile);
             var oldTile = _tiles[xIndex, yIndex];
             LastModifiedTick = _grid.CurTick;
-            _grid.NotifyTileChanged(newTileRef, oldTile);
 
             _tiles[xIndex, yIndex] = tile;
+
+            _grid.NotifyTileChanged(newTileRef, oldTile);
+            CheckBounds(new Vector2i(xIndex, yIndex), tile.IsEmpty);
         }
 
         /// <summary>
@@ -218,6 +222,102 @@ namespace Robust.Shared.Map
             {
                 cell.Edge?.Remove(snap);
             }
+        }
+
+        private void CheckBounds(in Vector2i indices, bool empty)
+        {
+            var tileBounds = new Box2i(0,0,1, 1);
+            tileBounds = tileBounds.Translated(indices);
+
+            if (!empty)
+            {
+                // placing tiles can only expand the bounds, it is easier to just blind union
+                if (_cachedBounds.Size.Equals(Vector2i.Zero))
+                    _cachedBounds = tileBounds;
+                else
+                    _cachedBounds = _cachedBounds.Union(tileBounds);
+            }
+            else
+            {
+                // removing tiles can only shrink the bounds, this is not an easy thing to detect
+                TrimBoundsX(_tiles, ChunkSize, indices, tileBounds, ref _cachedBounds);
+                TrimBoundsY(_tiles, ChunkSize, indices, tileBounds, ref _cachedBounds);
+            }
+        }
+
+        private static void TrimBoundsX(in Tile[,] tiles, int size, in Vector2i indices, in Box2i tBounds, ref Box2i cBounds)
+        {
+            if (tBounds.Left != cBounds.Left && tBounds.Right != cBounds.Right)
+                return; // nothing to do, we are not on an edge
+
+            // check if we are the only tile holding the side out
+            bool onlyTile = IsOnlyTileOnY(tiles, size, indices);
+
+            if(!onlyTile)
+                return; // our removal does not modify the edge
+
+            // shrink the chunk bounds
+            var newLeft  = tBounds.Left ==  cBounds.Left ?  cBounds.Left  + 1 : cBounds.Left;
+            var newRight = tBounds.Right == cBounds.Right ? cBounds.Right - 1 : cBounds.Right;
+            cBounds = new Box2i(newLeft, cBounds.Bottom, newRight, cBounds.Top);
+        }
+
+        private static void TrimBoundsY(in Tile[,] tiles, int size, in Vector2i indices, in Box2i tBounds, ref Box2i cBounds)
+        {
+            if (tBounds.Bottom != cBounds.Bottom && tBounds.Top != cBounds.Top)
+                return; // nothing to do, we are not on an edge
+
+            // check if we are the only tile holding the side out
+            bool onlyTile = IsOnlyTileOnX(tiles, size, indices);
+
+            if (!onlyTile)
+                return; // our removal does not modify the edge
+
+            // shrink the chunk bounds
+            var newLeft = tBounds.Bottom == cBounds.Bottom ? cBounds.Bottom + 1 : cBounds.Bottom;
+            var newRight = tBounds.Top == cBounds.Top ? cBounds.Top - 1 : cBounds.Top;
+            cBounds = new Box2i(newLeft, cBounds.Bottom, newRight, cBounds.Top);
+        }
+        
+        private static bool IsOnlyTileOnX(in Tile[,] tiles, int size, in Vector2i indices)
+        {
+            var myX = indices.X;
+            var y = indices.Y;
+            for (var x = 0; x < size; x++)
+            {
+                if(tiles[x, y].IsEmpty)
+                    continue;
+
+                if(x == myX) // skip over me
+                    continue;
+                
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool IsOnlyTileOnY(in Tile[,] tiles, int size, in Vector2i indices)
+        {
+            var x = indices.X;
+            var myY = indices.Y;
+            for (var y = 0; y < size; y++)
+            {
+                if(tiles[x, y].IsEmpty)
+                    continue;
+
+                if(y == myY)
+                    continue;
+
+                return false;
+            }
+
+            return true;
+        }
+
+        public Box2i CalcLocalBounds()
+        {
+            return _cachedBounds;
         }
 
         /// <summary>

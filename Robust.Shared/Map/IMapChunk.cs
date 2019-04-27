@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.Map;
+using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map
 {
@@ -73,5 +74,7 @@ namespace Robust.Shared.Map
 
         void AddToSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset, SnapGridComponent snap);
         void RemoveFromSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset, SnapGridComponent snap);
+
+        Box2i CalcLocalBounds();
     }
 }

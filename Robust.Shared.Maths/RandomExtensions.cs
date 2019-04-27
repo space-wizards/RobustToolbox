@@ -32,5 +32,15 @@ namespace Robust.Shared.Maths
         {
             return (float)random.NextDouble();
         }
+
+        /// <summary>
+        ///     Have a certain chance to return a boolean.
+        /// </summary>
+        /// <param name="random">The random instance to run on.</param>
+        /// <param name="chance">The chance to pass, from 0 to 1.</param>
+        public static bool Prob(this Random random, float chance)
+        {
+            return random.NextDouble() <= chance;
+        }
     }
 }

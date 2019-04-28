@@ -18,7 +18,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Last game tick that the map was modified.
         /// </summary>
-        public GameTick LastModifiedTick { get; set; }
+        public GameTick LastModifiedTick { get; private set; }
 
         /// <inheritdoc />
         public GameTick CurTick => _mapManager.GameTiming.CurTick;
@@ -35,7 +35,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Grid chunks than make up this grid.
         /// </summary>
-        internal readonly Dictionary<MapIndices, MapChunk> _chunks = new Dictionary<MapIndices, MapChunk>();
+        private readonly Dictionary<MapIndices, IMapChunkInternal> _chunks = new Dictionary<MapIndices, IMapChunkInternal>();
 
         private readonly IMapManagerInternal _mapManager;
         private Vector2 _worldPosition;
@@ -70,7 +70,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Box2 WorldBounds => LocalBounds.Translated(WorldPosition);
 
-        private Box2 LocalBounds;
+        public Box2 LocalBounds { get; private set; }
 
         /// <inheritdoc />
         public ushort ChunkSize { get; }
@@ -103,7 +103,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="gridTile">The new tile to check.</param>
         /// <param name="empty"></param>
-        public void UpdateAABB(MapIndices gridTile, bool empty)
+        private void UpdateAABB(MapIndices gridTile, bool empty)
         {
             LocalBounds = new Box2();
             foreach (var chunk in _chunks.Values)
@@ -149,15 +149,15 @@ namespace Robust.Shared.Map
         #region TileAccess
 
         /// <inheritdoc />
-        public TileRef GetTile(GridCoordinates worldPos)
+        public TileRef GetTileRef(GridCoordinates worldPos)
         {
-            return GetTile(WorldToTile(worldPos));
+            return GetTileRef(WorldToTile(worldPos));
         }
 
         /// <inheritdoc />
-        public TileRef GetTile(MapIndices tileCoordinates)
+        public TileRef GetTileRef(MapIndices tileCoordinates)
         {
-            var chunkIndices = GridTileToGridChunk(tileCoordinates);
+            var chunkIndices = GridTileToChunkIndices(tileCoordinates);
 
             if (!_chunks.TryGetValue(chunkIndices, out var output))
             {
@@ -186,21 +186,10 @@ namespace Robust.Shared.Map
         public void SetTile(GridCoordinates worldPos, Tile tile)
         {
             var localTile = WorldToTile(worldPos);
-            SetTile(localTile.X, localTile.Y, tile);
-        }
-
-        private void SetTile(int xIndex, int yIndex, Tile tile)
-        {
-            var (chunk, chunkTile) = ChunkAndOffsetForTile(new MapIndices(xIndex, yIndex));
-            chunk.SetTile((ushort)chunkTile.X, (ushort)chunkTile.Y, tile);
+            SetTile(new MapIndices(localTile.X, localTile.Y), tile);
         }
 
         /// <inheritdoc />
-        public void SetTile(GridCoordinates worldPos, ushort tileId, ushort tileData = 0)
-        {
-            SetTile(worldPos, new Tile(tileId, tileData));
-        }
-
         public void SetTile(MapIndices gridIndices, Tile tile)
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(gridIndices);
@@ -220,7 +209,7 @@ namespace Robust.Shared.Map
             {
                 for (var y = gridTileLb.Y; y <= gridTileRt.Y; y++)
                 {
-                    var gridChunk = GridTileToGridChunk(new MapIndices(x, y));
+                    var gridChunk = GridTileToChunkIndices(new MapIndices(x, y));
 
                     if (_chunks.TryGetValue(gridChunk, out var chunk))
                     {
@@ -259,13 +248,13 @@ namespace Robust.Shared.Map
         public int ChunkCount => _chunks.Count;
 
         /// <inheritdoc />
-        public IMapChunk GetChunk(int xIndex, int yIndex)
+        public IMapChunkInternal GetChunk(int xIndex, int yIndex)
         {
             return GetChunk(new MapIndices(xIndex, yIndex));
         }
 
         /// <inheritdoc />
-        public IMapChunk GetChunk(MapIndices chunkIndices)
+        public IMapChunkInternal GetChunk(MapIndices chunkIndices)
         {
             if (_chunks.TryGetValue(chunkIndices, out var output))
                 return output;
@@ -274,12 +263,9 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public IEnumerable<IMapChunk> GetMapChunks()
+        public IReadOnlyDictionary<MapIndices, IMapChunkInternal> GetMapChunks()
         {
-            foreach (var kvChunk in _chunks)
-            {
-                yield return kvChunk.Value;
-            }
+            return _chunks;
         }
 
         #endregion ChunkAccess
@@ -340,7 +326,7 @@ namespace Robust.Shared.Map
 
         private (IMapChunk, MapIndices) ChunkAndOffsetForTile(MapIndices pos)
         {
-            var gridChunkIndices = GridTileToGridChunk(pos);
+            var gridChunkIndices = GridTileToChunkIndices(pos);
             var chunk = GetChunk(gridChunkIndices);
             var chunkTile = chunk.GridTileToChunkTile(pos);
             return (chunk, chunkTile);
@@ -390,7 +376,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Transforms global world coordinates to chunk indices relative to grid origin.
         /// </summary>
-        public MapIndices WorldToChunk(GridCoordinates posWorld)
+        public MapIndices LocalToChunkIndices(GridCoordinates posWorld)
         {
             var local = posWorld.ConvertToGrid(_mapManager, this);
             var x = (int)Math.Floor(local.X / (TileSize * ChunkSize));
@@ -399,7 +385,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public MapIndices GridTileToGridChunk(MapIndices gridTile)
+        public MapIndices GridTileToChunkIndices(MapIndices gridTile)
         {
             var x = (int)Math.Floor(gridTile.X / (float)ChunkSize);
             var y = (int)Math.Floor(gridTile.Y / (float)ChunkSize);
@@ -414,16 +400,17 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public bool IndicesToTile(MapIndices indices, out TileRef tile)
+        public bool TryGetTileRef(MapIndices indices, out TileRef tile)
         {
-            var chunkIndices = new MapIndices(indices.X / ChunkSize, indices.Y / ChunkSize);
-            if (!_chunks.ContainsKey(chunkIndices))
+            var chunkIndices = GridTileToChunkIndices(indices);
+            if (!_chunks.TryGetValue(chunkIndices, out var chunk))
             {
-                tile = new TileRef(); //Nothing should ever use or access this, bool check should occur first
+                tile = default;
                 return false;
             }
-            var chunk = _chunks[chunkIndices];
-            tile = chunk.GetTileRef(new MapIndices(indices.X % ChunkSize, indices.Y % ChunkSize));
+
+            var cTileIndices = chunk.GridTileToChunkTile(indices);
+            tile = chunk.GetTileRef(cTileIndices);
             return true;
         }
 

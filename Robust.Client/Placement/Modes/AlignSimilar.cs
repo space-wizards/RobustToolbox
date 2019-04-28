@@ -17,7 +17,7 @@ namespace Robust.Client.Placement.Modes
         {
             MouseCoords = ScreenToPlayerGrid(mouseScreen);
             var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GridID);
-            CurrentTile = mapGrid.GetTile(MouseCoords);
+            CurrentTile = mapGrid.GetTileRef(MouseCoords);
 
             if (pManager.CurrentPermission.IsTile)
             {

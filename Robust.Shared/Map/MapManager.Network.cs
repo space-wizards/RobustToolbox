@@ -30,7 +30,7 @@ namespace Robust.Shared.Map
                 }
 
                 var chunkData = new List<GameStateMapData.ChunkDatum>();
-                foreach (var (index, chunk) in grid._chunks)
+                foreach (var (index, chunk) in grid.GetMapChunks())
                 {
                     if (chunk.LastModifiedTick < fromTick)
                     {

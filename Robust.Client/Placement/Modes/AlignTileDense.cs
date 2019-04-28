@@ -14,7 +14,7 @@ namespace Robust.Client.Placement.Modes
             MouseCoords = ScreenToPlayerGrid(mouseScreen);
 
             var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GridID);
-            CurrentTile = mapGrid.GetTile(MouseCoords);
+            CurrentTile = mapGrid.GetTileRef(MouseCoords);
             float tileSize = mapGrid.TileSize; //convert from ushort to float
             GridDistancing = tileSize;
 

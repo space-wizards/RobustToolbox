@@ -109,7 +109,7 @@ namespace Robust.Client.UserInterface.CustomControls
                     mouseEntity = gameScreen.GetEntityUnderPosition(coords);
                 }
 
-                tile = _mapManager.GetGrid(coords.GridID).GetTile(coords);
+                tile = _mapManager.GetGrid(coords.GridID).GetTileRef(coords);
             }
             catch
             {

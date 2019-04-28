@@ -46,8 +46,10 @@ namespace Robust.Client.Graphics.Clyde
             gridProgram.SetUniform(UniModUV, new Vector4(0, 0, 1, 1));
             gridProgram.SetUniform(UniModulate, Color.White);
 
-            foreach (var grid in _mapManager.GetMap(map).GetAllGrids())
+            foreach (var mapGrid in _mapManager.GetMap(map).GetAllGrids())
             {
+                var grid = (IMapGridInternal) mapGrid;
+
                 if (!_mapChunkData.ContainsKey(grid.Index))
                 {
                     continue;
@@ -57,7 +59,7 @@ namespace Robust.Client.Graphics.Clyde
                 model.R1C2 = grid.WorldPosition.Y;
                 gridProgram.SetUniform(UniModelMatrix, model);
 
-                foreach (var chunk in grid.GetMapChunks())
+                foreach (var (index, chunk) in grid.GetMapChunks())
                 {
                     if (_isChunkDirty(grid, chunk))
                     {
@@ -199,7 +201,7 @@ namespace Robust.Client.Graphics.Clyde
             foreach (var (pos, _) in args.Modified)
             {
                 var grid = args.Grid;
-                var chunk = grid.GridTileToGridChunk(pos);
+                var chunk = grid.GridTileToChunkIndices(pos);
                 _setChunkDirty(grid, chunk);
             }
         }
@@ -207,7 +209,7 @@ namespace Robust.Client.Graphics.Clyde
         private void _updateTileMapOnUpdate(object sender, TileChangedEventArgs args)
         {
             var grid = _mapManager.GetGrid(args.NewTile.GridIndex);
-            var chunk = grid.GridTileToGridChunk(new MapIndices(args.NewTile.X, args.NewTile.Y));
+            var chunk = grid.GridTileToChunkIndices(new MapIndices(args.NewTile.X, args.NewTile.Y));
             _setChunkDirty(grid, chunk);
         }
 

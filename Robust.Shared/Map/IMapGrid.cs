@@ -75,14 +75,14 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="worldPos">The location of the tile in coordinates.</param>
         /// <returns>The tile at the world coordinates.</returns>
-        TileRef GetTile(GridCoordinates worldPos);
+        TileRef GetTileRef(GridCoordinates worldPos);
 
         /// <summary>
-        ///     Gets a tile a the given tile coordinates. This will not create a new chunk.
+        ///     Gets a tile a the given grid indices. This will not create a new chunk.
         /// </summary>
         /// <param name="tileCoordinates">The location of the tile in coordinates.</param>
         /// <returns>The tile at the tile coordinates.</returns>
-        TileRef GetTile(MapIndices tileCoordinates);
+        TileRef GetTileRef(MapIndices tileCoordinates);
 
         /// <summary>
         ///     Returns all tiles in the grid, in row-major order [xTileIndex, yTileIndex].
@@ -96,14 +96,6 @@ namespace Robust.Shared.Map
         /// <param name="worldPos"></param>
         /// <param name="tile">The tile to insert at the coordinates.</param>
         void SetTile(GridCoordinates worldPos, Tile tile);
-
-        /// <summary>
-        ///     Modifies a single tile inside of the chunk.
-        /// </summary>
-        /// <param name="worldPos"></param>
-        /// <param name="tileId">The new internal ID of the tile.</param>
-        /// <param name="tileData">The new data of the tile.</param>
-        void SetTile(GridCoordinates worldPos, ushort tileId, ushort tileData = 0);
 
         /// <summary>
         ///     Modifies a single tile inside of the chunk.
@@ -136,39 +128,7 @@ namespace Robust.Shared.Map
         void RemoveFromSnapGridCell(GridCoordinates worldPos, SnapGridOffset offset, SnapGridComponent snap);
 
         #endregion SnapGridAccess
-
-        #region ChunkAccess
-
-        /// <summary>
-        ///     The total number of chunks contained on this grid.
-        /// </summary>
-        int ChunkCount { get; }
-
-        /// <summary>
-        ///     Returns the chunk at the given indices. If the chunk does not exist,
-        ///     then a new one is generated that is filled with empty space.
-        /// </summary>
-        /// <param name="xIndex">The X index of the chunk in this grid.</param>
-        /// <param name="yIndex">The Y index of the chunk in this grid.</param>
-        /// <returns>The existing or new chunk.</returns>
-        IMapChunk GetChunk(int xIndex, int yIndex);
-
-        /// <summary>
-        ///     Returns the chunk at the given indices. If the chunk does not exist,
-        ///     then a new one is generated that is filled with empty space.
-        /// </summary>
-        /// <param name="chunkIndices">The indices of the chunk in this grid.</param>
-        /// <returns>The existing or new chunk.</returns>
-        IMapChunk GetChunk(MapIndices chunkIndices);
-
-        /// <summary>
-        ///     Returns all chunks in this grid. This will not generate new chunks.
-        /// </summary>
-        /// <returns>All chunks in the grid.</returns>
-        IEnumerable<IMapChunk> GetMapChunks();
-
-        #endregion ChunkAccess
-
+        
         #region Transforms
 
         /// <summary>
@@ -213,12 +173,17 @@ namespace Robust.Shared.Map
         /// <param name="indices">The Grid Tile indices.</param>
         /// <param name="tile"></param>
         /// <returns></returns>
-        bool IndicesToTile(MapIndices indices, out TileRef tile);
+        bool TryGetTileRef(MapIndices indices, out TileRef tile);
 
         /// <summary>
-        /// Transforms grid tile indices to grid chunk indices.
+        /// Transforms grid tile indices to chunk indices.
         /// </summary>
-        MapIndices GridTileToGridChunk(MapIndices gridTile);
+        MapIndices GridTileToChunkIndices(MapIndices gridTile);
+
+        /// <summary>
+        /// Transforms local grid coordinates to chunk indices.
+        /// </summary>
+        MapIndices LocalToChunkIndices(GridCoordinates posWorld);
 
         #endregion Transforms
     }

@@ -307,7 +307,7 @@ namespace Robust.Client.GameObjects
 
                 foreach (var effect in _owner._Effects)
                 {
-                    if (_mapManager.GetGrid(effect.Coordinates.GridID).ParentMap.Index != map)
+                    if (_mapManager.GetGrid(effect.Coordinates.GridID).ParentMapId != map)
                     {
                         continue;
                     }

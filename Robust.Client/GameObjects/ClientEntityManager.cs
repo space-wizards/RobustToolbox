@@ -22,7 +22,7 @@ namespace Robust.Client.GameObjects
         public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float Range)
         {
             var AABB = new Box2(position.Position - new Vector2(Range / 2, Range / 2), position.Position + new Vector2(Range / 2, Range / 2));
-            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).ParentMap.Index, AABB);
+            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).ParentMapId, AABB);
         }
 
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position)

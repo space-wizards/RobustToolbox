@@ -170,7 +170,7 @@
     <Compile Include="Interfaces\Resources\IResourceManager.cs" />
     <Compile Include="Interfaces\Resources\IWritableDirProvider.cs" />
     <Compile Include="Interfaces\Serialization\IRobustSerializer.cs" />
-    <Compile Include="Interfaces\Map\IMapGrid.cs" />
+    <Compile Include="Map\IMapGrid.cs" />
     <Compile Include="Interfaces\Map\IMapManager.cs" />
     <Compile Include="Interfaces\Map\ITileDefinition.cs" />
     <Compile Include="Interfaces\Map\ITileDefinitionManager.cs" />
@@ -306,7 +306,7 @@
     <Compile Include="GameObjects\Components\NetIDs.cs" />
     <Compile Include="Input\BoundKeyMap.cs" />
     <Compile Include="Map\MapManager.Map.cs" />
-    <Compile Include="Map\MapManager.MapGrid.cs" />
+    <Compile Include="Map\MapGrid.cs" />
     <Compile Include="ViewVariables\ViewVariablesAttribute.cs" />
     <Compile Include="ViewVariables\ViewVariablesBlob.cs" />
     <Compile Include="ViewVariables\ViewVariablesManagerShared.cs" />

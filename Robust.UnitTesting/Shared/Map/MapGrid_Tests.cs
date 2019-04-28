@@ -2,7 +2,7 @@
 using NUnit.Framework;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Map;
-using MapGrid = Robust.Shared.Map.MapManager.MapGrid;
+using MapGrid = Robust.Shared.Map.MapGrid;
 
 namespace Robust.UnitTesting.Shared.Map
 {

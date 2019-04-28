@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Map;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Maths;
 
-namespace Robust.Shared.Interfaces.Map
+namespace Robust.Shared.Map
 {
     /// <summary>
     ///     This is a collection of tiles in a grid format.

@@ -45,7 +45,7 @@ namespace Robust.Server.Maps
         {
             var grid = _mapManager.GetGrid(gridId);
 
-            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager);
+            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager);
             context.RegisterGrid(grid);
             var root = context.Serialize();
             var document = new YamlDocument(root);
@@ -66,10 +66,8 @@ namespace Robust.Server.Maps
         }
 
         /// <inheritdoc />
-        public IMapGrid LoadBlueprint(IMap map, string path, BlueprintLoadOptions options = null)
+        public IMapGrid LoadBlueprint(IMap map, string path)
         {
-            options = options ?? new BlueprintLoadOptions();
-
             TextReader reader;
             var resPath = new ResourcePath(path).ToRootedPath();
 
@@ -107,14 +105,17 @@ namespace Robust.Server.Maps
                     throw new InvalidDataException("Cannot instance map with multiple grids as blueprint.");
                 }
 
-                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, (YamlMappingNode)data.RootNode, map);
+                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, (YamlMappingNode)data.RootNode, map);
                 context.Deserialize();
                 grid = context.Grids[0];
-            }
 
-            if (options.DoMapInit)
-            {
-                _pauseManager.MapInitializeGrid(grid);
+                if (!context.MapIsPostInit && _pauseManager.IsMapInitialized(map))
+                {
+                    foreach (var entity in context.Entities)
+                    {
+                        entity.RunMapInit();
+                    }
+                }
             }
 
             return grid;
@@ -123,7 +124,7 @@ namespace Robust.Server.Maps
         /// <inheritdoc />
         public void SaveMap(IMap map, string yamlPath)
         {
-            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager);
+            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager);
             foreach (var grid in map.GetAllGrids())
             {
                 context.RegisterGrid(grid);
@@ -185,8 +186,16 @@ namespace Robust.Server.Maps
                     throw new InvalidDataException("Cannot instance map with multiple grids as blueprint.");
                 }
 
-                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, (YamlMappingNode)data.RootNode, _mapManager.GetMap(mapId));
+                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, (YamlMappingNode)data.RootNode, _mapManager.GetMap(mapId));
                 context.Deserialize();
+
+                if (!context.MapIsPostInit && _pauseManager.IsMapInitialized(mapId))
+                {
+                    foreach (var entity in context.Entities)
+                    {
+                        entity.RunMapInit();
+                    }
+                }
             }
         }
 
@@ -198,12 +207,13 @@ namespace Robust.Server.Maps
             private readonly IMapManager _mapManager;
             private readonly ITileDefinitionManager _tileDefinitionManager;
             private readonly IServerEntityManagerInternal _serverEntityManager;
+            private readonly IPauseManager _pauseManager;
 
             private readonly Dictionary<GridId, int> GridIDMap = new Dictionary<GridId, int>();
             public readonly List<IMapGrid> Grids = new List<IMapGrid>();
 
             private readonly Dictionary<EntityUid, int> EntityUidMap = new Dictionary<EntityUid, int>();
-            private readonly List<IEntity> Entities = new List<IEntity>();
+            public readonly List<IEntity> Entities = new List<IEntity>();
 
             private readonly YamlMappingNode RootNode;
             private readonly IMap TargetMap;
@@ -215,16 +225,19 @@ namespace Robust.Server.Maps
 
             private Dictionary<ushort, string> _tileMap;
 
-            public MapContext(IMapManager maps, ITileDefinitionManager tileDefs, IServerEntityManagerInternal entities)
+            public bool MapIsPostInit { get; private set; }
+
+            public MapContext(IMapManager maps, ITileDefinitionManager tileDefs, IServerEntityManagerInternal entities, IPauseManager pauseManager)
             {
                 _mapManager = maps;
                 _tileDefinitionManager = tileDefs;
                 _serverEntityManager = entities;
+                _pauseManager = pauseManager;
 
                 RootNode = new YamlMappingNode();
             }
 
-            public MapContext(IMapManager maps, ITileDefinitionManager tileDefs, IServerEntityManagerInternal entities, YamlMappingNode node, IMap targetMap)
+            public MapContext(IMapManager maps, ITileDefinitionManager tileDefs, IServerEntityManagerInternal entities, IPauseManager pauseManager, YamlMappingNode node, IMap targetMap)
             {
                 _mapManager = maps;
                 _tileDefinitionManager = tileDefs;
@@ -232,6 +245,7 @@ namespace Robust.Server.Maps
 
                 RootNode = node;
                 TargetMap = targetMap;
+                _pauseManager = pauseManager;
             }
 
             // Deserialization
@@ -265,6 +279,15 @@ namespace Robust.Server.Maps
                 if (ver != MapFormatVersion)
                 {
                     throw new InvalidDataException("Cannot handle this map file version.");
+                }
+
+                if (meta.TryGetNode("postmapinit", out var mapInitNode))
+                {
+                    MapIsPostInit = mapInitNode.AsBool();
+                }
+                else
+                {
+                    MapIsPostInit = true;
                 }
             }
 
@@ -386,6 +409,14 @@ namespace Robust.Server.Maps
                 // TODO: Make these values configurable.
                 meta.Add("name", "DemoStation");
                 meta.Add("author", "Space-Wizards");
+                if (_pauseManager.IsMapInitialized(TargetMap))
+                {
+                    meta.Add("postmapinit", "true");
+                }
+                else
+                {
+                    meta.Add("postmapinit", "false");
+                }
             }
 
             private void WriteTileMapSection()

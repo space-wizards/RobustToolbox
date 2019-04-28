@@ -19,6 +19,9 @@ Fields:
 * `format`: Version identifier. **The current version is `2`.** Can be used to bail out early for unsupported map files.
 * `name`: A name. Simple huh. Can be left out.
 * `author`: Authorship info. Also simple. Can be left out.
+* `postmapinit`: Whether this map is "post map init". This means that presets such as procedural generation have applied.
+                 In general, maps touched only via map editing mode will have this false. Maps saved mid game will not.
+                 Default value is true if left out.
 
 ### The `tilemap` section
 

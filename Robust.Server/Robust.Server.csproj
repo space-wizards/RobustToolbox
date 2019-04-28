@@ -121,7 +121,6 @@
     <Compile Include="Console\IConGroupController.cs" />
     <Compile Include="Console\SessionGroupContainer.cs" />
     <Compile Include="GameObjects\Components\Appearance\AppearanceComponent.cs" />
-    <Compile Include="GameObjects\Components\MapInitComponent.cs" />
     <Compile Include="GameObjects\Components\Markers\IgnorePauseComponent.cs" />
     <Compile Include="GameObjects\Components\UserInterface\ServerUserInterfaceComponent.cs" />
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />

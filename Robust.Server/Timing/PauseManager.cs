@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Timing;
 using Robust.Shared.Interfaces.GameObjects;
@@ -17,10 +16,9 @@ namespace Robust.Server.Timing
         [Dependency] private IEntityManager _entityManager;
 
         [ViewVariables] private readonly HashSet<MapId> _pausedMaps = new HashSet<MapId>();
-        [ViewVariables] private readonly HashSet<GridId> _initializedGrids = new HashSet<GridId>();
+        [ViewVariables] private readonly HashSet<MapId> _unInitializedMaps = new HashSet<MapId>();
 
         public void SetMapPaused(IMap map, bool paused) => SetMapPaused(map.Index, paused);
-
         public void SetMapPaused(MapId mapId, bool paused)
         {
             if (paused)
@@ -33,29 +31,45 @@ namespace Robust.Server.Timing
             }
         }
 
-        public void MapInitializeGrid(GridId gridId)
+        public void DoMapInitialize(IMap map) => DoMapInitialize(map.Index);
+        public void DoMapInitialize(MapId mapId)
         {
-            MapInitializeGrid(_mapManager.GetGrid(gridId));
-        }
-
-        public void MapInitializeGrid(IMapGrid grid)
-        {
-            if (_initializedGrids.Contains(grid.Index))
+            if (IsMapInitialized(mapId))
             {
-                throw new ArgumentException("That grid is already initialized", nameof(grid));
+                throw new ArgumentException("That map is already initialized.");
             }
 
-            _initializedGrids.Add(grid.Index);
+            _unInitializedMaps.Remove(mapId);
 
             foreach (var entity in _entityManager.GetEntities())
             {
-                if (entity.Transform.GridID != grid.Index)
+                if (entity.Transform.MapID != mapId)
                 {
                     continue;
                 }
 
                 entity.RunMapInit();
             }
+        }
+
+        public void DoGridMapInitialize(IMapGrid grid) => DoGridMapInitialize(grid.Index);
+        public void DoGridMapInitialize(GridId gridId)
+        {
+            foreach (var entity in _entityManager.GetEntities())
+            {
+                if (entity.Transform.GridID != gridId)
+                {
+                    continue;
+                }
+
+                entity.RunMapInit();
+            }
+        }
+
+        public void AddUninitializedMap(IMap map) => AddUninitializedMap(map.Index);
+        public void AddUninitializedMap(MapId mapId)
+        {
+            _unInitializedMaps.Add(mapId);
         }
 
         public bool IsMapPaused(IMap map) => IsMapPaused(map.Index);
@@ -68,19 +82,19 @@ namespace Robust.Server.Timing
             return IsGridPaused(grid);
         }
 
-        public bool IsGridMapInitialized(GridId gridId)
+        public bool IsMapInitialized(IMap map) => IsMapInitialized(map.Index);
+        public bool IsMapInitialized(MapId mapId)
         {
-            return _initializedGrids.Contains(gridId);
-        }
-
-        public bool IsGridMapInitialized(IMapGrid grid)
-        {
-            return IsGridMapInitialized(grid.Index);
+            return !_unInitializedMaps.Contains(mapId);
         }
 
         public void PostInject()
         {
-            _mapManager.MapDestroyed += (sender, args) => _pausedMaps.Remove(args.Map.Index);
+            _mapManager.MapDestroyed += (sender, args) =>
+            {
+                _pausedMaps.Remove(args.Map.Index);
+                _unInitializedMaps.Add(args.Map.Index);
+            };
         }
     }
 }

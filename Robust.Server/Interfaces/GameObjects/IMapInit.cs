@@ -1,3 +1,4 @@
+using System.Linq;
 using Robust.Server.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 
@@ -8,15 +9,8 @@ namespace Robust.Server.Interfaces.GameObjects
     ///     Basically irreversible behavior that moves the map from "map editor" to playable,
     ///     like spawning preset objects.
     /// </summary>
-    /// <seealso cref="MapInitComponent"/>
     public interface IMapInit
     {
-        /// <summary>
-        ///     Get whether this entity has already had MapInit ran on it.
-        ///     This should of course be inherited through map saving.
-        /// </summary>
-        bool HasInitialized { get; }
-
         void MapInit();
     }
 
@@ -24,7 +18,7 @@ namespace Robust.Server.Interfaces.GameObjects
     {
         public static void RunMapInit(this IEntity entity)
         {
-            foreach (var init in entity.GetAllComponents<IMapInit>())
+            foreach (var init in entity.GetAllComponents<IMapInit>().ToList())
             {
                 init.MapInit();
             }

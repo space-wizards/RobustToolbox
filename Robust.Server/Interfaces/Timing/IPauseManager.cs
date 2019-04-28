@@ -11,8 +11,14 @@ namespace Robust.Server.Interfaces.Timing
         void SetMapPaused(IMap map, bool paused);
         void SetMapPaused(MapId mapId, bool paused);
 
-        void MapInitializeGrid(GridId gridId);
-        void MapInitializeGrid(IMapGrid grid);
+        void DoMapInitialize(MapId mapId);
+        void DoMapInitialize(IMap map);
+
+        void DoGridMapInitialize(GridId gridId);
+        void DoGridMapInitialize(IMapGrid grid);
+
+        void AddUninitializedMap(MapId mapId);
+        void AddUninitializedMap(IMap map);
 
         [Pure]
         bool IsMapPaused(IMap map);
@@ -27,10 +33,10 @@ namespace Robust.Server.Interfaces.Timing
         bool IsGridPaused(GridId gridId);
 
         [Pure]
-        bool IsGridMapInitialized(GridId gridId);
+        bool IsMapInitialized(MapId mapId);
 
         [Pure]
-        bool IsGridMapInitialized(IMapGrid grid);
+        bool IsMapInitialized(IMap map);
     }
 
     public static class PauseManagerExt

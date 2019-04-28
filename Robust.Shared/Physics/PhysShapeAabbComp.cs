@@ -27,6 +27,7 @@ namespace Robust.Shared.Physics
         {
             if (Entity.TryGetComponent<BoundingBoxComponent>(out var boundComp))
             {
+                _localBounds = boundComp.AABB;
                 return boundComp.AABB;
             }
 

@@ -166,7 +166,9 @@ namespace Robust.Shared.GameObjects
 
             serializer.DataField(ref _entityName, "name", string.Empty);
             serializer.DataField(ref _entityDescription, "desc", string.Empty);
-            serializer.DataField(ref _entityPrototype, "proto", null);
+            serializer.DataField(ref _entityPrototype, "proto", null,
+                s => _prototypes.Index<EntityPrototype>(s),
+                p => p.ID);
         }
     }
 }

@@ -278,7 +278,7 @@ namespace Robust.Client.Placement
             }
         }
 
-        private void OnEntityAttached(object o, EventArgs eventArgs)
+        private void OnEntityAttached(EntityAttachedEventArgs eventArgs)
         {
             // player attached to a new entity, basically disable the editor
             Clear();

@@ -26,12 +26,12 @@ namespace Robust.Client.Player
         /// <summary>
         ///     An entity has been attached to the local player.
         /// </summary>
-        public event EventHandler EntityAttached;
+        public event Action<EntityAttachedEventArgs> EntityAttached;
 
         /// <summary>
         ///     An entity has been detached from the local player.
         /// </summary>
-        public event EventHandler EntityDetached;
+        public event Action<EntityDetachedEventArgs> EntityDetached;
 
         /// <summary>
         ///     Game entity that the local player is controlling. If this is null, the player
@@ -93,7 +93,7 @@ namespace Robust.Client.Player
             var transform = ControlledEntity.Transform;
             transform.OnMove += OnPlayerMoved;
 
-            EntityAttached?.Invoke(this, EventArgs.Empty);
+            EntityAttached?.Invoke(new EntityAttachedEventArgs(entity));
             entity.SendMessage(null, new PlayerAttachedMsg());
 
             // notify ECS Systems
@@ -105,6 +105,7 @@ namespace Robust.Client.Player
         /// </summary>
         public void DetachEntity()
         {
+            var previous = ControlledEntity;
             if (ControlledEntity != null && ControlledEntity.Initialized)
             {
                 ControlledEntity.GetComponent<EyeComponent>().Current = false;
@@ -116,9 +117,13 @@ namespace Robust.Client.Player
                 // notify ECS Systems
                 ControlledEntity.EntityManager.RaiseEvent(this, new PlayerAttachSysMessage(null));
             }
+
             ControlledEntity = null;
 
-            EntityDetached?.Invoke(this, EventArgs.Empty);
+            if (previous != null)
+            {
+                EntityDetached?.Invoke(new EntityDetachedEventArgs(previous));
+            }
         }
 
         private void OnPlayerMoved(object sender, MoveEventArgs args)
@@ -168,5 +173,25 @@ namespace Robust.Client.Player
             OldStatus = oldStatus;
             NewStatus = newStatus;
         }
+    }
+
+    public class EntityDetachedEventArgs : EventArgs
+    {
+        public EntityDetachedEventArgs(IEntity oldEntity)
+        {
+            OldEntity = oldEntity;
+        }
+
+        public IEntity OldEntity { get; }
+    }
+
+    public class EntityAttachedEventArgs : EventArgs
+    {
+        public EntityAttachedEventArgs(IEntity newEntity)
+        {
+            NewEntity = newEntity;
+        }
+
+        public IEntity NewEntity { get; }
     }
 }

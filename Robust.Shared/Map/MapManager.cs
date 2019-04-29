@@ -186,6 +186,11 @@ namespace Robust.Shared.Map
             return _maps.Values;
         }
 
+        public IEnumerable<IMapGrid> GetAllGrids()
+        {
+            return _grids.Values;
+        }
+
         public IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16, float snapSize = 1)
         {
             var map = _maps[currentMapID];

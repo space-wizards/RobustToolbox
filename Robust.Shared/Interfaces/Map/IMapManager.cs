@@ -28,6 +28,8 @@ namespace Robust.Shared.Interfaces.Map
 
         IEnumerable<IMap> GetAllMaps();
 
+        IEnumerable<IMapGrid> GetAllGrids();
+
         /// <summary>
         ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
         ///     so that you don't spam an event for each of the million station tiles.

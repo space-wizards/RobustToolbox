@@ -1,4 +1,6 @@
 ﻿using System.Globalization;
+using System.Linq;
+using System.Text;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Maps;
 using Robust.Server.Interfaces.Player;
@@ -14,7 +16,7 @@ namespace Robust.Server.Console.Commands
     {
         public string Command => "addmap";
         public string Description => "Adds a new empty map to the round. If the mapID already exists, this command does nothing.";
-        public string Help => "addmap <mapID>";
+        public string Help => "addmap <mapID> [initialize]";
 
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
@@ -24,10 +26,15 @@ namespace Robust.Server.Console.Commands
             var mapId = new MapId(int.Parse(args[0]));
 
             var mapMgr = IoCManager.Resolve<IMapManager>();
+            var pauseMgr = IoCManager.Resolve<IPauseManager>();
 
             if (!mapMgr.MapExists(mapId))
             {
                 mapMgr.CreateMap(mapId);
+                if (args.Length >= 2 && args[1] == "false")
+                {
+                    pauseMgr.AddUninitializedMap(mapId);
+                }
                 shell.SendText(player, $"Map with ID {mapId} created.");
                 return;
             }
@@ -82,11 +89,38 @@ namespace Robust.Server.Console.Commands
     {
         public string Command => "loadbp";
         public string Description => "Loads a blueprint from disk into the game.";
-        public string Help => "loadbp <MapID> <GridID> <Path>";
+        public string Help => "loadbp <MapID> <Path>";
 
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
-            //TODO: Make me work after placement can create new grids.
+            if (args.Length < 2)
+            {
+                return;
+            }
+
+            if (!int.TryParse(args[0], out var intMapId))
+            {
+                return;
+            }
+
+            var mapId = new MapId(intMapId);
+
+            // no loading into null space
+            if (mapId == MapId.Nullspace)
+            {
+                shell.SendText(player, "Cannot load into nullspace.");
+                return;
+            }
+
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            if (!mapManager.TryGetMap(mapId, out var map))
+            {
+                shell.SendText(player, "Target map does not exist.");
+                return;
+            }
+
+            var mapLoader = IoCManager.Resolve<IMapLoader>();
+            mapLoader.LoadBlueprint(map, args[1]);
         }
     }
 
@@ -233,6 +267,7 @@ namespace Robust.Server.Console.Commands
         public string Command => "tpgrid";
         public string Description => "Teleports a grid to a new location.";
         public string Help => "tpgrid <gridId> <X> <Y> [<MapId>]";
+
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if (args.Length < 3 || args.Length > 4)
@@ -255,7 +290,89 @@ namespace Robust.Server.Console.Commands
 
                 shell.SendText(player, "Grid was teleported.");
             }
+        }
+    }
 
+    internal sealed class RunMapInitCommand : IClientCommand
+    {
+        public string Command => "mapinit";
+        public string Description => default;
+        public string Help => "mapinit <mapID>";
+
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            if (args.Length != 1)
+            {
+                shell.SendText(player, "Wrong number of args.");
+                return;
+            }
+
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            var pauseManager = IoCManager.Resolve<IPauseManager>();
+
+            var arg = args[0];
+            var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
+
+            if (!mapManager.TryGetMap(mapId, out var map))
+            {
+                shell.SendText(player, "Map does not exist!");
+                return;
+            }
+
+            if (pauseManager.IsMapInitialized(map))
+            {
+                shell.SendText(player, "Map is already initialized!");
+                return;
+            }
+
+            pauseManager.DoMapInitialize(map);
+        }
+    }
+
+    internal sealed class ListMapsCommand : IClientCommand
+    {
+        public string Command => "lsmap";
+        public string Description => default;
+        public string Help => "lsmap";
+
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            var pauseManager = IoCManager.Resolve<IPauseManager>();
+
+            var msg = new StringBuilder();
+
+            foreach (var map in mapManager.GetAllMaps().OrderBy(map => map.Index.Value))
+            {
+                msg.AppendFormat("{0}: default grid: {1}, init: {2}, paused: {3} , grids: {4}\n",
+                    map.Index, map.DefaultGrid.Index, pauseManager.IsMapInitialized(map),
+                    pauseManager.IsMapPaused(map),
+                    string.Join(",", map.GetAllGrids().Select(grid => grid.Index)));
+            }
+
+            shell.SendText(player, msg.ToString());
+        }
+    }
+
+    internal sealed class ListGridsCommand : IClientCommand
+    {
+        public string Command => "lsgrid";
+        public string Description => default;
+        public string Help => "lsgrid";
+
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
+            var msg = new StringBuilder();
+
+            foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.Index.Value))
+            {
+                msg.AppendFormat("{0}: map: {1}, default: {2}, pos: {3} \n",
+                    grid.Index, grid.ParentMap.Index, grid.IsDefaultGrid, grid.WorldPosition);
+            }
+
+            shell.SendText(player, msg.ToString());
         }
     }
 }

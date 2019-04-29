@@ -27,6 +27,7 @@ namespace Robust.Server.GameObjects
         {
             var newEnt = CreateEntity(protoName);
             InitializeAndStartEntity(newEnt);
+            newEnt.RunMapInit();
             return newEnt;
         }
 
@@ -39,6 +40,7 @@ namespace Robust.Server.GameObjects
                 var result = CreateEntity(entityType);
                 result.Transform.GridPosition = coordinates;
                 InitializeAndStartEntity(result);
+                result.RunMapInit();
                 entity = result;
                 return true;
             }
@@ -60,6 +62,7 @@ namespace Robust.Server.GameObjects
             var entity = CreateEntity(entityType);
             entity.Transform.GridPosition = coordinates;
             InitializeAndStartEntity(entity);
+            entity.RunMapInit();
             return entity;
         }
 

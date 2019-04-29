@@ -1,4 +1,6 @@
 ﻿using System.Globalization;
+using System.Linq;
+using System.Text;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Maps;
 using Robust.Server.Interfaces.Player;
@@ -265,6 +267,7 @@ namespace Robust.Server.Console.Commands
         public string Command => "tpgrid";
         public string Description => "Teleports a grid to a new location.";
         public string Help => "tpgrid <gridId> <X> <Y> [<MapId>]";
+
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             if (args.Length < 3 || args.Length > 4)
@@ -287,7 +290,6 @@ namespace Robust.Server.Console.Commands
 
                 shell.SendText(player, "Grid was teleported.");
             }
-
         }
     }
 
@@ -324,6 +326,53 @@ namespace Robust.Server.Console.Commands
             }
 
             pauseManager.DoMapInitialize(map);
+        }
+    }
+
+    internal sealed class ListMapsCommand : IClientCommand
+    {
+        public string Command => "lsmap";
+        public string Description => default;
+        public string Help => "lsmap";
+
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            var pauseManager = IoCManager.Resolve<IPauseManager>();
+
+            var msg = new StringBuilder();
+
+            foreach (var map in mapManager.GetAllMaps().OrderBy(map => map.Index.Value))
+            {
+                msg.AppendFormat("{0}: default grid: {1}, init: {2}, paused: {3} , grids: {4}\n",
+                    map.Index, map.DefaultGrid.Index, pauseManager.IsMapInitialized(map),
+                    pauseManager.IsMapPaused(map),
+                    string.Join(",", map.GetAllGrids().Select(grid => grid.Index)));
+            }
+
+            shell.SendText(player, msg.ToString());
+        }
+    }
+
+    internal sealed class ListGridsCommand : IClientCommand
+    {
+        public string Command => "lsgrid";
+        public string Description => default;
+        public string Help => "lsgrid";
+
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
+            var msg = new StringBuilder();
+
+            foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.Index.Value))
+            {
+                msg.AppendFormat("{0}: map: {1}, default: {2}, pos: {3} \n",
+                    grid.Index, grid.ParentMap.Index, grid.IsDefaultGrid, grid.WorldPosition);
+            }
+
+            shell.SendText(player, msg.ToString());
         }
     }
 }

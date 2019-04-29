@@ -242,10 +242,10 @@ namespace Robust.Server.Maps
                 _mapManager = maps;
                 _tileDefinitionManager = tileDefs;
                 _serverEntityManager = entities;
+                _pauseManager = pauseManager;
 
                 RootNode = node;
                 TargetMap = targetMap;
-                _pauseManager = pauseManager;
             }
 
             // Deserialization
@@ -409,14 +409,18 @@ namespace Robust.Server.Maps
                 // TODO: Make these values configurable.
                 meta.Add("name", "DemoStation");
                 meta.Add("author", "Space-Wizards");
-                if (_pauseManager.IsMapInitialized(TargetMap))
+
+                var isPostInit = false;
+                foreach (var grid in Grids)
                 {
-                    meta.Add("postmapinit", "true");
+                    if (_pauseManager.IsMapInitialized(grid.ParentMap))
+                    {
+                        isPostInit = true;
+                        break;
+                    }
                 }
-                else
-                {
-                    meta.Add("postmapinit", "false");
-                }
+
+                meta.Add("postmapinit", isPostInit ? "true" : "false");
             }
 
             private void WriteTileMapSection()

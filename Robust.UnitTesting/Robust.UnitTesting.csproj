@@ -58,9 +58,9 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
     <PackageReference Include="Moq" Version="4.10.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="NUnit" Version="3.10.1" />
-    <PackageReference Include="NUnit.ConsoleRunner" Version="3.9.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
+    <PackageReference Include="NUnit" Version="3.11.0" />
+    <PackageReference Include="NUnit.ConsoleRunner" Version="3.10.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
     <PackageReference Include="Smocks.ExtensionPackage">
       <Version>0.7.5-beta2</Version>
     </PackageReference>
@@ -110,7 +110,10 @@
     <Compile Include="Shared\GameObjects\ComponentManager_Test.cs" />
     <Compile Include="Shared\GameObjects\EntityState_Tests.cs" />
     <Compile Include="Shared\IoC\IoCManager_Test.cs" />
+    <Compile Include="Shared\Map\MapChunk_Tests.cs" />
+    <Compile Include="Shared\Map\MapGrid_Tests.cs" />
     <Compile Include="Shared\Maths\Angle_Test.cs" />
+    <Compile Include="Shared\Maths\Box2i_Test.cs" />
     <Compile Include="Shared\Maths\UIBox2i_Test.cs" />
     <Compile Include="Shared\Maths\Box2_Test.cs" />
     <Compile Include="Shared\Maths\UIBox2_Test.cs" />

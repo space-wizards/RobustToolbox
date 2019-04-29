@@ -171,8 +171,7 @@
     <Compile Include="Interfaces\Resources\IResourceManager.cs" />
     <Compile Include="Interfaces\Resources\IWritableDirProvider.cs" />
     <Compile Include="Interfaces\Serialization\IRobustSerializer.cs" />
-    <Compile Include="Interfaces\Map\IMapChunk.cs" />
-    <Compile Include="Interfaces\Map\IMapGrid.cs" />
+    <Compile Include="Map\IMapGrid.cs" />
     <Compile Include="Interfaces\Map\IMapManager.cs" />
     <Compile Include="Interfaces\Map\ITileDefinition.cs" />
     <Compile Include="Interfaces\Map\ITileDefinitionManager.cs" />
@@ -194,6 +193,10 @@
     <Compile Include="Log\LogManager.cs" />
     <Compile Include="Map\GridId.cs" />
     <Compile Include="Map\Coordinates.cs" />
+    <Compile Include="Map\IMapChunk.cs" />
+    <Compile Include="Map\IMapChunkInternal.cs" />
+    <Compile Include="Map\IMapGridInternal.cs" />
+    <Compile Include="Map\IMapManagerInternal.cs" />
     <Compile Include="Map\MapId.cs" />
     <Compile Include="Map\MapManager.cs" />
     <Compile Include="Map\MapManager.Network.cs" />
@@ -304,7 +307,7 @@
     <Compile Include="GameObjects\Components\NetIDs.cs" />
     <Compile Include="Input\BoundKeyMap.cs" />
     <Compile Include="Map\MapManager.Map.cs" />
-    <Compile Include="Map\MapManager.MapGrid.cs" />
+    <Compile Include="Map\MapGrid.cs" />
     <Compile Include="ViewVariables\ViewVariablesAttribute.cs" />
     <Compile Include="ViewVariables\ViewVariablesBlob.cs" />
     <Compile Include="ViewVariables\ViewVariablesManagerShared.cs" />
@@ -374,7 +377,7 @@
       <ResourceRoot />
       <Visible>False</Visible>
     </Resources>
-    <Compile Include="Map\MapManager.Chunk.cs" />
+    <Compile Include="Map\MapChunk.cs" />
     <Compile Include="Map\MapIndices.cs" />
     <Compile Include="GameObjects\Components\Renderable\SharedSpriteComponent.cs" />
     <Compile Include="Interfaces\Serialization\IExposeData.cs" />

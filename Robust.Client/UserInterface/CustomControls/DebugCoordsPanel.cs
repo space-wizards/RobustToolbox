@@ -100,7 +100,7 @@ namespace Robust.Client.UserInterface.CustomControls
             try
             {
                 var coords = eyeManager.ScreenToWorld(new ScreenCoordinates(mouseScreenPos));
-                mouseWorldMap = (int) _mapManager.GetGrid(coords.GridID).ParentMap.Index;
+                mouseWorldMap = (int) _mapManager.GetGrid(coords.GridID).ParentMapId;
                 mouseWorldGrid = (int) coords.GridID;
                 mouseWorldPos = coords;
                 worldToScreen = eyeManager.WorldToScreen(coords);
@@ -109,7 +109,7 @@ namespace Robust.Client.UserInterface.CustomControls
                     mouseEntity = gameScreen.GetEntityUnderPosition(coords);
                 }
 
-                tile = _mapManager.GetGrid(coords.GridID).GetTile(coords);
+                tile = _mapManager.GetGrid(coords.GridID).GetTileRef(coords);
             }
             catch
             {

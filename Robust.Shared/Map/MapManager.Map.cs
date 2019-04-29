@@ -75,7 +75,7 @@ namespace Robust.Shared.Map
             public IMapGrid FindGridAt(Vector2 worldPos)
             {
                 foreach (var kvGrid in _grids)
-                    if (kvGrid.Value.AABBWorld.Contains(worldPos) && kvGrid.Value != DefaultGrid)
+                    if (kvGrid.Value.WorldBounds.Contains(worldPos) && kvGrid.Value != DefaultGrid)
                         return kvGrid.Value;
                 return DefaultGrid;
             }
@@ -89,7 +89,7 @@ namespace Robust.Shared.Map
             {
                 var gridList = new List<MapGrid>();
                 foreach (var kvGrid in _grids)
-                    if (kvGrid.Value.AABBWorld.Intersects(worldArea))
+                    if (kvGrid.Value.WorldBounds.Intersects(worldArea))
                         gridList.Add(kvGrid.Value);
                 return gridList;
             }

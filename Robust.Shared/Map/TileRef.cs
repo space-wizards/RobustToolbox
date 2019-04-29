@@ -15,7 +15,7 @@ namespace Robust.Shared.Map
         public readonly MapId MapIndex;
 
         /// <summary>
-        ///     Identifier of the <see cref="MapManager.MapGrid"/> this Tile belongs to.
+        ///     Identifier of the <see cref="MapGrid"/> this Tile belongs to.
         /// </summary>
         public readonly GridId GridIndex;
 

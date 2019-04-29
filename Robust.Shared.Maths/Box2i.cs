@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Robust.Shared.Maths
 {
@@ -60,6 +60,22 @@ namespace Robust.Shared.Maths
         public Box2i Translated(Vector2i point)
         {
             return new Box2i(Left + point.X, Bottom + point.Y, Right + point.X, Top + point.Y);
+        }
+
+        /// <summary>
+        ///     Returns the smallest rectangle that contains both of the rectangles.
+        /// </summary>
+        public Box2i Union(in Box2i other)
+        {
+            var left = Math.Min(Left, other.Left);
+            var right = Math.Max(Right, other.Right);
+            var bottom = Math.Min(Bottom, other.Bottom);
+            var top = Math.Max(Top, other.Top);
+
+            if (left <= right && bottom <= top)
+                return new Box2i(left, bottom, right, top);
+
+            return new Box2i();
         }
 
         // override object.Equals

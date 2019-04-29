@@ -33,6 +33,10 @@ namespace Robust.Client.Graphics
         {
             _configurationManager.RegisterCVar(CVarVSync, VSync, CVar.ARCHIVE, _vSyncChanged);
             _configurationManager.RegisterCVar(CVarWindowMode, (int) WindowMode, CVar.ARCHIVE, _windowModeChanged);
+            _configurationManager.RegisterCVar("display.width", 1280);
+            _configurationManager.RegisterCVar("display.height", 720);
+            _configurationManager.RegisterCVar("display.highreslights", false, onValueChanged: HighResLightsChanged);
+            _configurationManager.RegisterCVar("audio.device", "");
         }
 
         public abstract Vector2i ScreenSize { get; }
@@ -69,6 +73,10 @@ namespace Robust.Client.Graphics
         }
 
         protected virtual void WindowModeChanged()
+        {
+        }
+
+        protected virtual void HighResLightsChanged(bool newValue)
         {
         }
     }

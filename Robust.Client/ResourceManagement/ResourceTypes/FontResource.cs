@@ -26,8 +26,6 @@ namespace Robust.Client.ResourceManagement
 
             switch (GameController.Mode)
             {
-                case GameController.DisplayMode.Headless:
-                    break;
                 case GameController.DisplayMode.Godot:
                     if (!cache.TryGetDiskFilePath(path, out string diskPath))
                     {
@@ -42,6 +40,7 @@ namespace Robust.Client.ResourceManagement
 
                     FontData = fontData;
                     break;
+                case GameController.DisplayMode.Headless:
                 case GameController.DisplayMode.Clyde:
                     FontFaceHandle = IoCManager.Resolve<IFontManagerInternal>().Load(cache.ContentFileRead(path).ToArray());
                     break;

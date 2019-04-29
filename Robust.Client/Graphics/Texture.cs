@@ -59,7 +59,7 @@ namespace Robust.Client.Graphics
             switch (GameController.Mode)
             {
                 case GameController.DisplayMode.Headless:
-                    return new DummyTexture();
+                    return new DummyTexture(image.Width, image.Height);
                 case GameController.DisplayMode.Godot:
                 {
                     var stream = new MemoryStream();
@@ -188,8 +188,14 @@ namespace Robust.Client.Graphics
     {
         internal override Godot.Texture GodotTexture => null;
 
-        public override int Width => default;
-        public override int Height => default;
+        public override int Width { get; }
+        public override int Height { get; }
+
+        public DummyTexture(int width, int height)
+        {
+            Width = width;
+            Height = height;
+        }
 
         public DummyTexture()
         {

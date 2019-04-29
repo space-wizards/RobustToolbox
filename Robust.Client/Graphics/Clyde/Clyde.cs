@@ -142,11 +142,6 @@ namespace Robust.Client.Graphics.Clyde
         {
             base.PostInject();
 
-            _configurationManager.RegisterCVar("display.width", 1280);
-            _configurationManager.RegisterCVar("display.height", 720);
-            _configurationManager.RegisterCVar("display.highreslights", false, onValueChanged: _highResLightsChanged);
-            _configurationManager.RegisterCVar("audio.device", "");
-
             _mapManager.TileChanged += _updateTileMapOnUpdate;
             _mapManager.OnGridCreated += _updateOnGridCreated;
             _mapManager.OnGridRemoved += _updateOnGridRemoved;
@@ -570,7 +565,7 @@ namespace Robust.Client.Graphics.Clyde
             _window.WindowState = WindowMode == WindowMode.Fullscreen ? WindowState.Fullscreen : WindowState.Normal;
         }
 
-        private void _highResLightsChanged(bool newValue)
+        protected override void HighResLightsChanged(bool newValue)
         {
             _quartResLights = !newValue;
             if (LightTexture == default)

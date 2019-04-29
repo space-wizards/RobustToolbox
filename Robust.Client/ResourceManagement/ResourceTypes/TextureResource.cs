@@ -7,6 +7,7 @@ using System.IO;
 using System.Text;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.IoC;
+using SixLabors.ImageSharp;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client.ResourceManagement
@@ -32,7 +33,8 @@ namespace Robust.Client.ResourceManagement
             switch (GameController.Mode)
             {
                 case GameController.DisplayMode.Headless:
-                    Texture = new DummyTexture();
+                    var image = Image.Load(cache.ContentFileRead(path).ToArray());
+                    Texture = new DummyTexture(image.Width, image.Height);
                     break;
                 case GameController.DisplayMode.Godot:
                     _loadGodot(cache, path, loadParameters);

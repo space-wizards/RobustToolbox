@@ -138,6 +138,8 @@ namespace Robust.Client
                 case DisplayMode.Headless:
                     IoCManager.Register<IDisplayManager, DisplayManagerHeadless>();
                     IoCManager.Register<IInputManager, InputManager>();
+                    IoCManager.Register<IFontManager, FontManager>();
+                    IoCManager.Register<IFontManagerInternal, FontManager>();
                     break;
                 case DisplayMode.Godot:
                     IoCManager.Register<IDisplayManager, DisplayManagerGodot>();

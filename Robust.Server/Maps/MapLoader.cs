@@ -213,7 +213,11 @@ namespace Robust.Server.Maps
             public readonly List<IMapGrid> Grids = new List<IMapGrid>();
 
             private readonly Dictionary<EntityUid, int> EntityUidMap = new Dictionary<EntityUid, int>();
+            private readonly Dictionary<int, EntityUid> UidEntityMap = new Dictionary<int, EntityUid>();
             public readonly List<IEntity> Entities = new List<IEntity>();
+
+
+            private int uidCounter;
 
             private readonly YamlMappingNode RootNode;
             private readonly IMap TargetMap;
@@ -333,12 +337,14 @@ namespace Robust.Server.Maps
                 foreach (var entityDef in entities.Cast<YamlMappingNode>())
                 {
                     var type = entityDef.GetNode("type").AsString();
+                    var uid = Entities.Count;
+                    if (entityDef.TryGetNode("uid", out var uidNode))
+                    {
+                        uid = uidNode.AsInt();
+                    }
                     var entity = _serverEntityManager.AllocEntity(type);
                     Entities.Add(entity);
-                    if (entityDef.TryGetNode("name", out var nameNode))
-                    {
-                        entity.Name = nameNode.AsString();
-                    }
+                    UidEntityMap.Add(uid, entity.Uid);
                 }
             }
 
@@ -451,7 +457,8 @@ namespace Robust.Server.Maps
                 {
                     if (IsMapSavable(entity))
                     {
-                        EntityUidMap.Add(entity.Uid, EntityUidMap.Count);
+                        var uid = uidCounter++;
+                        EntityUidMap.Add(entity.Uid, uid);
                         Entities.Add(entity);
                     }
                 }
@@ -465,13 +472,11 @@ namespace Robust.Server.Maps
                 foreach (var entity in Entities)
                 {
                     CurrentWritingEntity = entity;
-                    var mapping = new YamlMappingNode();
-                    mapping.Add("type", entity.Prototype.ID);
-                    if (entity.Name != entity.Prototype.Name)
+                    var mapping = new YamlMappingNode
                     {
-                        // TODO: This shouldn't be hardcoded.
-                        mapping.Add("name", entity.Prototype.Name);
-                    }
+                        {"type", entity.Prototype.ID},
+                        {"uid", EntityUidMap[entity.Uid].ToString(CultureInfo.InvariantCulture)}
+                    };
 
                     var components = new YamlSequenceNode();
                     // See engine#636 for why the Distinct() call.
@@ -525,7 +530,7 @@ namespace Robust.Server.Maps
                     }
                     else
                     {
-                        obj = Entities[val].Uid;
+                        obj = UidEntityMap[val];
                         return true;
                     }
                 }

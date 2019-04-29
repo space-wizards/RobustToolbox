@@ -45,7 +45,8 @@ Contains data for all the grids. The section is an ordered sequence. Each sequen
 
 Contains data for all entities on the map. Just like grids these are stored in an indexed list, and an entity declaration is pretty much just like a prototype.
 
-Each entity has a `type` field which specifies which prototype it is, and the components list works as overrides in the same way as entity parenting.
+Each entity has a `type` field which specifies which prototype it is, and the components list works as overrides in the same way as prototype parenting.
+Each entity also has a numerical `uid` field, which is used to give this entity an unique identifier when referenced by other entities.
 
 #### Chunk Data
 
@@ -87,7 +88,7 @@ Direct hard `IEntity` references are stored as entity UID, it is simply decoded 
 In-game `EntityUid` instances are either:
 
 * Serialized as YAML `null` if the entity referenced to is not included in the map saving. If it's on a different grid, for example.
-* An integer representing the index in the `entities` section corresponding to the serialized entity.
+* An integer representing the `uid` of the serialized entity.
 
 ### Grid IDs
 

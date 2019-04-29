@@ -30,7 +30,7 @@ namespace Robust.Shared.Map
                 }
 
                 var chunkData = new List<GameStateMapData.ChunkDatum>();
-                foreach (var (index, chunk) in grid._chunks)
+                foreach (var (index, chunk) in grid.GetMapChunks())
                 {
                     if (chunk.LastModifiedTick < fromTick)
                     {
@@ -45,7 +45,7 @@ namespace Robust.Shared.Map
                     for (var x = 0; x < grid.ChunkSize; x++)
                     for (var y = 0; y < grid.ChunkSize; y++)
                     {
-                        tileBuffer[x * grid.ChunkSize + y] = chunk._tiles[x, y];
+                        tileBuffer[x * grid.ChunkSize + y] = chunk.GetTile((ushort) x, (ushort) y);
                     }
 
                     chunkData.Add(new GameStateMapData.ChunkDatum(index, tileBuffer));
@@ -153,7 +153,7 @@ namespace Robust.Shared.Map
                         for (ushort y = 0; y < grid.ChunkSize; y++)
                         {
                             var tile = chunkData.TileData[counter++];
-                            if (chunk.GetTile(x, y).Tile != tile)
+                            if (chunk.GetTileRef(x, y).Tile != tile)
                             {
                                 chunk.SetTile(x, y, tile);
                                 modified.Add((new MapIndices(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));

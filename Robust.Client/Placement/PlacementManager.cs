@@ -573,7 +573,7 @@ namespace Robust.Client.Placement
 
         private void RequestPlacement(GridCoordinates coordinates)
         {
-            if (MapManager.GetGrid(coordinates.GridID).ParentMap.Index == MapId.Nullspace) return;
+            if (MapManager.GetGrid(coordinates.GridID).ParentMapId == MapId.Nullspace) return;
             if (CurrentPermission == null) return;
             if (!CurrentMode.IsValidPosition(coordinates)) return;
             if (Hijack != null && Hijack.HijackPlacementRequest(coordinates)) return;
@@ -583,7 +583,7 @@ namespace Robust.Client.Placement
                 var grid = MapManager.GetGrid(coordinates.GridID);
 
                 // no point changing the tile to the same thing.
-                if (grid.GetTile(coordinates).Tile.TypeId == CurrentPermission.TileType)
+                if (grid.GetTileRef(coordinates).Tile.TypeId == CurrentPermission.TileType)
                     return;
 
                 foreach (var tileChange in _pendingTileChanges)

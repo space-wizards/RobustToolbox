@@ -17,7 +17,7 @@ namespace Robust.Client.Placement.Modes
             MouseCoords = ScreenToPlayerGrid(mouseScreen);
 
             var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GridID);
-            CurrentTile = mapGrid.GetTile(MouseCoords);
+            CurrentTile = mapGrid.GetTileRef(MouseCoords);
             float tileSize = mapGrid.TileSize; //convert from ushort to float
             GridDistancing = tileSize;
 
@@ -43,7 +43,7 @@ namespace Robust.Client.Placement.Modes
             }
 
             var entitymanager = IoCManager.Resolve<IClientEntityManager>();
-            return !(entitymanager.AnyEntitiesIntersecting(pManager.MapManager.GetGrid(MouseCoords.GridID).ParentMap.Index,
+            return !(entitymanager.AnyEntitiesIntersecting(pManager.MapManager.GetGrid(MouseCoords.GridID).ParentMapId,
                 new Box2(new Vector2(CurrentTile.X, CurrentTile.Y), new Vector2(CurrentTile.X + 0.99f, CurrentTile.Y + 0.99f))));
         }
     }

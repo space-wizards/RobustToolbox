@@ -9,10 +9,12 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
 {
-    /// <inheritdoc />
-    public partial class MapManager : IMapManager, IPostInjectInit
+    /// <inheritdoc cref="IMapManager"/>
+    public partial class MapManager : IMapManagerInternal, IPostInjectInit
     {
-        [Dependency] private protected readonly IGameTiming _gameTiming;
+        [Dependency] private readonly IGameTiming _gameTiming;
+
+        public IGameTiming GameTiming => _gameTiming;
 
         /// <inheritdoc />
         public IMap DefaultMap => GetMap(MapId.Nullspace);

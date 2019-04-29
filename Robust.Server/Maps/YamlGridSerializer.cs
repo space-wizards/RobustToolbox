@@ -15,8 +15,10 @@ namespace Robust.Server.Maps
 {
     public static class YamlGridSerializer
     {
-        public static YamlMappingNode SerializeGrid(IMapGrid grid)
+        public static YamlMappingNode SerializeGrid(IMapGrid mapGrid)
         {
+            var grid = (IMapGridInternal) mapGrid;
+
             var gridn = new YamlMappingNode();
             var info = new YamlMappingNode();
             var chunkSeq = new YamlSequenceNode();
@@ -32,7 +34,7 @@ namespace Robust.Server.Maps
             var chunks = grid.GetMapChunks();
             foreach (var chunk in chunks)
             {
-                var chunkNode = SerializeChunk(chunk);
+                var chunkNode = SerializeChunk(chunk.Value);
                 chunkSeq.Add(chunkNode);
             }
 

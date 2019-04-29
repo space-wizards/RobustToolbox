@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using JetBrains.Annotations;
+using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Map
@@ -86,6 +87,16 @@ namespace Robust.Shared.Map
         public override int GetHashCode()
         {
             return X ^ (Y * 23011);
+        }
+
+        public static implicit operator Vector2i(in MapIndices indices)
+        {
+            return new Vector2i(indices.X, indices.Y);
+        }
+
+        public static implicit operator MapIndices(in Vector2i indices)
+        {
+            return new MapIndices(indices.X, indices.Y);
         }
     }
 }

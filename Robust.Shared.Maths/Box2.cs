@@ -38,6 +38,11 @@ namespace Robust.Shared.Maths
         public Vector2 Size => new Vector2(Width, Height);
         public Vector2 Center => BottomLeft + Size / 2;
 
+        /// <summary>
+        ///     A 1x1 unit box with the origin centered.
+        /// </summary>
+        public static readonly Box2 UnitCentered = new Box2(-0.5f, -0.5f, 0.5f, 0.5f);
+
         public Box2(Vector2 bottomLeft, Vector2 topRight) : this(bottomLeft.X, bottomLeft.Y, topRight.X, topRight.Y)
         {
         }

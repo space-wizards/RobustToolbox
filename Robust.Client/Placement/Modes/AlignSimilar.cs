@@ -17,7 +17,7 @@ namespace Robust.Client.Placement.Modes
         {
             MouseCoords = ScreenToPlayerGrid(mouseScreen);
             var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GridID);
-            CurrentTile = mapGrid.GetTile(MouseCoords);
+            CurrentTile = mapGrid.GetTileRef(MouseCoords);
 
             if (pManager.CurrentPermission.IsTile)
             {
@@ -32,7 +32,7 @@ namespace Robust.Client.Placement.Modes
             var manager = IoCManager.Resolve<IClientEntityManager>();
 
             var snapToEntities = manager.GetEntitiesInRange(MouseCoords, SnapToRange)
-                .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.Transform.MapID == mapGrid.ParentMap.Index)
+                .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.Transform.MapID == mapGrid.ParentMapId)
                 .OrderBy(entity => (entity.Transform.WorldPosition - MouseCoords.ToWorld(pManager.MapManager).Position).LengthSquared)
                 .ToList();
 

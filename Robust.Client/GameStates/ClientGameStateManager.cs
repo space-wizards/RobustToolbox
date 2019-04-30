@@ -84,7 +84,7 @@ namespace Robust.Client.GameStates
         /// <inheritdoc />
         public void ApplyGameState()
         {
-            if (!_processor.TryCalculateStates(_timing.CurTick, out var curState, out var nextState))
+            if (!_processor.ProcessTickStates(_timing.CurTick, out var curState, out var nextState))
                 return;
 
             ApplyGameState(curState, nextState);

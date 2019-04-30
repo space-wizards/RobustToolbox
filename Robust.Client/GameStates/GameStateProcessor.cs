@@ -16,6 +16,7 @@ namespace Robust.Client.GameStates
         private GameState _lastFullState;
         private bool _waitingForFull = true;
         private int _interpRatio;
+        private GameTick _lastProcessedRealState;
 
         /// <inheritdoc />
         public int MinBufferSize => Interpolation ? 3 : 2;
@@ -27,22 +28,25 @@ namespace Robust.Client.GameStates
         public int CurrentBufferSize => _stateBuffer.Count;
 
         /// <inheritdoc />
-        public bool Interpolation { get; set; } = false;
+        public bool Interpolation { get; set; }
 
         /// <inheritdoc />
         public int InterpRatio
         {
             get => _interpRatio;
-            set
-            {
-                var i = value;
-                _interpRatio = i < 0 ? 0 : i; // min bound, < 0 makes no sense
-            }
+            set => _interpRatio = value < 0 ? 0 : value;
         }
 
         /// <inheritdoc />
-        public bool Logging { get; set; } = false;
+        public bool Extrapolation { get; set; }
 
+        /// <inheritdoc />
+        public bool Logging { get; set; }
+
+        /// <summary>
+        ///     Constructs a new instance of <see cref="GameStateProcessor"/>.
+        /// </summary>
+        /// <param name="timing">Timing information of the current state.</param>
         public GameStateProcessor(IGameTiming timing)
         {
             _timing = timing;
@@ -99,7 +103,7 @@ namespace Robust.Client.GameStates
         }
 
         /// <inheritdoc />
-        public bool TryCalculateStates(GameTick curTick, out GameState curState, out GameState nextState)
+        public bool ProcessTickStates(GameTick curTick, out GameState curState, out GameState nextState)
         {
             bool applyNextState;
             if (_waitingForFull)
@@ -111,8 +115,14 @@ namespace Robust.Client.GameStates
                 applyNextState = CalculateDeltaState(curTick, out curState, out nextState);
             }
 
+            if (applyNextState && !curState.Extrapolated)
+                _lastProcessedRealState = curState.ToSequence;
+            
             if (!_waitingForFull)
             {
+                if (!applyNextState)
+                    _timing.CurTick = _lastProcessedRealState;
+
                 // This will slightly speed up or slow down the client tickrate based on the contents of the buffer.
                 // CalcNextState should have just cleaned out any old states, so the buffer contains [t-1(last), t+0(cur), t+1(next), t+2, t+3, ..., t+n]
                 // we can use this info to properly time our tickrate so it does not run fast or slow compared to the server.
@@ -213,8 +223,15 @@ namespace Robust.Client.GameStates
                 }
             }
 
+            // we won't extrapolate, and curState was not found.
+            if (!Extrapolation && curState == null)
+                return false;
+
             // we found both the states to interpolate between, this should almost always be true.
-            if ((Interpolation && curState != null) || (!Interpolation && curState != null && nextState != null))
+            if (Interpolation && curState != null)
+                return true;
+
+            if (!Interpolation && curState != null && nextState != null)
                 return true;
 
             if (curState == null)

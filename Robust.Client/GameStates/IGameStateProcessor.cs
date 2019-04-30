@@ -43,6 +43,11 @@ namespace Robust.Client.GameStates
         int InterpRatio { get; set; }
 
         /// <summary>
+        ///     If the client clock runs ahead of the server and the buffer gets emptied, should fake extrapolated states be generated?
+        /// </summary>
+        bool Extrapolation { get; set; }
+
+        /// <summary>
         ///     Is debug logging enabled? This will dump debug info about every state to the log.
         /// </summary>
         bool Logging { get; set; }
@@ -61,7 +66,7 @@ namespace Robust.Client.GameStates
         /// <param name="curState">Current state for the given tick. This can be null.</param>
         /// <param name="nextState">Current state for tick + 1. This can be null.</param>
         /// <returns>Was the function able to correctly calculate the states for the given tick?</returns>
-        bool TryCalculateStates(GameTick curTick, out GameState curState, out GameState nextState);
+        bool ProcessTickStates(GameTick curTick, out GameState curState, out GameState nextState);
 
         /// <summary>
         ///     Resets the processor back to its initial state.

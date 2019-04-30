@@ -77,7 +77,8 @@ namespace Robust.Client.Graphics.ClientEye
 
         public ScreenCoordinates WorldToScreen(GridCoordinates point)
         {
-            return new ScreenCoordinates(WorldToScreen(point.Position));
+            var worldCoords = _mapManager.GetGrid(point.GridID).LocalToWorld(point);
+            return new ScreenCoordinates(WorldToScreen(worldCoords.Position));
         }
 
         public GridCoordinates ScreenToWorld(ScreenCoordinates point)

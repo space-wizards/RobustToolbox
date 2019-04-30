@@ -107,7 +107,8 @@ namespace Robust.Client.Placement
             var size = SpriteToDraw.Size;
             foreach (var coordinate in locationcollection)
             {
-                var pos = coordinate.Position - (size/(float)EyeManager.PIXELSPERMETER) / 2f;
+                var worldPos = pManager.MapManager.GetGrid(coordinate.GridID).LocalToWorld(coordinate).Position;
+                var pos = worldPos - (size/(float)EyeManager.PIXELSPERMETER) / 2f;
                 var color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
                 handle.DrawTexture(SpriteToDraw, pos, color);
             }
@@ -206,7 +207,8 @@ namespace Robust.Client.Placement
 
         protected Vector2 ScreenToWorld(Vector2 point)
         {
-            return pManager.eyeManager.ScreenToWorld(point).Position;
+            var gridCoords = pManager.eyeManager.ScreenToWorld(point);
+            return gridCoords.ToWorld(pManager.MapManager).Position;
         }
 
         protected Vector2 WorldToScreen(Vector2 point)
@@ -214,11 +216,9 @@ namespace Robust.Client.Placement
             return pManager.eyeManager.WorldToScreen(point);
         }
 
-        protected GridCoordinates ScreenToPlayerGrid(ScreenCoordinates coords)
+        protected GridCoordinates ScreenToCursorGrid(ScreenCoordinates coords)
         {
-            var worldPos = ScreenToWorld(coords.Position);
-            var entityGrid = pManager.PlayerManager.LocalPlayer.ControlledEntity.Transform.GridID;
-            return new GridCoordinates(worldPos, entityGrid);
+            return pManager.eyeManager.ScreenToWorld(coords.Position);
         }
     }
 }

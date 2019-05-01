@@ -20,9 +20,13 @@ namespace Robust.Client.Placement.Modes
 
             if (pManager.CurrentPermission.IsTile)
             {
-                MouseCoords = new GridCoordinates(CurrentTile.X + tileSize / 2,
-                    CurrentTile.Y + tileSize / 2,
-                    MouseCoords.GridID);
+                if(!mapGrid.IsDefaultGrid)
+                {
+                    MouseCoords = new GridCoordinates(CurrentTile.X + tileSize / 2,
+                        CurrentTile.Y + tileSize / 2,
+                        MouseCoords.GridID);
+                }
+                // else we don't modify coords
             }
             else
             {

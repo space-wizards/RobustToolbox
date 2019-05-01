@@ -151,7 +151,7 @@ namespace Robust.Server.Placement
             else // create a new grid
             {
                 var newGrid = map.CreateGrid();
-                newGrid.WorldPosition = position;
+                newGrid.WorldPosition = position + (newGrid.TileSize / 2f); // assume bottom left tile origin
                 var tilePos = newGrid.WorldToTile(position);
                 newGrid.SetTile(tilePos, new Tile(tileType));
             }

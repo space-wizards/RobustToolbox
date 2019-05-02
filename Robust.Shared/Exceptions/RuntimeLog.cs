@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
@@ -11,6 +12,8 @@ namespace Robust.Shared.Exceptions
     internal sealed class RuntimeLog : IRuntimeLog
     {
         private readonly Dictionary<Type, List<LoggedException>> exceptions = new Dictionary<Type, List<LoggedException>>();
+
+        public int ExceptionCount => exceptions.Values.Sum(l => l.Count);
 
         public void LogException(Exception exception, string catcher=null)
         {
@@ -83,6 +86,8 @@ namespace Robust.Shared.Exceptions
     /// </remarks>
     public interface IRuntimeLog
     {
+        int ExceptionCount { get; }
+
         void LogException(Exception exception, string catcher=null);
 
         string Display();

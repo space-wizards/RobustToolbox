@@ -21,6 +21,7 @@ namespace Robust.Client
             throw new InvalidOperationException("The client cannot start outside x64.");
 #endif
 
+            IoCManager.InitThread();
             IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
             IoCManager.BuildGraph();
 

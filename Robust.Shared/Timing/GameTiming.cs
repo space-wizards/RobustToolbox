@@ -13,7 +13,7 @@ namespace Robust.Shared.Timing
         // number of sample frames to store for profiling
         private const int NumFrames = 60;
 
-        private static readonly IStopwatch _realTimer = new Stopwatch();
+        private readonly IStopwatch _realTimer = new Stopwatch();
         private readonly List<long> _realFrameTimes = new List<long>(NumFrames);
         private TimeSpan _lastRealTime;
 

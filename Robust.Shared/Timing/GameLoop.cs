@@ -8,10 +8,45 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Timing
 {
+    public interface IGameLoop
+    {
+        event EventHandler<FrameEventArgs> Input;
+        event EventHandler<FrameEventArgs> Tick;
+        event EventHandler<FrameEventArgs> Update;
+        event EventHandler<FrameEventArgs> Render;
+
+        /// <summary>
+        ///     Enables single step mode. If this is enabled, after every tick the GameTime will pause.
+        ///     Unpausing GameTime will run another single tick.
+        /// </summary>
+        bool SingleStep { get; set; }
+
+        /// <summary>
+        ///     Setting this to false will stop the loop after it has started running.
+        /// </summary>
+        bool Running { get; set; }
+
+        /// <summary>
+        ///     How many ticks behind the simulation can get before it starts to slow down.
+        /// </summary>
+        int MaxQueuedTicks { get; set; }
+
+        /// <summary>
+        ///     The method currently being used to limit the Update rate.
+        /// </summary>
+        SleepMode SleepMode { get; set; }
+
+        /// <summary>
+        ///     Start running the loop. This function will block for as long as the loop is Running.
+        ///     Set Running to false to exit the loop and return from this function.
+        /// </summary>
+        void Run();
+    }
+
     /// <summary>
     ///     Manages the main game loop for a GameContainer.
     /// </summary>
-    public class GameLoop
+    public class GameLoop : IGameLoop
     {
         private readonly IGameTiming _timing;
         private TimeSpan _lastTick; // last wall time tick

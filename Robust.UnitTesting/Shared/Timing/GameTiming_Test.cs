@@ -205,8 +205,8 @@ namespace Robust.UnitTesting.Shared.Timing
         {
             var timing = new GameTiming();
 
-            var field = typeof(GameTiming).GetField("_realTimer", BindingFlags.Static | BindingFlags.NonPublic);
-            field.SetValue(null, stopwatch);
+            var field = typeof(GameTiming).GetField("_realTimer", BindingFlags.NonPublic | BindingFlags.Instance);
+            field.SetValue(timing, stopwatch);
 
             return timing;
         }

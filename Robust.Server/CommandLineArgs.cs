@@ -51,9 +51,9 @@ namespace Robust.Server
             return help;
         }
 
-        public bool Parse()
+        public bool Parse(string[] args)
         {
-            return CommandLine.Parser.Default.ParseArguments(Environment.GetCommandLineArgs(), this);
+            return CommandLine.Parser.Default.ParseArguments(args, this);
         }
     }
 }

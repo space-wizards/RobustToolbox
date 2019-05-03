@@ -59,6 +59,8 @@ namespace Robust.Client.UserInterface.Controls
                 offsetCenter = firstMinSize;
             }
 
+            offsetCenter += 0f.Clamp(firstMinSize - offsetCenter, size - secondMinSize - Separation - offsetCenter);
+
             if (Vertical)
             {
                 FitChildInBox(first, new UIBox2(0, 0, Width, offsetCenter));
@@ -87,7 +89,7 @@ namespace Robust.Client.UserInterface.Controls
             var second = GetChild(1);
 
             var (firstSizeX, firstSizeY) = first.CombinedMinimumSize;
-            var (secondSizeX , secondSizeY) = second.CombinedMinimumSize;
+            var (secondSizeX, secondSizeY) = second.CombinedMinimumSize;
 
             if (Vertical)
             {

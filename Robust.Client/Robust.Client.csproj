@@ -140,6 +140,8 @@
     <Compile Include="Console\Commands\QuitCommand.cs" />
     <Compile Include="Console\Commands\Debug.cs" />
     <Compile Include="GameStates\ClientGameStateManager.cs" />
+    <Compile Include="GameStates\GameStateProcessor.cs" />
+    <Compile Include="GameStates\IGameStateProcessor.cs" />
     <Compile Include="GameStates\NetGraphOverlay.cs" />
     <Compile Include="GameStates\NetInterpOverlay.cs" />
     <Compile Include="Graphics\CanvasLayers.cs" />

@@ -92,6 +92,7 @@
     <Compile Include="ApproxEqualityConstraint.cs" />
     <Compile Include="Client\GameObjects\Components\Transform_Test.cs" />
     <Compile Include="Client\GameControllerProxyDummy.cs" />
+    <Compile Include="Client\GameStates\GameStateProcessor_Tests.cs" />
     <Compile Include="Client\Graphics\StyleBoxTest.cs" />
     <Compile Include="Client\Graphics\TextureLoadParametersTest.cs" />
     <Compile Include="Client\UserInterface\Controls\BoxContainerTest.cs" />

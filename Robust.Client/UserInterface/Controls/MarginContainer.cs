@@ -1,3 +1,4 @@
+using Robust.Client.Utility;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -89,6 +90,31 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             return (childMinSize.X + left + right, childMinSize.Y + top + bottom);
+        }
+
+        private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
+        {
+            base.SetGodotProperty(property, value, context);
+
+            if (property == "custom_constants/margin_right")
+            {
+                MarginRightOverride = (int)(long)value;
+            }
+
+            if (property == "custom_constants/margin_left")
+            {
+                MarginLeftOverride = (int)(long)value;
+            }
+
+            if (property == "custom_constants/margin_bottom")
+            {
+                MarginBottomOverride = (int)(long)value;
+            }
+
+            if (property == "custom_constants/margin_top")
+            {
+                MarginTopOverride = (int)(long)value;
+            }
         }
     }
 }

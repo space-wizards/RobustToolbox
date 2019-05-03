@@ -12,15 +12,20 @@ margin_top = 38.0
 margin_right = 878.0
 margin_bottom = 519.0
 
-[node name="Contents" type="Container" parent="."]
+[node name="Contents" type="MarginContainer" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
-margin_left = 10.0
-margin_top = 40.0
-margin_right = -10.0
-margin_bottom = -10.0
+margin_left = 0.0
+margin_top = 30.0
+margin_right = 0.0
+margin_bottom = 0.0
 rect_min_size = Vector2( 50, 50 )
+rect_clip_content = true
 mouse_filter = 2
+custom_constants/margin_right = 10
+custom_constants/margin_left = 10
+custom_constants/margin_bottom = 10
+custom_constants/margin_top = 10
 
 [node name="Header" type="Panel" parent="."]
 anchor_right = 1.0

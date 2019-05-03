@@ -49,13 +49,11 @@ namespace Robust.Client.UserInterface.CustomControls
 
         // TODO: Unhardcode this header size.
         private const float HEADER_SIZE_Y = 25;
-        protected virtual Vector2 ContentsMinimumSize => new Vector2(50, 50);
+        protected virtual Vector2 ContentsMinimumSize => (50, 50);
 
         protected override Vector2 CalculateMinimumSize()
         {
-            var marginSize = new Vector2(Contents.MarginLeft - Contents.MarginRight,
-                Contents.MarginTop - Contents.MarginBottom);
-            return ContentsMinimumSize + marginSize;
+            return Vector2.ComponentMax(ContentsMinimumSize, Contents.CombinedMinimumSize) + (0, Contents.MarginTop);
         }
 
         private DragMode CurrentDrag = DragMode.None;
@@ -94,6 +92,7 @@ namespace Robust.Client.UserInterface.CustomControls
             CloseButton.OnPressed += CloseButtonPressed;
 
             Contents = GetChild("Contents");
+            Contents.OnMinimumSizeChanged += _ => MinimumSizeChanged();
 
             TitleLabel.AddStyleClass(StyleClassWindowTitle);
             AddStyleClass(StyleClassWindowPanel);

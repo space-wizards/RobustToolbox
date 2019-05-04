@@ -89,6 +89,10 @@ namespace Robust.Client.Graphics.Clyde
             }
             else if (pixelType == typeof(Alpha8))
             {
+                if (image.Width % 4 != 0 || image.Height % 4 != 0)
+                {
+                    throw new ArgumentException("Alpha8 images must have multiple of 4 sizes.");
+                }
                 internalFormat = PixelInternalFormat.R8;
                 pixelDataFormat = PixelFormat.Red;
                 pixelDataType = PixelType.UnsignedByte;

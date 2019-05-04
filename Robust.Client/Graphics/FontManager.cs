@@ -101,8 +101,11 @@ namespace Robust.Client.Graphics
             var atlasEntriesHorizontal = (int) Math.Ceiling(Math.Sqrt(count));
             var atlasEntriesVertical =
                 (int) Math.Ceiling(count / (float) atlasEntriesHorizontal);
-            var atlas = new Image<Rgba32>(atlasEntriesHorizontal * maxGlyphSize.X,
-                atlasEntriesVertical * maxGlyphSize.Y);
+            var atlasDimX =
+                (int) Math.Round(atlasEntriesHorizontal * maxGlyphSize.X / 4f, MidpointRounding.AwayFromZero) * 4;
+            var atlasDimY =
+                (int) Math.Round(atlasEntriesVertical * maxGlyphSize.Y / 4f, MidpointRounding.AwayFromZero) * 4;
+            var atlas = new Image<Alpha8>(atlasDimX, atlasDimY);
 
             var glyphMap = new Dictionary<char, uint>();
             var metricsMap = new Dictionary<uint, CharMetrics>();
@@ -152,6 +155,7 @@ namespace Robust.Client.Graphics
                         bitmapImage = MonoBitMapToImage(bitmap);
                         break;
                     }
+
                     case PixelMode.Gray:
                     {
                         ReadOnlySpan<Alpha8> span;
@@ -163,6 +167,7 @@ namespace Robust.Client.Graphics
                         bitmapImage = Image.LoadPixelData(span, bitmap.Width, bitmap.Rows);
                         break;
                     }
+
                     case PixelMode.Gray2:
                     case PixelMode.Gray4:
                     case PixelMode.Lcd:
@@ -181,18 +186,6 @@ namespace Robust.Client.Graphics
                     PixelColorBlendingMode.Overlay, 1));
                 count += 1;
                 atlasRegions.Add(glyphIndex, UIBox2i.FromDimensions(offsetX, offsetY, bitmap.Width, bitmap.Rows));
-            }
-
-            for (var x = 0; x < atlas.Width; x++)
-            {
-                for (var y = 0; y < atlas.Height; y++)
-                {
-                    var a = atlas[x, y].A;
-                    if (a != 0)
-                    {
-                        atlas[x, y] = new Rgba32(255, 255, 255, a);
-                    }
-                }
             }
 
             var atlasDictionary = new Dictionary<uint, AtlasTexture>();

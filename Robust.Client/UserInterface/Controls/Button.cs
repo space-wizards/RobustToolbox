@@ -34,7 +34,7 @@ namespace Robust.Client.UserInterface.Controls
             return new Godot.Button();
         }
 
-        private AlignMode _textAlign;
+        private AlignMode _textAlign = AlignMode.Center;
 
         [ViewVariables]
         public AlignMode TextAlign

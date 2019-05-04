@@ -21,6 +21,7 @@ namespace Robust.Client
 #endif
             Mode = DisplayMode.Godot;
             tree.SetAutoAcceptQuit(false);
+            IoCManager.InitThread();
             IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
             IoCManager.BuildGraph();
             IoCManager.Resolve<ISceneTreeHolder>().Initialize(tree);

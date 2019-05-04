@@ -23,12 +23,18 @@ namespace Robust.Server.Console
 
         public void Dispose()
         {
-            Con.CancelKeyPress -= CancelKeyHandler;
+            if (Environment.UserInteractive)
+            {
+                Con.CancelKeyPress -= CancelKeyHandler;
+            }
         }
 
         public void PostInject()
         {
-            Con.CancelKeyPress += CancelKeyHandler;
+            if (Environment.UserInteractive)
+            {
+                Con.CancelKeyPress += CancelKeyHandler;
+            }
         }
 
         public void Update()

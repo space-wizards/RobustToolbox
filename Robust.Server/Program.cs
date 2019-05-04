@@ -50,18 +50,19 @@ using Robust.Shared.Exceptions;
 
 namespace Robust.Server
 {
-    internal class EntryPoint
+    internal static class EntryPoint
     {
-        private static void Main(string[] args)
+        internal static void Main(string[] args)
         {
 #if !X64
             throw new InvalidOperationException("The server cannot start outside x64.");
 #endif
-            //Register minidump dumper only if the app isn't being debugged. No use filling up hard drives with shite
+            IoCManager.InitThread();
             RegisterIoC();
+            IoCManager.BuildGraph();
             SetupLogging();
             InitReflectionManager();
-            HandleCommandLineArgs();
+            HandleCommandLineArgs(args);
 
             var server = IoCManager.Resolve<IBaseServer>();
 
@@ -71,7 +72,7 @@ namespace Robust.Server
             {
                 Logger.Fatal("Server -> Can not start server");
                 //Not like you'd see this, haha. Perhaps later for logging.
-                Environment.Exit(0);
+                //Environment.Exit(0);
             }
 
             string strVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -89,10 +90,10 @@ namespace Robust.Server
             IoCManager.Clear();
         }
 
-        private static void HandleCommandLineArgs()
+        private static void HandleCommandLineArgs(string[] args)
         {
             var commandLine = IoCManager.Resolve<ICommandLineArgs>();
-            if (!commandLine.Parse())
+            if (!commandLine.Parse(args))
             {
                 Environment.Exit(0);
             }
@@ -101,7 +102,7 @@ namespace Robust.Server
         /// <summary>
         /// Registers all the types into the <see cref="IoCManager"/> with <see cref="IoCManager.Register{TInterface, TImplementation}"/>
         /// </summary>
-        private static void RegisterIoC()
+        internal static void RegisterIoC()
         {
             // Shared stuff.
             IoCManager.Register<IComponentManager, ComponentManager>();
@@ -128,6 +129,7 @@ namespace Robust.Server
             IoCManager.Register<ISystemConsoleManager, SystemConsoleManager>();
             IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
             IoCManager.Register<IBaseServer, BaseServer>();
+            IoCManager.Register<IBaseServerInternal, BaseServer>();
             IoCManager.Register<IRobustSerializer, RobustSerializer>();
             IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();
             IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
@@ -142,11 +144,9 @@ namespace Robust.Server
             IoCManager.Register<IConGroupController, ConGroupController>();
             IoCManager.Register<IStatusHost, StatusHost>();
             IoCManager.Register<IPauseManager, PauseManager>();
-
-            IoCManager.BuildGraph();
         }
 
-        private static void InitReflectionManager()
+        internal static void InitReflectionManager()
         {
             // gets a handle to the shared and the current (server) dll.
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(new List<Assembly>(2)
@@ -156,7 +156,7 @@ namespace Robust.Server
             });
         }
 
-        private static void SetupLogging()
+        internal static void SetupLogging()
         {
             var mgr = IoCManager.Resolve<ILogManager>();
             var handler = new ConsoleLogHandler();

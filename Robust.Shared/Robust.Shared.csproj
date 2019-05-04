@@ -248,6 +248,7 @@
     <Compile Include="Utility\DebugTools.cs" />
     <Compile Include="Utility\EncodingHelpers.cs" />
     <Compile Include="Utility\FormattedMessage.cs" />
+    <Compile Include="Utility\ManualResetEventExt.cs" />
     <Compile Include="Utility\RefList.cs" />
     <Compile Include="Utility\ResourcePath.cs" />
     <Compile Include="Utility\QuadTree.cs" />

@@ -2,6 +2,7 @@
 using DiscordRPC.Logging;
 using Robust.Client.Interfaces.Utility;
 using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.Interfaces.Log;
 using Robust.Shared.IoC;
 
 namespace Robust.Client.Utility
@@ -25,6 +26,7 @@ namespace Robust.Client.Utility
         private DiscordRpcClient _client;
 
         [Dependency] private readonly IConfigurationManager _configurationManager;
+        [Dependency] private readonly ILogManager _logManager;
 
         private bool _initialized;
 
@@ -45,7 +47,7 @@ namespace Robust.Client.Utility
             // Create the client
             _client = new DiscordRpcClient("560499552273170473")
             {
-                Logger = NativeLogger.Instance
+                Logger = new NativeLogger(_logManager.GetSawmill("discord"))
             };
 
             // == Subscribe to some events
@@ -121,9 +123,12 @@ namespace Robust.Client.Utility
 
         private sealed class NativeLogger : ILogger
         {
-            public static readonly NativeLogger Instance = new NativeLogger();
+            private readonly ISawmill _sawmill;
 
-            private NativeLogger() {}
+            public NativeLogger(ISawmill sawmill)
+            {
+                _sawmill = sawmill;
+            }
 
             public void Trace(string message, params object[] args)
             {
@@ -132,7 +137,7 @@ namespace Robust.Client.Utility
                     return;
                 }
 
-                Shared.Log.Logger.DebugS("discord", message, args);
+                _sawmill.Debug(message, args);
             }
 
             public void Info(string message, params object[] args)
@@ -142,7 +147,7 @@ namespace Robust.Client.Utility
                     return;
                 }
 
-                Shared.Log.Logger.InfoS("discord", message, args);
+                _sawmill.Info(message, args);
             }
 
             public void Warning(string message, params object[] args)
@@ -152,12 +157,12 @@ namespace Robust.Client.Utility
                     return;
                 }
 
-                Shared.Log.Logger.WarningS("discord", message, args);
+                _sawmill.Warning(message, args);
             }
 
             public void Error(string message, params object[] args)
             {
-                Shared.Log.Logger.ErrorS("discord", message, args);
+                _sawmill.Error(message, args);
             }
 
             public LogLevel Level { get; set; } = LogLevel.Info;

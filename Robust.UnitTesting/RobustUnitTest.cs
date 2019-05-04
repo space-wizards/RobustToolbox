@@ -132,6 +132,7 @@ namespace Robust.UnitTesting
             }
 
             // Clear state across tests.
+            IoCManager.InitThread();
             IoCManager.Clear();
             RegisterIoC();
 

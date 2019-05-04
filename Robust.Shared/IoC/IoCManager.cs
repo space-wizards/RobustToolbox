@@ -1,6 +1,7 @@
 ﻿using Robust.Shared.IoC.Exceptions;
 using System;
 using System.Diagnostics.Contracts;
+using System.Threading;
 
 namespace Robust.Shared.IoC
 {
@@ -26,7 +27,27 @@ namespace Robust.Shared.IoC
     /// <seealso cref="Interfaces.Reflection.IReflectionManager"/>
     public static class IoCManager
     {
-        private static readonly IDependencyCollection _container = new DependencyCollection();
+        private static readonly ThreadLocal<IDependencyCollection> _container = new ThreadLocal<IDependencyCollection>();
+
+        public static void InitThread()
+        {
+            if (_container.IsValueCreated)
+            {
+                return;
+            }
+
+            _container.Value = new DependencyCollection();
+        }
+
+        public static void InitThread(IDependencyCollection collection)
+        {
+            if (_container.IsValueCreated)
+            {
+                throw new InvalidOperationException("This thread has already been initialized.");
+            }
+
+            _container.Value = collection;
+        }
 
         /// <summary>
         /// Registers an interface to an implementation, to make it accessible to <see cref="Resolve{T}"/>
@@ -44,7 +65,7 @@ namespace Robust.Shared.IoC
         public static void Register<TInterface, TImplementation>(bool overwrite = false)
             where TImplementation : class, TInterface, new()
         {
-            _container.Register<TInterface, TImplementation>(overwrite);
+            _container.Value.Register<TInterface, TImplementation>(overwrite);
         }
 
         /// <summary>
@@ -54,7 +75,6 @@ namespace Robust.Shared.IoC
         ///     <see cref="IDependencyCollection.BuildGraph"/> does not need to be called after registering an instance.
         /// </summary>
         /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
-        /// <typeparam name="TImplementation">The type that will be constructed as implementation.</typeparam>
         /// <param name="implementation">The existing instance to use as the implementation.</param>
         /// <param name="overwrite">
         /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
@@ -62,7 +82,7 @@ namespace Robust.Shared.IoC
         /// </param>
         public static void RegisterInstance<TInterface>(object implementation, bool overwrite = false)
         {
-            _container.RegisterInstance<TInterface>(implementation, overwrite);
+            _container.Value.RegisterInstance<TInterface>(implementation, overwrite);
         }
 
         /// <summary>
@@ -72,7 +92,7 @@ namespace Robust.Shared.IoC
         /// </summary>
         public static void Clear()
         {
-            _container.Clear();
+            _container.Value.Clear();
         }
 
         /// <summary>
@@ -86,7 +106,7 @@ namespace Robust.Shared.IoC
         [Pure]
         public static T Resolve<T>()
         {
-            return _container.Resolve<T>();
+            return _container.Value.Resolve<T>();
         }
 
         /// <summary>
@@ -100,7 +120,7 @@ namespace Robust.Shared.IoC
         [Pure]
         public static object ResolveType(Type type)
         {
-            return _container.ResolveType(type);
+            return _container.Value.ResolveType(type);
         }
 
         /// <summary>
@@ -109,7 +129,7 @@ namespace Robust.Shared.IoC
         /// <seealso cref="InjectDependencies(object)"/>
         public static void BuildGraph()
         {
-            _container.BuildGraph();
+            _container.Value.BuildGraph();
         }
 
         /// <summary>
@@ -126,7 +146,7 @@ namespace Robust.Shared.IoC
         /// <seealso cref="BuildGraph"/>
         public static void InjectDependencies(object obj)
         {
-            _container.InjectDependencies(obj);
+            _container.Value.InjectDependencies(obj);
         }
     }
 }

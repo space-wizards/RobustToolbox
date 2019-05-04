@@ -50,7 +50,7 @@ namespace Robust.Server
     /// <summary>
     /// The master class that runs the rest of the engine.
     /// </summary>
-    public class BaseServer : IBaseServer
+    public class BaseServer : IBaseServerInternal
     {
         [Dependency]
         private readonly ICommandLineArgs _commandLine;
@@ -82,7 +82,7 @@ namespace Robust.Server
         private readonly ITaskManager _taskManager;
 
         private FileLogHandler fileLogHandler;
-        private GameLoop _mainLoop;
+        private IGameLoop _mainLoop;
 
         [Dependency]
         private IRuntimeLog runtimeLog;
@@ -90,6 +90,8 @@ namespace Robust.Server
         private TimeSpan _lastTitleUpdate;
         private int _lastReceivedBytes;
         private int _lastSentBytes;
+
+        public string ContentRootDir { get; set; } = "../../../";
 
         /// <inheritdoc />
         public int MaxPlayers => _config.GetCVar<int>("game.maxplayers");
@@ -180,8 +182,9 @@ namespace Robust.Server
 #else
             // Load from the resources dir in the repo root instead.
             // It's a debug build so this is fine.
-            _resources.MountContentDirectory(@"../../Resources/");
-            _resources.MountContentDirectory(@"../../../bin/Content.Server/", new ResourcePath("/Assemblies/"));
+            _resources.MountContentDirectory($@"{ContentRootDir}RobustToolbox/Resources/");
+            _resources.MountContentDirectory($@"{ContentRootDir}bin/Content.Server/", new ResourcePath("/Assemblies/"));
+            _resources.MountContentDirectory($@"{ContentRootDir}Resources/");
 #endif
 
             //mount the engine content pack
@@ -239,16 +242,24 @@ namespace Robust.Server
         /// <inheritdoc />
         public void MainLoop()
         {
-            _mainLoop = new GameLoop(_time)
+            if (_mainLoop == null)
             {
-                SleepMode = SleepMode.Delay
-            };
+                _mainLoop = new GameLoop(_time)
+                {
+                    SleepMode = SleepMode.Delay
+                };
+            }
 
             _mainLoop.Tick += (sender, args) => Update(args.DeltaSeconds);
 
             // set GameLoop.Running to false to return from this function.
             _mainLoop.Run();
             Cleanup();
+        }
+
+        public void OverrideMainLoop(IGameLoop gameLoop)
+        {
+            _mainLoop = gameLoop;
         }
 
         /// <summary>

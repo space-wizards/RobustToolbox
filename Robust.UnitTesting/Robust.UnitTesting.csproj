@@ -105,6 +105,7 @@
     <Compile Include="Client\Utility\GodotParserTest.cs" />
     <Compile Include="Client\Utility\GodotPathUtilityTest.cs" />
     <Compile Include="LogCatcher.cs" />
+    <Compile Include="RobustIntegrationTest.cs" />
     <Compile Include="Server\GameObjects\Components\Container_Test.cs" />
     <Compile Include="Server\GameObjects\Components\Transform_Test.cs" />
     <Compile Include="Shared\ContentPack\ResourceManagerTest.cs" />

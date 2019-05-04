@@ -22,6 +22,7 @@ namespace Robust.Client.ResourceManagement
 #else
             MountContentDirectory(@"../../Resources/");
             MountContentDirectory(@"../../../bin/Content.Client/", new ResourcePath("/Assemblies/"));
+            MountContentDirectory(@"../../../Resources/");
 #endif
             //_resources.MountContentPack(@"./EngineContentPack.zip");
         }

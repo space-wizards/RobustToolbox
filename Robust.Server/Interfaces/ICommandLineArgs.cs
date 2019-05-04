@@ -7,7 +7,7 @@
         /// This method must be ran before other members are accessed.
         /// </summary>
         /// <returns>True if the arguments were parsed correctly, false if the program should terminate immediately (parse error, help used).</returns>
-        bool Parse();
+        bool Parse(string[] args);
 
         string ConfigFile { get; }
 

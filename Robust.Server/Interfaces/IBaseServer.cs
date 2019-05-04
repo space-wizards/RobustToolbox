@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Server.Player;
+using Robust.Shared.Timing;
 
 namespace Robust.Server.Interfaces
 {
@@ -39,5 +40,11 @@ namespace Robust.Server.Interfaces
         ///     Enters the main loop of the server. This functions blocks until the server is shut down.
         /// </summary>
         void MainLoop();
+    }
+
+    internal interface IBaseServerInternal : IBaseServer
+    {
+        void OverrideMainLoop(IGameLoop gameLoop);
+        string ContentRootDir { get; set; }
     }
 }

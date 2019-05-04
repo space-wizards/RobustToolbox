@@ -1,13 +1,9 @@
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.CheckButton))]
+    [ControlWrap("CheckButton")]
     public class CheckButton : Button
     {
         public CheckButton()
-        {
-        }
-
-        public CheckButton(Godot.CheckButton button) : base(button)
         {
         }
     }

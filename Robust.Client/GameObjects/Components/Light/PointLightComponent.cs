@@ -85,21 +85,11 @@ namespace Robust.Client.GameObjects
                 {
                     if (Owner.Transform.Parent == null) return;
 
-                    if (GameController.OnGodot)
-                    {
-                        Light.ParentTo((GodotTransformComponent) Owner.Transform.Parent);
-                    }
-
                     _lightOnParent = true;
                 }
                 else
                 {
                     if (!_lightOnParent) return;
-
-                    if (GameController.OnGodot)
-                    {
-                        Light.ParentTo((GodotTransformComponent) Owner.Transform);
-                    }
 
                     _lightOnParent = false;
                 }
@@ -123,12 +113,6 @@ namespace Robust.Client.GameObjects
                 var tex = _resourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/Effects/Light/") /
                                                            $"lighting_falloff_{(int) radius}.png");
 
-                if (GameController.OnGodot)
-                {
-                    // TODO: Maybe editing the global texture resource is not a good idea.
-                    tex.Texture.GodotTexture.SetFlags(tex.Texture.GodotTexture.GetFlags() |
-                                                      (int) Godot.Texture.FlagsEnum.Filter);
-                }
 
                 Light.Texture = tex.Texture;
             }
@@ -137,11 +121,6 @@ namespace Robust.Client.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-
-            if (GameController.OnGodot)
-            {
-                Light.ParentTo((GodotTransformComponent) Owner.Transform);
-            }
 
             Owner.Transform.OnParentChanged += TransformOnOnParentChanged;
         }
@@ -156,20 +135,11 @@ namespace Robust.Client.GameObjects
 
             if (obj.New.IsValid() && Owner.EntityManager.TryGetEntity(obj.New, out var entity))
             {
-                if (GameController.OnGodot)
-                {
-                    Light.ParentTo((GodotTransformComponent) entity.Transform);
-                }
 
                 _lightOnParent = true;
             }
             else
             {
-                if (GameController.OnGodot)
-                {
-                    Light.ParentTo((GodotTransformComponent) Owner.Transform);
-                }
-
                 _lightOnParent = false;
             }
         }

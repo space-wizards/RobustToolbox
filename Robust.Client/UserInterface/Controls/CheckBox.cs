@@ -4,7 +4,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.CheckBox))]
+    [ControlWrap("CheckBox")]
     public class CheckBox : Button
     {
         public const string StylePropertyIcon = "icon";
@@ -18,17 +18,8 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        internal CheckBox(Godot.CheckBox box) : base(box)
-        {
-        }
-
         protected internal override void Draw(DrawingHandleScreen handle)
         {
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             var offset = 0;
             var icon = _getIcon();
             if (icon != null)
@@ -43,11 +34,6 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            if (GameController.OnGodot)
-            {
-                return Vector2.Zero;
-            }
-
             var minSize = _getIcon()?.Size ?? Vector2i.Zero;
             var font = ActualFont;
 
@@ -78,11 +64,6 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             return 0;
-        }
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.CheckBox();
         }
 
         protected override void SetDefaults()

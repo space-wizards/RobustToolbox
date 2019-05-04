@@ -43,7 +43,6 @@ namespace Robust.Client.UserInterface
         /// <param name="sizeX">The horizontal size of the container of this entry.</param>
         public void Update(Font font, float sizeX)
         {
-            DebugTools.Assert(!GameController.OnGodot);
             // This method is gonna suck due to complexity.
             // Bear with me here.
             // I am so deeply sorry for the person adding stuff to this in the future.

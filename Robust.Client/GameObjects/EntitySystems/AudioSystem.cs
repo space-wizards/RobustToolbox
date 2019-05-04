@@ -1,7 +1,5 @@
 ﻿using Robust.Client.Audio;
-using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces;
-using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Audio;
@@ -12,7 +10,6 @@ using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Utility;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
@@ -23,16 +20,10 @@ namespace Robust.Client.GameObjects.EntitySystems
 {
     public class AudioSystem : EntitySystem
     {
-        [Dependency] private readonly ISceneTreeHolder sceneTree;
         [Dependency] private readonly IResourceCache resourceCache;
         [Dependency] private readonly IMapManager _mapManager;
 
         private IClyde _clyde;
-
-        private uint LastPlayKey;
-
-        private readonly Dictionary<uint, PlayingGodotStream> PlayingGodotStreams =
-            new Dictionary<uint, PlayingGodotStream>();
 
         private readonly List<PlayingClydeStream> PlayingClydeStreams = new List<PlayingClydeStream>();
 
@@ -117,30 +108,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                     Source = source,
                 };
                 PlayingClydeStreams.Add(playing);
-                return;
             }
-
-            if (GameController.Mode != GameController.DisplayMode.Godot)
-            {
-                return;
-            }
-
-            var player = new Godot.AudioStreamPlayer()
-            {
-                Stream = stream.GodotAudioStream,
-                Playing = true,
-            };
-            if (audioParams != null)
-            {
-                var val = audioParams.Value;
-                player.Bus = val.BusName;
-                player.VolumeDb = val.Volume;
-                //player.PitchScale = val.PitchScale;
-                player.MixTarget = (Godot.AudioStreamPlayer.MixTargetEnum) val.MixTarget;
-            }
-
-            sceneTree.WorldRoot.AddChild(player);
-            TrackGodotPlayer(player);
         }
 
         /// <summary>
@@ -179,32 +147,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                     TrackingEntity = entity,
                 };
                 PlayingClydeStreams.Add(playing);
-                return;
             }
-
-            if (GameController.Mode != GameController.DisplayMode.Godot)
-            {
-                return;
-            }
-
-            var parent = entity.GetComponent<IGodotTransformComponent>().SceneNode;
-            var player = new Godot.AudioStreamPlayer2D()
-            {
-                Stream = stream.GodotAudioStream,
-                Playing = true
-            };
-            if (audioParams != null)
-            {
-                var val = audioParams.Value;
-                player.Bus = val.BusName;
-                player.VolumeDb = val.Volume;
-                //player.PitchScale = val.PitchScale;
-                player.Attenuation = val.Attenuation;
-                player.MaxDistance = EyeManager.PIXELSPERMETER * val.MaxDistance;
-            }
-
-            parent.AddChild(player);
-            TrackGodotPlayer(player);
         }
 
         /// <summary>
@@ -243,33 +186,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                     TrackingCoordinates = coordinates
                 };
                 PlayingClydeStreams.Add(playing);
-                return;
             }
-
-            if (GameController.Mode != GameController.DisplayMode.Godot)
-            {
-                return;
-            }
-
-            var player = new Godot.AudioStreamPlayer2D()
-            {
-                Stream = stream.GodotAudioStream,
-                Playing = true,
-                // TODO: Handle grid and map of the coordinates.
-                Position = (coordinates.Position * EyeManager.PIXELSPERMETER).Convert()
-            };
-            if (audioParams != null)
-            {
-                var val = audioParams.Value;
-                player.Bus = audioParams.Value.BusName;
-                player.VolumeDb = val.Volume;
-                //player.PitchScale = val.PitchScale;
-                player.Attenuation = val.Attenuation;
-                player.MaxDistance = EyeManager.PIXELSPERMETER * val.MaxDistance;
-            }
-
-            sceneTree.WorldRoot.AddChild(player);
-            TrackGodotPlayer(player);
         }
 
         public override void HandleNetMessage(INetChannel channel, EntitySystemMessage message)
@@ -309,35 +226,6 @@ namespace Robust.Client.GameObjects.EntitySystems
             {
                 Logger.Error($"Server tried to play audio file {msg.FileName} which does not exist.");
             }
-        }
-
-        private void TrackGodotPlayer(Godot.Node player)
-        {
-            var key = LastPlayKey++;
-            var signal = new GodotGlue.GodotSignalSubscriber0();
-            signal.Connect(player, "finished");
-            signal.Signal += () => { CleanupAudioPlayer(key); };
-            PlayingGodotStreams[key] = new PlayingGodotStream()
-            {
-                Player = player,
-                Signal = signal
-            };
-        }
-
-        private void CleanupAudioPlayer(uint key)
-        {
-            var stream = PlayingGodotStreams[key];
-            stream.Signal.Disconnect(stream.Player, "finished");
-            stream.Signal.Dispose();
-            stream.Player.QueueFree();
-            stream.Player.Dispose();
-            PlayingGodotStreams.Remove(key);
-        }
-
-        private struct PlayingGodotStream
-        {
-            public Godot.Node Player;
-            public GodotGlue.GodotSignalSubscriber0 Signal;
         }
 
         private class PlayingClydeStream

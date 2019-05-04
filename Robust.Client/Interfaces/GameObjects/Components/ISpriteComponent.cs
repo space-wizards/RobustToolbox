@@ -198,17 +198,5 @@ namespace Robust.Client.Interfaces.GameObjects.Components
     public interface ISpriteProxy : IDisposable
     {
         Vector2 Offset { get; set; }
-        void AttachToItem(Godot.RID item);
-    }
-
-    public static class SpriteProxyExt
-    {
-        public static void AttachToControl(this ISpriteProxy mirror, Control control)
-        {
-            if (GameController.OnGodot)
-            {
-                mirror.AttachToItem(control.SceneControl.GetCanvasItem());
-            }
-        }
     }
 }

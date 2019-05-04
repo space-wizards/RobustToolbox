@@ -5,7 +5,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.ProgressBar))]
+    [ControlWrap("ProgressBar")]
     public class ProgressBar : Range
     {
         public const string StylePropertyBackground = "background";
@@ -17,22 +17,6 @@ namespace Robust.Client.UserInterface.Controls
 
         public ProgressBar(string name) : base(name)
         {
-        }
-
-        internal ProgressBar(Godot.ProgressBar control) : base(control)
-        {
-        }
-
-        /// <summary>
-        ///     True if the percentage label on top of the progress bar is visible.
-        /// </summary>
-        public bool PercentVisible
-        {
-            get => GameController.OnGodot ? (bool)SceneControl.Get("percent_visible") : default;
-            set
-            {
-                if (GameController.OnGodot) SceneControl.Set("percent_visible", value);
-            }
         }
 
         [Pure]
@@ -53,11 +37,6 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.Draw(handle);
 
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             var bg = _getBackground();
             bg?.Draw(handle, SizeBox);
 
@@ -76,20 +55,10 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            if (GameController.OnGodot)
-            {
-                return Vector2.Zero;
-            }
-
             var bgSize = _getBackground()?.MinimumSize ?? Vector2.Zero;
             var fgSize = _getForeground()?.MinimumSize ?? Vector2.Zero;
 
             return Vector2.ComponentMax(bgSize, fgSize);
-        }
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.ProgressBar();
         }
     }
 }

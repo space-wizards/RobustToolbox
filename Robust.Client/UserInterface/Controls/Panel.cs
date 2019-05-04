@@ -4,7 +4,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.Panel))]
+    [ControlWrap("Panel")]
     public class Panel : Control
     {
         public const string StylePropertyPanel = "panel";
@@ -13,25 +13,16 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        public Panel() : base()
+        public Panel()
         {
-        }
-
-        internal Panel(Godot.Panel panel) : base(panel)
-        {
-        }
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.Panel();
         }
 
         private StyleBox _panelOverride;
 
         public StyleBox PanelOverride
         {
-            get => _panelOverride ?? GetStyleBoxOverride("panel");
-            set => SetStyleBoxOverride("panel", _panelOverride = value);
+            get => _panelOverride;
+            set => _panelOverride = value;
         }
 
         private StyleBox ActualPanel
@@ -56,11 +47,8 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.Draw(handle);
 
-            if (!GameController.OnGodot)
-            {
-                var panel = ActualPanel;
-                panel.Draw(handle, SizeBox);
-            }
+            var panel = ActualPanel;
+            panel.Draw(handle, SizeBox);
         }
 
         private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
@@ -75,11 +63,6 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            if (GameController.OnGodot)
-            {
-                return Vector2.Zero;
-            }
-
             return ActualPanel.MinimumSize;
         }
     }

@@ -11,13 +11,13 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.TextureRect))]
+    [ControlWrap("TextureRect")]
     public class TextureRect : Control
     {
-        private bool _canShrink = false;
+        private bool _canShrink;
         private StretchMode _stretch = StretchMode.Keep;
 
-        public TextureRect() : base()
+        public TextureRect()
         {
         }
 
@@ -25,52 +25,15 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        public TextureRect(Godot.TextureRect button) : base(button)
-        {
-        }
-
         private Texture _texture;
 
         public Texture Texture
         {
-            // TODO: Maybe store the texture passed in in case it's like a TextureResource or whatever.
-            get => _texture ?? (GameController.OnGodot
-                       ? new GodotTextureSource((Godot.Texture) SceneControl.Get("texture"))
-                       : null);
+            get => _texture;
             set
             {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("texture", value?.GodotTexture);
-                }
-
                 _texture = value;
                 MinimumSizeChanged();
-            }
-        }
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.TextureRect();
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-
-#pragma warning disable 618
-            if (GameController.OnGodot && Stretch == StretchMode.ScaleOnExpand)
-#pragma warning restore 618
-            {
-                // Turn the old compat mode into the non deprecated mode.
-                if (CanShrink)
-                {
-                    Stretch = StretchMode.Scale;
-                }
-                else
-                {
-                    Stretch = StretchMode.Keep;
-                }
             }
         }
 
@@ -78,7 +41,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.Draw(handle);
 
-            if (_texture == null || GameController.OnGodot)
+            if (_texture == null)
             {
                 return;
             }
@@ -125,7 +88,6 @@ namespace Robust.Client.UserInterface.Controls
                     var (scaleX, scaleY) = Size / _texture.Size;
                     // Use whichever scale is greater.
                     var scale = Math.Max(scaleX, scaleY);
-                    var texSize = _texture.Size * scale;
                     // Offset inside the actual texture.
                     var offset = (_texture.Size - Size) / scale / 2f;
                     handle.DrawTextureRectRegion(_texture, SizeBox, UIBox2.FromDimensions(offset, Size / scale));
@@ -161,42 +123,28 @@ namespace Robust.Client.UserInterface.Controls
 
         public bool CanShrink
         {
-            get => GameController.OnGodot ? (bool) SceneControl.Get("expand") : _canShrink;
+            get => _canShrink;
             set
             {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("expand", value);
-                }
-                else
-                {
-                    _canShrink = value;
-                    MinimumSizeChanged();
-                }
+                _canShrink = value;
+                MinimumSizeChanged();
             }
         }
 
         public StretchMode Stretch
         {
-            get => GameController.OnGodot ? (StretchMode) SceneControl.Get("stretch_mode") : _stretch;
+            get => _stretch;
             set
             {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("stretch_mode", (Godot.TextureRect.StretchModeEnum) value);
-                }
-                else
-                {
 #pragma warning disable 618
-                    if (value == StretchMode.ScaleOnExpand)
+                if (value == StretchMode.ScaleOnExpand)
 #pragma warning restore 618
-                    {
-                        throw new ArgumentException("ScaleOnExpand is a deprecated holdover from Godot, do not use it.",
-                            nameof(value));
-                    }
-
-                    _stretch = value;
+                {
+                    throw new ArgumentException("ScaleOnExpand is a deprecated holdover from Godot, do not use it.",
+                        nameof(value));
                 }
+
+                _stretch = value;
             }
         }
 
@@ -216,7 +164,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            if (GameController.OnGodot || _texture == null || CanShrink)
+            if (_texture == null || CanShrink)
             {
                 return Vector2.Zero;
             }

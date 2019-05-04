@@ -11,7 +11,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     A label is a GUI control that displays simple text.
     /// </summary>
-    [ControlWrap(typeof(Godot.Label))]
+    [ControlWrap("Label")]
     public class Label : Control
     {
         public const string StylePropertyFontColor = "font-color";
@@ -23,11 +23,7 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        public Label() : base()
-        {
-        }
-
-        internal Label(Godot.Label control) : base(control)
+        public Label()
         {
         }
 
@@ -36,90 +32,39 @@ namespace Robust.Client.UserInterface.Controls
         [ViewVariables]
         public string Text
         {
-            get => GameController.OnGodot ? (string) SceneControl.Get("text") : _text;
+            get => _text;
             set
             {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("text", value);
-                }
-                else
-                {
-                    _text = value;
-                    _textDimensionCache = null;
-                    MinimumSizeChanged();
-                }
+                _text = value;
+                _textDimensionCache = null;
+                MinimumSizeChanged();
             }
         }
 
         [ViewVariables]
         public bool AutoWrap
         {
-            get => GameController.OnGodot ? (bool) SceneControl.Get("autowrap") : default;
+            get => default;
             set
             {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("autowrap", value);
-                }
             }
         }
-
-        private AlignMode _align;
 
         [ViewVariables]
-        public AlignMode Align
-        {
-            get => GameController.OnGodot ? (AlignMode) SceneControl.Get("align") : _align;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("align", (Godot.Label.AlignEnum) value);
-                }
-                else
-                {
-                    _align = value;
-                }
-            }
-        }
-
-        private VAlignMode _vAlign;
+        public AlignMode Align { get; set; }
 
         [ViewVariables]
-        public VAlignMode VAlign
-        {
-            // ReSharper disable once StringLiteralTypo
-            get => GameController.OnGodot ? (VAlignMode) SceneControl.Get("valign") : _vAlign;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    // ReSharper disable once StringLiteralTypo
-                    SceneControl.Set("valign", (Godot.Label.VAlign) value);
-                }
-                else
-                {
-                    _vAlign = value;
-                }
-            }
-        }
+        public VAlignMode VAlign { get; set; }
 
-        private Font _fontOverride;
-
-        public Font FontOverride
-        {
-            get => _fontOverride ?? GetFontOverride("font");
-            set => SetFontOverride("font", _fontOverride = value);
-        }
+        public Font FontOverride { get; set; }
 
         private Font ActualFont
         {
             get
             {
-                if (_fontOverride != null)
+                if (FontOverride != null)
                 {
-                    return _fontOverride;
+                    return FontOverride;
                 }
 
                 if (TryGetStyleProperty<Font>(StylePropertyFont, out var font))
@@ -131,21 +76,15 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        private Color? _fontColorShadowOverride;
-
-        public Color? FontColorShadowOverride
-        {
-            get => _fontColorShadowOverride ?? GetColorOverride("font_color_shadow");
-            set => SetColorOverride("font_color_shadow", _fontColorShadowOverride = value);
-        }
+        public Color? FontColorShadowOverride { get; set; }
 
         private Color ActualFontColor
         {
             get
             {
-                if (_fontColorOverride.HasValue)
+                if (FontColorOverride.HasValue)
                 {
-                    return _fontColorOverride.Value;
+                    return FontColorOverride.Value;
                 }
 
                 if (TryGetStyleProperty<Color>(StylePropertyFontColor, out var color))
@@ -157,42 +96,15 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        private Color? _fontColorOverride;
+        public Color? FontColorOverride { get; set; }
 
-        public Color? FontColorOverride
-        {
-            get => _fontColorOverride ?? GetColorOverride("font_color");
-            set => SetColorOverride("font_color", _fontColorOverride = value);
-        }
+        public int? ShadowOffsetXOverride { get; set; }
 
-        private int? _shadowOffsetXOverride;
+        public int? ShadowOffsetYOverride { get; set; }
 
-        public int? ShadowOffsetXOverride
-        {
-            get => _shadowOffsetXOverride ?? GetConstantOverride("shadow_offset_x");
-            set => SetConstantOverride("shadow_offset_x", _shadowOffsetXOverride = value);
-        }
-
-        private int? _shadowOffsetYOverride;
-
-        public int? ShadowOffsetYOverride
-        {
-            get => _shadowOffsetYOverride ?? GetConstantOverride("shadow_offset_y");
-            set => SetConstantOverride("shadow_offset_y", _shadowOffsetYOverride = value);
-        }
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.Label();
-        }
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             if (_text == null)
             {
                 return;
@@ -273,11 +185,6 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            if (GameController.OnGodot)
-            {
-                return base.CalculateMinimumSize();
-            }
-
             if (!_textDimensionCache.HasValue)
             {
                 _calculateTextDimension();

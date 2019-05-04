@@ -1,14 +1,12 @@
 ﻿using System;
-using Robust.Client.GodotGlue;
-using Robust.Client.Utility;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.Popup))]
+    [ControlWrap("Popup")]
     public class Popup : Control
     {
-        public Popup() : base()
+        public Popup()
         {
         }
 
@@ -16,34 +14,18 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        internal Popup(Godot.Popup control) : base(control)
-        {
-        }
-
         public event Action OnPopupHide;
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.Popup();
-        }
 
         public void Open(UIBox2? box = null)
         {
-            if (GameController.OnGodot)
+            if (box != null)
             {
-                SceneControl.Call("popup", box?.Convert());
+                Position = box.Value.TopLeft;
+                Size = box.Value.Size;
             }
-            else
-            {
-                if (box != null)
-                {
-                    Position = box.Value.TopLeft;
-                    Size = box.Value.Size;
-                }
 
-                Visible = true;
-                UserInterfaceManagerInternal.PushModal(this);
-            }
+            Visible = true;
+            UserInterfaceManagerInternal.PushModal(this);
         }
 
         protected internal override void ModalRemoved()
@@ -51,31 +33,6 @@ namespace Robust.Client.UserInterface.Controls
             base.ModalRemoved();
 
             Visible = false;
-            OnPopupHide?.Invoke();
-        }
-
-        private GodotSignalSubscriber0 __popupHideSubscriber;
-
-        protected override void SetupSignalHooks()
-        {
-            base.SetupSignalHooks();
-
-            __popupHideSubscriber = new GodotSignalSubscriber0();
-            __popupHideSubscriber.Connect(SceneControl, "popup_hide");
-            __popupHideSubscriber.Signal += __popupHideHook;
-        }
-
-        protected override void DisposeSignalHooks()
-        {
-            base.DisposeSignalHooks();
-
-            __popupHideSubscriber.Disconnect(SceneControl, "popup_hide");
-            __popupHideSubscriber.Dispose();
-            __popupHideSubscriber = null;
-        }
-
-        private void __popupHideHook()
-        {
             OnPopupHide?.Invoke();
         }
 

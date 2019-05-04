@@ -30,7 +30,6 @@
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <LangVersion>7.2</LangVersion>
-    <Godot>true</Godot>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
@@ -73,12 +72,6 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Drawing" />
-    <Reference Include="GodotSharp" Condition="Exists('..\Robust.Client.Godot\.mono\assemblies\GodotSharp.dll')">
-      <HintPath>..\Robust.Client.Godot\.mono\assemblies\GodotSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="GodotSharp" Condition="!Exists('..\Robust.Client.Godot\.mono\assemblies\GodotSharp.dll')">
-      <HintPath>..\Dependencies\godot\GodotSharp.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <Choose>
     <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">
@@ -101,7 +94,6 @@
     <Compile Include="Client\UserInterface\ControlTest.cs" />
     <Compile Include="Client\UserInterface\StylesheetTest.cs" />
     <Compile Include="Client\UserInterface\UserInterfaceManagerTest.cs" />
-    <Compile Include="Client\Utility\GodotConversionsTest.cs" />
     <Compile Include="Client\Utility\GodotParserTest.cs" />
     <Compile Include="Client\Utility\GodotPathUtilityTest.cs" />
     <Compile Include="LogCatcher.cs" />

@@ -91,20 +91,10 @@ namespace Robust.Client
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
-            if (OnGodot)
-            {
-                IoCManager.Register<IComponentFactory, GodotComponentFactory>();
-                IoCManager.Register<IMapManager, GodotMapManager>();
-                IoCManager.Register<ITileDefinitionManager, GodotTileDefinitionManager>();
-                IoCManager.Register<IGodotTileDefinitionManager, GodotTileDefinitionManager>();
-            }
-            else
-            {
-                IoCManager.Register<IComponentFactory, ClientComponentFactory>();
-                IoCManager.Register<IMapManager, MapManager>();
-                IoCManager.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
-                IoCManager.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
-            }
+            IoCManager.Register<IComponentFactory, ClientComponentFactory>();
+            IoCManager.Register<IMapManager, MapManager>();
+            IoCManager.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
+            IoCManager.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
             IoCManager.Register<IComponentManager, ComponentManager>();
             IoCManager.Register<IPhysicsManager, PhysicsManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
@@ -141,10 +131,6 @@ namespace Robust.Client
                     IoCManager.Register<IFontManager, FontManager>();
                     IoCManager.Register<IFontManagerInternal, FontManager>();
                     break;
-                case DisplayMode.Godot:
-                    IoCManager.Register<IDisplayManager, DisplayManagerGodot>();
-                    IoCManager.Register<IInputManager, GodotInputManager>();
-                    break;
                 case DisplayMode.Clyde:
                     IoCManager.Register<IDisplayManager, Clyde>();
                     IoCManager.Register<IClyde, Clyde>();
@@ -156,16 +142,7 @@ namespace Robust.Client
                     throw new ArgumentOutOfRangeException();
             }
             IoCManager.Register<IEyeManager, EyeManager>();
-            if (OnGodot)
-            {
-                IoCManager.Register<IGameTiming, GameController.GameTimingGodot>();
-                // Only GameController can access this because the type is private so it's fine.
-                IoCManager.Register<GameController.GameTimingGodot, GameController.GameTimingGodot>();
-            }
-            else
-            {
-                IoCManager.Register<IGameTiming, GameTiming>();
-            }
+            IoCManager.Register<IGameTiming, GameTiming>();
 
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<IOverlayManager, OverlayManager>();
@@ -173,20 +150,13 @@ namespace Robust.Client
             IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();
             IoCManager.Register<IViewVariablesManagerInternal, ViewVariablesManager>();
 
-            if (OnGodot)
-            {
-                IoCManager.Register<IClipboardManager, ClipboardManagerGodot>();
-            }
-            else
-            {
 #if LINUX
-                IoCManager.Register<IClipboardManager, ClipboardManagerLinux>();
+            IoCManager.Register<IClipboardManager, ClipboardManagerLinux>();
 #elif WINDOWS
-                IoCManager.Register<IClipboardManager, ClipboardManagerWindows>();
+            IoCManager.Register<IClipboardManager, ClipboardManagerWindows>();
 #else
-                IoCManager.Register<IClipboardManager, ClipboardManagerUnsupported>();
+            IoCManager.Register<IClipboardManager, ClipboardManagerUnsupported>();
 #endif
-            }
 
             IoCManager.BuildGraph();
         }

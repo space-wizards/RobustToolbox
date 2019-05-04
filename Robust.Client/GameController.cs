@@ -46,26 +46,16 @@ using Robust.Shared.Interfaces.Resources;
 
 namespace Robust.Client
 {
-    // Gets automatically ran by Robust.Client.Godot.
     [UsedImplicitly]
     internal sealed partial class GameController : IGameControllerInternal
     {
         public enum DisplayMode
         {
             Headless,
-            Godot,
             Clyde
         }
 
         internal static DisplayMode Mode { get; private set; } = DisplayMode.Headless;
-
-        internal static bool OnGodot => Mode == DisplayMode.Godot;
-
-        /// <summary>
-        ///     QueueFreeing a Godot node during finalization can cause segfaults.
-        ///     As such, this var is set as soon as we tell Godot to shut down proper.
-        /// </summary>
-        public static bool ShuttingDownHard { get; private set; } = false;
 
         [Dependency] private readonly IConfigurationManager _configurationManager;
         [Dependency] private readonly IResourceCacheInternal _resourceCache;
@@ -168,7 +158,6 @@ namespace Robust.Client
             _lightManager.Initialize();
             _entityManager.Initialize();
             _gameStateManager.Initialize();
-            _overlayManager.Initialize();
             _placementManager.Initialize();
             _viewVariablesManager.Initialize();
 
@@ -197,17 +186,10 @@ namespace Robust.Client
                 Logger.Info("Shutting down!");
             }
 
-            if (Mode != DisplayMode.Godot)
-            {
-                _mainLoop.Running = false;
-            }
+            _mainLoop.Running = false;
 
             Logger.Debug("Goodbye");
             IoCManager.Clear();
-            ShuttingDownHard = true;
-            // Hahaha Godot is crashing absurdly and I can't be bothered to fix it.
-            // Hey now it shuts down easily.
-            Environment.Exit(0);
         }
 
         private void Update(float frameTime)
@@ -242,14 +224,7 @@ namespace Robust.Client
 
         private void SetupLogging()
         {
-            if (OnGodot)
-            {
-                _logManager.RootSawmill.AddHandler(new GodotLogHandler());
-            }
-            else
-            {
-                _logManager.RootSawmill.AddHandler(new ConsoleLogHandler());
-            }
+            _logManager.RootSawmill.AddHandler(new ConsoleLogHandler());
 
             _logManager.GetSawmill("res.typecheck").Level = LogLevel.Info;
             _logManager.GetSawmill("res.tex").Level = LogLevel.Info;
@@ -264,7 +239,7 @@ namespace Robust.Client
 
         public static ICollection<string> GetCommandLineArgs()
         {
-            return OnGodot ? Godot.OS.GetCmdlineArgs() : Environment.GetCommandLineArgs();
+            return Environment.GetCommandLineArgs();
         }
 
         private static string _getUserDataDir(ICollection<string> commandLineArgs)

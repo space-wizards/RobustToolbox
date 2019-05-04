@@ -24,7 +24,6 @@ namespace Robust.Client.Graphics.Lighting
 {
     public sealed partial class LightManager : ILightManager, IDisposable, IPostInjectInit
     {
-        [Dependency] readonly ISceneTreeHolder sceneTreeHolder;
         [Dependency] readonly IConfigurationManager configManager;
         [Dependency] readonly IResourceCache resourceCache;
 
@@ -41,7 +40,6 @@ namespace Robust.Client.Graphics.Lighting
                 }
 
                 enabled = value;
-                UpdateEnabled();
             }
         }
 
@@ -49,14 +47,6 @@ namespace Robust.Client.Graphics.Lighting
         private List<Occluder> occluders = new List<Occluder>();
 
         private LightingSystem System = LightingSystem.Normal;
-
-        private Godot.CanvasModulate canvasModulate;
-        private Godot.Viewport rootViewport;
-        private Godot.Viewport deferredViewport;
-        private Godot.CanvasLayer deferredMaskLayer;
-        private Godot.Sprite deferredMaskBackground;
-        private Godot.Sprite deferredMaskSprite;
-        private GodotGlue.GodotSignalSubscriber0 deferredSizeChangedSubscriber;
 
         private bool disposed = false;
 
@@ -69,96 +59,7 @@ namespace Robust.Client.Graphics.Lighting
         public void Initialize()
         {
             System = configManager.GetCVar<LightingSystem>("display.lighting_system");
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
-            canvasModulate = new Godot.CanvasModulate()
-            {
-                // Black
-                Color = new Godot.Color(0.1f, 0.1f, 0.1f),
-                Name = "LightingCanvasModulate"
-            };
-            rootViewport = sceneTreeHolder.SceneTree.Root;
-
-            if (System == LightingSystem.Deferred)
-            {
-                deferredViewport = new Godot.Viewport
-                {
-                    Name = "LightingViewport",
-                    RenderTargetUpdateMode = Godot.Viewport.UpdateMode.Always,
-                    RenderTargetVFlip = true,
-                };
-                deferredViewport.AddChild(canvasModulate);
-                rootViewport.AddChild(deferredViewport);
-
-                var whiteTex =
-                    resourceCache.GetResource<TextureResource>(new ResourcePath(@"/Textures/Effects/Light/white.png"));
-                deferredMaskBackground = new Godot.Sprite()
-                {
-                    Name = "DeferredMaskBackground",
-                    Texture = whiteTex.Texture.GodotTexture,
-                    Centered = false,
-                };
-                deferredViewport.AddChild(deferredMaskBackground);
-
-                deferredSizeChangedSubscriber = new GodotGlue.GodotSignalSubscriber0();
-                deferredSizeChangedSubscriber.Connect(rootViewport, "size_changed");
-                deferredSizeChangedSubscriber.Signal += OnWindowSizeChanged;
-
-                deferredMaskLayer = new Godot.CanvasLayer()
-                {
-                    Name = "LightingMaskLayer",
-                    Layer = CanvasLayers.LAYER_DEFERRED_LIGHTING,
-                };
-                rootViewport.AddChild(deferredMaskLayer);
-
-                CreateDeferMaskSprite();
-                OnWindowSizeChanged();
-            }
-            else if (System == LightingSystem.Normal)
-            {
-                sceneTreeHolder.WorldRoot.AddChild(canvasModulate);
-            }
         }
-
-
-        private void OnWindowSizeChanged()
-        {
-            if (System == LightingSystem.Deferred)
-            {
-                var size = sceneTreeHolder.SceneTree.Root.Size;
-                deferredViewport.Size = size;
-                deferredMaskBackground.Scale = size;
-                // Needs to be re-created because otherwise it seems to not acknowledge the updated texture size?
-                // Might be a better way to do this.
-                CreateDeferMaskSprite();
-            }
-        }
-
-        private void CreateDeferMaskSprite()
-        {
-            if (deferredMaskSprite != null)
-            {
-                deferredMaskSprite.QueueFree();
-                deferredMaskSprite.Dispose();
-            }
-
-            var mat = new Godot.CanvasItemMaterial()
-            {
-                BlendMode = Godot.CanvasItemMaterial.BlendModeEnum.Mul
-            };
-            deferredMaskSprite = new Godot.Sprite
-            {
-                Name = "LightingDeferMask",
-                Texture = deferredViewport.GetTexture(),
-                Centered = false,
-                Material = mat,
-            };
-            deferredMaskLayer.AddChild(deferredMaskSprite);
-        }
-
 
         public void Dispose()
         {
@@ -172,41 +73,6 @@ namespace Robust.Client.Graphics.Lighting
             {
                 light.Dispose();
             }
-
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
-            if (System == LightingSystem.Deferred)
-            {
-                deferredSizeChangedSubscriber.Disconnect(rootViewport, "size_changed");
-                deferredSizeChangedSubscriber.Dispose();
-                deferredSizeChangedSubscriber = null;
-            }
-
-            rootViewport = null;
-
-            if (System == LightingSystem.Deferred)
-            {
-                deferredViewport.QueueFree();
-                deferredViewport.Dispose();
-                deferredViewport = null;
-
-                deferredMaskLayer.QueueFree();
-                deferredMaskLayer.Dispose();
-                deferredMaskLayer = null;
-
-                // These are implicitly freed by the other free calls.
-                deferredMaskBackground.Dispose();
-                deferredMaskBackground = null;
-                deferredMaskSprite.Dispose();
-                deferredMaskSprite = null;
-            }
-
-            canvasModulate.QueueFree();
-            canvasModulate.Dispose();
-            canvasModulate = null;
         }
 
         public ILight MakeLight()
@@ -240,33 +106,8 @@ namespace Robust.Client.Graphics.Lighting
             occluders.Remove(occluder);
         }
 
-        private void UpdateEnabled()
-        {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-            if (System == LightingSystem.Deferred)
-            {
-                deferredMaskSprite.Visible = Enabled;
-            }
-
-            foreach (var light in lights)
-            {
-                light.UpdateEnabled();
-            }
-        }
-
         public void FrameUpdate(RenderFrameEventArgs args)
         {
-            if (GameController.OnGodot && System == LightingSystem.Deferred)
-            {
-                var transform = rootViewport.CanvasTransform;
-                deferredViewport.CanvasTransform = transform;
-                deferredMaskBackground.Transform = transform.Inverse();
-                deferredMaskBackground.Scale = rootViewport.Size;
-            }
-
             foreach (var light in lights)
             {
                 light.FrameProcess(args);

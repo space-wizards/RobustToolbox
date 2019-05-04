@@ -15,25 +15,17 @@ namespace Robust.Client.Graphics.Lighting
         {
             public Vector2 Offset
             {
-                get => GameController.OnGodot ? Light2D.Offset.Convert() : default;
+                get => default;
                 set
                 {
-                    if (GameController.OnGodot)
-                    {
-                        Light2D.Offset = value.Convert();
-                    }
                 }
             }
 
             public Angle Rotation
             {
-                get => GameController.OnGodot ? new Angle(Light2D.GlobalRotation) : default;
+                get => default;
                 set
                 {
-                    if (GameController.OnGodot)
-                    {
-                        Light2D.GlobalRotation = (float) value.Theta;
-                    }
                 }
             }
 
@@ -50,11 +42,6 @@ namespace Robust.Client.Graphics.Lighting
                     }
 
                     color = value;
-
-                    if (GameController.OnGodot)
-                    {
-                        Light2D.Color = value.Convert();
-                    }
                 }
             }
 
@@ -71,11 +58,6 @@ namespace Robust.Client.Graphics.Lighting
                     }
 
                     textureScale = value;
-
-                    if (GameController.OnGodot)
-                    {
-                        Light2D.TextureScale = value;
-                    }
                 }
             }
 
@@ -92,10 +74,6 @@ namespace Robust.Client.Graphics.Lighting
                     }
 
                     energy = value;
-                    if (GameController.OnGodot)
-                    {
-                        Light2D.Energy = value;
-                    }
                 }
             }
 
@@ -133,10 +111,6 @@ namespace Robust.Client.Graphics.Lighting
                     }
 
                     texture = value;
-                    if (GameController.OnGodot)
-                    {
-                        Light2D.Texture = value;
-                    }
                 }
             }
 
@@ -156,74 +130,22 @@ namespace Robust.Client.Graphics.Lighting
 
             private LightManager Manager;
             private LightingSystem System => Manager.System;
-            private Godot.Light2D Light2D;
-            private IGodotTransformComponent parentTransform;
-            private Godot.Vector2 CurrentPos;
 
             public Light(LightManager manager)
             {
                 Manager = manager;
 
-                if (GameController.OnGodot)
-                {
-                    Light2D = new Godot.Light2D()
-                    {
-                        // TODO: Allow this to be modified.
-                        ShadowEnabled = true,
-                        ShadowFilter = Godot.Light2D.ShadowFilterEnum.Pcf5,
-                    };
-
-                    if (Manager.System == LightingSystem.Disabled)
-                    {
-                        Light2D.Enabled = Light2D.Visible = false;
-                    }
-                }
-
                 Mode = new LightModeConstant();
                 Mode.Start(this);
-
-                if (GameController.OnGodot && System == LightingSystem.Deferred)
-                {
-                    Manager.deferredViewport.AddChild(Light2D);
-                }
             }
 
             public void DeParent()
             {
-                if (GameController.OnGodot)
-                {
-                    if (System == LightingSystem.Deferred)
-                    {
-                        Light2D.Position = new Godot.Vector2(0, 0);
-                    }
-                    else
-                    {
-                        parentTransform.SceneNode.RemoveChild(Light2D);
-                    }
-                }
-
                 UpdateEnabled();
             }
 
             public void ParentTo(ITransformComponent node)
             {
-                if (!GameController.OnGodot)
-                {
-                    return;
-                }
-
-                if (System != LightingSystem.Deferred)
-                {
-                    if (parentTransform != null)
-                    {
-                        DeParent();
-                    }
-
-                    ((IGodotTransformComponent) node).SceneNode.AddChild(Light2D);
-                }
-
-                parentTransform = (IGodotTransformComponent) node;
-                UpdateEnabled();
             }
 
             public void Dispose()
@@ -238,14 +160,6 @@ namespace Robust.Client.Graphics.Lighting
                 Manager.RemoveLight(this);
 
                 Disposed = true;
-
-                if (!GameController.OnGodot)
-                {
-                    return;
-                }
-
-                Light2D.QueueFree();
-                Light2D.Dispose();
             }
 
             private static ILightMode GetModeInstance(LightModeClass modeClass)
@@ -262,26 +176,10 @@ namespace Robust.Client.Graphics.Lighting
 
             public void UpdateEnabled()
             {
-                if (GameController.OnGodot)
-                {
-                    Light2D.Visible = Enabled && Manager.Enabled && parentTransform != null;
-                }
             }
 
             public void FrameProcess(FrameEventArgs args)
             {
-// TODO: Maybe use OnMove events to make this less expensive.
-                if (!GameController.OnGodot || Manager.System != LightingSystem.Deferred ||
-                    parentTransform == null)
-                {
-                    return;
-                }
-
-                var newpos = parentTransform.SceneNode.GlobalPosition;
-                if (CurrentPos != newpos)
-                {
-                    Light2D.Position = newpos;
-                }
             }
         }
     }

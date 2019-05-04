@@ -231,7 +231,6 @@ namespace Robust.UnitTesting
                     //IoCManager.Register<IEyeManager, EyeManager>();
                     IoCManager.Register<IPrototypeManager, PrototypeManager>();
                     IoCManager.Register<IOverlayManager, OverlayManager>();
-                    IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
                     IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();
                     IoCManager.Register<IClipboardManager, ClipboardManagerUnsupported>();
                     IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();

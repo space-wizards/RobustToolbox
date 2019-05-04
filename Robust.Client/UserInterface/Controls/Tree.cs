@@ -8,52 +8,24 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.Tree))]
+    [ControlWrap("Tree")]
     public class Tree : Control
     {
         public const string StylePropertyItemBoxSelected = "item-selected";
         public const string StylePropertyBackground = "background";
 
-        readonly Dictionary<Godot.TreeItem, Item> ItemMap = new Dictionary<Godot.TreeItem, Item>();
         private readonly List<Item> _itemList = new List<Item>();
-
-        private bool _hideRoot;
 
         private Item _root;
         private int? _selectedIndex;
 
         private VScrollBar _scrollBar;
 
-        public bool HideRoot
-        {
-            get => GameController.OnGodot ? (bool) SceneControl.Get("hide_root") : _hideRoot;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("hide_root", value);
-                }
-                else
-                {
-                    _hideRoot = value;
-                }
-            }
-        }
+        public bool HideRoot { get; set; }
 
-        public Item Root => GameController.OnGodot ? GetItem((Godot.TreeItem) SceneControl.Call("get_root")) : _root;
+        public Item Root => _root;
 
-        public Item Selected
-        {
-            get
-            {
-                if (GameController.OnGodot)
-                {
-                    return GetItem((Godot.TreeItem) SceneControl.Call("get_selected"));
-                }
-
-                return _selectedIndex == null ? null : _itemList[_selectedIndex.Value];
-            }
-        }
+        public Item Selected => _selectedIndex == null ? null : _itemList[_selectedIndex.Value];
 
         public event Action OnItemSelected;
 
@@ -67,30 +39,10 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        internal Tree(Godot.Tree panel) : base(panel)
-        {
-        }
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.Tree();
-        }
-
         #endregion Construction
 
         public void Clear()
         {
-            foreach (var item in ItemMap.Values)
-            {
-                item.Dispose();
-            }
-
-            ItemMap.Clear();
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("clear");
-            }
-
             foreach (var item in _itemList)
             {
                 item.Dispose();
@@ -117,54 +69,21 @@ namespace Robust.Client.UserInterface.Controls
                 }
             }
 
-            if (GameController.OnGodot)
+            var item = new Item(this, _itemList.Count);
+            _itemList.Add(item);
+
+            if (_root == null)
             {
-                var nativeItem = (Godot.TreeItem) SceneControl.Call("create_item", parent?.NativeItem);
-                var item = new Item(nativeItem, this, ItemMap.Count);
-                ItemMap[nativeItem] = item;
-                return item;
+                _root = item;
             }
             else
             {
-                var item = new Item(this, _itemList.Count);
-                _itemList.Add(item);
-
-                if (_root == null)
-                {
-                    _root = item;
-                }
-                else
-                {
-                    parent = parent ?? _root;
-                    parent.Children.Add(item);
-                }
-
-                _updateScrollbar();
-                return item;
-            }
-        }
-
-        public void EnsureCursorIsVisible()
-        {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("ensure_cursor_is_visible");
-            }
-        }
-
-        public Vector2 GetScroll()
-        {
-            return GameController.OnGodot ? ((Godot.Vector2) SceneControl.Call("get_scroll")).Convert() : default;
-        }
-
-        private Item GetItem(Godot.TreeItem item)
-        {
-            if (ItemMap.TryGetValue(item, out var ret))
-            {
-                return ret;
+                parent = parent ?? _root;
+                parent.Children.Add(item);
             }
 
-            return null;
+            _updateScrollbar();
+            return item;
         }
 
         protected override void SetDefaults()
@@ -178,11 +97,6 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.Initialize();
 
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             _scrollBar = new VScrollBar {Name = "_v_scroll"};
             AddChild(_scrollBar);
             _scrollBar.SetAnchorAndMarginPreset(LayoutPreset.RightWide);
@@ -191,11 +105,6 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void MouseDown(GUIMouseButtonEventArgs args)
         {
             base.MouseDown(args);
-
-            if (GameController.OnGodot)
-            {
-                return;
-            }
 
             var item = _tryFindItemAtPosition(args.RelativePosition);
 
@@ -208,8 +117,6 @@ namespace Robust.Client.UserInterface.Controls
 
         private Item _tryFindItemAtPosition(Vector2 position)
         {
-            DebugTools.Assert(!GameController.OnGodot);
-
             var font = _getFont();
             if (font == null || _root == null)
             {
@@ -270,11 +177,6 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
-
-            if (GameController.OnGodot)
-            {
-                return;
-            }
 
             var font = _getFont();
             if (font == null || _root == null)
@@ -374,11 +276,6 @@ namespace Robust.Client.UserInterface.Controls
 
         private void _updateScrollbar()
         {
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             var internalHeight = _getInternalHeight();
             _scrollBar.MaxValue = internalHeight;
             _scrollBar.Page = Height;
@@ -432,88 +329,17 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        #region Signals
-
-        private GodotGlue.GodotSignalSubscriber0 __itemSelectedSubscriber;
-
-        protected override void SetupSignalHooks()
-        {
-            base.SetupSignalHooks();
-
-            __itemSelectedSubscriber = new GodotGlue.GodotSignalSubscriber0();
-            __itemSelectedSubscriber.Connect(SceneControl, "item_selected");
-            __itemSelectedSubscriber.Signal += () => OnItemSelected?.Invoke();
-        }
-
-        protected override void DisposeSignalHooks()
-        {
-            base.DisposeSignalHooks();
-
-            if (__itemSelectedSubscriber != null)
-            {
-                __itemSelectedSubscriber?.Disconnect(SceneControl, "item_selected");
-                __itemSelectedSubscriber?.Dispose();
-                __itemSelectedSubscriber = null;
-            }
-        }
-
-        #endregion Signals
-
         public sealed class Item : IDisposable
         {
-            internal readonly Godot.TreeItem NativeItem;
             internal readonly List<Item> Children = new List<Item>();
             internal readonly int Index;
             public readonly Tree Parent;
             public object Metadata { get; set; }
             public bool Disposed { get; private set; }
 
-            private string _text;
-            private bool _selectable = true;
+            public string Text { get; set; }
 
-            public string Text
-            {
-                get => GameController.OnGodot ? NativeItem.GetText(0) : _text;
-                set
-                {
-                    if (GameController.OnGodot)
-                    {
-                        NativeItem.SetText(0, value);
-                    }
-                    else
-                    {
-                        _text = value;
-                    }
-                }
-            }
-
-            [Obsolete("Use Text")]
-            public void SetText(int column, string text)
-            {
-                Text = text;
-            }
-
-            public bool Selectable
-            {
-                get => GameController.OnGodot ? NativeItem.IsSelectable(0) : _selectable;
-                set
-                {
-                    if (GameController.OnGodot)
-                    {
-                        NativeItem.SetSelectable(0, value);
-                    }
-                    else
-                    {
-                        _selectable = value;
-                    }
-                }
-            }
-
-            [Obsolete("Use Selectable")]
-            public void SetSelectable(int column, bool selectable)
-            {
-                Selectable = selectable;
-            }
+            public bool Selectable { get; set; } = true;
 
             internal Item(Tree parent, int index)
             {
@@ -521,20 +347,8 @@ namespace Robust.Client.UserInterface.Controls
                 Index = index;
             }
 
-            internal Item(Godot.TreeItem native, Tree parent, int index)
-            {
-                NativeItem = native;
-                Parent = parent;
-                Index = index;
-            }
-
             public void Dispose()
             {
-                if (GameController.OnGodot)
-                {
-                    NativeItem?.Dispose();
-                }
-
                 Disposed = true;
             }
         }

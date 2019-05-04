@@ -9,14 +9,11 @@ namespace Robust.Client
         /// </summary>
         public void KeyDown(KeyEventArgs keyEvent)
         {
-            if (!OnGodot)
-            {
-                _userInterfaceManager.KeyDown(keyEvent);
+            _userInterfaceManager.KeyDown(keyEvent);
 
-                if (keyEvent.Handled)
-                {
-                    return;
-                }
+            if (keyEvent.Handled)
+            {
+                return;
             }
             _inputManager.KeyDown(keyEvent);
         }
@@ -28,10 +25,7 @@ namespace Robust.Client
         {
             // Unlike KeyDown, InputManager still gets key ups.
             // My logic is that it should be fine dealing with redundant key ups and this *might* prevent edge cases.
-            if (!OnGodot)
-            {
-                _userInterfaceManager.KeyUp(keyEvent);
-            }
+            _userInterfaceManager.KeyUp(keyEvent);
             _inputManager.KeyUp(keyEvent);
         }
 
@@ -45,14 +39,7 @@ namespace Robust.Client
         /// </summary>
         public void MouseDown(MouseButtonEventArgs mouseEvent)
         {
-            if (GameController.OnGodot)
-            {
-                _userInterfaceManager.GDUnhandledMouseDown(mouseEvent);
-            }
-            else
-            {
-                _userInterfaceManager.MouseDown(mouseEvent);
-            }
+            _userInterfaceManager.MouseDown(mouseEvent);
             _stateManager.MouseDown(mouseEvent);
         }
 
@@ -61,14 +48,7 @@ namespace Robust.Client
         /// </summary>
         public void MouseUp(MouseButtonEventArgs mouseButtonEventArgs)
         {
-            if (GameController.OnGodot)
-            {
-                _userInterfaceManager.GDUnhandledMouseUp(mouseButtonEventArgs);
-            }
-            else
-            {
-                _userInterfaceManager.MouseUp(mouseButtonEventArgs);
-            }
+            _userInterfaceManager.MouseUp(mouseButtonEventArgs);
             _stateManager.MouseUp(mouseButtonEventArgs);
         }
 
@@ -77,10 +57,7 @@ namespace Robust.Client
         /// </summary>
         public void MouseMove(MouseMoveEventArgs mouseMoveEventArgs)
         {
-            if (!GameController.OnGodot)
-            {
-                _userInterfaceManager.MouseMove(mouseMoveEventArgs);
-            }
+            _userInterfaceManager.MouseMove(mouseMoveEventArgs);
             _stateManager.MouseMove(mouseMoveEventArgs);
         }
 

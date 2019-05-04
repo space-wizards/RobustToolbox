@@ -24,20 +24,6 @@ namespace Robust.Client.ResourceManagement
                 case GameController.DisplayMode.Headless:
                     AudioStream = new AudioStream();
                     break;
-                case GameController.DisplayMode.Godot:
-                    using (var fileStream = cache.ContentFileRead(path))
-                    {
-                        var stream = new Godot.AudioStreamOGGVorbis()
-                        {
-                            Data = fileStream.ToArray(),
-                        };
-                        if (stream.GetLength() == 0)
-                        {
-                            throw new InvalidDataException();
-                        }
-                        AudioStream = new AudioStream(stream);
-                    }
-                    break;
                 case GameController.DisplayMode.Clyde:
                     using (var fileStream = cache.ContentFileRead(path))
                     {

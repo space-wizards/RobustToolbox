@@ -12,8 +12,6 @@ namespace Robust.Client.Graphics.Drawing
     [PublicAPI]
     public abstract class StyleBox
     {
-        internal abstract Godot.StyleBox GodotStyleBox { get; }
-
         public Vector2 MinimumSize =>
             new Vector2(GetContentMargin(Margin.Left) + GetContentMargin(Margin.Right),
                 GetContentMargin(Margin.Top) + GetContentMargin(Margin.Bottom));
@@ -25,21 +23,7 @@ namespace Robust.Client.Graphics.Drawing
 
         public float? ContentMarginLeftOverride
         {
-            get
-            {
-                if (!GameController.OnGodot)
-                {
-                    return _contentMarginLeft;
-                }
-
-                var c = GodotStyleBox.ContentMarginLeft;
-                if (c < 0)
-                {
-                    return null;
-                }
-
-                return c;
-            }
+            get => _contentMarginLeft;
             set
             {
                 if (value < 0)
@@ -47,34 +31,13 @@ namespace Robust.Client.Graphics.Drawing
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
                 }
 
-                if (GameController.OnGodot)
-                {
-                    GodotStyleBox.ContentMarginLeft = value ?? -1;
-                }
-                else
-                {
-                    _contentMarginLeft = value;
-                }
+                _contentMarginLeft = value;
             }
         }
 
         public float? ContentMarginTopOverride
         {
-            get
-            {
-                if (!GameController.OnGodot)
-                {
-                    return _contentMarginTop;
-                }
-
-                var c = GodotStyleBox.ContentMarginTop;
-                if (c < 0)
-                {
-                    return null;
-                }
-
-                return c;
-            }
+            get => _contentMarginTop;
             set
             {
                 if (value < 0)
@@ -82,34 +45,13 @@ namespace Robust.Client.Graphics.Drawing
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
                 }
 
-                if (GameController.OnGodot)
-                {
-                    GodotStyleBox.ContentMarginTop = value ?? -1;
-                }
-                else
-                {
-                    _contentMarginTop = value;
-                }
+                _contentMarginTop = value;
             }
         }
 
         public float? ContentMarginRightOverride
         {
-            get
-            {
-                if (!GameController.OnGodot)
-                {
-                    return _contentMarginRight;
-                }
-
-                var c = GodotStyleBox.ContentMarginRight;
-                if (c < 0)
-                {
-                    return null;
-                }
-
-                return c;
-            }
+            get => _contentMarginRight;
             set
             {
                 if (value < 0)
@@ -117,34 +59,13 @@ namespace Robust.Client.Graphics.Drawing
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
                 }
 
-                if (GameController.OnGodot)
-                {
-                    GodotStyleBox.ContentMarginRight = value ?? -1;
-                }
-                else
-                {
-                    _contentMarginRight = value;
-                }
+                _contentMarginRight = value;
             }
         }
 
         public float? ContentMarginBottomOverride
         {
-            get
-            {
-                if (!GameController.OnGodot)
-                {
-                    return _contentMarginBottom;
-                }
-
-                var c = GodotStyleBox.ContentMarginBottom;
-                if (c < 0)
-                {
-                    return null;
-                }
-
-                return c;
-            }
+            get => _contentMarginBottom;
             set
             {
                 if (value < 0)
@@ -152,36 +73,17 @@ namespace Robust.Client.Graphics.Drawing
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
                 }
 
-                if (GameController.OnGodot)
-                {
-                    GodotStyleBox.ContentMarginBottom = value ?? -1;
-                }
-                else
-                {
-                    _contentMarginBottom = value;
-                }
+                _contentMarginBottom = value;
             }
         }
 
         public void Draw(DrawingHandleScreen handle, UIBox2 box)
         {
-            if (GameController.OnGodot)
-            {
-                GodotStyleBox.Draw(handle.Item, box.Convert());
-            }
-            else
-            {
-                DoDraw(handle, box);
-            }
+            DoDraw(handle, box);
         }
 
         public float GetContentMargin(Margin margin)
         {
-            if (GameController.OnGodot)
-            {
-                return GodotStyleBox.GetMargin((Godot.Margin) margin);
-            }
-
             float? marginData;
             switch (margin)
             {
@@ -301,23 +203,14 @@ namespace Robust.Client.Graphics.Drawing
     /// </summary>
     public class StyleBoxTexture : StyleBox
     {
-        private readonly Godot.StyleBoxTexture gdStyleBox;
-        internal override Godot.StyleBox GodotStyleBox => gdStyleBox;
-
         public StyleBoxTexture()
         {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
-            gdStyleBox = new Godot.StyleBoxTexture();
         }
 
         /// <summary>
         ///     Clones a stylebox so it can be separately modified.
         /// </summary>
-        public StyleBoxTexture(StyleBoxTexture copy) : this()
+        public StyleBoxTexture(StyleBoxTexture copy)
         {
             PatchMarginTop = copy.PatchMarginTop;
             PatchMarginLeft = copy.PatchMarginLeft;
@@ -327,80 +220,19 @@ namespace Robust.Client.Graphics.Drawing
             Modulate = copy.Modulate;
         }
 
-        private float _expandMarginLeft;
-        private float _expandMarginRight;
-        private float _expandMarginTop;
-        private float _expandMarginBottom;
+        public float ExpandMarginLeft { get; set; }
 
-        public float ExpandMarginLeft
-        {
-            get => GameController.OnGodot ? gdStyleBox.ExpandMarginLeft : _expandMarginLeft;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    gdStyleBox.ExpandMarginLeft = value;
-                }
-                else
-                {
-                    _expandMarginLeft = value;
-                }
-            }
-        }
+        public float ExpandMarginTop { get; set; }
 
-        public float ExpandMarginTop
-        {
-            get => GameController.OnGodot ? gdStyleBox.ExpandMarginTop : _expandMarginTop;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    gdStyleBox.ExpandMarginTop = value;
-                }
-                else
-                {
-                    _expandMarginTop = value;
-                }
-            }
-        }
+        public float ExpandMarginBottom { get; set; }
 
-        public float ExpandMarginBottom
-        {
-            get => GameController.OnGodot ? gdStyleBox.ExpandMarginBottom : _expandMarginBottom;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    gdStyleBox.ExpandMarginBottom = value;
-                }
-                else
-                {
-                    _expandMarginBottom = value;
-                }
-            }
-        }
-
-        public float ExpandMarginRight
-        {
-            get => GameController.OnGodot ? gdStyleBox.ExpandMarginRight : _expandMarginRight;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    gdStyleBox.ExpandMarginRight = value;
-                }
-                else
-                {
-                    _expandMarginRight = value;
-                }
-            }
-        }
+        public float ExpandMarginRight { get; set; }
 
         private float _patchMarginLeft;
 
         public float PatchMarginLeft
         {
-            get => GameController.OnGodot ? gdStyleBox.MarginLeft : _patchMarginLeft;
+            get => _patchMarginLeft;
             set
             {
                 if (value < 0)
@@ -408,14 +240,7 @@ namespace Robust.Client.Graphics.Drawing
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
                 }
 
-                if (GameController.OnGodot)
-                {
-                    gdStyleBox.MarginLeft = value;
-                }
-                else
-                {
-                    _patchMarginLeft = value;
-                }
+                _patchMarginLeft = value;
             }
         }
 
@@ -423,7 +248,7 @@ namespace Robust.Client.Graphics.Drawing
 
         public float PatchMarginRight
         {
-            get => GameController.OnGodot ? gdStyleBox.MarginRight : _patchMarginRight;
+            get => _patchMarginRight;
             set
             {
                 if (value < 0)
@@ -431,14 +256,7 @@ namespace Robust.Client.Graphics.Drawing
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
                 }
 
-                if (GameController.OnGodot)
-                {
-                    gdStyleBox.MarginRight = value;
-                }
-                else
-                {
-                    _patchMarginRight = value;
-                }
+                _patchMarginRight = value;
             }
         }
 
@@ -446,7 +264,7 @@ namespace Robust.Client.Graphics.Drawing
 
         public float PatchMarginTop
         {
-            get => GameController.OnGodot ? gdStyleBox.MarginTop : _patchMarginTop;
+            get => _patchMarginTop;
             set
             {
                 if (value < 0)
@@ -454,14 +272,7 @@ namespace Robust.Client.Graphics.Drawing
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
                 }
 
-                if (GameController.OnGodot)
-                {
-                    gdStyleBox.MarginTop = value;
-                }
-                else
-                {
-                    _patchMarginTop = value;
-                }
+                _patchMarginTop = value;
             }
         }
 
@@ -469,7 +280,7 @@ namespace Robust.Client.Graphics.Drawing
 
         public float PatchMarginBottom
         {
-            get => GameController.OnGodot ? gdStyleBox.MarginBottom : _patchMarginBottom;
+            get => _patchMarginBottom;
             set
             {
                 if (value < 0)
@@ -477,53 +288,13 @@ namespace Robust.Client.Graphics.Drawing
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
                 }
 
-                if (GameController.OnGodot)
-                {
-                    gdStyleBox.MarginBottom = value;
-                }
-                else
-                {
-                    _patchMarginBottom = value;
-                }
+                _patchMarginBottom = value;
             }
         }
 
-        private Color _modulate = Color.White;
+        public Color Modulate { get; set; } = Color.White;
 
-        public Color Modulate
-        {
-            get => GameController.OnGodot ? gdStyleBox.ModulateColor.Convert() : _modulate;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    gdStyleBox.ModulateColor = value.Convert();
-                }
-                else
-                {
-                    _modulate = value;
-                }
-            }
-        }
-
-        private Texture _texture;
-
-        public Texture Texture
-        {
-            // In Godot 3.0, StyleBoxTexture.Texture is a plain resource.
-            // So we need this cast.
-            // ReSharper disable once RedundantCast
-            get => _texture ?? (GameController.OnGodot ? new GodotTextureSource((Godot.Texture)gdStyleBox.Texture) : null);
-            // Woo implicit casts.
-            set
-            {
-                _texture = value;
-                if (GameController.OnGodot)
-                {
-                    gdStyleBox.Texture = value;
-                }
-            }
-        }
+        public Texture Texture { get; set; }
 
         [Obsolete("Use SetPatchMargin")]
         public void SetMargin(Margin margin, float value)
@@ -592,7 +363,7 @@ namespace Robust.Client.Graphics.Drawing
                     // Draw top left
                     var topLeftBox = new UIBox2(0, 0, PatchMarginLeft, PatchMarginTop)
                         .Translated(box.TopLeft);
-                    handle.DrawTextureRectRegion(_texture, topLeftBox,
+                    handle.DrawTextureRectRegion(Texture, topLeftBox,
                         new UIBox2(0, 0, PatchMarginLeft, PatchMarginTop), Modulate);
                 }
 
@@ -601,7 +372,7 @@ namespace Robust.Client.Graphics.Drawing
                     var leftBox =
                         new UIBox2(0, PatchMarginTop, PatchMarginLeft, box.Height - PatchMarginBottom)
                             .Translated(box.TopLeft);
-                    handle.DrawTextureRectRegion(_texture, leftBox,
+                    handle.DrawTextureRectRegion(Texture, leftBox,
                         new UIBox2(0, PatchMarginTop, PatchMarginLeft, Texture.Height - PatchMarginBottom), Modulate);
                 }
 
@@ -611,7 +382,7 @@ namespace Robust.Client.Graphics.Drawing
                     var bottomLeftBox =
                         new UIBox2(0, box.Height - PatchMarginBottom, PatchMarginLeft, box.Height)
                             .Translated(box.TopLeft);
-                    handle.DrawTextureRectRegion(_texture, bottomLeftBox,
+                    handle.DrawTextureRectRegion(Texture, bottomLeftBox,
                         new UIBox2(0, Texture.Height - PatchMarginBottom, PatchMarginLeft, Texture.Height), Modulate);
                 }
             }
@@ -623,7 +394,7 @@ namespace Robust.Client.Graphics.Drawing
                     // Draw top right
                     var topRightBox = new UIBox2(box.Width - PatchMarginRight, 0, box.Width, PatchMarginTop)
                         .Translated(box.TopLeft);
-                    handle.DrawTextureRectRegion(_texture, topRightBox,
+                    handle.DrawTextureRectRegion(Texture, topRightBox,
                         new UIBox2(Texture.Width - PatchMarginRight, 0, Texture.Width, PatchMarginTop), Modulate);
                 }
 
@@ -633,7 +404,7 @@ namespace Robust.Client.Graphics.Drawing
                         new UIBox2(box.Width - PatchMarginRight, PatchMarginTop, box.Width,
                                 box.Height - PatchMarginBottom)
                             .Translated(box.TopLeft);
-                    handle.DrawTextureRectRegion(_texture, rightBox,
+                    handle.DrawTextureRectRegion(Texture, rightBox,
                         new UIBox2(Texture.Width - PatchMarginRight, PatchMarginTop, Texture.Width,
                             Texture.Height - PatchMarginBottom), Modulate);
                 }
@@ -644,7 +415,7 @@ namespace Robust.Client.Graphics.Drawing
                     var bottomRightBox =
                         new UIBox2(box.Width - PatchMarginRight, box.Height - PatchMarginBottom, box.Width, box.Height)
                             .Translated(box.TopLeft);
-                    handle.DrawTextureRectRegion(_texture, bottomRightBox,
+                    handle.DrawTextureRectRegion(Texture, bottomRightBox,
                         new UIBox2(Texture.Width - PatchMarginRight, Texture.Height - PatchMarginBottom, Texture.Width,
                             Texture.Height), Modulate);
                 }
@@ -656,7 +427,7 @@ namespace Robust.Client.Graphics.Drawing
                 var topBox =
                     new UIBox2(PatchMarginLeft, 0, box.Width - PatchMarginRight, PatchMarginTop)
                         .Translated(box.TopLeft);
-                handle.DrawTextureRectRegion(_texture, topBox,
+                handle.DrawTextureRectRegion(Texture, topBox,
                     new UIBox2(PatchMarginLeft, 0, Texture.Width - PatchMarginRight, PatchMarginTop), Modulate);
             }
 
@@ -667,7 +438,7 @@ namespace Robust.Client.Graphics.Drawing
                     new UIBox2(PatchMarginLeft, box.Height - PatchMarginBottom, box.Width - PatchMarginRight,
                             box.Height)
                         .Translated(box.TopLeft);
-                handle.DrawTextureRectRegion(_texture, bottomBox,
+                handle.DrawTextureRectRegion(Texture, bottomBox,
                     new UIBox2(PatchMarginLeft, Texture.Height - PatchMarginBottom, Texture.Width - PatchMarginRight,
                         Texture.Height), Modulate);
             }
@@ -677,7 +448,7 @@ namespace Robust.Client.Graphics.Drawing
                 var centerBox = new UIBox2(PatchMarginLeft, PatchMarginTop, box.Width - PatchMarginRight,
                     box.Height - PatchMarginBottom).Translated(box.TopLeft);
 
-                handle.DrawTextureRectRegion(_texture, centerBox,
+                handle.DrawTextureRectRegion(Texture, centerBox,
                     new UIBox2(PatchMarginLeft, PatchMarginTop, Texture.Width - PatchMarginRight,
                         Texture.Height - PatchMarginBottom), Modulate);
             }
@@ -703,73 +474,19 @@ namespace Robust.Client.Graphics.Drawing
 
     public class StyleBoxFlat : StyleBox
     {
-        private Color _backgroundColor;
-
-        public Color BackgroundColor
-        {
-            get => GameController.OnGodot ? stylebox.BgColor.Convert() : _backgroundColor;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    stylebox.BgColor = value.Convert();
-                }
-                else
-                {
-                    _backgroundColor = value;
-                }
-            }
-        }
-
-        private readonly Godot.StyleBoxFlat stylebox;
-        internal override Godot.StyleBox GodotStyleBox => stylebox;
-
-        public StyleBoxFlat()
-        {
-            if (GameController.OnGodot)
-            {
-                stylebox = new Godot.StyleBoxFlat();
-            }
-        }
+        public Color BackgroundColor { get; set; }
 
         protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box)
         {
-            handle.DrawRect(box, _backgroundColor);
+            handle.DrawRect(box, BackgroundColor);
         }
     }
 
     public class StyleBoxEmpty : StyleBox
     {
-        internal override Godot.StyleBox GodotStyleBox { get; }
-
-        public StyleBoxEmpty()
-        {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
-            GodotStyleBox = new Godot.StyleBoxEmpty();
-        }
-
         protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box)
         {
             // It's empty what more do you want?
-        }
-    }
-
-    internal class GodotStyleBoxWrap : StyleBox
-    {
-        public GodotStyleBoxWrap(Godot.StyleBox godotStyleBox)
-        {
-            GodotStyleBox = godotStyleBox;
-        }
-
-        internal override Godot.StyleBox GodotStyleBox { get; }
-
-        protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box)
-        {
-            throw new NotImplementedException();
         }
     }
 }

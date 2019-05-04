@@ -79,11 +79,6 @@ namespace Robust.Client.GameObjects
             };
 
             transform.OnMove += Transform_OnMove;
-
-            if (GameController.OnGodot)
-            {
-                Owner.GetComponent<IGodotTransformComponent>().SceneNode.AddChild(eye.GodotCamera);
-            }
         }
 
         public override void OnRemove()

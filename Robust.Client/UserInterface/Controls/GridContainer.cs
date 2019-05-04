@@ -4,7 +4,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.GridContainer))]
+    [ControlWrap("GridContainer")]
     public class GridContainer : Container
     {
         private int _columns = 1;
@@ -17,35 +17,19 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        internal GridContainer(Godot.GridContainer sceneControl) : base(sceneControl)
-        {
-        }
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.GridContainer();
-        }
-
         public int Columns
         {
-            get => GameController.OnGodot ? (int) SceneControl.Get("columns") : _columns;
+            get => _columns;
             set
             {
-                if (GameController.OnGodot)
+                if (value <= 0)
                 {
-                    SceneControl.Set("columns", value);
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Value must be greater than zero.");
                 }
-                else
-                {
-                    if (value <= 0)
-                    {
-                        throw new ArgumentOutOfRangeException(nameof(value), value, "Value must be greater than zero.");
-                    }
 
-                    _columns = value;
-                    MinimumSizeChanged();
-                    SortChildren();
-                }
+                _columns = value;
+                MinimumSizeChanged();
+                SortChildren();
             }
         }
 
@@ -73,8 +57,8 @@ namespace Robust.Client.UserInterface.Controls
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
         public int? VSeparationOverride
         {
-            get => _vSeparationOverride ?? GetConstantOverride("vseparation");
-            set => SetConstantOverride("vseparation", _vSeparationOverride = value);
+            get => _vSeparationOverride;
+            set => _vSeparationOverride = value;
         }
 
         private int? _hSeparationOverride;
@@ -82,19 +66,14 @@ namespace Robust.Client.UserInterface.Controls
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
         public int? HSeparationOverride
         {
-            get => _hSeparationOverride ?? GetConstantOverride("hseparation");
-            set => SetConstantOverride("hseparation", _hSeparationOverride = value);
+            get => _hSeparationOverride;
+            set => _hSeparationOverride = value;
         }
 
         private (int h, int v) Separations => (_hSeparationOverride ?? 4, _vSeparationOverride ?? 4);
 
         protected override Vector2 CalculateMinimumSize()
         {
-            if (GameController.OnGodot)
-            {
-                return Vector2.Zero;
-            }
-
             var firstRow = true;
             var totalMinSize = Vector2.Zero;
             var thisRowSize = Vector2.Zero;

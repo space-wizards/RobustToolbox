@@ -3,7 +3,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.Container))]
+    [ControlWrap("Container")]
     public class Container : Control
     {
         public Container() : base()
@@ -12,17 +12,6 @@ namespace Robust.Client.UserInterface.Controls
 
         public Container(string name) : base(name)
         {
-        }
-
-        // So for SOME REASON Godot.TabContainer wasn't a Container until 3.1.
-        // ???
-        internal Container(Godot.Control sceneControl) : base(sceneControl)
-        {
-        }
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.Container();
         }
 
         protected virtual void SortChildren()
@@ -34,26 +23,20 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.ChildAdded(newChild);
 
-            if (!GameController.OnGodot)
-            {
-                newChild.OnMinimumSizeChanged += _childChanged;
-                newChild.OnVisibilityChanged += _childChanged;
-                MinimumSizeChanged();
-                SortChildren();
-            }
+            newChild.OnMinimumSizeChanged += _childChanged;
+            newChild.OnVisibilityChanged += _childChanged;
+            MinimumSizeChanged();
+            SortChildren();
         }
 
         protected override void ChildRemoved(Control child)
         {
             base.ChildRemoved(child);
 
-            if (!GameController.OnGodot)
-            {
-                child.OnMinimumSizeChanged -= _childChanged;
-                child.OnVisibilityChanged -= _childChanged;
-                MinimumSizeChanged();
-                SortChildren();
-            }
+            child.OnMinimumSizeChanged -= _childChanged;
+            child.OnVisibilityChanged -= _childChanged;
+            MinimumSizeChanged();
+            SortChildren();
         }
 
         protected void FitChildInBox(Control child, UIBox2 box)
@@ -108,11 +91,6 @@ namespace Robust.Client.UserInterface.Controls
         protected override void Resized()
         {
             base.Resized();
-
-            if (GameController.OnGodot)
-            {
-                return;
-            }
 
             SortChildren();
         }

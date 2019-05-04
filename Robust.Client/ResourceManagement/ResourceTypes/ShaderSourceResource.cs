@@ -16,7 +16,6 @@ namespace Robust.Client.ResourceManagement.ResourceTypes
     /// </summary>
     public class ShaderSourceResource : BaseResource
     {
-        internal Godot.Shader GodotShader { get; private set; }
         internal int ClydeHandle { get; private set; } = -1;
         internal ParsedShader ParsedShader { get; private set; }
 
@@ -32,12 +31,6 @@ namespace Robust.Client.ResourceManagement.ResourceTypes
             {
                 case GameController.DisplayMode.Headless:
                     return;
-                case GameController.DisplayMode.Godot:
-                    GodotShader = new Godot.Shader
-                    {
-                        Code = _getGodotCode(),
-                    };
-                    break;
                 case GameController.DisplayMode.Clyde:
                     ClydeHandle = IoCManager.Resolve<IClyde>().LoadShader(ParsedShader);
                     break;
@@ -45,19 +38,9 @@ namespace Robust.Client.ResourceManagement.ResourceTypes
                     throw new ArgumentOutOfRangeException();
             }
 
-            if (GameController.OnGodot)
-            {
-                GodotShader = new Godot.Shader
-                {
-                    Code = _getGodotCode(),
-                };
-            }
-            else
-            {
-                var clyde = IoCManager.Resolve<IClyde>();
-                // TODO: vertex shaders.
-                ClydeHandle = clyde.LoadShader(ParsedShader, path.ToString());
-            }
+            var clyde = IoCManager.Resolve<IClyde>();
+            // TODO: vertex shaders.
+            ClydeHandle = clyde.LoadShader(ParsedShader, path.ToString());
         }
 
         private string _getGodotCode()

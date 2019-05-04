@@ -97,13 +97,10 @@ namespace Robust.Client.UserInterface.CustomControls
             TitleLabel.AddStyleClass(StyleClassWindowTitle);
             AddStyleClass(StyleClassWindowPanel);
             header.AddStyleClass(StyleClassWindowHeader);
-            // TODO: Remove this check by making UI in Godot also use CSS.
-            if (!GameController.OnGodot)
-            {
-                header.PanelOverride = null;
-                CloseButton.TextureNormal = null;
-                CloseButton.AddStyleClass(StyleClassWindowCloseButton);
-            }
+
+            header.PanelOverride = null;
+            CloseButton.TextureNormal = null;
+            CloseButton.AddStyleClass(StyleClassWindowCloseButton);
 
             if (CustomSize != null)
             {

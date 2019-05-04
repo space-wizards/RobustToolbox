@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics.Clyde;
 using Robust.Shared.Utility;
-using VS = Godot.VisualServer;
 
 namespace Robust.Client.Graphics.Overlays
 {
@@ -32,44 +31,14 @@ namespace Robust.Client.Graphics.Overlays
 
         private IRenderHandle _renderHandle;
 
-        private Shader _shader;
+        public Shader Shader { get; set; }
 
-        public Shader Shader
-        {
-            get => _shader;
-            set
-            {
-                _shader = value;
-                if (GameController.OnGodot && MainCanvasItem != null)
-                {
-                    VS.CanvasItemSetMaterial(MainCanvasItem, value?.GodotMaterial?.GetRid());
-                }
-            }
-        }
-
-        private int? _zIndex;
-        public int? ZIndex
-        {
-            get => _zIndex;
-            set
-            {
-                if (value != null && (_zIndex > VS.CanvasItemZMax || _zIndex < VS.CanvasItemZMin))
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value));
-                }
-
-                _zIndex = value;
-                UpdateZIndex();
-            }
-        }
+        public int? ZIndex { get; set; }
 
         public virtual bool SubHandlesUseMainShader { get; } = true;
 
         private bool _isDirty = true;
 
-        private Godot.RID MainCanvasItem;
-
-        private readonly List<Godot.RID> CanvasItems = new List<Godot.RID>();
         private readonly List<DrawingHandle> TempHandles = new List<DrawingHandle>();
 
         private bool Disposed;
@@ -78,13 +47,6 @@ namespace Robust.Client.Graphics.Overlays
         {
             OverlayManager = IoCManager.Resolve<IOverlayManager>();
             ID = id;
-        }
-
-        internal void AssignCanvasItem(Godot.RID canvasItem)
-        {
-            MainCanvasItem = canvasItem;
-            Shader?.ApplyToCanvasItem(MainCanvasItem);
-            UpdateZIndex();
         }
 
         public void Dispose()
@@ -106,7 +68,6 @@ namespace Robust.Client.Graphics.Overlays
 
         protected virtual void Dispose(bool disposing)
         {
-            ClearDraw();
         }
 
         protected abstract void Draw(DrawingHandle handle);
@@ -162,37 +123,6 @@ namespace Robust.Client.Graphics.Overlays
 
                     return handle;
                 }
-                case GameController.DisplayMode.Godot:
-                {
-                    var item = VS.CanvasItemCreate();
-                    VS.CanvasItemSetParent(item, MainCanvasItem);
-                    CanvasItems.Add(item);
-                    if (shader != null)
-                    {
-                        shader.ApplyToCanvasItem(item);
-                    }
-                    else
-                    {
-                        VS.CanvasItemSetUseParentMaterial(item, SubHandlesUseMainShader);
-                    }
-
-                    DrawingHandle handle;
-                    switch (Space)
-                    {
-                        case OverlaySpace.ScreenSpaceBelowWorld:
-                        case OverlaySpace.ScreenSpace:
-                            handle = new DrawingHandleScreen(item);
-                            break;
-                        case OverlaySpace.WorldSpace:
-                            handle = new DrawingHandleWorld(item);
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-
-                    TempHandles.Add(handle);
-                    return handle;
-                }
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -205,42 +135,6 @@ namespace Robust.Client.Graphics.Overlays
 
         internal void FrameUpdate(RenderFrameEventArgs args)
         {
-            if (!IsDirty || !GameController.OnGodot)
-            {
-                return;
-            }
-
-            ClearDraw();
-
-            try
-            {
-                Drawing = true;
-                DrawingHandle handle;
-                switch (Space)
-                {
-                    case OverlaySpace.ScreenSpaceBelowWorld:
-                    case OverlaySpace.ScreenSpace:
-                        handle = new DrawingHandleScreen(MainCanvasItem);
-                        break;
-                    case OverlaySpace.WorldSpace:
-                        handle = new DrawingHandleWorld(MainCanvasItem);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
-                Draw(handle);
-            }
-            finally
-            {
-                Drawing = false;
-                foreach (var handle in TempHandles)
-                {
-                    handle.Dispose();
-                }
-
-                TempHandles.Clear();
-            }
         }
 
         internal void OpenGLRender(IRenderHandle renderHandle)
@@ -263,42 +157,6 @@ namespace Robust.Client.Graphics.Overlays
             {
                 _renderHandle = null;
                 Drawing = false;
-            }
-        }
-
-        private void ClearDraw()
-        {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
-            foreach (var item in CanvasItems)
-            {
-                VS.FreeRid(item);
-            }
-
-            VS.CanvasItemClear(MainCanvasItem);
-
-            CanvasItems.Clear();
-        }
-
-        private void UpdateZIndex()
-        {
-            if (MainCanvasItem == null || !GameController.OnGodot)
-            {
-                return;
-            }
-
-            if (Space != OverlaySpace.WorldSpace || ZIndex == null)
-            {
-                VS.CanvasItemSetZIndex(MainCanvasItem, 0);
-                VS.CanvasItemSetZAsRelativeToParent(MainCanvasItem, true);
-            }
-            else
-            {
-                VS.CanvasItemSetZIndex(MainCanvasItem, ZIndex.Value);
-                VS.CanvasItemSetZAsRelativeToParent(MainCanvasItem, false);
             }
         }
     }

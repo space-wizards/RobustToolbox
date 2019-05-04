@@ -5,7 +5,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.ScrollContainer))]
+    [ControlWrap("ScrollContainer")]
     public class ScrollContainer : Container
     {
         private bool _vScrollEnabled = true;
@@ -24,10 +24,6 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         public ScrollContainer(string name) : base(name)
-        {
-        }
-
-        internal ScrollContainer(Godot.ScrollContainer container) : base(container)
         {
         }
 
@@ -51,19 +47,9 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.ScrollContainer();
-        }
-
         protected override void Initialize()
         {
             base.Initialize();
-
-            if (GameController.OnGodot)
-            {
-                return;
-            }
 
             Action<Range> ev = _scrollValueChanged;
             _hScrollBar = new HScrollBar {Visible = false};
@@ -149,11 +135,6 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            if (GameController.OnGodot)
-            {
-                return Vector2.Zero;
-            }
-
             var totalX = 0f;
             var totalY = 0f;
 

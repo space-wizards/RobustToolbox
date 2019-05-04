@@ -75,12 +75,18 @@ namespace Robust.Client.Graphics
             var maxGlyphSize = Vector2i.Zero;
             var count = 0;
 
-            // TODO: Render more than ASCII, somehow. Does it make sense to just render every glyph in the font?
-            // Render all the normal ASCII characters.
+            // TODO: Render more than extended ASCII, somehow. Does it make sense to just render every glyph in the font?
+            // Render all the extended ASCII characters.
             const uint startIndex = 32;
-            const uint endIndex = 127;
+            const uint endIndex = 255;
             for (var i = startIndex; i <= endIndex; i++)
             {
+                var glyphIndex = face.GetCharIndex(i);
+                if (glyphIndex == 0)
+                {
+                    continue;
+                }
+
                 face.LoadChar(i, LoadFlags.Default, LoadTarget.Normal);
                 face.Glyph.RenderGlyph(RenderMode.Normal);
 
@@ -107,10 +113,15 @@ namespace Robust.Client.Graphics
                 var glyphIndex = face.GetCharIndex(i);
                 if (glyphIndex == 0)
                 {
-                    count += 1;
                     continue;
                 }
+
                 glyphMap.Add((char) i, glyphIndex);
+                if (metricsMap.ContainsKey(glyphIndex))
+                {
+                    continue;
+                }
+
                 face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
                 face.Glyph.RenderGlyph(RenderMode.Normal);
                 var glyphMetrics = face.Glyph.Metrics;
@@ -169,7 +180,7 @@ namespace Robust.Client.Graphics
                 atlas.Mutate(x => x.DrawImage(bitmapImage, new Point(column * maxGlyphSize.X, row * maxGlyphSize.Y),
                     PixelColorBlendingMode.Overlay, 1));
                 count += 1;
-                atlasRegions[glyphIndex] = UIBox2i.FromDimensions(offsetX, offsetY, bitmap.Width, bitmap.Rows);
+                atlasRegions.Add(glyphIndex, UIBox2i.FromDimensions(offsetX, offsetY, bitmap.Width, bitmap.Rows));
             }
 
             for (var x = 0; x < atlas.Width; x++)

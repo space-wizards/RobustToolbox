@@ -4,7 +4,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(BoxContainer))]
+    [ControlWrap("BoxContainer")]
     public abstract class BoxContainer : Container
     {
         public const string StylePropertySeparation = "separation";
@@ -20,27 +20,7 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        internal BoxContainer(Godot.BoxContainer sceneControl) : base(sceneControl)
-        {
-        }
-
-        private AlignMode _align;
-
-        public AlignMode Align
-        {
-            get => GameController.OnGodot ? (AlignMode) SceneControl.Get("align_mode") : _align;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("align_mode", (int) value);
-                }
-                else
-                {
-                    _align = value;
-                }
-            }
-        }
+        public AlignMode Align { get; set; }
 
         private int ActualSeparation
         {
@@ -51,17 +31,11 @@ namespace Robust.Client.UserInterface.Controls
                     return separation;
                 }
 
-                return _separationOverride ?? 1;
+                return SeparationOverride ?? 1;
             }
         }
 
-        private int? _separationOverride;
-
-        public int? SeparationOverride
-        {
-            get => _separationOverride ?? GetConstantOverride("separation");
-            set => SetConstantOverride("separation", _separationOverride = value);
-        }
+        public int? SeparationOverride { get; set; }
 
         protected override void SortChildren()
         {
@@ -160,7 +134,7 @@ namespace Robust.Client.UserInterface.Controls
             var offset = 0;
             if (!stretchingAtAll)
             {
-                switch (_align)
+                switch (Align)
                 {
                     case AlignMode.Begin:
                         break;
@@ -203,10 +177,6 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            if (GameController.OnGodot)
-            {
-                return base.CalculateMinimumSize();
-            }
             var separation = ActualSeparation;
 
             var minWidth = 0f;

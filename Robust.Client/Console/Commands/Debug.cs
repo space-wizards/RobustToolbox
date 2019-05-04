@@ -183,37 +183,6 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class DumpDeferredLightingCommand : IConsoleCommand
-    {
-        public string Command => "dumpdeferredlighting";
-        public string Help => "";
-        public string Description => "";
-
-        public bool Execute(IDebugConsole console, params string[] args)
-        {
-            var viewport =
-                IoCManager.Resolve<ISceneTreeHolder>().SceneTree.Root.GetNode("LightingViewport") as Godot.Viewport;
-            var tex = viewport.GetTexture().GetData();
-            tex.SavePng("res://deferredlightingdump.png");
-            return false;
-        }
-    }
-
-    internal class GetRootViewportTransformCommand : IConsoleCommand
-    {
-        public string Command => "rootvptransform";
-        public string Help => "";
-        public string Description => "";
-
-        public bool Execute(IDebugConsole console, params string[] args)
-        {
-            var vp = IoCManager.Resolve<ISceneTreeHolder>().SceneTree.Root;
-            console.AddLine(
-                $"canvas_transform: {vp.CanvasTransform}, global_canvas_transform: {vp.GlobalCanvasTransform}, size: {vp.Size}");
-            return false;
-        }
-    }
-
     internal class DisconnectCommand : IConsoleCommand
     {
         public string Command => "disconnect";

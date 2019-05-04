@@ -22,7 +22,6 @@ using System.Linq;
 using System.Text;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.ViewVariables;
-using VS = Godot.VisualServer;
 
 namespace Robust.Client.GameObjects
 {
@@ -35,18 +34,7 @@ namespace Robust.Client.GameObjects
         public bool Visible
         {
             get => _visible;
-            set
-            {
-                _visible = value;
-                if (value)
-                {
-                    RedrawQueued = true;
-                }
-                else
-                {
-                    ClearDraw();
-                }
-            }
+            set => _visible = value;
         }
 
         private DrawDepth drawDepth = DrawDepth.Objects;
@@ -58,15 +46,7 @@ namespace Robust.Client.GameObjects
         public DrawDepth DrawDepth
         {
             get => drawDepth;
-            set
-            {
-                drawDepth = value;
-
-                if (GameController.OnGodot && SceneNode != null)
-                {
-                    SceneNode.ZIndex = (int) value;
-                }
-            }
+            set => drawDepth = value;
         }
 
         private Vector2 scale = Vector2.One;
@@ -78,14 +58,7 @@ namespace Robust.Client.GameObjects
         public Vector2 Scale
         {
             get => scale;
-            set
-            {
-                scale = value;
-                if (GameController.OnGodot && SceneNode != null)
-                {
-                    SceneNode.Scale = value.Convert();
-                }
-            }
+            set => scale = value;
         }
 
         private Angle rotation;
@@ -94,14 +67,7 @@ namespace Robust.Client.GameObjects
         public Angle Rotation
         {
             get => rotation;
-            set
-            {
-                rotation = value;
-                if (GameController.OnGodot && SceneNode != null)
-                {
-                    SceneNode.Rotation = (float) value;
-                }
-            }
+            set => rotation = value;
         }
 
         private Vector2 offset = Vector2.Zero;
@@ -113,14 +79,7 @@ namespace Robust.Client.GameObjects
         public Vector2 Offset
         {
             get => offset;
-            set
-            {
-                offset = value;
-                if (GameController.OnGodot && SceneNode != null)
-                {
-                    SceneNode.Position = value.Convert() * EyeManager.PIXELSPERMETER;
-                }
-            }
+            set => offset = value;
         }
 
         private Color color = Color.White;
@@ -129,14 +88,7 @@ namespace Robust.Client.GameObjects
         public Color Color
         {
             get => color;
-            set
-            {
-                color = value;
-                if (GameController.OnGodot && SceneNode != null)
-                {
-                    SceneNode.Modulate = value.Convert();
-                }
-            }
+            set => color = value;
         }
 
         /// <summary>
@@ -149,16 +101,10 @@ namespace Robust.Client.GameObjects
         public bool Directional
         {
             get => _directional;
-            set
-            {
-                _directional = value;
-                RedrawQueued = true;
-            }
+            set => _directional = value;
         }
 
         private bool _directional = true;
-
-        [ViewVariables(VVAccess.ReadWrite)] private bool RedrawQueued = true;
 
         private RSI _baseRsi;
 
@@ -210,8 +156,6 @@ namespace Robust.Client.GameObjects
         // This may be worth the overhead of basically reimplementing List<T>.
         [ViewVariables] private List<Layer> Layers;
 
-        private Godot.Node2D SceneNode;
-
         [Dependency] private readonly IResourceCache resourceCache;
         [Dependency] private readonly IPrototypeManager prototypes;
         [Dependency] private readonly IReflectionManager reflectionManager;
@@ -228,7 +172,6 @@ namespace Robust.Client.GameObjects
         // Do not directly store mirror instances, so that they can be picked up by the GC is not disposed correctly.
         // Don't need em anyways.
         readonly Dictionary<int, MirrorData> Mirrors = new Dictionary<int, MirrorData>();
-        ISpriteProxy MainMirror;
 
         private static Shader _defaultShader;
 
@@ -298,8 +241,6 @@ namespace Robust.Client.GameObjects
         {
             var layer = Layer.New();
             layer.Visible = false;
-            // Redraw is probably not needed but eh?
-            RedrawQueued = true;
             return AddLayer(layer, newIndex);
         }
 
@@ -327,7 +268,6 @@ namespace Robust.Client.GameObjects
         {
             var layer = Layer.New();
             layer.Texture = texture;
-            RedrawQueued = true;
             return AddLayer(layer, newIndex);
         }
 
@@ -345,7 +285,6 @@ namespace Robust.Client.GameObjects
                     Environment.StackTrace);
             }
 
-            RedrawQueued = true;
             return AddLayer(layer, newIndex);
         }
 
@@ -394,7 +333,6 @@ namespace Robust.Client.GameObjects
                     Environment.StackTrace);
             }
 
-            RedrawQueued = true;
             return AddLayer(layer, newIndex);
         }
 
@@ -462,8 +400,6 @@ namespace Robust.Client.GameObjects
                     LayerMap[kv.Key] = kv.Value - 1;
                 }
             }
-
-            RedrawQueued = true;
         }
 
         public void RemoveLayer(object layerKey)
@@ -490,7 +426,6 @@ namespace Robust.Client.GameObjects
             var thelayer = Layers[layer];
             thelayer.Shader = shader;
             Layers[layer] = thelayer;
-            RedrawQueued = true;
         }
 
         public void LayerSetShader(object layerKey, Shader shader)
@@ -576,7 +511,6 @@ namespace Robust.Client.GameObjects
             thelayer.State = null;
             thelayer.Texture = texture;
             Layers[layer] = thelayer;
-            RedrawQueued = true;
         }
 
         public void LayerSetTexture(object layerKey, Texture texture)
@@ -668,7 +602,6 @@ namespace Robust.Client.GameObjects
             }
 
             Layers[layer] = thelayer;
-            RedrawQueued = true;
         }
 
         public void LayerSetState(object layerKey, RSI.StateId stateId)
@@ -719,7 +652,6 @@ namespace Robust.Client.GameObjects
             }
 
             Layers[layer] = thelayer;
-            RedrawQueued = true;
         }
 
         public void LayerSetState(object layerKey, RSI.StateId stateId, RSI rsi)
@@ -806,7 +738,6 @@ namespace Robust.Client.GameObjects
             }
 
             Layers[layer] = thelayer;
-            RedrawQueued = true;
         }
 
         public void LayerSetRSI(object layerKey, RSI rsi)
@@ -865,7 +796,6 @@ namespace Robust.Client.GameObjects
             var thelayer = Layers[layer];
             thelayer.Scale = scale;
             Layers[layer] = thelayer;
-            RedrawQueued = true;
         }
 
         public void LayerSetScale(object layerKey, Vector2 scale)
@@ -893,7 +823,6 @@ namespace Robust.Client.GameObjects
             var thelayer = Layers[layer];
             thelayer.Rotation = rotation;
             Layers[layer] = thelayer;
-            RedrawQueued = true;
         }
 
         public void LayerSetRotation(object layerKey, Angle rotation)
@@ -920,7 +849,6 @@ namespace Robust.Client.GameObjects
             var thelayer = Layers[layer];
             thelayer.Visible = visible;
             Layers[layer] = thelayer;
-            RedrawQueued = true;
         }
 
         public void LayerSetVisible(object layerKey, bool visible)
@@ -947,7 +875,6 @@ namespace Robust.Client.GameObjects
             var thelayer = Layers[layer];
             thelayer.Color = color;
             Layers[layer] = thelayer;
-            RedrawQueued = true;
         }
 
         public void LayerSetColor(object layerKey, Color color)
@@ -1028,7 +955,6 @@ namespace Robust.Client.GameObjects
             // And set to said frame.
             theLayer.Texture = state.GetFrame(correctDir, theLayer.AnimationFrame).icon;
             Layers[layer] = theLayer;
-            RedrawQueued = true;
         }
 
         public void LayerSetAnimationTime(object layerKey, float animationTime)
@@ -1106,49 +1032,10 @@ namespace Robust.Client.GameObjects
 
         public ISpriteProxy CreateProxy()
         {
-            if (GameController.OnGodot)
-            {
-                var item = VS.CanvasItemCreate();
-                RedrawQueued = true;
-                return CreateMirror(item);
-            }
-
             var key = NextMirrorKey++;
             var mirror = new SpriteMirror(key, this);
             Mirrors.Add(key, new MirrorData());
             return mirror;
-        }
-
-        ISpriteProxy CreateMirror(Godot.RID item)
-        {
-            var key = NextMirrorKey++;
-            var mirror = new SpriteMirror(key, this, item);
-            var data = new MirrorData
-            {
-                Root = item,
-                Children = new List<Godot.RID>(),
-                Visible = true,
-            };
-            Mirrors.Add(key, data);
-            return mirror;
-        }
-
-        public override void OnAdd()
-        {
-            base.OnAdd();
-
-            if (GameController.OnGodot)
-            {
-                SceneNode = new Godot.Node2D()
-                {
-                    Name = "Sprite",
-                    ZIndex = (int) drawDepth,
-                    Scale = scale.Convert(),
-                    Position = offset.Convert(),
-                    Modulate = color.Convert(),
-                    Rotation = (float) rotation,
-                };
-            }
         }
 
         public override void OnRemove()
@@ -1158,91 +1045,6 @@ namespace Robust.Client.GameObjects
             foreach (var key in Mirrors.Keys.ToList())
             {
                 DisposeMirror(key);
-            }
-
-            if (GameController.OnGodot)
-            {
-                MainMirror.Dispose();
-            }
-
-            if (GameController.OnGodot)
-            {
-                SceneNode.QueueFree();
-            }
-        }
-
-        public override void Initialize()
-        {
-            base.Initialize();
-
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
-            MainMirror = CreateMirror(SceneNode.GetCanvasItem());
-            var mir = Mirrors[0];
-            mir.DontFree = true;
-            Mirrors[0] = mir;
-            ((IGodotTransformComponent) Owner.Transform).SceneNode.AddChild(SceneNode);
-        }
-
-        private void ClearDraw()
-        {
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
-            foreach (var data in Mirrors.Values)
-            {
-                foreach (var item in data.Children)
-                {
-                    VS.FreeRid(item);
-                }
-
-                data.Children.Clear();
-            }
-        }
-
-        private void Redraw()
-        {
-            ClearDraw();
-
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-
-            foreach (var data in Mirrors.Values)
-            {
-                if (!data.Visible)
-                {
-                    continue;
-                }
-
-                foreach (var layer in Layers)
-                {
-                    if (!layer.Visible)
-                    {
-                        continue;
-                    }
-
-                    var shader = layer.Shader ?? DefaultShader;
-                    var texture = layer.Texture ?? resourceCache.GetFallback<TextureResource>();
-
-                    var currentItem = VS.CanvasItemCreate();
-                    VS.CanvasItemSetParent(currentItem, data.Root);
-                    data.Children.Add(currentItem);
-                    VS.CanvasItemSetMaterial(currentItem, shader.GodotMaterial.GetRid());
-
-                    var transform = Godot.Transform2D.Identity;
-                    DrawingHandle.SetTransform2DRotationAndScale(ref transform, -layer.Rotation, layer.Scale);
-                    VS.CanvasItemAddSetTransform(currentItem, transform);
-                    // Not instantiating a DrawingHandle here because those are ref types,
-                    // and I really don't want the extra allocation.
-                    texture.GodotTexture.Draw(currentItem, -texture.GodotTexture.GetSize() / 2, layer.Color.Convert());
-                }
             }
         }
 
@@ -1481,12 +1283,6 @@ namespace Robust.Client.GameObjects
             // TODO: This entire method is a hotspot of redundant code.
             // This is definitely gonna deserve some optimizations later down the line.
 
-            // Counteract world rotation so this thing gets rendered straight.
-            if (Directional && GameController.OnGodot)
-            {
-                SceneNode.Rotation = (float) (Owner.Transform.WorldRotation - Rotation) - MathHelper.PiOver2;
-            }
-
             var dirWeAreFacing = GetDir();
             var dirChanged = false;
 
@@ -1546,14 +1342,7 @@ namespace Robust.Client.GameObjects
                 _advanceFrameAnimation(ref layer, state, layerSpecificDir);
                 layer.Texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame).icon;
 
-                RedrawQueued = true;
                 Layers[i] = layer;
-            }
-
-            if (GameController.OnGodot && RedrawQueued)
-            {
-                Redraw();
-                RedrawQueued = false;
             }
         }
 
@@ -1751,14 +1540,6 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            // TODO: Doing a full redraw when a mirror is disposed is kinda a waste.
-            ClearDraw();
-            RedrawQueued = true;
-            if (!val.DontFree && GameController.OnGodot)
-            {
-                VS.FreeRid(val.Root);
-            }
-
             Mirrors.Remove(key);
         }
 
@@ -1772,7 +1553,6 @@ namespace Robust.Client.GameObjects
             var mirror = Mirrors[key];
             mirror.Visible = visible;
             Mirrors[key] = mirror;
-            RedrawQueued = true;
         }
 
         /// <summary>
@@ -1834,8 +1614,6 @@ namespace Robust.Client.GameObjects
         {
             readonly int Key;
             readonly SpriteComponent Master;
-            private Godot.RID CanvasItem;
-            private Godot.RID Parent;
             private Vector2 _offset;
 
             public Vector2 Offset
@@ -1845,7 +1623,6 @@ namespace Robust.Client.GameObjects
                 {
                     CheckDisposed();
                     _offset = value;
-                    UpdateTransform();
                 }
             }
 
@@ -1859,11 +1636,6 @@ namespace Robust.Client.GameObjects
                     _visible = value;
                     Master.MirrorSetVisible(Key, value);
                 }
-            }
-
-            public SpriteMirror(int key, SpriteComponent master, Godot.RID canvasItem) : this(key, master)
-            {
-                CanvasItem = canvasItem;
             }
 
             public SpriteMirror(int key, SpriteComponent master)
@@ -1882,24 +1654,6 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            private void UpdateTransform()
-            {
-                if (!GameController.OnGodot)
-                {
-                    return;
-                }
-
-                var transform = new Godot.Transform2D(0, Offset.Convert());
-                VS.CanvasItemSetTransform(CanvasItem, transform);
-            }
-
-            public void AttachToItem(Godot.RID item)
-            {
-                CheckDisposed();
-                Parent = item;
-                VS.CanvasItemSetParent(CanvasItem, Parent);
-            }
-
             public void Dispose()
             {
                 if (Disposed)
@@ -1916,24 +1670,16 @@ namespace Robust.Client.GameObjects
                 Dispose(false);
             }
 
-            void Dispose(bool disposing)
+            private void Dispose(bool disposing)
             {
                 Master.DisposeMirror(Key);
-
-                if (GameController.OnGodot)
-                {
-                    CanvasItem = null;
-                }
 
                 Disposed = true;
             }
         }
 
-        struct MirrorData
+        private struct MirrorData
         {
-            public Godot.RID Root;
-            public List<Godot.RID> Children;
-
             public bool Visible;
 
             // Don't free the canvas item if it's the scene node item.

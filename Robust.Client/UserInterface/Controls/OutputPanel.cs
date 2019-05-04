@@ -21,9 +21,6 @@ namespace Robust.Client.UserInterface.Controls
         private readonly List<RichTextEntry> _entries = new List<RichTextEntry>();
         private bool _isAtBottom = true;
 
-        // These two are used to implement this on Godot.
-        private PanelContainer _godotPanelContainer;
-        private Godot.RichTextLabel _godotRichTextLabel;
         private int _totalContentHeight;
         private bool _firstLine = true;
         private StyleBox _styleBoxOverride;
@@ -39,43 +36,22 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _styleBoxOverride = value;
-                if (GameController.OnGodot)
-                {
-                    // Have to set this to empty so Godot doesn't set it to that ugly default one.
-                    _godotPanelContainer.PanelOverride = value ?? new StyleBoxEmpty();
-                }
-                else
-                {
-                    MinimumSizeChanged();
-                    _invalidateEntries();
-                }
+                MinimumSizeChanged();
+                _invalidateEntries();
             }
         }
 
         public void Clear()
         {
             _firstLine = true;
-            if (GameController.OnGodot)
-            {
-                _godotRichTextLabel.Clear();
-            }
-            else
-            {
-                _entries.Clear();
-                _totalContentHeight = 0;
-                _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
-                _scrollBar.Value = 0;
-            }
+            _entries.Clear();
+            _totalContentHeight = 0;
+            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
+            _scrollBar.Value = 0;
         }
 
         public void RemoveLine(int line)
         {
-            if (GameController.OnGodot)
-            {
-                _godotRichTextLabel.RemoveLine(line);
-                return;
-            }
-
             var entry = _entries[line];
             _entries.RemoveAt(line);
 
@@ -90,12 +66,6 @@ namespace Robust.Client.UserInterface.Controls
 
         public void AddMessage(FormattedMessage message)
         {
-            if (GameController.OnGodot)
-            {
-                _addMessageGodot(message);
-                return;
-            }
-
             var entry = new RichTextEntry(message);
 
             entry.Update(_getFont(), _getContentBox().Width);
@@ -129,31 +99,15 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.Initialize();
 
-            if (GameController.OnGodot)
-            {
-                _godotPanelContainer = new PanelContainer {PanelOverride = new StyleBoxEmpty()};
-                _godotPanelContainer.SetAnchorPreset(LayoutPreset.Wide);
-                AddChild(_godotPanelContainer);
-                _godotRichTextLabel = new Godot.RichTextLabel {ScrollFollowing = true};
-                _godotPanelContainer.SceneControl.AddChild(_godotRichTextLabel);
-            }
-            else
-            {
-                _scrollBar = new VScrollBar {Name = "_v_scroll"};
-                AddChild(_scrollBar);
-                _scrollBar.SetAnchorAndMarginPreset(LayoutPreset.RightWide);
-                _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
-            }
+            _scrollBar = new VScrollBar {Name = "_v_scroll"};
+            AddChild(_scrollBar);
+            _scrollBar.SetAnchorAndMarginPreset(LayoutPreset.RightWide);
+            _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
-
-            if (GameController.OnGodot)
-            {
-                return;
-            }
 
             var style = _getStyleBox();
             var font = _getFont();
@@ -190,11 +144,6 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseWheel(args);
 
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             if (args.WheelDirection == Mouse.Wheel.Up)
             {
                 _scrollBar.Value = _scrollBar.Value - _getScrollSpeed();
@@ -202,50 +151,11 @@ namespace Robust.Client.UserInterface.Controls
             }
             else if (args.WheelDirection == Mouse.Wheel.Down)
             {
-                var limit = ScrollLimit;
                 _scrollBar.Value = _scrollBar.Value + _getScrollSpeed();
                 if (_scrollBar.IsAtEnd)
                 {
                     _isAtBottom = true;
                 }
-            }
-        }
-
-        private void _addMessageGodot(FormattedMessage message)
-        {
-            DebugTools.Assert(GameController.OnGodot);
-
-            if (!_firstLine)
-            {
-                _godotRichTextLabel.Newline();
-            }
-            else
-            {
-                _firstLine = false;
-            }
-
-            var pushCount = 0;
-            foreach (var tag in message.Tags)
-                switch (tag)
-                {
-                    case FormattedMessage.TagText text:
-                        _godotRichTextLabel.AddText(text.Text);
-                        break;
-                    case FormattedMessage.TagColor color:
-                        _godotRichTextLabel.PushColor(color.Color.Convert());
-                        pushCount++;
-                        break;
-                    case FormattedMessage.TagPop _:
-                        if (pushCount <= 0) throw new InvalidOperationException();
-
-                        _godotRichTextLabel.Pop();
-                        pushCount--;
-                        break;
-                }
-
-            for (; pushCount > 0; pushCount--)
-            {
-                _godotRichTextLabel.Pop();
             }
         }
 
@@ -259,11 +169,6 @@ namespace Robust.Client.UserInterface.Controls
         protected override void Resized()
         {
             base.Resized();
-
-            if (GameController.OnGodot)
-            {
-                return;
-            }
 
             var styleBoxSize = _getStyleBox()?.MinimumSize.Y ?? 0;
 

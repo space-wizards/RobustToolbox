@@ -6,7 +6,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.Range))]
+    [ControlWrap("Range")]
     public abstract class Range : Control
     {
         private float _maxValue = 100;
@@ -22,94 +22,57 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        internal Range(Godot.Range control) : base(control)
-        {
-        }
-
         public event Action<Range> OnValueChanged;
 
         public float GetAsRatio()
         {
-            if (GameController.OnGodot)
-            {
-                return (float)SceneControl.Call("get_as_ratio");
-            }
-
             return (_value - _minValue) / (_maxValue - _minValue);
         }
 
         [ViewVariables]
         public float Page
         {
-            get => GameController.OnGodot ? (float)SceneControl.Get("page") : _page;
+            get => _page;
             set
             {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("page", value);
-                }
-                else
-                {
-                    _page = value;
-                    _ensureValueClamped();
-                }
+                _page = value;
+                _ensureValueClamped();
             }
         }
 
         [ViewVariables]
         public float MaxValue
         {
-            get => GameController.OnGodot ? (float)SceneControl.Get("max_value") : _maxValue;
+            get => _maxValue;
             set
             {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("max_value", value);
-                }
-                else
-                {
-                    _maxValue = value;
-                    _ensureValueClamped();
-                }
+                _maxValue = value;
+                _ensureValueClamped();
             }
         }
 
         [ViewVariables]
         public float MinValue
         {
-            get => GameController.OnGodot ? (float)SceneControl.Get("min_value") : _minValue;
+            get => _minValue;
             set
             {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("min_value", value);
-                }
-                else
-                {
-                    _minValue = value;
-                    _ensureValueClamped();
-                }
+                _minValue = value;
+                _ensureValueClamped();
             }
         }
 
         [ViewVariables]
         public float Value
         {
-            get => GameController.OnGodot ? (float) SceneControl.Get("value") : _value;
+            get => _value;
             set
             {
-                if (GameController.OnGodot)
+                var newValue = ClampValue(value);
+                if (!FloatMath.CloseTo(newValue, _value))
                 {
-                    SceneControl.Set("value", value);
-                }
-                else
-                {
-                    var newValue = ClampValue(value);
-                    if (!FloatMath.CloseTo(newValue, _value))
-                    {
-                        _value = newValue;
-                        OnValueChanged?.Invoke(this);
-                    }
+                    _value = newValue;
+                    OnValueChanged?.Invoke(this);
                 }
             }
         }

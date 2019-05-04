@@ -3,7 +3,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.MarginContainer))]
+    [ControlWrap("MarginContainer")]
     public class MarginContainer : Container
     {
         public MarginContainer()
@@ -14,53 +14,17 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        internal MarginContainer(Godot.MarginContainer sceneControl) : base(sceneControl)
-        {
-        }
-
-        private int? _marginBottomOverride;
-
-        public int? MarginBottomOverride
-        {
-            get => _marginBottomOverride ?? GetConstantOverride("margin_bottom");
-            set => SetConstantOverride("margin_bottom", _marginBottomOverride = value);
-        }
-
-        private int? _marginTopOverride;
-
-        public int? MarginTopOverride
-        {
-            get => _marginTopOverride ?? GetConstantOverride("margin_top");
-            set => SetConstantOverride("margin_top", _marginTopOverride = value);
-        }
-
-        private int? _marginRightOverride;
-
-        public int? MarginRightOverride
-        {
-            get => _marginRightOverride ?? GetConstantOverride("margin_right");
-            set => SetConstantOverride("margin_right", _marginRightOverride = value);
-        }
-
-        private int? _marginLeftOverride;
-
-        public int? MarginLeftOverride
-        {
-            get => _marginLeftOverride ?? GetConstantOverride("margin_left");
-            set => SetConstantOverride("margin_left", _marginLeftOverride = value);
-        }
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.MarginContainer();
-        }
+        public int? MarginBottomOverride { get; set; }
+        public int? MarginTopOverride { get; set; }
+        public int? MarginRightOverride { get; set; }
+        public int? MarginLeftOverride { get; set; }
 
         protected override void SortChildren()
         {
-            var top = _marginTopOverride ?? 0;
-            var bottom = _marginBottomOverride ?? 0;
-            var left = _marginLeftOverride ?? 0;
-            var right = _marginRightOverride ?? 0;
+            var top = MarginTopOverride ?? 0;
+            var bottom = MarginBottomOverride ?? 0;
+            var left = MarginLeftOverride ?? 0;
+            var right = MarginRightOverride ?? 0;
 
             var box = new UIBox2(left, top, Width - right - left, Height - bottom - top);
 
@@ -72,15 +36,10 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            if (GameController.OnGodot)
-            {
-                return Vector2.Zero;
-            }
-
-            var top = _marginTopOverride ?? 0;
-            var bottom = _marginBottomOverride ?? 0;
-            var left = _marginLeftOverride ?? 0;
-            var right = _marginRightOverride ?? 0;
+            var top = MarginTopOverride ?? 0;
+            var bottom = MarginBottomOverride ?? 0;
+            var left = MarginLeftOverride ?? 0;
+            var right = MarginRightOverride ?? 0;
 
             var childMinSize = Vector2.Zero;
 
@@ -96,24 +55,20 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.SetGodotProperty(property, value, context);
 
-            if (property == "custom_constants/margin_right")
+            switch (property)
             {
-                MarginRightOverride = (int)(long)value;
-            }
-
-            if (property == "custom_constants/margin_left")
-            {
-                MarginLeftOverride = (int)(long)value;
-            }
-
-            if (property == "custom_constants/margin_bottom")
-            {
-                MarginBottomOverride = (int)(long)value;
-            }
-
-            if (property == "custom_constants/margin_top")
-            {
-                MarginTopOverride = (int)(long)value;
+                case "custom_constants/margin_right":
+                    MarginRightOverride = (int)(long)value;
+                    break;
+                case "custom_constants/margin_left":
+                    MarginLeftOverride = (int)(long)value;
+                    break;
+                case "custom_constants/margin_bottom":
+                    MarginBottomOverride = (int)(long)value;
+                    break;
+                case "custom_constants/margin_top":
+                    MarginTopOverride = (int)(long)value;
+                    break;
             }
         }
     }

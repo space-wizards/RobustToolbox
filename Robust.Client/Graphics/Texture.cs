@@ -21,8 +21,6 @@ namespace Robust.Client.Graphics
     [PublicAPI]
     public abstract class Texture : IDirectionalTextureProvider
     {
-        internal abstract Godot.Texture GodotTexture { get; }
-
         /// <summary>
         ///     The width of the texture, in pixels.
         /// </summary>
@@ -34,11 +32,6 @@ namespace Robust.Client.Graphics
         public abstract int Height { get; }
 
         public Vector2i Size => new Vector2i(Width, Height);
-
-        public static implicit operator Godot.Texture(Texture src)
-        {
-            return src?.GodotTexture;
-        }
 
         public static Texture Transparent { get; internal set; }
         public static Texture White { get; internal set; }
@@ -60,32 +53,6 @@ namespace Robust.Client.Graphics
             {
                 case GameController.DisplayMode.Headless:
                     return new DummyTexture(image.Width, image.Height);
-                case GameController.DisplayMode.Godot:
-                {
-                    var stream = new MemoryStream();
-
-                    try
-                    {
-                        image.SaveAsPng(stream, new PngEncoder {CompressionLevel = 1});
-
-                        var gdImage = new Godot.Image();
-                        var ret = gdImage.LoadPngFromBuffer(stream.ToArray());
-                        if (ret != Godot.Error.Ok)
-                        {
-                            throw new InvalidDataException(ret.ToString());
-                        }
-
-                        // Godot does not provide a way to load from memory directly so we turn it into a PNG I guess.
-                        var texture = new Godot.ImageTexture();
-                        texture.CreateFromImage(gdImage);
-                        (loadParameters ?? TextureLoadParameters.Default).SampleParameters.ApplyToGodotTexture(texture);
-                        return new GodotTextureSource(texture);
-                    }
-                    finally
-                    {
-                        stream.Dispose();
-                    }
-                }
                 case GameController.DisplayMode.Clyde:
                 {
                     var manager = IoCManager.Resolve<IClyde>();
@@ -112,24 +79,6 @@ namespace Robust.Client.Graphics
             {
                 case GameController.DisplayMode.Headless:
                     return new DummyTexture();
-                case GameController.DisplayMode.Godot:
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        stream.CopyTo(memoryStream);
-
-                        var data = memoryStream.ToArray();
-                        var gdImage = new Godot.Image();
-                        var ret = gdImage.LoadPngFromBuffer(data);
-                        if (ret != Godot.Error.Ok)
-                        {
-                            throw new InvalidDataException(ret.ToString());
-                        }
-
-                        var texture = new Godot.ImageTexture();
-                        texture.CreateFromImage(gdImage);
-                        (loadParameters ?? TextureLoadParameters.Default).SampleParameters.ApplyToGodotTexture(texture);
-                        return new GodotTextureSource(texture);
-                    }
                 case GameController.DisplayMode.Clyde:
                 {
                     var manager = IoCManager.Resolve<IClyde>();
@@ -186,8 +135,6 @@ namespace Robust.Client.Graphics
 
     internal sealed class DummyTexture : Texture
     {
-        internal override Godot.Texture GodotTexture => null;
-
         public override int Width { get; }
         public override int Height { get; }
 
@@ -217,20 +164,9 @@ namespace Robust.Client.Graphics
             DebugTools.Assert(SubRegion.Left >= 0);
             DebugTools.Assert(SubRegion.Top >= 0);
 
-            if (GameController.OnGodot)
-            {
-                GodotTexture = new Godot.AtlasTexture
-                {
-                    Atlas = texture,
-                    Region = subRegion.Convert()
-                };
-            }
-
             SubRegion = subRegion;
             SourceTexture = texture;
         }
-
-        internal override Godot.Texture GodotTexture { get; }
 
         /// <summary>
         ///     The texture this texture is a sub region of.
@@ -294,39 +230,6 @@ namespace Robust.Client.Graphics
         /// </summary>
         public TextureWrapMode WrapMode { get; set; }
 
-        internal void ApplyToGodotTexture(Godot.Texture texture)
-        {
-            var flags = texture.Flags;
-            if (Filter)
-            {
-                flags |= (int) Godot.Texture.FlagsEnum.Filter;
-            }
-            else
-            {
-                flags &= ~(int) Godot.Texture.FlagsEnum.Filter;
-            }
-
-            switch (WrapMode)
-            {
-                case TextureWrapMode.None:
-                    flags &= ~(int) Godot.Texture.FlagsEnum.Repeat;
-                    flags &= ~(int) Godot.Texture.FlagsEnum.MirroredRepeat;
-                    break;
-                case TextureWrapMode.Repeat:
-                    flags |= (int) Godot.Texture.FlagsEnum.Repeat;
-                    flags &= ~(int) Godot.Texture.FlagsEnum.MirroredRepeat;
-                    break;
-                case TextureWrapMode.MirroredRepeat:
-                    flags &= ~(int) Godot.Texture.FlagsEnum.Repeat;
-                    flags |= (int) Godot.Texture.FlagsEnum.MirroredRepeat;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            texture.Flags = flags;
-        }
-
         public static TextureSampleParameters FromYaml(YamlMappingNode node)
         {
             var wrap = TextureWrapMode.None;
@@ -389,7 +292,6 @@ namespace Robust.Client.Graphics
 
     internal class OpenGLTexture : Texture
     {
-        internal override Godot.Texture GodotTexture => null;
         internal int OpenGLTextureId { get; }
         internal int ArrayIndex { get; }
 
@@ -409,23 +311,6 @@ namespace Robust.Client.Graphics
             Width = width;
             Height = height;
             ArrayIndex = arrayIndex;
-        }
-    }
-
-    /// <summary>
-    ///     Wraps a texture returned by Godot itself,
-    ///     for example when the texture was set in a GUI scene.
-    /// </summary>
-    internal class GodotTextureSource : Texture
-    {
-        internal override Godot.Texture GodotTexture { get; }
-        public override int Width => GodotTexture.GetWidth();
-        public override int Height => GodotTexture.GetHeight();
-
-        public GodotTextureSource(Godot.Texture texture)
-        {
-            DebugTools.Assert(GameController.OnGodot);
-            GodotTexture = texture;
         }
     }
 }

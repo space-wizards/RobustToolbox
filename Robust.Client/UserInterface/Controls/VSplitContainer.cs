@@ -1,11 +1,10 @@
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.VSplitContainer))]
+    [ControlWrap("VSplitContainer")]
     public class VSplitContainer : SplitContainer
     {
         private protected sealed override bool Vertical => true;
 
         public VSplitContainer() {}
-        public VSplitContainer(Godot.VSplitContainer control) : base(control) {}
     }
 }

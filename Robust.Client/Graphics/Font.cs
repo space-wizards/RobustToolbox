@@ -14,22 +14,20 @@ namespace Robust.Client.Graphics
     /// </summary>
     public abstract class Font
     {
-        internal abstract Godot.Font GodotFont { get; }
-
         /// <summary>
         ///     The maximum amount a glyph goes above the baseline.
         /// </summary>
-        public virtual int Ascent => (int?)GodotFont?.GetAscent() ?? default;
+        public virtual int Ascent => default;
 
         /// <summary>
         ///     The maximum glyph height of a line of text, not relative to the baseline.
         /// </summary>
-        public virtual int Height => (int?)GodotFont?.GetHeight() ?? default;
+        public virtual int Height => default;
 
         /// <summary>
         ///     The maximum amount a glyph drops below the baseline.
         /// </summary>
-        public virtual int Descent => (int?)GodotFont?.GetDescent() ?? default;
+        public virtual int Descent => default;
 
         /// <summary>
         ///     The distance between the baselines of two consecutive lines.
@@ -41,11 +39,6 @@ namespace Robust.Client.Graphics
         ///     The distance between the edges of two consecutive lines.
         /// </summary>
         public int LineSeparation => LineHeight - Height;
-
-        public static implicit operator Godot.Font(Font font)
-        {
-            return font?.GodotFont;
-        }
 
         // Yes, I am aware that using char is bad.
         // At the same time the font system is nowhere close to rendering Unicode so...
@@ -97,10 +90,6 @@ namespace Robust.Client.Graphics
     {
         public int Size { get; }
 
-        internal override Godot.Font GodotFont => _font;
-
-        private readonly Godot.DynamicFont _font;
-
         internal IFontInstanceHandle Handle { get; }
 
         public override int Ascent => Handle?.Ascent ?? base.Ascent;
@@ -111,24 +100,11 @@ namespace Robust.Client.Graphics
         public VectorFont(FontResource res, int size)
         {
             Size = size;
-            if (GameController.OnGodot)
-            {
-                _font = new Godot.DynamicFont
-                {
-                    FontData = res.FontData,
-                    Size = size,
-                };
-            }
-            else
-            {
-                Handle = IoCManager.Resolve<IFontManagerInternal>().MakeInstance(res.FontFaceHandle, size);
-            }
+            Handle = IoCManager.Resolve<IFontManagerInternal>().MakeInstance(res.FontFaceHandle, size);
         }
 
         public override float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color)
         {
-            DebugTools.Assert(!GameController.OnGodot);
-
             var metrics = Handle.GetCharMetrics(chr);
             if (!metrics.HasValue)
             {
@@ -154,13 +130,6 @@ namespace Robust.Client.Graphics
 
     internal sealed class GodotWrapFont : Font
     {
-        public GodotWrapFont(Godot.Font godotFont)
-        {
-            GodotFont = godotFont;
-        }
-
-        internal override Godot.Font GodotFont { get; }
-
         public override float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color)
         {
             throw new NotImplementedException();
@@ -174,7 +143,6 @@ namespace Robust.Client.Graphics
 
     public sealed class DummyFont : Font
     {
-        internal override Godot.Font GodotFont => null;
         public override float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color)
         {
             // Nada, it's a dummy after all.

@@ -52,8 +52,6 @@ namespace Robust.Client.Placement
         [Dependency]
         public readonly IEyeManager eyeManager;
         [Dependency]
-        internal readonly ISceneTreeHolder sceneTree;
-        [Dependency]
         private readonly IInputManager _inputManager;
         [Dependency]
         private readonly IEntitySystemManager _entitySystemManager;

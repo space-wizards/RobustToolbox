@@ -16,7 +16,6 @@ namespace Robust.Client.ResourceManagement
     {
         public override ResourcePath Fallback { get; } = new ResourcePath("/Textures/noSprite.png");
         public Texture Texture { get; private set; }
-        private Godot.ImageTexture godotTexture;
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
@@ -35,9 +34,6 @@ namespace Robust.Client.ResourceManagement
                 case GameController.DisplayMode.Headless:
                     var image = Image.Load(cache.ContentFileRead(path).ToArray());
                     Texture = new DummyTexture(image.Width, image.Height);
-                    break;
-                case GameController.DisplayMode.Godot:
-                    _loadGodot(cache, path, loadParameters);
                     break;
                 case GameController.DisplayMode.Clyde:
                     _loadOpenGL(cache, path, loadParameters);
@@ -70,28 +66,6 @@ namespace Robust.Client.ResourceManagement
             return null;
         }
 
-        private void _loadGodot(IResourceCache cache, ResourcePath path, TextureLoadParameters? parameters)
-        {
-            DebugTools.Assert(GameController.Mode == GameController.DisplayMode.Godot);
-
-            using (var stream = cache.ContentFileRead(path))
-            {
-                var buffer = stream.ToArray();
-                var image = new Godot.Image();
-                var error = image.LoadPngFromBuffer(buffer);
-                if (error != Godot.Error.Ok)
-                {
-                    throw new InvalidDataException($"Unable to load texture from buffer, reason: {error}");
-                }
-                godotTexture = new Godot.ImageTexture();
-                godotTexture.CreateFromImage(image);
-            }
-
-            // Disable filter by default because pixel art.
-            (parameters ?? TextureLoadParameters.Default).SampleParameters.ApplyToGodotTexture(godotTexture);
-            Texture = new GodotTextureSource(godotTexture);
-        }
-
         private void _loadOpenGL(IResourceCache cache, ResourcePath path, TextureLoadParameters? parameters)
         {
             DebugTools.Assert(GameController.Mode == GameController.DisplayMode.Clyde);
@@ -104,14 +78,6 @@ namespace Robust.Client.ResourceManagement
         public static implicit operator Texture(TextureResource res)
         {
             return res?.Texture;
-        }
-
-        public override void Dispose()
-        {
-            if (GameController.OnGodot)
-            {
-                godotTexture.Dispose();
-            }
         }
     }
 }

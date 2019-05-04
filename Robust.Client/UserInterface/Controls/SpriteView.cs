@@ -10,7 +10,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(GodotGlue.SpriteView), "res://Engine/Scenes/SpriteMirror/SpriteView.tscn")]
+    [ControlWrap("res://Engine/Scenes/SpriteMirror/SpriteView.tscn")]
     public class SpriteView : Control
     {
         ISpriteProxy Mirror;
@@ -31,7 +31,6 @@ namespace Robust.Client.UserInterface.Controls
                 if (value != null)
                 {
                     Mirror = value.CreateProxy();
-                    Mirror.AttachToControl(this);
                     UpdateMirrorPosition();
                 }
             }
@@ -42,10 +41,6 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         public SpriteView(string name) : base(name)
-        {
-        }
-
-        public SpriteView(Godot.Control control) : base(control)
         {
         }
 
@@ -88,7 +83,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
-            if (GameController.OnGodot || _sprite == null)
+            if (_sprite == null)
             {
                 return;
             }

@@ -7,7 +7,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.Button))]
+    [ControlWrap("Button")]
     public class Button : BaseButton
     {
         public const string StylePropertyStyleBox = "stylebox";
@@ -25,71 +25,23 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        internal Button(Godot.Button button) : base(button)
-        {
-        }
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.Button();
-        }
-
-        private AlignMode _textAlign = AlignMode.Center;
+        [ViewVariables]
+        public AlignMode TextAlign { get; set; } = AlignMode.Center;
 
         [ViewVariables]
-        public AlignMode TextAlign
-        {
-            get => GameController.OnGodot ? (AlignMode) SceneControl.Get("align") : _textAlign;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("align", (Godot.Button.TextAlign) value);
-                }
-                else
-                {
-                    _textAlign = value;
-                }
-            }
-        }
-
-        private bool _clipText;
-
-        [ViewVariables]
-        public bool ClipText
-        {
-            get => GameController.OnGodot ? (bool) SceneControl.Get("clip_text") : _clipText;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("clip_text", value);
-                }
-                else
-                {
-                    _clipText = value;
-                }
-            }
-        }
+        public bool ClipText { get; set; }
 
         private string _text;
 
         [ViewVariables]
         public string Text
         {
-            get => GameController.OnGodot ? (string) SceneControl.Get("text") : _text;
+            get => _text;
             set
             {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("text", value);
-                }
-                else
-                {
-                    _text = value;
-                    _textWidthCache = null;
-                    MinimumSizeChanged();
-                }
+                _text = value;
+                _textWidthCache = null;
+                MinimumSizeChanged();
             }
         }
 
@@ -128,41 +80,14 @@ namespace Robust.Client.UserInterface.Controls
                     return fontColor;
                 }
 
-                return _fontColorOverride ?? Color.White;
+                return FontColorOverride ?? Color.White;
             }
         }
 
-        private Color? _fontColorOverride;
-
-        public Color? FontColorOverride
-        {
-            get => _fontColorOverride ?? GetColorOverride("font_color");
-            set => SetColorOverride("font_color", _fontColorOverride = value);
-        }
-
-        private Color? _fontColorDisabledOverride;
-
-        public Color? FontColorDisabledOverride
-        {
-            get => _fontColorDisabledOverride ?? GetColorOverride("font_color_disabled");
-            set => SetColorOverride("font_color_disabled", _fontColorDisabledOverride = value);
-        }
-
-        private Color? _fontColorHoverOverride;
-
-        public Color? FontColorHoverOverride
-        {
-            get => _fontColorHoverOverride ?? GetColorOverride("font_color_hover");
-            set => SetColorOverride("font_color_hover", _fontColorHoverOverride = value);
-        }
-
-        private Color? _fontColorPressedOverride;
-
-        public Color? FontColorPressedOverride
-        {
-            get => _fontColorPressedOverride ?? GetColorOverride("font_color_pressed");
-            set => SetColorOverride("font_color_pressed", _fontColorPressedOverride = value);
-        }
+        public Color? FontColorOverride { get; set; }
+        public Color? FontColorDisabledOverride { get; set; }
+        public Color? FontColorHoverOverride { get; set; }
+        public Color? FontColorPressedOverride { get; set; }
 
         public enum AlignMode
         {
@@ -174,11 +99,6 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
-
-            if (GameController.OnGodot)
-            {
-                return;
-            }
 
             var style = ActualStyleBox;
             var drawBox = SizeBox;
@@ -243,12 +163,6 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            if (GameController.OnGodot)
-            {
-                return base.CalculateMinimumSize();
-            }
-
-            var uiTheme = UserInterfaceManager.ThemeDefaults;
             var style = ActualStyleBox;
             var font = ActualFont;
 

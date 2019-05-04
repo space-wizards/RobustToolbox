@@ -3,21 +3,13 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.SplitContainer))]
+    [ControlWrap("SplitContainer")]
     public abstract class SplitContainer : Container
     {
         // TODO: Implement the grabber.
         private const float Separation = 2;
 
         private protected abstract bool Vertical { get; }
-
-        protected SplitContainer()
-        {
-        }
-
-        protected SplitContainer(Godot.SplitContainer control) : base(control)
-        {
-        }
 
         protected override void SortChildren()
         {
@@ -75,11 +67,6 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            if (GameController.OnGodot)
-            {
-                return Vector2.Zero;
-            }
-
             if (ChildCount != 2)
             {
                 return Vector2.Zero;

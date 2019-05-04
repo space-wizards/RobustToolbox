@@ -29,7 +29,6 @@ namespace Robust.Client.UserInterface
 {
     internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal
     {
-        [Dependency] private readonly ISceneTreeHolder _sceneTreeHolder;
         [Dependency] private readonly IInputManager _inputManager;
         [Dependency] private readonly IDisplayManager _displayManager;
         [Dependency] private readonly IClientConsole _console;
@@ -50,7 +49,6 @@ namespace Robust.Client.UserInterface
         // So we keep track of which control is "focused" by the mouse.
         private Control _mouseFocused;
 
-        private Godot.CanvasLayer CanvasLayer;
         public Control StateRoot { get; private set; }
         public Control CurrentlyHovered { get; private set; }
         public Control RootControl { get; private set; }
@@ -94,33 +92,14 @@ namespace Robust.Client.UserInterface
 
         private void _initializeCommon()
         {
-            if (GameController.OnGodot)
-            {
-                CanvasLayer = new Godot.CanvasLayer
-                {
-                    Name = "UILayer",
-                    Layer = CanvasLayers.LAYER_GUI
-                };
-
-                _sceneTreeHolder.SceneTree.GetRoot().AddChild(CanvasLayer);
-            }
-
             RootControl = new Control("UIRoot")
             {
                 MouseFilter = Control.MouseFilterMode.Ignore,
                 IsInsideTree = true
             };
             RootControl.SetAnchorPreset(Control.LayoutPreset.Wide);
-            if (!GameController.OnGodot)
-            {
-                RootControl.Size = _displayManager.ScreenSize;
-                _displayManager.OnWindowResized += args => RootControl.Size = args.NewSize;
-            }
-
-            if (GameController.OnGodot)
-            {
-                CanvasLayer.AddChild(RootControl.SceneControl);
-            }
+            RootControl.Size = _displayManager.ScreenSize;
+            _displayManager.OnWindowResized += args => RootControl.Size = args.NewSize;
 
             StateRoot = new Control("StateRoot")
             {

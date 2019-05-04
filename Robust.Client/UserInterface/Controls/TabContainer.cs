@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Client.GodotGlue;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Maths;
@@ -10,7 +9,7 @@ using PureAttribute = System.Diagnostics.Contracts.PureAttribute;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.TabContainer))]
+    [ControlWrap("TabContainer")]
     public class TabContainer : Container
     {
         public const string StylePropertyTabStyleBox = "tab-stylebox";
@@ -18,9 +17,6 @@ namespace Robust.Client.UserInterface.Controls
         public const string stylePropertyTabFontColor = "tab-font-color";
         public const string StylePropertyTabFontColorInactive = "tab-font-color-inactive";
         public const string StylePropertyPanelStyleBox = "panel-stylebox";
-
-        private GodotSignalSubscriber1 _onTabSelectedSubscriber;
-        private GodotSignalSubscriber1 _onTabChangedSubscriber;
 
         private int _currentTab;
         private bool _tabsVisible = true;
@@ -34,111 +30,64 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        internal TabContainer(Godot.TabContainer control) : base(control)
-        {
-        }
-
         public int CurrentTab
         {
-            get => GameController.OnGodot ? (int) SceneControl.Call("get_current_tab") : _currentTab;
+            get => _currentTab;
             set
             {
-                if (GameController.OnGodot)
+                if (_currentTab < 0)
                 {
-                    SceneControl.Call("set_current_tab", value);
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Current tab must be positive.");
                 }
-                else
+
+                if (_currentTab >= ChildCount)
                 {
-                    if (_currentTab < 0)
-                    {
-                        throw new ArgumentOutOfRangeException(nameof(value), value, "Current tab must be positive.");
-                    }
-
-                    if (_currentTab >= ChildCount)
-                    {
-                        throw new ArgumentOutOfRangeException(nameof(value), value,
-                            "Current tab must less than the amount of tabs.");
-                    }
-
-                    if (_currentTab == value)
-                    {
-                        return;
-                    }
-
-                    var old = _currentTab;
-                    _currentTab = value;
-
-                    GetChild(old).Visible = false;
-                    var newSelected = GetChild(value);
-                    newSelected.Visible = true;
-                    _fixChildMargins(newSelected);
-
-                    OnTabChanged?.Invoke(value);
+                    throw new ArgumentOutOfRangeException(nameof(value), value,
+                        "Current tab must less than the amount of tabs.");
                 }
-            }
-        }
 
-        public TabAlignMode TabAlign
-        {
-            get => GameController.OnGodot ? (TabAlignMode) SceneControl.Call("get_tab_align") : default;
-            set
-            {
-                if (GameController.OnGodot)
+                if (_currentTab == value)
                 {
-                    SceneControl.Call("set_tab_align", (Godot.TabContainer.TabAlignEnum) value);
+                    return;
                 }
+
+                var old = _currentTab;
+                _currentTab = value;
+
+                GetChild(old).Visible = false;
+                var newSelected = GetChild(value);
+                newSelected.Visible = true;
+                _fixChildMargins(newSelected);
+
+                OnTabChanged?.Invoke(value);
             }
         }
 
         public bool TabsVisible
         {
-            get => GameController.OnGodot ? (bool) SceneControl.Get("tabs_visible") : _tabsVisible;
+            get => _tabsVisible;
             set
             {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("tabs_visible", value);
-                }
-                else
-                {
-                    _tabsVisible = value;
-                    MinimumSizeChanged();
-                }
+                _tabsVisible = value;
+                MinimumSizeChanged();
             }
         }
 
-        public event Action<int> OnTabSelected;
         public event Action<int> OnTabChanged;
 
         public string GetTabTitle(int tab)
         {
-            if (GameController.OnGodot)
-            {
-                return (string) SceneControl.Call("get_tab_title", tab);
-            }
-
             return _tabData[tab].Name ?? GetChild(tab).Name;
         }
 
         public void SetTabTitle(int tab, string title)
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("set_tab_title", tab, title);
-                return;
-            }
-
             _tabData[tab].Name = title;
         }
 
         protected override void ChildAdded(Control newChild)
         {
             base.ChildAdded(newChild);
-
-            if (GameController.OnGodot)
-            {
-                return;
-            }
 
             _tabData.Add(new TabData(newChild));
 
@@ -159,11 +108,6 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.ChildRemoved(child);
 
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             for (var i = 0; i < _tabData.Count; i++)
             {
                 if (_tabData[i].Control == child)
@@ -178,11 +122,6 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.ChildMoved(child, oldIndex, newIndex);
 
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             var data = _tabData[oldIndex];
             DebugTools.Assert(data.Control == child);
             _tabData.RemoveAt(oldIndex);
@@ -192,11 +131,6 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
-
-            if (GameController.OnGodot)
-            {
-                return;
-            }
 
             // First, draw panel.
             var headerSize = _getHeaderSize();
@@ -270,11 +204,6 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            if (GameController.OnGodot)
-            {
-                return Vector2.Zero;
-            }
-
             var total = new Vector2();
 
             foreach (var child in Children)
@@ -319,7 +248,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseDown(args);
 
-            if (GameController.OnGodot || !TabsVisible)
+            if (!TabsVisible)
             {
                 return;
             }
@@ -455,50 +384,6 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             return UserInterfaceManager.ThemeDefaults.DefaultFont;
-        }
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.TabContainer();
-        }
-
-        protected override void SetupSignalHooks()
-        {
-            base.SetupSignalHooks();
-
-            _onTabSelectedSubscriber = new GodotSignalSubscriber1();
-            _onTabSelectedSubscriber.Connect(SceneControl, "tab_selected");
-            _onTabSelectedSubscriber.Signal += tab => OnTabSelected?.Invoke((int) tab);
-
-            _onTabChangedSubscriber = new GodotSignalSubscriber1();
-            _onTabChangedSubscriber.Connect(SceneControl, "tab_changed");
-            _onTabChangedSubscriber.Signal += tab => OnTabChanged?.Invoke((int) tab);
-        }
-
-        protected override void DisposeSignalHooks()
-        {
-            base.DisposeSignalHooks();
-
-            if (_onTabSelectedSubscriber != null)
-            {
-                _onTabSelectedSubscriber.Disconnect(SceneControl, "tab_selected");
-                _onTabSelectedSubscriber.Dispose();
-                _onTabSelectedSubscriber = null;
-            }
-
-            if (_onTabChangedSubscriber != null)
-            {
-                _onTabChangedSubscriber.Disconnect(SceneControl, "tab_changed");
-                _onTabChangedSubscriber.Dispose();
-                _onTabChangedSubscriber = null;
-            }
-        }
-
-        public enum TabAlignMode
-        {
-            Left = 0,
-            Center = 1,
-            Right = 2
         }
 
         private class TabData

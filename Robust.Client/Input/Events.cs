@@ -47,12 +47,6 @@ namespace Robust.Client.Input
         /// </summary>
         public void Handle()
         {
-            if (GameController.OnGodot)
-            {
-                var tree = IoCManager.Resolve<ISceneTreeHolder>();
-                tree.SceneTree.SetInputAsHandled();
-            }
-
             Handled = true;
         }
     }
@@ -84,22 +78,6 @@ namespace Robust.Client.Input
         {
             Key = key;
             IsRepeat = repeat;
-        }
-
-        public static explicit operator KeyEventArgs(Godot.InputEventKey args)
-        {
-            return new KeyEventArgs(Keyboard.ConvertGodotKey(args.Scancode),
-                args.Echo,
-                args.Alt,
-                args.Control,
-                args.Shift,
-                args.Command);
-        }
-
-        public static explicit operator KeyEventArgs(Godot.InputEventMouseButton args)
-        {
-            var key = Mouse.MouseButtonToKey((Mouse.Button) args.ButtonIndex);
-            return new KeyEventArgs(key, false, false, false, false, false);
         }
 
         public static explicit operator KeyEventArgs(OpenTK.Input.KeyboardKeyEventArgs args)
@@ -200,20 +178,6 @@ namespace Robust.Client.Input
             DoubleClick = doubleClick;
         }
 
-        public static explicit operator MouseButtonEventArgs(Godot.InputEventMouseButton inputEvent)
-        {
-            // Before cutting this up,
-            // this line was 281 characters long.
-            return new MouseButtonEventArgs((Mouse.Button) inputEvent.ButtonIndex,
-                inputEvent.Doubleclick,
-                (Mouse.ButtonMask) inputEvent.ButtonMask,
-                inputEvent.Position.Convert(),
-                inputEvent.Alt,
-                inputEvent.Control,
-                inputEvent.Shift,
-                inputEvent.Command);
-        }
-
         public static explicit operator MouseButtonEventArgs(OpenTK.Input.MouseButtonEventArgs inputEvent)
         {
             return new MouseButtonEventArgs(
@@ -242,19 +206,6 @@ namespace Robust.Client.Input
             : base(buttonMask, position, alt, control, shift, system)
         {
             WheelDirection = wheelDirection;
-        }
-
-        public static explicit operator MouseWheelEventArgs(Godot.InputEventMouseButton inputEvent)
-        {
-            // Before cutting this up,
-            // this line was 281 characters long.
-            return new MouseWheelEventArgs((Mouse.Wheel) inputEvent.ButtonIndex,
-                (Mouse.ButtonMask) inputEvent.ButtonMask,
-                inputEvent.Position.Convert(),
-                inputEvent.Alt,
-                inputEvent.Control,
-                inputEvent.Shift,
-                inputEvent.Command);
         }
 
         public static explicit operator MouseWheelEventArgs(OpenTK.Input.MouseWheelEventArgs inputEvent)
@@ -295,18 +246,6 @@ namespace Robust.Client.Input
         {
             Relative = relative;
             Speed = speed;
-        }
-
-        public static explicit operator MouseMoveEventArgs(Godot.InputEventMouseMotion inputEvent)
-        {
-            return new MouseMoveEventArgs(inputEvent.Relative.Convert(),
-                inputEvent.Speed.Convert(),
-                (Mouse.ButtonMask) inputEvent.ButtonMask,
-                inputEvent.Position.Convert(),
-                inputEvent.Alt,
-                inputEvent.Control,
-                inputEvent.Shift,
-                inputEvent.Command);
         }
 
         public static explicit operator MouseMoveEventArgs(OpenTK.Input.MouseMoveEventArgs inputEvent)

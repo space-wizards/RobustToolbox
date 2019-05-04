@@ -22,8 +22,6 @@ namespace Robust.Client
 #endif
 
             IoCManager.InitThread();
-            IoCManager.Register<ISceneTreeHolder, SceneTreeHolder>();
-            IoCManager.BuildGraph();
 
             if (Environment.GetCommandLineArgs().Contains("--headless"))
             {
@@ -47,21 +45,39 @@ namespace Robust.Client
                 SleepMode = Mode == DisplayMode.Headless ? SleepMode.Delay : SleepMode.None
             };
 
-            _mainLoop.Tick += (sender, args) => Update(args.DeltaSeconds);
+            _mainLoop.Tick += (sender, args) =>
+            {
+                if (_mainLoop.Running)
+                {
+                    Update(args.DeltaSeconds);
+                }
+            };
 
             if (Mode == DisplayMode.Clyde)
             {
                 _mainLoop.Render += (sender, args) =>
                 {
-                    _gameTimingHeadless.CurFrame++;
-                    _clyde.Render(new FrameEventArgs(args.DeltaSeconds));
+                    if (_mainLoop.Running)
+                    {
+                        _gameTimingHeadless.CurFrame++;
+                        _clyde.Render(new FrameEventArgs(args.DeltaSeconds));
+                    }
                 };
-                _mainLoop.Input += (sender, args) => _clyde.ProcessInput(new FrameEventArgs(args.DeltaSeconds));
+                _mainLoop.Input += (sender, args) =>
+                {
+                    if (_mainLoop.Running)
+                    {
+                        _clyde.ProcessInput(new FrameEventArgs(args.DeltaSeconds));
+                    }
+                };
             }
 
             _mainLoop.Update += (sender, args) =>
             {
-                _frameProcessMain(args.DeltaSeconds);
+                if (_mainLoop.Running)
+                {
+                    _frameProcessMain(args.DeltaSeconds);
+                }
             };
 
             // set GameLoop.Running to false to return from this function.

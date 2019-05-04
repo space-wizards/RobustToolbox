@@ -10,7 +10,6 @@ namespace Robust.Client.Graphics.ClientEye
     public class Eye : IEye, IDisposable
     {
         protected IEyeManager eyeManager;
-        public Godot.Camera2D GodotCamera { get; private set; }
         private bool disposed = false;
 
         public bool Current
@@ -34,19 +33,7 @@ namespace Robust.Client.Graphics.ClientEye
             }
         }
 
-        private Vector2 _zoom = Vector2.One;
-        public Vector2 Zoom
-        {
-            get => _zoom;
-            set
-            {
-                _zoom = value;
-                if (GameController.OnGodot)
-                {
-                    GodotCamera.Zoom = value.Convert();
-                }
-            }
-        }
+        public Vector2 Zoom { get; set; } = Vector2.One;
 
         private MapCoordinates _position;
 
@@ -61,14 +48,6 @@ namespace Robust.Client.Graphics.ClientEye
         public Eye()
         {
             eyeManager = IoCManager.Resolve<IEyeManager>();
-            if (GameController.OnGodot)
-            {
-                GodotCamera = new Godot.Camera2D()
-                {
-                    DragMarginHEnabled = false,
-                    DragMarginVEnabled = false,
-                };
-            }
         }
 
         protected virtual void Dispose(bool disposing)
@@ -80,14 +59,6 @@ namespace Robust.Client.Graphics.ClientEye
                 Current = false;
                 eyeManager = null;
             }
-
-            if (!GameController.OnGodot)
-            {
-                return;
-            }
-            GodotCamera.QueueFree();
-            GodotCamera.Dispose();
-            GodotCamera = null;
         }
 
         public void Dispose()

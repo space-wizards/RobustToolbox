@@ -22,7 +22,6 @@ namespace Robust.Client.Interfaces.Graphics.Overlays
 
     internal interface IOverlayManagerInternal : IOverlayManager
     {
-        void Initialize();
         void FrameUpdate(RenderFrameEventArgs args);
     }
 }

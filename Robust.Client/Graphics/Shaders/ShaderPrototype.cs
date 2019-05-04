@@ -10,8 +10,6 @@ using System;
 using System.Collections.Generic;
 using Robust.Client.Interfaces.Graphics;
 using YamlDotNet.RepresentationModel;
-using BlendModeEnum = Godot.CanvasItemMaterial.BlendModeEnum;
-using LightModeEnum = Godot.CanvasItemMaterial.LightModeEnum;
 
 namespace Robust.Client.Graphics.Shaders
 {
@@ -28,7 +26,10 @@ namespace Robust.Client.Graphics.Shaders
 
         // Canvas shader variables.
         private LightModeEnum LightMode;
+#pragma warning disable 414
+        // TODO: Use this.
         private BlendModeEnum BlendMode;
+#pragma warning restore 414
 
         private Shader _canvasKindInstance;
 
@@ -41,8 +42,6 @@ namespace Robust.Client.Graphics.Shaders
             {
                 case GameController.DisplayMode.Headless:
                     return new Shader();
-                case GameController.DisplayMode.Godot:
-                    return _instanceGodot();
                 case GameController.DisplayMode.Clyde:
                     return _instanceOpenGL();
                 default:
@@ -81,41 +80,6 @@ namespace Robust.Client.Graphics.Shaders
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-        }
-
-        private Shader _instanceGodot()
-        {
-            Godot.Material mat;
-
-            switch (Kind)
-            {
-                case ShaderKind.Source:
-                    var shaderMat = new Godot.ShaderMaterial
-                    {
-                        Shader = Source.GodotShader
-                    };
-                    mat = shaderMat;
-                    if (ShaderParams != null)
-                    {
-                        foreach (var pair in ShaderParams)
-                        {
-                            shaderMat.SetShaderParam(pair.Key, pair.Value);
-                        }
-                    }
-
-                    break;
-                case ShaderKind.Canvas:
-                    mat = new Godot.CanvasItemMaterial
-                    {
-                        LightMode = LightMode,
-                        BlendMode = BlendMode,
-                    };
-                    break;
-                default:
-                    throw new InvalidOperationException();
-            }
-
-            return new Shader(mat);
         }
 
         public void LoadFrom(YamlMappingNode mapping)
@@ -201,63 +165,20 @@ namespace Robust.Client.Graphics.Shaders
                         break;
 
                     case "subtract":
-                        BlendMode = BlendModeEnum.Sub;
+                        BlendMode = BlendModeEnum.Subtract;
                         break;
 
                     case "multiply":
-                        BlendMode = BlendModeEnum.Mul;
+                        BlendMode = BlendModeEnum.Multiply;
                         break;
 
                     case "premultiplied_alpha":
-                        BlendMode = BlendModeEnum.PremultAlpha;
+                        BlendMode = BlendModeEnum.PremultipliedAlpha;
                         break;
 
                     default:
                         throw new InvalidOperationException($"Invalid blend mode: '{node.AsString()}'");
                 }
-            }
-        }
-
-        private object ParseShaderParamFor(YamlNode node, ShaderParamType type)
-        {
-            if (!GameController.OnGodot)
-            {
-                throw new NotImplementedException();
-            }
-            switch (type)
-            {
-                case ShaderParamType.Void:
-                    throw new NotSupportedException();
-                case ShaderParamType.Bool:
-                    return node.AsBool();
-                case ShaderParamType.Int:
-                case ShaderParamType.UInt:
-                    return node.AsInt();
-                case ShaderParamType.Float:
-                    return node.AsFloat();
-                case ShaderParamType.Vec2:
-                    return node.AsVector2().Convert();
-                case ShaderParamType.Vec3:
-                    return node.AsVector3().Convert();
-                case ShaderParamType.Vec4:
-                    try
-                    {
-                        return node.AsColor().Convert();
-                    }
-                    catch
-                    {
-                        var vec4 = node.AsVector4();
-                        return new Godot.Quat(vec4.X, vec4.Y, vec4.Z, vec4.W);
-                    }
-
-                case ShaderParamType.Sampler2D:
-                    var path = node.AsResourcePath();
-                    var resc = IoCManager.Resolve<IResourceCache>();
-                    return resc.GetResource<TextureResource>(path).Texture.GodotTexture;
-
-                // If something's not handled here, then that's probably because I was lazy.
-                default:
-                    throw new NotImplementedException();
             }
         }
 
@@ -279,5 +200,21 @@ void fragment() {
     COLOR = texture(TEXTURE, UV);
 }
 ";
+
+        private enum LightModeEnum
+        {
+            Normal = 0,
+            Unshaded = 1,
+            LightOnly = 2,
+        }
+
+        private enum BlendModeEnum
+        {
+            Mix = 0,
+            Add = 1,
+            Subtract = 2,
+            Multiply = 3,
+            PremultipliedAlpha = 4,
+        }
     }
 }

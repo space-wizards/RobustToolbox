@@ -11,7 +11,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.TextureButton))]
+    [ControlWrap("TextureButton")]
     public class TextureButton : BaseButton
     {
         public const string StylePropertyTexture = "texture";
@@ -19,9 +19,6 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePseudoClassHover = "hover";
         public const string StylePseudoClassDisabled = "disabled";
         public const string StylePseudoClassPressed = "pressed";
-
-        private Texture _textureNormal;
-        private Texture _textureHover;
 
         public TextureButton()
         {
@@ -31,41 +28,8 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        internal TextureButton(Godot.TextureButton button) : base(button)
-        {
-        }
-
-        public Texture TextureNormal
-        {
-            get => _textureNormal ?? (GameController.OnGodot
-                       ? new GodotTextureSource((Godot.Texture) SceneControl.Get("texture_normal"))
-                       : null);
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("texture_normal", value.GodotTexture);
-                }
-
-                _textureNormal = value;
-            }
-        }
-
-        public Texture TextureHover
-        {
-            get => _textureHover ?? (GameController.OnGodot
-                       ? new GodotTextureSource((Godot.Texture) SceneControl.Get("texture_hover"))
-                       : null);
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("texture_hover", value.GodotTexture);
-                }
-
-                _textureHover = value;
-            }
-        }
+        public Texture TextureNormal { get; set; }
+        public Texture TextureHover { get; set; }
 
         protected override void Initialize()
         {
@@ -95,18 +59,8 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.TextureButton();
-        }
-
         protected internal override void Draw(DrawingHandleScreen handle)
         {
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             var texture = TextureNormal;
 
             if (IsHovered && TextureHover != null)

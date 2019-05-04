@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Client.GodotGlue;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Input;
@@ -12,7 +11,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.LineEdit))]
+    [ControlWrap("LineEdit")]
     public class LineEdit : Control
     {
         public const string StylePropertyStyleBox = "stylebox";
@@ -20,7 +19,6 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePseudoClassPlaceholder = "placeholder";
 
         [NotNull] private string _text = "";
-        private AlignMode _textAlign;
         private bool _editable = true;
         [CanBeNull] private string _placeHolder;
         private int _cursorPosition;
@@ -38,92 +36,48 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        internal LineEdit(Godot.LineEdit control) : base(control)
-        {
-        }
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.LineEdit();
-        }
-
-        public AlignMode TextAlign
-        {
-            get => GameController.OnGodot ? (AlignMode) SceneControl.Get("align") : _textAlign;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("align", (Godot.LineEdit.AlignEnum) value);
-                }
-                else
-                {
-                    _textAlign = value;
-                }
-            }
-        }
+        public AlignMode TextAlign { get; set; }
 
         public string Text
         {
-            get => GameController.OnGodot ? (string) SceneControl.Get("text") : _text;
+            get => _text;
             set
             {
-                if (GameController.OnGodot)
+                if (value == null)
                 {
-                    SceneControl.Set("text", value);
+                    value = "";
                 }
-                else
-                {
-                    if (value == null)
-                    {
-                        value = "";
-                    }
 
-                    _text = value;
-                    _cursorPosition = 0;
-                    _updatePseudoClass();
-                }
+                _text = value;
+                _cursorPosition = 0;
+                _updatePseudoClass();
             }
         }
 
         public bool Editable
         {
-            get => GameController.OnGodot ? (bool) SceneControl.Get("editable") : _editable;
+            get => _editable;
             set
             {
-                if (GameController.OnGodot)
+                _editable = value;
+                if (!_editable)
                 {
-                    SceneControl.Set("editable", value);
+                    AddStyleClass(StyleClassLineEditNotEditable);
                 }
                 else
                 {
-                    _editable = value;
-                    if (!_editable)
-                    {
-                        AddStyleClass(StyleClassLineEditNotEditable);
-                    }
-                    else
-                    {
-                        RemoveStyleClass(StyleClassLineEditNotEditable);
-                    }
+                    RemoveStyleClass(StyleClassLineEditNotEditable);
                 }
             }
         }
 
         public string PlaceHolder
         {
-            get => GameController.OnGodot ? (string) SceneControl.Get("placeholder_text") : _placeHolder;
+            get => _placeHolder;
             set
             {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("placeholder_text", value);
-                }
-                else
-                {
-                    _placeHolder = value;
-                    _updatePseudoClass();
-                }
+                _placeHolder = value;
+                _updatePseudoClass();
             }
         }
 
@@ -136,51 +90,19 @@ namespace Robust.Client.UserInterface.Controls
         // Future me reporting, thanks past me.
         // Second future me reporting, thanks again.
         // Third future me is here to say thanks.
-
-        public void AppendAtCursor(string text)
-        {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("append_at_cursor", text);
-            }
-        }
+        // Fourth future me is here to continue the tradition.
 
         public void Clear()
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("clear");
-            }
-
             Text = "";
-        }
-
-        public int CursorPosition
-        {
-            get => GameController.OnGodot ? (int) SceneControl.Get("caret_position") : default;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("caret_position", value);
-                }
-            }
         }
 
         public void Select(int from = 0, int to = -1)
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("select", from, to);
-            }
         }
 
         public void SelectAll()
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("select_all");
-            }
         }
 
         public event Action<LineEditEventArgs> OnTextChanged;
@@ -188,12 +110,6 @@ namespace Robust.Client.UserInterface.Controls
 
         public void InsertAtCursor(string text)
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("append_at_cursor", text);
-                return;
-            }
-
             // Strip newlines.
             var chars = new List<char>(text.Length);
             foreach (var chr in text)
@@ -218,11 +134,6 @@ namespace Robust.Client.UserInterface.Controls
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             var styleBox = _getStyleBox();
             var drawBox = SizeBox;
             var contentBox = styleBox.GetContentBox(drawBox);
@@ -287,11 +198,6 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.FrameUpdate(args);
 
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             _cursorBlinkTimer -= args.Elapsed;
             if (_cursorBlinkTimer <= 0)
             {
@@ -302,11 +208,6 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            if (GameController.OnGodot)
-            {
-                return Vector2.Zero;
-            }
-
             var font = _getFont();
             var style = _getStyleBox();
             return new Vector2(0, font.Height) + style.MinimumSize;
@@ -316,7 +217,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.TextEntered(args);
 
-            if (GameController.OnGodot || !Editable)
+            if (!Editable)
             {
                 return;
             }
@@ -336,11 +237,6 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void KeyDown(GUIKeyEventArgs args)
         {
             base.KeyDown(args);
-
-            if (GameController.OnGodot)
-            {
-                return;
-            }
 
             // Just eat all keyboard input.
             args.Handle();
@@ -407,11 +303,6 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseDown(args);
 
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             // Find closest cursor position under mouse.
             var style = _getStyleBox();
             var contentBox = style.GetContentBox(SizeBox);
@@ -465,12 +356,6 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void FocusEntered()
         {
             base.FocusEntered();
-
-
-            if (GameController.OnGodot)
-            {
-                return;
-            }
 
             // Reset this so the cursor is always visible immediately after gaining focus..
             _cursorCurrentlyLit = true;
@@ -541,51 +426,6 @@ namespace Robust.Client.UserInterface.Controls
                 Control = control;
                 Text = text;
             }
-        }
-
-        private GodotSignalSubscriber1 __textChangedSubscriber;
-        private GodotSignalSubscriber1 __textEnteredSubscriber;
-
-        protected override void SetupSignalHooks()
-        {
-            base.SetupSignalHooks();
-
-            __textChangedSubscriber = new GodotSignalSubscriber1();
-            __textChangedSubscriber.Connect(SceneControl, "text_changed");
-            __textChangedSubscriber.Signal += __textChangedHook;
-
-            __textEnteredSubscriber = new GodotSignalSubscriber1();
-            __textEnteredSubscriber.Connect(SceneControl, "text_entered");
-            __textEnteredSubscriber.Signal += __textEnteredHook;
-        }
-
-        protected override void DisposeSignalHooks()
-        {
-            base.DisposeSignalHooks();
-
-            if (__textChangedSubscriber != null)
-            {
-                __textChangedSubscriber.Disconnect(SceneControl, "text_changed");
-                __textChangedSubscriber.Dispose();
-                __textChangedSubscriber = null;
-            }
-
-            if (__textEnteredSubscriber != null)
-            {
-                __textEnteredSubscriber.Disconnect(SceneControl, "text_entered");
-                __textEnteredSubscriber.Dispose();
-                __textEnteredSubscriber = null;
-            }
-        }
-
-        private void __textChangedHook(object text)
-        {
-            OnTextChanged?.Invoke(new LineEditEventArgs(this, (string) text));
-        }
-
-        private void __textEnteredHook(object text)
-        {
-            OnTextEntered?.Invoke(new LineEditEventArgs(this, (string) text));
         }
 
         private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)

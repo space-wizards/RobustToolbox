@@ -11,7 +11,7 @@ using Font = Robust.Client.Graphics.Font;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.ItemList))]
+    [ControlWrap("ItemList")]
     public class ItemList : Control
     {
         private bool _isAtBottom = true;
@@ -29,7 +29,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertySelectedItemBackground = "selected-item-background";
         public const string StylePropertyDisabledItemBackground = "disabled-item-background";
 
-        public int ItemCount => GameController.OnGodot ? (int)SceneControl.Call("get_item_count") : _itemList.Count;
+        public int ItemCount => _itemList.Count;
 
         public bool ScrollFollowing { get; set; } = true;
 
@@ -45,18 +45,9 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        internal ItemList(Godot.ItemList control) : base(control)
-        {
-        }
-
         protected override void SetDefaults()
         {
             RectClipContent = true;
-        }
-
-        private protected override Godot.Control SpawnSceneControl()
-        {
-            return new Godot.ItemList();
         }
 
         private void RecalculateContentHeight()
@@ -74,236 +65,118 @@ namespace Robust.Client.UserInterface.Controls
 
         public void AddItem(string text, Texture icon = null, bool selectable = true)
         {
-            if (GameController.OnGodot)
+            var item = new Item {Text = text, Icon = icon, Selectable = selectable};
+            _itemList.Add(item);
+            RecalculateContentHeight();
+            if (_isAtBottom && ScrollFollowing)
             {
-                SceneControl.Call("add_item", text, icon, selectable);
-            }
-            else
-            {
-                var item = new Item() {Text = text, Icon = icon, Selectable = selectable};
-                _itemList.Add(item);
-                RecalculateContentHeight();
-                if (_isAtBottom && ScrollFollowing)
-                {
-                    _scrollBar.Value = ScrollLimit;
+                _scrollBar.Value = ScrollLimit;
 
-                }
             }
         }
 
         public void AddIconItem(Texture icon, bool selectable = true)
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("add_icon_item", icon, selectable);
-            }
-            else
-            {
-                AddItem(null, icon, selectable);
-            }
+            AddItem(null, icon, selectable);
         }
 
         public void Clear()
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("clear");
-            }
-            else
-            {
-                _itemList.Clear();
-                _totalContentHeight = 0;
-            }
+            _itemList.Clear();
+            _totalContentHeight = 0;
         }
 
         public void EnsureCurrentIsVisible()
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("ensure_current_is_visible");
-            }
+            // TODO: Implement this.
         }
 
         public int GetItemAtPosition(Vector2 position, bool exact = false)
         {
-            return GameController.OnGodot ? (int)SceneControl.Call("get_item_at_position", position.Convert(), exact) : default;
+            throw new NotImplementedException();
         }
 
         public bool IsSelected(int idx)
         {
-            return GameController.OnGodot ? (bool)SceneControl.Call("is_selected", idx) : _itemList[idx].Selected;
+            return _itemList[idx].Selected;
         }
 
         public void RemoveItem(int idx)
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("remove_item", idx);
-            }
-            else
-            {
-                _itemList.RemoveAt(idx);
-                RecalculateContentHeight();
-            }
+            _itemList.RemoveAt(idx);
+            RecalculateContentHeight();
         }
 
         public void Select(int idx, bool single = true)
         {
-            if (GameController.OnGodot)
+            if (single)
             {
-                SceneControl.Call("select", idx, single);
+                for (var jdx = 0; jdx < _itemList.Count; jdx++)
+                {
+                    Unselect(jdx);
+                }
             }
-            else
+
+            var i = _itemList[idx];
+
+            if (i.Selectable)
             {
-                if (single)
-                {
-                    for (var jdx = 0; jdx < _itemList.Count; jdx++)
-                    {
-                        Unselect(jdx);
-                    }
-                }
-
-                var i = _itemList[idx];
-
-                if (i.Selectable)
-                {
-                    i.Selected = true;
-                    OnItemSelected?.Invoke(new ItemListSelectedEventArgs(idx, this));
-                }
+                i.Selected = true;
+                OnItemSelected?.Invoke(new ItemListSelectedEventArgs(idx, this));
             }
         }
 
         public void Select(Item item, bool single = true)
         {
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-            else
-            {
-                var idx = _itemList.IndexOf(item);
-                if (idx != -1)
-                    Select(idx, single);
-            }
-        }
-
-        public void SetItemCustomBgColor(int idx, Color color)
-        {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("set_icon_custom_bg_color", idx, color.Convert());
-            }
-            else
-            {
-                //_itemList[idx].CustomBg = color;
-            }
+            var idx = _itemList.IndexOf(item);
+            if (idx != -1)
+                Select(idx, single);
         }
 
         public void SetItemDisabled(int idx, bool disabled)
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("set_item_disabled", idx, disabled);
-            }
-            else
-            {
-                Unselect(idx);
-                var i = _itemList[idx];
-                i.Disabled = disabled;
-            }
+            Unselect(idx);
+            var i = _itemList[idx];
+            i.Disabled = disabled;
         }
 
         public void SetItemIcon(int idx, Texture icon)
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("set_item_icon", idx, icon);
-            }
-            else
-            {
-                _itemList[idx].Icon = icon;
-            }
+            _itemList[idx].Icon = icon;
         }
 
         public void SetItemIconRegion(int idx, UIBox2 region)
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("set_item_icon_region", idx, region.Convert());
-            }
-            else
-            {
-                _itemList[idx].IconRegion = region;
-            }
+            _itemList[idx].IconRegion = region;
         }
 
         public void SetItemSelectable(int idx, bool selectable)
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("set_item_selectable", idx, selectable);
-            }
-            else
-            {
-                _itemList[idx].Selectable = selectable;
-            }
+            _itemList[idx].Selectable = selectable;
         }
 
         public void SetItemText(int idx, string text)
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("set_item_text", idx, text);
-            }
-            else
-            {
-                _itemList[idx].Text = text;
-            }
+            _itemList[idx].Text = text;
         }
 
         public void SetItemTooltip(int idx, string tooltip)
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("set_item_tooltip", idx, tooltip);
-            }
-            else
-            {
-                _itemList[idx].TooltipText = tooltip;
-            }
+            _itemList[idx].TooltipText = tooltip;
         }
 
         public void SetItemTooltipEnabled(int idx, bool enabled)
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("set_item_tooltip_enabled", idx, enabled);
-            }
-            else
-            {
-                _itemList[idx].TooltipEnabled = true;
-            }
+            _itemList[idx].TooltipEnabled = true;
         }
 
         public void SortItemsByText()
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("sort_items_by_text");
-            }
-            else
-            {
-                _itemList.Sort((p, q) => string.Compare(p.Text, q.Text, StringComparison.Ordinal));
-            }
+            _itemList.Sort((p, q) => string.Compare(p.Text, q.Text, StringComparison.Ordinal));
         }
 
         public void Unselect(int idx)
         {
-            if (GameController.OnGodot)
-            {
-                SceneControl.Call("unselect", idx);
-            }
-            else
             {
                 var i = _itemList[idx];
                 if (!i.Selected) return;
@@ -314,16 +187,9 @@ namespace Robust.Client.UserInterface.Controls
 
         public void Unselect(Item item)
         {
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-            else
-            {
-                var idx = _itemList.IndexOf(item);
-                if (idx == -1) return;
-                Unselect(idx);
-            }
+            var idx = _itemList.IndexOf(item);
+            if (idx == -1) return;
+            Unselect(idx);
         }
 
         public Font ActualFont
@@ -412,11 +278,6 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
-
-            if (GameController.OnGodot)
-            {
-                return;
-            }
 
             var font = ActualFont;
             var listBg = ActualBackground;
@@ -516,11 +377,6 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseMove(args);
 
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             for (var idx = 0; idx < _itemList.Count; idx++)
             {
                 var item = _itemList[idx];
@@ -534,11 +390,6 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
         {
             base.MouseWheel(args);
-
-            if (GameController.OnGodot)
-            {
-                return;
-            }
 
             if (args.WheelDirection == Mouse.Wheel.Up)
             {
@@ -563,7 +414,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseDown(args);
 
-            if (GameController.OnGodot || SelectMode == ItemListSelectMode.None || args.Button != Mouse.Button.Left)
+            if (SelectMode == ItemListSelectMode.None || args.Button != Mouse.Button.Left)
             {
                 return;
             }
@@ -584,8 +435,6 @@ namespace Robust.Client.UserInterface.Controls
         protected override void Initialize()
         {
             base.Initialize();
-            if (GameController.OnGodot)
-                return;
 
             _scrollBar = new VScrollBar {Name = "_v_scroll"};
             AddChild(_scrollBar);

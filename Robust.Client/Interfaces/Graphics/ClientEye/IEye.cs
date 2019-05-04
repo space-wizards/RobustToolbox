@@ -9,8 +9,6 @@ namespace Robust.Client.Interfaces.Graphics.ClientEye
     /// </summary>
     public interface IEye
     {
-        Godot.Camera2D GodotCamera { get; }
-
         /// <summary>
         ///     Whether this is the current eye. If true, this one will be used.
         /// </summary>

@@ -6,7 +6,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap(typeof(Godot.ScrollBar))]
+    [ControlWrap("ScrollBar")]
     public abstract class ScrollBar : Range
     {
         public const string StylePropertyGrabber = "grabber";
@@ -22,10 +22,6 @@ namespace Robust.Client.UserInterface.Controls
             _orientation = orientation;
         }
 
-        private protected ScrollBar(Godot.ScrollBar control) : base(control)
-        {
-        }
-
         public bool IsAtEnd
         {
             get
@@ -37,11 +33,6 @@ namespace Robust.Client.UserInterface.Controls
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             var styleBox = _getGrabberStyleBox();
 
             styleBox?.Draw(handle, _getGrabberBox());
@@ -58,22 +49,12 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseExited();
 
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             _isHovered = false;
             _updatePseudoClass();
         }
 
         protected internal override void MouseMove(GUIMouseMoveEventArgs args)
         {
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             if (_grabData == null)
             {
                 var box = _getGrabberBox();
@@ -103,7 +84,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected internal override void MouseDown(GUIMouseButtonEventArgs args)
         {
-            if (GameController.OnGodot || args.Button != Mouse.Button.Left)
+            if (args.Button != Mouse.Button.Left)
             {
                 return;
             }
@@ -120,7 +101,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected internal override void MouseUp(GUIMouseButtonEventArgs args)
         {
-            if (GameController.OnGodot || args.Button != Mouse.Button.Left)
+            if (args.Button != Mouse.Button.Left)
             {
                 return;
             }

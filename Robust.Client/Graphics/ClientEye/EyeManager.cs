@@ -32,24 +32,7 @@ namespace Robust.Client.Graphics.ClientEye
                     return;
                 }
 
-                if (GameController.OnGodot)
-                {
-                    currentEye.GodotCamera.Current = false;
-                }
-
-                if (value != null)
-                {
-                    currentEye = value;
-                }
-                else
-                {
-                    currentEye = defaultEye;
-                }
-
-                if (GameController.OnGodot)
-                {
-                    currentEye.GodotCamera.Current = true;
-                }
+                currentEye = value ?? defaultEye;
             }
         }
 
@@ -76,11 +59,6 @@ namespace Robust.Client.Graphics.ClientEye
         {
             defaultEye = new FixedEye();
             currentEye = defaultEye;
-
-            if (GameController.OnGodot)
-            {
-                currentEye.GodotCamera.Current = true;
-            }
         }
 
         public void Dispose()

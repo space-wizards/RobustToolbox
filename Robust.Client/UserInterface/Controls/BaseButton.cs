@@ -1,5 +1,4 @@
-﻿using Robust.Client.GodotGlue;
-using System;
+﻿using System;
 using JetBrains.Annotations;
 using Robust.Client.Utility;
 using Robust.Shared.Log;
@@ -8,7 +7,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.UserInterface.Controls
 {
     [PublicAPI]
-    [ControlWrap(typeof(Godot.BaseButton))]
+    [ControlWrap("BaseButton")]
     public abstract class BaseButton : Control
     {
         private bool _attemptingPress;
@@ -22,50 +21,23 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        internal BaseButton(Godot.BaseButton button) : base(button)
-        {
-        }
-
-        private ActionMode _mode = ActionMode.Release;
-
         [ViewVariables]
-        public ActionMode Mode
-        {
-            get => GameController.OnGodot ? (ActionMode) SceneControl.Get("action_mode") : _mode;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("action_mode", (Godot.BaseButton.ActionModeEnum) value);
-                }
-                else
-                {
-                    _mode = value;
-                }
-            }
-        }
+        public ActionMode Mode { get; set; } = ActionMode.Release;
 
         private bool _disabled;
 
         [ViewVariables]
         public bool Disabled
         {
-            get => GameController.OnGodot ? (bool) SceneControl.Get("disabled") : _disabled;
+            get => _disabled;
             set
             {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("disabled", value);
-                }
-                else
-                {
-                    var old = _disabled;
-                    _disabled = value;
+                var old = _disabled;
+                _disabled = value;
 
-                    if (old != value)
-                    {
-                        DrawModeChanged();
-                    }
+                if (old != value)
+                {
+                    DrawModeChanged();
                 }
             }
         }
@@ -78,43 +50,21 @@ namespace Robust.Client.UserInterface.Controls
         [ViewVariables]
         public bool Pressed
         {
-            get => GameController.OnGodot ? (bool) SceneControl.Get("pressed") : _pressed;
+            get => _pressed;
             set
             {
-                if (GameController.OnGodot)
+                if (_pressed == value)
                 {
-                    SceneControl.Set("pressed", value);
+                    return;
                 }
-                else
-                {
-                    if (_pressed != value)
-                    {
-                        _pressed = value;
+                _pressed = value;
 
-                        DrawModeChanged();
-                    }
-                }
+                DrawModeChanged();
             }
         }
-
-        private bool _toggleMode;
 
         [ViewVariables]
-        public bool ToggleMode
-        {
-            get => GameController.OnGodot ? (bool) SceneControl.Get("toggle_mode") : _toggleMode;
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Set("toggle_mode", value);
-                }
-                else
-                {
-                    _toggleMode = value;
-                }
-            }
-        }
+        public bool ToggleMode { get; set; }
 
         public enum ActionMode
         {
@@ -123,18 +73,13 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [ViewVariables]
-        public bool IsHovered => GameController.OnGodot ? (bool) SceneControl.Call("is_hovered") : _beingHovered;
+        public bool IsHovered => _beingHovered;
 
         [ViewVariables]
         public DrawModeEnum DrawMode
         {
             get
             {
-                if (GameController.OnGodot)
-                {
-                    return (DrawModeEnum) SceneControl.Call("get_draw_mode");
-                }
-
                 if (Disabled)
                 {
                     return DrawModeEnum.Disabled;
@@ -154,21 +99,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        private ButtonGroup _buttonGroup;
-
-        public ButtonGroup ButtonGroup
-        {
-            get => _buttonGroup ?? (GameController.OnGodot
-                       ? new ButtonGroup((Godot.ButtonGroup) SceneControl.Call("get_button_group"))
-                       : null);
-            set
-            {
-                if (GameController.OnGodot)
-                {
-                    SceneControl.Call("set_button_group", value?.GodotGroup);
-                }
-            }
-        }
+        public ButtonGroup ButtonGroup { get; set; }
 
         public event Action<ButtonEventArgs> OnButtonDown;
         public event Action<ButtonEventArgs> OnButtonUp;
@@ -183,7 +114,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseDown(args);
 
-            if (GameController.OnGodot || Disabled)
+            if (Disabled)
             {
                 return;
             }
@@ -221,7 +152,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseUp(args);
 
-            if (GameController.OnGodot || Disabled)
+            if (Disabled)
             {
                 return;
             }
@@ -255,11 +186,6 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseEntered();
 
-            if (GameController.OnGodot)
-            {
-                return;
-            }
-
             var drawMode = DrawMode;
             _beingHovered = true;
             if (drawMode != DrawMode)
@@ -271,11 +197,6 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void MouseExited()
         {
             base.MouseExited();
-
-            if (GameController.OnGodot)
-            {
-                return;
-            }
 
             var drawMode = DrawMode;
             _beingHovered = false;
@@ -319,85 +240,6 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        private GodotSignalSubscriber0 __buttonDownSubscriber;
-        private GodotSignalSubscriber0 __buttonUpSubscriber;
-        private GodotSignalSubscriber1 __toggledSubscriber;
-        private GodotSignalSubscriber0 __pressedSubscriber;
-
-        protected override void SetupSignalHooks()
-        {
-            base.SetupSignalHooks();
-
-            __buttonDownSubscriber = new GodotSignalSubscriber0();
-            __buttonDownSubscriber.Connect(SceneControl, "button_down");
-            __buttonDownSubscriber.Signal += __buttonDownHook;
-
-            __buttonUpSubscriber = new GodotSignalSubscriber0();
-            __buttonUpSubscriber.Connect(SceneControl, "button_up");
-            __buttonUpSubscriber.Signal += __buttonUpHook;
-
-            __toggledSubscriber = new GodotSignalSubscriber1();
-            __toggledSubscriber.Connect(SceneControl, "toggled");
-            __toggledSubscriber.Signal += __toggledHook;
-
-            __pressedSubscriber = new GodotSignalSubscriber0();
-            __pressedSubscriber.Connect(SceneControl, "pressed");
-            __pressedSubscriber.Signal += __pressedHook;
-        }
-
-        protected override void DisposeSignalHooks()
-        {
-            base.DisposeSignalHooks();
-
-            if (__buttonDownSubscriber != null)
-            {
-                __buttonDownSubscriber.Disconnect(SceneControl, "button_down");
-                __buttonDownSubscriber.Dispose();
-                __buttonDownSubscriber = null;
-            }
-
-            if (__buttonUpSubscriber != null)
-            {
-                __buttonUpSubscriber.Disconnect(SceneControl, "button_up");
-                __buttonUpSubscriber.Dispose();
-                __buttonUpSubscriber = null;
-            }
-
-            if (__toggledSubscriber != null)
-            {
-                __toggledSubscriber.Disconnect(SceneControl, "toggled");
-                __toggledSubscriber.Dispose();
-                __toggledSubscriber = null;
-            }
-
-            if (__pressedSubscriber != null)
-            {
-                __pressedSubscriber.Disconnect(SceneControl, "pressed");
-                __pressedSubscriber.Dispose();
-                __pressedSubscriber = null;
-            }
-        }
-
-        private void __buttonDownHook()
-        {
-            OnButtonDown?.Invoke(new ButtonEventArgs(this));
-        }
-
-        private void __buttonUpHook()
-        {
-            OnButtonUp?.Invoke(new ButtonEventArgs(this));
-        }
-
-        private void __pressedHook()
-        {
-            OnPressed?.Invoke(new ButtonEventArgs(this));
-        }
-
-        private void __toggledHook(object state)
-        {
-            OnToggled?.Invoke(new ButtonToggledEventArgs((bool) state, this));
-        }
-
         private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
         {
             base.SetGodotProperty(property, value, context);
@@ -416,56 +258,5 @@ namespace Robust.Client.UserInterface.Controls
 
     public sealed class ButtonGroup
     {
-        public Godot.ButtonGroup GodotGroup { get; }
-
-        public ButtonGroup()
-        {
-            if (GameController.OnGodot)
-            {
-                GodotGroup = new Godot.ButtonGroup();
-            }
-        }
-
-        public ButtonGroup(Godot.ButtonGroup group)
-        {
-            GodotGroup = group;
-        }
-
-        private bool Equals(ButtonGroup other)
-        {
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            if (GameController.OnGodot)
-            {
-                return Equals(GodotGroup, other.GodotGroup);
-            }
-
-            return false;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj is ButtonGroup grp && Equals(grp);
-        }
-
-        public override int GetHashCode()
-        {
-            return GodotGroup != null ? GodotGroup.GetHashCode() : 0;
-        }
-
-        public static bool operator ==(ButtonGroup left, ButtonGroup right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(ButtonGroup left, ButtonGroup right)
-        {
-            return !Equals(left, right);
-        }
     }
 }

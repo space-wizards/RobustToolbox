@@ -6,7 +6,6 @@ namespace Robust.Client.Audio
     public sealed class AudioStream
     {
         public TimeSpan Length { get; }
-        internal Godot.AudioStream GodotAudioStream { get; }
         internal Clyde.Handle? ClydeHandle { get; }
 
         // Constructor used on headless.
@@ -20,13 +19,6 @@ namespace Robust.Client.Audio
         {
             ClydeHandle = handle;
             Length = length;
-        }
-
-        // Constructor used on Godot.
-        internal AudioStream(Godot.AudioStream godotStream)
-        {
-            GodotAudioStream = godotStream;
-            Length = TimeSpan.FromSeconds(godotStream.GetLength());
         }
     }
 }

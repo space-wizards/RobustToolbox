@@ -57,7 +57,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.Draw(handle);
 
-            if (GameController.OnGodot || _message == null)
+            if (_message == null)
             {
                 return;
             }

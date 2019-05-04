@@ -6,7 +6,6 @@ using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -20,7 +19,6 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IDisplayManager _displayManager;
         private readonly IConfigurationManager _configSystem;
 
-        protected override ResourcePath ScenePath => new ResourcePath("/Scenes/EscapeMenu/EscapeMenu.tscn");
         private BaseButton QuitButton;
         private BaseButton OptionsButton;
         private BaseButton SpawnEntitiesButton;
@@ -57,17 +55,31 @@ namespace Robust.Client.UserInterface.CustomControls
             Resizable = false;
             HideOnClose = true;
 
-            QuitButton = Contents.GetChild<BaseButton>("QuitButton");
-            QuitButton.OnPressed += OnQuitButtonClicked;
+            Title = "Menu";
 
-            OptionsButton = Contents.GetChild<BaseButton>("OptionsButton");
-            OptionsButton.OnPressed += OnOptionsButtonClicked;
+            var vBox = new VBoxContainer {SeparationOverride = 2};
+            Contents.AddChild(vBox);
 
-            SpawnEntitiesButton = Contents.GetChild<BaseButton>("SpawnEntitiesButton");
+            SpawnEntitiesButton = new Button {Text = "Spawn Entities"};
             SpawnEntitiesButton.OnPressed += OnSpawnEntitiesButtonClicked;
+            vBox.AddChild(SpawnEntitiesButton);
 
-            SpawnTilesButton = Contents.GetChild<BaseButton>("SpawnTilesButton");
+            SpawnTilesButton = new Button {Text = "Spawn Tiles"};
             SpawnTilesButton.OnPressed += OnSpawnTilesButtonClicked;
+            vBox.AddChild(SpawnTilesButton);
+
+            // Add a spacer.
+            vBox.AddChild(new Control { CustomMinimumSize = (0, 5)});
+
+            OptionsButton = new Button {Text = "Options"};
+            OptionsButton.OnPressed += OnOptionsButtonClicked;
+            vBox.AddChild(OptionsButton);
+
+            QuitButton = new Button {Text = "Quit"};
+            QuitButton.OnPressed += OnQuitButtonClicked;
+            vBox.AddChild(QuitButton);
+
+            Size = CombinedMinimumSize;
         }
 
         private void OnQuitButtonClicked(BaseButton.ButtonEventArgs args)

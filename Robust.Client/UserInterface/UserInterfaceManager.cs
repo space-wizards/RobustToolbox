@@ -575,7 +575,7 @@ namespace Robust.Client.UserInterface
         private void _showTooltip()
         {
             var hovered = CurrentlyHovered;
-            if (hovered == null)
+            if (hovered == null || string.IsNullOrWhiteSpace(hovered.ToolTip))
             {
                 return;
             }

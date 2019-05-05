@@ -62,18 +62,17 @@ namespace Robust.Server.Maps
             const int structSize = 4;
 
             var nTiles = chunk.ChunkSize * chunk.ChunkSize * structSize;
-            byte[] barr = new byte[nTiles];
+            var barr = new byte[nTiles];
 
             using (var stream = new MemoryStream(barr))
+            using (var writer = new BinaryWriter(stream))
             {
-                using (var writer = new BinaryWriter(stream))
+                for (ushort y = 0; y < chunk.ChunkSize; y++)
+                for (ushort x = 0; x < chunk.ChunkSize; x++)
                 {
-                    foreach (var tileRef in chunk)
-                    {
-                        // if you change these types, fix structSize!!!
-                        writer.Write(tileRef.Tile.TypeId);
-                        writer.Write(tileRef.Tile.Data);
-                    }
+                    var tile = chunk.GetTile(x, y);
+                    writer.Write(tile.TypeId);
+                    writer.Write(tile.Data);
                 }
             }
 
@@ -116,30 +115,28 @@ namespace Robust.Server.Maps
             var indNode = chunk["ind"];
             var tileNode = chunk["tiles"];
 
-            var indices = indNode.AsVector2i() * grid.ChunkSize;
+            var (chunkOffsetX, chunkOffsetY) = indNode.AsVector2i() * grid.ChunkSize;
             var tileBytes = Convert.FromBase64String(tileNode.ToString());
 
             using (var stream = new MemoryStream(tileBytes))
+            using (var reader = new BinaryReader(stream))
             {
-                using (var reader = new BinaryReader(stream))
+                mapMan.SuppressOnTileChanged = true;
+
+                for (var y = 0; y < grid.ChunkSize; y++)
+                for (var x = 0; x < grid.ChunkSize; x++)
                 {
-                    mapMan.SuppressOnTileChanged = true;
+                    var id = reader.ReadUInt16();
+                    var data = reader.ReadUInt16();
 
-                    for (var x = 0; x < grid.ChunkSize; x++)
-                        for (var y = 0; y < grid.ChunkSize; y++)
-                        {
-                            var id = reader.ReadUInt16();
-                            var data = reader.ReadUInt16();
+                    var defName = tileDefMapping[id];
+                    id = tileDefinitionManager[defName].TileId;
 
-                            var defName = tileDefMapping[id];
-                            id = tileDefinitionManager[defName].TileId;
-
-                            var tile = new Tile(id, data);
-                            grid.SetTile(new GridCoordinates(x + indices.X, y + indices.Y, grid), tile);
-                        }
-
-                    mapMan.SuppressOnTileChanged = false;
+                    var tile = new Tile(id, data);
+                    grid.SetTile(new MapIndices(chunkOffsetX + x, chunkOffsetY + y), tile);
                 }
+
+                mapMan.SuppressOnTileChanged = false;
             }
         }
     }

@@ -25,7 +25,6 @@ namespace Robust.Client.Graphics.Lighting
     public sealed partial class LightManager : ILightManager, IDisposable, IPostInjectInit
     {
         [Dependency] readonly IConfigurationManager configManager;
-        [Dependency] readonly IResourceCache resourceCache;
 
         private bool enabled = true;
 

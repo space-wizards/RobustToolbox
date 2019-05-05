@@ -139,7 +139,7 @@ namespace Robust.Shared.Maths
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is Angle angle == Equals(Theta);
+            return obj is Angle angle && Equals(angle);
         }
 
         /// <inheritdoc />

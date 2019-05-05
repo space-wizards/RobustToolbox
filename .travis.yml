@@ -33,7 +33,6 @@ before_script:
 - "python3.5 -m pip install --user requests"
 - "nuget restore RobustToolbox.sln"
 - "python3.5 RUN_THIS.py --no-prompt"
-- "Tools/download_godotsharp.py"
 
 script:
 - "msbuild /p:Configuration=Debug /p:Platform=x64 /p:HEADLESS=1 /nologo /m /p:AllowMissingMacNatives=yes RobustToolbox.sln /p:Python=python3.5"

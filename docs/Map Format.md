@@ -55,7 +55,7 @@ Each entry into the `chunks` sequence is a mapping for a single chunk of the gri
 * `ind`: The chunk index.
 * `tiles`: Base64 encoded tile data. See below.
 
-Tile data is a binary array of the tile data of a chunk. Tiles are ordered without gaps, x coords being more significant, so x will increase per row, then every y coordinate is iterated, then x increases again, etc..
+Tile data is a binary array of the tile data of a chunk. Tiles are ordered without gaps, in row-major order.
 
 Tiles are 4 bytes in size (`ushort` for Tile ID, `ushort` for tile metadata field, little endian) Thus, since the amount of tiles is equal to `chunksize * chunksize`, the tile data per chunk is exactly `chunksize * chunksize * 4` bytes long.
 

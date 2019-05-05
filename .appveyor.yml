@@ -19,7 +19,6 @@ install:
 
 before_build:
 - cmd: py -3.5 -m pip install --user requests
-- cmd: py -3.5 Tools\download_godotsharp.py
 - cmd: py -3.5 RUN_THIS.py --no-prompt
 - cmd: nuget restore RobustToolbox.sln
 - ps: >

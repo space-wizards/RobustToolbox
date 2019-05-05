@@ -337,6 +337,12 @@ namespace Robust.Shared.GameObjects.Components.Transform
             if (parent == null)
                 return;
 
+            // That's already our parent, don't bother attaching again.
+            if (parent.Owner.Uid == _parent)
+            {
+                return;
+            }
+
             var oldConcrete = (TransformComponent) Parent;
             oldConcrete?._children.Remove(Owner.Uid);
             var newConcrete = (TransformComponent) parent;

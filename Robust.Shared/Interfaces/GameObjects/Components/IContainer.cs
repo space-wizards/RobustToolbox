@@ -84,6 +84,8 @@ namespace Robust.Server.Interfaces.GameObjects
         /// <returns>True if the entity was removed, false otherwise.</returns>
         bool Remove(IEntity toremove);
 
+        void ForceRemove(IEntity toRemove);
+
         /// <summary>
         /// Checks if the entity is contained in this container.
         /// This is not recursive, so containers of children are not checked.

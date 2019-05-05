@@ -52,5 +52,7 @@ namespace Robust.Server.Interfaces.GameObjects
         /// <param name="container">The container if it was found, <c>null</c> if not found.</param>
         /// <returns>True if the container was found, false otherwise.</returns>
         bool TryGetContainer(string id, out IContainer container);
+
+        void ForceRemove(IEntity entity);
     }
 }

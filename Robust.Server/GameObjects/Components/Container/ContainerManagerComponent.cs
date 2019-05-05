@@ -108,6 +108,17 @@ namespace Robust.Server.GameObjects.Components.Container
             return true;
         }
 
+        public void ForceRemove(IEntity entity)
+        {
+            foreach (var containers in EntityContainers.Values)
+            {
+                if (containers.Contains(entity))
+                {
+                    containers.ForceRemove(entity);
+                }
+            }
+        }
+
         /// <inheritdoc />
         public bool Remove(IEntity entity)
         {

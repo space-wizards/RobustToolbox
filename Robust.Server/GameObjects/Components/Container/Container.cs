@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Robust.Server.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.ViewVariables;
@@ -30,12 +31,14 @@ namespace Robust.Server.GameObjects.Components.Container
         protected override void InternalInsert(IEntity toinsert)
         {
             ContainerList.Add(toinsert);
+            base.InternalInsert(toinsert);
         }
 
         /// <inheritdoc />
         protected override void InternalRemove(IEntity toremove)
         {
             ContainerList.Remove(toremove);
+            base.InternalRemove(toremove);
         }
 
         /// <inheritdoc />
@@ -111,7 +114,10 @@ namespace Robust.Server.GameObjects.Components.Container
         /// Implement to store the reference in whatever form you want
         /// </summary>
         /// <param name="toinsert"></param>
-        protected abstract void InternalInsert(IEntity toinsert);
+        protected virtual void InternalInsert(IEntity toinsert)
+        {
+            Owner.EntityManager.RaiseEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, this));
+        }
 
         /// <inheritdoc />
         public virtual bool CanInsert(IEntity toinsert)
@@ -145,11 +151,19 @@ namespace Robust.Server.GameObjects.Components.Container
             return true;
         }
 
+        public void ForceRemove(IEntity toRemove)
+        {
+            InternalRemove(toRemove);
+        }
+
         /// <summary>
         /// Implement to remove the reference you used to store the entity
         /// </summary>
         /// <param name="toremove"></param>
-        protected abstract void InternalRemove(IEntity toremove);
+        protected virtual void InternalRemove(IEntity toremove)
+        {
+            Owner.EntityManager.RaiseEvent(Owner, new EntRemovedFromContainerMessage(toremove, this));
+        }
 
         /// <inheritdoc />
         public virtual bool CanRemove(IEntity toremove)

@@ -56,7 +56,7 @@ namespace Robust.Client.Graphics
                 case GameController.DisplayMode.Clyde:
                 {
                     var manager = IoCManager.Resolve<IClyde>();
-                    return manager.LoadTextureFromImage(image, name);
+                    return manager.LoadTextureFromImage(image, name, loadParameters);
                 }
                 default:
                     throw new ArgumentOutOfRangeException();

@@ -70,7 +70,7 @@ namespace Robust.Server.GameObjects.Components.Container
 
         /// <inheritdoc />
         [ViewVariables]
-        public IEntity Owner => Manager.Owner;
+        public IEntity Owner => Manager?.Owner;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -162,7 +162,7 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <param name="toremove"></param>
         protected virtual void InternalRemove(IEntity toremove)
         {
-            Owner.EntityManager.RaiseEvent(Owner, new EntRemovedFromContainerMessage(toremove, this));
+            Owner?.EntityManager.RaiseEvent(Owner, new EntRemovedFromContainerMessage(toremove, this));
         }
 
         /// <inheritdoc />

@@ -128,19 +128,6 @@ namespace Robust.Client.Graphics
         }
     }
 
-    internal sealed class GodotWrapFont : Font
-    {
-        public override float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override CharMetrics? GetCharMetrics(char chr)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     public sealed class DummyFont : Font
     {
         public override float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color)

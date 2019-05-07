@@ -1,4 +1,7 @@
-﻿using Robust.Shared.Map;
+﻿using System.CodeDom;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Placement.Modes
 {
@@ -11,9 +14,58 @@ namespace Robust.Client.Placement.Modes
 
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
+            const float SearchBoxSize = 1.5f; // size of search box in meters
+
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
             var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GridID);
+
+            if (mapGrid.IsDefaultGrid)
+            {
+                // check if we are on an edge of a grid
+                // create a box around the cursor
+                DebugTools.Assert(mapGrid.WorldPosition == Vector2.Zero); // assert that LocalPos == WorldPos
+                var gridSearchBox = Box2.UnitCentered.Scale(SearchBoxSize).Translated(MouseCoords.Position);
+
+                // find grids in search box
+                var gridsInArea = mapGrid.ParentMap.FindGridsIntersecting(gridSearchBox);
+
+                // find closest grid intersecting our search box.
+                IMapGrid closest = null;
+                var distance = float.PositiveInfinity;
+                var intersect = new Box2();
+                foreach (var grid in gridsInArea)
+                {
+                    // figure out closest intersect
+                    var gridIntersect = gridSearchBox.Intersect(grid.WorldBounds);
+                    var gridDist = (gridIntersect.Center - MouseCoords.Position).LengthSquared;
+
+                    if (gridDist >= distance)
+                        continue;
+
+                    distance = gridDist;
+                    closest = grid;
+                    intersect = gridIntersect;
+                }
+
+                if (closest != null) // stick to existing grid
+                {
+                    // round to nearest cardinal dir
+                    var normal = new Angle(MouseCoords.Position - intersect.Center).GetCardinalDir().ToVec();
+
+                    // round coords to center of tile
+                    var tileIndices = closest.WorldToTile(intersect.Center);
+                    var tileCenterLocal = closest.GridTileToLocal(tileIndices);
+                    var tileCenterWorld = tileCenterLocal.ToWorld(pManager.MapManager).Position;
+
+                    // move mouse one tile out along normal
+                    var newTilePos = tileCenterWorld + normal * closest.TileSize;
+                    MouseCoords = new GridCoordinates(closest.WorldToLocal(newTilePos), closest.Index); 
+                }
+                //else free place
+            }
+
+
             CurrentTile = mapGrid.GetTileRef(MouseCoords);
             float tileSize = mapGrid.TileSize; //convert from ushort to float
             GridDistancing = tileSize;

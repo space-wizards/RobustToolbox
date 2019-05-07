@@ -150,8 +150,8 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="posLocal">The local vector with this grid as origin.</param>
         /// <returns>The world-space vector with global origin.</returns>
-        Vector2 ConvertToWorld(Vector2 posLocal);
-
+        Vector2 LocalToWorld(Vector2 posLocal);
+        
         /// <summary>
         ///     Transforms World position into grid tile indices.
         /// </summary>

@@ -228,7 +228,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     // Eh.
                     if (_mapManager.TryGetGrid(GridID, out var grid))
                     {
-                        return grid.ConvertToWorld(GetLocalPosition());
+                        return grid.LocalToWorld(GetLocalPosition());
                     }
                     return GetLocalPosition();
                 }

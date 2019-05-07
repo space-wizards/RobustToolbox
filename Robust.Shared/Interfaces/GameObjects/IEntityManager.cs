@@ -124,13 +124,11 @@ namespace Robust.Shared.Interfaces.GameObjects
 
         #region ComponentEvents
 
-        void SubscribeEvent<T>(Delegate eventHandler, IEntityEventSubscriber s)
+        void SubscribeEvent<T>(EntityEventHandler<T> eventHandler, IEntityEventSubscriber s)
             where T : EntityEventArgs;
 
         void UnsubscribeEvent<T>(IEntityEventSubscriber s)
             where T : EntityEventArgs;
-
-        void UnsubscribeEvent(Type eventType, Delegate evh, IEntityEventSubscriber s);
 
         void RaiseEvent(object sender, EntityEventArgs toRaise);
         void QueueEvent(object sender, EntityEventArgs toRaise);

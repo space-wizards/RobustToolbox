@@ -282,54 +282,59 @@ namespace Robust.Shared.GameObjects
 
         #region ComponentEvents
 
-        public void SubscribeEvent<T>(Delegate eventHandler, IEntityEventSubscriber s)
+        public void SubscribeEvent<T>(EntityEventHandler<T> eventHandler, IEntityEventSubscriber s)
             where T : EntityEventArgs
         {
-            Type eventType = typeof(T);
-            if (!_eventSubscriptions.ContainsKey(eventType))
+            var eventType = typeof(T);
+            if (!_eventSubscriptions.TryGetValue(eventType, out var subscriptions))
             {
                 _eventSubscriptions.Add(eventType, new List<Delegate> { eventHandler });
             }
-            else if (!_eventSubscriptions[eventType].Contains(eventHandler))
+            else if (!subscriptions.Contains(eventHandler))
             {
-                _eventSubscriptions[eventType].Add(eventHandler);
+                subscriptions.Add(eventHandler);
             }
 
-            if (!_inverseEventSubscriptions.ContainsKey(s))
+            if (!_inverseEventSubscriptions.TryGetValue(s, out var inverseSubscription))
             {
+                inverseSubscription = new Dictionary<Type, Delegate>
+                {
+                    {eventType, eventHandler}
+                };
+
                 _inverseEventSubscriptions.Add(
                     s,
-                    new Dictionary<Type, Delegate>()
+                    inverseSubscription
                 );
             }
 
-            if (!_inverseEventSubscriptions[s].ContainsKey(eventType))
+            else if (!inverseSubscription.ContainsKey(eventType))
             {
-                _inverseEventSubscriptions[s].Add(eventType, eventHandler);
+                inverseSubscription.Add(eventType, eventHandler);
             }
         }
 
         public void UnsubscribeEvent<T>(IEntityEventSubscriber s)
             where T : EntityEventArgs
         {
-            Type eventType = typeof(T);
+            var eventType = typeof(T);
 
-            if (_inverseEventSubscriptions.ContainsKey(s) && _inverseEventSubscriptions[s].ContainsKey(eventType))
+            if (_inverseEventSubscriptions.TryGetValue(s, out var inverse) && inverse.ContainsKey(eventType))
             {
-                UnsubscribeEvent(eventType, _inverseEventSubscriptions[s][eventType], s);
+                UnsubscribeEvent(eventType, inverse[eventType], s);
             }
         }
 
-        public void UnsubscribeEvent(Type eventType, Delegate evh, IEntityEventSubscriber s)
+        private void UnsubscribeEvent(Type eventType, Delegate evh, IEntityEventSubscriber s)
         {
-            if (_eventSubscriptions.ContainsKey(eventType) && _eventSubscriptions[eventType].Contains(evh))
+            if (_eventSubscriptions.TryGetValue(eventType, out var subscriptions) && subscriptions.Contains(evh))
             {
-                _eventSubscriptions[eventType].Remove(evh);
+                subscriptions.Remove(evh);
             }
 
-            if (_inverseEventSubscriptions.ContainsKey(s) && _inverseEventSubscriptions[s].ContainsKey(eventType))
+            if (_inverseEventSubscriptions.TryGetValue(s, out var inverse) && inverse.ContainsKey(eventType))
             {
-                _inverseEventSubscriptions[s].Remove(eventType);
+                inverse.Remove(eventType);
             }
         }
 

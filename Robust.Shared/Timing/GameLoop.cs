@@ -78,6 +78,8 @@ namespace Robust.Shared.Timing
         /// </summary>
         public SleepMode SleepMode { get; set; } = SleepMode.Yield;
 
+        // Only used on release mode.
+        // ReSharper disable once NotAccessedField.Local
         private readonly IRuntimeLog _runtimeLog;
 
         public GameLoop(IGameTiming timing)
@@ -130,16 +132,19 @@ namespace Robust.Shared.Timing
 
                 _timing.StartFrame();
                 realFrameEvent.SetDeltaSeconds((float)_timing.RealFrameTime.TotalSeconds);
-
+#if RELEASE
                 try
+#endif
                 {
                     // process Net/KB/Mouse input
                     Input?.Invoke(this, realFrameEvent);
                 }
+#if RELEASE
                 catch (Exception exp)
                 {
                     _runtimeLog.LogException(exp, "GameLoop Input");
                 }
+#endif
                 _timing.InSimulation = true;
                 var tickPeriod = CalcTickPeriod();
 

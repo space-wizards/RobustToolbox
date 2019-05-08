@@ -96,6 +96,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool _quartResLights = true;
 
+        private bool _disposing;
+
         public override void SetWindowTitle(string title)
         {
             _window.Title = title;
@@ -183,7 +185,7 @@ namespace Robust.Client.Graphics.Clyde
             };
 
             _window.KeyUp += (sender, eventArgs) => { _gameController.GameController.KeyUp((KeyEventArgs) eventArgs); };
-            _window.Closed += (sender, eventArgs) => { _gameController.GameController.Shutdown("Window closed"); };
+            _window.Closed += _onWindowClosed;
             _window.Resize += (sender, eventArgs) =>
             {
                 var oldSize = _windowSize;
@@ -539,6 +541,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Dispose()
         {
+            _disposing = true;
             _window.Dispose();
             _shutdownAudio();
         }
@@ -583,6 +586,18 @@ namespace Robust.Client.Graphics.Clyde
             var (lightW, lightH) = _lightMapSize();
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, lightW, lightH, 0,
                 PixelFormat.Rgba, PixelType.Float, IntPtr.Zero);
+        }
+
+        private void _onWindowClosed(object sender, EventArgs args)
+        {
+            if (_disposing)
+            {
+                // OpenTK seems to fire Closed when closing the window via Dispose on Windows.
+                // So uh, ignore it.
+                return;
+            }
+
+            _gameController.GameController.Shutdown("Window closed");
         }
 
         [StructLayout(LayoutKind.Sequential)]

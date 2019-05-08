@@ -24,7 +24,6 @@ namespace Robust.Shared.ContentPack
 
             public bool TryGetFile(ResourcePath relPath, out MemoryStream stream)
             {
-                System.Console.WriteLine(relPath);
                 if (relPath == _resourcePath)
                 {
                     stream = new MemoryStream();

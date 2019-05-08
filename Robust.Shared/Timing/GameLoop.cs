@@ -183,24 +183,33 @@ namespace Robust.Shared.Timing
 
                 // update out of the simulation
                 simFrameEvent.SetDeltaSeconds((float)_timing.FrameTime.TotalSeconds);
+#if RELEASE
                 try
+#endif
                 {
                     Update?.Invoke(this, simFrameEvent);
                 }
+#if RELEASE
                 catch (Exception exp)
                 {
                     _runtimeLog.LogException(exp, "GameLoop Update");
                 }
+#endif
 
                 // render the simulation
+#if RELEASE
                 try
+#endif
                 {
                     Render?.Invoke(this, realFrameEvent);
                 }
+#if RELEASE
                 catch (Exception exp)
                 {
                     _runtimeLog.LogException(exp, "GameLoop Render");
                 }
+#endif
+
                 // Set sleep to 1 if you want to be nice and give the rest of the timeslice up to the os scheduler.
                 // Set sleep to 0 if you want to use 100% cpu, but still cooperate with the scheduler.
                 // do not call sleep if you want to be 'that thread' and hog 100% cpu.

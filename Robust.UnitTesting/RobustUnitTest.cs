@@ -87,6 +87,7 @@ namespace Robust.UnitTesting
         Client
     }
 
+    [Parallelizable]
     public abstract class RobustUnitTest
     {
         #region Options

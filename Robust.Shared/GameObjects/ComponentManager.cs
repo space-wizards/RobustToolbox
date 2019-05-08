@@ -381,7 +381,7 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<IComponent> GetAllComponents(Type type)
         {
             if (_dictComponents.TryGetValue(type, out var typeDict))
-                return typeDict.Values;
+                return typeDict.Values.Where(c => !c.Deleted);
 
             return Enumerable.Empty<IComponent>();
         }

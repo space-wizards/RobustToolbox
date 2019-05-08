@@ -1,15 +1,19 @@
 using System;
 using System.Threading;
+using Robust.Shared.Exceptions;
+using Robust.Shared.IoC;
 
 namespace Robust.Shared.Asynchronous
 {
     internal sealed class TaskManager : ITaskManager
     {
-        private SS14SynchronizationContext _mainThreadContext;
+        private RobustSynchronizationContext _mainThreadContext;
+
+        [Dependency] private readonly IRuntimeLog _runtimeLog;
 
         public void Initialize()
         {
-            _mainThreadContext = new SS14SynchronizationContext();
+            _mainThreadContext = new RobustSynchronizationContext(_runtimeLog);
             SynchronizationContext.SetSynchronizationContext(_mainThreadContext);
         }
 

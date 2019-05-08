@@ -104,7 +104,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Asynchronous\SS14SynchronizationContext.cs" />
+    <Compile Include="Asynchronous\RobustSynchronizationContext.cs" />
     <Compile Include="Asynchronous\TaskManager.cs" />
     <Compile Include="Audio\AudioParams.cs" />
     <Compile Include="Configuration\ConfigurationCommands.cs" />

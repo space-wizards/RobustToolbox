@@ -1,12 +1,21 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using Robust.Shared.Log;
+using Robust.Shared.Exceptions;
 
 namespace Robust.Shared.Asynchronous
 {
-    internal class SS14SynchronizationContext : SynchronizationContext
+    internal class RobustSynchronizationContext : SynchronizationContext
     {
+        // Used only on release.
+        // ReSharper disable once NotAccessedField.Local
+        private readonly IRuntimeLog _runtimeLog;
+
+        public RobustSynchronizationContext(IRuntimeLog runtimeLog)
+        {
+            _runtimeLog = runtimeLog;
+        }
+
         private readonly BlockingCollection<(SendOrPostCallback d, object state)> _pending = new BlockingCollection<(SendOrPostCallback, object)>();
 
         public override void Send(SendOrPostCallback d, object state)
@@ -31,14 +40,18 @@ namespace Robust.Shared.Asynchronous
         {
             while (_pending.TryTake(out var task))
             {
+#if RELEASE
                 try
+#endif
                 {
                     task.d(task.state);
                 }
+#if RELEASE
                 catch (Exception e)
                 {
-                    Logger.ErrorS("async", "Caught exception in queued callback: {0}", e);
+                    _runtimeLog.LogException(e, "Async Queued Callback");
                 }
+#endif
             }
         }
     }

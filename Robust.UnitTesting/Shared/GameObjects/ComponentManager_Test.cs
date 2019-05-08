@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Moq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -237,11 +236,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         #endregion
-
-        // mimics the IoC system.
+        
         private static IComponentManager ManagerFactory(out IEntityManager entityManager)
         {
-            var manager = new ComponentManager();
+            var dependencies = new DependencyCollection();
 
             // set up the registration
             var mockRegistration = new Mock<IComponentRegistration>();
@@ -252,31 +250,17 @@ namespace Robust.UnitTesting.Shared.GameObjects
             mockFactory.Setup(x => x.GetRegistration(It.IsAny<IComponent>())).Returns(mockRegistration.Object);
             mockFactory.Setup(x => x.GetRegistration(It.IsAny<Type>())).Returns(mockRegistration.Object);
             mockFactory.Setup(x => x.GetComponent<DummyComponent>()).Returns(new DummyComponent());
+            dependencies.RegisterInstance<IComponentFactory>(mockFactory.Object);
 
             // set up the entity manager
             var mockEntMan = new Mock<IEntityManager>();
+            dependencies.RegisterInstance<IEntityManager>(mockEntMan.Object);
 
-            // Inject the dependency into manager
-            foreach (var field in GetDepFields(typeof(ComponentManager)))
-            {
-                if (field.FieldType.IsAssignableFrom(typeof(IComponentFactory)))
-                {
-                    field.SetValue(manager, mockFactory.Object);
-                }
-                else if (field.FieldType.IsAssignableFrom(typeof(IEntityManager)))
-                {
-                    field.SetValue(manager, mockEntMan.Object);
-                }
-            }
+            var manager = new ComponentManager();
+            dependencies.InjectDependencies(manager);
 
             entityManager = mockEntMan.Object;
             return manager;
-        }
-
-        private static IEnumerable<FieldInfo> GetDepFields(Type targetType)
-        {
-            return targetType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(p => Attribute.GetCustomAttribute(p, typeof(DependencyAttribute)) != null);
         }
 
         private class DummyComponent : Component, ICompType1, ICompType2

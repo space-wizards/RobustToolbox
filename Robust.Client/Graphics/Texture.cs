@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using JetBrains.Annotations;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Utility;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -89,47 +85,11 @@ namespace Robust.Client.Graphics
             }
         }
 
-        public static TextureArray LoadArrayFromImages<T>(ICollection<Image<T>> images, string name = null,
-            TextureLoadParameters? loadParameters = null)
-            where T : unmanaged, IPixel<T>
-        {
-            if (GameController.Mode != GameController.DisplayMode.Clyde)
-            {
-                throw new NotImplementedException();
-            }
-
-            var manager = IoCManager.Resolve<IClyde>();
-            return manager.LoadArrayFromImages(images, name, loadParameters);
-        }
-
         Texture IDirectionalTextureProvider.Default => this;
 
         Texture IDirectionalTextureProvider.TextureFor(Direction dir)
         {
             return this;
-        }
-    }
-
-    public sealed class TextureArray : IReadOnlyList<Texture>
-    {
-        public Texture this[int index] => _subTextures[index];
-        private readonly OpenGLTexture[] _subTextures;
-
-        public int Count => _subTextures.Length;
-
-        internal TextureArray(OpenGLTexture[] subTextures)
-        {
-            _subTextures = subTextures;
-        }
-
-        public IEnumerator<Texture> GetEnumerator()
-        {
-            return ((IReadOnlyCollection<Texture>) _subTextures).GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
     }
 

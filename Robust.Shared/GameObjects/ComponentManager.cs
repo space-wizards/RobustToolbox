@@ -372,7 +372,7 @@ namespace Robust.Shared.GameObjects
             where T : IComponent
         {
             if (_dictComponents.TryGetValue(typeof(T), out var typeDict))
-                return typeDict.Values.Cast<T>();
+                return typeDict.Values.Cast<T>().Where(c => !c.Deleted);
 
             return Enumerable.Empty<T>();
         }

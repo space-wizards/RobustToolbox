@@ -12,7 +12,7 @@ using System.Threading;
 using JetBrains.Annotations;
 using OpenTK;
 using OpenTK.Graphics;
-using OpenTK.Graphics.OpenGL4;
+using OpenTK.Graphics.OpenGL;
 using Robust.Client.Audio;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
@@ -240,6 +240,7 @@ namespace Robust.Client.Graphics.Clyde
             _loadExtensions();
 
             GL.Enable(EnableCap.Blend);
+            GL.Enable(EnableCap.FramebufferSrgb);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
             var vendor = GL.GetString(StringName.Vendor);

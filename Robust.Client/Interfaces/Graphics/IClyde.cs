@@ -22,9 +22,6 @@ namespace Robust.Client.Interfaces.Graphics
             TextureLoadParameters? loadParams = null);
         Texture LoadTextureFromImage<T>(Image<T> image, string name=null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>;
-        TextureArray LoadArrayFromImages<T>(ICollection<Image<T>> images, string name = null,
-            TextureLoadParameters? loadParams = null)
-            where T : unmanaged, IPixel<T>;
 
         int LoadShader(ParsedShader shader, string name = null);
 

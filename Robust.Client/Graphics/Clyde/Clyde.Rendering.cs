@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using OpenTK.Graphics.OpenGL4;
+using OpenTK.Graphics.OpenGL;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Drawing;
@@ -287,6 +287,8 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
+            GL.Disable(EnableCap.FramebufferSrgb);
+
             void DrawLight(Vector2 pos, float range, float power, Color color)
             {
                 _lightShader.SetUniform("lightCenter", pos);
@@ -304,7 +306,8 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, LightFBO.Handle);
             var complete = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
-            GL.ClearColor(0.1f, 0.1f, 0.1f, 1);
+            var converted = Color.FromSrgb(new Color(0.1f, 0.1f, 0.1f));
+            GL.ClearColor(converted.R, converted.G, converted.B, 1);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             var (lightW, lightH) = _lightMapSize();
@@ -329,6 +332,8 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.Viewport(0, 0, _window.Width, _window.Height);
+
+            GL.Enable(EnableCap.FramebufferSrgb);
 
             _lightingReady = true;
         }

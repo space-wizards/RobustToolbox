@@ -242,7 +242,7 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Converts sRGB color values to RGB color values.
+        ///     Converts sRGB color values to linear RGB color values.
         /// </summary>
         /// <returns>
         ///     Returns the converted color value.
@@ -273,7 +273,7 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Converts RGB color values to sRGB color values.
+        ///     Converts linear RGB color values to sRGB color values.
         /// </summary>
         /// <returns>
         ///     Returns the converted color value.

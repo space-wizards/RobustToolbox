@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using OpenTK.Graphics.OpenGL4;
+using OpenTK.Graphics.OpenGL;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -176,15 +176,18 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            public void SetUniform(string uniformName, in Color color)
+            public void SetUniform(string uniformName, in Color color, bool convertToLinear=true)
             {
                 var uniformId = GetUniform(uniformName);
+                var converted = color;
+                if (convertToLinear)
+                {
+                    converted = Color.FromSrgb(color);
+                }
+
                 unsafe
                 {
-                    fixed (Color* ptr = &color)
-                    {
-                        GL.Uniform4(uniformId, 1, (float*) ptr);
-                    }
+                    GL.Uniform4(uniformId, 1, (float*) &converted);
                 }
             }
 

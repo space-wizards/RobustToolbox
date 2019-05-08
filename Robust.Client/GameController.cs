@@ -177,6 +177,12 @@ namespace Robust.Client
 
         public void Shutdown(string reason = null)
         {
+            // Already got shut down I assume,
+            if (!_mainLoop.Running)
+            {
+                return;
+            }
+
             if (reason != null)
             {
                 Logger.Info($"Shutting down! Reason: {reason}");
@@ -187,9 +193,6 @@ namespace Robust.Client
             }
 
             _mainLoop.Running = false;
-
-            Logger.Debug("Goodbye");
-            IoCManager.Clear();
         }
 
         private void Update(float frameTime)

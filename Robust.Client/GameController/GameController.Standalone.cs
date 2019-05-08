@@ -35,6 +35,9 @@ namespace Robust.Client
             var gc = new GameController();
             gc.Startup();
             gc.MainLoop();
+
+            Logger.Debug("Goodbye");
+            IoCManager.Clear();
         }
 
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
@@ -74,11 +75,12 @@ namespace Robust.Shared.Timers
         ///     The task is resumed on the main game logic thread.
         /// </summary>
         /// <param name="milliseconds">The length of time, in milliseconds, to delay for.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The task that can be awaited.</returns>
-        public static Task Delay(int milliseconds)
+        public static Task Delay(int milliseconds, CancellationToken cancellationToken = default)
         {
             var tcs = new TaskCompletionSource<object>();
-            Spawn(milliseconds, () => tcs.SetResult(null));
+            Spawn(milliseconds, () => tcs.SetResult(null), cancellationToken);
             return tcs.Task;
         }
 
@@ -87,10 +89,11 @@ namespace Robust.Shared.Timers
         ///     The task is resumed on the main game logic thread.
         /// </summary>
         /// <param name="duration">The length of time to delay for.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The task that can be awaited.</returns>
-        public static Task Delay(TimeSpan duration)
+        public static Task Delay(TimeSpan duration, CancellationToken cancellationToken = default)
         {
-            return Delay((int)duration.TotalMilliseconds);
+            return Delay((int)duration.TotalMilliseconds, cancellationToken);
         }
 
         /// <summary>
@@ -99,10 +102,11 @@ namespace Robust.Shared.Timers
         /// </summary>
         /// <param name="milliseconds">The length of time, in milliseconds, to wait before firing the action.</param>
         /// <param name="onFired">The action to fire.</param>
-        public static void Spawn(int milliseconds, Action onFired)
+        /// <param name="cancellationToken"></param>
+        public static void Spawn(int milliseconds, Action onFired, CancellationToken cancellationToken = default)
         {
             var timer = new Timer(milliseconds, false, onFired);
-            IoCManager.Resolve<ITimerManager>().AddTimer(timer);
+            IoCManager.Resolve<ITimerManager>().AddTimer(timer, cancellationToken);
         }
 
         /// <summary>
@@ -111,9 +115,10 @@ namespace Robust.Shared.Timers
         /// </summary>
         /// <param name="duration">The length of time, to wait before firing the action.</param>
         /// <param name="onFired">The action to fire.</param>
-        public static void Spawn(TimeSpan duration, Action onFired)
+        /// <param name="cancellationToken"></param>
+        public static void Spawn(TimeSpan duration, Action onFired, CancellationToken cancellationToken = default)
         {
-            Spawn((int)duration.TotalMilliseconds, onFired);
+            Spawn((int)duration.TotalMilliseconds, onFired, cancellationToken);
         }
     }
 }

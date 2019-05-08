@@ -1,12 +1,13 @@
 using System;
 using System.Linq;
+using System.Threading;
 using NUnit.Framework;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Timers;
+using Timer = Robust.Shared.Timers.Timer;
 
 namespace Robust.UnitTesting.Shared.Timers
 {
@@ -144,6 +145,27 @@ namespace Robust.UnitTesting.Shared.Timers
             taskManager.ProcessPendingTasks();
             Assert.That(threw, Is.True);
             Assert.That(DidThrow(), Is.True);
+        }
+
+        [Test]
+        public void TestCancellation()
+        {
+            var timerManager = IoCManager.Resolve<ITimerManager>();
+            var taskManager = IoCManager.Resolve<ITaskManager>();
+
+            var cts = new CancellationTokenSource();
+            var ran = false;
+            Timer.Spawn(1000, () => ran = true, cts.Token);
+
+            timerManager.UpdateTimers(0.5f);
+
+            Assert.That(ran, Is.False);
+
+            cts.Cancel();
+
+            timerManager.UpdateTimers(0.6f);
+
+            Assert.That(ran, Is.False);
         }
     }
 }

@@ -12,6 +12,12 @@ namespace Robust.UnitTesting.Shared.IoC
     [TestFixture, TestOf(typeof(IoCManager))]
     public class IoCManager_Test
     {
+        [OneTimeSetUp]
+        public void OneTimeSetup()
+        {
+            IoCManager.InitThread();
+        }
+
         [SetUp]
         public void TestSetup()
         {

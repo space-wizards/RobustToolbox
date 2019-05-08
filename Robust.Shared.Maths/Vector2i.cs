@@ -139,6 +139,12 @@ namespace Robust.Shared.Maths
             return new Vector2i((int) vector.X, (int) vector.Y);
         }
 
+        public static implicit operator Vector2i((int x, int y) tuple)
+        {
+            var (x, y) = tuple;
+            return new Vector2i(x, y);
+        }
+
         /// <summary>
         ///     Returns a string that represents the current Vector2i.
         /// </summary>

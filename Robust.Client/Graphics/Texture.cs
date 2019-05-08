@@ -45,18 +45,8 @@ namespace Robust.Client.Graphics
         public static Texture LoadFromImage<T>(Image<T> image, string name = null,
             TextureLoadParameters? loadParameters = null) where T : unmanaged, IPixel<T>
         {
-            switch (GameController.Mode)
-            {
-                case GameController.DisplayMode.Headless:
-                    return new DummyTexture(image.Width, image.Height);
-                case GameController.DisplayMode.Clyde:
-                {
-                    var manager = IoCManager.Resolve<IClyde>();
-                    return manager.LoadTextureFromImage(image, name, loadParameters);
-                }
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            var manager = IoCManager.Resolve<IClyde>();
+            return manager.LoadTextureFromImage(image, name, loadParameters);
         }
 
         /// <summary>
@@ -71,18 +61,8 @@ namespace Robust.Client.Graphics
         public static Texture LoadFromPNGStream(Stream stream, string name = null,
             TextureLoadParameters? loadParameters = null)
         {
-            switch (GameController.Mode)
-            {
-                case GameController.DisplayMode.Headless:
-                    return new DummyTexture();
-                case GameController.DisplayMode.Clyde:
-                {
-                    var manager = IoCManager.Resolve<IClyde>();
-                    return manager.LoadTextureFromPNGStream(stream, name, loadParameters);
-                }
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            var manager = IoCManager.Resolve<IClyde>();
+            return manager.LoadTextureFromPNGStream(stream, name, loadParameters);
         }
 
         Texture IDirectionalTextureProvider.Default => this;
@@ -102,11 +82,6 @@ namespace Robust.Client.Graphics
         {
             Width = width;
             Height = height;
-        }
-
-        public DummyTexture()
-        {
-            DebugTools.Assert(GameController.Mode == GameController.DisplayMode.Headless);
         }
     }
 

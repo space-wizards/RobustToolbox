@@ -1,5 +1,4 @@
 ﻿using Robust.Client.Audio;
-using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Audio;
@@ -22,19 +21,9 @@ namespace Robust.Client.GameObjects.EntitySystems
     {
         [Dependency] private readonly IResourceCache resourceCache;
         [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IClyde _clyde;
 
-        private IClyde _clyde;
-
-        private readonly List<PlayingClydeStream> PlayingClydeStreams = new List<PlayingClydeStream>();
-
-        public override void Initialize()
-        {
-            base.Initialize();
-            if (GameController.Mode == GameController.DisplayMode.Clyde)
-            {
-                _clyde = IoCManager.Resolve<IClyde>();
-            }
-        }
+        private readonly List<PlayingStream> PlayingClydeStreams = new List<PlayingStream>();
 
         public override void RegisterMessageTypes()
         {
@@ -47,11 +36,6 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         public override void FrameUpdate(float frameTime)
         {
-            if (GameController.Mode != GameController.DisplayMode.Clyde)
-            {
-                return;
-            }
-
             // Update positions of streams every frame.
             foreach (var stream in PlayingClydeStreams)
             {
@@ -92,23 +76,20 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="audioParams"></param>
         public void Play(AudioStream stream, AudioParams? audioParams = null)
         {
-            if (GameController.Mode == GameController.DisplayMode.Clyde)
+            var source = _clyde.CreateAudioSource(stream);
+            if (audioParams.HasValue)
             {
-                var source = _clyde.CreateAudioSource(stream);
-                if (audioParams.HasValue)
-                {
-                    source.SetPitch(audioParams.Value.PitchScale);
-                    source.SetVolume(audioParams.Value.Volume);
-                }
-
-                source.SetGlobal();
-                source.StartPlaying();
-                var playing = new PlayingClydeStream
-                {
-                    Source = source,
-                };
-                PlayingClydeStreams.Add(playing);
+                source.SetPitch(audioParams.Value.PitchScale);
+                source.SetVolume(audioParams.Value.Volume);
             }
+
+            source.SetGlobal();
+            source.StartPlaying();
+            var playing = new PlayingStream
+            {
+                Source = source,
+            };
+            PlayingClydeStreams.Add(playing);
         }
 
         /// <summary>
@@ -130,24 +111,21 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="audioParams"></param>
         public void Play(AudioStream stream, IEntity entity, AudioParams? audioParams = null)
         {
-            if (GameController.Mode == GameController.DisplayMode.Clyde)
+            var source = _clyde.CreateAudioSource(stream);
+            source.SetPosition(entity.Transform.WorldPosition);
+            if (audioParams.HasValue)
             {
-                var source = _clyde.CreateAudioSource(stream);
-                source.SetPosition(entity.Transform.WorldPosition);
-                if (audioParams.HasValue)
-                {
-                    source.SetPitch(audioParams.Value.PitchScale);
-                    source.SetVolume(audioParams.Value.Volume);
-                }
-
-                source.StartPlaying();
-                var playing = new PlayingClydeStream
-                {
-                    Source = source,
-                    TrackingEntity = entity,
-                };
-                PlayingClydeStreams.Add(playing);
+                source.SetPitch(audioParams.Value.PitchScale);
+                source.SetVolume(audioParams.Value.Volume);
             }
+
+            source.StartPlaying();
+            var playing = new PlayingStream
+            {
+                Source = source,
+                TrackingEntity = entity,
+            };
+            PlayingClydeStreams.Add(playing);
         }
 
         /// <summary>
@@ -169,24 +147,21 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="audioParams"></param>
         public void Play(AudioStream stream, GridCoordinates coordinates, AudioParams? audioParams = null)
         {
-            if (GameController.Mode == GameController.DisplayMode.Clyde)
+            var source = _clyde.CreateAudioSource(stream);
+            source.SetPosition(coordinates.ToWorld(_mapManager).Position);
+            if (audioParams.HasValue)
             {
-                var source = _clyde.CreateAudioSource(stream);
-                source.SetPosition(coordinates.ToWorld(_mapManager).Position);
-                if (audioParams.HasValue)
-                {
-                    source.SetPitch(audioParams.Value.PitchScale);
-                    source.SetVolume(audioParams.Value.Volume);
-                }
-
-                source.StartPlaying();
-                var playing = new PlayingClydeStream
-                {
-                    Source = source,
-                    TrackingCoordinates = coordinates
-                };
-                PlayingClydeStreams.Add(playing);
+                source.SetPitch(audioParams.Value.PitchScale);
+                source.SetVolume(audioParams.Value.Volume);
             }
+
+            source.StartPlaying();
+            var playing = new PlayingStream
+            {
+                Source = source,
+                TrackingCoordinates = coordinates
+            };
+            PlayingClydeStreams.Add(playing);
         }
 
         public override void HandleNetMessage(INetChannel channel, EntitySystemMessage message)
@@ -228,7 +203,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             }
         }
 
-        private class PlayingClydeStream
+        private class PlayingStream
         {
             public IClydeAudioSource Source;
             public IEntity TrackingEntity;

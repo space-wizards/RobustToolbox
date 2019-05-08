@@ -15,7 +15,7 @@ namespace Robust.Client
     {
         private GameLoop _mainLoop;
 
-        [Dependency] private IGameTiming _gameTimingHeadless;
+        [Dependency] private IGameTiming _gameTiming;
 
         public static void Main()
         {
@@ -25,31 +25,32 @@ namespace Robust.Client
 
             IoCManager.InitThread();
 
+            DisplayMode mode;
             if (Environment.GetCommandLineArgs().Contains("--headless"))
             {
-                Mode = DisplayMode.Headless;
+                mode = DisplayMode.Headless;
             }
             else
             {
-                Mode = DisplayMode.Clyde;
+                mode = DisplayMode.Clyde;
             }
 
             ThreadUtility.MainThread = Thread.CurrentThread;
-            InitIoC();
+            InitIoC(mode);
 
             var gc = (GameController) IoCManager.Resolve<IGameController>();
             gc.Startup();
-            gc.MainLoop();
+            gc.MainLoop(mode);
 
             Logger.Debug("Goodbye");
             IoCManager.Clear();
         }
 
-        private void MainLoop()
+        private void MainLoop(DisplayMode mode)
         {
-            _mainLoop = new GameLoop(_gameTimingHeadless)
+            _mainLoop = new GameLoop(_gameTiming)
             {
-                SleepMode = Mode == DisplayMode.Headless ? SleepMode.Delay : SleepMode.None
+                SleepMode = mode == DisplayMode.Headless ? SleepMode.Delay : SleepMode.None
             };
 
             _mainLoop.Tick += (sender, args) =>
@@ -60,24 +61,21 @@ namespace Robust.Client
                 }
             };
 
-            if (Mode == DisplayMode.Clyde)
+            _mainLoop.Render += (sender, args) =>
             {
-                _mainLoop.Render += (sender, args) =>
+                if (_mainLoop.Running)
                 {
-                    if (_mainLoop.Running)
-                    {
-                        _gameTimingHeadless.CurFrame++;
-                        _clyde.Render(new FrameEventArgs(args.DeltaSeconds));
-                    }
-                };
-                _mainLoop.Input += (sender, args) =>
+                    _gameTiming.CurFrame++;
+                    _clyde.Render(new FrameEventArgs(args.DeltaSeconds));
+                }
+            };
+            _mainLoop.Input += (sender, args) =>
+            {
+                if (_mainLoop.Running)
                 {
-                    if (_mainLoop.Running)
-                    {
-                        _clyde.ProcessInput(new FrameEventArgs(args.DeltaSeconds));
-                    }
-                };
-            }
+                    _clyde.ProcessInput(new FrameEventArgs(args.DeltaSeconds));
+                }
+            };
 
             _mainLoop.Update += (sender, args) =>
             {

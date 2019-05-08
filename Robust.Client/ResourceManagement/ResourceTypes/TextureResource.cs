@@ -1,13 +1,10 @@
-﻿using System;
-using Robust.Client.Graphics;
+﻿using Robust.Client.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 using System.IO;
-using System.Text;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.IoC;
-using SixLabors.ImageSharp;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client.ResourceManagement
@@ -29,18 +26,7 @@ namespace Robust.Client.ResourceManagement
 
             var loadParameters = _tryLoadTextureParameters(cache, path) ?? TextureLoadParameters.Default;
 
-            switch (GameController.Mode)
-            {
-                case GameController.DisplayMode.Headless:
-                    var image = Image.Load(cache.ContentFileRead(path).ToArray());
-                    Texture = new DummyTexture(image.Width, image.Height);
-                    break;
-                case GameController.DisplayMode.Clyde:
-                    _loadOpenGL(cache, path, loadParameters);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            _loadOpenGL(cache, path, loadParameters);
         }
 
         private static TextureLoadParameters? _tryLoadTextureParameters(IResourceCache cache, ResourcePath path)
@@ -68,8 +54,6 @@ namespace Robust.Client.ResourceManagement
 
         private void _loadOpenGL(IResourceCache cache, ResourcePath path, TextureLoadParameters? parameters)
         {
-            DebugTools.Assert(GameController.Mode == GameController.DisplayMode.Clyde);
-
             var manager = IoCManager.Resolve<IClyde>();
 
             Texture = manager.LoadTextureFromPNGStream(cache.ContentFileRead(path), path.ToString(), parameters);

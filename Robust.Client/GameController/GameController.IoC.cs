@@ -66,14 +66,14 @@ namespace Robust.Client
     // Partial of GameController to initialize IoC and some other low-level systems like it.
     internal sealed partial class GameController
     {
-        private static void InitIoC()
+        private static void InitIoC(DisplayMode mode)
         {
-            RegisterIoC();
+            RegisterIoC(mode);
             IoCManager.BuildGraph();
             RegisterReflection();
         }
 
-        private static void RegisterIoC()
+        private static void RegisterIoC(DisplayMode mode)
         {
             // Shared stuff.
             IoCManager.Register<ILogManager, LogManager>();
@@ -115,20 +115,19 @@ namespace Robust.Client
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
             IoCManager.Register<IClientConsole, ClientConsole>();
-            switch (Mode)
+            IoCManager.Register<IFontManager, FontManager>();
+            IoCManager.Register<IFontManagerInternal, FontManager>();
+            switch (mode)
             {
                 case DisplayMode.Headless:
-                    IoCManager.Register<IDisplayManager, DisplayManagerHeadless>();
+                    IoCManager.Register<IDisplayManager, ClydeHeadless>();
+                    IoCManager.Register<IClyde, ClydeHeadless>();
                     IoCManager.Register<IInputManager, InputManager>();
-                    IoCManager.Register<IFontManager, FontManager>();
-                    IoCManager.Register<IFontManagerInternal, FontManager>();
                     break;
                 case DisplayMode.Clyde:
                     IoCManager.Register<IDisplayManager, Clyde>();
                     IoCManager.Register<IClyde, Clyde>();
-                    IoCManager.Register<IInputManager, OpenGLInputManager>();
-                    IoCManager.Register<IFontManager, FontManager>();
-                    IoCManager.Register<IFontManagerInternal, FontManager>();
+                    IoCManager.Register<IInputManager, ClydeInputManager>();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

@@ -38,48 +38,26 @@ namespace Robust.Client.Graphics.Shaders
         /// </summary>
         public Shader Instance()
         {
-            switch (GameController.Mode)
+            if (_canvasKindInstance != null)
             {
-                case GameController.DisplayMode.Headless:
-                    return new Shader();
-                case GameController.DisplayMode.Clyde:
-                    return _instanceOpenGL();
-                default:
-                    throw new ArgumentOutOfRangeException();
+                return _canvasKindInstance;
             }
-        }
 
-        private Shader _instanceOpenGL()
-        {
-            switch (Kind)
+            string source;
+            if (LightMode == LightModeEnum.Unshaded)
             {
-                case ShaderKind.Source:
-                    return new Shader(Source.ClydeHandle);
-                case ShaderKind.Canvas:
-                    if (_canvasKindInstance != null)
-                    {
-                        return _canvasKindInstance;
-                    }
-
-                    string source;
-                    if (LightMode == LightModeEnum.Unshaded)
-                    {
-                        source = SourceUnshaded;
-                    }
-                    else
-                    {
-                        source = SourceShaded;
-                    }
-
-                    var parsed = ShaderParser.Parse(source);
-                    var clyde = IoCManager.Resolve<IClyde>();
-                    var instance = new Shader(clyde.LoadShader(parsed));
-                    _canvasKindInstance = instance;
-                    return instance;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
+                source = SourceUnshaded;
             }
+            else
+            {
+                source = SourceShaded;
+            }
+
+            var parsed = ShaderParser.Parse(source);
+            var clyde = IoCManager.Resolve<IClyde>();
+            var instance = new Shader(clyde.LoadShader(parsed));
+            _canvasKindInstance = instance;
+            return instance;
         }
 
         public void LoadFrom(YamlMappingNode mapping)

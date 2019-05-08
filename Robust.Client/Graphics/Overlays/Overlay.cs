@@ -79,53 +79,26 @@ namespace Robust.Client.Graphics.Overlays
                 throw new InvalidOperationException("Can only allocate new handles while drawing.");
             }
 
-            switch (GameController.Mode)
+            DrawingHandle handle;
+            switch (Space)
             {
-                case GameController.DisplayMode.Headless:
-                {
-                    DrawingHandle handle;
-                    switch (Space)
-                    {
-                        case OverlaySpace.ScreenSpaceBelowWorld:
-                        case OverlaySpace.ScreenSpace:
-                            handle = new DrawingHandleScreen();
-                            break;
-                        case OverlaySpace.WorldSpace:
-                            handle = new DrawingHandleWorld();
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-
-                    TempHandles.Add(handle);
-                    return handle;
-                }
-                case GameController.DisplayMode.Clyde:
-                {
-                    DrawingHandle handle;
-                    switch (Space)
-                    {
-                        case OverlaySpace.ScreenSpaceBelowWorld:
-                        case OverlaySpace.ScreenSpace:
-                            handle = _renderHandle.CreateHandleScreen();
-                            break;
-                        case OverlaySpace.WorldSpace:
-                            handle = _renderHandle.CreateHandleWorld();
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-
-                    if (shader != null)
-                    {
-                        handle.UseShader(shader);
-                    }
-
-                    return handle;
-                }
+                case OverlaySpace.ScreenSpaceBelowWorld:
+                case OverlaySpace.ScreenSpace:
+                    handle = _renderHandle.CreateHandleScreen();
+                    break;
+                case OverlaySpace.WorldSpace:
+                    handle = _renderHandle.CreateHandleWorld();
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            if (shader != null)
+            {
+                handle.UseShader(shader);
+            }
+
+            return handle;
         }
 
         public void Dirty()
@@ -137,10 +110,8 @@ namespace Robust.Client.Graphics.Overlays
         {
         }
 
-        internal void OpenGLRender(IRenderHandle renderHandle)
+        internal void ClydeRender(IRenderHandle renderHandle)
         {
-            DebugTools.Assert(GameController.Mode == GameController.DisplayMode.Clyde);
-
             try
             {
                 _renderHandle = renderHandle;

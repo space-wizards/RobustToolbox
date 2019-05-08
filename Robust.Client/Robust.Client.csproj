@@ -148,7 +148,7 @@
     <Compile Include="Graphics\Clyde\Clyde.ShaderProgram.cs" />
     <Compile Include="Graphics\Clyde\Clyde.Shaders.cs" />
     <Compile Include="Graphics\Clyde\Clyde.Textures.cs" />
-    <Compile Include="Graphics\DisplayManagerHeadless.cs" />
+    <Compile Include="Graphics\Clyde\ClydeHeadless.cs" />
     <Compile Include="Graphics\FontManager.cs" />
     <Compile Include="Graphics\IDirectionalTextureProvider.cs" />
     <Compile Include="Graphics\Lighting\LightManager.Light.cs" />
@@ -163,7 +163,7 @@
     <Compile Include="Graphics\Shaders\ShaderPrototype.cs" />
     <Compile Include="Graphics\Shaders\Shader.cs" />
     <Compile Include="Input\EngineContexts.cs" />
-    <Compile Include="Input\OpenGLInputManager.cs" />
+    <Compile Include="Input\ClydeInputManager.cs" />
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
     <Compile Include="Interfaces\Console\IDebugConsole.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClientClickableComponent.cs" />

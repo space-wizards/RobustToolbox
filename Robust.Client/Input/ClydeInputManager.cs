@@ -4,7 +4,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Input
 {
-    internal class OpenGLInputManager : InputManager
+    internal sealed class ClydeInputManager : InputManager
     {
         [Dependency] private readonly IClyde _clyde;
 

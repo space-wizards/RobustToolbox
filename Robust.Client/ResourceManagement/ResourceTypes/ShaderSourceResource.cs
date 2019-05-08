@@ -27,17 +27,6 @@ namespace Robust.Client.ResourceManagement.ResourceTypes
                 ParsedShader = ShaderParser.Parse(reader);
             }
 
-            switch (GameController.Mode)
-            {
-                case GameController.DisplayMode.Headless:
-                    return;
-                case GameController.DisplayMode.Clyde:
-                    ClydeHandle = IoCManager.Resolve<IClyde>().LoadShader(ParsedShader);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
             var clyde = IoCManager.Resolve<IClyde>();
             // TODO: vertex shaders.
             ClydeHandle = clyde.LoadShader(ParsedShader, path.ToString());

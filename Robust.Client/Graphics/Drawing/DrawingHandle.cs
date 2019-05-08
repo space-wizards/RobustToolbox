@@ -21,7 +21,6 @@ namespace Robust.Client.Graphics.Drawing
 
         internal DrawingHandle()
         {
-            DebugTools.Assert(GameController.Mode == GameController.DisplayMode.Headless);
         }
 
         internal DrawingHandle(IRenderHandle handle, int handleId)

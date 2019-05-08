@@ -1,5 +1,4 @@
-﻿using System;
-using Robust.Client.Audio;
+﻿using Robust.Client.Audio;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Shared.Utility;
 using System.IO;
@@ -19,19 +18,9 @@ namespace Robust.Client.ResourceManagement
                 throw new FileNotFoundException("Content file does not exist for audio sample.");
             }
 
-            switch (GameController.Mode)
+            using (var fileStream = cache.ContentFileRead(path))
             {
-                case GameController.DisplayMode.Headless:
-                    AudioStream = new AudioStream();
-                    break;
-                case GameController.DisplayMode.Clyde:
-                    using (var fileStream = cache.ContentFileRead(path))
-                    {
-                        AudioStream = IoCManager.Resolve<IClyde>().LoadAudioOggVorbis(fileStream);
-                    }
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                AudioStream = IoCManager.Resolve<IClyde>().LoadAudioOggVorbis(fileStream);
             }
         }
 

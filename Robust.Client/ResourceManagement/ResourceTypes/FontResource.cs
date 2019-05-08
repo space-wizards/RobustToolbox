@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Robust.Client.Interfaces.ResourceManagement;
+﻿using Robust.Client.Interfaces.ResourceManagement;
 using System.IO;
 using Robust.Shared.Utility;
 using Robust.Client.Graphics;
@@ -23,16 +18,7 @@ namespace Robust.Client.ResourceManagement
                 throw new FileNotFoundException("Content file does not exist for font");
             }
 
-            switch (GameController.Mode)
-            {
-                case GameController.DisplayMode.Headless:
-                case GameController.DisplayMode.Clyde:
-                    FontFaceHandle = IoCManager.Resolve<IFontManagerInternal>().Load(cache.ContentFileRead(path).ToArray());
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
+            FontFaceHandle = IoCManager.Resolve<IFontManagerInternal>().Load(cache.ContentFileRead(path).ToArray());
         }
 
         public VectorFont MakeDefault()

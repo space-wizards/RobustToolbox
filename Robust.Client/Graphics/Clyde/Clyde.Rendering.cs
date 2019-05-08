@@ -97,11 +97,6 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Render(FrameEventArgs args)
         {
-            if (GameController.Mode != GameController.DisplayMode.Clyde)
-            {
-                return;
-            }
-
             GL.ClearColor(0, 0, 0, 1);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
@@ -174,7 +169,7 @@ namespace Robust.Client.Graphics.Clyde
                 .Where(o => o.Space == OverlaySpace.ScreenSpaceBelowWorld)
                 .OrderBy(o => o.ZIndex))
             {
-                overlay.OpenGLRender(_renderHandle);
+                overlay.ClydeRender(_renderHandle);
             }
 
             _flushRenderHandle(_renderHandle);
@@ -243,7 +238,7 @@ namespace Robust.Client.Graphics.Clyde
                 .Where(o => o.Space == OverlaySpace.WorldSpace)
                 .OrderBy(o => o.ZIndex))
             {
-                overlay.OpenGLRender(_renderHandle);
+                overlay.ClydeRender(_renderHandle);
             }
 
             _flushRenderHandle(_renderHandle);
@@ -262,7 +257,7 @@ namespace Robust.Client.Graphics.Clyde
                 .Where(o => o.Space == OverlaySpace.ScreenSpace)
                 .OrderBy(o => o.ZIndex))
             {
-                overlay.OpenGLRender(_renderHandle);
+                overlay.ClydeRender(_renderHandle);
             }
 
             _flushRenderHandle(_renderHandle);

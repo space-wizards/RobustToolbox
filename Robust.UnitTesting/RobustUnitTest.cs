@@ -10,6 +10,7 @@ using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.ClientEye;
+using Robust.Client.Graphics.Clyde;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Input;
 using Robust.Client.Interfaces;
@@ -227,7 +228,8 @@ namespace Robust.UnitTesting
                     IoCManager.Register<IInputManager, InputManager>();
                     IoCManager.Register<IDebugDrawing, DebugDrawing>();
                     //IoCManager.Register<ILightManager, LightManager>();
-                    IoCManager.Register<IDisplayManager, DisplayManagerHeadless>();
+                    IoCManager.Register<IDisplayManager, ClydeHeadless>();
+                    IoCManager.Register<IClyde, ClydeHeadless>();
                     //IoCManager.Register<IEyeManager, EyeManager>();
                     IoCManager.Register<IPrototypeManager, PrototypeManager>();
                     IoCManager.Register<IOverlayManager, OverlayManager>();

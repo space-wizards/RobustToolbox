@@ -48,14 +48,6 @@ namespace Robust.Client
 {
     internal sealed partial class GameController : IGameControllerInternal
     {
-        public enum DisplayMode
-        {
-            Headless,
-            Clyde
-        }
-
-        internal static DisplayMode Mode { get; private set; } = DisplayMode.Headless;
-
         [Dependency] private readonly IConfigurationManager _configurationManager;
         [Dependency] private readonly IResourceCacheInternal _resourceCache;
         [Dependency] private readonly IResourceManager _resourceManager;
@@ -80,9 +72,8 @@ namespace Robust.Client
         [Dependency] private readonly ITaskManager _taskManager;
         [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager;
         [Dependency] private readonly IDiscordRichPresence _discord;
-        private IClyde _clyde;
-        private IFontManagerInternal _fontManager;
-
+        [Dependency] private readonly IClyde _clyde;
+        [Dependency] private readonly IFontManagerInternal _fontManager;
 
         private void Startup()
         {
@@ -109,11 +100,6 @@ namespace Robust.Client
                 _configurationManager.SetSaveFile(configFile);
             }
 
-            if (Mode == DisplayMode.Clyde)
-            {
-                _clyde = IoCManager.Resolve<IClyde>();
-            }
-
             _resourceCache.Initialize(userDataDir);
             _resourceCache.LoadBaseResources();
 
@@ -121,11 +107,7 @@ namespace Robust.Client
             _displayManager.Initialize();
             _displayManager.SetWindowTitle("Space Station 14");
 
-            if (Mode == DisplayMode.Clyde)
-            {
-                _fontManager = IoCManager.Resolve<IFontManagerInternal>();
-                _fontManager.Initialize();
-            }
+            _fontManager.Initialize();
 
             //identical code for server in baseserver
             if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))
@@ -278,6 +260,12 @@ namespace Robust.Client
 #endif
 
             return Path.Combine(appDataDir, "Space Station 14");
+        }
+
+        private enum DisplayMode
+        {
+            Headless,
+            Clyde,
         }
     }
 }

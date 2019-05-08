@@ -9,9 +9,8 @@ using Robust.Shared.IoC;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
-    [TestFixture]
-    [TestOf(typeof(ComponentManager))]
-    class ComponentManager_Test
+    [TestFixture, Parallelizable ,TestOf(typeof(ComponentManager))]
+    class ComponentManager_Tests
     {
         private const uint CompNetId = 3;
 

@@ -4,6 +4,7 @@ using Robust.Client.GameObjects.Components.UserInterface;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.Components.UserInterface;
 using Robust.Shared.Interfaces.GameObjects.Components;
@@ -22,6 +23,12 @@ namespace Robust.Client.GameObjects
             // Required for the engine to work
             Register<TransformComponent>();
             RegisterReference<TransformComponent, ITransformComponent>();
+
+            Register<MapComponent>();
+            RegisterReference<MapComponent, IMapComponent>();
+
+            Register<MapGridComponent>();
+            RegisterReference<MapGridComponent, IMapGridComponent>();
 
             Register<CollidableComponent>();
             RegisterReference<CollidableComponent, IPhysBody>();

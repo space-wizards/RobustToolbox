@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -27,6 +28,8 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         public MapId ParentMapId { get; set; }
+
+        public EntityUid GridEntity { get; internal set; }
 
         /// <summary>
         ///     Grid chunks than make up this grid.

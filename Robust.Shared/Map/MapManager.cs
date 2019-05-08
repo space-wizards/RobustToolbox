@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.GameObjects.Components.Map;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
@@ -15,6 +17,7 @@ namespace Robust.Shared.Map
     {
 #pragma warning disable 649
         [Dependency] private readonly IGameTiming _gameTiming;
+        [Dependency] private readonly IEntityManager _entityManager;
 #pragma warning restore 649
 
         public IGameTiming GameTiming => _gameTiming;
@@ -210,6 +213,34 @@ namespace Robust.Shared.Map
 
             var grid = new MapGrid(this, actualID, chunkSize, snapSize, currentMapID);
             _grids.Add(actualID, grid);
+
+            if(actualID != GridId.Nullspace)
+            {
+                // the entity may already exist from map deserialization
+                IMapGridComponent result = null;
+                foreach (var comp in _entityManager.ComponentManager.GetAllComponents<IMapGridComponent>())
+                {
+                    if (comp.GridIndex != actualID)
+                        continue;
+
+                    result = comp;
+                    break;
+                }
+
+                if (result != null)
+                {
+                    grid.GridEntity = result.Owner.Uid;
+                }
+                else
+                {
+                    var newEnt = _entityManager.SpawnEntity(null, new GridCoordinates(0, 0, actualID));
+                    grid.GridEntity = newEnt.Uid;
+
+                    var gridComp = newEnt.AddComponent<MapGridComponent>();
+                    gridComp.GridIndex = grid.Index;
+                }
+            }
+
             OnGridCreated?.Invoke(actualID);
             return grid;
         }

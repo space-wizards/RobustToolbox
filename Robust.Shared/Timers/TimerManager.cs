@@ -1,11 +1,15 @@
 ﻿using Robust.Shared.Interfaces.Timers;
 using System.Collections.Generic;
 using System.Threading;
+using Robust.Shared.Exceptions;
+using Robust.Shared.IoC;
 
 namespace Robust.Shared.Timers
 {
     internal sealed class TimerManager : ITimerManager
     {
+        [Dependency] private readonly IRuntimeLog _runtimeLog;
+
         private readonly List<(Timer, CancellationToken)> _timers
             = new List<(Timer, CancellationToken)>();
 
@@ -27,7 +31,7 @@ namespace Robust.Shared.Timers
                     continue;
                 }
 
-                timer.Update(frameTime);
+                timer.Update(frameTime, _runtimeLog);
             }
 
             _timers.RemoveAll(timer => !timer.Item1.IsActive || timer.Item2.IsCancellationRequested);

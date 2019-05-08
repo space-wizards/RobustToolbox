@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Robust.Shared.Exceptions;
 using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 
 namespace Robust.Shared.Timers
 {
@@ -41,7 +41,9 @@ namespace Robust.Shared.Timers
             OnFired = onFired;
         }
 
-        public void Update(float frameTime)
+        // Parameter is used only on release.
+        // ReSharper disable once UnusedParameter.Global
+        public void Update(float frameTime, IRuntimeLog runtimeLog)
         {
             if (IsActive)
             {
@@ -49,14 +51,19 @@ namespace Robust.Shared.Timers
 
                 if (_timeCounter <= 0)
                 {
+#if RELEASE
                     try
+#endif
                     {
                         OnFired();
                     }
+#if RELEASE
                     catch (Exception e)
                     {
+                        runtimeLog.LogException(e, "Timer Callback");
                         Logger.ErrorS("timer", "Caught exception in timer callback: {0}", e);
                     }
+#endif
 
                     if (IsRepeating)
                     {

@@ -129,7 +129,7 @@ namespace Robust.Client.UserInterface
 
         public void Dispose()
         {
-            RootControl.Dispose();
+            RootControl?.Dispose();
         }
 
         public void Update(ProcessFrameEventArgs args)

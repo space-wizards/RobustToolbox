@@ -104,15 +104,6 @@ namespace Robust.UnitTesting.Shared.IoC
         }
 
         [Test]
-        public void IoCTestCatchExceptionFromDisposingService()
-        {
-            IoCManager.Register<ITestDisposeExceptionCaught, TestDisposeExceptionCaught>();
-            IoCManager.BuildGraph();
-
-            IoCManager.Clear(); // should NOT throw an exception
-        }
-
-        [Test]
         public void IoCBasicRegisterInstance()
         {
             var obj = new Mock<IIoCTestPriorities>().Object;

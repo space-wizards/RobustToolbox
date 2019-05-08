@@ -79,15 +79,7 @@ namespace Robust.Shared.IoC
         {
             foreach (var service in _services.Values.OfType<IDisposable>().Distinct())
             {
-                try
-                {
-                    service.Dispose();
-                }
-                catch (Exception e)
-                {
-                    // DON'T use the logger since it might be dead already.
-                    System.Console.WriteLine($"Caught exception inside {service.GetType()} dispose! {e}");
-                }
+                service.Dispose();
             }
             _services.Clear();
             _resolveTypes.Clear();

@@ -63,7 +63,7 @@ namespace Robust.Client.Graphics.ClientEye
 
         public void Dispose()
         {
-            defaultEye.Dispose();
+            defaultEye?.Dispose();
         }
 
         public Vector2 WorldToScreen(Vector2 point)

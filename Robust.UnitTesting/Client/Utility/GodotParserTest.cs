@@ -5,10 +5,9 @@ using Robust.Client.Utility;
 
 namespace Robust.UnitTesting.Client.Utility
 {
-    [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     [TestOf(typeof(GodotParser))]
-    public class GodotParserTest
+    public class GodotParserTest : RobustUnitTest
     {
         [Test]
         public void Test()

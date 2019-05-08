@@ -61,7 +61,6 @@ namespace Robust.Shared.Timers
                     catch (Exception e)
                     {
                         runtimeLog.LogException(e, "Timer Callback");
-                        Logger.ErrorS("timer", "Caught exception in timer callback: {0}", e);
                     }
 #endif
 

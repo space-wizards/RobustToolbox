@@ -71,8 +71,8 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<IEntityEventSubscriber, Dictionary<Type, Delegate>> _inverseEventSubscriptions
             = new Dictionary<IEntityEventSubscriber, Dictionary<Type, Delegate>>();
 
-        private readonly Queue<Tuple<object, EntityEventArgs>> _eventQueue
-            = new Queue<Tuple<object, EntityEventArgs>>();
+        private readonly Queue<(object sender, EntityEventArgs eventArgs)> _eventQueue
+            = new Queue<(object, EntityEventArgs)>();
 
         public bool Started { get; protected set; }
 
@@ -319,9 +319,10 @@ namespace Robust.Shared.GameObjects
         {
             var eventType = typeof(T);
 
-            if (_inverseEventSubscriptions.TryGetValue(s, out var inverse) && inverse.ContainsKey(eventType))
+            if (_inverseEventSubscriptions.TryGetValue(s, out var inverse)
+                && inverse.TryGetValue(eventType, out var @delegate))
             {
-                UnsubscribeEvent(eventType, inverse[eventType], s);
+                UnsubscribeEvent(eventType, @delegate, s);
             }
         }
 
@@ -340,12 +341,12 @@ namespace Robust.Shared.GameObjects
 
         public void RaiseEvent(object sender, EntityEventArgs toRaise)
         {
-            ProcessSingleEvent(new Tuple<object, EntityEventArgs>(sender, toRaise));
+            ProcessSingleEvent((sender, toRaise));
         }
 
         public void QueueEvent(object sender, EntityEventArgs toRaise)
         {
-            _eventQueue.Enqueue(new Tuple<object, EntityEventArgs>(sender, toRaise));
+            _eventQueue.Enqueue((sender, toRaise));
         }
 
         public void RemoveSubscribedEvents(IEntityEventSubscriber subscriber)
@@ -355,9 +356,9 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            foreach (var keyValuePair in val.ToList())
+            foreach (var (type, @delegate) in val.ToList())
             {
-                UnsubscribeEvent(keyValuePair.Key, keyValuePair.Value, subscriber);
+                UnsubscribeEvent(type, @delegate, subscriber);
             }
         }
 
@@ -376,17 +377,18 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void ProcessSingleEvent(Tuple<object, EntityEventArgs> argsTuple)
+        private void ProcessSingleEvent((object sender, EntityEventArgs eventArgs) argsTuple)
         {
-            var sender = argsTuple.Item1;
-            var args = argsTuple.Item2;
-            var eventType = args.GetType();
-            if (_eventSubscriptions.ContainsKey(eventType))
+            var (sender, eventArgs) = argsTuple;
+            var eventType = eventArgs.GetType();
+            if (!_eventSubscriptions.TryGetValue(eventType, out var subs))
             {
-                foreach (Delegate handler in _eventSubscriptions[eventType])
-                {
-                    handler.DynamicInvoke(sender, args);
-                }
+                return;
+            }
+
+            foreach (var handler in subs)
+            {
+                handler.DynamicInvoke(sender, eventArgs);
             }
         }
 

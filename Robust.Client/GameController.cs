@@ -46,7 +46,6 @@ using Robust.Shared.Interfaces.Resources;
 
 namespace Robust.Client
 {
-    [UsedImplicitly]
     internal sealed partial class GameController : IGameControllerInternal
     {
         public enum DisplayMode
@@ -87,8 +86,6 @@ namespace Robust.Client
 
         private void Startup()
         {
-            ThreadUtility.MainThread = Thread.CurrentThread;
-            InitIoC();
             SetupLogging();
 
             var args = GetCommandLineArgs();

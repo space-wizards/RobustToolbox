@@ -181,10 +181,10 @@ namespace Robust.Client.Graphics.Clyde
 
             _window.KeyDown += (sender, eventArgs) =>
             {
-                _gameController.GameController.KeyDown((KeyEventArgs) eventArgs);
+                _gameController.KeyDown((KeyEventArgs) eventArgs);
             };
 
-            _window.KeyUp += (sender, eventArgs) => { _gameController.GameController.KeyUp((KeyEventArgs) eventArgs); };
+            _window.KeyUp += (sender, eventArgs) => { _gameController.KeyUp((KeyEventArgs) eventArgs); };
             _window.Closed += _onWindowClosed;
             _window.Resize += (sender, eventArgs) =>
             {
@@ -197,36 +197,36 @@ namespace Robust.Client.Graphics.Clyde
             _window.MouseDown += (sender, eventArgs) =>
             {
                 var mouseButtonEventArgs = (MouseButtonEventArgs) eventArgs;
-                _gameController.GameController.MouseDown(mouseButtonEventArgs);
+                _gameController.MouseDown(mouseButtonEventArgs);
                 if (!mouseButtonEventArgs.Handled)
                 {
-                    _gameController.GameController.KeyDown((KeyEventArgs) eventArgs);
+                    _gameController.KeyDown((KeyEventArgs) eventArgs);
                 }
             };
             _window.MouseUp += (sender, eventArgs) =>
             {
                 var mouseButtonEventArgs = (MouseButtonEventArgs) eventArgs;
-                _gameController.GameController.MouseUp(mouseButtonEventArgs);
+                _gameController.MouseUp(mouseButtonEventArgs);
                 if (!mouseButtonEventArgs.Handled)
                 {
-                    _gameController.GameController.KeyUp((KeyEventArgs) eventArgs);
+                    _gameController.KeyUp((KeyEventArgs) eventArgs);
                 }
             };
             _window.MouseMove += (sender, eventArgs) =>
             {
                 MouseScreenPosition = new Vector2(eventArgs.X, eventArgs.Y);
-                _gameController.GameController.MouseMove((MouseMoveEventArgs) eventArgs);
+                _gameController.MouseMove((MouseMoveEventArgs) eventArgs);
             };
             _window.MouseWheel += (sender, eventArgs) =>
             {
-                _gameController.GameController.MouseWheel((MouseWheelEventArgs) eventArgs);
+                _gameController.MouseWheel((MouseWheelEventArgs) eventArgs);
             };
             _window.KeyPress += (sender, eventArgs) =>
             {
                 // If this is a surrogate it has to be specifically handled and I'm not doing that yet.
                 DebugTools.Assert(!char.IsSurrogate(eventArgs.KeyChar));
 
-                _gameController.GameController.TextEntered(new TextEventArgs(eventArgs.KeyChar));
+                _gameController.TextEntered(new TextEventArgs(eventArgs.KeyChar));
             };
 
             using (var iconFile = _resourceCache.ContentFileRead("/Textures/Logo/icon.ico"))
@@ -597,7 +597,7 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            _gameController.GameController.Shutdown("Window closed");
+            _gameController.Shutdown("Window closed");
         }
 
         [StructLayout(LayoutKind.Sequential)]

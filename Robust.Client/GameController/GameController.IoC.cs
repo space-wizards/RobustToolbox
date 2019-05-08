@@ -14,7 +14,6 @@ using Robust.Client.Interfaces.Map;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
-using Robust.Client.Log;
 using Robust.Client.Map;
 using Robust.Client.Player;
 using Robust.Client.Reflection;
@@ -24,7 +23,6 @@ using Robust.Client.UserInterface;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
@@ -68,17 +66,11 @@ namespace Robust.Client
     // Partial of GameController to initialize IoC and some other low-level systems like it.
     internal sealed partial class GameController
     {
-        private void InitIoC()
+        private static void InitIoC()
         {
             RegisterIoC();
+            IoCManager.BuildGraph();
             RegisterReflection();
-            Logger.Debug("IoC Initialized!");
-
-            // We are not IoC-managed (Robust.Client.Godot spawns us), but we still want the dependencies.
-            IoCManager.InjectDependencies(this);
-
-            var proxy = (GameControllerProxy) IoCManager.Resolve<IGameControllerProxy>();
-            proxy.GameController = this;
         }
 
         private static void RegisterIoC()
@@ -103,6 +95,8 @@ namespace Robust.Client
             IoCManager.Register<IDynamicTypeFactory, DynamicTypeFactory>();
 
             // Client stuff.
+            IoCManager.Register<IGameController, GameController>();
+            IoCManager.Register<IGameControllerInternal, GameController>();
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();
             IoCManager.Register<IResourceManager, ResourceCache>();
             IoCManager.Register<IResourceManagerInternal, ResourceCache>();
@@ -117,8 +111,6 @@ namespace Robust.Client
             IoCManager.Register<IStateManager, StateManager>();
             IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
             IoCManager.Register<IUserInterfaceManagerInternal, UserInterfaceManager>();
-            IoCManager.Register<IGameControllerProxy, GameControllerProxy>();
-            IoCManager.Register<IGameControllerProxyInternal, GameControllerProxy>();
             IoCManager.Register<IDebugDrawing, DebugDrawing>();
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
@@ -157,8 +149,6 @@ namespace Robust.Client
 #else
             IoCManager.Register<IClipboardManager, ClipboardManagerUnsupported>();
 #endif
-
-            IoCManager.BuildGraph();
         }
 
         private static void RegisterReflection()

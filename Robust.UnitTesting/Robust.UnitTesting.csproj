@@ -84,7 +84,6 @@
   <ItemGroup>
     <Compile Include="ApproxEqualityConstraint.cs" />
     <Compile Include="Client\GameObjects\Components\Transform_Test.cs" />
-    <Compile Include="Client\GameControllerProxyDummy.cs" />
     <Compile Include="Client\GameStates\GameStateProcessor_Tests.cs" />
     <Compile Include="Client\Graphics\StyleBoxTest.cs" />
     <Compile Include="Client\Graphics\TextureLoadParametersTest.cs" />
@@ -96,6 +95,7 @@
     <Compile Include="Client\UserInterface\UserInterfaceManagerTest.cs" />
     <Compile Include="Client\Utility\GodotParserTest.cs" />
     <Compile Include="Client\Utility\GodotPathUtilityTest.cs" />
+    <Compile Include="GameControllerDummy.cs" />
     <Compile Include="LogCatcher.cs" />
     <Compile Include="RobustIntegrationTest.cs" />
     <Compile Include="Server\GameObjects\Components\Container_Test.cs" />

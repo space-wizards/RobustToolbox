@@ -24,7 +24,7 @@ namespace Robust.Client.Graphics
         private const string CVarWindowMode = "display.windowmode";
 
         [Dependency] protected readonly IConfigurationManager _configurationManager;
-        [Dependency] protected readonly IGameControllerProxyInternal _gameController;
+        [Dependency] protected readonly IGameControllerInternal _gameController;
 
         protected WindowMode WindowMode { get; private set; } = WindowMode.Windowed;
         protected bool VSync { get; private set; } = true;

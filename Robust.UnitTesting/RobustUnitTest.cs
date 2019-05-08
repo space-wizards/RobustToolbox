@@ -209,6 +209,8 @@ namespace Robust.UnitTesting
                     IoCManager.Register<IPhysicsManager, PhysicsManager>();
 
                     // Client stuff.
+                    IoCManager.Register<IGameControllerInternal, GameControllerDummy>();
+                    IoCManager.Register<IGameController, GameControllerDummy>();
                     IoCManager.Register<IReflectionManager, ClientReflectionManager>();
                     IoCManager.Register<IResourceManager, ResourceCache>();
                     IoCManager.Register<IResourceManagerInternal, ResourceCache>();
@@ -222,8 +224,6 @@ namespace Robust.UnitTesting
                     IoCManager.Register<IStateManager, StateManager>();
                     IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
                     IoCManager.Register<IUserInterfaceManagerInternal, UserInterfaceManager>();
-                    IoCManager.Register<IGameControllerProxy, GameControllerProxyDummy>();
-                    IoCManager.Register<IGameControllerProxyInternal, GameControllerProxyDummy>();
                     IoCManager.Register<IInputManager, InputManager>();
                     IoCManager.Register<IDebugDrawing, DebugDrawing>();
                     //IoCManager.Register<ILightManager, LightManager>();

@@ -272,8 +272,6 @@
     <Compile Include="UserInterface\CustomControls\FPSCounter.cs" />
     <Compile Include="UserInterface\CustomControls\DebugNetPanel.cs" />
     <Compile Include="UserInterface\CustomControls\OptionsMenu.cs" />
-    <Compile Include="GameController\GameControllerProxy.cs" />
-    <Compile Include="Interfaces\IGameControllerProxy.cs" />
     <Compile Include="Interfaces\IGameController.cs" />
     <Compile Include="Interfaces\Input\IInputManager.cs" />
     <Compile Include="Interfaces\Input\IKeyBinding.cs" />

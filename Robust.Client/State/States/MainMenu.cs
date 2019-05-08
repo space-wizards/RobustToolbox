@@ -30,7 +30,7 @@ namespace Robust.Client.State.States
         [Dependency] private readonly IStateManager stateManager;
         [Dependency] private readonly IClientNetManager _netManager;
         [Dependency] private readonly IConfigurationManager _configurationManager;
-        [Dependency] private readonly IGameControllerProxy _controllerProxy;
+        [Dependency] private readonly IGameController _controllerProxy;
         [Dependency] private readonly IResourceCache _resourceCache;
         [Dependency] private readonly IDisplayManager _displayManager;
 
@@ -74,7 +74,7 @@ namespace Robust.Client.State.States
 
         private void QuitButtonPressed(BaseButton.ButtonEventArgs args)
         {
-            _controllerProxy.GameController.Shutdown();
+            _controllerProxy.Shutdown();
         }
 
         private void OptionsButtonPressed(BaseButton.ButtonEventArgs args)

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Runtime.Remoting.Channels;
+using System.Threading;
 using Robust.Client.Interfaces;
+using Robust.Client.Utility;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -32,14 +34,16 @@ namespace Robust.Client
                 Mode = DisplayMode.Clyde;
             }
 
-            var gc = new GameController();
+            ThreadUtility.MainThread = Thread.CurrentThread;
+            InitIoC();
+
+            var gc = (GameController) IoCManager.Resolve<IGameController>();
             gc.Startup();
             gc.MainLoop();
 
             Logger.Debug("Goodbye");
             IoCManager.Clear();
         }
-
 
         private void MainLoop()
         {

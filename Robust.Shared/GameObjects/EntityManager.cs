@@ -81,6 +81,8 @@ namespace Robust.Shared.GameObjects
         public virtual void Initialize()
         {
             _network.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
+
+            _componentManager.ComponentRemoved += (sender, args) => RemoveSubscribedEvents(args.Component);
         }
 
         public virtual void Startup()

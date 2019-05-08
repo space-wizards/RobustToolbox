@@ -22,9 +22,15 @@ namespace Robust.Shared.GameObjects
 
         [Dependency]
         private readonly IComponentFactory _componentFactory;
+        
+        /// <inheritdoc />
+        public event EventHandler<ComponentEventArgs> ComponentAdded;
 
-        [Dependency]
-        private readonly IEntityManager _entityManager;
+        /// <inheritdoc />
+        public event EventHandler<ComponentEventArgs> ComponentRemoved;
+
+        /// <inheritdoc />
+        public event EventHandler<ComponentEventArgs> ComponentDeleted;
 
         /// <inheritdoc />
         public void Clear()
@@ -105,6 +111,8 @@ namespace Robust.Shared.GameObjects
 
                 // mark the component as dirty for networking
                 component.Dirty();
+
+                ComponentAdded?.Invoke(this, new ComponentEventArgs(component));
             }
 
             component.OnAdd();
@@ -174,6 +182,7 @@ namespace Robust.Shared.GameObjects
                 component.Shutdown();
 
             component.OnRemove();
+            ComponentRemoved?.Invoke(this, new ComponentEventArgs(component));
         }
 
         private void RemoveComponentImmediate(Component component)
@@ -188,6 +197,7 @@ namespace Robust.Shared.GameObjects
                 component.Shutdown();
 
             component.OnRemove();
+            ComponentRemoved?.Invoke(this, new ComponentEventArgs(component));
 
             DeleteComponent(component);
         }
@@ -206,9 +216,7 @@ namespace Robust.Shared.GameObjects
         private void DeleteComponent(Component component)
         {
             var reg = _componentFactory.GetRegistration(component.GetType());
-
-            _entityManager.RemoveSubscribedEvents(component);
-
+            
             var entityUid = component.Owner.Uid;
 
             foreach (var refType in reg.References)
@@ -225,6 +233,8 @@ namespace Robust.Shared.GameObjects
 
             // mark the owning entity as dirty for networking
             component.Owner.Dirty();
+
+            ComponentDeleted?.Invoke(this, new ComponentEventArgs(component));
         }
 
         /// <inheritdoc />
@@ -386,5 +396,25 @@ namespace Robust.Shared.GameObjects
             return Enumerable.Empty<IComponent>();
         }
         #endregion
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class ComponentEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Component that this event relates to.
+        /// </summary>
+        public IComponent Component { get; }
+
+        /// <summary>
+        /// Constructs a new instance of <see cref="ComponentEventArgs"/>.
+        /// </summary>
+        /// <param name="component"></param>
+        public ComponentEventArgs(IComponent component)
+        {
+            Component = component;
+        }
     }
 }

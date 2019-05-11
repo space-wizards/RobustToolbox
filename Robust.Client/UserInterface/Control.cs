@@ -310,6 +310,13 @@ namespace Robust.Client.UserInterface
             EnteredTree();
         }
 
+        protected internal virtual void UIScaleChanged()
+        {
+            MinimumSizeChanged();
+        }
+
+        protected float UIScale => UserInterfaceManager.UIScale;
+
         // _marginSetSize is the size calculated by the margins,
         // but it's different from _size if min size is higher.
         private Vector2 _sizeByMargins;
@@ -328,9 +335,17 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        [ViewVariables]
+        public Vector2i PixelSize => (Vector2i) (_size * UserInterfaceManager.UIScale);
+
         public UIBox2 SizeBox => new UIBox2(Vector2.Zero, Size);
+        public UIBox2i PixelSizeBox => new UIBox2i(Vector2i.Zero, PixelSize);
+
         public float Width => Size.X;
         public float Height => Size.Y;
+
+        public int PixelWidth => PixelSize.X;
+        public int PixelHeight => PixelSize.Y;
 
         private Vector2 _position;
 
@@ -350,6 +365,9 @@ namespace Robust.Client.UserInterface
         }
 
         [ViewVariables]
+        public Vector2i PixelPosition => (Vector2i)(_position * UserInterfaceManager.UIScale);
+
+        [ViewVariables]
         public Vector2 GlobalPosition
         {
             get
@@ -366,26 +384,27 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        [ViewVariables]
+        public Vector2i GlobalPixelPosition
+        {
+            get
+            {
+                var offset = PixelPosition;
+                var parent = Parent;
+                while (parent != null)
+                {
+                    offset += parent.PixelPosition;
+                    parent = parent.Parent;
+                }
+
+                return offset;
+            }
+        }
+
         public UIBox2 Rect => UIBox2.FromDimensions(_position, _size);
+        public UIBox2i PixelRect => UIBox2i.FromDimensions(PixelPosition, PixelSize);
 
-        public Vector2 Scale
-        {
-            get => default;
-            set
-            {
-            }
-        }
-
-        private string _tooltip;
-
-        public string ToolTip
-        {
-            get => _tooltip;
-            set
-            {
-                _tooltip = value;
-            }
-        }
+        public string ToolTip { get; set; }
 
         [ViewVariables]
         public MouseFilterMode MouseFilter { get; set; } = MouseFilterMode.Stop;
@@ -492,6 +511,8 @@ namespace Robust.Client.UserInterface
                 return Vector2.ComponentMax(CustomMinimumSize, _calculatedMinimumSize.Value);
             }
         }
+
+        public Vector2i CombinedPixelMinimumSize => (Vector2i)(CombinedMinimumSize * UIScale);
 
         private Vector2? _calculatedMinimumSize;
         private Vector2 _customMinimumSize;

@@ -2,7 +2,6 @@
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
-using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -35,7 +34,7 @@ namespace Robust.Client.UserInterface.Controls
                 return Vector2.Zero;
             }
 
-            return (0, _entry.Height);
+            return (0, _entry.Height / UIScale);
         }
 
         private void _updateEntry()
@@ -45,7 +44,7 @@ namespace Robust.Client.UserInterface.Controls
             if (_message != null)
             {
                 var oldHeight = _entry.Height;
-                _entry.Update(font, Width);
+                _entry.Update(font, Width, UIScale);
                 if (oldHeight != _entry.Height)
                 {
                     MinimumSizeChanged();
@@ -62,7 +61,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            _entry.Draw(handle, _getFont(), SizeBox, 0, new Stack<FormattedMessage.Tag>());
+            _entry.Draw(handle, _getFont(), SizeBox, 0, new Stack<FormattedMessage.Tag>(), UIScale);
         }
 
         protected override void Resized()

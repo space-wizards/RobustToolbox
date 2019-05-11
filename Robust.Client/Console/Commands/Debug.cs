@@ -430,8 +430,10 @@ namespace Robust.Client.Console.Commands
         {
             var window = new SS14Window(IoCManager.Resolve<IDisplayManager>(), "UITest");
             window.AddToScreen();
+            var tabContainer = new TabContainer();
+            window.Contents.AddChild(tabContainer);
             var scroll = new ScrollContainer();
-            window.Contents.AddChild(scroll);
+            tabContainer.AddChild(scroll);
             scroll.SetAnchorAndMarginPreset(Control.LayoutPreset.Wide);
             var vBox = new VBoxContainer();
             scroll.AddChild(vBox);
@@ -467,6 +469,25 @@ namespace Robust.Client.Console.Commands
             message.Pop();
             rich.SetMessage(message);
             vBox.AddChild(rich);
+
+            var itemList = new ItemList();
+            tabContainer.AddChild(itemList);
+            for (var i = 0; i < 10; i++)
+            {
+                itemList.AddItem(i.ToString());
+            }
+
+            var grid = new GridContainer {Columns = 3};
+            tabContainer.AddChild(grid);
+            for (var y = 0; y < 3; y++)
+            for (var x = 0; x < 3; x++)
+            {
+                grid.AddChild(new Button
+                {
+                    CustomMinimumSize = (50, 50),
+                    Text = $"{x}, {y}"
+                });
+            }
 
             return false;
         }

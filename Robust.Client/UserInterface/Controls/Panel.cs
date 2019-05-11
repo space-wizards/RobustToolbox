@@ -48,7 +48,7 @@ namespace Robust.Client.UserInterface.Controls
             base.Draw(handle);
 
             var panel = ActualPanel;
-            panel.Draw(handle, SizeBox);
+            panel.Draw(handle, PixelSizeBox);
         }
 
         private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
@@ -63,7 +63,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            return ActualPanel.MinimumSize;
+            return ActualPanel.MinimumSize/UIScale;
         }
     }
 }

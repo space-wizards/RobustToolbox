@@ -166,10 +166,15 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             base.MouseMove(args);
 
+            if (Parent == null)
+            {
+                return;
+            }
+
             if (CurrentDrag == DragMode.Move)
             {
                 var globalPos = args.GlobalPosition;
-                globalPos = Vector2.Clamp(globalPos, Vector2.Zero, _displayManager.ScreenSize);
+                globalPos = Vector2.Clamp(globalPos, Vector2.Zero, Parent.Size);
                 Position = globalPos - DragOffsetTopLeft;
                 return;
             }

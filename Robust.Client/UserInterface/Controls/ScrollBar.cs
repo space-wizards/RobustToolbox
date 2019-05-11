@@ -31,6 +31,12 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        public void MoveToEnd()
+        {
+            // Will be clamped as necessary.
+            Value = MaxValue;
+        }
+
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             var styleBox = _getGrabberStyleBox();
@@ -121,11 +127,11 @@ namespace Robust.Client.UserInterface.Controls
 
             if (_orientation == OrientationMode.Horizontal)
             {
-                return new UIBox2(grabberOffset, 0, grabberEnd, Height);
+                return new UIBox2(grabberOffset, 0, grabberEnd, PixelHeight);
             }
             else
             {
-                return new UIBox2(0, grabberOffset, Width, grabberEnd);
+                return new UIBox2(0, grabberOffset, PixelWidth, grabberEnd);
             }
         }
 
@@ -146,11 +152,11 @@ namespace Robust.Client.UserInterface.Controls
         {
             if (_orientation == OrientationMode.Horizontal)
             {
-                return Width;
+                return PixelWidth;
             }
             else
             {
-                return Height;
+                return PixelHeight;
             }
         }
 

@@ -39,6 +39,14 @@ namespace Robust.Client.UserInterface.Controls
             SortChildren();
         }
 
+        protected void FitChildInPixelBox(Control child, UIBox2i pixelBox)
+        {
+            var topLeft = pixelBox.TopLeft / UIScale;
+            var bottomRight = pixelBox.BottomRight / UIScale;
+
+            FitChildInBox(child, new UIBox2(topLeft, bottomRight));
+        }
+
         protected void FitChildInBox(Control child, UIBox2 box)
         {
             DebugTools.Assert(child.Parent == this);

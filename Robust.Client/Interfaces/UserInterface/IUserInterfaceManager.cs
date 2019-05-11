@@ -24,6 +24,8 @@ namespace Robust.Client.Interfaces.UserInterface
 
         Control CurrentlyHovered { get; }
 
+        float UIScale { get; }
+
         /// <summary>
         ///     The "root" control to which all other controls are parented,
         ///     potentially indirectly.

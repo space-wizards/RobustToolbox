@@ -88,7 +88,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            handle.DrawEntity(_sprite.Owner, GlobalPosition + Size / 2);
+            handle.DrawEntity(_sprite.Owner, GlobalPixelPosition + PixelSize / 2);
         }
     }
 }

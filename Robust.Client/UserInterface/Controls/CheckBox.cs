@@ -25,23 +25,23 @@ namespace Robust.Client.UserInterface.Controls
             if (icon != null)
             {
                 offset += _getIcon().Width + _getHSeparation();
-                handle.DrawTexture(icon, Vector2.Zero);
+                handle.DrawTextureRect(icon, UIBox2.FromDimensions(Vector2.Zero, icon.Size * UIScale), false);
             }
 
-            var box = new UIBox2(offset, 0, Width, Height);
+            var box = new UIBox2(offset, 0, PixelWidth, PixelHeight);
             DrawTextInternal(handle, box);
         }
 
         protected override Vector2 CalculateMinimumSize()
         {
-            var minSize = _getIcon()?.Size ?? Vector2i.Zero;
+            var minSize = _getIcon()?.Size / UIScale ?? Vector2.Zero;
             var font = ActualFont;
 
             if (!string.IsNullOrWhiteSpace(Text) && !ClipText)
             {
-                minSize += new Vector2i(EnsureWidthCache() + _getHSeparation(), 0);
+                minSize += (EnsureWidthCache() / UIScale + _getHSeparation() / UIScale, 0);
             }
-            minSize = Vector2i.ComponentMax(minSize, new Vector2i(0, font.Height));
+            minSize = Vector2.ComponentMax(minSize, (0, font.GetHeight(UIScale) / UIScale));
 
             return minSize;
         }

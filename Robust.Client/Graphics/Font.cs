@@ -15,30 +15,39 @@ namespace Robust.Client.Graphics
     public abstract class Font
     {
         /// <summary>
-        ///     The maximum amount a glyph goes above the baseline.
+        ///     The maximum amount a glyph goes above the baseline, in pixels.
         /// </summary>
-        public virtual int Ascent => default;
+        public abstract int GetAscent(float scale);
 
         /// <summary>
-        ///     The maximum glyph height of a line of text, not relative to the baseline.
+        ///     The maximum glyph height of a line of text in pixels, not relative to the baseline.
         /// </summary>
-        public virtual int Height => default;
+        public abstract int GetHeight(float scale);
 
         /// <summary>
-        ///     The maximum amount a glyph drops below the baseline.
+        ///     The maximum amount a glyph drops below the baseline, in pixels.
         /// </summary>
-        public virtual int Descent => default;
+        public abstract int GetDescent(float scale);
 
         /// <summary>
-        ///     The distance between the baselines of two consecutive lines.
+        ///     The distance between the baselines of two consecutive lines, in pixels.
         ///     Basically, if you encounter a new line, this is how much you need to move down the cursor.
         /// </summary>
-        public virtual int LineHeight => Height;
+        public abstract int GetLineHeight(float scale);
 
         /// <summary>
-        ///     The distance between the edges of two consecutive lines.
+        ///     The distance between the edges of two consecutive lines, in pixels.
         /// </summary>
-        public int LineSeparation => LineHeight - Height;
+        public int GetLineSeparation(float scale)
+        {
+            return GetLineHeight(scale) - GetHeight(scale);
+        }
+
+        [Obsolete("Use GetAscent")] public int Ascent => GetAscent(1);
+        [Obsolete("Use GetHeight")] public int Height => GetHeight(1);
+        [Obsolete("Use GetDescent")] public int Descent => GetDescent(1);
+        [Obsolete("Use GetLineHeight")] public int LineHeight => GetLineHeight(1);
+        [Obsolete("Use GetLineSeparation")] public int LineSeparation => GetLineSeparation(1);
 
         // Yes, I am aware that using char is bad.
         // At the same time the font system is nowhere close to rendering Unicode so...
@@ -53,7 +62,14 @@ namespace Robust.Client.Graphics
         /// <param name="baseline">The baseline from which to draw the character.</param>
         /// <param name="color">The color of the character to draw.</param>
         /// <returns>How much to advance the cursor to draw the next character.</returns>
-        public abstract float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color);
+        [Obsolete("Use DrawChar with scale support.")]
+        public float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color)
+        {
+            return DrawChar(handle, chr, baseline, 1, color);
+        }
+
+        public abstract float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, float scale,
+            Color color);
 
         /// <summary>
         ///     Gets metrics describing the dimensions and positioning of a single glyph in the font.
@@ -64,14 +80,26 @@ namespace Robust.Client.Graphics
         ///     otherwise the metrics you asked for.
         /// </returns>
         /// <seealso cref="TryGetCharMetrics"/>
-        public abstract CharMetrics? GetCharMetrics(char chr);
+        [Obsolete("Use GetCharMetrics with scale support.")]
+        public CharMetrics? GetCharMetrics(char chr)
+        {
+            return GetCharMetrics(chr, 1);
+        }
+
+        public abstract CharMetrics? GetCharMetrics(char chr, float scale);
 
         /// <summary>
         ///     Try-pattern version of <see cref="GetCharMetrics"/>.
         /// </summary>
+        [Obsolete("Use TryGetCharMetrics with scale support.")]
         public bool TryGetCharMetrics(char chr, out CharMetrics metrics)
         {
-            var maybe = GetCharMetrics(chr);
+            return TryGetCharMetrics(chr, 1, out metrics);
+        }
+
+        public bool TryGetCharMetrics(char chr, float scale, out CharMetrics metrics)
+        {
+            var maybe = GetCharMetrics(chr, scale);
             if (maybe.HasValue)
             {
                 metrics = maybe.Value;
@@ -92,26 +120,26 @@ namespace Robust.Client.Graphics
 
         internal IFontInstanceHandle Handle { get; }
 
-        public override int Ascent => Handle?.Ascent ?? base.Ascent;
-        public override int Descent => Handle?.Descent ?? base.Descent;
-        public override int Height => Handle?.Height ?? base.Height;
-        public override int LineHeight => Handle?.LineHeight ?? base.LineHeight;
-
         public VectorFont(FontResource res, int size)
         {
             Size = size;
             Handle = IoCManager.Resolve<IFontManagerInternal>().MakeInstance(res.FontFaceHandle, size);
         }
 
-        public override float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color)
+        public override int GetAscent(float scale) => Handle.GetAscent(scale);
+        public override int GetHeight(float scale) => Handle.GetHeight(scale);
+        public override int GetDescent(float scale) => Handle.GetDescent(scale);
+        public override int GetLineHeight(float scale) => Handle.GetLineHeight(scale);
+
+        public override float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, float scale, Color color)
         {
-            var metrics = Handle.GetCharMetrics(chr);
+            var metrics = Handle.GetCharMetrics(chr, scale);
             if (!metrics.HasValue)
             {
                 return 0;
             }
 
-            var texture = Handle.GetCharTexture(chr);
+            var texture = Handle.GetCharTexture(chr, scale);
             if (texture == null)
             {
                 return metrics.Value.Advance;
@@ -122,21 +150,26 @@ namespace Robust.Client.Graphics
             return metrics.Value.Advance;
         }
 
-        public override CharMetrics? GetCharMetrics(char chr)
+        public override CharMetrics? GetCharMetrics(char chr, float scale)
         {
-            return Handle.GetCharMetrics(chr);
+            return Handle.GetCharMetrics(chr, scale);
         }
     }
 
     public sealed class DummyFont : Font
     {
-        public override float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color)
+        public override int GetAscent(float scale) => default;
+        public override int GetHeight(float scale) => default;
+        public override int GetDescent(float scale) => default;
+        public override int GetLineHeight(float scale) => default;
+
+        public override float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, float scale, Color color)
         {
             // Nada, it's a dummy after all.
             return 0;
         }
 
-        public override CharMetrics? GetCharMetrics(char chr)
+        public override CharMetrics? GetCharMetrics(char chr, float scale)
         {
             // Nada, it's a dummy after all.
             return null;

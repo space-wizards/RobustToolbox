@@ -59,6 +59,7 @@ using Robust.Client.ViewVariables;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Exceptions;
+using Robust.Shared.Localization;
 using Robust.Shared.Map;
 
 namespace Robust.Client
@@ -93,6 +94,7 @@ namespace Robust.Client
             IoCManager.Register<ITaskManager, TaskManager>();
             IoCManager.Register<IRuntimeLog, RuntimeLog>();
             IoCManager.Register<IDynamicTypeFactory, DynamicTypeFactory>();
+            IoCManager.Register<ILocalizationManager, LocalizationManager>();
 
             // Client stuff.
             IoCManager.Register<IGameController, GameController>();

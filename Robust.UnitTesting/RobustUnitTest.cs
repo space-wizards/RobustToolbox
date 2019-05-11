@@ -68,6 +68,7 @@ using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -200,6 +201,7 @@ namespace Robust.UnitTesting
             IoCManager.Register<ITaskManager, TaskManager>();
             IoCManager.Register<IRuntimeLog, RuntimeLog>();
             IoCManager.Register<IDynamicTypeFactory, DynamicTypeFactory>();
+            IoCManager.Register<ILocalizationManager, LocalizationManager>();
 
             switch (Project)
             {

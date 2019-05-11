@@ -94,6 +94,8 @@ namespace Robust.Shared.Prototypes
     {
         [Dependency]
         private readonly IReflectionManager ReflectionManager;
+        [Dependency]
+        private readonly IDynamicTypeFactory _dynamicTypeFactory;
         private readonly Dictionary<string, Type> prototypeTypes = new Dictionary<string, Type>();
 
         [Dependency]
@@ -287,7 +289,7 @@ namespace Robust.Shared.Prototypes
                 }
 
                 var prototypeType = prototypeTypes[type];
-                var prototype = (IPrototype)Activator.CreateInstance(prototypeType);
+                var prototype = (IPrototype)_dynamicTypeFactory.CreateInstance(prototypeType);
                 prototype.LoadFrom(node);
                 prototypes[prototypeType].Add(prototype);
                 var indexedPrototype = prototype as IIndexedPrototype;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -44,6 +45,7 @@ using Robust.Shared.Utility;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Exceptions;
+using Robust.Shared.Localization;
 
 namespace Robust.Server
 {
@@ -80,6 +82,8 @@ namespace Robust.Server
         private readonly ISystemConsoleManager _systemConsole;
         [Dependency]
         private readonly ITaskManager _taskManager;
+        [Dependency]
+        private readonly ILocalizationManager _localizationManager;
 
         private FileLogHandler fileLogHandler;
         private IGameLoop _mainLoop;
@@ -186,6 +190,11 @@ namespace Robust.Server
             _resources.MountContentDirectory($@"{ContentRootDir}bin/Content.Server/", new ResourcePath("/Assemblies/"));
             _resources.MountContentDirectory($@"{ContentRootDir}Resources/");
 #endif
+
+            // Default to en-US.
+            // Perhaps in the future we could make a command line arg or something to change this default.
+            _localizationManager.LoadCulture(new CultureInfo("en-US"));
+
 
             //mount the engine content pack
             // _resources.MountContentPack(@"EngineContentPack.zip");

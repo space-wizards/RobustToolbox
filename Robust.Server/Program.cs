@@ -47,6 +47,7 @@ using Robust.Server.Timing;
 using Robust.Server.ViewVariables;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Exceptions;
+using Robust.Shared.Localization;
 
 namespace Robust.Server
 {
@@ -118,6 +119,7 @@ namespace Robust.Server
             IoCManager.Register<ITaskManager, TaskManager>();
             IoCManager.Register<IRuntimeLog, RuntimeLog>();
             IoCManager.Register<IDynamicTypeFactory, DynamicTypeFactory>();
+            IoCManager.Register<ILocalizationManager, LocalizationManager>();
 
             // Server stuff.
             IoCManager.Register<IEntityManager, ServerEntityManager>();

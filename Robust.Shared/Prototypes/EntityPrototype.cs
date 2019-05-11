@@ -7,6 +7,7 @@ using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -22,6 +23,8 @@ namespace Robust.Shared.GameObjects
     [Prototype("entity")]
     public class EntityPrototype : IPrototype, IIndexedPrototype, ISyncingPrototype
     {
+        [Dependency] private readonly ILocalizationManager _localization;
+
         /// <summary>
         /// The type string of this prototype used in files.
         /// </summary>
@@ -143,7 +146,7 @@ namespace Robust.Shared.GameObjects
 
             if (mapping.TryGetNode("name", out YamlNode node))
             {
-                Name = node.AsString();
+                Name = _localization.GetString(node.AsString());
             }
 
             if (mapping.TryGetNode("class", out node))
@@ -163,7 +166,7 @@ namespace Robust.Shared.GameObjects
             // DESCRIPTION
             if (mapping.TryGetNode("description", out node))
             {
-                Description = node.AsString();
+                Description = _localization.GetString(node.AsString());
             }
 
             // COMPONENTS

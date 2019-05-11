@@ -33,6 +33,7 @@ using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -43,6 +44,7 @@ using Robust.Client.ViewVariables;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Interfaces.Resources;
+using Robust.Shared.Localization;
 
 namespace Robust.Client
 {
@@ -74,6 +76,7 @@ namespace Robust.Client
         [Dependency] private readonly IDiscordRichPresence _discord;
         [Dependency] private readonly IClyde _clyde;
         [Dependency] private readonly IFontManagerInternal _fontManager;
+        [Dependency] private readonly ILocalizationManager _localizationManager;
 
         private void Startup()
         {
@@ -102,6 +105,10 @@ namespace Robust.Client
 
             _resourceCache.Initialize(userDataDir);
             _resourceCache.LoadBaseResources();
+
+            // Default to en-US.
+            // Perhaps in the future we could make a command line arg or something to change this default.
+            _localizationManager.LoadCulture(new CultureInfo("en-US"));
 
             // Bring display up as soon as resources are mounted.
             _displayManager.Initialize();

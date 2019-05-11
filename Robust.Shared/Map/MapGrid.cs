@@ -349,7 +349,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public Vector2 ConvertToWorld(Vector2 posLocal)
+        public Vector2 LocalToWorld(Vector2 posLocal)
         {
             return posLocal + WorldPosition;
         }

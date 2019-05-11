@@ -143,15 +143,36 @@ namespace Robust.Server.Placement
 
             if (closest != null) // stick to existing grid
             {
-                var normal = new Angle(position - intersect.Center).GetCardinalDir().ToVec(); // round to nearest cardinal dir
-                var newTilePos = position + normal * closest.TileSize;
+                // round to nearest cardinal dir
+                var normal = new Angle(position - intersect.Center).GetCardinalDir().ToVec();
+
+                // round coords to center of tile
+                var tileIndices = closest.WorldToTile(intersect.Center);
+                var tileCenterLocal = closest.GridTileToLocal(tileIndices);
+                var tileCenterWorld = tileCenterLocal.ToWorld(_mapManager).Position;
+
+                // move mouse one tile out along normal
+                var newTilePos = tileCenterWorld + normal * closest.TileSize;
+
+                // you can always remove a tile
+                if(Tile.Empty.TypeId != tileType)
+                {
+                    var tileBounds = Box2.UnitCentered.Scale(closest.TileSize).Translated(newTilePos);
+
+                    var collideCount = map.FindGridsIntersecting(tileBounds).Count();
+
+                    // prevent placing a tile if it overlaps more than one grid
+                    if(collideCount > 1)
+                        return;
+                }
+
                 var pos = closest.WorldToTile(position);
                 closest.SetTile(pos, new Tile(tileType));
             }
             else // create a new grid
             {
                 var newGrid = map.CreateGrid();
-                newGrid.WorldPosition = position;
+                newGrid.WorldPosition = position + (newGrid.TileSize / 2f); // assume bottom left tile origin
                 var tilePos = newGrid.WorldToTile(position);
                 newGrid.SetTile(tilePos, new Tile(tileType));
             }

@@ -54,7 +54,7 @@ namespace Robust.Client.Placement.Modes
 
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
-            MouseCoords = ScreenToPlayerGrid(mouseScreen);
+            MouseCoords = ScreenToCursorGrid(mouseScreen);
 
             snapSize = pManager.MapManager.GetGrid(MouseCoords.GridID).SnapSize; //Find snap size.
             GridDistancing = snapSize;

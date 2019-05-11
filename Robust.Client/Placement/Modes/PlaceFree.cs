@@ -8,7 +8,7 @@ namespace Robust.Client.Placement.Modes
 
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
-            MouseCoords = ScreenToPlayerGrid(mouseScreen);
+            MouseCoords = ScreenToCursorGrid(mouseScreen);
             CurrentTile = pManager.MapManager.GetGrid(MouseCoords.GridID).GetTileRef(MouseCoords);
         }
 

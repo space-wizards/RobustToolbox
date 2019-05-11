@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Console;
-using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Input;
-using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Input;
@@ -17,7 +15,9 @@ using Robust.Client.Player;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.Utility;
+using Robust.Shared.Configuration;
 using Robust.Shared.Input;
+using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Resources;
@@ -27,7 +27,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface
 {
-    internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal
+    internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal, IPostInjectInit
     {
         [Dependency] private readonly IInputManager _inputManager;
         [Dependency] private readonly IDisplayManager _displayManager;
@@ -40,6 +40,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IStateManager _stateManager;
         [Dependency] private readonly IClientNetManager _netManager;
         [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IConfigurationManager _configurationManager;
 
         public UITheme ThemeDefaults { get; private set; }
         public Stylesheet Stylesheet { get; set; }
@@ -51,6 +52,7 @@ namespace Robust.Client.UserInterface
 
         public Control StateRoot { get; private set; }
         public Control CurrentlyHovered { get; private set; }
+        public float UIScale { get; private set; } = 1;
         public Control RootControl { get; private set; }
         public Control WindowRoot { get; private set; }
         public DebugConsole DebugConsole { get; private set; }
@@ -69,6 +71,7 @@ namespace Robust.Client.UserInterface
 
         public void Initialize()
         {
+            UIScale = _configurationManager.GetCVar<float>("display.uiScale");
             ThemeDefaults = new UIThemeDefault();
 
             _initializeCommon();
@@ -98,8 +101,8 @@ namespace Robust.Client.UserInterface
                 IsInsideTree = true
             };
             RootControl.SetAnchorPreset(Control.LayoutPreset.Wide);
-            RootControl.Size = _displayManager.ScreenSize;
-            _displayManager.OnWindowResized += args => RootControl.Size = args.NewSize;
+            RootControl.Size = _displayManager.ScreenSize / UIScale;
+            _displayManager.OnWindowResized += args => _updateRootSize();
 
             StateRoot = new Control("StateRoot")
             {
@@ -154,8 +157,8 @@ namespace Robust.Client.UserInterface
             if (_modalStack.Count != 0)
             {
                 var top = _modalStack[_modalStack.Count - 1];
-                var offset = args.Position - top.GlobalPosition;
-                if (!top.HasPoint(offset))
+                var offset = args.Position - top.GlobalPixelPosition;
+                if (!top.HasPoint(offset / UIScale))
                 {
                     RemoveModal(top);
                     args.Handle();
@@ -178,7 +181,8 @@ namespace Robust.Client.UserInterface
             }
 
             var guiArgs = new GUIMouseButtonEventArgs(args.Button, args.DoubleClick, control, Mouse.ButtonMask.None,
-                args.Position, args.Position - control.GlobalPosition, args.Alt, args.Control, args.Shift,
+                args.Position / UIScale, args.Position, args.Position / UIScale - control.GlobalPosition,
+                args.Position - control.GlobalPixelPosition, args.Alt, args.Control, args.Shift,
                 args.System);
 
             _doMouseGuiInput(control, guiArgs, (c, ev) => c.MouseDown(ev));
@@ -198,7 +202,8 @@ namespace Robust.Client.UserInterface
 
             var guiArgs = new GUIMouseButtonEventArgs(args.Button, args.DoubleClick, _mouseFocused,
                 Mouse.ButtonMask.None,
-                args.Position, args.Position - _mouseFocused.GlobalPosition, args.Alt, args.Control, args.Shift,
+                args.Position / UIScale, args.Position, args.Position / UIScale - _mouseFocused.GlobalPosition,
+                args.Position - _mouseFocused.GlobalPixelPosition, args.Alt, args.Control, args.Shift,
                 args.System);
 
             _doMouseGuiInput(_mouseFocused, guiArgs, (c, ev) => c.MouseUp(ev));
@@ -226,10 +231,12 @@ namespace Robust.Client.UserInterface
             var target = _mouseFocused ?? newHovered;
             if (target != null)
             {
-                var guiArgs = new GUIMouseMoveEventArgs(mouseMoveEventArgs.Relative, mouseMoveEventArgs.Speed,
-                    target,
-                    mouseMoveEventArgs.ButtonMask, mouseMoveEventArgs.Position,
-                    mouseMoveEventArgs.Position - target.GlobalPosition, mouseMoveEventArgs.Alt,
+                var guiArgs = new GUIMouseMoveEventArgs(mouseMoveEventArgs.Relative / UIScale,
+                    mouseMoveEventArgs.Speed / UIScale, target,
+                    mouseMoveEventArgs.ButtonMask, mouseMoveEventArgs.Position / UIScale, mouseMoveEventArgs.Position,
+                    mouseMoveEventArgs.Position / UIScale - target.GlobalPosition,
+                    mouseMoveEventArgs.Position - target.GlobalPixelPosition,
+                    mouseMoveEventArgs.Alt,
                     mouseMoveEventArgs.Control, mouseMoveEventArgs.Shift, mouseMoveEventArgs.System);
 
                 _doMouseGuiInput(target, guiArgs, (c, ev) => c.MouseMove(ev));
@@ -246,8 +253,10 @@ namespace Robust.Client.UserInterface
 
             args.Handle();
 
-            var guiArgs = new GUIMouseWheelEventArgs(args.WheelDirection, control, Mouse.ButtonMask.None, args.Position,
-                args.Position - control.GlobalPosition, args.Alt, args.Control, args.Shift, args.System);
+            var guiArgs = new GUIMouseWheelEventArgs(args.WheelDirection, control, Mouse.ButtonMask.None,
+                args.Position / UIScale, args.Position,
+                args.Position / UIScale - control.GlobalPosition, args.Position - control.GlobalPixelPosition, args.Alt,
+                args.Control, args.Shift, args.System);
 
             _doMouseGuiInput(control, guiArgs, (c, ev) => c.MouseWheel(ev), true);
         }
@@ -416,12 +425,13 @@ namespace Robust.Client.UserInterface
             {
                 return;
             }
+
             var drawHandle = renderHandle.CreateHandleScreen();
 
-            _render(drawHandle, RootControl, Vector2.Zero, Color.White, null);
+            _render(drawHandle, RootControl, Vector2i.Zero, Color.White, null);
         }
 
-        private static void _render(DrawingHandleScreen handle, Control control, Vector2 position, Color modulate,
+        private static void _render(DrawingHandleScreen handle, Control control, Vector2i position, Color modulate,
             UIBox2i? scissorBox)
         {
             if (!control.Visible)
@@ -430,7 +440,7 @@ namespace Robust.Client.UserInterface
             }
 
             // Manual clip test with scissor region as optimization.
-            var controlBox = UIBox2i.FromDimensions((Vector2i)position, (Vector2i)control.Size);
+            var controlBox = UIBox2i.FromDimensions(position, control.PixelSize);
 
             if (scissorBox != null)
             {
@@ -468,10 +478,11 @@ namespace Robust.Client.UserInterface
 
                 handle.SetScissor(scissorRegion);
             }
+
             control.Draw(handle);
             foreach (var child in control.Children)
             {
-                _render(handle, child, position + child.Position.Rounded(), modulate, scissorRegion);
+                _render(handle, child, position + child.PixelPosition, modulate, scissorRegion);
             }
 
             if (clip)
@@ -520,19 +531,19 @@ namespace Robust.Client.UserInterface
         {
             foreach (var child in control.Children.Reverse())
             {
-                if (!child.Visible || (child.RectClipContent && !child.Rect.Contains(position)))
+                if (!child.Visible || (child.RectClipContent && !child.PixelRect.Contains((Vector2i) position)))
                 {
                     continue;
                 }
 
-                var maybeFoundOnChild = _mouseFindControlAtPos(child, position - child.Position);
+                var maybeFoundOnChild = _mouseFindControlAtPos(child, position - child.PixelPosition);
                 if (maybeFoundOnChild != null)
                 {
                     return maybeFoundOnChild;
                 }
             }
 
-            if (control.MouseFilter != Control.MouseFilterMode.Ignore && control.HasPoint(position))
+            if (control.MouseFilter != Control.MouseFilterMode.Ignore && control.HasPoint(position / UIScale))
             {
                 return control;
             }
@@ -540,7 +551,8 @@ namespace Robust.Client.UserInterface
             return null;
         }
 
-        private void _doMouseGuiInput<T>(Control control, T guiEvent, Action<Control, T> action, bool ignoreStop=false)
+        private static void _doMouseGuiInput<T>(Control control, T guiEvent, Action<Control, T> action,
+            bool ignoreStop = false)
             where T : GUIMouseEventArgs
         {
             while (control != null)
@@ -556,6 +568,7 @@ namespace Robust.Client.UserInterface
                 }
 
                 guiEvent.RelativePosition += control.Position;
+                guiEvent.RelativePixelPosition += control.PixelPosition;
                 control = control.Parent;
                 guiEvent.SourceControl = control;
             }
@@ -596,6 +609,39 @@ namespace Robust.Client.UserInterface
             {
                 _tooltip.Position = (_tooltip.Position.X, RootControl.Size.Y - _tooltip.Size.Y);
             }
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _configurationManager.RegisterCVar("display.uiScale", 1f, CVar.ARCHIVE, _uiScaleChanged);
+        }
+
+        private void _uiScaleChanged(float newValue)
+        {
+            UIScale = newValue;
+
+            if (RootControl == null)
+            {
+                return;
+            }
+
+            _propagateUIScaleChanged(RootControl);
+            _updateRootSize();
+        }
+
+        private static void _propagateUIScaleChanged(Control control)
+        {
+            control.UIScaleChanged();
+
+            foreach (var child in control.Children)
+            {
+                _propagateUIScaleChanged(child);
+            }
+        }
+
+        private void _updateRootSize()
+        {
+            RootControl.Size = _displayManager.ScreenSize / UIScale;
         }
     }
 }

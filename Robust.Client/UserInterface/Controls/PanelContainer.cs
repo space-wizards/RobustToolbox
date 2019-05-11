@@ -31,18 +31,18 @@ namespace Robust.Client.UserInterface.Controls
             base.Draw(handle);
 
             var style = _getStyleBox();
-            style?.Draw(handle, SizeBox);
+            style?.Draw(handle, PixelSizeBox);
         }
 
         protected override void SortChildren()
         {
             base.SortChildren();
 
-            var contentBox = _getStyleBox()?.GetContentBox(SizeBox) ?? SizeBox;
+            var contentBox = _getStyleBox()?.GetContentBox(PixelSizeBox) ?? SizeBox;
 
             foreach (var child in Children)
             {
-                FitChildInBox(child, contentBox);
+                FitChildInPixelBox(child, (UIBox2i) contentBox);
             }
         }
 
@@ -55,7 +55,7 @@ namespace Robust.Client.UserInterface.Controls
                 childSize = Vector2.ComponentMax(childSize, child.CombinedMinimumSize);
             }
 
-            return styleSize + childSize;
+            return styleSize / UIScale + childSize;
         }
 
         [System.Diagnostics.Contracts.Pure]

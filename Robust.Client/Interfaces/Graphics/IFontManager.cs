@@ -22,12 +22,12 @@ namespace Robust.Client.Interfaces.Graphics
 
     internal interface IFontInstanceHandle
     {
-        Texture GetCharTexture(char chr);
-        CharMetrics? GetCharMetrics(char chr);
-        int Ascent { get; }
-        int Descent { get; }
-        int Height { get; }
-        int LineHeight { get; }
+        Texture GetCharTexture(char chr, float scale);
+        CharMetrics? GetCharMetrics(char chr, float scale);
+        int GetAscent(float scale);
+        int GetDescent(float scale);
+        int GetHeight(float scale);
+        int GetLineHeight(float scale);
     }
 
     /// <summary>

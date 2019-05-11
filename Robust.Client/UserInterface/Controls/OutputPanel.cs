@@ -4,7 +4,6 @@ using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Input;
-using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using PureAttribute = System.Diagnostics.Contracts.PureAttribute;
@@ -27,8 +26,6 @@ namespace Robust.Client.UserInterface.Controls
         private VScrollBar _scrollBar;
 
         public bool ScrollFollowing { get; set; } = true;
-
-        private int ScrollLimit => Math.Max(0, _totalContentHeight - (int) _getContentBox().Height + 1);
 
         public StyleBox StyleBoxOverride
         {
@@ -56,7 +53,7 @@ namespace Robust.Client.UserInterface.Controls
             _entries.RemoveAt(line);
 
             var font = _getFont();
-            _totalContentHeight -= entry.Height + font.LineSeparation;
+            _totalContentHeight -= entry.Height + font.GetLineSeparation(UIScale);
             if (_entries.Count == 0)
             {
                 Clear();
@@ -68,7 +65,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             var entry = new RichTextEntry(message);
 
-            entry.Update(_getFont(), _getContentBox().Width);
+            entry.Update(_getFont(), _getContentBox().Width, UIScale);
 
             _entries.Add(entry);
             var font = _getFont();
@@ -79,19 +76,19 @@ namespace Robust.Client.UserInterface.Controls
             }
             else
             {
-                _totalContentHeight += font.LineSeparation;
+                _totalContentHeight += font.GetLineSeparation(UIScale);
             }
 
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
             if (_isAtBottom && ScrollFollowing)
             {
-                _scrollBar.Value = ScrollLimit;
+                _scrollBar.MoveToEnd();
             }
         }
 
         public void ScrollToBottom()
         {
-            _scrollBar.Value = ScrollLimit;
+            _scrollBar.MoveToEnd();
             _isAtBottom = true;
         }
 
@@ -111,7 +108,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var style = _getStyleBox();
             var font = _getFont();
-            style?.Draw(handle, SizeBox);
+            style?.Draw(handle, PixelSizeBox);
             var contentBox = _getContentBox();
 
             var entryOffset = -_scrollBar.Value;
@@ -125,7 +122,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 if (entryOffset + entry.Height < 0)
                 {
-                    entryOffset += entry.Height + font.LineSeparation;
+                    entryOffset += entry.Height + font.GetLineSeparation(UIScale);
                     continue;
                 }
 
@@ -134,9 +131,9 @@ namespace Robust.Client.UserInterface.Controls
                     break;
                 }
 
-                entry.Draw(handle, font, contentBox, entryOffset, formatStack);
+                entry.Draw(handle, font, contentBox, entryOffset, formatStack, UIScale);
 
-                entryOffset += entry.Height + font.LineSeparation;
+                entryOffset += entry.Height + font.GetLineSeparation(UIScale);
             }
         }
 
@@ -146,12 +143,12 @@ namespace Robust.Client.UserInterface.Controls
 
             if (args.WheelDirection == Mouse.Wheel.Up)
             {
-                _scrollBar.Value = _scrollBar.Value - _getScrollSpeed();
+                _scrollBar.Value -= _getScrollSpeed();
                 _isAtBottom = false;
             }
             else if (args.WheelDirection == Mouse.Wheel.Down)
             {
-                _scrollBar.Value = _scrollBar.Value + _getScrollSpeed();
+                _scrollBar.Value += _getScrollSpeed();
                 if (_scrollBar.IsAtEnd)
                 {
                     _isAtBottom = true;
@@ -172,7 +169,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var styleBoxSize = _getStyleBox()?.MinimumSize.Y ?? 0;
 
-            _scrollBar.Page = Size.Y - styleBoxSize;
+            _scrollBar.Page = PixelSize.Y - styleBoxSize;
             _invalidateEntries();
         }
 
@@ -189,15 +186,15 @@ namespace Robust.Client.UserInterface.Controls
             for (var i = 0; i < _entries.Count; i++)
             {
                 var entry = _entries[i];
-                entry.Update(font, sizeX);
+                entry.Update(font, sizeX, UIScale);
                 _entries[i] = entry;
-                _totalContentHeight += entry.Height + font.LineSeparation;
+                _totalContentHeight += entry.Height + font.GetLineSeparation(UIScale);
             }
 
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
             if (_isAtBottom && ScrollFollowing)
             {
-                _scrollBar.Value = ScrollLimit;
+                _scrollBar.MoveToEnd();
             }
         }
 
@@ -229,14 +226,21 @@ namespace Robust.Client.UserInterface.Controls
         private int _getScrollSpeed()
         {
             var font = _getFont();
-            return font.Height * 2;
+            return font.GetLineHeight(UIScale) * 2;
         }
 
         [Pure]
         private UIBox2 _getContentBox()
         {
             var style = _getStyleBox();
-            return style?.GetContentBox(SizeBox) ?? SizeBox;
+            return style?.GetContentBox(PixelSizeBox) ?? PixelSizeBox;
+        }
+
+        protected internal override void UIScaleChanged()
+        {
+            _invalidateEntries();
+
+            base.UIScaleChanged();
         }
     }
 }

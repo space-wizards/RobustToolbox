@@ -18,7 +18,7 @@ namespace Robust.Client.Graphics
     {
         [Dependency] private readonly IConfigurationManager _configuration;
 
-        private uint FontDPI;
+        private uint BaseFontDPI;
 
         private readonly Library _library;
 
@@ -32,12 +32,14 @@ namespace Robust.Client.Graphics
 
         public IFontFaceHandle Load(ReadOnlySpan<byte> data)
         {
-            unsafe
-            {
-                var face = new Face(_library, data.ToArray(), 0);
-                var handle = new FontFaceHandle(face);
-                return handle;
-            }
+            var face = new Face(_library, data.ToArray(), 0);
+            var handle = new FontFaceHandle(face);
+            return handle;
+        }
+
+        void IFontManagerInternal.Initialize()
+        {
+            BaseFontDPI = (uint) _configuration.GetCVar<int>("display.fontdpi");
         }
 
         public IFontInstanceHandle MakeInstance(IFontFaceHandle handle, int size)
@@ -48,50 +50,63 @@ namespace Robust.Client.Graphics
                 return instance;
             }
 
-            var face = fontFaceHandle.Face;
-            var (atlasData, glyphMap, metricsMap) = _generateAtlas(face, size);
-            var ascent = face.Size.Metrics.Ascender.ToInt32();
-            var descent = -face.Size.Metrics.Descender.ToInt32();
-            var height = face.Size.Metrics.Height.ToInt32();
-            var instanceHandle = new FontInstanceHandle(this, atlasData, size, fontFaceHandle.Face, glyphMap, ascent,
-                descent, height, metricsMap);
-            _loadedInstances.Add((fontFaceHandle, size), instanceHandle);
-            return instanceHandle;
+            var glyphMap = _generateGlyphMap(fontFaceHandle.Face);
+            instance = new FontInstanceHandle(this, size, glyphMap, fontFaceHandle);
+
+            _loadedInstances.Add((fontFaceHandle, size), instance);
+            return instance;
         }
 
-        void IFontManagerInternal.Initialize()
+        private ScaledFontData _generateScaledDatum(FontInstanceHandle instance, float scale)
         {
-            FontDPI = (uint) _configuration.GetCVar<int>("display.fontdpi");
+            var ftFace = instance.FaceHandle.Face;
+            ftFace.SetCharSize(0, instance.Size, 0, (uint) (BaseFontDPI * scale));
+
+            var ascent = ftFace.Size.Metrics.Ascender.ToInt32();
+            var descent = -ftFace.Size.Metrics.Descender.ToInt32();
+            var lineHeight = ftFace.Size.Metrics.Height.ToInt32();
+
+            var (atlas, metricsMap) = _generateAtlas(instance, scale);
+
+            return new ScaledFontData(metricsMap, ascent, descent, ascent + descent, lineHeight, atlas);
         }
 
-        private (FontTextureAtlas, Dictionary<char, uint> glyphMap, Dictionary<uint, CharMetrics> metricsMap)
-            _generateAtlas(Face face, int size)
+        private (FontTextureAtlas, Dictionary<uint, CharMetrics> metricsMap)
+            _generateAtlas(FontInstanceHandle instance, float scale)
         {
             // TODO: This could use a better box packing algorithm.
             // Right now we treat each glyph bitmap as having the max size among all glyphs.
             // So we can divide the atlas into equal-size rectangles.
             // This wastes a lot of space though because there's a lot of tiny glyphs.
-            face.SetCharSize(0, size, 0, FontDPI);
+
+            var face = instance.FaceHandle.Face;
+
             var maxGlyphSize = Vector2i.Zero;
             var count = 0;
 
-            // TODO: Render more than extended ASCII, somehow. Does it make sense to just render every glyph in the font?
-            // Render all the extended ASCII characters.
-            const uint startIndex = 32;
-            const uint endIndex = 255;
-            for (var i = startIndex; i <= endIndex; i++)
+            var metricsMap = new Dictionary<uint, CharMetrics>();
+
+            foreach (var glyph in instance.GlyphMap.Values)
             {
-                var glyphIndex = face.GetCharIndex(i);
-                if (glyphIndex == 0)
+                if (metricsMap.ContainsKey(glyph))
                 {
                     continue;
                 }
 
-                face.LoadChar(i, LoadFlags.Default, LoadTarget.Normal);
+                face.LoadGlyph(glyph, LoadFlags.Default, LoadTarget.Normal);
                 face.Glyph.RenderGlyph(RenderMode.Normal);
+
+                var glyphMetrics = face.Glyph.Metrics;
+                var metrics = new CharMetrics(glyphMetrics.HorizontalBearingX.ToInt32(),
+                    glyphMetrics.HorizontalBearingY.ToInt32(),
+                    glyphMetrics.HorizontalAdvance.ToInt32(),
+                    glyphMetrics.Width.ToInt32(),
+                    glyphMetrics.Height.ToInt32());
+                metricsMap.Add(glyph, metrics);
 
                 maxGlyphSize = Vector2i.ComponentMax(maxGlyphSize,
                     new Vector2i(face.Glyph.Bitmap.Width, face.Glyph.Bitmap.Rows));
+
                 count += 1;
             }
 
@@ -107,33 +122,12 @@ namespace Robust.Client.Graphics
                 (int) Math.Round(atlasEntriesVertical * maxGlyphSize.Y / 4f, MidpointRounding.AwayFromZero) * 4;
             var atlas = new Image<Alpha8>(atlasDimX, atlasDimY);
 
-            var glyphMap = new Dictionary<char, uint>();
-            var metricsMap = new Dictionary<uint, CharMetrics>();
             var atlasRegions = new Dictionary<uint, UIBox2>();
             count = 0;
-            for (var i = startIndex; i <= endIndex; i++)
+            foreach (var glyph in metricsMap.Keys)
             {
-                var glyphIndex = face.GetCharIndex(i);
-                if (glyphIndex == 0)
-                {
-                    continue;
-                }
-
-                glyphMap.Add((char) i, glyphIndex);
-                if (metricsMap.ContainsKey(glyphIndex))
-                {
-                    continue;
-                }
-
-                face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
+                face.LoadGlyph(glyph, LoadFlags.Default, LoadTarget.Normal);
                 face.Glyph.RenderGlyph(RenderMode.Normal);
-                var glyphMetrics = face.Glyph.Metrics;
-                var metrics = new CharMetrics(glyphMetrics.HorizontalBearingX.ToInt32(),
-                    glyphMetrics.HorizontalBearingY.ToInt32(),
-                    glyphMetrics.HorizontalAdvance.ToInt32(),
-                    glyphMetrics.Width.ToInt32(),
-                    glyphMetrics.Height.ToInt32());
-                metricsMap.Add(glyphIndex, metrics);
 
                 var bitmap = face.Glyph.Bitmap;
                 if (bitmap.Pitch == 0)
@@ -185,18 +179,19 @@ namespace Robust.Client.Graphics
                 atlas.Mutate(x => x.DrawImage(bitmapImage, new Point(column * maxGlyphSize.X, row * maxGlyphSize.Y),
                     PixelColorBlendingMode.Overlay, 1));
                 count += 1;
-                atlasRegions.Add(glyphIndex, UIBox2i.FromDimensions(offsetX, offsetY, bitmap.Width, bitmap.Rows));
+                atlasRegions.Add(glyph, UIBox2i.FromDimensions(offsetX, offsetY, bitmap.Width, bitmap.Rows));
             }
 
             var atlasDictionary = new Dictionary<uint, AtlasTexture>();
-            var texture = Texture.LoadFromImage(atlas, $"font-{face.FamilyName}-{size}");
+            var texture = Texture.LoadFromImage(atlas,
+                $"font-{face.FamilyName}-{instance.Size}-{(uint) (BaseFontDPI * scale)}");
 
             foreach (var (glyph, region) in atlasRegions)
             {
                 atlasDictionary.Add(glyph, new AtlasTexture(texture, region));
             }
 
-            return (new FontTextureAtlas(texture, atlasDictionary), glyphMap, metricsMap);
+            return (new FontTextureAtlas(texture, atlasDictionary), metricsMap);
         }
 
         private static Image<Alpha8> MonoBitMapToImage(FTBitmap bitmap)
@@ -226,6 +221,27 @@ namespace Robust.Client.Graphics
             return bitmapImage;
         }
 
+        private Dictionary<char, uint> _generateGlyphMap(Face face)
+        {
+            var map = new Dictionary<char, uint>();
+            // TODO: Render more than extended ASCII, somehow. Does it make sense to just render every glyph in the font?
+            // Render all the extended ASCII characters.
+            const uint startIndex = 32;
+            const uint endIndex = 255;
+            for (var i = startIndex; i <= endIndex; i++)
+            {
+                var glyphIndex = face.GetCharIndex(i);
+                if (glyphIndex == 0)
+                {
+                    continue;
+                }
+
+                map.Add((char) i, glyphIndex);
+            }
+
+            return map;
+        }
+
         private class FontFaceHandle : IFontFaceHandle
         {
             public Face Face { get; }
@@ -239,42 +255,22 @@ namespace Robust.Client.Graphics
         [PublicAPI]
         private class FontInstanceHandle : IFontInstanceHandle
         {
-            public Face Face { get; }
+            public FontFaceHandle FaceHandle { get; }
             public int Size { get; }
-            private readonly Dictionary<char, uint> _glyphMap;
-            private readonly Dictionary<uint, CharMetrics> _metricsMap;
-            public int Ascent { get; }
-            public int Descent { get; }
-            public int Height { get; }
-            public int LineHeight { get; }
+            private readonly Dictionary<float, ScaledFontData> _scaledData = new Dictionary<float, ScaledFontData>();
+            public readonly IReadOnlyDictionary<char, uint> GlyphMap;
             private readonly FontManager _fontManager;
 
-            public FontInstanceHandle(FontManager manager, FontTextureAtlas atlas, int size, Face face,
-                Dictionary<char, uint> glyphMap,
-                int ascent, int descent, int lineHeight, Dictionary<uint, CharMetrics> metricsMap)
+            public FontInstanceHandle(FontManager fontManager, int size, IReadOnlyDictionary<char, uint> glyphMap,
+                FontFaceHandle faceHandle)
             {
-                _fontManager = manager;
-                Atlas = atlas;
+                _fontManager = fontManager;
                 Size = size;
-                Face = face;
-                _glyphMap = glyphMap;
-                Ascent = ascent;
-                Descent = descent;
-                LineHeight = lineHeight;
-                Height = ascent + descent;
-                _metricsMap = metricsMap;
+                GlyphMap = glyphMap;
+                FaceHandle = faceHandle;
             }
 
-            public FontTextureAtlas Atlas { get; }
-
-            public Texture GetCharTexture(char chr)
-            {
-                var glyph = _getGlyph(chr);
-                Atlas.AtlasData.TryGetValue(glyph, out var ret);
-                return ret;
-            }
-
-            public CharMetrics? GetCharMetrics(char chr)
+            public Texture GetCharTexture(char chr, float scale)
             {
                 var glyph = _getGlyph(chr);
                 if (glyph == 0)
@@ -282,19 +278,89 @@ namespace Robust.Client.Graphics
                     return null;
                 }
 
-                _metricsMap.TryGetValue(glyph, out var metrics);
-                return metrics;
+                var scaled = _getScaleDatum(scale);
+                scaled.Atlas.AtlasData.TryGetValue(glyph, out var texture);
+                return texture;
+            }
+
+            public CharMetrics? GetCharMetrics(char chr, float scale)
+            {
+                var glyph = _getGlyph(chr);
+                if (glyph == 0)
+                {
+                    return null;
+                }
+
+                var scaled = _getScaleDatum(scale);
+                return scaled.MetricsMap[glyph];
+            }
+
+            public int GetAscent(float scale)
+            {
+                var scaled = _getScaleDatum(scale);
+                return scaled.Ascent;
+            }
+
+            public int GetDescent(float scale)
+            {
+                var scaled = _getScaleDatum(scale);
+                return scaled.Descent;
+            }
+
+            public int GetHeight(float scale)
+            {
+                var scaled = _getScaleDatum(scale);
+                return scaled.Height;
+            }
+
+            public int GetLineHeight(float scale)
+            {
+                var scaled = _getScaleDatum(scale);
+                return scaled.LineHeight;
             }
 
             private uint _getGlyph(char chr)
             {
-                if (_glyphMap.TryGetValue(chr, out var glyph))
+                if (GlyphMap.TryGetValue(chr, out var glyph))
                 {
                     return glyph;
                 }
 
                 return 0;
             }
+
+            private ScaledFontData _getScaleDatum(float scale)
+            {
+                if (_scaledData.TryGetValue(scale, out var datum))
+                {
+                    return datum;
+                }
+
+                datum = _fontManager._generateScaledDatum(this, scale);
+                _scaledData.Add(scale, datum);
+                return datum;
+            }
+        }
+
+        private class ScaledFontData
+        {
+            public ScaledFontData(IReadOnlyDictionary<uint, CharMetrics> metricsMap, int ascent, int descent,
+                int height, int lineHeight, FontTextureAtlas atlas)
+            {
+                MetricsMap = metricsMap;
+                Ascent = ascent;
+                Descent = descent;
+                Height = height;
+                LineHeight = lineHeight;
+                Atlas = atlas;
+            }
+
+            public IReadOnlyDictionary<uint, CharMetrics> MetricsMap { get; }
+            public int Ascent { get; }
+            public int Descent { get; }
+            public int Height { get; }
+            public int LineHeight { get; }
+            public FontTextureAtlas Atlas { get; }
         }
 
         private class FontTextureAtlas

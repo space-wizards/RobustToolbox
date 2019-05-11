@@ -39,7 +39,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override void SortChildren()
         {
-            var separation = ActualSeparation;
+            var separation = (int) (ActualSeparation * UIScale);
 
             // Step one: figure out the sizes of all our children and whether they want to stretch.
             var sizeList = new List<(Control control, int minSize, int finalSize, bool stretch)>();
@@ -53,18 +53,18 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     continue;
                 }
-                var childMinSize = child.CombinedMinimumSize;
+                var (minX, minY) = child.CombinedPixelMinimumSize;
                 int minSize;
                 bool stretch;
 
                 if (Vertical)
                 {
-                    minSize = (int) childMinSize.Y;
+                    minSize = (int) minY;
                     stretch = (child.SizeFlagsVertical & SizeFlags.Expand) == SizeFlags.Expand;
                 }
                 else
                 {
-                    minSize = (int) childMinSize.X;
+                    minSize = (int) minX;
                     stretch = (child.SizeFlagsHorizontal & SizeFlags.Expand) == SizeFlags.Expand;
                 }
 
@@ -80,15 +80,7 @@ namespace Robust.Client.UserInterface.Controls
                 sizeList.Add((child, minSize, minSize, stretch));
             }
 
-            int stretchMax;
-            if (Vertical)
-            {
-                stretchMax = (int) Size.Y;
-            }
-            else
-            {
-                stretchMax = (int) Size.X;
-            }
+            var stretchMax = Vertical ? PixelHeight : PixelWidth;
 
             stretchMax -= separation * (ChildCount - 1);
             // This is the amount of space allocated for stretchable children.
@@ -159,17 +151,17 @@ namespace Robust.Client.UserInterface.Controls
 
                 first = false;
 
-                UIBox2 targetBox;
+                UIBox2i targetBox;
                 if (Vertical)
                 {
-                    targetBox = new UIBox2(0, offset, Size.X, offset+size);
+                    targetBox = new UIBox2i(0, offset, PixelWidth, offset+size);
                 }
                 else
                 {
-                    targetBox = new UIBox2(offset, 0, offset+size, Size.Y);
+                    targetBox = new UIBox2i(offset, 0, offset+size, PixelHeight);
                 }
 
-                FitChildInBox(control, targetBox);
+                FitChildInPixelBox(control, targetBox);
 
                 offset += size;
             }

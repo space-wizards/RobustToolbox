@@ -177,9 +177,6 @@ namespace Robust.Client.UserInterface.CustomControls
                 if (tex != null)
                 {
                     rect.Texture = tex.Default;
-                    // Ok I can't find a way to make this TextureRect scale down sanely so let's do this.
-                    var scale = (float) TARGET_ICON_HEIGHT / tex.Default.Height;
-                    rect.Scale = new Vector2(scale, scale);
                 }
                 else
                 {

@@ -41,12 +41,13 @@ namespace Robust.Client.UserInterface
         /// </summary>
         /// <param name="font">The font being used for display.</param>
         /// <param name="sizeX">The horizontal size of the container of this entry.</param>
-        public void Update(Font font, float sizeX)
+        /// <param name="uiScale"></param>
+        public void Update(Font font, float sizeX, float uiScale)
         {
             // This method is gonna suck due to complexity.
             // Bear with me here.
             // I am so deeply sorry for the person adding stuff to this in the future.
-            Height = font.Height;
+            Height = font.GetHeight(uiScale);
             LineBreaks.Clear();
 
             // Index we put into the LineBreaks list when a line break should occur.
@@ -89,7 +90,7 @@ namespace Robust.Client.UserInterface
                             // We ran into a word boundary and the word is too big to fit the previous line.
                             // So we insert the line break BEFORE the last word.
                             LineBreaks.Add(wordStartBreakIndex.Value);
-                            Height += font.LineHeight;
+                            Height += font.GetLineHeight(uiScale);
                             posX = wordSizePixels;
                         }
 
@@ -103,7 +104,7 @@ namespace Robust.Client.UserInterface
                         if (chr == '\n')
                         {
                             LineBreaks.Add(breakIndexCounter);
-                            Height += font.LineHeight;
+                            Height += font.GetLineHeight(uiScale);
                             posX = 0;
                             lastChar = chr;
                             wordStartBreakIndex = null;
@@ -112,7 +113,7 @@ namespace Robust.Client.UserInterface
                     }
 
                     // Uh just skip unknown characters I guess.
-                    if (!font.TryGetCharMetrics(chr, out var metrics))
+                    if (!font.TryGetCharMetrics(chr, uiScale, out var metrics))
                     {
                         lastChar = chr;
                         continue;
@@ -142,7 +143,7 @@ namespace Robust.Client.UserInterface
                             // Reset forceSplitData so that we can split again if necessary.
                             forceSplitData = null;
                             LineBreaks.Add(breakIndex);
-                            Height += font.LineHeight;
+                            Height += font.GetLineHeight(uiScale);
                             wordSizePixels -= splitWordSize;
                             wordStartBreakIndex = null;
                             posX = wordSizePixels;
@@ -159,7 +160,7 @@ namespace Robust.Client.UserInterface
                 DebugTools.Assert(wordStartBreakIndex.HasValue,
                     "wordStartBreakIndex can only be null if the word begins at a new line, in which case this branch shouldn't be reached as the word would be split due to being longer than a single line.");
                 LineBreaks.Add(wordStartBreakIndex.Value);
-                Height += font.LineHeight;
+                Height += font.GetLineHeight(uiScale);
             }
         }
 
@@ -171,14 +172,14 @@ namespace Robust.Client.UserInterface
             // A stack for format tags.
             // This stack contains the format tag to RETURN TO when popped off.
             // So when a new color tag gets hit this stack gets the previous color pushed on.
-            Stack<FormattedMessage.Tag> formatStack)
+            Stack<FormattedMessage.Tag> formatStack, float uiScale)
         {
             // The tag currently doing color.
             var currentColorTag = TagWhite;
 
             var globalBreakCounter = 0;
             var lineBreakIndex = 0;
-            var baseLine = drawBox.TopLeft + new Vector2(0, font.Ascent + verticalOffset);
+            var baseLine = drawBox.TopLeft + new Vector2(0, font.GetAscent(uiScale) + verticalOffset);
             formatStack.Clear();
             foreach (var tag in Message.Tags)
             {
@@ -209,11 +210,11 @@ namespace Robust.Client.UserInterface
                             if (lineBreakIndex < LineBreaks.Count &&
                                 LineBreaks[lineBreakIndex] == globalBreakCounter)
                             {
-                                baseLine = new Vector2(drawBox.Left, baseLine.Y + font.LineHeight);
+                                baseLine = new Vector2(drawBox.Left, baseLine.Y + font.GetLineHeight(uiScale));
                                 lineBreakIndex += 1;
                             }
 
-                            var advance = font.DrawChar(handle, chr, baseLine, currentColorTag.Color);
+                            var advance = font.DrawChar(handle, chr, baseLine, uiScale, currentColorTag.Color);
                             baseLine += new Vector2(advance, 0);
                         }
 

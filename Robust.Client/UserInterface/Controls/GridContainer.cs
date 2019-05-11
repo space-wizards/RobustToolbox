@@ -70,15 +70,15 @@ namespace Robust.Client.UserInterface.Controls
             set => _hSeparationOverride = value;
         }
 
-        private (int h, int v) Separations => (_hSeparationOverride ?? 4, _vSeparationOverride ?? 4);
+        private Vector2i Separations => (_hSeparationOverride ?? 4, _vSeparationOverride ?? 4);
 
         protected override Vector2 CalculateMinimumSize()
         {
             var firstRow = true;
-            var totalMinSize = Vector2.Zero;
-            var thisRowSize = Vector2.Zero;
+            var totalMinSize = Vector2i.Zero;
+            var thisRowSize = Vector2i.Zero;
             var currentRowCount = 0;
-            var (h, v) = Separations;
+            var (h, v) = (Vector2i)(Separations * UIScale);
 
             foreach (var child in Children)
             {
@@ -87,7 +87,7 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                var (minSizeX, minSizeY) = child.CombinedMinimumSize;
+                var (minSizeX, minSizeY) = child.CombinedPixelMinimumSize;
                 thisRowSize = (thisRowSize.X + minSizeX, Math.Max(thisRowSize.Y, minSizeY));
                 if (currentRowCount != 0)
                 {
@@ -103,7 +103,7 @@ namespace Robust.Client.UserInterface.Controls
                     }
                     firstRow = false;
 
-                    thisRowSize = Vector2.Zero;
+                    thisRowSize = Vector2i.Zero;
                     currentRowCount = 0;
                 }
             }
@@ -117,7 +117,7 @@ namespace Robust.Client.UserInterface.Controls
                 }
             }
 
-            return totalMinSize;
+            return totalMinSize / UIScale;
         }
 
         protected override void SortChildren()
@@ -148,15 +148,15 @@ namespace Robust.Client.UserInterface.Controls
                 var row = index / _columns;
                 var column = index % _columns;
 
-                var (minSizeX, minSizeY) = child.CombinedMinimumSize;
-                columnSizes[column] = Math.Max((int) minSizeX, columnSizes[column]);
-                rowSizes[row] = Math.Max((int) minSizeY, rowSizes[row]);
+                var (minSizeX, minSizeY) = child.CombinedPixelMinimumSize;
+                columnSizes[column] = Math.Max(minSizeX, columnSizes[column]);
+                rowSizes[row] = Math.Max(minSizeY, rowSizes[row]);
                 columnExpand[column] = columnExpand[column] || (child.SizeFlagsHorizontal & SizeFlags.Expand) != 0;
                 rowExpand[row] = rowExpand[row] || (child.SizeFlagsVertical & SizeFlags.Expand) != 0;
             }
 
             // Basically now we just apply BoxContainer logic on rows and columns.
-            var (vSep, hSep) = Separations;
+            var (vSep, hSep) = (Vector2i)(Separations * UIScale);
             var stretchMinX = 0;
             var stretchMinY = 0;
             // We do not use stretch ratios because Godot doesn't,
@@ -191,8 +191,8 @@ namespace Robust.Client.UserInterface.Controls
                 }
             }
 
-            var stretchMaxX = Size.X - hSep * (_columns - 1);
-            var stretchMaxY = Size.Y - vSep * (rows - 1);
+            var stretchMaxX = Width - hSep * (_columns - 1);
+            var stretchMaxY = Height - vSep * (rows - 1);
 
             var stretchAvailX = Math.Max(0, stretchMaxX - stretchMinX);
             var stretchAvailY = Math.Max(0, stretchMaxY - stretchMinY);
@@ -243,8 +243,8 @@ namespace Robust.Client.UserInterface.Controls
                     }
                 }
 
-                var box = UIBox2.FromDimensions(hOffset, vOffset, columnSizes[column], rowSizes[row]);
-                FitChildInBox(child, box);
+                var box = UIBox2i.FromDimensions(hOffset, vOffset, columnSizes[column], rowSizes[row]);
+                FitChildInPixelBox(child, box);
 
                 hOffset += columnSizes[column] + hSep;
             }

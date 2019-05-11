@@ -4,7 +4,6 @@ using System.Diagnostics.Contracts;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Input;
-using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Color = Robust.Shared.Maths.Color;
 using Font = Robust.Client.Graphics.Font;
@@ -16,7 +15,6 @@ namespace Robust.Client.UserInterface.Controls
     {
         private bool _isAtBottom = true;
         private int _totalContentHeight;
-        private float _itemListHeight;
 
         private VScrollBar _scrollBar = new VScrollBar();
         private readonly List<Item> _itemList = new List<Item>();
@@ -32,8 +30,6 @@ namespace Robust.Client.UserInterface.Controls
         public int ItemCount => _itemList.Count;
 
         public bool ScrollFollowing { get; set; } = true;
-
-        private int ScrollLimit => Math.Max(0, _totalContentHeight - (int) _getContentBox().Height + 1);
 
         public ItemListSelectMode SelectMode { get; set; } = ItemListSelectMode.Single;
 
@@ -55,12 +51,19 @@ namespace Robust.Client.UserInterface.Controls
             _totalContentHeight = 0;
             foreach (var item in _itemList)
             {
-                var itemHeight = item.Icon != null
-                    ? Math.Max(item.IconSize.Y, ActualFont.Height) + ActualItemBackground.MinimumSize.Y
-                    : ActualFont.Height + ActualItemBackground.MinimumSize.Y;
+                var itemHeight = 0f;
+                if (item.Icon != null)
+                {
+                    itemHeight = item.IconSize.Y;
+                }
 
-                _totalContentHeight += (int)itemHeight;
+                itemHeight = Math.Max(itemHeight, ActualFont.GetHeight(UIScale));
+                itemHeight += ActualItemBackground.MinimumSize.Y;
+
+                _totalContentHeight += (int)Math.Ceiling(itemHeight);
             }
+
+            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
         }
 
         public void AddItem(string text, Texture icon = null, bool selectable = true)
@@ -70,8 +73,7 @@ namespace Robust.Client.UserInterface.Controls
             RecalculateContentHeight();
             if (_isAtBottom && ScrollFollowing)
             {
-                _scrollBar.Value = ScrollLimit;
-
+                _scrollBar.MoveToEnd();
             }
         }
 
@@ -271,7 +273,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public void ScrollToBottom()
         {
-            _scrollBar.Value = ScrollLimit;
+            _scrollBar.MoveToEnd();
             _isAtBottom = true;
         }
 
@@ -285,10 +287,9 @@ namespace Robust.Client.UserInterface.Controls
             var iconSelectedBg = ActualSelectedItemBackground;
             var iconDisabledBg = ActualDisabledItemBackground;
 
-            _itemListHeight = 0f;
-            Vector2 separation = (0, -_scrollBar.Value);
+            var offset = -_scrollBar.Value;
 
-            listBg.Draw(handle, SizeBox);
+            listBg.Draw(handle, PixelSizeBox);
 
             foreach (var item in _itemList)
             {
@@ -300,11 +301,16 @@ namespace Robust.Client.UserInterface.Controls
                 if (item.Selected)
                     bg = iconSelectedBg;
 
-                var itemHeight = item.Icon != null
-                    ? Math.Max(item.IconSize.Y, font.Height) + bg.MinimumSize.Y
-                    : font.Height + bg.MinimumSize.Y;
+                var itemHeight = 0f;
+                if (item.Icon != null)
+                {
+                    itemHeight = item.IconSize.Y;
+                }
 
-                item.Region = UIBox2.FromDimensions(separation, (SizeBox.Width, itemHeight));
+                itemHeight = Math.Max(itemHeight, ActualFont.GetHeight(UIScale));
+                itemHeight += ActualItemBackground.MinimumSize.Y;
+
+                item.Region = UIBox2.FromDimensions((0, offset), (PixelWidth, itemHeight));
 
                 bg.Draw(handle, item.Region.Value);
 
@@ -312,36 +318,23 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     if (item.IconRegion.Size == Vector2.Zero)
                     {
-                        handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(separation, item.Icon.Size), false, item.IconModulate, item.IconTranspose);
+                        handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions((0, offset), item.Icon.Size), false, item.IconModulate, item.IconTranspose);
                     }
                     else
                     {
-                        handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(separation, item.Icon.Size), item.IconRegion, item.IconModulate);
+                        handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions((0, offset), item.Icon.Size), item.IconRegion, item.IconModulate);
                     }
                 }
 
                 if (item.Text != null)
                 {
                     DrawTextInternal(handle, item.Text,
-                        UIBox2.FromDimensions((item.IconSize.X, separation.Y), (SizeBox.Width-item.IconSize.X,font.Height*2))
+                        UIBox2.FromDimensions((item.IconSize.X, offset), (PixelWidth-item.IconSize.X,font.GetHeight(UIScale)))
                         );
                 }
 
-                separation += (0, itemHeight);
-                _itemListHeight += itemHeight;
+                offset += itemHeight;
             }
-
-            if (_itemListHeight > Size.Y)
-            {
-                _scrollBar.MaxValue = _itemListHeight;
-                _scrollBar.Page = Size.Y - ActualBackground.MinimumSize.Y;
-            }
-            else
-            {
-                _scrollBar.MaxValue = 0f;
-                _scrollBar.Page = 0f;
-            }
-
         }
 
         protected void DrawTextInternal(DrawingHandleScreen handle, string text, UIBox2 box)
@@ -349,19 +342,19 @@ namespace Robust.Client.UserInterface.Controls
             var font = ActualFont;
 
             var color = ActualFontColor;
-            var offsetY = (int) (box.Height - font.Height) / 2;
-            var baseLine = new Vector2i(0, offsetY + font.Ascent) + box.TopLeft;
+            var offsetY = (int) (box.Height - font.GetHeight(UIScale)) / 2;
+            var baseLine = new Vector2i(0, offsetY + font.GetAscent(UIScale)) + box.TopLeft;
 
             foreach (var chr in text)
             {
-                if (!font.TryGetCharMetrics(chr, out var metrics))
+                if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
                 {
                     continue;
                 }
 
                 if (!(baseLine.X < box.Left || baseLine.X + metrics.Advance > box.Right))
                 {
-                    font.DrawChar(handle, chr, baseLine, color);
+                    font.DrawChar(handle, chr, baseLine, UIScale, color);
                 }
 
                 baseLine += (metrics.Advance, 0);
@@ -370,7 +363,13 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            return (ActualBackground?.MinimumSize.X ?? 0, _itemListHeight + ActualBackground?.MinimumSize.Y ?? 0);
+            var size = Vector2.Zero;
+            if (ActualBackground != null)
+            {
+                size += ActualBackground.MinimumSize / UIScale;
+            }
+
+            return size;
         }
 
         protected internal override void MouseMove(GUIMouseMoveEventArgs args)
@@ -393,16 +392,12 @@ namespace Robust.Client.UserInterface.Controls
 
             if (args.WheelDirection == Mouse.Wheel.Up)
             {
-                _scrollBar.Value = _scrollBar.Value - _getScrollSpeed();
+                _scrollBar.Value -= _getScrollSpeed();
                 _isAtBottom = false;
             }
             else if (args.WheelDirection == Mouse.Wheel.Down)
             {
-                var limit = ScrollLimit;
-                if (_scrollBar.Value + _getScrollSpeed() < limit)
-                    _scrollBar.Value = _scrollBar.Value + _getScrollSpeed();
-                else
-                    ScrollToBottom();
+                _scrollBar.Value += _getScrollSpeed();
                 if (_scrollBar.IsAtEnd)
                 {
                     _isAtBottom = true;
@@ -446,7 +441,7 @@ namespace Robust.Client.UserInterface.Controls
         private int _getScrollSpeed()
         {
             var font = ActualFont;
-            return font.Height * 2;
+            return font.GetHeight(UIScale) * 2;
         }
 
         [Pure]
@@ -454,6 +449,23 @@ namespace Robust.Client.UserInterface.Controls
         {
             var style = ActualBackground;
             return style?.GetContentBox(SizeBox) ?? SizeBox;
+        }
+
+        protected override void Resized()
+        {
+            base.Resized();
+
+            var styleBoxSize = ActualBackground?.MinimumSize.Y ?? 0;
+
+            _scrollBar.Page = PixelSize.Y - styleBoxSize;
+            RecalculateContentHeight();
+        }
+
+        protected internal override void UIScaleChanged()
+        {
+             RecalculateContentHeight();
+
+             base.UIScaleChanged();
         }
 
         public sealed class Item

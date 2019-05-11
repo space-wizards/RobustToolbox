@@ -4,7 +4,6 @@ using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -134,8 +133,8 @@ namespace Robust.Client.UserInterface.Controls
 
             bool DoSearch(Item item, float hOffset)
             {
-                var itemHeight = font.Height;
-                var itemBox = UIBox2.FromDimensions((hOffset, vOffset), (Width - hOffset, itemHeight));
+                var itemHeight = font.GetHeight(UIScale);
+                var itemBox = UIBox2.FromDimensions((hOffset, vOffset), (PixelWidth - hOffset, itemHeight));
                 if (itemBox.Contains(position))
                 {
                     final = item;
@@ -190,7 +189,7 @@ namespace Robust.Client.UserInterface.Controls
             var hOffset = 0f;
             if (background != null)
             {
-                background.Draw(handle, SizeBox);
+                background.Draw(handle, PixelSizeBox);
                 var (bho, bvo) = background.GetContentOffset(Vector2.Zero);
                 vOffset += bvo;
                 hOffset += bho;
@@ -213,20 +212,20 @@ namespace Robust.Client.UserInterface.Controls
             DrawingHandleScreen handle, ref float vOffset, float hOffset, Item item,
             Font font, StyleBox itemSelected)
         {
-            var itemHeight = font.Height + itemSelected.MinimumSize.Y;
+            var itemHeight = font.GetHeight(UIScale) + itemSelected.MinimumSize.Y;
             var selected = item.Index == _selectedIndex;
             if (selected)
             {
-                itemSelected.Draw(handle, UIBox2.FromDimensions(hOffset, vOffset, Width - hOffset, itemHeight));
+                itemSelected.Draw(handle, UIBox2.FromDimensions(hOffset, vOffset, PixelWidth - hOffset, itemHeight));
             }
 
             if (!string.IsNullOrWhiteSpace(item.Text))
             {
                 var offset = itemSelected.GetContentOffset(Vector2.Zero);
-                var baseLine = offset + (hOffset, vOffset + font.Ascent);
+                var baseLine = offset + (hOffset, vOffset + font.GetAscent(UIScale));
                 foreach (var chr in item.Text)
                 {
-                    baseLine += (font.DrawChar(handle, chr, baseLine, Color.White), 0);
+                    baseLine += (font.DrawChar(handle, chr, baseLine, UIScale, Color.White), 0);
                 }
             }
 
@@ -264,7 +263,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private float _getItemHeight(Item item, Font font)
         {
-            float sum = font.Height;
+            float sum = font.GetHeight(UIScale);
 
             foreach (var child in item.Children)
             {
@@ -278,8 +277,8 @@ namespace Robust.Client.UserInterface.Controls
         {
             var internalHeight = _getInternalHeight();
             _scrollBar.MaxValue = internalHeight;
-            _scrollBar.Page = Height;
-            _scrollBar.Visible = internalHeight > Height;
+            _scrollBar.Page = PixelHeight;
+            _scrollBar.Visible = internalHeight > PixelHeight;
         }
 
         protected override void Resized()

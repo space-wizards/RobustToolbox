@@ -58,7 +58,7 @@ namespace Robust.Client.UserInterface.Controls
                     break;
                 case StretchMode.KeepCentered:
                 {
-                    var position = (Vector2i) (Size - _texture.Size) / 2;
+                    var position = (PixelSize - _texture.Size) / 2;
                     handle.DrawTexture(_texture, position);
                     break;
                 }

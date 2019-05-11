@@ -101,7 +101,7 @@ namespace Robust.Client.UserInterface.Controls
             base.Draw(handle);
 
             var style = ActualStyleBox;
-            var drawBox = SizeBox;
+            var drawBox = PixelSizeBox;
             style.Draw(handle, drawBox);
 
             if (_text == null)
@@ -142,19 +142,19 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             var color = ActualFontColor;
-            var offsetY = (int) (box.Height - font.Height) / 2;
-            var baseLine = new Vector2i(drawOffset, offsetY + font.Ascent) + box.TopLeft;
+            var offsetY = (int) (box.Height - font.GetHeight(UIScale)) / 2;
+            var baseLine = new Vector2i(drawOffset, offsetY + font.GetAscent(UIScale)) + box.TopLeft;
 
             foreach (var chr in _text)
             {
-                if (!font.TryGetCharMetrics(chr, out var metrics))
+                if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
                 {
                     continue;
                 }
 
                 if (!(ClipText && (baseLine.X < box.Left || baseLine.X + metrics.Advance > box.Right)))
                 {
-                    font.DrawChar(handle, chr, baseLine, color);
+                    font.DrawChar(handle, chr, baseLine, UIScale, color);
                 }
 
                 baseLine += (metrics.Advance, 0);
@@ -166,16 +166,16 @@ namespace Robust.Client.UserInterface.Controls
             var style = ActualStyleBox;
             var font = ActualFont;
 
-            var fontHeight = font.Height;
+            var fontHeight = font.GetHeight(UIScale) / UIScale;
 
             if (ClipText)
             {
-                return (0, fontHeight) + style.MinimumSize;
+                return (0, fontHeight) + style.MinimumSize/UIScale;
             }
 
             var width = EnsureWidthCache();
 
-            return new Vector2(width, fontHeight) + style.MinimumSize;
+            return (width / UIScale, fontHeight) + style.MinimumSize/UIScale;
         }
 
         protected override void Initialize()
@@ -224,7 +224,7 @@ namespace Robust.Client.UserInterface.Controls
             var textWidth = 0;
             foreach (var chr in _text)
             {
-                var metrics = font.GetCharMetrics(chr);
+                var metrics = font.GetCharMetrics(chr, UIScale);
                 if (metrics == null)
                 {
                     continue;
@@ -262,6 +262,13 @@ namespace Robust.Client.UserInterface.Controls
             {
                 ClipText = (bool) value;
             }
+        }
+
+        protected internal override void UIScaleChanged()
+        {
+            _textWidthCache = null;
+
+            base.UIScaleChanged();
         }
     }
 }

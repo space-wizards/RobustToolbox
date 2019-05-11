@@ -135,7 +135,7 @@ namespace Robust.Client.UserInterface.Controls
             // First, draw panel.
             var headerSize = _getHeaderSize();
             var panel = _getPanel();
-            var panelBox = new UIBox2(0, headerSize, Width, Height);
+            var panelBox = new UIBox2(0, headerSize, PixelWidth, PixelHeight);
 
             panel?.Draw(handle, panelBox);
 
@@ -156,7 +156,7 @@ namespace Robust.Client.UserInterface.Controls
                 // Get string length.
                 foreach (var chr in title)
                 {
-                    if (!font.TryGetCharMetrics(chr, out var metrics))
+                    if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
                     {
                         continue;
                     }
@@ -169,7 +169,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 UIBox2 contentBox;
                 var topLeft = new Vector2(headerOffset, 0);
-                var size = new Vector2(titleLength, font.Height);
+                var size = new Vector2(titleLength, font.GetHeight(UIScale));
                 float boxAdvance;
 
                 if (box != null)
@@ -185,16 +185,16 @@ namespace Robust.Client.UserInterface.Controls
                     contentBox = UIBox2.FromDimensions(topLeft, size);
                 }
 
-                var baseLine = new Vector2(0, font.Ascent) + contentBox.TopLeft;
+                var baseLine = new Vector2(0, font.GetAscent(UIScale)) + contentBox.TopLeft;
 
                 foreach (var chr in title)
                 {
-                    if (!font.TryGetCharMetrics(chr, out var metrics))
+                    if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
                     {
                         continue;
                     }
 
-                    font.DrawChar(handle, chr, baseLine, active ? fontColorActive : fontColorInactive);
+                    font.DrawChar(handle, chr, baseLine, UIScale, active ? fontColorActive : fontColorInactive);
                     baseLine += new Vector2(metrics.Advance, 0);
                 }
 
@@ -204,30 +204,30 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            var total = new Vector2();
+            var total = Vector2i.Zero;
 
             foreach (var child in Children)
             {
                 if (child.Visible)
                 {
-                    total = Vector2.ComponentMax(child.CombinedMinimumSize, total);
+                    total = Vector2i.ComponentMax(child.CombinedPixelMinimumSize, total);
                 }
             }
 
             if (TabsVisible)
             {
-                total += new Vector2(0, _getHeaderSize());
+                total += (0, _getHeaderSize());
             }
 
             var panel = _getPanel();
-            total += panel?.MinimumSize ?? Vector2.Zero;
+            total += (Vector2i)(panel?.MinimumSize ?? Vector2.Zero);
 
-            return total;
+            return total / UIScale;
         }
 
         private void _fixChildMargins(Control child)
         {
-            FitChildInBox(child, _getContentBox());
+            FitChildInPixelBox(child, _getContentBox());
         }
 
         protected override void SortChildren()
@@ -254,14 +254,14 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             // Outside of header size, ignore.
-            if (args.RelativePosition.Y < 0 || args.RelativePosition.Y > _getHeaderSize())
+            if (args.RelativePixelPosition.Y < 0 || args.RelativePixelPosition.Y > _getHeaderSize())
             {
                 return;
             }
 
             args.Handle();
 
-            var relX = args.RelativePosition.X;
+            var relX = args.RelativePixelPosition.X;
 
             var font = _getFont();
             var boxActive = _getTabBoxActive();
@@ -277,7 +277,7 @@ namespace Robust.Client.UserInterface.Controls
                 // Get string length.
                 foreach (var chr in title)
                 {
-                    if (!font.TryGetCharMetrics(chr, out var metrics))
+                    if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
                     {
                         continue;
                     }
@@ -301,18 +301,22 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [Pure]
-        private UIBox2 _getContentBox()
+        private UIBox2i _getContentBox()
         {
             var headerSize = _getHeaderSize();
             var panel = _getPanel();
-            var panelBox = new UIBox2(0, headerSize, Width, Height);
-            return panel?.GetContentBox(panelBox) ?? panelBox;
+            var panelBox = new UIBox2i(0, headerSize, PixelWidth, PixelHeight);
+            if (panel != null)
+            {
+                return (UIBox2i) panel.GetContentBox(panelBox);
+            }
+            return panelBox;
         }
 
         [Pure]
-        private float _getHeaderSize()
+        private int _getHeaderSize()
         {
-            var headerSize = 0f;
+            var headerSize = 0;
 
             if (TabsVisible)
             {
@@ -323,8 +327,8 @@ namespace Robust.Client.UserInterface.Controls
                 var activeSize = active?.MinimumSize ?? Vector2.Zero;
                 var inactiveSize = inactive?.MinimumSize ?? Vector2.Zero;
 
-                headerSize = Math.Max(activeSize.Y, inactiveSize.Y);
-                headerSize += font.Height;
+                headerSize = (int) Math.Max(activeSize.Y, inactiveSize.Y);
+                headerSize += font.GetHeight(UIScale);
             }
 
             return headerSize;

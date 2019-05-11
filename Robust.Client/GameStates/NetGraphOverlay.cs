@@ -32,11 +32,11 @@ namespace Robust.Client.GameStates
 
         private void DrawString(DrawingHandleScreen handle, Font font, Vector2 pos, string str)
         {
-            var baseLine = new Vector2(pos.X, font.Ascent + pos.Y);
+            var baseLine = new Vector2(pos.X, font.GetAscent(1) + pos.Y);
 
             foreach (var chr in str)
             {
-                var advance = font.DrawChar(handle, chr, baseLine, Color.White);
+                var advance = font.DrawChar(handle, chr, baseLine, 1, Color.White);
                 baseLine += new Vector2(advance, 0);
             }
         }

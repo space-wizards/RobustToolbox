@@ -135,14 +135,14 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             var styleBox = _getStyleBox();
-            var drawBox = SizeBox;
+            var drawBox = PixelSizeBox;
             var contentBox = styleBox.GetContentBox(drawBox);
             styleBox.Draw(handle, drawBox);
             var font = _getFont();
             var renderedTextColor = _getFontColor();
 
-            var offsetY = (int) (contentBox.Height - font.Height) / 2;
-            var baseLine = new Vector2i(0, offsetY + font.Ascent) + contentBox.TopLeft;
+            var offsetY = (int) (contentBox.Height - font.GetHeight(UIScale)) / 2;
+            var baseLine = new Vector2i(0, offsetY + font.GetAscent(UIScale)) + contentBox.TopLeft;
 
             string renderedText;
 
@@ -165,7 +165,7 @@ namespace Robust.Client.UserInterface.Controls
             var count = 0;
             foreach (var chr in renderedText)
             {
-                if (!font.TryGetCharMetrics(chr, out var metrics))
+                if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
                 {
                     count += 1;
                     continue;
@@ -177,7 +177,7 @@ namespace Robust.Client.UserInterface.Controls
                     break;
                 }
 
-                font.DrawChar(handle, chr, baseLine, renderedTextColor);
+                font.DrawChar(handle, chr, baseLine, UIScale, renderedTextColor);
                 baseLine += new Vector2(metrics.Advance, 0);
                 count += 1;
                 if (count == _cursorPosition)
@@ -210,7 +210,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             var font = _getFont();
             var style = _getStyleBox();
-            return new Vector2(0, font.Height) + style.MinimumSize;
+            return new Vector2(0, font.GetHeight(UIScale)/UIScale) + style.MinimumSize/UIScale;
         }
 
         protected internal override void TextEntered(GUITextEventArgs args)
@@ -305,9 +305,9 @@ namespace Robust.Client.UserInterface.Controls
 
             // Find closest cursor position under mouse.
             var style = _getStyleBox();
-            var contentBox = style.GetContentBox(SizeBox);
+            var contentBox = style.GetContentBox(PixelSizeBox);
 
-            var clickPosX = args.RelativePosition.X;
+            var clickPosX = args.RelativePosition.X * UIScale;
 
             var font = _getFont();
             var index = 0;
@@ -315,7 +315,7 @@ namespace Robust.Client.UserInterface.Controls
             var lastChrPostX = contentBox.Left;
             foreach (var chr in _text)
             {
-                if (!font.TryGetCharMetrics(chr, out var metrics))
+                if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
                 {
                     index += 1;
                     continue;

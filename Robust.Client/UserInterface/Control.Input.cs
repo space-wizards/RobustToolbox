@@ -107,15 +107,21 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public Vector2 GlobalPosition { get; }
 
+        public Vector2 GlobalPixelPosition { get; }
+
         /// <summary>
         ///     Position of the mouse, relative to the current control.
         /// </summary>
         public Vector2 RelativePosition { get; internal set; }
 
+        public Vector2 RelativePixelPosition { get; internal set; }
+
         protected GUIMouseEventArgs(Control sourceControl,
             Mouse.ButtonMask buttonMask,
             Vector2 globalPosition,
+            Vector2 globalPixelPosition,
             Vector2 relativePosition,
+            Vector2 relativePixelPosition,
             bool alt,
             bool control,
             bool shift,
@@ -126,6 +132,8 @@ namespace Robust.Client.UserInterface
             ButtonMask = buttonMask;
             GlobalPosition = globalPosition;
             RelativePosition = relativePosition;
+            RelativePixelPosition = relativePixelPosition;
+            GlobalPixelPosition = globalPixelPosition;
         }
     }
 
@@ -147,12 +155,14 @@ namespace Robust.Client.UserInterface
             Control sourceControl,
             Mouse.ButtonMask buttonMask,
             Vector2 globalPosition,
+            Vector2 globalPixelPosition,
             Vector2 relativePosition,
+            Vector2 relativePixelPosition,
             bool alt,
             bool control,
             bool shift,
             bool system)
-            : base(sourceControl, buttonMask, globalPosition, relativePosition, alt, control, shift, system)
+            : base(sourceControl, buttonMask, globalPosition, globalPixelPosition, relativePosition, relativePixelPosition, alt, control, shift, system)
         {
             Button = button;
             DoubleClick = doubleClick;
@@ -179,12 +189,14 @@ namespace Robust.Client.UserInterface
             Control sourceControl,
             Mouse.ButtonMask buttonMask,
             Vector2 globalPosition,
+            Vector2 globalPixelPosition,
             Vector2 relativePosition,
+            Vector2 relativePixelPosition,
             bool alt,
             bool control,
             bool shift,
             bool system)
-            : base(sourceControl, buttonMask, globalPosition, relativePosition, alt, control, shift, system)
+            : base(sourceControl, buttonMask, globalPosition, globalPixelPosition, relativePosition, relativePixelPosition, alt, control, shift, system)
         {
             Relative = relative;
             Speed = speed;
@@ -201,13 +213,15 @@ namespace Robust.Client.UserInterface
         public GUIMouseWheelEventArgs(Mouse.Wheel wheelDirection,
             Control sourceControl,
             Mouse.ButtonMask buttonMask,
-            Shared.Maths.Vector2 globalPosition,
-            Shared.Maths.Vector2 relativePosition,
+            Vector2 globalPosition,
+            Vector2 globalPixelPosition,
+            Vector2 relativePosition,
+            Vector2 relativePixelPosition,
             bool alt,
             bool control,
             bool shift,
             bool system)
-            : base(sourceControl, buttonMask, globalPosition, relativePosition, alt, control, shift, system)
+            : base(sourceControl, buttonMask, globalPosition, globalPixelPosition, relativePosition, relativePixelPosition, alt, control, shift, system)
         {
             WheelDirection = wheelDirection;
         }

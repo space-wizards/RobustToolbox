@@ -11,7 +11,7 @@
     <ApplicationIcon />
     <AssemblyKeyContainerName />
     <AssemblyName>Robust.Server</AssemblyName>
-    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder />
     <RootNamespace>Robust.Server</RootNamespace>
@@ -92,6 +92,7 @@
       <Name>System.Core</Name>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml">
       <Name>System.Xml</Name>
       <Private>False</Private>

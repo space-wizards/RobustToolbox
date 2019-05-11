@@ -176,7 +176,7 @@ namespace Lidgren.Network
 
 			try
 			{
-				var entry = await Task.Factory.FromAsync(Dns.BeginGetHostEntry, Dns.EndGetHostEntry, ipOrHost, null);
+				var entry = await Dns.GetHostEntryAsync(ipOrHost);
 				return entry.AddressList;
 			}
 			catch (SocketException)

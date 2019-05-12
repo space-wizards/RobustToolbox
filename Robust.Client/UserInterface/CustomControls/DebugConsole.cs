@@ -8,7 +8,6 @@ using Robust.Client.Input;
 using Robust.Client.Interfaces.Console;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.Utility;
-using Robust.Shared.Console;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -92,18 +91,11 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public void Toggle()
         {
-            var focus = CommandBar.HasKeyboardFocus();
             Visible = !Visible;
             if (Visible)
             {
                 CommandBar.IgnoreNext = true;
                 CommandBar.GrabKeyboardFocus();
-            }
-            else if (focus)
-            {
-                // We manually need to call this.
-                // See https://github.com/godotengine/godot/pull/15074
-                UserInterfaceManagerInternal.GDFocusExited(CommandBar);
             }
         }
 

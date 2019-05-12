@@ -371,19 +371,6 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public void GDPreKeyDown(KeyEventArgs args)
-        {
-            if (args.Key == Keyboard.Key.Quote)
-            {
-                DebugConsole.Toggle();
-                args.Handle();
-            }
-        }
-
-        public void GDPreKeyUp(KeyEventArgs args)
-        {
-        }
-
         public void ControlHidden(Control control)
         {
             // Does the same thing but it could later be changed so..
@@ -488,42 +475,6 @@ namespace Robust.Client.UserInterface
             if (clip)
             {
                 handle.SetScissor(scissorBox);
-            }
-        }
-
-        public void GDUnhandledMouseDown(MouseButtonEventArgs args)
-        {
-            KeyboardFocused?.ReleaseKeyboardFocus();
-        }
-
-        public void GDUnhandledMouseUp(MouseButtonEventArgs args)
-        {
-            //throw new System.NotImplementedException();
-        }
-
-        public void GDFocusEntered(Control control)
-        {
-            KeyboardFocused = control;
-        }
-
-        public void GDFocusExited(Control control)
-        {
-            if (KeyboardFocused == control)
-            {
-                KeyboardFocused = null;
-            }
-        }
-
-        public void GDMouseEntered(Control control)
-        {
-            CurrentlyHovered = control;
-        }
-
-        public void GDMouseExited(Control control)
-        {
-            if (control == CurrentlyHovered)
-            {
-                CurrentlyHovered = null;
             }
         }
 

@@ -92,22 +92,6 @@ namespace Robust.Client.Interfaces.UserInterface
 
         void KeyUp(KeyEventArgs keyEvent);
 
-        void GDUnhandledMouseDown(MouseButtonEventArgs args);
-
-        void GDUnhandledMouseUp(MouseButtonEventArgs args);
-
-        void GDFocusEntered(Control control);
-
-        void GDFocusExited(Control control);
-
-        void GDMouseEntered(Control control);
-
-        void GDMouseExited(Control control);
-
-        void GDPreKeyDown(KeyEventArgs args);
-
-        void GDPreKeyUp(KeyEventArgs args);
-
         void ControlHidden(Control control);
 
         void ControlRemovedFromTree(Control control);

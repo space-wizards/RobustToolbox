@@ -170,8 +170,9 @@ namespace Robust.Client.UserInterface.Controls
 
         private void _onPressed(ButtonEventArgs args)
         {
+            var globalPos = GlobalPosition;
             var (minX, minY) = _popupVBox.CombinedMinimumSize;
-            var box = UIBox2.FromDimensions(0, 0, Math.Max(minX, Width), minY);
+            var box = UIBox2.FromDimensions(globalPos, (Math.Max(minX, Width), minY));
             _popup.Open(box);
         }
 
@@ -189,10 +190,17 @@ namespace Robust.Client.UserInterface.Controls
 
             OnPressed += _onPressed;
             _popup = new Popup();
-            AddChild(_popup);
+            UserInterfaceManager.ModalRoot.AddChild(_popup);
             _popupVBox = new VBoxContainer();
             _popup.AddChild(_popupVBox);
             _popupVBox.SetAnchorAndMarginPreset(LayoutPreset.Wide);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
+            _popup?.Dispose();
         }
 
         public class ItemSelectedEventArgs : EventArgs

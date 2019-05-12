@@ -51,6 +51,7 @@ namespace Robust.Client.UserInterface
         private Control _mouseFocused;
 
         public Control StateRoot { get; private set; }
+        public Control ModalRoot { get; private set; }
         public Control CurrentlyHovered { get; private set; }
         public float UIScale { get; private set; } = 1;
         public Control RootControl { get; private set; }
@@ -117,6 +118,13 @@ namespace Robust.Client.UserInterface
             };
             WindowRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             RootControl.AddChild(WindowRoot);
+
+            ModalRoot = new Control("ModalRoot")
+            {
+                MouseFilter = Control.MouseFilterMode.Ignore,
+            };
+            ModalRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
+            RootControl.AddChild(ModalRoot);
 
             _tooltip = new Tooltip();
             RootControl.AddChild(_tooltip);

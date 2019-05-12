@@ -194,6 +194,17 @@ namespace Robust.Client.UserInterface.Controls
             Unselect(idx);
         }
 
+        public void ClearSelections()
+        {
+            foreach (var item in _itemList)
+            {
+                if (item.Selected)
+                {
+                    Unselect(item);
+                }
+            }
+        }
+
         public Font ActualFont
         {
             get

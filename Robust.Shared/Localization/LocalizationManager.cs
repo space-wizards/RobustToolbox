@@ -20,48 +20,80 @@ namespace Robust.Shared.Localization
 
         public string GetString(string text)
         {
+            if (_defaultCulture == null)
+            {
+                return text;
+            }
             var catalog = _catalogs[_defaultCulture];
             return catalog.GetString(text);
         }
 
         public string GetString(string text, params object[] args)
         {
+            if (_defaultCulture == null)
+            {
+                return string.Format(text, args);
+            }
             var catalog = _catalogs[_defaultCulture];
             return catalog.GetString(text, args);
         }
 
         public string GetParticularString(string context, string text)
         {
+            if (_defaultCulture == null)
+            {
+                return text;
+            }
             var catalog = _catalogs[_defaultCulture];
             return catalog.GetParticularString(context, text);
         }
 
         public string GetParticularString(string context, string text, params object[] args)
         {
+            if (_defaultCulture == null)
+            {
+                return string.Format(text, args);
+            }
             var catalog = _catalogs[_defaultCulture];
             return catalog.GetParticularString(context, text, args);
         }
 
         public string GetPluralString(string text, string pluralText, long n)
         {
+            if (_defaultCulture == null)
+            {
+                return n == 1 ? text : pluralText;
+            }
             var catalog = _catalogs[_defaultCulture];
             return catalog.GetParticularString(text, pluralText, n);
         }
 
         public string GetPluralString(string text, string pluralText, long n, params object[] args)
         {
+            if (_defaultCulture == null)
+            {
+                return string.Format(n == 1 ? text : pluralText, args);
+            }
             var catalog = _catalogs[_defaultCulture];
             return catalog.GetParticularString(text, pluralText, n, args);
         }
 
         public string GetParticularPluralString(string context, string text, string pluralText, long n)
         {
+            if (_defaultCulture == null)
+            {
+                return n == 1 ? text : pluralText;
+            }
             var catalog = _catalogs[_defaultCulture];
             return catalog.GetParticularString(context, text, n, pluralText);
         }
 
         public string GetParticularPluralString(string context, string text, string pluralText, long n, params object[] args)
         {
+            if (_defaultCulture == null)
+            {
+                return string.Format(n == 1 ? text : pluralText, args);
+            }
             var catalog = _catalogs[_defaultCulture];
             return catalog.GetParticularPluralString(context, text, pluralText, n, args);
         }

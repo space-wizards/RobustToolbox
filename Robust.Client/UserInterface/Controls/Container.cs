@@ -55,11 +55,11 @@ namespace Robust.Client.UserInterface.Controls
             var newPosX = box.Left;
             var newSizeX = minX;
 
-            if (child.SizeFlagsHorizontal == SizeFlags.ShrinkEnd)
+            if ((child.SizeFlagsHorizontal & SizeFlags.ShrinkEnd) != 0)
             {
                 newPosX += (box.Width - minX);
             }
-            else if (child.SizeFlagsHorizontal == SizeFlags.ShrinkCenter)
+            else if ((child.SizeFlagsHorizontal & SizeFlags.ShrinkCenter) != 0)
             {
                 newPosX += (box.Width - minX) / 2;
             }
@@ -71,11 +71,11 @@ namespace Robust.Client.UserInterface.Controls
             var newPosY = box.Top;
             var newSizeY = minY;
 
-            if (child.SizeFlagsVertical == SizeFlags.ShrinkEnd)
+            if ((child.SizeFlagsVertical & SizeFlags.ShrinkEnd) != 0)
             {
                 newPosY += (box.Height - minY);
             }
-            else if (child.SizeFlagsVertical == SizeFlags.ShrinkCenter)
+            else if ((child.SizeFlagsVertical & SizeFlags.ShrinkCenter) != 0)
             {
                 newPosY += (box.Height - minY) / 2;
             }

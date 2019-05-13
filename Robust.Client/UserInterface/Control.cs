@@ -1,40 +1,73 @@
-﻿using Robust.Client.Interfaces.UserInterface;
-using Robust.Shared.IoC;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Robust.Shared.Log;
-using Robust.Shared.Interfaces.Reflection;
 using System.Reflection;
-using Robust.Shared.Maths;
-using Robust.Client.Utility;
-using Robust.Client.Graphics.Drawing;
-using Robust.Shared.Utility;
-using Robust.Client.Interfaces.ResourceManagement;
-using System.IO;
-using System.Linq;
 using JetBrains.Annotations;
-using Robust.Client.Graphics;
-using Robust.Client.Interfaces.Input;
+using Robust.Client.Graphics.Drawing;
+using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.ResourceManagement.ResourceTypes;
-using Robust.Client.UserInterface.Controls;
+using Robust.Client.Utility;
+using Robust.Shared.Interfaces.Reflection;
+using Robust.Shared.IoC;
+using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface
 {
     /// <summary>
     ///     A node in the GUI system.
-    ///     NOTE: For docs, most of these are direct proxies to Godot's Control.
-    ///     See the official docs for more help: https://godot.readthedocs.io/en/3.0/classes/class_control.html
+    ///     See https://github.com/space-wizards/RobustToolbox/wiki/UI-System-Tutorial for some basic concepts.
     /// </summary>
     [PublicAPI]
     [ControlWrap("Control")]
     // ReSharper disable once RequiredBaseTypesIsNotInherited
     public partial class Control : IDisposable
     {
+        private readonly Dictionary<string, (Control, int orderedIndex)> _children =
+            new Dictionary<string, (Control, int)>();
+
+        private readonly List<Control> _orderedChildren = new List<Control>();
+
+        private string _name;
+
+        private float _anchorBottom;
+        private float _anchorLeft;
+        private float _anchorRight;
+        private float _anchorTop;
+
+        private float _marginRight;
+        private float _marginLeft;
+        private float _marginTop;
+        private float _marginBottom;
+
+        private bool _visible = true;
+
+        private Vector2 _position;
+        // _marginSetSize is the size calculated by the margins,
+        // but it's different from _size if min size is higher.
+        private Vector2 _sizeByMargins;
+        private Vector2 _size;
+
+        private bool _canKeyboardFocus;
+
+        private float _sizeFlagsStretchRatio = 1;
+
+        private Vector2? _calculatedMinimumSize;
+        private Vector2 _customMinimumSize;
+
+        private Dictionary<string, (object value, GodotAssetScene source)>
+            _toApplyPropertyMapping;
+
+        private static Dictionary<string, Type> _manualNodeTypeTranslations;
+
+        public event Action<Control> OnMinimumSizeChanged;
+        public event Action<Control> OnVisibilityChanged;
+
         /// <summary>
         ///     The name of this control.
-        ///     Names must be unique between the control's siblings.
+        ///     Names must be unique between the siblings of the control.
         /// </summary>
         [ViewVariables]
         public string Name
@@ -73,8 +106,12 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private string _name;
-
+        /// <summary>
+        ///     Our parent inside the control tree.
+        /// </summary>
+        /// <remarks>
+        ///     This cannot be changed directly. Use <see cref="AddChild" /> and such on the parent to change it.
+        /// </remarks>
         [ViewVariables]
         public Control Parent { get; private set; }
 
@@ -86,13 +123,12 @@ namespace Robust.Client.UserInterface
         public IUserInterfaceManager UserInterfaceManager => UserInterfaceManagerInternal;
 
         /// <summary>
-        ///     Gets an enumerable over all the children of this control.
+        ///     Gets an ordered enumerable over all the children of this control.
         /// </summary>
         [ViewVariables]
         public OrderedChildEnumerable Children => new OrderedChildEnumerable(this);
 
-        [ViewVariables]
-        public int ChildCount => _orderedChildren.Count;
+        [ViewVariables] public int ChildCount => _orderedChildren.Count;
 
         /// <summary>
         ///     Path to the .tscn file for this scene in the VFS.
@@ -101,11 +137,19 @@ namespace Robust.Client.UserInterface
         /// </summary>
         protected virtual ResourcePath ScenePath => null;
 
-        public const float ANCHOR_BEGIN = 0;
-        public const float ANCHOR_END = 1;
+        /// <summary>
+        ///     The value of an anchor that is exactly on the begin of the parent control.
+        /// </summary>
+        public const float AnchorBegin = 0;
 
-        private float _anchorBottom;
+        /// <summary>
+        ///     The value of an anchor that is exactly on the end of the parent control.
+        /// </summary>
+        public const float AnchorEnd = 1;
 
+        /// <summary>
+        ///     Specifies the anchor of the bottom edge of the control.
+        /// </summary>
         [ViewVariables]
         public float AnchorBottom
         {
@@ -117,8 +161,9 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private float _anchorLeft;
-
+        /// <summary>
+        ///     Specifies the anchor of the left edge of the control.
+        /// </summary>
         [ViewVariables]
         public float AnchorLeft
         {
@@ -130,8 +175,9 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private float _anchorRight;
-
+        /// <summary>
+        ///     Specifies the anchor of the right edge of the control.
+        /// </summary>
         [ViewVariables]
         public float AnchorRight
         {
@@ -143,8 +189,9 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private float _anchorTop;
-
+        /// <summary>
+        ///     Specifies the anchor of the top edge of the control.
+        /// </summary>
         [ViewVariables]
         public float AnchorTop
         {
@@ -156,8 +203,9 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private float _marginRight;
-
+        /// <summary>
+        ///     Specifies the margin of the right edge of the control.
+        /// </summary>
         [ViewVariables]
         public float MarginRight
         {
@@ -169,8 +217,9 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private float _marginLeft;
-
+        /// <summary>
+        ///     Specifies the margin of the left edge of the control.
+        /// </summary>
         [ViewVariables]
         public float MarginLeft
         {
@@ -182,8 +231,9 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private float _marginTop;
-
+        /// <summary>
+        ///     Specifies the margin of the top edge of the control.
+        /// </summary>
         [ViewVariables]
         public float MarginTop
         {
@@ -195,8 +245,9 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private float _marginBottom;
-
+        /// <summary>
+        ///     Specifies the margin of the bottom edge of the control.
+        /// </summary>
         [ViewVariables]
         public float MarginBottom
         {
@@ -208,6 +259,11 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        ///     Gets whether this control is at all visible.
+        ///     This means the control is part of the tree of the root control, and all of its parents are visible.
+        /// </summary>
+        /// <seealso cref="Visible"/>
         [ViewVariables]
         public bool VisibleInTree
         {
@@ -230,8 +286,11 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private bool _visible = true;
 
+        /// <summary>
+        ///     Whether or not this control and its children are visible.
+        /// </summary>
+        /// <seealso cref="VisibleInTree"/>
         [ViewVariables]
         public bool Visible
         {
@@ -242,6 +301,7 @@ namespace Robust.Client.UserInterface
                 {
                     return;
                 }
+
                 _visible = value;
 
                 _propagateVisibilityChanged(value);
@@ -265,6 +325,10 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        ///     Whether or not this control is an (possibly indirect) child of
+        ///     <see cref="IUserInterfaceManager.RootControl"/>
+        /// </summary>
         public bool IsInsideTree { get; internal set; }
 
         private void _propagateExitTree()
@@ -278,9 +342,12 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        ///     Called when the control is removed from the root control tree.
+        /// </summary>
+        /// <seealso cref="EnteredTree"/>
         protected virtual void ExitedTree()
         {
-
         }
 
         private void _exitedTree()
@@ -300,9 +367,12 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        ///     Called when the control enters the root control tree.
+        /// </summary>
+        /// <seealso cref="ExitedTree"/>
         protected virtual void EnteredTree()
         {
-
         }
 
         private void _enteredTree()
@@ -310,18 +380,26 @@ namespace Robust.Client.UserInterface
             EnteredTree();
         }
 
+        /// <summary>
+        ///     Called when the <see cref="UIScale"/> for this control changes.
+        /// </summary>
         protected internal virtual void UIScaleChanged()
         {
             MinimumSizeChanged();
         }
 
+        /// <summary>
+        ///     The amount of "real" pixels a virtual pixel takes up.
+        ///     The higher the number, the bigger the interface.
+        /// </summary>
         protected float UIScale => UserInterfaceManager.UIScale;
 
-        // _marginSetSize is the size calculated by the margins,
-        // but it's different from _size if min size is higher.
-        private Vector2 _sizeByMargins;
-        private Vector2 _size;
-
+        /// <summary>
+        ///     The size of this control, in virtual pixels.
+        /// </summary>
+        /// <seealso cref="PixelSize"/>
+        /// <seealso cref="Width"/>
+        /// <seealso cref="Height"/>
         [ViewVariables]
         public Vector2 Size
         {
@@ -335,20 +413,54 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        [ViewVariables]
-        public Vector2i PixelSize => (Vector2i) (_size * UserInterfaceManager.UIScale);
+        /// <summary>
+        ///     The size of this control, in physical pixels.
+        /// </summary>
+        [ViewVariables] public Vector2i PixelSize => (Vector2i) (_size * UserInterfaceManager.UIScale);
 
+        /// <summary>
+        ///     A <see cref="UIBox2"/> with the top left at 0,0 and the size equal to <see cref="Size"/>.
+        /// </summary>
+        /// <seealso cref="PixelSizeBox"/>
         public UIBox2 SizeBox => new UIBox2(Vector2.Zero, Size);
+
+        /// <summary>
+        ///     A <see cref="UIBox2i"/> with the top left at 0,0 and the size equal to <see cref="PixelSize"/>.
+        /// </summary>
+        /// <seealso cref="SizeBox"/>
         public UIBox2i PixelSizeBox => new UIBox2i(Vector2i.Zero, PixelSize);
 
+        /// <summary>
+        ///     The width of the control, in virtual pixels.
+        /// </summary>
+        /// <seealso cref="PixelWidth"/>
         public float Width => Size.X;
+
+        /// <summary>
+        ///     The height of the control, in virtual pixels.
+        /// </summary>
+        /// <seealso cref="PixelHeight"/>
         public float Height => Size.Y;
 
+        /// <summary>
+        ///     The width of the control, in physical pixels.
+        /// </summary>
+        /// <seealso cref="Width"/>
         public int PixelWidth => PixelSize.X;
+
+        /// <summary>
+        ///     The height of the control, in physical pixels.
+        /// </summary>
+        /// <seealso cref="Height"/>
         public int PixelHeight => PixelSize.Y;
 
-        private Vector2 _position;
 
+        /// <summary>
+        ///     The position of the top left corner of the control, in virtual pixels.
+        ///     This is relative to the position of the parent.
+        /// </summary>
+        /// <seealso cref="PixelPosition"/>
+        /// <seealso cref="GlobalPosition"/>
         [ViewVariables]
         public Vector2 Position
         {
@@ -364,9 +476,18 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        [ViewVariables]
-        public Vector2i PixelPosition => (Vector2i)(_position * UserInterfaceManager.UIScale);
+        /// <summary>
+        ///     The position of the top left corner of the control, in physical pixels.
+        /// </summary>
+        /// <seealso cref="Position"/>
+        [ViewVariables] public Vector2i PixelPosition => (Vector2i) (_position * UserInterfaceManager.UIScale);
 
+        /// <summary>
+        ///     The position of the top left corner of the control, in virtual pixels.
+        ///     This is not relative to the parent.
+        /// </summary>
+        /// <seealso cref="GlobalPosition"/>
+        /// <seealso cref="Position"/>
         [ViewVariables]
         public Vector2 GlobalPosition
         {
@@ -384,6 +505,11 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        ///     The position of the top left corner of the control, in physical pixels.
+        ///     This is not relative to the parent.
+        /// </summary>
+        /// <seealso cref="GlobalPosition"/>
         [ViewVariables]
         public Vector2i GlobalPixelPosition
         {
@@ -401,16 +527,36 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        ///     Represents the "rectangle" of the control relative to the parent, in virtual pixels.
+        /// </summary>
+        /// <seealso cref="PixelRect"/>
         public UIBox2 Rect => UIBox2.FromDimensions(_position, _size);
+
+        /// <summary>
+        ///     Represents the "rectangle" of the control relative to the parent, in physical pixels.
+        /// </summary>
+        /// <seealso cref="Rect"/>
         public UIBox2i PixelRect => UIBox2i.FromDimensions(PixelPosition, PixelSize);
 
+        /// <summary>
+        ///     The tooltip that is shown when the mouse is hovered over this control for a bit.
+        /// </summary>
+        /// <remarks>
+        ///     If empty or null, no tooltip is shown in the first place.
+        /// </remarks>
         public string ToolTip { get; set; }
 
-        [ViewVariables]
-        public MouseFilterMode MouseFilter { get; set; } = MouseFilterMode.Stop;
+        /// <summary>
+        ///     The mode that controls how mouse filtering works. See the enum for how it functions.
+        /// </summary>
+        [ViewVariables] public MouseFilterMode MouseFilter { get; set; } = MouseFilterMode.Stop;
 
-        private bool _canKeyboardFocus;
-
+        /// <summary>
+        ///     Whether this control can take keyboard focus.
+        ///     Keyboard focus is necessary for the control to receive keyboard events.
+        /// </summary>
+        /// <seealso cref="KeyboardFocusOnClick"/>
         [ViewVariables]
         public bool CanKeyboardFocus
         {
@@ -431,13 +577,31 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        ///     Whether the control will automatically receive keyboard focus (if possible) when clicked on.
+        /// </summary>
+        /// <remarks>
+        ///     Obviously, <see cref="CanKeyboardFocus"/> must be set to true for this to work.
+        /// </remarks>
         public bool KeyboardFocusOnClick { get; set; }
 
-        [ViewVariables]
-        public SizeFlags SizeFlagsHorizontal { get; set; } = SizeFlags.Fill;
+        /// <summary>
+        ///     Horizontal size flags for container layout.
+        /// </summary>
+        [ViewVariables] public SizeFlags SizeFlagsHorizontal { get; set; } = SizeFlags.Fill;
 
-        private float _sizeFlagsStretchRatio = 1;
+        /// <summary>
+        ///     Vertical size flags for container layout.
+        /// </summary>
+        [ViewVariables] public SizeFlags SizeFlagsVertical { get; set; } = SizeFlags.Fill;
 
+        /// <summary>
+        ///     Stretch ratio used to give shared of the available space in case multiple siblings are set to expand
+        ///     in a container
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     Thrown if the value is less than or equal to 0.
+        /// </exception>
         [ViewVariables]
         public float SizeFlagsStretchRatio
         {
@@ -454,11 +618,15 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        [ViewVariables]
-        public SizeFlags SizeFlagsVertical { get; set; } = SizeFlags.Fill;
-
-        [ViewVariables]
-        public bool RectClipContent { get; set; } = false;
+        /// <summary>
+        ///     Whether to clip drawing of this control and its children to its rectangle.
+        /// </summary>
+        /// <remarks>
+        ///     By default, controls (and their children) can render outside their rectangle.
+        ///     If this is set, rendering is hard clipped to it.
+        /// </remarks>
+        /// <seealso cref="RectDrawClipMargin"/>
+        [ViewVariables] public bool RectClipContent { get; set; }
 
         /// <summary>
         ///     A margin around this control. If this control + this margin is outside its parent's <see cref="RectClipContent" />,
@@ -468,12 +636,36 @@ namespace Robust.Client.UserInterface
         ///     A control rectangle does not necessarily have to be listened to for drawing.
         ///     So the problem is, how do we know where to stop trying to draw the control if it's clipped away?
         /// </remarks>
+        /// <seealso cref="RectClipContent"/>
         public int RectDrawClipMargin { get; set; } = 10;
 
+        // You may wonder why Modulate isn't stylesheet controlled, but ModulateSelf is.
+        // Reason is simple: I'm fucking lazy.
+        // I'm expecting this comment to last much longer than the problem it's pointing out.
+
+        /// <summary>
+        ///     An override for the modulate self from the style sheet.
+        /// </summary>
+        /// <seealso cref="ActualModulateSelf" />
         public Color? ModulateSelfOverride { get; set; }
 
+        /// <summary>
+        ///     Modulates the color of this control and all its children when drawing.
+        /// </summary>
+        /// <remarks>
+        ///     Modulation is multiplying or tinting the color basically.
+        /// </remarks>
         public Color Modulate { get; set; } = Color.White;
 
+        /// <summary>
+        ///     The value used to modulate this control (and not its siblings) with on top of <see cref="Modulate"/>
+        ///     when drawing.
+        /// </summary>
+        /// <remarks>
+        ///     By default this value is pulled from CSS, or <see cref="ModulateSelfOverride"/> if available.
+        ///
+        ///     Modulation is multiplying or tinting the color basically.
+        /// </remarks>
         public Color ActualModulateSelf
         {
             get
@@ -497,6 +689,10 @@ namespace Robust.Client.UserInterface
         ///     Whichever is greater.
         ///     Use this for whenever you need the *actual* minimum size of something.
         /// </summary>
+        /// <remarks>
+        ///     This is in virtual pixels.
+        /// </remarks>
+        /// <seealso cref="CombinedPixelMinimumSize"/>
         [ViewVariables]
         public Vector2 CombinedMinimumSize
         {
@@ -512,10 +708,10 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public Vector2i CombinedPixelMinimumSize => (Vector2i)(CombinedMinimumSize * UIScale);
-
-        private Vector2? _calculatedMinimumSize;
-        private Vector2 _customMinimumSize;
+        /// <summary>
+        ///     The <see cref="CombinedMinimumSize"/>, in physical pixels.
+        /// </summary>
+        public Vector2i CombinedPixelMinimumSize => (Vector2i) (CombinedMinimumSize * UIScale);
 
         /// <summary>
         ///     A custom minimum size. If the control-calculated size is is smaller than this, this is used instead.
@@ -533,23 +729,10 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public bool LayoutLocked => Parent is Container;
-
         private void _updateMinimumSize()
         {
             _calculatedMinimumSize = Vector2.ComponentMax(Vector2.Zero, CalculateMinimumSize());
         }
-
-        public Vector2 GlobalMousePosition =>
-            IoCManager.Resolve<IInputManager>().MouseScreenPosition;
-
-        private readonly Dictionary<string, (Control, int orderedIndex)> _children =
-            new Dictionary<string, (Control, int)>();
-
-        private readonly List<Control> _orderedChildren = new List<Control>();
-
-        public event Action<Control> OnMinimumSizeChanged;
-        public event Action<Control> OnVisibilityChanged;
 
         /// <summary>
         ///     Default constructor.
@@ -601,11 +784,12 @@ namespace Robust.Client.UserInterface
         {
         }
 
+        /// <summary>
+        ///     A bad idea.
+        /// </summary>
         protected virtual void SetDefaults()
         {
         }
-
-        private static Dictionary<string, Type> _manualNodeTypeTranslations;
 
         private void _manualNodeSetup()
         {
@@ -739,9 +923,6 @@ namespace Robust.Client.UserInterface
                 }
             }
         }
-
-        private Dictionary<string, (object value, GodotAssetScene source)>
-            _toApplyPropertyMapping;
 
         private void _applyPropertyMap()
         {
@@ -888,7 +1069,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         /// <param name="context">The asset in which said object is referenced.</param>
         /// <param name="value">
-        ///     The <see cref="GodotAsset.TokenSubResource"/> or <see cref="GodotAsset.TokenExtResource"/>
+        ///     The <see cref="GodotAsset.TokenSubResource" /> or <see cref="GodotAsset.TokenExtResource" />
         /// </param>
         /// <typeparam name="T">
         ///     The expected type of the resource. This is not a godot type but our equivalent.
@@ -942,6 +1123,14 @@ namespace Robust.Client.UserInterface
             return (T) result;
         }
 
+        /// <summary>
+        ///     Called to render this control.
+        /// </summary>
+        /// <remarks>
+        ///     Drawing is done relative to the position of the control.
+        ///     It is also done in pixel space, so you should not directly use properties such as <see cref="Size"/>.
+        /// </remarks>
+        /// <param name="handle">A handle that can be used to draw.</param>
         protected internal virtual void Draw(DrawingHandleScreen handle)
         {
         }
@@ -950,11 +1139,15 @@ namespace Robust.Client.UserInterface
         {
         }
 
+        /// <summary>
+        ///     Called when this modal control is closed.
+        ///     Only used for controls that are actually modals.
+        /// </summary>
         protected internal virtual void ModalRemoved()
         {
         }
 
-        public bool Disposed { get; private set; } = false;
+        public bool Disposed { get; private set; }
 
         /// <summary>
         ///     Dispose this control, its own scene control, and all its children.
@@ -1012,9 +1205,9 @@ namespace Robust.Client.UserInterface
         ///     or the provided component is still parented to a different control.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///    <paramref name="child"/> is <c>null</c>.
+        ///     <paramref name="child" /> is <c>null</c>.
         /// </exception>
-        public void AddChild(Control child, bool LegibleUniqueName = false)
+        public void AddChild(Control child)
         {
             if (child == null) throw new ArgumentNullException(nameof(child));
             if (child.Parent != null)
@@ -1062,9 +1255,14 @@ namespace Robust.Client.UserInterface
             {
                 child._propagateEnterTree();
             }
+
             ChildAdded(child);
         }
 
+        /// <summary>
+        ///     Called after a new child is added to this control.
+        /// </summary>
+        /// <param name="newChild">The new child.</param>
         protected virtual void ChildAdded(Control newChild)
         {
         }
@@ -1109,6 +1307,10 @@ namespace Robust.Client.UserInterface
             ChildRemoved(child);
         }
 
+        /// <summary>
+        ///     Called when a child is removed from this child.
+        /// </summary>
+        /// <param name="child">The former child.</param>
         protected virtual void ChildRemoved(Control child)
         {
         }
@@ -1121,15 +1323,20 @@ namespace Robust.Client.UserInterface
             Restyle();
         }
 
+        /// <summary>
+        ///     Called when the order index of a child changes.
+        /// </summary>
+        /// <param name="child">The child that was changed.</param>
+        /// <param name="oldIndex">The previous index of the child.</param>
+        /// <param name="newIndex">The new index of the child.</param>
         protected virtual void ChildMoved(Control child, int oldIndex, int newIndex)
         {
-
         }
 
         /// <summary>
         ///     Override this to calculate a minimum size for this control.
         ///     Do NOT call this directly to get the minimum size for layout purposes!
-        ///     Use <see cref="GetCombinedMinimumSize" /> for the ACTUAL minimum size.
+        ///     Use <see cref="CombinedMinimumSize" /> for the ACTUAL minimum size.
         /// </summary>
         protected virtual Vector2 CalculateMinimumSize()
         {
@@ -1138,7 +1345,7 @@ namespace Robust.Client.UserInterface
 
         /// <summary>
         ///     Tells the GUI system that the minimum size of this control may have changed,
-        ///     so that say containers will re-sort it.
+        ///     so that say containers will re-sort it if necessary.
         /// </summary>
         public void MinimumSizeChanged()
         {
@@ -1147,6 +1354,12 @@ namespace Robust.Client.UserInterface
             OnMinimumSizeChanged?.Invoke(this);
         }
 
+        /// <summary>
+        ///     Called to test whether this control has a certain point,
+        ///     for the purposes of finding controls under the cursor.
+        /// </summary>
+        /// <param name="point">The relative point, in virtual pixels.</param>
+        /// <returns>True if this control does have the point and should be counted as a hit.</returns>
         protected internal virtual bool HasPoint(Vector2 point)
         {
             // This is effectively the same implementation as the default Godot one in Control.cpp.
@@ -1155,6 +1368,20 @@ namespace Robust.Client.UserInterface
             return point.X >= 0 && point.X <= size.X && point.Y >= 0 && point.Y <= size.Y;
         }
 
+        /// <summary>
+        ///     Gets a child of this control with the specified name.
+        /// </summary>
+        /// <param name="name">
+        ///     The name of the child. This name can use / as delimiter to get grandchildren controls and so on.
+        /// </param>
+        /// <typeparam name="T">The type to cast the found control to, if it is found.</typeparam>
+        /// <returns>The control.</returns>
+        /// <exception cref="KeyNotFoundException">
+        ///     Thrown if the child with the specified name does not exist.
+        /// </exception>
+        /// <exception cref="InvalidCastException">
+        ///     Thrown if the control exists, but it is of the wrong type.
+        /// </exception>
         public T GetChild<T>(string name) where T : Control
         {
             return (T) GetChild(name);
@@ -1162,11 +1389,26 @@ namespace Robust.Client.UserInterface
 
         private static readonly char[] SectionSplitDelimiter = {'/'};
 
+        /// <summary>
+        ///     Gets the immediate child of this control with the specified index.
+        /// </summary>
+        /// <param name="index">The index of the child.</param>
+        /// <returns>The child.</returns>
         public Control GetChild(int index)
         {
             return _orderedChildren[index];
         }
 
+        /// <summary>
+        ///     Gets a child of this control with the specified name.
+        /// </summary>
+        /// <param name="name">
+        ///     The name of the child. This name can use / as delimiter to get grandchildren controls and so on.
+        /// </param>
+        /// <returns>The control.</returns>
+        /// <exception cref="KeyNotFoundException">
+        ///     Thrown if the child with the specified name does not exist.
+        /// </exception>
         public Control GetChild(string name)
         {
             if (name.IndexOf('/') != -1)
@@ -1188,6 +1430,10 @@ namespace Robust.Client.UserInterface
             throw new KeyNotFoundException($"No child UI element {name}");
         }
 
+        /// <summary>
+        ///     Try-get version of <see cref="GetChild{T}"/>.
+        ///     Note that it still throws if the node is found but the type invalid.
+        /// </summary>
         public bool TryGetChild<T>(string name, out T child) where T : Control
         {
             if (_children.TryGetValue(name, out var control))
@@ -1200,6 +1446,9 @@ namespace Robust.Client.UserInterface
             return false;
         }
 
+        /// <summary>
+        ///     Try-get version of <see cref="GetChild(string)"/>.
+        /// </summary>
         public bool TryGetChild(string name, out Control child)
         {
             if (_children.TryGetValue(name, out var childEntry))
@@ -1212,11 +1461,21 @@ namespace Robust.Client.UserInterface
             return false;
         }
 
+        /// <summary>
+        ///     See if this control has an immediate child with the specified name.
+        /// </summary>
         public bool HasChild(string name)
         {
             return _children.ContainsKey(name);
         }
 
+        /// <summary>
+        ///     Gets the "index" in the parent.
+        ///     This index is used for ordering of actions like input and drawing among siblings.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        ///     Thrown if this control has no parent.
+        /// </exception>
         public int GetPositionInParent()
         {
             if (Parent == null)
@@ -1269,42 +1528,62 @@ namespace Robust.Client.UserInterface
         /// <exception cref="InvalidOperationException">This control has no parent.</exception>
         public void SetPositionLast()
         {
-            SetPositionInParent(Parent.ChildCount-1);
+            SetPositionInParent(Parent.ChildCount - 1);
         }
 
         /// <summary>
-        ///     Called when this control receives focus.
+        ///     Called when this control receives keyboard focus.
         /// </summary>
         protected internal virtual void FocusEntered()
         {
         }
 
         /// <summary>
-        ///     Called when this control loses focus.
+        ///     Called when this control loses keyboard focus.
         /// </summary>
         protected internal virtual void FocusExited()
         {
         }
 
+        /// <summary>
+        ///     Check if this control currently has keyboard focus.
+        /// </summary>
+        /// <returns></returns>
         public bool HasKeyboardFocus()
         {
             return UserInterfaceManager.KeyboardFocused == this;
         }
 
+        /// <summary>
+        ///     Grab keyboard focus if this control doesn't already have it.
+        /// </summary>
+        /// <remarks>
+        ///     <see cref="CanKeyboardFocus"/> must be true for this to work.
+        /// </remarks>
         public void GrabKeyboardFocus()
         {
             UserInterfaceManager.GrabKeyboardFocus(this);
         }
 
+        /// <summary>
+        ///     Release keyboard focus from this control if it has it.
+        ///     If a different control has keyboard focus, nothing happens.
+        /// </summary>
         public void ReleaseKeyboardFocus()
         {
             UserInterfaceManager.ReleaseKeyboardFocus(this);
         }
 
+        /// <summary>
+        ///     Called when the size of the control changes.
+        /// </summary>
         protected virtual void Resized()
         {
         }
 
+        /// <summary>
+        ///     Sets an anchor AND a margin preset. This is most likely the method you want.
+        /// </summary>
         public void SetAnchorAndMarginPreset(LayoutPreset preset, LayoutPresetMode mode = LayoutPresetMode.MinSize,
             int margin = 0)
         {
@@ -1314,20 +1593,23 @@ namespace Robust.Client.UserInterface
 
         /// <summary>
         ///     Changes all the anchors of a node at once to common presets.
+        ///     The result is that the anchors are laid out to be suitable for a preset.
         /// </summary>
         /// <param name="preset">
         ///     The preset to apply to the anchors.
         /// </param>
         /// <param name="keepMargin">
-        ///     If this is true, the control margins themselves will not be changed,
-        ///     and the control position will change according to the new anchor parameters.
-        ///     If false, the control margins will adjust so that the control position remains the same relative to its parent.
+        ///     If this is true, the control margin values themselves will not be changed,
+        ///     and the control position and size will change according to the new anchor parameters.
+        ///     If false, the control margins will adjust so that the control position and size remains the same relative to its parent.
         /// </param>
         /// <exception cref="ArgumentOutOfRangeException">
-        ///     Thrown if <paramref name="preset"/> isn't a valid preset value.
+        ///     Thrown if <paramref name="preset" /> isn't a valid preset value.
         /// </exception>
         public void SetAnchorPreset(LayoutPreset preset, bool keepMargin = false)
         {
+            // TODO: Implement keepMargin.
+
             // Left Anchor.
             switch (preset)
             {
@@ -1445,6 +1727,10 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        ///     Changes all the margins of a control at once to common presets.
+        ///     The result is that the control is laid out as specified by the preset.
+        /// </summary>
         /// <param name="preset"></param>
         /// <param name="resizeMode"></param>
         /// <param name="margin">Some extra margin to add depending on the preset chosen.</param>
@@ -1606,7 +1892,7 @@ namespace Robust.Client.UserInterface
             Wide = 15,
         }
 
-        /// <seealso cref="Control.SetMarginsPreset"/>
+        /// <seealso cref="Control.SetMarginsPreset" />
         [Flags]
         [PublicAPI]
         public enum LayoutPresetMode : byte
@@ -1640,7 +1926,7 @@ namespace Robust.Client.UserInterface
         public enum SizeFlags : byte
         {
             /// <summary>
-            ///     Do not resize inside containers.
+            ///     Shrink to the begin of the specified axis.
             /// </summary>
             None = 0,
 
@@ -1651,7 +1937,7 @@ namespace Robust.Client.UserInterface
 
             /// <summary>
             ///     Fill as much space as possible in a container, pushing other nodes.
-            ///     The ratio of pushing if there's multiple set to expand is depenent on <see cref="SizeFlagsStretchRatio" />
+            ///     The ratio of pushing if there's multiple set to expand is dependant on <see cref="SizeFlagsStretchRatio" />
             /// </summary>
             Expand = 2,
 
@@ -1699,7 +1985,6 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     This is called before every render frame.
         /// </summary>
-        /// <param name="args"></param>
         protected virtual void FrameUpdate(RenderFrameEventArgs args)
         {
         }
@@ -1735,7 +2020,7 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
-        ///     Updates the indices stored inside <see cref="_children"/>.
+        ///     Updates the indices stored inside <see cref="_children" />.
         /// </summary>
         private void _updateChildIndices()
         {
@@ -1770,9 +2055,7 @@ namespace Robust.Client.UserInterface
         public CursorShape DefaultCursorShape
         {
             get => default;
-            set
-            {
-            }
+            set { }
         }
 
         public override string ToString()
@@ -1788,12 +2071,13 @@ namespace Robust.Client.UserInterface
             /// <summary>
             ///     The control will be able to receive mouse buttons events.
             ///     Furthermore, if a control with this mode does get clicked,
-            ///     the event automatically gets marked as handled.
+            ///     the event automatically gets marked as handled after every other candidate has been tried,
+            ///     so that the rest of the game does not receive it.
             /// </summary>
             Pass = 1,
 
             /// <summary>
-            ///     The control will be able to receive mouse button events like <see cref="Pass"/>,
+            ///     The control will be able to receive mouse button events like <see cref="Pass" />,
             ///     but the event will be stopped and handled even if the relevant events do not handle it.
             /// </summary>
             Stop = 0,

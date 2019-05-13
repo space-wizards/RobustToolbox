@@ -102,7 +102,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void OnSpawnTilesButtonClicked(BaseButton.ButtonEventArgs args)
         {
-            var window = new TileSpawnWindow(__tileDefinitionManager, _placementManager, _displayManager);
+            var window = new TileSpawnWindow(__tileDefinitionManager, _placementManager, _displayManager, _resourceCache);
             window.AddToScreen();
             window.OpenToLeft();
         }

@@ -5,44 +5,62 @@ using Robust.Shared.Interfaces.Map;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Client.Graphics;
 using Robust.Client.Interfaces.Graphics;
+using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.ResourceManagement;
+using Robust.Shared.Interfaces.Resources;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
     internal class TileSpawnWindow : SS14Window
     {
-        protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Placement/TileSpawnPanel.tscn");
-
         private readonly ITileDefinitionManager __tileDefinitionManager;
         private readonly IPlacementManager _placementManager;
+        private readonly IResourceCache _resourceCache;
 
-        private Control TileList;
+        private ItemList TileList;
         private LineEdit SearchBar;
         private Button ClearButton;
 
-        private TileSpawnButton SelectedButton;
+        private List<ITileDefinition> _shownItems;
+
+        private bool _clearingSelections;
+
+        protected override Vector2? CustomSize => (300, 300);
 
         public TileSpawnWindow(ITileDefinitionManager tileDefinitionManager, IPlacementManager placementManager,
-            IDisplayManager displayManager) : base(displayManager)
+            IDisplayManager displayManager, IResourceCache resourceCache) : base(displayManager)
         {
             __tileDefinitionManager = tileDefinitionManager;
             _placementManager = placementManager;
+            _resourceCache = resourceCache;
 
             PerformLayout();
+
+            Title = "Place Tiles";
         }
 
         private void PerformLayout()
         {
-            // Get all the controls.
-            var HSplitContainer = Contents.GetChild("HSplitContainer");
-            TileList = HSplitContainer.GetChild("TileListScrollContainer").GetChild("TileList");
-            var options = HSplitContainer.GetChild("Options");
-            SearchBar = options.GetChild<LineEdit>("SearchBar");
+            var vBox = new VBoxContainer();
+            Contents.AddChild(vBox);
+            var hBox = new HBoxContainer();
+            vBox.AddChild(hBox);
+            SearchBar = new LineEdit {PlaceHolder = "Search", SizeFlagsHorizontal = SizeFlags.FillExpand};
             SearchBar.OnTextChanged += OnSearchBarTextChanged;
+            hBox.AddChild(SearchBar);
 
-            ClearButton = options.GetChild<Button>("ClearButton");
+            ClearButton = new Button {Text = "Clear"};
             ClearButton.OnPressed += OnClearButtonPressed;
+            hBox.AddChild(ClearButton);
+
+            TileList = new ItemList {SizeFlagsVertical = SizeFlags.FillExpand};
+            TileList.OnItemSelected += TileListOnOnItemSelected;
+            TileList.OnItemDeselected += TileListOnOnItemDeselected;
+            vBox.AddChild(TileList);
 
             BuildTileList();
 
@@ -72,78 +90,61 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void BuildTileList(string searchStr = null)
         {
-            TileList.DisposeAllChildren();
+            TileList.Clear();
 
             IEnumerable<ITileDefinition> tileDefs = __tileDefinitionManager;
 
             if (!string.IsNullOrEmpty(searchStr))
             {
-                tileDefs = tileDefs.Where(s => s.DisplayName.IndexOf(searchStr, StringComparison.InvariantCultureIgnoreCase) >= 0);
+                tileDefs = tileDefs.Where(s =>
+                    s.DisplayName.IndexOf(searchStr, StringComparison.InvariantCultureIgnoreCase) >= 0 ||
+                    s.Name.IndexOf(searchStr, StringComparison.OrdinalIgnoreCase) >= 0);
             }
 
-            foreach (var entry in tileDefs)
+            tileDefs = tileDefs.OrderBy(d => d.DisplayName);
+
+            _shownItems = tileDefs.ToList();
+
+            foreach (var entry in _shownItems)
             {
-                var button = new TileSpawnButton()
+                Texture texture = null;
+                if (!string.IsNullOrEmpty(entry.SpriteName))
                 {
-                    TileDef = entry,
-                };
-                button.ActualButton.Text = entry.DisplayName;
-                button.ActualButton.OnToggled += OnItemButtonToggled;
-
-                TileList.AddChild(button);
-            }
-        }
-
-        private class TileSpawnButton : PanelContainer
-        {
-            public ITileDefinition TileDef { get; set; }
-            public Button ActualButton { get; private set; }
-
-            protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Placement/TileSpawnItem.tscn");
-
-            protected override void Initialize()
-            {
-                base.Initialize();
-
-                ActualButton = GetChild<Button>("Button");
+                    texture = _resourceCache.GetResource<TextureResource>($"/Textures/Tiles/{entry.SpriteName}.png");
+                }
+                TileList.AddItem(entry.DisplayName, texture);
             }
         }
 
         private void OnPlacementCanceled(object sender, EventArgs e)
         {
-            if (SelectedButton != null)
-            {
-                SelectedButton.ActualButton.Pressed = false;
-                SelectedButton = null;
-            }
+            _clearingSelections = true;
+            TileList.ClearSelections();
+            _clearingSelections = false;
         }
-
-        private void OnItemButtonToggled(BaseButton.ButtonToggledEventArgs args)
+        private void TileListOnOnItemSelected(ItemList.ItemListSelectedEventArgs args)
         {
-            var item = (TileSpawnButton)args.Button.Parent;
-            if (SelectedButton == item)
-            {
-                SelectedButton = null;
-                _placementManager.Clear();
-                return;
-            }
-            else if (SelectedButton != null)
-            {
-                SelectedButton.ActualButton.Pressed = false;
-            }
-
-            SelectedButton = null;
+            var definition = _shownItems[args.ItemIndex];
 
             var newObjInfo = new PlacementInformation
             {
                 PlacementOption = "AlignTileAny",
-                TileType = item.TileDef.TileId,
+                TileType = definition.TileId,
                 Range = 400,
                 IsTile = true
             };
 
             _placementManager.BeginPlacing(newObjInfo);
-            SelectedButton = item;
+        }
+
+        private void TileListOnOnItemDeselected(ItemList.ItemListDeselectedEventArgs args)
+        {
+            if (_clearingSelections)
+            {
+                return;
+            }
+
+            _placementManager.Clear();
         }
     }
 }

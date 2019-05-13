@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Utility;
@@ -17,7 +18,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyFontColor = "font-color";
         public const string StylePropertyFont = "font";
 
-        private Vector2i? _textDimensionCache;
+        private (int Height, List<int> Widths)? _textDimensionCache;
 
         public Label(string name) : base(name)
         {
@@ -41,11 +42,9 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        [ViewVariables]
-        public AlignMode Align { get; set; }
+        [ViewVariables] public AlignMode Align { get; set; }
 
-        [ViewVariables]
-        public VAlignMode VAlign { get; set; }
+        [ViewVariables] public VAlignMode VAlign { get; set; }
 
         public Font FontOverride { get; set; }
 
@@ -107,23 +106,6 @@ namespace Robust.Client.UserInterface.Controls
                 DebugTools.Assert(_textDimensionCache.HasValue);
             }
 
-            int hOffset;
-            switch (Align)
-            {
-                case AlignMode.Left:
-                    hOffset = 0;
-                    break;
-                case AlignMode.Center:
-                case AlignMode.Fill:
-                    hOffset = (PixelSize.X - _textDimensionCache.Value.X) / 2;
-                    break;
-                case AlignMode.Right:
-                    hOffset = PixelSize.X - _textDimensionCache.Value.X;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
             int vOffset;
             switch (VAlign)
             {
@@ -132,10 +114,10 @@ namespace Robust.Client.UserInterface.Controls
                     break;
                 case VAlignMode.Fill:
                 case VAlignMode.Center:
-                    vOffset = (PixelSize.Y - _textDimensionCache.Value.Y) / 2;
+                    vOffset = (PixelSize.Y - _textDimensionCache.Value.Height) / 2;
                     break;
                 case VAlignMode.Bottom:
-                    vOffset = PixelSize.Y - _textDimensionCache.Value.Y;
+                    vOffset = PixelSize.Y - _textDimensionCache.Value.Height;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -143,18 +125,44 @@ namespace Robust.Client.UserInterface.Controls
 
             var newlines = 0;
             var font = ActualFont;
-            var baseLine = new Vector2(hOffset, font.GetAscent(UIScale) + vOffset);
             var actualFontColor = ActualFontColor;
+
+            Vector2 CalcBaseline()
+            {
+                DebugTools.Assert(_textDimensionCache.HasValue);
+
+                int hOffset;
+                switch (Align)
+                {
+                    case AlignMode.Left:
+                        hOffset = 0;
+                        break;
+                    case AlignMode.Center:
+                    case AlignMode.Fill:
+                        hOffset = (PixelSize.X - _textDimensionCache.Value.Widths[newlines]) / 2;
+                        break;
+                    case AlignMode.Right:
+                        hOffset = PixelSize.X - _textDimensionCache.Value.Widths[newlines];
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+                return (hOffset, font.GetAscent(UIScale) + font.GetLineHeight(UIScale) * newlines + vOffset);
+            }
+
+            var baseLine = CalcBaseline();
+
             foreach (var chr in _text)
             {
                 if (chr == '\n')
                 {
                     newlines += 1;
-                    baseLine = new Vector2(hOffset, font.GetAscent(UIScale) + font.GetLineHeight(UIScale) * newlines);
+                    baseLine = CalcBaseline();
                 }
 
                 var advance = font.DrawChar(handle, chr, baseLine, UIScale, actualFontColor);
-                baseLine += new Vector2(advance, 0);
+                baseLine += (advance, 0);
             }
         }
 
@@ -182,7 +190,13 @@ namespace Robust.Client.UserInterface.Controls
                 DebugTools.Assert(_textDimensionCache.HasValue);
             }
 
-            return _textDimensionCache.Value;
+            var totalWidth = 0;
+            foreach (var width in _textDimensionCache.Value.Widths)
+            {
+                totalWidth = Math.Max(totalWidth, width);
+            }
+
+            return (totalWidth / UIScale, _textDimensionCache.Value.Height / UIScale);
         }
 
         protected internal override void UIScaleChanged()
@@ -196,20 +210,18 @@ namespace Robust.Client.UserInterface.Controls
         {
             if (_text == null)
             {
-                _textDimensionCache = Vector2i.Zero;
+                _textDimensionCache = (0, new List<int> {0});
                 return;
             }
 
             var font = ActualFont;
             var height = font.GetHeight(UIScale);
-            var maxLineSize = 0;
-            var currentLineSize = 0;
+            var lineSizeList = new List<int> { 0 };
             foreach (var chr in _text)
             {
                 if (chr == '\n')
                 {
-                    maxLineSize = Math.Max(currentLineSize, maxLineSize);
-                    currentLineSize = 0;
+                    lineSizeList.Add(0);
                     height += font.GetLineHeight(UIScale);
                 }
                 else
@@ -220,13 +232,11 @@ namespace Robust.Client.UserInterface.Controls
                         continue;
                     }
 
-                    currentLineSize += metrics.Value.Advance;
+                    lineSizeList[lineSizeList.Count-1] += metrics.Value.Advance;
                 }
             }
 
-            maxLineSize = Math.Max(currentLineSize, maxLineSize);
-
-            _textDimensionCache = (Vector2i)(new Vector2(maxLineSize, height) / UIScale);
+            _textDimensionCache = (height, lineSizeList);
         }
 
         protected override void StylePropertiesChanged()

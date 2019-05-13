@@ -26,7 +26,7 @@ namespace Robust.Client.UserInterface.Controls
             var left = MarginLeftOverride ?? 0;
             var right = MarginRightOverride ?? 0;
 
-            var box = new UIBox2(left, top, Width - right - left, Height - bottom - top);
+            var box = UIBox2.FromDimensions(left, top, Width - right - left, Height - bottom - top);
 
             foreach (var child in Children)
             {
@@ -48,7 +48,7 @@ namespace Robust.Client.UserInterface.Controls
                 childMinSize = Vector2.ComponentMax(child.CombinedMinimumSize, childMinSize);
             }
 
-            return (childMinSize.X + left + right, childMinSize.Y + top + bottom);
+            return childMinSize + (left + right, top + bottom);
         }
 
         private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)

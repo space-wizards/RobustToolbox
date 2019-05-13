@@ -1,4 +1,5 @@
 using System.Globalization;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.Localization
 {
@@ -16,6 +17,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         ///     Version of <see cref="GetString(string)"/> that also runs string formatting.
         /// </summary>
+        [StringFormatMethod("text")]
         string GetString(string text, params object[] args);
 
         /// <summary>
@@ -26,14 +28,17 @@ namespace Robust.Shared.Localization
         /// <summary>
         ///     Gets a string inside a context or category with formatting.
         /// </summary>
+        [StringFormatMethod("text")]
         string GetParticularString(string context, string text, params object[] args);
 
         string GetPluralString(string text, string pluralText, long n);
 
+        [StringFormatMethod("text")]
         string GetPluralString(string text, string pluralText, long n, params object[] args);
 
         string GetParticularPluralString(string context, string text, string pluralText, long n);
 
+        [StringFormatMethod("text")]
         string GetParticularPluralString(string context, string text, string pluralText, long n, params object[] args);
 
         /// <summary>

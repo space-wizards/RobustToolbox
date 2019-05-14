@@ -112,7 +112,7 @@ namespace Robust.Client.Graphics.Drawing
         /// </summary>
         public Vector2 GetContentOffset(Vector2 basePosition)
         {
-            return new Vector2(GetContentMargin(Margin.Left), GetContentMargin(Margin.Top));
+            return basePosition + (GetContentMargin(Margin.Left), GetContentMargin(Margin.Top));
         }
 
         /// <summary>

@@ -64,6 +64,7 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
+            _updateScrollbarVisibility();
         }
 
         public void AddItem(string text, Texture icon = null, bool selectable = true)
@@ -478,6 +479,11 @@ namespace Robust.Client.UserInterface.Controls
              RecalculateContentHeight();
 
              base.UIScaleChanged();
+        }
+
+        private void _updateScrollbarVisibility()
+        {
+            _scrollBar.Visible = _totalContentHeight + ActualBackground.MinimumSize.Y > PixelHeight;
         }
 
         public sealed class Item

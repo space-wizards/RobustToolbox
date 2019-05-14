@@ -321,27 +321,28 @@ namespace Robust.Client.UserInterface.Controls
                 itemHeight = Math.Max(itemHeight, ActualFont.GetHeight(UIScale));
                 itemHeight += ActualItemBackground.MinimumSize.Y;
 
-                item.Region = UIBox2.FromDimensions((0, offset), (PixelWidth, itemHeight));
+                item.Region = UIBox2.FromDimensions(0, offset, PixelWidth, itemHeight);
 
                 bg.Draw(handle, item.Region.Value);
 
+                var contentBox = bg.GetContentBox(item.Region.Value);
+                var drawOffset = contentBox.TopLeft;
                 if (item.Icon != null)
                 {
                     if (item.IconRegion.Size == Vector2.Zero)
                     {
-                        handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions((0, offset), item.Icon.Size), false, item.IconModulate, item.IconTranspose);
+                        handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size), false, item.IconModulate, item.IconTranspose);
                     }
                     else
                     {
-                        handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions((0, offset), item.Icon.Size), item.IconRegion, item.IconModulate);
+                        handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size), item.IconRegion, item.IconModulate);
                     }
                 }
 
                 if (item.Text != null)
                 {
-                    DrawTextInternal(handle, item.Text,
-                        UIBox2.FromDimensions((item.IconSize.X, offset), (PixelWidth-item.IconSize.X,font.GetHeight(UIScale)))
-                        );
+                    var textBox = new UIBox2(contentBox.Left + item.IconSize.X, contentBox.Top, contentBox.Right, contentBox.Bottom);
+                    DrawTextInternal(handle, item.Text, textBox);
                 }
 
                 offset += itemHeight;

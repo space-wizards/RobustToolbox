@@ -198,10 +198,10 @@ namespace Robust.Client.Player
                 }
             }
 
-            foreach (var existing in hitSet)
+            foreach (var existing in _sessions.Keys.ToArray())
             {
                 // clear slot, player left
-                if (!_sessions.ContainsKey(existing))
+                if (!hitSet.Contains(existing))
                 {
                     DebugTools.Assert(LocalPlayer.SessionId != existing, "I'm still connected to the server, but i left?");
                     _sessions.Remove(existing);

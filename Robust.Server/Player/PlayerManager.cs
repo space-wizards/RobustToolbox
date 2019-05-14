@@ -312,6 +312,8 @@ namespace Robust.Server.Player
             {
                 _sessionsLock.ExitWriteLock();
             }
+
+            Dirty();
         }
 
         private void HandleWelcomeMessageReq(MsgServerInfoReq message)

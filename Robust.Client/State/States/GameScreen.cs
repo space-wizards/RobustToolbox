@@ -5,7 +5,6 @@ using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.Placement;
 using Robust.Client.Interfaces.UserInterface;
-using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.GameObjects;
@@ -13,15 +12,10 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Client.Console;
 using Robust.Client.GameObjects.EntitySystems;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Player;
-using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.Prototypes;
 
 namespace Robust.Client.State.States
 {
@@ -39,58 +33,20 @@ namespace Robust.Client.State.States
         [Dependency] private readonly IEyeManager eyeManager;
         [Dependency] private readonly IEntitySystemManager entitySystemManager;
         [Dependency] private readonly IGameTiming timing;
-        [Dependency] private readonly IClientConsole _console;
-        [Dependency] private readonly IPrototypeManager prototypeManager;
-        [Dependency] private readonly IResourceCache resourceCache;
-        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
-        [Dependency] private readonly IDisplayManager _displayManager;
-        [Dependency] private readonly IConfigurationManager _configurationManager;
         [Dependency] private readonly IMapManager _mapManager;
 
-        private EscapeMenu escapeMenu;
         private IEntity lastHoveredEntity;
 
         public override void Startup()
         {
             inputManager.KeyBindStateChanged += OnKeyBindStateChanged;
-
-            escapeMenu = new EscapeMenu(_displayManager,_console, _tileDefinitionManager,
-                placementManager, prototypeManager, resourceCache, _configurationManager)
-            {
-                Visible = false
-            };
-            escapeMenu.AddToScreen();
-
-            var escapeMenuCommand = InputCmdHandler.FromDelegate(session =>
-            {
-                if (escapeMenu.Visible)
-                {
-                    if (escapeMenu.IsAtFront())
-                    {
-                        escapeMenu.Visible = false;
-                    }
-                    else
-                    {
-                        escapeMenu.MoveToFront();
-                    }
-                }
-                else
-                {
-                    escapeMenu.OpenCentered();
-                }
-            });
-            inputManager.SetInputCommand(EngineKeyFunctions.EscapeMenu, escapeMenuCommand);
         }
 
         public override void Shutdown()
         {
-            escapeMenu.Dispose();
-
             playerManager.LocalPlayer.DetachEntity();
 
             userInterfaceManager.StateRoot.DisposeAllChildren();
-
-            inputManager.SetInputCommand(EngineKeyFunctions.EscapeMenu, null);
 
             inputManager.KeyBindStateChanged -= OnKeyBindStateChanged;
         }

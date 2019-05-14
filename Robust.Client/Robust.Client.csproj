@@ -268,7 +268,6 @@
     <Compile Include="UserInterface\Controls\HBoxContainer.cs" />
     <Compile Include="UserInterface\CustomControls\DebugConsole.cs" />
     <Compile Include="UserInterface\CustomControls\SS14Window.cs" />
-    <Compile Include="UserInterface\CustomControls\EscapeMenu.cs" />
     <Compile Include="UserInterface\CustomControls\FPSCounter.cs" />
     <Compile Include="UserInterface\CustomControls\DebugNetPanel.cs" />
     <Compile Include="UserInterface\CustomControls\OptionsMenu.cs" />

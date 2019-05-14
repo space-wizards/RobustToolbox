@@ -13,7 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    internal class EntitySpawnWindow : SS14Window
+    public sealed class EntitySpawnWindow : SS14Window
     {
         protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Placement/EntitySpawnPanel.tscn");
 

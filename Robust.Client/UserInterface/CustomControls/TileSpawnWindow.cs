@@ -15,7 +15,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    internal class TileSpawnWindow : SS14Window
+    public sealed class TileSpawnWindow : SS14Window
     {
         private readonly ITileDefinitionManager __tileDefinitionManager;
         private readonly IPlacementManager _placementManager;

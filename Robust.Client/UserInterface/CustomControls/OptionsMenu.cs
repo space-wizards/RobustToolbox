@@ -6,7 +6,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    internal sealed class OptionsMenu : SS14Window
+    public sealed class OptionsMenu : SS14Window
     {
         private Button ApplyButton;
         private CheckBox VSyncCheckBox;

@@ -6,10 +6,11 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.State
 {
-    public class StateManager : IStateManager
+    internal sealed class StateManager : IStateManager
     {
         [Dependency] private readonly IDynamicTypeFactory _typeFactory;
 
+        public event Action<StateChangedEventArgs> OnStateChanged;
         public State CurrentState { get; private set; }
 
         #region Updates & Statechanges
@@ -48,10 +49,13 @@ namespace Robust.Client.State
 
             var newState = (State)_typeFactory.CreateInstance(type);
 
+            var old = CurrentState;
             CurrentState?.Shutdown();
 
             CurrentState = newState;
             CurrentState.Startup();
+
+            OnStateChanged?.Invoke(new StateChangedEventArgs(old, CurrentState));
         }
 
         #endregion Updates & Statechanges

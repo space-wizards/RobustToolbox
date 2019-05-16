@@ -13,6 +13,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Player
 {
@@ -47,10 +48,10 @@ namespace Robust.Client.Player
         public int MaxPlayers => _client.GameInfo.ServerMaxPlayers;
 
         /// <inheritdoc />
-        public LocalPlayer LocalPlayer { get; private set; }
+        [ViewVariables] public LocalPlayer LocalPlayer { get; private set; }
 
         /// <inheritdoc />
-        public IEnumerable<IPlayerSession> Sessions => _sessions.Values;
+        [ViewVariables] public IEnumerable<IPlayerSession> Sessions => _sessions.Values;
 
         /// <inheritdoc />
         public IReadOnlyDictionary<NetSessionId, IPlayerSession> SessionsDict => _sessions;

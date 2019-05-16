@@ -38,26 +38,35 @@ namespace Robust.Client.Graphics.Shaders
         /// </summary>
         public Shader Instance()
         {
-            if (_canvasKindInstance != null)
+            switch (Kind)
             {
-                return _canvasKindInstance;
-            }
+                case ShaderKind.Source:
+                    return new Shader(Source.ClydeHandle);
 
-            string source;
-            if (LightMode == LightModeEnum.Unshaded)
-            {
-                source = SourceUnshaded;
-            }
-            else
-            {
-                source = SourceShaded;
-            }
+                case ShaderKind.Canvas:
+                    if (_canvasKindInstance != null)
+                    {
+                        return _canvasKindInstance;
+                    }
 
-            var parsed = ShaderParser.Parse(source);
-            var clyde = IoCManager.Resolve<IClyde>();
-            var instance = new Shader(clyde.LoadShader(parsed));
-            _canvasKindInstance = instance;
-            return instance;
+                    string source;
+                    if (LightMode == LightModeEnum.Unshaded)
+                    {
+                        source = SourceUnshaded;
+                    }
+                    else
+                    {
+                        source = SourceShaded;
+                    }
+
+                    var parsed = ShaderParser.Parse(source);
+                    var clyde = IoCManager.Resolve<IClyde>();
+                    var instance = new Shader(clyde.LoadShader(parsed));
+                    _canvasKindInstance = instance;
+                    return instance;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         public void LoadFrom(YamlMappingNode mapping)

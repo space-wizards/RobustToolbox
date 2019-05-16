@@ -55,7 +55,7 @@ namespace Robust.Client.State.States
 
             _client.RunLevelChanged += RunLevelChanged;
 
-            OptionsMenu = new OptionsMenu(_displayManager, _configurationManager)
+            OptionsMenu = new OptionsMenu(_configurationManager)
             {
                 Visible = false,
             };

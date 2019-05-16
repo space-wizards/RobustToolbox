@@ -1,5 +1,4 @@
 ﻿using Robust.Client.Graphics;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Maths;
@@ -13,13 +12,11 @@ namespace Robust.Client.UserInterface.CustomControls
         private CheckBox FullscreenCheckBox;
         private CheckBox HighResLightsCheckBox;
         private readonly IConfigurationManager configManager;
-        private readonly IDisplayManager _displayManager;
 
         protected override Vector2? CustomSize => (180, 160);
 
-        public OptionsMenu(IDisplayManager displayMan, IConfigurationManager configMan) : base(displayMan)
+        public OptionsMenu(IConfigurationManager configMan)
         {
-            _displayManager = displayMan;
             configManager = configMan;
 
             PerformLayout();

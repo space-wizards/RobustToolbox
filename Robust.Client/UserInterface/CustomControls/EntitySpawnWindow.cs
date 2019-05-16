@@ -48,9 +48,9 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private EntitySpawnButton SelectedButton;
 
-        public EntitySpawnWindow(IDisplayManager displayManager, IPlacementManager placementManager,
+        public EntitySpawnWindow(IPlacementManager placementManager,
             IPrototypeManager prototypeManager,
-            IResourceCache resourceCache) : base(displayManager)
+            IResourceCache resourceCache)
         {
             this.placementManager = placementManager;
             this.prototypeManager = prototypeManager;

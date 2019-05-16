@@ -15,18 +15,19 @@ namespace Robust.Client.UserInterface.CustomControls
         public const string StyleClassWindowHeader = "windowHeader";
         public const string StyleClassWindowCloseButton = "windowCloseButton";
 
-        private readonly IDisplayManager _displayManager;
-
         protected virtual Vector2? CustomSize => null;
 
-        public SS14Window(IDisplayManager displayMan) : base()
+        public SS14Window() {}
+        public SS14Window(string name) : base(name) {}
+
+        [Obsolete("SS14Window no longer needs an IDisplayManager.")]
+        public SS14Window(IDisplayManager displayMan)
         {
-            _displayManager = displayMan;
         }
 
+        [Obsolete("SS14Window no longer needs an IDisplayManager.")]
         public SS14Window(IDisplayManager displayMan, string name) : base(name)
         {
-            _displayManager = displayMan;
         }
 
         [Flags]
@@ -369,16 +370,16 @@ namespace Robust.Client.UserInterface.CustomControls
         // Prevent window headers from getting off screen due to game window resizes.
         protected override void Update(ProcessFrameEventArgs args)
         {
-            var windowSize = _displayManager.ScreenSize;
-            if (Position.Y > windowSize.Y)
+            var (spaceX, spaceY) = Parent.Size;
+            if (Position.Y > spaceY)
             {
-                Position = new Vector2(Position.X, windowSize.Y - HEADER_SIZE_Y);
+                Position = new Vector2(Position.X, spaceY - HEADER_SIZE_Y);
             }
 
-            if (Position.X > windowSize.X)
+            if (Position.X > spaceX)
             {
                 // 50 is arbitrary here. As long as it's bumped back into view.
-                Position = new Vector2(windowSize.X - 50, Position.Y);
+                Position = new Vector2(spaceX - 50, Position.Y);
             }
         }
 

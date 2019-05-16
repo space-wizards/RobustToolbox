@@ -324,7 +324,7 @@ namespace Robust.Client.UserInterface
 
         public void Popup(string contents, string title = "Alert!")
         {
-            var popup = new SS14Window(_displayManager)
+            var popup = new SS14Window
                 {Title = title};
             popup.Contents.AddChild(new Label {Text = contents});
             popup.AddToScreen();

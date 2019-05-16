@@ -32,7 +32,7 @@ namespace Robust.Client.UserInterface.CustomControls
         protected override Vector2? CustomSize => (300, 300);
 
         public TileSpawnWindow(ITileDefinitionManager tileDefinitionManager, IPlacementManager placementManager,
-            IDisplayManager displayManager, IResourceCache resourceCache) : base(displayManager)
+            IResourceCache resourceCache)
         {
             __tileDefinitionManager = tileDefinitionManager;
             _placementManager = placementManager;

@@ -488,7 +488,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         protected virtual Vector2 GetLocalPosition()
         {
-            if(_gameTiming.InSimulation || _localPosition == _nextPosition)
+            if(_gameTiming.InSimulation || _localPosition == _nextPosition || Owner.Uid.IsClientSide())
                 return _localPosition;
 
             return Vector2.Lerp(_localPosition, _nextPosition, (float) (_gameTiming.TickRemainder.TotalSeconds / _gameTiming.TickPeriod.TotalSeconds));
@@ -496,7 +496,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         protected virtual Angle GetLocalRotation()
         {
-            if (_gameTiming.InSimulation || _localRotation == _nextRotation)
+            if (_gameTiming.InSimulation || _localRotation == _nextRotation || Owner.Uid.IsClientSide())
                 return _localRotation;
 
             return Angle.Lerp(_localRotation, _nextRotation, (float)(_gameTiming.TickRemainder.TotalSeconds / _gameTiming.TickPeriod.TotalSeconds));
@@ -504,7 +504,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         protected virtual Matrix3 GetWorldMatrix()
         {
-            if (_gameTiming.InSimulation)
+            if (_gameTiming.InSimulation || Owner.Uid.IsClientSide())
                 return _worldMatrix;
 
             // there really is no point trying to cache this because it will only be used in one frame
@@ -521,7 +521,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         protected virtual Matrix3 GetWorldMatrixInv()
         {
-            if (_gameTiming.InSimulation)
+            if (_gameTiming.InSimulation || Owner.Uid.IsClientSide())
                 return _invWorldMatrix;
 
             // there really is no point trying to cache this because it will only be used in one frame

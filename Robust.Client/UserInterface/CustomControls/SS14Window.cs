@@ -1,13 +1,14 @@
 ﻿using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
 using System;
+using Robust.Client.Graphics;
+using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    [ControlWrap("res://Engine/Scenes/SS14Window/SS14Window.tscn")]
     public class SS14Window : Panel
     {
         public const string StyleClassWindowTitle = "windowTitle";
@@ -41,9 +42,7 @@ namespace Robust.Client.UserInterface.CustomControls
             Right = 1 << 4,
         }
 
-        protected override ResourcePath ScenePath => new ResourcePath("/Scenes/SS14Window/SS14Window.tscn");
-
-        public Control Contents { get; private set; }
+        public MarginContainer Contents { get; private set; }
         private TextureButton CloseButton;
 
         private const int DRAG_MARGIN_SIZE = 7;
@@ -69,7 +68,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public bool Resizable { get; set; } = true;
 
-        private Label TitleLabel => GetChild("Header").GetChild<Label>("Header Text");
+        private Label TitleLabel;// => GetChild("Header").GetChild<Label>("Header Text");
 
         public string Title
         {
@@ -87,21 +86,59 @@ namespace Robust.Client.UserInterface.CustomControls
         protected override void Initialize()
         {
             base.Initialize();
+            // Set panel background color
+            PanelOverride = new StyleBoxFlat()
+            {
+                BackgroundColor = new Color(0.1451f, 0.1451f, 0.1647f, 1.0f)
+            };
 
-            var header = GetChild<Panel>("Header");
-            CloseButton = header.GetChild<TextureButton>("CloseButton");
-            CloseButton.OnPressed += CloseButtonPressed;
-
-            Contents = GetChild("Contents");
-            Contents.OnMinimumSizeChanged += _ => MinimumSizeChanged();
-
-            TitleLabel.AddStyleClass(StyleClassWindowTitle);
-            AddStyleClass(StyleClassWindowPanel);
+            // Setup header. Includes the title label and close button.
+            var header = new Panel("Header")
+            {
+                AnchorRight = 1.0f, MarginBottom = 25.0f, MouseFilter = MouseFilterMode.Ignore
+            };
             header.AddStyleClass(StyleClassWindowHeader);
-
-            header.PanelOverride = null;
-            CloseButton.TextureNormal = null;
+            TitleLabel = new Label("Header Text")
+            {
+                AnchorRight = 1.0f,
+                AnchorBottom = 1.0f,
+                MarginRight = -25.0f,
+                Text = "Exemplary Window Title Here",
+                Align = Label.AlignMode.Center,
+                VAlign = Label.VAlignMode.Center
+            };
+            TitleLabel.AddStyleClass(StyleClassWindowTitle);
+            CloseButton = new TextureButton("CloseButton")
+            {
+                AnchorLeft = 1.0f, AnchorRight = 1.0f, AnchorBottom = 1.0f, MarginLeft = -25.0f
+            };
             CloseButton.AddStyleClass(StyleClassWindowCloseButton);
+            CloseButton.OnPressed += CloseButtonPressed;
+            header.AddChild(TitleLabel);
+            header.AddChild(CloseButton);
+
+            // Setup content area.
+            Contents = new MarginContainer("Contents")
+            {
+                AnchorRight = 1.0f,
+                AnchorBottom = 1.0f,
+                MarginTop = 30.0f,
+                MarginBottomOverride = 10,
+                MarginLeftOverride = 10,
+                MarginRightOverride = 10,
+                MarginTopOverride = 10,
+                RectClipContent = true,
+                MouseFilter = MouseFilterMode.Ignore
+            };
+            Contents.OnMinimumSizeChanged += _ => MinimumSizeChanged();
+            AddChild(header);
+            AddChild(Contents);
+
+            AddStyleClass(StyleClassWindowPanel);
+            MarginLeft = 100.0f;
+            MarginTop = 38.0f;
+            MarginRight = 878.0f;
+            MarginBottom = 519.0f;
 
             if (CustomSize != null)
             {

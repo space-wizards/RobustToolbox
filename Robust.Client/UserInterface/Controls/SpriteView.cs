@@ -10,7 +10,6 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap("res://Engine/Scenes/SpriteMirror/SpriteView.tscn")]
     public class SpriteView : Control
     {
         ISpriteProxy Mirror;

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Mime;
+using System.Net.NetworkInformation;
 using Robust.Client.GameObjects;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Placement;
@@ -15,14 +17,12 @@ namespace Robust.Client.UserInterface.CustomControls
 {
     public sealed class EntitySpawnWindow : SS14Window
     {
-        protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Placement/EntitySpawnPanel.tscn");
-
         private readonly IPlacementManager placementManager;
         private readonly IPrototypeManager prototypeManager;
         private readonly IResourceCache resourceCache;
 
         private Control HSplitContainer;
-        private Control PrototypeList;
+        private VBoxContainer PrototypeList;
         private LineEdit SearchBar;
         private OptionButton OverrideMenu;
         private Button ClearButton;
@@ -63,27 +63,83 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             base.Initialize();
 
-            // Get all the controls.
-            HSplitContainer = Contents.GetChild("HSplitContainer");
-            PrototypeList = HSplitContainer.GetChild("PrototypeListScrollContainer").GetChild("PrototypeList");
-            var options = HSplitContainer.GetChild("Options");
-            SearchBar = options.GetChild<LineEdit>("SearchBar");
+            Title = "Entity Spawn Panel";
+
+            HSplitContainer = new HSplitContainer
+            {
+                Name = "HSplitContainer",
+                MouseFilter = MouseFilterMode.Pass
+            };
+
+            // Left side
+            var prototypeListScroll = new ScrollContainer("PrototypeListScrollContainer")
+            {
+                CustomMinimumSize = new Vector2(200.0f, 0.0f),
+                RectClipContent = true,
+                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                HScrollEnabled = true,
+                VScrollEnabled = true
+            };
+            PrototypeList = new VBoxContainer("PrototypeList")
+            {
+                MouseFilter = MouseFilterMode.Ignore,
+                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                SeparationOverride = new int?(2),
+                Align = BoxContainer.AlignMode.Begin
+            };
+            prototypeListScroll.AddChild(PrototypeList);
+            HSplitContainer.AddChild(prototypeListScroll);
+
+            // Right side
+            var options = new VBoxContainer("Options")
+            {
+                CustomMinimumSize = new Vector2(200.0f, 0.0f), MouseFilter = MouseFilterMode.Ignore
+            };
+
+            SearchBar = new LineEdit("SearchBar") {MouseFilter = MouseFilterMode.Stop, PlaceHolder = "Search Entities"};
             SearchBar.OnTextChanged += OnSearchBarTextChanged;
+            options.AddChild(SearchBar);
 
-            OverrideMenu = options.GetChild<OptionButton>("OverrideMenu");
+            var buttons = new HBoxContainer("Buttons!")
+            {
+                MouseFilter = MouseFilterMode.Ignore
+            };
+            ClearButton = new Button("ClearButton")
+            {
+                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                Disabled = true,
+                ToggleMode = false,
+                Text = "Clear Search",
+            };
+            ClearButton.OnPressed += OnClearButtonPressed;
+            EraseButton = new Button("EraseButton")
+            {
+                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                ToggleMode = true,
+                Text = "Erase Mode"
+            };
+            EraseButton.OnToggled += OnEraseButtonToggled;
+            buttons.AddChild(ClearButton);
+            buttons.AddChild(EraseButton);
+            options.AddChild(buttons);
+
+            var overridePlacementText = new Label("OverridePlacementText")
+            {
+                MouseFilter = MouseFilterMode.Ignore,
+                SizeFlagsVertical = SizeFlags.ShrinkCenter,
+                Text = "Override Placement:"
+            };
+            OverrideMenu = new OptionButton("OverrideMenu") {ToggleMode = false};//, TextAlign = Button.AlignMode.Left};
             OverrideMenu.OnItemSelected += OnOverrideMenuItemSelected;
-
             for (var i = 0; i < initOpts.Length; i++)
             {
                 OverrideMenu.AddItem(initOpts[i], i);
             }
 
-            var buttons = options.GetChild("Buttons!");
-            ClearButton = buttons.GetChild<Button>("ClearButton");
-            ClearButton.OnPressed += OnClearButtonPressed;
-
-            EraseButton = buttons.GetChild<Button>("EraseButton");
-            EraseButton.OnToggled += OnEraseButtonToggled;
+            options.AddChild(overridePlacementText);
+            options.AddChild(OverrideMenu);
+            HSplitContainer.AddChild(options);
+            Contents.AddChild(HSplitContainer);
         }
 
         private void PerformLayout()
@@ -168,12 +224,11 @@ namespace Robust.Client.UserInterface.CustomControls
                 {
                     Prototype = prototype,
                 };
-                var container = button.GetChild("HBoxContainer");
                 button.ActualButton.OnToggled += OnItemButtonToggled;
-                container.GetChild<Label>("Label").Text = prototype.Name;
+                button.EntityLabel.Text = prototype.Name;
 
                 var tex = IconComponent.GetPrototypeIcon(prototype, resourceCache);
-                var rect = container.GetChild("TextureWrap").GetChild<TextureRect>("TextureRect");
+                var rect = button.EntityTextureRect;
                 if (tex != null)
                 {
                     rect.Texture = tex.Default;
@@ -237,14 +292,50 @@ namespace Robust.Client.UserInterface.CustomControls
             public string PrototypeID => Prototype.ID;
             public EntityPrototype Prototype { get; set; }
             public Button ActualButton { get; private set; }
-
-            protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Placement/EntitySpawnItem.tscn");
+            public Label EntityLabel { get; private set; }
+            public TextureRect EntityTextureRect { get; private set; }
 
             protected override void Initialize()
             {
                 base.Initialize();
 
-                ActualButton = GetChild<Button>("Button");
+                ActualButton = new Button("Button")
+                {
+                    SizeFlagsHorizontal = SizeFlags.FillExpand,
+                    SizeFlagsVertical = SizeFlags.FillExpand,
+                    ToggleMode = true,
+                };
+                AddChild(ActualButton);
+
+                var hBoxContainer = new HBoxContainer("HBoxContainer")
+                {
+                    MouseFilter = MouseFilterMode.Ignore,
+                };
+                var textureWrap = new Control("TextureWrap")
+                {
+                    CustomMinimumSize = new Vector2(32.0f, 32.0f),
+                    MouseFilter = MouseFilterMode.Ignore,
+                    RectClipContent = true
+                };
+                EntityTextureRect = new TextureRect("TextureRect")
+                {
+                    AnchorRight = 1.0f,
+                    AnchorBottom = 1.0f,
+                    MouseFilter = MouseFilterMode.Ignore,
+                    SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
+                    SizeFlagsVertical = SizeFlags.ShrinkCenter
+                };
+                textureWrap.AddChild(EntityTextureRect);
+
+                EntityLabel = new Label("Label")
+                {
+                    SizeFlagsVertical = SizeFlags.ShrinkCenter,
+                    Text = "Backpack"
+                };
+
+                hBoxContainer.AddChild(textureWrap);
+                hBoxContainer.AddChild(EntityLabel);
+                AddChild(hBoxContainer);
             }
         }
 

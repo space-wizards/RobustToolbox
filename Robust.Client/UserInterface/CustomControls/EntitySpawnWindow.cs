@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Mime;
-using System.Net.NetworkInformation;
 using Robust.Client.GameObjects;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Placement;

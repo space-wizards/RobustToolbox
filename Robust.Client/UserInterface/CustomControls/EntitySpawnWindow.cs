@@ -138,6 +138,8 @@ namespace Robust.Client.UserInterface.CustomControls
             options.AddChild(OverrideMenu);
             HSplitContainer.AddChild(options);
             Contents.AddChild(HSplitContainer);
+
+            Size = new Vector2(400.0f, 300.0f);
         }
 
         private void PerformLayout()

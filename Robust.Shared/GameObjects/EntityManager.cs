@@ -276,6 +276,9 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private protected Entity CreateEntity(string prototypeName, EntityUid? uid = null)
         {
+            if (prototypeName == null)
+                return AllocEntity(uid);
+
             var entity = AllocEntity(prototypeName, uid);
             entity.Prototype.LoadEntity(entity, ComponentFactory, null);
             return entity;

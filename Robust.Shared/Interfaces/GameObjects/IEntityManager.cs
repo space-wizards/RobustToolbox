@@ -30,10 +30,10 @@ namespace Robust.Shared.Interfaces.GameObjects
         #region Entity Management
 
         /// <summary>
-        /// Spawns an initialized entity at the default location.
+        /// Spawns an initialized entity at the default location, using the given prototype.
         /// </summary>
-        /// <param name="protoName"></param>
-        /// <returns></returns>
+        /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
+        /// <returns>Newly created entity.</returns>
         IEntity SpawnEntity(string protoName);
 
         /// <summary>

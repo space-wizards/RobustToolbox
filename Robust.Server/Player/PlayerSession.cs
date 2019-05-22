@@ -107,16 +107,27 @@ namespace Robust.Server.Player
         /// <inheritdoc />
         public void DetachFromEntity()
         {
-            if (AttachedEntity == null)
-            {
+            if(AttachedEntity == null)
                 return;
+
+            if (AttachedEntity.Deleted)
+            {
+                throw new InvalidOperationException("Tried to detach player, but my entity does not exist!");
             }
 
-            AttachedEntity.SendMessage(AttachedEntity.GetComponent<BasicActorComponent>(), new PlayerDetachedMsg(this));
-            AttachedEntity.EntityManager.RaiseEvent(this, new PlayerDetachedSystemMessage(AttachedEntity));
-            AttachedEntity.RemoveComponent<BasicActorComponent>();
-            AttachedEntity = null;
-            UpdatePlayerState();
+            if (AttachedEntity.TryGetComponent<BasicActorComponent>(out var actor))
+            {
+                AttachedEntity.SendMessage(actor, new PlayerDetachedMsg(this));
+                AttachedEntity.EntityManager.RaiseEvent(this, new PlayerDetachedSystemMessage(AttachedEntity));
+                AttachedEntity.RemoveComponent<BasicActorComponent>();
+                AttachedEntity = null;
+                UpdatePlayerState();
+            }
+            else
+            {
+                throw new InvalidOperationException("Tried to detach player, but entity does not have ActorComponent!");
+            }
+
         }
 
         /// <inheritdoc />

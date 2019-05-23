@@ -13,7 +13,7 @@ namespace Robust.Shared.Network.Messages
     public class MsgEntity : NetMessage
     {
         #region REQUIRED
-        public static readonly MsgGroups GROUP = MsgGroups.Entity;
+        public static readonly MsgGroups GROUP = MsgGroups.EntityEvent;
         public static readonly string NAME = nameof(MsgEntity);
         public MsgEntity(INetChannel channel) : base(NAME, GROUP) { }
         #endregion

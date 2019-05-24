@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics.Contracts;
 using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Maths;
@@ -11,6 +11,9 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyBackground = "background";
         public const string StylePropertyForeground = "foreground";
 
+        private StyleBoxFlat _backgroundStyleBoxOverride;
+        private StyleBoxFlat _foregroundStyleBoxOverride;
+
         public ProgressBar()
         {
         }
@@ -19,17 +22,47 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        [Pure]
-        private StyleBox _getBackground()
+        public StyleBoxFlat BackgroundStyleBoxOverride
         {
-            TryGetStyleProperty(StylePropertyBackground, out StyleBox ret);
+            get => _backgroundStyleBoxOverride;
+            set
+            {
+                _backgroundStyleBoxOverride = value;
+                MinimumSizeChanged();
+            }
+        }
+
+        public StyleBoxFlat ForegroundStyleBoxOverride
+        {
+            get => _foregroundStyleBoxOverride;
+            set
+            {
+                _foregroundStyleBoxOverride = value;
+                MinimumSizeChanged();
+            }
+        }
+
+        [Pure]
+        private StyleBoxFlat _getBackground()
+        {
+            if (BackgroundStyleBoxOverride != null)
+            {
+                return BackgroundStyleBoxOverride;
+            }
+
+            TryGetStyleProperty(StylePropertyBackground, out StyleBoxFlat ret);
             return ret;
         }
 
         [Pure]
-        private StyleBox _getForeground()
+        private StyleBoxFlat _getForeground()
         {
-            TryGetStyleProperty(StylePropertyForeground, out StyleBox ret);
+            if (ForegroundStyleBoxOverride != null)
+            {
+                return ForegroundStyleBoxOverride;
+            }
+
+            TryGetStyleProperty(StylePropertyForeground, out StyleBoxFlat ret);
             return ret;
         }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Robust.Shared.Console;
@@ -19,7 +19,16 @@ If not, the current value of the CVar is displayed.";
         {
             if (type == typeof(bool))
             {
-                return bool.Parse(input);
+                if(bool.TryParse(input, out var val))
+                    return val;
+
+                if (int.TryParse(input, out var intVal))
+                {
+                    if (intVal == 0) return false;
+                    if (intVal == 1) return true;
+                }
+
+                throw new FormatException($"Could not parse bool value: {input}");
             }
 
             if (type == typeof(string))

@@ -41,7 +41,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="predicate"></param>
         public PredicateEntityQuery(Predicate<IEntity> predicate)
         {
-            if(Predicate == null)
+            if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
             Predicate = predicate;

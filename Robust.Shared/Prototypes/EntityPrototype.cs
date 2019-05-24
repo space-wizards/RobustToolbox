@@ -407,21 +407,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        internal Entity AllocEntity(EntityUid uid, IEntityManager manager)
-        {
-            var entity = (Entity)Activator.CreateInstance(ClassType ?? typeof(Entity));
-
-            entity.SetManagers(manager);
-            entity.SetUid(uid);
-
-            // allocate the required MetaDataComponent
-            manager.ComponentManager.AddComponent<MetaDataComponent>(entity);
-
-            entity.Prototype = this;
-
-            return entity;
-        }
-
         internal void LoadEntity(Entity entity, IComponentFactory factory, IEntityLoadContext context)
         {
             YamlObjectSerializer.Context defaultContext = null;

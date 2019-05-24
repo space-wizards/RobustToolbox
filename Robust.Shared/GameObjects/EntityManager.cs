@@ -81,6 +81,8 @@ namespace Robust.Shared.GameObjects
         public virtual void Initialize()
         {
             _network.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
+
+            _componentManager.ComponentRemoved += (sender, args) => RemoveSubscribedEvents(args.Component);
         }
 
         public virtual void Startup()
@@ -229,6 +231,22 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private protected Entity AllocEntity(string prototypeName, EntityUid? uid = null)
         {
+            var entity = AllocEntity(uid);
+
+            if (string.IsNullOrWhiteSpace(prototypeName))
+                return entity;
+
+            var prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
+            entity.Prototype = prototype;
+
+            return entity;
+        }
+
+        /// <summary>
+        ///     Allocates an entity and stores it but does not load components or do initialization.
+        /// </summary>
+        private protected Entity AllocEntity(EntityUid? uid = null)
+        {
             if (uid == null)
             {
                 uid = new EntityUid(NextUid++);
@@ -239,10 +257,17 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"UID already taken: {uid}");
             }
 
-            var prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
-            var entity = prototype.AllocEntity(uid.Value, this);
+            var entity = new Entity();
+
+            entity.SetManagers(this);
+            entity.SetUid(uid.Value);
+
+            // allocate the required MetaDataComponent
+            _componentManager.AddComponent<MetaDataComponent>(entity);
+
             Entities[entity.Uid] = entity;
             _allEntities.Add(entity);
+
             return entity;
         }
 
@@ -251,6 +276,9 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private protected Entity CreateEntity(string prototypeName, EntityUid? uid = null)
         {
+            if (prototypeName == null)
+                return AllocEntity(uid);
+
             var entity = AllocEntity(prototypeName, uid);
             entity.Prototype.LoadEntity(entity, ComponentFactory, null);
             return entity;

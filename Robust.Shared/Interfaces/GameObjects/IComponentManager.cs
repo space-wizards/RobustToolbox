@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Interfaces.GameObjects
@@ -7,8 +8,25 @@ namespace Robust.Shared.Interfaces.GameObjects
     /// <summary>
     ///     Holds a collection of ECS components that are attached to entities.
     /// </summary>
+    [PublicAPI]
     public interface IComponentManager
     {
+        /// <summary>
+        ///     A component was added to the manager.
+        /// </summary>
+        event EventHandler<ComponentEventArgs> ComponentAdded;
+
+        /// <summary>
+        ///     A component was removed from the manager.
+        /// </summary>
+        event EventHandler<ComponentEventArgs> ComponentRemoved;
+
+        /// <summary>
+        ///     A component was deleted. This is usually deferred until some time after it was removed.
+        ///     Usually you will want to subscribe to <see cref="ComponentRemoved"/>.
+        /// </summary>
+        event EventHandler<ComponentEventArgs> ComponentDeleted;
+
         /// <summary>
         ///     Instantly clears all components from the manager. This will NOT shut them down gracefully.
         ///     Any entities relying on existing components will be broken.

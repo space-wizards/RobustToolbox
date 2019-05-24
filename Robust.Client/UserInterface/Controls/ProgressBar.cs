@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics.Contracts;
 using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Maths;
@@ -11,6 +11,9 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyBackground = "background";
         public const string StylePropertyForeground = "foreground";
 
+        private StyleBox _backgroundStyleBoxOverride;
+        private StyleBox _foregroundStyleBoxOverride;
+
         public ProgressBar()
         {
         }
@@ -19,9 +22,34 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
+        public StyleBox BackgroundStyleBoxOverride
+        {
+            get => _backgroundStyleBoxOverride;
+            set
+            {
+                _backgroundStyleBoxOverride = value;
+                MinimumSizeChanged();
+            }
+        }
+
+        public StyleBox ForegroundStyleBoxOverride
+        {
+            get => _foregroundStyleBoxOverride;
+            set
+            {
+                _foregroundStyleBoxOverride = value;
+                MinimumSizeChanged();
+            }
+        }
+
         [Pure]
         private StyleBox _getBackground()
         {
+            if (BackgroundStyleBoxOverride != null)
+            {
+                return BackgroundStyleBoxOverride;
+            }
+
             TryGetStyleProperty(StylePropertyBackground, out StyleBox ret);
             return ret;
         }
@@ -29,6 +57,11 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         private StyleBox _getForeground()
         {
+            if (ForegroundStyleBoxOverride != null)
+            {
+                return ForegroundStyleBoxOverride;
+            }
+
             TryGetStyleProperty(StylePropertyForeground, out StyleBox ret);
             return ret;
         }

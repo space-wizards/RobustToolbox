@@ -32,6 +32,11 @@ namespace Robust.Shared.Network
         /// A command message from client -> server.
         /// </summary>
         Command,
+
+        /// <summary>
+        /// ECS Events between the server and the client.
+        /// </summary>
+        EntityEvent,
     }
 
     /// <summary>

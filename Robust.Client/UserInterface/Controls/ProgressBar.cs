@@ -43,26 +43,26 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [Pure]
-        private StyleBoxFlat _getBackground()
+        private StyleBox _getBackground()
         {
             if (BackgroundStyleBoxOverride != null)
             {
                 return BackgroundStyleBoxOverride;
             }
 
-            TryGetStyleProperty(StylePropertyBackground, out StyleBoxFlat ret);
+            TryGetStyleProperty(StylePropertyBackground, out StyleBox ret);
             return ret;
         }
 
         [Pure]
-        private StyleBoxFlat _getForeground()
+        private StyleBox _getForeground()
         {
             if (ForegroundStyleBoxOverride != null)
             {
                 return ForegroundStyleBoxOverride;
             }
 
-            TryGetStyleProperty(StylePropertyForeground, out StyleBoxFlat ret);
+            TryGetStyleProperty(StylePropertyForeground, out StyleBox ret);
             return ret;
         }
 

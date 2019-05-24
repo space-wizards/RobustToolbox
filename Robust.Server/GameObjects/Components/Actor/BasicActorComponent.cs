@@ -3,6 +3,7 @@ using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
@@ -13,6 +14,17 @@ namespace Robust.Server.GameObjects
 
         [ViewVariables]
         public IPlayerSession playerSession { get; internal set; }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            DebugTools.AssertNotNull(playerSession);
+
+            // Warning: careful here, Detach removes this component, make sure this is after the base shutdown
+            // to prevent infinite recursion
+            playerSession.DetachFromEntity();
+        }
     }
 
     /// <summary>

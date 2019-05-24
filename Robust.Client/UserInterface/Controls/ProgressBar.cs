@@ -11,8 +11,8 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyBackground = "background";
         public const string StylePropertyForeground = "foreground";
 
-        private StyleBoxFlat _backgroundStyleBoxOverride;
-        private StyleBoxFlat _foregroundStyleBoxOverride;
+        private StyleBox _backgroundStyleBoxOverride;
+        private StyleBox _foregroundStyleBoxOverride;
 
         public ProgressBar()
         {
@@ -22,7 +22,7 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        public StyleBoxFlat BackgroundStyleBoxOverride
+        public StyleBox BackgroundStyleBoxOverride
         {
             get => _backgroundStyleBoxOverride;
             set
@@ -32,7 +32,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public StyleBoxFlat ForegroundStyleBoxOverride
+        public StyleBox ForegroundStyleBoxOverride
         {
             get => _foregroundStyleBoxOverride;
             set

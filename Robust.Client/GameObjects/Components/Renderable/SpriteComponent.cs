@@ -156,9 +156,11 @@ namespace Robust.Client.GameObjects
         // This may be worth the overhead of basically reimplementing List<T>.
         [ViewVariables] private List<Layer> Layers;
 
+#pragma warning disable 649
         [Dependency] private readonly IResourceCache resourceCache;
         [Dependency] private readonly IPrototypeManager prototypes;
         [Dependency] private readonly IReflectionManager reflectionManager;
+#pragma warning restore 649
 
         [ViewVariables(VVAccess.ReadWrite)] RSI.State.Direction LastDir;
         [ViewVariables(VVAccess.ReadWrite)] private bool _recalcDirections = false;

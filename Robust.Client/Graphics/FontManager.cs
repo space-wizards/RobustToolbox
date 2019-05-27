@@ -16,7 +16,9 @@ namespace Robust.Client.Graphics
 {
     internal sealed class FontManager : IFontManagerInternal, IPostInjectInit
     {
+#pragma warning disable 649
         [Dependency] private readonly IConfigurationManager _configuration;
+#pragma warning restore 649
 
         private uint BaseFontDPI;
 

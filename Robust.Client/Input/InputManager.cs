@@ -25,11 +25,13 @@ namespace Robust.Client.Input
         public virtual Vector2 MouseScreenPosition => Vector2.Zero;
 
         [Dependency]
+#pragma warning disable 649
         private readonly IUserInterfaceManager _uiManager;
         [Dependency]
         private readonly IResourceManager _resourceMan;
         [Dependency]
         private readonly IReflectionManager _reflectionManager;
+#pragma warning restore 649
 
         private readonly Dictionary<BoundKeyFunction, InputCmdHandler> _commands = new Dictionary<BoundKeyFunction, InputCmdHandler>();
         private readonly List<KeyBinding> _bindings = new List<KeyBinding>();

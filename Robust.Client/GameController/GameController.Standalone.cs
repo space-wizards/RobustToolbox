@@ -15,7 +15,9 @@ namespace Robust.Client
     {
         private GameLoop _mainLoop;
 
+#pragma warning disable 649
         [Dependency] private IGameTiming _gameTiming;
+#pragma warning restore 649
 
         public static void Main()
         {

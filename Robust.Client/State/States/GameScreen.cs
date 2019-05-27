@@ -24,6 +24,7 @@ namespace Robust.Client.State.States
     // Instantiated dynamically through the StateManager, Dependencies will be resolved.
     public sealed partial class GameScreen : State
     {
+#pragma warning disable 649
         [Dependency] private readonly IClientEntityManager _entityManager;
         [Dependency] private readonly IComponentManager _componentManager;
         [Dependency] private readonly IInputManager inputManager;
@@ -34,6 +35,7 @@ namespace Robust.Client.State.States
         [Dependency] private readonly IEntitySystemManager entitySystemManager;
         [Dependency] private readonly IGameTiming timing;
         [Dependency] private readonly IMapManager _mapManager;
+#pragma warning restore 649
 
         private IEntity lastHoveredEntity;
 

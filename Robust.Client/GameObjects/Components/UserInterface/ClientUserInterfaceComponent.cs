@@ -16,7 +16,9 @@ namespace Robust.Client.GameObjects.Components.UserInterface
             new Dictionary<object, BoundUserInterface>();
 
         private Dictionary<object, PrototypeData> _interfaceData;
+#pragma warning disable 649
         [Dependency] private readonly IReflectionManager _reflectionManager;
+#pragma warning restore 649
 
         public override void ExposeData(ObjectSerializer serializer)
         {

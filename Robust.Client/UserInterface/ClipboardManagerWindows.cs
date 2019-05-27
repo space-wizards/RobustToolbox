@@ -11,7 +11,9 @@ namespace Robust.Client.UserInterface
     sealed class ClipboardManagerWindows : IClipboardManager
     {
         [Dependency]
+#pragma warning disable 649
         private readonly IClyde _clyde;
+#pragma warning restore 649
 
         public bool Available => true;
 

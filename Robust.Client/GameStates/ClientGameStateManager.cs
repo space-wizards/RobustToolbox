@@ -19,6 +19,7 @@ namespace Robust.Client.GameStates
     {
         private GameStateProcessor _processor;
         
+#pragma warning disable 649
         [Dependency] private readonly IClientEntityManager _entities;
         [Dependency] private readonly IPlayerManager _players;
         [Dependency] private readonly IClientNetManager _network;
@@ -26,6 +27,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IGameTiming _timing;
         [Dependency] private readonly IConfigurationManager _config;
+#pragma warning restore 649
 
         /// <inheritdoc />
         public int MinBufferSize => _processor.MinBufferSize;

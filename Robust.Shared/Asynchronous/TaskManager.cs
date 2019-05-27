@@ -9,7 +9,9 @@ namespace Robust.Shared.Asynchronous
     {
         private RobustSynchronizationContext _mainThreadContext;
 
+#pragma warning disable 649
         [Dependency] private readonly IRuntimeLog _runtimeLog;
+#pragma warning restore 649
 
         public void Initialize()
         {

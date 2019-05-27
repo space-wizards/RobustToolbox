@@ -33,8 +33,10 @@ namespace Robust.Shared.IoC
     {
         // https://blog.ploeh.dk/2012/03/15/ImplementinganAbstractFactory/
 
+        #pragma warning disable 649
         [Dependency]
         private readonly IDependencyCollection _dependencies;
+        #pragma warning restore 649
 
         /// <inheritdoc />
         public object CreateInstance(Type type)

@@ -8,7 +8,9 @@ namespace Robust.Shared.Timers
 {
     internal sealed class TimerManager : ITimerManager
     {
+#pragma warning disable 649
         [Dependency] private readonly IRuntimeLog _runtimeLog;
+#pragma warning restore 649
 
         private readonly List<(Timer, CancellationToken)> _timers
             = new List<(Timer, CancellationToken)>();

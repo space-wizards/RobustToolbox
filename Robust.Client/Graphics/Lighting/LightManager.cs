@@ -24,7 +24,9 @@ namespace Robust.Client.Graphics.Lighting
 {
     public sealed partial class LightManager : ILightManager, IDisposable, IPostInjectInit
     {
+#pragma warning disable 649
         [Dependency] readonly IConfigurationManager configManager;
+#pragma warning restore 649
 
         private bool enabled = true;
 

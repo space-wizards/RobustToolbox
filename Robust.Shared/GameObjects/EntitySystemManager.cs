@@ -13,10 +13,12 @@ namespace Robust.Shared.GameObjects
     public class EntitySystemManager : IEntitySystemManager
     {
         [Dependency]
+#pragma warning disable 649
         private readonly IReflectionManager ReflectionManager;
 
         [Dependency]
         private readonly IDynamicTypeFactory _typeFactory;
+#pragma warning restore 649
 
         /// <summary>
         /// Maps system types to instances.

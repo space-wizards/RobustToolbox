@@ -25,6 +25,7 @@ namespace Robust.Client.State.States
     {
         private const string PublicServerAddress = "server.spacestation14.io";
 
+#pragma warning disable 649
         [Dependency] private readonly IBaseClient _client;
         [Dependency] private readonly IUserInterfaceManager userInterfaceManager;
         [Dependency] private readonly IStateManager stateManager;
@@ -33,6 +34,7 @@ namespace Robust.Client.State.States
         [Dependency] private readonly IGameController _controllerProxy;
         [Dependency] private readonly IResourceCache _resourceCache;
         [Dependency] private readonly IDisplayManager _displayManager;
+#pragma warning restore 649
 
         private MainMenuControl _mainMenuControl;
         private OptionsMenu OptionsMenu;

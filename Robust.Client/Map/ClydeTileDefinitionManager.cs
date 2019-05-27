@@ -20,7 +20,9 @@ namespace Robust.Client.Map
 {
     internal sealed class ClydeTileDefinitionManager : TileDefinitionManager, IClydeTileDefinitionManager
     {
+#pragma warning disable 649
         [Dependency] private IResourceCache _resourceCache;
+#pragma warning restore 649
 
         public Texture TileTextureAtlas { get; private set; }
 

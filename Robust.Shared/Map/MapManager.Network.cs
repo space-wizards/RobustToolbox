@@ -17,7 +17,9 @@ namespace Robust.Shared.Map
 {
     public partial class MapManager
     {
+#pragma warning disable 649
         [Dependency] private readonly INetManager _netManager;
+#pragma warning restore 649
 
         public GameStateMapData GetStateData(GameTick fromTick)
         {

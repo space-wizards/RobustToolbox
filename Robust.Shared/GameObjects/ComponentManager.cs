@@ -20,9 +20,11 @@ namespace Robust.Shared.GameObjects
 
         private readonly List<Component> _deleteList = new List<Component>();
 
+        #pragma warning disable 649
         [Dependency]
         private readonly IComponentFactory _componentFactory;
-        
+        #pragma warning restore 649
+
         /// <inheritdoc />
         public event EventHandler<ComponentEventArgs> ComponentAdded;
 

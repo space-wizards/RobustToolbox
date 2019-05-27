@@ -42,7 +42,9 @@ namespace Robust.Shared.Network
         private readonly Dictionary<NetConnection, NetSessionId> _assignedSessions =
             new Dictionary<NetConnection, NetSessionId>();
 
+#pragma warning disable 649
         [Dependency] private readonly IConfigurationManager _config;
+#pragma warning restore 649
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type

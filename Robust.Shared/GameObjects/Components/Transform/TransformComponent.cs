@@ -31,8 +31,10 @@ namespace Robust.Shared.GameObjects.Components.Transform
         [ViewVariables]
         private readonly List<EntityUid> _children = new List<EntityUid>();
 
+        #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IGameTiming _gameTiming;
+        #pragma warning restore 649
 
         /// <inheritdoc />
         public event EventHandler<MoveEventArgs> OnMove;

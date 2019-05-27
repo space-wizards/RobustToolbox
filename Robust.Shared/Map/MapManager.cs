@@ -12,7 +12,9 @@ namespace Robust.Shared.Map
     /// <inheritdoc cref="IMapManager"/>
     public partial class MapManager : IMapManagerInternal, IPostInjectInit
     {
+#pragma warning disable 649
         [Dependency] private readonly IGameTiming _gameTiming;
+#pragma warning restore 649
 
         public IGameTiming GameTiming => _gameTiming;
 

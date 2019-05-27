@@ -35,7 +35,9 @@ namespace Robust.Client.GameObjects
         private OccluderComponent[] neighbors = new OccluderComponent[4];
         private SnapGridComponent SnapGrid;
         [Dependency]
+#pragma warning disable 649
         private readonly ILightManager lightManager;
+#pragma warning restore 649
 
         public override void Initialize()
         {

@@ -24,6 +24,7 @@ namespace Robust.Client
     public class BaseClient : IBaseClient
     {
         [Dependency]
+#pragma warning disable 649
         private readonly IClientNetManager _net;
 
         [Dependency]
@@ -49,6 +50,7 @@ namespace Robust.Client
 
         [Dependency]
         private readonly IClientGameStateManager _gameStates;
+#pragma warning restore 649
 
         /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;

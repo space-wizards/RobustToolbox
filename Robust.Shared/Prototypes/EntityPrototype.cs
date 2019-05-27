@@ -23,7 +23,9 @@ namespace Robust.Shared.GameObjects
     [Prototype("entity")]
     public class EntityPrototype : IPrototype, IIndexedPrototype, ISyncingPrototype
     {
+#pragma warning disable 649
         [Dependency] private readonly ILocalizationManager _localization;
+#pragma warning restore 649
 
         /// <summary>
         /// The type string of this prototype used in files.

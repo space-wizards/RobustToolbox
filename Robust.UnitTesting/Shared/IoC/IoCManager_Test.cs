@@ -138,10 +138,12 @@ namespace Robust.UnitTesting.Shared.IoC
     public class TestFieldInjectionParent
     {
         [Dependency]
+#pragma warning disable 649
         private readonly TestFieldInjection myself;
 
         [Dependency]
         public TestFieldInjection myotherself;
+#pragma warning restore 649
 
         public virtual void Test()
         {
@@ -153,10 +155,12 @@ namespace Robust.UnitTesting.Shared.IoC
     public class TestFieldInjection : TestFieldInjectionParent
     {
         [Dependency]
+#pragma warning disable 649
         private readonly TestFieldInjection myuniqueself;
 
         [Dependency]
         public TestFieldInjection mydifferentself;
+#pragma warning restore 649
 
         public override void Test()
         {

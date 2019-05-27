@@ -15,7 +15,9 @@ namespace Robust.Client.GameObjects
     {
         private Dictionary<object, object> data = new Dictionary<object, object>();
         internal List<AppearanceVisualizer> Visualizers = new List<AppearanceVisualizer>();
+#pragma warning disable 649
         [Dependency] private readonly IReflectionManager _reflectionManager;
+#pragma warning restore 649
 
         private static bool _didRegisterSerializer;
 

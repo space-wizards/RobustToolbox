@@ -17,8 +17,10 @@ namespace Robust.Client.GameObjects.EntitySystems
     /// </summary>
     public class InputSystem : EntitySystem
     {
+#pragma warning disable 649
         [Dependency] private readonly IInputManager _inputManager;
         [Dependency] private readonly IPlayerManager _playerManager;
+#pragma warning restore 649
 
         private readonly IPlayerCommandStates _cmdStates = new PlayerCommandStates();
         private readonly CommandBindMapping _bindMap = new CommandBindMapping();

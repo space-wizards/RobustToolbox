@@ -29,6 +29,7 @@ namespace Robust.Client.UserInterface
 {
     internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal, IPostInjectInit
     {
+#pragma warning disable 649
         [Dependency] private readonly IInputManager _inputManager;
         [Dependency] private readonly IDisplayManager _displayManager;
         [Dependency] private readonly IClientConsole _console;
@@ -41,6 +42,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IClientNetManager _netManager;
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IConfigurationManager _configurationManager;
+#pragma warning restore 649
 
         public UITheme ThemeDefaults { get; private set; }
         public Stylesheet Stylesheet { get; set; }

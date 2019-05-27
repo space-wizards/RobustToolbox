@@ -43,6 +43,7 @@ namespace Robust.Client.Graphics.Clyde
     /// </summary>
     internal sealed partial class Clyde : DisplayManager, IClyde, IDisposable
     {
+#pragma warning disable 649
         [Dependency] private readonly IResourceCache _resourceCache;
         [Dependency] private readonly IEyeManager _eyeManager;
         [Dependency] private readonly IMapManager _mapManager;
@@ -52,6 +53,7 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
         [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager;
         [Dependency] private readonly ILightManager _lightManager;
+#pragma warning restore 649
 
         private Vector2i _windowSize;
         private GameWindow _window;

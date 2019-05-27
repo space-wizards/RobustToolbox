@@ -9,8 +9,10 @@ namespace Robust.Client.GameObjects
 {
     public class ClientEntityNetworkManager : IEntityNetworkManager
     {
+#pragma warning disable 649
         [Dependency] private readonly IClientNetManager _network;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager;
+#pragma warning restore 649
 
         /// <summary>
         /// Sends a message to the relevant system(s) server side.

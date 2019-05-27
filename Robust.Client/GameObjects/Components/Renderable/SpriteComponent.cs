@@ -169,12 +169,6 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public uint RenderOrder { get => _renderOrder; set => _renderOrder = value; }
 
-        int NextMirrorKey;
-
-        // Do not directly store mirror instances, so that they can be picked up by the GC is not disposed correctly.
-        // Don't need em anyways.
-        readonly Dictionary<int, MirrorData> Mirrors = new Dictionary<int, MirrorData>();
-
         private static Shader _defaultShader;
 
         [ViewVariables]
@@ -1032,24 +1026,6 @@ namespace Robust.Client.GameObjects
             return LayerGetActualRSI(layer);
         }
 
-        public ISpriteProxy CreateProxy()
-        {
-            var key = NextMirrorKey++;
-            var mirror = new SpriteMirror(key, this);
-            Mirrors.Add(key, new MirrorData());
-            return mirror;
-        }
-
-        public override void OnRemove()
-        {
-            base.OnRemove();
-
-            foreach (var key in Mirrors.Keys.ToList())
-            {
-                DisposeMirror(key);
-            }
-        }
-
         internal void OpenGLRender(DrawingHandleWorld drawingHandle, bool useWorldTransform=true)
         {
             Matrix3 transform;
@@ -1534,29 +1510,6 @@ namespace Robust.Client.GameObjects
             return OffsetRsiDir(GetDir(), layer.DirOffset);
         }
 
-        private void DisposeMirror(int key)
-        {
-            if (!Mirrors.TryGetValue(key, out var val))
-            {
-                // Maybe possible if the sprite gets disposed before the mirror handle?
-                return;
-            }
-
-            Mirrors.Remove(key);
-        }
-
-        private bool IsMirrorDisposed(int key)
-        {
-            return Mirrors.ContainsKey(key);
-        }
-
-        void MirrorSetVisible(int key, bool visible)
-        {
-            var mirror = Mirrors[key];
-            mirror.Visible = visible;
-            Mirrors[key] = mirror;
-        }
-
         /// <summary>
         ///     Enum to "offset" a cardinal direction.
         /// </summary>
@@ -1610,84 +1563,6 @@ namespace Robust.Client.GameObjects
                     AutoAnimated = true,
                 };
             }
-        }
-
-        sealed class SpriteMirror : ISpriteProxy
-        {
-            readonly int Key;
-            readonly SpriteComponent Master;
-            private Vector2 _offset;
-
-            public Vector2 Offset
-            {
-                get => _offset;
-                set
-                {
-                    CheckDisposed();
-                    _offset = value;
-                }
-            }
-
-            private bool _visible = true;
-
-            public bool Visible
-            {
-                get => _visible;
-                set
-                {
-                    _visible = value;
-                    Master.MirrorSetVisible(Key, value);
-                }
-            }
-
-            public SpriteMirror(int key, SpriteComponent master)
-            {
-                Master = master;
-                Key = key;
-            }
-
-            public bool Disposed { get; private set; }
-
-            private void CheckDisposed()
-            {
-                if (Disposed)
-                {
-                    throw new ObjectDisposedException(nameof(SpriteMirror));
-                }
-            }
-
-            public void Dispose()
-            {
-                if (Disposed)
-                {
-                    return;
-                }
-
-                Dispose(true);
-                GC.SuppressFinalize(this);
-            }
-
-            ~SpriteMirror()
-            {
-                Dispose(false);
-            }
-
-            private void Dispose(bool disposing)
-            {
-                Master.DisposeMirror(Key);
-
-                Disposed = true;
-            }
-        }
-
-        private struct MirrorData
-        {
-            public bool Visible;
-
-            // Don't free the canvas item if it's the scene node item.
-            // That causes problems.
-            // Seriously.
-            public bool DontFree;
         }
     }
 }

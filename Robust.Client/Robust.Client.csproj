@@ -26,6 +26,8 @@
     <PackageReference Include="YamlDotNet" Version="5.0.1" />
     <PackageReference Include="OpenTK" Version="3.0.1" />
     <PackageReference Include="SharpFont" Version="4.0.1" />
+    <!-- Including SharpFont.Dependencies to silence a warning -->
+    <PackageReference Include="SharpFont.Dependencies" Version="2.5.5" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using Robust.Client.Interfaces;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface;
@@ -33,7 +32,6 @@ namespace Robust.Client.State.States
         [Dependency] private readonly IConfigurationManager _configurationManager;
         [Dependency] private readonly IGameController _controllerProxy;
         [Dependency] private readonly IResourceCache _resourceCache;
-        [Dependency] private readonly IDisplayManager _displayManager;
 #pragma warning restore 649
 
         private MainMenuControl _mainMenuControl;

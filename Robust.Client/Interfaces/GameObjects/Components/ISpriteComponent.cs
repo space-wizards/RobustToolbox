@@ -188,15 +188,5 @@ namespace Robust.Client.Interfaces.GameObjects.Components
         ///     Get the RSI used by a layer.
         /// </summary>
         RSI LayerGetActualRSI(object layerKey);
-
-        ISpriteProxy CreateProxy();
-    }
-
-    /// <summary>
-    ///     A handle to allow a <see cref="ISpriteComponent"/> to draw in multiple locations, such as a UI slot.
-    /// </summary>
-    public interface ISpriteProxy : IDisposable
-    {
-        Vector2 Offset { get; set; }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using JetBrains.Annotations;
-using Microsoft.SqlServer.Server;
 using Robust.Shared.Log;
 
 namespace Robust.Shared.Interfaces.Log

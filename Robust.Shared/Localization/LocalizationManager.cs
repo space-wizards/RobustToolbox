@@ -13,7 +13,9 @@ namespace Robust.Shared.Localization
 {
     internal sealed class LocalizationManager : ILocalizationManager
     {
+#pragma warning disable 649
         [Dependency] private readonly IResourceManager _resourceManager;
+#pragma warning restore 649
 
         private readonly Dictionary<CultureInfo, Catalog> _catalogs = new Dictionary<CultureInfo, Catalog>();
         private CultureInfo _defaultCulture;

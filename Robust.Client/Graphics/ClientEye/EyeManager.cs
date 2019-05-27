@@ -14,8 +14,10 @@ namespace Robust.Client.Graphics.ClientEye
         // No I can't be bothered to make this a shared constant.
         public const int PIXELSPERMETER = 32;
 
+#pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IDisplayManager _displayManager;
+#pragma warning restore 649
 
         // We default to this when we get set to a null eye.
         private FixedEye defaultEye;

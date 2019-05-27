@@ -16,11 +16,13 @@ namespace Robust.Server.ViewVariables
 {
     internal class ViewVariablesHost : ViewVariablesManagerShared, IViewVariablesHost
     {
+#pragma warning disable 649
         [Dependency] private readonly INetManager _netManager;
         [Dependency] private readonly IEntityManager _entityManager;
         [Dependency] private readonly IPlayerManager _playerManager;
         [Dependency] private readonly IComponentManager _componentManager;
         [Dependency] private readonly IConGroupController _groupController;
+#pragma warning restore 649
 
         private readonly Dictionary<uint, ViewVariablesSession>
             _sessions = new Dictionary<uint, ViewVariablesSession>();

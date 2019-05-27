@@ -16,7 +16,9 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed class ClientEntityManager : EntityManager, IClientEntityManager, IDisposable
     {
+#pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
+#pragma warning restore 649
 
         private int NextClientEntityUid = EntityUid.ClientUid + 1;
 

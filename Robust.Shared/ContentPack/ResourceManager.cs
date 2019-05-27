@@ -18,7 +18,9 @@ namespace Robust.Shared.ContentPack
         private const string DataFolderName = "Space Station 14";
 
         [Dependency]
+#pragma warning disable 649
         private readonly IConfigurationManager _config;
+#pragma warning restore 649
 
         private DirectoryInfo _configRoot;
         private readonly List<(ResourcePath prefix, IContentRoot root)> _contentRoots = new List<(ResourcePath, IContentRoot)>();

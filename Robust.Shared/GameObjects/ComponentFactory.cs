@@ -8,7 +8,9 @@ namespace Robust.Shared.GameObjects
 {
     public class ComponentFactory : IComponentFactory
     {
+#pragma warning disable 649
         [Dependency] private readonly IDynamicTypeFactory _typeFactory;
+#pragma warning restore 649
 
         private class ComponentRegistration : IComponentRegistration
         {

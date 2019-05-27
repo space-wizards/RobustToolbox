@@ -19,9 +19,11 @@ namespace Robust.Client.GameObjects.EntitySystems
 {
     public class AudioSystem : EntitySystem
     {
+#pragma warning disable 649
         [Dependency] private readonly IResourceCache resourceCache;
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IClyde _clyde;
+#pragma warning restore 649
 
         private readonly List<PlayingStream> PlayingClydeStreams = new List<PlayingStream>();
 

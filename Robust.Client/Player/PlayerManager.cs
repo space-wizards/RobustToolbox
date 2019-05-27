@@ -25,6 +25,7 @@ namespace Robust.Client.Player
     public class PlayerManager : IPlayerManager
     {
         [Dependency]
+#pragma warning disable 649
         private readonly IClientNetManager _network;
 
         [Dependency]
@@ -35,6 +36,7 @@ namespace Robust.Client.Player
 
         [Dependency]
         private readonly IEntityManager _entityManager;
+#pragma warning restore 649
 
         /// <summary>
         ///     Active sessions of connected clients to the server.

@@ -16,7 +16,9 @@ namespace Robust.Server.GameObjects.Components.Container
     {
         public override string Name => "ContainerContainer";
 
+#pragma warning disable 649
         [Dependency] private readonly IReflectionManager _reflectionManager;
+#pragma warning restore 649
 
         private readonly Dictionary<string, IContainer> EntityContainers = new Dictionary<string, IContainer>();
         private Dictionary<string, List<EntityUid>> _entitiesWaitingResolve;

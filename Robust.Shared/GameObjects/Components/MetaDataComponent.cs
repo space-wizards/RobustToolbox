@@ -65,7 +65,9 @@ namespace Robust.Shared.GameObjects
     /// <inheritdoc cref="IMetaDataComponent"/>
     internal class MetaDataComponent : Component, IMetaDataComponent
     {
+#pragma warning disable 649
         [Dependency] private readonly IPrototypeManager _prototypes;
+#pragma warning restore 649
 
         private string _entityName;
         private string _entityDescription;

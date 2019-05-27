@@ -14,7 +14,9 @@ namespace Robust.Shared.Serialization
     public class RobustSerializer : IRobustSerializer
     {
         [Dependency]
+#pragma warning disable 649
         private readonly IReflectionManager reflectionManager;
+#pragma warning restore 649
         private Serializer Serializer;
 
         public void Initialize()

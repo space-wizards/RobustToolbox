@@ -13,18 +13,13 @@ namespace Robust.Client.ResourceManagement
 
         public void LoadBaseResources()
         {
-            // TODO: Godot RIGHT NOW doesn't make it easy to load files from non-disk.
-            // AFAICT Godot has an internal system for this (PackedData/PackSource) but it's not exposed enough for us to use it at the moment.
-            // Specifically: Godot does use its pack system for exported projects, but there's no way to load new packs at runtime manually.
-            // So we wing it with file paths right now.
-#if RELEASE
+#if FULL_RELEASE
             MountContentDirectory(@"Resources/");
 #else
             MountContentDirectory(@"../../Resources/");
             MountContentDirectory(@"../../../bin/Content.Client/", new ResourcePath("/Assemblies/"));
             MountContentDirectory(@"../../../Resources/");
 #endif
-            //_resources.MountContentPack(@"./EngineContentPack.zip");
         }
 
         public T GetResource<T>(string path, bool useFallback = true) where T : BaseResource, new()

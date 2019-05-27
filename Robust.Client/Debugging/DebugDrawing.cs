@@ -15,10 +15,12 @@ namespace Robust.Client.Debugging
 {
     public class DebugDrawing : IDebugDrawing
     {
+#pragma warning disable 649
         [Dependency] private readonly IOverlayManager _overlayManager;
         [Dependency] private readonly IComponentManager _componentManager;
         [Dependency] private readonly IEyeManager _eyeManager;
         [Dependency] private readonly IPrototypeManager _prototypeManager;
+#pragma warning restore 649
 
         private bool _debugColliders;
 

@@ -20,8 +20,10 @@ namespace Robust.Client.GameObjects
         public override Type StateType => typeof(PointLightComponentState);
 
         private ILight Light;
+#pragma warning disable 649
         [Dependency] private readonly ILightManager lightManager;
         [Dependency] private readonly IResourceCache _resourceCache;
+#pragma warning restore 649
 
         [ViewVariables(VVAccess.ReadWrite)]
         public Color Color

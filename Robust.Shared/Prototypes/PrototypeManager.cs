@@ -93,13 +93,15 @@ namespace Robust.Shared.Prototypes
     public class PrototypeManager : IPrototypeManager, IPostInjectInit
     {
         [Dependency]
+#pragma warning disable 649
         private readonly IReflectionManager ReflectionManager;
         [Dependency]
         private readonly IDynamicTypeFactory _dynamicTypeFactory;
-        private readonly Dictionary<string, Type> prototypeTypes = new Dictionary<string, Type>();
-
         [Dependency]
         private readonly IResourceManager _resources;
+#pragma warning restore 649
+
+        private readonly Dictionary<string, Type> prototypeTypes = new Dictionary<string, Type>();
 
         private bool _hasEverBeenReloaded;
 

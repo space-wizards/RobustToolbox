@@ -15,7 +15,9 @@ namespace Robust.Client.GameObjects
         public IDirectionalTextureProvider Icon => _icon;
         private IDirectionalTextureProvider _icon;
 
+#pragma warning disable 649
         [Dependency] private readonly IResourceCache _resourceCache;
+#pragma warning restore 649
 
         public const string LogCategory = "go.comp.icon";
         const string SerializationCache = "icon";

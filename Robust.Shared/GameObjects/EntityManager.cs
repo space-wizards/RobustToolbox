@@ -20,6 +20,7 @@ namespace Robust.Shared.GameObjects
         #region Dependencies
 
         [Dependency]
+#pragma warning disable 649
         private readonly IEntityNetworkManager EntityNetworkManager;
 
         [Dependency]
@@ -39,6 +40,7 @@ namespace Robust.Shared.GameObjects
 
         [Dependency]
         private readonly IGameTiming _gameTiming;
+#pragma warning restore 649
 
         #endregion Dependencies
 

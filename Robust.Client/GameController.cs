@@ -50,6 +50,7 @@ namespace Robust.Client
 {
     internal sealed partial class GameController : IGameControllerInternal
     {
+#pragma warning disable 649
         [Dependency] private readonly IConfigurationManager _configurationManager;
         [Dependency] private readonly IResourceCacheInternal _resourceCache;
         [Dependency] private readonly IResourceManager _resourceManager;
@@ -77,6 +78,7 @@ namespace Robust.Client
         [Dependency] private readonly IClyde _clyde;
         [Dependency] private readonly IFontManagerInternal _fontManager;
         [Dependency] private readonly ILocalizationManager _localizationManager;
+#pragma warning restore 649
 
         private void Startup()
         {

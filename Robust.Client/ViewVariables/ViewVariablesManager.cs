@@ -20,9 +20,11 @@ namespace Robust.Client.ViewVariables
 {
     internal class ViewVariablesManager : ViewVariablesManagerShared, IViewVariablesManagerInternal
     {
+#pragma warning disable 649
         [Dependency] private readonly IClientNetManager _netManager;
         [Dependency] private readonly IResourceCache _resourceCache;
         [Dependency] private readonly IEntityManager _entityManager;
+#pragma warning restore 649
 
         private uint _nextReqId = 1;
 

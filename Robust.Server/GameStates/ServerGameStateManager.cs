@@ -22,11 +22,13 @@ namespace Robust.Server.GameStates
         private readonly Dictionary<long, GameTick> _ackedStates = new Dictionary<long, GameTick>();
         private GameTick _lastOldestAck = GameTick.Zero;
 
+#pragma warning disable 649
         [Dependency] private readonly IServerEntityManager _entityManager;
         [Dependency] private readonly IGameTiming _gameTiming;
         [Dependency] private readonly IServerNetManager _networkManager;
         [Dependency] private readonly IPlayerManager _playerManager;
         [Dependency] private readonly IMapManager _mapManager;
+#pragma warning restore 649
 
         /// <inheritdoc />
         public void Initialize()

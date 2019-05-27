@@ -25,12 +25,14 @@ namespace Robust.Client.GameObjects
 {
     public class EffectSystem : EntitySystem
     {
+#pragma warning disable 649
         [Dependency] private readonly IGameTiming gameTiming;
         [Dependency] private readonly IResourceCache resourceCache;
         [Dependency] private readonly IEyeManager eyeManager;
         [Dependency] private readonly IOverlayManager overlayManager;
         [Dependency] private readonly IPrototypeManager prototypeManager;
         [Dependency] private readonly IMapManager _mapManager;
+#pragma warning restore 649
 
         private readonly List<Effect> _Effects = new List<Effect>();
 

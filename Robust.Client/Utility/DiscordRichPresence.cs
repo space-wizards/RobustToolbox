@@ -25,8 +25,10 @@ namespace Robust.Client.Utility
 
         private DiscordRpcClient _client;
 
+#pragma warning disable 649
         [Dependency] private readonly IConfigurationManager _configurationManager;
         [Dependency] private readonly ILogManager _logManager;
+#pragma warning restore 649
 
         private bool _initialized;
 

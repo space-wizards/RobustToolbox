@@ -12,7 +12,9 @@ namespace Robust.Server.GameObjects.EntitySystems
     /// </summary>
     public class EffectSystem : EntitySystem
     {
+#pragma warning disable 649
         [Dependency] private readonly IGameTiming _timing;
+#pragma warning restore 649
 
         /// <summary>
         /// Priority queue sorted by how soon the effect will die, we remove messages from the front of the queue during update until caught up

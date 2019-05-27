@@ -44,11 +44,13 @@ namespace Robust.Client.Console
         private static readonly Color MsgColor = new Color(65, 105, 225);
 
         [Dependency]
+#pragma warning disable 649
         private readonly IClientNetManager _network;
         [Dependency]
         private readonly IReflectionManager _reflectionManager;
         [Dependency]
         private readonly ILogManager logManager;
+#pragma warning restore 649
 
         private readonly Dictionary<string, IConsoleCommand> _commands = new Dictionary<string, IConsoleCommand>();
         private bool _requestedCommands;

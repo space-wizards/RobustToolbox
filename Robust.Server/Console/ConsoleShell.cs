@@ -21,6 +21,7 @@ namespace Robust.Server.Console
     {
         private const string SawmillName = "con";
 
+#pragma warning disable 649
         [Dependency] private readonly IReflectionManager _reflectionManager;
         [Dependency] private readonly IPlayerManager _players;
         [Dependency] private readonly IServerNetManager _net;
@@ -28,6 +29,7 @@ namespace Robust.Server.Console
         [Dependency] private readonly ILogManager _logMan;
         [Dependency] private readonly IConfigurationManager _configMan;
         [Dependency] private readonly IConGroupController _groupController;
+#pragma warning restore 649
 
         private readonly Dictionary<string, IClientCommand> _availableCommands =
             new Dictionary<string, IClientCommand>();

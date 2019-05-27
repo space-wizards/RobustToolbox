@@ -21,7 +21,9 @@ namespace Robust.Server.ServerStatus
 {
     internal sealed class StatusHost : IStatusHost, IDisposable
     {
+#pragma warning disable 649
         [Dependency] private IConfigurationManager _configurationManager;
+#pragma warning restore 649
 
         // See this SO post for inspiration: https://stackoverflow.com/a/4673210
 

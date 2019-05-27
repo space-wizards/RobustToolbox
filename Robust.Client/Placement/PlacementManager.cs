@@ -35,6 +35,7 @@ namespace Robust.Client.Placement
 {
     public partial class PlacementManager : IPlacementManager, IDisposable
     {
+#pragma warning disable 649
         [Dependency]
         public readonly IPhysicsManager PhysicsManager;
         [Dependency]
@@ -65,6 +66,7 @@ namespace Robust.Client.Placement
         private readonly IOverlayManager _overlayManager;
         [Dependency]
         public readonly IDisplayManager DisplayManager;
+#pragma warning restore 649
 
         /// <summary>
         ///     How long before a pending tile change is dropped.

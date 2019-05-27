@@ -177,6 +177,9 @@ namespace Robust.Client.Graphics.Clyde
                 Visible = true
             };
 
+            // Actually set VSync.
+            VSyncChanged();
+
             _windowSize = new Vector2i(_window.Width, _window.Height);
 
             _mainThread = Thread.CurrentThread;

@@ -12,8 +12,10 @@ namespace Robust.Server.Timing
 {
     internal sealed class PauseManager : IPauseManager, IPostInjectInit
     {
+#pragma warning disable 649
         [Dependency] private IMapManager _mapManager;
         [Dependency] private IEntityManager _entityManager;
+#pragma warning restore 649
 
         [ViewVariables] private readonly HashSet<MapId> _pausedMaps = new HashSet<MapId>();
         [ViewVariables] private readonly HashSet<MapId> _unInitializedMaps = new HashSet<MapId>();

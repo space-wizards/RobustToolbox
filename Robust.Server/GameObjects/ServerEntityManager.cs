@@ -18,8 +18,10 @@ namespace Robust.Server.GameObjects
     {
         #region IEntityManager Members
 
+#pragma warning disable 649
         [Dependency] private readonly IPrototypeManager _protoManager;
         [Dependency] private readonly IMapManager _mapManager;
+#pragma warning restore 649
 
         private readonly List<(GameTick tick, EntityUid uid)> DeletionHistory = new List<(GameTick, EntityUid)>();
 

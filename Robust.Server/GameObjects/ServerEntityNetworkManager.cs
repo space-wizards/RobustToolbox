@@ -10,9 +10,11 @@ namespace Robust.Server.GameObjects
     public class ServerEntityNetworkManager : IEntityNetworkManager
     {
         [Dependency]
+#pragma warning disable 649
         private readonly IServerNetManager _mNetManager;
         [Dependency]
         private readonly IEntitySystemManager _entitySystemManager;
+#pragma warning restore 649
 
         #region IEntityNetworkManager Members
 

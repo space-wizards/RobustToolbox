@@ -16,10 +16,12 @@ namespace Robust.Server.Console
     /// </summary>
     internal class ConGroupController : IConGroupController
     {
+#pragma warning disable 649
         [Dependency] private readonly IResourceManager _resourceManager;
         [Dependency] private readonly IConfigurationManager _configurationManager;
         [Dependency] private readonly ILogManager _logManager;
         [Dependency] private readonly IPlayerManager _playerManager;
+#pragma warning restore 649
 
         private ConGroupContainer _groups;
         private SessionGroupContainer _sessions;

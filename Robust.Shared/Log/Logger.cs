@@ -1,5 +1,4 @@
 ﻿using JetBrains.Annotations;
-using Microsoft.SqlServer.Server;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.IoC;
 

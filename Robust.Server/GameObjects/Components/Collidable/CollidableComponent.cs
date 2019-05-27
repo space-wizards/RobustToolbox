@@ -14,7 +14,9 @@ namespace Robust.Server.GameObjects
 {
     public class CollidableComponent : Component, ICollidableComponent
     {
+#pragma warning disable 649
         [Dependency] private readonly IPhysicsManager _physicsManager;
+#pragma warning restore 649
 
         private bool _collisionEnabled;
         private bool _isHardCollidable;

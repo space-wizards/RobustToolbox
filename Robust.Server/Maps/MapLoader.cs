@@ -27,6 +27,7 @@ namespace Robust.Server.Maps
         private const int MapFormatVersion = 2;
 
         [Dependency]
+#pragma warning disable 649
         private readonly IResourceManager _resMan;
 
         [Dependency]
@@ -39,6 +40,7 @@ namespace Robust.Server.Maps
         private readonly IServerEntityManagerInternal _serverEntityManager;
 
         [Dependency] private readonly IPauseManager _pauseManager;
+#pragma warning restore 649
 
         /// <inheritdoc />
         public void SaveBlueprint(GridId gridId, string yamlPath)

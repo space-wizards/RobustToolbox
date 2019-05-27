@@ -188,7 +188,7 @@ namespace Robust.Client.State.States
         {
             _isConnecting = state;
             _mainMenuControl.DirectConnectButton.Disabled = state;
-#if RELEASE
+#if FULL_RELEASE
             _mainMenuControl.JoinPublicServerButton.Disabled = state;
 #endif
         }
@@ -258,7 +258,7 @@ namespace Robust.Client.State.States
                 {
                     Text = "Join Public Server",
                     TextAlign = Button.AlignMode.Center,
-#if !RELEASE
+#if !FULL_RELEASERELEASE
                     Disabled = true,
                     ToolTip = "Cannot connect to public server with a debug build."
 #endif

@@ -12,10 +12,12 @@ namespace Robust.Server.GameObjects.EntitySystems
 {
     internal class PhysicsSystem : EntitySystem
     {
+#pragma warning disable 649
         [Dependency] private readonly IPauseManager _pauseManager;
         [Dependency] private readonly IPhysicsManager _physicsManager;
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
         [Dependency] private readonly IMapManager _mapManager;
+#pragma warning restore 649
 
         private const float Epsilon = 1.0e-6f;
 

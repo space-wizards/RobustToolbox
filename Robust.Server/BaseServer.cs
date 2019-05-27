@@ -54,6 +54,7 @@ namespace Robust.Server
     /// </summary>
     public class BaseServer : IBaseServerInternal
     {
+#pragma warning disable 649
         [Dependency]
         private readonly ICommandLineArgs _commandLine;
         [Dependency]
@@ -84,12 +85,12 @@ namespace Robust.Server
         private readonly ITaskManager _taskManager;
         [Dependency]
         private readonly ILocalizationManager _localizationManager;
+        [Dependency]
+        private IRuntimeLog runtimeLog;
+#pragma warning restore 649
 
         private FileLogHandler fileLogHandler;
         private IGameLoop _mainLoop;
-
-        [Dependency]
-        private IRuntimeLog runtimeLog;
 
         private TimeSpan _lastTitleUpdate;
         private int _lastReceivedBytes;
@@ -181,7 +182,7 @@ namespace Robust.Server
             // Set up the VFS
             _resources.Initialize(dataDir);
 
-#if RELEASE
+#if FULL_RELEASE
             _resources.MountContentDirectory(@"./Resources/");
 #else
             // Load from the resources dir in the repo root instead.

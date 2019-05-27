@@ -25,11 +25,13 @@ namespace Robust.Server.Player
     /// </summary>
     internal class PlayerManager : IPlayerManager
     {
+#pragma warning disable 649
         [Dependency] private readonly IBaseServer _baseServer;
         [Dependency] private readonly IGameTiming _timing;
         [Dependency] private readonly IServerNetManager _network;
         [Dependency] private readonly IReflectionManager _reflectionManager;
         [Dependency] private readonly IMapManager _mapManager;
+#pragma warning restore 649
 
         public BoundKeyMap KeyMap { get; private set; }
 

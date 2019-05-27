@@ -17,11 +17,13 @@ namespace Robust.Server.Placement
 {
     public class PlacementManager : IPlacementManager
     {
+#pragma warning disable 649
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
         [Dependency] private readonly IServerNetManager _networkManager;
         [Dependency] private readonly IPlayerManager _playerManager;
         [Dependency] private readonly IServerEntityManager _entityManager;
         [Dependency] private readonly IMapManager _mapManager;
+#pragma warning restore 649
 
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).

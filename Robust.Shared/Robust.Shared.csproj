@@ -13,7 +13,7 @@
     <PackageReference Include="JetBrains.Annotations" Version="2019.1.1" />
     <PackageReference Include="Mono.Cecil" Version="0.10.3" />
     <PackageReference Include="NetSerializer" Version="4.1.0" />
-    <PackageReference Include="Nett" Version="0.9.0" />
+    <PackageReference Include="Nett" Version="0.11.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="NGettext" Version="0.6.3" />
     <PackageReference Include="SharpZipLib" Version="1.1.0" />

@@ -126,7 +126,7 @@ namespace Robust.Shared.Configuration
                     {
                         if (!table.TryGetValue(curTblName, out TomlObject tblObject))
                         {
-                            tblObject = table.Add(curTblName, new Dictionary<string, TomlObject>());
+                            tblObject = table.Add(curTblName, new Dictionary<string, TomlObject>()).Added;
                         }
                         table = tblObject as TomlTable ?? throw new InvalidConfigurationException($"[CFG] Object {curTblName} is being used like a table, but it is a {tblObject}. Are your CVar names formed properly?");
                     }

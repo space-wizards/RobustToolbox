@@ -29,6 +29,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         private string _text;
+        private bool _clipText;
 
         [ViewVariables]
         public string Text
@@ -38,6 +39,18 @@ namespace Robust.Client.UserInterface.Controls
             {
                 _text = value;
                 _textDimensionCache = null;
+                MinimumSizeChanged();
+            }
+        }
+
+        [ViewVariables]
+        public bool ClipText
+        {
+            get => _clipText;
+            set
+            {
+                _clipText = value;
+                RectClipContent = value;
                 MinimumSizeChanged();
             }
         }
@@ -188,6 +201,11 @@ namespace Robust.Client.UserInterface.Controls
             {
                 _calculateTextDimension();
                 DebugTools.Assert(_textDimensionCache.HasValue);
+            }
+
+            if (ClipText)
+            {
+                return (0, _textDimensionCache.Value.Height / UIScale);
             }
 
             var totalWidth = 0;

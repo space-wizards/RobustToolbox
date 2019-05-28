@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
@@ -388,7 +389,7 @@ namespace Robust.Shared.Network
                     {
                         awaitInfo.Item1.Dispose();
                         awaitInfo.Item2.TrySetException(
-                            new Exception($"Disconnected: {reason}"));
+                            new ClientDisconnectedException($"Disconnected: {reason}"));
                         _awaitingData.Remove(sender);
                     }
 
@@ -415,8 +416,16 @@ namespace Robust.Shared.Network
 
         private async void HandleHandshake(NetConnection connection)
         {
-            var userNamePacket = await AwaitData(connection);
-            var requestedUsername = userNamePacket.ReadString();
+            string requestedUsername;
+            try
+            {
+                var userNamePacket = await AwaitData(connection);
+                requestedUsername = userNamePacket.ReadString();
+            }
+            catch (ClientDisconnectedException)
+            {
+                return;
+            }
 
             if (!UsernameHelpers.IsNameValid(requestedUsername))
             {
@@ -450,7 +459,16 @@ namespace Robust.Shared.Network
                 return;
             }
 
-            var okMsg = await AwaitData(connection);
+            NetIncomingMessage okMsg;
+            try
+            {
+                okMsg = await AwaitData(connection);
+            }
+            catch (ClientDisconnectedException)
+            {
+                return;
+            }
+
             if (okMsg.ReadString() != "ok")
             {
                 connection.Disconnect("You should say ok.");
@@ -742,6 +760,28 @@ namespace Robust.Shared.Network
             ///     Connection is solid and handshake is done go wild.
             /// </summary>
             Connected
+        }
+
+        [Serializable]
+        public class ClientDisconnectedException : Exception
+        {
+            public ClientDisconnectedException()
+            {
+            }
+
+            public ClientDisconnectedException(string message) : base(message)
+            {
+            }
+
+            public ClientDisconnectedException(string message, Exception inner) : base(message, inner)
+            {
+            }
+
+            protected ClientDisconnectedException(
+                SerializationInfo info,
+                StreamingContext context) : base(info, context)
+            {
+            }
         }
     }
 

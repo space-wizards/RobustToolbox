@@ -118,7 +118,7 @@ namespace Robust.Client.ViewVariables
         {
             if (top == bottom)
             {
-                return new Label {Text = top};
+                return new Label {Text = top, ClipText = true};
             }
 
             var smallFont =
@@ -127,8 +127,14 @@ namespace Robust.Client.ViewVariables
 
             // Custom ToString() implementation.
             var headBox = new VBoxContainer {SeparationOverride = 0};
-            headBox.AddChild(new Label {Text = top});
-            headBox.AddChild(new Label {Text = bottom, FontOverride = smallFont, FontColorOverride = Color.DarkGray});
+            headBox.AddChild(new Label {Text = top, ClipText = true});
+            headBox.AddChild(new Label
+            {
+                Text = bottom,
+                FontOverride = smallFont,
+                FontColorOverride = Color.DarkGray,
+                ClipText = true
+            });
             return headBox;
         }
     }

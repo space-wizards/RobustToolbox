@@ -73,9 +73,14 @@ namespace Robust.Client.ViewVariables.Instances
                     var smallFont = new VectorFont(_resourceCache.GetResource<FontResource>("/Fonts/CALIBRI.TTF"), 10);
                     // Custom ToString() implementation.
                     var headBox = new VBoxContainer {SeparationOverride = 0};
-                    headBox.AddChild(new Label {Text = stringified});
+                    headBox.AddChild(new Label {Text = stringified, ClipText = true});
                     headBox.AddChild(new Label
-                        {Text = type.FullName, FontOverride = smallFont, FontColorOverride = Color.DarkGray});
+                    {
+                        Text = type.FullName,
+                        FontOverride = smallFont,
+                        FontColorOverride = Color.DarkGray,
+                        ClipText = true
+                    });
                     top = headBox;
                 }
                 else

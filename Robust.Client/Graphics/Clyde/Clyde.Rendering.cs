@@ -301,6 +301,8 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, LightFBO.Handle);
             var complete = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+            DebugTools.Assert(complete == FramebufferErrorCode.FramebufferComplete,
+                $"Framebuffer is not complete: {complete}");
             var converted = Color.FromSrgb(new Color(0.1f, 0.1f, 0.1f));
             GL.ClearColor(converted.R, converted.G, converted.B, 1);
             GL.Clear(ClearBufferMask.ColorBufferBit);

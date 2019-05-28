@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.ViewVariables;
 
@@ -57,6 +57,13 @@ namespace Robust.Client.UserInterface
         public void RemoveStyleClass(string className)
         {
             _styleClasses.Remove(className);
+            Restyle();
+        }
+
+        public void SetOnlyStyleClass(string className)
+        {
+            _styleClasses.Clear();
+            _styleClasses.Add(className);
             Restyle();
         }
 

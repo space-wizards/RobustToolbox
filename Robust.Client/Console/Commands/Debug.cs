@@ -169,6 +169,20 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    internal class ShowPositionsCommand : IConsoleCommand
+    {
+        public string Command => "showpos";
+        public string Help => "";
+        public string Description => "Enables debug drawing over all entity positions in the game.";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var mgr = IoCManager.Resolve<IDebugDrawing>();
+            mgr.DebugPositions = !mgr.DebugPositions;
+            return false;
+        }
+    }
+
     internal class SpawnWindowCommand : IConsoleCommand
     {
         public string Command => "spawnwindow";

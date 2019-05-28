@@ -20,9 +20,11 @@ namespace Robust.Client.Debugging
         [Dependency] private readonly IComponentManager _componentManager;
         [Dependency] private readonly IEyeManager _eyeManager;
         [Dependency] private readonly IPrototypeManager _prototypeManager;
+        [Dependency] private readonly IEntityManager _entityManager;
 #pragma warning restore 649
 
         private bool _debugColliders;
+        private bool _debugPositions;
 
         public bool DebugColliders
         {
@@ -38,11 +40,35 @@ namespace Robust.Client.Debugging
 
                 if (value)
                 {
-                    _overlayManager.AddOverlay(new CollidableOverlay(_componentManager, _eyeManager, _prototypeManager));
+                    _overlayManager.AddOverlay(new CollidableOverlay(_componentManager, _eyeManager,
+                        _prototypeManager));
                 }
                 else
                 {
                     _overlayManager.RemoveOverlay(nameof(CollidableOverlay));
+                }
+            }
+        }
+
+        public bool DebugPositions
+        {
+            get => _debugPositions;
+            set
+            {
+                if (value == DebugColliders)
+                {
+                    return;
+                }
+
+                _debugColliders = value;
+
+                if (value)
+                {
+                    _overlayManager.AddOverlay(new EntityPositionOverlay(_entityManager, _eyeManager));
+                }
+                else
+                {
+                    _overlayManager.RemoveOverlay(nameof(EntityPositionOverlay));
                 }
             }
         }
@@ -96,6 +122,38 @@ namespace Robust.Client.Debugging
 
                     worldHandle.DrawRect(worldBox, colorFill);
                     worldHandle.DrawRect(worldBox, colorEdge, filled: false);
+                }
+            }
+        }
+
+        private sealed class EntityPositionOverlay : Overlay
+        {
+            private readonly IEntityManager _entityManager;
+            private readonly IEyeManager _eyeManager;
+
+            public override OverlaySpace Space => OverlaySpace.WorldSpace;
+
+            public EntityPositionOverlay(IEntityManager entityManager, IEyeManager eyeManager) : base(nameof(EntityPositionOverlay))
+            {
+                _entityManager = entityManager;
+                _eyeManager = eyeManager;
+            }
+
+            protected override void Draw(DrawingHandle handle)
+            {
+                const float stubLength = 0.25f;
+
+                var worldHandle = (DrawingHandleWorld) handle;
+                foreach (var entity in _entityManager.GetEntities())
+                {
+                    if (entity.Transform.MapID != _eyeManager.CurrentMap)
+                    {
+                        continue;
+                    }
+
+                    var center = entity.Transform.WorldPosition;
+                    worldHandle.DrawLine(center - (stubLength, 0), center + (stubLength, 0), Color.Red);
+                    worldHandle.DrawLine(center - (0, stubLength), center + (0, stubLength), Color.Blue);
                 }
             }
         }

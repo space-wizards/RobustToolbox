@@ -223,7 +223,7 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction, float arcwidth)
         {
-            var entities = GetEntitiesInRange(coordinates, range);
+            var entities = GetEntitiesInRange(coordinates, range*2);
 
             foreach (var entity in entities)
             {

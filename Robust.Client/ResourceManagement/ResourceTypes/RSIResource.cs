@@ -208,9 +208,9 @@ namespace Robust.Client.ResourceManagement
             RSI = rsi;
         }
 
-        private static readonly JsonSchema4 RSISchema = GetSchema();
+        private static readonly JsonSchema RSISchema = GetSchema();
 
-        private static JsonSchema4 GetSchema()
+        private static JsonSchema GetSchema()
         {
             try
             {
@@ -222,7 +222,7 @@ namespace Robust.Client.ResourceManagement
                     schema = schemaReader.ReadToEnd();
                 }
 
-                return JsonSchema4.FromJsonAsync(schema).Result;
+                return JsonSchema.FromJsonAsync(schema).Result;
             }
             catch (Exception e)
             {

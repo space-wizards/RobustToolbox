@@ -111,7 +111,7 @@ namespace Robust.Client.Utility
 
                 if (newValue)
                 {
-                    if (_client == null || _client.Disposed)
+                    if (_client == null || _client.IsDisposed)
                     {
                         _start();
                     }

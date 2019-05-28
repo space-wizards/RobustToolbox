@@ -55,12 +55,12 @@ namespace Robust.Client.Debugging
             get => _debugPositions;
             set
             {
-                if (value == DebugColliders)
+                if (value == DebugPositions)
                 {
                     return;
                 }
 
-                _debugColliders = value;
+                _debugPositions = value;
 
                 if (value)
                 {

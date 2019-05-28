@@ -25,7 +25,8 @@ namespace Robust.Client.UserInterface.Controls
             if (icon != null)
             {
                 offset += _getIcon().Width + _getHSeparation();
-                handle.DrawTextureRect(icon, UIBox2.FromDimensions(Vector2.Zero, icon.Size * UIScale), false);
+                var vOffset = (PixelHeight - _getIcon().Height) / 2;
+                handle.DrawTextureRect(icon, UIBox2.FromDimensions((0, vOffset), icon.Size * UIScale), false);
             }
 
             var box = new UIBox2(offset, 0, PixelWidth, PixelHeight);

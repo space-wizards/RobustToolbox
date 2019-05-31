@@ -383,19 +383,46 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<T> GetAllComponents<T>()
             where T : IComponent
         {
-            if (_dictComponents.TryGetValue(typeof(T), out var typeDict))
-                return typeDict.Values.Cast<T>().Where(c => !c.Deleted);
+            if (!_dictComponents.TryGetValue(typeof(T), out var typeDict))
+            {
+                return Enumerable.Empty<T>();
+            }
 
-            return Enumerable.Empty<T>();
+            var list = new List<T>(typeDict.Count);
+            foreach (var comp in typeDict.Values)
+            {
+                if (comp.Deleted)
+                {
+                    continue;
+                }
+
+                list.Add((T)(object)comp);
+            }
+
+            return list;
         }
 
         /// <inheritdoc />
         public IEnumerable<IComponent> GetAllComponents(Type type)
         {
-            if (_dictComponents.TryGetValue(type, out var typeDict))
-                return typeDict.Values.Where(c => !c.Deleted);
+            if (!_dictComponents.TryGetValue(type, out var typeDict))
+            {
+                return Enumerable.Empty<IComponent>();
+            }
 
-            return Enumerable.Empty<IComponent>();
+            var list = new List<IComponent>(typeDict.Count);
+            foreach (var comp in typeDict.Values)
+            {
+                if (comp.Deleted)
+                {
+                    continue;
+                }
+
+                list.Add(comp);
+            }
+
+            return list;
+
         }
         #endregion
     }

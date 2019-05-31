@@ -238,6 +238,25 @@ namespace Robust.Shared.Map
             return tiles;
         }
 
+        /// <inheritdoc />
+        public IEnumerable<TileRef> GetTilesIntersecting(Circle worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null)
+        {
+            var aabb = new Box2(worldArea.Position.X - worldArea.Radius, worldArea.Position.Y - worldArea.Radius, worldArea.Position.X + worldArea.Radius, worldArea.Position.Y + worldArea.Radius);
+            var tiles = new List<TileRef>();
+
+            foreach(var tile in GetTilesIntersecting(aabb, ignoreEmpty))
+            {
+                if (worldArea.Contains(new Vector2(tile.X, tile.Y)))
+                {
+                    if (predicate == null || predicate(tile))
+                    {
+                        tiles.Add(tile);
+                    }
+                }
+            }
+            return tiles;
+        }
+
         #endregion TileAccess
 
         #region ChunkAccess

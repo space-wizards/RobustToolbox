@@ -7,18 +7,15 @@ namespace Robust.Client.Audio
     {
         public TimeSpan Length { get; }
         internal Clyde.Handle? ClydeHandle { get; }
+        public string Name { get; }
+        public int ChannelCount { get; }
 
-        // Constructor used on headless.
-        internal AudioStream()
-        {
-            Length = TimeSpan.Zero;
-        }
-
-        // Constructor used on Clyde.
-        internal AudioStream(Clyde.Handle handle, TimeSpan length)
+        internal AudioStream(Clyde.Handle handle, TimeSpan length, int channelCount, string name = null)
         {
             ClydeHandle = handle;
             Length = length;
+            ChannelCount = channelCount;
+            Name = name;
         }
     }
 }

@@ -123,7 +123,7 @@ namespace Robust.Client.Graphics.Clyde
             var source = AL.GenSource();
             // ReSharper disable once PossibleInvalidOperationException
             AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[stream.ClydeHandle.Value.ClydeHandle].BufferHandle);
-            var audioSource = new AudioSource(this, source);
+            var audioSource = new AudioSource(this, source, stream);
             _audioSources.Add(source, new WeakReference<AudioSource>(audioSource));
             return audioSource;
         }
@@ -149,7 +149,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        public AudioStream LoadAudioOggVorbis(Stream stream)
+        public AudioStream LoadAudioOggVorbis(Stream stream, string name = null)
         {
             var vorbis = _readOggVorbis(stream);
 
@@ -185,10 +185,10 @@ namespace Robust.Client.Graphics.Clyde
             var handle = new Handle(_audioSampleBuffers.Count);
             _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
             var length = TimeSpan.FromSeconds(vorbis.TotalSamples / (double) vorbis.SampleRate);
-            return new AudioStream(handle, length);
+            return new AudioStream(handle, length, (int) vorbis.Channels, name);
         }
 
-        public AudioStream LoadAudioWav(Stream stream)
+        public AudioStream LoadAudioWav(Stream stream, string name = null)
         {
             var wav = _readWav(stream);
 
@@ -242,7 +242,7 @@ namespace Robust.Client.Graphics.Clyde
             var handle = new Handle(_audioSampleBuffers.Count);
             _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
             var length = TimeSpan.FromSeconds(wav.Data.Length / (double)wav.BlockAlign / wav.SampleRate);
-            return new AudioStream(handle, length);
+            return new AudioStream(handle, length, wav.NumChannels, name);
         }
 
         private sealed class LoadedAudioSample
@@ -257,13 +257,18 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class AudioSource : IClydeAudioSource
         {
-            public Clyde Master;
-            public int SourceHandle;
+            private Clyde Master;
+            private int SourceHandle;
+            private AudioStream _sourceStream;
+#if DEBUG
+            private bool _didPositionWarning;
+#endif
 
-            public AudioSource(Clyde master, int sourceHandle)
+            public AudioSource(Clyde master, int sourceHandle, AudioStream sourceStream)
             {
                 Master = master;
                 SourceHandle = sourceHandle;
+                _sourceStream = sourceStream;
             }
 
             public void StartPlaying()
@@ -300,6 +305,17 @@ namespace Robust.Client.Graphics.Clyde
             public void SetPosition(Vector2 position)
             {
                 _checkDisposed();
+
+#if DEBUG
+                // OpenAL doesn't seem to want to play stereo positionally.
+                // Log a warning if people try to.
+                if (_sourceStream.ChannelCount > 1 && !_didPositionWarning)
+                {
+                    _didPositionWarning = true;
+                    Logger.WarningS("oal", "Attempting to set position on audio source with multiple audio channels! Stream: '{0}'", _sourceStream.Name);
+                }
+#endif
+
                 var (x, y) = position;
                 AL.Source(SourceHandle, ALSource3f.Position, x, y, 0);
                 _checkAlError();

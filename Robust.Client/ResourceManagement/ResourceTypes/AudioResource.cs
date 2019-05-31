@@ -20,7 +20,7 @@ namespace Robust.Client.ResourceManagement
 
             using (var fileStream = cache.ContentFileRead(path))
             {
-                AudioStream = IoCManager.Resolve<IClyde>().LoadAudioOggVorbis(fileStream);
+                AudioStream = IoCManager.Resolve<IClyde>().LoadAudioOggVorbis(fileStream, path.ToString());
             }
         }
 

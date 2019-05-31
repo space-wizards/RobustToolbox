@@ -33,8 +33,8 @@ namespace Robust.Client.Interfaces.Graphics
         Vector2 MouseScreenPosition { get; }
 
         // AUDIO SYSTEM DOWN BELOW.
-        AudioStream LoadAudioOggVorbis(Stream stream);
-        AudioStream LoadAudioWav(Stream stream);
+        AudioStream LoadAudioOggVorbis(Stream stream, string name = null);
+        AudioStream LoadAudioWav(Stream stream, string name = null);
 
         IClydeAudioSource CreateAudioSource(AudioStream stream);
 

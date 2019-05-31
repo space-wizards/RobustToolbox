@@ -1,4 +1,5 @@
-﻿using Robust.Client.Audio;
+﻿using System;
+using Robust.Client.Audio;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Shared.Utility;
 using System.IO;
@@ -20,7 +21,19 @@ namespace Robust.Client.ResourceManagement
 
             using (var fileStream = cache.ContentFileRead(path))
             {
-                AudioStream = IoCManager.Resolve<IClyde>().LoadAudioOggVorbis(fileStream, path.ToString());
+                var clyde = IoCManager.Resolve<IClyde>();
+                if (path.Extension == "ogg")
+                {
+                    AudioStream = clyde.LoadAudioOggVorbis(fileStream, path.ToString());
+                }
+                else if (path.Extension == "wav")
+                {
+                    AudioStream = clyde.LoadAudioWav(fileStream, path.ToString());
+                }
+                else
+                {
+                    throw new NotSupportedException("Unable to load audio files outside of ogg Vorbis or PCM wav");
+                }
             }
         }
 

@@ -91,16 +91,6 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override void Initialize()
-        {
-            // This component requires that the entity has an AABB.
-            if (!Owner.HasComponent<BoundingBoxComponent>())
-                Logger.Error($"[ECS] {Owner.Prototype.Name} - {nameof(PhysicsComponent)} requires {nameof(BoundingBoxComponent)}. ");
-
-            base.Initialize();
-        }
-
-        /// <inheritdoc />
         public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);

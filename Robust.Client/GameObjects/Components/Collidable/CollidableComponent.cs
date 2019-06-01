@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
 {
@@ -20,7 +21,7 @@ namespace Robust.Client.GameObjects
 
         private bool _collisionIsActuallyEnabled;
         private bool _collisionEnabled;
-        private PhysShapeAabbComp _physShapeAabb;
+        private IPhysShape _physShapeAabb;
 
         /// <inheritdoc />
         public override string Name => "Collidable";
@@ -33,6 +34,7 @@ namespace Robust.Client.GameObjects
 
 
         /// <inheritdoc />
+        [ViewVariables]
         Box2 ICollidable.WorldAABB
         {
             get
@@ -44,6 +46,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         Box2 ICollidable.AABB
         {
             get
@@ -54,12 +57,14 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public IPhysShape PhysicsShape
         {
             get => _physShapeAabb;
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public MapId MapID => Owner.Transform.MapID;
 
         /// <inheritdoc />
@@ -80,6 +85,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public bool CollisionEnabled
         {
             get => _collisionEnabled;
@@ -103,12 +109,15 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public bool IsHardCollidable { get; set; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public int CollisionLayer { get; set; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public int CollisionMask { get; set; }
 
         /// <summary>
@@ -119,7 +128,8 @@ namespace Robust.Client.GameObjects
             base.Initialize();
 
             // normally ExposeData would create this
-            _physShapeAabb = new PhysShapeAabbComp(Owner);
+            if(_physShapeAabb == null)
+                _physShapeAabb = new PhysShapeAabb();
 
             if (_collisionEnabled && !_collisionIsActuallyEnabled)
             {
@@ -157,6 +167,8 @@ namespace Robust.Client.GameObjects
                 EnableCollision();
             else
                 DisableCollision();
+
+            _physShapeAabb = newState.PhysShape;
         }
 
         /// <inheritdoc />

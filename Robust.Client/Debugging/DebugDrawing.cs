@@ -1,5 +1,4 @@
-﻿using Robust.Client.GameObjects;
-using Robust.Client.Graphics.Drawing;
+﻿using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Debugging;
@@ -97,30 +96,18 @@ namespace Robust.Client.Debugging
                 var worldHandle = (DrawingHandleWorld) handle;
 
                 var viewport = _eyeManager.GetWorldViewport();
-                foreach (var boundingBox in _componentManager.GetAllComponents<ClientBoundingBoxComponent>())
+                foreach (var boundingBox in _componentManager.GetAllComponents<ICollidableComponent>())
                 {
                     // all entities have a TransformComponent
-                    var transform = boundingBox.Owner.Transform;
+                    var transform = ((ICollidable) boundingBox).Owner.Transform;
 
                     // if not on the same map, continue
                     if (transform.MapID != _eyeManager.CurrentMap || !transform.IsMapTransform)
                         continue;
 
-                    Color colorEdge;
-                    Color colorFill;
-                    Box2 worldBox;
-                    if (boundingBox.Owner.TryGetComponent<ICollidableComponent>(out var collision))
-                    {
-                        worldBox = collision.WorldAABB;
-                        colorFill = Color.Red.WithAlpha(0.25f);
-                        colorEdge = Color.Green.WithAlpha(0.33f);
-                    }
-                    else
-                    {
-                        worldBox = boundingBox.WorldAABB;
-                        colorFill = Color.Aqua.WithAlpha(0.35f);
-                        colorEdge = Color.Red.WithAlpha(0.33f);
-                    }
+                    var worldBox = boundingBox.WorldAABB;
+                    var colorFill = Color.Red.WithAlpha(0.25f);
+                    var colorEdge = Color.Red.WithAlpha(0.33f);
 
                     // if not on screen, or too small, continue
                     if (!worldBox.Intersects(viewport) || worldBox.IsEmpty())
@@ -159,7 +146,7 @@ namespace Robust.Client.Debugging
 
                     var center = entity.Transform.WorldPosition;
                     worldHandle.DrawLine(center - (stubLength, 0), center + (stubLength, 0), Color.Red);
-                    worldHandle.DrawLine(center - (0, stubLength), center + (0, stubLength), Color.Blue);
+                    worldHandle.DrawLine(center - (0, stubLength), center + (0, stubLength), Color.Green);
                 }
             }
         }

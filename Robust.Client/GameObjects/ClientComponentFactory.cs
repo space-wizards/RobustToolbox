@@ -33,9 +33,6 @@ namespace Robust.Client.GameObjects
 
             Register<InputComponent>();
 
-            Register<ClientBoundingBoxComponent>();
-            RegisterReference<ClientBoundingBoxComponent, BoundingBoxComponent>();
-
             Register<SpriteComponent>();
             RegisterReference<SpriteComponent, ISpriteComponent>();
             RegisterReference<SpriteComponent, IClickTargetComponent>();

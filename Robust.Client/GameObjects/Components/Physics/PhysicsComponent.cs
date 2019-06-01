@@ -35,16 +35,6 @@ namespace Robust.Client.GameObjects
         public Vector2 Velocity { get; private set; }
 
         /// <inheritdoc />
-        public override void Initialize()
-        {
-            // This component requires that the entity has an AABB.
-            if (!Owner.HasComponent<BoundingBoxComponent>())
-                Logger.Error($"[ECS] {Owner.Prototype.Name} - {nameof(PhysicsComponent)} requires {nameof(BoundingBoxComponent)}. ");
-
-            base.Initialize();
-        }
-
-        /// <inheritdoc />
         public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
             if (curState == null)

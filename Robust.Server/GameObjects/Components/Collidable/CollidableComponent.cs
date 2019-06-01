@@ -24,7 +24,7 @@ namespace Robust.Server.GameObjects
         private int _collisionLayer;
         private int _collisionMask;
         private bool _isScrapingFloor;
-        private PhysShapeAabbComp _physShapeAabb;
+        private PhysShapeAabb _physShapeAabb;
 
         /// <inheritdoc />
         public override string Name => "Collidable";
@@ -45,16 +45,17 @@ namespace Robust.Server.GameObjects
             serializer.DataField(ref _collisionLayer, "layer", 1);
             serializer.DataField(ref _collisionMask, "mask", 1);
             serializer.DataField(ref _isScrapingFloor, "IsScrapingFloor", false);
-            serializer.DataField(ref _physShapeAabb, "shape", new PhysShapeAabbComp(Owner));
+            serializer.DataField(ref _physShapeAabb, "shape", new PhysShapeAabb());
         }
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new CollidableComponentState(_collisionEnabled, _isHardCollidable, _collisionLayer, _collisionMask);
+            return new CollidableComponentState(_collisionEnabled, _isHardCollidable, _collisionLayer, _collisionMask, _isScrapingFloor, _physShapeAabb);
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         Box2 ICollidable.WorldAABB
         {
             get
@@ -66,6 +67,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         Box2 ICollidable.AABB
         {
             get
@@ -76,6 +78,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public IPhysShape PhysicsShape => _physShapeAabb;
 
         /// <summary>
@@ -138,13 +141,6 @@ namespace Robust.Server.GameObjects
             {
                 collidecomponents[i].CollideWith(bumpedinto);
             }
-        }
-
-        public override void Initialize()
-        {
-            base.Initialize();
-
-            _physShapeAabb.Entity = Owner;
         }
 
         /// <inheritdoc />

@@ -13,11 +13,11 @@ namespace Robust.Shared.Physics
     /// <inheritdoc />
     public class PhysicsManager : IPhysicsManager
     {
-        private readonly List<ICollidable> _bodies = new List<ICollidable>();
-        private readonly List<ICollidable> _results = new List<ICollidable>();
+        private readonly List<IPhysBody> _bodies = new List<IPhysBody>();
+        private readonly List<IPhysBody> _results = new List<IPhysBody>();
 
         /// <summary>
-        ///     returns true if collider intersects a collidable under management. Does not trigger Bump.
+        ///     returns true if collider intersects a physBody under management. Does not trigger Bump.
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <param name="map">Map ID to filter</param>
@@ -39,7 +39,7 @@ namespace Robust.Shared.Physics
         }
 
         /// <summary>
-        ///     returns true if collider intersects a collidable under management and calls Bump.
+        ///     returns true if collider intersects a physBody under management and calls Bump.
         /// </summary>
         /// <param name="entity">Rectangle to check for collision</param>
         /// <param name="offset"></param>
@@ -50,7 +50,7 @@ namespace Robust.Shared.Physics
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            var collidable = (ICollidable) entity.GetComponent<ICollidableComponent>();
+            var collidable = (IPhysBody) entity.GetComponent<ICollidableComponent>();
 
             if (!collidable.CollisionEnabled || collidable.CollisionLayer == 0x0)
                 return false;
@@ -61,7 +61,7 @@ namespace Robust.Shared.Physics
                 colliderAABB = colliderAABB.Translated(offset);
             }
 
-            // Test this collidable against every other one.
+            // Test this physBody against every other one.
             _results.Clear();
             DoCollisionTest(collidable, colliderAABB, _results);
 
@@ -114,12 +114,12 @@ namespace Robust.Shared.Physics
         }
 
         /// <summary>
-        ///     Tests a collidable against every other registered collidable.
+        ///     Tests a physBody against every other registered physBody.
         /// </summary>
-        /// <param name="collidable">Collidable being tested.</param>
-        /// <param name="colliderAABB">The AABB of the collidable being tested. This can be ICollidable.WorldAABB, or a modified version of it.</param>
+        /// <param name="physBody">Body being tested.</param>
+        /// <param name="colliderAABB">The AABB of the physBody being tested. This can be IPhysBody.WorldAABB, or a modified version of it.</param>
         /// <param name="results">An empty list that the function stores all colliding bodies inside of.</param>
-        internal void DoCollisionTest(ICollidable collidable, Box2 colliderAABB, List<ICollidable> results)
+        internal void DoCollisionTest(IPhysBody physBody, Box2 colliderAABB, List<IPhysBody> results)
         {
             foreach (var body in GetCollidablesForLocation(colliderAABB))
             {
@@ -128,13 +128,13 @@ namespace Robust.Shared.Physics
                     continue;
                 }
 
-                if ((collidable.CollisionMask & body.CollisionLayer) == 0x0)
+                if ((physBody.CollisionMask & body.CollisionLayer) == 0x0)
                 {
                     continue;
                 }
 
-                if (collidable.MapID != body.MapID ||
-                    collidable == body ||
+                if (physBody.MapID != body.MapID ||
+                    physBody == body ||
                     !colliderAABB.Intersects(body.WorldAABB))
                 {
                     continue;
@@ -145,27 +145,27 @@ namespace Robust.Shared.Physics
         }
 
         /// <summary>
-        ///     Adds a collidable to the manager.
+        ///     Adds a physBody to the manager.
         /// </summary>
-        /// <param name="collidable"></param>
-        public void AddCollidable(ICollidable collidable)
+        /// <param name="physBody"></param>
+        public void AddBody(IPhysBody physBody)
         {
-            if (!_bodies.Contains(collidable))
-                _bodies.Add(collidable);
+            if (!_bodies.Contains(physBody))
+                _bodies.Add(physBody);
             else
-                Logger.WarningS("phys", $"Collidable already registered! {collidable.Owner}");
+                Logger.WarningS("phys", $"PhysicsBody already registered! {physBody.Owner}");
         }
 
         /// <summary>
-        ///     Removes a collidable from the manager
+        ///     Removes a physBody from the manager
         /// </summary>
-        /// <param name="collidable"></param>
-        public void RemoveCollidable(ICollidable collidable)
+        /// <param name="physBody"></param>
+        public void RemoveBody(IPhysBody physBody)
         {
-            if (_bodies.Contains(collidable))
-                _bodies.Remove(collidable);
+            if (_bodies.Contains(physBody))
+                _bodies.Remove(physBody);
             else
-                Logger.WarningS("phys", $"Trying to remove unregistered collidable! {collidable.Owner}");
+                Logger.WarningS("phys", $"Trying to remove unregistered PhysicsBody! {physBody.Owner}");
         }
 
         /// <inheritdoc />
@@ -198,7 +198,7 @@ namespace Robust.Shared.Physics
             return default;
         }
 
-        private Dictionary<Vector2, List<ICollidable>> _collisionGrid = new Dictionary<Vector2, List<ICollidable>>();
+        private Dictionary<Vector2, List<IPhysBody>> _collisionGrid = new Dictionary<Vector2, List<IPhysBody>>();
         private float _collisionGridResolution = 5;
 
         public void BuildCollisionGrid()
@@ -209,7 +209,7 @@ namespace Robust.Shared.Physics
                 var snappedLocation = SnapLocationToGrid(body.WorldAABB);
                 if (!_collisionGrid.ContainsKey(snappedLocation))
                 {
-                    _collisionGrid[snappedLocation] = new List<ICollidable>();
+                    _collisionGrid[snappedLocation] = new List<IPhysBody>();
                 }
                 _collisionGrid[snappedLocation].Add(body);
             });
@@ -223,16 +223,16 @@ namespace Robust.Shared.Physics
             return result;
         }
 
-        public List<ICollidable> GetCollidablesForLocation(Box2 location)
+        public List<IPhysBody> GetCollidablesForLocation(Box2 location)
         {
             var snappedLocation = SnapLocationToGrid(location);
-            var result = new List<ICollidable>();
+            var result = new List<IPhysBody>();
             for(int xOffset = -1; xOffset <= 1; xOffset++)
             {
                 for (int yOffset = -1; yOffset <= 1; yOffset++)
                 {
                     var offsetLocation = snappedLocation + new Vector2(xOffset, yOffset);
-                    result.AddRange(_collisionGrid.ContainsKey(offsetLocation) ? _collisionGrid[offsetLocation] : Enumerable.Empty<ICollidable>());
+                    result.AddRange(_collisionGrid.ContainsKey(offsetLocation) ? _collisionGrid[offsetLocation] : Enumerable.Empty<IPhysBody>());
                 }
             }
             return result;

@@ -7,7 +7,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.Components.UserInterface;
 using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.Physics;
 
 namespace Robust.Client.GameObjects
 {
@@ -24,7 +24,7 @@ namespace Robust.Client.GameObjects
             RegisterReference<TransformComponent, ITransformComponent>();
 
             Register<CollidableComponent>();
-            RegisterReference<CollidableComponent, ICollidable>();
+            RegisterReference<CollidableComponent, IPhysBody>();
             RegisterReference<CollidableComponent, ICollidableComponent>();
             Register<IconComponent>();
             RegisterIgnore("KeyBindingInput");

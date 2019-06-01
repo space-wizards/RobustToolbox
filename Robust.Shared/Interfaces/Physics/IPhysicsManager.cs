@@ -11,8 +11,8 @@ namespace Robust.Shared.Interfaces.Physics
     public interface IPhysicsManager
     {
         /// <summary>
-        /// Checks to see if the specified collision rectangle collides with any of the colliders under management.
-        /// Also fires the OnCollide event of the first managed collidable to intersect with the collider.
+        /// Checks to see if the specified collision rectangle collides with any of the physBodies under management.
+        /// Also fires the OnCollide event of the first managed physBody to intersect with the collider.
         /// </summary>
         /// <param name="collider">Collision rectangle to check</param>
         /// <param name="map">Map to check on</param>
@@ -21,8 +21,8 @@ namespace Robust.Shared.Interfaces.Physics
 
         bool TryCollide(IEntity entity, Vector2 offset, bool bump = true);
 
-        void AddCollidable(ICollidable collidable);
-        void RemoveCollidable(ICollidable collidable);
+        void AddBody(IPhysBody physBody);
+        void RemoveBody(IPhysBody physBody);
         void BuildCollisionGrid();
 
         /// <summary>

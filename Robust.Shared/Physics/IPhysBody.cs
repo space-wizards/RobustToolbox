@@ -2,14 +2,16 @@
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 
-namespace Robust.Shared.Interfaces.Physics
+namespace Robust.Shared.Physics
 {
-    public interface ICollidable
+    /// <summary>
+    /// 
+    /// </summary>
+    public interface IPhysBody
     {
         /// <summary>
-        ///     Entity that this collidable represents.
+        ///     Entity that this physBody represents.
         /// </summary>
         IEntity Owner { get; }
 
@@ -46,19 +48,19 @@ namespace Robust.Shared.Interfaces.Physics
         int CollisionMask { get; set; }
 
         /// <summary>
-        /// Called when the collidable is bumped into by someone/something
+        /// Called when the physBody is bumped into by someone/something
         /// </summary>
         /// <param name="bumpedby"></param>
         void Bumped(IEntity bumpedby);
 
         /// <summary>
-        /// Called when the collidable bumps into this entity
+        /// Called when the physBody bumps into this entity
         /// </summary>
         /// <param name="bumpedinto"></param>
         void Bump(List<IEntity> bumpedinto);
 
         /// <summary>
-        ///     The map index this collidable is located upon
+        ///     The map index this physBody is located upon
         /// </summary>
         MapId MapID { get; }
     }

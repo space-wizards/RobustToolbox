@@ -32,10 +32,9 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public override Type StateType => typeof(CollidableComponentState);
 
-
         /// <inheritdoc />
         [ViewVariables]
-        Box2 ICollidable.WorldAABB
+        Box2 IPhysBody.WorldAABB
         {
             get
             {
@@ -47,7 +46,7 @@ namespace Robust.Client.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        Box2 ICollidable.AABB
+        Box2 IPhysBody.AABB
         {
             get
             {
@@ -68,13 +67,13 @@ namespace Robust.Client.GameObjects
         public MapId MapID => Owner.Transform.MapID;
 
         /// <inheritdoc />
-        void ICollidable.Bumped(IEntity bumpedby)
+        void IPhysBody.Bumped(IEntity bumpedby)
         {
             SendMessage(new BumpedEntMsg(bumpedby));
         }
 
         /// <inheritdoc />
-        void ICollidable.Bump(List<IEntity> bumpedinto)
+        void IPhysBody.Bump(List<IEntity> bumpedinto)
         {
             var collidecomponents = Owner.GetAllComponents<ICollideBehavior>().ToList();
 
@@ -133,7 +132,7 @@ namespace Robust.Client.GameObjects
 
             if (_collisionEnabled && !_collisionIsActuallyEnabled)
             {
-                _physicsManager.AddCollidable(this);
+                _physicsManager.AddBody(this);
                 _collisionIsActuallyEnabled = true;
             }
         }
@@ -145,7 +144,7 @@ namespace Robust.Client.GameObjects
         {
             if (_collisionEnabled)
             {
-                _physicsManager.RemoveCollidable(this);
+                _physicsManager.RemoveBody(this);
             }
 
             base.Shutdown();
@@ -178,23 +177,23 @@ namespace Robust.Client.GameObjects
         }
 
         /// <summary>
-        ///     Enables collidable
+        ///     Enables PhysicsBody
         /// </summary>
         private void EnableCollision()
         {
             _collisionEnabled = true;
             _collisionIsActuallyEnabled = true;
-            _physicsManager.AddCollidable(this);
+            _physicsManager.AddBody(this);
         }
 
         /// <summary>
-        ///     Disables Collidable
+        ///     Disables PhysicsBody
         /// </summary>
         private void DisableCollision()
         {
             _collisionEnabled = false;
             _collisionIsActuallyEnabled = false;
-            _physicsManager.RemoveCollidable(this);
+            _physicsManager.RemoveBody(this);
         }
     }
 }

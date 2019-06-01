@@ -6,9 +6,9 @@ using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Client.Debugging
@@ -99,7 +99,7 @@ namespace Robust.Client.Debugging
                 foreach (var boundingBox in _componentManager.GetAllComponents<ICollidableComponent>())
                 {
                     // all entities have a TransformComponent
-                    var transform = ((ICollidable) boundingBox).Owner.Transform;
+                    var transform = ((IPhysBody) boundingBox).Owner.Transform;
 
                     // if not on the same map, continue
                     if (transform.MapID != _eyeManager.CurrentMap || !transform.IsMapTransform)

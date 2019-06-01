@@ -42,8 +42,8 @@ namespace Robust.Server.GameObjects
 
             serializer.DataField(ref _collisionEnabled, "on", true);
             serializer.DataField(ref _isHardCollidable, "hard", true);
-            serializer.DataField(ref _collisionLayer, "layer", 1);
-            serializer.DataField(ref _collisionMask, "mask", 1);
+            serializer.DataField(ref _collisionLayer, "layer", 0);
+            serializer.DataField(ref _collisionMask, "mask", 0);
             serializer.DataField(ref _isScrapingFloor, "IsScrapingFloor", false);
             serializer.DataField(ref _physShapeAabb, "shape", new PhysShapeAabb());
         }

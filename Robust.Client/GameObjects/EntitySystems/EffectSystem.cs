@@ -123,6 +123,14 @@ namespace Robust.Client.GameObjects
             /// </summary>
             public Texture EffectSprite { get; set; }
 
+            public RSI.State RsiState { get; set; }
+
+            public int AnimationIndex { get; set; }
+
+            public float AnimationTime { get; set; }
+
+            public bool AnimationLoops { get; set; }
+
             /// <summary>
             /// Effect position relative to the emit position
             /// </summary>
@@ -212,8 +220,22 @@ namespace Robust.Client.GameObjects
 
             public Effect(EffectSystemMessage effectcreation, IResourceCache resourceCache, IMapManager mapManager)
             {
-                EffectSprite = resourceCache
-                    .GetResource<TextureResource>(new ResourcePath("/Textures/") / effectcreation.EffectSprite).Texture;
+                if (effectcreation.RsiState != null)
+                {
+                    var rsi = resourceCache
+                        .GetResource<RSIResource>(new ResourcePath("/Textures/") / effectcreation.EffectSprite)
+                        .RSI;
+                    RsiState = rsi[effectcreation.RsiState];
+                    EffectSprite = RsiState.Frame0;
+                }
+                else
+                {
+                    EffectSprite = resourceCache
+                        .GetResource<TextureResource>(new ResourcePath("/Textures/") / effectcreation.EffectSprite)
+                        .Texture;
+                }
+
+                AnimationLoops = effectcreation.AnimationLoops;
                 Coordinates = effectcreation.Coordinates;
                 EmitterCoordinates = effectcreation.EmitterCoordinates;
                 Velocity = effectcreation.Velocity;
@@ -274,6 +296,36 @@ namespace Robust.Client.GameObjects
                 Rotation += RotationRate * frameTime;
                 Size += SizeDelta * frameTime;
                 Color += ColorDelta * frameTime;
+
+                if (RsiState == null)
+                {
+                    return;
+                }
+
+                // Calculate RSI animations.
+                var delayCount = RsiState.DelayCount(RSI.State.Direction.South);
+                if (delayCount > 0 && (AnimationLoops || AnimationIndex < delayCount-1))
+                {
+                    AnimationTime += frameTime;
+                    while (RsiState.GetFrame(RSI.State.Direction.South, AnimationIndex).delay < AnimationTime)
+                    {
+                        var (_, delay) = RsiState.GetFrame(RSI.State.Direction.South, AnimationIndex);
+                        AnimationIndex += 1;
+                        AnimationTime -= delay;
+                        if (AnimationIndex == delayCount)
+                        {
+                            if (AnimationLoops)
+                            {
+                                AnimationIndex = 0;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                        EffectSprite = RsiState.GetFrame(RSI.State.Direction.South, AnimationIndex).icon;
+                    }
+                }
             }
         }
 

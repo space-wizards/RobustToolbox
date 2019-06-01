@@ -75,6 +75,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
+        /// <inheritdoc />
         public IPhysShape PhysicsShape => _physShapeAabb;
 
         /// <summary>

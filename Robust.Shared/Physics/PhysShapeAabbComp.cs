@@ -17,6 +17,8 @@ namespace Robust.Shared.Physics
             set => _localBounds = value;
         }
 
+        // parameterless public constructor required for deserialization
+        public PhysShapeAabbComp() { }
         public PhysShapeAabbComp(IEntity entity)
         {
             Entity = entity;

@@ -107,16 +107,18 @@ namespace Robust.Client.Debugging
                         continue;
 
                     Color colorEdge;
-                    var colorFill = boundingBox.DebugColor.WithAlpha(0.25f);
+                    Color colorFill;
                     Box2 worldBox;
                     if (boundingBox.Owner.TryGetComponent<ICollidableComponent>(out var collision))
                     {
                         worldBox = collision.WorldAABB;
+                        colorFill = Color.Red.WithAlpha(0.25f);
                         colorEdge = Color.Green.WithAlpha(0.33f);
                     }
                     else
                     {
                         worldBox = boundingBox.WorldAABB;
+                        colorFill = Color.Aqua.WithAlpha(0.35f);
                         colorEdge = Color.Red.WithAlpha(0.33f);
                     }
 

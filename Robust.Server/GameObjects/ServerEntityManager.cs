@@ -3,6 +3,7 @@ using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -110,7 +111,7 @@ namespace Robust.Server.GameObjects
                 if (transform.MapID != mapId)
                     continue;
 
-                if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
+                if (entity.TryGetComponent<ICollidableComponent>(out var component))
                 {
                     if (position.Intersects(component.WorldAABB))
                         yield return entity;
@@ -134,7 +135,7 @@ namespace Robust.Server.GameObjects
                 if (transform.MapID != mapId)
                     continue;
 
-                if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
+                if (entity.TryGetComponent<ICollidableComponent>(out var component))
                 {
                     if (component.WorldAABB.Contains(position))
                         yield return entity;
@@ -158,7 +159,7 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity)
         {
-            if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
+            if (entity.TryGetComponent<ICollidableComponent>(out var component))
             {
                 return GetEntitiesIntersecting(entity.Transform.MapID, component.WorldAABB);
             }
@@ -183,7 +184,7 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range)
         {
-            if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
+            if (entity.TryGetComponent<ICollidableComponent>(out var component))
             {
                 return GetEntitiesInRange(entity.Transform.MapID, component.WorldAABB, range);
             }

@@ -115,6 +115,8 @@ namespace Robust.UnitTesting
 
                         server = DependencyCollection.Resolve<IBaseServerInternal>();
 
+                        server.ContentRootDir = "../../";
+
                         if (server.Start())
                         {
                             // TODO: Store load fail.

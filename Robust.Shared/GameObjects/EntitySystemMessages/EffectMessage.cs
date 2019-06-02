@@ -9,9 +9,20 @@ namespace Robust.Shared.GameObjects.EntitySystemMessages
     public class EffectSystemMessage : EntitySystemMessage
     {
         /// <summary>
-        /// Name of the sprite to be used for the effect
+        ///     Path to the texture used for the effect.
+        ///     Can also be a path to an RSI. In that case, <see cref="RsiState"/> must also be set.
         /// </summary>
         public string EffectSprite { get; set; } = "";
+
+        /// <summary>
+        ///     Specifies the name of the RSI state to use if <see cref="EffectSprite"/> is an RSI.
+        /// </summary>
+        public string RsiState { get; set; }
+
+        /// <summary>
+        ///     If the sprite is an RSI state, controls whether the animation loops or ends on the last frame.
+        /// </summary>
+        public bool AnimationLoops { get; set; }
 
         /// <summary>
         /// Effect position relative to the emit position

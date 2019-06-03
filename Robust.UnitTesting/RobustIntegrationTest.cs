@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Robust.Client;
 using Robust.Client.Interfaces;
 using Robust.Server.Interfaces;
-using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;

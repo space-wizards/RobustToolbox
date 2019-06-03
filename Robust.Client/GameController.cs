@@ -67,6 +67,7 @@ namespace Robust.Client
         [Dependency] private readonly IClyde _clyde;
         [Dependency] private readonly IFontManagerInternal _fontManager;
         [Dependency] private readonly ILocalizationManager _localizationManager;
+        [Dependency] private readonly IModLoader _modLoader;
 #pragma warning restore 649
 
         public string ContentRootDir { get; set; } = "../../../";
@@ -117,20 +118,20 @@ namespace Robust.Client
             _fontManager.Initialize();
 
             //identical code for server in baseserver
-            if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))
+            if (!_modLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))
             {
                 Logger.FatalS("eng", "Could not load any Shared DLL.");
                 throw new NotSupportedException("Cannot load client without content assembly");
             }
 
-            if (!AssemblyLoader.TryLoadAssembly<GameClient>(_resourceManager, $"Content.Client"))
+            if (!_modLoader.TryLoadAssembly<GameClient>(_resourceManager, $"Content.Client"))
             {
                 Logger.FatalS("eng", "Could not load any Client DLL.");
                 throw new NotSupportedException("Cannot load client without content assembly");
             }
 
             // Call Init in game assemblies.
-            AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
+            _modLoader.BroadcastRunLevel(ModRunLevel.Init);
 
             _eyeManager.Initialize();
             _serializer.Initialize();
@@ -149,7 +150,7 @@ namespace Robust.Client
 
             _client.Initialize();
             _discord.Initialize();
-            AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.PostInit);
+            _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
             _stateManager.RequestStateChange<MainScreen>();
 
@@ -185,7 +186,7 @@ namespace Robust.Client
         {
             var eventArgs = new ProcessFrameEventArgs(frameTime);
             _networkManager.ProcessPackets();
-            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, eventArgs.Elapsed);
+            _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, eventArgs.Elapsed);
             _timerManager.UpdateTimers(frameTime);
             _taskManager.ProcessPendingTasks();
             _userInterfaceManager.Update(eventArgs);
@@ -196,19 +197,19 @@ namespace Robust.Client
                 _gameStateManager.ApplyGameState();
             }
 
-            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, eventArgs.Elapsed);
+            _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, eventArgs.Elapsed);
         }
 
         private void _frameProcessMain(float delta)
         {
             var eventArgs = new RenderFrameEventArgs(delta);
             _clyde?.FrameProcess(eventArgs);
-            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePreEngine, eventArgs.Elapsed);
+            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, eventArgs.Elapsed);
             _lightManager.FrameUpdate(eventArgs);
             _stateManager.FrameUpdate(eventArgs);
             _overlayManager.FrameUpdate(eventArgs);
             _userInterfaceManager.FrameUpdate(eventArgs);
-            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePostEngine, eventArgs.Elapsed);
+            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, eventArgs.Elapsed);
         }
 
         internal static void SetupLogging(ILogManager logManager)

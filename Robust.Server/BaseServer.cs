@@ -87,6 +87,8 @@ namespace Robust.Server
         private readonly ILocalizationManager _localizationManager;
         [Dependency]
         private IRuntimeLog runtimeLog;
+        [Dependency]
+        private readonly IModLoader _modLoader;
 #pragma warning restore 649
 
         private FileLogHandler fileLogHandler;
@@ -204,13 +206,13 @@ namespace Robust.Server
             // _resources.MountDefaultContentPack();
 
             //identical code in game controller for client
-            if (!AssemblyLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
+            if (!_modLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
             {
                 Logger.FatalS("eng", "Could not load any Shared DLL.");
                 return true;
             }
 
-            if (!AssemblyLoader.TryLoadAssembly<GameServer>(_resources, $"Content.Server"))
+            if (!_modLoader.TryLoadAssembly<GameServer>(_resources, $"Content.Server"))
             {
                 Logger.FatalS("eng", "Could not load any Server DLL.");
                 return true;
@@ -230,7 +232,7 @@ namespace Robust.Server
             IoCManager.Resolve<IViewVariablesHost>().Initialize();
 
             // Call Init in game assemblies.
-            AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
+            _modLoader.BroadcastRunLevel(ModRunLevel.Init);
 
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared
@@ -242,7 +244,7 @@ namespace Robust.Server
             IoCManager.Resolve<IConGroupController>().Initialize();
             _entities.Startup();
 
-            AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.PostInit);
+            _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
             IoCManager.Resolve<IStatusHost>().Start();
 
@@ -346,7 +348,7 @@ namespace Robust.Server
 
             IoCManager.Resolve<IServerNetManager>().ProcessPackets();
 
-            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, frameTime);
+            _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameTime);
 
             timerManager.UpdateTimers(frameTime);
             _taskManager.ProcessPendingTasks();
@@ -354,7 +356,7 @@ namespace Robust.Server
             _components.CullRemovedComponents();
             _entities.Update(frameTime);
 
-            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, frameTime);
+            _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameTime);
 
             _stateManager.SendGameStateUpdate();
         }

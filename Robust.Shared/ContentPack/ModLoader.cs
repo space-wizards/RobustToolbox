@@ -12,87 +12,56 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.ContentPack
 {
     /// <summary>
-    ///     Class for managing the loading of assemblies into the engine.
+    ///     Run levels of the Content entry point.
     /// </summary>
-    public static class AssemblyLoader
+    public enum ModRunLevel
+    {
+        Error = 0,
+        Init = 1,
+        PostInit = 2,
+    }
+
+    /// <summary>
+    ///     Levels at which point the content assemblies are getting updates.
+    /// </summary>
+    public enum ModUpdateLevel
     {
         /// <summary>
-        ///     Run levels of the Content entry point.
+        ///     This update is called before the main state manager on process frames.
         /// </summary>
-        public enum RunLevel
-        {
-            Error = 0,
-            Init = 1,
-            PostInit = 2,
-        }
+        PreEngine,
 
         /// <summary>
-        ///     Levels at which point the content assemblies are getting updates.
+        ///     This update is called before the main state manager on render frames, thus only applies to the client.
         /// </summary>
-        public enum UpdateLevel
-        {
-            /// <summary>
-            ///     This update is called before the main state manager on process frames.
-            /// </summary>
-            PreEngine,
+        FramePreEngine,
 
-            /// <summary>
-            ///     This update is called before the main state manager on render frames, thus only applies to the client.
-            /// </summary>
-            FramePreEngine,
+        /// <summary>
+        ///     This update is called after the main state manager on process frames.
+        /// </summary>
+        PostEngine,
 
-            /// <summary>
-            ///     This update is called after the main state manager on process frames.
-            /// </summary>
-            PostEngine,
+        /// <summary>
+        ///     This update is called after the main state manager on render frames, thus only applies to the client.
+        /// </summary>
+        FramePostEngine,
+    }
 
-            /// <summary>
-            ///     This update is called after the main state manager on render frames, thus only applies to the client.
-            /// </summary>
-            FramePostEngine,
-        }
+    /// <summary>
+    ///     Class for managing the loading of assemblies into the engine.
+    /// </summary>
+    internal sealed class ModLoader : IModLoader
+    {
+#pragma warning disable 649
+        [Dependency] private readonly IReflectionManager _reflectionManager;
+#pragma warning restore 649
 
         /// <summary>
         ///     Loaded assemblies.
         /// </summary>
-        private static readonly List<ModInfo> _mods = new List<ModInfo>();
+        private readonly List<ModInfo> _mods = new List<ModInfo>();
 
-        static AssemblyLoader()
-        {
-            // Make it attempt to use already loaded assemblies,
-            // as .NET doesn't do it automatically.
-            // (It attempts to load dependencies from disk next to executable only)
-            AppDomain.CurrentDomain.AssemblyResolve += ResolveMissingAssembly;
-        }
-
-        private static Assembly ResolveMissingAssembly(object sender, ResolveEventArgs args)
-        {
-            foreach (var mod in _mods)
-            {
-                if (mod.GameAssembly.FullName == args.Name)
-                    return mod.GameAssembly;
-            }
-            return null;
-        }
-
-        /// <summary>
-        ///     Gets an assembly by name from the given AppDomain.
-        /// </summary>
-        /// <param name="domain"></param>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public static Assembly GetAssemblyByName(this AppDomain domain, string name)
-        {
-            return domain.GetAssemblies().SingleOrDefault(assembly => assembly.GetName().Name == name);
-        }
-
-        /// <summary>
-        ///     Loads an assembly into the current AppDomain.
-        /// </summary>
-        /// <typeparam name="T">The type of the entry point to search for.</typeparam>
-        /// <param name="assembly">Byte array of the assembly.</param>
-        /// <param name="symbols">Optional byte array of the debug symbols.</param>
-        public static void LoadGameAssembly<T>(byte[] assembly, byte[] symbols = null)
+        public void LoadGameAssembly<T>(byte[] assembly, byte[] symbols = null)
             where T : GameShared
         {
             // TODO: Re-enable type check when it's not just a giant pain in the butt.
@@ -109,7 +78,7 @@ namespace Robust.Shared.ContentPack
                 ? AppDomain.CurrentDomain.Load(assembly, symbols)
                 : AppDomain.CurrentDomain.Load(assembly);
 
-            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(mod.GameAssembly);
+            _reflectionManager.LoadAssemblies(mod.GameAssembly);
 
             var entryPoints = mod.GameAssembly.GetTypes().Where(t => typeof(T).IsAssignableFrom(t)).ToArray();
 
@@ -124,11 +93,7 @@ namespace Robust.Shared.ContentPack
             _mods.Add(mod);
         }
 
-        /// <summary>
-        ///     Loads an assembly into the current AppDomain.
-        /// </summary>
-        /// <typeparam name="T">The type of the entry point to search for.</typeparam>
-        public static void LoadGameAssembly<T>(string diskPath)
+        public void LoadGameAssembly<T>(string diskPath)
             where T : GameShared
         {
             // TODO: Re-enable type check when it's not just a giant pain in the butt.
@@ -141,10 +106,9 @@ namespace Robust.Shared.ContentPack
 
             var mod = new ModInfo();
 
-            mod.GameAssembly =
-                Assembly.LoadFrom(diskPath);
+            mod.GameAssembly = Assembly.LoadFrom(diskPath);
 
-            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(mod.GameAssembly);
+            _reflectionManager.LoadAssemblies(mod.GameAssembly);
 
             var entryPoints = mod.GameAssembly.GetTypes().Where(t => typeof(T).IsAssignableFrom(t)).ToArray();
 
@@ -159,11 +123,7 @@ namespace Robust.Shared.ContentPack
             _mods.Add(mod);
         }
 
-        /// <summary>
-        ///     Broadcasts a run level change to all loaded entry point.
-        /// </summary>
-        /// <param name="level">New level</param>
-        public static void BroadcastRunLevel(RunLevel level)
+        public void BroadcastRunLevel(ModRunLevel level)
         {
             foreach (var mod in _mods)
             {
@@ -171,10 +131,10 @@ namespace Robust.Shared.ContentPack
                 {
                     switch (level)
                     {
-                        case RunLevel.Init:
+                        case ModRunLevel.Init:
                             entry.Init();
                             break;
-                        case RunLevel.PostInit:
+                        case ModRunLevel.PostInit:
                             entry.PostInit();
                             break;
                         default:
@@ -185,7 +145,7 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        public static void BroadcastUpdate(UpdateLevel level, float frameTime)
+        public void BroadcastUpdate(ModUpdateLevel level, float frameTime)
         {
             foreach (var entrypoint in _mods.SelectMany(m => m.EntryPoints))
             {
@@ -207,19 +167,12 @@ namespace Robust.Shared.ContentPack
             public List<GameShared> EntryPoints { get; }
         }
 
-        /// <summary>
-        ///     Tries to load an assembly from a resource manager into the current appdomain.
-        /// </summary>
-        /// <typeparam name="T">The type of the entry point to search for.</typeparam>
-        /// <param name="resMan">The assembly will be located inside of this resource manager.</param>
-        /// <param name="assemblyName">File name of the assembly inside of the ./Assemblies folder in the resource manager.</param>
-        /// <returns>If the assembly was successfully located and loaded.</returns>
-        public static bool TryLoadAssembly<T>(IResourceManager resMan, string assemblyName)
+        public bool TryLoadAssembly<T>(IResourceManager resMan, string assemblyName)
             where T : GameShared
         {
             var dllPath = new ResourcePath($@"/Assemblies/{assemblyName}.dll");
             // To prevent breaking debugging on Rider, try to load from disk if possible.
-            #if DEBUG
+#if DEBUG
             if (resMan.TryGetDiskFilePath(dllPath, out var path))
             {
                 Logger.DebugS("srv", $"Loading {assemblyName} DLL");
@@ -234,14 +187,14 @@ namespace Robust.Shared.ContentPack
                     return false;
                 }
             }
-            #endif
+#endif
             if (resMan.TryContentFileRead(dllPath, out var gameDll))
             {
                 Logger.DebugS("srv", $"Loading {assemblyName} DLL");
 
-                #if DEBUG
+#if DEBUG
                 // see if debug info is present
-                if (resMan.TryContentFileRead(new ResourcePath($@"/Assemblies/{assemblyName}.pdb") , out var gamePdb))
+                if (resMan.TryContentFileRead(new ResourcePath($@"/Assemblies/{assemblyName}.pdb"), out var gamePdb))
                 {
                     try
                     {
@@ -255,7 +208,7 @@ namespace Robust.Shared.ContentPack
                         return false;
                     }
                 }
-                #endif
+#endif
 
                 try
                 {

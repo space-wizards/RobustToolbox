@@ -150,6 +150,8 @@ namespace Robust.Client
 #else
             IoCManager.Register<IClipboardManager, ClipboardManagerUnsupported>();
 #endif
+
+            IoCManager.Register<IModLoader, ModLoader>();
         }
 
         internal static void RegisterReflection()

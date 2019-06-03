@@ -113,6 +113,8 @@ namespace Robust.Shared.Map
         /// <returns></returns>
         IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null);
 
+        IEnumerable<TileRef> GetTilesIntersecting(Circle worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null);
+
         #endregion TileAccess
 
         #region SnapGridAccess

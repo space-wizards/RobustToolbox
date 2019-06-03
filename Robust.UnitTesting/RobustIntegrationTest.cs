@@ -85,6 +85,12 @@ namespace Robust.UnitTesting
                 _currentTicksId += 1;
                 _toInstanceChannel.PushMessage(new StopMessage());
             }
+
+            public void Post(Action post)
+            {
+                _currentTicksId += 1;
+                _toInstanceChannel.PushMessage(new PostMessage(post, _currentTicksId));
+            }
         }
 
         public sealed class ServerIntegrationInstance : IntegrationInstance
@@ -230,6 +236,11 @@ namespace Robust.UnitTesting
                         case StopMessage _:
                             Running = false;
                             break;
+
+                        case PostMessage postMessage:
+                            postMessage.Post();
+                            _fromInstanceChannel.PushMessage(new AckTicksMessage(postMessage.MessageId));
+                            break;
                     }
                 }
             }
@@ -330,6 +341,18 @@ namespace Robust.UnitTesting
             }
 
             public Exception UnhandledException { get; }
+        }
+
+        private sealed class PostMessage
+        {
+            public Action Post { get; }
+            public int MessageId { get; }
+
+            public PostMessage(Action post, int messageId)
+            {
+                Post = post;
+                MessageId = messageId;
+            }
         }
     }
 }

@@ -11,17 +11,6 @@ namespace Robust.Client.ResourceManagement
     {
         private Dictionary<(ResourcePath, Type), BaseResource> CachedResources = new Dictionary<(ResourcePath, Type), BaseResource>();
 
-        public void LoadBaseResources()
-        {
-#if FULL_RELEASE
-            MountContentDirectory(@"Resources/");
-#else
-            MountContentDirectory(@"../../Resources/");
-            MountContentDirectory(@"../../../bin/Content.Client/", new ResourcePath("/Assemblies/"));
-            MountContentDirectory(@"../../../Resources/");
-#endif
-        }
-
         public T GetResource<T>(string path, bool useFallback = true) where T : BaseResource, new()
         {
             return GetResource<T>(new ResourcePath(path), useFallback);

@@ -74,7 +74,7 @@ namespace Robust.Client
             RegisterReflection();
         }
 
-        private static void RegisterIoC(DisplayMode mode)
+        internal static void RegisterIoC(DisplayMode mode)
         {
             // Shared stuff.
             IoCManager.Register<ILogManager, LogManager>();
@@ -152,7 +152,7 @@ namespace Robust.Client
 #endif
         }
 
-        private static void RegisterReflection()
+        internal static void RegisterReflection()
         {
             // Gets a handle to the shared and the current (client) dll.
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(new List<Assembly>(2)

@@ -1,4 +1,9 @@
-﻿using Robust.Client.Console;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Reflection;
+using Robust.Client.Console;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameStates;
@@ -7,44 +12,28 @@ using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Lighting;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Interfaces.Input;
-using Robust.Client.Interfaces.Map;
 using Robust.Client.Interfaces.Placement;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Interfaces.Utility;
-using Robust.Client.Log;
 using Robust.Client.State.States;
+using Robust.Client.ViewVariables;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Input;
-using Robust.Shared.Interfaces;
 using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Network.Messages;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
-using System.IO;
-using System.Reflection;
-using System.Threading;
-using JetBrains.Annotations;
-using Robust.Client.ResourceManagement;
-using Robust.Client.Utility;
-using Robust.Client.ViewVariables;
-using Robust.Shared;
-using Robust.Shared.Asynchronous;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Localization;
+using Robust.Shared.Log;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Client
 {
@@ -80,9 +69,11 @@ namespace Robust.Client
         [Dependency] private readonly ILocalizationManager _localizationManager;
 #pragma warning restore 649
 
-        private void Startup()
+        public string ContentRootDir { get; set; } = "../../../";
+
+        public void Startup()
         {
-            SetupLogging();
+            SetupLogging(_logManager);
 
             var args = GetCommandLineArgs();
 
@@ -106,7 +97,14 @@ namespace Robust.Client
             }
 
             _resourceCache.Initialize(userDataDir);
-            _resourceCache.LoadBaseResources();
+
+#if FULL_RELEASE
+            _resourceCache.MountContentDirectory(@"Resources/");
+#else
+            _resourceCache.MountContentDirectory($@"{ContentRootDir}RobustToolbox/Resources/");
+            _resourceCache.MountContentDirectory($@"{ContentRootDir}bin/Content.Client/", new ResourcePath("/Assemblies/"));
+            _resourceCache.MountContentDirectory($@"{ContentRootDir}Resources/");
+#endif
 
             // Default to en-US.
             // Perhaps in the future we could make a command line arg or something to change this default.
@@ -213,19 +211,19 @@ namespace Robust.Client
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.FramePostEngine, eventArgs.Elapsed);
         }
 
-        private void SetupLogging()
+        internal static void SetupLogging(ILogManager logManager)
         {
-            _logManager.RootSawmill.AddHandler(new ConsoleLogHandler());
+            logManager.RootSawmill.AddHandler(new ConsoleLogHandler());
 
-            _logManager.GetSawmill("res.typecheck").Level = LogLevel.Info;
-            _logManager.GetSawmill("res.tex").Level = LogLevel.Info;
-            _logManager.GetSawmill("console").Level = LogLevel.Info;
-            _logManager.GetSawmill("go.sys").Level = LogLevel.Info;
-            _logManager.GetSawmill("ogl.debug.performance").Level = LogLevel.Fatal;
+            logManager.GetSawmill("res.typecheck").Level = LogLevel.Info;
+            logManager.GetSawmill("res.tex").Level = LogLevel.Info;
+            logManager.GetSawmill("console").Level = LogLevel.Info;
+            logManager.GetSawmill("go.sys").Level = LogLevel.Info;
+            logManager.GetSawmill("ogl.debug.performance").Level = LogLevel.Fatal;
             // Stupid nvidia driver spams buffer info on DebugTypeOther every time you re-allocate a buffer.
-            _logManager.GetSawmill("ogl.debug.other").Level = LogLevel.Warning;
-            _logManager.GetSawmill("gdparse").Level = LogLevel.Error;
-            _logManager.GetSawmill("discord").Level = LogLevel.Warning;
+            logManager.GetSawmill("ogl.debug.other").Level = LogLevel.Warning;
+            logManager.GetSawmill("gdparse").Level = LogLevel.Error;
+            logManager.GetSawmill("discord").Level = LogLevel.Warning;
         }
 
         public static ICollection<string> GetCommandLineArgs()
@@ -271,7 +269,7 @@ namespace Robust.Client
             return Path.Combine(appDataDir, "Space Station 14");
         }
 
-        private enum DisplayMode
+        internal enum DisplayMode
         {
             Headless,
             Clyde,

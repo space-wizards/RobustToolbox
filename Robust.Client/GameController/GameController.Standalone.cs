@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Runtime.Remoting.Channels;
 using System.Threading;
 using Robust.Client.Interfaces;
 using Robust.Client.Utility;
@@ -13,7 +12,7 @@ namespace Robust.Client
 {
     internal partial class GameController
     {
-        private GameLoop _mainLoop;
+        private IGameLoop _mainLoop;
 
 #pragma warning disable 649
         [Dependency] private IGameTiming _gameTiming;
@@ -37,7 +36,6 @@ namespace Robust.Client
                 mode = DisplayMode.Clyde;
             }
 
-            ThreadUtility.MainThread = Thread.CurrentThread;
             InitIoC(mode);
 
             var gc = (GameController) IoCManager.Resolve<IGameController>();
@@ -48,12 +46,20 @@ namespace Robust.Client
             IoCManager.Clear();
         }
 
-        private void MainLoop(DisplayMode mode)
+        public void OverrideMainLoop(IGameLoop gameLoop)
         {
-            _mainLoop = new GameLoop(_gameTiming)
+            _mainLoop = gameLoop;
+        }
+
+        public void MainLoop(DisplayMode mode)
+        {
+            if (_mainLoop == null)
             {
-                SleepMode = mode == DisplayMode.Headless ? SleepMode.Delay : SleepMode.None
-            };
+                _mainLoop = new GameLoop(_gameTiming)
+                {
+                    SleepMode = mode == DisplayMode.Headless ? SleepMode.Delay : SleepMode.None
+                };
+            }
 
             _mainLoop.Tick += (sender, args) =>
             {
@@ -92,4 +98,3 @@ namespace Robust.Client
         }
     }
 }
-

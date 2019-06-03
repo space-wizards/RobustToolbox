@@ -242,19 +242,17 @@ namespace Robust.Shared.Map
         public IEnumerable<TileRef> GetTilesIntersecting(Circle worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null)
         {
             var aabb = new Box2(worldArea.Position.X - worldArea.Radius, worldArea.Position.Y - worldArea.Radius, worldArea.Position.X + worldArea.Radius, worldArea.Position.Y + worldArea.Radius);
-            var tiles = new List<TileRef>();
 
             foreach(var tile in GetTilesIntersecting(aabb, ignoreEmpty))
             {
-                if (worldArea.Contains(new Vector2(tile.X, tile.Y)))
+                if (GridTileToLocal(tile.GridIndices).Distance(_mapManager, new GridCoordinates(worldArea.Position,tile.GridIndex)) <= worldArea.Radius)
                 {
                     if (predicate == null || predicate(tile))
                     {
-                        tiles.Add(tile);
+                        yield return tile;
                     }
                 }
             }
-            return tiles;
         }
 
         #endregion TileAccess

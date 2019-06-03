@@ -872,31 +872,31 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Calculates a gradient by lerping between 3 different hue values. The gradient has uniform saturation and brightness
+        ///     Calculates a gradient by lerping between the provided hue values.
         /// </summary>
-        /// <param name="leftHue">The hue at the far left side of the gradient. When gradientPosition = 0.0</param>
-        /// <param name="middleHue">The hue at the middle of the gradient. When gradientPosition = 0.5</param>
-        /// <param name="rightHue">The hue at the far right side of the gradient. When gradientPosition = 1.0</param>
-        /// <param name="gradientPosition">The position on the gradient to return a color for. Should range from 0.0 to 1.0</param>
-        /// <param name="leftSideSize">Fraction of the gradient lerped from leftHue to middleHue</param>
-        /// <param name="rightSideSize">Fraction of the gradient lerped from middleHue to rightHue. This plus the previous argument should add up to 1.0</param>
-        /// <returns>The Color of the gradient at the provided gradientPosition</returns>
-        public static Color HueShiftedGradient(float leftHue, float middleHue, float rightHue, float gradientPosition, float leftSideSize = 0.5f, float rightSideSize = 0.5f)
+        /// <param name="position">The position on the gradient to return a color for. Should range from 0.0 to 1.0</param>
+        /// <param name="hues">An array of hues to interpolate over</param>
+        /// <param name="saturation">Optional. The saturation value used across the whole gradient. Default = 1.0</param>
+        /// <param name="brightness">Optional. The brightness value used across the whole gradient. Default = 0.8</param>
+        /// <param name="alpha">Optional. The alpha value used across the whole gradient. Default = 1.0</param>
+        /// <returns></returns>
+        public static Color HueShiftedGradient(float position, float[] hues, float saturation = 1.0f, float brightness = 0.8f, float alpha = 1.0f)
         {
-            float finalHue;
-            if (gradientPosition <= leftSideSize)
+            float finalHue = 0.0f;
+            int numberOfSteps = hues.Length - 1;
+            float stepSize = 1.0f / numberOfSteps;
+            for (int i = 0; i < hues.Length - 1; i++)
             {
-                gradientPosition /= leftSideSize;// Adjust range to 0.0 to 1.0
-                finalHue = FloatMath.Lerp(leftHue, middleHue, gradientPosition);
-            }
-            else
-            {
-                gradientPosition = (gradientPosition - leftSideSize) / rightSideSize;// Adjust range to 0.0 to 1.0.
-                finalHue = FloatMath.Lerp(middleHue, rightHue, gradientPosition);
+                float stepStart = i * stepSize;
+                float stepEnd = (i + 1) * stepSize;
+                if (position > stepStart && position <= stepEnd)
+                {
+                    float normalizedPosition = (position - stepStart) / (stepEnd - stepStart); //Normalize to 0.0 to 1.0
+                    finalHue = FloatMath.Lerp(hues[i], hues[i + 1], normalizedPosition);
+                }
             }
 
-            // Uniform saturation, value, and alpha
-            return FromHsv(new Vector4(finalHue, 1.0f, 0.8f, 1.0f));
+            return FromHsv(new Vector4(finalHue, saturation, brightness, alpha));
         }
 
         [PublicAPI]

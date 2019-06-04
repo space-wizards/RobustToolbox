@@ -15,7 +15,7 @@ namespace Robust.Shared.ContentPack
         {
         }
 
-        public virtual void Update(AssemblyLoader.UpdateLevel level, float frameTime)
+        public virtual void Update(ModUpdateLevel level, float frameTime)
         {
         }
 

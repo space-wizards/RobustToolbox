@@ -36,6 +36,5 @@ namespace Robust.Client.Interfaces.ResourceManagement
 
     internal interface IResourceCacheInternal : IResourceCache, IResourceManagerInternal
     {
-        void LoadBaseResources();
     }
 }

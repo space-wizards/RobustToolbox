@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Robust.Client;
+using Robust.Client.Interfaces;
 using Robust.Server.Interfaces;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 using ServerEntryPoint = Robust.Server.EntryPoint;
 
 namespace Robust.UnitTesting
@@ -18,19 +21,24 @@ namespace Robust.UnitTesting
             return new ServerIntegrationInstance();
         }
 
+        protected static ClientIntegrationInstance StartClient()
+        {
+            return new ClientIntegrationInstance();
+        }
+
         public abstract class IntegrationInstance
         {
-            protected Thread InstanceThread;
-            protected IDependencyCollection DependencyCollection;
-            private protected IntegrationGameLoop GameLoop;
+            private protected Thread InstanceThread;
+            private protected IDependencyCollection DependencyCollection;
 
-            protected readonly object DependencyLock = new object();
+            private protected readonly Channel _toInstanceChannel = new Channel();
+            private protected readonly Channel _fromInstanceChannel = new Channel();
 
-            public bool IsAlive => InstanceThread?.IsAlive ?? false;
+            private int _currentTicksId = 1;
+            private int _ackTicksId;
 
-            protected readonly ManualResetEvent InitDoneEvent = new ManualResetEvent(false);
-            protected readonly ManualResetEvent ShutdownEvent = new ManualResetEvent(false);
-            private bool _shutdownRequested;
+            public bool IsAlive { get; private set; } = true;
+            public Exception UnhandledException { get; private set; }
 
             private protected IntegrationInstance()
             {
@@ -38,56 +46,50 @@ namespace Robust.UnitTesting
 
             public T ResolveDependency<T>()
             {
-                lock (DependencyLock)
-                {
-                    return DependencyCollection.Resolve<T>();
-                }
+                // TODO: Synchronize and ensure idle.
+                return DependencyCollection.Resolve<T>();
             }
 
             public async Task WaitIdleAsync(CancellationToken cancellationToken = default)
             {
-                await InitDoneEvent.WaitOneAsync(cancellationToken);
-
-                if (GameLoop != null)
+                while (IsAlive && _currentTicksId != _ackTicksId)
                 {
-                    await GameLoop.WaitIdleAsync(cancellationToken);
-                }
+                    var msg = await _fromInstanceChannel.WaitMessageAsync(cancellationToken);
+                    switch (msg)
+                    {
+                        case ShutDownMessage shutDownMessage:
+                        {
+                            IsAlive = false;
+                            UnhandledException = shutDownMessage.UnhandledException;
+                            break;
+                        }
 
-                if (_shutdownRequested)
-                {
-                    await ShutdownEvent.WaitOneAsync(cancellationToken);
+                        case AckTicksMessage ack:
+                        {
+                            _ackTicksId = ack.MessageId;
+                            break;
+                        }
+                    }
                 }
             }
 
             public void RunTicks(int ticks)
             {
-                if (GameLoop == null)
-                {
-                    InitDoneEvent.WaitOne();
-                }
-
-                if (GameLoop == null)
-                {
-                    throw new InvalidOperationException("Server failed to start, GameLoop does not exist.");
-                }
-
-                GameLoop.PushTicks(ticks);
+                _currentTicksId += 1;
+                _toInstanceChannel.PushMessage(new RunTicksMessage(ticks, 1 / 60f, _currentTicksId));
             }
 
             public void Stop()
             {
-                if (GameLoop == null)
-                {
-                    InitDoneEvent.WaitOne();
-                }
+                // Won't get ack'd directly but the shutdown is convincing enough.
+                _currentTicksId += 1;
+                _toInstanceChannel.PushMessage(new StopMessage());
+            }
 
-                if (GameLoop == null)
-                {
-                    throw new InvalidOperationException("Server failed to start, GameLoop does not exist.");
-                }
-
-                GameLoop.PushStop();
-                _shutdownRequested = true;
+            public void Post(Action post)
+            {
+                _currentTicksId += 1;
+                _toInstanceChannel.PushMessage(new PostMessage(post, _currentTicksId));
             }
         }
 
@@ -104,49 +106,84 @@ namespace Robust.UnitTesting
             {
                 try
                 {
-                    IBaseServerInternal server;
-                    lock (DependencyLock)
+                    IoCManager.InitThread(DependencyCollection);
+                    ServerEntryPoint.RegisterIoC();
+                    IoCManager.BuildGraph();
+                    ServerEntryPoint.SetupLogging();
+                    ServerEntryPoint.InitReflectionManager();
+
+                    var server = DependencyCollection.Resolve<IBaseServerInternal>();
+
+                    server.ContentRootDir = "../../";
+
+                    if (server.Start())
                     {
-                        IoCManager.InitThread(DependencyCollection);
-                        ServerEntryPoint.RegisterIoC();
-                        IoCManager.BuildGraph();
-                        ServerEntryPoint.SetupLogging();
-                        ServerEntryPoint.InitReflectionManager();
-
-                        server = DependencyCollection.Resolve<IBaseServerInternal>();
-
-                        server.ContentRootDir = "../../";
-
-                        if (server.Start())
-                        {
-                            // TODO: Store load fail.
-                            Console.WriteLine("Server failed to start.");
-                            return;
-                        }
-
-                        GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>());
-                        server.OverrideMainLoop(GameLoop);
+                        throw new Exception("Server failed to start.");
                     }
 
-                    InitDoneEvent.Set();
+                    var gameLoop = new IntegrationGameLoop(
+                        DependencyCollection.Resolve<IGameTiming>(),
+                        _toInstanceChannel, _fromInstanceChannel);
+                    server.OverrideMainLoop(gameLoop);
+
                     server.MainLoop();
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("Server crashed on exception: {0}", e);
-                    // TODO: Store exception somewhere.
+                    _fromInstanceChannel.PushMessage(new ShutDownMessage(e));
+                    return;
                 }
-                finally
+
+                _fromInstanceChannel.PushMessage(new ShutDownMessage(null));
+            }
+        }
+
+        public sealed class ClientIntegrationInstance : IntegrationInstance
+        {
+            internal ClientIntegrationInstance()
+            {
+                InstanceThread = new Thread(_clientMain) {Name = "Client Instance Thread"};
+                DependencyCollection = new DependencyCollection();
+                InstanceThread.Start();
+            }
+
+            private void _clientMain()
+            {
+                try
                 {
-                    InitDoneEvent.Set();
-                    ShutdownEvent.Set();
+                    IoCManager.InitThread(DependencyCollection);
+                    GameController.RegisterIoC(GameController.DisplayMode.Headless);
+                    IoCManager.BuildGraph();
+
+                    GameController.RegisterReflection();
+
+                    var client = DependencyCollection.Resolve<IGameControllerInternal>();
+
+                    client.ContentRootDir = "../../";
+
+                    client.Startup();
+
+                    var gameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(), _toInstanceChannel, _fromInstanceChannel);
+                    client.OverrideMainLoop(gameLoop);
+                    client.MainLoop(GameController.DisplayMode.Headless);
                 }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Client crashed on exception: {0}", e);
+                    _fromInstanceChannel.PushMessage(new ShutDownMessage(e));
+                    return;
+                }
+
+                _fromInstanceChannel.PushMessage(new ShutDownMessage(null));
             }
         }
 
         internal sealed class IntegrationGameLoop : IGameLoop
         {
             private readonly IGameTiming _gameTiming;
+            private readonly Channel _toInstanceChannel;
+            private readonly Channel _fromInstanceChannel;
 
 #pragma warning disable 67
             public event EventHandler<FrameEventArgs> Input;
@@ -160,110 +197,161 @@ namespace Robust.UnitTesting
             public int MaxQueuedTicks { get; set; }
             public SleepMode SleepMode { get; set; }
 
-            private readonly ManualResetEvent _resumeEvent = new ManualResetEvent(false);
-            private readonly ManualResetEvent _queueDoneEvent = new ManualResetEvent(true);
-            private readonly Queue<object> _messageChannel = new Queue<object>();
-
-            public IntegrationGameLoop(IGameTiming gameTiming)
+            public IntegrationGameLoop(IGameTiming gameTiming, Channel toInstanceChannel, Channel fromInstanceChannel)
             {
                 _gameTiming = gameTiming;
+                _toInstanceChannel = toInstanceChannel;
+                _fromInstanceChannel = fromInstanceChannel;
             }
 
             public void Run()
             {
+                // Ack tick message 1 is implied as "init done"
+                _fromInstanceChannel.PushMessage(new AckTicksMessage(1));
                 Running = true;
 
-                try
+                Tick += (a, b) => Console.WriteLine("tick: {0}", _gameTiming.CurTick);
+
+                var simFrameEvent = new MutableFrameEventArgs(0);
+                _gameTiming.InSimulation = true;
+
+                while (Running)
                 {
-                    Tick += (a, b) => Console.WriteLine("tick: {0}", _gameTiming.CurTick);
+                    var message = _toInstanceChannel.WaitMessage();
 
-                    var simFrameEvent = new MutableFrameEventArgs(0);
-                    _gameTiming.InSimulation = true;
-
-                    while (Running)
+                    switch (message)
                     {
-                        _resumeEvent.WaitOne();
-
-                        object message;
-                        lock (_messageChannel)
-                        {
-                            if (_messageChannel.Count == 0)
+                        case RunTicksMessage msg:
+                            _gameTiming.InSimulation = true;
+                            simFrameEvent.SetDeltaSeconds(msg.Delta);
+                            for (var i = 0; i < msg.Ticks && Running; i++)
                             {
-                                _queueDoneEvent.Set();
-                                _resumeEvent.Reset();
-                                continue;
+                                _gameTiming.CurTick = new GameTick(_gameTiming.CurTick.Value + 1);
+                                Tick?.Invoke(this, simFrameEvent);
                             }
 
-                            message = _messageChannel.Dequeue();
-                        }
+                            _fromInstanceChannel.PushMessage(new AckTicksMessage(msg.MessageId));
+                            break;
 
-                        _queueDoneEvent.Reset();
+                        case StopMessage _:
+                            Running = false;
+                            break;
 
-                        switch (message)
-                        {
-                            case RunTicksMessage msg:
-                                _gameTiming.InSimulation = true;
-                                simFrameEvent.SetDeltaSeconds(msg.Delta);
-                                for (var i = 0; i < msg.Ticks && Running; i++)
-                                {
-                                    _gameTiming.CurTick = new GameTick(_gameTiming.CurTick.Value + 1);
-                                    Tick?.Invoke(this, simFrameEvent);
-                                }
-
-                                break;
-
-                            case StopMessage msg:
-                                Running = false;
-                                break;
-                        }
+                        case PostMessage postMessage:
+                            postMessage.Post();
+                            _fromInstanceChannel.PushMessage(new AckTicksMessage(postMessage.MessageId));
+                            break;
                     }
                 }
-                finally
+            }
+        }
+
+        internal sealed class Channel
+        {
+            private readonly object _lock = new object();
+            private readonly Queue<object> _messageQueue = new Queue<object>();
+            private readonly ManualResetEvent _resumeEvent = new ManualResetEvent(false);
+
+            public void PushMessage(object message)
+            {
+                lock (_lock)
                 {
-                    // Set queue done always so that if the main loop dies from an exception we don't deadlock.
-                    _queueDoneEvent.Set();
-                }
-            }
-
-            public void PushTicks(int ticks)
-            {
-                _pushMessage(new RunTicksMessage(ticks, 1 / 60f));
-            }
-
-            public void PushStop()
-            {
-                _pushMessage(new StopMessage());
-            }
-
-            private void _pushMessage(object message)
-            {
-                lock (_messageChannel)
-                {
-                    _messageChannel.Enqueue(message);
+                    _messageQueue.Enqueue(message);
                     _resumeEvent.Set();
-                    _queueDoneEvent.Reset();
                 }
             }
 
-            public Task WaitIdleAsync(CancellationToken cancellationToken = default)
+            public object WaitMessage()
             {
-                return _queueDoneEvent.WaitOneAsync(cancellationToken);
-            }
-
-            private sealed class RunTicksMessage
-            {
-                public RunTicksMessage(int ticks, float delta)
+                _resumeEvent.WaitOne();
+                lock (_lock)
                 {
-                    Ticks = ticks;
-                    Delta = delta;
-                }
+                    var message = _messageQueue.Dequeue();
+                    if (_messageQueue.Count == 0)
+                    {
+                        _resumeEvent.Reset();
+                    }
 
-                public int Ticks { get; }
-                public float Delta { get; }
+                    return message;
+                }
             }
 
-            private sealed class StopMessage
+            public async Task<object> WaitMessageAsync(CancellationToken cancellationToken)
             {
+                await _resumeEvent.WaitOneAsync(cancellationToken);
+
+                lock (_lock)
+                {
+                    var message = _messageQueue.Dequeue();
+                    if (_messageQueue.Count == 0)
+                    {
+                        _resumeEvent.Reset();
+                    }
+
+                    return message;
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Sent head -> instance to tell the instance to run a few simulation ticks.
+        /// </summary>
+        private sealed class RunTicksMessage
+        {
+            public RunTicksMessage(int ticks, float delta, int messageId)
+            {
+                Ticks = ticks;
+                Delta = delta;
+                MessageId = messageId;
+            }
+
+            public int Ticks { get; }
+            public float Delta { get; }
+            public int MessageId { get; }
+        }
+
+        /// <summary>
+        ///     Sent head -> instance to tell the instance to shut down cleanly.
+        /// </summary>
+        private sealed class StopMessage
+        {
+        }
+
+        /// <summary>
+        ///     Sent instance -> head to confirm finishing of ticks message.
+        /// </summary>
+        private sealed class AckTicksMessage
+        {
+            public AckTicksMessage(int messageId)
+            {
+                MessageId = messageId;
+            }
+
+            public int MessageId { get; }
+        }
+
+        /// <summary>
+        ///     Sent instance -> head when instance shuts down for whatever reason.
+        /// </summary>
+        private sealed class ShutDownMessage
+        {
+            public ShutDownMessage(Exception unhandledException)
+            {
+                UnhandledException = unhandledException;
+            }
+
+            public Exception UnhandledException { get; }
+        }
+
+        private sealed class PostMessage
+        {
+            public Action Post { get; }
+            public int MessageId { get; }
+
+            public PostMessage(Action post, int messageId)
+            {
+                Post = post;
+                MessageId = messageId;
             }
         }
     }

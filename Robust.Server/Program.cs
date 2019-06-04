@@ -146,6 +146,7 @@ namespace Robust.Server
             IoCManager.Register<IConGroupController, ConGroupController>();
             IoCManager.Register<IStatusHost, StatusHost>();
             IoCManager.Register<IPauseManager, PauseManager>();
+            IoCManager.Register<IModLoader, ModLoader>();
         }
 
         internal static void InitReflectionManager()

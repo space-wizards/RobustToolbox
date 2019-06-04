@@ -202,6 +202,7 @@ namespace Robust.UnitTesting
             IoCManager.Register<IRuntimeLog, RuntimeLog>();
             IoCManager.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             IoCManager.Register<ILocalizationManager, LocalizationManager>();
+            IoCManager.Register<IModLoader, ModLoader>();
 
             switch (Project)
             {

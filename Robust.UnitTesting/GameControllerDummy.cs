@@ -1,5 +1,7 @@
+using Robust.Client;
 using Robust.Client.Input;
 using Robust.Client.Interfaces;
+using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting
 {
@@ -8,6 +10,18 @@ namespace Robust.UnitTesting
         public void Shutdown(string reason = null)
         {
         }
+
+        public void Startup()
+        {
+
+        }
+
+        public void MainLoop(GameController.DisplayMode mode)
+        {
+
+        }
+
+        public string ContentRootDir { get; set; }
 
         public void KeyDown(KeyEventArgs keyEvent)
         {
@@ -35,6 +49,11 @@ namespace Robust.UnitTesting
 
         public void MouseWheel(MouseWheelEventArgs mouseWheelEventArgs)
         {
+        }
+
+        public void OverrideMainLoop(IGameLoop gameLoop)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

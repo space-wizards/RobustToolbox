@@ -135,14 +135,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public void AddFormattedLine(FormattedMessage message)
         {
-            if (!ThreadUtility.IsOnMainThread())
-            {
-                _messageQueue.Enqueue(message);
-                return;
-            }
-
-            _flushQueue();
-            _addFormattedLineInternal(message);
+            _messageQueue.Enqueue(message);
         }
 
         public void Clear()
@@ -157,8 +150,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void _flushQueue()
         {
-            DebugTools.Assert(ThreadUtility.IsOnMainThread());
-
             while (_messageQueue.TryDequeue(out var message))
             {
                 _addFormattedLineInternal(message);

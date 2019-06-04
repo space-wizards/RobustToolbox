@@ -148,5 +148,17 @@ namespace Robust.UnitTesting.Shared.Maths
 
             Assert.That(target.GetCardinalDir(), Is.EqualTo(test.Item3));
         }
+
+        [Test]
+        public void TestAngleRotateVec()
+        {
+            var angle = new Angle(MathHelper.Pi / 6);
+            var vec = new Vector2(0.5f, 0.5f);
+
+            var result = angle.RotateVec(vec);
+
+            Assert.That(FloatMath.CloseTo(result.X, 0.183013f), Is.True, result.X.ToString);
+            Assert.That(FloatMath.CloseTo(result.Y, 0.683013f), Is.True, result.Y.ToString);
+        }
     }
 }

@@ -279,6 +279,11 @@ namespace Robust.Server
         /// </summary>
         private void UpdateTitle()
         {
+            if (!Environment.UserInteractive)
+            {
+                return;
+            }
+
             // every 1 second update stats in the console window title
             if ((_time.RealTime - _lastTitleUpdate).TotalSeconds < 1.0)
                 return;

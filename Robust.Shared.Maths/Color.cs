@@ -885,14 +885,14 @@ namespace Robust.Shared.Maths
             float finalHue = 0.0f;
             int numberOfSteps = hues.Length - 1;
             float stepSize = 1.0f / numberOfSteps;
-            for (int i = 0; i < hues.Length - 1; i++)
+            for (int step = 0; step < numberOfSteps; step++)
             {
-                float stepStart = i * stepSize;
-                float stepEnd = (i + 1) * stepSize;
+                float stepStart = step * stepSize;
+                float stepEnd = (step + 1) * stepSize;
                 if (position > stepStart && position <= stepEnd)
                 {
                     float normalizedPosition = (position - stepStart) / (stepEnd - stepStart); //Normalize to 0.0 to 1.0
-                    finalHue = FloatMath.Lerp(hues[i], hues[i + 1], normalizedPosition);
+                    finalHue = FloatMath.Lerp(hues[step], hues[step + 1], normalizedPosition);
                 }
             }
 

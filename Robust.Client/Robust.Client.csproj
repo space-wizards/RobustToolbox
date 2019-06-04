@@ -44,5 +44,5 @@
     <EmbeddedResource Include="Graphics\RSI\RSISchema.json" />
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
-  <Target Name="AfterBuild" DependsOnTargets="CopySS14Noise;CopyMiscDependencies" />
+  <Target Name="RobustAfterBuild" DependsOnTargets="CopySS14Noise;CopyMiscDependencies" AfterTargets="Build" />
 </Project>

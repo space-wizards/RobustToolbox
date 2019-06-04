@@ -31,5 +31,5 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
-  <Target Name="AfterBuild" DependsOnTargets="CopySS14Noise" />
+  <Target Name="RobustAfterBuild" DependsOnTargets="CopySS14Noise" AfterTargets="Build" />
 </Project>

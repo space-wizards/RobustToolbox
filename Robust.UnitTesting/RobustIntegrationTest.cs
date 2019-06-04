@@ -14,18 +14,42 @@ using ServerEntryPoint = Robust.Server.EntryPoint;
 
 namespace Robust.UnitTesting
 {
+    /// <summary>
+    ///     Base class allowing you to implement integration tests.
+    /// </summary>
+    /// <remarks>
+    ///     Integration tests allow you to act upon a running server as a whole,
+    ///     contrary to unit testing which tests, well, units.
+    /// </remarks>
     public abstract class RobustIntegrationTest
     {
+        /// <summary>
+        ///     Start an instance of the server and return an object that can be used to control it.
+        /// </summary>
         protected static ServerIntegrationInstance StartServer()
         {
             return new ServerIntegrationInstance();
         }
 
+        /// <summary>
+        ///     Start a headless instance of the client and return an object that can be used to control it.
+        /// </summary>
         protected static ClientIntegrationInstance StartClient()
         {
             return new ClientIntegrationInstance();
         }
 
+        /// <summary>
+        ///     Provides control over a running instance of the client or server.
+        /// </summary>
+        /// <remarks>
+        ///     The instance executes in another thread.
+        ///     As such, sending commands to it purely queues them to be ran asynchronously.
+        ///     To ensure that the instance is idle, i.e. not executing code and finished all queued commands,
+        ///     you can use <see cref="WaitIdleAsync"/>.
+        ///     This method must be used before trying to access any state like <see cref="ResolveDependency{T}"/>,
+        ///     to prevent race conditions.
+        /// </remarks>
         public abstract class IntegrationInstance
         {
             private protected Thread InstanceThread;
@@ -37,57 +61,148 @@ namespace Robust.UnitTesting
             private int _currentTicksId = 1;
             private int _ackTicksId;
 
-            public bool IsAlive { get; private set; } = true;
-            public Exception UnhandledException { get; private set; }
+            private bool _isSurelyIdle;
+            private bool _isAlive = true;
+            private Exception _unhandledException;
+
+            /// <summary>
+            ///     Whether the instance is still alive.
+            ///     "Alive" indicates that it is able to receive and process commands.
+            /// </summary>
+            /// <exception cref="InvalidOperationException">
+            ///     Thrown if you did not ensure that the instance is idle via <see cref="WaitIdleAsync"/> first.
+            /// </exception>
+            public bool IsAlive
+            {
+                get
+                {
+                    if (!_isSurelyIdle)
+                    {
+                        throw new InvalidOperationException(
+                            "Cannot read this without ensuring that the instance is idle.");
+                    }
+
+                    return _isAlive;
+                }
+            }
+
+            /// <summary>
+            ///     If the server
+            /// </summary>
+            /// <exception cref="InvalidOperationException">
+            ///     Thrown if you did not ensure that the instance is idle via <see cref="WaitIdleAsync"/> first.
+            /// </exception>
+            public Exception UnhandledException
+            {
+                get
+                {
+                    if (!_isSurelyIdle)
+                    {
+                        throw new InvalidOperationException(
+                            "Cannot read this without ensuring that the instance is idle.");
+                    }
+
+                    return _unhandledException;
+                }
+            }
 
             private protected IntegrationInstance()
             {
             }
 
+            /// <summary>
+            ///     Resolve a dependency inside the instance.
+            ///     This works identical to <see cref="IoCManager.Resolve{T}"/>.
+            /// </summary>
+            /// <exception cref="InvalidOperationException">
+            ///     Thrown if you did not ensure that the instance is idle via <see cref="WaitIdleAsync"/> first.
+            /// </exception>
             public T ResolveDependency<T>()
             {
+                if (!_isSurelyIdle)
+                {
+                    throw new InvalidOperationException(
+                        "Cannot resolve services without ensuring that the instance is idle.");
+                }
+
                 // TODO: Synchronize and ensure idle.
                 return DependencyCollection.Resolve<T>();
             }
 
-            public async Task WaitIdleAsync(CancellationToken cancellationToken = default)
+            /// <summary>
+            ///     Wait for the instance to go idle, either through finishing all commands or shutting down/crashing.
+            /// </summary>
+            /// <param name="throwOnUnhandled">
+            ///     If true, throw an exception if the server dies on an unhandled exception.
+            /// </param>
+            /// <param name="cancellationToken"></param>
+            /// <exception cref="Exception">
+            ///     Thrown if <paramref name="throwOnUnhandled"/> is true and the instance shuts down on an unhandled exception.
+            /// </exception>
+            public async Task WaitIdleAsync(bool throwOnUnhandled = true, CancellationToken cancellationToken = default)
             {
-                while (IsAlive && _currentTicksId != _ackTicksId)
+                try
                 {
-                    var msg = await _fromInstanceChannel.WaitMessageAsync(cancellationToken);
-                    switch (msg)
+                    while (_isAlive && _currentTicksId != _ackTicksId)
                     {
-                        case ShutDownMessage shutDownMessage:
+                        var msg = await _fromInstanceChannel.WaitMessageAsync(cancellationToken);
+                        switch (msg)
                         {
-                            IsAlive = false;
-                            UnhandledException = shutDownMessage.UnhandledException;
-                            break;
-                        }
+                            case ShutDownMessage shutDownMessage:
+                            {
+                                _isAlive = false;
+                                _unhandledException = shutDownMessage.UnhandledException;
+                                if (throwOnUnhandled && _unhandledException != null)
+                                {
+                                    throw new Exception("Waiting instance shut down with unhandled exception",
+                                        _unhandledException);
+                                }
 
-                        case AckTicksMessage ack:
-                        {
-                            _ackTicksId = ack.MessageId;
-                            break;
+                                break;
+                            }
+
+                            case AckTicksMessage ack:
+                            {
+                                _ackTicksId = ack.MessageId;
+                                break;
+                            }
                         }
                     }
                 }
+                finally
+                {
+                    _isSurelyIdle = true;
+                }
             }
 
+            /// <summary>
+            ///     Queue for the server to run n ticks.
+            /// </summary>
+            /// <param name="ticks">The amount of ticks to run.</param>
             public void RunTicks(int ticks)
             {
+                _isSurelyIdle = false;
                 _currentTicksId += 1;
                 _toInstanceChannel.PushMessage(new RunTicksMessage(ticks, 1 / 60f, _currentTicksId));
             }
 
+            /// <summary>
+            ///     Queue for the server to be stopped.
+            /// </summary>
             public void Stop()
             {
+                _isSurelyIdle = false;
                 // Won't get ack'd directly but the shutdown is convincing enough.
                 _currentTicksId += 1;
                 _toInstanceChannel.PushMessage(new StopMessage());
             }
 
+            /// <summary>
+            ///     Queue for a delegate to be ran inside the main loop of the instance.
+            /// </summary>
             public void Post(Action post)
             {
+                _isSurelyIdle = false;
                 _currentTicksId += 1;
                 _toInstanceChannel.PushMessage(new PostMessage(post, _currentTicksId));
             }
@@ -130,7 +245,6 @@ namespace Robust.UnitTesting
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Server crashed on exception: {0}", e);
                     _fromInstanceChannel.PushMessage(new ShutDownMessage(e));
                     return;
                 }
@@ -164,13 +278,13 @@ namespace Robust.UnitTesting
 
                     client.Startup();
 
-                    var gameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(), _toInstanceChannel, _fromInstanceChannel);
+                    var gameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
+                        _toInstanceChannel, _fromInstanceChannel);
                     client.OverrideMainLoop(gameLoop);
                     client.MainLoop(GameController.DisplayMode.Headless);
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Client crashed on exception: {0}", e);
                     _fromInstanceChannel.PushMessage(new ShutDownMessage(e));
                     return;
                 }
@@ -178,6 +292,10 @@ namespace Robust.UnitTesting
                 _fromInstanceChannel.PushMessage(new ShutDownMessage(null));
             }
         }
+
+        // Synchronization between the integration instance and the main loop is done purely through message passing.
+        // The main thread sends commands like "run n ticks" and the main loop reports back the commands it has finished.
+        // It also reports when it dies, of course.
 
         internal sealed class IntegrationGameLoop : IGameLoop
         {

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using Robust.Client.Interfaces;
 using Robust.Client.Utility;
+using Robust.Shared;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;

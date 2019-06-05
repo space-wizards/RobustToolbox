@@ -45,6 +45,7 @@ using Robust.Server.Interfaces.Timing;
 using Robust.Server.ServerStatus;
 using Robust.Server.Timing;
 using Robust.Server.ViewVariables;
+using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Exceptions;
 using Robust.Shared.Localization;
@@ -79,8 +80,7 @@ namespace Robust.Server
             string strVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             Logger.Info("Server Version " + strVersion + " -> Ready");
 
-            // TODO: Move this to an interface.
-            SignalHander.InstallSignals();
+            IoCManager.Resolve<ISignalHandler>().MaybeStart();
 
             server.MainLoop();
 
@@ -147,6 +147,7 @@ namespace Robust.Server
             IoCManager.Register<IStatusHost, StatusHost>();
             IoCManager.Register<IPauseManager, PauseManager>();
             IoCManager.Register<IModLoader, ModLoader>();
+            IoCManager.Register<ISignalHandler, ServerSignalHandler>();
         }
 
         internal static void InitReflectionManager()

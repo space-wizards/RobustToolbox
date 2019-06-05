@@ -19,6 +19,7 @@ using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Interfaces.Utility;
 using Robust.Client.State.States;
 using Robust.Client.ViewVariables;
+using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Configuration;
@@ -68,6 +69,7 @@ namespace Robust.Client
         [Dependency] private readonly IFontManagerInternal _fontManager;
         [Dependency] private readonly ILocalizationManager _localizationManager;
         [Dependency] private readonly IModLoader _modLoader;
+        [Dependency] private readonly ISignalHandler _signalHandler;
 #pragma warning restore 649
 
         public string ContentRootDir { get; set; } = "../../../";
@@ -96,6 +98,8 @@ namespace Robust.Client
                 // Else we just use code-defined defaults and let it save to file when the user changes things.
                 _configurationManager.SetSaveFile(configFile);
             }
+
+            _signalHandler.MaybeStart();
 
             _resourceCache.Initialize(userDataDir);
 

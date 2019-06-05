@@ -258,7 +258,7 @@ namespace Robust.Client.State.States
                 {
                     Text = "Join Public Server",
                     TextAlign = Button.AlignMode.Center,
-#if !FULL_RELEASERELEASE
+#if !FULL_RELEASE
                     Disabled = true,
                     ToolTip = "Cannot connect to public server with a debug build."
 #endif

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
@@ -57,9 +58,9 @@ namespace Robust.Shared.Map
 
             var mapDeletionsData = _mapDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.mapId).ToList();
             var gridDeletionsData = _gridDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.gridId).ToList();
-            var mapCreations = _mapCreationTick.Where(kv => kv.Value >= fromTick)
+            var mapCreations = _mapCreationTick.Where(kv => kv.Value >= fromTick && kv.Key != MapId.Nullspace)
                 .ToDictionary(kv => kv.Key, kv => _defaultGrids[kv.Key]);
-            var gridCreations = _grids.Values.Where(g => g.CreatedTick >= fromTick).ToDictionary(g => g.Index,
+            var gridCreations = _grids.Values.Where(g => g.CreatedTick >= fromTick && g.ParentMapId != MapId.Nullspace).ToDictionary(g => g.Index,
                 grid => new GameStateMapData.GridCreationDatum(grid.ChunkSize, grid.SnapSize,
                     grid.IsDefaultGrid));
 
@@ -178,6 +179,35 @@ namespace Robust.Shared.Map
 
             if(data == null) // if there is no data, there is nothing to do!
                 return;
+
+            // grids created on the client in pre-state are linked to client entities
+            // resolve new grids with their shared component that the server just gave us
+            // and delete the client entities
+            if (data.CreatedGrids != null)
+            {
+                foreach (var kvNewGrid in data.CreatedGrids)
+                {
+                    var grid = _grids[kvNewGrid.Key];
+
+                    // this was already linked in a previous state.
+                    if(!grid.GridEntity.IsClientSide())
+                        continue;
+
+                    _entityManager.GetEntity(grid.GridEntity).Delete();
+
+                    var gridComps = _entityManager.ComponentManager.GetAllComponents<IMapGridComponent>();
+                    foreach (var gridComp in gridComps)
+                    {
+                        if (gridComp.GridIndex == kvNewGrid.Key)
+                        {
+                            grid.GridEntity = gridComp.Owner.Uid;
+                            break;
+                        }
+                    }
+
+                    DebugTools.Assert(!grid.GridEntity.IsClientSide());
+                }
+            }
 
             if(data.DeletedGrids != null)
             {

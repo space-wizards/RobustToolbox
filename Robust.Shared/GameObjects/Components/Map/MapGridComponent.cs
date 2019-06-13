@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Interfaces.GameObjects;
+﻿using System;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -17,15 +18,23 @@ namespace Robust.Shared.GameObjects.Components.Map
     }
 
     /// <inheritdoc cref="IMapGridComponent"/>
-    public class MapGridComponent : Component, IMapGridComponent
+    internal class MapGridComponent : Component, IMapGridComponent
     {
+#pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
+#pragma warning restore 649
 
         [ViewVariables(VVAccess.ReadOnly)]
         private GridId _gridIndex;
 
         /// <inheritdoc />
         public override string Name => "MapGrid";
+
+        /// <inheritdoc />
+        public override uint? NetID => NetIDs.MAP_GRID;
+
+        /// <inheritdoc />
+        public override Type StateType => typeof(MapGridComponentState);
 
         /// <inheritdoc />
         public GridId GridIndex
@@ -38,11 +47,50 @@ namespace Robust.Shared.GameObjects.Components.Map
         public IMapGrid Grid => _mapManager.GetGrid(_gridIndex);
 
         /// <inheritdoc />
+        public override ComponentState GetComponentState()
+        {
+            return new MapGridComponentState(_gridIndex);
+        }
+
+        /// <inheritdoc />
+        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        {
+            base.HandleComponentState(curState, nextState);
+
+            if (!(curState is MapGridComponentState state))
+                return;
+
+            _gridIndex = state.GridIndex;
+        }
+
+        /// <inheritdoc />
         public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);
 
             serializer.DataField(ref _gridIndex, "index", GridId.Nullspace);
+        }
+    }
+
+    /// <summary>
+    ///     Serialized state of a <see cref="MapGridComponentState"/>.
+    /// </summary>
+    [Serializable, NetSerializable]
+    internal class MapGridComponentState : ComponentState
+    {
+        /// <summary>
+        ///     Index of the grid this component is linked to.
+        /// </summary>
+        public GridId GridIndex { get; }
+
+        /// <summary>
+        ///     Constructs a new instance of <see cref="MapGridComponentState"/>.
+        /// </summary>
+        /// <param name="gridIndex">Index of the grid this component is linked to.</param>
+        public MapGridComponentState(GridId gridIndex)
+            : base(NetIDs.MAP_GRID)
+        {
+            GridIndex = gridIndex;
         }
     }
 }

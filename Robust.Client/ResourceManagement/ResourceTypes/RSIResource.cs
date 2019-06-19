@@ -86,6 +86,9 @@ namespace Robust.Client.ResourceManagement
                     case 4:
                         directions = RSI.State.DirectionType.Dir4;
                         break;
+                    case 8:
+                        directions = RSI.State.DirectionType.Dir8;
+                        break;
                     default:
                         throw new RSILoadException($"Invalid direction: {dirValue}");
                 }

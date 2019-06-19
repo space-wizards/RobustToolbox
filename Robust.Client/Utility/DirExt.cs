@@ -22,23 +22,60 @@ namespace Robust.Client.Utility
 
                 case RSIDirection.West:
                     return Direction.West;
+
+                case RSIDirection.SouthEast:
+                    return Direction.SouthEast;
+
+                case RSIDirection.SouthWest:
+                    return Direction.SouthWest;
+
+                case RSIDirection.NorthEast:
+                    return Direction.NorthEast;
+
+                case RSIDirection.NorthWest:
+                    return Direction.NorthWest;
             }
 
             throw new ArgumentException($"Unknown RSI dir: {dir}.", nameof(dir));
         }
 
-        public static RSIDirection Convert(this Direction dir)
+        /// <summary>
+        /// 'Rounds' a diagonal direction down to a cardinal direction
+        /// </summary>
+        /// <param name="dir">The direction to round</param>
+        /// <returns><paramref name="dir"/> if it's a cardinal direction, otherwise either north or
+        /// south.</returns>
+        public static RSIDirection RoundToCardinal(this RSIDirection dir)
         {
             switch (dir)
             {
+                case RSIDirection.NorthEast:
+                case RSIDirection.NorthWest:
+                    return RSIDirection.North;
+
+                case RSIDirection.SouthEast:
+                case RSIDirection.SouthWest:
+                    return RSIDirection.South;
+
+                default:
+                    return dir;
+            }
+        }
+
+        public static RSIDirection Convert(this Direction dir, RSI.State.DirectionType type)
+        {
+            // Round down to a four-way direction if appropriate
+            if (type != RSI.State.DirectionType.Dir8)
+            {
+                return dir.Convert(RSI.State.DirectionType.Dir8).RoundToCardinal();
+            }
+
+            switch (dir)
+            {
                 case Direction.North:
-                case Direction.NorthEast:
-                case Direction.NorthWest:
                     return RSIDirection.North;
 
                 case Direction.South:
-                case Direction.SouthEast:
-                case Direction.SouthWest:
                     return RSIDirection.South;
 
                 case Direction.East:
@@ -46,6 +83,18 @@ namespace Robust.Client.Utility
 
                 case Direction.West:
                     return RSIDirection.West;
+
+                case Direction.SouthEast:
+                    return RSIDirection.SouthEast;
+
+                case Direction.SouthWest:
+                    return RSIDirection.SouthWest;
+
+                case Direction.NorthEast:
+                    return RSIDirection.NorthEast;
+
+                case Direction.NorthWest:
+                    return RSIDirection.NorthWest;
             }
 
             throw new ArgumentException($"Unknown dir: {dir}.", nameof(dir));

@@ -1261,12 +1261,14 @@ namespace Robust.Client.GameObjects
             // TODO: This entire method is a hotspot of redundant code.
             // This is definitely gonna deserve some optimizations later down the line.
 
-            var dirWeAreFacing = GetDir();
-            var dirChanged = false;
+            var dirWeAreFacing = GetDir(RSI.State.DirectionType.Dir8);
+            var diagonalDirChanged = false;
+            var cardinalDirChanged = false;
 
             if (LastDir != dirWeAreFacing || _recalcDirections)
             {
-                dirChanged = true;
+                diagonalDirChanged = true;
+                cardinalDirChanged = LastDir.RoundToCardinal() != dirWeAreFacing.RoundToCardinal() || _recalcDirections;
                 LastDir = dirWeAreFacing;
                 _recalcDirections = false;
             }
@@ -1293,8 +1295,14 @@ namespace Robust.Client.GameObjects
                 }
                 else
                 {
-                    layerSpecificDir = OffsetRsiDir(dirWeAreFacing, layer.DirOffset);
+                    layerSpecificDir = OffsetRsiDir(GetDir(state.Directions), layer.DirOffset);
                 }
+
+                // Is this layer's direction changed?
+                // This depends on the direction type of the layer.
+                var dirChanged = state.Directions == RSI.State.DirectionType.Dir8
+                    ? diagonalDirChanged
+                    : cardinalDirChanged;
 
                 layer.AnimationTime += delta;
                 if (!dirChanged)
@@ -1409,7 +1417,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private RSI.State.Direction GetDir()
+        private RSI.State.Direction GetDir(RSI.State.DirectionType type)
         {
             if (!Directional)
             {
@@ -1417,7 +1425,7 @@ namespace Robust.Client.GameObjects
             }
 
             var angle = new Angle(Owner.Transform.WorldRotation);
-            return angle.GetDir().Convert();
+            return angle.GetDir().Convert(type);
         }
 
         private static RSI.State.Direction OffsetRsiDir(RSI.State.Direction dir, DirectionOffset offset)
@@ -1481,7 +1489,7 @@ namespace Robust.Client.GameObjects
             builder.AppendFormat(
                 "vis/depth/scl/rot/ofs/col/diral/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}\n",
                 Visible, DrawDepth, Scale, Rotation, Offset,
-                Color, Directional, GetDir()
+                Color, Directional, GetDir(RSI.State.DirectionType.Dir8)
             );
 
             foreach (var layer in Layers)
@@ -1507,7 +1515,7 @@ namespace Robust.Client.GameObjects
                 return RSI.State.Direction.South;
             }
 
-            return OffsetRsiDir(GetDir(), layer.DirOffset);
+            return OffsetRsiDir(GetDir(state.Directions), layer.DirOffset);
         }
 
         /// <summary>

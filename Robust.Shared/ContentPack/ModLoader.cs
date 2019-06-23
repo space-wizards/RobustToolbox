@@ -56,6 +56,13 @@ namespace Robust.Shared.ContentPack
         [Dependency] private readonly IReflectionManager _reflectionManager;
 #pragma warning restore 649
 
+        static ModLoader()
+        {
+            // Necessary to make the assembly loader not choke on Windows on release builds,
+            // it seems like.
+            AppDomain.CurrentDomain.AssemblyResolve += ResolveMissingAssembly;
+        }
+
         /// <summary>
         ///     Loaded assemblies.
         /// </summary>
@@ -225,6 +232,25 @@ namespace Robust.Shared.ContentPack
 
             Logger.WarningS("eng", $"Could not load {assemblyName} DLL: {dllPath} does not exist in the VFS.");
             return false;
+        }
+
+        private static Assembly ResolveMissingAssembly(object sender, ResolveEventArgs args)
+        {
+            var modLoader = IoCManager.Resolve<IModLoader>();
+            if (!(modLoader is ModLoader me))
+            {
+                return null;
+            }
+
+            foreach (var mod in me._mods)
+            {
+                if (mod.GameAssembly.FullName == args.Name)
+                {
+                    return mod.GameAssembly;
+                }
+            }
+
+            return null;
         }
     }
 }

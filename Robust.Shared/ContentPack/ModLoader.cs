@@ -183,7 +183,7 @@ namespace Robust.Shared.ContentPack
                 }
                 catch (Exception e)
                 {
-                    Logger.ErrorS("srv", $"Exception loading DLL {assemblyName}.dll: {e}");
+                    Logger.ErrorS("srv", $"Exception loading DLL {assemblyName}.dll: {e.ToStringBetter()}");
                     return false;
                 }
             }
@@ -204,7 +204,7 @@ namespace Robust.Shared.ContentPack
                     }
                     catch (Exception e)
                     {
-                        Logger.ErrorS("srv", $"Exception loading DLL {assemblyName}.dll: {e}");
+                        Logger.ErrorS("srv", $"Exception loading DLL {assemblyName}.dll: {e.ToStringBetter()}");
                         return false;
                     }
                 }
@@ -218,15 +218,13 @@ namespace Robust.Shared.ContentPack
                 }
                 catch (Exception e)
                 {
-                    Logger.ErrorS("srv", $"Exception loading DLL {assemblyName}.dll: {e}");
+                    Logger.ErrorS("srv", $"Exception loading DLL {assemblyName}.dll: {e.ToStringBetter()}");
                     return false;
                 }
             }
-            else
-            {
-                Logger.WarningS("eng", $"Could not load {assemblyName} DLL.");
-                return false;
-            }
+
+            Logger.WarningS("eng", $"Could not load {assemblyName} DLL: {dllPath} does not exist in the VFS.");
+            return false;
         }
     }
 }

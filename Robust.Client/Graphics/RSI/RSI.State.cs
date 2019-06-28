@@ -57,6 +57,7 @@ namespace Robust.Client.Graphics
             {
                 Dir1,
                 Dir4,
+                Dir8,
             }
 
             public enum Direction : byte
@@ -65,6 +66,10 @@ namespace Robust.Client.Graphics
                 North = 1,
                 East = 2,
                 West = 3,
+                SouthEast = 4,
+                SouthWest = 5,
+                NorthEast = 6,
+                NorthWest = 7,
             }
 
             public (Texture icon, float delay) GetFrame(Direction direction, int frame)
@@ -90,7 +95,7 @@ namespace Robust.Client.Graphics
                 {
                     return GetFrame(Direction.South, 0).icon;
                 }
-                return GetFrame(dir.Convert(), 0).icon;
+                return GetFrame(dir.Convert(Directions), 0).icon;
             }
         }
     }

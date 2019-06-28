@@ -1,14 +1,14 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Robust.Client;
 using Robust.Client.Interfaces;
 using Robust.Server.Interfaces;
+using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 using ServerEntryPoint = Robust.Server.EntryPoint;
 
@@ -21,7 +21,7 @@ namespace Robust.UnitTesting
     ///     Integration tests allow you to act upon a running server as a whole,
     ///     contrary to unit testing which tests, well, units.
     /// </remarks>
-    public abstract class RobustIntegrationTest
+    public abstract partial class RobustIntegrationTest
     {
         /// <summary>
         ///     Start an instance of the server and return an object that can be used to control it.
@@ -55,8 +55,10 @@ namespace Robust.UnitTesting
             private protected Thread InstanceThread;
             private protected IDependencyCollection DependencyCollection;
 
-            private protected readonly Channel _toInstanceChannel = new Channel();
-            private protected readonly Channel _fromInstanceChannel = new Channel();
+            private protected readonly ChannelReader<object> _toInstanceReader;
+            private protected readonly ChannelWriter<object> _toInstanceWriter;
+            private protected readonly ChannelReader<object> _fromInstanceReader;
+            private protected readonly ChannelWriter<object> _fromInstanceWriter;
 
             private int _currentTicksId = 1;
             private int _ackTicksId;
@@ -108,6 +110,23 @@ namespace Robust.UnitTesting
 
             private protected IntegrationInstance()
             {
+                var toInstance = Channel.CreateUnbounded<object>(new UnboundedChannelOptions
+                {
+                    SingleReader = true,
+                    SingleWriter = true
+                });
+
+                _toInstanceReader = toInstance.Reader;
+                _toInstanceWriter = toInstance.Writer;
+
+                var fromInstance = Channel.CreateUnbounded<object>(new UnboundedChannelOptions
+                {
+                    SingleReader = true,
+                    SingleWriter = true
+                });
+
+                _fromInstanceReader = fromInstance.Reader;
+                _fromInstanceWriter = fromInstance.Writer;
             }
 
             /// <summary>
@@ -125,7 +144,6 @@ namespace Robust.UnitTesting
                         "Cannot resolve services without ensuring that the instance is idle.");
                 }
 
-                // TODO: Synchronize and ensure idle.
                 return DependencyCollection.Resolve<T>();
             }
 
@@ -145,7 +163,7 @@ namespace Robust.UnitTesting
                 {
                     while (_isAlive && _currentTicksId != _ackTicksId)
                     {
-                        var msg = await _fromInstanceChannel.WaitMessageAsync(cancellationToken);
+                        var msg = await _fromInstanceReader.ReadAsync(cancellationToken);
                         switch (msg)
                         {
                             case ShutDownMessage shutDownMessage:
@@ -183,7 +201,7 @@ namespace Robust.UnitTesting
             {
                 _isSurelyIdle = false;
                 _currentTicksId += 1;
-                _toInstanceChannel.PushMessage(new RunTicksMessage(ticks, 1 / 60f, _currentTicksId));
+                _toInstanceWriter.TryWrite(new RunTicksMessage(ticks, 1 / 60f, _currentTicksId));
             }
 
             /// <summary>
@@ -194,7 +212,7 @@ namespace Robust.UnitTesting
                 _isSurelyIdle = false;
                 // Won't get ack'd directly but the shutdown is convincing enough.
                 _currentTicksId += 1;
-                _toInstanceChannel.PushMessage(new StopMessage());
+                _toInstanceWriter.TryWrite(new StopMessage());
             }
 
             /// <summary>
@@ -204,7 +222,7 @@ namespace Robust.UnitTesting
             {
                 _isSurelyIdle = false;
                 _currentTicksId += 1;
-                _toInstanceChannel.PushMessage(new PostMessage(post, _currentTicksId));
+                _toInstanceWriter.TryWrite(new PostMessage(post, _currentTicksId));
             }
         }
 
@@ -223,6 +241,9 @@ namespace Robust.UnitTesting
                 {
                     IoCManager.InitThread(DependencyCollection);
                     ServerEntryPoint.RegisterIoC();
+                    IoCManager.Register<INetManager, IntegrationNetManager>(true);
+                    IoCManager.Register<IServerNetManager, IntegrationNetManager>(true);
+                    IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
                     IoCManager.BuildGraph();
                     ServerEntryPoint.SetupLogging();
                     ServerEntryPoint.InitReflectionManager();
@@ -238,18 +259,18 @@ namespace Robust.UnitTesting
 
                     var gameLoop = new IntegrationGameLoop(
                         DependencyCollection.Resolve<IGameTiming>(),
-                        _toInstanceChannel, _fromInstanceChannel);
+                        _fromInstanceWriter, _toInstanceReader);
                     server.OverrideMainLoop(gameLoop);
 
                     server.MainLoop();
                 }
                 catch (Exception e)
                 {
-                    _fromInstanceChannel.PushMessage(new ShutDownMessage(e));
+                    _fromInstanceWriter.TryWrite(new ShutDownMessage(e));
                     return;
                 }
 
-                _fromInstanceChannel.PushMessage(new ShutDownMessage(null));
+                _fromInstanceWriter.TryWrite(new ShutDownMessage(null));
             }
         }
 
@@ -262,12 +283,31 @@ namespace Robust.UnitTesting
                 InstanceThread.Start();
             }
 
+            /// <summary>
+            ///     Wire up the server to connect to when <see cref="IClientNetManager.ClientConnect"/> gets called.
+            /// </summary>
+            public void SetConnectTarget(ServerIntegrationInstance server)
+            {
+                var clientNetManager = ResolveDependency<IntegrationNetManager>();
+                var serverNetManager = server.ResolveDependency<IntegrationNetManager>();
+
+                if (!serverNetManager.IsRunning)
+                {
+                    throw new InvalidOperationException("Server net manager is not running!");
+                }
+
+                clientNetManager.NextConnectChannel = serverNetManager.MessageChannelWriter;
+            }
+
             private void _clientMain()
             {
                 try
                 {
                     IoCManager.InitThread(DependencyCollection);
                     GameController.RegisterIoC(GameController.DisplayMode.Headless);
+                    IoCManager.Register<INetManager, IntegrationNetManager>(true);
+                    IoCManager.Register<IClientNetManager, IntegrationNetManager>(true);
+                    IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
                     IoCManager.BuildGraph();
 
                     GameController.RegisterReflection();
@@ -279,17 +319,17 @@ namespace Robust.UnitTesting
                     client.Startup();
 
                     var gameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
-                        _toInstanceChannel, _fromInstanceChannel);
+                        _fromInstanceWriter, _toInstanceReader);
                     client.OverrideMainLoop(gameLoop);
                     client.MainLoop(GameController.DisplayMode.Headless);
                 }
                 catch (Exception e)
                 {
-                    _fromInstanceChannel.PushMessage(new ShutDownMessage(e));
+                    _fromInstanceWriter.TryWrite(new ShutDownMessage(e));
                     return;
                 }
 
-                _fromInstanceChannel.PushMessage(new ShutDownMessage(null));
+                _fromInstanceWriter.TryWrite(new ShutDownMessage(null));
             }
         }
 
@@ -300,8 +340,9 @@ namespace Robust.UnitTesting
         internal sealed class IntegrationGameLoop : IGameLoop
         {
             private readonly IGameTiming _gameTiming;
-            private readonly Channel _toInstanceChannel;
-            private readonly Channel _fromInstanceChannel;
+
+            private readonly ChannelWriter<object> _channelWriter;
+            private readonly ChannelReader<object> _channelReader;
 
 #pragma warning disable 67
             public event EventHandler<FrameEventArgs> Input;
@@ -315,17 +356,17 @@ namespace Robust.UnitTesting
             public int MaxQueuedTicks { get; set; }
             public SleepMode SleepMode { get; set; }
 
-            public IntegrationGameLoop(IGameTiming gameTiming, Channel toInstanceChannel, Channel fromInstanceChannel)
+            public IntegrationGameLoop(IGameTiming gameTiming, ChannelWriter<object> channelWriter, ChannelReader<object> channelReader)
             {
                 _gameTiming = gameTiming;
-                _toInstanceChannel = toInstanceChannel;
-                _fromInstanceChannel = fromInstanceChannel;
+                _channelWriter = channelWriter;
+                _channelReader = channelReader;
             }
 
             public void Run()
             {
                 // Ack tick message 1 is implied as "init done"
-                _fromInstanceChannel.PushMessage(new AckTicksMessage(1));
+                _channelWriter.TryWrite(new AckTicksMessage(1));
                 Running = true;
 
                 Tick += (a, b) => Console.WriteLine("tick: {0}", _gameTiming.CurTick);
@@ -335,7 +376,7 @@ namespace Robust.UnitTesting
 
                 while (Running)
                 {
-                    var message = _toInstanceChannel.WaitMessage();
+                    var message = _channelReader.ReadAsync().AsTask().Result;
 
                     switch (message)
                     {
@@ -348,7 +389,7 @@ namespace Robust.UnitTesting
                                 Tick?.Invoke(this, simFrameEvent);
                             }
 
-                            _fromInstanceChannel.PushMessage(new AckTicksMessage(msg.MessageId));
+                            _channelWriter.TryWrite(new AckTicksMessage(msg.MessageId));
                             break;
 
                         case StopMessage _:
@@ -357,56 +398,9 @@ namespace Robust.UnitTesting
 
                         case PostMessage postMessage:
                             postMessage.Post();
-                            _fromInstanceChannel.PushMessage(new AckTicksMessage(postMessage.MessageId));
+                            _channelWriter.TryWrite(new AckTicksMessage(postMessage.MessageId));
                             break;
                     }
-                }
-            }
-        }
-
-        internal sealed class Channel
-        {
-            private readonly object _lock = new object();
-            private readonly Queue<object> _messageQueue = new Queue<object>();
-            private readonly ManualResetEvent _resumeEvent = new ManualResetEvent(false);
-
-            public void PushMessage(object message)
-            {
-                lock (_lock)
-                {
-                    _messageQueue.Enqueue(message);
-                    _resumeEvent.Set();
-                }
-            }
-
-            public object WaitMessage()
-            {
-                _resumeEvent.WaitOne();
-                lock (_lock)
-                {
-                    var message = _messageQueue.Dequeue();
-                    if (_messageQueue.Count == 0)
-                    {
-                        _resumeEvent.Reset();
-                    }
-
-                    return message;
-                }
-            }
-
-            public async Task<object> WaitMessageAsync(CancellationToken cancellationToken)
-            {
-                await _resumeEvent.WaitOneAsync(cancellationToken);
-
-                lock (_lock)
-                {
-                    var message = _messageQueue.Dequeue();
-                    if (_messageQueue.Count == 0)
-                    {
-                        _resumeEvent.Reset();
-                    }
-
-                    return message;
                 }
             }
         }

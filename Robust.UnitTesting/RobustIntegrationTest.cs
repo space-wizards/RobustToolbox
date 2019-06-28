@@ -26,17 +26,17 @@ namespace Robust.UnitTesting
         /// <summary>
         ///     Start an instance of the server and return an object that can be used to control it.
         /// </summary>
-        protected static ServerIntegrationInstance StartServer()
+        protected virtual ServerIntegrationInstance StartServer(ServerIntegrationOptions options = null)
         {
-            return new ServerIntegrationInstance();
+            return new ServerIntegrationInstance(options);
         }
 
         /// <summary>
         ///     Start a headless instance of the client and return an object that can be used to control it.
         /// </summary>
-        protected static ClientIntegrationInstance StartClient()
+        protected virtual ClientIntegrationInstance StartClient(ClientIntegrationOptions options = null)
         {
-            return new ClientIntegrationInstance();
+            return new ClientIntegrationInstance(options);
         }
 
         /// <summary>
@@ -228,8 +228,11 @@ namespace Robust.UnitTesting
 
         public sealed class ServerIntegrationInstance : IntegrationInstance
         {
-            internal ServerIntegrationInstance()
+            private readonly ServerIntegrationOptions _options;
+
+            internal ServerIntegrationInstance(ServerIntegrationOptions options)
             {
+                _options = options;
                 InstanceThread = new Thread(_serverMain) {Name = "Server Instance Thread"};
                 DependencyCollection = new DependencyCollection();
                 InstanceThread.Start();
@@ -244,6 +247,8 @@ namespace Robust.UnitTesting
                     IoCManager.Register<INetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IServerNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
+                    IoCManager.Register<ICommandLineArgs, CommandLineArgs>(true);
+                    _options?.InitIoC?.Invoke();
                     IoCManager.BuildGraph();
                     ServerEntryPoint.SetupLogging();
                     ServerEntryPoint.InitReflectionManager();
@@ -252,6 +257,7 @@ namespace Robust.UnitTesting
 
                     server.ContentRootDir = "../../";
 
+                    _options?.BeforeStart?.Invoke();
                     if (server.Start())
                     {
                         throw new Exception("Server failed to start.");
@@ -272,12 +278,27 @@ namespace Robust.UnitTesting
 
                 _fromInstanceWriter.TryWrite(new ShutDownMessage(null));
             }
+
+            private sealed class CommandLineArgs : ICommandLineArgs
+            {
+                public bool Parse(string[] args)
+                {
+                    // No-op.
+                    return true;
+                }
+
+                public string ConfigFile => null;
+                public string DataDir => null;
+            }
         }
 
         public sealed class ClientIntegrationInstance : IntegrationInstance
         {
-            internal ClientIntegrationInstance()
+            private readonly ClientIntegrationOptions _options;
+
+            internal ClientIntegrationInstance(ClientIntegrationOptions options)
             {
+                _options = options;
                 InstanceThread = new Thread(_clientMain) {Name = "Client Instance Thread"};
                 DependencyCollection = new DependencyCollection();
                 InstanceThread.Start();
@@ -308,6 +329,7 @@ namespace Robust.UnitTesting
                     IoCManager.Register<INetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IClientNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
+                    _options?.InitIoC?.Invoke();
                     IoCManager.BuildGraph();
 
                     GameController.RegisterReflection();
@@ -315,7 +337,8 @@ namespace Robust.UnitTesting
                     var client = DependencyCollection.Resolve<IGameControllerInternal>();
 
                     client.ContentRootDir = "../../";
-
+                    client.LoadConfigAndUserData = false;
+                    _options?.BeforeStart?.Invoke();
                     client.Startup();
 
                     var gameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
@@ -356,7 +379,8 @@ namespace Robust.UnitTesting
             public int MaxQueuedTicks { get; set; }
             public SleepMode SleepMode { get; set; }
 
-            public IntegrationGameLoop(IGameTiming gameTiming, ChannelWriter<object> channelWriter, ChannelReader<object> channelReader)
+            public IntegrationGameLoop(IGameTiming gameTiming, ChannelWriter<object> channelWriter,
+                ChannelReader<object> channelReader)
             {
                 _gameTiming = gameTiming;
                 _channelWriter = channelWriter;
@@ -403,6 +427,20 @@ namespace Robust.UnitTesting
                     }
                 }
             }
+        }
+
+        public class ServerIntegrationOptions : IntegrationOptions
+        {
+        }
+
+        public class ClientIntegrationOptions : IntegrationOptions
+        {
+        }
+
+        public abstract class IntegrationOptions
+        {
+            public Action InitIoC { get; set; }
+            public Action BeforeStart { get; set; }
         }
 
         /// <summary>

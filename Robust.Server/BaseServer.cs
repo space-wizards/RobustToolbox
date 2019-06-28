@@ -132,8 +132,11 @@ namespace Robust.Server
         public bool Start()
         {
 
-            //Sets up the configMgr
-            _config.LoadFromFile(_commandLine.ConfigFile);
+            // Sets up the configMgr
+            if (_commandLine.ConfigFile != null)
+            {
+                _config.LoadFromFile(_commandLine.ConfigFile);
+            }
 
             //Sets up Logging
             _config.RegisterCVar("log.path", "logs", CVar.ARCHIVE);
@@ -172,13 +175,6 @@ namespace Robust.Server
                 return true;
             }
 
-            var exeDir = Assembly.GetExecutingAssembly().Location;
-            if (string.IsNullOrEmpty(exeDir))
-            {
-                throw new Exception("Unable to locate client exe");
-            }
-
-            exeDir = Path.GetDirectoryName(exeDir);
             var dataDir = _commandLine.DataDir;
 
             // Set up the VFS

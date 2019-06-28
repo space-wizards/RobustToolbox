@@ -11,6 +11,8 @@ namespace Robust.UnitTesting
         {
         }
 
+        public bool LoadConfigAndUserData { get; set; } = true;
+
         public void Startup()
         {
 

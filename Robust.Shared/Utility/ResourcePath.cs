@@ -556,6 +556,25 @@ namespace Robust.Shared.Utility
             return new ResourcePath(newSegments, Separator);
         }
 
+        /// <summary>
+        ///     Enumerates the segments of this path.
+        /// </summary>
+        /// <remarks>
+        ///     Segments are returned from highest to deepest.
+        ///     For example <c>/a/b</c> will yield <c>a</c> then <c>b</c>.
+        ///     No special indication is given for rooted paths,
+        ///     so <c>/a/b</c> yields the same as <c>a/b</c>.
+        /// </remarks>
+        public IEnumerable<string> EnumerateSegments()
+        {
+            if (IsRooted)
+            {
+                // Skip '/' root.
+                return Segments.Skip(1);
+            }
+            return Segments;
+        }
+
         /// <inheritdoc />
         public override int GetHashCode()
         {

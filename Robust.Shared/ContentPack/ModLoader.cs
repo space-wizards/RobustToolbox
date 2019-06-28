@@ -63,6 +63,8 @@ namespace Robust.Shared.ContentPack
             AppDomain.CurrentDomain.AssemblyResolve += ResolveMissingAssembly;
         }
 
+        private ModuleTestingCallbacks _testingCallbacks;
+
         /// <summary>
         ///     Loaded assemblies.
         /// </summary>
@@ -79,25 +81,11 @@ namespace Robust.Shared.ContentPack
             if (!AssemblyTypeChecker.CheckAssembly(assembly))
                 return;
 
-            var mod = new ModInfo();
-
-            mod.GameAssembly = symbols != null
+            var gameAssembly = symbols != null
                 ? AppDomain.CurrentDomain.Load(assembly, symbols)
                 : AppDomain.CurrentDomain.Load(assembly);
 
-            _reflectionManager.LoadAssemblies(mod.GameAssembly);
-
-            var entryPoints = mod.GameAssembly.GetTypes().Where(t => typeof(T).IsAssignableFrom(t)).ToArray();
-
-            if (entryPoints.Length == 0)
-                Logger.WarningS("res", $"Assembly has no entry points: {mod.GameAssembly.FullName}");
-
-            foreach (var entryPoint in entryPoints)
-            {
-                mod.EntryPoints.Add(Activator.CreateInstance(entryPoint) as T);
-            }
-
-            _mods.Add(mod);
+            InitMod<T>(gameAssembly);
         }
 
         public void LoadGameAssembly<T>(string diskPath)
@@ -111,9 +99,12 @@ namespace Robust.Shared.ContentPack
             if (!AssemblyTypeChecker.CheckAssembly(File.ReadAllBytes(diskPath)))
                 return;
 
-            var mod = new ModInfo();
+            InitMod<T>(Assembly.LoadFrom(diskPath));
+        }
 
-            mod.GameAssembly = Assembly.LoadFrom(diskPath);
+        private void InitMod<T>(Assembly assembly) where T : GameShared
+        {
+            var mod = new ModInfo {GameAssembly = assembly};
 
             _reflectionManager.LoadAssemblies(mod.GameAssembly);
 
@@ -124,7 +115,9 @@ namespace Robust.Shared.ContentPack
 
             foreach (var entryPoint in entryPoints)
             {
-                mod.EntryPoints.Add(Activator.CreateInstance(entryPoint) as T);
+                var entryPointInstance = (T) Activator.CreateInstance(entryPoint);
+                entryPointInstance.SetTestingCallbacks(_testingCallbacks);
+                mod.EntryPoints.Add(entryPointInstance);
             }
 
             _mods.Add(mod);
@@ -232,6 +225,11 @@ namespace Robust.Shared.ContentPack
 
             Logger.WarningS("eng", $"Could not load {assemblyName} DLL: {dllPath} does not exist in the VFS.");
             return false;
+        }
+
+        public void SetModuleBaseCallbacks(ModuleTestingCallbacks testingCallbacks)
+        {
+            _testingCallbacks = testingCallbacks;
         }
 
         private static Assembly ResolveMissingAssembly(object sender, ResolveEventArgs args)

@@ -74,6 +74,8 @@ namespace Robust.Client
 
         public string ContentRootDir { get; set; } = "../../../";
 
+        public bool LoadConfigAndUserData { get; set; } = true;
+
         public void Startup()
         {
             SetupLogging(_logManager);
@@ -87,21 +89,24 @@ namespace Robust.Client
             // Figure out user data directory.
             var userDataDir = _getUserDataDir(args);
 
-            var configFile = Path.Combine(userDataDir, "client_config.toml");
-            if (File.Exists(configFile))
+            if (LoadConfigAndUserData)
             {
-                // Load config from user data if available.
-                _configurationManager.LoadFromFile(configFile);
-            }
-            else
-            {
-                // Else we just use code-defined defaults and let it save to file when the user changes things.
-                _configurationManager.SetSaveFile(configFile);
+                var configFile = Path.Combine(userDataDir, "client_config.toml");
+                if (File.Exists(configFile))
+                {
+                    // Load config from user data if available.
+                    _configurationManager.LoadFromFile(configFile);
+                }
+                else
+                {
+                    // Else we just use code-defined defaults and let it save to file when the user changes things.
+                    _configurationManager.SetSaveFile(configFile);
+                }
             }
 
             _signalHandler.MaybeStart();
 
-            _resourceCache.Initialize(userDataDir);
+            _resourceCache.Initialize(LoadConfigAndUserData ? userDataDir : null);
 
 #if FULL_RELEASE
             _resourceCache.MountContentDirectory(@"Resources/");

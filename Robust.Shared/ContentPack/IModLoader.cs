@@ -37,5 +37,10 @@ namespace Robust.Shared.ContentPack
         /// <returns>If the assembly was successfully located and loaded.</returns>
         bool TryLoadAssembly<T>(IResourceManager resMan, string assemblyName)
             where T : GameShared;
+
+        /// <summary>
+        ///     Sets the testing callbacks that will be passed to <see cref="GameShared.SetTestingCallbacks"/>.
+        /// </summary>
+        void SetModuleBaseCallbacks(ModuleTestingCallbacks testingCallbacks);
     }
 }

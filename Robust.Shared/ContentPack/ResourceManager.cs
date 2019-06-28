@@ -22,7 +22,6 @@ namespace Robust.Shared.ContentPack
         private readonly IConfigurationManager _config;
 #pragma warning restore 649
 
-        private DirectoryInfo _configRoot;
         private readonly List<(ResourcePath prefix, IContentRoot root)> _contentRoots = new List<(ResourcePath, IContentRoot)>();
 
         /// <inheritdoc />
@@ -31,9 +30,14 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public void Initialize(string userData)
         {
-            _configRoot = Directory.CreateDirectory(userData);
-
-            UserData = new WritableDirProvider(_configRoot);
+            if (userData != null)
+            {
+                UserData = new WritableDirProvider(Directory.CreateDirectory(userData));
+            }
+            else
+            {
+                UserData = new VirtualWritableDirProvider();
+            }
         }
 
         /// <inheritdoc />

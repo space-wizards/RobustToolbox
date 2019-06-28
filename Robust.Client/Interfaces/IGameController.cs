@@ -10,6 +10,7 @@ namespace Robust.Client.Interfaces
 
     internal interface IGameControllerInternal : IGameController
     {
+        bool LoadConfigAndUserData { get; set; }
         void Startup();
         void MainLoop(GameController.DisplayMode mode);
         string ContentRootDir { get; set; }

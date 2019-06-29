@@ -1,10 +1,13 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <PropertyGroup>
+    <RobustToolsPath>../Tools/</RobustToolsPath>
+  </PropertyGroup>
   <Target Name="CopySS14Noise">
-    <Exec Condition="'$(Platform)' == 'x64'" Command="$(Python) ../Tools/download_ss14_noise.py $(Platform) $(TargetOS) $(OutputPath)" CustomErrorRegularExpression="^Error" />
+    <Exec Condition="'$(Platform)' == 'x64'" Command="$(Python) $(RobustToolsPath)download_ss14_noise.py $(Platform) $(TargetOS) $(OutputPath)" CustomErrorRegularExpression="^Error" />
     <Warning Condition="'$(Platform)' != 'x64'" Text="Did not download ss14_noise because the platform is not set to x64. Only use this build for unit testing!" />
   </Target>
   <Target Name="CopyMiscDependencies">
-    <Exec Condition="'$(Platform)' == 'x64'" Command="$(Python) ../Tools/download_misc_dependencies.py $(Platform) $(TargetOS) $(OutputPath)" CustomErrorRegularExpression="^Error" />
+    <Exec Condition="'$(Platform)' == 'x64'" Command="$(Python) $(RobustToolsPath)download_misc_dependencies.py $(Platform) $(TargetOS) $(OutputPath)" CustomErrorRegularExpression="^Error" />
     <Warning Condition="'$(Platform)' != 'x64'" Text="Did not download misc dependencies because the platform is not set to x64. Only use this build for unit testing!" />
   </Target>
 </Project>

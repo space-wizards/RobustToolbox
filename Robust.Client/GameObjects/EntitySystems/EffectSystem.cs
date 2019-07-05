@@ -304,7 +304,7 @@ namespace Robust.Client.GameObjects
 
                 // Calculate RSI animations.
                 var delayCount = RsiState.DelayCount(RSI.State.Direction.South);
-                if (delayCount > 0 && (AnimationLoops || AnimationIndex < delayCount-1))
+                if (delayCount > 0 && (AnimationLoops || AnimationIndex < delayCount - 1))
                 {
                     AnimationTime += frameTime;
                     while (RsiState.GetFrame(RSI.State.Direction.South, AnimationIndex).delay < AnimationTime)
@@ -323,6 +323,7 @@ namespace Robust.Client.GameObjects
                                 break;
                             }
                         }
+
                         EffectSprite = RsiState.GetFrame(RSI.State.Direction.South, AnimationIndex).icon;
                     }
                 }
@@ -341,23 +342,24 @@ namespace Robust.Client.GameObjects
             public override bool AlwaysDirty => true;
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            private readonly Shader _unshadedShader;
+            private readonly ShaderInstance _unshadedShader;
             private readonly EffectSystem _owner;
             private readonly IMapManager _mapManager;
 
-            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IMapManager mapMan) : base("EffectSystem")
+            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IMapManager mapMan) : base(
+                "EffectSystem")
             {
                 _owner = owner;
                 _unshadedShader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
                 _mapManager = mapMan;
             }
 
-            protected override void Draw(DrawingHandle handle)
+            protected override void Draw(DrawingHandleBase handle)
             {
                 var map = _owner.eyeManager.CurrentMap;
 
-                var shaded = (DrawingHandleWorld) handle;
-                var unshaded = (DrawingHandleWorld) NewHandle(_unshadedShader);
+                var worldHandle = (DrawingHandleWorld) handle;
+                ShaderInstance currentShader = null;
 
                 foreach (var effect in _owner._Effects)
                 {
@@ -366,16 +368,20 @@ namespace Robust.Client.GameObjects
                         continue;
                     }
 
-                    // NOTE TO FUTURE READERS:
-                    // Yes, due to how this is implemented, unshaded is always on top of shaded.
-                    // If you want to rework it to be properly defined, be my guest.
-                    var usingHandle = effect.Shaded ? shaded : unshaded;
+                    var newShader = effect.Shaded ? null : _unshadedShader;
 
-                    usingHandle.SetTransform(
+                    if (newShader != currentShader)
+                    {
+                        worldHandle.UseShader(newShader);
+                        currentShader = newShader;
+                    }
+
+                    worldHandle.SetTransform(
                         effect.Coordinates.ToWorld(_mapManager).Position,
                         new Angle(-effect.Rotation), effect.Size);
                     var effectSprite = effect.EffectSprite;
-                    usingHandle.DrawTexture(effectSprite, -((Vector2) effectSprite.Size / EyeManager.PIXELSPERMETER) / 2, ToColor(effect.Color));
+                    worldHandle.DrawTexture(effectSprite,
+                        -((Vector2) effectSprite.Size / EyeManager.PIXELSPERMETER) / 2, ToColor(effect.Color));
                 }
             }
         }

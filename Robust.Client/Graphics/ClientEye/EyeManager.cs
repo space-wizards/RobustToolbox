@@ -16,7 +16,7 @@ namespace Robust.Client.Graphics.ClientEye
 
 #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IDisplayManager _displayManager;
+        [Dependency] private readonly IClyde _displayManager;
 #pragma warning restore 649
 
         // We default to this when we get set to a null eye.

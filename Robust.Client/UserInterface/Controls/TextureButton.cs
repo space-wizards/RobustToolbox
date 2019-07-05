@@ -77,7 +77,7 @@ namespace Robust.Client.UserInterface.Controls
                 }
             }
 
-            handle.DrawTextureRect(texture, PixelSizeBox, false);
+            handle.DrawTextureRectRegion(texture, PixelSizeBox);
         }
 
         private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)

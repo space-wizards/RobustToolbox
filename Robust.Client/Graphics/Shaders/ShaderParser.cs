@@ -40,19 +40,32 @@ namespace Robust.Client.Graphics.Shaders
         {
             _tokenize();
 
-            var renderMode = ShaderRenderMode.None;
+            ShaderLightMode? lightMode = null;
+            ShaderBlendMode? blendMode = null;
 
-            var token = _peekToken();
+            Token token;
+
+            while (_tokenIndex < _tokens.Count)
             {
-                // Parse render_mode maybe.
+                token = _peekToken();
+                if (token == null)
+                {
+                    // EOF.
+                    break;
+                }
+
                 if (!(token is TokenWord word))
                 {
-                    throw new ShaderParseException("Expected 'render_mode', 'uniform', 'varying' or type.",
+                    throw new ShaderParseException("Expected 'light_mode', 'blend_mode', 'uniform', 'varying' or type.",
                         token.Position);
                 }
 
-                if (word.Word == "render_mode")
+                if (word.Word == "light_mode")
                 {
+                    if (lightMode != null)
+                    {
+                        throw new ShaderParseException("Already specified 'light_mode' before!");
+                    }
                     _takeToken();
                     token = _takeToken();
                     if (!(token is TokenWord unshadedWord) || unshadedWord.Word != "unshaded")
@@ -60,14 +73,45 @@ namespace Robust.Client.Graphics.Shaders
                         throw new ShaderParseException("Expected 'unshaded'", token.Position);
                     }
 
-                    renderMode |= ShaderRenderMode.Unshaded;
+                    lightMode = ShaderLightMode.Unshaded;
 
                     token = _takeToken();
-                    if (!(token is TokenSymbol semicolonUnshadedSymbol) || semicolonUnshadedSymbol.Symbol != Symbols.Semicolon)
+                    if (!(token is TokenSymbol semicolonUnshadedSymbol) ||
+                        semicolonUnshadedSymbol.Symbol != Symbols.Semicolon)
                     {
                         throw new ShaderParseException("Expected ';'", token.Position);
                     }
+                }
+                else if (word.Word == "blend_mode")
+                {
+                    if (lightMode != null)
+                    {
+                        throw new ShaderParseException("Already specified 'blend_mode' before!");
+                    }
+                    _takeToken();
+                    token = _takeToken();
 
+                    switch (token)
+                    {
+                        case TokenWord t when t.Word == "mix":
+                            blendMode = ShaderBlendMode.Mix;
+                            break;
+                        case TokenWord t when t.Word == "add":
+                            blendMode = ShaderBlendMode.Add;
+                            break;
+                        case TokenWord t when t.Word == "subtract":
+                            blendMode = ShaderBlendMode.Subtract;
+                            break;
+                        case TokenWord t when t.Word == "multiply":
+                            blendMode = ShaderBlendMode.Multiply;
+                            break;
+                        default:
+                            throw new ShaderParseException("Expected 'mix', 'add', 'subtract' or 'multiply'.");
+                    }
+                }
+                else
+                {
+                    break;
                 }
             }
 
@@ -105,7 +149,7 @@ namespace Robust.Client.Graphics.Shaders
             return new ParsedShader(
                 _uniformsParsing.ToDictionary(p => p.Name, p => p),
                 _varyingsParsing.ToDictionary(p => p.Name, p => p),
-                _functionsParsing, renderMode);
+                _functionsParsing, lightMode ?? ShaderLightMode.Default, blendMode ?? ShaderBlendMode.Mix);
         }
 
         private void _parseFunction()

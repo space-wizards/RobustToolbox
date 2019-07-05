@@ -5,6 +5,7 @@ using Robust.Client.UserInterface.Controls;
 using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics.Clyde;
+using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;

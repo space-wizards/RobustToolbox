@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Robust.Client.Graphics.Clyde;
 using Robust.Client.Console;
 using Robust.Client.Debugging;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Graphics.Clyde;
 using Robust.Client.Graphics.Lighting;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Input;
@@ -123,13 +123,15 @@ namespace Robust.Client
             switch (mode)
             {
                 case DisplayMode.Headless:
-                    IoCManager.Register<IDisplayManager, ClydeHeadless>();
                     IoCManager.Register<IClyde, ClydeHeadless>();
+                    IoCManager.Register<IClydeAudio, ClydeHeadless>();
+                    IoCManager.Register<IClydeInternal, ClydeHeadless>();
                     IoCManager.Register<IInputManager, InputManager>();
                     break;
                 case DisplayMode.Clyde:
-                    IoCManager.Register<IDisplayManager, Clyde>();
                     IoCManager.Register<IClyde, Clyde>();
+                    IoCManager.Register<IClydeAudio, Clyde>();
+                    IoCManager.Register<IClydeInternal, Clyde>();
                     IoCManager.Register<IInputManager, ClydeInputManager>();
                     break;
                 default:

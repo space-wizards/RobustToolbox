@@ -19,7 +19,7 @@ namespace Robust.Client.Placement.Modes
         {
             if (onGrid)
             {
-                var viewportSize = (Vector2)pManager.DisplayManager.ScreenSize;
+                var viewportSize = (Vector2)pManager._clyde.ScreenSize;
                 var position = pManager.eyeManager.ScreenToWorld(Vector2.Zero);
                 var gridstart = pManager.eyeManager.WorldToScreen(new Vector2( //Find snap grid closest to screen origin and convert back to screen coords
                     (float)(Math.Round(position.X / snapSize - 0.5f, MidpointRounding.AwayFromZero) + 0.5f) * snapSize,
@@ -28,13 +28,13 @@ namespace Robust.Client.Placement.Modes
                 {
                     var from = ScreenToWorld(new Vector2(a, 0));
                     var to = ScreenToWorld(new Vector2(a, viewportSize.Y));
-                    handle.DrawLine(from, to, new Color(0, 0, 1f), 0.5f);
+                    handle.DrawLine(from, to, new Color(0, 0, 1f));
                 }
                 for (var a = gridstart.Y; a < viewportSize.Y; a += snapSize * 32)
                 {
                     var from = ScreenToWorld(new Vector2(0, a));
                     var to = ScreenToWorld(new Vector2(viewportSize.X, a));
-                    handle.DrawLine(from, to, new Color(0, 0, 1f), 0.5f);
+                    handle.DrawLine(from, to, new Color(0, 0, 1f));
                 }
             }
 

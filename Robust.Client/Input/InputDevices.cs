@@ -78,13 +78,12 @@ namespace Robust.Client.Input
             {TKButton.Left, Button.Left},
             {TKButton.Middle, Button.Middle},
             {TKButton.Right, Button.Right},
-            {TKButton.Button4, Button.Button4},
-            {TKButton.Button5, Button.Button5},
-            {TKButton.Button6, Button.Button6},
-            {TKButton.Button7, Button.Button7},
-            {TKButton.Button8, Button.Button8},
-            {TKButton.Button9, Button.Button9},
-            {TKButton.LastButton, Button.LastButton},
+            {TKButton.Button1, Button.Button4},
+            {TKButton.Button2, Button.Button5},
+            {TKButton.Button3, Button.Button6},
+            {TKButton.Button4, Button.Button7},
+            {TKButton.Button5, Button.Button8},
+            {TKButton.Button6, Button.Button9},
         };
     }
 

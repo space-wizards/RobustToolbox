@@ -14,24 +14,24 @@ namespace Robust.Client.Graphics.Clyde
                 Compile(type, shaderSource);
                 if (name != null)
                 {
-                    _clyde._objectLabelMaybe(ObjectLabelIdentifier.Shader, Handle, name);
+                    _clyde._objectLabelMaybe(ObjectLabelIdentifier.Shader, ObjectHandle, name);
                 }
             }
 
-            public int Handle { get; private set; } = -1;
+            public uint ObjectHandle { get; private set; } = 0;
             public ShaderType Type { get; private set; }
 
             private void Compile(ShaderType type, string shaderSource)
             {
-                Handle = GL.CreateShader(type);
+                ObjectHandle = (uint)GL.CreateShader(type);
                 Type = type;
-                GL.ShaderSource(Handle, shaderSource);
-                GL.CompileShader(Handle);
+                GL.ShaderSource((int) ObjectHandle, shaderSource);
+                GL.CompileShader(ObjectHandle);
 
-                GL.GetShader(Handle, ShaderParameter.CompileStatus, out var compiled);
+                GL.GetShader(ObjectHandle, ShaderParameter.CompileStatus, out var compiled);
                 if (compiled != 1)
                 {
-                    var message = GL.GetShaderInfoLog(Handle);
+                    var message = GL.GetShaderInfoLog((int) ObjectHandle);
                     Delete();
                     throw new ShaderCompilationException(message);
                 }
@@ -39,12 +39,12 @@ namespace Robust.Client.Graphics.Clyde
 
             public void Delete()
             {
-                if (Handle == -1)
+                if (ObjectHandle == 0)
                 {
                     return;
                 }
-                GL.DeleteShader(Handle);
-                Handle = -1;
+                GL.DeleteShader(ObjectHandle);
+                ObjectHandle = 0;
             }
         }
     }

@@ -122,7 +122,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             var source = AL.GenSource();
             // ReSharper disable once PossibleInvalidOperationException
-            AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[stream.ClydeHandle.Value.ClydeHandle].BufferHandle);
+            AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[stream.ClydeHandle.Value.Handle].BufferHandle);
             var audioSource = new AudioSource(this, source, stream);
             _audioSources.Add(source, new WeakReference<AudioSource>(audioSource));
             return audioSource;
@@ -182,7 +182,7 @@ namespace Robust.Client.Graphics.Clyde
 
             _checkAlError();
 
-            var handle = new Handle(_audioSampleBuffers.Count);
+            var handle = new ClydeHandle(_audioSampleBuffers.Count);
             _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
             var length = TimeSpan.FromSeconds(vorbis.TotalSamples / (double) vorbis.SampleRate);
             return new AudioStream(handle, length, (int) vorbis.Channels, name);
@@ -239,7 +239,7 @@ namespace Robust.Client.Graphics.Clyde
             }
             _checkAlError();
 
-            var handle = new Handle(_audioSampleBuffers.Count);
+            var handle = new ClydeHandle(_audioSampleBuffers.Count);
             _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
             var length = TimeSpan.FromSeconds(wav.Data.Length / (double)wav.BlockAlign / wav.SampleRate);
             return new AudioStream(handle, length, wav.NumChannels, name);

@@ -91,7 +91,7 @@ namespace Robust.Client.Debugging
                 Shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
             }
 
-            protected override void Draw(DrawingHandle handle)
+            protected override void Draw(DrawingHandleBase handle)
             {
                 var worldHandle = (DrawingHandleWorld) handle;
                 var viewport = _eyeManager.GetWorldViewport();
@@ -139,7 +139,7 @@ namespace Robust.Client.Debugging
                 _eyeManager = eyeManager;
             }
 
-            protected override void Draw(DrawingHandle handle)
+            protected override void Draw(DrawingHandleBase handle)
             {
                 const float stubLength = 0.25f;
 

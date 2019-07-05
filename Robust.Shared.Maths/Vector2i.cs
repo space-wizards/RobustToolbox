@@ -7,7 +7,8 @@ namespace Robust.Shared.Maths
     [StructLayout(LayoutKind.Sequential)]
     public readonly struct Vector2i : IEquatable<Vector2i>
     {
-        public static readonly Vector2i Zero = new Vector2i(0, 0);
+        public static readonly Vector2i Zero = (0, 0);
+        public static readonly Vector2i One = (1, 1);
 
         /// <summary>
         /// The X component of the Vector2i.

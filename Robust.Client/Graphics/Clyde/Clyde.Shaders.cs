@@ -4,13 +4,14 @@ using System.Text;
 using OpenTK.Graphics.OpenGL;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.ResourceManagement.ResourceTypes;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private int _defaultShader;
+        private ClydeHandle _defaultShader;
 
         private string _shaderWrapCodeSpriteFrag;
         private string _shaderWrapCodeSpriteVert;
@@ -23,9 +24,10 @@ namespace Robust.Client.Graphics.Clyde
         {
             public ShaderProgram Program;
             public bool HasLighting = true;
+            public ShaderBlendMode BlendMode;
         }
 
-        public int LoadShader(ParsedShader shader, string name = null)
+        public ClydeHandle LoadShader(ParsedShader shader, string name = null)
         {
             var vertexSource = _shaderWrapCodeSpriteVert;
             var fragmentSource = _shaderWrapCodeSpriteFrag;
@@ -45,11 +47,17 @@ namespace Robust.Client.Graphics.Clyde
             var loaded = new LoadedShader
             {
                 Program = program,
-                HasLighting = (shader.RenderMode & ShaderRenderMode.Unshaded) == 0
+                HasLighting = shader.LightMode != ShaderLightMode.Unshaded,
+                BlendMode = shader.BlendMode
             };
             var ret = _loadedShaders.Count;
             _loadedShaders.Add(loaded);
-            return ret;
+            return new ClydeHandle(ret);
+        }
+
+        public ShaderInstance InstanceShader(ClydeHandle handle)
+        {
+            return new ClydeShaderInstance(handle);
         }
 
         private void _loadStockShaders()
@@ -183,6 +191,71 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             return (header.ToString(), vertexMain?.Body ?? "", fragmentMain?.Body ?? "");
+        }
+
+        private sealed class ClydeShaderInstance : ShaderInstance
+        {
+            public readonly ClydeHandle ShaderHandle;
+
+            public ClydeShaderInstance(ClydeHandle shaderHandle)
+            {
+                ShaderHandle = shaderHandle;
+            }
+
+            public override void SetParameter(string name, float value)
+            {
+//                throw new System.NotImplementedException();
+            }
+
+            public override void SetParameter(string name, Vector2 value)
+            {
+//                throw new System.NotImplementedException();
+            }
+
+            public override void SetParameter(string name, Vector3 value)
+            {
+//                throw new System.NotImplementedException();
+            }
+
+            public override void SetParameter(string name, Vector4 value)
+            {
+//                throw new System.NotImplementedException();
+            }
+
+            public override void SetParameter(string name, int value)
+            {
+//                throw new System.NotImplementedException();
+            }
+
+            public override void SetParameter(string name, Vector2i value)
+            {
+//                throw new System.NotImplementedException();
+            }
+
+            public override void SetParameter(string name, bool value)
+            {
+//                throw new System.NotImplementedException();
+            }
+
+            public override void SetParameter(string name, in Matrix3 matrix)
+            {
+//                throw new System.NotImplementedException();
+            }
+
+            public override void SetParameter(string name, in Matrix4 matrix)
+            {
+//                throw new System.NotImplementedException();
+            }
+
+            public override void SetParameter(string name, Texture texture)
+            {
+//                throw new System.NotImplementedException();
+            }
+
+            public override void Dispose()
+            {
+//                throw new System.NotImplementedException();
+            }
         }
     }
 }

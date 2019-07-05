@@ -73,50 +73,6 @@ namespace Robust.Client.Graphics
         }
     }
 
-    internal sealed class DummyTexture : Texture
-    {
-        public override int Width { get; }
-        public override int Height { get; }
-
-        public DummyTexture(int width, int height)
-        {
-            Width = width;
-            Height = height;
-        }
-    }
-
-    /// <summary>
-    ///     Represents a sub region of another texture.
-    ///     This can be a useful optimization in many cases.
-    /// </summary>
-    [PublicAPI]
-    public sealed class AtlasTexture : Texture
-    {
-        public AtlasTexture(Texture texture, UIBox2 subRegion)
-        {
-            DebugTools.Assert(SubRegion.Right < texture.Width);
-            DebugTools.Assert(SubRegion.Bottom < texture.Height);
-            DebugTools.Assert(SubRegion.Left >= 0);
-            DebugTools.Assert(SubRegion.Top >= 0);
-
-            SubRegion = subRegion;
-            SourceTexture = texture;
-        }
-
-        /// <summary>
-        ///     The texture this texture is a sub region of.
-        /// </summary>
-        public Texture SourceTexture { get; }
-
-        /// <summary>
-        ///     Our sub region within our source, in pixel coordinates.
-        /// </summary>
-        public UIBox2 SubRegion { get; }
-
-        public override int Width => (int) SubRegion.Width;
-        public override int Height => (int) SubRegion.Height;
-    }
-
     /// <summary>
     ///     Flags for loading of textures.
     /// </summary>
@@ -223,29 +179,5 @@ namespace Robust.Client.Graphics
         ///     Repeat the texture mirrored.
         /// </summary>
         MirroredRepeat,
-    }
-
-    internal class OpenGLTexture : Texture
-    {
-        internal int OpenGLTextureId { get; }
-        internal int ArrayIndex { get; }
-
-        public override int Width { get; }
-        public override int Height { get; }
-
-        internal OpenGLTexture(int id, int width, int height)
-        {
-            OpenGLTextureId = id;
-            Width = width;
-            Height = height;
-        }
-
-        internal OpenGLTexture(int id, int width, int height, int arrayIndex)
-        {
-            OpenGLTextureId = id;
-            Width = width;
-            Height = height;
-            ArrayIndex = arrayIndex;
-        }
     }
 }

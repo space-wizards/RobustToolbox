@@ -17,7 +17,7 @@ namespace Robust.Client.Placement
                 ZIndex = 100;
             }
 
-            protected override void Draw(DrawingHandle handle)
+            protected override void Draw(DrawingHandleBase handle)
             {
                 _manager.Render((DrawingHandleWorld) handle);
             }

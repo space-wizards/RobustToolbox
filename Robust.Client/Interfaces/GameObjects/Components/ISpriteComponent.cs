@@ -2,7 +2,6 @@
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Shaders;
-using Robust.Client.UserInterface;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
@@ -57,6 +56,8 @@ namespace Robust.Client.Interfaces.GameObjects.Components
         ///     Layers will fall back to this RSI if they do not have their own RSI set.
         /// </summary>
         RSI BaseRSI { get; set; }
+
+        ShaderInstance PostShader { get; set; }
 
         /// <summary>
         ///     Sets a layer key to the layer map, creating it if it does not exist.
@@ -128,8 +129,8 @@ namespace Robust.Client.Interfaces.GameObjects.Components
         void RemoveLayer(int layer);
         void RemoveLayer(object layerKey);
 
-        void LayerSetShader(int layer, Shader shader);
-        void LayerSetShader(object layerKey, Shader shader);
+        void LayerSetShader(int layer, ShaderInstance shader);
+        void LayerSetShader(object layerKey, ShaderInstance shader);
         void LayerSetShader(int layer, string shaderName);
         void LayerSetShader(object layerKey, string shaderName);
 

@@ -58,6 +58,7 @@ namespace Robust.Client.Interfaces.GameObjects.Components
         RSI BaseRSI { get; set; }
 
         ShaderInstance PostShader { get; set; }
+        uint RenderOrder { get; set; }
 
         /// <summary>
         ///     Sets a layer key to the layer map, creating it if it does not exist.

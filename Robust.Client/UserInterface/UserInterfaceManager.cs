@@ -423,10 +423,10 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
-            _render(renderHandle.DrawingHandleScreen, RootControl, Vector2i.Zero, Color.White, null);
+            _render(renderHandle, RootControl, Vector2i.Zero, Color.White, null);
         }
 
-        private static void _render(DrawingHandleScreen handle, Control control, Vector2i position, Color modulate,
+        private static void _render(IRenderHandle renderHandle, Control control, Vector2i position, Color modulate,
             UIBox2i? scissorBox)
         {
             if (!control.Visible)
@@ -449,6 +449,7 @@ namespace Robust.Client.UserInterface
                 }
             }
 
+            var handle = renderHandle.DrawingHandleScreen;
             handle.SetTransform(position, Angle.Zero, Vector2.One);
             modulate *= control.Modulate;
             handle.Modulate = modulate * control.ActualModulateSelf;
@@ -471,18 +472,18 @@ namespace Robust.Client.UserInterface
                     scissorRegion = result.Value;
                 }
 
-                handle.SetScissor(scissorRegion);
+                renderHandle.SetScissor(scissorRegion);
             }
 
-            control.Draw(handle);
+            control.DrawInternal(renderHandle);
             foreach (var child in control.Children)
             {
-                _render(handle, child, position + child.PixelPosition, modulate, scissorRegion);
+                _render(renderHandle, child, position + child.PixelPosition, modulate, scissorRegion);
             }
 
             if (clip)
             {
-                handle.SetScissor(scissorBox);
+                renderHandle.SetScissor(scissorBox);
             }
         }
 

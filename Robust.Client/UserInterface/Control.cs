@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using JetBrains.Annotations;
 using Robust.Client.Graphics.Drawing;
+using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.ResourceManagement.ResourceTypes;
@@ -1133,6 +1134,11 @@ namespace Robust.Client.UserInterface
         /// <param name="handle">A handle that can be used to draw.</param>
         protected internal virtual void Draw(DrawingHandleScreen handle)
         {
+        }
+
+        internal virtual void DrawInternal(IRenderHandle renderHandle)
+        {
+            Draw(renderHandle.DrawingHandleScreen);
         }
 
         public void UpdateDraw()

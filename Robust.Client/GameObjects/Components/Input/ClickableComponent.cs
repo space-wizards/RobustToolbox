@@ -66,6 +66,7 @@ namespace Robust.Client.GameObjects
             if (Owner.TryGetComponent(out ISpriteComponent sprite))
             {
                 sprite.PostShader = _selectionShaderInstance;
+                sprite.RenderOrder = Owner.EntityManager.CurrentTick.Value;
             }
         }
 
@@ -74,6 +75,7 @@ namespace Robust.Client.GameObjects
             if (Owner.TryGetComponent(out ISpriteComponent sprite))
             {
                 sprite.PostShader = null;
+                sprite.RenderOrder = 0;
             }
         }
     }

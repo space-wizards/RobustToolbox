@@ -59,8 +59,7 @@ namespace Robust.Client.Graphics.Clyde
         /// </summary>
         private bool _reallocateBuffers;
 
-        private ProjViewMatrices _defaultMatricesScreen;
-        private ProjViewMatrices _defaultMatricesWorld;
+        private ProjViewMatrices _currentMatrices;
 
         private ClydeHandle _currentShader;
 
@@ -76,7 +75,6 @@ namespace Robust.Client.Graphics.Clyde
 
             // Update shared UBOs.
             _updateUniformConstants();
-            _updateDefaultScreenMatrices();
 
             _setSpace(CurrentSpace.ScreenSpace);
 
@@ -89,7 +87,7 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            _updateDefaultWorldMatrices();
+            var worldMatrices = _worldMatrices();
 
             void RenderOverlays(OverlaySpace space)
             {
@@ -113,8 +111,6 @@ namespace Robust.Client.Graphics.Clyde
             using (DebugGroup("Lights"))
             {
                 _drawLights();
-
-                _lightingReady = true;
             }
 
             using (DebugGroup("Grids"))
@@ -149,9 +145,45 @@ namespace Robust.Client.Graphics.Clyde
                     return a.RenderOrder.CompareTo(b.RenderOrder);
                 });
 
-                foreach (var entity in entityList)
+                foreach (var sprite in entityList)
                 {
-                    entity.OpenGLRender(_renderHandle.DrawingHandleWorld);
+                    Vector2i roundedPos = default;
+                    if (sprite.PostShader != null)
+                    {
+                        _renderHandle.UseRenderTarget(EntityPostRenderTarget);
+                        _renderHandle.Clear(new Color());
+                        // Calculate viewport so that the entity thinks it's drawing to the same position,
+                        // which is necessary for light application,
+                        // but it's ACTUALLY drawing into the center of the render target.
+                        var spritePos = sprite.Owner.Transform.WorldPosition;
+                        var screenPos = _eyeManager.WorldToScreen(spritePos);
+                        var (roundedX, roundedY) = roundedPos = (Vector2i) screenPos;
+                        var flippedPos = new Vector2i(roundedX, ScreenSize.Y - roundedY);
+                        flippedPos -= EntityPostRenderTarget.Size / 2;
+                        _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, ScreenSize));
+                    }
+
+                    sprite.OpenGLRender(_renderHandle.DrawingHandleWorld);
+
+                    if (sprite.PostShader != null)
+                    {
+                        _renderHandle.UseRenderTarget(null);
+                        _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, ScreenSize));
+
+                        _renderHandle.UseShader(sprite.PostShader);
+                        _renderHandle.SetSpace(CurrentSpace.ScreenSpace);
+                        _renderHandle.SetModelTransform(Matrix3.Identity);
+
+                        var rounded = roundedPos - EntityPostRenderTarget.Size / 2;
+
+                        var box = UIBox2i.FromDimensions(rounded, EntityPostRenderTarget.Size);
+
+                        _renderHandle.DrawTexture(EntityPostRenderTarget.Texture, box.BottomLeft,
+                            box.TopRight, Color.White, null);
+
+                        _renderHandle.SetSpace(CurrentSpace.WorldSpace);
+                        _renderHandle.UseShader(null);
+                    }
                 }
 
                 _flushRenderHandle(_renderHandle);
@@ -191,7 +223,7 @@ namespace Robust.Client.Graphics.Clyde
             _writeBuffer(UniformConstantsUBO, constants);
         }
 
-        private void _updateDefaultScreenMatrices()
+        private ProjViewMatrices _screenMatrices()
         {
             var viewMatrixScreen = Matrix3.Identity;
 
@@ -202,10 +234,10 @@ namespace Robust.Client.Graphics.Clyde
             projMatrixScreen.R0C2 = -1;
             projMatrixScreen.R1C2 = 1;
 
-            _defaultMatricesScreen = new ProjViewMatrices(projMatrixScreen, viewMatrixScreen);
+            return new ProjViewMatrices(projMatrixScreen, viewMatrixScreen);
         }
 
-        private void _updateDefaultWorldMatrices()
+        private ProjViewMatrices _worldMatrices()
         {
             var eye = _eyeManager.CurrentEye;
 
@@ -224,7 +256,7 @@ namespace Robust.Client.Graphics.Clyde
             projMatrixWorld.R0C0 = EyeManager.PIXELSPERMETER * 2f / _window.Width;
             projMatrixWorld.R1C1 = EyeManager.PIXELSPERMETER * 2f / _window.Height;
 
-            _defaultMatricesWorld = new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
+            return new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
         }
 
         private void _drawLights()
@@ -278,11 +310,13 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.Viewport(0, 0, _window.Width, _window.Height);
+
+            _lightingReady = true;
         }
 
         private void _setProjViewMatrices(in ProjViewMatrices matrices)
         {
-            ProjViewUBO.Use();
+            _currentMatrices = matrices;
             _writeBuffer(ProjViewUBO, matrices);
         }
 
@@ -329,12 +363,7 @@ namespace Robust.Client.Graphics.Clyde
 
                     case RenderCommandType.ViewMatrix:
                         _flushBatchBuffer();
-                        ProjViewMatrices matrices;
-                        ref var pullProj = ref _currentSpace == CurrentSpace.ScreenSpace
-                            ? ref _defaultMatricesScreen
-                            : ref _defaultMatricesWorld;
-
-                        matrices = new ProjViewMatrices(pullProj, command.ViewMatrix.Matrix);
+                        var matrices = new ProjViewMatrices(_currentMatrices, command.ViewMatrix.Matrix);
                         _setProjViewMatrices(matrices);
                         break;
 
@@ -348,9 +377,49 @@ namespace Robust.Client.Graphics.Clyde
                         _currentShader = (ClydeHandle) command.UseShader.Handle;
                         break;
 
+                    case RenderCommandType.ResetViewMatrix:
+                        _flushBatchBuffer();
+                        _setSpace(_currentSpace);
+                        break;
+
                     case RenderCommandType.SwitchSpace:
                         _flushBatchBuffer();
                         _setSpace(command.SwitchSpace.NewSpace);
+                        break;
+
+                    case RenderCommandType.RenderTarget:
+                        _flushBatchBuffer();
+                        if (command.RenderTarget.RenderTarget.Handle == 0)
+                        {
+                            _popDebugGroupMaybe();
+                            // Bind window framebuffer.
+                            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                            var (w, h) = ScreenSize;
+                            GL.Viewport(0, 0, w, h);
+                        }
+                        else
+                        {
+                            _pushDebugGroupMaybe("fb");
+                            var renderTarget = _renderTargets[command.RenderTarget.RenderTarget];
+
+                            GL.BindFramebuffer(FramebufferTarget.Framebuffer, renderTarget.ObjectHandle.Handle);
+                            var (w, h) = renderTarget.Size;
+                            GL.Viewport(0, 0, w, h);
+                        }
+
+                        break;
+
+                    case RenderCommandType.Viewport:
+                        _flushBatchBuffer();
+                        ref var vp = ref command.Viewport.Viewport;
+                        GL.Viewport(vp.Left, vp.Bottom, vp.Width, vp.Height);
+                        break;
+
+                    case RenderCommandType.Clear:
+                        _flushBatchBuffer();
+                        ref var color = ref command.Clear.Color;
+                        GL.ClearColor(color.R, color.G, color.B, color.A);
+                        GL.Clear(ClearBufferMask.ColorBufferBit);
                         break;
 
                     default:
@@ -494,7 +563,6 @@ namespace Robust.Client.Graphics.Clyde
             _currentModelMatrix = Matrix3.Identity;
             _currentShader = _defaultShader;
             _disableScissor();
-            _setProjViewMatrices(_defaultMatricesScreen);
         }
 
         private void _flushBatchBuffer()
@@ -573,10 +641,10 @@ namespace Robust.Client.Graphics.Clyde
             switch (newSpace)
             {
                 case CurrentSpace.ScreenSpace:
-                    _setProjViewMatrices(_defaultMatricesScreen);
+                    _setProjViewMatrices(_screenMatrices());
                     break;
                 case CurrentSpace.WorldSpace:
-                    _setProjViewMatrices(_defaultMatricesWorld);
+                    _setProjViewMatrices(_worldMatrices());
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(newSpace), newSpace, null);
@@ -629,7 +697,7 @@ namespace Robust.Client.Graphics.Clyde
                 DrawingHandleWorld = new DrawingHandleWorldImpl(this);
             }
 
-            private void SetModelTransform(in Matrix3 matrix)
+            public void SetModelTransform(in Matrix3 matrix)
             {
                 ref var command = ref CommandList.RenderCommands.AllocAdd();
                 command.Type = RenderCommandType.ModelMatrix;
@@ -637,7 +705,7 @@ namespace Robust.Client.Graphics.Clyde
                 command.ModelMatrix.Matrix = matrix;
             }
 
-            private void SetViewTransform(in Matrix3 matrix)
+            public void SetViewTransform(in Matrix3 matrix)
             {
                 ref var command = ref CommandList.RenderCommands.AllocAdd();
                 command.Type = RenderCommandType.ViewMatrix;
@@ -645,7 +713,13 @@ namespace Robust.Client.Graphics.Clyde
                 command.ViewMatrix.Matrix = matrix;
             }
 
-            private void DrawTexture(Texture texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion)
+            public void ResetViewTransform()
+            {
+                ref var command = ref CommandList.RenderCommands.AllocAdd();
+                command.Type = RenderCommandType.ResetViewMatrix;
+            }
+
+            public void DrawTexture(Texture texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion)
             {
                 switch (texture)
                 {
@@ -687,7 +761,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            private void SetScissor(UIBox2i? scissorBox)
+            public void SetScissor(UIBox2i? scissorBox)
             {
                 ref var command = ref CommandList.RenderCommands.AllocAdd();
                 command.Type = RenderCommandType.Scissor;
@@ -699,16 +773,19 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            private void DrawEntity(IEntity entity, in Vector2 position)
+            public void SetSpace(CurrentSpace space)
+            {
+                ref var commandWorldSpace = ref CommandList.RenderCommands.AllocAdd();
+                commandWorldSpace.Type = RenderCommandType.SwitchSpace;
+                commandWorldSpace.SwitchSpace.NewSpace = space;
+            }
+
+            public void DrawEntity(IEntity entity, Vector2 position)
             {
                 var sprite = entity.GetComponent<SpriteComponent>();
 
                 // Switch rendering to world space.
-                {
-                    ref var commandWorldSpace = ref CommandList.RenderCommands.AllocAdd();
-                    commandWorldSpace.Type = RenderCommandType.SwitchSpace;
-                    commandWorldSpace.SwitchSpace.NewSpace = CurrentSpace.WorldSpace;
-                }
+                SetSpace(CurrentSpace.WorldSpace);
 
                 {
                     // Change view matrix to put entity where we need.
@@ -727,14 +804,10 @@ namespace Robust.Client.Graphics.Clyde
                 sprite.OpenGLRender(DrawingHandleWorld, false);
 
                 // Reset to screen space
-                {
-                    ref var commandScreenSpace = ref CommandList.RenderCommands.AllocAdd();
-                    commandScreenSpace.Type = RenderCommandType.SwitchSpace;
-                    commandScreenSpace.SwitchSpace.NewSpace = CurrentSpace.ScreenSpace;
-                }
+                SetSpace(CurrentSpace.ScreenSpace);
             }
 
-            private void DrawLine(Vector2 a, Vector2 b, Color color)
+            public void DrawLine(Vector2 a, Vector2 b, Color color)
             {
                 ref var command = ref CommandList.RenderCommands.AllocAdd();
                 command.Type = RenderCommandType.Line;
@@ -744,7 +817,7 @@ namespace Robust.Client.Graphics.Clyde
                 command.Line.Color = color;
             }
 
-            private void UseShader(ShaderInstance shader)
+            public void UseShader(ShaderInstance shader)
             {
                 var clydeShader = (ClydeShaderInstance) shader;
 
@@ -754,7 +827,31 @@ namespace Robust.Client.Graphics.Clyde
                 command.UseShader.Handle = clydeShader?.ShaderHandle.Handle ?? _clyde._defaultShader.Handle;
             }
 
+            public void Viewport(Box2i viewport)
+            {
+                ref var command = ref CommandList.RenderCommands.AllocAdd();
+                command.Type = RenderCommandType.Viewport;
 
+                command.Viewport.Viewport = viewport;
+            }
+
+            public void UseRenderTarget(IRenderTarget renderTarget)
+            {
+                var target = (RenderTarget) renderTarget;
+
+                ref var command = ref CommandList.RenderCommands.AllocAdd();
+                command.Type = RenderCommandType.RenderTarget;
+
+                command.RenderTarget.RenderTarget = target?.Handle ?? new ClydeHandle(0);
+            }
+
+            public void Clear(Color color)
+            {
+                ref var command = ref CommandList.RenderCommands.AllocAdd();
+                command.Type = RenderCommandType.Clear;
+
+                command.Clear.Color = color;
+            }
 
             private sealed class DrawingHandleScreenImpl : DrawingHandleScreen
             {
@@ -785,11 +882,6 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.DrawLine(from, to, color * Modulate);
                 }
 
-                public override void SetScissor(UIBox2i? scissorBox)
-                {
-                    _renderHandle.SetScissor(scissorBox);
-                }
-
                 public override void DrawRect(UIBox2 rect, Color color, bool filled = true)
                 {
                     // TODO: Hollow rect drawing.
@@ -802,11 +894,6 @@ namespace Robust.Client.Graphics.Clyde
                     var color = (modulate ?? Color.White) * Modulate;
                     _renderHandle.DrawTexture(texture, rect.TopLeft, rect.BottomRight, color,
                         subRegion);
-                }
-
-                internal override void DrawEntity(IEntity entity, Vector2 screenPosition)
-                {
-                    _renderHandle.DrawEntity(entity, screenPosition);
                 }
             }
 
@@ -870,6 +957,9 @@ namespace Robust.Client.Graphics.Clyde
             [FieldOffset(4)] public RenderCommandUseShader UseShader;
             [FieldOffset(4)] public RenderCommandLine Line;
             [FieldOffset(4)] public RenderCommandSwitchSpace SwitchSpace;
+            [FieldOffset(4)] public RenderCommandRenderTarget RenderTarget;
+            [FieldOffset(4)] public RenderCommandViewport Viewport;
+            [FieldOffset(4)] public RenderCommandClear Clear;
         }
 
         private struct RenderCommandTexture
@@ -918,6 +1008,21 @@ namespace Robust.Client.Graphics.Clyde
             public CurrentSpace NewSpace;
         }
 
+        private struct RenderCommandRenderTarget
+        {
+            public ClydeHandle RenderTarget;
+        }
+
+        private struct RenderCommandViewport
+        {
+            public Box2i Viewport;
+        }
+
+        private struct RenderCommandClear
+        {
+            public Color Color;
+        }
+
         private enum RenderCommandType
         {
             Texture,
@@ -925,10 +1030,14 @@ namespace Robust.Client.Graphics.Clyde
 
             ModelMatrix,
             ViewMatrix,
+            ResetViewMatrix,
             SwitchSpace,
+            Viewport,
 
             UseShader,
             Scissor,
+            RenderTarget,
+            Clear
         }
 
         private enum CurrentSpace

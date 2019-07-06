@@ -341,7 +341,7 @@ namespace Robust.Client.Graphics.Clyde
 
             _regenerateLightRenderTarget();
 
-            EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * EyeManager.PIXELSPERMETER,
+            EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 4 * EyeManager.PIXELSPERMETER,
                 RenderTargetColorFormat.Rgba8Srgb, name: nameof(EntityPostRenderTarget));
 
             _drawingSplash = true;

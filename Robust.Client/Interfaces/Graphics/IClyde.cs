@@ -7,6 +7,7 @@ using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Input;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Interfaces.Graphics
@@ -98,6 +99,9 @@ namespace Robust.Client.Interfaces.Graphics
     {
         DrawingHandleScreen DrawingHandleScreen { get; }
         DrawingHandleWorld DrawingHandleWorld { get; }
+
+        void SetScissor(UIBox2i? scissorBox);
+        void DrawEntity(IEntity entity, Vector2 position);
     }
 
     /// <summary>

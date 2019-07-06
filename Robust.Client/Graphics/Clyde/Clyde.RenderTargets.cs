@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Maths;
@@ -8,6 +9,11 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
+        private int _nextRenderTarget = 1;
+
+        private readonly Dictionary<ClydeHandle, RenderTarget> _renderTargets =
+            new Dictionary<ClydeHandle, RenderTarget>();
+
         IRenderTarget IClyde.CreateRenderTarget(Vector2i size, RenderTargetColorFormat colorFormat,
             TextureSampleParameters? sampleParameters, string name)
         {
@@ -68,12 +74,16 @@ namespace Robust.Client.Graphics.Clyde
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, boundReadBuffer);
 
             var textureObject = _genTexture(texture, size, name);
-            return new RenderTarget(size, textureObject, fbo, this);
+            var handle = new ClydeHandle(_nextRenderTarget++);
+            var renderTarget = new RenderTarget(size, textureObject, fbo, this, handle);
+            _renderTargets.Add(handle, renderTarget);
+            return renderTarget;
         }
 
         private void _deleteRenderTarget(RenderTarget renderTarget)
         {
             GL.DeleteFramebuffer(renderTarget.ObjectHandle.Handle);
+            _renderTargets.Remove(renderTarget.Handle);
             _deleteTexture(renderTarget.Texture);
         }
 
@@ -81,16 +91,18 @@ namespace Robust.Client.Graphics.Clyde
         {
             private readonly Clyde _clyde;
 
-            public RenderTarget(Vector2i size, ClydeTexture texture, OGLHandle objectHandle, Clyde clyde)
+            public RenderTarget(Vector2i size, ClydeTexture texture, OGLHandle objectHandle, Clyde clyde, ClydeHandle handle)
             {
                 Size = size;
                 Texture = texture;
                 ObjectHandle = objectHandle;
                 _clyde = clyde;
+                Handle = handle;
             }
 
             public Vector2i Size { get; }
             public ClydeTexture Texture { get; }
+            public ClydeHandle Handle { get; }
 
             Texture IRenderTarget.Texture => Texture;
 

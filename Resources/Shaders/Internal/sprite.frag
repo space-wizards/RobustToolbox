@@ -3,6 +3,7 @@
 out vec4 FragColor;
 
 in vec2 UV;
+in vec2 Pos;
 
 uniform sampler2D TEXTURE;
 uniform sampler2D lightMap;
@@ -26,8 +27,7 @@ void main()
 
     [SHADER_CODE]
 
-    vec2 lightSampleUv = (FRAGCOORD.xy * SCREEN_PIXEL_SIZE);
-    vec3 lightSample = texture(lightMap, lightSampleUv).rgb;
+    vec3 lightSample = texture(lightMap, Pos).rgb;
 
     FragColor = COLOR * modulate * vec4(lightSample, 1);
 }

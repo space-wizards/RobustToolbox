@@ -884,8 +884,17 @@ namespace Robust.Client.Graphics.Clyde
 
                 public override void DrawRect(UIBox2 rect, Color color, bool filled = true)
                 {
-                    // TODO: Hollow rect drawing.
-                    DrawTextureRect(Texture.White, rect, color * Modulate);
+                    if (filled)
+                    {
+                        DrawTextureRect(Texture.White, rect, color);
+                    }
+                    else
+                    {
+                        DrawLine(rect.TopLeft, rect.TopRight, color);
+                        DrawLine(rect.TopRight, rect.BottomRight, color);
+                        DrawLine(rect.BottomRight, rect.BottomLeft, color);
+                        DrawLine(rect.BottomLeft, rect.TopLeft, color);
+                    }
                 }
 
                 public override void DrawTextureRectRegion(Texture texture, UIBox2 rect, UIBox2? subRegion = null,
@@ -928,8 +937,17 @@ namespace Robust.Client.Graphics.Clyde
 
                 public override void DrawRect(Box2 rect, Color color, bool filled = true)
                 {
-                    // TODO: Hollow rect drawing.
-                    DrawTextureRect(Texture.White, rect, color * Modulate);
+                    if (filled)
+                    {
+                        DrawTextureRect(Texture.White, rect, color);
+                    }
+                    else
+                    {
+                        DrawLine(rect.TopLeft, rect.TopRight, color);
+                        DrawLine(rect.TopRight, rect.BottomRight, color);
+                        DrawLine(rect.BottomRight, rect.BottomLeft, color);
+                        DrawLine(rect.BottomLeft, rect.TopLeft, color);
+                    }
                 }
 
                 public override void DrawTextureRectRegion(Texture texture, Box2 rect, UIBox2? subRegion = null,

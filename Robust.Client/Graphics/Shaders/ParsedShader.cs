@@ -8,18 +8,20 @@ namespace Robust.Client.Graphics.Shaders
     {
         public ParsedShader(IReadOnlyDictionary<string, ShaderUniformDefinition> uniforms,
             IReadOnlyDictionary<string, ShaderVaryingDefinition> varyings, IList<ShaderFunctionDefinition> functions,
-            ShaderRenderMode renderMode)
+            ShaderLightMode lightMode, ShaderBlendMode blendMode)
         {
             Uniforms = uniforms;
             Varyings = varyings;
             Functions = functions;
-            RenderMode = renderMode;
+            LightMode = lightMode;
+            BlendMode = blendMode;
         }
 
         public IReadOnlyDictionary<string, ShaderUniformDefinition> Uniforms { get; }
         public IReadOnlyDictionary<string, ShaderVaryingDefinition> Varyings { get; }
         public IList<ShaderFunctionDefinition> Functions { get; }
-        public ShaderRenderMode RenderMode { get; }
+        public ShaderLightMode LightMode { get; }
+        public ShaderBlendMode BlendMode { get; }
     }
 
     internal sealed class ShaderFunctionDefinition
@@ -161,11 +163,18 @@ namespace Robust.Client.Graphics.Shaders
         };
     }
 
-    [Flags]
-    internal enum ShaderRenderMode
+    internal enum ShaderLightMode
     {
-        None = 0,
+        Default = 0,
         Unshaded = 1,
+    }
+
+    internal enum ShaderBlendMode
+    {
+        Mix,
+        Add,
+        Subtract,
+        Multiply
     }
 
     // Yeah I had no idea what to name this.

@@ -21,16 +21,6 @@ namespace Robust.Client.UserInterface.CustomControls
         public SS14Window() {}
         public SS14Window(string name) : base(name) {}
 
-        [Obsolete("SS14Window no longer needs an IDisplayManager.")]
-        public SS14Window(IDisplayManager displayMan)
-        {
-        }
-
-        [Obsolete("SS14Window no longer needs an IDisplayManager.")]
-        public SS14Window(IDisplayManager displayMan, string name) : base(name)
-        {
-        }
-
         [Flags]
         enum DragMode
         {

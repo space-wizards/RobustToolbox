@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics.Clyde;
-using Robust.Shared.Utility;
+using Robust.Client.Interfaces.Graphics;
 
 namespace Robust.Client.Graphics.Overlays
 {
@@ -29,9 +29,7 @@ namespace Robust.Client.Graphics.Overlays
 
         protected IOverlayManager OverlayManager { get; }
 
-        private IRenderHandle _renderHandle;
-
-        public Shader Shader { get; set; }
+        public ShaderInstance Shader { get; set; }
 
         public int? ZIndex { get; set; }
 
@@ -39,7 +37,7 @@ namespace Robust.Client.Graphics.Overlays
 
         private bool _isDirty = true;
 
-        private readonly List<DrawingHandle> TempHandles = new List<DrawingHandle>();
+        private readonly List<DrawingHandleBase> TempHandles = new List<DrawingHandleBase>();
 
         private bool Disposed;
 
@@ -70,36 +68,7 @@ namespace Robust.Client.Graphics.Overlays
         {
         }
 
-        protected abstract void Draw(DrawingHandle handle);
-
-        protected DrawingHandle NewHandle(Shader shader = null)
-        {
-            if (!Drawing)
-            {
-                throw new InvalidOperationException("Can only allocate new handles while drawing.");
-            }
-
-            DrawingHandle handle;
-            switch (Space)
-            {
-                case OverlaySpace.ScreenSpaceBelowWorld:
-                case OverlaySpace.ScreenSpace:
-                    handle = _renderHandle.CreateHandleScreen();
-                    break;
-                case OverlaySpace.WorldSpace:
-                    handle = _renderHandle.CreateHandleWorld();
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            if (shader != null)
-            {
-                handle.UseShader(shader);
-            }
-
-            return handle;
-        }
+        protected abstract void Draw(DrawingHandleBase handle);
 
         public void Dirty()
         {
@@ -112,23 +81,21 @@ namespace Robust.Client.Graphics.Overlays
 
         internal void ClydeRender(IRenderHandle renderHandle)
         {
-            try
+            DrawingHandleBase handle;
+            if (Space == OverlaySpace.WorldSpace)
             {
-                _renderHandle = renderHandle;
-                Drawing = true;
+                handle = renderHandle.DrawingHandleWorld;
+            }
+            else
+            {
+                handle = renderHandle.DrawingHandleScreen;
+            }
 
-                var handle = NewHandle();
-                if (Shader != null)
-                {
-                    handle.UseShader(Shader);
-                }
-                Draw(handle);
-            }
-            finally
+            if (Shader != null)
             {
-                _renderHandle = null;
-                Drawing = false;
+                handle.UseShader(Shader);
             }
+            Draw(handle);
         }
     }
 

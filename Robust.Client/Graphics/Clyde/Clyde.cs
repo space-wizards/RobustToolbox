@@ -2,18 +2,16 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
-using System.Text;
 using System.Threading;
 using JetBrains.Annotations;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
-using Robust.Client.Audio;
+using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
@@ -22,18 +20,14 @@ using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Interfaces.Map;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.UserInterface;
-using Robust.Client.Map;
-using Robust.Client.ResourceManagement;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Matrix3 = Robust.Shared.Maths.Matrix3;
 using Vector2 = Robust.Shared.Maths.Vector2;
 using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Client.Graphics.Clyde
@@ -41,7 +35,7 @@ namespace Robust.Client.Graphics.Clyde
     /// <summary>
     ///     Responsible for most things rendering on OpenGL mode.
     /// </summary>
-    internal sealed partial class Clyde : DisplayManager, IClyde, IDisposable
+    internal sealed partial class Clyde : DisplayManager, IClydeInternal, IClydeAudio, IDisposable
     {
 #pragma warning disable 649
         [Dependency] private readonly IResourceCache _resourceCache;
@@ -63,19 +57,21 @@ namespace Robust.Client.Graphics.Clyde
         private Buffer ProjViewUBO;
         private Buffer UniformConstantsUBO;
 
+        private RenderTarget LightRenderTarget;
+        private RenderTarget EntityPostRenderTarget;
+
         private Buffer BatchVBO;
         private Buffer BatchEBO;
         private OGLHandle BatchVAO;
-        private OGLHandle LightFBO;
-        private OGLHandle LightTexture;
 
         // VBO to draw a single quad.
         private Buffer QuadVBO;
+
         private OGLHandle QuadVAO;
+
         // VBO to draw a single line.
         private Buffer LineVBO;
         private OGLHandle LineVAO;
-
 
         private const string UniModUV = "modifyUV";
         private const string UniModelMatrix = "modelMatrix";
@@ -114,6 +110,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public void FrameProcess(RenderFrameEventArgs eventArgs)
         {
+            _renderTime += eventArgs.Elapsed;
             _updateAudio();
         }
 
@@ -139,7 +136,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             base.ReloadConfig();
 
-            _regenerateLightTexture();
+            _regenerateLightRenderTarget();
         }
 
         public override void PostInject()
@@ -184,10 +181,7 @@ namespace Robust.Client.Graphics.Clyde
 
             _mainThread = Thread.CurrentThread;
 
-            _window.KeyDown += (sender, eventArgs) =>
-            {
-                _gameController.KeyDown((KeyEventArgs) eventArgs);
-            };
+            _window.KeyDown += (sender, eventArgs) => { _gameController.KeyDown((KeyEventArgs) eventArgs); };
 
             _window.KeyUp += (sender, eventArgs) => { _gameController.KeyUp((KeyEventArgs) eventArgs); };
             _window.Closed += _onWindowClosed;
@@ -196,7 +190,7 @@ namespace Robust.Client.Graphics.Clyde
                 var oldSize = _windowSize;
                 _windowSize = new Vector2i(_window.Width, _window.Height);
                 GL.Viewport(0, 0, _window.Width, _window.Height);
-                _regenerateLightTexture();
+                _regenerateLightRenderTarget();
                 OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _windowSize));
             };
             _window.MouseDown += (sender, eventArgs) =>
@@ -276,9 +270,9 @@ namespace Robust.Client.Graphics.Clyde
                 };
 
                 QuadVBO = new Buffer<Vertex2D>(this, BufferTarget.ArrayBuffer, BufferUsageHint.StaticDraw, quadVertices,
-                    "QuadVBO");
+                    nameof(QuadVBO));
 
-                QuadVAO = new OGLHandle(GL.GenVertexArray());
+                QuadVAO = new OGLHandle((uint) GL.GenVertexArray());
                 GL.BindVertexArray(QuadVAO.Handle);
                 _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, QuadVAO, "QuadVAO");
                 // Vertex Coords
@@ -300,7 +294,7 @@ namespace Robust.Client.Graphics.Clyde
                 LineVBO = new Buffer<Vertex2D>(this, BufferTarget.ArrayBuffer, BufferUsageHint.StaticDraw, lineVertices,
                     nameof(LineVBO));
 
-                LineVAO = new OGLHandle(GL.GenVertexArray());
+                LineVAO = new OGLHandle((uint) GL.GenVertexArray());
                 GL.BindVertexArray(LineVAO.Handle);
                 _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, LineVAO, nameof(LineVAO));
                 // Vertex Coords
@@ -333,7 +327,7 @@ namespace Robust.Client.Graphics.Clyde
                 ProjViewUBO.Reallocate(sizeof(ProjViewMatrices));
             }
 
-            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, ProjViewBindingIndex, ProjViewUBO.Handle);
+            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, ProjViewBindingIndex, ProjViewUBO.ObjectHandle);
 
             UniformConstantsUBO = new Buffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw,
                 nameof(UniformConstantsUBO));
@@ -343,27 +337,12 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             GL.BindBufferBase(BufferRangeTarget.UniformBuffer, UniformConstantsBindingIndex,
-                UniformConstantsUBO.Handle);
+                UniformConstantsUBO.ObjectHandle);
 
-            LightFBO = new OGLHandle(GL.GenFramebuffer());
-            LightTexture = new OGLHandle(GL.GenTexture());
+            _regenerateLightRenderTarget();
 
-            _regenerateLightTexture();
-
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMagFilter.Linear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)OpenTK.Graphics.OpenGL.TextureWrapMode.ClampToEdge);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)OpenTK.Graphics.OpenGL.TextureWrapMode.ClampToEdge);
-
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, LightFBO.Handle);
-
-            _objectLabelMaybe(ObjectLabelIdentifier.Framebuffer, LightFBO, nameof(LightFBO));
-            _objectLabelMaybe(ObjectLabelIdentifier.Texture, LightTexture, nameof(LightTexture));
-
-            GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
-                LightTexture.Handle, 0);
-
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 4 * EyeManager.PIXELSPERMETER,
+                RenderTargetColorFormat.Rgba8Srgb, name: nameof(EntityPostRenderTarget));
 
             _drawingSplash = true;
 
@@ -371,9 +350,11 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.Viewport(0, 0, _window.Width, _window.Height);
 
-            Render(null);
+            // Quickly do a render with _drawingSplash = true so the screen isn't blank.
+            Render();
         }
 
+        // ReSharper disable once UnusedParameter.Local
         private void _loadVendorSettings(string vendor, string renderer, string version)
         {
             if (vendor.IndexOf("intel", StringComparison.InvariantCultureIgnoreCase) != -1)
@@ -383,7 +364,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private (int, int) _lightMapSize()
+        private Vector2i _lightMapSize()
         {
             if (!_quartResLights)
             {
@@ -394,14 +375,6 @@ namespace Robust.Client.Graphics.Clyde
             var h = (int) Math.Ceiling(_window.Height / 2f);
 
             return (w, h);
-        }
-
-        private void _displaySplash(IRenderHandle handle)
-        {
-            var texture = _resourceCache.GetResource<TextureResource>("/Textures/Logo/logo.png").Texture;
-
-            var drawHandle = handle.CreateHandleScreen();
-            drawHandle.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
         }
 
         private void _hijackDebugCallback()
@@ -503,7 +476,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [Conditional("DEBUG")]
-        private void _objectLabelMaybe(ObjectLabelIdentifier identifier, int name, string label)
+        private void _objectLabelMaybe(ObjectLabelIdentifier identifier, uint name, string label)
         {
             DebugTools.Assert(label != null);
 
@@ -521,16 +494,21 @@ namespace Robust.Client.Graphics.Clyde
             _objectLabelMaybe(identifier, name.Handle, label);
         }
 
+        private PopDebugGroup DebugGroup(string group)
+        {
+            _pushDebugGroupMaybe(group);
+            return new PopDebugGroup(this);
+        }
+
         [Conditional("DEBUG")]
-        private void _pushDebugGroupMaybe(in (uint, string) group)
+        private void _pushDebugGroupMaybe(string group)
         {
             if (!HasKHRDebug)
             {
                 return;
             }
 
-            var (id, name) = group;
-            GL.PushDebugGroup(DebugSourceExternal.DebugSourceApplication, id, name.Length, name);
+            GL.PushDebugGroup(DebugSourceExternal.DebugSourceApplication, 0, group.Length, group);
         }
 
         [Conditional("DEBUG")]
@@ -562,6 +540,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 return;
             }
+
             _window.VSync = VSync ? VSyncMode.On : VSyncMode.Off;
         }
 
@@ -571,26 +550,25 @@ namespace Robust.Client.Graphics.Clyde
             {
                 return;
             }
+
             _window.WindowState = WindowMode == WindowMode.Fullscreen ? WindowState.Fullscreen : WindowState.Normal;
         }
 
         protected override void HighResLightsChanged(bool newValue)
         {
             _quartResLights = !newValue;
-            if (LightTexture == default)
+            if (LightRenderTarget == null)
             {
                 return;
             }
 
-            _regenerateLightTexture();
+            _regenerateLightRenderTarget();
         }
 
-        private void _regenerateLightTexture()
+        private void _regenerateLightRenderTarget()
         {
-            GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
-            var (lightW, lightH) = _lightMapSize();
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, lightW, lightH, 0,
-                PixelFormat.Rgba, PixelType.Float, IntPtr.Zero);
+            LightRenderTarget = CreateRenderTarget(_lightMapSize(), RenderTargetColorFormat.Rgba16F,
+                name: "LightRenderTarget");
         }
 
         private void _onWindowClosed(object sender, EventArgs args)
@@ -655,9 +633,13 @@ namespace Robust.Client.Graphics.Clyde
         [PublicAPI]
         private struct OGLHandle
         {
-            public readonly int Handle;
+            public readonly uint Handle;
 
-            public OGLHandle(int handle)
+            public OGLHandle(int handle) : this((uint) handle)
+            {
+            }
+
+            public OGLHandle(uint handle)
             {
                 Handle = handle;
             }
@@ -675,7 +657,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public override int GetHashCode()
             {
-                return Handle;
+                return Handle.GetHashCode();
             }
 
             public override string ToString()
@@ -694,7 +676,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        [StructLayout(LayoutKind.Explicit)]
+        [StructLayout(LayoutKind.Explicit, Size = 28 * sizeof(float))]
         [PublicAPI]
         private struct ProjViewMatrices
         {
@@ -706,14 +688,9 @@ namespace Robust.Client.Graphics.Clyde
             [FieldOffset(16 * sizeof(float))] public Vector3 ViewMatrixC1;
             [FieldOffset(20 * sizeof(float))] public Vector3 ViewMatrixC2;
 
-            // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-            [FieldOffset(24 * sizeof(float))] private readonly Vector4 _pad;
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ProjViewMatrices(in Matrix3 projMatrix, in Matrix3 viewMatrix)
             {
-                _pad = Vector4.Zero;
-
                 ProjMatrixC0 = new Vector3(projMatrix.R0C0, projMatrix.R1C0, projMatrix.R2C0);
                 ProjMatrixC1 = new Vector3(projMatrix.R0C1, projMatrix.R1C1, projMatrix.R2C1);
                 ProjMatrixC2 = new Vector3(projMatrix.R0C2, projMatrix.R1C2, projMatrix.R2C2);
@@ -723,10 +700,9 @@ namespace Robust.Client.Graphics.Clyde
                 ViewMatrixC2 = new Vector3(viewMatrix.R0C2, viewMatrix.R1C2, viewMatrix.R2C2);
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ProjViewMatrices(in ProjViewMatrices readProjMatrix, in Matrix3 viewMatrix)
             {
-                _pad = Vector4.Zero;
-
                 ProjMatrixC0 = readProjMatrix.ProjMatrixC0;
                 ProjMatrixC1 = readProjMatrix.ProjMatrixC1;
                 ProjMatrixC2 = readProjMatrix.ProjMatrixC2;
@@ -748,16 +724,6 @@ namespace Robust.Client.Graphics.Clyde
             {
                 ScreenPixelSize = screenPixelSize;
                 Time = time;
-            }
-        }
-
-        public readonly struct Handle
-        {
-            internal readonly int ClydeHandle;
-
-            public Handle(int clydeHandle)
-            {
-                ClydeHandle = clydeHandle;
             }
         }
     }

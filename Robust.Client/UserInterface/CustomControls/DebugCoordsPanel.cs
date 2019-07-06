@@ -25,7 +25,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IInputManager inputManager;
         private readonly IResourceCache resourceCache;
         private readonly IStateManager stateManager;
-        private readonly IDisplayManager _displayManager;
+        private readonly IClyde _displayManager;
         private readonly IMapManager _mapManager;
 
         private Label contents;
@@ -36,7 +36,7 @@ namespace Robust.Client.UserInterface.CustomControls
             IInputManager inputMan,
             IResourceCache resCache,
             IStateManager stateMan,
-            IDisplayManager displayMan,
+            IClyde displayMan,
             IMapManager mapMan)
         {
             playerManager = playerMan;

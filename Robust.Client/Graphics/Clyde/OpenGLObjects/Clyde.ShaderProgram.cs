@@ -16,7 +16,7 @@ namespace Robust.Client.Graphics.Clyde
         private class ShaderProgram
         {
             private readonly Dictionary<string, int> _uniformCache = new Dictionary<string, int>();
-            private int _handle = -1;
+            private uint _handle = 0;
             private Shader _fragmentShader;
             private Shader _vertexShader;
             public string Name { get; }
@@ -47,7 +47,7 @@ namespace Robust.Client.Graphics.Clyde
             public void Link()
             {
                 _uniformCache.Clear();
-                _handle = GL.CreateProgram();
+                _handle = (uint) GL.CreateProgram();
                 if (Name != null)
                 {
                     _clyde._objectLabelMaybe(ObjectLabelIdentifier.Program, _handle, Name);
@@ -55,12 +55,12 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (_vertexShader != null)
                 {
-                    GL.AttachShader(_handle, _vertexShader.Handle);
+                    GL.AttachShader(_handle, _vertexShader.ObjectHandle);
                 }
 
                 if (_fragmentShader != null)
                 {
-                    GL.AttachShader(_handle, _fragmentShader.Handle);
+                    GL.AttachShader(_handle, _fragmentShader.ObjectHandle);
                 }
 
                 GL.LinkProgram(_handle);
@@ -68,13 +68,13 @@ namespace Robust.Client.Graphics.Clyde
                 GL.GetProgram(_handle, GetProgramParameterName.LinkStatus, out var compiled);
                 if (compiled != 1)
                 {
-                    throw new ShaderCompilationException(GL.GetProgramInfoLog(_handle));
+                    throw new ShaderCompilationException(GL.GetProgramInfoLog((int) _handle));
                 }
             }
 
             public void Use()
             {
-                DebugTools.Assert(_handle != -1);
+                DebugTools.Assert(_handle != 0);
 
                 if (_clyde._currentProgram == this)
                 {
@@ -87,13 +87,13 @@ namespace Robust.Client.Graphics.Clyde
 
             public void Delete()
             {
-                if (_handle == -1)
+                if (_handle == 0)
                 {
                     return;
                 }
 
                 GL.DeleteProgram(_handle);
-                _handle = -1;
+                _handle = 0;
             }
 
             public int GetUniform(string name)
@@ -108,7 +108,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public bool TryGetUniform(string name, out int index)
             {
-                DebugTools.Assert(_handle != -1);
+                DebugTools.Assert(_handle != 0);
 
                 if (_uniformCache.TryGetValue(name, out index))
                 {
@@ -122,9 +122,9 @@ namespace Robust.Client.Graphics.Clyde
 
             public bool HasUniform(string name) => TryGetUniform(name, out _);
 
-            public void BindBlock(string blockName, int blockBinding)
+            public void BindBlock(string blockName, uint blockBinding)
             {
-                var index = GL.GetUniformBlockIndex(_handle, blockName);
+                var index = (uint)GL.GetUniformBlockIndex(_handle, blockName);
                 GL.UniformBlockBinding(_handle, index, blockBinding);
             }
 

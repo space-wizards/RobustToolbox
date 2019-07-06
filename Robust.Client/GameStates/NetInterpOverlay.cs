@@ -30,7 +30,7 @@ namespace Robust.Client.GameStates
             IoCManager.InjectDependencies(this);
             Shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
         }
-        protected override void Draw(DrawingHandle handle)
+        protected override void Draw(DrawingHandleBase handle)
         {
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = _eyeManager.GetWorldViewport();

@@ -18,7 +18,6 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.ViewVariables;
@@ -143,6 +142,8 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        public ShaderInstance PostShader { get; set; }
+
         [ViewVariables] private Dictionary<object, int> LayerMap = new Dictionary<object, int>();
         [ViewVariables] private bool _layerMapShared;
 
@@ -169,10 +170,10 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public uint RenderOrder { get => _renderOrder; set => _renderOrder = value; }
 
-        private static Shader _defaultShader;
+        private static ShaderInstance _defaultShader;
 
         [ViewVariables]
-        private Shader DefaultShader => _defaultShader ??
+        private ShaderInstance DefaultShader => _defaultShader ??
                                                (_defaultShader = prototypes
                                                    .Index<ShaderPrototype>("shaded")
                                                    .Instance());
@@ -410,7 +411,7 @@ namespace Robust.Client.GameObjects
             RemoveLayer(layer);
         }
 
-        public void LayerSetShader(int layer, Shader shader)
+        public void LayerSetShader(int layer, ShaderInstance shader)
         {
             if (Layers.Count <= layer)
             {
@@ -424,7 +425,7 @@ namespace Robust.Client.GameObjects
             Layers[layer] = thelayer;
         }
 
-        public void LayerSetShader(object layerKey, Shader shader)
+        public void LayerSetShader(object layerKey, ShaderInstance shader)
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
@@ -1495,13 +1496,13 @@ namespace Robust.Client.GameObjects
             foreach (var layer in Layers)
             {
                 builder.AppendFormat(
-                    "shad/shcly/tex/rsi/state/ant/anf/scl/rot/vis/col/dofs: {0}/{11}/{1}/{2}/{3}/{4}/{5}/{6}/{7}/{8}/{9}/{10}\n",
+                    "shad/tex/rsi/state/ant/anf/scl/rot/vis/col/dofs: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}/{8}/{9}/{10}\n",
                     // These are references and don't include useful data for knowing where they came from, sadly.
                     // "is one set" is better than nothing at least.
                     layer.Shader != null, layer.Texture != null, layer.RSI != null,
                     layer.State,
                     layer.AnimationTimeLeft, layer.AnimationFrame, layer.Scale, layer.Rotation, layer.Visible,
-                    layer.Color, layer.DirOffset, layer.Shader?.ClydeHandle ?? -1
+                    layer.Color, layer.DirOffset
                 );
             }
 
@@ -1546,7 +1547,7 @@ namespace Robust.Client.GameObjects
 
         private struct Layer
         {
-            public Shader Shader;
+            public ShaderInstance Shader;
             public Texture Texture;
 
             public RSI RSI;

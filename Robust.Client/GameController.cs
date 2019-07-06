@@ -54,7 +54,6 @@ namespace Robust.Client
         [Dependency] private readonly IInputManager _inputManager;
         [Dependency] private readonly IClientConsole _console;
         [Dependency] private readonly ILightManager _lightManager;
-        [Dependency] private readonly IDisplayManager _displayManager;
         [Dependency] private readonly ITimerManager _timerManager;
         [Dependency] private readonly IClientEntityManager _entityManager;
         [Dependency] private readonly IEyeManager _eyeManager;
@@ -65,7 +64,7 @@ namespace Robust.Client
         [Dependency] private readonly ITaskManager _taskManager;
         [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager;
         [Dependency] private readonly IDiscordRichPresence _discord;
-        [Dependency] private readonly IClyde _clyde;
+        [Dependency] private readonly IClydeInternal _clyde;
         [Dependency] private readonly IFontManagerInternal _fontManager;
         [Dependency] private readonly ILocalizationManager _localizationManager;
         [Dependency] private readonly IModLoader _modLoader;
@@ -121,8 +120,8 @@ namespace Robust.Client
             _localizationManager.LoadCulture(new CultureInfo("en-US"));
 
             // Bring display up as soon as resources are mounted.
-            _displayManager.Initialize();
-            _displayManager.SetWindowTitle("Space Station 14");
+            _clyde.Initialize();
+            _clyde.SetWindowTitle("Space Station 14");
 
             _fontManager.Initialize();
 

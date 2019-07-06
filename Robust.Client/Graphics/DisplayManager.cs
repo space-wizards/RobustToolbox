@@ -18,13 +18,15 @@ namespace Robust.Client.Graphics
     /// <summary>
     ///     Manages the game window, resolutions, fullscreen mode, VSync, etc...
     /// </summary>
-    internal abstract class DisplayManager : IDisplayManager, IPostInjectInit
+    internal abstract class DisplayManager : IPostInjectInit
     {
         private const string CVarVSync = "display.vsync";
         private const string CVarWindowMode = "display.windowmode";
 
+#pragma warning disable 649
         [Dependency] protected readonly IConfigurationManager _configurationManager;
         [Dependency] protected readonly IGameControllerInternal _gameController;
+#pragma warning restore 649
 
         protected WindowMode WindowMode { get; private set; } = WindowMode.Windowed;
         protected bool VSync { get; private set; } = true;

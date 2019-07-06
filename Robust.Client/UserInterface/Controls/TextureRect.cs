@@ -54,7 +54,7 @@ namespace Robust.Client.UserInterface.Controls
                 case StretchMode.Tile:
                 // TODO: Implement Tile.
                 case StretchMode.Keep:
-                    handle.DrawTextureRect(_texture, UIBox2.FromDimensions(Vector2.Zero, _texture.Size), false);
+                    handle.DrawTextureRectRegion(_texture, UIBox2.FromDimensions(Vector2.Zero, _texture.Size));
                     break;
                 case StretchMode.KeepCentered:
                 {
@@ -80,7 +80,7 @@ namespace Robust.Client.UserInterface.Controls
                         position = (Size - size) / 2;
                     }
 
-                    handle.DrawTextureRect(_texture, UIBox2.FromDimensions(position, size), false);
+                    handle.DrawTextureRectRegion(_texture, UIBox2.FromDimensions(position, size));
                     break;
                 }
                 case StretchMode.KeepAspectCovered:

@@ -2,7 +2,6 @@
 using System.Buffers;
 using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -25,21 +24,24 @@ namespace Robust.Client.Graphics.Clyde
             GL.PrimitiveRestartIndex(ushort.MaxValue);
 
             var atlasTexture = _tileDefinitionManager.TileTextureAtlas;
-            var loadedTex = _loadedTextures[((OpenGLTexture) atlasTexture).OpenGLTextureId];
+            var loadedTex = _loadedTextures[((ClydeTexture) atlasTexture).TextureId];
 
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, loadedTex.OpenGLObject.Handle);
+
             GL.ActiveTexture(TextureUnit.Texture1);
             if (_lightingReady)
             {
-                GL.BindTexture(TextureTarget.Texture2D, LightTexture.Handle);
+                var lightTexture = _loadedTextures[LightRenderTarget.Texture.TextureId].OpenGLObject;
+                GL.BindTexture(TextureTarget.Texture2D, lightTexture.Handle);
             }
             else
             {
-                var white = _loadedTextures[((OpenGLTexture) Texture.White).OpenGLTextureId].OpenGLObject;
+                var white = _loadedTextures[((ClydeTexture) Texture.White).TextureId].OpenGLObject;
                 GL.BindTexture(TextureTarget.Texture2D, white.Handle);
             }
-            var gridProgram = _loadedShaders[_defaultShader].Program;
+
+            var gridProgram = _loadedShaders[_defaultShader.Handle].Program;
             gridProgram.Use();
             gridProgram.SetUniformTextureMaybe(UniMainTexture, TextureUnit.Texture0);
             gridProgram.SetUniformTextureMaybe(UniLightTexture, TextureUnit.Texture1);
@@ -144,7 +146,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private MapChunkData _initChunkBuffers(IMapGrid grid, IMapChunk chunk)
         {
-            var vao = GL.GenVertexArray();
+            var vao = (uint)GL.GenVertexArray();
             GL.BindVertexArray(vao);
 
             var vboSize = _verticesPerChunk(chunk) * Vertex2D.SizeOf;
@@ -234,7 +236,7 @@ namespace Robust.Client.Graphics.Clyde
         private class MapChunkData
         {
             public bool Dirty;
-            public int VAO;
+            public uint VAO;
             public Buffer VBO;
             public Buffer EBO;
             public int TileCount;

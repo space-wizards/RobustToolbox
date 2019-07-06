@@ -31,12 +31,12 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IInputManager _inputManager;
         private readonly IResourceCache _resourceCache;
         private readonly IStateManager _stateManager;
-        private readonly IDisplayManager _displayManager;
+        private readonly IClyde _displayManager;
         private readonly IClientNetManager _netManager;
         private readonly IMapManager _mapManager;
 
         //TODO: Think about a factory for this
-        public DebugMonitors(IGameTiming gameTiming, IPlayerManager playerManager, IEyeManager eyeManager, IInputManager inputManager, IResourceCache resourceCache, IStateManager stateManager, IDisplayManager displayManager, IClientNetManager netManager, IMapManager mapManager)
+        public DebugMonitors(IGameTiming gameTiming, IPlayerManager playerManager, IEyeManager eyeManager, IInputManager inputManager, IResourceCache resourceCache, IStateManager stateManager, IClyde displayManager, IClientNetManager netManager, IMapManager mapManager)
         {
             _gameTiming = gameTiming;
             _playerManager = playerManager;

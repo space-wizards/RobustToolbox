@@ -12,10 +12,15 @@ namespace Robust.Client.Graphics.Clyde
     /// <summary>
     ///     Hey look, it's Clyde's evil twin brother!
     /// </summary>
-    internal sealed class ClydeHeadless : DisplayManager, IClyde
+    internal sealed class ClydeHeadless : DisplayManager, IClydeInternal, IClydeAudio
     {
         // Would it make sense to report a fake resolution like 720p here so code doesn't break? idk.
         public override Vector2i ScreenSize => (1280, 720);
+        public ShaderInstance InstanceShader(ClydeHandle handle)
+        {
+            return new DummyShaderInstance();
+        }
+
         public Vector2 MouseScreenPosition => ScreenSize / 2;
 
         public override void SetWindowTitle(string title)
@@ -32,7 +37,7 @@ namespace Robust.Client.Graphics.Clyde
         public override event Action<WindowResizedEventArgs> OnWindowResized;
 #pragma warning restore CS0067
 
-        public void Render(FrameEventArgs args)
+        public void Render()
         {
             // Nada.
         }
@@ -62,7 +67,13 @@ namespace Robust.Client.Graphics.Clyde
             return new DummyTexture(image.Width, image.Height);
         }
 
-        public int LoadShader(ParsedShader shader, string name = null)
+        public IRenderTarget CreateRenderTarget(Vector2i size, RenderTargetColorFormat colorFormat,
+            TextureSampleParameters? sampleParameters = null, string name = null)
+        {
+            return new DummyRenderTarget(size, new DummyTexture(size.X, size.Y));
+        }
+
+        public ClydeHandle LoadShader(ParsedShader shader, string name = null)
         {
             return default;
         }
@@ -127,6 +138,86 @@ namespace Robust.Client.Graphics.Clyde
             public void SetVolume(float decibels)
             {
                 // Nada.
+            }
+        }
+
+        private sealed class DummyTexture : OwnedTexture
+        {
+            public override int Width { get; }
+            public override int Height { get; }
+
+            public override void Delete()
+            {
+                // Hey that was easy.
+            }
+
+            public DummyTexture(int width, int height)
+            {
+                Width = width;
+                Height = height;
+            }
+        }
+
+        private sealed class DummyShaderInstance : ShaderInstance
+        {
+            public override void SetParameter(string name, float value)
+            {
+            }
+
+            public override void SetParameter(string name, Vector2 value)
+            {
+            }
+
+            public override void SetParameter(string name, Vector3 value)
+            {
+            }
+
+            public override void SetParameter(string name, Vector4 value)
+            {
+            }
+
+            public override void SetParameter(string name, int value)
+            {
+            }
+
+            public override void SetParameter(string name, Vector2i value)
+            {
+            }
+
+            public override void SetParameter(string name, bool value)
+            {
+            }
+
+            public override void SetParameter(string name, in Matrix3 matrix)
+            {
+            }
+
+            public override void SetParameter(string name, in Matrix4 matrix)
+            {
+            }
+
+            public override void SetParameter(string name, Texture texture)
+            {
+            }
+
+            public override void Dispose()
+            {
+            }
+        }
+
+        private sealed class DummyRenderTarget : IRenderTarget
+        {
+            public DummyRenderTarget(Vector2i size, Texture texture)
+            {
+                Size = size;
+                Texture = texture;
+            }
+
+            public Vector2i Size { get; }
+            public Texture Texture { get; }
+
+            public void Delete()
+            {
             }
         }
     }

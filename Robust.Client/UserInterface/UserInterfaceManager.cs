@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Client.Console;
 using Robust.Client.Graphics.Clyde;
+using Robust.Client.Console;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
@@ -31,7 +31,7 @@ namespace Robust.Client.UserInterface
     {
 #pragma warning disable 649
         [Dependency] private readonly IInputManager _inputManager;
-        [Dependency] private readonly IDisplayManager _displayManager;
+        [Dependency] private readonly IClyde _displayManager;
         [Dependency] private readonly IClientConsole _console;
         [Dependency] private readonly IResourceManager _resourceManager;
         [Dependency] private readonly IGameTiming _gameTiming;
@@ -423,12 +423,10 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
-            var drawHandle = renderHandle.CreateHandleScreen();
-
-            _render(drawHandle, RootControl, Vector2i.Zero, Color.White, null);
+            _render(renderHandle, RootControl, Vector2i.Zero, Color.White, null);
         }
 
-        private static void _render(DrawingHandleScreen handle, Control control, Vector2i position, Color modulate,
+        private static void _render(IRenderHandle renderHandle, Control control, Vector2i position, Color modulate,
             UIBox2i? scissorBox)
         {
             if (!control.Visible)
@@ -451,6 +449,7 @@ namespace Robust.Client.UserInterface
                 }
             }
 
+            var handle = renderHandle.DrawingHandleScreen;
             handle.SetTransform(position, Angle.Zero, Vector2.One);
             modulate *= control.Modulate;
             handle.Modulate = modulate * control.ActualModulateSelf;
@@ -473,18 +472,18 @@ namespace Robust.Client.UserInterface
                     scissorRegion = result.Value;
                 }
 
-                handle.SetScissor(scissorRegion);
+                renderHandle.SetScissor(scissorRegion);
             }
 
-            control.Draw(handle);
+            control.DrawInternal(renderHandle);
             foreach (var child in control.Children)
             {
-                _render(handle, child, position + child.PixelPosition, modulate, scissorRegion);
+                _render(renderHandle, child, position + child.PixelPosition, modulate, scissorRegion);
             }
 
             if (clip)
             {
-                handle.SetScissor(scissorBox);
+                renderHandle.SetScissor(scissorBox);
             }
         }
 

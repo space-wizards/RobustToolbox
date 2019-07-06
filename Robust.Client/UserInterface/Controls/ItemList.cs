@@ -332,7 +332,7 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     if (item.IconRegion.Size == Vector2.Zero)
                     {
-                        handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size), false, item.IconModulate, item.IconTranspose);
+                        handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size), item.IconModulate);
                     }
                     else
                     {
@@ -493,7 +493,6 @@ namespace Robust.Client.UserInterface.Controls
             public Texture Icon = null;
             public UIBox2 IconRegion = new UIBox2();
             public Color IconModulate = Color.White;
-            public bool IconTranspose = false;
             public bool Selected = false;
             public bool Selectable = true;
             public bool TooltipEnabled = true;

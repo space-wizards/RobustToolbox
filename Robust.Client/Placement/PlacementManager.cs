@@ -65,7 +65,7 @@ namespace Robust.Client.Placement
         [Dependency]
         private readonly IOverlayManager _overlayManager;
         [Dependency]
-        public readonly IDisplayManager DisplayManager;
+        public readonly IClyde _clyde;
 #pragma warning restore 649
 
         /// <summary>

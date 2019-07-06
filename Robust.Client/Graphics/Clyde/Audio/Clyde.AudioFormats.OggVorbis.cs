@@ -5,7 +5,7 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private unsafe OggVorbisData _readOggVorbis(Stream stream)
+        private OggVorbisData _readOggVorbis(Stream stream)
         {
             using (var vorbis = new NVorbis.VorbisReader(stream, false))
             {

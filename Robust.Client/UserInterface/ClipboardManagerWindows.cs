@@ -12,7 +12,7 @@ namespace Robust.Client.UserInterface
     {
         [Dependency]
 #pragma warning disable 649
-        private readonly IClyde _clyde;
+        private readonly IClydeInternal _clyde;
 #pragma warning restore 649
 
         public bool Available => true;

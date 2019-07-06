@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.GameObjects.Components;
+using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 
@@ -36,14 +37,14 @@ namespace Robust.Client.UserInterface.Controls
             return (32, 32);
         }
 
-        protected internal override void Draw(DrawingHandleScreen handle)
+        internal override void DrawInternal(IRenderHandle renderHandle)
         {
             if (Sprite == null)
             {
                 return;
             }
 
-            handle.DrawEntity(Sprite.Owner, GlobalPixelPosition + PixelSize / 2);
+            renderHandle.DrawEntity(Sprite.Owner, GlobalPixelPosition + PixelSize / 2);
         }
     }
 }

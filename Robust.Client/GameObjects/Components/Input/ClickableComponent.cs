@@ -1,9 +1,13 @@
-﻿using Robust.Client.Interfaces.GameObjects;
+﻿using Robust.Client.Graphics.Shaders;
+using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
@@ -11,22 +15,30 @@ namespace Robust.Client.GameObjects
     // Notice: Most actual logic for clicking is done by the game screen.
     public class ClickableComponent : Component, IClientClickableComponent
     {
-        private string _baseShader;
+#pragma warning disable 649
+        [Dependency] private readonly IPrototypeManager _prototypeManager;
+#pragma warning restore 649
+
+        private ShaderInstance _selectionShaderInstance;
+
         private string _selectionShader;
 
         public override string Name => "Clickable";
         public override uint? NetID => NetIDs.CLICKABLE;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public string BaseShader { get => _baseShader; private set => _baseShader = value; }
+        public string SelectionShader => _selectionShader;
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        public string SelectionShader { get => _selectionShader; set => _selectionShader = value; }
-
-        public override void ExposeData(Shared.Serialization.ObjectSerializer serializer)
+        public override void ExposeData(ObjectSerializer serializer)
         {
-            serializer.DataFieldCached(ref _baseShader, "baseshader", "shaded");
             serializer.DataFieldCached(ref _selectionShader, "selectionshader", "selection_outline");
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            _selectionShaderInstance = _prototypeManager.Index<ShaderPrototype>(_selectionShader).Instance();
         }
 
         public bool CheckClick(GridCoordinates worldPos, out int drawdepth)
@@ -51,14 +63,20 @@ namespace Robust.Client.GameObjects
 
         public void OnMouseEnter()
         {
-            var sprite = Owner.GetComponent<ISpriteComponent>();
-            sprite.LayerSetShader(0, SelectionShader);
+            if (Owner.TryGetComponent(out ISpriteComponent sprite))
+            {
+                sprite.PostShader = _selectionShaderInstance;
+                sprite.RenderOrder = Owner.EntityManager.CurrentTick.Value;
+            }
         }
 
         public void OnMouseLeave()
         {
-            var sprite = Owner.GetComponent<ISpriteComponent>();
-            sprite.LayerSetShader(0, BaseShader);
+            if (Owner.TryGetComponent(out ISpriteComponent sprite))
+            {
+                sprite.PostShader = null;
+                sprite.RenderOrder = 0;
+            }
         }
     }
 }

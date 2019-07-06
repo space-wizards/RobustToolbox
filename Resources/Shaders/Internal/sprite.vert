@@ -6,6 +6,7 @@ layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec2 tCoord;
 
 out vec2 UV;
+out vec2 Pos;
 
 // Maybe we should merge these CPU side.
 // idk yet.
@@ -43,5 +44,6 @@ void main()
     VERTEX -= 1;
 
     gl_Position = vec4(VERTEX, 0.0, 1.0);
+    Pos = (VERTEX + 1) / 2;
     UV = mix(modifyUV.xy, modifyUV.zw, tCoord);
 }

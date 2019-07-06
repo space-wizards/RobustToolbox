@@ -10,16 +10,12 @@ namespace Robust.Client.Graphics.Clyde
     {
         /// <summary>
         ///     Represents an OpenGL buffer object.
-        ///     This is an utility class. It does not check whether the OpenGL state machine is set up correctly.
-        ///     You've been warned:
-        ///     using things like <see cref="WriteSubData{T}"/> if this buffer isn't bound WILL mess things up!
         /// </summary>
         private class Buffer
         {
             private readonly Clyde _clyde;
             public BufferTarget Type { get; }
-            public int Size { get; private set; }
-            public int Handle { get; private set; }
+            public uint ObjectHandle { get; private set; }
             public BufferUsageHint UsageHint { get; }
             public string Name { get; }
 
@@ -30,12 +26,12 @@ namespace Robust.Client.Graphics.Clyde
                 Name = name;
                 UsageHint = usage;
 
-                Handle = GL.GenBuffer();
-                Use();
+                GL.GenBuffers(1, out uint handle);
+                ObjectHandle = handle;
 
                 if (name != null)
                 {
-                    _clyde._objectLabelMaybe(ObjectLabelIdentifier.Buffer, Handle, name);
+                    _clyde._objectLabelMaybe(ObjectLabelIdentifier.Buffer, ObjectHandle, name);
                 }
             }
 
@@ -52,22 +48,24 @@ namespace Robust.Client.Graphics.Clyde
                 Reallocate(initialize);
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Use()
             {
-                DebugTools.Assert(Handle != -1);
+                DebugTools.Assert(ObjectHandle != 0);
 
-                GL.BindBuffer(Type, Handle);
+                GL.BindBuffer(Type, ObjectHandle);
             }
 
             public void Delete()
             {
-                GL.DeleteBuffer(Handle);
-                Handle = -1;
+                GL.DeleteBuffer(ObjectHandle);
+                ObjectHandle = 0;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void WriteSubData<T>(int start, Span<T> data) where T : unmanaged
             {
+                Use();
                 var byteSpan = MemoryMarshal.AsBytes(data);
 
                 unsafe
@@ -82,6 +80,7 @@ namespace Robust.Client.Graphics.Clyde
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void WriteSubData<T>(Span<T> data) where T : unmanaged
             {
+                Use();
                 var byteSpan = MemoryMarshal.AsBytes(data);
 
                 unsafe
@@ -96,6 +95,7 @@ namespace Robust.Client.Graphics.Clyde
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void WriteSubData<T>(in T data) where T : unmanaged
             {
+                Use();
                 unsafe
                 {
                     fixed (T* ptr = &data)
@@ -108,6 +108,7 @@ namespace Robust.Client.Graphics.Clyde
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reallocate<T>(Span<T> data) where T : unmanaged
             {
+                Use();
                 var byteSpan = MemoryMarshal.AsBytes(data);
 
                 unsafe
@@ -122,6 +123,7 @@ namespace Robust.Client.Graphics.Clyde
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reallocate<T>(in T data) where T : unmanaged
             {
+                Use();
                 unsafe
                 {
                     fixed (T* ptr = &data)
@@ -134,6 +136,7 @@ namespace Robust.Client.Graphics.Clyde
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reallocate(int size)
             {
+                Use();
                 GL.BufferData(Type, size, IntPtr.Zero, UsageHint);
             }
         }

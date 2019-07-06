@@ -23,7 +23,7 @@ namespace Robust.Client.GameStates
             _font = new VectorFont(cache.GetResource<FontResource>("/Nano/NotoSans/NotoSans-Regular.ttf"), 10);
         }
 
-        protected override void Draw(DrawingHandle handle)
+        protected override void Draw(DrawingHandleBase handle)
         {
             //TODO: Make me actually work!
             handle.DrawLine(new Vector2(50,50), new Vector2(100,100), Color.Green);

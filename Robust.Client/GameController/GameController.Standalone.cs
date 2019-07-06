@@ -75,7 +75,7 @@ namespace Robust.Client
                 if (_mainLoop.Running)
                 {
                     _gameTiming.CurFrame++;
-                    _clyde.Render(new FrameEventArgs(args.DeltaSeconds));
+                    _clyde.Render();
                 }
             };
             _mainLoop.Input += (sender, args) =>

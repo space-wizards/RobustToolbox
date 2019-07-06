@@ -35,47 +35,9 @@ namespace Robust.Client.Graphics.Clyde
 
             var pixelType = typeof(T);
 
-            var texture = new OGLHandle(GL.GenTexture());
+            var texture = new OGLHandle((uint) GL.GenTexture());
             GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
-            var actualParams = loadParams ?? TextureLoadParameters.Default;
-            if (actualParams.SampleParameters.Filter)
-            {
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
-                    (int) TextureMinFilter.Linear);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
-                    (int) TextureMagFilter.Linear);
-            }
-            else
-            {
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
-                    (int) TextureMinFilter.Nearest);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
-                    (int) TextureMagFilter.Nearest);
-            }
-
-            switch (actualParams.SampleParameters.WrapMode)
-            {
-                case TextureWrapMode.None:
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
-                        (int) OGLTextureWrapMode.ClampToEdge);
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
-                        (int) OGLTextureWrapMode.ClampToEdge);
-                    break;
-                case TextureWrapMode.Repeat:
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
-                        (int) OGLTextureWrapMode.Repeat);
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
-                        (int) OGLTextureWrapMode.Repeat);
-                    break;
-                case TextureWrapMode.MirroredRepeat:
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
-                        (int) OGLTextureWrapMode.MirroredRepeat);
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
-                        (int) OGLTextureWrapMode.MirroredRepeat);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            _applySampleParameters(loadParams?.SampleParameters);
 
             PixelInternalFormat internalFormat;
             PixelFormat pixelDataFormat;
@@ -117,24 +79,85 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            return _genTexture(texture, (image.Width, image.Height), name);
+        }
+
+        private static void _applySampleParameters(TextureSampleParameters? sampleParameters)
+        {
+            var actualParams = sampleParameters ?? TextureSampleParameters.Default;
+            if (actualParams.Filter)
+            {
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
+                    (int) TextureMinFilter.Linear);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
+                    (int) TextureMagFilter.Linear);
+            }
+            else
+            {
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
+                    (int) TextureMinFilter.Nearest);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
+                    (int) TextureMagFilter.Nearest);
+            }
+
+            switch (actualParams.WrapMode)
+            {
+                case TextureWrapMode.None:
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
+                        (int) OGLTextureWrapMode.ClampToEdge);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
+                        (int) OGLTextureWrapMode.ClampToEdge);
+                    break;
+                case TextureWrapMode.Repeat:
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
+                        (int) OGLTextureWrapMode.Repeat);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
+                        (int) OGLTextureWrapMode.Repeat);
+                    break;
+                case TextureWrapMode.MirroredRepeat:
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
+                        (int) OGLTextureWrapMode.MirroredRepeat);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
+                        (int) OGLTextureWrapMode.MirroredRepeat);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private ClydeTexture _genTexture(OGLHandle oglHandle, Vector2i size, string name)
+        {
             if (name != null)
             {
-                _objectLabelMaybe(ObjectLabelIdentifier.Texture, texture, name);
+                _objectLabelMaybe(ObjectLabelIdentifier.Texture, oglHandle, name);
             }
+
+            var (width, height) = size;
 
             var loaded = new LoadedTexture
             {
-                OpenGLObject = texture,
-                Width = image.Width,
-                Height = image.Height,
-                Name = name,
-                Type = LoadedTextureType.Texture2D
+                OpenGLObject = oglHandle,
+                Width = width,
+                Height = height,
+                Name = name
             };
 
             var id = ++_nextTextureId;
             _loadedTextures.Add(id, loaded);
 
-            return new OpenGLTexture(id, image.Width, image.Height);
+            return new ClydeTexture(id, width, height, this);
+        }
+
+        private void _deleteTexture(ClydeTexture texture)
+        {
+            if (!_loadedTextures.TryGetValue(texture.TextureId, out var loadedTexture))
+            {
+                // Already deleted.
+                return;
+            }
+
+            GL.DeleteTexture(loadedTexture.OpenGLObject.Handle);
+            _loadedTextures.Remove(texture.TextureId);
         }
 
         private void _loadStockTextures()
@@ -148,19 +171,37 @@ namespace Robust.Client.Graphics.Clyde
             Texture.Transparent = Texture.LoadFromImage(blank);
         }
 
-        private class LoadedTexture
+        private sealed class LoadedTexture
         {
             public OGLHandle OpenGLObject;
-            public LoadedTextureType Type;
             public int Width;
             public int Height;
             public string Name;
-            public Vector2i Size => new Vector2i(Width, Height);
+            public Vector2i Size => (Width, Height);
         }
 
-        private enum LoadedTextureType
+        private sealed class ClydeTexture : OwnedTexture
         {
-            Texture2D,
+            private readonly Clyde _clyde;
+
+            internal int TextureId { get; }
+
+            public override int Width { get; }
+            public override int Height { get; }
+
+            public override void Delete()
+            {
+                _clyde._deleteTexture(this);
+            }
+
+            internal ClydeTexture(int id, int width, int height, Clyde clyde)
+            {
+                TextureId = id;
+                Width = width;
+                Height = height;
+                _clyde = clyde;
+            }
         }
     }
 }
+

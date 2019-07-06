@@ -36,5 +36,5 @@ before_script:
 
 script:
 - "msbuild /p:Configuration=Debug /p:Platform=x64 /p:HEADLESS=1 /nologo /m /p:AllowMissingMacNatives=yes RobustToolbox.sln /p:Python=python3.5"
-- "mono --debug packages/nunit.consolerunner/3.9.0/tools/nunit3-console.exe bin/UnitTesting/Robust.UnitTesting.dll"
+- "mono --debug packages/nunit.consolerunner/3.10.0/tools/nunit3-console.exe bin/UnitTesting/Robust.UnitTesting.dll"
 

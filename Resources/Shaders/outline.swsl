@@ -35,8 +35,6 @@ uniform float outline_width = 2.0;
 uniform vec4 outline_color=vec4(1,0,0,0.33);
 
 void fragment() {
-
-
 	vec4 col = texture(TEXTURE, UV);
 	vec2 ps = TEXTURE_PIXEL_SIZE;
 	float a;
@@ -47,17 +45,33 @@ void fragment() {
 	maxa = max(a, maxa);
 	mina = min(a, mina);
 
+    a = texture(TEXTURE, UV + vec2(-outline_width, -outline_width)*ps/2).a;
+    maxa = max(a, maxa);
+    mina = min(a, mina);
+
 	a = texture(TEXTURE, UV + vec2(0, outline_width)*ps).a;
 	maxa = max(a, maxa);
 	mina = min(a, mina);
+
+    a = texture(TEXTURE, UV + vec2(outline_width, -outline_width)*ps/2).a;
+    maxa = max(a, maxa);
+    mina = min(a, mina);
 
 	a = texture(TEXTURE, UV + vec2(-outline_width,0)*ps).a;
 	maxa = max(a, maxa);
 	mina = min(a, mina);
 
+    a = texture(TEXTURE, UV + vec2(-outline_width, outline_width)*ps/2).a;
+    maxa = max(a, maxa);
+    mina = min(a, mina);
+
 	a = texture(TEXTURE, UV + vec2(outline_width, 0)*ps).a;
 	maxa = max(a, maxa);
 	mina = min(a, mina);
+
+    a = texture(TEXTURE, UV + vec2(outline_width, outline_width)*ps/2).a;
+    maxa = max(a, maxa);
+    mina = min(a, mina);
 
 	COLOR = mix(col, outline_color, maxa-col.a);
 }

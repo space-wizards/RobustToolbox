@@ -84,6 +84,11 @@ namespace Robust.Shared.Maths
             return new Vector2i(a.X - b, a.Y - b);
         }
 
+        public static Vector2i operator -(Vector2i a)
+        {
+            return new Vector2i(-a.X, -a.Y);
+        }
+
         public static Vector2i operator +(Vector2i a, Vector2i b)
         {
             return new Vector2i(a.X + b.X, a.Y + b.Y);

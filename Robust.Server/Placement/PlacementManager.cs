@@ -106,8 +106,7 @@ namespace Robust.Server.Placement
             */
             if (!isTile)
             {
-                if (!_entityManager.TrySpawnEntityAt(entityTemplateName, coordinates, out var created))
-                    return;
+                var created = _entityManager.SpawnEntityAt(entityTemplateName, coordinates);
 
                 created.Transform.LocalRotation = dirRcv.ToAngle();
             }

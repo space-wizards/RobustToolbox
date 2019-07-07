@@ -21,7 +21,7 @@ namespace Robust.Server.Console.Commands
             }
             else
             {
-                ent.ForceSpawnEntityAt(args[0], player.AttachedEntity.Transform.GridPosition);
+                ent.SpawnEntityAt(args[0], player.AttachedEntity.Transform.GridPosition);
             }
         }
     }

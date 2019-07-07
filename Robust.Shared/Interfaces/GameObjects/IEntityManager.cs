@@ -42,26 +42,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="entityType"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
-        IEntity ForceSpawnEntityAt(string entityType, GridCoordinates coordinates);
-
-        /// <summary>
-        /// Spawns an entity at a specific position
-        /// </summary>
-        /// <param name="entityType"></param>
-        /// <param name="position"></param>
-        /// <param name="argMap"></param>
-        /// <returns></returns>
-        IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap);
-
-        /// <summary>
-        /// Spawns an entity at a specific position
-        /// </summary>
-        /// <param name="entityType"></param>
-        /// <param name="position"></param>
-        /// <param name="argMap"></param>
-        /// <param name="entity"></param>
-        /// <returns></returns>
-        bool TrySpawnEntityAt(string entityType, Vector2 position, MapId argMap, out IEntity entity);
+        IEntity SpawnEntityAt(string entityType, GridCoordinates coordinates);
 
         /// <summary>
         /// Spawns an entity at a specific position
@@ -69,7 +50,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="entityType"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
-        bool TrySpawnEntityAt(string entityType, GridCoordinates coordinates, out IEntity entity);
+        IEntity SpawnEntityAt(string entityType, MapCoordinates coordinates);
 
         /// <summary>
         /// Returns an entity by id
@@ -107,18 +88,6 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// Checks whether an entity with the specified ID exists.
         /// </summary>
         bool EntityExists(EntityUid uid);
-
-        /// <summary>
-        /// Disposes all entities and clears all lists.
-        /// </summary>
-        void FlushEntities();
-
-        /// <summary>
-        /// Retrieves template with given name from db
-        /// </summary>
-        /// <param name="prototypeName">name of the template</param>
-        /// <returns>Template</returns>
-        EntityPrototype GetTemplate(string prototypeName);
 
         #endregion Entity Management
 

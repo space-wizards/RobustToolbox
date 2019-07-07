@@ -6,7 +6,6 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Robust.Server.GameObjects
@@ -19,7 +18,6 @@ namespace Robust.Server.GameObjects
         #region IEntityManager Members
 
 #pragma warning disable 649
-        [Dependency] private readonly IPrototypeManager _protoManager;
         [Dependency] private readonly IMapManager _mapManager;
 #pragma warning restore 649
 
@@ -34,49 +32,13 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override bool TrySpawnEntityAt(string entityType, GridCoordinates coordinates, out IEntity entity)
-        {
-            var prototype = _protoManager.Index<EntityPrototype>(entityType);
-            if (prototype.CanSpawnAt(_mapManager.GetGrid(coordinates.GridID), coordinates.Position))
-            {
-                var result = CreateEntity(entityType);
-                result.Transform.GridPosition = coordinates;
-                InitializeAndStartEntity(result);
-                result.RunMapInit();
-                entity = result;
-                return true;
-            }
-
-            entity = null;
-            return false;
-        }
-
-        /// <inheritdoc />
-        public override bool TrySpawnEntityAt(string entityType, Vector2 position, MapId argMap, out IEntity entity)
-        {
-            var coordinates = new GridCoordinates(position, _mapManager.GetMap(argMap).FindGridAt(position));
-            return TrySpawnEntityAt(entityType, coordinates, out entity);
-        }
-
-        /// <inheritdoc />
-        public override IEntity ForceSpawnEntityAt(string entityType, GridCoordinates coordinates)
+        public override IEntity SpawnEntityAt(string entityType, GridCoordinates coordinates)
         {
             var entity = CreateEntity(entityType);
             entity.Transform.GridPosition = coordinates;
             InitializeAndStartEntity(entity);
             entity.RunMapInit();
             return entity;
-        }
-
-        /// <inheritdoc />
-        public override IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap)
-        {
-            if (!_mapManager.TryGetMap(argMap, out var map))
-            {
-                map = _mapManager.DefaultMap;
-            }
-
-            return ForceSpawnEntityAt(entityType, new GridCoordinates(position, map.FindGridAt(position)));
         }
 
         /// <inheritdoc />
@@ -105,8 +67,8 @@ namespace Robust.Server.GameObjects
 
         public List<EntityUid> GetDeletedEntities(GameTick fromTick)
         {
-            List<EntityUid> list = new List<EntityUid>();
-            foreach ((var tick, var id) in DeletionHistory)
+            var list = new List<EntityUid>();
+            foreach (var (tick, id) in DeletionHistory)
             {
                 if (tick >= fromTick)
                 {
@@ -200,10 +162,10 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float range)
+        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Box2 box, float range)
         {
             var aabb = new Box2(box.Left - range, box.Top - range, box.Right + range, box.Bottom + range);
-            return GetEntitiesIntersecting(mapID, aabb);
+            return GetEntitiesIntersecting(mapId, aabb);
         }
 
         /// <inheritdoc />
@@ -221,14 +183,14 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction, float arcwidth)
+        public IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction, float arcWidth)
         {
             var entities = GetEntitiesInRange(coordinates, range*2);
 
             foreach (var entity in entities)
             {
                 var angle = new Angle(entity.Transform.WorldPosition - coordinates.ToWorld(_mapManager).Position);
-                if (angle.Degrees < direction.Degrees + arcwidth / 2 && angle.Degrees > direction.Degrees - arcwidth / 2)
+                if (angle.Degrees < direction.Degrees + arcWidth / 2 && angle.Degrees > direction.Degrees - arcWidth / 2)
                     yield return entity;
             }
         }

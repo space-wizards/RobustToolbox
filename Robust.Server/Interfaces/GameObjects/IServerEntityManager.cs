@@ -3,7 +3,6 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using System.Collections.Generic;
 using Robust.Shared.Maths;
-using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 
 namespace Robust.Server.Interfaces.GameObjects
@@ -33,7 +32,6 @@ namespace Robust.Server.Interfaces.GameObjects
         /// <summary>
         /// Gets entities that intersect with this entity
         /// </summary>
-        /// <param name="position"></param>
         IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity);
 
         /// <summary>
@@ -64,9 +62,9 @@ namespace Robust.Server.Interfaces.GameObjects
         /// <param name="coordinates"></param>
         /// <param name="range"></param>
         /// <param name="direction"></param>
-        /// <param name="arcwidth"></param>
+        /// <param name="arcWidth"></param>
         /// <returns></returns>
-        IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction, float arcwidth);
+        IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction, float arcWidth);
 
         /// <summary>
         ///     Gets all entity states that have been modified after and including the provided tick.

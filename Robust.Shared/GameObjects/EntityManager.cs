@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
@@ -40,6 +41,8 @@ namespace Robust.Shared.GameObjects
 
         [Dependency]
         private readonly IGameTiming _gameTiming;
+
+        [Dependency] private readonly IMapManager _mapManager;
 #pragma warning restore 649
 
         #endregion Dependencies
@@ -125,10 +128,16 @@ namespace Robust.Shared.GameObjects
         #region Entity Management
 
         public abstract IEntity SpawnEntity(string protoName);
-        public abstract IEntity ForceSpawnEntityAt(string entityType, GridCoordinates coordinates);
-        public abstract IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap);
-        public abstract bool TrySpawnEntityAt(string entityType, Vector2 position, MapId argMap, out IEntity entity);
-        public abstract bool TrySpawnEntityAt(string entityType, GridCoordinates coordinates, out IEntity entity);
+        public abstract IEntity SpawnEntityAt(string entityType, GridCoordinates coordinates);
+
+        public IEntity SpawnEntityAt(string entityType, MapCoordinates coordinates)
+        {
+            var map = _mapManager.GetMap(coordinates.MapId);
+            var grid = map.FindGridAt(coordinates.Position);
+            var gridCoords = new GridCoordinates(grid.WorldToLocal(coordinates.Position), grid);
+
+            return SpawnEntityAt(entityType, gridCoords);
+        }
 
         /// <summary>
         /// Returns an entity by id

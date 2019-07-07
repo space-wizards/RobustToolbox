@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 using Robust.Shared.Serialization;
@@ -457,20 +456,6 @@ namespace Robust.Shared.GameObjects
 
                 entity.AddComponent(component);
             }
-        }
-
-        /// <summary>
-        /// Tests whether the prototype is going to conflict with anything previously placed in this location on the snap grid
-        /// </summary>
-        public bool CanSpawnAt(IMapGrid grid, Vector2 position)
-        {
-            if (!grid.OnSnapCenter(position) && !grid.OnSnapBorder(position)) //We only check snap position logic at this time, extensible for other behavior
-            {
-                return true;
-            }
-            var entitymanager = IoCManager.Resolve<IEntityManager>();
-            var entities = entitymanager.GetEntitiesAt(position);
-            return !entities.SelectMany(e => e.Prototype._snapFlags).Any(f => _snapFlags.Contains(f));
         }
 
         private void ReadComponent(YamlMappingNode mapping, IComponentFactory factory)

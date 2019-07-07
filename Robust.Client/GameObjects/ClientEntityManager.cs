@@ -22,10 +22,10 @@ namespace Robust.Client.GameObjects
 
         private int NextClientEntityUid = EntityUid.ClientUid + 1;
 
-        public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float Range)
+        public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range)
         {
-            var AABB = new Box2(position.Position - new Vector2(Range / 2, Range / 2), position.Position + new Vector2(Range / 2, Range / 2));
-            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).ParentMapId, AABB);
+            var aabb = new Box2(position.Position - new Vector2(range / 2, range / 2), position.Position + new Vector2(range / 2, range / 2));
+            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).ParentMapId, aabb);
         }
 
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position)
@@ -190,7 +190,7 @@ namespace Robust.Client.GameObjects
             return ent;
         }
 
-        public override IEntity ForceSpawnEntityAt(string entityType, GridCoordinates coordinates)
+        public override IEntity SpawnEntityAt(string entityType, GridCoordinates coordinates)
         {
             var entity = CreateEntity(entityType, NewClientEntityUid());
             entity.Transform.GridPosition = coordinates;
@@ -199,35 +199,9 @@ namespace Robust.Client.GameObjects
             return entity;
         }
 
-        public override IEntity ForceSpawnEntityAt(string entityType, Vector2 position, MapId argMap)
-        {
-            if (!_mapManager.TryGetMap(argMap, out var map))
-            {
-                map = _mapManager.DefaultMap;
-            }
-
-            return ForceSpawnEntityAt(entityType, new GridCoordinates(position, map.FindGridAt(position)));
-
-        }
-
-        public override bool TrySpawnEntityAt(string entityType, Vector2 position, MapId argMap, out IEntity entity)
-        {
-            // TODO: check collisions here?
-            entity = ForceSpawnEntityAt(entityType, position, argMap);
-            return true;
-        }
-
-        public override bool TrySpawnEntityAt(string entityType, GridCoordinates coordinates, out IEntity entity)
-        {
-            // TODO: check collisions here?
-            entity = ForceSpawnEntityAt(entityType, coordinates);
-            return true;
-        }
-
-        EntityUid NewClientEntityUid()
+        private EntityUid NewClientEntityUid()
         {
             return new EntityUid(NextClientEntityUid++);
         }
-
     }
 }

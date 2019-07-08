@@ -128,6 +128,8 @@ namespace Robust.Shared.GameObjects
         #region Entity Management
 
         public abstract IEntity SpawnEntity(string protoName);
+        public abstract IEntity SpawnEntityNoMapInit(string protoName);
+
         public abstract IEntity SpawnEntityAt(string entityType, GridCoordinates coordinates);
 
         public IEntity SpawnEntityAt(string entityType, MapCoordinates coordinates)

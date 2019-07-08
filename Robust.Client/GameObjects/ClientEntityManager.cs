@@ -190,6 +190,11 @@ namespace Robust.Client.GameObjects
             return ent;
         }
 
+        public override IEntity SpawnEntityNoMapInit(string protoName)
+        {
+            return SpawnEntity(protoName);
+        }
+
         public override IEntity SpawnEntityAt(string entityType, GridCoordinates coordinates)
         {
             var entity = CreateEntity(entityType, NewClientEntityUid());

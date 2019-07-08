@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Robust.Server.Interfaces.GameObjects;
+using Robust.Server.Interfaces.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -19,15 +20,22 @@ namespace Robust.Server.GameObjects
 
 #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IPauseManager _pauseManager;
 #pragma warning restore 649
 
         private readonly List<(GameTick tick, EntityUid uid)> DeletionHistory = new List<(GameTick, EntityUid)>();
 
         public override IEntity SpawnEntity(string protoName)
         {
+            var entity = SpawnEntityNoMapInit(protoName);
+            entity.RunMapInit();
+            return entity;
+        }
+
+        public override IEntity SpawnEntityNoMapInit(string protoName)
+        {
             var newEnt = CreateEntity(protoName);
             InitializeAndStartEntity(newEnt);
-            newEnt.RunMapInit();
             return newEnt;
         }
 
@@ -37,7 +45,11 @@ namespace Robust.Server.GameObjects
             var entity = CreateEntity(entityType);
             entity.Transform.GridPosition = coordinates;
             InitializeAndStartEntity(entity);
-            entity.RunMapInit();
+            var grid = _mapManager.GetGrid(coordinates.GridID);
+            if (_pauseManager.IsMapInitialized(grid.ParentMap))
+            {
+                entity.RunMapInit();
+            }
             return entity;
         }
 

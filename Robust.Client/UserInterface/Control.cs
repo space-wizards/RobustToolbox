@@ -46,6 +46,7 @@ namespace Robust.Client.UserInterface
         private bool _visible = true;
 
         private Vector2 _position;
+
         // _marginSetSize is the size calculated by the margins,
         // but it's different from _size if min size is higher.
         private Vector2 _sizeByMargins;
@@ -60,6 +61,9 @@ namespace Robust.Client.UserInterface
 
         private Dictionary<string, (object value, GodotAssetScene source)>
             _toApplyPropertyMapping;
+
+        private GrowDirection _growHorizontal;
+        private GrowDirection _growVertical;
 
         private static Dictionary<string, Type> _manualNodeTypeTranslations;
 
@@ -417,7 +421,8 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     The size of this control, in physical pixels.
         /// </summary>
-        [ViewVariables] public Vector2i PixelSize => (Vector2i) (_size * UserInterfaceManager.UIScale);
+        [ViewVariables]
+        public Vector2i PixelSize => (Vector2i) (_size * UserInterfaceManager.UIScale);
 
         /// <summary>
         ///     A <see cref="UIBox2"/> with the top left at 0,0 and the size equal to <see cref="Size"/>.
@@ -481,7 +486,8 @@ namespace Robust.Client.UserInterface
         ///     The position of the top left corner of the control, in physical pixels.
         /// </summary>
         /// <seealso cref="Position"/>
-        [ViewVariables] public Vector2i PixelPosition => (Vector2i) (_position * UserInterfaceManager.UIScale);
+        [ViewVariables]
+        public Vector2i PixelPosition => (Vector2i) (_position * UserInterfaceManager.UIScale);
 
         /// <summary>
         ///     The position of the top left corner of the control, in virtual pixels.
@@ -551,7 +557,8 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     The mode that controls how mouse filtering works. See the enum for how it functions.
         /// </summary>
-        [ViewVariables] public MouseFilterMode MouseFilter { get; set; } = MouseFilterMode.Stop;
+        [ViewVariables]
+        public MouseFilterMode MouseFilter { get; set; } = MouseFilterMode.Stop;
 
         /// <summary>
         ///     Whether this control can take keyboard focus.
@@ -587,14 +594,46 @@ namespace Robust.Client.UserInterface
         public bool KeyboardFocusOnClick { get; set; }
 
         /// <summary>
+        ///     Determines how the control will move on the horizontal axis to ensure it is at its minimum size.
+        ///     See <see cref="GrowDirection"/> for more information.
+        /// </summary>
+        [ViewVariables]
+        public GrowDirection GrowHorizontal
+        {
+            get => _growHorizontal;
+            set
+            {
+                _growHorizontal = value;
+                _doUpdateLayout();
+            }
+        }
+
+        /// <summary>
+        ///     Determines how the control will move on the vertical axis to ensure it is at its minimum size.
+        ///     See <see cref="GrowDirection"/> for more information.
+        /// </summary>
+        [ViewVariables]
+        public GrowDirection GrowVertical
+        {
+            get => _growVertical;
+            set
+            {
+                _growVertical = value;
+                _doUpdateLayout();
+            }
+        }
+
+        /// <summary>
         ///     Horizontal size flags for container layout.
         /// </summary>
-        [ViewVariables] public SizeFlags SizeFlagsHorizontal { get; set; } = SizeFlags.Fill;
+        [ViewVariables]
+        public SizeFlags SizeFlagsHorizontal { get; set; } = SizeFlags.Fill;
 
         /// <summary>
         ///     Vertical size flags for container layout.
         /// </summary>
-        [ViewVariables] public SizeFlags SizeFlagsVertical { get; set; } = SizeFlags.Fill;
+        [ViewVariables]
+        public SizeFlags SizeFlagsVertical { get; set; } = SizeFlags.Fill;
 
         /// <summary>
         ///     Stretch ratio used to give shared of the available space in case multiple siblings are set to expand
@@ -627,7 +666,8 @@ namespace Robust.Client.UserInterface
         ///     If this is set, rendering is hard clipped to it.
         /// </remarks>
         /// <seealso cref="RectDrawClipMargin"/>
-        [ViewVariables] public bool RectClipContent { get; set; }
+        [ViewVariables]
+        public bool RectClipContent { get; set; }
 
         /// <summary>
         ///     A margin around this control. If this control + this margin is outside its parent's <see cref="RectClipContent" />,
@@ -1963,6 +2003,28 @@ namespace Robust.Client.UserInterface
             ShrinkEnd = 8,
         }
 
+        /// <summary>
+        ///     Controls how the control should move when its wanted size (controlled by anchors/margins) is smaller
+        ///     than its minimum size.
+        /// </summary>
+        public enum GrowDirection : byte
+        {
+            /// <summary>
+            ///     The control will expand to the bottom right to reach its minimum size.
+            /// </summary>
+            End = 0,
+
+            /// <summary>
+            ///     The control will expand to the top left to reach its minimum size.
+            /// </summary>
+            Begin,
+
+            /// <summary>
+            ///     The control will expand on all axes equally to reach its minimum size.
+            /// </summary>
+            Both
+        }
+
         internal void DoUpdate(ProcessFrameEventArgs args)
         {
             Update(args);
@@ -2004,16 +2066,27 @@ namespace Robust.Client.UserInterface
         {
             var (pSizeX, pSizeY) = Parent?._size ?? Vector2.Zero;
 
+            // Calculate where the control "wants" to be by its anchors/margins.
             var top = _anchorTop * pSizeY + _marginTop;
             var left = _anchorLeft * pSizeX + _marginLeft;
             var right = _anchorRight * pSizeX + _marginRight;
             var bottom = _anchorBottom * pSizeY + _marginBottom;
 
-            _position = new Vector2(left, top);
-            var oldSize = _size;
-            _sizeByMargins = new Vector2(right - left, bottom - top);
-            _size = Vector2.ComponentMax(_sizeByMargins, CombinedMinimumSize);
+            // The position we want.
+            var (wPosX, wPosY) = (left, top);
+            // The size we want.
+            var (wSizeX, wSizeY) = (right - left, bottom - top);
+            var (minSizeX, minSizeY) = CombinedMinimumSize;
 
+            _handleLayoutOverflow(GrowHorizontal, minSizeX, wPosX, wSizeX, out var posX, out var sizeX);
+            _handleLayoutOverflow(GrowVertical, minSizeY, wPosY, wSizeY, out var posY, out var sizeY);
+
+            var oldSize = _size;
+            _position = (posX, posY);
+            _size = (sizeX, sizeY);
+            _sizeByMargins = (wSizeX, wSizeY);
+
+            // If size is different then child controls may need to be laid out differently.
             if (_size != oldSize)
             {
                 Resized();
@@ -2023,6 +2096,36 @@ namespace Robust.Client.UserInterface
                     child._doUpdateLayout();
                 }
             }
+        }
+
+        private static void _handleLayoutOverflow(GrowDirection direction, float minSize, float wPos, float wSize,
+            out float pos,
+            out float size)
+        {
+            var overflow = minSize - wSize;
+            if (overflow <= 0)
+            {
+                pos = wPos;
+                size = wSize;
+                return;
+            }
+
+            switch (direction)
+            {
+                case GrowDirection.End:
+                    pos = wPos;
+                    break;
+                case GrowDirection.Begin:
+                    pos = wPos - overflow;
+                    break;
+                case GrowDirection.Both:
+                    pos = wPos - overflow / 2;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            size = minSize;
         }
 
         /// <summary>

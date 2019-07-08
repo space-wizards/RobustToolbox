@@ -235,6 +235,82 @@ namespace Robust.UnitTesting.Client.UserInterface
             control1.Dispose();
         }
 
+        // Test that a control grows its size instead of position by default. (GrowDirection.End)
+        [Test]
+        public void TestGrowEnd()
+        {
+            var parent = new Control {Size = (50, 50)};
+            var child = new Control();
+            parent.AddChild(child);
+
+            // Child should be at 0,0.
+            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
+
+            // Making the child have a bigger minimum size should grow it to the bottom left.
+            // i.e. size should change, position should not.
+            child.CustomMinimumSize = (100, 100);
+
+            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
+            Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
+        }
+
+        // Test GrowDirection.Begin
+        [Test]
+        public void TestGrowBegin()
+        {
+            var parent = new Control {Size = (50, 50)};
+            var child = new Control {GrowHorizontal = Control.GrowDirection.Begin};
+            parent.AddChild(child);
+
+            // Child should be at 0,0.
+            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
+
+            // Making the child have a bigger minimum size should grow it to the bottom right.
+            // i.e. size should change, position should not.
+            child.CustomMinimumSize = (100, 100);
+
+            Assert.That(child.Position, Is.EqualTo(new Vector2(-100, 0)));
+            Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
+        }
+
+        // Test GrowDirection.Both
+        [Test]
+        public void TestGrowBoth()
+        {
+            var parent = new Control {Size = (50, 50)};
+            var child = new Control {GrowHorizontal = Control.GrowDirection.Both};
+            parent.AddChild(child);
+
+            // Child should be at 0,0.
+            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
+
+            child.CustomMinimumSize = (100, 100);
+
+            Assert.That(child.Position, Is.EqualTo(new Vector2(-50, 0)));
+            Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
+        }
+
+        // Test that changing a grow direction updates the position correctly.
+        [Test]
+        public void TestGrowDirectionChange()
+        {
+            var parent = new Control {Size = (50, 50)};
+            var child = new Control();
+            parent.AddChild(child);
+
+            // Child should be at 0,0.
+            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
+
+            child.CustomMinimumSize = (100, 100);
+
+            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
+            Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
+
+            child.GrowHorizontal = Control.GrowDirection.Begin;
+
+            Assert.That(child.Position, Is.EqualTo(new Vector2(-100, 0)));
+        }
+
         private class TestControl : Control
         {
             protected override ResourcePath ScenePath => new ResourcePath("/Scenes/Test/TestScene.tscn");

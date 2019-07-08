@@ -4,6 +4,10 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    /// <summary>
+    ///     A container that lays out its children sequentially.
+    ///     Use <see cref="VBoxContainer"/> or <see cref="HBoxContainer"/> for an implementation.
+    /// </summary>
     [ControlWrap("BoxContainer")]
     public abstract class BoxContainer : Container
     {
@@ -20,6 +24,9 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
+        /// <summary>
+        ///     Specifies "where" the controls should be laid out.
+        /// </summary>
         public AlignMode Align { get; set; }
 
         private int ActualSeparation
@@ -59,12 +66,12 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (Vertical)
                 {
-                    minSize = (int) minY;
+                    minSize = minY;
                     stretch = (child.SizeFlagsVertical & SizeFlags.Expand) == SizeFlags.Expand;
                 }
                 else
                 {
-                    minSize = (int) minX;
+                    minSize = minX;
                     stretch = (child.SizeFlagsHorizontal & SizeFlags.Expand) == SizeFlags.Expand;
                 }
 
@@ -216,8 +223,19 @@ namespace Robust.Client.UserInterface.Controls
 
         public enum AlignMode
         {
+            /// <summary>
+            ///     Controls are laid out from the begin of the box container.
+            /// </summary>
             Begin = 0,
+
+            /// <summary>
+            ///     Controls are laid out from the center of the box container.
+            /// </summary>
             Center = 1,
+
+            /// <summary>
+            ///     Controls are laid out from the end of the box container.
+            /// </summary>
             End = 2,
         }
     }

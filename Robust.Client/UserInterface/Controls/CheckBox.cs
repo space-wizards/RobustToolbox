@@ -4,6 +4,9 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    /// <summary>
+    ///     A type of toggleable button that also has a checkbox.
+    /// </summary>
     [ControlWrap("CheckBox")]
     public class CheckBox : Button
     {

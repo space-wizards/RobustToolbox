@@ -4,6 +4,9 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    /// <summary>
+    ///     A container that lays out its children in a grid.
+    /// </summary>
     [ControlWrap("GridContainer")]
     public class GridContainer : Container
     {
@@ -17,6 +20,12 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
+        /// <summary>
+        ///     The amount of columns to organize the children into.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     Thrown if the value assigned is less than or equal to 0.
+        /// </exception>
         public int Columns
         {
             get => _columns;
@@ -33,6 +42,9 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        /// <summary>
+        ///     The amount of rows being used for the current amount of children.
+        /// </summary>
         public int Rows
         {
             get

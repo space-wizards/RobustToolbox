@@ -19,6 +19,8 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyFont = "font";
 
         private (int Height, List<int> Widths)? _textDimensionCache;
+        private string _text;
+        private bool _clipText;
 
         public Label(string name) : base(name)
         {
@@ -28,9 +30,9 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        private string _text;
-        private bool _clipText;
-
+        /// <summary>
+        ///     The text to display.
+        /// </summary>
         [ViewVariables]
         public string Text
         {

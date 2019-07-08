@@ -7,6 +7,9 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    /// <summary>
+    ///     Most common button type that draws text in a fancy box.
+    /// </summary>
     [ControlWrap("Button")]
     public class Button : BaseButton
     {
@@ -16,6 +19,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePseudoClassDisabled = "disabled";
         public const string StylePseudoClassPressed = "pressed";
         private int? _textWidthCache;
+        private string _text;
 
         public Button()
         {
@@ -25,14 +29,23 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
+        /// <summary>
+        ///     How to align the text inside the button.
+        /// </summary>
         [ViewVariables]
         public AlignMode TextAlign { get; set; } = AlignMode.Center;
 
+        /// <summary>
+        ///     If true, the button will allow shrinking and clip text
+        ///     to prevent the text from going outside the bounds of the button.
+        ///     If false, the minimum size will always fit the contained text.
+        /// </summary>
         [ViewVariables]
         public bool ClipText { get; set; }
 
-        private string _text;
-
+        /// <summary>
+        ///     The text displayed by the button.
+        /// </summary>
         [ViewVariables]
         public string Text
         {
@@ -91,8 +104,19 @@ namespace Robust.Client.UserInterface.Controls
 
         public enum AlignMode
         {
+            /// <summary>
+            ///     Text is aligned to the left of the button.
+            /// </summary>
             Left = 0,
+
+            /// <summary>
+            ///     Text is aligned to the center of the button.
+            /// </summary>
             Center = 1,
+
+            /// <summary>
+            ///     Text is aligned to the right of the button.
+            /// </summary>
             Right = 2,
         }
 
@@ -170,12 +194,12 @@ namespace Robust.Client.UserInterface.Controls
 
             if (ClipText)
             {
-                return (0, fontHeight) + style.MinimumSize/UIScale;
+                return (0, fontHeight) + style.MinimumSize / UIScale;
             }
 
             var width = EnsureWidthCache();
 
-            return (width / UIScale, fontHeight) + style.MinimumSize/UIScale;
+            return (width / UIScale, fontHeight) + style.MinimumSize / UIScale;
         }
 
         protected override void Initialize()

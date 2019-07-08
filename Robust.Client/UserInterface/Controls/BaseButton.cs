@@ -1,31 +1,41 @@
 ﻿using System;
-using JetBrains.Annotations;
 using Robust.Client.Utility;
-using Robust.Shared.Log;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [PublicAPI]
+    /// <summary>
+    ///     Base class for a generic UI button.
+    /// </summary>
+    /// <seealso cref="Button"/>
+    /// <seealso cref="TextureButton"/>
+    /// <seealso cref="CheckBox"/>
     [ControlWrap("BaseButton")]
     public abstract class BaseButton : Control
     {
         private bool _attemptingPress;
         private bool _beingHovered;
+        private bool _disabled;
+        private bool _pressed;
 
-        public BaseButton()
+        protected BaseButton()
         {
         }
 
-        public BaseButton(string name) : base(name)
+        protected BaseButton(string name) : base(name)
         {
         }
 
+        /// <summary>
+        ///     Controls mode of operation in relation to press/release events.
+        /// </summary>
         [ViewVariables]
         public ActionMode Mode { get; set; } = ActionMode.Release;
 
-        private bool _disabled;
-
+        /// <summary>
+        ///     Whether the button is disabled.
+        ///     If a button is disabled, it appears greyed out and cannot be interacted with.
+        /// </summary>
         [ViewVariables]
         public bool Disabled
         {
@@ -41,8 +51,6 @@ namespace Robust.Client.UserInterface.Controls
                 }
             }
         }
-
-        private bool _pressed;
 
         /// <summary>
         ///     Whether the button is currently toggled down. Only applies when <see cref="ToggleMode"/> is true.
@@ -63,18 +71,21 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        /// <summary>
+        ///     If <c>true</c>, this button functions as a toggle, not as a regular push button.
+        /// </summary>
         [ViewVariables]
         public bool ToggleMode { get; set; }
 
-        public enum ActionMode
-        {
-            Press = 0,
-            Release = 1,
-        }
-
+        /// <summary>
+        ///     If <c>true</c>, this button is currently being hovered over by the mouse.
+        /// </summary>
         [ViewVariables]
         public bool IsHovered => _beingHovered;
 
+        /// <summary>
+        ///     Draw mode used for styling of buttons.
+        /// </summary>
         [ViewVariables]
         public DrawModeEnum DrawMode
         {
@@ -99,11 +110,24 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public ButtonGroup ButtonGroup { get; set; }
-
+        /// <summary>
+        ///     Fired when the button is pushed down by the mouse.
+        /// </summary>
         public event Action<ButtonEventArgs> OnButtonDown;
+
+        /// <summary>
+        ///     Fired when the button is released by the mouse.
+        /// </summary>
         public event Action<ButtonEventArgs> OnButtonUp;
+
+        /// <summary>
+        ///     Fired when the button is "pressed". When this happens depends on <see cref="Mode"/>.
+        /// </summary>
         public event Action<ButtonEventArgs> OnPressed;
+
+        /// <summary>
+        ///     If <see cref="ToggleMode"/> is set, fired when the button is toggled up or down.
+        /// </summary>
         public event Action<ButtonToggledEventArgs> OnToggled;
 
         protected virtual void DrawModeChanged()
@@ -227,6 +251,9 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        /// <summary>
+        ///     Fired when a <see cref="BaseButton"/> is toggled.
+        /// </summary>
         public class ButtonToggledEventArgs : ButtonEventArgs
         {
             /// <summary>
@@ -254,9 +281,22 @@ namespace Robust.Client.UserInterface.Controls
                     break;
             }
         }
-    }
 
-    public sealed class ButtonGroup
-    {
+        /// <summary>
+        ///     For use with <see cref="BaseButton.Mode"/>.
+        /// </summary>
+        public enum ActionMode
+        {
+            /// <summary>
+            ///     <see cref="BaseButton.OnPressed"/> fires when the mouse button causing them is pressed down.
+            /// </summary>
+            Press = 0,
+
+            /// <summary>
+            ///     <see cref="BaseButton.OnPressed"/> fires when the mouse button causing them is released.
+            ///     This is the default and most intuitive method.
+            /// </summary>
+            Release = 1,
+        }
     }
 }

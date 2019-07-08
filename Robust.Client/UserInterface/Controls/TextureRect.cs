@@ -11,11 +11,14 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    /// <summary>
+    ///     Simple control that draws a single texture using a variety of possible stretching modes.
+    /// </summary>
     [ControlWrap("TextureRect")]
     public class TextureRect : Control
     {
         private bool _canShrink;
-        private StretchMode _stretch = StretchMode.Keep;
+        private Texture _texture;
 
         public TextureRect()
         {
@@ -25,8 +28,9 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        private Texture _texture;
-
+        /// <summary>
+        ///     The texture to draw.
+        /// </summary>
         public Texture Texture
         {
             get => _texture;
@@ -36,6 +40,28 @@ namespace Robust.Client.UserInterface.Controls
                 MinimumSizeChanged();
             }
         }
+
+        /// <summary>
+        ///     If true, this control can shrink below the size of <see cref="Texture"/>.
+        /// </summary>
+        /// <remarks>
+        ///     This does not set <see cref="Control.RectClipContent"/>.
+        ///     Certain stretch modes may display outside the area of the control unless it is set.
+        /// </remarks>
+        public bool CanShrink
+        {
+            get => _canShrink;
+            set
+            {
+                _canShrink = value;
+                MinimumSizeChanged();
+            }
+        }
+
+        /// <summary>
+        ///     Controls how the texture should be drawn if the control is larger than the size of the texture.
+        /// </summary>
+        public StretchMode Stretch { get; set; } = StretchMode.Keep;
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
@@ -62,6 +88,7 @@ namespace Robust.Client.UserInterface.Controls
                     handle.DrawTexture(_texture, position);
                     break;
                 }
+
                 case StretchMode.KeepAspect:
                 case StretchMode.KeepAspectCentered:
                 {
@@ -83,6 +110,7 @@ namespace Robust.Client.UserInterface.Controls
                     handle.DrawTextureRectRegion(_texture, UIBox2.FromDimensions(position, size));
                     break;
                 }
+
                 case StretchMode.KeepAspectCovered:
                     // Calculate the scale necessary to fit width and height to control size.
                     var (scaleX, scaleY) = Size / _texture.Size;
@@ -121,45 +149,50 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public bool CanShrink
-        {
-            get => _canShrink;
-            set
-            {
-                _canShrink = value;
-                MinimumSizeChanged();
-            }
-        }
-
-        public StretchMode Stretch
-        {
-            get => _stretch;
-            set
-            {
-#pragma warning disable 618
-                if (value == StretchMode.ScaleOnExpand)
-#pragma warning restore 618
-                {
-                    throw new ArgumentException("ScaleOnExpand is a deprecated holdover from Godot, do not use it.",
-                        nameof(value));
-                }
-
-                _stretch = value;
-            }
-        }
-
         public enum StretchMode
         {
+            /// <summary>
+            ///     The texture is stretched to fit the entire area of the control.
+            /// </summary>
             Scale = 1,
-            Tile = 2,
-            Keep = 3,
-            KeepCentered = 4,
-            KeepAspect = 5,
-            KeepAspectCentered = 7,
-            KeepAspectCovered = 8,
 
-            [Obsolete("This is a deprecated Godot thing for compatibility, do not use.")]
-            ScaleOnExpand = 0,
+            /// <summary>
+            ///     The texture is tiled to fit the entire area of the control, without stretching.
+            /// </summary>
+            Tile = 2,
+
+            /// <summary>
+            ///     The texture is drawn in its correct size, in the top left corner of the control.
+            /// </summary>
+            Keep = 3,
+
+            /// <summary>
+            ///     The texture is drawn in its correct size, in the center of the control.
+            /// </summary>
+            KeepCentered = 4,
+
+            /// <summary>
+            ///     The texture is stretched to take as much space as possible,
+            ///     while maintaining the original aspect ratio.
+            ///     The texture is positioned from the top left corner of the control.
+            ///     The texture remains completely visible, potentially leaving some sections of the control blank.
+            /// </summary>
+            KeepAspect = 5,
+
+            /// <summary>
+            ///     <see cref="KeepAspect"/>, but the texture is centered instead.
+            /// </summary>
+            KeepAspectCentered = 7,
+
+            /// <summary>
+            ///     <see cref="KeepAspectCentered"/>, but the texture covers the entire control,
+            ///     potentially cutting out part of the texture.
+            /// </summary>
+            /// <example>
+            ///     This effectively causes the entire control to be filled with the texture,
+            ///     while preserving aspect ratio.
+            /// </example>
+            KeepAspectCovered = 8
         }
 
         protected override Vector2 CalculateMinimumSize()

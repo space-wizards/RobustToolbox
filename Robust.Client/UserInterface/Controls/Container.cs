@@ -3,17 +3,23 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    /// <summary>
+    ///     A container lays out its children by some implementation-dependent rules.
+    /// </summary>
     [ControlWrap("Container")]
-    public class Container : Control
+    public abstract class Container : Control
     {
-        public Container() : base()
+        protected Container() : base()
         {
         }
 
-        public Container(string name) : base(name)
+        protected Container(string name) : base(name)
         {
         }
 
+        /// <summary>
+        ///     Called when the container should re-sort its children.
+        /// </summary>
         protected virtual void SortChildren()
         {
 

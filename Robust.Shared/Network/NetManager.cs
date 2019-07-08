@@ -127,7 +127,8 @@ namespace Robust.Shared.Network
                     return null;
                 }
 
-                return GetChannel(peer.Connections[0]);
+                TryGetChannel(peer.Connections[0], out var channel);
+                return channel;
             }
         }
 
@@ -357,6 +358,23 @@ namespace Robust.Shared.Network
                 return channel;
 
             throw new NetManagerException("There is no NetChannel for this NetConnection.");
+        }
+
+        private bool TryGetChannel(NetConnection connection, out INetChannel channel)
+        {
+            if (connection == null)
+            {
+                throw new ArgumentNullException(nameof(connection));
+            }
+
+            if (_channels.TryGetValue(connection, out var channelInstance))
+            {
+                channel = channelInstance;
+                return true;
+            }
+
+            channel = default;
+            return false;
         }
 
         private void HandleStatusChanged(NetIncomingMessage msg)

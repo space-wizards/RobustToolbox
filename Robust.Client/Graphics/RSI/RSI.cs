@@ -18,10 +18,7 @@ namespace Robust.Client.Graphics
         public Vector2u Size { get; private set; }
         private Dictionary<StateId, State> States = new Dictionary<StateId, State>();
 
-        public State this[StateId key]
-        {
-            get => States[key];
-        }
+        public State this[StateId key] => States[key];
 
         public void AddState(State state)
         {
@@ -62,7 +59,7 @@ namespace Robust.Client.Graphics
         /// <summary>
         ///     Represents a name+selector pair used to reference states in an RSI.
         /// </summary>
-        public struct StateId
+        public struct StateId : IEquatable<StateId>
         {
             public readonly string Name;
             public readonly Selectors Selectors;

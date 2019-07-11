@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using Robust.Client.Graphics.Clyde;
 using Robust.Client.Console;
-using Robust.Client.Graphics.Drawing;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
@@ -489,8 +486,9 @@ namespace Robust.Client.UserInterface
 
         private Control _mouseFindControlAtPos(Control control, Vector2 position)
         {
-            foreach (var child in control.Children.Reverse())
+            for (var i = control.ChildCount - 1; i >= 0; i--)
             {
+                var child = control.GetChild(i);
                 if (!child.Visible || (child.RectClipContent && !child.PixelRect.Contains((Vector2i) position)))
                 {
                     continue;

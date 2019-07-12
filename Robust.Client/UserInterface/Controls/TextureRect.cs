@@ -19,6 +19,7 @@ namespace Robust.Client.UserInterface.Controls
     {
         private bool _canShrink;
         private Texture _texture;
+        private Vector2 _textureScale = Vector2.One;
 
         public TextureRect()
         {
@@ -37,6 +38,22 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _texture = value;
+                MinimumSizeChanged();
+            }
+        }
+
+        /// <summary>
+        ///     Scales the texture displayed.
+        /// </summary>
+        /// <remarks>
+        ///     This does not apply to the following stretch modes: <see cref="StretchMode.Scale"/>.
+        /// </remarks>
+        public Vector2 TextureScale
+        {
+            get => _textureScale;
+            set
+            {
+                _textureScale = value;
                 MinimumSizeChanged();
             }
         }
@@ -75,16 +92,18 @@ namespace Robust.Client.UserInterface.Controls
             switch (Stretch)
             {
                 case StretchMode.Scale:
-                    handle.DrawTexture(_texture, Vector2.Zero);
+                    handle.DrawTextureRect(_texture,
+                        UIBox2.FromDimensions(Vector2.Zero, PixelSize));
                     break;
                 case StretchMode.Tile:
                 // TODO: Implement Tile.
                 case StretchMode.Keep:
-                    handle.DrawTextureRectRegion(_texture, UIBox2.FromDimensions(Vector2.Zero, _texture.Size));
+                    handle.DrawTextureRect(_texture,
+                        UIBox2.FromDimensions(Vector2.Zero, _texture.Size * _textureScale));
                     break;
                 case StretchMode.KeepCentered:
                 {
-                    var position = (PixelSize - _texture.Size) / 2;
+                    var position = (PixelSize - _texture.Size * _textureScale) / 2;
                     handle.DrawTexture(_texture, position);
                     break;
                 }
@@ -92,19 +111,20 @@ namespace Robust.Client.UserInterface.Controls
                 case StretchMode.KeepAspect:
                 case StretchMode.KeepAspectCentered:
                 {
-                    var width = _texture.Width * (Size.Y / _texture.Height);
-                    var height = Size.Y;
-                    if (width > Size.X)
+                    var (texWidth, texHeight) = _texture.Size * _textureScale;
+                    var width = texWidth * (PixelSize.Y / texHeight);
+                    var height = (float)PixelSize.Y;
+                    if (width > PixelSize.X)
                     {
-                        width = Size.X;
-                        height = _texture.Height * (Size.X / _texture.Width);
+                        width = PixelSize.X;
+                        height = texHeight * (PixelSize.X / texWidth);
                     }
 
                     var size = new Vector2(width, height);
                     var position = Vector2.Zero;
                     if (Stretch == StretchMode.KeepAspectCentered)
                     {
-                        position = (Size - size) / 2;
+                        position = (PixelSize - size) / 2;
                     }
 
                     handle.DrawTextureRectRegion(_texture, UIBox2.FromDimensions(position, size));
@@ -112,13 +132,14 @@ namespace Robust.Client.UserInterface.Controls
                 }
 
                 case StretchMode.KeepAspectCovered:
+                    var texSize = _texture.Size * _textureScale;
                     // Calculate the scale necessary to fit width and height to control size.
-                    var (scaleX, scaleY) = Size / _texture.Size;
+                    var (scaleX, scaleY) = PixelSize / texSize;
                     // Use whichever scale is greater.
                     var scale = Math.Max(scaleX, scaleY);
                     // Offset inside the actual texture.
-                    var offset = (_texture.Size - Size) / scale / 2f;
-                    handle.DrawTextureRectRegion(_texture, SizeBox, UIBox2.FromDimensions(offset, Size / scale));
+                    var offset = (texSize - PixelSize) / scale / 2f;
+                    handle.DrawTextureRectRegion(_texture, PixelSizeBox, UIBox2.FromDimensions(offset, PixelSize / scale));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -202,7 +223,7 @@ namespace Robust.Client.UserInterface.Controls
                 return Vector2.Zero;
             }
 
-            return Texture.Size;
+            return Texture.Size * TextureScale;
         }
     }
 }

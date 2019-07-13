@@ -17,5 +17,10 @@ namespace Robust.Client.UserInterface.CustomControls
             base.Initialize();
             AddChild(_label = new Label());
         }
+
+        public Tooltip()
+        {
+            MouseFilter = MouseFilterMode.Ignore;
+        }
     }
 }

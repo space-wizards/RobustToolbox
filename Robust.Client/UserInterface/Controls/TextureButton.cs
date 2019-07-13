@@ -102,5 +102,10 @@ namespace Robust.Client.UserInterface.Controls
                 TextureNormal = texture;
             }
         }
+
+        protected override Vector2 CalculateMinimumSize()
+        {
+            return (TextureNormal?.Size ?? Vector2.Zero) / UIScale;
+        }
     }
 }

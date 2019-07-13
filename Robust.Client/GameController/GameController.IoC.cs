@@ -98,6 +98,8 @@ namespace Robust.Client
             IoCManager.Register<ILocalizationManager, LocalizationManager>();
 
             // Client stuff.
+            IoCManager.Register<IFileDialogManager, FileDialogManager>();
+            IoCManager.Register<IFileDialogManagerInternal, FileDialogManager>();
             IoCManager.Register<IGameController, GameController>();
             IoCManager.Register<IGameControllerInternal, GameController>();
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();

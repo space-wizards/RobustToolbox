@@ -69,6 +69,7 @@ namespace Robust.Client
         [Dependency] private readonly ILocalizationManager _localizationManager;
         [Dependency] private readonly IModLoader _modLoader;
         [Dependency] private readonly ISignalHandler _signalHandler;
+        [Dependency] private readonly IFileDialogManagerInternal _fileDialogManager;
 #pragma warning restore 649
 
         public string ContentRootDir { get; set; } = "../../../";
@@ -141,6 +142,7 @@ namespace Robust.Client
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
 
+            _fileDialogManager.Initialize();
             _eyeManager.Initialize();
             _serializer.Initialize();
             _userInterfaceManager.Initialize();

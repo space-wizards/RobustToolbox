@@ -2,6 +2,13 @@ using System.Threading.Tasks;
 
 namespace Robust.Client.Interfaces.UserInterface
 {
+    /// <summary>
+    ///     Manager for opening of file dialogs.
+    /// </summary>
+    /// <remarks>
+    ///     File dialogs are native to the OS being ran on.
+    ///     All operations are asynchronous to prevent locking up the main thread while the user makes his pick.
+    /// </remarks>
     public interface IFileDialogManager
     {
         /// <summary>

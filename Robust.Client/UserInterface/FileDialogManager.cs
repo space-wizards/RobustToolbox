@@ -14,8 +14,14 @@ namespace Robust.Client.UserInterface
 {
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     [SuppressMessage("ReSharper", "IdentifierTypo")]
+    [SuppressMessage("ReSharper", "CommentTypo")]
+    [SuppressMessage("ReSharper", "StringLiteralTypo")]
     internal sealed class FileDialogManager : IFileDialogManagerInternal
     {
+        // Uses nativefiledialog to open the file dialogs cross platform.
+        // On Linux, if the kdialog command is found, it will be used instead.
+        // TODO: Should we maybe try to avoid running kdialog if the DE isn't KDE?
+
 #if LINUX
         private bool _kDialogAvailable;
 #endif

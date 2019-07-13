@@ -38,10 +38,6 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         [OneTimeSetUp]
         public void Setup()
         {
-            var factory = IoCManager.Resolve<IComponentFactory>();
-            factory.Register<TransformComponent>();
-            factory.RegisterReference<TransformComponent, ITransformComponent>();
-
             EntityManager = IoCManager.Resolve<IClientEntityManager>();
             MapManager = IoCManager.Resolve<IMapManager>();
 

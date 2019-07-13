@@ -70,95 +70,11 @@ namespace Robust.Client
     {
         private static void InitIoC(DisplayMode mode)
         {
-            RegisterIoC(mode);
+            ClientIoC.RegisterIoC(mode);
             IoCManager.BuildGraph();
             RegisterReflection();
         }
 
-        internal static void RegisterIoC(DisplayMode mode)
-        {
-            // Shared stuff.
-            IoCManager.Register<ILogManager, LogManager>();
-            IoCManager.Register<IConfigurationManager, ConfigurationManager>();
-            IoCManager.Register<IRobustSerializer, RobustSerializer>();
-            IoCManager.Register<IPrototypeManager, PrototypeManager>();
-            IoCManager.Register<INetManager, NetManager>();
-            IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
-            IoCManager.Register<IEntityManager, ClientEntityManager>();
-            IoCManager.Register<IComponentFactory, ClientComponentFactory>();
-            IoCManager.Register<IMapManager, MapManager>();
-            IoCManager.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
-            IoCManager.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
-            IoCManager.Register<IComponentManager, ComponentManager>();
-            IoCManager.Register<IPhysicsManager, PhysicsManager>();
-            IoCManager.Register<ITimerManager, TimerManager>();
-            IoCManager.Register<ITaskManager, TaskManager>();
-            IoCManager.Register<IRuntimeLog, RuntimeLog>();
-            IoCManager.Register<IDynamicTypeFactory, DynamicTypeFactory>();
-            IoCManager.Register<ILocalizationManager, LocalizationManager>();
-
-            // Client stuff.
-            IoCManager.Register<IFileDialogManager, FileDialogManager>();
-            IoCManager.Register<IFileDialogManagerInternal, FileDialogManager>();
-            IoCManager.Register<IGameController, GameController>();
-            IoCManager.Register<IGameControllerInternal, GameController>();
-            IoCManager.Register<IReflectionManager, ClientReflectionManager>();
-            IoCManager.Register<IResourceManager, ResourceCache>();
-            IoCManager.Register<IResourceManagerInternal, ResourceCache>();
-            IoCManager.Register<IResourceCache, ResourceCache>();
-            IoCManager.Register<IResourceCacheInternal, ResourceCache>();
-            IoCManager.Register<IClientNetManager, NetManager>();
-            IoCManager.Register<IClientEntityManager, ClientEntityManager>();
-            IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
-            IoCManager.Register<IClientGameStateManager, ClientGameStateManager>();
-            IoCManager.Register<IBaseClient, BaseClient>();
-            IoCManager.Register<IPlayerManager, PlayerManager>();
-            IoCManager.Register<IStateManager, StateManager>();
-            IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
-            IoCManager.Register<IUserInterfaceManagerInternal, UserInterfaceManager>();
-            IoCManager.Register<IDebugDrawing, DebugDrawing>();
-            IoCManager.Register<ILightManager, LightManager>();
-            IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
-            IoCManager.Register<IClientConsole, ClientConsole>();
-            IoCManager.Register<IFontManager, FontManager>();
-            IoCManager.Register<IFontManagerInternal, FontManager>();
-            switch (mode)
-            {
-                case DisplayMode.Headless:
-                    IoCManager.Register<IClyde, ClydeHeadless>();
-                    IoCManager.Register<IClydeAudio, ClydeHeadless>();
-                    IoCManager.Register<IClydeInternal, ClydeHeadless>();
-                    IoCManager.Register<IInputManager, InputManager>();
-                    break;
-                case DisplayMode.Clyde:
-                    IoCManager.Register<IClyde, Clyde>();
-                    IoCManager.Register<IClydeAudio, Clyde>();
-                    IoCManager.Register<IClydeInternal, Clyde>();
-                    IoCManager.Register<IInputManager, ClydeInputManager>();
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            IoCManager.Register<IEyeManager, EyeManager>();
-            IoCManager.Register<IGameTiming, GameTiming>();
-
-            IoCManager.Register<IPlacementManager, PlacementManager>();
-            IoCManager.Register<IOverlayManager, OverlayManager>();
-            IoCManager.Register<IOverlayManagerInternal, OverlayManager>();
-            IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();
-            IoCManager.Register<IViewVariablesManagerInternal, ViewVariablesManager>();
-
-#if LINUX
-            IoCManager.Register<IClipboardManager, ClipboardManagerLinux>();
-#elif WINDOWS
-            IoCManager.Register<IClipboardManager, ClipboardManagerWindows>();
-#else
-            IoCManager.Register<IClipboardManager, ClipboardManagerUnsupported>();
-#endif
-
-            IoCManager.Register<IModLoader, ModLoader>();
-            IoCManager.Register<ISignalHandler, ClientSignalHandler>();
-        }
 
         internal static void RegisterReflection()
         {

@@ -14,7 +14,6 @@ using Robust.Server.Reflection;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
@@ -60,7 +59,7 @@ namespace Robust.Server
             throw new InvalidOperationException("The server cannot start outside x64.");
 #endif
             IoCManager.InitThread();
-            RegisterIoC();
+            ServerIoC.RegisterIoC();
             IoCManager.BuildGraph();
             SetupLogging();
             InitReflectionManager();
@@ -98,56 +97,6 @@ namespace Robust.Server
             {
                 Environment.Exit(0);
             }
-        }
-
-        /// <summary>
-        /// Registers all the types into the <see cref="IoCManager"/> with <see cref="IoCManager.Register{TInterface, TImplementation}"/>
-        /// </summary>
-        internal static void RegisterIoC()
-        {
-            // Shared stuff.
-            IoCManager.Register<IComponentManager, ComponentManager>();
-            IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
-            IoCManager.Register<IConfigurationManager, ConfigurationManager>();
-            IoCManager.Register<INetManager, NetManager>();
-            IoCManager.Register<IGameTiming, GameTiming>();
-            IoCManager.Register<IResourceManager, ResourceManager>();
-            IoCManager.Register<IResourceManagerInternal, ResourceManager>();
-            IoCManager.Register<IPhysicsManager, PhysicsManager>();
-            IoCManager.Register<ITimerManager, TimerManager>();
-            IoCManager.Register<ILogManager, LogManager>();
-            IoCManager.Register<ITaskManager, TaskManager>();
-            IoCManager.Register<IRuntimeLog, RuntimeLog>();
-            IoCManager.Register<IDynamicTypeFactory, DynamicTypeFactory>();
-            IoCManager.Register<ILocalizationManager, LocalizationManager>();
-
-            // Server stuff.
-            IoCManager.Register<IEntityManager, ServerEntityManager>();
-            IoCManager.Register<IServerEntityManager, ServerEntityManager>();
-            IoCManager.Register<IServerEntityManagerInternal, ServerEntityManager>();
-            IoCManager.Register<IServerNetManager, NetManager>();
-            IoCManager.Register<IMapManager, MapManager>();
-            IoCManager.Register<IPlacementManager, PlacementManager>();
-            IoCManager.Register<ISystemConsoleManager, SystemConsoleManager>();
-            IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
-            IoCManager.Register<IBaseServer, BaseServer>();
-            IoCManager.Register<IBaseServerInternal, BaseServer>();
-            IoCManager.Register<IRobustSerializer, RobustSerializer>();
-            IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();
-            IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
-            IoCManager.Register<IServerGameStateManager, ServerGameStateManager>();
-            IoCManager.Register<IReflectionManager, ServerReflectionManager>();
-            IoCManager.Register<IConsoleShell, ConsoleShell>();
-            IoCManager.Register<IPlayerManager, PlayerManager>();
-            IoCManager.Register<IComponentFactory, ServerComponentFactory>();
-            IoCManager.Register<IMapLoader, MapLoader>();
-            IoCManager.Register<IPrototypeManager, ServerPrototypeManager>();
-            IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
-            IoCManager.Register<IConGroupController, ConGroupController>();
-            IoCManager.Register<IStatusHost, StatusHost>();
-            IoCManager.Register<IPauseManager, PauseManager>();
-            IoCManager.Register<IModLoader, ModLoader>();
-            IoCManager.Register<ISignalHandler, ServerSignalHandler>();
         }
 
         internal static void InitReflectionManager()

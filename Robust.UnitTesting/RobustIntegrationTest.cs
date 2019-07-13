@@ -4,6 +4,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Robust.Client;
 using Robust.Client.Interfaces;
+using Robust.Server;
 using Robust.Server.Interfaces;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
@@ -243,7 +244,7 @@ namespace Robust.UnitTesting
                 try
                 {
                     IoCManager.InitThread(DependencyCollection);
-                    ServerEntryPoint.RegisterIoC();
+                    ServerIoC.RegisterIoC();
                     IoCManager.Register<INetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IServerNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
@@ -325,7 +326,7 @@ namespace Robust.UnitTesting
                 try
                 {
                     IoCManager.InitThread(DependencyCollection);
-                    GameController.RegisterIoC(GameController.DisplayMode.Headless);
+                    ClientIoC.RegisterIoC(GameController.DisplayMode.Headless);
                     IoCManager.Register<INetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IClientNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);

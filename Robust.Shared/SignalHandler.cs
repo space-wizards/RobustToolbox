@@ -107,7 +107,7 @@ namespace Robust.Shared
 
         private void Stop()
         {
-            _signalThread.Abort();
+            _signalThread?.Abort();
             _signalThread = null;
         }
 

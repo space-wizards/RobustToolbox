@@ -298,7 +298,7 @@ namespace Robust.Client.Placement
 
         public void Dispose()
         {
-            _drawOverlay.Dispose();
+            _drawOverlay?.Dispose();
         }
 
         private void HandlePlacementMessage(MsgPlacement msg)

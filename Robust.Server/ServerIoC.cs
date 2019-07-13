@@ -1,0 +1,72 @@
+using Robust.Server.Console;
+using Robust.Server.GameObjects;
+using Robust.Server.GameStates;
+using Robust.Server.Interfaces;
+using Robust.Server.Interfaces.Console;
+using Robust.Server.Interfaces.GameObjects;
+using Robust.Server.Interfaces.GameState;
+using Robust.Server.Interfaces.Maps;
+using Robust.Server.Interfaces.Placement;
+using Robust.Server.Interfaces.Player;
+using Robust.Server.Interfaces.ServerStatus;
+using Robust.Server.Interfaces.Timing;
+using Robust.Server.Maps;
+using Robust.Server.Placement;
+using Robust.Server.Player;
+using Robust.Server.Prototypes;
+using Robust.Server.Reflection;
+using Robust.Server.ServerStatus;
+using Robust.Server.Timing;
+using Robust.Server.ViewVariables;
+using Robust.Shared;
+using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Map;
+using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Interfaces.Reflection;
+using Robust.Shared.Interfaces.Resources;
+using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Network;
+using Robust.Shared.Prototypes;
+
+namespace Robust.Server
+{
+    internal static class ServerIoC
+    {
+        /// <summary>
+        /// Registers all the types into the <see cref="IoCManager"/> with <see cref="IoCManager.Register{TInterface, TImplementation}"/>
+        /// </summary>
+        internal static void RegisterIoC()
+        {
+            SharedIoC.RegisterIoC();
+
+            IoCManager.Register<IBaseServer, BaseServer>();
+            IoCManager.Register<IBaseServerInternal, BaseServer>();
+            IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
+            IoCManager.Register<IComponentFactory, ServerComponentFactory>();
+            IoCManager.Register<IConGroupController, ConGroupController>();
+            IoCManager.Register<IConsoleShell, ConsoleShell>();
+            IoCManager.Register<IEntityManager, ServerEntityManager>();
+            IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();
+            IoCManager.Register<IMapLoader, MapLoader>();
+            IoCManager.Register<IPauseManager, PauseManager>();
+            IoCManager.Register<IPlacementManager, PlacementManager>();
+            IoCManager.Register<IPlayerManager, PlayerManager>();
+            IoCManager.Register<IPrototypeManager, ServerPrototypeManager>();
+            IoCManager.Register<IReflectionManager, ServerReflectionManager>();
+            IoCManager.Register<IResourceManager, ResourceManager>();
+            IoCManager.Register<IResourceManagerInternal, ResourceManager>();
+            IoCManager.Register<IServerEntityManager, ServerEntityManager>();
+            IoCManager.Register<IServerEntityManagerInternal, ServerEntityManager>();
+            IoCManager.Register<IServerGameStateManager, ServerGameStateManager>();
+            IoCManager.Register<IServerNetManager, NetManager>();
+            IoCManager.Register<ISignalHandler, ServerSignalHandler>();
+            IoCManager.Register<IStatusHost, StatusHost>();
+            IoCManager.Register<ISystemConsoleManager, SystemConsoleManager>();
+            IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
+            IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
+        }
+    }
+}

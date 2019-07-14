@@ -22,6 +22,10 @@ namespace Robust.Client.UserInterface
         // On Linux, if the kdialog command is found, it will be used instead.
         // TODO: Should we maybe try to avoid running kdialog if the DE isn't KDE?
 
+#if MACOS
+        [Dependency] private readonly Shared.Asynchronous.ITaskManager _taskManager;
+#endif
+
 #if LINUX
         private bool _kDialogAvailable;
 #endif
@@ -66,10 +70,10 @@ namespace Robust.Client.UserInterface
 #endif
         }
 
-        private static unsafe Task<string> OpenFileNfd()
+        private unsafe Task<string> OpenFileNfd()
         {
             // Have to run it in the thread pool to avoid blocking the main thread.
-            return Task.Run(() =>
+            return RunAsyncMaybe(() =>
             {
                 byte* outPath;
 
@@ -79,10 +83,10 @@ namespace Robust.Client.UserInterface
             });
         }
 
-        private static unsafe Task<string> SaveFileNfd()
+        private unsafe Task<string> SaveFileNfd()
         {
             // Have to run it in the thread pool to avoid blocking the main thread.
-            return Task.Run(() =>
+            return RunAsyncMaybe(() =>
             {
                 byte* outPath;
 
@@ -92,10 +96,10 @@ namespace Robust.Client.UserInterface
             });
         }
 
-        private static unsafe Task<string> OpenFolderNfd()
+        private unsafe Task<string> OpenFolderNfd()
         {
             // Have to run it in the thread pool to avoid blocking the main thread.
-            return Task.Run(() =>
+            return RunAsyncMaybe(() =>
             {
                 byte* outPath;
 
@@ -103,6 +107,24 @@ namespace Robust.Client.UserInterface
 
                 return HandleNfdResult(result, outPath);
             });
+        }
+
+        // ReSharper disable once MemberCanBeMadeStatic.Local
+        private Task<string> RunAsyncMaybe(Func<string> action)
+        {
+#if MACOS
+            // macOS seems pretty annoying about having the file dialog opened from the main thread.
+            // So we are forced to execute this synchronously on the main thread.
+            // Also I'm calling RunOnMainThread here to provide safety in case this is ran from a different thread.
+            // nativefiledialog doesn't provide any form of async API, so this WILL lock up the client.
+            var tcs = new TaskCompletionSource<string>();
+            _taskManager.RunOnMainThread(() => tcs.SetResult(action()));
+
+            return tcs.Task;
+#else
+            // Luckily, GTK Linux and COM Windows are both happily threaded. Yay!
+            return Task.Run(action);
+#endif
         }
 
         private static unsafe string HandleNfdResult(sw_nfdresult result, byte* outPath)

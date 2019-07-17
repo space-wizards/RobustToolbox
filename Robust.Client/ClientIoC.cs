@@ -57,8 +57,6 @@ namespace Robust.Client
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();
             IoCManager.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
             IoCManager.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
-            IoCManager.Register<IFileDialogManager, FileDialogManager>();
-            IoCManager.Register<IFileDialogManagerInternal, FileDialogManager>();
             IoCManager.Register<IGameController, GameController>();
             IoCManager.Register<IGameControllerInternal, GameController>();
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();
@@ -88,12 +86,16 @@ namespace Robust.Client
                     IoCManager.Register<IClydeAudio, ClydeHeadless>();
                     IoCManager.Register<IClydeInternal, ClydeHeadless>();
                     IoCManager.Register<IInputManager, InputManager>();
+                    IoCManager.Register<IFileDialogManager, DummyFileDialogManager>();
+                    IoCManager.Register<IFileDialogManagerInternal, DummyFileDialogManager>();
                     break;
                 case GameController.DisplayMode.Clyde:
                     IoCManager.Register<IClyde, Clyde>();
                     IoCManager.Register<IClydeAudio, Clyde>();
                     IoCManager.Register<IClydeInternal, Clyde>();
                     IoCManager.Register<IInputManager, ClydeInputManager>();
+                    IoCManager.Register<IFileDialogManager, FileDialogManager>();
+                    IoCManager.Register<IFileDialogManagerInternal, FileDialogManager>();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

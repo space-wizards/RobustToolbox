@@ -152,28 +152,35 @@ namespace Robust.Client.UserInterface
 #if LINUX
         private void CheckKDialogSupport()
         {
-            var process = Process.Start(
-                new ProcessStartInfo
-                {
-                    FileName = "kdialog",
-                    Arguments = "--version",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false
-                });
+            try
+            {
+                var process = Process.Start(
+                    new ProcessStartInfo
+                    {
+                        FileName = "kdialog",
+                        Arguments = "--version",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false
+                    });
 
-            if (process == null)
+                if (process == null)
+                {
+                    _kDialogAvailable = false;
+                    return;
+                }
+
+                process.WaitForExit();
+                _kDialogAvailable = process.ExitCode == 0;
+
+                if (_kDialogAvailable)
+                {
+                    Logger.DebugS("filedialog", "kdialog available.");
+                }
+            }
+            catch
             {
                 _kDialogAvailable = false;
-                return;
-            }
-
-            process.WaitForExit();
-            _kDialogAvailable = process.ExitCode == 0;
-
-            if (_kDialogAvailable)
-            {
-                Logger.DebugS("filedialog", "kdialog available.");
             }
         }
 

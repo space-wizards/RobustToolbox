@@ -26,8 +26,6 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             base.Initialize();
 
-            HideOnClose = true;
-
             Title = "Options";
         }
 

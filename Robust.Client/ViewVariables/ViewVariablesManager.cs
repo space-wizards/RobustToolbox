@@ -191,7 +191,6 @@ namespace Robust.Client.ViewVariables
 
             var window = new SS14Window("VV") {Title = "View Variables"};
             instance.Initialize(window, obj);
-            window.AddToScreen();
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
         }
@@ -201,7 +200,6 @@ namespace Robust.Client.ViewVariables
             var window = new SS14Window("VV") {Title = "View Variables"};
             var loadingLabel = new Label {Text = "Retrieving remote object data from server..."};
             window.Contents.AddChild(loadingLabel);
-            window.AddToScreen();
 
             // We need to request the data, THEN create an instance.
             // Because we don't know what instance to make until we asked the server about the object data.

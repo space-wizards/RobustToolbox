@@ -192,7 +192,6 @@ namespace Robust.Client.Console.Commands
         public bool Execute(IDebugConsole console, params string[] args)
         {
             var window = new EntitySpawnWindow(IoCManager.Resolve<IPlacementManager>(), IoCManager.Resolve<IPrototypeManager>(), IoCManager.Resolve<IResourceCache>());
-            window.AddToScreen();
             return false;
         }
     }
@@ -443,7 +442,6 @@ namespace Robust.Client.Console.Commands
         public bool Execute(IDebugConsole console, params string[] args)
         {
             var window = new SS14Window("UITest");
-            window.AddToScreen();
             var tabContainer = new TabContainer();
             window.Contents.AddChild(tabContainer);
             var scroll = new ScrollContainer();

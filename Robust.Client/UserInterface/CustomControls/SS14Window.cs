@@ -1,14 +1,13 @@
 ﻿using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
 using System;
-using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Utility;
-using Robust.Shared.Utility;
+using Robust.Shared.Log;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
+    // ReSharper disable once InconsistentNaming
     public class SS14Window : Panel
     {
         public const string StyleClassWindowTitle = "windowTitle";
@@ -37,7 +36,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private const int DRAG_MARGIN_SIZE = 7;
 
-        // TODO: Unhardcode this header size.
+        // TODO: Un-hard code this header size.
         private const float HEADER_SIZE_Y = 25;
         protected virtual Vector2 ContentsMinimumSize => (50, 50);
 
@@ -50,21 +49,17 @@ namespace Robust.Client.UserInterface.CustomControls
         private Vector2 DragOffsetTopLeft;
         private Vector2 DragOffsetBottomRight;
 
-        /// <summary>
-        ///     If true, the window will simply be hidden if closed.
-        ///     If false, the window control will be disposed entirely.
-        /// </summary>
-        public bool HideOnClose { get; set; } = false;
-
         public bool Resizable { get; set; } = true;
 
-        private Label TitleLabel;// => GetChild("Header").GetChild<Label>("Header Text");
+        private Label TitleLabel;
 
         public string Title
         {
             get => TitleLabel.Text;
             set => TitleLabel.Text = value;
         }
+
+        public bool IsOpen => Parent != null;
 
         /// <summary>
         ///     Invoked when the close button of this window is pressed.
@@ -77,9 +72,9 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             base.Initialize();
             // Set panel background color
-            PanelOverride = new StyleBoxFlat()
+            PanelOverride = new StyleBoxFlat
             {
-                BackgroundColor = new Color(0.1451f, 0.1451f, 0.1647f, 1.0f)
+                BackgroundColor = new Color(37, 37, 42)
             };
 
             // Setup header. Includes the title label and close button.
@@ -87,6 +82,7 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 AnchorRight = 1.0f, MarginBottom = 25.0f, MouseFilter = MouseFilterMode.Ignore
             };
+
             header.AddStyleClass(StyleClassWindowHeader);
             TitleLabel = new Label("Header Text")
             {
@@ -153,15 +149,13 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public virtual void Close()
         {
+            if (Parent == null)
+            {
+                return;
+            }
+
+            Parent.RemoveChild(this);
             OnClose?.Invoke();
-            if (HideOnClose)
-            {
-                Visible = false;
-            }
-            else
-            {
-                Dispose();
-            }
         }
 
         protected internal override void MouseDown(GUIMouseButtonEventArgs args)
@@ -247,25 +241,25 @@ namespace Robust.Client.UserInterface.CustomControls
                 var bottom = Rect.Bottom;
                 var left = Rect.Left;
                 var right = Rect.Right;
-                var minsize = CombinedMinimumSize;
+                var (minSizeX, minSizeY) = CombinedMinimumSize;
                 if ((CurrentDrag & DragMode.Top) == DragMode.Top)
                 {
-                    var MaxY = bottom - minsize.Y;
-                    top = Math.Min(args.GlobalPosition.Y - DragOffsetTopLeft.Y, MaxY);
+                    var maxY = bottom - minSizeY;
+                    top = Math.Min(args.GlobalPosition.Y - DragOffsetTopLeft.Y, maxY);
                 }
                 else if ((CurrentDrag & DragMode.Bottom) == DragMode.Bottom)
                 {
-                    bottom = Math.Max(args.GlobalPosition.Y + DragOffsetBottomRight.Y, top + minsize.Y);
+                    bottom = Math.Max(args.GlobalPosition.Y + DragOffsetBottomRight.Y, top + minSizeY);
                 }
 
                 if ((CurrentDrag & DragMode.Left) == DragMode.Left)
                 {
-                    var MaxX = right - minsize.X;
-                    left = Math.Min(args.GlobalPosition.X - DragOffsetTopLeft.X, MaxX);
+                    var maxX = right - minSizeX;
+                    left = Math.Min(args.GlobalPosition.X - DragOffsetTopLeft.X, maxX);
                 }
                 else if ((CurrentDrag & DragMode.Right) == DragMode.Right)
                 {
-                    right = Math.Max(args.GlobalPosition.X + DragOffsetBottomRight.X, left + minsize.X);
+                    right = Math.Max(args.GlobalPosition.X + DragOffsetBottomRight.X, left + minSizeX);
                 }
 
                 var rect = new UIBox2(left, top, right, bottom);
@@ -317,11 +311,9 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public void MoveToFront()
         {
-            var root = UserInterfaceManager.WindowRoot;
-            if (Parent != root)
+            if (Parent == null)
             {
-                throw new InvalidOperationException(
-                    "Window is not a child of the window root! You need to call AddToScreen first!");
+                throw new InvalidOperationException("This window is not currently open.");
             }
 
             SetPositionLast();
@@ -329,10 +321,9 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public bool IsAtFront()
         {
-            if (Parent != UserInterfaceManager.WindowRoot)
+            if (Parent == null)
             {
-                throw new InvalidOperationException(
-                    "Window is not a child of the window root! You need to call AddToScreen first!");
+                throw new InvalidOperationException("This window is not currently open");
             }
 
             var siblingCount = Parent.ChildCount;
@@ -349,48 +340,25 @@ namespace Robust.Client.UserInterface.CustomControls
             return true;
         }
 
-        public void AddToScreen()
-        {
-            if (Parent != null)
-            {
-                Parent.RemoveChild(this);
-            }
-
-            UserInterfaceManager.WindowRoot.AddChild(this);
-        }
-
         public void Open()
         {
-            if (Parent != UserInterfaceManager.WindowRoot)
+            if (!Visible)
             {
-                throw new InvalidOperationException(
-                    "Window is not a child of the window root! You need to call AddToScreen first!");
+                Visible = true;
+                Logger.WarningS("ui", $"Window {this} had visibility false. Do not use visibility on SS14Window.");
             }
-
-            Visible = true;
-            MoveToFront();
+            UserInterfaceManager.WindowRoot.AddChild(this);
         }
 
         public void OpenCentered()
         {
-            if (Parent != UserInterfaceManager.WindowRoot)
-            {
-                throw new InvalidOperationException(
-                    "Window is not a child of the window root! You need to call AddToScreen first!");
-            }
-
-            Position = (Parent.Size - Size) / 2;
             Open();
+            Position = (Parent.Size - Size) / 2;
         }
 
         public void OpenToLeft()
         {
-            if (Parent != UserInterfaceManager.WindowRoot)
-            {
-                throw new InvalidOperationException(
-                    "Window is not a child of the window root! You need to call AddToScreen first!");
-            }
-
+            Open();
             Position = new Vector2(0, (Parent.Size.Y - Size.Y) / 2);
         }
 

@@ -324,9 +324,10 @@ namespace Robust.Client.UserInterface
         public void Popup(string contents, string title = "Alert!")
         {
             var popup = new SS14Window
-                {Title = title};
+            {
+                Title = title
+            };
             popup.Contents.AddChild(new Label {Text = contents});
-            popup.AddToScreen();
         }
 
         public Control MouseGetControl(Vector2 coordinates)

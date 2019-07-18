@@ -59,7 +59,6 @@ namespace Robust.Client.State.States
             {
                 Visible = false,
             };
-            OptionsMenu.AddToScreen();
         }
 
         /// <inheritdoc />

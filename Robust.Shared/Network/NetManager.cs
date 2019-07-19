@@ -307,6 +307,9 @@ namespace Robust.Shared.Network
         {
             var netConfig = new NetPeerConfiguration("SS14_NetTag");
 
+            // ping the client 4 times every second.
+            netConfig.PingInterval = 0.25f;
+
 #if DEBUG
             //Simulate Latency
             netConfig.SimulatedLoss = _config.GetCVar<float>("net.fakeloss");

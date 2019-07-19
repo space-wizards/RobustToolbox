@@ -1,4 +1,5 @@
-﻿using Robust.Client.Interfaces;
+﻿using System;
+using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameStates;
 using Robust.Shared.GameStates;
@@ -34,6 +35,12 @@ namespace Robust.Client.GameStates
 
         /// <inheritdoc />
         public int TargetBufferSize => _processor.TargetBufferSize;
+
+        /// <inheritdoc />
+        public int CurrentBufferSize => _processor.CurrentBufferSize;
+
+        /// <inheritdoc />
+        public event Action<GameStateAppliedArgs> GameStateApplied;
 
         /// <inheritdoc />
         public void Initialize()
@@ -77,7 +84,7 @@ namespace Robust.Client.GameStates
         {
             var state = message.State;
 
-            _processor.AddNewState(state, message.MsgSize);
+            _processor.AddNewState(state);
 
             // we always ack everything we receive, even if it is late
             AckGameState(state.ToSequence);
@@ -105,6 +112,18 @@ namespace Robust.Client.GameStates
             _entities.ApplyEntityStates(curState.EntityStates, curState.EntityDeletions, nextState?.EntityStates);
             _players.ApplyPlayerStates(curState.PlayerStates);
             _mapManager.ApplyGameStatePost(curState.MapData);
+
+            GameStateApplied?.Invoke(new GameStateAppliedArgs(curState));
+        }
+    }
+
+    public class GameStateAppliedArgs : EventArgs
+    {
+        public GameState AppliedState { get; }
+
+        public GameStateAppliedArgs(GameState appliedState)
+        {
+            AppliedState = appliedState;
         }
     }
 }

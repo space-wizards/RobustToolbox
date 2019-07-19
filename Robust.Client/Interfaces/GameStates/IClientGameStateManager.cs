@@ -1,4 +1,7 @@
-﻿namespace Robust.Client.Interfaces.GameStates
+﻿using System;
+using Robust.Client.GameStates;
+
+namespace Robust.Client.Interfaces.GameStates
 {
     /// <summary>
     ///     Engine service that provides processing and management of game states.
@@ -19,6 +22,16 @@
         ///     be greater or equal to <see cref="MinBufferSize"/>.
         /// </summary>
         int TargetBufferSize { get; }
+
+        /// <summary>
+        ///     Number of game states currently in the state buffer.
+        /// </summary>
+        int CurrentBufferSize { get; }
+
+        /// <summary>
+        ///     This is called after the game state has been applied for the current tick.
+        /// </summary>
+        event Action<GameStateAppliedArgs> GameStateApplied;
 
         /// <summary>
         ///     One time initialization of the service.

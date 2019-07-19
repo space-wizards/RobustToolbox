@@ -56,8 +56,7 @@ namespace Robust.Client.GameStates
         ///     Adds a new state into the processor. These are usually from networking or replays.
         /// </summary>
         /// <param name="state">Newly received state.</param>
-        /// <param name="stateSize">Optionally provide the size in bytes of this new state. This is strictly for debug logging.</param>
-        void AddNewState(GameState state, int stateSize);
+        void AddNewState(GameState state);
 
         /// <summary>
         ///     Calculates the current and next state to apply for a given game tick.

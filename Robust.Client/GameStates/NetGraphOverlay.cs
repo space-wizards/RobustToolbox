@@ -1,33 +1,159 @@
-﻿using Robust.Client.Graphics;
+﻿using System.Collections.Generic;
+using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Interfaces.Console;
+using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
 {
+    /// <summary>
+    ///     Visual debug overlay for the network diagnostic graph.
+    /// </summary>
     internal class NetGraphOverlay : Overlay
     {
+        [Dependency] private readonly IGameTiming _gameTiming;
+        [Dependency] private readonly IClientNetManager _netManager;
+        [Dependency] private readonly IClientGameStateManager _gameStateManager;
+
+        private const int HistorySize = 60 * 3; // number of ticks to keep in history.
+        private const int TargetPayloadBps = 56000 / 8; // Target Payload size in Bytes per second. A mind-numbing fifty-six thousand bits per second, who would ever need more?
+        private const int MidrangePayloadBps = 33600 / 8; // mid-range line
+        private const int BytesPerPixel = 2; // If you are running the game on a DSL connection, you can scale the graph to fit your absurd bandwidth.
+        private const int LowerGraphOffset = 100; // Offset on the Y axis in pixels of the lower lag/interp graph.
+        private const int MsPerPixel = 4; // Latency Milliseconds per pixel, for scaling the graph.
+        
+        /// <inheritdoc />
         public override OverlaySpace Space => OverlaySpace.ScreenSpace;
 
-        private Font _font;
+        private readonly Font _font;
+        private GameTick _lastTick;
+        private int _warningPayloadSize;
+        private int _midrangePayloadSize;
+
+        private List<(GameTick Tick, int Payload, int lag, int interp)> _history = new List<(GameTick Tick, int Payload, int lag, int interp)>(HistorySize+10);
 
         public NetGraphOverlay() : base(nameof(NetGraphOverlay))
         {
             IoCManager.InjectDependencies(this);
             var cache = IoCManager.Resolve<IResourceCache>();
             _font = new VectorFont(cache.GetResource<FontResource>("/Nano/NotoSans/NotoSans-Regular.ttf"), 10);
+
+            _gameStateManager.GameStateApplied += HandleGameStateApplied;
+        }
+
+        private void HandleGameStateApplied(GameStateAppliedArgs args)
+        {
+            var toSeq = args.AppliedState.ToSequence;
+            var sz = args.AppliedState.PayloadSize;
+            
+            // calc payload size
+            _warningPayloadSize = TargetPayloadBps / _gameTiming.TickRate;
+            _midrangePayloadSize = MidrangePayloadBps / _gameTiming.TickRate;
+
+            // calc lag
+            var lag = _netManager.ServerChannel.Ping;
+
+            // calc interp info
+            var interpBuff = _gameStateManager.CurrentBufferSize - _gameStateManager.MinBufferSize;
+
+            _history.Add((toSeq, sz, lag, interpBuff));
+        }
+
+        /// <inheritdoc />
+        internal override void FrameUpdate(RenderFrameEventArgs args)
+        {
+            base.FrameUpdate(args);
+
+            var over = _history.Count - HistorySize;
+            if (over > 0)
+            {
+                _history.RemoveRange(0, over);
+            }
         }
 
         protected override void Draw(DrawingHandleBase handle)
         {
-            //TODO: Make me actually work!
-            handle.DrawLine(new Vector2(50,50), new Vector2(100,100), Color.Green);
-            DrawString((DrawingHandleScreen)handle, _font, new Vector2(60, 50), "Hello World!");
+            // remember, 0,0 is top left of ui with +X right and +Y down
+
+            var leftMargin = 300;
+            var width = HistorySize;
+            var height = 500;
+
+            // bottom payload line
+            handle.DrawLine(new Vector2(leftMargin, height), new Vector2(leftMargin + width, height), Color.DarkGray.WithAlpha(0.8f));
+
+            // bottom lag line
+            handle.DrawLine(new Vector2(leftMargin, height + LowerGraphOffset), new Vector2(leftMargin + width, height + LowerGraphOffset), Color.DarkGray.WithAlpha(0.8f));
+
+            int lastLagY = -1;
+            int lastLagMs = -1;
+            // data points
+            for (var i = 0; i < _history.Count; i++)
+            {
+                var state = _history[i];
+
+                // draw the payload size
+                var xOff = leftMargin + i;
+                var yoff = height - state.Payload / BytesPerPixel;
+                handle.DrawLine(new Vector2(xOff, height), new Vector2(xOff, yoff), Color.LightGreen.WithAlpha(0.8f));
+
+                // second tick marks
+                if (state.Tick.Value % _gameTiming.TickRate == 0)
+                {
+                    handle.DrawLine(new Vector2(xOff, height), new Vector2(xOff, height+2), Color.LightGray);
+                }
+
+                // lag data
+                var lagYoff = height + LowerGraphOffset - state.lag / MsPerPixel;
+                lastLagY = lagYoff - 1;
+                lastLagMs = state.lag;
+                handle.DrawLine(new Vector2(xOff, lagYoff - 2), new Vector2(xOff, lagYoff - 1), Color.Blue.WithAlpha(0.8f));
+
+                // interp data
+                Color interpColor;
+                if(state.interp < 0)
+                    interpColor = Color.Red;
+                else if(state.interp < _gameStateManager.TargetBufferSize - _gameStateManager.MinBufferSize)
+                    interpColor = Color.Yellow;
+                else
+                    interpColor = Color.Green;
+
+                handle.DrawLine(new Vector2(xOff, height + LowerGraphOffset), new Vector2(xOff, height + LowerGraphOffset + state.interp * 6), interpColor.WithAlpha(0.8f));
+            }
+
+            // top payload warning line
+            var warnYoff = height - _warningPayloadSize / BytesPerPixel;
+            handle.DrawLine(new Vector2(leftMargin, warnYoff), new Vector2(leftMargin + width, warnYoff), Color.DarkGray.WithAlpha(0.8f));
+
+            // mid payload line
+            var midYoff = height - _midrangePayloadSize / BytesPerPixel;
+            handle.DrawLine(new Vector2(leftMargin, midYoff), new Vector2(leftMargin + width, midYoff), Color.DarkGray.WithAlpha(0.8f));
+
+            // payload text
+            DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin + width, warnYoff), "56K");
+            DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin + width, midYoff), "33.6K");
+
+            // interp text info
+            if(lastLagY != -1)
+                DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin + width, lastLagY), $"{lastLagMs.ToString()}ms");
+            
+            DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin, height + LowerGraphOffset), $"{_gameStateManager.CurrentBufferSize.ToString()} states");
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            _gameStateManager.GameStateApplied -= HandleGameStateApplied;
+
+            base.Dispose(disposing);
         }
 
         private void DrawString(DrawingHandleScreen handle, Font font, Vector2 pos, string str)

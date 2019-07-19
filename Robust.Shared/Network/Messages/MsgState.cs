@@ -1,9 +1,11 @@
-﻿using Lidgren.Network;
+﻿using System;
+using Lidgren.Network;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using System.IO;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Messages
 {
@@ -20,13 +22,15 @@ namespace Robust.Shared.Network.Messages
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
             MsgSize = buffer.LengthBytes;
-            var length = buffer.ReadInt32();
+            var length = buffer.ReadVariableInt32();
             var stateData = buffer.ReadBytes(length);
             using (var stateStream = new MemoryStream(stateData))
             {
                 var serializer = IoCManager.Resolve<IRobustSerializer>();
                 State = serializer.Deserialize<GameState>(stateStream);
             }
+
+            State.PayloadSize = length;
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
@@ -34,8 +38,9 @@ namespace Robust.Shared.Network.Messages
             var serializer = IoCManager.Resolve<IRobustSerializer>();
             using (var stateStream = new MemoryStream())
             {
+                DebugTools.Assert(stateStream.Length <= Int32.MaxValue);
                 serializer.Serialize(stateStream, State);
-                buffer.Write((int)stateStream.Length);
+                buffer.WriteVariableInt32((int)stateStream.Length);
                 buffer.Write(stateStream.ToArray());
             }
             MsgSize = buffer.LengthBytes;

@@ -75,7 +75,7 @@ namespace Robust.Client.Graphics.Overlays
             _isDirty = true;
         }
 
-        internal void FrameUpdate(RenderFrameEventArgs args)
+        internal virtual void FrameUpdate(RenderFrameEventArgs args)
         {
         }
 

@@ -53,7 +53,7 @@ namespace Robust.Client.GameStates
         }
 
         /// <inheritdoc />
-        public void AddNewState(GameState state, int stateSize)
+        public void AddNewState(GameState state)
         {
             // any state from tick 0 is a full state, and needs to be handled different
             if (state.FromSequence == GameTick.Zero)
@@ -64,7 +64,7 @@ namespace Robust.Client.GameStates
                     _lastFullState = state;
 
                     if (Logging)
-                        Logger.InfoS("net", $"Received Full GameState: to={state.ToSequence}, sz={stateSize}");
+                        Logger.InfoS("net", $"Received Full GameState: to={state.ToSequence}, sz={state.PayloadSize}");
 
                     return;
                 }
@@ -76,7 +76,7 @@ namespace Robust.Client.GameStates
             if (state.ToSequence <= lastTick && !_waitingForFull) // CurTick isn't set properly when WaitingForFull
             {
                 if (Logging)
-                    Logger.DebugS("net.state", $"Received Old GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={stateSize}, buf={_stateBuffer.Count}");
+                    Logger.DebugS("net.state", $"Received Old GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
 
                 return;
             }
@@ -90,7 +90,7 @@ namespace Robust.Client.GameStates
                     continue;
 
                 if (Logging)
-                    Logger.DebugS("net.state", $"Received Dupe GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={stateSize}, buf={_stateBuffer.Count}");
+                    Logger.DebugS("net.state", $"Received Dupe GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
 
                 return;
             }
@@ -99,7 +99,7 @@ namespace Robust.Client.GameStates
             _stateBuffer.Add(state);
 
             if (Logging)
-                Logger.DebugS("net.state", $"Received New GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={stateSize}, buf={_stateBuffer.Count}");
+                Logger.DebugS("net.state", $"Received New GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
         }
 
         /// <inheritdoc />

@@ -17,6 +17,12 @@ namespace Robust.Shared.GameStates
         public bool Extrapolated { get; set; }
 
         /// <summary>
+        ///     The serialized size in bytes of this game state.
+        /// </summary>
+        [field:NonSerialized]
+        public int PayloadSize { get; set; }
+
+        /// <summary>
         /// Constructor!
         /// </summary>
         public GameState(GameTick fromSequence, GameTick toSequence, List<EntityState> entities, List<PlayerState> players, List<EntityUid> deletions, GameStateMapData mapData)

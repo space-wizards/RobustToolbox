@@ -19,8 +19,8 @@ namespace Robust.UnitTesting.Client.GameStates
             var timing = timingMock.Object;
             var processor = new GameStateProcessor(timing);
 
-            processor.AddNewState(GameStateFactory(0, 1), 0);
-            processor.AddNewState(GameStateFactory(1, 2), 0); // buffer is at 2/3, so processing should be blocked
+            processor.AddNewState(GameStateFactory(0, 1));
+            processor.AddNewState(GameStateFactory(1, 2)); // buffer is at 2/3, so processing should be blocked
 
             // calculate states for first tick
             timing.CurTick = new GameTick(3);
@@ -39,9 +39,9 @@ namespace Robust.UnitTesting.Client.GameStates
             var timing = timingMock.Object;
             var processor = new GameStateProcessor(timing);
 
-            processor.AddNewState(GameStateFactory(0, 1), 0);
-            processor.AddNewState(GameStateFactory(1, 2), 0);
-            processor.AddNewState(GameStateFactory(2, 3), 0); // buffer is now full, otherwise cannot calculate states.
+            processor.AddNewState(GameStateFactory(0, 1));
+            processor.AddNewState(GameStateFactory(1, 2));
+            processor.AddNewState(GameStateFactory(2, 3)); // buffer is now full, otherwise cannot calculate states.
 
             // calculate states for first tick
             timing.CurTick = new GameTick(1);
@@ -67,9 +67,9 @@ namespace Robust.UnitTesting.Client.GameStates
             var timing = timingMock.Object;
             var processor = new GameStateProcessor(timing);
 
-            processor.AddNewState(GameStateFactory(0, 1), 0);
-            processor.AddNewState(GameStateFactory(1, 2), 0);
-            processor.AddNewState(GameStateFactory(2, 3), 0); // buffer is now full, otherwise cannot calculate states.
+            processor.AddNewState(GameStateFactory(0, 1));
+            processor.AddNewState(GameStateFactory(1, 2));
+            processor.AddNewState(GameStateFactory(2, 3)); // buffer is now full, otherwise cannot calculate states.
 
             // calculate states for first tick
             timing.CurTick = new GameTick(3);
@@ -87,7 +87,7 @@ namespace Robust.UnitTesting.Client.GameStates
 
             // a few moments later...
             timing.CurTick = new GameTick(5); // current clock is ahead of server
-            processor.AddNewState(GameStateFactory(3, 4), 0); // received a late state
+            processor.AddNewState(GameStateFactory(3, 4)); // received a late state
             var result = processor.ProcessTickStates(timing.CurTick, out _, out _);
 
             Assert.That(result, Is.False);
@@ -174,9 +174,9 @@ namespace Robust.UnitTesting.Client.GameStates
             var timing = timingMock.Object;
             var processor = new GameStateProcessor(timing);
 
-            processor.AddNewState(GameStateFactory(0, 1), 0);
-            processor.AddNewState(GameStateFactory(1, 2), 0);
-            processor.AddNewState(GameStateFactory(2, 3), 0); // buffer is now full, otherwise cannot calculate states.
+            processor.AddNewState(GameStateFactory(0, 1));
+            processor.AddNewState(GameStateFactory(1, 2));
+            processor.AddNewState(GameStateFactory(2, 3)); // buffer is now full, otherwise cannot calculate states.
 
             // calculate states for first tick
             timing.CurTick = new GameTick(1);

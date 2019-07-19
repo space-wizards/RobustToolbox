@@ -179,6 +179,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Actually set VSync.
             VSyncChanged();
+            WindowModeChanged();
 
             _windowSize = new Vector2i(_window.Width, _window.Height);
 

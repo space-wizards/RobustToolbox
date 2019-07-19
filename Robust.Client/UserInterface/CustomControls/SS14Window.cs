@@ -86,11 +86,12 @@ namespace Robust.Client.UserInterface.CustomControls
             header.AddStyleClass(StyleClassWindowHeader);
             TitleLabel = new Label("Header Text")
             {
+                ClipText = true,
                 AnchorRight = 1.0f,
                 AnchorBottom = 1.0f,
                 MarginRight = -25.0f,
+                MarginLeft = 5,
                 Text = "Exemplary Window Title Here",
-                Align = Label.AlignMode.Center,
                 VAlign = Label.VAlignMode.Center
             };
             TitleLabel.AddStyleClass(StyleClassWindowTitle);

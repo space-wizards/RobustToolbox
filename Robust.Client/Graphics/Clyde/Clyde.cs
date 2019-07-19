@@ -49,6 +49,8 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly ILightManager _lightManager;
 #pragma warning restore 649
 
+        private static readonly Version MinimumOpenGLVersion = new Version(3, 3);
+
         private Vector2i _windowSize;
         private GameWindow _window;
 
@@ -125,6 +127,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public Vector2 MouseScreenPosition { get; private set; }
+        public IClydeDebugInfo DebugInfo { get; private set; }
 
         protected override void ReadConfig()
         {
@@ -251,6 +254,11 @@ namespace Robust.Client.Graphics.Clyde
             Logger.DebugS("ogl", "OpenGL Renderer: {0}", renderer);
             Logger.DebugS("ogl", "OpenGL Version: {0}", version);
             _loadVendorSettings(vendor, renderer, version);
+
+            var major = GL.GetInteger(GetPName.MajorVersion);
+            var minor = GL.GetInteger(GetPName.MinorVersion);
+
+            DebugInfo = new ClydeDebugInfo(new Version(major, minor), MinimumOpenGLVersion, renderer, vendor, version);
 
 #if DEBUG
             _hijackDebugCallback();
@@ -725,6 +733,24 @@ namespace Robust.Client.Graphics.Clyde
                 ScreenPixelSize = screenPixelSize;
                 Time = time;
             }
+        }
+
+        private sealed class ClydeDebugInfo : IClydeDebugInfo
+        {
+            public ClydeDebugInfo(Version openGLVersion, Version minimumVersion, string renderer, string vendor, string versionString)
+            {
+                OpenGLVersion = openGLVersion;
+                MinimumVersion = minimumVersion;
+                Renderer = renderer;
+                Vendor = vendor;
+                VersionString = versionString;
+            }
+
+            public Version OpenGLVersion { get; }
+            public Version MinimumVersion { get; }
+            public string Renderer { get; }
+            public string Vendor { get; }
+            public string VersionString { get; }
         }
     }
 

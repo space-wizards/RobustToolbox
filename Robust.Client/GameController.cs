@@ -18,6 +18,7 @@ using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Interfaces.Utility;
 using Robust.Client.State.States;
+using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
@@ -170,6 +171,23 @@ namespace Robust.Client
             {
                 _client.ConnectToServer("127.0.0.1", 1212);
             }
+
+            _checkOpenGLVersion();
+        }
+
+        private void _checkOpenGLVersion()
+        {
+            var debugInfo = _clyde.DebugInfo;
+
+            // == null because I'm too lazy to implement a dummy for headless.
+            if (debugInfo == null || debugInfo.OpenGLVersion >= debugInfo.MinimumVersion)
+            {
+                // OpenGL version supported, we're good.
+                return;
+            }
+
+            var window = new BadOpenGLVersionWindow(debugInfo);
+            window.OpenCentered();
         }
 
         public void Shutdown(string reason = null)

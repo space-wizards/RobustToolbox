@@ -56,6 +56,8 @@ namespace Robust.Client.Interfaces.Graphics
         /// </summary>
         Vector2 MouseScreenPosition { get; }
 
+        IClydeDebugInfo DebugInfo { get; }
+
         /// <summary>
         ///     Gets the platform specific window handle exposed by OpenTK.
         ///     Seriously please avoid using this unless absolutely necessary.
@@ -135,5 +137,15 @@ namespace Robust.Client.Interfaces.Graphics
 
         public Vector2i OldSize { get; }
         public Vector2i NewSize { get; }
+    }
+
+    public interface IClydeDebugInfo
+    {
+        Version OpenGLVersion { get; }
+        Version MinimumVersion { get; }
+
+        string Renderer { get; }
+        string Vendor { get; }
+        string VersionString { get; }
     }
 }

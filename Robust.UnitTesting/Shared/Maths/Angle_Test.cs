@@ -148,5 +148,16 @@ namespace Robust.UnitTesting.Shared.Maths
 
             Assert.That(target.GetCardinalDir(), Is.EqualTo(test.Item3));
         }
+
+        [Test]
+        public void TestAngleRotateVec()
+        {
+            var angle = new Angle(MathHelper.Pi / 6);
+            var vec = new Vector2(0.5f, 0.5f);
+
+            var result = angle.RotateVec(vec);
+
+            Assert.That(result, new ApproxEqualityConstraint(new Vector2(0.183013f, 0.683013f)));
+        }
     }
 }

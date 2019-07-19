@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.Maths
 {
@@ -75,6 +76,21 @@ namespace Robust.Shared.Maths
                 ang += 2 * (float) Math.PI;
 
             return (Direction) (Math.Floor((ang + CardinalOffset) / CardinalSegment) * 2 % 8);
+        }
+
+        /// <summary>
+        ///     Rotates the vector counter-clockwise around its origin by the value of Theta.
+        /// </summary>
+        /// <param name="vec">Vector to rotate.</param>
+        /// <returns>New rotated vector.</returns>
+        [Pure]
+        public Vector2 RotateVec(in Vector2 vec)
+        {
+            var (x, y) = vec;
+            var dx = Math.Cos(Theta) * x - Math.Sin(Theta) * y;
+            var dy = Math.Sin(Theta) * x + Math.Cos(Theta) * y;
+
+            return new Vector2((float)dx, (float)dy);
         }
 
         public bool EqualsApprox(Angle other, double tolerance)

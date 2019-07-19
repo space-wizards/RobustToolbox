@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
 using Robust.Client.Graphics.Drawing;
@@ -131,7 +132,7 @@ namespace Robust.Client.UserInterface
         ///     Gets an ordered enumerable over all the children of this control.
         /// </summary>
         [ViewVariables]
-        public OrderedChildEnumerable Children => new OrderedChildEnumerable(this);
+        public OrderedChildCollection Children { get; }
 
         [ViewVariables] public int ChildCount => _orderedChildren.Count;
 
@@ -782,6 +783,8 @@ namespace Robust.Client.UserInterface
         public Control()
         {
             UserInterfaceManagerInternal = IoCManager.Resolve<IUserInterfaceManagerInternal>();
+            StyleClasses = new StyleClassCollection(this);
+            Children = new OrderedChildCollection(this);
 
             SetDefaults();
             if (ScenePath != null)
@@ -804,6 +807,8 @@ namespace Robust.Client.UserInterface
             }
 
             UserInterfaceManagerInternal = IoCManager.Resolve<IUserInterfaceManagerInternal>();
+            StyleClasses = new StyleClassCollection(this);
+            Children = new OrderedChildCollection(this);
 
             SetDefaults();
             if (ScenePath != null)
@@ -2197,28 +2202,92 @@ namespace Robust.Client.UserInterface
             Ignore = 2,
         }
 
-        public readonly struct OrderedChildEnumerable : IEnumerable<Control>
+        public class OrderedChildCollection : ICollection<Control>, IReadOnlyCollection<Control>
         {
             private readonly Control Owner;
 
-            public OrderedChildEnumerable(Control owner)
+            public OrderedChildCollection(Control owner)
             {
                 Owner = owner;
             }
 
-            public List<Control>.Enumerator GetEnumerator()
+            public Enumerator GetEnumerator()
             {
-                return Owner._orderedChildren.GetEnumerator();
+                return new Enumerator(Owner);
             }
 
-            IEnumerator<Control> IEnumerable<Control>.GetEnumerator()
+            IEnumerator<Control> IEnumerable<Control>.GetEnumerator() => GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+            public void Add(Control item)
             {
-                return GetEnumerator();
+                Owner.AddChild(item);
             }
 
-            IEnumerator IEnumerable.GetEnumerator()
+            public void Clear()
             {
-                return GetEnumerator();
+                foreach (var child in this.ToList())
+                {
+                    Owner.RemoveChild(child);
+                }
+            }
+
+            public bool Contains(Control item)
+            {
+                return item?.Parent == Owner;
+            }
+
+            public void CopyTo(Control[] array, int arrayIndex)
+            {
+                Owner._orderedChildren.CopyTo(array, arrayIndex);
+            }
+
+            public bool Remove(Control item)
+            {
+                if (item?.Parent != Owner)
+                {
+                    return false;
+                }
+
+                DebugTools.AssertNotNull(Owner);
+                Owner.RemoveChild(item);
+
+                return true;
+            }
+
+            int ICollection<Control>.Count => Owner.ChildCount;
+            int IReadOnlyCollection<Control>.Count => Owner.ChildCount;
+
+            public bool IsReadOnly => false;
+
+
+            public struct Enumerator : IEnumerator<Control>
+            {
+                private List<Control>.Enumerator _enumerator;
+
+                internal Enumerator(Control control)
+                {
+                    _enumerator = control._orderedChildren.GetEnumerator();
+                }
+
+                public bool MoveNext()
+                {
+                    return _enumerator.MoveNext();
+                }
+
+                public void Reset()
+                {
+                    ((IEnumerator) _enumerator).Reset();
+                }
+
+                public Control Current => _enumerator.Current;
+
+                object IEnumerator.Current => Current;
+
+                public void Dispose()
+                {
+                    _enumerator.Dispose();
+                }
             }
         }
 

@@ -80,7 +80,9 @@ namespace Robust.Client.UserInterface.CustomControls
             // Setup header. Includes the title label and close button.
             var header = new Panel("Header")
             {
-                AnchorRight = 1.0f, MarginBottom = 25.0f, MouseFilter = MouseFilterMode.Ignore
+                AnchorRight = 1.0f, MarginBottom = 25.0f,
+                MouseFilter = MouseFilterMode.Ignore,
+                StyleClasses = { StyleClassWindowHeader }
             };
 
             header.AddStyleClass(StyleClassWindowHeader);
@@ -92,14 +94,14 @@ namespace Robust.Client.UserInterface.CustomControls
                 MarginRight = -25.0f,
                 MarginLeft = 5,
                 Text = "Exemplary Window Title Here",
-                VAlign = Label.VAlignMode.Center
+                VAlign = Label.VAlignMode.Center,
+                StyleClasses = { StyleClassWindowTitle }
             };
-            TitleLabel.AddStyleClass(StyleClassWindowTitle);
             CloseButton = new TextureButton("CloseButton")
             {
-                AnchorLeft = 1.0f, AnchorRight = 1.0f, AnchorBottom = 1.0f, MarginLeft = -25.0f
+                AnchorLeft = 1.0f, AnchorRight = 1.0f, AnchorBottom = 1.0f, MarginLeft = -25.0f,
+                StyleClasses = { StyleClassWindowCloseButton }
             };
-            CloseButton.AddStyleClass(StyleClassWindowCloseButton);
             CloseButton.OnPressed += CloseButtonPressed;
             header.AddChild(TitleLabel);
             header.AddChild(CloseButton);

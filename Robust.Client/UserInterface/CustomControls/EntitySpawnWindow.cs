@@ -27,7 +27,8 @@ namespace Robust.Client.UserInterface.CustomControls
         private Button EraseButton;
         protected override Vector2 ContentsMinimumSize => MainVBox?.CombinedMinimumSize ?? Vector2.Zero;
 
-        private static readonly string[] initOpts = {
+        private static readonly string[] initOpts =
+        {
             "Default",
             "PlaceFree",
             "PlaceNearby",
@@ -63,65 +64,72 @@ namespace Robust.Client.UserInterface.CustomControls
             Size = new Vector2(250.0f, 300.0f);
             Title = _loc.GetString("Entity Spawn Panel");
 
-            MainVBox = new VBoxContainer();
-            Contents.AddChild(MainVBox);
-            var topHBox = new HBoxContainer();
-            MainVBox.AddChild(topHBox);
-
-            SearchBar = new LineEdit
+            Contents.AddChild(MainVBox = new VBoxContainer
             {
-                MouseFilter = MouseFilterMode.Stop,
-                SizeFlagsHorizontal = SizeFlags.FillExpand,
-                PlaceHolder = _loc.GetString("Search Entities")
-            };
-            SearchBar.OnTextChanged += OnSearchBarTextChanged;
-            topHBox.AddChild(SearchBar);
+                Children =
+                {
+                    new HBoxContainer
+                    {
+                        Children =
+                        {
+                            (SearchBar = new LineEdit
+                            {
+                                MouseFilter = MouseFilterMode.Stop,
+                                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                                PlaceHolder = _loc.GetString("Search Entities")
+                            }),
 
-            ClearButton = new Button
-            {
-                Disabled = true,
-                Text = _loc.GetString("Clear Search"),
-            };
-            ClearButton.OnPressed += OnClearButtonPressed;
-            topHBox.AddChild(ClearButton);
+                            (ClearButton = new Button
+                            {
+                                Disabled = true,
+                                Text = _loc.GetString("Clear Search"),
+                            })
+                        }
+                    },
+                    new ScrollContainer
+                    {
+                        CustomMinimumSize = new Vector2(200.0f, 0.0f),
+                        SizeFlagsVertical = SizeFlags.FillExpand,
+                        Children =
+                        {
+                            (PrototypeList = new VBoxContainer
+                            {
+                                MouseFilter = MouseFilterMode.Ignore,
+                                SeparationOverride = 2,
+                            })
+                        }
+                    },
+                    new HBoxContainer
+                    {
+                        Children =
+                        {
+                            (EraseButton = new Button
+                            {
+                                ToggleMode = true,
+                                Text = _loc.GetString("Erase Mode")
+                            }),
 
-            var prototypeListScroll = new ScrollContainer
-            {
-                CustomMinimumSize = new Vector2(200.0f, 0.0f),
-                SizeFlagsVertical = SizeFlags.FillExpand,
-            };
-            PrototypeList = new VBoxContainer
-            {
-                MouseFilter = MouseFilterMode.Ignore,
-                SeparationOverride = 2,
-            };
-            prototypeListScroll.AddChild(PrototypeList);
-            MainVBox.AddChild(prototypeListScroll);
-
-            var bottomHBox = new HBoxContainer();
-            MainVBox.AddChild(bottomHBox);
-
-            EraseButton = new Button
-            {
-                ToggleMode = true,
-                Text = _loc.GetString("Erase Mode")
-            };
-            EraseButton.OnToggled += OnEraseButtonToggled;
-            bottomHBox.AddChild(EraseButton);
-
-            OverrideMenu = new OptionButton
-            {
-                ToggleMode = false,
-                SizeFlagsHorizontal = SizeFlags.FillExpand,
-                ToolTip = _loc.GetString("Override placement")
-            };
-            OverrideMenu.OnItemSelected += OnOverrideMenuItemSelected;
+                            (OverrideMenu = new OptionButton
+                            {
+                                ToggleMode = false,
+                                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                                ToolTip = _loc.GetString("Override placement")
+                            })
+                        }
+                    }
+                }
+            });
 
             for (var i = 0; i < initOpts.Length; i++)
             {
                 OverrideMenu.AddItem(initOpts[i], i);
             }
-            bottomHBox.AddChild(OverrideMenu);
+
+            EraseButton.OnToggled += OnEraseButtonToggled;
+            OverrideMenu.OnItemSelected += OnOverrideMenuItemSelected;
+            EraseButton.OnToggled += OnEraseButtonToggled;
+            SearchBar.OnTextChanged += OnSearchBarTextChanged;
+            ClearButton.OnPressed += OnClearButtonPressed;
 
             BuildEntityList();
 

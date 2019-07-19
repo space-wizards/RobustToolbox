@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Client.GameObjects;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Placement;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -18,17 +17,17 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IPlacementManager placementManager;
         private readonly IPrototypeManager prototypeManager;
         private readonly IResourceCache resourceCache;
+        private readonly ILocalizationManager _loc;
 
-        private Control HSplitContainer;
+        private VBoxContainer MainVBox;
         private VBoxContainer PrototypeList;
         private LineEdit SearchBar;
         private OptionButton OverrideMenu;
         private Button ClearButton;
         private Button EraseButton;
-        protected override Vector2 ContentsMinimumSize => HSplitContainer?.CombinedMinimumSize ?? Vector2.Zero;
+        protected override Vector2 ContentsMinimumSize => MainVBox?.CombinedMinimumSize ?? Vector2.Zero;
 
-        private static readonly string[] initOpts = new string[]
-        {
+        private static readonly string[] initOpts = {
             "Default",
             "PlaceFree",
             "PlaceNearby",
@@ -48,102 +47,82 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public EntitySpawnWindow(IPlacementManager placementManager,
             IPrototypeManager prototypeManager,
-            IResourceCache resourceCache)
+            IResourceCache resourceCache,
+            ILocalizationManager loc)
         {
             this.placementManager = placementManager;
             this.prototypeManager = prototypeManager;
             this.resourceCache = resourceCache;
+            _loc = loc;
 
             PerformLayout();
         }
 
-        protected override void Initialize()
+        private void PerformLayout()
         {
-            base.Initialize();
+            Size = new Vector2(250.0f, 300.0f);
+            Title = _loc.GetString("Entity Spawn Panel");
 
-            Title = "Entity Spawn Panel";
+            MainVBox = new VBoxContainer();
+            Contents.AddChild(MainVBox);
+            var topHBox = new HBoxContainer();
+            MainVBox.AddChild(topHBox);
 
-            HSplitContainer = new HSplitContainer
+            SearchBar = new LineEdit
             {
-                Name = "HSplitContainer",
-                MouseFilter = MouseFilterMode.Pass
-            };
-
-            // Left side
-            var prototypeListScroll = new ScrollContainer("PrototypeListScrollContainer")
-            {
-                CustomMinimumSize = new Vector2(200.0f, 0.0f),
-                RectClipContent = true,
+                MouseFilter = MouseFilterMode.Stop,
                 SizeFlagsHorizontal = SizeFlags.FillExpand,
-                HScrollEnabled = true,
-                VScrollEnabled = true
+                PlaceHolder = _loc.GetString("Search Entities")
             };
-            PrototypeList = new VBoxContainer("PrototypeList")
-            {
-                MouseFilter = MouseFilterMode.Ignore,
-                SizeFlagsHorizontal = SizeFlags.FillExpand,
-                SeparationOverride = new int?(2),
-                Align = BoxContainer.AlignMode.Begin
-            };
-            prototypeListScroll.AddChild(PrototypeList);
-            HSplitContainer.AddChild(prototypeListScroll);
-
-            // Right side
-            var options = new VBoxContainer("Options")
-            {
-                CustomMinimumSize = new Vector2(200.0f, 0.0f), MouseFilter = MouseFilterMode.Ignore
-            };
-
-            SearchBar = new LineEdit("SearchBar") {MouseFilter = MouseFilterMode.Stop, PlaceHolder = "Search Entities"};
             SearchBar.OnTextChanged += OnSearchBarTextChanged;
-            options.AddChild(SearchBar);
+            topHBox.AddChild(SearchBar);
 
-            var buttons = new HBoxContainer("Buttons!")
+            ClearButton = new Button
             {
-                MouseFilter = MouseFilterMode.Ignore
-            };
-            ClearButton = new Button("ClearButton")
-            {
-                SizeFlagsHorizontal = SizeFlags.FillExpand,
                 Disabled = true,
-                ToggleMode = false,
-                Text = "Clear Search",
+                Text = _loc.GetString("Clear Search"),
             };
             ClearButton.OnPressed += OnClearButtonPressed;
-            EraseButton = new Button("EraseButton")
-            {
-                SizeFlagsHorizontal = SizeFlags.FillExpand,
-                ToggleMode = true,
-                Text = "Erase Mode"
-            };
-            EraseButton.OnToggled += OnEraseButtonToggled;
-            buttons.AddChild(ClearButton);
-            buttons.AddChild(EraseButton);
-            options.AddChild(buttons);
+            topHBox.AddChild(ClearButton);
 
-            var overridePlacementText = new Label("OverridePlacementText")
+            var prototypeListScroll = new ScrollContainer
+            {
+                CustomMinimumSize = new Vector2(200.0f, 0.0f),
+                SizeFlagsVertical = SizeFlags.FillExpand,
+            };
+            PrototypeList = new VBoxContainer
             {
                 MouseFilter = MouseFilterMode.Ignore,
-                SizeFlagsVertical = SizeFlags.ShrinkCenter,
-                Text = "Override Placement:"
+                SeparationOverride = 2,
             };
-            OverrideMenu = new OptionButton("OverrideMenu") {ToggleMode = false};//, TextAlign = Button.AlignMode.Left};
+            prototypeListScroll.AddChild(PrototypeList);
+            MainVBox.AddChild(prototypeListScroll);
+
+            var bottomHBox = new HBoxContainer();
+            MainVBox.AddChild(bottomHBox);
+
+            EraseButton = new Button
+            {
+                ToggleMode = true,
+                Text = _loc.GetString("Erase Mode")
+            };
+            EraseButton.OnToggled += OnEraseButtonToggled;
+            bottomHBox.AddChild(EraseButton);
+
+            OverrideMenu = new OptionButton
+            {
+                ToggleMode = false,
+                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                ToolTip = _loc.GetString("Override placement")
+            };
             OverrideMenu.OnItemSelected += OnOverrideMenuItemSelected;
+
             for (var i = 0; i < initOpts.Length; i++)
             {
                 OverrideMenu.AddItem(initOpts[i], i);
             }
+            bottomHBox.AddChild(OverrideMenu);
 
-            options.AddChild(overridePlacementText);
-            options.AddChild(OverrideMenu);
-            HSplitContainer.AddChild(options);
-            Contents.AddChild(HSplitContainer);
-
-            Size = new Vector2(400.0f, 300.0f);
-        }
-
-        private void PerformLayout()
-        {
             BuildEntityList();
 
             placementManager.PlacementCanceled += OnPlacementCanceled;

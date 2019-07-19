@@ -350,7 +350,11 @@ namespace Robust.Client.UserInterface.CustomControls
                 Visible = true;
                 Logger.WarningS("ui", $"Window {this} had visibility false. Do not use visibility on SS14Window.");
             }
-            UserInterfaceManager.WindowRoot.AddChild(this);
+
+            if (!IsOpen)
+            {
+                UserInterfaceManager.WindowRoot.AddChild(this);
+            }
         }
 
         public void OpenCentered()

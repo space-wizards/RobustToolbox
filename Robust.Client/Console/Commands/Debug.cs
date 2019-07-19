@@ -8,9 +8,7 @@ using System.Text;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.Debugging;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.Lighting;
-using Robust.Client.Interfaces.Placement;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
@@ -18,7 +16,6 @@ using Robust.Client.State.States;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
@@ -29,7 +26,6 @@ using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -179,19 +175,6 @@ namespace Robust.Client.Console.Commands
         {
             var mgr = IoCManager.Resolve<IDebugDrawing>();
             mgr.DebugPositions = !mgr.DebugPositions;
-            return false;
-        }
-    }
-
-    internal class SpawnWindowCommand : IConsoleCommand
-    {
-        public string Command => "spawnwindow";
-        public string Help => "";
-        public string Description => "";
-
-        public bool Execute(IDebugConsole console, params string[] args)
-        {
-            var window = new EntitySpawnWindow(IoCManager.Resolve<IPlacementManager>(), IoCManager.Resolve<IPrototypeManager>(), IoCManager.Resolve<IResourceCache>());
             return false;
         }
     }

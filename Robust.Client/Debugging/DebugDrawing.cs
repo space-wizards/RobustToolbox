@@ -94,6 +94,9 @@ namespace Robust.Client.Debugging
             protected override void Draw(DrawingHandleBase handle)
             {
                 var worldHandle = (DrawingHandleWorld) handle;
+
+                worldHandle.DrawRect(new Box2Rotated(new Box2(0, 0, 5, 5), Angle.FromDegrees(45)), Color.Yellow);
+
                 var viewport = _eyeManager.GetWorldViewport();
                 foreach (var boundingBox in _componentManager.GetAllComponents<ClientBoundingBoxComponent>())
                 {

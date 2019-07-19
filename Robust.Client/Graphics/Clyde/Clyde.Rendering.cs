@@ -179,7 +179,7 @@ namespace Robust.Client.Graphics.Clyde
                         var box = UIBox2i.FromDimensions(rounded, EntityPostRenderTarget.Size);
 
                         _renderHandle.DrawTexture(EntityPostRenderTarget.Texture, box.BottomLeft,
-                            box.TopRight, Color.White, null);
+                            box.TopRight, Color.White, null, 0);
 
                         _renderHandle.SetSpace(CurrentSpace.WorldSpace);
                         _renderHandle.UseShader(null);
@@ -474,10 +474,25 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            var bl = _currentModelMatrix.Transform(command.PositionA);
-            var br = _currentModelMatrix.Transform(new Vector2(command.PositionB.X, command.PositionA.Y));
-            var tr = _currentModelMatrix.Transform(command.PositionB);
-            var tl = _currentModelMatrix.Transform(new Vector2(command.PositionA.X, command.PositionB.Y));
+            Vector2 bl;
+            Vector2 br;
+            Vector2 tr;
+            Vector2 tl;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (command.Angle == Angle.Zero)
+            {
+                bl = _currentModelMatrix.Transform(command.PositionA);
+                br = _currentModelMatrix.Transform((command.PositionB.X, command.PositionA.Y));
+                tr = _currentModelMatrix.Transform(command.PositionB);
+                tl = _currentModelMatrix.Transform((command.PositionA.X, command.PositionB.Y));
+            }
+            else
+            {
+                bl = _currentModelMatrix.Transform(command.Angle.RotateVec(command.PositionA));
+                br = _currentModelMatrix.Transform(command.Angle.RotateVec((command.PositionB.X, command.PositionA.Y)));
+                tr = _currentModelMatrix.Transform(command.Angle.RotateVec(command.PositionB));
+                tl = _currentModelMatrix.Transform(command.Angle.RotateVec((command.PositionA.X, command.PositionB.Y)));
+            }
             var vIdx = BatchIndex * 4;
             BatchVertexData[vIdx + 0] = new Vertex2D(bl, sr.BottomLeft);
             BatchVertexData[vIdx + 1] = new Vertex2D(br, sr.BottomRight);
@@ -719,7 +734,8 @@ namespace Robust.Client.Graphics.Clyde
                 command.Type = RenderCommandType.ResetViewMatrix;
             }
 
-            public void DrawTexture(Texture texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion)
+            public void DrawTexture(Texture texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion,
+                Angle angle)
             {
                 switch (texture)
                 {
@@ -749,6 +765,7 @@ namespace Robust.Client.Graphics.Clyde
                 command.Texture.TextureId = clydeTexture.TextureId;
                 command.Texture.PositionA = a;
                 command.Texture.PositionB = b;
+                command.Texture.Angle = angle;
                 command.Texture.Modulate = modulate;
                 if (subRegion.HasValue)
                 {
@@ -902,7 +919,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     var color = (modulate ?? Color.White) * Modulate;
                     _renderHandle.DrawTexture(texture, rect.TopLeft, rect.BottomRight, color,
-                        subRegion);
+                        subRegion, 0);
                 }
             }
 
@@ -950,12 +967,36 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
+                public override void DrawRect(in Box2Rotated rect, Color color, bool filled = true)
+                {
+                    if (filled)
+                    {
+                        DrawTextureRect(Texture.White, rect, color);
+                    }
+                    else
+                    {
+                        DrawLine(rect.TopLeft, rect.TopRight, color);
+                        DrawLine(rect.TopRight, rect.BottomRight, color);
+                        DrawLine(rect.BottomRight, rect.BottomLeft, color);
+                        DrawLine(rect.BottomLeft, rect.TopLeft, color);
+                    }
+                }
+
                 public override void DrawTextureRectRegion(Texture texture, Box2 rect, UIBox2? subRegion = null,
                     Color? modulate = null)
                 {
                     var color = (modulate ?? Color.White) * Modulate;
 
-                    _renderHandle.DrawTexture(texture, rect.BottomLeft, rect.TopRight, color, subRegion);
+                    _renderHandle.DrawTexture(texture, rect.BottomLeft, rect.TopRight, color, subRegion, 0);
+                }
+
+                public override void DrawTextureRectRegion(Texture texture, in Box2Rotated rect,
+                    UIBox2? subRegion = null, Color? modulate = null)
+                {
+                    var color = (modulate ?? Color.White) * Modulate;
+
+                    _renderHandle.DrawTexture(texture, rect.Box.BottomLeft, rect.Box.TopRight, color, subRegion,
+                        (float) rect.Rotation);
                 }
             }
         }
@@ -990,6 +1031,7 @@ namespace Robust.Client.Graphics.Clyde
             public Vector2 PositionB;
 
             public Color Modulate;
+            public Angle Angle;
         }
 
         private struct RenderCommandModelMatrix

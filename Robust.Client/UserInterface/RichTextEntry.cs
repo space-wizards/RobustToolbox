@@ -4,7 +4,6 @@ using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.UserInterface.Controls;
-using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -15,7 +14,8 @@ namespace Robust.Client.UserInterface
     /// </summary>
     internal struct RichTextEntry
     {
-        private static readonly FormattedMessage.TagColor TagWhite = new FormattedMessage.TagColor(Color.White);
+        private static readonly FormattedMessage.TagColor TagBaseColor
+            = new FormattedMessage.TagColor(new Color(200, 200, 200));
 
         public readonly FormattedMessage Message;
 
@@ -175,7 +175,7 @@ namespace Robust.Client.UserInterface
             Stack<FormattedMessage.Tag> formatStack, float uiScale)
         {
             // The tag currently doing color.
-            var currentColorTag = TagWhite;
+            var currentColorTag = TagBaseColor;
 
             var globalBreakCounter = 0;
             var lineBreakIndex = 0;

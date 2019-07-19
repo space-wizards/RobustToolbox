@@ -226,22 +226,35 @@ namespace Robust.Client.Graphics
         private Dictionary<char, uint> _generateGlyphMap(Face face)
         {
             var map = new Dictionary<char, uint>();
-            // TODO: Render more than extended ASCII, somehow. Does it make sense to just render every glyph in the font?
-            // Render all the extended ASCII characters.
-            const uint startIndex = 32;
-            const uint endIndex = 255;
-            for (var i = startIndex; i <= endIndex; i++)
-            {
-                var glyphIndex = face.GetCharIndex(i);
-                if (glyphIndex == 0)
-                {
-                    continue;
-                }
 
-                map.Add((char) i, glyphIndex);
+            // TODO: Render more than extended ASCII + Cyrillic, somehow.
+            // Does it make sense to just render every glyph in the font?
+
+            // Render all the extended ASCII characters.
+            // Yeah I know "extended ASCII" isn't a real thing get off my back.
+            for (var i = 32u; i <= 255; i++)
+            {
+                _addGlyph(i, face, map);
+            }
+
+            // Render basic cyrillic.
+            for (var i = 0x0410u; i <= 0x044F; i++)
+            {
+                _addGlyph(i, face, map);
             }
 
             return map;
+        }
+
+        private static void _addGlyph(uint codePoint, Face face, Dictionary<char, uint> map)
+        {
+            var glyphIndex = face.GetCharIndex(codePoint);
+            if (glyphIndex == 0)
+            {
+                return;
+            }
+
+            map.Add((char) codePoint, glyphIndex);
         }
 
         private class FontFaceHandle : IFontFaceHandle

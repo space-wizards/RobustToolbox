@@ -45,7 +45,7 @@ void fragment() {
 	maxa = max(a, maxa);
 	mina = min(a, mina);
 
-    a = texture(TEXTURE, UV + vec2(-outline_width, -outline_width)*ps/2).a;
+    a = texture(TEXTURE, UV + vec2(-outline_width, -outline_width)*ps).a;
     maxa = max(a, maxa);
     mina = min(a, mina);
 
@@ -53,7 +53,7 @@ void fragment() {
 	maxa = max(a, maxa);
 	mina = min(a, mina);
 
-    a = texture(TEXTURE, UV + vec2(outline_width, -outline_width)*ps/2).a;
+    a = texture(TEXTURE, UV + vec2(outline_width, -outline_width)*ps).a;
     maxa = max(a, maxa);
     mina = min(a, mina);
 
@@ -61,7 +61,7 @@ void fragment() {
 	maxa = max(a, maxa);
 	mina = min(a, mina);
 
-    a = texture(TEXTURE, UV + vec2(-outline_width, outline_width)*ps/2).a;
+    a = texture(TEXTURE, UV + vec2(-outline_width, outline_width)*ps).a;
     maxa = max(a, maxa);
     mina = min(a, mina);
 
@@ -69,7 +69,7 @@ void fragment() {
 	maxa = max(a, maxa);
 	mina = min(a, mina);
 
-    a = texture(TEXTURE, UV + vec2(outline_width, outline_width)*ps/2).a;
+    a = texture(TEXTURE, UV + vec2(outline_width, outline_width)*ps).a;
     maxa = max(a, maxa);
     mina = min(a, mina);
 

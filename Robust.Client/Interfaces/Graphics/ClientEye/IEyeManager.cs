@@ -22,5 +22,6 @@ namespace Robust.Client.Interfaces.Graphics.ClientEye
         ScreenCoordinates WorldToScreen(GridCoordinates point);
         GridCoordinates ScreenToWorld(ScreenCoordinates point);
         GridCoordinates ScreenToWorld(Vector2 point);
+        MapCoordinates ScreenToMap(Vector2 point);
     }
 }

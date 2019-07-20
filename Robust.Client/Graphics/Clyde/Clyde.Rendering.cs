@@ -244,7 +244,7 @@ namespace Robust.Client.Graphics.Clyde
             var toScreen = _eyeManager.WorldToScreen(eye.Position.Position);
             // Round camera position to a screen pixel to avoid weird issues on odd screen sizes.
             toScreen = ((float) Math.Floor(toScreen.X), (float) Math.Floor(toScreen.Y));
-            var cameraWorldAdjusted = _eyeManager.ScreenToWorld(toScreen);
+            var cameraWorldAdjusted = _eyeManager.ScreenToMap(toScreen);
 
             var viewMatrixWorld = Matrix3.Identity;
             viewMatrixWorld.R0C0 = 1 / eye.Zoom.X;

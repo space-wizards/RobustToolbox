@@ -90,19 +90,26 @@ namespace Robust.Client.Graphics.ClientEye
 
         public GridCoordinates ScreenToWorld(Vector2 point)
         {
-            var matrix = Matrix3.Invert(CurrentEye.GetMatrix());
-            point -= _displayManager.ScreenSize/2f;
-            var worldPos = matrix.Transform(point / PIXELSPERMETER * new Vector2(1, -1));
+            var mapPos = ScreenToMap(point).Position;
+
             IMapGrid grid;
             if (_mapManager.TryGetMap(currentEye.Position.MapId, out var map))
             {
-                grid = map.FindGridAt(worldPos);
+                grid = map.FindGridAt(mapPos);
             }
             else
             {
                 grid = _mapManager.GetGrid(GridId.Nullspace);
             }
-            return new GridCoordinates(grid.WorldToLocal(worldPos), grid);
+            return new GridCoordinates(grid.WorldToLocal(mapPos), grid);
+        }
+
+        public MapCoordinates ScreenToMap(Vector2 point)
+        {
+            var matrix = Matrix3.Invert(CurrentEye.GetMatrix());
+            point -= _displayManager.ScreenSize / 2f;
+            var worldPos = matrix.Transform(point / PIXELSPERMETER * new Vector2(1, -1));
+            return new MapCoordinates(worldPos, CurrentMap);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Map;
@@ -63,6 +62,9 @@ namespace Robust.Client.GameObjects
                 _updateCameraPosition();
             }
         }
+
+        [ViewVariables]
+        public MapCoordinates? Position => eye?.Position;
 
         private ITransformComponent transform;
 

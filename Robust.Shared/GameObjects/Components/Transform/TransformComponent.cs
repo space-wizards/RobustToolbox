@@ -251,13 +251,18 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                     SetPosition(newPos);
                 }
-                else
+                else // has no parent
                 {
-                    if (_localPosition == value)
+                    var worldPos = value;
+                    var grid = _mapManager.GetMap(MapID).FindGridAt(worldPos); // resolve grid id at location
+                    var localPos = grid.WorldToLocal(worldPos);
+
+                    // this prevents the component being marked as dirty
+                    if (_localPosition == value && grid.Index == _gridID)
                         return;
 
-                    SetPosition(value);
-                    _recurseSetGridId(_mapManager.GetMap(MapID).FindGridAt(GetLocalPosition()).Index);
+                    SetPosition(localPos);
+                    _recurseSetGridId(grid.Index);
                 }
 
                 Dirty();

@@ -797,7 +797,7 @@ namespace Robust.Client.Graphics.Clyde
                 commandWorldSpace.SwitchSpace.NewSpace = space;
             }
 
-            public void DrawEntity(IEntity entity, Vector2 position)
+            public void DrawEntity(IEntity entity, Vector2 position, Vector2 scale)
             {
                 var sprite = entity.GetComponent<SpriteComponent>();
 
@@ -813,6 +813,8 @@ namespace Robust.Client.Graphics.Clyde
                     var ofsY = position.Y - _clyde._window.Height / 2f;
                     ref var viewMatrix = ref commandViewMatrix.ViewMatrix.Matrix;
                     viewMatrix = Matrix3.Identity;
+                    viewMatrix.R0C0 = scale.X;
+                    viewMatrix.R1C1 = scale.Y;
                     viewMatrix.R0C2 = ofsX / EyeManager.PIXELSPERMETER;
                     viewMatrix.R1C2 = -ofsY / EyeManager.PIXELSPERMETER;
                 }

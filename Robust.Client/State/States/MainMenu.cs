@@ -12,7 +12,9 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Localization;
 using Robust.Shared.Network;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.State.States
 {
@@ -26,12 +28,13 @@ namespace Robust.Client.State.States
 
 #pragma warning disable 649
         [Dependency] private readonly IBaseClient _client;
-        [Dependency] private readonly IUserInterfaceManager userInterfaceManager;
-        [Dependency] private readonly IStateManager stateManager;
         [Dependency] private readonly IClientNetManager _netManager;
         [Dependency] private readonly IConfigurationManager _configurationManager;
         [Dependency] private readonly IGameController _controllerProxy;
+        [Dependency] private readonly ILocalizationManager _loc;
         [Dependency] private readonly IResourceCache _resourceCache;
+        [Dependency] private readonly IStateManager stateManager;
+        [Dependency] private readonly IUserInterfaceManager userInterfaceManager;
 #pragma warning restore 649
 
         private MainMenuControl _mainMenuControl;
@@ -101,10 +104,21 @@ namespace Robust.Client.State.States
 
         private void TryConnect(string address)
         {
+            var inputName = _mainMenuControl.UserNameBox.Text.Trim();
+            var (nameValid, invalidReason) = UsernameHelpers.IsNameValid(inputName);
+            if (!nameValid)
+            {
+                invalidReason = _loc.GetString(invalidReason);
+                userInterfaceManager.Popup(
+                    _loc.GetString("Invalid username:\n{0}", invalidReason),
+                    _loc.GetString("Invalid Username"));
+                return;
+            }
+
             var configName = _configurationManager.GetCVar<string>("player.name");
             if (_mainMenuControl.UserNameBox.Text != configName)
             {
-                _configurationManager.SetCVar("player.name", _mainMenuControl.UserNameBox.Text);
+                _configurationManager.SetCVar("player.name", inputName);
                 _configurationManager.SaveToFile();
             }
 

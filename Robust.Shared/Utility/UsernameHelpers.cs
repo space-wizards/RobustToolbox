@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Robust.Shared.Utility
 {
     public static class UsernameHelpers
     {
         private const int NameLengthMax = 32;
-        private static readonly string[] InvalidStrings = new string[]
-        {
+        private static readonly string[] InvalidStrings = {
             " ", // That's a space.
             "\"",
             "'",
@@ -23,12 +18,12 @@ namespace Robust.Shared.Utility
         /// </summary>
         /// <param name="name">The name to check.</param>
         /// <returns>True if the name is acceptable, false otherwise.</returns>
-        public static bool IsNameValid(string name)
+        public static (bool, string reason) IsNameValid(string name)
         {
             // No empty username.
             if (string.IsNullOrWhiteSpace(name))
             {
-                return false;
+                return (false, "Name can't be empty");
             }
 
             // TODO: This length check is crap and doesn't work correctly.
@@ -44,7 +39,7 @@ namespace Robust.Shared.Utility
             // Not surprising, huh.
             if (name.Length > 0 && name.Length >= NameLengthMax)
             {
-                return false;
+                return (false, "Name too long");
             }
 
             // TODO: Oh yeah, should probably cut out like, control characters or something.
@@ -56,13 +51,14 @@ namespace Robust.Shared.Utility
             // Flashbacks to libvg intensify.
             foreach (var item in InvalidStrings)
             {
-                if (name.IndexOf(item) != -1)
+                if (name.IndexOf(item, StringComparison.Ordinal) != -1)
                 {
-                    return false;
+                    var invalidChar = item == " " ? "<space>" : item;
+                    return (false, $"Contains invalid character: \"{invalidChar}\"");
                 }
             }
 
-            return true;
+            return (true, null);
         }
     }
 }

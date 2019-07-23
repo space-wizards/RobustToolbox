@@ -445,9 +445,10 @@ namespace Robust.Shared.Network
                 return;
             }
 
-            if (!UsernameHelpers.IsNameValid(requestedUsername))
+            var (nameValid, invalidReason) = UsernameHelpers.IsNameValid(requestedUsername);
+            if (!nameValid)
             {
-                connection.Disconnect("Username is invalid (contains illegal characters/too long).");
+                connection.Disconnect($"Username is invalid ({invalidReason}).");
                 return;
             }
 

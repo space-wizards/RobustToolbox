@@ -210,7 +210,7 @@ namespace Robust.Client.Input
 
         public static explicit operator MouseWheelEventArgs(OpenTK.Input.MouseWheelEventArgs inputEvent)
         {
-            var direction = inputEvent.Delta > 0 ? Mouse.Wheel.Up : Mouse.Wheel.Down;
+            var direction = inputEvent.DeltaPrecise > 0 ? Mouse.Wheel.Up : Mouse.Wheel.Down;
             return new MouseWheelEventArgs(
                 direction,
                 Mouse.ButtonMask.None,

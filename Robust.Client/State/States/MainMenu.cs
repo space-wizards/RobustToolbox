@@ -107,6 +107,7 @@ namespace Robust.Client.State.States
                 _configurationManager.SetCVar("player.name", _mainMenuControl.UserNameBox.Text);
                 _configurationManager.SaveToFile();
             }
+
             _setConnectingState(true);
             _netManager.ConnectFailed += _onConnectFailed;
             try
@@ -262,6 +263,9 @@ namespace Robust.Client.State.States
 
                 vBox.AddChild(JoinPublicServerButton);
 
+                // Separator.
+                vBox.AddChild(new Control {CustomMinimumSize = (0, 2)});
+
                 AddressBox = new LineEdit
                 {
                     Text = "localhost",
@@ -278,6 +282,9 @@ namespace Robust.Client.State.States
                 };
 
                 vBox.AddChild(DirectConnectButton);
+
+                // Separator.
+                vBox.AddChild(new Control {CustomMinimumSize = (0, 2)});
 
                 OptionsButton = new Button
                 {

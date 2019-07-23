@@ -93,7 +93,7 @@ namespace Robust.Shared.GameObjects
             {
                 Logger.DebugS("go.sys", "Initializing entity system {0}", type);
                 //Force initialization of all systems
-                var instance = (IEntitySystem)_typeFactory.CreateInstance(type);
+                var instance = _typeFactory.CreateInstance<IEntitySystem>(type);
                 AddSystem(instance);
                 instance.RegisterMessageTypes();
                 instance.SubscribeEvents();

@@ -291,7 +291,7 @@ namespace Robust.Shared.Prototypes
                 }
 
                 var prototypeType = prototypeTypes[type];
-                var prototype = (IPrototype)_dynamicTypeFactory.CreateInstance(prototypeType);
+                var prototype = _dynamicTypeFactory.CreateInstance<IPrototype>(prototypeType);
                 prototype.LoadFrom(node);
                 prototypes[prototypeType].Add(prototype);
                 var indexedPrototype = prototype as IIndexedPrototype;

@@ -49,7 +49,7 @@ namespace Robust.Client.State
         {
             Logger.Debug($"Switching to state {type}");
 
-            var newState = (State)_typeFactory.CreateInstance(type);
+            var newState = _typeFactory.CreateInstance<State>(type);
 
             var old = CurrentState;
             CurrentState?.Shutdown();

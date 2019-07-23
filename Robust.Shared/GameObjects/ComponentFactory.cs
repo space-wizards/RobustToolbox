@@ -182,7 +182,7 @@ namespace Robust.Shared.GameObjects
             {
                 throw new InvalidOperationException($"{componentType} is not a registered component.");
             }
-            return (IComponent)_typeFactory.CreateInstance(types[componentType].Type);
+            return _typeFactory.CreateInstance<IComponent>(types[componentType].Type);
         }
 
         public T GetComponent<T>() where T : IComponent, new()
@@ -191,12 +191,12 @@ namespace Robust.Shared.GameObjects
             {
                 throw new InvalidOperationException($"{typeof(T)} is not a registered component.");
             }
-            return (T)_typeFactory.CreateInstance(types[typeof(T)].Type);
+            return _typeFactory.CreateInstance<T>(types[typeof(T)].Type);
         }
 
         public IComponent GetComponent(string componentName)
         {
-            return (IComponent)_typeFactory.CreateInstance(GetRegistration(componentName).Type);
+            return _typeFactory.CreateInstance<IComponent>(GetRegistration(componentName).Type);
         }
 
         public IComponentRegistration GetRegistration(string componentName)

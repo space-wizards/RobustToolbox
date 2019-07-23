@@ -363,6 +363,12 @@ namespace Robust.Client.UserInterface.CustomControls
             Position = (Parent.Size - Size) / 2;
         }
 
+        public void OpenCenteredMinSize()
+        {
+            Size = ContentsMinimumSize;
+            OpenCentered();
+        }
+
         public void OpenToLeft()
         {
             Open();

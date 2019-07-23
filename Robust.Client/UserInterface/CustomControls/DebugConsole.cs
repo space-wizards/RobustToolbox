@@ -59,7 +59,7 @@ namespace Robust.Client.UserInterface.CustomControls
             AddChild(boxContainer);
             var styleBox = new StyleBoxFlat
             {
-                BackgroundColor = Color.Gray.WithAlpha(0.5f),
+                BackgroundColor = Color.FromHex("#25252add"),
             };
             styleBox.SetContentMarginOverride(StyleBox.Margin.All, 3);
             Output = new OutputPanel

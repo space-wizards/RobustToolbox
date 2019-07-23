@@ -484,6 +484,8 @@ namespace Robust.Client.Console.Commands
                 });
             }
 
+            window.OpenCenteredMinSize();
+
             return false;
         }
     }

@@ -14,6 +14,7 @@ namespace Robust.Client.UserInterface.Controls
     [ControlWrap("TextureButton")]
     public class TextureButton : BaseButton
     {
+        private Vector2 _scale = (1, 1);
         public const string StylePropertyTexture = "texture";
         public const string StylePseudoClassNormal = "normal";
         public const string StylePseudoClassHover = "hover";
@@ -30,6 +31,16 @@ namespace Robust.Client.UserInterface.Controls
 
         public Texture TextureNormal { get; set; }
         public Texture TextureHover { get; set; }
+
+        public Vector2 Scale
+        {
+            get => _scale;
+            set
+            {
+                _scale = value;
+                MinimumSizeChanged();
+            }
+        }
 
         protected override void Initialize()
         {
@@ -105,7 +116,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            return (TextureNormal?.Size ?? Vector2.Zero) / UIScale;
+            return Scale * (TextureNormal?.Size ?? Vector2.Zero) / UIScale;
         }
     }
 }

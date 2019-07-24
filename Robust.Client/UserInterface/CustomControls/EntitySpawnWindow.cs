@@ -127,7 +127,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
             EraseButton.OnToggled += OnEraseButtonToggled;
             OverrideMenu.OnItemSelected += OnOverrideMenuItemSelected;
-            EraseButton.OnToggled += OnEraseButtonToggled;
             SearchBar.OnTextChanged += OnSearchBarTextChanged;
             ClearButton.OnPressed += OnClearButtonPressed;
 

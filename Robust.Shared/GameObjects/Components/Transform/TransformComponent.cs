@@ -516,6 +516,10 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             // there really is no point trying to cache this because it will only be used in one frame
             var pos = GetLocalPosition();
+
+            if (!_parent.IsValid())
+                pos = _mapManager.GetGrid(_gridID).LocalToWorld(pos);
+
             var rot = GetLocalRotation().Theta;
 
             var posMat = Matrix3.CreateTranslation(pos);
@@ -533,6 +537,10 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             // there really is no point trying to cache this because it will only be used in one frame
             var pos = GetLocalPosition();
+
+            if (!_parent.IsValid())
+                pos = _mapManager.GetGrid(_gridID).LocalToWorld(pos);
+
             var rot = GetLocalRotation().Theta;
 
             var posMat = Matrix3.CreateTranslation(pos);
@@ -548,6 +556,13 @@ namespace Robust.Shared.GameObjects.Components.Transform
         private void RebuildMatrices()
         {
             var pos = _localPosition;
+
+            // Orphaned entities combine their local position with the grid position to form the world matrix
+            if (!_parent.IsValid())
+            {
+                pos = _mapManager.GetGrid(_gridID).LocalToWorld(pos);
+            }
+
             var rot = _localRotation.Theta;
 
             var posMat = Matrix3.CreateTranslation(pos);

@@ -205,12 +205,9 @@ namespace Robust.Client.UserInterface
 
     public class GUIMouseWheelEventArgs : GUIMouseEventArgs
     {
-        /// <summary>
-        ///     The direction the mouse wheel was moved in.
-        /// </summary>
-        public Mouse.Wheel WheelDirection { get; }
+        public Vector2 Delta { get; }
 
-        public GUIMouseWheelEventArgs(Mouse.Wheel wheelDirection,
+        public GUIMouseWheelEventArgs(Vector2 delta,
             Control sourceControl,
             Mouse.ButtonMask buttonMask,
             Vector2 globalPosition,
@@ -223,7 +220,7 @@ namespace Robust.Client.UserInterface
             bool system)
             : base(sourceControl, buttonMask, globalPosition, globalPixelPosition, relativePosition, relativePixelPosition, alt, control, shift, system)
         {
-            WheelDirection = wheelDirection;
+            Delta = delta;
         }
     }
 }

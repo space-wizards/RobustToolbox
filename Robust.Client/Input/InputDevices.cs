@@ -37,18 +37,6 @@ namespace Robust.Client.Input
             Right = 4,
         }
 
-        /// <summary>
-        ///     Represents mousewheel directions.
-        /// </summary>
-        public enum Wheel
-        {
-            // These match Godot's
-            Up = 4,
-            Down = 5,
-            Left = 6,
-            Right = 7,
-        }
-
         public static Keyboard.Key MouseButtonToKey(Button button)
         {
             return _mouseKeyMap[button];
@@ -209,7 +197,7 @@ namespace Robust.Client.Input
             F15,
             Pause,
         }
-        
+
         internal static Key ConvertOpenTKKey(TKKey key)
         {
             if (OpenTKKeyMap.TryGetValue(key, out var result))

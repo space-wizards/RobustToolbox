@@ -141,19 +141,13 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseWheel(args);
 
-            if (args.WheelDirection == Mouse.Wheel.Up)
+            if (FloatMath.CloseTo(0, args.Delta.Y))
             {
-                _scrollBar.Value -= _getScrollSpeed();
-                _isAtBottom = false;
+                return;
             }
-            else if (args.WheelDirection == Mouse.Wheel.Down)
-            {
-                _scrollBar.Value += _getScrollSpeed();
-                if (_scrollBar.IsAtEnd)
-                {
-                    _isAtBottom = true;
-                }
-            }
+
+            _scrollBar.Value -= _getScrollSpeed() * args.Delta.Y;
+            _isAtBottom = _scrollBar.IsAtEnd;
         }
 
         protected override void SetDefaults()

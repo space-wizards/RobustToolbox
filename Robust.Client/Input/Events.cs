@@ -193,10 +193,10 @@ namespace Robust.Client.Input
         /// <summary>
         ///     The direction the mouse wheel was moved in.
         /// </summary>
-        public Mouse.Wheel WheelDirection { get; }
+        public Vector2 Delta { get; }
 
         // ALL the parameters!
-        public MouseWheelEventArgs(Mouse.Wheel wheelDirection,
+        public MouseWheelEventArgs(Vector2 delta,
             Mouse.ButtonMask buttonMask,
             Vector2 position,
             bool alt,
@@ -205,14 +205,16 @@ namespace Robust.Client.Input
             bool system)
             : base(buttonMask, position, alt, control, shift, system)
         {
-            WheelDirection = wheelDirection;
+            Delta = delta;
         }
 
         public static explicit operator MouseWheelEventArgs(OpenTK.Input.MouseWheelEventArgs inputEvent)
         {
-            var direction = inputEvent.DeltaPrecise > 0 ? Mouse.Wheel.Up : Mouse.Wheel.Down;
             return new MouseWheelEventArgs(
-                direction,
+                // OpenTK 3 doesn't support horizontal scrolling.
+                // This is a necessary feature, so the events do have the API.
+                // Eventually when we switch to OpenTK 4 this will be fixed.
+                (0, inputEvent.DeltaPrecise),
                 Mouse.ButtonMask.None,
                 new Vector2(inputEvent.X, inputEvent.Y),
                 false, false, false, false);

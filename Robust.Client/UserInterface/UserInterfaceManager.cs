@@ -260,7 +260,7 @@ namespace Robust.Client.UserInterface
 
             args.Handle();
 
-            var guiArgs = new GUIMouseWheelEventArgs(args.WheelDirection, control, Mouse.ButtonMask.None,
+            var guiArgs = new GUIMouseWheelEventArgs(args.Delta, control, Mouse.ButtonMask.None,
                 args.Position / UIScale, args.Position,
                 args.Position / UIScale - control.GlobalPosition, args.Position - control.GlobalPixelPosition, args.Alt,
                 args.Control, args.Shift, args.System);

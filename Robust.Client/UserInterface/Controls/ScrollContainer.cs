@@ -182,18 +182,14 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseWheel(args);
 
-            var up = args.WheelDirection == Mouse.Wheel.Up;
+            if (_vScrollEnabled)
+            {
+                _vScrollBar.Value -= args.Delta.Y * 50;
+            }
 
             if (_vScrollEnabled)
             {
-                if (up)
-                {
-                    _vScrollBar.Value -= 50;
-                }
-                else
-                {
-                    _vScrollBar.Value += 50;
-                }
+                _hScrollBar.Value += args.Delta.X * 50;
             }
         }
 

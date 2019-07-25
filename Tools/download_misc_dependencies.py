@@ -10,7 +10,7 @@ import urllib.request
 import shutil
 
 FILES = [
-    ("FREETYPE", "1", "freetype6.dll", "https://github.com/Robmaister/SharpFont.Dependencies/blob/2ea4fe0dc23e8f76d8a51f8ce78becb0faf3a2af/freetype2/2.6/msvc12/x64/freetype6.dll?raw=true"),
+    ("FREETYPE", "2", "freetype6.dll", "https://github.com/space-wizards/SharpFont.Dependencies/blob/b1baace7f6259f77162247291c970709650029c6/freetype2/2.10/msvc14/x64/freetype6.dll?raw=true"),
     ("OPENAL", "1", "openal32.dll", "https://github.com/opentk/opentk-dependencies/blob/9eb4991b871d2d2c0745d2c8c8c0fa6404f56438/x64/openal32.dll?raw=true")
 ]
 

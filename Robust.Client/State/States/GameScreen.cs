@@ -48,7 +48,7 @@ namespace Robust.Client.State.States
         {
             playerManager.LocalPlayer.DetachEntity();
 
-            userInterfaceManager.StateRoot.DisposeAllChildren();
+            userInterfaceManager.StateRoot.RemoveAllChildren();
 
             inputManager.KeyBindStateChanged -= OnKeyBindStateChanged;
         }

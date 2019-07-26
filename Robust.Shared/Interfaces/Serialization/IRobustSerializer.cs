@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace Robust.Shared.Interfaces.Serialization
@@ -8,5 +9,6 @@ namespace Robust.Shared.Interfaces.Serialization
         void Serialize(Stream stream, object toSerialize);
         T Deserialize<T>(Stream stream);
         object Deserialize(Stream stream);
+        bool CanSerialize(Type type);
     }
 }

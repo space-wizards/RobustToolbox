@@ -168,7 +168,7 @@ namespace Robust.Client.ViewVariables
                 return new ViewVariablesPropertyEditorColor();
             }
 
-            if (!type.IsValueType)
+            if (type != typeof(ViewVariablesBlobMembers.ServerValueTypeToken) && !type.IsValueType)
             {
                 return new ViewVariablesPropertyEditorReference();
             }

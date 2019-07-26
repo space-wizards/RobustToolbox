@@ -6,8 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using Robust.Shared.Maths;
 
 namespace Robust.Shared.Serialization
 {
@@ -18,6 +16,7 @@ namespace Robust.Shared.Serialization
         private readonly IReflectionManager reflectionManager;
 #pragma warning restore 649
         private Serializer Serializer;
+        private HashSet<Type> SerializableTypes;
 
         public void Initialize()
         {
@@ -34,6 +33,7 @@ namespace Robust.Shared.Serialization
 
             var settings = new Settings();
             Serializer = new Serializer(types, settings);
+            SerializableTypes = new HashSet<Type>(Serializer.GetTypeMap().Keys);
         }
 
         public void Serialize(Stream stream, object toSerialize)
@@ -49,6 +49,11 @@ namespace Robust.Shared.Serialization
         public object Deserialize(Stream stream)
         {
             return Serializer.Deserialize(stream);
+        }
+
+        public bool CanSerialize(Type type)
+        {
+            return SerializableTypes.Contains(type);
         }
     }
 }

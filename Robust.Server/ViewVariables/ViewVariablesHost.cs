@@ -6,6 +6,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Reflection;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages;
@@ -22,6 +23,7 @@ namespace Robust.Server.ViewVariables
         [Dependency] private readonly IPlayerManager _playerManager;
         [Dependency] private readonly IComponentManager _componentManager;
         [Dependency] private readonly IConGroupController _groupController;
+        [Dependency] private readonly IRobustSerializer _robustSerializer;
 #pragma warning restore 649
 
         private readonly Dictionary<uint, ViewVariablesSession>
@@ -179,6 +181,7 @@ namespace Robust.Server.ViewVariables
                         Deny(DenyReason.InvalidRequest);
                         return;
                     }
+
                     theObject = IoCManager.ResolveType(type);
                     break;
 
@@ -188,7 +191,8 @@ namespace Robust.Server.ViewVariables
             }
 
             var sessionId = _nextSessionId++;
-            var session = new ViewVariablesSession(message.MsgChannel.SessionId, theObject, sessionId, this);
+            var session = new ViewVariablesSession(message.MsgChannel.SessionId, theObject, sessionId, this,
+                _robustSerializer);
 
             _sessions.Add(sessionId, session);
 

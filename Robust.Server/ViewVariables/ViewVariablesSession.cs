@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Server.ViewVariables.Traits;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Network;
 using Robust.Shared.ViewVariables;
 
@@ -10,6 +11,7 @@ namespace Robust.Server.ViewVariables
     {
         private readonly List<ViewVariablesTrait> _traits = new List<ViewVariablesTrait>();
         public IViewVariablesHost Host { get; }
+        public IRobustSerializer RobustSerializer { get; }
         public NetSessionId PlayerSession { get; }
         public object Object { get; }
         public uint SessionId { get; }
@@ -21,13 +23,14 @@ namespace Robust.Server.ViewVariables
         ///     The session ID for this session. This is what the server and client use to talk about this session.
         /// </param>
         /// <param name="host">The view variables host owning this session.</param>
-        public ViewVariablesSession(NetSessionId playerSession, object o, uint sessionId, IViewVariablesHost host)
+        public ViewVariablesSession(NetSessionId playerSession, object o, uint sessionId, IViewVariablesHost host, IRobustSerializer robustSerializer)
         {
             PlayerSession = playerSession;
             Object = o;
             SessionId = sessionId;
             ObjectType = o.GetType();
             Host = host;
+            RobustSerializer = robustSerializer;
 
             var traitIds = Host.TraitIdsFor(ObjectType);
             if (traitIds.Contains(ViewVariablesTraits.Members))

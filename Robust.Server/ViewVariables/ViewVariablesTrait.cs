@@ -81,7 +81,7 @@ namespace Robust.Server.ViewVariables
         /// <summary>
         ///     Swaps values like references over to reference tokens to prevent issues.
         /// </summary>
-        protected static object MakeValueNetSafe(object value)
+        protected object MakeValueNetSafe(object value)
         {
             if (value == null)
             {
@@ -100,7 +100,7 @@ namespace Robust.Server.ViewVariables
                     };
                 }
             }
-            else if (valType.IsServerSide())
+            else if (!Session.RobustSerializer.CanSerialize(valType))
             {
                 // Can't send this value type over the wire.
                 return new ViewVariablesBlobMembers.ServerValueTypeToken

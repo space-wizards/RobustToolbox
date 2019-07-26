@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.UserInterface;
@@ -28,37 +27,50 @@ namespace Robust.Client.ViewVariables
             if (args.Length == 0)
             {
                 vvm.OpenVV(new VVTest());
+                return false;
             }
-            else
+
+            var valArg = args[0];
+            if (valArg.StartsWith("SI"))
             {
-                var valArg = args[0];
-                if (valArg.StartsWith("SI"))
-                {
-                    var selector = new ViewVariablesIoCSelector(valArg.Substring(1));
-                    vvm.OpenVV(selector);
-                    return false;
-                }
-
-                if (valArg.StartsWith("I"))
-                {
-                    // IoC name.
-                    var type = IoCManager.Resolve<IReflectionManager>().LooseGetType(valArg);
-                    var obj = IoCManager.ResolveType(type);
-                    vvm.OpenVV(obj);
-                    return false;
-                }
-
-                if (valArg.StartsWith("gui/"))
-                {
-                    var obj = IoCManager.Resolve<IUserInterfaceManager>().RootControl;
-                    vvm.OpenVV(obj.GetChild(valArg.Substring(4)));
-                    return false;
-                }
-
-                var entityManager = IoCManager.Resolve<IEntityManager>();
-                var uid = EntityUid.Parse(args[0]);
-                vvm.OpenVV(entityManager.GetEntity(uid));
+                // Server-side IoC selector.
+                var selector = new ViewVariablesIoCSelector(valArg.Substring(1));
+                vvm.OpenVV(selector);
+                return false;
             }
+
+            if (valArg.StartsWith("I"))
+            {
+                // Client-side IoC selector.
+                var type = IoCManager.Resolve<IReflectionManager>().LooseGetType(valArg);
+                var obj = IoCManager.ResolveType(type);
+                vvm.OpenVV(obj);
+                return false;
+            }
+
+            if (valArg.StartsWith("gui/"))
+            {
+                // UI element.
+                var obj = IoCManager.Resolve<IUserInterfaceManager>().RootControl;
+                vvm.OpenVV(obj.GetChild(valArg.Substring(4)));
+                return false;
+            }
+
+            // Entity.
+            if (!EntityUid.TryParse(args[0], out var uid))
+            {
+                console.AddLine("Invalid specifier format.");
+                return false;
+            }
+
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            if (!entityManager.TryGetEntity(uid, out var entity))
+            {
+                console.AddLine("That entity does not exist.");
+                return false;
+            }
+
+            vvm.OpenVV(entity);
 
             return false;
         }
@@ -74,7 +86,7 @@ namespace Robust.Client.ViewVariables
             public Dictionary<object, object> Dict => new Dictionary<object, object> {{"a", "b"}, {"c", "d"}};
 
             [ViewVariables]
-            public List<object> List => new List<object> {1, 2, 3, 4, 5, 6, 7, 8, 9, x, 11, 12, 13, 14, 15};
+            public List<object> List => new List<object> {1, 2, 3, 4, 5, 6, 7, 8, 9, x, 11, 12, 13, 14, 15, this};
 
             [ViewVariables] private Vector2 Vector = (50, 50);
 

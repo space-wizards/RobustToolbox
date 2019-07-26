@@ -76,13 +76,13 @@ namespace Robust.Client.UserInterface.CustomControls
                             {
                                 MouseFilter = MouseFilterMode.Stop,
                                 SizeFlagsHorizontal = SizeFlags.FillExpand,
-                                PlaceHolder = _loc.GetString("Search Entities")
+                                PlaceHolder = _loc.GetString("Search")
                             }),
 
                             (ClearButton = new Button
                             {
                                 Disabled = true,
-                                Text = _loc.GetString("Clear Search"),
+                                Text = _loc.GetString("Clear"),
                             })
                         }
                     },
@@ -206,7 +206,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             foreach (var prototype in prototypes)
             {
-                var button = new EntitySpawnButton()
+                var button = new EntitySpawnButton
                 {
                     Prototype = prototype,
                 };

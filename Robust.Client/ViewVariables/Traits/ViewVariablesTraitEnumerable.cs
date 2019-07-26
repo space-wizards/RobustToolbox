@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -27,7 +28,7 @@ namespace Robust.Client.ViewVariables.Traits
         private HBoxContainer _controlsHBox;
         private VBoxContainer _elementsVBox;
 
-        private int HighestKnownPage => ((_cache.Count + ElementsPerPage - 1) / ElementsPerPage) - 1;
+        private int HighestKnownPage => Math.Max(0, ((_cache.Count + ElementsPerPage - 1) / ElementsPerPage) - 1);
 
         private SemaphoreSlim _networkSemaphore;
 

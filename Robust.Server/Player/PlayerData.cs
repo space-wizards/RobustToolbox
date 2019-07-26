@@ -1,6 +1,6 @@
 ﻿using Robust.Server.Interfaces.Player;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.Player
 {
@@ -11,8 +11,10 @@ namespace Robust.Server.Player
             SessionId = sessionId;
         }
 
+        [ViewVariables]
         public NetSessionId SessionId { get; }
 
+        [ViewVariables]
         public object ContentDataUncast { get; set; }
     }
 }

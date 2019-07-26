@@ -1248,6 +1248,25 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
+        ///     Remove all the children from this control.
+        /// </summary>
+        public void RemoveAllChildren()
+        {
+            foreach (var child in Children.ToList())
+            {
+                RemoveChild(child);
+            }
+        }
+
+        /// <summary>
+        ///     Make this child an orphan. e.g. remove it from its parent if it has one.
+        /// </summary>
+        public void Orphan()
+        {
+            Parent?.RemoveChild(this);
+        }
+
+        /// <summary>
         ///     Make the provided control a parent of this control.
         /// </summary>
         /// <param name="child">The control to make a child of this control.</param>
@@ -2223,10 +2242,7 @@ namespace Robust.Client.UserInterface
 
             public void Clear()
             {
-                foreach (var child in this.ToList())
-                {
-                    Owner.RemoveChild(child);
-                }
+                Owner.RemoveAllChildren();
             }
 
             public bool Contains(Control item)

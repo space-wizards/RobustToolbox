@@ -10,10 +10,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Robust.Client.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.Primitives;
 
 namespace Robust.Client.ResourceManagement
 {
@@ -46,6 +45,7 @@ namespace Robust.Client.ResourceManagement
                 manifestContents = reader.ReadToEnd();
             }
 
+#if DEBUG
             if (RSISchema != null)
             {
                 var errors = RSISchema.Validate(manifestContents);
@@ -61,6 +61,7 @@ namespace Robust.Client.ResourceManagement
                     throw new RSILoadException($"{errors.Count} errors while loading RSI. See console.");
                 }
             }
+#endif
 
             // Ok schema validated just fine.
             var manifestJson = JObject.Parse(manifestContents);
@@ -68,7 +69,7 @@ namespace Robust.Client.ResourceManagement
 
             var rsi = new RSI(size);
 
-            var images = new List<Image<Rgba32>>();
+            var images = new List<(Image<Rgba32> src, Vector2i offset)>();
             var directionFramesList = new List<(Texture, float)[]>();
 
             // Do every state.
@@ -151,8 +152,7 @@ namespace Robust.Client.ResourceManagement
                         var posX = (int) ((counter % sheetWidth) * size.X);
                         var posY = (int) ((counter / sheetWidth) * size.Y);
 
-                        var rect = new Rectangle(posX, posY, (int) size.X, (int) size.Y);
-                        images.Add(image.Clone(x => x.Crop(rect)));
+                        images.Add((image, (posX, posY)));
 
                         directionFrames[i] = (null, delayList[i]);
                         counter++;
@@ -181,9 +181,11 @@ namespace Robust.Client.ResourceManagement
                         var column = i % dimensionX;
                         var row = i / dimensionX;
 
-                        var point = new Point((int) (column * size.X), (int) (row * size.Y));
+                        var (image, offset) = images[i];
 
-                        sheet.Mutate(p => p.DrawImage(images[i], point, PixelColorBlendingMode.Overlay, 1));
+                        var srcBox = UIBox2i.FromDimensions(offset, (Vector2i) size);
+                        var dstOffset = ((int)(column * size.X), (int)(row * size.Y));
+                        image.Blit(srcBox, sheet, dstOffset);
                     }
                 }
 

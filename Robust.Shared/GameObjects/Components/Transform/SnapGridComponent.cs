@@ -77,6 +77,13 @@ namespace Robust.Shared.GameObjects.Components.Transform
             return grid.GetSnapGridCell(pos, Offset).Select(s => s.Owner);
         }
 
+        public IEnumerable<IEntity> GetLocal()
+        {
+            var grid = _mapManager.GetGrid(Owner.Transform.GridID);
+
+            return grid.GetSnapGridCell(Position, Offset).Select(s => s.Owner);
+        }
+
 
         public string GetDebugString()
         {

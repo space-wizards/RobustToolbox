@@ -13,9 +13,41 @@ namespace Robust.Client.UserInterface
     {
         public IReadOnlyList<StyleRule> Rules { get; }
 
+        // More organized forms of the above rules list, that is more efficient to query.
+        internal List<(int order, StyleRule rule)> UnsortedRules { get; }
+        internal Dictionary<Type, List<(int order, StyleRule rule)>> TypeSortedRules { get; }
+
         public Stylesheet(IReadOnlyList<StyleRule> rules)
         {
             Rules = rules;
+
+            UnsortedRules = new List<(int order, StyleRule rule)>();
+            TypeSortedRules = new Dictionary<Type, List<(int order, StyleRule rule)>>();
+
+            var order = 0;
+            var typeControl = typeof(Control);
+            foreach (var rule in rules)
+            {
+                if (rule.Selector is SelectorElement element
+                    && element.ElementType != null
+                    && typeControl.IsAssignableFrom(element.ElementType)
+                    && element.ElementType != typeControl)
+                {
+                    if (!TypeSortedRules.TryGetValue(element.ElementType, out var typeList))
+                    {
+                        typeList = new List<(int order, StyleRule rule)>();
+                        TypeSortedRules.Add(element.ElementType, typeList);
+                    }
+
+                    typeList.Add((order, rule));
+                }
+                else
+                {
+                    UnsortedRules.Add((order, rule));
+                }
+
+                order += 1;
+            }
         }
     }
 
@@ -193,7 +225,8 @@ namespace Robust.Client.UserInterface
     }
 
     // Temporarily hidden due to performance concerns.
-    // Like seriously this thing is O(n!)
+    // Like seriously this thing is awful performance wise.
+    // Also, you can't just enable it. The code is here but AddChild etc only do restyles one level deep.
     internal sealed class SelectorDescendant : Selector
     {
         public SelectorDescendant([NotNull] Selector ascendant, [NotNull] Selector descendant)

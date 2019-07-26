@@ -71,6 +71,8 @@ namespace Robust.Client.UserInterface
         public event Action<Control> OnMinimumSizeChanged;
         public event Action<Control> OnVisibilityChanged;
 
+        private int _uniqueChildId;
+
         /// <summary>
         ///     The name of this control.
         ///     Names must be unique between the siblings of the control.
@@ -605,7 +607,7 @@ namespace Robust.Client.UserInterface
             set
             {
                 _growHorizontal = value;
-                _doUpdateLayout();
+                _updateLayout();
             }
         }
 
@@ -620,7 +622,7 @@ namespace Robust.Client.UserInterface
             set
             {
                 _growVertical = value;
-                _doUpdateLayout();
+                _updateLayout();
             }
         }
 
@@ -795,7 +797,6 @@ namespace Robust.Client.UserInterface
             Name = GetType().Name;
             Initialize();
             _applyPropertyMap();
-            Restyle();
         }
 
         /// <param name="name">The name the component will have.</param>
@@ -819,7 +820,6 @@ namespace Robust.Client.UserInterface
             Name = name;
             Initialize();
             _applyPropertyMap();
-            Restyle();
         }
 
         /// <summary>
@@ -1284,12 +1284,11 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            var i = 0;
             var origChildName = child.Name;
             var childName = origChildName;
             while (_children.ContainsKey(childName))
             {
-                childName = $"{origChildName}_{++i}";
+                childName = $"{origChildName}_{++_uniqueChildId}";
             }
 
             if (origChildName != childName)
@@ -1324,7 +1323,6 @@ namespace Robust.Client.UserInterface
         /// <param name="newParent">The new parent component.</param>
         protected virtual void Parented(Control newParent)
         {
-            MinimumSizeChanged();
             Restyle();
         }
 
@@ -1371,7 +1369,6 @@ namespace Robust.Client.UserInterface
         /// </summary>
         protected virtual void Deparented()
         {
-            Restyle();
         }
 
         /// <summary>
@@ -2062,12 +2059,12 @@ namespace Robust.Client.UserInterface
         {
         }
 
-        private void _updateLayout(bool immediate = false)
+        private void _updateLayout()
         {
-            _doUpdateLayout();
+            DoUpdateLayout();
         }
 
-        private void _doUpdateLayout()
+        internal void DoUpdateLayout()
         {
             var (pSizeX, pSizeY) = Parent?._size ?? Vector2.Zero;
 
@@ -2098,7 +2095,7 @@ namespace Robust.Client.UserInterface
 
                 foreach (var child in _orderedChildren)
                 {
-                    child._doUpdateLayout();
+                    child._updateLayout();
                 }
             }
         }

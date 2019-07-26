@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface
@@ -15,6 +14,8 @@ namespace Robust.Client.UserInterface
         public ICollection<string> StyleClasses { get; }
 
         private string _styleIdentifier;
+
+        internal int RestyleGeneration;
 
         [ViewVariables]
         public string StyleIdentifier
@@ -39,6 +40,7 @@ namespace Robust.Client.UserInterface
                 {
                     return;
                 }
+
                 _stylePseudoClass = value;
                 Restyle();
             }
@@ -68,7 +70,7 @@ namespace Robust.Client.UserInterface
             Restyle();
         }
 
-        private void Restyle(bool doChildren = true)
+        private void Restyle()
         {
             _styleProperties.Clear();
 
@@ -80,17 +82,32 @@ namespace Robust.Client.UserInterface
             }
 
             // Get all rules that apply to us, sort them and apply they params again.
-            var ruleList = new List<(StyleRule rule, int index)>();
-            var count = 0;
-            foreach (var rule in stylesheet.Rules)
+            var ruleList = new List<(int index, StyleRule rule)>();
+
+            // Unsorted rules
+            foreach (var (index, rule) in stylesheet.UnsortedRules)
             {
-                if (!rule.Selector.Matches(this))
+                if (rule.Selector.Matches(this))
+                {
+                    ruleList.Add((index, rule));
+                }
+            }
+
+            // Rules specific to our type.
+            for (var type = GetType(); type != typeof(Control); type = type.BaseType)
+            {
+                if (!stylesheet.TypeSortedRules.TryGetValue(type, out var typeRuleList))
                 {
                     continue;
                 }
 
-                ruleList.Add((rule, count));
-                count += 1;
+                foreach (var (index, rule) in typeRuleList)
+                {
+                    if (rule.Selector.Matches(this))
+                    {
+                        ruleList.Add((index, rule));
+                    }
+                }
             }
 
             // Sort by specificity.
@@ -103,7 +120,7 @@ namespace Robust.Client.UserInterface
             });
 
             // Go over each rule.
-            foreach (var (rule, _) in ruleList)
+            foreach (var (_, rule) in ruleList)
             {
                 foreach (var property in rule.Properties)
                 {
@@ -120,14 +137,6 @@ namespace Robust.Client.UserInterface
             }
 
             StylePropertiesChanged();
-
-            if (doChildren)
-            {
-                foreach (var child in _orderedChildren.ToList())
-                {
-                    child.Restyle(false);
-                }
-            }
         }
 
         protected virtual void StylePropertiesChanged()

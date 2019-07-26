@@ -83,5 +83,10 @@ namespace Robust.Shared.Maths
         {
             return new Vector2u((uint) vector.X, (uint) vector.Y);
         }
+
+        public static explicit operator Vector2i(Vector2u vector)
+        {
+            return new Vector2i((int) vector.X, (int) vector.Y);
+        }
     }
 }

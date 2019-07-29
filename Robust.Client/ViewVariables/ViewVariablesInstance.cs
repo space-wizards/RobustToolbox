@@ -121,9 +121,9 @@ namespace Robust.Client.ViewVariables
                 return new Label {Text = top, ClipText = true};
             }
 
-            var smallFont =
-                new VectorFont(IoCManager.Resolve<IResourceCache>().GetResource<FontResource>("/Fonts/CALIBRI.TTF"),
-                    10);
+            //var smallFont =
+            //    new VectorFont(IoCManager.Resolve<IResourceCache>().GetResource<FontResource>("/Fonts/CALIBRI.TTF"),
+            //        10);
 
             // Custom ToString() implementation.
             var headBox = new VBoxContainer {SeparationOverride = 0};
@@ -131,7 +131,7 @@ namespace Robust.Client.ViewVariables
             headBox.AddChild(new Label
             {
                 Text = bottom,
-                FontOverride = smallFont,
+            //    FontOverride = smallFont,
                 FontColorOverride = Color.DarkGray,
                 ClipText = true
             });

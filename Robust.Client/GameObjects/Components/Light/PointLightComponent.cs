@@ -112,11 +112,11 @@ namespace Robust.Client.GameObjects
             set
             {
                 radius = FloatMath.Clamp(value, 2, 10);
-                var tex = _resourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/Effects/Light/") /
-                                                           $"lighting_falloff_{(int) radius}.png");
+                //var tex = _resourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/Effects/Light/") /
+                //                                           $"lighting_falloff_{(int) radius}.png");
 
 
-                Light.Texture = tex.Texture;
+                //Light.Texture = tex.Texture;
             }
         }
 

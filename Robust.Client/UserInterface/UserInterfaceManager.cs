@@ -72,7 +72,7 @@ namespace Robust.Client.UserInterface
         public void Initialize()
         {
             UIScale = _configurationManager.GetCVar<float>("display.uiScale");
-            ThemeDefaults = new UIThemeDefault();
+            ThemeDefaults = new UIThemeDummy();
 
             _initializeCommon();
 

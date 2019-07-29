@@ -51,8 +51,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
             contents = new Label
             {
-                FontOverride = resourceCache.GetResource<FontResource>(new ResourcePath("/Fonts/CALIBRI.TTF"))
-                    .MakeDefault(),
                 FontColorShadowOverride = Color.Black,
                 MarginTop = 5,
                 MarginLeft = 5

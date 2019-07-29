@@ -92,7 +92,8 @@ namespace Robust.Shared.IoC
         /// </summary>
         public static void Clear()
         {
-            _container.Value.Clear();
+            if (_container.IsValueCreated)
+                _container.Value.Clear();
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -1343,6 +1343,7 @@ namespace Robust.Client.UserInterface
         protected virtual void Parented(Control newParent)
         {
             Restyle();
+            DoUpdateLayout();
         }
 
         /// <summary>

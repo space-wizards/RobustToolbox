@@ -39,8 +39,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
         /// <inheritdoc />
         public event EventHandler<MoveEventArgs> OnMove;
 
-        public event Action<ParentChangedEventArgs> OnParentChanged;
-
         /// <inheritdoc />
         public override string Name => "Transform";
         /// <inheritdoc />
@@ -117,11 +115,11 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => !_parent.IsValid() ? null : Owner.EntityManager.GetEntity(_parent).Transform;
             private set
             {
-                var old = _parent;
-                var msg = new EntParentChangedMessage(Owner, Parent?.Owner);
+                var entMessage = new EntParentChangedMessage(Owner, Parent?.Owner);
+                var compMessage = new ParentChangedMessage(Owner, Parent?.Owner);
                 _parent = value?.Owner.Uid ?? EntityUid.Invalid;
-                Owner.EntityManager.RaiseEvent(Owner, msg);
-                OnParentChanged?.Invoke(new ParentChangedEventArgs(old, _parent));
+                Owner.EntityManager.RaiseEvent(Owner, entMessage);
+                Owner.SendMessage(this, compMessage);
             }
         }
 

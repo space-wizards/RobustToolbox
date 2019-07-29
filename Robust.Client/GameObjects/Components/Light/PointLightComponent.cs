@@ -4,7 +4,9 @@ using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -120,14 +122,18 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public override void Initialize()
+        /// <inheritdoc />
+        public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null, IComponent component = null)
         {
-            base.Initialize();
+            base.HandleMessage(message, netChannel, component);
 
-            Owner.Transform.OnParentChanged += TransformOnOnParentChanged;
+            if ((message is ParentChangedMessage msg))
+            {
+                HandleTransformParentChanged(msg);
+            }
         }
 
-        private void TransformOnOnParentChanged(ParentChangedEventArgs obj)
+        private void HandleTransformParentChanged(ParentChangedMessage obj)
         {
             // TODO: this does not work for things nested multiply layers deep.
             if (!VisibleNested)
@@ -135,7 +141,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            if (obj.New.IsValid() && Owner.EntityManager.TryGetEntity(obj.New, out var entity))
+            if (obj.NewParent != null && obj.NewParent.IsValid())
             {
 
                 _lightOnParent = true;

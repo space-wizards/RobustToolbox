@@ -88,6 +88,7 @@ namespace Robust.Client
                     IoCManager.Register<IInputManager, InputManager>();
                     IoCManager.Register<IFileDialogManager, DummyFileDialogManager>();
                     IoCManager.Register<IFileDialogManagerInternal, DummyFileDialogManager>();
+                    IoCManager.Register<IUriOpener, UriOpenerDummy>();
                     break;
                 case GameController.DisplayMode.Clyde:
                     IoCManager.Register<IClyde, Clyde>();
@@ -96,6 +97,13 @@ namespace Robust.Client
                     IoCManager.Register<IInputManager, ClydeInputManager>();
                     IoCManager.Register<IFileDialogManager, FileDialogManager>();
                     IoCManager.Register<IFileDialogManagerInternal, FileDialogManager>();
+#if LINUX
+                    IoCManager.Register<IUriOpener, UriOpenerLinux>();
+#elif MACOS
+                    IoCManager.Register<IUriOpener, UriOpenerMacOS>();
+#elif WINDOWS
+                    IoCManager.Register<IUriOpener, UriOpenerWindows>();
+#endif
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

@@ -132,7 +132,7 @@ namespace Robust.Client.UserInterface.Controls
             return totalMinSize / UIScale;
         }
 
-        protected override void SortChildren()
+        protected internal override void SortChildren()
         {
             var rows = Rows;
 

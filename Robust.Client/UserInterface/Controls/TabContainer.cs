@@ -230,7 +230,7 @@ namespace Robust.Client.UserInterface.Controls
             FitChildInPixelBox(child, _getContentBox());
         }
 
-        protected override void SortChildren()
+        protected internal override void SortChildren()
         {
             base.SortChildren();
 

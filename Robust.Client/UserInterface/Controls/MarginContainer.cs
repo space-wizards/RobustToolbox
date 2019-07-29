@@ -19,7 +19,7 @@ namespace Robust.Client.UserInterface.Controls
         public int? MarginRightOverride { get; set; }
         public int? MarginLeftOverride { get; set; }
 
-        protected override void SortChildren()
+        protected internal override void SortChildren()
         {
             var top = MarginTopOverride ?? 0;
             var bottom = MarginBottomOverride ?? 0;

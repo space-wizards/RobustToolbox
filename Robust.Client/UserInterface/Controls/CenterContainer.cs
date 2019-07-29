@@ -8,7 +8,7 @@ namespace Robust.Client.UserInterface.Controls
     [ControlWrap("CenterContainer")]
     public class CenterContainer : Container
     {
-        protected override void SortChildren()
+        protected internal override void SortChildren()
         {
             foreach (var child in Children)
             {

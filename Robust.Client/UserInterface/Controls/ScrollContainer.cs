@@ -62,7 +62,7 @@ namespace Robust.Client.UserInterface.Controls
             _vScrollBar.OnValueChanged += ev;
         }
 
-        protected override void SortChildren()
+        protected internal override void SortChildren()
         {
             if (_vScrollBar?.Parent == null || _hScrollBar?.Parent == null)
             {

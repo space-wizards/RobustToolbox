@@ -34,7 +34,7 @@ namespace Robust.Client.UserInterface.Controls
             style?.Draw(handle, PixelSizeBox);
         }
 
-        protected override void SortChildren()
+        protected internal override void SortChildren()
         {
             base.SortChildren();
 

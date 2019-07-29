@@ -20,7 +20,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         ///     Called when the container should re-sort its children.
         /// </summary>
-        protected virtual void SortChildren()
+        protected internal virtual void SortChildren()
         {
 
         }

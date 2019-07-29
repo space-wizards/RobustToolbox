@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +9,7 @@ using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.ResourceManagement.ResourceTypes;
+using Robust.Client.UserInterface.Controls;
 using Robust.Client.Utility;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
@@ -72,6 +73,8 @@ namespace Robust.Client.UserInterface
         public event Action<Control> OnVisibilityChanged;
 
         private int _uniqueChildId;
+        private SizeFlags _sizeFlagsHorizontal = SizeFlags.Fill;
+        private SizeFlags _sizeFlagsVertical = SizeFlags.Fill;
 
         /// <summary>
         ///     The name of this control.
@@ -630,13 +633,37 @@ namespace Robust.Client.UserInterface
         ///     Horizontal size flags for container layout.
         /// </summary>
         [ViewVariables]
-        public SizeFlags SizeFlagsHorizontal { get; set; } = SizeFlags.Fill;
+        public SizeFlags SizeFlagsHorizontal
+        {
+            get => _sizeFlagsHorizontal;
+            set
+            {
+                _sizeFlagsHorizontal = value;
+
+                if (Parent is Container container)
+                {
+                    container.SortChildren();
+                }
+            }
+        }
 
         /// <summary>
         ///     Vertical size flags for container layout.
         /// </summary>
         [ViewVariables]
-        public SizeFlags SizeFlagsVertical { get; set; } = SizeFlags.Fill;
+        public SizeFlags SizeFlagsVertical
+        {
+            get => _sizeFlagsVertical;
+            set
+            {
+                _sizeFlagsVertical = value;
+
+                if (Parent is Container container)
+                {
+                    container.SortChildren();
+                }
+            }
+        }
 
         /// <summary>
         ///     Stretch ratio used to give shared of the available space in case multiple siblings are set to expand
@@ -656,8 +683,11 @@ namespace Robust.Client.UserInterface
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Value must be greater than zero.");
                 }
 
-                // TODO: Notify parent container.
                 _sizeFlagsStretchRatio = value;
+                if (Parent is Container container)
+                {
+                    container.SortChildren();
+                }
             }
         }
 

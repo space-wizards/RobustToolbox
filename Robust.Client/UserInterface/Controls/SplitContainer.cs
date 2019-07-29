@@ -11,7 +11,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private protected abstract bool Vertical { get; }
 
-        protected override void SortChildren()
+        protected internal override void SortChildren()
         {
             base.SortChildren();
 

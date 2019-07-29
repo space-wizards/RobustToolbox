@@ -89,7 +89,12 @@ namespace Robust.Client.Graphics.Clyde
 
         private ShaderProgram _currentProgram;
 
-        public override Vector2i ScreenSize => new Vector2i(_window.Width, _window.Height);
+        public override Vector2i ScreenSize
+        {
+            get => new Vector2i(_window.Width, _window.Height);
+            set => _window.Size = new Size(value.X, value.Y);
+        }
+
         private readonly HashSet<string> OpenGLExtensions = new HashSet<string>();
 
         private bool HasKHRDebug => HasExtension("GL_KHR_debug");
@@ -97,14 +102,16 @@ namespace Robust.Client.Graphics.Clyde
         private bool _quartResLights = true;
 
         private bool _disposing;
+        private bool _lite;
 
         public override void SetWindowTitle(string title)
         {
             _window.Title = title;
         }
 
-        public override void Initialize()
+        public override void Initialize(bool lite=false)
         {
+            _lite = lite;
             _initWindow();
             _initializeAudio();
             ReloadConfig();
@@ -163,7 +170,7 @@ namespace Robust.Client.Graphics.Clyde
                 width,
                 height,
                 GraphicsMode.Default,
-                "Space Station 14",
+                string.Empty,
                 GameWindowFlags.Default,
                 DisplayDevice.Default,
                 3, 3,
@@ -360,7 +367,10 @@ namespace Robust.Client.Graphics.Clyde
             GL.Viewport(0, 0, _window.Width, _window.Height);
 
             // Quickly do a render with _drawingSplash = true so the screen isn't blank.
-            Render();
+            if (!_lite)
+            {
+                Render();
+            }
         }
 
         // ReSharper disable once UnusedParameter.Local
@@ -576,8 +586,11 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _regenerateLightRenderTarget()
         {
-            LightRenderTarget = CreateRenderTarget(_lightMapSize(), RenderTargetColorFormat.Rgba16F,
+            if (!_lite)
+            {
+                LightRenderTarget = CreateRenderTarget(_lightMapSize(), RenderTargetColorFormat.Rgba16F,
                 name: "LightRenderTarget");
+            }
         }
 
         private void _onWindowClosed(object sender, EventArgs args)

@@ -41,9 +41,9 @@ namespace Robust.Client.Graphics
             _configurationManager.RegisterCVar("audio.device", "");
         }
 
-        public abstract Vector2i ScreenSize { get; }
+        public abstract Vector2i ScreenSize { get; set; }
         public abstract void SetWindowTitle(string title);
-        public abstract void Initialize();
+        public abstract void Initialize(bool lite=false);
 
         protected virtual void ReloadConfig()
         {

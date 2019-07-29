@@ -14,7 +14,7 @@ namespace Robust.Client.Interfaces.Graphics
 {
     public interface IClyde
     {
-        Vector2i ScreenSize { get; }
+        Vector2i ScreenSize { get; set; }
         void SetWindowTitle(string title);
         event Action<WindowResizedEventArgs> OnWindowResized;
 
@@ -45,7 +45,7 @@ namespace Robust.Client.Interfaces.Graphics
         void ProcessInput(FrameEventArgs frameEventArgs);
 
         // Init.
-        void Initialize();
+        void Initialize(bool lite=false);
         void Ready();
 
         ClydeHandle LoadShader(ParsedShader shader, string name = null);

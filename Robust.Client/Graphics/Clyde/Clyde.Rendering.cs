@@ -87,8 +87,6 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            var worldMatrices = _worldMatrices();
-
             void RenderOverlays(OverlaySpace space)
             {
                 using (DebugGroup($"Overlays: {space}"))
@@ -104,99 +102,101 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            RenderOverlays(OverlaySpace.ScreenSpaceBelowWorld);
-
-            _setSpace(CurrentSpace.WorldSpace);
-
-            using (DebugGroup("Lights"))
+            if (!_lite)
             {
-                _drawLights();
-            }
+                RenderOverlays(OverlaySpace.ScreenSpaceBelowWorld);
 
-            using (DebugGroup("Grids"))
-            {
-                _drawGrids();
-            }
+                _setSpace(CurrentSpace.WorldSpace);
 
-            using (DebugGroup("Entities"))
-            {
-                var entityList = new List<SpriteComponent>(100);
-                var map = _eyeManager.CurrentMap;
-
-                foreach (var entity in _entityManager.GetEntities())
+                using (DebugGroup("Lights"))
                 {
-                    if (!entity.Transform.IsMapTransform || entity.Transform.MapID != map ||
-                        !entity.TryGetComponent(out SpriteComponent sprite) || !sprite.Visible)
-                    {
-                        continue;
-                    }
-
-                    entityList.Add(sprite);
+                    _drawLights();
                 }
 
-                entityList.Sort((a, b) =>
+                using (DebugGroup("Grids"))
                 {
-                    var cmp = ((int) a.DrawDepth).CompareTo((int) b.DrawDepth);
-                    if (cmp != 0)
-                    {
-                        return cmp;
-                    }
-
-                    return a.RenderOrder.CompareTo(b.RenderOrder);
-                });
-
-                foreach (var sprite in entityList)
-                {
-                    Vector2i roundedPos = default;
-                    if (sprite.PostShader != null)
-                    {
-                        _renderHandle.UseRenderTarget(EntityPostRenderTarget);
-                        _renderHandle.Clear(new Color());
-                        // Calculate viewport so that the entity thinks it's drawing to the same position,
-                        // which is necessary for light application,
-                        // but it's ACTUALLY drawing into the center of the render target.
-                        var spritePos = sprite.Owner.Transform.WorldPosition;
-                        var screenPos = _eyeManager.WorldToScreen(spritePos);
-                        var (roundedX, roundedY) = roundedPos = (Vector2i) screenPos;
-                        var flippedPos = new Vector2i(roundedX, ScreenSize.Y - roundedY);
-                        flippedPos -= EntityPostRenderTarget.Size / 2;
-                        _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, ScreenSize));
-                    }
-
-                    sprite.OpenGLRender(_renderHandle.DrawingHandleWorld);
-
-                    if (sprite.PostShader != null)
-                    {
-                        _renderHandle.UseRenderTarget(null);
-                        _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, ScreenSize));
-
-                        _renderHandle.UseShader(sprite.PostShader);
-                        _renderHandle.SetSpace(CurrentSpace.ScreenSpace);
-                        _renderHandle.SetModelTransform(Matrix3.Identity);
-
-                        var rounded = roundedPos - EntityPostRenderTarget.Size / 2;
-
-                        var box = UIBox2i.FromDimensions(rounded, EntityPostRenderTarget.Size);
-
-                        _renderHandle.DrawTexture(EntityPostRenderTarget.Texture, box.BottomLeft,
-                            box.TopRight, Color.White, null, 0);
-
-                        _renderHandle.SetSpace(CurrentSpace.WorldSpace);
-                        _renderHandle.UseShader(null);
-                    }
+                    _drawGrids();
                 }
 
-                _flushRenderHandle(_renderHandle);
+                using (DebugGroup("Entities"))
+                {
+                    var entityList = new List<SpriteComponent>(100);
+                    var map = _eyeManager.CurrentMap;
+
+                    foreach (var entity in _entityManager.GetEntities())
+                    {
+                        if (!entity.Transform.IsMapTransform || entity.Transform.MapID != map ||
+                            !entity.TryGetComponent(out SpriteComponent sprite) || !sprite.Visible)
+                        {
+                            continue;
+                        }
+
+                        entityList.Add(sprite);
+                    }
+
+                    entityList.Sort((a, b) =>
+                    {
+                        var cmp = ((int) a.DrawDepth).CompareTo((int) b.DrawDepth);
+                        if (cmp != 0)
+                        {
+                            return cmp;
+                        }
+
+                        return a.RenderOrder.CompareTo(b.RenderOrder);
+                    });
+
+                    foreach (var sprite in entityList)
+                    {
+                        Vector2i roundedPos = default;
+                        if (sprite.PostShader != null)
+                        {
+                            _renderHandle.UseRenderTarget(EntityPostRenderTarget);
+                            _renderHandle.Clear(new Color());
+                            // Calculate viewport so that the entity thinks it's drawing to the same position,
+                            // which is necessary for light application,
+                            // but it's ACTUALLY drawing into the center of the render target.
+                            var spritePos = sprite.Owner.Transform.WorldPosition;
+                            var screenPos = _eyeManager.WorldToScreen(spritePos);
+                            var (roundedX, roundedY) = roundedPos = (Vector2i) screenPos;
+                            var flippedPos = new Vector2i(roundedX, ScreenSize.Y - roundedY);
+                            flippedPos -= EntityPostRenderTarget.Size / 2;
+                            _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, ScreenSize));
+                        }
+
+                        sprite.OpenGLRender(_renderHandle.DrawingHandleWorld);
+
+                        if (sprite.PostShader != null)
+                        {
+                            _renderHandle.UseRenderTarget(null);
+                            _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, ScreenSize));
+
+                            _renderHandle.UseShader(sprite.PostShader);
+                            _renderHandle.SetSpace(CurrentSpace.ScreenSpace);
+                            _renderHandle.SetModelTransform(Matrix3.Identity);
+
+                            var rounded = roundedPos - EntityPostRenderTarget.Size / 2;
+
+                            var box = UIBox2i.FromDimensions(rounded, EntityPostRenderTarget.Size);
+
+                            _renderHandle.DrawTexture(EntityPostRenderTarget.Texture, box.BottomLeft,
+                                box.TopRight, Color.White, null, 0);
+
+                            _renderHandle.SetSpace(CurrentSpace.WorldSpace);
+                            _renderHandle.UseShader(null);
+                        }
+                    }
+
+                    _flushRenderHandle(_renderHandle);
+                }
+
+                RenderOverlays(OverlaySpace.WorldSpace);
+
+                _lightingReady = false;
+
+                _setSpace(CurrentSpace.ScreenSpace);
+
+                RenderOverlays(OverlaySpace.ScreenSpace);
             }
-
-            RenderOverlays(OverlaySpace.WorldSpace);
-
-            _lightingReady = false;
-
-            _setSpace(CurrentSpace.ScreenSpace);
-
-            RenderOverlays(OverlaySpace.ScreenSpace);
-
             using (DebugGroup("UI"))
             {
                 _userInterfaceManager.Render(_renderHandle);

@@ -15,7 +15,7 @@ namespace Robust.Client.Graphics.Clyde
     internal sealed class ClydeHeadless : DisplayManager, IClydeInternal, IClydeAudio
     {
         // Would it make sense to report a fake resolution like 720p here so code doesn't break? idk.
-        public override Vector2i ScreenSize => (1280, 720);
+        public override Vector2i ScreenSize { get; set; } = (1280, 720);
         public ShaderInstance InstanceShader(ClydeHandle handle)
         {
             return new DummyShaderInstance();
@@ -29,7 +29,7 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public override void Initialize()
+        public override void Initialize(bool lite=false)
         {
             // Nada.
         }

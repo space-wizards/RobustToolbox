@@ -19,6 +19,7 @@ using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Interfaces.Utility;
 using Robust.Client.State.States;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
@@ -34,7 +35,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client
@@ -165,7 +165,7 @@ namespace Robust.Client
 
             _stateManager.RequestStateChange<MainScreen>();
 
-            _clyde?.Ready();
+            _clyde.Ready();
 
             if (args.Contains("--connect"))
             {
@@ -231,7 +231,7 @@ namespace Robust.Client
         private void _frameProcessMain(float delta)
         {
             var eventArgs = new RenderFrameEventArgs(delta);
-            _clyde?.FrameProcess(eventArgs);
+            _clyde.FrameProcess(eventArgs);
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, eventArgs.Elapsed);
             _lightManager.FrameUpdate(eventArgs);
             _stateManager.FrameUpdate(eventArgs);
@@ -275,28 +275,9 @@ namespace Robust.Client
                 return Path.Combine(exeDir ?? throw new InvalidOperationException(), "user_data");
             }
 
-            string appDataDir;
-
-#if LINUX
-            var xdgDataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
-            if (xdgDataHome == null)
-            {
-                appDataDir = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share");
-            }
-            else
-            {
-                appDataDir = xdgDataHome;
-            }
-#elif MACOS
-            appDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                                      "Library", "Application Support");
-#else
-            appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-#endif
-
-            return Path.Combine(appDataDir, "Space Station 14");
+            return UserDataDir.GetUserDataDir();
         }
+
 
         internal enum DisplayMode
         {

@@ -11,6 +11,12 @@ namespace Robust.UnitTesting.Client.UserInterface
     {
         public override UnitTestProject Project => UnitTestProject.Client;
 
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            IoCManager.Resolve<IUserInterfaceManagerInternal>().InitializeTesting();
+        }
+
         [Test]
         public void TestSelectors()
         {
@@ -65,6 +71,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             uiMgr.Stylesheet = sheet;
 
             var control = new Label();
+            uiMgr.StateRoot.AddChild(control);
             control.TryGetStyleProperty("foo", out string value);
             Assert.That(value, Is.EqualTo("bar"));
 

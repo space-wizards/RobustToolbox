@@ -3,12 +3,13 @@ using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.State;
-using Robust.Client.UserInterface.Controls;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Player;
+using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
+
 namespace Robust.Client.UserInterface.CustomControls
 {
     public class DebugMonitors : VBoxContainer, IDebugMonitors
@@ -19,7 +20,7 @@ namespace Robust.Client.UserInterface.CustomControls
         public bool ShowTime { get => _timeDebug.Visible; set => _timeDebug.Visible = value; }
         public bool ShowFrameGraph { get => _frameGraph.Visible; set => _frameGraph.Visible = value; }
 
-        private FPSCounter _fpsCounter;
+        private FpsCounter _fpsCounter;
         private DebugCoordsPanel _debugCoordsPanel;
         private DebugNetPanel _debugNetPanel;
         private DebugTimePanel _timeDebug;
@@ -65,7 +66,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void PerformLayout()
         {
-            _fpsCounter = new FPSCounter(_gameTiming);
+            _fpsCounter = new FpsCounter(_gameTiming);
             AddChild(_fpsCounter);
 
             _debugCoordsPanel = new DebugCoordsPanel(_playerManager, _eyeManager, _inputManager,

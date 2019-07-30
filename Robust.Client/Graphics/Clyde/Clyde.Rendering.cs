@@ -12,7 +12,6 @@ using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
-using Robust.Shared.Enums;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -297,7 +296,7 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var component in _componentManager.GetAllComponents<PointLightComponent>())
             {
-                if (component.State != LightState.On || component.Owner.Transform.MapID != map)
+                if (!component.Enabled || component.Owner.Transform.MapID != map)
                 {
                     continue;
                 }

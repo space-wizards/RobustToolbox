@@ -1,19 +1,19 @@
 ﻿﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Robust.Shared.Enums;
-using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.IoC;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Serialization;
-using Robust.Shared.ViewVariables;
+ using System.Collections.Generic;
+ using System.Linq;
+ using Robust.Shared.Enums;
+ using Robust.Shared.GameObjects.EntitySystemMessages;
+ using Robust.Shared.Interfaces.GameObjects;
+ using Robust.Shared.Interfaces.GameObjects.Components;
+ using Robust.Shared.Interfaces.Map;
+ using Robust.Shared.Interfaces.Timing;
+ using Robust.Shared.IoC;
+ using Robust.Shared.Map;
+ using Robust.Shared.Maths;
+ using Robust.Shared.Serialization;
+ using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.GameObjects.Components.Transform
+ namespace Robust.Shared.GameObjects.Components.Transform
 {
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {

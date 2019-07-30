@@ -1,17 +1,10 @@
 ﻿using System;
-using Robust.Client.Interfaces.Graphics.Lighting;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.ResourceManagement;
-using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
-using ObjectSerializer = Robust.Shared.Serialization.ObjectSerializer;
 
 namespace Robust.Client.GameObjects
 {
@@ -21,44 +14,36 @@ namespace Robust.Client.GameObjects
         public override uint? NetID => NetIDs.POINT_LIGHT;
         public override Type StateType => typeof(PointLightComponentState);
 
-        private ILight Light;
-#pragma warning disable 649
-        [Dependency] private readonly ILightManager lightManager;
-        [Dependency] private readonly IResourceCache _resourceCache;
-#pragma warning restore 649
-
         [ViewVariables(VVAccess.ReadWrite)]
         public Color Color
         {
-            get => Light.Color;
-            set => Light.Color = value;
+            get => _color;
+            set => _color = value;
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Offset
         {
-            get => Light.Offset;
-            set => Light.Offset = value;
+            get => _offset;
+            set => _offset = value;
         }
 
-        private LightState state = LightState.On;
-
         [ViewVariables(VVAccess.ReadWrite)]
-        public LightState State
+        public bool Enabled
         {
-            get => state;
-            set
-            {
-                state = value;
-                Light.Enabled = state == LightState.On;
-            }
+            get => _enabled;
+            set => _enabled = value;
         }
 
         /// <summary>
         ///     Determines if the light mask should automatically rotate with the entity. (like a flashlight)
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool MaskAutoRotate { get; set; }
+        public bool MaskAutoRotate
+        {
+            get => _maskAutoRotate;
+            set => _maskAutoRotate = value;
+        }
 
         /// <summary>
         ///     Local rotation of the light mask around the center origin
@@ -66,15 +51,15 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public Angle Rotation
         {
-            get => Light.Rotation;
-            set => Light.Rotation = value;
+            get => _rotation;
+            set => _rotation = value;
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
         public float Energy
         {
-            get => Light.Energy;
-            set => Light.Energy = value;
+            get => _energy;
+            set => _energy = value;
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -100,9 +85,15 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private float radius = 5;
+        private float _radius = 5;
         private bool _visibleNested = true;
         private bool _lightOnParent = false;
+        private Color _color = Color.White;
+        private Vector2 _offset;
+        private bool _enabled = true;
+        private bool _maskAutoRotate;
+        private Angle _rotation;
+        private float _energy;
 
         /// <summary>
         ///     Radius, in meters.
@@ -110,16 +101,8 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public float Radius
         {
-            get => radius;
-            set
-            {
-                radius = FloatMath.Clamp(value, 2, 10);
-                //var tex = _resourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/Effects/Light/") /
-                //                                           $"lighting_falloff_{(int) radius}.png");
-
-
-                //Light.Texture = tex.Texture;
-            }
+            get => _radius;
+            set => _radius = value;
         }
 
         /// <inheritdoc />
@@ -154,25 +137,13 @@ namespace Robust.Client.GameObjects
 
         public override void ExposeData(ObjectSerializer serializer)
         {
-            // First in the init stack so...
-            // FIXME: This is terrible.
-            Light?.Dispose();
-            Light = lightManager.MakeLight();
-            serializer.DataReadWriteFunction("offset", Vector2.Zero, vec => Offset = vec, () => Offset);
-            serializer.DataReadWriteFunction("radius", 5f, radius => Radius = radius, () => Radius);
-            serializer.DataReadWriteFunction("color", Color.White, col => Color = col, () => Color);
-            serializer.DataReadWriteFunction("state", LightState.On, state => State = state, () => State);
-            serializer.DataReadWriteFunction("energy", 1f, energy => Energy = energy, () => Energy);
-            serializer.DataReadWriteFunction("autoRot", false, rot => MaskAutoRotate = rot, () => MaskAutoRotate);
+            serializer.DataFieldCached(ref _offset, "offset", Vector2.Zero);
+            serializer.DataFieldCached(ref _radius, "radius", 5f);
+            serializer.DataFieldCached(ref _color, "color", Color.White);
+            serializer.DataFieldCached(ref _enabled, "enabled", true);
+            serializer.DataFieldCached(ref _energy, "energy", 1f);
+            serializer.DataFieldCached(ref _maskAutoRotate, "autoRot", false);
             serializer.DataFieldCached(ref _visibleNested, "nestedvisible", true);
-        }
-
-        public override void OnRemove()
-        {
-            Light.Dispose();
-            Light = null;
-
-            base.OnRemove();
         }
 
         /// <inheritdoc />
@@ -182,9 +153,10 @@ namespace Robust.Client.GameObjects
                 return;
 
             var newState = (PointLightComponentState) curState;
-            State = newState.State;
+            Enabled = newState.Enabled;
+            Radius = newState.Radius;
+            Offset = newState.Offset;
             Color = newState.Color;
-            Light.ModeClass = newState.Mode;
         }
     }
 }

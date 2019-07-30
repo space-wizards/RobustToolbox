@@ -9,7 +9,6 @@ using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics.Lighting;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.Placement;
@@ -54,7 +53,6 @@ namespace Robust.Client
         [Dependency] private readonly IBaseClient _client;
         [Dependency] private readonly IInputManager _inputManager;
         [Dependency] private readonly IClientConsole _console;
-        [Dependency] private readonly ILightManager _lightManager;
         [Dependency] private readonly ITimerManager _timerManager;
         [Dependency] private readonly IClientEntityManager _entityManager;
         [Dependency] private readonly IEyeManager _eyeManager;
@@ -153,7 +151,6 @@ namespace Robust.Client
             _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
             _prototypeManager.Resync();
             _mapManager.Initialize();
-            _lightManager.Initialize();
             _entityManager.Initialize();
             _gameStateManager.Initialize();
             _placementManager.Initialize();
@@ -233,7 +230,6 @@ namespace Robust.Client
             var eventArgs = new RenderFrameEventArgs(delta);
             _clyde.FrameProcess(eventArgs);
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, eventArgs.Elapsed);
-            _lightManager.FrameUpdate(eventArgs);
             _stateManager.FrameUpdate(eventArgs);
             _overlayManager.FrameUpdate(eventArgs);
             _userInterfaceManager.FrameUpdate(eventArgs);

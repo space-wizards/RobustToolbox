@@ -1,5 +1,4 @@
 ﻿using System;
-using Robust.Shared.Enums;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
@@ -9,18 +8,16 @@ namespace Robust.Shared.GameObjects
     public class PointLightComponentState : ComponentState
     {
         public readonly Color Color;
-        public readonly LightModeClass Mode;
-        public readonly LightState State;
+        public readonly bool Enabled;
 
         public readonly float Radius;
         public readonly Vector2 Offset;
 
-        public PointLightComponentState(LightState state, Color color, LightModeClass mode, float radius, Vector2 offset)
+        public PointLightComponentState(bool enabled, Color color, float radius, Vector2 offset)
             : base(NetIDs.POINT_LIGHT)
         {
-            State = state;
+            Enabled = enabled;
             Color = color;
-            Mode = mode;
             Radius = radius;
             Offset = offset;
         }

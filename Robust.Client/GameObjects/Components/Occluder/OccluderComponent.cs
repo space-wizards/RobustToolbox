@@ -1,11 +1,11 @@
-﻿using Robust.Client.Interfaces.Graphics.Lighting;
+﻿using Robust.Client.Graphics.ClientEye;
+using Robust.Client.Interfaces.Graphics.Lighting;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components.Transform;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
@@ -31,7 +31,7 @@ namespace Robust.Client.GameObjects
         // TODO: Unhardcode SideSize. Should be based on grid size.
         const float SideSize = 1;
         bool _enabled = true;
-        private IOccluder[] occluders = new IOccluder[4];
+        //private IOccluder[] occluders = new IOccluder[4];
         private OccluderComponent[] neighbors = new OccluderComponent[4];
         private SnapGridComponent SnapGrid;
         [Dependency]
@@ -53,6 +53,7 @@ namespace Robust.Client.GameObjects
             var sw = new Vector2(-halfSize, halfSize);
             var nw = new Vector2(-halfSize, -halfSize);
 
+            /*
             // North occluder.
             var occluder = lightManager.MakeOccluder();
             occluder.CullMode = OccluderCullMode.Clockwise;
@@ -80,6 +81,7 @@ namespace Robust.Client.GameObjects
             occluder.SetPolygon(new Vector2[] { sw, nw });
             occluders[(int)OccluderDir.West] = occluder;
             occluder.ParentTo(transform);
+            */
 
             UpdateConnections(true);
         }
@@ -88,6 +90,7 @@ namespace Robust.Client.GameObjects
         {
             base.OnRemove();
 
+            /*
             foreach (var occluder in occluders)
             {
                 occluder.Dispose();
@@ -96,6 +99,7 @@ namespace Robust.Client.GameObjects
             occluders = null;
             SnapGrid.OnPositionChanged -= SnapGridPositionChanged;
             SayGoodbyes();
+            */
         }
 
         public override void ExposeData(ObjectSerializer serializer)
@@ -107,10 +111,12 @@ namespace Robust.Client.GameObjects
 
         void UpdateEnabled()
         {
+            /*
             occluders[0].Enabled = Enabled && neighbors[0] == null;
             occluders[1].Enabled = Enabled && neighbors[1] == null;
             occluders[2].Enabled = Enabled && neighbors[2] == null;
             occluders[3].Enabled = Enabled && neighbors[3] == null;
+            */
         }
 
         void SnapGridPositionChanged()

@@ -1,5 +1,4 @@
 ﻿using Robust.Shared.GameObjects;
-using Robust.Shared.Enums;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -9,8 +8,7 @@ namespace Robust.Server.GameObjects
     public class PointLightComponent : Component
     {
         private Color _color;
-        private LightModeClass _mode;
-        private LightState _state;
+        private bool _enabled;
         private int _radius;
         private Vector2 _offset;
 
@@ -29,23 +27,12 @@ namespace Robust.Server.GameObjects
         }
 
         [ViewVariables]
-        public LightModeClass Mode
+        public bool Enabled
         {
-            get => _mode;
+            get => _enabled;
             set
             {
-                _mode = value;
-                Dirty();
-            }
-        }
-
-        [ViewVariables]
-        public LightState State
-        {
-            get => _state;
-            set
-            {
-                _state = value;
+                _enabled = value;
                 Dirty();
             }
         }
@@ -77,16 +64,15 @@ namespace Robust.Server.GameObjects
         {
             base.ExposeData(serializer);
 
-            serializer.DataField(ref _state, "state", LightState.On);
+            serializer.DataField(ref _enabled, "enabled", true);
             serializer.DataField(ref _color, "color", new Color(200, 200, 200));
-            serializer.DataField(ref _mode, "mode", LightModeClass.Constant);
             serializer.DataField(ref _radius, "radius", 512);
             serializer.DataField(ref _offset, "offset", Vector2.Zero);
         }
 
         public override ComponentState GetComponentState()
         {
-            return new PointLightComponentState(State, Color, Mode, Radius, Offset);
+            return new PointLightComponentState(Enabled, Color, Radius, Offset);
         }
     }
 }

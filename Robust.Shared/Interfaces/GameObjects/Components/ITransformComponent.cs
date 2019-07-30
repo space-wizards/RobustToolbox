@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Maths;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 
 namespace Robust.Shared.Interfaces.GameObjects.Components
 {

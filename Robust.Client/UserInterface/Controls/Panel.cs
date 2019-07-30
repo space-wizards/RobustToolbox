@@ -3,7 +3,6 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap("Panel")]
     public class Panel : Control
     {
         public const string StylePropertyPanel = "panel";

@@ -8,7 +8,6 @@ namespace Robust.Client.UserInterface.Controls
     ///     A container that lays out its children sequentially.
     ///     Use <see cref="VBoxContainer"/> or <see cref="HBoxContainer"/> for an implementation.
     /// </summary>
-    [ControlWrap("BoxContainer")]
     public abstract class BoxContainer : Container
     {
         public const string StylePropertySeparation = "separation";

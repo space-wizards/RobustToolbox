@@ -5,11 +5,9 @@ using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using PureAttribute = System.Diagnostics.Contracts.PureAttribute;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap("TabContainer")]
     public class TabContainer : Container
     {
         public const string StylePropertyTabStyleBox = "tab-stylebox";
@@ -300,7 +298,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         private UIBox2i _getContentBox()
         {
             var headerSize = _getHeaderSize();
@@ -313,7 +311,7 @@ namespace Robust.Client.UserInterface.Controls
             return panelBox;
         }
 
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         private int _getHeaderSize()
         {
             var headerSize = 0;
@@ -334,7 +332,7 @@ namespace Robust.Client.UserInterface.Controls
             return headerSize;
         }
 
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         [CanBeNull]
         private StyleBox _getTabBoxActive()
         {
@@ -342,7 +340,7 @@ namespace Robust.Client.UserInterface.Controls
             return box;
         }
 
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         [CanBeNull]
         private StyleBox _getTabBoxInactive()
         {
@@ -350,7 +348,7 @@ namespace Robust.Client.UserInterface.Controls
             return box;
         }
 
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         private Color _getTabFontColorActive()
         {
             if (TryGetStyleProperty(stylePropertyTabFontColor, out Color color))
@@ -360,7 +358,7 @@ namespace Robust.Client.UserInterface.Controls
             return Color.White;
         }
 
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         private Color _getTabFontColorInactive()
         {
             if (TryGetStyleProperty(StylePropertyTabFontColorInactive, out Color color))
@@ -370,7 +368,7 @@ namespace Robust.Client.UserInterface.Controls
             return Color.Gray;
         }
 
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         [CanBeNull]
         private StyleBox _getPanel()
         {
@@ -378,7 +376,7 @@ namespace Robust.Client.UserInterface.Controls
             return box;
         }
 
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         [NotNull]
         private Font _getFont()
         {

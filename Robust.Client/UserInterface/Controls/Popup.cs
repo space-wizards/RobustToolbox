@@ -3,7 +3,6 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap("Popup")]
     public class Popup : Control
     {
         public Popup()

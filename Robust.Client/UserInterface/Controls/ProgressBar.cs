@@ -1,11 +1,9 @@
-﻿using System;
-using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.Contracts;
 using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap("ProgressBar")]
     public class ProgressBar : Range
     {
         public const string StylePropertyBackground = "background";

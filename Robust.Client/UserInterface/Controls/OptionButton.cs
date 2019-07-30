@@ -5,7 +5,6 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap("OptionButton")]
     public class OptionButton : Button
     {
         private List<ButtonData> _buttonData = new List<ButtonData>();

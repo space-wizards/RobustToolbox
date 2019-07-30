@@ -3,7 +3,6 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap("SplitContainer")]
     public abstract class SplitContainer : Container
     {
         // TODO: Implement the grabber.

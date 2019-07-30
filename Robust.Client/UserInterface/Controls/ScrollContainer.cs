@@ -1,11 +1,9 @@
 using System;
 using System.Diagnostics.Contracts;
-using Robust.Client.Input;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap("ScrollContainer")]
     public class ScrollContainer : Container
     {
         private bool _vScrollEnabled = true;

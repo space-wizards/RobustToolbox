@@ -5,12 +5,9 @@ using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Input;
 using Robust.Shared.Maths;
-using Color = Robust.Shared.Maths.Color;
-using Font = Robust.Client.Graphics.Font;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap("ItemList")]
     public class ItemList : Control
     {
         private bool _isAtBottom = true;

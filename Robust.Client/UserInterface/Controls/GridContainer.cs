@@ -7,7 +7,6 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     A container that lays out its children in a grid.
     /// </summary>
-    [ControlWrap("GridContainer")]
     public class GridContainer : Container
     {
         private int _columns = 1;

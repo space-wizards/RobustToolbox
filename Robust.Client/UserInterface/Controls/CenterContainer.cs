@@ -5,7 +5,6 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     Container type that centers its children inside itself.
     /// </summary>
-    [ControlWrap("CenterContainer")]
     public class CenterContainer : Container
     {
         protected internal override void SortChildren()

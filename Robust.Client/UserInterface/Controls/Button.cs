@@ -9,7 +9,6 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     Most common button type that draws text in a fancy box.
     /// </summary>
-    [ControlWrap("Button")]
     public class Button : BaseButton
     {
         public const string StylePropertyStyleBox = "stylebox";

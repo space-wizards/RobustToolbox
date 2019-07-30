@@ -6,7 +6,6 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap("ScrollBar")]
     public abstract class ScrollBar : Range
     {
         public const string StylePropertyGrabber = "grabber";

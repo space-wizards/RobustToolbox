@@ -2,7 +2,6 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap("MarginContainer")]
     public class MarginContainer : Container
     {
         public MarginContainer()

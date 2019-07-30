@@ -6,7 +6,6 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     A container lays out its children by some implementation-dependent rules.
     /// </summary>
-    [ControlWrap("Container")]
     public abstract class Container : Control
     {
         protected Container() : base()

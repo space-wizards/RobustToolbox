@@ -11,7 +11,6 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     A label is a GUI control that displays simple text.
     /// </summary>
-    [ControlWrap("Label")]
     public class Label : Control
     {
         public const string StylePropertyFontColor = "font-color";

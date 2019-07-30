@@ -5,7 +5,6 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap("Range")]
     public abstract class Range : Control
     {
         private float _maxValue = 100;

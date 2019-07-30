@@ -19,8 +19,6 @@ namespace Robust.Client.UserInterface
     ///     See https://github.com/space-wizards/RobustToolbox/wiki/UI-System-Tutorial for some basic concepts.
     /// </summary>
     [PublicAPI]
-    [ControlWrap("Control")]
-    // ReSharper disable once RequiredBaseTypesIsNotInherited
     public partial class Control : IDisposable
     {
         private readonly Dictionary<string, (Control, int orderedIndex)> _children =
@@ -1975,18 +1973,6 @@ namespace Robust.Client.UserInterface
                 {
                     _enumerator.Dispose();
                 }
-            }
-        }
-
-        [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-        [BaseTypeRequired(typeof(Control))]
-        internal class ControlWrapAttribute : Attribute
-        {
-            public readonly string InstanceString;
-
-            public ControlWrapAttribute(string instanceString)
-            {
-                InstanceString = instanceString;
             }
         }
     }

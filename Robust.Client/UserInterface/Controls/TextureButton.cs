@@ -5,7 +5,6 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [ControlWrap("TextureButton")]
     public class TextureButton : BaseButton
     {
         private Vector2 _scale = (1, 1);

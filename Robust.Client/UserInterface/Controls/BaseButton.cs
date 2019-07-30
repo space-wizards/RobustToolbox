@@ -9,7 +9,6 @@ namespace Robust.Client.UserInterface.Controls
     /// <seealso cref="Button"/>
     /// <seealso cref="TextureButton"/>
     /// <seealso cref="CheckBox"/>
-    [ControlWrap("BaseButton")]
     public abstract class BaseButton : Control
     {
         private bool _attemptingPress;

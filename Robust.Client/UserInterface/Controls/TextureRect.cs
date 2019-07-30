@@ -8,7 +8,6 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     Simple control that draws a single texture using a variety of possible stretching modes.
     /// </summary>
-    [ControlWrap("TextureRect")]
     public class TextureRect : Control
     {
         private bool _canShrink;

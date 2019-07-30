@@ -13,7 +13,6 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     Allows the user to input and modify a line of text.
     /// </summary>
-    [ControlWrap("LineEdit")]
     public class LineEdit : Control
     {
         public const string StylePropertyStyleBox = "stylebox";

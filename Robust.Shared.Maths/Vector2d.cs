@@ -22,6 +22,11 @@ namespace Robust.Shared.Maths
             y = Y;
         }
 
+        public static implicit operator Vector2d((double, double) tuple)
+        {
+            return new Vector2d(tuple.Item1, tuple.Item2);
+        }
+
         public static implicit operator Vector2d(Vector2 vector)
         {
             return new Vector2d(vector.X, vector.Y);

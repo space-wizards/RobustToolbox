@@ -12,6 +12,8 @@ namespace Robust.Client.UserInterface.Controls
         private FormattedMessage _message;
         private RichTextEntry _entry;
 
+        public float? MaxWidth { get; set; }
+
         public RichTextLabel()
         {
         }
@@ -27,6 +29,13 @@ namespace Robust.Client.UserInterface.Controls
             _updateEntry();
         }
 
+        public void SetMessage(string message)
+        {
+            var msg = new FormattedMessage();
+            msg.AddText(message);
+            SetMessage(msg);
+        }
+
         protected override Vector2 CalculateMinimumSize()
         {
             if (_message == null)
@@ -34,7 +43,12 @@ namespace Robust.Client.UserInterface.Controls
                 return Vector2.Zero;
             }
 
-            return (0, _entry.Height / UIScale);
+            var width = 0f;
+            if (MaxWidth.HasValue)
+            {
+                width = _entry.Width / UIScale;
+            }
+            return (width, _entry.Height / UIScale);
         }
 
         private void _updateEntry()
@@ -44,12 +58,20 @@ namespace Robust.Client.UserInterface.Controls
             if (_message != null)
             {
                 var oldHeight = _entry.Height;
-                _entry.Update(font, Width, UIScale);
-                if (oldHeight != _entry.Height)
+                var oldWidth = _entry.Width;
+                _entry.Update(font, MaxWidth ?? Width, UIScale);
+                if (oldHeight != _entry.Height || MaxWidth != null && _entry.Width != oldWidth)
                 {
                     MinimumSizeChanged();
                 }
             }
+        }
+
+        protected override void StylePropertiesChanged()
+        {
+            base.StylePropertiesChanged();
+
+            _updateEntry();
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)

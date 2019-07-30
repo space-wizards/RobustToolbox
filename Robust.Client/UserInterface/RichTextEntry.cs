@@ -25,6 +25,11 @@ namespace Robust.Client.UserInterface
         public int Height;
 
         /// <summary>
+        ///     The horizontal size of this entry, in pixels.
+        /// </summary>
+        public int Width;
+
+        /// <summary>
         ///     The combined text indices in the message's text tags to put line breaks.
         /// </summary>
         public readonly List<int> LineBreaks;
@@ -33,6 +38,7 @@ namespace Robust.Client.UserInterface
         {
             Message = message;
             Height = 0;
+            Width = 0;
             LineBreaks = new List<int>();
         }
 
@@ -40,9 +46,9 @@ namespace Robust.Client.UserInterface
         ///     Recalculate line dimensions and where it has line breaks for word wrapping.
         /// </summary>
         /// <param name="font">The font being used for display.</param>
-        /// <param name="sizeX">The horizontal size of the container of this entry.</param>
+        /// <param name="maxSizeX">The maximum horizontal size of the container of this entry.</param>
         /// <param name="uiScale"></param>
-        public void Update(Font font, float sizeX, float uiScale)
+        public void Update(Font font, float maxSizeX, float uiScale)
         {
             // This method is gonna suck due to complexity.
             // Bear with me here.
@@ -50,16 +56,17 @@ namespace Robust.Client.UserInterface
             Height = font.GetHeight(uiScale);
             LineBreaks.Clear();
 
+            var maxUsedWidth = 0f;
             // Index we put into the LineBreaks list when a line break should occur.
             var breakIndexCounter = 0;
             // If the CURRENT processing word ends up too long, this is the index to put a line break.
-            int? wordStartBreakIndex = null;
+            (int index, float lineSize)? wordStartBreakIndex = null;
             // Word size in pixels.
             var wordSizePixels = 0;
             // The horizontal position of the text cursor.
             var posX = 0;
             var lastChar = 'A';
-            // If a word is larger than sizeX, we split it.
+            // If a word is larger than maxSizeX, we split it.
             // We need to keep track of some data to split it into two words.
             (int breakIndex, int wordSizePixels)? forceSplitData = null;
             // Go over every text tag.
@@ -83,21 +90,22 @@ namespace Robust.Client.UserInterface
                     if (IsWordBoundary(lastChar, chr) || chr == '\n')
                     {
                         // Word boundary means we know where the word ends.
-                        if (posX > sizeX)
+                        if (posX > maxSizeX && lastChar != ' ')
                         {
                             DebugTools.Assert(wordStartBreakIndex.HasValue,
                                 "wordStartBreakIndex can only be null if the word begins at a new line, in which case this branch shouldn't be reached as the word would be split due to being longer than a single line.");
                             // We ran into a word boundary and the word is too big to fit the previous line.
                             // So we insert the line break BEFORE the last word.
-                            LineBreaks.Add(wordStartBreakIndex.Value);
+                            LineBreaks.Add(wordStartBreakIndex.Value.index);
                             Height += font.GetLineHeight(uiScale);
+                            maxUsedWidth = Math.Max(maxUsedWidth, wordStartBreakIndex.Value.lineSize);
                             posX = wordSizePixels;
                         }
 
                         // Start a new word since we hit a word boundary.
                         //wordSize = 0;
                         wordSizePixels = 0;
-                        wordStartBreakIndex = breakIndexCounter;
+                        wordStartBreakIndex = (breakIndexCounter, posX);
                         forceSplitData = null;
 
                         // Just manually handle newlines.
@@ -105,6 +113,7 @@ namespace Robust.Client.UserInterface
                         {
                             LineBreaks.Add(breakIndexCounter);
                             Height += font.GetLineHeight(uiScale);
+                            maxUsedWidth = Math.Max(maxUsedWidth, posX);
                             posX = 0;
                             lastChar = chr;
                             wordStartBreakIndex = null;
@@ -127,7 +136,7 @@ namespace Robust.Client.UserInterface
                     //   Also definitely even more complex to implement.
                     posX += metrics.Advance;
 
-                    if (posX > sizeX)
+                    if (posX > maxSizeX)
                     {
                         if (!forceSplitData.HasValue)
                         {
@@ -135,10 +144,10 @@ namespace Robust.Client.UserInterface
                         }
 
                         // Oh hey we get to break a word that doesn't fit on a single line.
-                        if (wordSizePixels > sizeX)
+                        if (wordSizePixels > maxSizeX)
                         {
                             var (breakIndex, splitWordSize) = forceSplitData.Value;
-                            if (splitWordSize == 0) return;
+                            DebugTools.Assert(splitWordSize != 0);
 
                             // Reset forceSplitData so that we can split again if necessary.
                             forceSplitData = null;
@@ -146,6 +155,7 @@ namespace Robust.Client.UserInterface
                             Height += font.GetLineHeight(uiScale);
                             wordSizePixels -= splitWordSize;
                             wordStartBreakIndex = null;
+                            maxUsedWidth = Math.Max(maxUsedWidth, maxSizeX);
                             posX = wordSizePixels;
                         }
                     }
@@ -155,13 +165,20 @@ namespace Robust.Client.UserInterface
             }
 
             // This needs to happen because word wrapping doesn't get checked for the last word.
-            if (posX > sizeX)
+            if (posX > maxSizeX)
             {
                 DebugTools.Assert(wordStartBreakIndex.HasValue,
                     "wordStartBreakIndex can only be null if the word begins at a new line, in which case this branch shouldn't be reached as the word would be split due to being longer than a single line.");
-                LineBreaks.Add(wordStartBreakIndex.Value);
+                LineBreaks.Add(wordStartBreakIndex.Value.index);
                 Height += font.GetLineHeight(uiScale);
+                maxUsedWidth = Math.Max(maxUsedWidth, wordStartBreakIndex.Value.lineSize);
             }
+            else
+            {
+                maxUsedWidth = Math.Max(maxUsedWidth, posX);
+            }
+
+            Width = (int) maxUsedWidth;
         }
 
         public void Draw(

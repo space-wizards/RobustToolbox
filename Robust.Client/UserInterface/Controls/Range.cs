@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
-using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
@@ -91,31 +90,6 @@ namespace Robust.Client.UserInterface.Controls
         protected float ClampValue(float value)
         {
             return value.Clamp(_minValue, _maxValue-_page);
-        }
-
-        private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
-        {
-            base.SetGodotProperty(property, value, context);
-
-            if (property == "max_value")
-            {
-                MaxValue = (float) value;
-            }
-
-            if (property == "min_value")
-            {
-                MinValue = (float) value;
-            }
-
-            if (property == "value")
-            {
-                Value = (float) value;
-            }
-
-            if (property == "page")
-            {
-                Page = (float) value;
-            }
         }
     }
 }

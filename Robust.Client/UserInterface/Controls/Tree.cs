@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
-using Robust.Client.Utility;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -316,16 +315,6 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             return null;
-        }
-
-        private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
-        {
-            base.SetGodotProperty(property, value, context);
-
-            if (property == "hide_root")
-            {
-                HideRoot = (bool) value;
-            }
         }
 
         public sealed class Item : IDisposable

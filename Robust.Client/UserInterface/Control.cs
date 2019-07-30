@@ -2,16 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using JetBrains.Annotations;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.UserInterface;
-using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Client.UserInterface.Controls;
-using Robust.Client.Utility;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -60,9 +55,6 @@ namespace Robust.Client.UserInterface
 
         private Vector2? _calculatedMinimumSize;
         private Vector2 _customMinimumSize;
-
-        private Dictionary<string, (object value, GodotAssetScene source)>
-            _toApplyPropertyMapping;
 
         private GrowDirection _growHorizontal;
         private GrowDirection _growVertical;
@@ -140,13 +132,6 @@ namespace Robust.Client.UserInterface
         public OrderedChildCollection Children { get; }
 
         [ViewVariables] public int ChildCount => _orderedChildren.Count;
-
-        /// <summary>
-        ///     Path to the .tscn file for this scene in the VFS.
-        ///     This is mainly intended for content loading tscn files.
-        ///     Don't use it from the engine.
-        /// </summary>
-        protected virtual ResourcePath ScenePath => null;
 
         /// <summary>
         ///     The value of an anchor that is exactly on the begin of the parent control.
@@ -819,14 +804,9 @@ namespace Robust.Client.UserInterface
             Children = new OrderedChildCollection(this);
 
             SetDefaults();
-            if (ScenePath != null)
-            {
-                _manualNodeSetup();
-            }
 
             Name = GetType().Name;
             Initialize();
-            _applyPropertyMap();
         }
 
         /// <param name="name">The name the component will have.</param>
@@ -842,14 +822,9 @@ namespace Robust.Client.UserInterface
             Children = new OrderedChildCollection(this);
 
             SetDefaults();
-            if (ScenePath != null)
-            {
-                _manualNodeSetup();
-            }
 
             Name = name;
             Initialize();
-            _applyPropertyMap();
         }
 
         /// <summary>
@@ -865,338 +840,6 @@ namespace Robust.Client.UserInterface
         /// </summary>
         protected virtual void SetDefaults()
         {
-        }
-
-        private void _manualNodeSetup()
-        {
-            DebugTools.AssertNotNull(ScenePath);
-
-            if (_manualNodeTypeTranslations == null)
-            {
-                _initManualNodeTypeTranslations();
-            }
-
-            DebugTools.AssertNotNull(_manualNodeTypeTranslations);
-
-            var resourceCache = IoCManager.Resolve<IResourceCache>();
-            var asset = (GodotAssetScene) resourceCache.GetResource<GodotAssetResource>(ScenePath).Asset;
-
-            // Go over the inherited scenes with a stack,
-            // because you can theoretically have very deep scene inheritance.
-            var (_, inheritedSceneStack) = _manualFollowSceneInheritance(asset, resourceCache, false);
-
-            _manualApplyInheritedSceneStack(this, inheritedSceneStack, asset, resourceCache);
-        }
-
-        private static void _manualApplyInheritedSceneStack(Control baseControl,
-            Stack<GodotAssetScene> inheritedSceneStack, GodotAssetScene asset,
-            IResourceCache resourceCache)
-        {
-            var parentMapping = new Dictionary<string, Control> {["."] = baseControl};
-            var propertyMapping =
-                new Dictionary<(string parent, string name), Dictionary<string, (object value, GodotAssetScene source)>
-                >();
-
-            // Go over the inherited scenes bottom-first.
-            while (inheritedSceneStack.Count != 0)
-            {
-                var inheritedAsset = inheritedSceneStack.Pop();
-
-                foreach (var node in inheritedAsset.Nodes)
-                {
-                    {
-                        if (!propertyMapping.TryGetValue((node.Parent, node.Name), out var propMap))
-                        {
-                            propMap = new Dictionary<string, (object value, GodotAssetScene source)>();
-                            propertyMapping[(node.Parent, node.Name)] = propMap;
-                        }
-
-                        foreach (var (key, value) in node.Properties)
-                        {
-                            propMap[key] = (value, inheritedAsset);
-                        }
-                    }
-
-                    // It's the base control.
-                    if (node.Parent == null)
-                    {
-                        continue;
-                    }
-
-                    Control childControl;
-                    if (node.Type != null)
-                    {
-                        if (!_manualNodeTypeTranslations.TryGetValue(node.Type, out var type))
-                        {
-                            type = typeof(Control);
-                        }
-
-                        childControl = (Control) Activator.CreateInstance(type);
-                        childControl.Name = node.Name;
-                    }
-                    else if (node.Instance != null)
-                    {
-                        var extResource = asset.GetExtResource(node.Instance.Value);
-                        DebugTools.Assert(extResource.Type == "PackedScene");
-
-                        if (_manualNodeTypeTranslations.TryGetValue(extResource.Path, out var type))
-                        {
-                            childControl = (Control) Activator.CreateInstance(type);
-                        }
-                        else
-                        {
-                            var subScene =
-                                (GodotAssetScene) resourceCache
-                                    .GetResource<GodotAssetResource>(
-                                        GodotPathUtility.GodotPathToResourcePath(extResource.Path)).Asset;
-
-                            childControl = ManualSpawnFromScene(subScene);
-                        }
-
-                        childControl.Name = node.Name;
-                    }
-                    else
-                    {
-                        // This happens if the node def is overriding properties of a node instantiated in an instance.
-                        continue;
-                    }
-
-                    parentMapping[node.Parent].AddChild(childControl);
-                    if (node.Parent == ".")
-                    {
-                        parentMapping[node.Name] = childControl;
-                    }
-                    else
-                    {
-                        parentMapping[$"{node.Parent}/{node.Name}"] = childControl;
-                    }
-                }
-            }
-
-            // Apply all the properties.
-            foreach (var ((parent, nodeName), propMap) in propertyMapping)
-            {
-                Control node;
-                switch (parent)
-                {
-                    case null:
-                        // Base control, which isn't initialized yet, so defer until after Initialize().
-                        baseControl._toApplyPropertyMapping = propMap;
-                        continue;
-                    case ".":
-                        node = parentMapping[nodeName];
-                        break;
-                    default:
-                        var parentNode = baseControl.GetChild(parent);
-                        node = parentNode.GetChild(nodeName);
-                        break;
-                }
-
-                // We need to defer this until AFTER Initialize() has ran because else everything blows up.
-                foreach (var (key, (value, source)) in propMap)
-                {
-                    node.SetGodotProperty(key, value, source);
-                }
-            }
-        }
-
-        private void _applyPropertyMap()
-        {
-            if (_toApplyPropertyMapping == null)
-            {
-                return;
-            }
-
-            foreach (var (key, (value, source)) in _toApplyPropertyMapping)
-            {
-                SetGodotProperty(key, value, source);
-            }
-
-            _toApplyPropertyMapping = null;
-        }
-
-        internal static Control ManualSpawnFromScene(GodotAssetScene scene)
-        {
-            if (_manualNodeTypeTranslations == null)
-            {
-                _initManualNodeTypeTranslations();
-            }
-
-            DebugTools.AssertNotNull(_manualNodeTypeTranslations);
-
-            var resourceCache = IoCManager.Resolve<IResourceCache>();
-
-            var (controlType, inheritedSceneStack) = _manualFollowSceneInheritance(scene, resourceCache, true);
-
-            var control = (Control) Activator.CreateInstance(controlType);
-            control.Name = scene.Nodes[0].Name;
-
-            _manualApplyInheritedSceneStack(control, inheritedSceneStack, scene, resourceCache);
-
-            return control;
-        }
-
-        private static (Type, Stack<GodotAssetScene>) _manualFollowSceneInheritance(GodotAssetScene scene,
-            IResourceCache resourceCache, bool getType)
-        {
-            // Go over the inherited scenes with a stack,
-            // because you can theoretically have very deep scene inheritance.
-            var inheritedSceneStack = new Stack<GodotAssetScene>();
-            inheritedSceneStack.Push(scene);
-
-            Type controlType = null;
-
-            while (scene.Nodes[0].Instance != null)
-            {
-                var extResource = scene.GetExtResource(scene.Nodes[0].Instance.Value);
-                DebugTools.Assert(extResource.Type == "PackedScene");
-
-                if (getType && _manualNodeTypeTranslations.TryGetValue(extResource.Path, out controlType))
-                {
-                    break;
-                }
-
-                scene = (GodotAssetScene) resourceCache.GetResource<GodotAssetResource>(
-                    GodotPathUtility.GodotPathToResourcePath(extResource.Path)).Asset;
-
-                inheritedSceneStack.Push(scene);
-            }
-
-            if (controlType == null)
-            {
-                if (!getType
-                    || scene.Nodes[0].Type == null
-                    || !_manualNodeTypeTranslations.TryGetValue(scene.Nodes[0].Type, out controlType))
-                {
-                    controlType = typeof(Control);
-                }
-            }
-
-            return (controlType, inheritedSceneStack);
-        }
-
-        private static void _initManualNodeTypeTranslations()
-        {
-            DebugTools.AssertNull(_manualNodeTypeTranslations);
-
-            _manualNodeTypeTranslations = new Dictionary<string, Type>();
-
-            var reflectionManager = IoCManager.Resolve<IReflectionManager>();
-
-            foreach (var type in reflectionManager.FindTypesWithAttribute<ControlWrapAttribute>())
-            {
-                var attr = type.GetCustomAttribute<ControlWrapAttribute>();
-                if (attr.InstanceString != null)
-                {
-                    _manualNodeTypeTranslations[attr.InstanceString] = type;
-                }
-            }
-        }
-
-        private protected virtual void SetGodotProperty(string property, object value, GodotAssetScene context)
-        {
-            switch (property)
-            {
-                case "margin_left":
-                    MarginLeft = (float) value;
-                    break;
-                case "margin_right":
-                    MarginRight = (float) value;
-                    break;
-                case "margin_top":
-                    MarginTop = (float) value;
-                    break;
-                case "margin_bottom":
-                    MarginBottom = (float) value;
-                    break;
-                case "anchor_left":
-                    AnchorLeft = (float) value;
-                    break;
-                case "anchor_right":
-                    AnchorRight = (float) value;
-                    break;
-                case "anchor_bottom":
-                    AnchorBottom = (float) value;
-                    break;
-                case "anchor_top":
-                    AnchorTop = (float) value;
-                    break;
-                case "mouse_filter":
-                    MouseFilter = (MouseFilterMode) (long) value;
-                    break;
-                case "size_flags_horizontal":
-                    SizeFlagsHorizontal = (SizeFlags) (long) value;
-                    break;
-                case "size_flags_vertical":
-                    SizeFlagsVertical = (SizeFlags) (long) value;
-                    break;
-                case "rect_clip_content":
-                    RectClipContent = (bool) value;
-                    break;
-                case "rect_min_size":
-                    CustomMinimumSize = (Vector2) value;
-                    break;
-            }
-        }
-
-        /// <summary>
-        ///     Retrieves and instances the object pointed to by either a
-        ///     sub resource or ext resource reference in a godot asset.
-        /// </summary>
-        /// <param name="context">The asset in which said object is referenced.</param>
-        /// <param name="value">
-        ///     The <see cref="GodotAsset.TokenSubResource" /> or <see cref="GodotAsset.TokenExtResource" />
-        /// </param>
-        /// <typeparam name="T">
-        ///     The expected type of the resource. This is not a godot type but our equivalent.
-        /// </typeparam>
-        private protected T GetGodotResource<T>(GodotAsset context, object value)
-        {
-            GodotAsset.ResourceDef def;
-            (GodotAsset, int) defContext;
-            // Retrieve the actual ResourceDef for the resource requested.
-            if (value is GodotAsset.TokenExtResource ext)
-            {
-                var extRef = context.GetExtResource(ext);
-                var resPath = GodotPathUtility.GodotPathToResourcePath(extRef.Path);
-                var res = IoCManager.Resolve<IResourceCache>().GetResource<GodotAssetResource>(resPath);
-                def = ((GodotAssetRes) res.Asset).MainResource;
-                defContext = (res.Asset, 0);
-            }
-            else if (value is GodotAsset.TokenSubResource sub)
-            {
-                def = context.SubResources[(int) sub.ResourceId];
-                defContext = (context, (int) sub.ResourceId);
-            }
-            else
-            {
-                throw new ArgumentException("Value must be a TokenExtResource or a TokenSubResource", nameof(value));
-            }
-
-            // See if we've cached it.
-            if (UserInterfaceManagerInternal.GodotResourceInstanceCache.TryGetValue(defContext, out var result))
-            {
-                return (T) result;
-            }
-
-            // If not, here comes the mess of turning that into a native sane type.
-            if (def.Type == "StyleBoxFlat")
-            {
-                var box = new StyleBoxFlat();
-                if (def.Properties.TryGetValue("bg_color", out var val))
-                {
-                    box.BackgroundColor = (Color) val;
-                }
-
-                result = box;
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-
-            UserInterfaceManagerInternal.GodotResourceInstanceCache[defContext] = result;
-            return (T) result;
         }
 
         /// <summary>

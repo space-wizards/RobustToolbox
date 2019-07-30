@@ -1,9 +1,8 @@
-﻿using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Maths;
-using System;
+﻿using System;
 using Robust.Client.Graphics.Drawing;
-using Robust.Client.Utility;
+using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -389,19 +388,6 @@ namespace Robust.Client.UserInterface.CustomControls
                 // 50 is arbitrary here. As long as it's bumped back into view.
                 Position = new Vector2(spaceX - 50, Position.Y);
             }
-        }
-
-        private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
-        {
-            if (CustomSize.HasValue && (property == "margin_left" ||
-                 property == "margin_right" ||
-                 property == "margin_bottom" ||
-                 property == "margin_top"))
-            {
-                return;
-            }
-
-            base.SetGodotProperty(property, value, context);
         }
     }
 }

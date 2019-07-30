@@ -5,7 +5,6 @@ using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.UserInterface;
-using Robust.Client.Utility;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
@@ -121,6 +120,7 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     continue;
                 }
+
                 chars.Add(chr);
             }
 
@@ -213,7 +213,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             var font = _getFont();
             var style = _getStyleBox();
-            return new Vector2(0, font.GetHeight(UIScale)/UIScale) + style.MinimumSize/UIScale;
+            return new Vector2(0, font.GetHeight(UIScale) / UIScale) + style.MinimumSize / UIScale;
         }
 
         protected internal override void TextEntered(GUITextEventArgs args)
@@ -428,24 +428,6 @@ namespace Robust.Client.UserInterface.Controls
             {
                 Control = control;
                 Text = text;
-            }
-        }
-
-        private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
-        {
-            base.SetGodotProperty(property, value, context);
-
-            if (property == "text")
-            {
-                Text = (string) value;
-            }
-            else if (property == "placeholder_text")
-            {
-                PlaceHolder = (string) value;
-            }
-            else if (property == "editable")
-            {
-                Editable = (bool) value;
             }
         }
     }

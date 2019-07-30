@@ -1,13 +1,7 @@
 ﻿using System;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.ResourceManagement;
-using Robust.Client.Utility;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -89,29 +83,6 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             handle.DrawTextureRectRegion(texture, PixelSizeBox);
-        }
-
-        private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
-        {
-            base.SetGodotProperty(property, value, context);
-
-            if (property == "texture_normal")
-            {
-                var extRef = context.GetExtResource((GodotAsset.TokenExtResource) value);
-                ResourcePath godotPathToResourcePath;
-                try
-                {
-                    godotPathToResourcePath = GodotPathUtility.GodotPathToResourcePath(extRef.Path);
-                }
-                catch (ArgumentException)
-                {
-                    Logger.Error("TextureButton is referencing non-VFS Godot path {0}.", extRef.Path);
-                    return;
-                }
-                var texture = IoCManager.Resolve<IResourceCache>()
-                    .GetResource<TextureResource>(godotPathToResourcePath);
-                TextureNormal = texture;
-            }
         }
 
         protected override Vector2 CalculateMinimumSize()

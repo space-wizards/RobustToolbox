@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
-using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -265,26 +264,6 @@ namespace Robust.Client.UserInterface.Controls
 
             base.StylePropertiesChanged();
         }
-
-        private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
-        {
-            base.SetGodotProperty(property, value, context);
-
-            switch (property)
-            {
-                case "text":
-                    Text = (string) value;
-                    break;
-                case "align":
-                    Align = (AlignMode) (long) value;
-                    break;
-                // ReSharper disable once StringLiteralTypo
-                case "valign":
-                    VAlign = (VAlignMode) (long) value;
-                    break;
-            }
-        }
-
         protected override void SetDefaults()
         {
             base.SetDefaults();

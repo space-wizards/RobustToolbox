@@ -1,7 +1,6 @@
 ﻿using System;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
-using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
@@ -266,26 +265,6 @@ namespace Robust.Client.UserInterface.Controls
             _textWidthCache = null;
 
             base.StylePropertiesChanged();
-        }
-
-        private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
-        {
-            base.SetGodotProperty(property, value, context);
-
-            if (property == "text")
-            {
-                Text = (string) value;
-            }
-
-            if (property == "align")
-            {
-                TextAlign = (AlignMode) (long) value;
-            }
-
-            if (property == "clip_text")
-            {
-                ClipText = (bool) value;
-            }
         }
 
         protected internal override void UIScaleChanged()

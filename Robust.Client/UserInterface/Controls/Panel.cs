@@ -1,5 +1,4 @@
 ﻿using Robust.Client.Graphics.Drawing;
-using Robust.Client.Utility;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -49,16 +48,6 @@ namespace Robust.Client.UserInterface.Controls
 
             var panel = ActualPanel;
             panel.Draw(handle, PixelSizeBox);
-        }
-
-        private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
-        {
-            base.SetGodotProperty(property, value, context);
-
-            if (property == "custom_styles/panel")
-            {
-                PanelOverride = GetGodotResource<StyleBox>(context, value);
-            }
         }
 
         protected override Vector2 CalculateMinimumSize()

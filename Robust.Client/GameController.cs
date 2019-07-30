@@ -81,8 +81,6 @@ namespace Robust.Client
 
             var args = GetCommandLineArgs();
 
-            // Set up custom synchronization context.
-            // Sorry Godot.
             _taskManager.Initialize();
 
             // Figure out user data directory.

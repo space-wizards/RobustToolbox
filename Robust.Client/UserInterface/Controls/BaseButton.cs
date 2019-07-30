@@ -1,5 +1,4 @@
 ﻿using System;
-using Robust.Client.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
@@ -264,21 +263,6 @@ namespace Robust.Client.UserInterface.Controls
             public ButtonToggledEventArgs(bool pressed, BaseButton button) : base(button)
             {
                 Pressed = pressed;
-            }
-        }
-
-        private protected override void SetGodotProperty(string property, object value, GodotAssetScene context)
-        {
-            base.SetGodotProperty(property, value, context);
-
-            switch (property)
-            {
-                case "toggle_mode":
-                    ToggleMode = (bool) value;
-                    break;
-                case "disabled":
-                    Disabled = (bool) value;
-                    break;
             }
         }
 

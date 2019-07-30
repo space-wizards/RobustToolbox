@@ -11,7 +11,6 @@ using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Player;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Client.Utility;
 using Robust.Shared.Configuration;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.Configuration;
@@ -58,9 +57,6 @@ namespace Robust.Client.UserInterface
         public DebugConsole DebugConsole { get; private set; }
         public IDebugMonitors DebugMonitors => _debugMonitors;
         private DebugMonitors _debugMonitors;
-
-        public Dictionary<(GodotAsset asset, int resourceId), object> GodotResourceInstanceCache { get; } =
-            new Dictionary<(GodotAsset asset, int resourceId), object>();
 
         private readonly List<Control> _modalStack = new List<Control>();
 

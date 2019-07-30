@@ -76,9 +76,9 @@ namespace Robust.Shared.Noise
             _GeneratorSetSeed(_nativeGenerator, seed);
         }
 
-        public double GetNoiseTiled(float x, float y)
+        public double GetNoiseTiled(double x, double y)
         {
-            return GetNoiseTiled(new Vector2(x, y));
+            return GetNoiseTiled((x, y));
         }
 
         public double GetNoiseTiled(Vector2d vec)
@@ -88,9 +88,14 @@ namespace Robust.Shared.Noise
             return _GetNoiseTiled2D(_nativeGenerator, vec);
         }
 
-        public double GetNoise(float x, float y)
+        public double GetNoise(double x)
         {
-            return GetNoise(new Vector2(x, y));
+            return GetNoise((x, 0));
+        }
+
+        public double GetNoise(double x, double y)
+        {
+            return GetNoise((x, y));
         }
 
         public double GetNoise(Vector2d vector)
@@ -100,9 +105,9 @@ namespace Robust.Shared.Noise
             return _GetNoise2D(_nativeGenerator, vector);
         }
 
-        public double GetNoise(float x, float y, float z)
+        public double GetNoise(double x, double y, double z)
         {
-            return GetNoise(new Vector3(x, y, z));
+            return GetNoise((x, y, z));
         }
 
         public double GetNoise(Vector3d vector)
@@ -112,9 +117,9 @@ namespace Robust.Shared.Noise
             return _GetNoise3D(_nativeGenerator, vector);
         }
 
-        public double GetNoise(float x, float y, float z, float w)
+        public double GetNoise(double x, double y, double z, double w)
         {
-            return GetNoise(new Vector4(x, y, z, w));
+            return GetNoise((x, y, z, w));
         }
 
         public double GetNoise(Vector4d vector)

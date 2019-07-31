@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Interfaces.GameObjects
 {
@@ -134,6 +135,11 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="component"></param>
         /// <returns></returns>
         IComponentRegistration GetRegistration(IComponent component);
+
+        /// <summary>
+        ///     Automatically create registrations for all components with a <see cref="RegisterComponentAttribute" />
+        /// </summary>
+        void DoAutoRegistrations();
     }
 
     /// <summary>

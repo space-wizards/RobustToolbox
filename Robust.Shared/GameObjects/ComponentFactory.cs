@@ -1,8 +1,10 @@
-﻿using Robust.Shared.Interfaces.GameObjects;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 
 namespace Robust.Shared.GameObjects
 {
@@ -10,6 +12,7 @@ namespace Robust.Shared.GameObjects
     {
 #pragma warning disable 649
         [Dependency] private readonly IDynamicTypeFactory _typeFactory;
+        [Dependency] private readonly IReflectionManager _reflectionManager;
 #pragma warning restore 649
 
         private class ComponentRegistration : IComponentRegistration
@@ -62,14 +65,19 @@ namespace Robust.Shared.GameObjects
 
         public void Register<T>(bool overwrite = false) where T : IComponent, new()
         {
-            if (types.ContainsKey(typeof(T)))
+            Register(typeof(T), overwrite);
+        }
+
+        private void Register(Type type, bool overwrite=false)
+        {
+            if (types.ContainsKey(type))
             {
-                throw new InvalidOperationException($"Type is already registered: {typeof(T)}");
+                throw new InvalidOperationException($"Type is already registered: {type}");
             }
 
             // Create a dummy to be able to fetch instance properties like name.
             // Not clean but sadly C# doesn't have static virtual members.
-            var dummy = new T();
+            var dummy = (IComponent)Activator.CreateInstance(type);
 
             var name = dummy.Name;
             var netID = dummy.NetID;
@@ -105,9 +113,9 @@ namespace Robust.Shared.GameObjects
                 RemoveComponent(netIDs[netID.Value].Name);
             }
 
-            var registration = new ComponentRegistration(name, typeof(T), netID, netSyncExist);
+            var registration = new ComponentRegistration(name, type, netID, netSyncExist);
             names[name] = registration;
-            types[typeof(T)] = registration;
+            types[type] = registration;
             if (netID != null)
             {
                 netIDs[netID.Value] = registration;
@@ -116,17 +124,22 @@ namespace Robust.Shared.GameObjects
 
         public void RegisterReference<TTarget, TInterface>() where TTarget : TInterface, IComponent, new()
         {
-            if (!types.ContainsKey(typeof(TTarget)))
+            RegisterReference(typeof(TTarget), typeof(TInterface));
+        }
+
+        private void RegisterReference(Type target, Type @interface)
+        {
+            if (!types.ContainsKey(target))
             {
-                throw new InvalidOperationException($"Unregistered type: {typeof(TTarget)}");
+                throw new InvalidOperationException($"Unregistered type: {target}");
             }
 
-            var registration = types[typeof(TTarget)];
-            if (registration.References.Contains(typeof(TInterface)))
+            var registration = types[target];
+            if (registration.References.Contains(@interface))
             {
-                throw new InvalidOperationException($"Attempted to register a reference twice: {typeof(TInterface)}");
+                throw new InvalidOperationException($"Attempted to register a reference twice: {@interface}");
             }
-            registration.References.Add(typeof(TInterface));
+            registration.References.Add(@interface);
         }
 
         public void RegisterIgnore(string name, bool overwrite = false)
@@ -243,6 +256,37 @@ namespace Robust.Shared.GameObjects
         public IComponentRegistration GetRegistration(IComponent component)
         {
             return GetRegistration(component.GetType());
+        }
+
+        public void DoAutoRegistrations()
+        {
+            var iComponent = typeof(IComponent);
+
+            foreach (var type in _reflectionManager.FindTypesWithAttribute<RegisterComponentAttribute>())
+            {
+                if (!iComponent.IsAssignableFrom(type))
+                {
+                    Logger.Error("Type {0} has RegisterComponentAttribute but does not implement IComponent.", type);
+                    continue;
+                }
+
+                Register(type);
+
+                foreach (var attribute in Attribute.GetCustomAttributes(type, typeof(ComponentReferenceAttribute)))
+                {
+                    var cast = (ComponentReferenceAttribute) attribute;
+
+                    var refType = cast.ReferenceType;
+
+                    if (!refType.IsAssignableFrom(type))
+                    {
+                        Logger.Error("Type {0} has reference for type it does not implement: {1}.", type, refType);
+                        continue;
+                    }
+
+                    RegisterReference(type, refType);
+                }
+            }
         }
     }
 

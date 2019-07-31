@@ -1,9 +1,7 @@
 ﻿using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics.Lighting;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -34,11 +32,12 @@ namespace Robust.Client.GameObjects
         //private IOccluder[] occluders = new IOccluder[4];
         private OccluderComponent[] neighbors = new OccluderComponent[4];
         private SnapGridComponent SnapGrid;
+/*
         [Dependency]
 #pragma warning disable 649
         private readonly ILightManager lightManager;
 #pragma warning restore 649
-
+*/
         public override void Initialize()
         {
             base.Initialize();

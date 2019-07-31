@@ -20,9 +20,11 @@ namespace Robust.Client.GameStates
     /// </summary>
     internal class NetGraphOverlay : Overlay
     {
+#pragma warning disable 0649
         [Dependency] private readonly IGameTiming _gameTiming;
         [Dependency] private readonly IClientNetManager _netManager;
         [Dependency] private readonly IClientGameStateManager _gameStateManager;
+#pragma warning restore 0649
 
         private const int HistorySize = 60 * 3; // number of ticks to keep in history.
         private const int TargetPayloadBps = 56000 / 8; // Target Payload size in Bytes per second. A mind-numbing fifty-six thousand bits per second, who would ever need more?
@@ -30,12 +32,11 @@ namespace Robust.Client.GameStates
         private const int BytesPerPixel = 2; // If you are running the game on a DSL connection, you can scale the graph to fit your absurd bandwidth.
         private const int LowerGraphOffset = 100; // Offset on the Y axis in pixels of the lower lag/interp graph.
         private const int MsPerPixel = 4; // Latency Milliseconds per pixel, for scaling the graph.
-        
+
         /// <inheritdoc />
         public override OverlaySpace Space => OverlaySpace.ScreenSpace;
 
         private readonly Font _font;
-        private GameTick _lastTick;
         private int _warningPayloadSize;
         private int _midrangePayloadSize;
 
@@ -54,7 +55,7 @@ namespace Robust.Client.GameStates
         {
             var toSeq = args.AppliedState.ToSequence;
             var sz = args.AppliedState.PayloadSize;
-            
+
             // calc payload size
             _warningPayloadSize = TargetPayloadBps / _gameTiming.TickRate;
             _midrangePayloadSize = MidrangePayloadBps / _gameTiming.TickRate;
@@ -145,7 +146,7 @@ namespace Robust.Client.GameStates
             // interp text info
             if(lastLagY != -1)
                 DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin + width, lastLagY), $"{lastLagMs.ToString()}ms");
-            
+
             DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin, height + LowerGraphOffset), $"{_gameStateManager.CurrentBufferSize.ToString()} states");
         }
 

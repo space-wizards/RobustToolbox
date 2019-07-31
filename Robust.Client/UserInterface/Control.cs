@@ -57,8 +57,6 @@ namespace Robust.Client.UserInterface
         private GrowDirection _growHorizontal;
         private GrowDirection _growVertical;
 
-        private static Dictionary<string, Type> _manualNodeTypeTranslations;
-
         public event Action<Control> OnMinimumSizeChanged;
         public event Action<Control> OnVisibilityChanged;
 

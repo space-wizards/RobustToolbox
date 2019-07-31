@@ -7,7 +7,6 @@ using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.Placement;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
@@ -29,7 +28,6 @@ namespace Robust.Client.State.States
         [Dependency] private readonly IComponentManager _componentManager;
         [Dependency] private readonly IInputManager inputManager;
         [Dependency] private readonly IPlayerManager playerManager;
-        [Dependency] private readonly IUserInterfaceManager userInterfaceManager;
         [Dependency] private readonly IPlacementManager placementManager;
         [Dependency] private readonly IEyeManager eyeManager;
         [Dependency] private readonly IEntitySystemManager entitySystemManager;

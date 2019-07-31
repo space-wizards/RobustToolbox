@@ -36,7 +36,14 @@ namespace Robust.Shared.Utility
             // We need to fetch the entire class hierarchy and SelectMany(),
             // Because BindingFlags.FlattenHierarchy doesn't read privates,
             // Even when you pass BindingFlags.NonPublic.
-            return GetClassHierarchy(t).SelectMany(p => p.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly | BindingFlags.Public));
+            foreach (var p in GetClassHierarchy(t))
+            {
+                foreach (var field in p.GetFields(BindingFlags.NonPublic | BindingFlags.Instance |
+                                                  BindingFlags.DeclaredOnly | BindingFlags.Public))
+                {
+                    yield return field;
+                }
+            }
         }
 
         /// <summary>
@@ -44,7 +51,9 @@ namespace Robust.Shared.Utility
         /// </summary>
         public static IEnumerable<PropertyInfo> GetAllProperties(this Type t)
         {
-            return GetClassHierarchy(t).SelectMany(p => p.GetProperties(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly | BindingFlags.Public));
+            return GetClassHierarchy(t).SelectMany(p =>
+                p.GetProperties(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly |
+                                BindingFlags.Public));
         }
 
         public static IEnumerable<Type> GetClassHierarchy(this Type t)

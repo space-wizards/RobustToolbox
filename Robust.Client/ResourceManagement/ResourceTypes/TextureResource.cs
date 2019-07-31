@@ -1,10 +1,10 @@
-﻿using Robust.Client.Graphics;
+﻿using System.IO;
+using Robust.Client.Graphics;
+using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
-using System.IO;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Shared.IoC;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client.ResourceManagement
@@ -16,7 +16,7 @@ namespace Robust.Client.ResourceManagement
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
-            if (!cache.ContentFileExists(path))
+            if (!cache.TryContentFileRead(path, out var stream))
             {
                 throw new FileNotFoundException("Content file does not exist for texture");
             }
@@ -26,7 +26,7 @@ namespace Robust.Client.ResourceManagement
 
             var loadParameters = _tryLoadTextureParameters(cache, path) ?? TextureLoadParameters.Default;
 
-            _loadOpenGL(cache, path, loadParameters);
+            _loadOpenGL(cache, stream, path, loadParameters);
         }
 
         private static TextureLoadParameters? _tryLoadTextureParameters(IResourceCache cache, ResourcePath path)
@@ -52,11 +52,11 @@ namespace Robust.Client.ResourceManagement
             return null;
         }
 
-        private void _loadOpenGL(IResourceCache cache, ResourcePath path, TextureLoadParameters? parameters)
+        private void _loadOpenGL(IResourceCache cache, Stream stream, ResourcePath path, TextureLoadParameters? parameters)
         {
             var manager = IoCManager.Resolve<IClyde>();
 
-            Texture = manager.LoadTextureFromPNGStream(cache.ContentFileRead(path), path.ToString(), parameters);
+            Texture = manager.LoadTextureFromPNGStream(stream, path.ToString(), parameters);
         }
 
         public static implicit operator Texture(TextureResource res)

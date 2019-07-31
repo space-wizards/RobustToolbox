@@ -16,7 +16,7 @@ namespace Robust.Client.UserInterface
     [SuppressMessage("ReSharper", "IdentifierTypo")]
     [SuppressMessage("ReSharper", "CommentTypo")]
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
-    internal sealed class FileDialogManager : IFileDialogManagerInternal
+    internal sealed class FileDialogManager : IFileDialogManager
     {
         // Uses nativefiledialog to open the file dialogs cross platform.
         // On Linux, if the kdialog command is found, it will be used instead.
@@ -28,46 +28,40 @@ namespace Robust.Client.UserInterface
 
 #if LINUX
         private bool _kDialogAvailable;
+        private bool _checkedKDialogAvailable;
 #endif
 
-        public Task<string> OpenFile()
+        public async Task<string> OpenFile()
         {
 #if LINUX
-            if (_kDialogAvailable)
+            if (await IsKDialogAvailable())
             {
-                return OpenFileKDialog();
+                return await OpenFileKDialog();
             }
 #endif
-            return OpenFileNfd();
+            return await OpenFileNfd();
         }
 
-        public Task<string> SaveFile()
+        public async Task<string> SaveFile()
         {
 #if LINUX
-            if (_kDialogAvailable)
+            if (await IsKDialogAvailable())
             {
-                return SaveFileKDialog();
+                return await SaveFileKDialog();
             }
 #endif
-            return SaveFileNfd();
+            return await SaveFileNfd();
         }
 
-        public Task<string> OpenFolder()
+        public async Task<string> OpenFolder()
         {
 #if LINUX
-            if (_kDialogAvailable)
+            if (await IsKDialogAvailable())
             {
-                return OpenFolderKDialog();
+                return await OpenFolderKDialog();
             }
 #endif
-            return OpenFolderNfd();
-        }
-
-        public void Initialize()
-        {
-#if LINUX
-            CheckKDialogSupport();
-#endif
+            return await OpenFolderNfd();
         }
 
         private unsafe Task<string> OpenFileNfd()
@@ -150,7 +144,7 @@ namespace Robust.Client.UserInterface
         }
 
 #if LINUX
-        private void CheckKDialogSupport()
+        private async Task CheckKDialogSupport()
         {
             try
             {
@@ -170,7 +164,7 @@ namespace Robust.Client.UserInterface
                     return;
                 }
 
-                process.WaitForExit();
+                await process.WaitForExitAsync();
                 _kDialogAvailable = process.ExitCode == 0;
 
                 if (_kDialogAvailable)
@@ -222,6 +216,17 @@ namespace Robust.Client.UserInterface
             }
 
             return (await process.StandardOutput.ReadLineAsync()).Trim();
+        }
+
+        private async Task<bool> IsKDialogAvailable()
+        {
+            if (!_checkedKDialogAvailable)
+            {
+                await CheckKDialogSupport();
+                _checkedKDialogAvailable = true;
+            }
+
+            return _kDialogAvailable;
         }
 #endif
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Robust.Shared.Configuration;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
@@ -107,13 +106,13 @@ namespace Robust.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public MemoryStream ContentFileRead(string path)
+        public Stream ContentFileRead(string path)
         {
             return ContentFileRead(new ResourcePath(path));
         }
 
         /// <inheritdoc />
-        public MemoryStream ContentFileRead(ResourcePath path)
+        public Stream ContentFileRead(ResourcePath path)
         {
             if (TryContentFileRead(path, out var fileStream))
             {
@@ -123,13 +122,13 @@ namespace Robust.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public bool TryContentFileRead(string path, out MemoryStream fileStream)
+        public bool TryContentFileRead(string path, out Stream fileStream)
         {
             return TryContentFileRead(new ResourcePath(path), out fileStream);
         }
 
         /// <inheritdoc />
-        public bool TryContentFileRead(ResourcePath path, out MemoryStream fileStream)
+        public bool TryContentFileRead(ResourcePath path, out Stream fileStream)
         {
             if (path == null)
             {

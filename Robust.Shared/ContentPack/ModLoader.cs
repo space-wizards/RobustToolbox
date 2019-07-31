@@ -199,7 +199,7 @@ namespace Robust.Shared.ContentPack
                     try
                     {
                         // load the assembly into the process, and bootstrap the GameServer entry point.
-                        LoadGameAssembly<T>(gameDll.ToArray(), gamePdb.ToArray());
+                        LoadGameAssembly<T>(gameDll.CopyToArray(), gamePdb.CopyToArray());
                         return true;
                     }
                     catch (Exception e)
@@ -213,7 +213,7 @@ namespace Robust.Shared.ContentPack
                 try
                 {
                     // load the assembly into the process, and bootstrap the GameServer entry point.
-                    LoadGameAssembly<T>(gameDll.ToArray());
+                    LoadGameAssembly<T>(gameDll.CopyToArray());
                     return true;
                 }
                 catch (Exception e)

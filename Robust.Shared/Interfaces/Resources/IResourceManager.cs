@@ -50,7 +50,7 @@ namespace Robust.Shared.Interfaces.Resources
         /// <exception cref="FileNotFoundException">Thrown if <paramref name="path"/> does not exist in the VFS.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        MemoryStream ContentFileRead(ResourcePath path);
+        Stream ContentFileRead(ResourcePath path);
 
         /// <summary>
         ///     Read a file from the mounted content roots.
@@ -60,7 +60,7 @@ namespace Robust.Shared.Interfaces.Resources
         /// <exception cref="FileNotFoundException">Thrown if <paramref name="path"/> does not exist in the VFS.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        MemoryStream ContentFileRead(string path);
+        Stream ContentFileRead(string path);
 
         /// <summary>
         ///     Check if a file exists in any of the mounted content roots.
@@ -88,7 +88,7 @@ namespace Robust.Shared.Interfaces.Resources
         /// <returns>True if the file could be loaded, false otherwise.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        bool TryContentFileRead(ResourcePath path, out MemoryStream fileStream);
+        bool TryContentFileRead(ResourcePath path, out Stream fileStream);
 
         /// <summary>
         ///     Try to read a file from the mounted content roots.
@@ -98,7 +98,7 @@ namespace Robust.Shared.Interfaces.Resources
         /// <returns>True if the file could be loaded, false otherwise.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        bool TryContentFileRead(string path, out MemoryStream fileStream);
+        bool TryContentFileRead(string path, out Stream fileStream);
 
         /// <summary>
         ///     Recursively finds all files in a directory and all sub directories.

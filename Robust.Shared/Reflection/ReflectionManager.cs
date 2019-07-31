@@ -1,8 +1,8 @@
-﻿using Robust.Shared.Interfaces.Reflection;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Log;
 
 namespace Robust.Shared.Reflection
@@ -17,6 +17,7 @@ namespace Robust.Shared.Reflection
         /// First prefix should probably be <code>""</code>.
         /// </remarks>
         protected abstract IEnumerable<string> TypePrefixes { get; }
+
         private readonly List<Assembly> assemblies = new List<Assembly>();
 
         public event EventHandler<ReflectionUpdateEventArgs> OnAssemblyAdded;
@@ -25,20 +26,16 @@ namespace Robust.Shared.Reflection
 
         public IEnumerable<Type> GetAllChildren<T>(bool inclusive = false)
         {
+            var typeLists = new List<Type[]>(Assemblies.Count);
             try
             {
                 // There's very little assemblies, so storing these temporarily is cheap.
                 // We need to do it ahead of time so that we can catch ReflectionTypeLoadException HERE,
                 // so whoever is using us doesn't have to handle them.
-                var TypeLists = new List<Type[]>(Assemblies.Count);
-                TypeLists.AddRange(Assemblies.Select(t => t.GetTypes()));
-
-                return TypeLists.SelectMany(t => t)
-                                .Where(t => typeof(T).IsAssignableFrom(t)
-                                    && !t.IsAbstract
-                                    && ((Attribute.GetCustomAttribute(t, typeof(ReflectAttribute)) as ReflectAttribute)
-                                        ?.Discoverable ?? ReflectAttribute.DEFAULT_DISCOVERABLE)
-                                    && (inclusive || typeof(T) != t));
+                foreach (var assembly in Assemblies)
+                {
+                    typeLists.Add(assembly.GetTypes());
+                }
             }
             catch (ReflectionTypeLoadException e)
             {
@@ -47,11 +44,38 @@ namespace Robust.Shared.Reflection
                 {
                     Logger.Error(inner.ToString());
                 }
+
                 throw;
+            }
+
+            foreach (var t in typeLists)
+            {
+                foreach (var type in t)
+                {
+                    if (!typeof(T).IsAssignableFrom(type) || type.IsAbstract)
+                    {
+                        continue;
+                    }
+
+                    var attribute = (ReflectAttribute) Attribute.GetCustomAttribute(type, typeof(ReflectAttribute));
+
+                    if (!(attribute?.Discoverable ?? ReflectAttribute.DEFAULT_DISCOVERABLE))
+                    {
+                        continue;
+                    }
+
+                    if (typeof(T) == type && !inclusive)
+                    {
+                        continue;
+                    }
+
+                    yield return type;
+                }
             }
         }
 
         public void LoadAssemblies(params Assembly[] args) => LoadAssemblies(args.AsEnumerable());
+
         public void LoadAssemblies(IEnumerable<Assembly> assemblies)
         {
             this.assemblies.AddRange(assemblies);
@@ -86,6 +110,7 @@ namespace Robust.Shared.Reflection
             {
                 return ret;
             }
+
             throw new ArgumentException("Unable to find type.");
         }
 
@@ -143,7 +168,7 @@ namespace Robust.Shared.Reflection
                         continue;
                     }
 
-                    @enum = (Enum)Enum.Parse(type, value);
+                    @enum = (Enum) Enum.Parse(type, value);
                     return true;
                 }
             }

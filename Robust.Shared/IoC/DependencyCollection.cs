@@ -162,9 +162,13 @@ namespace Robust.Shared.IoC
         /// <inheritdoc />
         public void InjectDependencies(object obj)
         {
-            foreach (var field in obj.GetType().GetAllFields()
-                            .Where(p => Attribute.GetCustomAttribute(p, typeof(DependencyAttribute)) != null))
+            foreach (var field in obj.GetType().GetAllFields())
             {
+                if (Attribute.GetCustomAttribute(field, typeof(DependencyAttribute)) == null)
+                {
+                    continue;
+                }
+
                 // Not using Resolve<T>() because we're literally building it right now.
                 if (!_services.ContainsKey(field.FieldType))
                 {

@@ -21,15 +21,15 @@ using FrameEventArgs = Robust.Client.FrameEventArgs;
 
 namespace Robust.Lite
 {
-    internal class LiteGameController : IGameController, IGameControllerInternal
+    internal class LiteGameController : IGameControllerInternal
     {
         private IGameLoop _mainLoop;
 
 #pragma warning disable 649
+        [Dependency] private readonly IClipboardManagerInternal _clipboardManager;
         [Dependency] private readonly IClydeInternal _clyde;
         [Dependency] private readonly IConfigurationManager _configurationManager;
         [Dependency] private readonly IEyeManager _eyeManager;
-        [Dependency] private readonly IFileDialogManagerInternal _fileDialogManager;
         [Dependency] private readonly IFontManagerInternal _fontManager;
         [Dependency] private readonly IGameTiming _gameTiming;
         [Dependency] private readonly ILocalizationManager _localizationManager;
@@ -91,8 +91,7 @@ namespace Robust.Lite
             }
 
             _fontManager.Initialize();
-
-            _fileDialogManager.Initialize();
+            _clipboardManager.Initialize();
 
             _eyeManager.Initialize();
 

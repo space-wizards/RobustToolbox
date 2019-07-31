@@ -3,7 +3,7 @@ using Robust.Client.Interfaces.UserInterface;
 
 namespace Robust.Client.UserInterface
 {
-    internal sealed class ClipboardManagerUnsupported : IClipboardManager
+    internal sealed class ClipboardManagerUnsupported : IClipboardManagerInternal
     {
         public bool Available => false;
         public string NotAvailableReason => "Sorry, the clipboard is not supported on your platform.";
@@ -16,6 +16,11 @@ namespace Robust.Client.UserInterface
         public void SetText(string text)
         {
             throw new NotSupportedException();
+        }
+
+        public void Initialize()
+        {
+            // Nothing.
         }
     }
 }

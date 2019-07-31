@@ -264,7 +264,8 @@ namespace Robust.Shared.Prototypes
 
                 if (prototypeTypes.ContainsKey(attribute.Type))
                 {
-                    throw new InvalidImplementationException(type, typeof(IPrototype), string.Format("Duplicate prototype type ID: {0}. Current: {1}", attribute.Type, prototypeTypes[attribute.Type]));
+                    throw new InvalidImplementationException(type, typeof(IPrototype),
+                        $"Duplicate prototype type ID: {attribute.Type}. Current: {prototypeTypes[attribute.Type]}");
                 }
 
                 prototypeTypes[attribute.Type] = type;

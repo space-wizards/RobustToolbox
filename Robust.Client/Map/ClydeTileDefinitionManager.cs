@@ -1,20 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.Primitives;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Map;
 using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Shared.GameObjects.Components.Renderable;
+using Robust.Client.Utility;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
-using Image = SixLabors.ImageSharp.Image;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Robust.Client.Map
 {
@@ -72,10 +68,9 @@ namespace Robust.Client.Map
                     throw new NotImplementedException("Unable to use tiles with a dimension other than 32x32.");
                 }
 
-                var point = new Point(column * tileSize, row * tileSize);
+                var point = new Vector2i(column * tileSize, row * tileSize);
 
-                sheet.Mutate(x => x.DrawImage(image, point,
-                    PixelColorBlendingMode.Overlay, 1));
+                image.Blit(new UIBox2i(0, 0, image.Width, image.Height), sheet, point);
 
                 _tileRegions.Add(def.TileId,
                     UIBox2.FromDimensions(

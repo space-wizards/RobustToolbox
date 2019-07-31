@@ -7,7 +7,6 @@ using Robust.Client.Graphics.Drawing;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Console;
 using Robust.Client.UserInterface.Controls;
-using Robust.Client.Utility;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -219,7 +218,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
         }
 
-        private void _loadHistoryFromDisk()
+        private async void _loadHistoryFromDisk()
         {
             CommandHistory.Clear();
             Stream stream;
@@ -237,7 +236,7 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
                 {
-                    var data = JsonConvert.DeserializeObject<List<string>>(reader.ReadToEnd());
+                    var data = JsonConvert.DeserializeObject<List<string>>(await reader.ReadToEndAsync());
                     CommandHistory.Clear();
                     CommandHistory.AddRange(data);
                     _historyPosition = CommandHistory.Count;

@@ -28,7 +28,7 @@ namespace Robust.UnitTesting.Shared.ContentPack
             var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
             using (var stream = resourceManager.ContentFileRead("/a/b/c.dat"))
             {
-                Assert.That(stream.ToArray(), Is.EqualTo(Data));
+                Assert.That(stream.CopyToArray(), Is.EqualTo(Data));
             }
         }
     }

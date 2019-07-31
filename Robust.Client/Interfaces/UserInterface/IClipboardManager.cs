@@ -8,4 +8,9 @@ namespace Robust.Client.Interfaces.UserInterface
         string GetText();
         void SetText(string text);
     }
+
+    internal interface IClipboardManagerInternal : IClipboardManager
+    {
+        void Initialize();
+    }
 }

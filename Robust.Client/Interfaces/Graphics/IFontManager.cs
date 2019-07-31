@@ -1,4 +1,4 @@
-using System;
+using System.IO;
 using Robust.Client.Graphics;
 
 namespace Robust.Client.Interfaces.Graphics
@@ -10,7 +10,7 @@ namespace Robust.Client.Interfaces.Graphics
 
     internal interface IFontManagerInternal : IFontManager
     {
-        IFontFaceHandle Load(ReadOnlySpan<byte> data);
+        IFontFaceHandle Load(Stream stream);
         IFontInstanceHandle MakeInstance(IFontFaceHandle handle, int size);
         void Initialize();
     }

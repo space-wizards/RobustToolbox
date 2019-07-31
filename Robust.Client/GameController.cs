@@ -42,6 +42,7 @@ namespace Robust.Client
     {
 #pragma warning disable 649
         [Dependency] private readonly IConfigurationManager _configurationManager;
+        [Dependency] private readonly IClipboardManagerInternal _clipboardManager;
         [Dependency] private readonly IResourceCacheInternal _resourceCache;
         [Dependency] private readonly IResourceManager _resourceManager;
         [Dependency] private readonly IRobustSerializer _serializer;
@@ -68,7 +69,6 @@ namespace Robust.Client
         [Dependency] private readonly ILocalizationManager _localizationManager;
         [Dependency] private readonly IModLoader _modLoader;
         [Dependency] private readonly ISignalHandler _signalHandler;
-        [Dependency] private readonly IFileDialogManagerInternal _fileDialogManager;
 #pragma warning restore 649
 
         public string ContentRootDir { get; set; } = "../../../";
@@ -122,6 +122,7 @@ namespace Robust.Client
             _clyde.SetWindowTitle("Space Station 14");
 
             _fontManager.Initialize();
+            _clipboardManager.Initialize();
 
             //identical code for server in baseserver
             if (!_modLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))
@@ -139,7 +140,6 @@ namespace Robust.Client
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
 
-            _fileDialogManager.Initialize();
             _eyeManager.Initialize();
             _serializer.Initialize();
             _userInterfaceManager.Initialize();

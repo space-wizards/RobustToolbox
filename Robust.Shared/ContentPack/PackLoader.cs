@@ -35,7 +35,7 @@ namespace Robust.Shared.ContentPack
             }
 
             /// <inheritdoc />
-            public bool TryGetFile(ResourcePath relPath, out MemoryStream stream)
+            public bool TryGetFile(ResourcePath relPath, out Stream stream)
             {
                 var entry = _zip.GetEntry(relPath.ToRootedPath().ToString());
 

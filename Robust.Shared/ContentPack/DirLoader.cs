@@ -1,7 +1,6 @@
-﻿using Robust.Shared.Log;
-using Robust.Shared.Utility;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
 {
@@ -31,7 +30,7 @@ namespace Robust.Shared.ContentPack
             }
 
             /// <inheritdoc />
-            public bool TryGetFile(ResourcePath relPath, out MemoryStream stream)
+            public bool TryGetFile(ResourcePath relPath, out Stream stream)
             {
                 var path = GetPath(relPath);
                 if (!File.Exists(path))
@@ -40,8 +39,7 @@ namespace Robust.Shared.ContentPack
                     return false;
                 }
 
-                var bytes = File.ReadAllBytes(path);
-                stream = new MemoryStream(bytes, false);
+                stream = File.OpenRead(path);
                 return true;
             }
 

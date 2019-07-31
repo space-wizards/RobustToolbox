@@ -1,6 +1,6 @@
-﻿using Robust.Shared.Utility;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
 {
@@ -21,8 +21,9 @@ namespace Robust.Shared.ContentPack
             ///     Gets a file from the content root using the relative path.
             /// </summary>
             /// <param name="relPath">Relative path from the root directory.</param>
+            /// <param name="stream"></param>
             /// <returns>A stream of the file loaded into memory.</returns>
-            bool TryGetFile(ResourcePath relPath, out MemoryStream stream);
+            bool TryGetFile(ResourcePath relPath, out Stream stream);
 
             /// <summary>
             ///     Recursively finds all files in a directory and all sub directories.

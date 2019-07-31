@@ -87,7 +87,6 @@ namespace Robust.Client
                     IoCManager.Register<IClydeInternal, ClydeHeadless>();
                     IoCManager.Register<IInputManager, InputManager>();
                     IoCManager.Register<IFileDialogManager, DummyFileDialogManager>();
-                    IoCManager.Register<IFileDialogManagerInternal, DummyFileDialogManager>();
                     IoCManager.Register<IUriOpener, UriOpenerDummy>();
                     break;
                 case GameController.DisplayMode.Clyde:
@@ -96,7 +95,6 @@ namespace Robust.Client
                     IoCManager.Register<IClydeInternal, Clyde>();
                     IoCManager.Register<IInputManager, ClydeInputManager>();
                     IoCManager.Register<IFileDialogManager, FileDialogManager>();
-                    IoCManager.Register<IFileDialogManagerInternal, FileDialogManager>();
 #if LINUX
                     IoCManager.Register<IUriOpener, UriOpenerLinux>();
 #elif MACOS
@@ -119,10 +117,13 @@ namespace Robust.Client
 
 #if LINUX
             IoCManager.Register<IClipboardManager, ClipboardManagerLinux>();
+            IoCManager.Register<IClipboardManagerInternal, ClipboardManagerLinux>();
 #elif WINDOWS
             IoCManager.Register<IClipboardManager, ClipboardManagerWindows>();
+            IoCManager.Register<IClipboardManagerInternal, ClipboardManagerWindows>();
 #else
             IoCManager.Register<IClipboardManager, ClipboardManagerUnsupported>();
+            IoCManager.Register<IClipboardManagerInternal, ClipboardManagerUnsupported>();
 #endif
 
             IoCManager.Register<ISignalHandler, ClientSignalHandler>();

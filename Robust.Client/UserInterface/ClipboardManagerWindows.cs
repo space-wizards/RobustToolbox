@@ -8,7 +8,7 @@ using Robust.Shared.IoC;
 namespace Robust.Client.UserInterface
 {
     // Yay Windows API!
-    sealed class ClipboardManagerWindows : IClipboardManager
+    sealed class ClipboardManagerWindows : IClipboardManagerInternal
     {
         [Dependency]
 #pragma warning disable 649
@@ -164,6 +164,11 @@ namespace Robust.Client.UserInterface
             {
                 CloseClipboard();
             }
+        }
+
+        public void Initialize()
+        {
+            // Nothing.
         }
 
         private const uint CF_UNICODETEXT = 13;

@@ -50,7 +50,7 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         public MapIndices Indices => _gridIndices;
-        
+
         /// <inheritdoc />
         public TileRef GetTileRef(ushort xIndex, ushort yIndex)
         {
@@ -174,12 +174,11 @@ namespace Robust.Shared.Map
             var list = offset == SnapGridOffset.Center ? cell.Center : cell.Edge;
 
             if (list == null)
-                yield break;
-
-            foreach (var element in list)
             {
-                yield return element;
+                return Array.Empty<SnapGridComponent>();
             }
+
+            return list;
         }
 
         /// <inheritdoc />
@@ -276,7 +275,7 @@ namespace Robust.Shared.Map
                     newRight = cBounds.Right - 1;
                     tBounds = tBounds.Translated(new Vector2i(-1, 0));
                 }
-                
+
                 cBounds = new Box2i(newLeft, cBounds.Bottom, newRight, cBounds.Top);
             }
         }
@@ -310,11 +309,11 @@ namespace Robust.Shared.Map
                     newTop = cBounds.Top - 1;
                     tBounds = tBounds.Translated(new Vector2i(0, -1));
                 }
-                
+
                 cBounds = new Box2i(cBounds.Left, newBottom, cBounds.Right, newTop);
             }
         }
-        
+
         private static bool AnyTileOnX(in Tile[,] tiles, Vector2i extents, in Vector2i indices)
         {
             var y = indices.Y;
@@ -322,7 +321,7 @@ namespace Robust.Shared.Map
             {
                 if(tiles[x, y].IsEmpty)
                     continue;
-                
+
                 return false;
             }
 
@@ -336,7 +335,7 @@ namespace Robust.Shared.Map
             {
                 if(tiles[x, y].IsEmpty)
                     continue;
-                
+
                 return false;
             }
 

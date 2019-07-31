@@ -29,9 +29,4 @@ namespace Robust.Client.Interfaces.UserInterface
         /// <returns>The path the user selected to open. Null if the user cancelled the action.</returns>
         Task<string> OpenFolder();
     }
-
-    internal interface IFileDialogManagerInternal : IFileDialogManager
-    {
-        void Initialize();
-    }
 }

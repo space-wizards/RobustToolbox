@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using JetBrains.Annotations;
-using SharpFont;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.Primitives;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using SharpFont;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.Primitives;
 
 namespace Robust.Client.Graphics
 {
@@ -32,9 +33,9 @@ namespace Robust.Client.Graphics
             _library = new Library();
         }
 
-        public IFontFaceHandle Load(ReadOnlySpan<byte> data)
+        public IFontFaceHandle Load(Stream stream)
         {
-            var face = new Face(_library, data.ToArray(), 0);
+            var face = new Face(_library, stream.CopyToArray(), 0);
             var handle = new FontFaceHandle(face);
             return handle;
         }

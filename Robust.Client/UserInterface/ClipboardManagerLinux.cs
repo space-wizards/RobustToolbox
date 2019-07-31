@@ -1,14 +1,13 @@
 using System;
 using System.Diagnostics;
-using System.Text;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface
 {
-    internal sealed class ClipboardManagerLinux : IClipboardManager
+    internal sealed class ClipboardManagerLinux : IClipboardManagerInternal
     {
-        public bool Available { get; }
+        public bool Available { get; private set; }
 
         public string NotAvailableReason =>
             // ReSharper disable once StringLiteralTypo
@@ -58,7 +57,7 @@ namespace Robust.Client.UserInterface
             process.WaitForExit();
         }
 
-        public ClipboardManagerLinux()
+        public async void Initialize()
         {
             try
             {
@@ -71,13 +70,14 @@ namespace Robust.Client.UserInterface
                         RedirectStandardError = true,
                         UseShellExecute = false
                     });
+
                 if (process == null)
                 {
                     Available = false;
                     return;
                 }
 
-                process.WaitForExit();
+                await process.WaitForExitAsync();
                 Available = process.ExitCode == 0;
             }
             catch (Exception)

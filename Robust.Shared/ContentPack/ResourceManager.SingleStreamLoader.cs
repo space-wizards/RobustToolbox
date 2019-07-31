@@ -22,7 +22,7 @@ namespace Robust.Shared.ContentPack
                 // Nothing to do here I'm pretty sure.
             }
 
-            public bool TryGetFile(ResourcePath relPath, out MemoryStream stream)
+            public bool TryGetFile(ResourcePath relPath, out Stream stream)
             {
                 if (relPath == _resourcePath)
                 {

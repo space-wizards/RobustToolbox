@@ -6,7 +6,7 @@ namespace Robust.Client.UserInterface
     /// <summary>
     ///     Treats ever file dialog operation as cancelled.
     /// </summary>
-    internal sealed class DummyFileDialogManager : IFileDialogManagerInternal
+    internal sealed class DummyFileDialogManager : IFileDialogManager
     {
         public Task<string> OpenFile()
         {
@@ -21,11 +21,6 @@ namespace Robust.Client.UserInterface
         public Task<string> OpenFolder()
         {
             return Task.FromResult<string>(null);
-        }
-
-        public void Initialize()
-        {
-            // Nothing.
         }
     }
 }

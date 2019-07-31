@@ -1,21 +1,21 @@
-﻿using Robust.Client.Input;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Robust.Client.GameObjects.EntitySystems;
+using Robust.Client.Input;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.Placement;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Map;
-using System.Collections.Generic;
-using System.Linq;
-using Robust.Client.GameObjects.EntitySystems;
-using Robust.Client.Player;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.IoC;
+using Robust.Shared.Map;
 
 namespace Robust.Client.State.States
 {
@@ -47,8 +47,6 @@ namespace Robust.Client.State.States
         public override void Shutdown()
         {
             playerManager.LocalPlayer.DetachEntity();
-
-            userInterfaceManager.StateRoot.RemoveAllChildren();
 
             inputManager.KeyBindStateChanged -= OnKeyBindStateChanged;
         }

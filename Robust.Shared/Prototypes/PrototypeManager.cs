@@ -1,21 +1,17 @@
-﻿using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.IoC;
-using Robust.Shared.IoC.Exceptions;
-using Robust.Shared.Utility;
-using System;
-using System.IO;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
-using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces;
+using Robust.Shared.Interfaces.Reflection;
+using Robust.Shared.Interfaces.Resources;
+using Robust.Shared.IoC;
+using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
+using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Resources;
 
 namespace Robust.Shared.Prototypes
 {
@@ -208,6 +204,11 @@ namespace Robust.Shared.Prototypes
         {
             foreach (var filePath in _resources.ContentFindFiles(path))
             {
+                if (filePath.Extension != "yml")
+                {
+                    continue;
+                }
+
                 using (var reader = new StreamReader(_resources.ContentFileRead(filePath), EncodingHelpers.UTF8))
                 {
                     try

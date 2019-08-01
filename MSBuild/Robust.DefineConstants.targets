@@ -20,7 +20,4 @@
   <PropertyGroup Condition="'$(FullRelease)' == 'True'">
     <DefineConstants>$(DefineConstants);FULL_RELEASE</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Platform)' == 'x64'">
-    <DefineConstants>$(DefineConstants);X64</DefineConstants>
-  </PropertyGroup>
 </Project>

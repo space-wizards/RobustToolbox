@@ -1,11 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\MSBuild\Robust.Properties.targets" />
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
     <LangVersion>7.3</LangVersion>
     <IsPackable>false</IsPackable>
     <OutputType>Exe</OutputType>
-    <Platforms>x64;x86</Platforms>
+    <Platforms>x64</Platforms>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../bin/Server</OutputPath>
   </PropertyGroup>

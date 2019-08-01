@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
 using Robust.Client.Interfaces;
-using Robust.Client.Utility;
-using Robust.Shared;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -21,10 +18,6 @@ namespace Robust.Client
 
         public static void Main()
         {
-#if !X64
-            throw new InvalidOperationException("The client cannot start outside x64.");
-#endif
-
             IoCManager.InitThread();
 
             DisplayMode mode;

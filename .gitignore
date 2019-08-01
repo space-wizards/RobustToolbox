@@ -92,3 +92,4 @@ Dependencies/
 __pycache__
 .mypy_cache
 
+MSBuild/Robust.Custom.targets

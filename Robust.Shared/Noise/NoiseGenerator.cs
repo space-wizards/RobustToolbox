@@ -15,6 +15,11 @@ namespace Robust.Shared.Noise
             Ridged = 1
         }
 
+        static NoiseGenerator()
+        {
+            DllMapHelper.RegisterSimpleMap(typeof(NoiseGenerator).Assembly, "ss14_noise");
+        }
+
         private IntPtr _nativeGenerator;
 
         public NoiseGenerator(NoiseType type)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Graphics;
+using Robust.Shared;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -31,6 +32,12 @@ namespace Robust.Client.Graphics
         public FontManager()
         {
             _library = new Library();
+        }
+
+        static FontManager()
+        {
+            DllMapHelper.RegisterExplicitMap(typeof(Library).Assembly, "freetype6", "libfreetype.so.6",
+                "/Library/Frameworks/Mono.framework/Libraries/libfreetype.6.dylib");
         }
 
         public IFontFaceHandle Load(Stream stream)

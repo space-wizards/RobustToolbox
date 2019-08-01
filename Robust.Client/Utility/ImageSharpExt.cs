@@ -1,7 +1,7 @@
-using SixLabors.ImageSharp.PixelFormats;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Robust.Client.Utility
 {
@@ -28,7 +28,7 @@ namespace Robust.Client.Utility
         /// <param name="destination">The image to copy to.</param>
         /// <typeparam name="T">The type of pixel stored in the images.</typeparam>
         public static void Blit<T>(this Image<T> source, UIBox2i sourceRect,
-                Image<T> destination, Vector2i destinationOffset)
+            Image<T> destination, Vector2i destinationOffset)
             where T : struct, IPixel<T>
         {
             // TODO: Bounds checks.
@@ -41,14 +41,19 @@ namespace Robust.Client.Utility
 
             var (ox, oy) = destinationOffset;
 
-            for (var x = 0; x < sourceRect.Width; x++)
+            for (var y = 0; y < sourceRect.Height; y++)
             {
-                for (var y = 0; y < sourceRect.Height; y++)
+                var sourceRowOffset = srcWidth * (y + sourceRect.Top) + sourceRect.Left;
+                var destRowOffset = dstWidth * (y + oy) + ox;
+
+                for (var x = 0; x < sourceRect.Width; x++)
                 {
-                    var pixel = srcSpan[x + sourceRect.Left + srcWidth * (y + sourceRect.Top)];
-                    dstSpan[x + ox + dstWidth * (y + oy)] = pixel;
+                    var pixel = srcSpan[x + sourceRowOffset];
+                    dstSpan[x + destRowOffset] = pixel;
                 }
             }
         }
+
     }
 }
+

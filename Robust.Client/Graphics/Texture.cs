@@ -1,12 +1,12 @@
 ﻿using System;
 using System.IO;
 using JetBrains.Annotations;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client.Graphics
@@ -20,14 +20,22 @@ namespace Robust.Client.Graphics
         /// <summary>
         ///     The width of the texture, in pixels.
         /// </summary>
-        public abstract int Width { get; }
+        public int Width => Size.X;
 
         /// <summary>
         ///     The height of the texture, in pixels.
         /// </summary>
-        public abstract int Height { get; }
+        public int Height => Size.Y;
 
-        public Vector2i Size => new Vector2i(Width, Height);
+        /// <summary>
+        ///     The size of the texture, in pixels.
+        /// </summary>
+        public Vector2i Size { get; }
+
+        protected Texture(Vector2i size)
+        {
+            Size = size;
+        }
 
         public static Texture Transparent { get; internal set; }
         public static Texture White { get; internal set; }

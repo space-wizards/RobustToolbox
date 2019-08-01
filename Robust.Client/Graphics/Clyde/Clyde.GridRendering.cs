@@ -20,9 +20,6 @@ namespace Robust.Client.Graphics.Clyde
         {
             var map = _eyeManager.CurrentMap;
 
-            GL.Enable(EnableCap.PrimitiveRestart);
-            GL.PrimitiveRestartIndex(ushort.MaxValue);
-
             var atlasTexture = _tileDefinitionManager.TileTextureAtlas;
             var loadedTex = _loadedTextures[((ClydeTexture) atlasTexture).TextureId];
 
@@ -43,10 +40,10 @@ namespace Robust.Client.Graphics.Clyde
 
             var gridProgram = _loadedShaders[_defaultShader.Handle].Program;
             gridProgram.Use();
-            gridProgram.SetUniformTextureMaybe(UniMainTexture, TextureUnit.Texture0);
-            gridProgram.SetUniformTextureMaybe(UniLightTexture, TextureUnit.Texture1);
-            gridProgram.SetUniform(UniModUV, new Vector4(0, 0, 1, 1));
-            gridProgram.SetUniform(UniModulate, Color.White);
+            gridProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
+            gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
+            gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
+            gridProgram.SetUniform(UniIModulate, Color.White);
 
             foreach (var mapGrid in _mapManager.GetMap(map).GetAllGrids())
             {
@@ -59,7 +56,7 @@ namespace Robust.Client.Graphics.Clyde
                 var model = Matrix3.Identity;
                 model.R0C2 = grid.WorldPosition.X;
                 model.R1C2 = grid.WorldPosition.Y;
-                gridProgram.SetUniform(UniModelMatrix, model);
+                gridProgram.SetUniform(UniIModelMatrix, model);
 
                 foreach (var (index, chunk) in grid.GetMapChunks())
                 {
@@ -82,8 +79,6 @@ namespace Robust.Client.Graphics.Clyde
                     GL.DrawElements(BeginMode.TriangleStrip, datum.TileCount * 5, DrawElementsType.UnsignedShort, 0);
                 }
             }
-
-            GL.Disable(EnableCap.PrimitiveRestart);
         }
 
         private void _updateChunkMesh(IMapGrid grid, IMapChunk chunk)

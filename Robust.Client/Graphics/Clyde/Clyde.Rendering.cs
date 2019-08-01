@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -36,7 +37,7 @@ namespace Robust.Client.Graphics.Clyde
         private Matrix3 _currentModelMatrix = Matrix3.Identity;
 
         // The amount of quads we can render with ushort indices, leaving open 65536 for primitive restart.
-        private const ushort MaxBatchQuads = (2 << 13) - 1; // In human terms: (2**16/4)-1
+        private const ushort MaxBatchQuads = (2 << 13) - 1; // In human terms: (2**16/4)-1 = 16383
 
         private readonly Vertex2D[] BatchVertexData = new Vertex2D[MaxBatchQuads * 4];
 
@@ -433,7 +434,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 DebugTools.Assert(BatchingModulate.HasValue);
                 if (BatchingTexture.Value != command.TextureId ||
-                    BatchingModulate.Value != command.Modulate)
+                    !StrictColorEquality(BatchingModulate.Value, command.Modulate))
                 {
                     _flushBatchBuffer();
                     BatchingTexture = command.TextureId;
@@ -481,16 +482,16 @@ namespace Robust.Client.Graphics.Clyde
             if (command.Angle == Angle.Zero)
             {
                 bl = _currentModelMatrix.Transform(command.PositionA);
-                br = _currentModelMatrix.Transform((command.PositionB.X, command.PositionA.Y));
+                br = _currentModelMatrix.Transform(new Vector2(command.PositionB.X, command.PositionA.Y));
                 tr = _currentModelMatrix.Transform(command.PositionB);
-                tl = _currentModelMatrix.Transform((command.PositionA.X, command.PositionB.Y));
+                tl = _currentModelMatrix.Transform(new Vector2(command.PositionA.X, command.PositionB.Y));
             }
             else
             {
                 bl = _currentModelMatrix.Transform(command.Angle.RotateVec(command.PositionA));
-                br = _currentModelMatrix.Transform(command.Angle.RotateVec((command.PositionB.X, command.PositionA.Y)));
+                br = _currentModelMatrix.Transform(command.Angle.RotateVec(new Vector2(command.PositionB.X, command.PositionA.Y)));
                 tr = _currentModelMatrix.Transform(command.Angle.RotateVec(command.PositionB));
-                tl = _currentModelMatrix.Transform(command.Angle.RotateVec((command.PositionA.X, command.PositionB.Y)));
+                tl = _currentModelMatrix.Transform(command.Angle.RotateVec(new Vector2(command.PositionA.X, command.PositionB.Y)));
             }
             var vIdx = BatchIndex * 4;
             BatchVertexData[vIdx + 0] = new Vertex2D(bl, sr.BottomLeft);
@@ -517,8 +518,8 @@ namespace Robust.Client.Graphics.Clyde
             var program = loaded.Program;
 
             program.Use();
-            program.SetUniformMaybe(UniModUV, new Vector4(0, 0, 1, 1));
-            program.SetUniformMaybe(UniModulate, renderCommandLine.Color);
+            program.SetUniformMaybe(UniIModUV, new Vector4(0, 0, 1, 1));
+            program.SetUniformMaybe(UniIModulate, renderCommandLine.Color);
 
             var white = _loadedTextures[((ClydeTexture) Texture.White).TextureId].OpenGLObject;
             GL.ActiveTexture(TextureUnit.Texture0);
@@ -535,8 +536,8 @@ namespace Robust.Client.Graphics.Clyde
                 GL.BindTexture(TextureTarget.Texture2D, white.Handle);
             }
 
-            program.SetUniformTextureMaybe(UniMainTexture, TextureUnit.Texture0);
-            program.SetUniformTextureMaybe(UniLightTexture, TextureUnit.Texture1);
+            program.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
+            program.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
 
             var a = renderCommandLine.PositionA;
             var b = renderCommandLine.PositionB;
@@ -546,7 +547,7 @@ namespace Robust.Client.Graphics.Clyde
             (rectTransform.R0C0, rectTransform.R1C1) = b - a;
             (rectTransform.R0C2, rectTransform.R1C2) = a;
             rectTransform.Multiply(ref _currentModelMatrix);
-            program.SetUniformMaybe(UniModelMatrix, rectTransform);
+            program.SetUniformMaybe(UniIModelMatrix, rectTransform);
             GL.DrawArrays(PrimitiveType.Lines, 0, 2);
         }
 
@@ -557,7 +558,7 @@ namespace Robust.Client.Graphics.Clyde
             (rectTransform.R0C0, rectTransform.R1C1) = b - a;
             (rectTransform.R0C2, rectTransform.R1C2) = a;
             rectTransform.Multiply(ref modelMatrix);
-            program.SetUniformMaybe(UniModelMatrix, rectTransform);
+            program.SetUniformMaybe(UniIModelMatrix, rectTransform);
 
             GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
         }
@@ -614,22 +615,19 @@ namespace Robust.Client.Graphics.Clyde
 
             program.Use();
 
-            program.SetUniformTextureMaybe(UniMainTexture, TextureUnit.Texture0);
-            program.SetUniformTextureMaybe(UniLightTexture, TextureUnit.Texture1);
+            program.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
+            program.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
 
             // Model matrix becomes identity since it's built into the batch mesh.
-            program.SetUniformMaybe(UniModelMatrix, Matrix3.Identity);
+            program.SetUniformMaybe(UniIModelMatrix, Matrix3.Identity);
             // Reset ModUV to ensure it's identity and doesn't touch anything.
-            program.SetUniformMaybe(UniModUV, new Vector4(0, 0, 1, 1));
+            program.SetUniformMaybe(UniIModUV, new Vector4(0, 0, 1, 1));
             // Set modulate.
             DebugTools.Assert(BatchingModulate.HasValue);
-            program.SetUniformMaybe(UniModulate, BatchingModulate.Value);
-            program.SetUniformMaybe(UniTexturePixelSize, Vector2.One / loadedTexture.Size);
-            // Enable primitive restart & do that draw.
-            GL.Enable(EnableCap.PrimitiveRestart);
-            GL.PrimitiveRestartIndex(ushort.MaxValue);
+            program.SetUniformMaybe(UniIModulate, BatchingModulate.Value);
+            program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
+
             GL.DrawElements(PrimitiveType.TriangleStrip, BatchIndex * 5, DrawElementsType.UnsignedShort, 0);
-            GL.Disable(EnableCap.PrimitiveRestart);
 
             // Reset batch state.
             BatchIndex = 0;
@@ -694,6 +692,12 @@ namespace Robust.Client.Graphics.Clyde
             {
                 buffer.WriteSubData(data);
             }
+        }
+
+        [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
+        private static bool StrictColorEquality(in Color a, in Color b)
+        {
+            return a.R == b.R && a.G == b.G && a.B == b.B && a.A == b.A;
         }
 
         private sealed class RenderHandle : IRenderHandle

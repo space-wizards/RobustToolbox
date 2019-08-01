@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using OpenTK.Graphics.OpenGL;
+using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
-using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 using OGLTextureWrapMode = OpenTK.Graphics.OpenGL.TextureWrapMode;
 
 namespace Robust.Client.Graphics.Clyde
@@ -145,7 +145,7 @@ namespace Robust.Client.Graphics.Clyde
             var id = ++_nextTextureId;
             _loadedTextures.Add(id, loaded);
 
-            return new ClydeTexture(id, width, height, this);
+            return new ClydeTexture(id, size, this);
         }
 
         private void _deleteTexture(ClydeTexture texture)
@@ -186,19 +186,14 @@ namespace Robust.Client.Graphics.Clyde
 
             internal int TextureId { get; }
 
-            public override int Width { get; }
-            public override int Height { get; }
-
             public override void Delete()
             {
                 _clyde._deleteTexture(this);
             }
 
-            internal ClydeTexture(int id, int width, int height, Clyde clyde)
+            internal ClydeTexture(int id, Vector2i size, Clyde clyde) : base(size)
             {
                 TextureId = id;
-                Width = width;
-                Height = height;
                 _clyde = clyde;
             }
         }

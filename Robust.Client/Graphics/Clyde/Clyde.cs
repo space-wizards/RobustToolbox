@@ -28,7 +28,6 @@ using Robust.Shared.Utility;
 using Matrix3 = Robust.Shared.Maths.Matrix3;
 using Vector2 = Robust.Shared.Maths.Vector2;
 using Vector3 = Robust.Shared.Maths.Vector3;
-using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -38,15 +37,15 @@ namespace Robust.Client.Graphics.Clyde
     internal sealed partial class Clyde : DisplayManager, IClydeInternal, IClydeAudio, IDisposable
     {
 #pragma warning disable 649
-        [Dependency] private readonly IResourceCache _resourceCache;
-        [Dependency] private readonly IEyeManager _eyeManager;
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IOverlayManager _overlayManager;
-        [Dependency] private readonly IEntityManager _entityManager;
-        [Dependency] private readonly IComponentManager _componentManager;
-        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
-        [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager;
-        [Dependency] private readonly ILightManager _lightManager;
+        [Shared.IoC.Dependency] private readonly IResourceCache _resourceCache;
+        [Shared.IoC.Dependency] private readonly IEyeManager _eyeManager;
+        [Shared.IoC.Dependency] private readonly IMapManager _mapManager;
+        [Shared.IoC.Dependency] private readonly IOverlayManager _overlayManager;
+        [Shared.IoC.Dependency] private readonly IEntityManager _entityManager;
+        [Shared.IoC.Dependency] private readonly IComponentManager _componentManager;
+        [Shared.IoC.Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
+        [Shared.IoC.Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager;
+        [Shared.IoC.Dependency] private readonly ILightManager _lightManager;
 #pragma warning restore 649
 
         private static readonly Version MinimumOpenGLVersion = new Version(3, 3);
@@ -75,6 +74,13 @@ namespace Robust.Client.Graphics.Clyde
         private Buffer LineVBO;
         private OGLHandle LineVAO;
 
+        private const int UniIModUV = 0;
+        private const int UniIModelMatrix = 1;
+        private const int UniIModulate = 2;
+        private const int UniITexturePixelSize = 3;
+        private const int UniIMainTexture = 4;
+        private const int UniILightTexture = 5;
+        private const int UniCount = 6;
         private const string UniModUV = "modifyUV";
         private const string UniModelMatrix = "modelMatrix";
         private const string UniModulate = "modulate";
@@ -253,6 +259,8 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.Enable(EnableCap.Blend);
             GL.Enable(EnableCap.FramebufferSrgb);
+            GL.Enable(EnableCap.PrimitiveRestart);
+            GL.PrimitiveRestartIndex(ushort.MaxValue);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
             var vendor = GL.GetString(StringName.Vendor);

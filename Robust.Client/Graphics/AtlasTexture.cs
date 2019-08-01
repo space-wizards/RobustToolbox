@@ -11,7 +11,7 @@ namespace Robust.Client.Graphics
     [PublicAPI]
     public sealed class AtlasTexture : Texture
     {
-        public AtlasTexture(Texture texture, UIBox2 subRegion)
+        public AtlasTexture(Texture texture, UIBox2 subRegion) : base((Vector2i) subRegion.Size)
         {
             DebugTools.Assert(SubRegion.Right < texture.Width);
             DebugTools.Assert(SubRegion.Bottom < texture.Height);
@@ -31,8 +31,5 @@ namespace Robust.Client.Graphics
         ///     Our sub region within our source, in pixel coordinates.
         /// </summary>
         public UIBox2 SubRegion { get; }
-
-        public override int Width => (int) SubRegion.Width;
-        public override int Height => (int) SubRegion.Height;
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using OpenTK.Graphics.OpenGL;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -15,6 +16,7 @@ namespace Robust.Client.Graphics.Clyde
         /// </summary>
         private class ShaderProgram
         {
+            private readonly sbyte?[] _uniformIntCache = new sbyte?[Clyde.UniCount];
             private readonly Dictionary<string, int> _uniformCache = new Dictionary<string, int>();
             private uint _handle = 0;
             private Shader _fragmentShader;
@@ -30,7 +32,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public void Add(Shader shader)
             {
-                _uniformCache.Clear();
+                ClearCaches();
                 switch (shader.Type)
                 {
                     case ShaderType.VertexShader:
@@ -46,7 +48,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public void Link()
             {
-                _uniformCache.Clear();
+                ClearCaches();
                 _handle = (uint) GL.CreateProgram();
                 if (Name != null)
                 {
@@ -100,7 +102,17 @@ namespace Robust.Client.Graphics.Clyde
             {
                 if (!TryGetUniform(name, out var result))
                 {
-                    throw new ArgumentException("Could not get uniform!");
+                    ThrowCouldNotGetUniform();
+                }
+
+                return result;
+            }
+
+            public int GetUniform(int id)
+            {
+                if (!TryGetUniform(id, out var result))
+                {
+                    ThrowCouldNotGetUniform();
                 }
 
                 return result;
@@ -112,7 +124,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (_uniformCache.TryGetValue(name, out index))
                 {
-                    return true;
+                    return index != -1;
                 }
 
                 index = GL.GetUniformLocation(_handle, name);
@@ -120,11 +132,59 @@ namespace Robust.Client.Graphics.Clyde
                 return index != -1;
             }
 
+            public bool TryGetUniform(int id, out int index)
+            {
+                DebugTools.Assert(_handle != 0);
+                DebugTools.Assert(id < UniCount);
+
+                var value = _uniformIntCache[id];
+                if (value.HasValue)
+                {
+                    index = value.Value;
+                    return index != -1;
+                }
+
+                return InitIntUniform(id, out index);
+            }
+
+            private bool InitIntUniform(int id, out int index)
+            {
+                string name;
+                switch (id)
+                {
+                    case UniIModUV:
+                        name = UniModUV;
+                        break;
+                    case UniIModulate:
+                        name = UniModulate;
+                        break;
+                    case UniILightTexture:
+                        name = UniLightTexture;
+                        break;
+                    case UniIMainTexture:
+                        name = UniMainTexture;
+                        break;
+                    case UniIModelMatrix:
+                        name = UniModelMatrix;
+                        break;
+                    case UniITexturePixelSize:
+                        name = UniTexturePixelSize;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+                index = GL.GetUniformLocation(_handle, name);
+                _uniformIntCache[id] = (sbyte)index;
+                return index != -1;
+            }
+
             public bool HasUniform(string name) => TryGetUniform(name, out _);
+            public bool HasUniform(int id) => TryGetUniform(id, out _);
 
             public void BindBlock(string blockName, uint blockBinding)
             {
-                var index = (uint)GL.GetUniformBlockIndex(_handle, blockName);
+                var index = (uint) GL.GetUniformBlockIndex(_handle, blockName);
                 GL.UniformBlockBinding(_handle, index, blockBinding);
             }
 
@@ -143,42 +203,78 @@ namespace Robust.Client.Graphics.Clyde
             public void SetUniform(string uniformName, in Matrix3 matrix)
             {
                 var uniformId = GetUniform(uniformName);
-                unsafe
+                SetUniformDirect(uniformId, matrix);
+            }
+
+            public void SetUniform(int uniformName, in Matrix3 matrix)
+            {
+                var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, matrix);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static unsafe void SetUniformDirect(int slot, in Matrix3 value)
+            {
+                fixed (Matrix3* ptr = &value)
                 {
-                    fixed (Matrix3* ptr = &matrix)
-                    {
-                        GL.UniformMatrix3(uniformId, 1, true, (float*) ptr);
-                    }
+                    GL.UniformMatrix3(slot, 1, true, (float*) ptr);
                 }
             }
 
             public void SetUniform(string uniformName, in Matrix4 matrix)
             {
                 var uniformId = GetUniform(uniformName);
-                unsafe
+                SetUniformDirect(uniformId, matrix);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static unsafe void SetUniformDirect(int uniformId, in Matrix4 value)
+            {
+                fixed (Matrix4* ptr = &value)
                 {
-                    fixed (Matrix4* ptr = &matrix)
-                    {
-                        GL.UniformMatrix4(uniformId, 1, true, (float*) ptr);
-                    }
+                    GL.UniformMatrix4(uniformId, 1, true, (float*) ptr);
                 }
             }
 
             public void SetUniform(string uniformName, in Vector4 vector)
             {
                 var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, vector);
+            }
+
+            public void SetUniform(int uniformName, in Vector4 vector)
+            {
+                var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, vector);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void SetUniformDirect(int slot, in Vector4 vector)
+            {
                 unsafe
                 {
                     fixed (Vector4* ptr = &vector)
                     {
-                        GL.Uniform4(uniformId, 1, (float*) ptr);
+                        GL.Uniform4(slot, 1, (float*)ptr);
                     }
                 }
             }
 
-            public void SetUniform(string uniformName, in Color color, bool convertToLinear=true)
+            public void SetUniform(string uniformName, in Color color, bool convertToLinear = true)
             {
                 var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, color, convertToLinear);
+            }
+
+            public void SetUniform(int uniformName, in Color color, bool convertToLinear = true)
+            {
+                var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, color, convertToLinear);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void SetUniformDirect(int slot, in Color color, bool convertToLinear=true)
+            {
                 var converted = color;
                 if (convertToLinear)
                 {
@@ -187,18 +283,24 @@ namespace Robust.Client.Graphics.Clyde
 
                 unsafe
                 {
-                    GL.Uniform4(uniformId, 1, (float*) &converted);
+                    GL.Uniform4(slot, 1, (float*) &converted);
                 }
             }
 
             public void SetUniform(string uniformName, in Vector3 vector)
             {
                 var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, vector);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void SetUniformDirect(int slot, in Vector3 vector)
+            {
                 unsafe
                 {
                     fixed (Vector3* ptr = &vector)
                     {
-                        GL.Uniform3(uniformId, 1, (float*) ptr);
+                        GL.Uniform3(slot, 1, (float*)ptr);
                     }
                 }
             }
@@ -206,11 +308,17 @@ namespace Robust.Client.Graphics.Clyde
             public void SetUniform(string uniformName, in Vector2 vector)
             {
                 var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, vector);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void SetUniformDirect(int slot, in Vector2 vector)
+            {
                 unsafe
                 {
                     fixed (Vector2* ptr = &vector)
                     {
-                        GL.Uniform2(uniformId, 1, (float*) ptr);
+                        GL.Uniform2(slot, 1, (float*)ptr);
                     }
                 }
             }
@@ -218,47 +326,107 @@ namespace Robust.Client.Graphics.Clyde
             public void SetUniformTexture(string uniformName, TextureUnit textureUnit)
             {
                 var uniformId = GetUniform(uniformName);
-                GL.Uniform1(uniformId, textureUnit - TextureUnit.Texture0);
+                SetUniformTextureDirect(uniformId, textureUnit);
             }
 
-            public void SetUniformTextureMaybe(string uniformName, TextureUnit textureUnit)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void SetUniformTextureDirect(int slot, TextureUnit value)
             {
-                if (HasUniform(uniformName))
+                GL.Uniform1(slot, value - TextureUnit.Texture0);
+            }
+
+            public void SetUniformTextureMaybe(string uniformName, TextureUnit value)
+            {
+                if (TryGetUniform(uniformName, out var slot))
                 {
-                    SetUniformTexture(uniformName, textureUnit);
+                    SetUniformTextureDirect(slot, value);
+                }
+            }
+
+            public void SetUniformTextureMaybe(int uniformName, TextureUnit value)
+            {
+                if (TryGetUniform(uniformName, out var slot))
+                {
+                    SetUniformTextureDirect(slot, value);
                 }
             }
 
             public void SetUniformMaybe(string uniformName, in Vector4 value)
             {
-                if (HasUniform(uniformName))
+                if (TryGetUniform(uniformName, out var slot))
                 {
-                    SetUniform(uniformName, value);
+                    SetUniformDirect(slot, value);
+                }
+            }
+
+            public void SetUniformMaybe(int uniformName, in Vector4 value)
+            {
+                if (TryGetUniform(uniformName, out var slot))
+                {
+                    SetUniformDirect(slot, value);
                 }
             }
 
             public void SetUniformMaybe(string uniformName, in Color value)
             {
-                if (HasUniform(uniformName))
+                if (TryGetUniform(uniformName, out var slot))
                 {
-                    SetUniform(uniformName, value);
+                    SetUniformDirect(slot, value);
+                }
+            }
+
+            public void SetUniformMaybe(int uniformName, in Color value)
+            {
+                if (TryGetUniform(uniformName, out var slot))
+                {
+                    SetUniformDirect(slot, value);
                 }
             }
 
             public void SetUniformMaybe(string uniformName, in Matrix3 value)
             {
-                if (HasUniform(uniformName))
+                if (TryGetUniform(uniformName, out var slot))
                 {
-                    SetUniform(uniformName, value);
+                    SetUniformDirect(slot, value);
+                }
+            }
+
+            public void SetUniformMaybe(int uniformName, in Matrix3 value)
+            {
+                if (TryGetUniform(uniformName, out var slot))
+                {
+                    SetUniformDirect(slot, value);
                 }
             }
 
             public void SetUniformMaybe(string uniformName, in Vector2 value)
             {
-                if (HasUniform(uniformName))
+                if (TryGetUniform(uniformName, out var slot))
                 {
-                    SetUniform(uniformName, value);
+                    SetUniformDirect(slot, value);
                 }
+            }
+
+            public void SetUniformMaybe(int uniformName, in Vector2 value)
+            {
+                if (TryGetUniform(uniformName, out var slot))
+                {
+                    SetUniformDirect(slot, value);
+                }
+            }
+
+            private void ClearCaches()
+            {
+                _uniformCache.Clear();
+                for (var i = 0; i < UniCount; i++)
+                {
+                    _uniformIntCache[i] = null;
+                }
+            }
+
+            private static void ThrowCouldNotGetUniform()
+            {
+                throw new ArgumentException("Could not get uniform!");
             }
         }
     }

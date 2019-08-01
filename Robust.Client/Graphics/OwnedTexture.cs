@@ -1,3 +1,5 @@
+using Robust.Shared.Maths;
+
 namespace Robust.Client.Graphics
 {
     // TODO: Maybe implement IDisposable for owned textures. I got lazy and didn't.
@@ -7,5 +9,9 @@ namespace Robust.Client.Graphics
     public abstract class OwnedTexture : Texture
     {
         public abstract void Delete();
+
+        protected OwnedTexture(Vector2i size) : base(size)
+        {
+        }
     }
 }

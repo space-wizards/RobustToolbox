@@ -65,13 +65,13 @@ namespace Robust.Client.Graphics.Clyde
         public Texture LoadTextureFromImage<T>(Image<T> image, string name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
         {
-            return new DummyTexture(image.Width, image.Height);
+            return new DummyTexture((image.Width, image.Height));
         }
 
         public IRenderTarget CreateRenderTarget(Vector2i size, RenderTargetColorFormat colorFormat,
             TextureSampleParameters? sampleParameters = null, string name = null)
         {
-            return new DummyRenderTarget(size, new DummyTexture(size.X, size.Y));
+            return new DummyRenderTarget(size, new DummyTexture(size));
         }
 
         public ClydeHandle LoadShader(ParsedShader shader, string name = null)
@@ -144,18 +144,13 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class DummyTexture : OwnedTexture
         {
-            public override int Width { get; }
-            public override int Height { get; }
-
             public override void Delete()
             {
                 // Hey that was easy.
             }
 
-            public DummyTexture(int width, int height)
+            public DummyTexture(Vector2i size) : base(size)
             {
-                Width = width;
-                Height = height;
             }
         }
 

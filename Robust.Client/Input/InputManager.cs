@@ -260,9 +260,21 @@ namespace Robust.Client.Input
                     mod1 = mod1Name.AsEnum<Keyboard.Key>();
                 }
 
+                var mod2 = Keyboard.Key.Unknown;
+                if (keyMapping.TryGetNode("mod2", out var mod2Name))
+                {
+                    mod2 = mod2Name.AsEnum<Keyboard.Key>();
+                }
+
+                var mod3 = Keyboard.Key.Unknown;
+                if (keyMapping.TryGetNode("mod3", out var mod3Name))
+                {
+                    mod3 = mod3Name.AsEnum<Keyboard.Key>();
+                }
+
                 var type = keyMapping.GetNode("type").AsEnum<KeyBindingType>();
 
-                var binding = new KeyBinding(function, type, key, mod1);
+                var binding = new KeyBinding(function, type, key, mod1, mod2, mod3);
                 RegisterBinding(binding);
             }
         }

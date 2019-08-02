@@ -164,7 +164,6 @@ namespace Robust.Client.UserInterface
                 if (!top.HasPoint(offset / UIScale))
                 {
                     RemoveModal(top);
-                    args.Handle();
                     return;
                 }
             }

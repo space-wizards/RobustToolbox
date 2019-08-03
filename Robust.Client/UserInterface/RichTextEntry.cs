@@ -147,7 +147,12 @@ namespace Robust.Client.UserInterface
                         if (wordSizePixels > maxSizeX)
                         {
                             var (breakIndex, splitWordSize) = forceSplitData.Value;
-                            DebugTools.Assert(splitWordSize != 0);
+                            if (splitWordSize == 0)
+                            {
+                                // Happens if there's literally not enough space for a single character so uh...
+                                // Yeah just don't.
+                                return;
+                            }
 
                             // Reset forceSplitData so that we can split again if necessary.
                             forceSplitData = null;

@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Shared;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Noise;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface
@@ -30,6 +32,11 @@ namespace Robust.Client.UserInterface
         private bool _kDialogAvailable;
         private bool _checkedKDialogAvailable;
 #endif
+
+        static FileDialogManager()
+        {
+            DllMapHelper.RegisterSimpleMap(typeof(NoiseGenerator).Assembly, "swnfd");
+        }
 
         public async Task<string> OpenFile()
         {

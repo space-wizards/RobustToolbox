@@ -1,53 +1,13 @@
-﻿using Robust.Server.GameObjects;
-using Robust.Server.GameStates;
-using Robust.Server.Interfaces;
-using Robust.Server.Interfaces.GameObjects;
-using Robust.Server.Interfaces.GameState;
-using Robust.Server.Interfaces.Maps;
-using Robust.Server.Interfaces.Placement;
-using Robust.Server.Interfaces.Player;
-using Robust.Server.Maps;
-using Robust.Server.Placement;
-using Robust.Server.Player;
-using Robust.Server.Prototypes;
-using Robust.Server.Reflection;
-using Robust.Shared.Configuration;
-using Robust.Shared.ContentPack;
-using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Physics;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Serialization;
-using Robust.Shared.Interfaces.Timers;
-using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Map;
-using Robust.Shared.Network;
-using Robust.Shared.Physics;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
-using Robust.Shared.Timers;
-using Robust.Shared.Timing;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Robust.Shared.Interfaces.Resources;
-using Robust.Server.Console;
-using Robust.Server.Interfaces.Console;
-using Robust.Server.Interfaces.ServerStatus;
-using Robust.Server.Interfaces.Timing;
-using Robust.Server.ServerStatus;
-using Robust.Server.Timing;
-using Robust.Server.ViewVariables;
+using Robust.Server.Interfaces;
+using Robust.Shared.ContentPack;
+using Robust.Shared.Interfaces.Log;
+using Robust.Shared.Interfaces.Reflection;
+using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared;
-using Robust.Shared.Asynchronous;
-using Robust.Shared.Exceptions;
-using Robust.Shared.Localization;
 
 namespace Robust.Server
 {
@@ -55,9 +15,6 @@ namespace Robust.Server
     {
         internal static void Main(string[] args)
         {
-#if !X64
-            throw new InvalidOperationException("The server cannot start outside x64.");
-#endif
             IoCManager.InitThread();
             ServerIoC.RegisterIoC();
             IoCManager.BuildGraph();

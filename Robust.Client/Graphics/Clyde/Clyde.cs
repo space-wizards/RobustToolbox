@@ -115,7 +115,7 @@ namespace Robust.Client.Graphics.Clyde
             _window.Title = title;
         }
 
-        public override void Initialize(bool lite=false)
+        public override void Initialize(bool lite = false)
         {
             _lite = lite;
             _initWindow();
@@ -245,10 +245,12 @@ namespace Robust.Client.Graphics.Clyde
                 _gameController.TextEntered(new TextEventArgs(eventArgs.KeyChar));
             };
 
+#if !NETCOREAPP
             using (var iconFile = _resourceCache.ContentFileRead("/Textures/Logo/icon.ico"))
             {
                 _window.Icon = new Icon(iconFile);
             }
+#endif
 
             _initOpenGL();
         }
@@ -597,7 +599,7 @@ namespace Robust.Client.Graphics.Clyde
             if (!_lite)
             {
                 LightRenderTarget = CreateRenderTarget(_lightMapSize(), RenderTargetColorFormat.Rgba16F,
-                name: "LightRenderTarget");
+                    name: "LightRenderTarget");
             }
         }
 
@@ -759,7 +761,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class ClydeDebugInfo : IClydeDebugInfo
         {
-            public ClydeDebugInfo(Version openGLVersion, Version minimumVersion, string renderer, string vendor, string versionString)
+            public ClydeDebugInfo(Version openGLVersion, Version minimumVersion, string renderer, string vendor,
+                string versionString)
             {
                 OpenGLVersion = openGLVersion;
                 MinimumVersion = minimumVersion;

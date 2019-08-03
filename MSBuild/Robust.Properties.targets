@@ -1,4 +1,5 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <Import Project="Robust.Custom.targets" Condition="Exists('Robust.Custom.targets')"/>
   <!-- MSBuild hurts and I can't find a foolproof way to detect platform. -->
   <PropertyGroup>
     <OS Condition="'$(OS)' == ''">Windows_NT</OS>
@@ -26,4 +27,16 @@
     <Python>python3</Python>
     <Python Condition="'$(ActualOS)' == 'Windows'">py -3</Python>
   </PropertyGroup>
+  <Choose>
+    <When Condition="'$(UseNetCore)' == 'true'">
+      <PropertyGroup>
+        <TargetFramework>netcoreapp3.0</TargetFramework>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <TargetFramework>net472</TargetFramework>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
 </Project>

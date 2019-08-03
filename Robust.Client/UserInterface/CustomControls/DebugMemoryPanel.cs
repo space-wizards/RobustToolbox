@@ -2,6 +2,7 @@ using System;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -34,7 +35,7 @@ namespace Robust.Client.UserInterface.CustomControls
             MouseFilter = _label.MouseFilter = MouseFilterMode.Ignore;
         }
 
-        protected override void FrameUpdate(RenderFrameEventArgs args)
+        protected override void FrameUpdate(FrameEventArgs args)
         {
             base.FrameUpdate(args);
 

@@ -3,6 +3,7 @@ using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.Interfaces.UserInterface
 {
@@ -71,9 +72,9 @@ namespace Robust.Client.Interfaces.UserInterface
         void Initialize();
         void InitializeTesting();
 
-        void Update(ProcessFrameEventArgs args);
+        void Update(FrameEventArgs args);
 
-        void FrameUpdate(RenderFrameEventArgs args);
+        void FrameUpdate(FrameEventArgs args);
 
         void MouseDown(MouseButtonEventArgs args);
 

@@ -9,6 +9,7 @@ using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -1716,7 +1717,7 @@ namespace Robust.Client.UserInterface
             Both
         }
 
-        internal void DoUpdate(ProcessFrameEventArgs args)
+        internal void DoUpdate(FrameEventArgs args)
         {
             Update(args);
             foreach (var child in Children)
@@ -1728,11 +1729,11 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     This is called every process frame.
         /// </summary>
-        protected virtual void Update(ProcessFrameEventArgs args)
+        protected virtual void Update(FrameEventArgs args)
         {
         }
 
-        internal void DoFrameUpdate(RenderFrameEventArgs args)
+        internal void DoFrameUpdate(FrameEventArgs args)
         {
             FrameUpdate(args);
             foreach (var child in Children)
@@ -1744,7 +1745,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     This is called before every render frame.
         /// </summary>
-        protected virtual void FrameUpdate(RenderFrameEventArgs args)
+        protected virtual void FrameUpdate(FrameEventArgs args)
         {
         }
 

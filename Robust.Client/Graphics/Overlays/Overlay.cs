@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics.Clyde;
 using Robust.Client.Interfaces.Graphics;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.Graphics.Overlays
 {
@@ -75,7 +76,7 @@ namespace Robust.Client.Graphics.Overlays
             _isDirty = true;
         }
 
-        internal virtual void FrameUpdate(RenderFrameEventArgs args)
+        internal virtual void FrameUpdate(FrameEventArgs args)
         {
         }
 

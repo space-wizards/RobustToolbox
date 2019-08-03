@@ -17,7 +17,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
-using FrameEventArgs = Robust.Client.FrameEventArgs;
 
 namespace Robust.Lite
 {
@@ -108,7 +107,7 @@ namespace Robust.Lite
             {
                 if (_mainLoop.Running)
                 {
-                    ProcessUpdate(args.DeltaSeconds);
+                    ProcessUpdate(args);
                 }
             };
 
@@ -124,7 +123,7 @@ namespace Robust.Lite
             {
                 if (_mainLoop.Running)
                 {
-                    _clyde.ProcessInput(new FrameEventArgs(args.DeltaSeconds));
+                    _clyde.ProcessInput(args);
                 }
             };
 
@@ -132,28 +131,24 @@ namespace Robust.Lite
             {
                 if (_mainLoop.Running)
                 {
-                    RenderFrameProcess(args.DeltaSeconds);
+                    RenderFrameProcess(args);
                 }
             };
 
             _mainLoop.Run();
         }
 
-        private void RenderFrameProcess(float delta)
+        private void RenderFrameProcess(FrameEventArgs frameEventArgs)
         {
-            var frameEventArgs = new RenderFrameEventArgs(delta);
-
             _userInterfaceManager.FrameUpdate(frameEventArgs);
             _clyde.FrameProcess(frameEventArgs);
         }
 
-        private void ProcessUpdate(float delta)
+        private void ProcessUpdate(FrameEventArgs frameEventArgs)
         {
-            var eventArgs = new ProcessFrameEventArgs(delta);
-
-            _timerManager.UpdateTimers(delta);
+            _timerManager.UpdateTimers(frameEventArgs);
             _taskManager.ProcessPendingTasks();
-            _userInterfaceManager.Update(eventArgs);
+            _userInterfaceManager.Update(frameEventArgs);
         }
 
         public void KeyDown(KeyEventArgs keyEvent)

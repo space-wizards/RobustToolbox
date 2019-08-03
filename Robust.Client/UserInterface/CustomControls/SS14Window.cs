@@ -3,6 +3,7 @@ using Robust.Client.Graphics.Drawing;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -375,7 +376,7 @@ namespace Robust.Client.UserInterface.CustomControls
         }
 
         // Prevent window headers from getting off screen due to game window resizes.
-        protected override void Update(ProcessFrameEventArgs args)
+        protected override void Update(FrameEventArgs args)
         {
             var (spaceX, spaceY) = Parent.Size;
             if (Position.Y > spaceY)

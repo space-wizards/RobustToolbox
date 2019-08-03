@@ -34,6 +34,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client
@@ -205,33 +206,31 @@ namespace Robust.Client
             _mainLoop.Running = false;
         }
 
-        private void Update(float frameTime)
+        private void Update(FrameEventArgs frameEventArgs)
         {
-            var eventArgs = new ProcessFrameEventArgs(frameTime);
             _networkManager.ProcessPackets();
-            _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, eventArgs.Elapsed);
-            _timerManager.UpdateTimers(frameTime);
+            _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
+            _timerManager.UpdateTimers(frameEventArgs);
             _taskManager.ProcessPendingTasks();
-            _userInterfaceManager.Update(eventArgs);
-            _stateManager.Update(eventArgs);
+            _userInterfaceManager.Update(frameEventArgs);
+            _stateManager.Update(frameEventArgs);
 
             if (_client.RunLevel >= ClientRunLevel.Connected)
             {
                 _gameStateManager.ApplyGameState();
             }
 
-            _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, eventArgs.Elapsed);
+            _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
         }
 
-        private void _frameProcessMain(float delta)
+        private void _frameProcessMain(FrameEventArgs frameEventArgs)
         {
-            var eventArgs = new RenderFrameEventArgs(delta);
-            _clyde.FrameProcess(eventArgs);
-            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, eventArgs.Elapsed);
-            _stateManager.FrameUpdate(eventArgs);
-            _overlayManager.FrameUpdate(eventArgs);
-            _userInterfaceManager.FrameUpdate(eventArgs);
-            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, eventArgs.Elapsed);
+            _clyde.FrameProcess(frameEventArgs);
+            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, frameEventArgs);
+            _stateManager.FrameUpdate(frameEventArgs);
+            _overlayManager.FrameUpdate(frameEventArgs);
+            _userInterfaceManager.FrameUpdate(frameEventArgs);
+            _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
         }
 
         internal static void SetupLogging(ILogManager logManager)

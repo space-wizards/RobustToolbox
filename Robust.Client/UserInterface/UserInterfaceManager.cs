@@ -20,6 +20,7 @@ using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface
 {
@@ -138,16 +139,16 @@ namespace Robust.Client.UserInterface
             RootControl?.Dispose();
         }
 
-        public void Update(ProcessFrameEventArgs args)
+        public void Update(FrameEventArgs args)
         {
             RootControl.DoUpdate(args);
         }
 
-        public void FrameUpdate(RenderFrameEventArgs args)
+        public void FrameUpdate(FrameEventArgs args)
         {
             RootControl.DoFrameUpdate(args);
 
-            _tooltipTimer -= args.Elapsed;
+            _tooltipTimer -= args.DeltaSeconds;
             if (_tooltipTimer <= 0)
             {
                 _showTooltip();

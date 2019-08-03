@@ -396,7 +396,6 @@ namespace Robust.UnitTesting
 
                 Tick += (a, b) => Console.WriteLine("tick: {0}", _gameTiming.CurTick);
 
-                var simFrameEvent = new MutableFrameEventArgs(0);
                 _gameTiming.InSimulation = true;
 
                 while (Running)
@@ -407,7 +406,7 @@ namespace Robust.UnitTesting
                     {
                         case RunTicksMessage msg:
                             _gameTiming.InSimulation = true;
-                            simFrameEvent.SetDeltaSeconds(msg.Delta);
+                            var simFrameEvent = new FrameEventArgs(msg.Delta);
                             for (var i = 0; i < msg.Ticks && Running; i++)
                             {
                                 _gameTiming.CurTick = new GameTick(_gameTiming.CurTick.Value + 1);

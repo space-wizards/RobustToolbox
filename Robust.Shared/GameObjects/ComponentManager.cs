@@ -218,7 +218,7 @@ namespace Robust.Shared.GameObjects
         private void DeleteComponent(Component component)
         {
             var reg = _componentFactory.GetRegistration(component.GetType());
-            
+
             var entityUid = component.Owner.Uid;
 
             foreach (var refType in reg.References)
@@ -428,7 +428,7 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public class ComponentEventArgs : EventArgs
     {

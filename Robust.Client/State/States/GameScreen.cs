@@ -15,6 +15,7 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.State.States
 {
@@ -49,17 +50,17 @@ namespace Robust.Client.State.States
             inputManager.KeyBindStateChanged -= OnKeyBindStateChanged;
         }
 
-        public override void Update(ProcessFrameEventArgs e)
+        public override void Update(FrameEventArgs e)
         {
             _componentManager.CullRemovedComponents();
-            _entityManager.Update(e.Elapsed);
-            playerManager.Update(e.Elapsed);
+            _entityManager.Update(e.DeltaSeconds);
+            playerManager.Update(e.DeltaSeconds);
         }
 
-        public override void FrameUpdate(RenderFrameEventArgs e)
+        public override void FrameUpdate(FrameEventArgs e)
         {
             placementManager.FrameUpdate(e);
-            _entityManager.FrameUpdate(e.Elapsed);
+            _entityManager.FrameUpdate(e.DeltaSeconds);
 
             var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(inputManager.MouseScreenPosition));
             var entityToClick = GetEntityUnderPosition(mousePosWorld);

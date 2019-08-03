@@ -4,6 +4,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Overlays
@@ -12,7 +13,7 @@ namespace Robust.Client.Graphics.Overlays
     {
         private readonly Dictionary<string, Overlay> _overlays = new Dictionary<string, Overlay>();
 
-        public void FrameUpdate(RenderFrameEventArgs args)
+        public void FrameUpdate(FrameEventArgs args)
         {
             foreach (var overlay in _overlays.Values)
             {

@@ -7,6 +7,7 @@ using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -145,11 +146,11 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        public void BroadcastUpdate(ModUpdateLevel level, float frameTime)
+        public void BroadcastUpdate(ModUpdateLevel level, FrameEventArgs frameEventArgs)
         {
             foreach (var entrypoint in _mods.SelectMany(m => m.EntryPoints))
             {
-                entrypoint.Update(level, frameTime);
+                entrypoint.Update(level, frameEventArgs);
             }
         }
 

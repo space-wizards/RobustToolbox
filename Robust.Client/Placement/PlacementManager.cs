@@ -30,6 +30,7 @@ using Robust.Client.Player;
 using Robust.Shared.Input;
 using Robust.Shared.Utility;
 using Robust.Shared.Serialization;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.Placement
 {
@@ -474,7 +475,7 @@ namespace Robust.Client.Placement
         }
 
         /// <inheritdoc />
-        public void FrameUpdate(RenderFrameEventArgs e)
+        public void FrameUpdate(FrameEventArgs e)
         {
             if (!CurrentMousePosition(out var mouseScreen))
                 return;

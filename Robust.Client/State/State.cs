@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Client.Input;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.State
 {
@@ -18,9 +19,9 @@ namespace Robust.Client.State
         /// <summary>
         ///     Update the contents of this screen.
         /// </summary>
-        public virtual void Update(ProcessFrameEventArgs e) { }
+        public virtual void Update(FrameEventArgs e) { }
 
-        public virtual void FrameUpdate(RenderFrameEventArgs e) { }
+        public virtual void FrameUpdate(FrameEventArgs e) { }
 
         #region Events
 

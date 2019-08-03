@@ -28,6 +28,7 @@ using Robust.Shared.Utility;
 using Matrix3 = Robust.Shared.Maths.Matrix3;
 using Vector2 = Robust.Shared.Maths.Vector2;
 using Vector3 = Robust.Shared.Maths.Vector3;
+using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -123,9 +124,9 @@ namespace Robust.Client.Graphics.Clyde
             ReloadConfig();
         }
 
-        public void FrameProcess(RenderFrameEventArgs eventArgs)
+        public void FrameProcess(FrameEventArgs eventArgs)
         {
-            _renderTime += eventArgs.Elapsed;
+            _renderTime += eventArgs.DeltaSeconds;
             _updateAudio();
         }
 

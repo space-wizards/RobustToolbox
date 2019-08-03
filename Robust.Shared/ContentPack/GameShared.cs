@@ -1,4 +1,5 @@
 ﻿using System;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.ContentPack
 {
@@ -22,7 +23,7 @@ namespace Robust.Shared.ContentPack
         {
         }
 
-        public virtual void Update(ModUpdateLevel level, float frameTime)
+        public virtual void Update(ModUpdateLevel level, FrameEventArgs frameEventArgs)
         {
         }
 

@@ -14,6 +14,7 @@ using Robust.Client.Player;
 using Robust.Client.State.States;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
@@ -77,7 +78,7 @@ namespace Robust.Client.UserInterface.CustomControls
             MouseFilter = contents.MouseFilter = MouseFilterMode.Ignore;
         }
 
-        protected override void FrameUpdate(RenderFrameEventArgs args)
+        protected override void FrameUpdate(FrameEventArgs args)
         {
             if (!VisibleInTree)
             {

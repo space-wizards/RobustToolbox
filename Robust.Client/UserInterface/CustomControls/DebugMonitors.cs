@@ -19,12 +19,14 @@ namespace Robust.Client.UserInterface.CustomControls
         public bool ShowNet { get => _debugNetPanel.Visible; set => _debugNetPanel.Visible = value; }
         public bool ShowTime { get => _timeDebug.Visible; set => _timeDebug.Visible = value; }
         public bool ShowFrameGraph { get => _frameGraph.Visible; set => _frameGraph.Visible = value; }
+        public bool ShowMemory { get => _debugMemoryPanel.Visible; set => _debugMemoryPanel.Visible = value; }
 
         private FpsCounter _fpsCounter;
         private DebugCoordsPanel _debugCoordsPanel;
         private DebugNetPanel _debugNetPanel;
         private DebugTimePanel _timeDebug;
         private FrameGraph _frameGraph;
+        private DebugMemoryPanel _debugMemoryPanel;
 
         private readonly IGameTiming _gameTiming;
         private readonly IPlayerManager _playerManager;
@@ -84,6 +86,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
             _frameGraph = new FrameGraph(_gameTiming);
             AddChild(_frameGraph);
+
+            AddChild(_debugMemoryPanel = new DebugMemoryPanel());
         }
     }
 }

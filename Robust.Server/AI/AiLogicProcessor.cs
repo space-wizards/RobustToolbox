@@ -18,6 +18,11 @@ namespace Robust.Server.AI
         public IEntity SelfEntity { get; set; }
 
         /// <summary>
+        ///     One-Time setup when the processor is created.
+        /// </summary>
+        public virtual void Setup() { }
+
+        /// <summary>
         ///     Gives life to the AI.
         /// </summary>
         /// <param name="frameTime">Time since last update in seconds.</param>

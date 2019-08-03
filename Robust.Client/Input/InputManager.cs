@@ -72,6 +72,10 @@ namespace Robust.Client.Input
             foreach (var function in args.OldContext.Except(args.NewContext))
             {
                 var bind = _bindings.Find(binding => binding.Function == function);
+                if (bind == null)
+                {
+                    continue;
+                }
                 SetBindState(bind, BoundKeyState.Up);
             }
         }

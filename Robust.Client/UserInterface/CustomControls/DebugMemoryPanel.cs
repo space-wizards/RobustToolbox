@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
@@ -54,7 +54,7 @@ namespace Robust.Client.UserInterface.CustomControls
             return $@"Heap Size: {FormatBytes(info.HeapSizeBytes)}
 Total Allocated: {FormatBytes(GC.GetTotalMemory(false))}";
 #else
-            return "Memory information needs .NET Core"
+            return "Memory information needs .NET Core";
 #endif
         }
 

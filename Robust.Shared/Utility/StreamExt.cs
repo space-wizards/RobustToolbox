@@ -17,7 +17,7 @@ namespace Robust.Shared.Utility
             using (var memStream = new MemoryStream())
             {
                 stream.CopyTo(memStream);
-                return memStream.GetBuffer();
+                return memStream.ToArray();
             }
         }
     }

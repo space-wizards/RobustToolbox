@@ -16,6 +16,7 @@ namespace Robust.Client.Input
             var common = contexts.GetContext(InputContextContainer.DefaultContextName);
             common.AddFunction(EngineKeyFunctions.EscapeMenu);
             common.AddFunction(EngineKeyFunctions.HideUI);
+            common.AddFunction(EngineKeyFunctions.ShowDebugConsole);
             common.AddFunction(EngineKeyFunctions.ShowDebugMonitors);
             common.AddFunction(EngineKeyFunctions.MoveUp);
             common.AddFunction(EngineKeyFunctions.MoveDown);

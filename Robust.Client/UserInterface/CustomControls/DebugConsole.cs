@@ -159,6 +159,13 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             switch (obj.Key)
             {
+                case Keyboard.Key.Escape:
+                {
+                    CommandBar.ReleaseKeyboardFocus();
+                    obj.Handle();
+                    Toggle();
+                    return;
+                }
                 case Keyboard.Key.Up:
                 {
                     obj.Handle();

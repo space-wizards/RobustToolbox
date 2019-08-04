@@ -79,6 +79,9 @@ namespace Robust.Client.UserInterface
                 _resourceCache, _stateManager, _displayManager, _netManager, _mapManager);
             RootControl.AddChild(_debugMonitors);
 
+            _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugConsole,
+                InputCmdHandler.FromDelegate(session => DebugConsole.Toggle()));
+
             _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugMonitors,
                 InputCmdHandler.FromDelegate(enabled: session => { DebugMonitors.Visible = true; },
                     disabled: session => { DebugMonitors.Visible = false; }));
@@ -276,14 +279,6 @@ namespace Robust.Client.UserInterface
 
         public void KeyDown(KeyEventArgs keyEvent)
         {
-            // TODO: This is ugly.
-            if (keyEvent.Key == Keyboard.Key.Tilde)
-            {
-                keyEvent.Handle();
-                DebugConsole.Toggle();
-                return;
-            }
-
             if (KeyboardFocused == null)
             {
                 return;

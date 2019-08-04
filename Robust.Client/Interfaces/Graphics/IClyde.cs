@@ -9,6 +9,7 @@ using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Input;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.Interfaces.Graphics
 {
@@ -41,7 +42,7 @@ namespace Robust.Client.Interfaces.Graphics
     {
         // Basic main loop hooks.
         void Render();
-        void FrameProcess(RenderFrameEventArgs eventArgs);
+        void FrameProcess(FrameEventArgs eventArgs);
         void ProcessInput(FrameEventArgs frameEventArgs);
 
         // Init.

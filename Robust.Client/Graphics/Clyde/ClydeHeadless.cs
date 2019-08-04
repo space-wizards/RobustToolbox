@@ -4,6 +4,7 @@ using Robust.Client.Audio;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -43,7 +44,7 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public void FrameProcess(RenderFrameEventArgs eventArgs)
+        public void FrameProcess(FrameEventArgs eventArgs)
         {
             // Nada.
         }

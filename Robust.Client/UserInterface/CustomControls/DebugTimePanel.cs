@@ -4,6 +4,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
@@ -50,7 +51,7 @@ namespace Robust.Client.UserInterface.CustomControls
             SizeFlagsHorizontal = SizeFlags.None;
         }
 
-        protected override void Update(ProcessFrameEventArgs args)
+        protected override void Update(FrameEventArgs args)
         {
             base.Update(args);
 

@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using Robust.Shared.Timing;
 using Timer = Robust.Shared.Timers.Timer;
 
 namespace Robust.Shared.Interfaces.Timers
@@ -7,6 +8,6 @@ namespace Robust.Shared.Interfaces.Timers
     {
         void AddTimer(Timer timer, CancellationToken cancellationToken = default);
 
-        void UpdateTimers(float frameTime);
+        void UpdateTimers(FrameEventArgs frameEventArgs);
     }
 }

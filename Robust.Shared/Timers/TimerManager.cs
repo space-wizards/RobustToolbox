@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.Timers
 {
@@ -20,7 +21,7 @@ namespace Robust.Shared.Timers
             _timers.Add((timer, cancellationToken));
         }
 
-        public void UpdateTimers(float frameTime)
+        public void UpdateTimers(FrameEventArgs frameEventArgs)
         {
             // Manual for loop so we can modify the list while enumerating.
             // ReSharper disable once ForCanBeConvertedToForeach
@@ -33,7 +34,7 @@ namespace Robust.Shared.Timers
                     continue;
                 }
 
-                timer.Update(frameTime, _runtimeLog);
+                timer.Update(frameEventArgs.DeltaSeconds, _runtimeLog);
             }
 
             _timers.RemoveAll(timer => !timer.Item1.IsActive || timer.Item2.IsCancellationRequested);

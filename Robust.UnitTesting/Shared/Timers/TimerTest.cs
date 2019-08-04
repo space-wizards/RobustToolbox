@@ -7,6 +7,7 @@ using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Timing;
 using Timer = Robust.Shared.Timers.Timer;
 
 namespace Robust.UnitTesting.Shared.Timers
@@ -38,10 +39,10 @@ namespace Robust.UnitTesting.Shared.Timers
             Assert.That(fired, Is.False);
 
             // Set timers ahead 250 ms
-            timerManager.UpdateTimers(0.25f);
+            timerManager.UpdateTimers(new FrameEventArgs(.25f));
             Assert.That(fired, Is.False);
             // Another 300ms should do it.
-            timerManager.UpdateTimers(0.30f);
+            timerManager.UpdateTimers(new FrameEventArgs(.30f));
             Assert.That(fired, Is.True);
         }
 
@@ -61,11 +62,11 @@ namespace Robust.UnitTesting.Shared.Timers
             Assert.That(ran, Is.False);
 
             // Set timers ahead 250 ms
-            timerManager.UpdateTimers(0.25f);
+            timerManager.UpdateTimers(new FrameEventArgs(.25f));
             Assert.That(ran, Is.False);
 
             // Another 300ms should do it.
-            timerManager.UpdateTimers(0.30f);
+            timerManager.UpdateTimers(new FrameEventArgs(.30f));
             Assert.That(ran, Is.True);
         }
 
@@ -79,13 +80,13 @@ namespace Robust.UnitTesting.Shared.Timers
             var ran = false;
             Timer.Spawn(1000, () => ran = true, cts.Token);
 
-            timerManager.UpdateTimers(0.5f);
+            timerManager.UpdateTimers(new FrameEventArgs(.5f));
 
             Assert.That(ran, Is.False);
 
             cts.Cancel();
 
-            timerManager.UpdateTimers(0.6f);
+            timerManager.UpdateTimers(new FrameEventArgs(.6f));
 
             Assert.That(ran, Is.False);
         }

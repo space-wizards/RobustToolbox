@@ -7,6 +7,7 @@ using Robust.Client.Input;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -196,11 +197,11 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override void FrameUpdate(RenderFrameEventArgs args)
+        protected override void FrameUpdate(FrameEventArgs args)
         {
             base.FrameUpdate(args);
 
-            _cursorBlinkTimer -= args.Elapsed;
+            _cursorBlinkTimer -= args.DeltaSeconds;
             if (_cursorBlinkTimer <= 0)
             {
                 _cursorBlinkTimer += BlinkTime;

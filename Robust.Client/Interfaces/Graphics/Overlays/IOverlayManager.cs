@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics.Overlays;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.Interfaces.Graphics.Overlays
 {
@@ -22,6 +23,6 @@ namespace Robust.Client.Interfaces.Graphics.Overlays
 
     internal interface IOverlayManagerInternal : IOverlayManager
     {
-        void FrameUpdate(RenderFrameEventArgs args);
+        void FrameUpdate(FrameEventArgs args);
     }
 }

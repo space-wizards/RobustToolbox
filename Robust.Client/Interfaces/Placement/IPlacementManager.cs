@@ -4,6 +4,7 @@ using Robust.Client.Placement;
 using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.Map;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.Interfaces.Placement
 {
@@ -21,6 +22,6 @@ namespace Robust.Client.Interfaces.Placement
         void Clear();
         void ToggleEraser();
 
-        void FrameUpdate(RenderFrameEventArgs e);
+        void FrameUpdate(FrameEventArgs e);
     }
 }

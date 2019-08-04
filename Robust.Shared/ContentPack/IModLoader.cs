@@ -1,4 +1,5 @@
 using Robust.Shared.Interfaces.Resources;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.ContentPack
 {
@@ -26,7 +27,7 @@ namespace Robust.Shared.ContentPack
         /// <param name="level">New level</param>
         void BroadcastRunLevel(ModRunLevel level);
 
-        void BroadcastUpdate(ModUpdateLevel level, float frameTime);
+        void BroadcastUpdate(ModUpdateLevel level, FrameEventArgs frameEventArgs);
 
         /// <summary>
         ///     Tries to load an assembly from a resource manager into the current appdomain.

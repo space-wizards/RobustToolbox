@@ -258,7 +258,7 @@ namespace Robust.Server
                 };
             }
 
-            _mainLoop.Tick += (sender, args) => Update(args.DeltaSeconds);
+            _mainLoop.Tick += (sender, args) => Update(args);
 
             // set GameLoop.Running to false to return from this function.
             _mainLoop.Run();
@@ -342,22 +342,22 @@ namespace Robust.Server
             return bps;
         }
 
-        private void Update(float frameTime)
+        private void Update(FrameEventArgs frameEventArgs)
         {
             UpdateTitle();
             _systemConsole.Update();
 
             IoCManager.Resolve<IServerNetManager>().ProcessPackets();
 
-            _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameTime);
+            _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
 
-            timerManager.UpdateTimers(frameTime);
+            timerManager.UpdateTimers(frameEventArgs);
             _taskManager.ProcessPendingTasks();
 
             _components.CullRemovedComponents();
-            _entities.Update(frameTime);
+            _entities.Update(frameEventArgs.DeltaSeconds);
 
-            _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameTime);
+            _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
 
             _stateManager.SendGameStateUpdate();
         }

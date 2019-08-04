@@ -3,6 +3,7 @@ using Robust.Client.Interfaces.State;
 using Robust.Shared.Log;
 using System;
 using Robust.Shared.IoC;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.State
 {
@@ -17,12 +18,12 @@ namespace Robust.Client.State
 
         #region Updates & Statechanges
 
-        public void Update(ProcessFrameEventArgs e)
+        public void Update(FrameEventArgs e)
         {
             CurrentState?.Update(e);
         }
 
-        public void FrameUpdate(RenderFrameEventArgs e)
+        public void FrameUpdate(FrameEventArgs e)
         {
             CurrentState?.FrameUpdate(e);
         }

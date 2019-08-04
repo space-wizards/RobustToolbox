@@ -1,5 +1,6 @@
 ﻿using Robust.Client.Input;
 using System;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.Interfaces.State
 {
@@ -9,8 +10,8 @@ namespace Robust.Client.Interfaces.State
 
         Client.State.State CurrentState { get; }
         void RequestStateChange<T>() where T : Client.State.State, new();
-        void Update(ProcessFrameEventArgs e);
-        void FrameUpdate(RenderFrameEventArgs e);
+        void Update(FrameEventArgs e);
+        void FrameUpdate(FrameEventArgs e);
         void MouseUp(MouseButtonEventArgs e);
         void MouseDown(MouseButtonEventArgs e);
         void MouseMove(MouseMoveEventArgs e);

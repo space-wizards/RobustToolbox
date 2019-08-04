@@ -130,6 +130,9 @@ namespace Robust.Client.Console.Commands
                 case "frames":
                     monitor.ShowFrameGraph = !monitor.ShowFrameGraph;
                     break;
+                case "mem":
+                    monitor.ShowMemory ^= true;
+                    break;
                 default:
                     console.AddLine($"Invalid key: {args[0]}");
                     break;

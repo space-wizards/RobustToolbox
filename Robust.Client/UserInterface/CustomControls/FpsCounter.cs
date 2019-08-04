@@ -1,6 +1,7 @@
 ﻿using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -24,7 +25,7 @@ namespace Robust.Client.UserInterface.CustomControls
             MouseFilter = MouseFilterMode.Ignore;
         }
 
-        protected override void Update(ProcessFrameEventArgs args)
+        protected override void Update(FrameEventArgs args)
         {
             if (!VisibleInTree)
             {

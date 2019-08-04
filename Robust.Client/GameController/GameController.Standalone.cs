@@ -59,7 +59,7 @@ namespace Robust.Client
             {
                 if (_mainLoop.Running)
                 {
-                    Update(args.DeltaSeconds);
+                    Update(args);
                 }
             };
 
@@ -75,7 +75,7 @@ namespace Robust.Client
             {
                 if (_mainLoop.Running)
                 {
-                    _clyde.ProcessInput(new FrameEventArgs(args.DeltaSeconds));
+                    _clyde.ProcessInput(args);
                 }
             };
 
@@ -83,7 +83,7 @@ namespace Robust.Client
             {
                 if (_mainLoop.Running)
                 {
-                    _frameProcessMain(args.DeltaSeconds);
+                    _frameProcessMain(args);
                 }
             };
 

@@ -6,6 +6,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
@@ -65,7 +66,7 @@ namespace Robust.Client.UserInterface.CustomControls
             MouseFilter = contents.MouseFilter = MouseFilterMode.Ignore;
         }
 
-        protected override void Update(ProcessFrameEventArgs args)
+        protected override void Update(FrameEventArgs args)
         {
             base.Update(args);
 

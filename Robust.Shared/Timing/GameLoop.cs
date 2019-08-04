@@ -99,8 +99,8 @@ namespace Robust.Shared.Timing
 
             Running = true;
 
-            var realFrameEvent = new MutableFrameEventArgs(0);
-            var simFrameEvent = new MutableFrameEventArgs(0);
+            FrameEventArgs realFrameEvent;
+            FrameEventArgs simFrameEvent;
 
             _timing.ResetRealTime();
 
@@ -131,7 +131,7 @@ namespace Robust.Shared.Timing
                 }
 
                 _timing.StartFrame();
-                realFrameEvent.SetDeltaSeconds((float)_timing.RealFrameTime.TotalSeconds);
+                realFrameEvent = new FrameEventArgs((float)_timing.RealFrameTime.TotalSeconds);
 #if RELEASE
                 try
 #endif
@@ -160,7 +160,7 @@ namespace Robust.Shared.Timing
                         continue;
 
                     // update the simulation
-                    simFrameEvent.SetDeltaSeconds((float)_timing.FrameTime.TotalSeconds);
+                    simFrameEvent = new FrameEventArgs((float)_timing.FrameTime.TotalSeconds);
 #if RELEASE
                     try
                     {
@@ -187,7 +187,8 @@ namespace Robust.Shared.Timing
                 _timing.InSimulation = false;
 
                 // update out of the simulation
-                simFrameEvent.SetDeltaSeconds((float)_timing.FrameTime.TotalSeconds);
+
+                simFrameEvent = new FrameEventArgs((float)_timing.FrameTime.TotalSeconds);
 #if RELEASE
                 try
 #endif

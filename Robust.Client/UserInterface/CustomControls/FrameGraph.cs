@@ -1,6 +1,7 @@
 ﻿using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -52,7 +53,7 @@ namespace Robust.Client.UserInterface.CustomControls
             return (TrackedFrames * FrameWidth, FrameHeight * 2);
         }
 
-        protected override void FrameUpdate(RenderFrameEventArgs args)
+        protected override void FrameUpdate(FrameEventArgs args)
         {
             _frameTimes[_frameIndex] = (float)_gameTiming.RealFrameTime.TotalSeconds;
             _frameIndex = (_frameIndex + 1) % TrackedFrames;

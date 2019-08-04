@@ -301,9 +301,14 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected internal override void MouseDown(GUIMouseButtonEventArgs args)
+        protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
         {
-            base.MouseDown(args);
+            base.KeyBindDown(args);
+
+            if (!args.CanFocus)
+            {
+                return;
+            }
 
             // Find closest cursor position under mouse.
             var style = _getStyleBox();

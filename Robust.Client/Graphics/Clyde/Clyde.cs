@@ -212,21 +212,11 @@ namespace Robust.Client.Graphics.Clyde
             };
             _window.MouseDown += (sender, eventArgs) =>
             {
-                var mouseButtonEventArgs = (MouseButtonEventArgs) eventArgs;
-                _gameController.MouseDown(mouseButtonEventArgs);
-                if (!mouseButtonEventArgs.Handled)
-                {
-                    _gameController.KeyDown((KeyEventArgs) eventArgs);
-                }
+                _gameController.KeyDown((KeyEventArgs) eventArgs);
             };
             _window.MouseUp += (sender, eventArgs) =>
             {
-                var mouseButtonEventArgs = (MouseButtonEventArgs) eventArgs;
-                _gameController.MouseUp(mouseButtonEventArgs);
-                if (!mouseButtonEventArgs.Handled)
-                {
-                    _gameController.KeyUp((KeyEventArgs) eventArgs);
-                }
+                _gameController.KeyUp((KeyEventArgs) eventArgs);
             };
             _window.MouseMove += (sender, eventArgs) =>
             {

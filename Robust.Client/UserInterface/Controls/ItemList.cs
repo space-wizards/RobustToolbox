@@ -4,6 +4,7 @@ using System.Diagnostics.Contracts;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Input;
+using Robust.Shared.Input;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -382,6 +383,30 @@ namespace Robust.Client.UserInterface.Controls
             return size;
         }
 
+        protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
+        {
+            base.KeyBindDown(args);
+
+            if (SelectMode == ItemListSelectMode.None || args.Function != EngineKeyFunctions.Use)
+            {
+                return;
+            }
+
+            foreach (var item in _itemList)
+            {
+                if (item.Region == null)
+                    continue;
+                if (!item.Region.Value.Contains(args.RelativePosition))
+                    continue;
+                if (item.Selectable && !item.Disabled)
+                    if (item.Selected)
+                        Unselect(item);
+                    else
+                        Select(item, SelectMode == ItemListSelectMode.Single);
+                break;
+            }
+        }
+
         protected internal override void MouseMove(GUIMouseMoveEventArgs args)
         {
             base.MouseMove(args);
@@ -407,28 +432,6 @@ namespace Robust.Client.UserInterface.Controls
 
             _scrollBar.Value -= _getScrollSpeed() * args.Delta.Y;
             _isAtBottom = _scrollBar.IsAtEnd;
-        }
-
-        protected internal override void MouseDown(GUIMouseButtonEventArgs args)
-        {
-            base.MouseDown(args);
-
-            if (SelectMode == ItemListSelectMode.None || args.Button != Mouse.Button.Left)
-            {
-                return;
-            }
-
-            foreach (var item in _itemList)
-            {
-                if (item.Region == null) continue;
-                if (!item.Region.Value.Contains(args.RelativePosition)) continue;
-                if (item.Selectable && !item.Disabled)
-                    if (item.Selected)
-                        Unselect(item);
-                    else
-                        Select(item, SelectMode == ItemListSelectMode.Single);
-                break;
-            }
         }
 
         protected override void Initialize()

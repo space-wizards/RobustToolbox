@@ -35,24 +35,6 @@ namespace Robust.Client
         }
 
         /// <summary>
-        ///     Invoked when a button on the mouse is pressed down.
-        /// </summary>
-        public void MouseDown(MouseButtonEventArgs mouseEvent)
-        {
-            _userInterfaceManager.MouseDown(mouseEvent);
-            _stateManager.MouseDown(mouseEvent);
-        }
-
-        /// <summary>
-        ///     Invoked when a button on the mouse is released.
-        /// </summary>
-        public void MouseUp(MouseButtonEventArgs mouseButtonEventArgs)
-        {
-            _userInterfaceManager.MouseUp(mouseButtonEventArgs);
-            _stateManager.MouseUp(mouseButtonEventArgs);
-        }
-
-        /// <summary>
         ///     Invoked when the mouse is moved inside the game window.
         /// </summary>
         public void MouseMove(MouseMoveEventArgs mouseMoveEventArgs)

@@ -1,4 +1,5 @@
 ﻿using System;
+using Robust.Shared.Input;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
@@ -132,11 +133,11 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        protected internal override void MouseDown(GUIMouseButtonEventArgs args)
+        protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
         {
-            base.MouseDown(args);
+            base.KeyBindDown(args);
 
-            if (Disabled)
+            if (Disabled || !args.CanFocus)
             {
                 return;
             }
@@ -170,11 +171,11 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected internal override void MouseUp(GUIMouseButtonEventArgs args)
+        protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)
         {
-            base.MouseUp(args);
+            base.KeyBindUp(args);
 
-            if (Disabled)
+            if (Disabled || !args.CanFocus)
             {
                 return;
             }

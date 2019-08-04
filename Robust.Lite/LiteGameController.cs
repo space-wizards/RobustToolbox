@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using Robust.Client;
 using Robust.Client.Input;
@@ -169,16 +169,6 @@ namespace Robust.Lite
         public void TextEntered(TextEventArgs textEvent)
         {
             _userInterfaceManager.TextEntered(textEvent);
-        }
-
-        public void MouseDown(MouseButtonEventArgs mouseEvent)
-        {
-            _userInterfaceManager.MouseDown(mouseEvent);
-        }
-
-        public void MouseUp(MouseButtonEventArgs mouseButtonEventArgs)
-        {
-            _userInterfaceManager.MouseUp(mouseButtonEventArgs);
         }
 
         public void MouseMove(MouseMoveEventArgs mouseMoveEventArgs)

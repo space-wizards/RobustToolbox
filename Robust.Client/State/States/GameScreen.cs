@@ -7,6 +7,7 @@ using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.Placement;
+using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
@@ -33,6 +34,7 @@ namespace Robust.Client.State.States
         [Dependency] private readonly IEntitySystemManager entitySystemManager;
         [Dependency] private readonly IGameTiming timing;
         [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IUserInterfaceManagerInternal userInterfaceManager;
 #pragma warning restore 649
 
         private IEntity lastHoveredEntity;
@@ -160,6 +162,15 @@ namespace Robust.Client.State.States
         /// <param name="args">Event data values for a bound key state change.</param>
         private void OnKeyBindStateChanged(BoundKeyEventArgs args)
         {
+            if (args.State == BoundKeyState.Down)
+            {
+                userInterfaceManager.KeyBindDown(args);
+            }
+            else
+            {
+                userInterfaceManager.KeyBindUp(args);
+            }
+
             var inputSys = entitySystemManager.GetEntitySystem<InputSystem>();
 
             var func = args.Function;

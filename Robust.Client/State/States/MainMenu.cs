@@ -15,6 +15,8 @@ using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Localization;
 using Robust.Shared.Network;
 using Robust.Shared.Utility;
+using Robust.Shared.Input;
+using Robust.Client.Interfaces.Input;
 
 namespace Robust.Client.State.States
 {
@@ -35,6 +37,8 @@ namespace Robust.Client.State.States
         [Dependency] private readonly IResourceCache _resourceCache;
         [Dependency] private readonly IStateManager stateManager;
         [Dependency] private readonly IUserInterfaceManager userInterfaceManager;
+        [Dependency] private readonly IUserInterfaceManagerInternal userInterfaceManagerInternal;
+        [Dependency] private readonly IInputManager inputManager;
 #pragma warning restore 649
 
         private MainMenuControl _mainMenuControl;
@@ -58,6 +62,8 @@ namespace Robust.Client.State.States
 
             _client.RunLevelChanged += RunLevelChanged;
 
+            inputManager.KeyBindStateChanged += OnKeyBindStateChanged;
+
             OptionsMenu = new OptionsMenu(_configurationManager);
         }
 
@@ -66,6 +72,8 @@ namespace Robust.Client.State.States
         {
             _client.RunLevelChanged -= RunLevelChanged;
             _netManager.ConnectFailed -= _onConnectFailed;
+
+            inputManager.KeyBindStateChanged -= OnKeyBindStateChanged;
 
             _mainMenuControl.Dispose();
             OptionsMenu.Dispose();
@@ -202,6 +210,18 @@ namespace Robust.Client.State.States
 #if FULL_RELEASE
             _mainMenuControl.JoinPublicServerButton.Disabled = state;
 #endif
+        }
+
+        private void OnKeyBindStateChanged(BoundKeyEventArgs args)
+        {
+            if (args.State == BoundKeyState.Down)
+            {
+                userInterfaceManagerInternal.KeyBindDown(args);
+            }
+            else
+            {
+                userInterfaceManagerInternal.KeyBindUp(args);
+            }
         }
 
         private sealed class MainMenuControl : Control

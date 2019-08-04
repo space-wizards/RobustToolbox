@@ -1,8 +1,9 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using NUnit.Framework;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface;
+using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
@@ -60,15 +61,15 @@ namespace Robust.UnitTesting.Client.UserInterface
             control3.AddChild(control4);
             control4.Position = new Vector2(5, 5);
 
-            var mouseEvent = new MouseButtonEventArgs(Mouse.Button.Left, false, Mouse.ButtonMask.None,
-                new Vector2(30, 30), false, false, false, false);
+            var mouseEvent = new BoundKeyEventArgs(EngineKeyFunctions.Use, BoundKeyState.Down,
+                new Robust.Shared.Map.ScreenCoordinates(30, 30), true);
 
             var control2Fired = false;
             var control3Fired = false;
 
-            control1.OnMouseDown += _ => Assert.Fail("Control 1 should not get a mouse event.");
+            control1.OnKeyBindDown += _ => Assert.Fail("Control 1 should not get a mouse event.");
 
-            void Control2MouseDown(GUIMouseButtonEventArgs ev)
+            void Control2MouseDown(GUIBoundKeyEventArgs ev)
             {
                 Assert.That(control2Fired, Is.False);
                 Assert.That(control3Fired, Is.True);
@@ -78,9 +79,9 @@ namespace Robust.UnitTesting.Client.UserInterface
                 control2Fired = true;
             }
 
-            control2.OnMouseDown += Control2MouseDown;
+            control2.OnKeyBindDown += Control2MouseDown;
 
-            control3.OnMouseDown += ev =>
+            control3.OnKeyBindDown += ev =>
             {
                 Assert.That(control2Fired, Is.False);
                 Assert.That(control3Fired, Is.False);
@@ -90,9 +91,9 @@ namespace Robust.UnitTesting.Client.UserInterface
                 control3Fired = true;
             };
 
-            control4.OnMouseDown += _ => Assert.Fail("Control 4 should not get a mouse event.");
+            control4.OnKeyBindDown += _ => Assert.Fail("Control 4 should not get a mouse event.");
 
-            _userInterfaceManager.MouseDown(mouseEvent);
+            _userInterfaceManager.KeyBindDown(mouseEvent);
 
             Assert.Multiple(() =>
             {
@@ -106,8 +107,8 @@ namespace Robust.UnitTesting.Client.UserInterface
             control2Fired = false;
             control3Fired = false;
 
-            control2.OnMouseDown -= Control2MouseDown;
-            control2.OnMouseDown += ev =>
+            control2.OnKeyBindDown -= Control2MouseDown;
+            control2.OnKeyBindDown += ev =>
             {
                 Assert.That(control2Fired, Is.False);
                 Assert.That(control3Fired, Is.True);
@@ -119,7 +120,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             };
             control2.MouseFilter = Control.MouseFilterMode.Pass;
 
-            _userInterfaceManager.MouseDown(mouseEvent);
+            _userInterfaceManager.KeyBindDown(mouseEvent);
 
             Assert.Multiple(() =>
             {
@@ -212,10 +213,12 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             _userInterfaceManager.RootControl.AddChild(control);
 
-            var mouseEvent = new MouseButtonEventArgs(Mouse.Button.Left, false, Mouse.ButtonMask.None,
-                new Vector2(30, 30), false, false, false, false);
+            var pos = new Robust.Shared.Map.ScreenCoordinates(30, 30);
 
-            _userInterfaceManager.MouseDown(mouseEvent);
+            var mouseEvent = new GUIBoundKeyEventArgs(EngineKeyFunctions.Use, BoundKeyState.Down,
+                pos, true, pos.Position / 1 - control.GlobalPosition, pos.Position - control.GlobalPixelPosition);
+
+            _userInterfaceManager.KeyBindDown(mouseEvent);
 
             Assert.That(_userInterfaceManager.KeyboardFocused, Is.EqualTo(control));
             _userInterfaceManager.ReleaseKeyboardFocus();
@@ -238,10 +241,12 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             _userInterfaceManager.RootControl.AddChild(control);
 
-            var mouseEvent = new MouseButtonEventArgs(Mouse.Button.Left, false, Mouse.ButtonMask.None,
-                new Vector2(30, 30), false, false, false, false);
+            var pos = new Robust.Shared.Map.ScreenCoordinates(30, 30);
 
-            _userInterfaceManager.MouseDown(mouseEvent);
+            var mouseEvent = new GUIBoundKeyEventArgs(EngineKeyFunctions.Use, BoundKeyState.Down,
+                pos, true, pos.Position / 1 - control.GlobalPosition, pos.Position - control.GlobalPixelPosition);
+
+            _userInterfaceManager.KeyBindDown(mouseEvent);
 
             Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
 

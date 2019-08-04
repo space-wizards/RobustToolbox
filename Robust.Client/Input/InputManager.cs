@@ -170,7 +170,7 @@ namespace Robust.Client.Input
         {
             binding.State = state;
 
-            KeyBindStateChanged?.Invoke(new BoundKeyEventArgs(binding.Function, binding.State, new ScreenCoordinates(MouseScreenPosition)));
+            KeyBindStateChanged?.Invoke(new BoundKeyEventArgs(binding.Function, binding.State, new ScreenCoordinates(MouseScreenPosition), binding.CanFocus));
 
             var cmd = GetInputCommand(binding.Function);
             if (state == BoundKeyState.Up)
@@ -258,6 +258,12 @@ namespace Robust.Client.Input
                 }
                 var key = keyMapping.GetNode("key").AsEnum<Keyboard.Key>();
 
+                var canFocus = false;
+                if (keyMapping.TryGetNode("canFocus", out var canFocusName))
+                {
+                    canFocus = canFocusName.AsBool();
+                }
+
                 var mod1 = Keyboard.Key.Unknown;
                 if (keyMapping.TryGetNode("mod1", out var mod1Name))
                 {
@@ -278,7 +284,7 @@ namespace Robust.Client.Input
 
                 var type = keyMapping.GetNode("type").AsEnum<KeyBindingType>();
 
-                var binding = new KeyBinding(function, type, key, mod1, mod2, mod3);
+                var binding = new KeyBinding(function, type, key, canFocus, mod1, mod2, mod3);
                 RegisterBinding(binding);
             }
         }
@@ -343,16 +349,22 @@ namespace Robust.Client.Input
             public int PackedKeyCombo { get; }
             public BoundKeyFunction Function { get; }
             public KeyBindingType BindingType { get; }
+            /// <summary>
+            ///     Whether the Bound key can change the focused control.
+            /// </summary>
+            public bool CanFocus { get; internal set; }
 
             public KeyBinding(BoundKeyFunction function,
                               KeyBindingType bindingType,
                               Keyboard.Key baseKey,
+                              bool canFocus,
                               Keyboard.Key mod1 = Keyboard.Key.Unknown,
                               Keyboard.Key mod2 = Keyboard.Key.Unknown,
                               Keyboard.Key mod3 = Keyboard.Key.Unknown)
             {
                 Function = function;
                 BindingType = bindingType;
+                CanFocus = canFocus;
 
                 PackedKeyCombo = PackKeyCombo(baseKey, mod1, mod2, mod3);
             }

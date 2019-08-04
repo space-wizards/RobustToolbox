@@ -160,24 +160,34 @@ namespace Robust.Client.UserInterface.CustomControls
             OnClose?.Invoke();
         }
 
-        protected internal override void MouseDown(GUIMouseButtonEventArgs args)
+        protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
         {
-            base.MouseDown(args);
+            base.KeyBindDown(args);
+
+            if (!args.CanFocus)
+            {
+                return;
+            }
 
             CurrentDrag = GetDragModeFor(args.RelativePosition);
 
             if (CurrentDrag != DragMode.None)
             {
-                DragOffsetTopLeft = args.GlobalPosition - Position;
-                DragOffsetBottomRight = Position + Size - args.GlobalPosition;
+                DragOffsetTopLeft = args.PointerLocation.Position - Position;
+                DragOffsetBottomRight = Position + Size - args.PointerLocation.Position;
             }
 
             MoveToFront();
         }
 
-        protected internal override void MouseUp(GUIMouseButtonEventArgs args)
+        protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)
         {
-            base.MouseUp(args);
+            base.KeyBindUp(args);
+
+            if (!args.CanFocus)
+            {
+                return;
+            }
 
             DragOffsetTopLeft = DragOffsetBottomRight = Vector2.Zero;
             CurrentDrag = DragMode.None;

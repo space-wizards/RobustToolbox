@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.UserInterface;
+using Robust.Shared.Input;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Interfaces.UserInterface
@@ -75,9 +76,9 @@ namespace Robust.Client.Interfaces.UserInterface
 
         void FrameUpdate(RenderFrameEventArgs args);
 
-        void MouseDown(MouseButtonEventArgs args);
+        void KeyBindDown(BoundKeyEventArgs args);
 
-        void MouseUp(MouseButtonEventArgs args);
+        void KeyBindUp(BoundKeyEventArgs args);
 
         void MouseMove(MouseMoveEventArgs mouseMoveEventArgs);
 

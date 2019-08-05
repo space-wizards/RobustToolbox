@@ -157,8 +157,6 @@
 
         public bool IsMapTransform => Parent == null;
 
-        public virtual bool VisibleWhileParented { set; get; }
-
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public GridCoordinates GridPosition

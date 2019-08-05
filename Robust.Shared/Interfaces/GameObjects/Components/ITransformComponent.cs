@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Enums;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -73,11 +72,6 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         bool IsMapTransform { get; }
 
         /// <summary>
-        /// Whether or not this entity is visible while parented to another entity.
-        /// </summary>
-        bool VisibleWhileParented { get; set; }
-
-        /// <summary>
         ///
         /// </summary>
         Vector2 LerpDestination { get; }
@@ -107,24 +101,5 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         void AttachParent(IEntity parent);
 
         IEnumerable<ITransformComponent> Children { get; }
-    }
-
-    public class ParentChangedEventArgs : EventArgs
-    {
-        /// <summary>
-        ///     The entity that we were previously parented to. Can be null if none.
-        /// </summary>
-        public EntityUid Old { get; }
-
-        /// <summary>
-        ///     The entity that we are now parented to. Can be null if none.
-        /// </summary>
-        public EntityUid New { get; }
-
-        public ParentChangedEventArgs(EntityUid old, EntityUid @new)
-        {
-            Old = old;
-            New = @new;
-        }
     }
 }

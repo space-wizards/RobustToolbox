@@ -260,11 +260,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             _loadExtensions();
 
-            GL.Enable(EnableCap.Blend);
-            GL.Enable(EnableCap.FramebufferSrgb);
-            GL.Enable(EnableCap.PrimitiveRestart);
-            GL.PrimitiveRestartIndex(ushort.MaxValue);
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            _hijackDebugCallback();
 
             var vendor = GL.GetString(StringName.Vendor);
             var renderer = GL.GetString(StringName.Renderer);
@@ -279,9 +275,11 @@ namespace Robust.Client.Graphics.Clyde
 
             DebugInfo = new ClydeDebugInfo(new Version(major, minor), MinimumOpenGLVersion, renderer, vendor, version);
 
-#if DEBUG
-            _hijackDebugCallback();
-#endif
+            GL.Enable(EnableCap.Blend);
+            GL.Enable(EnableCap.FramebufferSrgb);
+            GL.Enable(EnableCap.PrimitiveRestart);
+            GL.PrimitiveRestartIndex(ushort.MaxValue);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
             _loadStockTextures();
             _loadStockShaders();
@@ -407,6 +405,7 @@ namespace Robust.Client.Graphics.Clyde
             return (w, h);
         }
 
+        [Conditional("DEBUG")]
         private void _hijackDebugCallback()
         {
             if (!HasKHRDebug)

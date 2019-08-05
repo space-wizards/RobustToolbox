@@ -17,6 +17,11 @@ namespace Robust.Client.UserInterface.Controls
 
         public void Open(UIBox2? box = null)
         {
+            if (Visible)
+            {
+                UserInterfaceManagerInternal.RemoveModal(this);
+            }
+
             if (box != null)
             {
                 Position = box.Value.TopLeft;

@@ -197,7 +197,6 @@ namespace Robust.Client.UserInterface
                 {
                     return;
                 }
-                args.Handle();
                 control = KeyboardFocused;
             }
 
@@ -206,6 +205,11 @@ namespace Robust.Client.UserInterface
                 args.PointerLocation.Position - control.GlobalPixelPosition);
 
             _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindDown(ev));
+
+            if (args.CanFocus)
+            {
+                args.Handle();
+            }
         }
 
         public void KeyBindUp(BoundKeyEventArgs args)
@@ -598,7 +602,7 @@ namespace Robust.Client.UserInterface
 
         private void OnUIKeyBindStateChanged(BoundKeyEventArgs args)
         {
-            if (KeyboardFocused is LineEdit)
+            if (!args.CanFocus && KeyboardFocused is LineEdit)
             {
                 args.Handle();
             }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +42,7 @@ namespace Robust.Client.UserInterface.Controls
             _buttons.Add(button);
             _hBox.AddChild(button);
 
-            button.OnMouseDown += _ => OpenPopupFor(button);
+            button.OnKeyBindDown += _ => OpenPopupFor(button);
 
             button.OnMouseEntered += () =>
             {

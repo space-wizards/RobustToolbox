@@ -173,7 +173,7 @@ namespace Robust.Client.Input
             var eventArgs = new BoundKeyEventArgs(binding.Function, binding.State, new ScreenCoordinates(MouseScreenPosition), binding.CanFocus);
 
             UIKeyBindStateChanged?.Invoke(eventArgs);
-            if (!eventArgs.Handled)
+            if (state == BoundKeyState.Up || !eventArgs.Handled)
             {
                 KeyBindStateChanged?.Invoke(eventArgs);
             }

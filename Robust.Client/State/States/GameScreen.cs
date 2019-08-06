@@ -35,7 +35,6 @@ namespace Robust.Client.State.States
         [Dependency] private readonly IEntitySystemManager entitySystemManager;
         [Dependency] private readonly IGameTiming timing;
         [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IUserInterfaceManagerInternal userInterfaceManager;
 #pragma warning restore 649
 
         private IEntity lastHoveredEntity;

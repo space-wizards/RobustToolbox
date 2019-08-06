@@ -37,8 +37,6 @@ namespace Robust.Client.State.States
         [Dependency] private readonly IResourceCache _resourceCache;
         [Dependency] private readonly IStateManager stateManager;
         [Dependency] private readonly IUserInterfaceManager userInterfaceManager;
-        [Dependency] private readonly IUserInterfaceManagerInternal userInterfaceManagerInternal;
-        [Dependency] private readonly IInputManager inputManager;
 #pragma warning restore 649
 
         private MainMenuControl _mainMenuControl;

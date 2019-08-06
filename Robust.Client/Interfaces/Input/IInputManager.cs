@@ -42,6 +42,7 @@ namespace Robust.Client.Interfaces.Input
 
         void SetInputCommand(BoundKeyFunction function, InputCmdHandler cmdHandler);
 
+        event Action<BoundKeyEventArgs> UIKeyBindStateChanged;
         event Action<BoundKeyEventArgs> KeyBindStateChanged;
     }
 }

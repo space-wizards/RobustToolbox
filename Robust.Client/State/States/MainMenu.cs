@@ -62,8 +62,6 @@ namespace Robust.Client.State.States
 
             _client.RunLevelChanged += RunLevelChanged;
 
-            inputManager.KeyBindStateChanged += OnKeyBindStateChanged;
-
             OptionsMenu = new OptionsMenu(_configurationManager);
         }
 
@@ -72,8 +70,6 @@ namespace Robust.Client.State.States
         {
             _client.RunLevelChanged -= RunLevelChanged;
             _netManager.ConnectFailed -= _onConnectFailed;
-
-            inputManager.KeyBindStateChanged -= OnKeyBindStateChanged;
 
             _mainMenuControl.Dispose();
             OptionsMenu.Dispose();
@@ -210,18 +206,6 @@ namespace Robust.Client.State.States
 #if FULL_RELEASE
             _mainMenuControl.JoinPublicServerButton.Disabled = state;
 #endif
-        }
-
-        private void OnKeyBindStateChanged(BoundKeyEventArgs args)
-        {
-            if (args.State == BoundKeyState.Down)
-            {
-                userInterfaceManagerInternal.KeyBindDown(args);
-            }
-            else
-            {
-                userInterfaceManagerInternal.KeyBindUp(args);
-            }
         }
 
         private sealed class MainMenuControl : Control

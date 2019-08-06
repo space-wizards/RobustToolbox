@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using Robust.Client.GameObjects.EntitySystems;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
@@ -24,13 +25,9 @@ namespace Robust.Client.Input
 
         public virtual Vector2 MouseScreenPosition => Vector2.Zero;
 
-        [Dependency]
 #pragma warning disable 649
-        private readonly IUserInterfaceManager _uiManager;
-        [Dependency]
-        private readonly IResourceManager _resourceMan;
-        [Dependency]
-        private readonly IReflectionManager _reflectionManager;
+        [Dependency] private readonly IResourceManager _resourceMan;
+        [Dependency] private readonly IReflectionManager _reflectionManager;
 #pragma warning restore 649
 
         private readonly Dictionary<BoundKeyFunction, InputCmdHandler> _commands = new Dictionary<BoundKeyFunction, InputCmdHandler>();
@@ -42,6 +39,9 @@ namespace Robust.Client.Input
 
         /// <inheritdoc />
         public IInputContextContainer Contexts { get; } = new InputContextContainer();
+
+        /// <inheritdoc />
+        public event Action<BoundKeyEventArgs> UIKeyBindStateChanged;
 
         /// <inheritdoc />
         public event Action<BoundKeyEventArgs> KeyBindStateChanged;
@@ -170,7 +170,13 @@ namespace Robust.Client.Input
         {
             binding.State = state;
 
-            KeyBindStateChanged?.Invoke(new BoundKeyEventArgs(binding.Function, binding.State, new ScreenCoordinates(MouseScreenPosition), binding.CanFocus));
+            var eventArgs = new BoundKeyEventArgs(binding.Function, binding.State, new ScreenCoordinates(MouseScreenPosition), binding.CanFocus);
+
+            UIKeyBindStateChanged?.Invoke(eventArgs);
+            if (!eventArgs.Handled)
+            {
+                KeyBindStateChanged?.Invoke(eventArgs);
+            }
 
             var cmd = GetInputCommand(binding.Function);
             if (state == BoundKeyState.Up)
@@ -296,7 +302,7 @@ namespace Robust.Client.Input
         // So if we didn't do this, the DebugConsole wouldn't block movement (for example).
         private bool UIBlocked()
         {
-            return _uiManager.KeyboardFocused is LineEdit;
+            return false; //_uiManager.KeyboardFocused is LineEdit;
         }
 
         private void RegisterBinding(KeyBinding binding)

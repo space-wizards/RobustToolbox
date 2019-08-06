@@ -153,12 +153,12 @@ namespace Robust.Lite
 
         public void KeyDown(KeyEventArgs keyEvent)
         {
-            _userInterfaceManager.KeyDown(keyEvent);
+            //_inputManager.KeyDown(keyEvent);
         }
 
         public void KeyUp(KeyEventArgs keyEvent)
         {
-            _userInterfaceManager.KeyUp(keyEvent);
+            //_userInterfaceManager.KeyUp(keyEvent);
         }
 
         public void TextEntered(TextEventArgs textEvent)

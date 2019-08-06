@@ -87,10 +87,6 @@ namespace Robust.Client.Interfaces.UserInterface
 
         void TextEntered(TextEventArgs textEvent);
 
-        void KeyDown(KeyEventArgs keyEvent);
-
-        void KeyUp(KeyEventArgs keyEvent);
-
         void ControlHidden(Control control);
 
         void ControlRemovedFromTree(Control control);

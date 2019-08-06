@@ -91,6 +91,8 @@ namespace Robust.Client.UserInterface
                 InputCmdHandler.FromDelegate(
                     enabled: session => _rendering = false,
                     disabled: session => _rendering = true));
+
+            _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
         }
 
         private void _initializeCommon()
@@ -191,7 +193,12 @@ namespace Robust.Client.UserInterface
 
             if (control == null)
             {
-                return;
+                if (KeyboardFocused == null)
+                {
+                    return;
+                }
+                args.Handle();
+                control = KeyboardFocused;
             }
 
             var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,
@@ -199,8 +206,6 @@ namespace Robust.Client.UserInterface
                 args.PointerLocation.Position - control.GlobalPixelPosition);
 
             _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindDown(ev));
-
-            args.Handle();
         }
 
         public void KeyBindUp(BoundKeyEventArgs args)
@@ -278,35 +283,6 @@ namespace Robust.Client.UserInterface
 
             var guiArgs = new GUITextEventArgs(KeyboardFocused, textEvent.CodePoint);
             KeyboardFocused.TextEntered(guiArgs);
-        }
-
-        public void KeyDown(KeyEventArgs keyEvent)
-        {
-            if (KeyboardFocused == null)
-            {
-                return;
-            }
-
-            var guiArgs = new GUIKeyEventArgs(KeyboardFocused, keyEvent.Key, keyEvent.IsRepeat, keyEvent.Alt,
-                keyEvent.Control, keyEvent.Shift, keyEvent.System);
-            KeyboardFocused.KeyDown(guiArgs);
-
-            if (guiArgs.Handled)
-            {
-                keyEvent.Handle();
-            }
-        }
-
-        public void KeyUp(KeyEventArgs keyEvent)
-        {
-            if (KeyboardFocused == null)
-            {
-                return;
-            }
-
-            var guiArgs = new GUIKeyEventArgs(KeyboardFocused, keyEvent.Key, keyEvent.IsRepeat, keyEvent.Alt,
-                keyEvent.Control, keyEvent.Shift, keyEvent.System);
-            KeyboardFocused.KeyUp(guiArgs);
         }
 
         public void DisposeAllComponents()
@@ -618,6 +594,22 @@ namespace Robust.Client.UserInterface
         private void _updateRootSize()
         {
             RootControl.Size = _displayManager.ScreenSize / UIScale;
+        }
+
+        private void OnUIKeyBindStateChanged(BoundKeyEventArgs args)
+        {
+            if (KeyboardFocused is LineEdit)
+            {
+                args.Handle();
+            }
+            if (args.State == BoundKeyState.Down)
+            {
+                KeyBindDown(args);
+            }
+            else
+            {
+                KeyBindUp(args);
+            }
         }
     }
 }

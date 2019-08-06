@@ -896,7 +896,7 @@ namespace Robust.Client.UserInterface
             DisposeAllChildren();
             Parent?.RemoveChild(this);
 
-            OnKeyDown = null;
+            OnKeyBindDown = null;
         }
 
         ~Control()

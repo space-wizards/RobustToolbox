@@ -163,15 +163,6 @@ namespace Robust.Client.State.States
         /// <param name="args">Event data values for a bound key state change.</param>
         private void OnKeyBindStateChanged(BoundKeyEventArgs args)
         {
-            if (args.State == BoundKeyState.Down)
-            {
-                userInterfaceManager.KeyBindDown(args);
-            }
-            else
-            {
-                userInterfaceManager.KeyBindUp(args);
-            }
-
             var inputSys = entitySystemManager.GetEntitySystem<InputSystem>();
 
             var func = args.Function;

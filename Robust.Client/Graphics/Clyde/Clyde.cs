@@ -200,7 +200,6 @@ namespace Robust.Client.Graphics.Clyde
             _mainThread = Thread.CurrentThread;
 
             _window.KeyDown += (sender, eventArgs) => { _gameController.KeyDown((KeyEventArgs) eventArgs); };
-
             _window.KeyUp += (sender, eventArgs) => { _gameController.KeyUp((KeyEventArgs) eventArgs); };
             _window.Closed += _onWindowClosed;
             _window.Resize += (sender, eventArgs) =>
@@ -211,14 +210,8 @@ namespace Robust.Client.Graphics.Clyde
                 _regenerateLightRenderTarget();
                 OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _windowSize));
             };
-            _window.MouseDown += (sender, eventArgs) =>
-            {
-                _gameController.KeyDown((KeyEventArgs) eventArgs);
-            };
-            _window.MouseUp += (sender, eventArgs) =>
-            {
-                _gameController.KeyUp((KeyEventArgs) eventArgs);
-            };
+            _window.MouseDown += (sender, eventArgs) => { _gameController.KeyDown((KeyEventArgs) eventArgs); };
+            _window.MouseUp += (sender, eventArgs) => { _gameController.KeyUp((KeyEventArgs) eventArgs); };
             _window.MouseMove += (sender, eventArgs) =>
             {
                 MouseScreenPosition = new Vector2(eventArgs.X, eventArgs.Y);

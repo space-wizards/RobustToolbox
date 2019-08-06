@@ -9,12 +9,6 @@ namespace Robust.Client
         /// </summary>
         public void KeyDown(KeyEventArgs keyEvent)
         {
-            _userInterfaceManager.KeyDown(keyEvent);
-
-            if (keyEvent.Handled)
-            {
-                return;
-            }
             _inputManager.KeyDown(keyEvent);
         }
 
@@ -23,9 +17,6 @@ namespace Robust.Client
         /// </summary>
         public void KeyUp(KeyEventArgs keyEvent)
         {
-            // Unlike KeyDown, InputManager still gets key ups.
-            // My logic is that it should be fine dealing with redundant key ups and this *might* prevent edge cases.
-            _userInterfaceManager.KeyUp(keyEvent);
             _inputManager.KeyUp(keyEvent);
         }
 

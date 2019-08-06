@@ -7,6 +7,7 @@ using Robust.Client.Graphics.Drawing;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Console;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Input;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -71,7 +72,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             CommandBar = new LineEdit {PlaceHolder = "Command Here"};
             boxContainer.AddChild(CommandBar);
-            CommandBar.OnKeyDown += CommandBarOnOnKeyDown;
+            CommandBar.OnKeyBindDown += CommandBarOnOnKeyBindDown;
             CommandBar.OnTextEntered += CommandEntered;
             CommandBar.OnTextChanged += CommandBarOnOnTextChanged;
 
@@ -156,61 +157,55 @@ namespace Robust.Client.UserInterface.CustomControls
             }
         }
 
-        private void CommandBarOnOnKeyDown(GUIKeyEventArgs obj)
+        private void CommandBarOnOnKeyBindDown(GUIBoundKeyEventArgs args)
         {
-            switch (obj.Key)
+            if (args.Function == EngineKeyFunctions.TextReleaseFocus)
             {
-                case Keyboard.Key.Escape:
+                CommandBar.ReleaseKeyboardFocus();
+                args.Handle();
+                Toggle();
+                return;
+            }
+            else if (args.Function == EngineKeyFunctions.TextHistoryPrev)
+            {
+                args.Handle();
+                var current = CommandBar.Text;
+                if (!string.IsNullOrWhiteSpace(current) && _currentCommandEdited)
                 {
-                    CommandBar.ReleaseKeyboardFocus();
-                    obj.Handle();
-                    Toggle();
+                    // Block up/down if something is typed in.
                     return;
                 }
-                case Keyboard.Key.Up:
+
+                if (_historyPosition <= 0)
                 {
-                    obj.Handle();
-                    var current = CommandBar.Text;
-                    if (!string.IsNullOrWhiteSpace(current) && _currentCommandEdited)
-                    {
-                        // Block up/down if something is typed in.
-                        return;
-                    }
-
-                    if (_historyPosition <= 0)
-                    {
-                        return;
-                    }
-
-                    CommandBar.Text = CommandHistory[--_historyPosition];
-                    break;
+                    return;
                 }
-                case Keyboard.Key.Down:
+
+                CommandBar.Text = CommandHistory[--_historyPosition];
+            }
+            else if (args.Function == EngineKeyFunctions.TextHistoryNext)
+            {
+                args.Handle();
+                var current = CommandBar.Text;
+                if (!string.IsNullOrWhiteSpace(current) && _currentCommandEdited)
                 {
-                    obj.Handle();
-                    var current = CommandBar.Text;
-                    if (!string.IsNullOrWhiteSpace(current) && _currentCommandEdited)
-                    {
-                        // Block up/down if something is typed in.
-                        return;
-                    }
-
-                    if (++_historyPosition >= CommandHistory.Count)
-                    {
-                        CommandBar.Text = "";
-                        _historyPosition = CommandHistory.Count;
-                        return;
-                    }
-
-                    CommandBar.Text = CommandHistory[_historyPosition];
-                    break;
+                    // Block up/down if something is typed in.
+                    return;
                 }
-                case Keyboard.Key.PageDown:
+
+                if (++_historyPosition >= CommandHistory.Count)
                 {
-                    obj.Handle();
-                    Output.ScrollToBottom();
-                    break;
+                    CommandBar.Text = "";
+                    _historyPosition = CommandHistory.Count;
+                    return;
                 }
+
+                CommandBar.Text = CommandHistory[_historyPosition];
+            }
+            else if (args.Function == EngineKeyFunctions.TextScrollToBottom)
+            {
+                args.Handle();
+                Output.ScrollToBottom();
             }
         }
 

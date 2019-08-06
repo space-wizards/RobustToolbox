@@ -20,6 +20,7 @@ namespace Robust.Client.UserInterface
         protected internal virtual void MouseWheel(GUIMouseWheelEventArgs args)
         {
         }
+
         public event Action<GUIBoundKeyEventArgs> OnKeyBindDown;
 
         protected internal virtual void KeyBindDown(GUIBoundKeyEventArgs args)
@@ -32,17 +33,6 @@ namespace Robust.Client.UserInterface
         }
 
         protected internal virtual void MouseMove(GUIMouseMoveEventArgs args)
-        {
-        }
-
-        public event Action<GUIKeyEventArgs> OnKeyDown;
-
-        protected internal virtual void KeyDown(GUIKeyEventArgs args)
-        {
-            OnKeyDown?.Invoke(args);
-        }
-
-        protected internal virtual void KeyUp(GUIKeyEventArgs args)
         {
         }
 

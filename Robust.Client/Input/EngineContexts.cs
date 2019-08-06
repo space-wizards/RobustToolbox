@@ -26,6 +26,16 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.MoveRight);
             common.AddFunction(EngineKeyFunctions.Run);
 
+            common.AddFunction(EngineKeyFunctions.TextCursorLeft);
+            common.AddFunction(EngineKeyFunctions.TextCursorRight);
+            common.AddFunction(EngineKeyFunctions.TextBackspace);
+            common.AddFunction(EngineKeyFunctions.TextSubmit);
+            common.AddFunction(EngineKeyFunctions.TextPaste);
+            common.AddFunction(EngineKeyFunctions.TextHistoryPrev);
+            common.AddFunction(EngineKeyFunctions.TextHistoryNext);
+            common.AddFunction(EngineKeyFunctions.TextReleaseFocus);
+            common.AddFunction(EngineKeyFunctions.TextScrollToBottom);
+
             var editor = contexts.New("editor", common);
             editor.AddFunction(EngineKeyFunctions.EditorLinePlace);
             editor.AddFunction(EngineKeyFunctions.EditorGridPlace);

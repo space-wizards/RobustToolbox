@@ -53,7 +53,7 @@ namespace Robust.Shared.Maths
                 if (Math.Abs(_direction.X) < epsilon)
                 {
                     // ray is parallel to this slab, it will never hit unless ray is inside box
-                    if (_position.X < FloatMath.Min(box.Left, box.Right) || _position.X > FloatMath.Max(box.Left, box.Right))
+                    if (_position.X < Math.Min(box.Left, box.Right) || _position.X > Math.Max(box.Left, box.Right))
                     {
                         return false;
                     }
@@ -61,16 +61,16 @@ namespace Robust.Shared.Maths
 
                 // calculate intersection t value of ray with near and far plane of slab
                 var ood = 1.0f / _direction.X;
-                var t1 = (FloatMath.Min(box.Left, box.Right) - _position.X) * ood;
-                var t2 = (FloatMath.Max(box.Left, box.Right) - _position.X) * ood;
+                var t1 = (Math.Min(box.Left, box.Right) - _position.X) * ood;
+                var t2 = (Math.Max(box.Left, box.Right) - _position.X) * ood;
 
                 // Make t1 be the intersection with near plane, t2 with far plane
                 if (t1 > t2)
                     MathHelper.Swap(ref t1, ref t2);
 
                 // Compute the intersection of slab intersection intervals
-                tmin = FloatMath.Max(t1, tmin);
-                tmax = FloatMath.Min(t2, tmax); // Is this Min (SE) or Max(Textbook)
+                tmin = Math.Max(t1, tmin);
+                tmax = Math.Min(t2, tmax); // Is this Min (SE) or Max(Textbook)
 
                 // Exit with no collision as soon as slab intersection becomes empty
                 if (tmin > tmax)
@@ -84,7 +84,7 @@ namespace Robust.Shared.Maths
                 if (Math.Abs(_direction.Y) < epsilon)
                 {
                     // ray is parallel to this slab, it will never hit unless ray is inside box
-                    if (_position.Y < FloatMath.Min(box.Top, box.Bottom) || _position.Y > FloatMath.Max(box.Top, box.Bottom))
+                    if (_position.Y < Math.Min(box.Top, box.Bottom) || _position.Y > Math.Max(box.Top, box.Bottom))
                     {
                         return false;
                     }
@@ -92,16 +92,16 @@ namespace Robust.Shared.Maths
 
                 // calculate intersection t value of ray with near and far plane of slab
                 var ood = 1.0f / _direction.Y;
-                var t1 = (FloatMath.Min(box.Top, box.Bottom) - _position.Y) * ood;
-                var t2 = (FloatMath.Max(box.Top, box.Bottom) - _position.Y) * ood;
+                var t1 = (Math.Min(box.Top, box.Bottom) - _position.Y) * ood;
+                var t2 = (Math.Max(box.Top, box.Bottom) - _position.Y) * ood;
 
                 // Make t1 be the intersection with near plane, t2 with far plane
                 if (t1 > t2)
                     MathHelper.Swap(ref t1, ref t2);
 
                 // Compute the intersection of slab intersection intervals
-                tmin = FloatMath.Max(t1, tmin);
-                tmax = FloatMath.Min(t2, tmax); // Is this Min (SE) or Max(Textbook)
+                tmin = Math.Max(t1, tmin);
+                tmax = Math.Min(t2, tmax); // Is this Min (SE) or Max(Textbook)
 
                 // Exit with no collision as soon as slab intersection becomes empty
                 if (tmin > tmax)

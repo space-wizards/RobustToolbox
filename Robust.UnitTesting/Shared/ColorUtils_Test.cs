@@ -20,7 +20,7 @@ namespace Robust.UnitTesting.Shared
             Assert.That(Color.InterpolateBetween(black, white, 1), Is.EqualTo(black));
             // Should be grey but floating points hate us so...
             // The byte conversion shouldn't have issues because the error marging should be small enough.
-            var grey = Color.InterpolateBetween(black, white, 0.5);
+            var grey = Color.InterpolateBetween(black, white, 0.5f);
             Assert.That(grey.RByte, Is.EqualTo(127));
             Assert.That(grey.GByte, Is.EqualTo(127));
             Assert.That(grey.BByte, Is.EqualTo(127));

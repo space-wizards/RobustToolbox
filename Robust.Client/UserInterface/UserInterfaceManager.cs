@@ -210,16 +210,17 @@ namespace Robust.Client.UserInterface
 
         public void KeyBindUp(BoundKeyEventArgs args)
         {
-            if (_controlFocused == null)
+            var control = _controlFocused ?? MouseGetControl(args.PointerLocation.Position);
+            if (control == null)
             {
                 return;
             }
 
             var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,
-                args.PointerLocation.Position / UIScale - _controlFocused.GlobalPosition,
-                args.PointerLocation.Position - _controlFocused.GlobalPixelPosition);
+                args.PointerLocation.Position / UIScale - control.GlobalPosition,
+                args.PointerLocation.Position - control.GlobalPixelPosition);
 
-            _doGuiInput(_controlFocused, guiArgs, (c, ev) => c.KeyBindUp(ev));
+            _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindUp(ev));
             _controlFocused = null;
 
             // Always mark this as handled.

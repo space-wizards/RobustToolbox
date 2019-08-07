@@ -256,7 +256,22 @@ namespace Robust.Shared.Maths
         public static Color FromSrgb(Color srgb)
         {
             float r, g, b;
+#if NETCOREAPP
+            if (srgb.R <= 0.04045f)
+                r = srgb.R / 12.92f;
+            else
+                r = MathF.Pow((srgb.R + 0.055f) / (1.0f + 0.055f), 2.4f);
 
+            if (srgb.G <= 0.04045f)
+                g = srgb.G / 12.92f;
+            else
+                g = MathF.Pow((srgb.G + 0.055f) / (1.0f + 0.055f), 2.4f);
+
+            if (srgb.B <= 0.04045f)
+                b = srgb.B / 12.92f;
+            else
+                b = MathF.Pow((srgb.B + 0.055f) / (1.0f + 0.055f), 2.4f);
+#else
             if (srgb.R <= 0.04045f)
                 r = srgb.R / 12.92f;
             else
@@ -271,6 +286,7 @@ namespace Robust.Shared.Maths
                 b = srgb.B / 12.92f;
             else
                 b = (float) Math.Pow((srgb.B + 0.055f) / (1.0f + 0.055f), 2.4f);
+#endif
 
             return new Color(r, g, b, srgb.A);
         }
@@ -286,6 +302,22 @@ namespace Robust.Shared.Maths
         {
             float r, g, b;
 
+#if NETCOREAPP
+            if (rgb.R <= 0.0031308)
+                r = 12.92f * rgb.R;
+            else
+                r = (1.0f + 0.055f) * MathF.Pow(rgb.R, 1.0f / 2.4f) - 0.055f;
+
+            if (rgb.G <= 0.0031308)
+                g = 12.92f * rgb.G;
+            else
+                g = (1.0f + 0.055f) * MathF.Pow(rgb.G, 1.0f / 2.4f) - 0.055f;
+
+            if (rgb.B <= 0.0031308)
+                b = 12.92f * rgb.B;
+            else
+                b = (1.0f + 0.055f) * MathF.Pow(rgb.B, 1.0f / 2.4f) - 0.055f;
+#else
             if (rgb.R <= 0.0031308)
                 r = 12.92f * rgb.R;
             else
@@ -300,6 +332,7 @@ namespace Robust.Shared.Maths
                 b = 12.92f * rgb.B;
             else
                 b = (1.0f + 0.055f) * (float) Math.Pow(rgb.B, 1.0f / 2.4f) - 0.055f;
+#endif
 
             return new Color(r, g, b, rgb.A);
         }

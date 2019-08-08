@@ -190,14 +190,14 @@ namespace Robust.Client.UserInterface
                     _controlFocused.GrabKeyboardFocus();
                 }
             }
+            else if (KeyboardFocused != null)
+            {
+                control = KeyboardFocused;
+            }
 
             if (control == null)
             {
-                if (KeyboardFocused == null)
-                {
-                    return;
-                }
-                control = KeyboardFocused;
+                return;
             }
 
             var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,

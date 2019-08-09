@@ -310,6 +310,11 @@ namespace Robust.Client.Input
             return false; //_uiManager.KeyboardFocused is LineEdit;
         }
 
+        public void AddClickBind()
+        {
+            RegisterBinding(new KeyBinding(EngineKeyFunctions.Use, KeyBindingType.State, Keyboard.Key.MouseLeft, true));
+        }
+
         private void RegisterBinding(KeyBinding binding)
         {
             //TODO: Assert there are no duplicate binding combos

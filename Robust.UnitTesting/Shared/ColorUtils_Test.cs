@@ -13,8 +13,6 @@ namespace Robust.UnitTesting.Shared
         {
             var black = Color.Black;
             var white = Color.White;
-            Assert.That(() => Color.InterpolateBetween(black, white, -10), Throws.TypeOf<ArgumentOutOfRangeException>());
-            Assert.That(() => Color.InterpolateBetween(black, white, 10), Throws.TypeOf<ArgumentOutOfRangeException>());
 
             Assert.That(Color.InterpolateBetween(black, white, 0), Is.EqualTo(white));
             Assert.That(Color.InterpolateBetween(black, white, 1), Is.EqualTo(black));

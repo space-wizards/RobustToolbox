@@ -206,6 +206,10 @@ namespace Robust.Client.Graphics.Clyde
             _window.Resize += (sender, eventArgs) =>
             {
                 var oldSize = _windowSize;
+                if (_window.Width == 0 && _window.Height == 0)
+                {
+                    return;
+                }
                 _windowSize = new Vector2i(_window.Width, _window.Height);
                 GL.Viewport(0, 0, _window.Width, _window.Height);
                 _regenerateLightRenderTarget();

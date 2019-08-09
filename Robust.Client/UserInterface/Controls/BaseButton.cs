@@ -16,7 +16,7 @@ namespace Robust.Client.UserInterface.Controls
         private bool _beingHovered;
         private bool _disabled;
         private bool _pressed;
-        private bool _nonFocusKeybinds;
+        private bool _enableAllKeybinds;
 
         protected BaseButton()
         {
@@ -72,12 +72,12 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         /// <summary>
-        ///     Whether the button is currently toggled down. Only applies when <see cref="ToggleMode"/> is true.
+        ///     Whether a button enables Keybinds without GUIBoundKeyEventArgs.CanFocus to trigger the button.
         /// </summary>
-        public bool NonFocusKeybinds
+        public bool EnableAllKeybinds
         {
-            get => _nonFocusKeybinds;
-            set => _nonFocusKeybinds = value;
+            get => _enableAllKeybinds;
+            set => _enableAllKeybinds = value;
         }
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindDown(args);
 
-            if (Disabled || (!_nonFocusKeybinds && !args.CanFocus))
+            if (Disabled || (!_enableAllKeybinds && !args.CanFocus))
             {
                 return;
             }

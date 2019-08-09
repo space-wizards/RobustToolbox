@@ -22,6 +22,8 @@ namespace Robust.Client.Interfaces.Input
 
         void Initialize();
 
+        void AddClickBind();
+
         void KeyDown(KeyEventArgs e);
         void KeyUp(KeyEventArgs e);
 

@@ -30,6 +30,10 @@ namespace Robust.Client.UserInterface.Controls
         private int _cursorPosition;
         private float _cursorBlinkTimer;
         private bool _cursorCurrentlyLit;
+        private BoundKeyFunction _boundKeyHeld;
+        private float _boundKeyTimer;
+        private const float BoundKeyDelay = 0.02f;
+        private const float BoundKeyFirstDelay = 0.5f;
         private const float BlinkTime = 0.5f;
 
         private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
@@ -40,6 +44,16 @@ namespace Robust.Client.UserInterface.Controls
 
         public LineEdit(string name) : base(name)
         {
+        }
+
+        private BoundKeyFunction BoundKeyHeld
+        {
+            get => _boundKeyHeld;
+            set
+            {
+                _boundKeyTimer = BoundKeyFirstDelay;
+                _boundKeyHeld = value;
+            }
         }
 
         public AlignMode TextAlign { get; set; }
@@ -236,6 +250,54 @@ namespace Robust.Client.UserInterface.Controls
             return new Vector2(0, font.GetHeight(UIScale) / UIScale) + style.MinimumSize / UIScale;
         }
 
+        protected override void Update(FrameEventArgs args)
+        {
+            base.Update(args);
+
+            if (BoundKeyHeld == null)
+            {
+                return;
+            }
+            else if (_boundKeyTimer > 0)
+            {
+                _boundKeyTimer -= args.DeltaSeconds;
+                return;
+            }
+            _boundKeyTimer = BoundKeyDelay;
+            _resetCursorBlink();
+
+            if (BoundKeyHeld == EngineKeyFunctions.TextBackspace)
+            {
+                if (_cursorPosition == 0 || !Editable)
+                {
+                    return;
+                }
+
+                _text = _text.Remove(_cursorPosition - 1, 1);
+                OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
+                _cursorPosition -= 1;
+                _updatePseudoClass();
+            }
+            else if (BoundKeyHeld == EngineKeyFunctions.TextCursorLeft)
+            {
+                if (_cursorPosition == 0)
+                {
+                    return;
+                }
+
+                _cursorPosition -= 1;
+            }
+            else if (BoundKeyHeld == EngineKeyFunctions.TextCursorRight)
+            {
+                if (_cursorPosition == _text.Length)
+                {
+                    return;
+                }
+
+                _cursorPosition += 1;
+            }
+        }
+
         protected internal override void TextEntered(GUITextEventArgs args)
         {
             base.TextEntered(args);
@@ -274,6 +336,7 @@ namespace Robust.Client.UserInterface.Controls
                     OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
                     _cursorPosition -= 1;
                     _updatePseudoClass();
+                    BoundKeyHeld = args.Function;
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorLeft)
                 {
@@ -283,6 +346,7 @@ namespace Robust.Client.UserInterface.Controls
                     }
 
                     _cursorPosition -= 1;
+                    BoundKeyHeld = args.Function;
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorRight)
                 {
@@ -292,6 +356,7 @@ namespace Robust.Client.UserInterface.Controls
                     }
 
                     _cursorPosition += 1;
+                    BoundKeyHeld = args.Function;
                 }
                 else if (args.Function == EngineKeyFunctions.TextSubmit)
                 {
@@ -364,6 +429,16 @@ namespace Robust.Client.UserInterface.Controls
             }
             // Reset this so the cursor is always visible immediately after a keybind is pressed.
             _resetCursorBlink();
+        }
+
+        protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)
+        {
+            base.KeyBindUp(args);
+
+            if (BoundKeyHeld == args.Function)
+            {
+              BoundKeyHeld = null;
+            }
         }
 
         protected internal override void FocusEntered()

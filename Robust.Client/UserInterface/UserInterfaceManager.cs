@@ -214,7 +214,7 @@ namespace Robust.Client.UserInterface
 
         public void KeyBindUp(BoundKeyEventArgs args)
         {
-            var control = _controlFocused ?? MouseGetControl(args.PointerLocation.Position);
+            var control = _controlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
             if (control == null)
             {
                 return;

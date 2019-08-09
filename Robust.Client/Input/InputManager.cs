@@ -83,7 +83,7 @@ namespace Robust.Client.Input
         /// <inheritdoc />
         public void KeyDown(KeyEventArgs args)
         {
-            if (!Enabled || UIBlocked() || args.Key == Keyboard.Key.Unknown || args.IsRepeat)
+            if (!Enabled || args.Key == Keyboard.Key.Unknown || args.IsRepeat)
             {
                 return;
             }
@@ -298,16 +298,6 @@ namespace Robust.Client.Input
                 var binding = new KeyBinding(function, type, key, canFocus, mod1, mod2, mod3);
                 RegisterBinding(binding);
             }
-        }
-
-        // Don't take input if we're focused on a LineEdit.
-        // LineEdits don't intercept keydowns when typing properly.
-        // NOTE: macOS specific!
-        // https://github.com/godotengine/godot/issues/15071
-        // So if we didn't do this, the DebugConsole wouldn't block movement (for example).
-        private bool UIBlocked()
-        {
-            return false; //_uiManager.KeyboardFocused is LineEdit;
         }
 
         private void RegisterBinding(KeyBinding binding)

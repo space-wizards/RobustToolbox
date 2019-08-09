@@ -103,11 +103,14 @@ namespace Robust.Client.Input
                 if (PackedMatchesPressedState(binding.PackedKeyCombo))
                 {
                     // this statement *should* always be true first
-                    if (matchedCombo == 0 && PackedContainsKey(binding.PackedKeyCombo, internalKey)) // first key match becomes pressed
+                    // Keep triggering keybinds of the same PackedKeyCombo until Handled or no bindings left
+                    if ((matchedCombo == 0 || binding.PackedKeyCombo == matchedCombo) &&
+                        PackedContainsKey(binding.PackedKeyCombo, internalKey))
                     {
                         matchedCombo = binding.PackedKeyCombo;
 
-                        DownBind(binding);
+                        if (DownBind(binding))
+                            break;
                     }
                     else if (PackedIsSubPattern(matchedCombo, binding.PackedKeyCombo))
                     {
@@ -141,19 +144,20 @@ namespace Robust.Client.Input
             _keysPressed[internalKey] = false;
         }
 
-        private void DownBind(KeyBinding binding)
+        private bool DownBind(KeyBinding binding)
         {
             if (binding.State == BoundKeyState.Down)
             {
                 if (binding.BindingType == KeyBindingType.Toggle)
                 {
-                    SetBindState(binding, BoundKeyState.Up);
+                    return SetBindState(binding, BoundKeyState.Up);
                 }
             }
             else
             {
-                SetBindState(binding, BoundKeyState.Down);
+                return SetBindState(binding, BoundKeyState.Down);
             }
+            return false;
         }
 
         private void UpBind(KeyBinding binding)
@@ -166,14 +170,14 @@ namespace Robust.Client.Input
             SetBindState(binding, BoundKeyState.Up);
         }
 
-        private void SetBindState(KeyBinding binding, BoundKeyState state)
+        private bool SetBindState(KeyBinding binding, BoundKeyState state)
         {
             binding.State = state;
 
             var eventArgs = new BoundKeyEventArgs(binding.Function, binding.State, new ScreenCoordinates(MouseScreenPosition), binding.CanFocus);
 
             UIKeyBindStateChanged?.Invoke(eventArgs);
-            if (!eventArgs.Handled)
+            if (state == BoundKeyState.Up || !eventArgs.Handled)
             {
                 KeyBindStateChanged?.Invoke(eventArgs);
             }
@@ -187,6 +191,7 @@ namespace Robust.Client.Input
             {
                 cmd?.Enabled(null);
             }
+            return (eventArgs.Handled);
         }
 
         private bool PackedMatchesPressedState(int packedKeyCombo)

@@ -31,10 +31,8 @@ platform: x64
 configuration: Debug
 
 cache:
-- packages -> **\packages.config
+- packages -> **\*.csproj
 - Dependencies
-- Robust.Client.Godot\.mono\assemblies\GodotSharp.dll
-- Robust.Client.Godot\.mono\assemblies\LAST_MODIFIED
 
 build:
   project: RobustToolbox.sln

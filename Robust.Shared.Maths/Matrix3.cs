@@ -771,11 +771,6 @@ namespace Robust.Shared.Maths
             vector.Y = y;
         }
 
-        public void Transform(ref Vector2 vector)
-        {
-            Transform(this, ref vector);
-        }
-
         public static void Transform(in Matrix3 matrix, ref Vector2 vector)
         {
             var vec3 = new Vector3(vector.X, vector.Y, 1);
@@ -785,14 +780,15 @@ namespace Robust.Shared.Maths
 
         public Vector2 Transform(Vector2 vector)
         {
-            Transform(ref vector);
-            return vector;
+            return Transform(this, vector);
         }
 
         public static Vector2 Transform(in Matrix3 matrix, Vector2 vector)
         {
-            Transform(matrix, ref vector);
-            return vector;
+            var x = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2;
+            var y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2;
+
+            return new Vector2(x, y);
         }
 
         public void Transform(ref Vector3 vector, out Vector3 result)

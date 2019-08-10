@@ -21,7 +21,7 @@ namespace Robust.Shared
 
             NativeLibrary.SetDllImportResolver(assembly, (name, _, __) =>
             {
-                if (name == baseName)
+                if (name == $"{baseName}.dll")
                 {
                     var assemblyDir = Path.GetDirectoryName(assembly.Location);
 

@@ -417,15 +417,6 @@ namespace Robust.UnitTesting.Shared.Maths
         }
 
         [Test]
-        public void InterpolateBetweenThrows()
-        {
-            var color = new Color(0, 0, 0, 0);
-
-            Assert.Throws<ArgumentOutOfRangeException>(() => Color.InterpolateBetween(color, color, -1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => Color.InterpolateBetween(color, color, 2));
-        }
-
-        [Test]
         public void FromHexThrows()
         {
             Assert.Throws<ArgumentException>(() => Color.FromHex(" "));

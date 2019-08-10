@@ -76,10 +76,10 @@ namespace Robust.Shared.Maths
         /// </summary>
         public Box2 Intersect(in Box2 other)
         {
-            var left   = FloatMath.Max(Left,   other.Left);
-            var right  = FloatMath.Min(Right,  other.Right);
-            var bottom = FloatMath.Max(Bottom, other.Bottom);
-            var top    = FloatMath.Min(Top,    other.Top);
+            var left   = Math.Max(Left,   other.Left);
+            var right  = Math.Min(Right,  other.Right);
+            var bottom = Math.Max(Bottom, other.Bottom);
+            var top    = Math.Min(Top,    other.Top);
 
             if (left <= right && bottom <= top)
                 return new Box2(left, bottom, right, top);
@@ -92,10 +92,10 @@ namespace Robust.Shared.Maths
         /// </summary>
         public Box2 Union(in Box2 other)
         {
-            var left   = FloatMath.Min(Left,   other.Left);
-            var right  = FloatMath.Max(Right,  other.Right);
-            var bottom = FloatMath.Min(Bottom, other.Bottom);
-            var top    = FloatMath.Max(Top,    other.Top);
+            var left   = Math.Min(Left,   other.Left);
+            var right  = Math.Max(Right,  other.Right);
+            var bottom = Math.Min(Bottom, other.Bottom);
+            var top    = Math.Max(Top,    other.Top);
 
             if (left <= right && bottom <= top)
                 return new Box2(left, bottom, right, top);

@@ -122,10 +122,10 @@ namespace Robust.Shared.GameObjects
         public void InitializeComponents()
         {
             // Initialize() can modify the collection of components.
-            var components = EntityManager.ComponentManager.GetComponentInstances(Uid).ToList();
-            for (int i = 0; i < components.Count; i++)
+            var components = EntityManager.ComponentManager.GetComponents(Uid);
+            foreach (var t in components)
             {
-                var comp = (Component)components[i];
+                var comp = (Component) t;
                 if (comp != null && !comp.Initialized)
                     comp.Initialize();
             }
@@ -138,10 +138,10 @@ namespace Robust.Shared.GameObjects
         {
             // Startup() can modify _components
             // TODO: This code can only handle additions to the list. Is there a better way?
-            var components = EntityManager.ComponentManager.GetComponentInstances(Uid).ToList();
-            for (int i = 0; i < components.Count; i++)
+            var components = EntityManager.ComponentManager.GetComponents(Uid);
+            foreach (var t in components)
             {
-                var comp = (Component)components[i];
+                var comp = (Component)t;
                 if (comp != null && comp.Initialized && !comp.Running && !comp.Deleted)
                     comp.Startup();
             }
@@ -162,7 +162,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void SendMessage(IComponent owner, ComponentMessage message)
         {
-            var components = EntityManager.ComponentManager.GetComponentInstances(Uid);
+            var components = EntityManager.ComponentManager.GetComponents(Uid);
             foreach (var component in components)
             {
                 if (owner != component)
@@ -205,7 +205,7 @@ namespace Robust.Shared.GameObjects
                         }
                         else
                         {
-                            foreach (var component in EntityManager.ComponentManager.GetComponentInstances(Uid))
+                            foreach (var component in EntityManager.ComponentManager.GetComponents(Uid))
                             {
                                 component.HandleMessage(compMsg, compChannel);
                             }
@@ -352,19 +352,13 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IComponent> GetAllComponents()
         {
-            return EntityManager.ComponentManager.GetComponents(Uid).Where(comp => !comp.Deleted);
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<IComponent> GetComponentInstances()
-        {
-            return EntityManager.ComponentManager.GetComponentInstances(Uid).Where(comp => !comp.Deleted);
+            return EntityManager.ComponentManager.GetComponents(Uid);
         }
 
         /// <inheritdoc />
         public IEnumerable<T> GetAllComponents<T>()
         {
-            return GetAllComponents().OfType<T>();
+            return EntityManager.ComponentManager.GetComponents<T>(Uid);
         }
 
         #endregion Components
@@ -381,7 +375,7 @@ namespace Robust.Shared.GameObjects
         internal void HandleEntityState(EntityState curState, EntityState nextState)
         {
             _compStateWork.Clear();
-            
+
             if(curState?.ComponentChanges != null)
             {
                 foreach (var compChange in curState.ComponentChanges)
@@ -448,7 +442,7 @@ namespace Robust.Shared.GameObjects
         public EntityState GetEntityState(GameTick fromTick)
         {
             var compStates = GetComponentStates(fromTick);
-            
+
             var addedComponents = EntityManager.ComponentManager.GetNetComponents(Uid)
                 .Where(c => c.CreationTick >= fromTick && !c.Deleted)
                 .Select(c => ComponentChanged.Added(c.NetID.Value, c.Name));
@@ -472,7 +466,7 @@ namespace Robust.Shared.GameObjects
         /// <returns></returns>
         private List<ComponentState> GetComponentStates(GameTick fromTick)
         {
-            return GetComponentInstances()
+            return GetAllComponents()
                 .Where(c => c.NetID != null && c.NetSyncEnabled && c.LastModifiedTick >= fromTick)
                 .Select(component => component.GetComponentState())
                 .ToList();

@@ -174,13 +174,6 @@ namespace Robust.Shared.Interfaces.GameObjects
         IEnumerable<IComponent> GetComponents(EntityUid uid);
 
         /// <summary>
-        ///     Returns all component instances on an entity. This does not use the
-        ///     component reference system. Use this for serialization.
-        /// </summary>
-        /// <returns>An enumerable of component instances on the entity.</returns>
-        IEnumerable<IComponent> GetComponentInstances(EntityUid uid);
-
-        /// <summary>
         ///     Returns ALL component type instances that are assignable to the specified type.
         ///     A single component instance can have multiple component type instances.
         /// </summary>

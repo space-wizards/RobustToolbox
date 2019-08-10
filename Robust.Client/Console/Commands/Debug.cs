@@ -223,7 +223,7 @@ namespace Robust.Client.Console.Commands
 
             console.AddLine($"{entity.Uid}: {entity.Prototype.ID}/{entity.Name}");
             console.AddLine($"init/del/lmt: {entity.Initialized}/{entity.Deleted}/{entity.LastModifiedTick}");
-            foreach (var component in entity.GetAllComponents().Distinct())
+            foreach (var component in entity.GetAllComponents())
             {
                 console.AddLine(component.ToString());
                 if (component is IComponentDebug debug)

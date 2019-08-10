@@ -226,7 +226,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             manager.AddComponent(entity, component);
 
             // Act
-            var result = manager.GetComponentInstances(entity.Uid);
+            var result = manager.GetComponents(entity.Uid);
 
             // Assert
             var list = result.ToList();
@@ -235,7 +235,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         #endregion
-        
+
         private static IComponentManager ManagerFactory(out IEntityManager entityManager)
         {
             var dependencies = new DependencyCollection();

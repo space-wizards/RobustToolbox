@@ -164,20 +164,12 @@ namespace Robust.Shared.Interfaces.GameObjects
         void Delete();
 
         /// <summary>
-        ///     Returns all components on the entity. This uses the reference system,
-        ///     so a component instance can be duplicated over multiple interfaces.
+        ///     Returns all components on the entity.
         /// </summary>
         /// <returns>An enumerable of components on the entity.</returns>
         IEnumerable<IComponent> GetAllComponents();
 
         /// <summary>
-        ///     Returns all component instances on an entity. This does not use the
-        ///     component reference system. Use this for serialization.
-        /// </summary>
-        /// <returns>An enumerable of component instances on the entity.</returns>
-        IEnumerable<IComponent> GetComponentInstances();
-
-            /// <summary>
         ///     Returns all components that are assignable to <typeparamref name="T"/>.
         ///     This does not go by component references.
         /// </summary>

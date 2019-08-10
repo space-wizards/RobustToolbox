@@ -340,21 +340,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IComponent> GetComponents(EntityUid uid)
         {
-            foreach (var kvTypeDict in _dictComponents.Values)
-            {
-                if (kvTypeDict.TryGetValue(uid, out var comp))
-                    yield return comp;
-            }
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<IComponent> GetComponentInstances(EntityUid uid)
-        {
             var results = new List<IComponent>();
 
             foreach (var kvTypeDict in _dictComponents.Values)
             {
-                if (kvTypeDict.TryGetValue(uid, out var comp) && !results.Contains(comp))
+                if (kvTypeDict.TryGetValue(uid, out var comp) && !results.Contains(comp) && !comp.Deleted)
                 {
                     results.Add(comp);
                 }
@@ -366,7 +356,17 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<T> GetComponents<T>(EntityUid uid)
         {
-            return GetComponents(uid).OfType<T>();
+            var results = new List<T>();
+
+            foreach (var kvTypeDict in _dictComponents.Values)
+            {
+                if (kvTypeDict.TryGetValue(uid, out var comp) && comp is T t && !results.Contains(t) && !comp.Deleted)
+                {
+                    results.Add(t);
+                }
+            }
+
+            return results;
         }
 
         /// <inheritdoc />

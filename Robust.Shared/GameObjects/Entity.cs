@@ -5,6 +5,7 @@ using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -423,17 +424,16 @@ namespace Robust.Shared.GameObjects
 
             foreach (var kvStates in _compStateWork)
             {
-                if (TryGetComponent(kvStates.Key, out var component))
+                if (!TryGetComponent(kvStates.Key, out var component))
                 {
-                    if (kvStates.Value.curState == null || kvStates.Value.curState.GetType() == component.StateType)
-                    {
-                        component.HandleComponentState(kvStates.Value.curState, kvStates.Value.nextState);
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException($"Incorrect component state type: {component.StateType}, component: {component.GetType()}");
-                    }
+                    continue;
                 }
+
+                DebugTools.Assert(kvStates.Value.curState == null
+                                  || kvStates.Value.curState.GetType() == component.StateType,
+                    "Component state is of the wrong type.");
+
+                component.HandleComponentState(kvStates.Value.curState, kvStates.Value.nextState);
             }
         }
 

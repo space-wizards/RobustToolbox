@@ -18,7 +18,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private readonly IClientNetManager NetManager;
         private readonly IGameTiming GameTiming;
-        private readonly IResourceCache resourceCache;
 
         private TimeSpan LastUpdate;
         private Label contents;
@@ -31,11 +30,10 @@ namespace Robust.Client.UserInterface.CustomControls
         private long LastSentPackets;
         private long LastReceivedPackets;
 
-        public DebugNetPanel(IClientNetManager netMan, IGameTiming gameTiming, IResourceCache resCache)
+        public DebugNetPanel(IClientNetManager netMan, IGameTiming gameTiming)
         {
             NetManager = netMan;
             GameTiming = gameTiming;
-            resourceCache = resCache;
 
             PerformLayout();
         }

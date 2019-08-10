@@ -120,7 +120,7 @@ namespace Robust.Client.ViewVariables.Instances
             _tabs.SetTabTitle(TabClientComponents, "Client Components");
 
             // See engine#636 for why the Distinct() call.
-            var componentList = _entity.GetAllComponents().Distinct().OrderBy(c => c.GetType().ToString());
+            var componentList = _entity.GetAllComponents().OrderBy(c => c.GetType().ToString());
             foreach (var component in componentList)
             {
                 var button = new Button {Text = component.GetType().ToString(), TextAlign = Button.AlignMode.Left};

@@ -13,11 +13,9 @@ namespace Robust.UnitTesting.Shared
         {
             var black = Color.Black;
             var white = Color.White;
-            Assert.That(() => Color.InterpolateBetween(black, white, -10), Throws.TypeOf<ArgumentOutOfRangeException>());
-            Assert.That(() => Color.InterpolateBetween(black, white, 10), Throws.TypeOf<ArgumentOutOfRangeException>());
 
-            Assert.That(Color.InterpolateBetween(black, white, 0), Is.EqualTo(white));
-            Assert.That(Color.InterpolateBetween(black, white, 1), Is.EqualTo(black));
+            Assert.That(Color.InterpolateBetween(black, white, 1), Is.EqualTo(white));
+            Assert.That(Color.InterpolateBetween(black, white, 0), Is.EqualTo(black));
             // Should be grey but floating points hate us so...
             // The byte conversion shouldn't have issues because the error marging should be small enough.
             var grey = Color.InterpolateBetween(black, white, 0.5f);

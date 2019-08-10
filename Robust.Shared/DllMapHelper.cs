@@ -11,6 +11,9 @@ namespace Robust.Shared
         [Conditional("NETCOREAPP")]
         public static void RegisterSimpleMap(Assembly assembly, string baseName)
         {
+            // On .NET Framework this doesn't need to run because:
+            // On Windows, the DLL names should check out correctly to just work.
+            // On Linux/macOS, Mono's DllMap handles it for us.
 #if NETCOREAPP
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -50,6 +53,9 @@ namespace Robust.Shared
         [Conditional("NETCOREAPP")]
         public static void RegisterExplicitMap(Assembly assembly, string baseName, string linuxName, string macName)
         {
+            // On .NET Framework this doesn't need to run because:
+            // On Windows, the DLL names should check out correctly to just work.
+            // On Linux/macOS, Mono's DllMap handles it for us.
 #if NETCOREAPP
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {

@@ -482,7 +482,7 @@ namespace Robust.Server.Maps
 
                     var components = new YamlSequenceNode();
                     // See engine#636 for why the Distinct() call.
-                    foreach (var component in entity.GetAllComponents().Distinct())
+                    foreach (var component in entity.GetAllComponents())
                     {
                         var compMapping = new YamlMappingNode();
                         CurrentWritingComponent = component.Name;

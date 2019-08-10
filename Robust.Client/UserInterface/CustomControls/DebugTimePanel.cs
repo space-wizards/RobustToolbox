@@ -11,14 +11,12 @@ namespace Robust.Client.UserInterface.CustomControls
 {
     public class DebugTimePanel : Panel
     {
-        private readonly IResourceCache _resourceCache;
         private readonly IGameTiming _gameTiming;
 
         private Label _contents;
 
-        public DebugTimePanel(IResourceCache resourceCache, IGameTiming gameTiming)
+        public DebugTimePanel(IGameTiming gameTiming)
         {
-            _resourceCache = resourceCache;
             _gameTiming = gameTiming;
 
             PerformLayout();

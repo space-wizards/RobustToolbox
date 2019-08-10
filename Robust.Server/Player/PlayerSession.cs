@@ -1,11 +1,8 @@
-﻿using Robust.Server.Interfaces.GameObjects;
-using Robust.Server.Interfaces.Player;
+﻿using Robust.Server.Interfaces.Player;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Server.GameObjects;
 using System;
-using Robust.Server.Interfaces;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.Network;
@@ -38,14 +35,11 @@ namespace Robust.Server.Player
             UpdatePlayerState();
         }
 
-        [ViewVariables]
-        public INetChannel ConnectedClient { get; }
+        [ViewVariables] public INetChannel ConnectedClient { get; }
 
-        [ViewVariables]
-        public IEntity AttachedEntity { get; private set; }
+        [ViewVariables] public IEntity AttachedEntity { get; private set; }
 
-        [ViewVariables]
-        public EntityUid? AttachedEntityUid => AttachedEntity?.Uid;
+        [ViewVariables] public EntityUid? AttachedEntityUid => AttachedEntity?.Uid;
 
         private SessionStatus _status = SessionStatus.Connecting;
 
@@ -57,7 +51,16 @@ namespace Robust.Server.Player
         public SessionStatus Status
         {
             get => _status;
-            set => OnPlayerStatusChanged(_status, value);
+            set
+            {
+                if (_status == value)
+                    return;
+
+                _status = value;
+                UpdatePlayerState();
+
+                PlayerStatusChanged?.Invoke(this, new SessionStatusEventArgs(this, _status, value));
+            }
         }
 
         /// <inheritdoc />
@@ -68,22 +71,10 @@ namespace Robust.Server.Player
         public NetSessionId SessionId { get; }
 
         readonly PlayerData _data;
-        [ViewVariables]
-        public IPlayerData Data => _data;
+        [ViewVariables] public IPlayerData Data => _data;
 
         /// <inheritdoc />
         public event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
-
-        private void OnPlayerStatusChanged(SessionStatus oldStatus, SessionStatus newStatus)
-        {
-            if (oldStatus == newStatus)
-                return;
-
-            _status = newStatus;
-            UpdatePlayerState();
-
-            PlayerStatusChanged?.Invoke(this, new SessionStatusEventArgs(this, oldStatus, newStatus));
-        }
 
         /// <inheritdoc />
         public void AttachToEntity(IEntity a)
@@ -107,7 +98,7 @@ namespace Robust.Server.Player
         /// <inheritdoc />
         public void DetachFromEntity()
         {
-            if(AttachedEntity == null)
+            if (AttachedEntity == null)
                 return;
 
             if (AttachedEntity.Deleted)
@@ -127,7 +118,6 @@ namespace Robust.Server.Player
             {
                 throw new InvalidOperationException("Tried to detach player, but entity does not have ActorComponent!");
             }
-
         }
 
         /// <inheritdoc />

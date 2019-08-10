@@ -76,8 +76,7 @@ namespace Robust.Client.UserInterface
             DebugConsole = new DebugConsole(_console, _resourceManager);
             RootControl.AddChild(DebugConsole);
 
-            _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager,
-                _resourceCache, _stateManager, _displayManager, _netManager, _mapManager);
+            _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager, _displayManager, _netManager, _mapManager);
             RootControl.AddChild(_debugMonitors);
 
             _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugConsole,

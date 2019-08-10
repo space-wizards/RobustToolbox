@@ -58,9 +58,11 @@ Total Allocated: {FormatBytes(GC.GetTotalMemory(false))}";
 #endif
         }
 
+#if NETCOREAPP
         private static string FormatBytes(long bytes)
         {
             return $"{bytes / 1024} KiB";
         }
+#endif
     }
 }

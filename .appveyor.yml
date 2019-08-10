@@ -24,7 +24,7 @@ before_build:
 - ps: >
     if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER -And $env:APPVEYOR_REPO_BRANCH -Eq "master")
     {
-      SonarScanner.MSBuild.exe begin /k:"ss14" /d:"sonar.host.url=https://sonarqube.com" /d:"sonar.login=$env:sonarqubekey" /o:"space-wizards" /d:"sonar.exclusions=SFML/**" /d:sonar.cs.nunit.reportsPaths="$(Get-Location)\nunitTestResult.xml";
+      SonarScanner.MSBuild.exe begin /k:"ss14" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.login=$env:sonarqubekey" /o:"space-wizards" /d:sonar.cs.nunit.reportsPaths="$(Get-Location)\nunitTestResult.xml";
     }
 
 platform: x64

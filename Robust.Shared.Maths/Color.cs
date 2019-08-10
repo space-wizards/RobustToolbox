@@ -25,7 +25,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using SysVector3 = System.Numerics.Vector3;
+using SysVector4 = System.Numerics.Vector4;
 
 namespace Robust.Shared.Maths
 {
@@ -253,7 +256,22 @@ namespace Robust.Shared.Maths
         public static Color FromSrgb(Color srgb)
         {
             float r, g, b;
+#if NETCOREAPP
+            if (srgb.R <= 0.04045f)
+                r = srgb.R / 12.92f;
+            else
+                r = MathF.Pow((srgb.R + 0.055f) / (1.0f + 0.055f), 2.4f);
 
+            if (srgb.G <= 0.04045f)
+                g = srgb.G / 12.92f;
+            else
+                g = MathF.Pow((srgb.G + 0.055f) / (1.0f + 0.055f), 2.4f);
+
+            if (srgb.B <= 0.04045f)
+                b = srgb.B / 12.92f;
+            else
+                b = MathF.Pow((srgb.B + 0.055f) / (1.0f + 0.055f), 2.4f);
+#else
             if (srgb.R <= 0.04045f)
                 r = srgb.R / 12.92f;
             else
@@ -268,6 +286,7 @@ namespace Robust.Shared.Maths
                 b = srgb.B / 12.92f;
             else
                 b = (float) Math.Pow((srgb.B + 0.055f) / (1.0f + 0.055f), 2.4f);
+#endif
 
             return new Color(r, g, b, srgb.A);
         }
@@ -283,6 +302,22 @@ namespace Robust.Shared.Maths
         {
             float r, g, b;
 
+#if NETCOREAPP
+            if (rgb.R <= 0.0031308)
+                r = 12.92f * rgb.R;
+            else
+                r = (1.0f + 0.055f) * MathF.Pow(rgb.R, 1.0f / 2.4f) - 0.055f;
+
+            if (rgb.G <= 0.0031308)
+                g = 12.92f * rgb.G;
+            else
+                g = (1.0f + 0.055f) * MathF.Pow(rgb.G, 1.0f / 2.4f) - 0.055f;
+
+            if (rgb.B <= 0.0031308)
+                b = 12.92f * rgb.B;
+            else
+                b = (1.0f + 0.055f) * MathF.Pow(rgb.B, 1.0f / 2.4f) - 0.055f;
+#else
             if (rgb.R <= 0.0031308)
                 r = 12.92f * rgb.R;
             else
@@ -297,6 +332,7 @@ namespace Robust.Shared.Maths
                 b = 12.92f * rgb.B;
             else
                 b = (1.0f + 0.055f) * (float) Math.Pow(rgb.B, 1.0f / 2.4f) - 0.055f;
+#endif
 
             return new Color(r, g, b, rgb.A);
         }
@@ -696,26 +732,21 @@ namespace Robust.Shared.Maths
         ///     Interpolate two colors with a lambda, AKA returning the two colors combined with a ratio of
         ///     <paramref name="lambda" />.
         /// </summary>
-        /// <remarks>
-        ///     This method is opposite of GLSL's <c>mix()</c> function.
-        /// </remarks>
         /// <param name="endPoint1"></param>
         /// <param name="endPoint2"></param>
         /// <param name="lambda">
-        ///     A value ranging from 0-1. The higher the value the more is taken from <paramref name="endPoint1" />,
-        ///     with 0.5 being 50% of both colors, 0.25 being 25% of <paramref name="endPoint1" /> and 75%
-        ///     <paramref name="endPoint2" />.
+        ///     A value ranging from 0-1. The higher the value the more is taken from <paramref name="endPoint2" />,
+        ///     with 0.5 being 50% of both colors, 0.25 being 25% of <paramref name="endPoint2" /> and 75%
+        ///     <paramref name="endPoint1" />.
         /// </param>
-        public static Color InterpolateBetween(Color endPoint1, Color endPoint2, double lambda)
+        public static unsafe Color InterpolateBetween(in Color endPoint1, in Color endPoint2, float lambda)
         {
-            if (lambda < 0 || lambda > 1)
-                throw new ArgumentOutOfRangeException(nameof(lambda));
-            return new Color(
-                (float) (endPoint1.R * lambda + endPoint2.R * (1 - lambda)),
-                (float) (endPoint1.G * lambda + endPoint2.G * (1 - lambda)),
-                (float) (endPoint1.B * lambda + endPoint2.B * (1 - lambda)),
-                (float) (endPoint1.A * lambda + endPoint2.A * (1 - lambda))
-            );
+            ref var sv1 = ref Unsafe.As<Color, SysVector4>(ref Unsafe.AsRef(endPoint1));
+            ref var sv2 = ref Unsafe.As<Color, SysVector4>(ref Unsafe.AsRef(endPoint2));
+
+            var res = SysVector4.Lerp(sv1, sv2, lambda);
+
+            return Unsafe.As<SysVector4, Color>(ref res);
         }
 
         public static Color FromHex(string hexColor, Color? fallback = null)
@@ -763,10 +794,10 @@ namespace Robust.Shared.Maths
 
         public static Color Blend(Color dstColor, Color srcColor, BlendFactor dstFactor, BlendFactor srcFactor)
         {
-            var dst = new Vector3(dstColor.R, dstColor.G, dstColor.B);
-            var src = new Vector3(srcColor.R, srcColor.G, srcColor.B);
+            var dst = new SysVector3(dstColor.R, dstColor.G, dstColor.B);
+            var src = new SysVector3(srcColor.R, srcColor.G, srcColor.B);
 
-            var ret = new Vector3();
+            var ret = new SysVector3();
 
             switch (dstFactor)
             {
@@ -779,13 +810,13 @@ namespace Robust.Shared.Maths
                     ret = dst * src;
                     break;
                 case BlendFactor.OneMinusSrcColor:
-                    ret = dst * (Vector3.One - src);
+                    ret = dst * (SysVector3.One - src);
                     break;
                 case BlendFactor.DstColor:
                     ret = dst * dst;
                     break;
                 case BlendFactor.OneMinusDstColor:
-                    ret = dst * (Vector3.One - dst);
+                    ret = dst * (SysVector3.One - dst);
                     break;
                 case BlendFactor.SrcAlpha:
                     ret = dst * srcColor.A;
@@ -814,13 +845,13 @@ namespace Robust.Shared.Maths
                     ret += src * src;
                     break;
                 case BlendFactor.OneMinusSrcColor:
-                    ret += src * (Vector3.One - src);
+                    ret += src * (SysVector3.One - src);
                     break;
                 case BlendFactor.DstColor:
                     ret += src * dst;
                     break;
                 case BlendFactor.OneMinusDstColor:
-                    ret += src * (Vector3.One - dst);
+                    ret += src * (SysVector3.One - dst);
                     break;
                 case BlendFactor.SrcAlpha:
                     ret += src * srcColor.A;

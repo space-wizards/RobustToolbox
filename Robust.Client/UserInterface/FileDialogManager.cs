@@ -35,7 +35,7 @@ namespace Robust.Client.UserInterface
 
         static FileDialogManager()
         {
-            DllMapHelper.RegisterSimpleMap(typeof(NoiseGenerator).Assembly, "swnfd");
+            DllMapHelper.RegisterSimpleMap(typeof(FileDialogManager).Assembly, "swnfd");
         }
 
         public async Task<string> OpenFile()

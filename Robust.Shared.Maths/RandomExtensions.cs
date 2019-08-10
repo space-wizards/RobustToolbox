@@ -30,7 +30,10 @@ namespace Robust.Shared.Maths
 
         public static float NextFloat(this Random random)
         {
-            return (float)random.NextDouble();
+            // This is pretty much the CoreFX implementation.
+            // So credits to that.
+            // Except using float instead of double.
+            return random.Next() * 4.6566128752458E-10f;
         }
 
         /// <summary>

@@ -54,7 +54,11 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Gets the length (magnitude) of the vector.
         /// </summary>
+#if NETCOREAPP
+        public float Length => MathF.Sqrt(LengthSquared);
+#else
         public float Length => (float) Math.Sqrt(LengthSquared);
+#endif
 
         /// <summary>
         ///     Gets the squared length of the vector.

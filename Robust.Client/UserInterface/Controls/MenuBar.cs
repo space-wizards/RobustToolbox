@@ -222,7 +222,7 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public abstract class MenuEntry
         {
-            internal MenuEntry()
+            private protected MenuEntry()
             {
             }
         }

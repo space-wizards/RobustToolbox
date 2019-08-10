@@ -925,7 +925,7 @@ namespace Robust.Client.GameObjects
             }
 
             var theLayer = Layers[layer];
-            if (theLayer.State == null)
+            if (theLayer.State.IsValid)
             {
                 return;
             }

@@ -24,7 +24,6 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IPlayerManager playerManager;
         private readonly IEyeManager eyeManager;
         private readonly IInputManager inputManager;
-        private readonly IResourceCache resourceCache;
         private readonly IStateManager stateManager;
         private readonly IClyde _displayManager;
         private readonly IMapManager _mapManager;
@@ -35,7 +34,6 @@ namespace Robust.Client.UserInterface.CustomControls
         public DebugCoordsPanel(IPlayerManager playerMan,
             IEyeManager eyeMan,
             IInputManager inputMan,
-            IResourceCache resCache,
             IStateManager stateMan,
             IClyde displayMan,
             IMapManager mapMan)
@@ -43,7 +41,6 @@ namespace Robust.Client.UserInterface.CustomControls
             playerManager = playerMan;
             eyeManager = eyeMan;
             inputManager = inputMan;
-            resourceCache = resCache;
             stateManager = stateMan;
             _displayManager = displayMan;
             _mapManager = mapMan;

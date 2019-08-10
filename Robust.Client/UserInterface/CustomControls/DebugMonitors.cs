@@ -32,20 +32,18 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IPlayerManager _playerManager;
         private readonly IEyeManager _eyeManager;
         private readonly IInputManager _inputManager;
-        private readonly IResourceCache _resourceCache;
         private readonly IStateManager _stateManager;
         private readonly IClyde _displayManager;
         private readonly IClientNetManager _netManager;
         private readonly IMapManager _mapManager;
 
         //TODO: Think about a factory for this
-        public DebugMonitors(IGameTiming gameTiming, IPlayerManager playerManager, IEyeManager eyeManager, IInputManager inputManager, IResourceCache resourceCache, IStateManager stateManager, IClyde displayManager, IClientNetManager netManager, IMapManager mapManager)
+        public DebugMonitors(IGameTiming gameTiming, IPlayerManager playerManager, IEyeManager eyeManager, IInputManager inputManager, IStateManager stateManager, IClyde displayManager, IClientNetManager netManager, IMapManager mapManager)
         {
             _gameTiming = gameTiming;
             _playerManager = playerManager;
             _eyeManager = eyeManager;
             _inputManager = inputManager;
-            _resourceCache = resourceCache;
             _stateManager = stateManager;
             _displayManager = displayManager;
             _netManager = netManager;
@@ -71,14 +69,13 @@ namespace Robust.Client.UserInterface.CustomControls
             _fpsCounter = new FpsCounter(_gameTiming);
             AddChild(_fpsCounter);
 
-            _debugCoordsPanel = new DebugCoordsPanel(_playerManager, _eyeManager, _inputManager,
-                _resourceCache, _stateManager, _displayManager, _mapManager);
+            _debugCoordsPanel = new DebugCoordsPanel(_playerManager, _eyeManager, _inputManager, _stateManager, _displayManager, _mapManager);
             AddChild(_debugCoordsPanel);
 
-            _debugNetPanel = new DebugNetPanel(_netManager, _gameTiming, _resourceCache);
+            _debugNetPanel = new DebugNetPanel(_netManager, _gameTiming);
             AddChild(_debugNetPanel);
 
-            _timeDebug = new DebugTimePanel(_resourceCache, _gameTiming)
+            _timeDebug = new DebugTimePanel(_gameTiming)
             {
                 Visible = false,
             };

@@ -26,7 +26,9 @@ namespace Robust.Client.ResourceManagement
 
             var loadParameters = _tryLoadTextureParameters(cache, path) ?? TextureLoadParameters.Default;
 
-            _loadOpenGL(cache, stream, path, loadParameters);
+            var manager = IoCManager.Resolve<IClyde>();
+
+            Texture = manager.LoadTextureFromPNGStream(stream, path.ToString(), loadParameters);
         }
 
         private static TextureLoadParameters? _tryLoadTextureParameters(IResourceCache cache, ResourcePath path)
@@ -50,13 +52,6 @@ namespace Robust.Client.ResourceManagement
                 return TextureLoadParameters.FromYaml((YamlMappingNode)yamlData.RootNode);
             }
             return null;
-        }
-
-        private void _loadOpenGL(IResourceCache cache, Stream stream, ResourcePath path, TextureLoadParameters? parameters)
-        {
-            var manager = IoCManager.Resolve<IClyde>();
-
-            Texture = manager.LoadTextureFromPNGStream(stream, path.ToString(), parameters);
         }
 
         public static implicit operator Texture(TextureResource res)

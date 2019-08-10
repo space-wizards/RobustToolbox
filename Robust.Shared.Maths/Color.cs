@@ -29,6 +29,10 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using SysVector3 = System.Numerics.Vector3;
 using SysVector4 = System.Numerics.Vector4;
+#if NETCOREAPP
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+#endif
 
 namespace Robust.Shared.Maths
 {
@@ -730,24 +734,45 @@ namespace Robust.Shared.Maths
 
         /// <summary>
         ///     Interpolate two colors with a lambda, AKA returning the two colors combined with a ratio of
-        ///     <paramref name="lambda" />.
+        ///     <paramref name="λ" />.
         /// </summary>
-        /// <param name="endPoint1"></param>
-        /// <param name="endPoint2"></param>
-        /// <param name="lambda">
-        ///     A value ranging from 0-1. The higher the value the more is taken from <paramref name="endPoint2" />,
-        ///     with 0.5 being 50% of both colors, 0.25 being 25% of <paramref name="endPoint2" /> and 75%
-        ///     <paramref name="endPoint1" />.
+        /// <param name="α"></param>
+        /// <param name="β"></param>
+        /// <param name="λ">
+        ///     A value ranging from 0-1. The higher the value the more is taken from <paramref name="β" />,
+        ///     with 0.5 being 50% of both colors, 0.25 being 25% of <paramref name="β" /> and 75%
+        ///     <paramref name="α" />.
         /// </param>
-        public static unsafe Color InterpolateBetween(in Color endPoint1, in Color endPoint2, float lambda)
+#if NETCOREAPP
+        public static Color InterpolateBetween(Color α, Color β, float λ)
         {
-            ref var sv1 = ref Unsafe.As<Color, SysVector4>(ref Unsafe.AsRef(endPoint1));
-            ref var sv2 = ref Unsafe.As<Color, SysVector4>(ref Unsafe.AsRef(endPoint2));
+            if (Sse.IsSupported && Fma.IsSupported)
+            {
+                var vecA = Unsafe.As<Color, Vector128<float>>(ref α);
+                var vecB = Unsafe.As<Color, Vector128<float>>(ref β);
 
-            var res = SysVector4.Lerp(sv1, sv2, lambda);
+                vecB = Fma.MultiplyAdd(Sse.Subtract(vecB, vecA), Vector128.Create(λ), vecA);
+
+                return Unsafe.As<Vector128<float>, Color>(ref vecB);
+            }
+            ref var svA = ref Unsafe.As<Color, SysVector4>(ref α);
+            ref var svB = ref Unsafe.As<Color, SysVector4>(ref β);
+
+            var res = SysVector4.Lerp(svA, svB, λ);
 
             return Unsafe.As<SysVector4, Color>(ref res);
         }
+#else
+        public static Color InterpolateBetween(in Color α, in Color β, float λ)
+        {
+            ref var svA = ref Unsafe.As<Color, SysVector4>(ref Unsafe.AsRef(α));
+            ref var svB = ref Unsafe.As<Color, SysVector4>(ref Unsafe.AsRef(β));
+
+            var res = SysVector4.Lerp(svA, svB, λ);
+
+            return Unsafe.As<SysVector4, Color>(ref res);
+        }
+#endif
 
         public static Color FromHex(string hexColor, Color? fallback = null)
         {

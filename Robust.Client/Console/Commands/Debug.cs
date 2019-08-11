@@ -101,7 +101,7 @@ namespace Robust.Client.Console.Commands
     internal class ToggleMonitorCommand : IConsoleCommand
     {
         public string Command => "monitor";
-        public string Help => "Usage: monitor <name>\nPossible monitors are: fps, net, coord, time";
+        public string Help => "Usage: monitor <name>\nPossible monitors are: fps, net, coord, time, frames, mem";
         public string Description => "Toggles a debug monitor in the F3 menu.";
 
         public bool Execute(IDebugConsole console, params string[] args)

@@ -204,7 +204,7 @@ namespace Robust.Shared.Prototypes
         {
             foreach (var filePath in _resources.ContentFindFiles(path))
             {
-                if (filePath.Extension != "yml")
+                if (filePath.Extension != "yml" || filePath.Filename.StartsWith('.'))
                 {
                     continue;
                 }

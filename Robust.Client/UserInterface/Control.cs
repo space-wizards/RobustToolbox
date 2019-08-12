@@ -143,7 +143,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Specifies the anchor of the bottom edge of the control.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public float AnchorBottom
         {
             get => _anchorBottom;
@@ -157,7 +157,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Specifies the anchor of the left edge of the control.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public float AnchorLeft
         {
             get => _anchorLeft;
@@ -171,7 +171,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Specifies the anchor of the right edge of the control.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public float AnchorRight
         {
             get => _anchorRight;
@@ -185,7 +185,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Specifies the anchor of the top edge of the control.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public float AnchorTop
         {
             get => _anchorTop;
@@ -199,7 +199,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Specifies the margin of the right edge of the control.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public float MarginRight
         {
             get => _marginRight;
@@ -213,7 +213,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Specifies the margin of the left edge of the control.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public float MarginLeft
         {
             get => _marginLeft;
@@ -227,7 +227,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Specifies the margin of the top edge of the control.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public float MarginTop
         {
             get => _marginTop;
@@ -241,7 +241,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Specifies the margin of the bottom edge of the control.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public float MarginBottom
         {
             get => _marginBottom;
@@ -284,7 +284,7 @@ namespace Robust.Client.UserInterface
         ///     Whether or not this control and its children are visible.
         /// </summary>
         /// <seealso cref="VisibleInTree"/>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool Visible
         {
             get => _visible;
@@ -322,6 +322,7 @@ namespace Robust.Client.UserInterface
         ///     Whether or not this control is an (possibly indirect) child of
         ///     <see cref="IUserInterfaceManager.RootControl"/>
         /// </summary>
+        [ViewVariables]
         public bool IsInsideTree { get; internal set; }
 
         private void _propagateExitTree()
@@ -385,6 +386,7 @@ namespace Robust.Client.UserInterface
         ///     The amount of "real" pixels a virtual pixel takes up.
         ///     The higher the number, the bigger the interface.
         /// </summary>
+        [ViewVariables]
         protected float UIScale => UserInterfaceManager.UIScale;
 
         /// <summary>
@@ -393,7 +395,7 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="PixelSize"/>
         /// <seealso cref="Width"/>
         /// <seealso cref="Height"/>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Size
         {
             get => _size;
@@ -455,7 +457,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         /// <seealso cref="PixelPosition"/>
         /// <seealso cref="GlobalPosition"/>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Position
         {
             get => _position;
@@ -545,7 +547,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     The mode that controls how mouse filtering works. See the enum for how it functions.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public MouseFilterMode MouseFilter { get; set; } = MouseFilterMode.Stop;
 
         /// <summary>
@@ -553,7 +555,7 @@ namespace Robust.Client.UserInterface
         ///     Keyboard focus is necessary for the control to receive keyboard events.
         /// </summary>
         /// <seealso cref="KeyboardFocusOnClick"/>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool CanKeyboardFocus
         {
             get => _canKeyboardFocus;
@@ -693,6 +695,7 @@ namespace Robust.Client.UserInterface
         ///     So the problem is, how do we know where to stop trying to draw the control if it's clipped away?
         /// </remarks>
         /// <seealso cref="RectClipContent"/>
+        [ViewVariables(VVAccess.ReadWrite)]
         public int RectDrawClipMargin { get; set; } = 10;
 
         // You may wonder why Modulate isn't stylesheet controlled, but ModulateSelf is.
@@ -703,6 +706,7 @@ namespace Robust.Client.UserInterface
         ///     An override for the modulate self from the style sheet.
         /// </summary>
         /// <seealso cref="ActualModulateSelf" />
+        [ViewVariables(VVAccess.ReadWrite)]
         public Color? ModulateSelfOverride { get; set; }
 
         /// <summary>
@@ -711,6 +715,7 @@ namespace Robust.Client.UserInterface
         /// <remarks>
         ///     Modulation is multiplying or tinting the color basically.
         /// </remarks>
+        [ViewVariables(VVAccess.ReadWrite)]
         public Color Modulate { get; set; } = Color.White;
 
         /// <summary>

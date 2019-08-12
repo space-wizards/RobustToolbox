@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.ResourceManagement;
@@ -215,6 +216,7 @@ namespace Robust.Client.State.States
             public Button DirectConnectButton { get; private set; }
             public Button OptionsButton { get; private set; }
             public Button QuitButton { get; private set; }
+            public Label VersionLabel { get; private set; }
 
             public MainMenuControl(IResourceCache resCache, IConfigurationManager configMan)
             {
@@ -315,6 +317,16 @@ namespace Robust.Client.State.States
                 };
 
                 vBox.AddChild(QuitButton);
+
+                VersionLabel = new Label
+                {
+                    GrowHorizontal = GrowDirection.Begin,
+                    GrowVertical = GrowDirection.Begin,
+                    Text = $"v0.1"
+                };
+
+                AddChild(VersionLabel);
+                VersionLabel.SetAnchorAndMarginPreset(LayoutPreset.BottomRight);
             }
         }
     }

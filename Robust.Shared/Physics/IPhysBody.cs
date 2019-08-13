@@ -25,27 +25,29 @@ namespace Robust.Shared.Physics
         /// </summary>
         Box2 AABB { get; }
 
-        IPhysShape PhysicsShape { get; }
+        List<IPhysShape> PhysicsShapes { get; }
 
         /// <summary>
-        ///     Enables or disabled collision processing of this body.
+        /// Enables or disabled collision processing of this body.
         /// </summary>
         bool CollisionEnabled { get; set; }
 
         /// <summary>
-        ///     True if collisions should prevent movement, or just trigger bumps.
+        /// True if collisions should prevent movement, or just trigger bumps.
         /// </summary>
         bool IsHardCollidable { get; set; }
 
         /// <summary>
-        ///     Bitmask of the collision layers this component is a part of.
+        /// Bitmask of the collision layers this body is a part of. The layers are calculated from
+        /// all of the shapes of this body.
         /// </summary>
-        int CollisionLayer { get; set; }
+        int CollisionLayer { get; }
 
         /// <summary>
-        ///     Bitmask of the layers this component collides with.
+        /// Bitmask of the layers this body collides with. The mask is calculated from
+        /// all of the shapes of this body.
         /// </summary>
-        int CollisionMask { get; set; }
+        int CollisionMask { get; }
 
         /// <summary>
         /// Called when the physBody is bumped into by someone/something

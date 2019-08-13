@@ -13,6 +13,7 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.Client.Debugging
 {
+    /// <inheritdoc />
     public class DebugDrawing : IDebugDrawing
     {
 #pragma warning disable 649
@@ -26,6 +27,7 @@ namespace Robust.Client.Debugging
         private bool _debugColliders;
         private bool _debugPositions;
 
+        /// <inheritdoc />
         public bool DebugColliders
         {
             get => _debugColliders;
@@ -50,6 +52,7 @@ namespace Robust.Client.Debugging
             }
         }
 
+        /// <inheritdoc />
         public bool DebugPositions
         {
             get => _debugPositions;
@@ -106,14 +109,24 @@ namespace Robust.Client.Debugging
                         continue;
 
                     var worldBox = boundingBox.WorldAABB;
-                    var colorFill = Color.Red.WithAlpha(0.25f);
+                    var colorFill = Color.Green.WithAlpha(0.25f);
                     var colorEdge = Color.Red.WithAlpha(0.33f);
 
                     // if not on screen, or too small, continue
                     if (!worldBox.Intersects(viewport) || worldBox.IsEmpty())
                         continue;
 
-                    worldHandle.DrawRect(worldBox, colorFill);
+                    foreach (var shape in boundingBox.PhysicsShapes)
+                    {
+                        if (shape is PhysShapeAabb aabb)
+                        {
+                            // TODO: Add a debug drawing function to IPhysShape
+                            var shapeWorldBox = aabb.CalculateLocalBounds(transform.WorldRotation).Translated(transform.WorldPosition);
+                            worldHandle.DrawRect(shapeWorldBox, colorFill);
+                        }
+                    }
+                    
+                    // draw AABB
                     worldHandle.DrawRect(worldBox, colorEdge, false);
                 }
             }
@@ -139,14 +152,19 @@ namespace Robust.Client.Debugging
                 var worldHandle = (DrawingHandleWorld) handle;
                 foreach (var entity in _entityManager.GetEntities())
                 {
-                    if (entity.Transform.MapID != _eyeManager.CurrentMap)
+                    var transform = entity.Transform;
+                    if (transform.MapID != _eyeManager.CurrentMap ||
+                        !_eyeManager.GetWorldViewport().Contains(transform.WorldPosition))
                     {
                         continue;
                     }
+                    
+                    var center = transform.WorldPosition;
+                    var xLine = transform.WorldRotation.RotateVec(Vector2.UnitX);
+                    var yLine = transform.WorldRotation.RotateVec(Vector2.UnitY);
 
-                    var center = entity.Transform.WorldPosition;
-                    worldHandle.DrawLine(center - (stubLength, 0), center + (stubLength, 0), Color.Red);
-                    worldHandle.DrawLine(center - (0, stubLength), center + (0, stubLength), Color.Green);
+                    worldHandle.DrawLine(center, center + xLine * stubLength, Color.Red);
+                    worldHandle.DrawLine(center, center + yLine * stubLength, Color.Green);
                 }
             }
         }

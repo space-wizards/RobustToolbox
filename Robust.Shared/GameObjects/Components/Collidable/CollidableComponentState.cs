@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 
@@ -9,20 +10,16 @@ namespace Robust.Shared.GameObjects
     {
         public readonly bool CollisionEnabled;
         public readonly bool HardCollidable;
-        public readonly int CollisionLayer;
-        public readonly int CollisionMask;
         public readonly bool ScrapingFloor;
-        public readonly IPhysShape PhysShape;
+        public readonly List<IPhysShape> PhysShapes;
 
-        public CollidableComponentState(bool collisionEnabled, bool hardCollidable, int collisionLayer, int collisionMask, bool scrapingFloor, IPhysShape physShape)
+        public CollidableComponentState(bool collisionEnabled, bool hardCollidable, bool scrapingFloor, List<IPhysShape> physShapes)
             : base(NetIDs.COLLIDABLE)
         {
             CollisionEnabled = collisionEnabled;
             HardCollidable = hardCollidable;
-            CollisionLayer = collisionLayer;
-            CollisionMask = collisionMask;
             ScrapingFloor = scrapingFloor;
-            PhysShape = physShape;
+            PhysShapes = physShapes;
         }
     }
 }

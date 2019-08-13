@@ -1,14 +1,17 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
+using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization
@@ -128,6 +131,14 @@ namespace Robust.Shared.Serialization
 
                 var key = name;
                 var val = value == null ? TypeToNode(defaultValue) : TypeToNode(value);
+
+                // write the concrete type tag
+                if (typeof(T).IsAbstract || typeof(T).IsInterface)
+                {
+                    var concreteType = value == null ? defaultValue.GetType() : value.GetType();
+                    val.Tag = $"type:{concreteType.Name}";
+                }
+
                 WriteMap.Add(key, val);
             }
         }
@@ -455,7 +466,26 @@ namespace Robust.Shared.Serialization
                 {
                     throw new InvalidOperationException("Cannot read from IExposeData on non-mapping node.");
                 }
-                var instance = (IExposeData)Activator.CreateInstance(type);
+
+                var concreteType = type;
+                if (type.IsAbstract || type.IsInterface)
+                {
+                    var tag = node.Tag;
+                    if (string.IsNullOrWhiteSpace(tag))
+                        throw new YamlException($"Type '{type}' is abstract, but there is no yaml tag for the concrete type.");
+
+                    var args = tag.Split(':');
+                    if (args.Length == 2 && args[0] == "!type")
+                    {
+                        concreteType = ResolveConcreteType(type, args[1]);
+                    }
+                    else
+                    {
+                        throw new YamlException($"Malformed type tag.");
+                    }
+                }
+
+                var instance = (IExposeData)Activator.CreateInstance(concreteType);
                 // TODO: Might be worth it to cut down on allocations here by using ourselves instead of creating a fork.
                 // Seems doable.
                 if (_context != null)
@@ -477,6 +507,20 @@ namespace Robust.Shared.Serialization
 
             // ref type that isn't a custom TypeSerializer
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(type));
+        }
+
+        private static Type ResolveConcreteType(Type baseType, string typeName)
+        {
+            var reflection = IoCManager.Resolve<IReflectionManager>();
+            foreach (var derivedType in reflection.GetAllChildren(baseType))
+            {
+                if (derivedType.Name == typeName)
+                {
+                    return derivedType;
+                }
+            }
+
+            throw new YamlException($"Type '{baseType}' is abstract, but could not find concrete type '{typeName}'.");
         }
 
         public YamlNode TypeToNode(object obj)

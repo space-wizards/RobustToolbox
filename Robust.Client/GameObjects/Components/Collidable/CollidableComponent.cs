@@ -21,7 +21,7 @@ namespace Robust.Client.GameObjects
 
         private bool _collisionIsActuallyEnabled;
         private bool _collisionEnabled;
-        private IPhysShape _physShapeAabb;
+        private List<IPhysShape> _physShapes;
 
         /// <inheritdoc />
         public override string Name => "Collidable";
@@ -38,9 +38,8 @@ namespace Robust.Client.GameObjects
         {
             get
             {
-                var angle = Owner.Transform.WorldRotation;
                 var pos = Owner.Transform.WorldPosition;
-                return _physShapeAabb.CalculateLocalBounds(angle).Translated(pos);
+                return ((IPhysBody) this).AABB.Translated(pos);
             }
         }
 
@@ -51,15 +50,23 @@ namespace Robust.Client.GameObjects
             get
             {
                 var angle = Owner.Transform.WorldRotation;
-                return _physShapeAabb.CalculateLocalBounds(angle);
+                var bounds = new Box2();
+
+                foreach (var shape in _physShapes)
+                {
+                    var shapeBounds = shape.CalculateLocalBounds(angle);
+                    bounds = bounds.IsEmpty() ? shapeBounds : bounds.Union(shapeBounds);
+                }
+
+                return bounds;
             }
         }
 
         /// <inheritdoc />
         [ViewVariables]
-        public IPhysShape PhysicsShape
+        public List<IPhysShape> PhysicsShapes
         {
-            get => _physShapeAabb;
+            get => _physShapes;
         }
 
         /// <inheritdoc />
@@ -127,8 +134,8 @@ namespace Robust.Client.GameObjects
             base.Initialize();
 
             // normally ExposeData would create this
-            if(_physShapeAabb == null)
-                _physShapeAabb = new PhysShapeAabb();
+            if(_physShapes == null)
+                _physShapes = new List<IPhysShape>{new PhysShapeAabb()};
 
             if (_collisionEnabled && !_collisionIsActuallyEnabled)
             {
@@ -167,7 +174,7 @@ namespace Robust.Client.GameObjects
             else
                 DisableCollision();
 
-            _physShapeAabb = newState.PhysShape;
+            _physShapes = newState.PhysShapes;
         }
 
         /// <inheritdoc />

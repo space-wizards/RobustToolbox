@@ -254,7 +254,8 @@ namespace Robust.Server
             {
                 _mainLoop = new GameLoop(_time)
                 {
-                    SleepMode = SleepMode.Delay
+                    SleepMode = SleepMode.Delay,
+                    DetectSoftLock = true
                 };
             }
 

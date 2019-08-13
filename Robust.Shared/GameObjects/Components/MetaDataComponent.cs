@@ -145,14 +145,14 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new MetaDataComponentState(_entityName, _entityDescription, EntityPrototype.ID);
+            return new MetaDataComponentState(_entityName, _entityDescription, EntityPrototype?.ID);
         }
 
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
             base.HandleComponentState(curState, nextState);
-            
+
             if (!(curState is MetaDataComponentState state))
                 return;
 

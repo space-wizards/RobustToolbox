@@ -40,6 +40,7 @@ namespace Robust.Client.UserInterface.CustomControls
             "AlignTileNonDense",
             "AlignTileDense",
             "AlignWall",
+            "AlignWallProper",
         };
 
         private const int TARGET_ICON_HEIGHT = 32;

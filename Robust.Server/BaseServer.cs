@@ -1,25 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
 using Robust.Server.Console;
-using Robust.Server.GameStates;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.GameState;
 using Robust.Server.Interfaces.Placement;
 using Robust.Server.Interfaces.Player;
-using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
-using Robust.Shared.GameStates;
-using Robust.Shared.Interfaces;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -29,17 +20,10 @@ using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Network;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Map;
-using Robust.Server.Interfaces.Maps;
 using Robust.Server.Interfaces.ServerStatus;
-using Robust.Server.Player;
 using Robust.Server.ViewVariables;
 using Robust.Shared.Asynchronous;
-using Robust.Shared.Enums;
-using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.Interfaces.Log;
@@ -109,7 +93,7 @@ namespace Robust.Server
         /// <inheritdoc />
         public void Restart()
         {
-            Logger.Info("[SRV] Restarting Server...");
+            Logger.InfoS("srv", "Restarting Server...");
 
             Cleanup();
             Start();
@@ -119,9 +103,9 @@ namespace Robust.Server
         public void Shutdown(string reason)
         {
             if (string.IsNullOrWhiteSpace(reason))
-                Logger.Info("[SRV] Shutting down...");
+                Logger.InfoS("srv", "Shutting down...");
             else
-                Logger.Info($"[SRV] {reason}, shutting down...");
+                Logger.InfoS("srv", $"{reason}, shutting down...");
 
             _mainLoop.Running = false;
             _log.RootSawmill.RemoveHandler(fileLogHandler);

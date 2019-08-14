@@ -14,10 +14,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public CheckBox()
         {
-        }
-
-        public CheckBox(string name) : base(name)
-        {
+            ToggleMode = true;
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)
@@ -67,13 +64,6 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             return 0;
-        }
-
-        protected override void SetDefaults()
-        {
-            base.SetDefaults();
-
-            ToggleMode = true;
         }
     }
 }

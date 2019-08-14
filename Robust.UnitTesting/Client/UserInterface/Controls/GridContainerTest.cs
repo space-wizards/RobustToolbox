@@ -32,6 +32,8 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             grid.AddChild(child4);
             grid.AddChild(child5);
 
+            grid.ForceRunLayoutUpdate();
+
             Assert.That(grid.CombinedMinimumSize, Is.EqualTo(new Vector2(104, 158)));
 
             Assert.That(child1.Position, Is.EqualTo(Vector2.Zero));
@@ -56,6 +58,8 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             grid.AddChild(child3);
             grid.AddChild(child4);
             grid.AddChild(child5);
+
+            grid.ForceRunLayoutUpdate();
 
             Assert.That(child1.Position, Is.EqualTo(Vector2.Zero));
             Assert.That(child1.Size, Is.EqualTo(new Vector2(146, 50)));

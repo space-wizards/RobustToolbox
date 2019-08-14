@@ -1,7 +1,6 @@
 ﻿using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Input;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Player;
@@ -49,12 +48,6 @@ namespace Robust.Client.UserInterface.CustomControls
             _netManager = netManager;
             _mapManager = mapManager;
 
-            PerformLayout();
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
             MouseFilter = MouseFilterMode.Ignore;
             Visible = false;
 
@@ -62,10 +55,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             MarginLeft = 2;
             MarginTop = 2;
-        }
 
-        private void PerformLayout()
-        {
             _fpsCounter = new FpsCounter(_gameTiming);
             AddChild(_fpsCounter);
 

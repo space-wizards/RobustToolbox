@@ -43,6 +43,9 @@ namespace Robust.UnitTesting.Client.UserInterface
             var control = new Control {Size = new Vector2(100, 100)};
             var child = new Control {AnchorRight = 1, AnchorBottom = 1};
             control.AddChild(child);
+
+            control.ForceRunLayoutUpdate();
+
             Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
             Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
 
@@ -87,6 +90,8 @@ namespace Robust.UnitTesting.Client.UserInterface
             };
 
             control.AddChild(child);
+            control.ForceRunLayoutUpdate();
+
             Assert.That(child.Position, Is.EqualTo(new Vector2(10, 10)));
             Assert.That(child.Size, Is.EqualTo(new Vector2(80, 80)));
         }
@@ -98,6 +103,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             var child = new Control();
 
             control.AddChild(child);
+            control.ForceRunLayoutUpdate();
 
             Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
             Assert.That(child.Size, Is.EqualTo(Vector2.Zero));
@@ -129,6 +135,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             var control = new Control {Size = new Vector2(100, 100)};
             var child = new Control {CustomMinimumSize = new Vector2(30, 30)};
             control.AddChild(child);
+            control.ForceRunLayoutUpdate();
 
             Assert.That(child.Size, Is.EqualTo(new Vector2(30, 30)));
 
@@ -198,6 +205,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             var parent = new Control {Size = (50, 50)};
             var child = new Control();
             parent.AddChild(child);
+            parent.ForceRunLayoutUpdate();
 
             // Child should be at 0,0.
             Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
@@ -205,6 +213,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             // Making the child have a bigger minimum size should grow it to the bottom left.
             // i.e. size should change, position should not.
             child.CustomMinimumSize = (100, 100);
+            parent.ForceRunLayoutUpdate();
 
             Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
             Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
@@ -217,6 +226,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             var parent = new Control {Size = (50, 50)};
             var child = new Control {GrowHorizontal = Control.GrowDirection.Begin};
             parent.AddChild(child);
+            parent.ForceRunLayoutUpdate();
 
             // Child should be at 0,0.
             Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
@@ -224,6 +234,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             // Making the child have a bigger minimum size should grow it to the bottom right.
             // i.e. size should change, position should not.
             child.CustomMinimumSize = (100, 100);
+            parent.ForceRunLayoutUpdate();
 
             Assert.That(child.Position, Is.EqualTo(new Vector2(-100, 0)));
             Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
@@ -236,11 +247,13 @@ namespace Robust.UnitTesting.Client.UserInterface
             var parent = new Control {Size = (50, 50)};
             var child = new Control {GrowHorizontal = Control.GrowDirection.Both};
             parent.AddChild(child);
+            parent.ForceRunLayoutUpdate();
 
             // Child should be at 0,0.
             Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
 
             child.CustomMinimumSize = (100, 100);
+            parent.ForceRunLayoutUpdate();
 
             Assert.That(child.Position, Is.EqualTo(new Vector2(-50, 0)));
             Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
@@ -253,16 +266,19 @@ namespace Robust.UnitTesting.Client.UserInterface
             var parent = new Control {Size = (50, 50)};
             var child = new Control();
             parent.AddChild(child);
+            parent.ForceRunLayoutUpdate();
 
             // Child should be at 0,0.
             Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
 
             child.CustomMinimumSize = (100, 100);
+            parent.ForceRunLayoutUpdate();
 
             Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
             Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
 
             child.GrowHorizontal = Control.GrowDirection.Begin;
+            parent.ForceRunLayoutUpdate();
 
             Assert.That(child.Position, Is.EqualTo(new Vector2(-100, 0)));
         }

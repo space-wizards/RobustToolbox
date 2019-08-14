@@ -16,10 +16,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public TextureButton()
         {
-        }
-
-        public TextureButton(string name) : base(name)
-        {
+            DrawModeChanged();
         }
 
         public Texture TextureNormal { get; set; }
@@ -33,13 +30,6 @@ namespace Robust.Client.UserInterface.Controls
                 _scale = value;
                 MinimumSizeChanged();
             }
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-
-            DrawModeChanged();
         }
 
         protected override void DrawModeChanged()

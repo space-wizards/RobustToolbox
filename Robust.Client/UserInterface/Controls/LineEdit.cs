@@ -32,10 +32,9 @@ namespace Robust.Client.UserInterface.Controls
 
         public LineEdit()
         {
-        }
-
-        public LineEdit(string name) : base(name)
-        {
+            MouseFilter = MouseFilterMode.Stop;
+            CanKeyboardFocus = true;
+            KeyboardFocusOnClick = true;
         }
 
         public AlignMode TextAlign { get; set; }
@@ -365,15 +364,6 @@ namespace Robust.Client.UserInterface.Controls
             _cursorBlinkTimer = BlinkTime;
         }
 
-        protected override void SetDefaults()
-        {
-            base.SetDefaults();
-
-            MouseFilter = MouseFilterMode.Stop;
-            CanKeyboardFocus = true;
-            KeyboardFocusOnClick = true;
-        }
-
         [Pure]
         private Font _getFont()
         {
@@ -416,7 +406,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             Left = 0,
             Center = 1,
-            Right = 2,
+            Right = 2
         }
 
         public class LineEditEventArgs : EventArgs

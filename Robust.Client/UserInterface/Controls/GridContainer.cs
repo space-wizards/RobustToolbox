@@ -11,14 +11,6 @@ namespace Robust.Client.UserInterface.Controls
     {
         private int _columns = 1;
 
-        public GridContainer()
-        {
-        }
-
-        public GridContainer(string name) : base(name)
-        {
-        }
-
         /// <summary>
         ///     The amount of columns to organize the children into.
         /// </summary>
@@ -37,7 +29,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 _columns = value;
                 MinimumSizeChanged();
-                SortChildren();
+                QueueSortChildren();
             }
         }
 

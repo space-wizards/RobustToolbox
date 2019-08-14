@@ -14,14 +14,6 @@ namespace Robust.Client.UserInterface.Controls
         private Texture _texture;
         private Vector2 _textureScale = Vector2.One;
 
-        public TextureRect()
-        {
-        }
-
-        public TextureRect(string name) : base(name)
-        {
-        }
-
         /// <summary>
         ///     The texture to draw.
         /// </summary>

@@ -19,6 +19,8 @@ namespace Robust.Client.UserInterface.Controls
         protected ScrollBar(OrientationMode orientation)
         {
             _orientation = orientation;
+
+            MouseFilter = MouseFilterMode.Pass;
         }
 
         public bool IsAtEnd
@@ -41,13 +43,6 @@ namespace Robust.Client.UserInterface.Controls
             var styleBox = _getGrabberStyleBox();
 
             styleBox?.Draw(handle, _getGrabberBox());
-        }
-
-        protected override void SetDefaults()
-        {
-            base.SetDefaults();
-
-            MouseFilter = MouseFilterMode.Pass;
         }
 
         protected internal override void MouseExited()
@@ -128,10 +123,8 @@ namespace Robust.Client.UserInterface.Controls
             {
                 return new UIBox2(grabberOffset, 0, grabberEnd, PixelHeight);
             }
-            else
-            {
-                return new UIBox2(0, grabberOffset, PixelWidth, grabberEnd);
-            }
+
+            return new UIBox2(0, grabberOffset, PixelWidth, grabberEnd);
         }
 
         [System.Diagnostics.Contracts.Pure]
@@ -153,10 +146,8 @@ namespace Robust.Client.UserInterface.Controls
             {
                 return PixelWidth;
             }
-            else
-            {
-                return PixelHeight;
-            }
+
+            return PixelHeight;
         }
 
         private void _updatePseudoClass()
@@ -183,7 +174,7 @@ namespace Robust.Client.UserInterface.Controls
         protected enum OrientationMode
         {
             Horizontal,
-            Vertical,
+            Vertical
         }
     }
 }

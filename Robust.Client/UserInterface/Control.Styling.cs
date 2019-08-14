@@ -72,6 +72,20 @@ namespace Robust.Client.UserInterface
 
         private void Restyle()
         {
+            if (_stylingDirty)
+            {
+                // Already queued for a style update, don't bother.
+                return;
+            }
+
+            _stylingDirty = true;
+
+            UserInterfaceManagerInternal.QueueStyleUpdate(this);
+        }
+
+        internal void DoStyleUpdate()
+        {
+            _stylingDirty = false;
             _styleProperties.Clear();
 
             // TODO: probably gonna need support for multiple stylesheets.
@@ -142,6 +156,16 @@ namespace Robust.Client.UserInterface
         protected virtual void StylePropertiesChanged()
         {
             MinimumSizeChanged();
+        }
+
+        public void ForceRunStyleUpdate()
+        {
+            DoStyleUpdate();
+
+            foreach (var child in Children)
+            {
+                child.ForceRunStyleUpdate();
+            }
         }
 
         public bool TryGetStyleProperty<T>(string param, out T value)

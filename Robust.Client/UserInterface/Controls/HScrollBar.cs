@@ -4,6 +4,7 @@ namespace Robust.Client.UserInterface.Controls
     {
         public HScrollBar() : base(OrientationMode.Horizontal)
         {
+            GrowVertical = GrowDirection.Begin;
         }
     }
 }

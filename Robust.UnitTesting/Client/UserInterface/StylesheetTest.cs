@@ -71,11 +71,16 @@ namespace Robust.UnitTesting.Client.UserInterface
             uiMgr.Stylesheet = sheet;
 
             var control = new Label();
+
             uiMgr.StateRoot.AddChild(control);
+            control.ForceRunStyleUpdate();
+
             control.TryGetStyleProperty("foo", out string value);
             Assert.That(value, Is.EqualTo("bar"));
 
             control.StyleIdentifier = "baz";
+            control.ForceRunStyleUpdate();
+
             control.TryGetStyleProperty("foo", out value);
             Assert.That(value, Is.EqualTo("honk"));
         }

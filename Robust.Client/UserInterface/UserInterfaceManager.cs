@@ -153,13 +153,15 @@ namespace Robust.Client.UserInterface
             RootControl.DoFrameUpdate(args);
 
             // Process queued style & layout updates.
-            while (_styleUpdateQueue.TryDequeue(out var control))
+            while (_styleUpdateQueue.Count != 0)
             {
+                var control = _styleUpdateQueue.Dequeue();
                 control.DoStyleUpdate();
             }
 
-            while (_layoutUpdateQueue.TryDequeue(out var control))
+            while (_layoutUpdateQueue.Count != 0)
             {
+                var control = _layoutUpdateQueue.Dequeue();
                 control.DoLayoutUpdate();
 
                 if (control is Container container)

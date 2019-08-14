@@ -55,13 +55,9 @@ namespace Robust.Client.UserInterface.CustomControls
             this.placementManager = placementManager;
             this.prototypeManager = prototypeManager;
             this.resourceCache = resourceCache;
+
             _loc = loc;
 
-            PerformLayout();
-        }
-
-        private void PerformLayout()
-        {
             Size = new Vector2(250.0f, 300.0f);
             Title = _loc.GetString("Entity Spawn Panel");
 
@@ -133,7 +129,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             BuildEntityList();
 
-            placementManager.PlacementCanceled += OnPlacementCanceled;
+            this.placementManager.PlacementCanceled += OnPlacementCanceled;
         }
 
         protected override void Dispose(bool disposing)
@@ -282,11 +278,9 @@ namespace Robust.Client.UserInterface.CustomControls
             public Label EntityLabel { get; private set; }
             public TextureRect EntityTextureRect { get; private set; }
 
-            protected override void Initialize()
+            public EntitySpawnButton()
             {
-                base.Initialize();
-
-                ActualButton = new Button("Button")
+                ActualButton = new Button
                 {
                     SizeFlagsHorizontal = SizeFlags.FillExpand,
                     SizeFlagsVertical = SizeFlags.FillExpand,
@@ -294,17 +288,17 @@ namespace Robust.Client.UserInterface.CustomControls
                 };
                 AddChild(ActualButton);
 
-                var hBoxContainer = new HBoxContainer("HBoxContainer")
+                var hBoxContainer = new HBoxContainer
                 {
                     MouseFilter = MouseFilterMode.Ignore,
                 };
-                var textureWrap = new Control("TextureWrap")
+                var textureWrap = new Control
                 {
                     CustomMinimumSize = new Vector2(32.0f, 32.0f),
                     MouseFilter = MouseFilterMode.Ignore,
                     RectClipContent = true
                 };
-                EntityTextureRect = new TextureRect("TextureRect")
+                EntityTextureRect = new TextureRect
                 {
                     AnchorRight = 1.0f,
                     AnchorBottom = 1.0f,
@@ -314,7 +308,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 };
                 textureWrap.AddChild(EntityTextureRect);
 
-                EntityLabel = new Label("Label")
+                EntityLabel = new Label
                 {
                     SizeFlagsVertical = SizeFlags.ShrinkCenter,
                     Text = "Backpack"

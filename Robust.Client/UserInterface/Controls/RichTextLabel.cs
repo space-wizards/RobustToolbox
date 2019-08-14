@@ -14,14 +14,6 @@ namespace Robust.Client.UserInterface.Controls
 
         public float? MaxWidth { get; set; }
 
-        public RichTextLabel()
-        {
-        }
-
-        public RichTextLabel(string name) : base(name)
-        {
-        }
-
         public void SetMessage(FormattedMessage message)
         {
             _message = message;

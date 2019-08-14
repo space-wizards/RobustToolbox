@@ -8,12 +8,9 @@ namespace Robust.Client.UserInterface.Controls
     /// </summary>
     public abstract class Container : Control
     {
-        protected Container() : base()
+        protected internal void QueueSortChildren()
         {
-        }
-
-        protected Container(string name) : base(name)
-        {
+            UpdateLayout();
         }
 
         /// <summary>
@@ -31,7 +28,7 @@ namespace Robust.Client.UserInterface.Controls
             newChild.OnMinimumSizeChanged += _childChanged;
             newChild.OnVisibilityChanged += _childChanged;
             MinimumSizeChanged();
-            SortChildren();
+            QueueSortChildren();
         }
 
         protected override void ChildRemoved(Control child)
@@ -41,7 +38,7 @@ namespace Robust.Client.UserInterface.Controls
             child.OnMinimumSizeChanged -= _childChanged;
             child.OnVisibilityChanged -= _childChanged;
             MinimumSizeChanged();
-            SortChildren();
+            QueueSortChildren();
         }
 
         protected void FitChildInPixelBox(Control child, UIBox2i pixelBox)
@@ -98,14 +95,14 @@ namespace Robust.Client.UserInterface.Controls
         private void _childChanged(Control child)
         {
             MinimumSizeChanged();
-            SortChildren();
+            QueueSortChildren();
         }
 
         protected override void Resized()
         {
             base.Resized();
 
-            SortChildren();
+            QueueSortChildren();
         }
     }
 }

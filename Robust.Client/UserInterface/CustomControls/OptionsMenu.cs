@@ -7,10 +7,10 @@ namespace Robust.Client.UserInterface.CustomControls
 {
     public sealed class OptionsMenu : SS14Window
     {
-        private Button ApplyButton;
-        private CheckBox VSyncCheckBox;
-        private CheckBox FullscreenCheckBox;
-        private CheckBox HighResLightsCheckBox;
+        private readonly Button ApplyButton;
+        private readonly CheckBox VSyncCheckBox;
+        private readonly CheckBox FullscreenCheckBox;
+        private readonly CheckBox HighResLightsCheckBox;
         private readonly IConfigurationManager configManager;
 
         protected override Vector2? CustomSize => (180, 160);
@@ -19,18 +19,8 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             configManager = configMan;
 
-            PerformLayout();
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-
             Title = "Options";
-        }
 
-        private void PerformLayout()
-        {
             var vBox = new VBoxContainer();
             Contents.AddChild(vBox);
             vBox.SetAnchorAndMarginPreset(LayoutPreset.Wide);

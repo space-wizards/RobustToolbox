@@ -4,14 +4,6 @@ namespace Robust.Client.UserInterface.Controls
 {
     public class MarginContainer : Container
     {
-        public MarginContainer()
-        {
-        }
-
-        public MarginContainer(string name) : base(name)
-        {
-        }
-
         public int? MarginBottomOverride { get; set; }
         public int? MarginTopOverride { get; set; }
         public int? MarginRightOverride { get; set; }

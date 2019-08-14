@@ -12,11 +12,6 @@ namespace Robust.Client.UserInterface.CustomControls
         public FpsCounter(IGameTiming gameTiming)
         {
             _gameTiming = gameTiming;
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
 
             FontColorShadowOverride = Color.Black;
             ShadowOffsetXOverride = 1;

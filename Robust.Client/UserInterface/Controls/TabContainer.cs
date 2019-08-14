@@ -20,14 +20,6 @@ namespace Robust.Client.UserInterface.Controls
         private bool _tabsVisible = true;
         private readonly List<TabData> _tabData = new List<TabData>();
 
-        public TabContainer()
-        {
-        }
-
-        public TabContainer(string name) : base(name)
-        {
-        }
-
         public int CurrentTab
         {
             get => _currentTab;

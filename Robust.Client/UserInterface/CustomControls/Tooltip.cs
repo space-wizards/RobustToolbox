@@ -12,15 +12,11 @@ namespace Robust.Client.UserInterface.CustomControls
             set => _label.Text = value;
         }
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            AddChild(_label = new Label());
-        }
-
         public Tooltip()
         {
             MouseFilter = MouseFilterMode.Ignore;
+
+            AddChild(_label = new Label());
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Robust.Client.ViewVariables.Editors
     {
         protected override Control MakeUI(object value)
         {
-            var hBox = new HBoxContainer("ViewVariablesPropertyEditorAngle")
+            var hBox = new HBoxContainer
             {
                 CustomMinimumSize = new Vector2(200, 0)
             };

@@ -12,14 +12,6 @@ namespace Robust.Client.UserInterface.Controls
         private float _value;
         private float _page;
 
-        public Range()
-        {
-        }
-
-        public Range(string name) : base(name)
-        {
-        }
-
         public event Action<Range> OnValueChanged;
 
         public float GetAsRatio()

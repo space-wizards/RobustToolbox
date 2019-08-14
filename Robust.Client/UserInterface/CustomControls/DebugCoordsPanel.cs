@@ -1,12 +1,9 @@
 ﻿using System.Text;
-using Robust.Client.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.ResourceManagement;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.State;
@@ -15,7 +12,6 @@ using Robust.Client.State.States;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -28,7 +24,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IClyde _displayManager;
         private readonly IMapManager _mapManager;
 
-        private Label contents;
+        private readonly Label contents;
 
         //TODO: Think about a factory for this
         public DebugCoordsPanel(IPlayerManager playerMan,
@@ -45,18 +41,6 @@ namespace Robust.Client.UserInterface.CustomControls
             _displayManager = displayMan;
             _mapManager = mapMan;
 
-            PerformLayout();
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-
-            contents = new Label();
-        }
-
-        private void PerformLayout()
-        {
             SizeFlagsHorizontal = SizeFlags.None;
 
             contents = new Label

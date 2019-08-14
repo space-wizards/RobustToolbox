@@ -17,10 +17,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected BoxContainer()
         {
-        }
-
-        protected BoxContainer(string name) : base(name)
-        {
+            MouseFilter = MouseFilterMode.Pass;
         }
 
         /// <summary>
@@ -213,13 +210,6 @@ namespace Robust.Client.UserInterface.Controls
             return new Vector2(minWidth, minHeight);
         }
 
-        protected override void SetDefaults()
-        {
-            base.SetDefaults();
-
-            MouseFilter = MouseFilterMode.Pass;
-        }
-
         public enum AlignMode
         {
             /// <summary>
@@ -235,7 +225,7 @@ namespace Robust.Client.UserInterface.Controls
             /// <summary>
             ///     Controls are laid out from the end of the box container.
             /// </summary>
-            End = 2,
+            End = 2
         }
     }
 }

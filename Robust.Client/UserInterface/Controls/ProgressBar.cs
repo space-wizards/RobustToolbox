@@ -12,14 +12,6 @@ namespace Robust.Client.UserInterface.Controls
         private StyleBox _backgroundStyleBoxOverride;
         private StyleBox _foregroundStyleBoxOverride;
 
-        public ProgressBar()
-        {
-        }
-
-        public ProgressBar(string name) : base(name)
-        {
-        }
-
         public StyleBox BackgroundStyleBoxOverride
         {
             get => _backgroundStyleBoxOverride;

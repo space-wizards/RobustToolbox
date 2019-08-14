@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
-using Robust.Client.Input;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using PureAttribute = System.Diagnostics.Contracts.PureAttribute;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -26,6 +24,16 @@ namespace Robust.Client.UserInterface.Controls
         private VScrollBar _scrollBar;
 
         public bool ScrollFollowing { get; set; } = true;
+
+        public OutputPanel()
+        {
+            RectClipContent = true;
+
+            _scrollBar = new VScrollBar {Name = "_v_scroll"};
+            AddChild(_scrollBar);
+            _scrollBar.SetAnchorAndMarginPreset(LayoutPreset.RightWide);
+            _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
+        }
 
         public StyleBox StyleBoxOverride
         {
@@ -92,16 +100,6 @@ namespace Robust.Client.UserInterface.Controls
             _isAtBottom = true;
         }
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-
-            _scrollBar = new VScrollBar {Name = "_v_scroll"};
-            AddChild(_scrollBar);
-            _scrollBar.SetAnchorAndMarginPreset(LayoutPreset.RightWide);
-            _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
-        }
-
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
@@ -150,13 +148,6 @@ namespace Robust.Client.UserInterface.Controls
             _isAtBottom = _scrollBar.IsAtEnd;
         }
 
-        protected override void SetDefaults()
-        {
-            base.SetDefaults();
-
-            RectClipContent = true;
-        }
-
         protected override void Resized()
         {
             base.Resized();
@@ -192,7 +183,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         private Font _getFont()
         {
             if (TryGetStyleProperty("font", out Font font))
@@ -203,7 +194,7 @@ namespace Robust.Client.UserInterface.Controls
             return UserInterfaceManager.ThemeDefaults.DefaultFont;
         }
 
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         [CanBeNull]
         private StyleBox _getStyleBox()
         {
@@ -216,14 +207,14 @@ namespace Robust.Client.UserInterface.Controls
             return box;
         }
 
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         private int _getScrollSpeed()
         {
             var font = _getFont();
             return font.GetLineHeight(UIScale) * 2;
         }
 
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         private UIBox2 _getContentBox()
         {
             var style = _getStyleBox();

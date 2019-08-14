@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,10 +19,16 @@ namespace Robust.Client.Graphics.Clyde
         private ContextHandle _openALContext;
 
         private readonly List<LoadedAudioSample> _audioSampleBuffers = new List<LoadedAudioSample>();
-        private readonly Dictionary<int, WeakReference<AudioSource>> _audioSources = new Dictionary<int, WeakReference<AudioSource>>();
+
+        private readonly Dictionary<int, WeakReference<AudioSource>> _audioSources =
+            new Dictionary<int, WeakReference<AudioSource>>();
 
         private readonly HashSet<string> _alcExtensions = new HashSet<string>();
         private readonly HashSet<string> _alContextExtensions = new HashSet<string>();
+
+        // Used to track audio sources that were disposed in the finalizer thread,
+        // so we need to properly send them off in the main thread.
+        private readonly ConcurrentQueue<int> _sourceDisposeQueue = new ConcurrentQueue<int>();
 
         private bool _alcHasExtension(string extension) => _alcExtensions.Contains(extension);
         private bool _alContentHasExtension(string extension) => _alContextExtensions.Contains(extension);
@@ -38,8 +45,9 @@ namespace Robust.Client.Graphics.Clyde
         {
             unsafe
             {
-                _openALContext = Alc.CreateContext(_openALDevice, (int*)0);
+                _openALContext = Alc.CreateContext(_openALDevice, (int*) 0);
             }
+
             Alc.MakeContextCurrent(_openALContext);
             _checkAlcError(_openALDevice);
             _checkAlError();
@@ -116,6 +124,15 @@ namespace Robust.Client.Graphics.Clyde
             var eye = _eyeManager.CurrentEye;
             var (x, y) = eye.Position.Position;
             AL.Listener(ALListener3f.Position, x, y, -5);
+
+            // Clear out finalized audio sources.
+            while (_sourceDisposeQueue.TryDequeue(out var handle))
+            {
+                Logger.DebugS("oal", "Cleaning out source {0} which finalized in another thread.", handle);
+                AL.DeleteSource(handle);
+                _checkAlError();
+                _audioSources.Remove(handle);
+            }
         }
 
         public IClydeAudioSource CreateAudioSource(AudioStream stream)
@@ -176,7 +193,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 fixed (float* ptr = vorbis.Data.Span)
                 {
-                    AL.BufferData(buffer, format, (IntPtr)ptr, vorbis.Data.Length * sizeof(float), (int)vorbis.SampleRate);
+                    AL.BufferData(buffer, format, (IntPtr) ptr, vorbis.Data.Length * sizeof(float),
+                        (int) vorbis.SampleRate);
                 }
             }
 
@@ -234,14 +252,15 @@ namespace Robust.Client.Graphics.Clyde
             {
                 fixed (byte* ptr = wav.Data.Span)
                 {
-                    AL.BufferData(buffer, format, (IntPtr)ptr, wav.Data.Length, wav.SampleRate);
+                    AL.BufferData(buffer, format, (IntPtr) ptr, wav.Data.Length, wav.SampleRate);
                 }
             }
+
             _checkAlError();
 
             var handle = new ClydeHandle(_audioSampleBuffers.Count);
             _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
-            var length = TimeSpan.FromSeconds(wav.Data.Length / (double)wav.BlockAlign / wav.SampleRate);
+            var length = TimeSpan.FromSeconds(wav.Data.Length / (double) wav.BlockAlign / wav.SampleRate);
             return new AudioStream(handle, length, wav.NumChannels, name);
         }
 
@@ -255,18 +274,23 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
+        private void DeleteSourceOnMainThread(int sourceHandle)
+        {
+            _sourceDisposeQueue.Enqueue(sourceHandle);
+        }
+
         private sealed class AudioSource : IClydeAudioSource
         {
-            private Clyde Master;
             private int SourceHandle;
-            private AudioStream _sourceStream;
+            private readonly Clyde _master;
+            private readonly AudioStream _sourceStream;
 #if DEBUG
             private bool _didPositionWarning;
 #endif
 
             public AudioSource(Clyde master, int sourceHandle, AudioStream sourceStream)
             {
-                Master = master;
+                _master = master;
                 SourceHandle = sourceHandle;
                 _sourceStream = sourceStream;
             }
@@ -298,7 +322,7 @@ namespace Robust.Client.Graphics.Clyde
             public void SetVolume(float decibels)
             {
                 _checkDisposed();
-                AL.Source(SourceHandle, ALSourcef.Gain, (float)Math.Pow(10, decibels/10));
+                AL.Source(SourceHandle, ALSourcef.Gain, (float) Math.Pow(10, decibels / 10));
                 _checkAlError();
             }
 
@@ -312,7 +336,9 @@ namespace Robust.Client.Graphics.Clyde
                 if (_sourceStream.ChannelCount > 1 && !_didPositionWarning)
                 {
                     _didPositionWarning = true;
-                    Logger.WarningS("oal", "Attempting to set position on audio source with multiple audio channels! Stream: '{0}'", _sourceStream.Name);
+                    Logger.WarningS("oal",
+                        "Attempting to set position on audio source with multiple audio channels! Stream: '{0}'",
+                        _sourceStream.Name);
                 }
 #endif
 
@@ -341,9 +367,18 @@ namespace Robust.Client.Graphics.Clyde
 
             private void Dispose(bool disposing)
             {
-                AL.DeleteSource(SourceHandle);
-                Master._audioSources.Remove(SourceHandle);
-                _checkAlError();
+                if (!disposing)
+                {
+                    // We can't run this code inside the finalizer thread so tell Clyde to clear it up later.
+                    _master.DeleteSourceOnMainThread(SourceHandle);
+                }
+                else
+                {
+                    AL.DeleteSource(SourceHandle);
+                    _master._audioSources.Remove(SourceHandle);
+                    _checkAlError();
+                }
+
                 SourceHandle = -1;
             }
 

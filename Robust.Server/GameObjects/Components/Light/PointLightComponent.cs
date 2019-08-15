@@ -1,4 +1,4 @@
-﻿using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -66,7 +66,7 @@ namespace Robust.Server.GameObjects
 
             serializer.DataField(ref _enabled, "enabled", true);
             serializer.DataField(ref _color, "color", new Color(200, 200, 200));
-            serializer.DataField(ref _radius, "radius", 512);
+            serializer.DataField(ref _radius, "radius", 10);
             serializer.DataField(ref _offset, "offset", Vector2.Zero);
         }
 

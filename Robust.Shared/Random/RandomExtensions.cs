@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Shared.Interfaces.Random;
 
-namespace Robust.Shared.Maths
+namespace Robust.Shared.Random
 {
     public static class RandomExtensions
     {
@@ -11,7 +12,7 @@ namespace Robust.Shared.Maths
         /// <param name="random">The random object to generate the number from.</param>
         /// <param name="μ">The average or "center" of the normal distribution.</param>
         /// <param name="σ">The standard deviation of the normal distribution.</param>
-        public static double NextGaussian(this Random random, double μ = 0, double σ = 1)
+        public static double NextGaussian(this IRobustRandom random, double μ = 0, double σ = 1)
         {
             // https://stackoverflow.com/a/218600
             var α = random.NextDouble();
@@ -22,17 +23,22 @@ namespace Robust.Shared.Maths
             return μ + σ * randStdNormal;
         }
 
-        public static T Pick<T>(this Random random, IReadOnlyList<T> list)
+        public static T Pick<T>(this IRobustRandom random, IReadOnlyList<T> list)
         {
             var index = random.Next(list.Count);
             return list[index];
         }
 
-        public static float NextFloat(this Random random)
+        public static float NextFloat(this IRobustRandom random)
         {
             // This is pretty much the CoreFX implementation.
             // So credits to that.
             // Except using float instead of double.
+            return random.Next() * 4.6566128752458E-10f;
+        }
+
+        public static float NextFloat(this System.Random random)
+        {
             return random.Next() * 4.6566128752458E-10f;
         }
 
@@ -41,7 +47,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="random">The random instance to run on.</param>
         /// <param name="chance">The chance to pass, from 0 to 1.</param>
-        public static bool Prob(this Random random, float chance)
+        public static bool Prob(this IRobustRandom random, float chance)
         {
             return random.NextDouble() <= chance;
         }

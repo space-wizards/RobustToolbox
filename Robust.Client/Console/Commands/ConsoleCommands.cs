@@ -5,6 +5,8 @@
 using System;
 using Robust.Client.Interfaces.Console;
 using Robust.Shared.Console;
+using Robust.Shared.Interfaces.Random;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Console.Commands
@@ -31,7 +33,7 @@ namespace Robust.Client.Console.Commands
         public bool Execute(IDebugConsole console, params string[] args)
         {
             Color[] colors = { Color.Green, Color.Blue, Color.Red };
-            Random random = new Random();
+            var random = IoCManager.Resolve<IRobustRandom>();
             for (int x = 0; x < 50; x++)
             {
                 console.AddLine("filling...", colors[random.Next(0, colors.Length)]);

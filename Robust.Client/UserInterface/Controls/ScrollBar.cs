@@ -154,15 +154,15 @@ namespace Robust.Client.UserInterface.Controls
         {
             if (_grabData != null)
             {
-                StylePseudoClass = StylePseudoClassGrabbed;
+                SetOnlyStylePseudoClass(StylePseudoClassGrabbed);
             }
             else if (_isHovered)
             {
-                StylePseudoClass = StylePseudoClassHover;
+                SetOnlyStylePseudoClass(StylePseudoClassHover);
             }
             else
             {
-                StylePseudoClass = null;
+                SetOnlyStylePseudoClass(null);
             }
         }
 

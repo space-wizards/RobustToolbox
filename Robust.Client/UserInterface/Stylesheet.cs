@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
@@ -148,7 +148,7 @@ namespace Robust.Client.UserInterface
             Type elementType,
             IReadOnlyCollection<string> elementClasses,
             string elementId,
-            string pseudoClass)
+            string[] pseudoClass)
         {
             if (elementType != null)
             {
@@ -166,13 +166,14 @@ namespace Robust.Client.UserInterface
             ElementType = elementType;
             ElementClasses = elementClasses;
             ElementId = elementId;
-            PseudoClass = pseudoClass;
+            PseudoClass = pseudoClass == null ? new HashSet<string>() : new HashSet<string>(pseudoClass);
         }
 
         public Type ElementType { get; }
         public IReadOnlyCollection<string> ElementClasses { get; }
         public string ElementId { get; }
-        public string PseudoClass { get; }
+
+        public HashSet<string> PseudoClass;
 
         public override bool Matches(Control control)
         {
@@ -197,7 +198,7 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            if (PseudoClass != null && PseudoClass != control.StylePseudoClass)
+            if (PseudoClass.Count > 0 && PseudoClass.Equals(control.StylePseudoClass))
             {
                 return false;
             }

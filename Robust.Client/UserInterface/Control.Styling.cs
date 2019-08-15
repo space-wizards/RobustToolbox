@@ -11,7 +11,9 @@ namespace Robust.Client.UserInterface
 
         private readonly Dictionary<string, object> _styleProperties = new Dictionary<string, object>();
         private readonly HashSet<string> _styleClasses = new HashSet<string>();
+        private readonly HashSet<string> _stylePseudoClass = new HashSet<string>();
         public ICollection<string> StyleClasses { get; }
+        public ICollection<string> StylePseudoClass { get => _stylePseudoClass; }
 
         private string _styleIdentifier;
 
@@ -28,24 +30,39 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private string _stylePseudoClass;
-
-        [ViewVariables]
-        public string StylePseudoClass
+        public bool HasStylePseudoClass(string className)
         {
-            get => _stylePseudoClass;
-            protected set
-            {
-                if (_stylePseudoClass == value)
-                {
-                    return;
-                }
-
-                _stylePseudoClass = value;
-                Restyle();
-            }
+            return _stylePseudoClass.Contains(className);
         }
 
+        public void AddStylePseudoClass(string className)
+        {
+            if (_stylePseudoClass.Contains(className))
+            {
+                return;
+            }
+
+            _stylePseudoClass.Add(className);
+            Restyle();
+        }
+
+        public void RemoveStylePseudoClass(string className)
+        {
+            _stylePseudoClass.Remove(className);
+            Restyle();
+        }
+
+        public void SetOnlyStylePseudoClass(string className)
+        {
+            if (_stylePseudoClass.Contains(className))
+            {
+                return;
+            }
+
+            _stylePseudoClass.Clear();
+            _stylePseudoClass.Add(className);
+            Restyle();
+        }
         public bool HasStyleClass(string className)
         {
             return _styleClasses.Contains(className);

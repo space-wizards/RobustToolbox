@@ -399,7 +399,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private void _updatePseudoClass()
         {
-            StylePseudoClass = IsPlaceHolderVisible ? StylePseudoClassPlaceholder : null;
+            SetOnlyStylePseudoClass(IsPlaceHolderVisible ? StylePseudoClassPlaceholder : null);
         }
 
         public enum AlignMode

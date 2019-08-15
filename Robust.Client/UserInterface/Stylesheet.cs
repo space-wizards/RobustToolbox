@@ -166,7 +166,7 @@ namespace Robust.Client.UserInterface
             ElementType = elementType;
             ElementClasses = elementClasses;
             ElementId = elementId;
-            PseudoClass = pseudoClass == null ? new HashSet<string>() : new HashSet<string>(pseudoClass);
+            PseudoClass = pseudoClass != null ? new HashSet<string>(pseudoClass) : new HashSet<string>();
         }
 
         public Type ElementType { get; }
@@ -198,7 +198,7 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            if (PseudoClass.Count > 0 && PseudoClass.Equals(control.StylePseudoClass))
+            if (PseudoClass.Count > 0 && !PseudoClass.Equals(control.StylePseudoClass))
             {
                 return false;
             }

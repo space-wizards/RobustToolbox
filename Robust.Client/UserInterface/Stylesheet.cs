@@ -198,7 +198,7 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            if (PseudoClass.Count > 0 && !PseudoClass.Equals(control.StylePseudoClass))
+            if (PseudoClass.Count > 0 && PseudoClass.Equals(control.StylePseudoClass))
             {
                 return false;
             }

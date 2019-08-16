@@ -9,6 +9,7 @@ using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.Interfaces.Timing;
@@ -18,6 +19,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
+using Robust.Shared.Random;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timers;
 using Robust.Shared.Timing;
@@ -43,6 +45,7 @@ namespace Robust.Shared
             IoCManager.Register<IRuntimeLog, RuntimeLog>();
             IoCManager.Register<ITaskManager, TaskManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
+            IoCManager.Register<IRobustRandom, RobustRandom>();
         }
     }
 }

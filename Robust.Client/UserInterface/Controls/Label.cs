@@ -20,12 +20,10 @@ namespace Robust.Client.UserInterface.Controls
         private string _text;
         private bool _clipText;
 
-        public Label(string name) : base(name)
-        {
-        }
-
         public Label()
         {
+            MouseFilter = MouseFilterMode.Ignore;
+            SizeFlagsVertical = SizeFlags.ShrinkCenter;
         }
 
         /// <summary>
@@ -184,7 +182,7 @@ namespace Robust.Client.UserInterface.Controls
             Left = 0,
             Center = 1,
             Right = 2,
-            Fill = 3,
+            Fill = 3
         }
 
         public enum VAlignMode
@@ -192,7 +190,7 @@ namespace Robust.Client.UserInterface.Controls
             Top = 0,
             Center = 1,
             Bottom = 2,
-            Fill = 3,
+            Fill = 3
         }
 
         protected override Vector2 CalculateMinimumSize()
@@ -262,12 +260,6 @@ namespace Robust.Client.UserInterface.Controls
             _textDimensionCache = null;
 
             base.StylePropertiesChanged();
-        }
-        protected override void SetDefaults()
-        {
-            base.SetDefaults();
-            MouseFilter = MouseFilterMode.Ignore;
-            SizeFlagsVertical = SizeFlags.ShrinkCenter;
         }
     }
 }

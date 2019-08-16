@@ -7,10 +7,7 @@ namespace Robust.Client.UserInterface.Controls
     {
         public Popup()
         {
-        }
-
-        public Popup(string name) : base(name)
-        {
+            Visible = false;
         }
 
         public event Action OnPopupHide;
@@ -38,13 +35,6 @@ namespace Robust.Client.UserInterface.Controls
 
             Visible = false;
             OnPopupHide?.Invoke();
-        }
-
-        protected override void SetDefaults()
-        {
-            base.SetDefaults();
-
-            Visible = false;
         }
     }
 }

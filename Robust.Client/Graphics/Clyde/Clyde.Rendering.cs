@@ -142,7 +142,14 @@ namespace Robust.Client.Graphics.Clyde
                             return cmp;
                         }
 
-                        return a.RenderOrder.CompareTo(b.RenderOrder);
+                        cmp = a.RenderOrder.CompareTo(b.RenderOrder);
+
+                        if (cmp != 0)
+                        {
+                            return cmp;
+                        }
+
+                        return a.Owner.Uid.CompareTo(b.Owner.Uid);
                     });
 
                     foreach (var sprite in entityList)

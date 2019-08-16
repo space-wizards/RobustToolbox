@@ -19,18 +19,6 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             _gameTiming = gameTiming;
 
-            PerformLayout();
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-
-            _contents = new Label();
-        }
-
-        private void PerformLayout()
-        {
             _contents = new Label
             {
                 FontColorShadowOverride = Color.Black,

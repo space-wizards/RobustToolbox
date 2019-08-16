@@ -74,6 +74,11 @@ namespace Robust.Shared.Timing
         public int MaxQueuedTicks { get; set; } = 5;
 
         /// <summary>
+        ///     If true and the same event causes an event 10 times in a row, the game loop will shut itself down.
+        /// </summary>
+        public bool DetectSoftLock { get; set; }
+
+        /// <summary>
         ///     The method currently being used to limit the Update rate.
         /// </summary>
         public SleepMode SleepMode { get; set; } = SleepMode.Yield;
@@ -81,6 +86,10 @@ namespace Robust.Shared.Timing
         // Only used on release mode.
         // ReSharper disable once NotAccessedField.Local
         private readonly IRuntimeLog _runtimeLog;
+
+        private int _tickExceptions;
+
+        private const int MaxSoftLockExceptions = 10;
 
         public GameLoop(IGameTiming timing)
         {
@@ -131,7 +140,7 @@ namespace Robust.Shared.Timing
                 }
 
                 _timing.StartFrame();
-                realFrameEvent = new FrameEventArgs((float)_timing.RealFrameTime.TotalSeconds);
+                realFrameEvent = new FrameEventArgs((float) _timing.RealFrameTime.TotalSeconds);
 #if RELEASE
                 try
 #endif
@@ -160,8 +169,9 @@ namespace Robust.Shared.Timing
                         continue;
 
                     // update the simulation
-                    simFrameEvent = new FrameEventArgs((float)_timing.FrameTime.TotalSeconds);
+                    simFrameEvent = new FrameEventArgs((float) _timing.FrameTime.TotalSeconds);
 #if RELEASE
+                    var threw = false;
                     try
                     {
 #endif
@@ -170,7 +180,21 @@ namespace Robust.Shared.Timing
                     }
                     catch (Exception exp)
                     {
+                        threw = true;
                         _runtimeLog.LogException(exp, "GameLoop Tick");
+                        _tickExceptions += 1;
+
+                        if (_tickExceptions > MaxSoftLockExceptions && DetectSoftLock)
+                        {
+                            Logger.FatalS("eng",
+                                "MainLoop: 10 consecutive exceptions inside GameLoop Tick, shutting down!");
+                            Running = false;
+                        }
+                    }
+
+                    if (!threw)
+                    {
+                        _tickExceptions = 0;
                     }
 #endif
                     _timing.CurTick = new GameTick(_timing.CurTick.Value + 1);
@@ -188,7 +212,7 @@ namespace Robust.Shared.Timing
 
                 // update out of the simulation
 
-                simFrameEvent = new FrameEventArgs((float)_timing.FrameTime.TotalSeconds);
+                simFrameEvent = new FrameEventArgs((float) _timing.FrameTime.TotalSeconds);
 #if RELEASE
                 try
 #endif
@@ -220,7 +244,7 @@ namespace Robust.Shared.Timing
                 // Set sleep to 0 if you want to use 100% cpu, but still cooperate with the scheduler.
                 // do not call sleep if you want to be 'that thread' and hog 100% cpu.
                 if (SleepMode != SleepMode.None)
-                    Thread.Sleep((int)SleepMode);
+                    Thread.Sleep((int) SleepMode);
             }
         }
 

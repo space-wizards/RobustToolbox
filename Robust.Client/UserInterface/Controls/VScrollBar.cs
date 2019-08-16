@@ -4,6 +4,7 @@
     {
         public VScrollBar() : base(OrientationMode.Vertical)
         {
+            GrowHorizontal = GrowDirection.Begin;
         }
     }
 }

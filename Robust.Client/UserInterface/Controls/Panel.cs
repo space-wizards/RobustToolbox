@@ -7,14 +7,6 @@ namespace Robust.Client.UserInterface.Controls
     {
         public const string StylePropertyPanel = "panel";
 
-        public Panel(string name) : base(name)
-        {
-        }
-
-        public Panel()
-        {
-        }
-
         private StyleBox _panelOverride;
 
         public StyleBox PanelOverride

@@ -26,17 +26,14 @@ namespace Robust.Client.UserInterface.Controls
 
         public event Action OnItemSelected;
 
-        #region Construction
-
-        public Tree(string name) : base(name)
-        {
-        }
-
         public Tree()
         {
-        }
+            RectClipContent = true;
 
-        #endregion Construction
+            _scrollBar = new VScrollBar {Name = "_v_scroll"};
+            AddChild(_scrollBar);
+            _scrollBar.SetAnchorAndMarginPreset(LayoutPreset.RightWide);
+        }
 
         public void Clear()
         {
@@ -81,22 +78,6 @@ namespace Robust.Client.UserInterface.Controls
 
             _updateScrollbar();
             return item;
-        }
-
-        protected override void SetDefaults()
-        {
-            base.SetDefaults();
-
-            RectClipContent = true;
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-
-            _scrollBar = new VScrollBar {Name = "_v_scroll"};
-            AddChild(_scrollBar);
-            _scrollBar.SetAnchorAndMarginPreset(LayoutPreset.RightWide);
         }
 
         protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
@@ -258,10 +239,8 @@ namespace Robust.Client.UserInterface.Controls
 
                 return sum;
             }
-            else
-            {
-                return _getItemHeight(_root, font);
-            }
+
+            return _getItemHeight(_root, font);
         }
 
         private float _getItemHeight(Item item, Font font)

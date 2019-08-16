@@ -17,8 +17,70 @@ namespace Robust.Client.UserInterface.CustomControls
 
         protected virtual Vector2? CustomSize => null;
 
-        public SS14Window() {}
-        public SS14Window(string name) : base(name) {}
+        public SS14Window()
+        {
+            PanelOverride = new StyleBoxFlat
+            {
+                BackgroundColor = new Color(37, 37, 42)
+            };
+
+            // Setup header. Includes the title label and close button.
+            var header = new Panel
+            {
+                AnchorRight = 1.0f, MarginBottom = 25.0f,
+                MouseFilter = MouseFilterMode.Ignore,
+                StyleClasses = {StyleClassWindowHeader}
+            };
+
+            header.AddStyleClass(StyleClassWindowHeader);
+            TitleLabel = new Label
+            {
+                ClipText = true,
+                AnchorRight = 1.0f,
+                AnchorBottom = 1.0f,
+                MarginRight = -25.0f,
+                MarginLeft = 5,
+                Text = "Exemplary Window Title Here",
+                VAlign = Label.VAlignMode.Center,
+                StyleClasses = {StyleClassWindowTitle}
+            };
+            CloseButton = new TextureButton
+            {
+                AnchorLeft = 1.0f, AnchorRight = 1.0f, AnchorBottom = 1.0f, MarginLeft = -25.0f,
+                StyleClasses = {StyleClassWindowCloseButton}
+            };
+            CloseButton.OnPressed += CloseButtonPressed;
+            header.AddChild(TitleLabel);
+            header.AddChild(CloseButton);
+
+            // Setup content area.
+            Contents = new MarginContainer
+            {
+                AnchorRight = 1.0f,
+                AnchorBottom = 1.0f,
+                MarginTop = 30.0f,
+                MarginBottomOverride = 10,
+                MarginLeftOverride = 10,
+                MarginRightOverride = 10,
+                MarginTopOverride = 10,
+                RectClipContent = true,
+                MouseFilter = MouseFilterMode.Ignore
+            };
+            Contents.OnMinimumSizeChanged += _ => MinimumSizeChanged();
+            AddChild(header);
+            AddChild(Contents);
+
+            AddStyleClass(StyleClassWindowPanel);
+            MarginLeft = 100.0f;
+            MarginTop = 38.0f;
+            MarginRight = 878.0f;
+            MarginBottom = 519.0f;
+
+            if (CustomSize != null)
+            {
+                Size = CustomSize.Value;
+            }
+        }
 
         [Flags]
         enum DragMode
@@ -67,73 +129,6 @@ namespace Robust.Client.UserInterface.CustomControls
         public event Action OnClose;
 
         // Drag resizing and moving code is mostly taken from Godot's WindowDialog.
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            // Set panel background color
-            PanelOverride = new StyleBoxFlat
-            {
-                BackgroundColor = new Color(37, 37, 42)
-            };
-
-            // Setup header. Includes the title label and close button.
-            var header = new Panel("Header")
-            {
-                AnchorRight = 1.0f, MarginBottom = 25.0f,
-                MouseFilter = MouseFilterMode.Ignore,
-                StyleClasses = { StyleClassWindowHeader }
-            };
-
-            header.AddStyleClass(StyleClassWindowHeader);
-            TitleLabel = new Label("Header Text")
-            {
-                ClipText = true,
-                AnchorRight = 1.0f,
-                AnchorBottom = 1.0f,
-                MarginRight = -25.0f,
-                MarginLeft = 5,
-                Text = "Exemplary Window Title Here",
-                VAlign = Label.VAlignMode.Center,
-                StyleClasses = { StyleClassWindowTitle }
-            };
-            CloseButton = new TextureButton("CloseButton")
-            {
-                AnchorLeft = 1.0f, AnchorRight = 1.0f, AnchorBottom = 1.0f, MarginLeft = -25.0f,
-                StyleClasses = { StyleClassWindowCloseButton }
-            };
-            CloseButton.OnPressed += CloseButtonPressed;
-            header.AddChild(TitleLabel);
-            header.AddChild(CloseButton);
-
-            // Setup content area.
-            Contents = new MarginContainer("Contents")
-            {
-                AnchorRight = 1.0f,
-                AnchorBottom = 1.0f,
-                MarginTop = 30.0f,
-                MarginBottomOverride = 10,
-                MarginLeftOverride = 10,
-                MarginRightOverride = 10,
-                MarginTopOverride = 10,
-                RectClipContent = true,
-                MouseFilter = MouseFilterMode.Ignore
-            };
-            Contents.OnMinimumSizeChanged += _ => MinimumSizeChanged();
-            AddChild(header);
-            AddChild(Contents);
-
-            AddStyleClass(StyleClassWindowPanel);
-            MarginLeft = 100.0f;
-            MarginTop = 38.0f;
-            MarginRight = 878.0f;
-            MarginBottom = 519.0f;
-
-            if (CustomSize != null)
-            {
-                Size = CustomSize.Value;
-            }
-        }
 
         protected override void Dispose(bool disposing)
         {

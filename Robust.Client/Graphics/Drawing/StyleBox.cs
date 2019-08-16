@@ -1,6 +1,5 @@
 ﻿using System;
 using JetBrains.Annotations;
-using Robust.Client.Utility;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.Drawing
@@ -127,11 +126,6 @@ namespace Robust.Client.Graphics.Drawing
             var top = baseBox.Top + GetContentMargin(Margin.Top);
             var right = baseBox.Right - GetContentMargin(Margin.Right);
             var bottom = baseBox.Bottom - GetContentMargin(Margin.Bottom);
-
-            if (left > right || top > bottom)
-            {
-                throw new ArgumentException("Box is too small!", nameof(baseBox));
-            }
 
             return new UIBox2(left, top, right, bottom);
         }

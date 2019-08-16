@@ -7,6 +7,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
+using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
@@ -42,8 +43,23 @@ namespace Robust.Client.ViewVariables
             if (valArg.StartsWith("I"))
             {
                 // Client-side IoC selector.
-                var type = IoCManager.Resolve<IReflectionManager>().LooseGetType(valArg);
-                var obj = IoCManager.ResolveType(type);
+                var reflection = IoCManager.Resolve<IReflectionManager>();
+                if (!reflection.TryLooseGetType(valArg, out var type))
+                {
+                    console.AddLine("Unable to find that type.");
+                    return false;
+                }
+
+                object obj;
+                try
+                {
+                    obj = IoCManager.ResolveType(type);
+                }
+                catch (UnregisteredTypeException)
+                {
+                    console.AddLine("Unable to find that type.");
+                    return false;
+                }
                 vvm.OpenVV(obj);
                 return false;
             }
@@ -52,7 +68,12 @@ namespace Robust.Client.ViewVariables
             {
                 // UI element.
                 var obj = IoCManager.Resolve<IUserInterfaceManager>().RootControl;
-                vvm.OpenVV(obj.GetChild(valArg.Substring(4)));
+                if (!obj.TryGetChild(valArg.Substring(4), out var control))
+                {
+                    console.AddLine("That control does not exist.");
+                    return false;
+                }
+                vvm.OpenVV(control);
                 return false;
             }
 

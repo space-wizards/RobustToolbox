@@ -39,11 +39,6 @@ namespace Robust.Client.UserInterface.CustomControls
         public FrameGraph(IGameTiming gameTiming)
         {
             _gameTiming = gameTiming;
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
 
             SizeFlagsHorizontal = SizeFlags.None;
         }

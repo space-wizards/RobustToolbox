@@ -18,14 +18,6 @@ namespace Robust.Client.UserInterface.Controls
         private bool _pressed;
         private bool _enableAllKeybinds;
 
-        protected BaseButton()
-        {
-        }
-
-        protected BaseButton(string name) : base(name)
-        {
-        }
-
         /// <summary>
         ///     Controls mode of operation in relation to press/release events.
         /// </summary>
@@ -244,7 +236,7 @@ namespace Robust.Client.UserInterface.Controls
             Normal = 0,
             Pressed = 1,
             Hover = 2,
-            Disabled = 3,
+            Disabled = 3
         }
 
         public class ButtonEventArgs : EventArgs
@@ -293,7 +285,7 @@ namespace Robust.Client.UserInterface.Controls
             ///     <see cref="BaseButton.OnPressed"/> fires when the mouse button causing them is released.
             ///     This is the default and most intuitive method.
             /// </summary>
-            Release = 1,
+            Release = 1
         }
     }
 }

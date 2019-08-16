@@ -5,7 +5,6 @@ using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Input;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Player;
@@ -34,7 +33,6 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IGameTiming _gameTiming;
         [Dependency] private readonly IPlayerManager _playerManager;
         [Dependency] private readonly IEyeManager _eyeManager;
-        [Dependency] private readonly IResourceCache _resourceCache;
         [Dependency] private readonly IStateManager _stateManager;
         [Dependency] private readonly IClientNetManager _netManager;
         [Dependency] private readonly IMapManager _mapManager;
@@ -66,6 +64,9 @@ namespace Robust.Client.UserInterface
         private Tooltip _tooltip;
         private const float TooltipDelay = 1;
 
+        private readonly Queue<Control> _styleUpdateQueue = new Queue<Control>();
+        private readonly Queue<Control> _layoutUpdateQueue = new Queue<Control>();
+
         public void Initialize()
         {
             UIScale = _configurationManager.GetCVar<float>("display.uiScale");
@@ -96,8 +97,9 @@ namespace Robust.Client.UserInterface
 
         private void _initializeCommon()
         {
-            RootControl = new Control("UIRoot")
+            RootControl = new Control
             {
+                Name = "UIRoot",
                 MouseFilter = Control.MouseFilterMode.Ignore,
                 IsInsideTree = true
             };
@@ -105,22 +107,25 @@ namespace Robust.Client.UserInterface
             RootControl.Size = _displayManager.ScreenSize / UIScale;
             _displayManager.OnWindowResized += args => _updateRootSize();
 
-            StateRoot = new Control("StateRoot")
+            StateRoot = new Control
             {
+                Name = "StateRoot",
                 MouseFilter = Control.MouseFilterMode.Ignore
             };
             StateRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             RootControl.AddChild(StateRoot);
 
-            WindowRoot = new Control("WindowRoot")
+            WindowRoot = new Control
             {
+                Name = "WindowRoot",
                 MouseFilter = Control.MouseFilterMode.Ignore
             };
             WindowRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             RootControl.AddChild(WindowRoot);
 
-            ModalRoot = new Control("ModalRoot")
+            ModalRoot = new Control
             {
+                Name = "ModalRoot",
                 MouseFilter = Control.MouseFilterMode.Ignore,
             };
             ModalRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
@@ -151,6 +156,24 @@ namespace Robust.Client.UserInterface
         public void FrameUpdate(FrameEventArgs args)
         {
             RootControl.DoFrameUpdate(args);
+
+            // Process queued style & layout updates.
+            while (_styleUpdateQueue.Count != 0)
+            {
+                var control = _styleUpdateQueue.Dequeue();
+                control.DoStyleUpdate();
+            }
+
+            while (_layoutUpdateQueue.Count != 0)
+            {
+                var control = _layoutUpdateQueue.Dequeue();
+                control.DoLayoutUpdate();
+
+                if (control is Container container)
+                {
+                    container.SortChildren();
+                }
+            }
 
             _tooltipTimer -= args.DeltaSeconds;
             if (_tooltipTimer <= 0)
@@ -397,6 +420,16 @@ namespace Robust.Client.UserInterface
             }
 
             _render(renderHandle, RootControl, Vector2i.Zero, Color.White, null);
+        }
+
+        public void QueueStyleUpdate(Control control)
+        {
+            _styleUpdateQueue.Enqueue(control);
+        }
+
+        public void QueueLayoutUpdate(Control control)
+        {
+            _layoutUpdateQueue.Enqueue(control);
         }
 
         private static void _render(IRenderHandle renderHandle, Control control, Vector2i position, Color modulate,

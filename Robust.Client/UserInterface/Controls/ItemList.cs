@@ -33,15 +33,12 @@ namespace Robust.Client.UserInterface.Controls
 
         public ItemList()
         {
-        }
-
-        public ItemList(string name) : base(name)
-        {
-        }
-
-        protected override void SetDefaults()
-        {
             RectClipContent = true;
+
+            _scrollBar = new VScrollBar {Name = "_v_scroll"};
+            AddChild(_scrollBar);
+            _scrollBar.SetAnchorAndMarginPreset(LayoutPreset.RightWide);
+            _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
         }
 
         private void RecalculateContentHeight()
@@ -434,16 +431,6 @@ namespace Robust.Client.UserInterface.Controls
             _isAtBottom = _scrollBar.IsAtEnd;
         }
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-
-            _scrollBar = new VScrollBar {Name = "_v_scroll"};
-            AddChild(_scrollBar);
-            _scrollBar.SetAnchorAndMarginPreset(LayoutPreset.RightWide);
-            _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
-        }
-
         [Pure]
         private int _getScrollSpeed()
         {
@@ -482,17 +469,17 @@ namespace Robust.Client.UserInterface.Controls
 
         public sealed class Item
         {
-            public string Text = null;
-            public string TooltipText = null;
-            public Texture Icon = null;
-            public UIBox2 IconRegion = new UIBox2();
+            public string Text;
+            public string TooltipText;
+            public Texture Icon;
+            public UIBox2 IconRegion;
             public Color IconModulate = Color.White;
-            public bool Selected = false;
+            public bool Selected;
             public bool Selectable = true;
             public bool TooltipEnabled = true;
-            public bool Disabled = false;
+            public bool Disabled;
 
-            public UIBox2? Region = null;
+            public UIBox2? Region;
 
             public Vector2 IconSize
             {
@@ -561,7 +548,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             None,
             Single,
-            Multiple,
+            Multiple
         }
     }
 }

@@ -35,17 +35,8 @@ namespace Robust.Client.UserInterface.CustomControls
             NetManager = netMan;
             GameTiming = gameTiming;
 
-            PerformLayout();
-        }
-        protected override void Initialize()
-        {
-            base.Initialize();
-
             contents = new Label();
-        }
 
-        private void PerformLayout()
-        {
             SizeFlagsHorizontal = SizeFlags.None;
 
             contents = new Label

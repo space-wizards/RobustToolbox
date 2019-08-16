@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -424,17 +424,16 @@ namespace Robust.Shared.GameObjects
 
             foreach (var kvStates in _compStateWork)
             {
-                if (TryGetComponent(kvStates.Key, out var component))
+                if (!TryGetComponent(kvStates.Key, out var component))
                 {
-                    if (kvStates.Value.curState == null || kvStates.Value.curState.GetType() == component.StateType)
-                    {
-                        component.HandleComponentState(kvStates.Value.curState, kvStates.Value.nextState);
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException($"Incorrect component state type: {component.StateType}, component: {component.GetType()}");
-                    }
+                    continue;
                 }
+
+                DebugTools.Assert(kvStates.Value.curState == null
+                                  || kvStates.Value.curState.GetType() == component.StateType,
+                    "Component state is of the wrong type.");
+
+                component.HandleComponentState(kvStates.Value.curState, kvStates.Value.nextState);
             }
         }
 
@@ -443,20 +442,25 @@ namespace Robust.Shared.GameObjects
         {
             var compStates = GetComponentStates(fromTick);
 
-            var addedComponents = EntityManager.ComponentManager.GetNetComponents(Uid)
-                .Where(c => c.CreationTick >= fromTick && !c.Deleted)
-                .Select(c => ComponentChanged.Added(c.NetID.Value, c.Name));
+            var changed = new List<ComponentChanged>();
 
-            var removedComponents = EntityManager.ComponentManager.GetNetComponents(Uid)
-                .Where(c => c.Deleted && c.LastModifiedTick >= fromTick)
-                .Select(s => ComponentChanged.Removed(s.NetID.Value));
+            foreach (var c in EntityManager.ComponentManager.GetNetComponents(Uid))
+            {
+                if (c.CreationTick >= fromTick && !c.Deleted)
+                {
+                    // Can't be null since it's returned by GetNetComponents
+                    // ReSharper disable once PossibleInvalidOperationException
+                    changed.Add(ComponentChanged.Added(c.NetID.Value, c.Name));
+                }
+                else if (c.Deleted && c.LastModifiedTick >= fromTick)
+                {
+                    // Can't be null since it's returned by GetNetComponents
+                    // ReSharper disable once PossibleInvalidOperationException
+                    changed.Add(ComponentChanged.Removed(c.NetID.Value));
+                }
+            }
 
-            var changedComponents = addedComponents.Concat(removedComponents).ToList();
-
-            var es = new EntityState(
-                Uid,
-                changedComponents,
-                compStates);
+            var es = new EntityState(Uid, changed, compStates);
             return es;
         }
 
@@ -466,10 +470,18 @@ namespace Robust.Shared.GameObjects
         /// <returns></returns>
         private List<ComponentState> GetComponentStates(GameTick fromTick)
         {
-            return GetAllComponents()
-                .Where(c => c.NetID != null && c.NetSyncEnabled && c.LastModifiedTick >= fromTick)
-                .Select(component => component.GetComponentState())
-                .ToList();
+            var list = new List<ComponentState>();
+            foreach (var component in GetAllComponents())
+            {
+                if (component.NetID == null || !component.NetSyncEnabled || component.LastModifiedTick < fromTick)
+                {
+                    continue;
+                }
+
+                list.Add(component.GetComponentState());
+            }
+
+            return list;
         }
 
         /// <summary>

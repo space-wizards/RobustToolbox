@@ -138,8 +138,8 @@ namespace Robust.UnitTesting.Client.UserInterface
         public void TestGrabKeyboardFocus()
         {
             Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
-            var control1 = new Control("Control1") {CanKeyboardFocus = true};
-            var control2 = new Control("Control2") {CanKeyboardFocus = true};
+            var control1 = new Control {CanKeyboardFocus = true};
+            var control2 = new Control {CanKeyboardFocus = true};
 
             control1.GrabKeyboardFocus();
             Assert.That(_userInterfaceManager.KeyboardFocused, Is.EqualTo(control1));
@@ -156,8 +156,8 @@ namespace Robust.UnitTesting.Client.UserInterface
         public void TestGrabKeyboardFocusSteal()
         {
             Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
-            var control1 = new Control("Control1") {CanKeyboardFocus = true};
-            var control2 = new Control("Control2") {CanKeyboardFocus = true};
+            var control1 = new Control {CanKeyboardFocus = true};
+            var control2 = new Control {CanKeyboardFocus = true};
 
             control1.GrabKeyboardFocus();
             control2.GrabKeyboardFocus();
@@ -173,8 +173,8 @@ namespace Robust.UnitTesting.Client.UserInterface
         public void TestGrabKeyboardFocusOtherRelease()
         {
             Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
-            var control1 = new Control("Control1") {CanKeyboardFocus = true};
-            var control2 = new Control("Control2") {CanKeyboardFocus = true};
+            var control1 = new Control {CanKeyboardFocus = true};
+            var control2 = new Control {CanKeyboardFocus = true};
 
             control1.GrabKeyboardFocus();
             control2.ReleaseKeyboardFocus();
@@ -212,6 +212,8 @@ namespace Robust.UnitTesting.Client.UserInterface
             };
 
             _userInterfaceManager.RootControl.AddChild(control);
+
+            _userInterfaceManager.RootControl.ForceRunLayoutUpdate();
 
             var pos = new Robust.Shared.Map.ScreenCoordinates(30, 30);
 

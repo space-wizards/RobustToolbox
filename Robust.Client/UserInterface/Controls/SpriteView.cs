@@ -22,16 +22,6 @@ namespace Robust.Client.UserInterface.Controls
 
         public SpriteView()
         {
-        }
-
-        public SpriteView(string name) : base(name)
-        {
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-
             RectClipContent = true;
         }
 

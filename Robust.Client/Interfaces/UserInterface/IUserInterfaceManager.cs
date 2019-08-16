@@ -96,6 +96,9 @@ namespace Robust.Client.Interfaces.UserInterface
         void RemoveModal(Control modal);
 
         void Render(IRenderHandle renderHandle);
+
+        void QueueStyleUpdate(Control control);
+        void QueueLayoutUpdate(Control control);
     }
 }
 

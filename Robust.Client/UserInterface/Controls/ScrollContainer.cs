@@ -12,17 +12,24 @@ namespace Robust.Client.UserInterface.Controls
         private bool _vScrollVisible;
         private bool _hScrollVisible;
 
-        private VScrollBar _vScrollBar;
-        private HScrollBar _hScrollBar;
+        private readonly VScrollBar _vScrollBar;
+        private readonly HScrollBar _hScrollBar;
 
         private bool _suppressScrollValueChanged;
 
         public ScrollContainer()
         {
-        }
+            RectClipContent = true;
 
-        public ScrollContainer(string name) : base(name)
-        {
+            Action<Range> ev = _scrollValueChanged;
+            _hScrollBar = new HScrollBar {Visible = false};
+            _vScrollBar = new VScrollBar {Visible = false};
+            AddChild(_hScrollBar);
+            AddChild(_vScrollBar);
+            _hScrollBar.SetAnchorAndMarginPreset(LayoutPreset.BottomWide);
+            _vScrollBar.SetAnchorAndMarginPreset(LayoutPreset.RightWide);
+            _hScrollBar.OnValueChanged += ev;
+            _vScrollBar.OnValueChanged += ev;
         }
 
         public bool VScrollEnabled
@@ -43,21 +50,6 @@ namespace Robust.Client.UserInterface.Controls
                 _hScrollEnabled = value;
                 MinimumSizeChanged();
             }
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-
-            Action<Range> ev = _scrollValueChanged;
-            _hScrollBar = new HScrollBar {Visible = false};
-            _vScrollBar = new VScrollBar {Visible = false};
-            AddChild(_hScrollBar);
-            AddChild(_vScrollBar);
-            _hScrollBar.SetAnchorAndMarginPreset(LayoutPreset.BottomWide);
-            _vScrollBar.SetAnchorAndMarginPreset(LayoutPreset.RightWide);
-            _hScrollBar.OnValueChanged += ev;
-            _vScrollBar.OnValueChanged += ev;
         }
 
         protected internal override void SortChildren()
@@ -169,13 +161,6 @@ namespace Robust.Client.UserInterface.Controls
             return new Vector2(totalX, totalY);
         }
 
-        protected override void SetDefaults()
-        {
-            base.SetDefaults();
-
-            RectClipContent = true;
-        }
-
         protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
         {
             base.MouseWheel(args);
@@ -228,7 +213,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            SortChildren();
+            QueueSortChildren();
         }
     }
 }

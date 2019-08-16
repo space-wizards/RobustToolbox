@@ -21,10 +21,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public Button()
         {
-        }
-
-        public Button(string name) : base(name)
-        {
+            DrawModeChanged();
         }
 
         /// <summary>
@@ -115,7 +112,7 @@ namespace Robust.Client.UserInterface.Controls
             /// <summary>
             ///     Text is aligned to the right of the button.
             /// </summary>
-            Right = 2,
+            Right = 2
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)
@@ -198,13 +195,6 @@ namespace Robust.Client.UserInterface.Controls
             var width = EnsureWidthCache();
 
             return (width / UIScale, fontHeight) + style.MinimumSize / UIScale;
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-
-            DrawModeChanged();
         }
 
         protected override void DrawModeChanged()

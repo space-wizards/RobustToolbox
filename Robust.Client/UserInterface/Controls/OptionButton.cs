@@ -177,16 +177,6 @@ namespace Robust.Client.UserInterface.Controls
 
         public OptionButton()
         {
-        }
-
-        public OptionButton(string name) : base(name)
-        {
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-
             OnPressed += _onPressed;
             _popup = new Popup();
             UserInterfaceManager.ModalRoot.AddChild(_popup);

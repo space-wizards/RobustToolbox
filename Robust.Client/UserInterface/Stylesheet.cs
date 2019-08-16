@@ -209,7 +209,7 @@ namespace Robust.Client.UserInterface
         public override StyleSpecificity CalculateSpecificity()
         {
             var countId = ElementId == null ? 0 : 1;
-            var countClasses = (ElementClasses?.Count ?? 0) + (PseudoClass == null ? 0 : 1);
+            var countClasses = (ElementClasses?.Count ?? 0) + (PseudoClass.Count == 0 ? 0 : 1);
             var countTypes = 0;
             if (ElementType != null)
             {

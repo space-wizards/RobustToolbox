@@ -173,7 +173,7 @@ namespace Robust.Client.UserInterface
         public IReadOnlyCollection<string> ElementClasses { get; }
         public string ElementId { get; }
 
-        private HashSet<string> _pseudoclass { get; }
+        private HashSet<string> _pseudoclass { get; set; }
         public IReadOnlyCollection<string> PseudoClass { get => _pseudoclass; }
 
         public override bool Matches(Control control)

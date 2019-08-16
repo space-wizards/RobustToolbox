@@ -10,21 +10,51 @@ namespace Robust.Shared.Maths
     {
         public readonly Box2 Box;
         public readonly Angle Rotation;
+        public readonly Vector2 Position;
 
         /// <summary>
         ///     A 1x1 unit box with the origin centered and identity rotation.
         /// </summary>
-        public static readonly Box2Rotated UnitCentered = new Box2Rotated(Box2.UnitCentered, Angle.Zero);
+        public static readonly Box2Rotated UnitCentered = new Box2Rotated(Box2.UnitCentered, Angle.Zero, Vector2.Zero);
 
-        public Vector2 BottomRight => Rotation.RotateVec(new Vector2(Box.Right, Box.Bottom));
-        public Vector2 TopLeft => Rotation.RotateVec(new Vector2(Box.Left, Box.Top));
-        public Vector2 TopRight => Rotation.RotateVec(new Vector2(Box.Right, Box.Top));
-        public Vector2 BottomLeft => Rotation.RotateVec(new Vector2(Box.Left, Box.Bottom));
+        public Vector2 BottomRight => Position + Rotation.RotateVec(new Vector2(Box.Right, Box.Bottom));
+        public Vector2 TopLeft => Position + Rotation.RotateVec(new Vector2(Box.Left, Box.Top));
+        public Vector2 TopRight => Position + Rotation.RotateVec(new Vector2(Box.Right, Box.Top));
+        public Vector2 BottomLeft => Position + Rotation.RotateVec(new Vector2(Box.Left, Box.Bottom));
 
         public Box2Rotated(Box2 box, Angle rotation)
+            : this(box, rotation, Vector2.Zero) { }
+
+        public Box2Rotated(Box2 box, Angle rotation, Vector2 position)
         {
             Box = box;
             Rotation = rotation;
+            Position = position;
+        }
+
+        /// <summary>
+        /// calculates the smallest AABB that will encompass the rotated box. The AABB is in local space.
+        /// </summary>
+        public Box2 CalcBoundingBox()
+        {
+            // https://stackoverflow.com/a/19830964
+
+            var (X0, Y0) = Box.BottomLeft;
+            var (X1, Y1) = Box.TopRight;
+
+            var Fi = Rotation.Theta;
+
+            var CX = (X0 + X1) / 2;  //Center point
+            var CY = (Y0 + Y1) / 2;
+            var WX = (X1 - X0) / 2;  //Half-width
+            var WY = (Y1 - Y0) / 2;
+
+            var SF = Math.Sin(Fi);
+            var CF = Math.Cos(Fi);
+
+            var NH = Math.Abs(WX * SF) + Math.Abs(WY * CF);  //boundrect half-height
+            var NW = Math.Abs(WX * CF) + Math.Abs(WY * SF);  //boundrect half-width
+            return new Box2((float) (CX - NW), (float) (CY - NH), (float) (CX + NW), (float) (CY + NH)); //draw bound rectangle
         }
 
         #region Equality

@@ -118,11 +118,17 @@ namespace Robust.Client.Debugging
 
                     foreach (var shape in boundingBox.PhysicsShapes)
                     {
+                        // TODO: Add a debug drawing function to IPhysShape
                         if (shape is PhysShapeAabb aabb)
                         {
-                            // TODO: Add a debug drawing function to IPhysShape
-                            var shapeWorldBox = aabb.CalculateLocalBounds(transform.WorldRotation).Translated(transform.WorldPosition);
+                            var shapeWorldBox = aabb.LocalBounds.Translated(transform.WorldPosition);
                             worldHandle.DrawRect(shapeWorldBox, colorFill);
+                        }
+                        else if (shape is PhysShapeRect rect)
+                        {
+                            worldHandle.SetTransform(transform.WorldMatrix);
+                            worldHandle.DrawRect(rect.Rectangle, colorFill);
+                            worldHandle.SetTransform(Matrix3.Identity);
                         }
                     }
                     

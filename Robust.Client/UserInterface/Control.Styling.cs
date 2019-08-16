@@ -13,7 +13,7 @@ namespace Robust.Client.UserInterface
         private readonly HashSet<string> _styleClasses = new HashSet<string>();
         private readonly HashSet<string> _stylePseudoClass = new HashSet<string>();
         public ICollection<string> StyleClasses { get; }
-        public ICollection<string> StylePseudoClass { get => _stylePseudoClass; }
+        public IReadOnlyCollection<string> StylePseudoClass { get => _stylePseudoClass; }
 
         private string _styleIdentifier;
 
@@ -30,12 +30,12 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public bool HasStylePseudoClass(string className)
+        public bool HasStylesPseudoClass(ICollection<string> collection)
         {
-            return _stylePseudoClass.Contains(className);
+            return _stylePseudoClass.IsSubsetOf(collection);
         }
 
-        public void AddStylePseudoClass(string className)
+        protected void AddStylePseudoClass(string className)
         {
             if (_stylePseudoClass.Contains(className))
             {
@@ -46,20 +46,21 @@ namespace Robust.Client.UserInterface
             Restyle();
         }
 
-        public void RemoveStylePseudoClass(string className)
+        protected void RemoveStylePseudoClass(string className)
         {
             _stylePseudoClass.Remove(className);
             Restyle();
         }
 
-        public void SetOnlyStylePseudoClass(string className)
+        protected void SetOnlyStylePseudoClass(string className)
         {
-            if (_stylePseudoClass.Contains(className))
+            _stylePseudoClass.Clear();
+
+            if (className == null)
             {
                 return;
             }
 
-            _stylePseudoClass.Clear();
             _stylePseudoClass.Add(className);
             Restyle();
         }

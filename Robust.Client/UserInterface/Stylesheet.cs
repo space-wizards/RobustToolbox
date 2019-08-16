@@ -148,7 +148,7 @@ namespace Robust.Client.UserInterface
             Type elementType,
             IReadOnlyCollection<string> elementClasses,
             string elementId,
-            string[] pseudoClass)
+            IReadOnlyCollection<string> pseudoClass)
         {
             if (elementType != null)
             {
@@ -166,14 +166,15 @@ namespace Robust.Client.UserInterface
             ElementType = elementType;
             ElementClasses = elementClasses;
             ElementId = elementId;
-            PseudoClass = pseudoClass != null ? new HashSet<string>(pseudoClass) : new HashSet<string>();
+            _pseudoclass = pseudoClass != null ? new HashSet<string>(pseudoClass) : new HashSet<string>();
         }
 
         public Type ElementType { get; }
         public IReadOnlyCollection<string> ElementClasses { get; }
         public string ElementId { get; }
 
-        public HashSet<string> PseudoClass;
+        private HashSet<string> _pseudoclass { get; }
+        public IReadOnlyCollection<string> PseudoClass { get => _pseudoclass; }
 
         public override bool Matches(Control control)
         {
@@ -198,7 +199,7 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            if (PseudoClass.Count > 0 && !PseudoClass.SetEquals(control.StylePseudoClass))
+            if (PseudoClass.Count > 0 &&  !control.HasStylesPseudoClass(_pseudoclass))
             {
                 return false;
             }
@@ -209,7 +210,7 @@ namespace Robust.Client.UserInterface
         public override StyleSpecificity CalculateSpecificity()
         {
             var countId = ElementId == null ? 0 : 1;
-            var countClasses = (ElementClasses?.Count ?? 0) + (PseudoClass.Count == 0 ? 0 : 1);
+            var countClasses = (ElementClasses?.Count ?? 0) + (PseudoClass.Count == 0 ? 0 : PseudoClass.Count);
             var countTypes = 0;
             if (ElementType != null)
             {

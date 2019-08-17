@@ -30,9 +30,9 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public bool HasStylesPseudoClass(ICollection<string> collection)
+        public bool HasStylePseudoClass(string className)
         {
-            return _stylePseudoClass.IsSubsetOf(collection);
+            return _stylePseudoClass.Contains(className);
         }
 
         protected void AddStylePseudoClass(string className)
@@ -58,6 +58,7 @@ namespace Robust.Client.UserInterface
 
             if (className == null)
             {
+                Restyle();
                 return;
             }
 

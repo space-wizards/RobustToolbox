@@ -199,9 +199,15 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            if (PseudoClass.Count > 0 &&  !control.HasStylesPseudoClass(_pseudoclass))
+            if (PseudoClass != null)
             {
-                return false;
+                foreach (var elementClass in PseudoClass)
+                {
+                    if (!control.HasStylePseudoClass(elementClass))
+                    {
+                        return false;
+                    }
+                }
             }
 
             return true;
@@ -210,7 +216,7 @@ namespace Robust.Client.UserInterface
         public override StyleSpecificity CalculateSpecificity()
         {
             var countId = ElementId == null ? 0 : 1;
-            var countClasses = (ElementClasses?.Count ?? 0) + (PseudoClass.Count == 0 ? 0 : PseudoClass.Count);
+            var countClasses = (ElementClasses?.Count ?? 0) + PseudoClass.Count;
             var countTypes = 0;
             if (ElementType != null)
             {

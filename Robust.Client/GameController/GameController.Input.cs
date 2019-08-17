@@ -5,7 +5,7 @@ namespace Robust.Client
     internal sealed partial class GameController
     {
         /// <summary>
-        ///     Invoked when a key on the keyboard is pressed down.
+        ///     Invoked when a key on the keyboard or a mouse button is pressed down.
         /// </summary>
         public void KeyDown(KeyEventArgs keyEvent)
         {
@@ -13,7 +13,7 @@ namespace Robust.Client
         }
 
         /// <summary>
-        ///     Invoked when a key on the keyboard is released.
+        ///     Invoked when a key on the keyboard or a mouse button is released.
         /// </summary>
         public void KeyUp(KeyEventArgs keyEvent)
         {

@@ -83,7 +83,7 @@ namespace Robust.Client.Input
         /// <inheritdoc />
         public void KeyDown(KeyEventArgs args)
         {
-            if (!Enabled || args.Key == Keyboard.Key.Unknown || args.IsRepeat)
+            if (!Enabled || args.Key == Keyboard.Key.Unknown)
             {
                 return;
             }
@@ -151,6 +151,10 @@ namespace Robust.Client.Input
                 if (binding.BindingType == KeyBindingType.Toggle)
                 {
                     return SetBindState(binding, BoundKeyState.Up);
+                }
+                else if (binding.CanRepeat)
+                {
+                    return SetBindState(binding, BoundKeyState.Down);
                 }
             }
             else
@@ -275,6 +279,12 @@ namespace Robust.Client.Input
                     canFocus = canFocusName.AsBool();
                 }
 
+                var canRepeat = false;
+                if (keyMapping.TryGetNode("canRepeat", out var canRepeatName))
+                {
+                    canRepeat = canRepeatName.AsBool();
+                }
+
                 var mod1 = Keyboard.Key.Unknown;
                 if (keyMapping.TryGetNode("mod1", out var mod1Name))
                 {
@@ -295,14 +305,14 @@ namespace Robust.Client.Input
 
                 var type = keyMapping.GetNode("type").AsEnum<KeyBindingType>();
 
-                var binding = new KeyBinding(function, type, key, canFocus, mod1, mod2, mod3);
+                var binding = new KeyBinding(function, type, key, canFocus, canRepeat, mod1, mod2, mod3);
                 RegisterBinding(binding);
             }
         }
 
         public void AddClickBind()
         {
-            RegisterBinding(new KeyBinding(EngineKeyFunctions.Use, KeyBindingType.State, Keyboard.Key.MouseLeft, true));
+            RegisterBinding(new KeyBinding(EngineKeyFunctions.Use, KeyBindingType.State, Keyboard.Key.MouseLeft, true, false));
         }
 
         private void RegisterBinding(KeyBinding binding)
@@ -355,15 +365,21 @@ namespace Robust.Client.Input
             public int PackedKeyCombo { get; }
             public BoundKeyFunction Function { get; }
             public KeyBindingType BindingType { get; }
+
             /// <summary>
-            ///     Whether the Bound key can change the focused control.
+            ///     Whether the BoundKey can change the focused control.
             /// </summary>
             public bool CanFocus { get; internal set; }
+
+            /// <summary>
+            ///     Whether the BoundKey still triggers while held down.
+            /// </summary>
+            public bool CanRepeat { get; internal set; }
 
             public KeyBinding(BoundKeyFunction function,
                               KeyBindingType bindingType,
                               Keyboard.Key baseKey,
-                              bool canFocus,
+                              bool canFocus, bool canRepeat,
                               Keyboard.Key mod1 = Keyboard.Key.Unknown,
                               Keyboard.Key mod2 = Keyboard.Key.Unknown,
                               Keyboard.Key mod3 = Keyboard.Key.Unknown)
@@ -371,6 +387,7 @@ namespace Robust.Client.Input
                 Function = function;
                 BindingType = bindingType;
                 CanFocus = canFocus;
+                CanRepeat = canRepeat;
 
                 PackedKeyCombo = PackKeyCombo(baseKey, mod1, mod2, mod3);
             }

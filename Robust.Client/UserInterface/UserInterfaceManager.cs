@@ -333,6 +333,7 @@ namespace Robust.Client.UserInterface
             return _mouseFindControlAtPos(RootControl, coordinates);
         }
 
+        /// <inheritdoc />
         public void GrabKeyboardFocus(Control control)
         {
             if (control == null)
@@ -633,9 +634,13 @@ namespace Robust.Client.UserInterface
             RootControl.Size = _displayManager.ScreenSize / UIScale;
         }
 
+        /// <summary>
+        ///     Converts 
+        /// </summary>
+        /// <param name="args">Event data values for a bound key state change.</param>
         private void OnUIKeyBindStateChanged(BoundKeyEventArgs args)
         {
-            if (!args.CanFocus && KeyboardFocused is LineEdit)
+            if (!args.CanFocus && KeyboardFocused != null)
             {
                 args.Handle();
             }

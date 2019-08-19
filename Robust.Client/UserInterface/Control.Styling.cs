@@ -13,7 +13,7 @@ namespace Robust.Client.UserInterface
         private readonly HashSet<string> _styleClasses = new HashSet<string>();
         private readonly HashSet<string> _stylePseudoClass = new HashSet<string>();
         public ICollection<string> StyleClasses { get; }
-        public IReadOnlyCollection<string> StylePseudoClass { get => _stylePseudoClass; }
+        public IReadOnlyCollection<string> StylePseudoClass => _stylePseudoClass; 
 
         private string _styleIdentifier;
 

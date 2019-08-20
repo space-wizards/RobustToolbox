@@ -37,16 +37,16 @@ namespace Robust.Client.UserInterface.Controls
             switch (DrawMode)
             {
                 case DrawModeEnum.Normal:
-                    StylePseudoClass = StylePseudoClassNormal;
+                    SetOnlyStylePseudoClass(StylePseudoClassNormal);
                     break;
                 case DrawModeEnum.Pressed:
-                    StylePseudoClass = StylePseudoClassPressed;
+                    SetOnlyStylePseudoClass(StylePseudoClassPressed);
                     break;
                 case DrawModeEnum.Hover:
-                    StylePseudoClass = StylePseudoClassHover;
+                    SetOnlyStylePseudoClass(StylePseudoClassHover);
                     break;
                 case DrawModeEnum.Disabled:
-                    StylePseudoClass = StylePseudoClassDisabled;
+                    SetOnlyStylePseudoClass(StylePseudoClassDisabled);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

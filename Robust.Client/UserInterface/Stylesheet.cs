@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
@@ -148,7 +148,7 @@ namespace Robust.Client.UserInterface
             Type elementType,
             IReadOnlyCollection<string> elementClasses,
             string elementId,
-            string pseudoClass)
+            IReadOnlyCollection<string> pseudoClass)
         {
             if (elementType != null)
             {
@@ -172,7 +172,8 @@ namespace Robust.Client.UserInterface
         public Type ElementType { get; }
         public IReadOnlyCollection<string> ElementClasses { get; }
         public string ElementId { get; }
-        public string PseudoClass { get; }
+
+        public IReadOnlyCollection<string> PseudoClass { get; }
 
         public override bool Matches(Control control)
         {
@@ -197,9 +198,15 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            if (PseudoClass != null && PseudoClass != control.StylePseudoClass)
+            if (PseudoClass != null)
             {
-                return false;
+                foreach (var elementClass in PseudoClass)
+                {
+                    if (!control.HasStylePseudoClass(elementClass))
+                    {
+                        return false;
+                    }
+                }
             }
 
             return true;
@@ -208,7 +215,7 @@ namespace Robust.Client.UserInterface
         public override StyleSpecificity CalculateSpecificity()
         {
             var countId = ElementId == null ? 0 : 1;
-            var countClasses = (ElementClasses?.Count ?? 0) + (PseudoClass == null ? 0 : 1);
+            var countClasses = (ElementClasses?.Count ?? 0) + (PseudoClass?.Count ?? 0);
             var countTypes = 0;
             if (ElementType != null)
             {

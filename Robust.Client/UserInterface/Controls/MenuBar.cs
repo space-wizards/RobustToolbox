@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -206,14 +206,14 @@ namespace Robust.Client.UserInterface.Controls
 
                 OnMouseEntered?.Invoke();
 
-                StylePseudoClass = StylePseudoClassHover;
+                SetOnlyStylePseudoClass(StylePseudoClassHover);
             }
 
             protected internal override void MouseExited()
             {
                 base.MouseExited();
 
-                StylePseudoClass = null;
+                SetOnlyStylePseudoClass(null);
             }
         }
 

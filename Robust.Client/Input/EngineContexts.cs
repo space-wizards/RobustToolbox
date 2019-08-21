@@ -14,14 +14,27 @@ namespace Robust.Client.Input
         public static void SetupContexts(IInputContextContainer contexts)
         {
             var common = contexts.GetContext(InputContextContainer.DefaultContextName);
+            common.AddFunction(EngineKeyFunctions.Use);
+
             common.AddFunction(EngineKeyFunctions.EscapeMenu);
             common.AddFunction(EngineKeyFunctions.HideUI);
+            common.AddFunction(EngineKeyFunctions.ShowDebugConsole);
             common.AddFunction(EngineKeyFunctions.ShowDebugMonitors);
             common.AddFunction(EngineKeyFunctions.MoveUp);
             common.AddFunction(EngineKeyFunctions.MoveDown);
             common.AddFunction(EngineKeyFunctions.MoveLeft);
             common.AddFunction(EngineKeyFunctions.MoveRight);
             common.AddFunction(EngineKeyFunctions.Run);
+
+            common.AddFunction(EngineKeyFunctions.TextCursorLeft);
+            common.AddFunction(EngineKeyFunctions.TextCursorRight);
+            common.AddFunction(EngineKeyFunctions.TextBackspace);
+            common.AddFunction(EngineKeyFunctions.TextSubmit);
+            common.AddFunction(EngineKeyFunctions.TextPaste);
+            common.AddFunction(EngineKeyFunctions.TextHistoryPrev);
+            common.AddFunction(EngineKeyFunctions.TextHistoryNext);
+            common.AddFunction(EngineKeyFunctions.TextReleaseFocus);
+            common.AddFunction(EngineKeyFunctions.TextScrollToBottom);
 
             var editor = contexts.New("editor", common);
             editor.AddFunction(EngineKeyFunctions.EditorLinePlace);

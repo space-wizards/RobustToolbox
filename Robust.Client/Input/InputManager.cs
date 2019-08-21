@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using Robust.Client.GameObjects.EntitySystems;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
@@ -24,13 +25,9 @@ namespace Robust.Client.Input
 
         public virtual Vector2 MouseScreenPosition => Vector2.Zero;
 
-        [Dependency]
 #pragma warning disable 649
-        private readonly IUserInterfaceManager _uiManager;
-        [Dependency]
-        private readonly IResourceManager _resourceMan;
-        [Dependency]
-        private readonly IReflectionManager _reflectionManager;
+        [Dependency] private readonly IResourceManager _resourceMan;
+        [Dependency] private readonly IReflectionManager _reflectionManager;
 #pragma warning restore 649
 
         private readonly Dictionary<BoundKeyFunction, InputCmdHandler> _commands = new Dictionary<BoundKeyFunction, InputCmdHandler>();
@@ -42,6 +39,9 @@ namespace Robust.Client.Input
 
         /// <inheritdoc />
         public IInputContextContainer Contexts { get; } = new InputContextContainer();
+
+        /// <inheritdoc />
+        public event Action<BoundKeyEventArgs> UIKeyBindStateChanged;
 
         /// <inheritdoc />
         public event Action<BoundKeyEventArgs> KeyBindStateChanged;
@@ -72,6 +72,10 @@ namespace Robust.Client.Input
             foreach (var function in args.OldContext.Except(args.NewContext))
             {
                 var bind = _bindings.Find(binding => binding.Function == function);
+                if (bind == null)
+                {
+                    continue;
+                }
                 SetBindState(bind, BoundKeyState.Up);
             }
         }
@@ -79,7 +83,7 @@ namespace Robust.Client.Input
         /// <inheritdoc />
         public void KeyDown(KeyEventArgs args)
         {
-            if (!Enabled || UIBlocked() || args.Key == Keyboard.Key.Unknown || args.IsRepeat)
+            if (!Enabled || args.Key == Keyboard.Key.Unknown)
             {
                 return;
             }
@@ -99,11 +103,14 @@ namespace Robust.Client.Input
                 if (PackedMatchesPressedState(binding.PackedKeyCombo))
                 {
                     // this statement *should* always be true first
-                    if (matchedCombo == 0 && PackedContainsKey(binding.PackedKeyCombo, internalKey)) // first key match becomes pressed
+                    // Keep triggering keybinds of the same PackedKeyCombo until Handled or no bindings left
+                    if ((matchedCombo == 0 || binding.PackedKeyCombo == matchedCombo) &&
+                        PackedContainsKey(binding.PackedKeyCombo, internalKey))
                     {
                         matchedCombo = binding.PackedKeyCombo;
 
-                        DownBind(binding);
+                        if (DownBind(binding))
+                            break;
                     }
                     else if (PackedIsSubPattern(matchedCombo, binding.PackedKeyCombo))
                     {
@@ -137,19 +144,24 @@ namespace Robust.Client.Input
             _keysPressed[internalKey] = false;
         }
 
-        private void DownBind(KeyBinding binding)
+        private bool DownBind(KeyBinding binding)
         {
             if (binding.State == BoundKeyState.Down)
             {
                 if (binding.BindingType == KeyBindingType.Toggle)
                 {
-                    SetBindState(binding, BoundKeyState.Up);
+                    return SetBindState(binding, BoundKeyState.Up);
+                }
+                else if (binding.CanRepeat)
+                {
+                    return SetBindState(binding, BoundKeyState.Down);
                 }
             }
             else
             {
-                SetBindState(binding, BoundKeyState.Down);
+                return SetBindState(binding, BoundKeyState.Down);
             }
+            return false;
         }
 
         private void UpBind(KeyBinding binding)
@@ -162,11 +174,17 @@ namespace Robust.Client.Input
             SetBindState(binding, BoundKeyState.Up);
         }
 
-        private void SetBindState(KeyBinding binding, BoundKeyState state)
+        private bool SetBindState(KeyBinding binding, BoundKeyState state)
         {
             binding.State = state;
 
-            KeyBindStateChanged?.Invoke(new BoundKeyEventArgs(binding.Function, binding.State, new ScreenCoordinates(MouseScreenPosition)));
+            var eventArgs = new BoundKeyEventArgs(binding.Function, binding.State, new ScreenCoordinates(MouseScreenPosition), binding.CanFocus);
+
+            UIKeyBindStateChanged?.Invoke(eventArgs);
+            if (state == BoundKeyState.Up || !eventArgs.Handled)
+            {
+                KeyBindStateChanged?.Invoke(eventArgs);
+            }
 
             var cmd = GetInputCommand(binding.Function);
             if (state == BoundKeyState.Up)
@@ -177,6 +195,7 @@ namespace Robust.Client.Input
             {
                 cmd?.Enabled(null);
             }
+            return (eventArgs.Handled);
         }
 
         private bool PackedMatchesPressedState(int packedKeyCombo)
@@ -254,27 +273,46 @@ namespace Robust.Client.Input
                 }
                 var key = keyMapping.GetNode("key").AsEnum<Keyboard.Key>();
 
+                var canFocus = false;
+                if (keyMapping.TryGetNode("canFocus", out var canFocusName))
+                {
+                    canFocus = canFocusName.AsBool();
+                }
+
+                var canRepeat = false;
+                if (keyMapping.TryGetNode("canRepeat", out var canRepeatName))
+                {
+                    canRepeat = canRepeatName.AsBool();
+                }
+
                 var mod1 = Keyboard.Key.Unknown;
                 if (keyMapping.TryGetNode("mod1", out var mod1Name))
                 {
                     mod1 = mod1Name.AsEnum<Keyboard.Key>();
                 }
 
+                var mod2 = Keyboard.Key.Unknown;
+                if (keyMapping.TryGetNode("mod2", out var mod2Name))
+                {
+                    mod2 = mod2Name.AsEnum<Keyboard.Key>();
+                }
+
+                var mod3 = Keyboard.Key.Unknown;
+                if (keyMapping.TryGetNode("mod3", out var mod3Name))
+                {
+                    mod3 = mod3Name.AsEnum<Keyboard.Key>();
+                }
+
                 var type = keyMapping.GetNode("type").AsEnum<KeyBindingType>();
 
-                var binding = new KeyBinding(function, type, key, mod1);
+                var binding = new KeyBinding(function, type, key, canFocus, canRepeat, mod1, mod2, mod3);
                 RegisterBinding(binding);
             }
         }
 
-        // Don't take input if we're focused on a LineEdit.
-        // LineEdits don't intercept keydowns when typing properly.
-        // NOTE: macOS specific!
-        // https://github.com/godotengine/godot/issues/15071
-        // So if we didn't do this, the DebugConsole wouldn't block movement (for example).
-        private bool UIBlocked()
+        public void AddClickBind()
         {
-            return _uiManager.KeyboardFocused is LineEdit;
+            RegisterBinding(new KeyBinding(EngineKeyFunctions.Use, KeyBindingType.State, Keyboard.Key.MouseLeft, true, false));
         }
 
         private void RegisterBinding(KeyBinding binding)
@@ -328,15 +366,28 @@ namespace Robust.Client.Input
             public BoundKeyFunction Function { get; }
             public KeyBindingType BindingType { get; }
 
+            /// <summary>
+            ///     Whether the BoundKey can change the focused control.
+            /// </summary>
+            public bool CanFocus { get; internal set; }
+
+            /// <summary>
+            ///     Whether the BoundKey still triggers while held down.
+            /// </summary>
+            public bool CanRepeat { get; internal set; }
+
             public KeyBinding(BoundKeyFunction function,
                               KeyBindingType bindingType,
                               Keyboard.Key baseKey,
+                              bool canFocus, bool canRepeat,
                               Keyboard.Key mod1 = Keyboard.Key.Unknown,
                               Keyboard.Key mod2 = Keyboard.Key.Unknown,
                               Keyboard.Key mod3 = Keyboard.Key.Unknown)
             {
                 Function = function;
                 BindingType = bindingType;
+                CanFocus = canFocus;
+                CanRepeat = canRepeat;
 
                 PackedKeyCombo = PackKeyCombo(baseKey, mod1, mod2, mod3);
             }

@@ -1,4 +1,4 @@
-using Robust.Client;
+﻿using Robust.Client;
 using Robust.Client.Input;
 using Robust.Client.Interfaces;
 using Robust.Shared.Timing;
@@ -34,14 +34,6 @@ namespace Robust.UnitTesting
         }
 
         public void TextEntered(TextEventArgs textEvent)
-        {
-        }
-
-        public void MouseDown(MouseButtonEventArgs mouseEvent)
-        {
-        }
-
-        public void MouseUp(MouseButtonEventArgs mouseButtonEventArgs)
         {
         }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
@@ -234,11 +234,11 @@ namespace Robust.Client.UserInterface.Controls
             _fixChildMargins(control);
         }
 
-        protected internal override void MouseDown(GUIMouseButtonEventArgs args)
+        protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
         {
-            base.MouseDown(args);
+            base.KeyBindDown(args);
 
-            if (!TabsVisible)
+            if (!TabsVisible || !args.CanFocus)
             {
                 return;
             }

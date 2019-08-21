@@ -7,6 +7,7 @@ using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.Placement;
+using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;

@@ -18,6 +18,9 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction MoveRight = "MoveRight";
         public static readonly BoundKeyFunction Run = "Run";
 
+        public static readonly BoundKeyFunction Use = "Use";
+
+        public static readonly BoundKeyFunction ShowDebugConsole = "ShowDebugConsole";
         public static readonly BoundKeyFunction ShowDebugMonitors = "ShowDebugMonitors";
         public static readonly BoundKeyFunction HideUI = "HideUI";
         public static readonly BoundKeyFunction EscapeMenu = "ShowEscapeMenu";
@@ -27,6 +30,16 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction EditorPlaceObject = "EditorPlaceObject";
         public static readonly BoundKeyFunction EditorCancelPlace = "EditorCancelPlace";
         public static readonly BoundKeyFunction EditorRotateObject = "EditorRotateObject";
+
+        public static readonly BoundKeyFunction TextCursorLeft = "TextCursorLeft";
+        public static readonly BoundKeyFunction TextCursorRight = "TextCursorRight";
+        public static readonly BoundKeyFunction TextBackspace = "TextBackspace";
+        public static readonly BoundKeyFunction TextSubmit = "TextSubmit";
+        public static readonly BoundKeyFunction TextPaste = "TextPaste";
+        public static readonly BoundKeyFunction TextHistoryPrev = "TextHistoryPrev";
+        public static readonly BoundKeyFunction TextHistoryNext = "TextHistoryNext";
+        public static readonly BoundKeyFunction TextReleaseFocus = "TextReleaseFocus";
+        public static readonly BoundKeyFunction TextScrollToBottom = "TextScrollToBottom";
     }
 
     [Serializable, NetSerializable]

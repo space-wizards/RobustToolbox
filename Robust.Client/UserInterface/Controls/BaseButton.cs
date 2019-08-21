@@ -1,4 +1,5 @@
 ﻿using System;
+using Robust.Shared.Input;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
@@ -15,6 +16,7 @@ namespace Robust.Client.UserInterface.Controls
         private bool _beingHovered;
         private bool _disabled;
         private bool _pressed;
+        private bool _enableAllKeybinds;
 
         /// <summary>
         ///     Controls mode of operation in relation to press/release events.
@@ -59,6 +61,15 @@ namespace Robust.Client.UserInterface.Controls
 
                 DrawModeChanged();
             }
+        }
+
+        /// <summary>
+        ///     Whether a button enables Keybinds without GUIBoundKeyEventArgs.CanFocus to trigger the button.
+        /// </summary>
+        public bool EnableAllKeybinds
+        {
+            get => _enableAllKeybinds;
+            set => _enableAllKeybinds = value;
         }
 
         /// <summary>
@@ -124,16 +135,16 @@ namespace Robust.Client.UserInterface.Controls
         {
         }
 
-        protected internal override void MouseDown(GUIMouseButtonEventArgs args)
+        protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
         {
-            base.MouseDown(args);
+            base.KeyBindDown(args);
 
-            if (Disabled)
+            if (Disabled || (!_enableAllKeybinds && !args.CanFocus))
             {
                 return;
             }
 
-            var buttonEventArgs = new ButtonEventArgs(this);
+            var buttonEventArgs = new ButtonEventArgs(this, args);
             OnButtonDown?.Invoke(buttonEventArgs);
 
             var drawMode = DrawMode;
@@ -147,7 +158,7 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     _pressed = !_pressed;
                     OnPressed?.Invoke(buttonEventArgs);
-                    OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this));
+                    OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
                 }
                 else
                 {
@@ -162,16 +173,16 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected internal override void MouseUp(GUIMouseButtonEventArgs args)
+        protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)
         {
-            base.MouseUp(args);
+            base.KeyBindUp(args);
 
             if (Disabled)
             {
                 return;
             }
 
-            var buttonEventArgs = new ButtonEventArgs(this);
+            var buttonEventArgs = new ButtonEventArgs(this, args);
             OnButtonUp?.Invoke(buttonEventArgs);
 
             var drawMode = DrawMode;
@@ -183,9 +194,9 @@ namespace Robust.Client.UserInterface.Controls
                 }
 
                 OnPressed?.Invoke(buttonEventArgs);
-                if (ToggleMode)
+                if (ToggleMode && args.CanFocus)
                 {
-                    OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this));
+                    OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
                 }
             }
 
@@ -235,9 +246,12 @@ namespace Robust.Client.UserInterface.Controls
             /// </summary>
             public BaseButton Button { get; }
 
-            public ButtonEventArgs(BaseButton button)
+            public GUIBoundKeyEventArgs Event { get; }
+
+            public ButtonEventArgs(BaseButton button, GUIBoundKeyEventArgs args)
             {
                 Button = button;
+                Event = args;
             }
         }
 
@@ -251,7 +265,7 @@ namespace Robust.Client.UserInterface.Controls
             /// </summary>
             public bool Pressed { get; }
 
-            public ButtonToggledEventArgs(bool pressed, BaseButton button) : base(button)
+            public ButtonToggledEventArgs(bool pressed, BaseButton button, GUIBoundKeyEventArgs args) : base(button, args)
             {
                 Pressed = pressed;
             }

@@ -1,5 +1,7 @@
 ﻿using Robust.Client.Input;
 using Robust.Client.Utility;
+using Robust.Shared.Input;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using System;
 
@@ -19,29 +21,18 @@ namespace Robust.Client.UserInterface
         {
         }
 
-        public event Action<GUIMouseButtonEventArgs> OnMouseDown;
+        public event Action<GUIBoundKeyEventArgs> OnKeyBindDown;
 
-        protected internal virtual void MouseDown(GUIMouseButtonEventArgs args)
+        protected internal virtual void KeyBindDown(GUIBoundKeyEventArgs args)
         {
-            OnMouseDown?.Invoke(args);
+            OnKeyBindDown?.Invoke(args);
         }
 
-        protected internal virtual void MouseUp(GUIMouseButtonEventArgs args)
+        protected internal virtual void KeyBindUp(GUIBoundKeyEventArgs args)
         {
         }
 
         protected internal virtual void MouseMove(GUIMouseMoveEventArgs args)
-        {
-        }
-
-        public event Action<GUIKeyEventArgs> OnKeyDown;
-
-        protected internal virtual void KeyDown(GUIKeyEventArgs args)
-        {
-            OnKeyDown?.Invoke(args);
-        }
-
-        protected internal virtual void KeyUp(GUIKeyEventArgs args)
         {
         }
 
@@ -51,6 +42,24 @@ namespace Robust.Client.UserInterface
 
         protected internal virtual void TextEntered(GUITextEventArgs args)
         {
+        }
+    }
+
+    public class GUIBoundKeyEventArgs : BoundKeyEventArgs
+    {
+        /// <summary>
+        ///     Position of the mouse, relative to the current control.
+        /// </summary>
+        public Vector2 RelativePosition { get; internal set; }
+
+        public Vector2 RelativePixelPosition { get; internal set; }
+
+        public GUIBoundKeyEventArgs(BoundKeyFunction function, BoundKeyState state, ScreenCoordinates pointerLocation,
+            bool canFocus, Vector2 relativePosition, Vector2 relativePixelPosition)
+            : base(function, state, pointerLocation, canFocus)
+        {
+            RelativePosition = relativePosition;
+            RelativePixelPosition = relativePixelPosition;
         }
     }
 
@@ -134,38 +143,6 @@ namespace Robust.Client.UserInterface
             RelativePosition = relativePosition;
             RelativePixelPosition = relativePixelPosition;
             GlobalPixelPosition = globalPixelPosition;
-        }
-    }
-
-    public class GUIMouseButtonEventArgs : GUIMouseEventArgs
-    {
-        /// <summary>
-        ///     The mouse button that has been pressed or released.
-        /// </summary>
-        public Mouse.Button Button { get; }
-
-        /// <summary>
-        ///     True if this action was a double click.
-        ///     Can't be true if this was a release event.
-        /// </summary>
-        public bool DoubleClick { get; }
-
-        public GUIMouseButtonEventArgs(Mouse.Button button,
-            bool doubleClick,
-            Control sourceControl,
-            Mouse.ButtonMask buttonMask,
-            Vector2 globalPosition,
-            Vector2 globalPixelPosition,
-            Vector2 relativePosition,
-            Vector2 relativePixelPosition,
-            bool alt,
-            bool control,
-            bool shift,
-            bool system)
-            : base(sourceControl, buttonMask, globalPosition, globalPixelPosition, relativePosition, relativePixelPosition, alt, control, shift, system)
-        {
-            Button = button;
-            DoubleClick = doubleClick;
         }
     }
 

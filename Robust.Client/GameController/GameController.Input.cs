@@ -5,51 +5,24 @@ namespace Robust.Client
     internal sealed partial class GameController
     {
         /// <summary>
-        ///     Invoked when a key on the keyboard is pressed down.
+        ///     Invoked when a key on the keyboard or a mouse button is pressed down.
         /// </summary>
         public void KeyDown(KeyEventArgs keyEvent)
         {
-            _userInterfaceManager.KeyDown(keyEvent);
-
-            if (keyEvent.Handled)
-            {
-                return;
-            }
             _inputManager.KeyDown(keyEvent);
         }
 
         /// <summary>
-        ///     Invoked when a key on the keyboard is released.
+        ///     Invoked when a key on the keyboard or a mouse button is released.
         /// </summary>
         public void KeyUp(KeyEventArgs keyEvent)
         {
-            // Unlike KeyDown, InputManager still gets key ups.
-            // My logic is that it should be fine dealing with redundant key ups and this *might* prevent edge cases.
-            _userInterfaceManager.KeyUp(keyEvent);
             _inputManager.KeyUp(keyEvent);
         }
 
         public void TextEntered(TextEventArgs textEvent)
         {
             _userInterfaceManager.TextEntered(textEvent);
-        }
-
-        /// <summary>
-        ///     Invoked when a button on the mouse is pressed down.
-        /// </summary>
-        public void MouseDown(MouseButtonEventArgs mouseEvent)
-        {
-            _userInterfaceManager.MouseDown(mouseEvent);
-            _stateManager.MouseDown(mouseEvent);
-        }
-
-        /// <summary>
-        ///     Invoked when a button on the mouse is released.
-        /// </summary>
-        public void MouseUp(MouseButtonEventArgs mouseButtonEventArgs)
-        {
-            _userInterfaceManager.MouseUp(mouseButtonEventArgs);
-            _stateManager.MouseUp(mouseButtonEventArgs);
         }
 
         /// <summary>

@@ -16,6 +16,8 @@ using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Localization;
 using Robust.Shared.Network;
 using Robust.Shared.Utility;
+using Robust.Shared.Input;
+using Robust.Client.Interfaces.Input;
 
 namespace Robust.Client.State.States
 {

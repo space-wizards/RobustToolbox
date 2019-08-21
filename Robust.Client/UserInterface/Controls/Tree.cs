@@ -80,9 +80,14 @@ namespace Robust.Client.UserInterface.Controls
             return item;
         }
 
-        protected internal override void MouseDown(GUIMouseButtonEventArgs args)
+        protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
         {
-            base.MouseDown(args);
+            base.KeyBindDown(args);
+
+            if (!args.CanFocus)
+            {
+                return;
+            }
 
             var item = _tryFindItemAtPosition(args.RelativePosition);
 

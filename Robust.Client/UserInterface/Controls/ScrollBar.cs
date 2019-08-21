@@ -2,6 +2,7 @@
 using JetBrains.Annotations;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Input;
+using Robust.Shared.Input;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -53,6 +54,38 @@ namespace Robust.Client.UserInterface.Controls
             _updatePseudoClass();
         }
 
+        protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
+        {
+            base.KeyBindDown(args);
+
+            if (args.Function != EngineKeyFunctions.Use)
+            {
+                return;
+            }
+
+            var box = _getGrabberBox();
+            if (!box.Contains(args.RelativePosition))
+            {
+                return;
+            }
+
+            _grabData = (args.RelativePosition, Value);
+            _updatePseudoClass();
+        }
+
+        protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)
+        {
+            base.KeyBindUp(args);
+
+            if (args.Function != EngineKeyFunctions.Use)
+            {
+                return;
+            }
+
+            _grabData = null;
+            _updatePseudoClass();
+        }
+
         protected internal override void MouseMove(GUIMouseMoveEventArgs args)
         {
             if (_grabData == null)
@@ -80,34 +113,6 @@ namespace Robust.Client.UserInterface.Controls
             movedValue *= MaxValue - MinValue;
             movedValue += MinValue + grabValue;
             Value = movedValue;
-        }
-
-        protected internal override void MouseDown(GUIMouseButtonEventArgs args)
-        {
-            if (args.Button != Mouse.Button.Left)
-            {
-                return;
-            }
-
-            var box = _getGrabberBox();
-            if (!box.Contains(args.RelativePosition))
-            {
-                return;
-            }
-
-            _grabData = (args.RelativePosition, Value);
-            _updatePseudoClass();
-        }
-
-        protected internal override void MouseUp(GUIMouseButtonEventArgs args)
-        {
-            if (args.Button != Mouse.Button.Left)
-            {
-                return;
-            }
-
-            _grabData = null;
-            _updatePseudoClass();
         }
 
         [System.Diagnostics.Contracts.Pure]

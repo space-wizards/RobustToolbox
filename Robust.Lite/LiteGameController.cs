@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Globalization;
 using Robust.Client;
 using Robust.Client.Input;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
+using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared;
@@ -38,6 +39,7 @@ namespace Robust.Lite
         [Dependency] private readonly ITaskManager _taskManager;
         [Dependency] private readonly ITimerManager _timerManager;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
+        [Dependency] private readonly IInputManager _inputManager;
 #pragma warning restore 649
 
         public bool LoadConfigAndUserData { get; set; }
@@ -96,6 +98,10 @@ namespace Robust.Lite
 
             _userInterfaceManager.Initialize();
 
+            _inputManager.Initialize();
+
+            _inputManager.AddClickBind();
+
             _clyde.Ready();
         }
 
@@ -153,27 +159,17 @@ namespace Robust.Lite
 
         public void KeyDown(KeyEventArgs keyEvent)
         {
-            _userInterfaceManager.KeyDown(keyEvent);
+            _inputManager.KeyDown(keyEvent);
         }
 
         public void KeyUp(KeyEventArgs keyEvent)
         {
-            _userInterfaceManager.KeyUp(keyEvent);
+            _inputManager.KeyUp(keyEvent);
         }
 
         public void TextEntered(TextEventArgs textEvent)
         {
             _userInterfaceManager.TextEntered(textEvent);
-        }
-
-        public void MouseDown(MouseButtonEventArgs mouseEvent)
-        {
-            _userInterfaceManager.MouseDown(mouseEvent);
-        }
-
-        public void MouseUp(MouseButtonEventArgs mouseButtonEventArgs)
-        {
-            _userInterfaceManager.MouseUp(mouseButtonEventArgs);
         }
 
         public void MouseMove(MouseMoveEventArgs mouseMoveEventArgs)

@@ -22,6 +22,11 @@ namespace Robust.Client.Interfaces.Input
 
         void Initialize();
 
+        /// <summary>
+        ///     Adds the Use keybind for Keyboard.Key.MouseLeft for Robust.Lite Launcher.
+        /// </summary>
+        void AddClickBind();
+
         void KeyDown(KeyEventArgs e);
         void KeyUp(KeyEventArgs e);
 
@@ -42,6 +47,14 @@ namespace Robust.Client.Interfaces.Input
 
         void SetInputCommand(BoundKeyFunction function, InputCmdHandler cmdHandler);
 
+        /// <summary>
+        ///     UIKeyBindStateChanged is called when a keybind is found.
+        /// </summary>
+        event Action<BoundKeyEventArgs> UIKeyBindStateChanged;
+
+        /// <summary>
+        ///     If UIKeyBindStateChanged did not handle the BoundKeyEvent, KeyBindStateChanged is called.
+        /// </summary>
         event Action<BoundKeyEventArgs> KeyBindStateChanged;
     }
 }

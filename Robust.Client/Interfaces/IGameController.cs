@@ -1,4 +1,4 @@
-using Robust.Client.Input;
+﻿using Robust.Client.Input;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.Interfaces
@@ -17,8 +17,6 @@ namespace Robust.Client.Interfaces
         void KeyDown(KeyEventArgs keyEvent);
         void KeyUp(KeyEventArgs keyEvent);
         void TextEntered(TextEventArgs textEvent);
-        void MouseDown(MouseButtonEventArgs mouseEvent);
-        void MouseUp(MouseButtonEventArgs mouseButtonEventArgs);
         void MouseMove(MouseMoveEventArgs mouseMoveEventArgs);
         void MouseWheel(MouseWheelEventArgs mouseWheelEventArgs);
         void OverrideMainLoop(IGameLoop gameLoop);

@@ -45,7 +45,7 @@ namespace Robust.Client.UserInterface
 
         // When a control receives a mouse down it must also receive a mouse up and mouse moves, always.
         // So we keep track of which control is "focused" by the mouse.
-        private Control _mouseFocused;
+        private Control _controlFocused;
 
         public Control StateRoot { get; private set; }
         public Control ModalRoot { get; private set; }
@@ -80,6 +80,9 @@ namespace Robust.Client.UserInterface
             _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager, _displayManager, _netManager, _mapManager);
             RootControl.AddChild(_debugMonitors);
 
+            _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugConsole,
+                InputCmdHandler.FromDelegate(session => DebugConsole.Toggle()));
+
             _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugMonitors,
                 InputCmdHandler.FromDelegate(enabled: session => { DebugMonitors.Visible = true; },
                     disabled: session => { DebugMonitors.Visible = false; }));
@@ -88,6 +91,8 @@ namespace Robust.Client.UserInterface
                 InputCmdHandler.FromDelegate(
                     enabled: session => _rendering = false,
                     disabled: session => _rendering = true));
+
+            _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
         }
 
         private void _initializeCommon()
@@ -177,63 +182,72 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public void MouseDown(MouseButtonEventArgs args)
+        public void KeyBindDown(BoundKeyEventArgs args)
         {
-            // If we have a modal open and the mouse down was outside it, close said modal.
-            if (_modalStack.Count != 0)
+            var control = MouseGetControl(args.PointerLocation.Position);
+            if (args.CanFocus)
             {
-                var top = _modalStack[_modalStack.Count - 1];
-                var offset = args.Position - top.GlobalPixelPosition;
-                if (!top.HasPoint(offset / UIScale))
+                // If we have a modal open and the mouse down was outside it, close said modal.
+                if (_modalStack.Count != 0)
                 {
-                    RemoveModal(top);
-                    args.Handle();
+                    var top = _modalStack[_modalStack.Count - 1];
+                    var offset = args.PointerLocation.Position - top.GlobalPixelPosition;
+                    if (!top.HasPoint(offset / UIScale))
+                    {
+                        RemoveModal(top);
+                        return;
+                    }
+                }
+
+                if (control == null)
+                {
+                    ReleaseKeyboardFocus();
                     return;
                 }
+
+                _controlFocused = control;
+
+                if (_controlFocused.CanKeyboardFocus && _controlFocused.KeyboardFocusOnClick)
+                {
+                    _controlFocused.GrabKeyboardFocus();
+                }
+            }
+            else if (KeyboardFocused != null)
+            {
+                control = KeyboardFocused;
             }
 
-            var control = MouseGetControl(args.Position);
             if (control == null)
             {
-                ReleaseKeyboardFocus();
                 return;
             }
 
-            _mouseFocused = control;
+            var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,
+                args.PointerLocation.Position / UIScale - control.GlobalPosition,
+                args.PointerLocation.Position - control.GlobalPixelPosition);
 
-            if (_mouseFocused.CanKeyboardFocus && _mouseFocused.KeyboardFocusOnClick)
+            _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindDown(ev));
+
+            if (args.CanFocus)
             {
-                _mouseFocused.GrabKeyboardFocus();
+                args.Handle();
             }
-
-            var guiArgs = new GUIMouseButtonEventArgs(args.Button, args.DoubleClick, control, Mouse.ButtonMask.None,
-                args.Position / UIScale, args.Position, args.Position / UIScale - control.GlobalPosition,
-                args.Position - control.GlobalPixelPosition, args.Alt, args.Control, args.Shift,
-                args.System);
-
-            _doMouseGuiInput(control, guiArgs, (c, ev) => c.MouseDown(ev));
-
-            // Always mark this as handled.
-            // The only case it should not be is if we do not have a control to click on,
-            // in which case we never reach this.
-            args.Handle();
         }
 
-        public void MouseUp(MouseButtonEventArgs args)
+        public void KeyBindUp(BoundKeyEventArgs args)
         {
-            if (_mouseFocused == null)
+            var control = _controlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
+            if (control == null)
             {
                 return;
             }
 
-            var guiArgs = new GUIMouseButtonEventArgs(args.Button, args.DoubleClick, _mouseFocused,
-                Mouse.ButtonMask.None,
-                args.Position / UIScale, args.Position, args.Position / UIScale - _mouseFocused.GlobalPosition,
-                args.Position - _mouseFocused.GlobalPixelPosition, args.Alt, args.Control, args.Shift,
-                args.System);
+            var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,
+                args.PointerLocation.Position / UIScale - control.GlobalPosition,
+                args.PointerLocation.Position - control.GlobalPixelPosition);
 
-            _doMouseGuiInput(_mouseFocused, guiArgs, (c, ev) => c.MouseUp(ev));
-            _mouseFocused = null;
+            _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindUp(ev));
+            _controlFocused = null;
 
             // Always mark this as handled.
             // The only case it should not be is if we do not have a control to click on,
@@ -245,7 +259,7 @@ namespace Robust.Client.UserInterface
         {
             _resetTooltipTimer();
             // Update which control is considered hovered.
-            var newHovered = _mouseFocused ?? MouseGetControl(mouseMoveEventArgs.Position);
+            var newHovered = _controlFocused ?? MouseGetControl(mouseMoveEventArgs.Position);
             if (newHovered != CurrentlyHovered)
             {
                 _clearTooltip();
@@ -254,7 +268,7 @@ namespace Robust.Client.UserInterface
                 CurrentlyHovered?.MouseEntered();
             }
 
-            var target = _mouseFocused ?? newHovered;
+            var target = _controlFocused ?? newHovered;
             if (target != null)
             {
                 var guiArgs = new GUIMouseMoveEventArgs(mouseMoveEventArgs.Relative / UIScale,
@@ -298,43 +312,6 @@ namespace Robust.Client.UserInterface
             KeyboardFocused.TextEntered(guiArgs);
         }
 
-        public void KeyDown(KeyEventArgs keyEvent)
-        {
-            // TODO: This is ugly.
-            if (keyEvent.Key == Keyboard.Key.Tilde)
-            {
-                keyEvent.Handle();
-                DebugConsole.Toggle();
-                return;
-            }
-
-            if (KeyboardFocused == null)
-            {
-                return;
-            }
-
-            var guiArgs = new GUIKeyEventArgs(KeyboardFocused, keyEvent.Key, keyEvent.IsRepeat, keyEvent.Alt,
-                keyEvent.Control, keyEvent.Shift, keyEvent.System);
-            KeyboardFocused.KeyDown(guiArgs);
-
-            if (guiArgs.Handled)
-            {
-                keyEvent.Handle();
-            }
-        }
-
-        public void KeyUp(KeyEventArgs keyEvent)
-        {
-            if (KeyboardFocused == null)
-            {
-                return;
-            }
-
-            var guiArgs = new GUIKeyEventArgs(KeyboardFocused, keyEvent.Key, keyEvent.IsRepeat, keyEvent.Alt,
-                keyEvent.Control, keyEvent.Shift, keyEvent.System);
-            KeyboardFocused.KeyUp(guiArgs);
-        }
-
         public void DisposeAllComponents()
         {
             RootControl.DisposeAllChildren();
@@ -356,6 +333,7 @@ namespace Robust.Client.UserInterface
             return _mouseFindControlAtPos(RootControl, coordinates);
         }
 
+        /// <inheritdoc />
         public void GrabKeyboardFocus(Control control)
         {
             if (control == null)
@@ -416,9 +394,9 @@ namespace Robust.Client.UserInterface
                 CurrentlyHovered = null;
             }
 
-            if (control == _mouseFocused)
+            if (control == _controlFocused)
             {
-                _mouseFocused = null;
+                _controlFocused = null;
             }
         }
 
@@ -564,6 +542,28 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        private static void _doGuiInput<T>(Control control, T guiEvent, Action<Control, T> action,
+            bool ignoreStop = false)
+            where T : GUIBoundKeyEventArgs
+        {
+            while (control != null)
+            {
+                if (control.MouseFilter != Control.MouseFilterMode.Ignore)
+                {
+                    action(control, guiEvent);
+
+                    if (guiEvent.Handled || (!ignoreStop && control.MouseFilter == Control.MouseFilterMode.Stop))
+                    {
+                        break;
+                    }
+                }
+
+                guiEvent.RelativePosition += control.Position;
+                guiEvent.RelativePixelPosition += control.PixelPosition;
+                control = control.Parent;
+            }
+        }
+
         private void _clearTooltip()
         {
             _tooltip.Visible = false;
@@ -632,6 +632,26 @@ namespace Robust.Client.UserInterface
         private void _updateRootSize()
         {
             RootControl.Size = _displayManager.ScreenSize / UIScale;
+        }
+
+        /// <summary>
+        ///     Converts 
+        /// </summary>
+        /// <param name="args">Event data values for a bound key state change.</param>
+        private void OnUIKeyBindStateChanged(BoundKeyEventArgs args)
+        {
+            if (!args.CanFocus && KeyboardFocused != null)
+            {
+                args.Handle();
+            }
+            if (args.State == BoundKeyState.Down)
+            {
+                KeyBindDown(args);
+            }
+            else
+            {
+                KeyBindUp(args);
+            }
         }
     }
 }

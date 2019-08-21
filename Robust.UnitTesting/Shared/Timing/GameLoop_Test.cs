@@ -18,6 +18,9 @@ namespace Robust.UnitTesting.Shared.Timing
         [Timeout(1000)] // comment this out if you want to debug
         public void SingleStepTest()
         {
+            // TimeoutAttribute causes this to run on different thread on .NET Core,
+            // which messes up IoC if we don't run this:
+            BaseSetup();
             // Arrange
             var elapsedVal = TimeSpan.FromSeconds(Math.PI);
             var newStopwatch = new Mock<IStopwatch>();

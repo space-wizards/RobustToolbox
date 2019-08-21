@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using Robust.Client;
 using Robust.Client.Interfaces;
 using Robust.Server;
+using Robust.Server.Console;
 using Robust.Server.Interfaces;
+using Robust.Server.Interfaces.Console;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
@@ -249,6 +251,7 @@ namespace Robust.UnitTesting
                     IoCManager.Register<IServerNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<ICommandLineArgs, CommandLineArgs>(true);
+                    IoCManager.Register<ISystemConsoleManager, SystemConsoleManagerDummy>(true);
                     _options?.InitIoC?.Invoke();
                     IoCManager.BuildGraph();
                     ServerEntryPoint.SetupLogging();

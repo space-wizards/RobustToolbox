@@ -8,7 +8,7 @@ using Con = System.Console;
 
 namespace Robust.Server.Console
 {
-    public class SystemConsoleManager : ISystemConsoleManager, IPostInjectInit, IDisposable
+    internal sealed class SystemConsoleManager : ISystemConsoleManager, IPostInjectInit, IDisposable
     {
         [Dependency]
 #pragma warning disable 649

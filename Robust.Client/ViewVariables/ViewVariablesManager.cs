@@ -118,6 +118,11 @@ namespace Robust.Client.ViewVariables
                 return new ViewVariablesPropertyEditorString();
             }
 
+            if (type.IsEnum)
+            {
+                return new ViewVariablesPropertyEditorEnum();
+            }
+
             if (type == typeof(Vector2))
             {
                 return new ViewVariablesPropertyEditorVector2(intVec: false);

@@ -51,7 +51,7 @@ namespace Robust.Shared.ContentPack
     /// <summary>
     ///     Class for managing the loading of assemblies into the engine.
     /// </summary>
-    internal sealed class ModLoader : IModLoader
+    internal class ModLoader : IModLoader
     {
 #pragma warning disable 649
         [Dependency] private readonly IReflectionManager _reflectionManager;
@@ -71,7 +71,7 @@ namespace Robust.Shared.ContentPack
         /// </summary>
         private readonly List<ModInfo> _mods = new List<ModInfo>();
 
-        public void LoadGameAssembly<T>(byte[] assembly, byte[] symbols = null)
+        public virtual void LoadGameAssembly<T>(byte[] assembly, byte[] symbols = null)
             where T : GameShared
         {
             // TODO: Re-enable type check when it's not just a giant pain in the butt.
@@ -89,7 +89,7 @@ namespace Robust.Shared.ContentPack
             InitMod<T>(gameAssembly);
         }
 
-        public void LoadGameAssembly<T>(string diskPath)
+        public virtual void LoadGameAssembly<T>(string diskPath)
             where T : GameShared
         {
             // TODO: Re-enable type check when it's not just a giant pain in the butt.
@@ -103,7 +103,7 @@ namespace Robust.Shared.ContentPack
             InitMod<T>(Assembly.LoadFrom(diskPath));
         }
 
-        private void InitMod<T>(Assembly assembly) where T : GameShared
+        protected void InitMod<T>(Assembly assembly) where T : GameShared
         {
             var mod = new ModInfo {GameAssembly = assembly};
 
@@ -168,7 +168,7 @@ namespace Robust.Shared.ContentPack
             public List<GameShared> EntryPoints { get; }
         }
 
-        public bool TryLoadAssembly<T>(IResourceManager resMan, string assemblyName)
+        public virtual bool TryLoadAssembly<T>(IResourceManager resMan, string assemblyName)
             where T : GameShared
         {
             var dllPath = new ResourcePath($@"/Assemblies/{assemblyName}.dll");

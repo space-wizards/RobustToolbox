@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using Robust.Server;
 using Robust.Server.Console;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Console;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
@@ -252,12 +254,24 @@ namespace Robust.UnitTesting
                     IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<ICommandLineArgs, CommandLineArgs>(true);
                     IoCManager.Register<ISystemConsoleManager, SystemConsoleManagerDummy>(true);
+                    IoCManager.Register<IModLoader, ModLoader>(true);
+                    IoCManager.Register<ModLoader, ModLoader>(true);
                     _options?.InitIoC?.Invoke();
                     IoCManager.BuildGraph();
                     ServerEntryPoint.SetupLogging();
                     ServerEntryPoint.InitReflectionManager();
 
                     var server = DependencyCollection.Resolve<IBaseServerInternal>();
+
+                    if (_options?.ServerContentAssembly != null)
+                    {
+                        IoCManager.Resolve<ModLoader>().ServerContentAssembly = _options.ServerContentAssembly;
+                    }
+
+                    if (_options?.SharedContentAssembly != null)
+                    {
+                        IoCManager.Resolve<ModLoader>().SharedContentAssembly = _options.SharedContentAssembly;
+                    }
 
                     server.ContentRootDir = "../../";
 
@@ -333,12 +347,24 @@ namespace Robust.UnitTesting
                     IoCManager.Register<INetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IClientNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
+                    IoCManager.Register<IModLoader, ModLoader>(true);
+                    IoCManager.Register<ModLoader, ModLoader>(true);
                     _options?.InitIoC?.Invoke();
                     IoCManager.BuildGraph();
 
                     GameController.RegisterReflection();
 
                     var client = DependencyCollection.Resolve<IGameControllerInternal>();
+
+                    if (_options?.ClientContentAssembly != null)
+                    {
+                        IoCManager.Resolve<ModLoader>().ClientContentAssembly = _options.ClientContentAssembly;
+                    }
+
+                    if (_options?.SharedContentAssembly != null)
+                    {
+                        IoCManager.Resolve<ModLoader>().SharedContentAssembly = _options.SharedContentAssembly;
+                    }
 
                     client.ContentRootDir = "../../";
                     client.LoadConfigAndUserData = false;
@@ -434,16 +460,19 @@ namespace Robust.UnitTesting
 
         public class ServerIntegrationOptions : IntegrationOptions
         {
+            public Assembly ServerContentAssembly { get; set; }
         }
 
         public class ClientIntegrationOptions : IntegrationOptions
         {
+            public Assembly ClientContentAssembly { get; set; }
         }
 
         public abstract class IntegrationOptions
         {
             public Action InitIoC { get; set; }
             public Action BeforeStart { get; set; }
+            public Assembly SharedContentAssembly { get; set; }
         }
 
         /// <summary>

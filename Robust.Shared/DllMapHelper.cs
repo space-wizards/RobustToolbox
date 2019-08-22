@@ -42,7 +42,7 @@ namespace Robust.Shared
                         throw new NotSupportedException();
                     }
 
-                    return NativeLibrary.Load(Path.Join(assemblyDir, libName));
+                    return NativeLibrary.Load(Path.Combine(assemblyDir, libName));
                 }
 
                 return IntPtr.Zero;

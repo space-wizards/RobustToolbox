@@ -102,7 +102,7 @@ namespace Robust.Shared.ContentPack
                             }
 
                             diskPath /= info.Name;
-                            prevPath = Path.Join(prevPath, info.Name);
+                            prevPath = Path.Combine(prevPath, info.Name);
                             found = true;
                             break;
                         }

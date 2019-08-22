@@ -56,12 +56,6 @@ namespace Robust.Shared.GameObjects
         public bool Abstract { get; private set; }
 
         /// <summary>
-        /// The type of entity instantiated when a new entity is created from this template.
-        /// </summary>
-        [ViewVariables]
-        public Type ClassType { get; private set; }
-
-        /// <summary>
         /// The different mounting points on walls. (If any).
         /// </summary>
         [ViewVariables]
@@ -148,15 +142,6 @@ namespace Robust.Shared.GameObjects
             if (mapping.TryGetNode("name", out YamlNode node))
             {
                 Name = _localization.GetString(node.AsString());
-            }
-
-            if (mapping.TryGetNode("class", out node))
-            {
-                var manager = IoCManager.Resolve<IReflectionManager>();
-                ClassType = manager.GetType(node.AsString());
-
-                if (ClassType == null)
-                    Logger.Error($"[ENG] Prototype \"{ID}\" - Cannot find class type \"{node.AsString()}\"!");
             }
 
             if (mapping.TryGetNode("parent", out node))
@@ -395,11 +380,6 @@ namespace Robust.Shared.GameObjects
             if (target.Name == null)
             {
                 target.Name = source.Name;
-            }
-
-            if (target.ClassType == null)
-            {
-                target.ClassType = source.ClassType;
             }
 
             if (target.Children == null)

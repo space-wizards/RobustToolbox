@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Robust.Client.ResourceManagement
 {
-    public partial class ResourceCache : ResourceManager, IResourceCacheInternal, IDisposable
+    internal class ResourceCache : ResourceManager, IResourceCacheInternal, IDisposable
     {
         private Dictionary<(ResourcePath, Type), BaseResource> CachedResources = new Dictionary<(ResourcePath, Type), BaseResource>();
 

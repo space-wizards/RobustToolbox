@@ -4,7 +4,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
 {
-    public partial class ResourceManager
+    internal partial class ResourceManager
     {
         private class SingleStreamLoader : IContentRoot
         {

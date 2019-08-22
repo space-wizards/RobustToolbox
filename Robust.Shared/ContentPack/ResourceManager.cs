@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
@@ -12,16 +13,23 @@ namespace Robust.Shared.ContentPack
     /// <summary>
     ///     Virtual file system for all disk resources.
     /// </summary>
-    public partial class ResourceManager : IResourceManagerInternal
+    internal partial class ResourceManager : IResourceManagerInternal
     {
-        private const string DataFolderName = "Space Station 14";
-
         [Dependency]
 #pragma warning disable 649
         private readonly IConfigurationManager _config;
 #pragma warning restore 649
 
-        private readonly List<(ResourcePath prefix, IContentRoot root)> _contentRoots = new List<(ResourcePath, IContentRoot)>();
+        private readonly List<(ResourcePath prefix, IContentRoot root)> _contentRoots =
+            new List<(ResourcePath, IContentRoot)>();
+
+        // Special file names on Windows like serial ports.
+        private static readonly Regex BadPathSegmentRegex =
+            new Regex("^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$", RegexOptions.IgnoreCase);
+
+        // Literally not characters that can't go into filenames on Windows.
+        private static readonly Regex BadPathCharacterRegex =
+            new Regex("[<>:\"|?*\0\\x01-\\x1f]", RegexOptions.IgnoreCase);
 
         /// <inheritdoc />
         public IWritableDirProvider UserData { get; private set; }
@@ -49,7 +57,7 @@ namespace Robust.Shared.ContentPack
             // no pack in config
             if (string.IsNullOrWhiteSpace(zipPath))
             {
-                Logger.Warning("[RES] No default ContentPack to load in configuration.");
+                Logger.WarningS("res", "No default ContentPack to load in configuration.");
                 return;
             }
 
@@ -63,10 +71,12 @@ namespace Robust.Shared.ContentPack
             {
                 prefix = ResourcePath.Root;
             }
+
             if (!prefix.IsRooted)
             {
                 throw new ArgumentException("Prefix must be rooted.", nameof(prefix));
             }
+
             pack = PathHelpers.ExecutableRelativeFile(pack);
 
             var packInfo = new FileInfo(pack);
@@ -89,10 +99,12 @@ namespace Robust.Shared.ContentPack
             {
                 prefix = ResourcePath.Root;
             }
+
             if (!prefix.IsRooted)
             {
                 throw new ArgumentException("Prefix must be rooted.", nameof(prefix));
             }
+
             path = PathHelpers.ExecutableRelativeFile(path);
             var pathInfo = new DirectoryInfo(path);
             if (!pathInfo.Exists)
@@ -118,6 +130,7 @@ namespace Robust.Shared.ContentPack
             {
                 return fileStream;
             }
+
             throw new FileNotFoundException($"Path does not exist in the VFS: '{path}'");
         }
 
@@ -134,21 +147,30 @@ namespace Robust.Shared.ContentPack
             {
                 throw new ArgumentNullException(nameof(path));
             }
+
             if (!path.IsRooted)
             {
                 throw new ArgumentException("Path must be rooted", nameof(path));
             }
-            foreach ((var prefix, var root) in _contentRoots)
+#if DEBUG
+            if (!IsPathValid(path))
+            {
+                throw new FileNotFoundException($"Path '{path}' contains invalid characters/filenames.");
+            }
+#endif
+            foreach (var (prefix, root) in _contentRoots)
             {
                 if (!path.TryRelativeTo(prefix, out var relative))
                 {
                     continue;
                 }
+
                 if (root.TryGetFile(relative, out fileStream))
                 {
                     return true;
                 }
             }
+
             fileStream = null;
             return false;
         }
@@ -178,12 +200,14 @@ namespace Robust.Shared.ContentPack
             {
                 throw new ArgumentNullException(nameof(path));
             }
+
             if (!path.IsRooted)
             {
                 throw new ArgumentException("Path is not rooted", nameof(path));
             }
+
             var alreadyReturnedFiles = new HashSet<ResourcePath>();
-            foreach ((var prefix, var root) in _contentRoots)
+            foreach (var (prefix, root) in _contentRoots)
             {
                 if (!path.TryRelativeTo(prefix, out var relative))
                 {
@@ -192,11 +216,11 @@ namespace Robust.Shared.ContentPack
 
                 foreach (var filename in root.FindFiles(relative))
                 {
-                    var newpath = prefix / filename;
-                    if (!alreadyReturnedFiles.Contains(newpath))
+                    var newPath = prefix / filename;
+                    if (!alreadyReturnedFiles.Contains(newPath))
                     {
-                        alreadyReturnedFiles.Add(newpath);
-                        yield return newpath;
+                        alreadyReturnedFiles.Add(newPath);
+                        yield return newPath;
                     }
                 }
             }
@@ -206,16 +230,18 @@ namespace Robust.Shared.ContentPack
         public bool TryGetDiskFilePath(ResourcePath path, out string diskPath)
         {
             // loop over each root trying to get the file
-            foreach ((var prefix, var root) in _contentRoots)
+            foreach (var (prefix, root) in _contentRoots)
             {
                 if (!(root is DirLoader dirLoader) || !path.TryRelativeTo(prefix, out var tempPath))
                 {
                     continue;
                 }
+
                 diskPath = dirLoader.GetPath(tempPath);
                 if (File.Exists(diskPath))
                     return true;
             }
+
             diskPath = null;
             return false;
         }
@@ -226,9 +252,29 @@ namespace Robust.Shared.ContentPack
             {
                 throw new ArgumentException("Path must be rooted.", nameof(path));
             }
+
             var loader = new SingleStreamLoader(stream, path.ToRelativePath());
             loader.Mount();
             _contentRoots.Add((ResourcePath.Root, loader));
+        }
+
+        internal static bool IsPathValid(ResourcePath path)
+        {
+            var asString = path.ToString();
+            if (BadPathCharacterRegex.IsMatch(asString))
+            {
+                return false;
+            }
+
+            foreach (var segment in path.EnumerateSegments())
+            {
+                if (BadPathSegmentRegex.IsMatch(segment))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

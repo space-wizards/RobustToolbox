@@ -6,7 +6,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
 {
-    public partial class ResourceManager
+    internal partial class ResourceManager
     {
         /// <summary>
         ///     Loads a zipped content pack into the VFS.

@@ -96,18 +96,18 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     return DrawModeEnum.Disabled;
                 }
-
-                if (Pressed || _attemptingPress)
+                else if (Pressed || _attemptingPress)
                 {
                     return DrawModeEnum.Pressed;
                 }
-
-                if (IsHovered)
+                else if (IsHovered)
                 {
                     return DrawModeEnum.Hover;
                 }
-
-                return DrawModeEnum.Normal;
+                else
+                {
+                    return DrawModeEnum.Normal;
+                }
             }
         }
 
@@ -177,7 +177,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindUp(args);
 
-            if (Disabled)
+            if (Disabled || (!_enableAllKeybinds && !args.CanFocus))
             {
                 return;
             }
@@ -186,7 +186,8 @@ namespace Robust.Client.UserInterface.Controls
             OnButtonUp?.Invoke(buttonEventArgs);
 
             var drawMode = DrawMode;
-            if (Mode == ActionMode.Release && _attemptingPress)
+            if (Mode == ActionMode.Release && _attemptingPress &&
+                this == UserInterfaceManagerInternal.MouseGetControl(args.PointerLocation.Position))
             {
                 if (ToggleMode)
                 {

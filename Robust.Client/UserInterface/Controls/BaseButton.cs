@@ -96,18 +96,18 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     return DrawModeEnum.Disabled;
                 }
-
-                if (Pressed || _attemptingPress)
+                else if (Pressed || _attemptingPress)
                 {
                     return DrawModeEnum.Pressed;
                 }
-
-                if (IsHovered)
+                else if (IsHovered)
                 {
                     return DrawModeEnum.Hover;
                 }
-
-                return DrawModeEnum.Normal;
+                else
+                {
+                    return DrawModeEnum.Normal;
+                }
             }
         }
 
@@ -154,16 +154,15 @@ namespace Robust.Client.UserInterface.Controls
             }
             else
             {
+                OnPressed?.Invoke(buttonEventArgs);
                 if (ToggleMode)
                 {
                     _pressed = !_pressed;
-                    OnPressed?.Invoke(buttonEventArgs);
                     OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
                 }
                 else
                 {
                     _attemptingPress = true;
-                    OnPressed?.Invoke(buttonEventArgs);
                 }
             }
 
@@ -186,24 +185,30 @@ namespace Robust.Client.UserInterface.Controls
             OnButtonUp?.Invoke(buttonEventArgs);
 
             var drawMode = DrawMode;
-            if (Mode == ActionMode.Release && _attemptingPress)
-            {
-                if (ToggleMode)
-                {
-                    _pressed = !_pressed;
-                }
-
-                OnPressed?.Invoke(buttonEventArgs);
-                if (ToggleMode && args.CanFocus)
-                {
-                    OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
-                }
-            }
-
             _attemptingPress = false;
             if (drawMode != DrawMode)
             {
                 DrawModeChanged();
+            }
+        }
+
+        protected internal override void KeyBindClick(GUIBoundKeyEventArgs args)
+        {
+            base.KeyBindClick(args);
+
+            if (Disabled || (!_enableAllKeybinds && !args.CanFocus))
+            {
+                return;
+            }
+
+            if (Mode == ActionMode.Release && _attemptingPress)
+            {
+                OnPressed?.Invoke(new ButtonEventArgs(this, args));
+                if (ToggleMode && args.CanFocus)
+                {
+                    _pressed = !_pressed;
+                    OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
+                }
             }
         }
 

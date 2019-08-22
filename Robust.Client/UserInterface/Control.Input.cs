@@ -32,6 +32,13 @@ namespace Robust.Client.UserInterface
         {
         }
 
+        public event Action<GUIBoundKeyEventArgs> OnKeyBindClick;
+
+        protected internal virtual void KeyBindClick(GUIBoundKeyEventArgs args)
+        {
+            OnKeyBindClick?.Invoke(args);
+        }
+
         protected internal virtual void MouseMove(GUIMouseMoveEventArgs args)
         {
         }

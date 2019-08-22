@@ -185,6 +185,8 @@ namespace Robust.Client.UserInterface
         public void KeyBindDown(BoundKeyEventArgs args)
         {
             var control = MouseGetControl(args.PointerLocation.Position);
+
+            _controlFocused = control;
             if (args.CanFocus)
             {
                 // If we have a modal open and the mouse down was outside it, close said modal.
@@ -204,8 +206,10 @@ namespace Robust.Client.UserInterface
                     ReleaseKeyboardFocus();
                     return;
                 }
-
-                _controlFocused = control;
+                else if (control != KeyboardFocused)
+                {
+                    ReleaseKeyboardFocus();
+                }
 
                 if (_controlFocused.CanKeyboardFocus && _controlFocused.KeyboardFocusOnClick)
                 {
@@ -236,7 +240,8 @@ namespace Robust.Client.UserInterface
 
         public void KeyBindUp(BoundKeyEventArgs args)
         {
-            var control = _controlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
+            var clicked = MouseGetControl(args.PointerLocation.Position);
+            var control = _controlFocused ?? KeyboardFocused ?? clicked;
             if (control == null)
             {
                 return;
@@ -245,6 +250,11 @@ namespace Robust.Client.UserInterface
             var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,
                 args.PointerLocation.Position / UIScale - control.GlobalPosition,
                 args.PointerLocation.Position - control.GlobalPixelPosition);
+
+            if (_controlFocused == clicked)
+            {
+                _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindClick(ev));
+            }
 
             _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindUp(ev));
             _controlFocused = null;
@@ -259,7 +269,7 @@ namespace Robust.Client.UserInterface
         {
             _resetTooltipTimer();
             // Update which control is considered hovered.
-            var newHovered = _controlFocused ?? MouseGetControl(mouseMoveEventArgs.Position);
+            var newHovered = MouseGetControl(mouseMoveEventArgs.Position);
             if (newHovered != CurrentlyHovered)
             {
                 _clearTooltip();

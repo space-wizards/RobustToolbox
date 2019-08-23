@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using SysVector3 = System.Numerics.Vector3;
@@ -1795,5 +1796,18 @@ namespace Robust.Shared.Maths
         };
 
         #endregion
+
+        [CanBeNull]
+        public string Name()
+        {
+            foreach (var entry in GetAllDefaultColors())
+            {
+                if (entry.Value == this)
+                {
+                    return entry.Key;
+                }
+            }
+            return null;
+        }
     }
 }

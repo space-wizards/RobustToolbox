@@ -29,6 +29,14 @@ namespace Robust.Shared.Random
             return list[index];
         }
 
+        public static T PickAndTake<T>(this IRobustRandom random, IList<T> list)
+        {
+            var index = random.Next(list.Count);
+            var element = list[index];
+            list.RemoveAt(index);
+            return element;
+        }
+
         public static float NextFloat(this IRobustRandom random)
         {
             // This is pretty much the CoreFX implementation.

@@ -87,7 +87,6 @@ namespace Robust.Server.GameObjects.Components.UserInterface
                             wrapped.UiKey);
                         return;
                     }
-
                     @interface.ReceiveMessage(wrapped.Message, session);
                     break;
             }
@@ -109,7 +108,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         /// </summary>
         public IEnumerable<IPlayerSession> SubscribedSessions => _subscribedSessions;
 
-        public event Action<BoundUserInterfaceMessage> OnReceiveMessage;
+        public event Action<ServerBoundUserInterfaceMessage> OnReceiveMessage;
 
         public BoundUserInterface(object uiKey, ServerUserInterfaceComponent owner)
         {
@@ -258,8 +257,9 @@ namespace Robust.Server.GameObjects.Components.UserInterface
                     _subscribedSessions.Remove(session);
                     break;
 
-                default:
-                    OnReceiveMessage?.Invoke(wrappedMessage);
+                case BoundUserInterfaceMessage msg:
+                    var serverMsg = new ServerBoundUserInterfaceMessage(msg, session);
+                    OnReceiveMessage?.Invoke(serverMsg);
                     break;
             }
         }
@@ -270,6 +270,17 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             {
                 throw new ArgumentException("Player session does not have this UI open.");
             }
+        }
+    }
+
+    public class ServerBoundUserInterfaceMessage : BoundUserInterfaceMessage
+    {
+        public BoundUserInterfaceMessage Message;
+        public IPlayerSession Session;
+        public ServerBoundUserInterfaceMessage(BoundUserInterfaceMessage message, IPlayerSession session)
+        {
+            Message = message;
+            Session = session;
         }
     }
 }

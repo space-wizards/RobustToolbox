@@ -259,7 +259,7 @@ namespace Robust.Client.UserInterface
         {
             _resetTooltipTimer();
             // Update which control is considered hovered.
-            var newHovered = _controlFocused ?? MouseGetControl(mouseMoveEventArgs.Position);
+            var newHovered = MouseGetControl(mouseMoveEventArgs.Position);
             if (newHovered != CurrentlyHovered)
             {
                 _clearTooltip();

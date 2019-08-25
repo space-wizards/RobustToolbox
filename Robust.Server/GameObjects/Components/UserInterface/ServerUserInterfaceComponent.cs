@@ -273,10 +273,10 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         }
     }
 
-    public class ServerBoundUserInterfaceMessage : BoundUserInterfaceMessage
+    public class ServerBoundUserInterfaceMessage
     {
-        public BoundUserInterfaceMessage Message;
-        public IPlayerSession Session;
+        public BoundUserInterfaceMessage Message { get; }
+        public IPlayerSession Session { get; }
         public ServerBoundUserInterfaceMessage(BoundUserInterfaceMessage message, IPlayerSession session)
         {
             Message = message;

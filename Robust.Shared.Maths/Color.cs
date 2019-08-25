@@ -1655,7 +1655,6 @@ namespace Robust.Shared.Maths
             ["transparent"] = Transparent,
             ["aliceblue"] = AliceBlue,
             ["antiquewhite"] = AntiqueWhite,
-            ["aqua"] = Aqua,
             ["aquamarine"] = Aquamarine,
             ["azure"] = Azure,
             ["beige"] = Beige,
@@ -1732,7 +1731,6 @@ namespace Robust.Shared.Maths
             ["lime"] = Lime,
             ["limegreen"] = LimeGreen,
             ["linen"] = Linen,
-            ["magenta"] = Magenta,
             ["maroon"] = Maroon,
             ["mediumaquamarine"] = MediumAquamarine,
             ["mediumblue"] = MediumBlue,
@@ -1797,17 +1795,12 @@ namespace Robust.Shared.Maths
 
         #endregion
 
+        private static readonly Dictionary<Color, string> DefaultColorsInverted = DefaultColors.ToDictionary((i) => i.Value, (i) => i.Key);
+
         [CanBeNull]
         public string Name()
         {
-            foreach (var entry in GetAllDefaultColors())
-            {
-                if (entry.Value == this)
-                {
-                    return entry.Key;
-                }
-            }
-            return null;
+            return DefaultColorsInverted.TryGetValue(this, out var name) ? name : null;
         }
     }
 }

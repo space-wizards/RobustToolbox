@@ -134,7 +134,7 @@ namespace Robust.Shared.Timing
                     // announce we are falling behind
                     if ((_timing.RealTime - _lastKeepUp).TotalSeconds >= 15.0)
                     {
-                        Logger.Warning("[ENG] MainLoop: Cannot keep up!");
+                        Logger.WarningS("eng", "MainLoop: Cannot keep up!");
                         _lastKeepUp = _timing.RealTime;
                     }
                 }

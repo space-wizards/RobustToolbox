@@ -28,7 +28,7 @@ namespace Robust.Shared.ContentPack
             /// <inheritdoc />
             public void Mount()
             {
-                Logger.Info($"[RES] Loading ContentPack: {_pack.FullName}...");
+                Logger.InfoS("res", $"Loading ContentPack: {_pack.FullName}...");
 
                 var zipFileStream = File.OpenRead(_pack.FullName);
                 _zip = new ZipFile(zipFileStream);

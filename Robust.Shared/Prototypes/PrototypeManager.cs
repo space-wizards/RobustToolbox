@@ -218,7 +218,7 @@ namespace Robust.Shared.Prototypes
                     catch (Exception e)
                         when (e is YamlException || e is PrototypeLoadException)
                     {
-                        Logger.Error($"[ENG] Exception whilst loading prototypes from {filePath}: {e}");
+                        Logger.ErrorS("eng", $"Exception whilst loading prototypes from {filePath}: {e}");
                     }
                 }
             }

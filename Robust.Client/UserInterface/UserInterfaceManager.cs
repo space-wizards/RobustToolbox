@@ -77,7 +77,8 @@ namespace Robust.Client.UserInterface
             DebugConsole = new DebugConsole(_console, _resourceManager);
             RootControl.AddChild(DebugConsole);
 
-            _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager, _displayManager, _netManager, _mapManager);
+            _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
+                _displayManager, _netManager, _mapManager);
             RootControl.AddChild(_debugMonitors);
 
             _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugConsole,
@@ -212,9 +213,16 @@ namespace Robust.Client.UserInterface
                     _controlFocused.GrabKeyboardFocus();
                 }
             }
-            else if (KeyboardFocused != null)
+            else
             {
-                control = KeyboardFocused;
+                if (KeyboardFocused != null)
+                {
+                    control = KeyboardFocused;
+                }
+                else
+                {
+                    return;
+                }
             }
 
             if (control == null)
@@ -635,7 +643,7 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
-        ///     Converts 
+        ///     Converts
         /// </summary>
         /// <param name="args">Event data values for a bound key state change.</param>
         private void OnUIKeyBindStateChanged(BoundKeyEventArgs args)
@@ -644,6 +652,7 @@ namespace Robust.Client.UserInterface
             {
                 args.Handle();
             }
+
             if (args.State == BoundKeyState.Down)
             {
                 KeyBindDown(args);

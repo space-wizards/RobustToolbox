@@ -452,6 +452,11 @@ namespace Robust.Client.UserInterface
 
         private void _updateMinimumSize()
         {
+            if (_stylingDirty)
+            {
+                ForceRunStyleUpdate();
+            }
+
             _calculatedMinimumSize = Vector2.ComponentMax(Vector2.Zero, CalculateMinimumSize());
         }
 

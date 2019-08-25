@@ -262,6 +262,10 @@ namespace Robust.Client.UserInterface.Controls
 
             if (!args.CanFocus)
             {
+                if (!this.HasKeyboardFocus())
+                {
+                    return;
+                }
                 if (args.Function == EngineKeyFunctions.TextBackspace)
                 {
                     if (_cursorPosition == 0 || !Editable)

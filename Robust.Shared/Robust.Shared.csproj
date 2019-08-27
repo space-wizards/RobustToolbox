@@ -13,12 +13,12 @@
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2019.1.3" />
-    <PackageReference Include="Mono.Cecil" Version="0.11.0" />
-    <PackageReference Include="NetSerializer" Version="4.1.0" />
-    <PackageReference Include="Nett" Version="0.13.0" />
+    <PackageReference Include="Mono.Cecil" Version="0.11.0" PrivateAssets="all"/>
+    <PackageReference Include="NetSerializer" Version="4.1.0" PrivateAssets="all"/>
+    <PackageReference Include="Nett" Version="0.13.0" PrivateAssets="all"/>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="NGettext" Version="0.6.4" />
-    <PackageReference Include="SharpZipLib" Version="1.2.0" />
+    <PackageReference Include="NGettext" Version="0.6.4" PrivateAssets="all"/>
+    <PackageReference Include="SharpZipLib" Version="1.2.0" PrivateAssets="all"/>
     <PackageReference Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="YamlDotNet" Version="6.1.2" />

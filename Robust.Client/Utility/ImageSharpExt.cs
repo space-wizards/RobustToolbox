@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
@@ -33,27 +34,29 @@ namespace Robust.Client.Utility
         {
             // TODO: Bounds checks.
 
-            var srcSpan = source.GetPixelSpan();
-            var dstSpan = destination.GetPixelSpan();
+            Blit(source.GetPixelSpan(), source.Width, sourceRect, destination, destinationOffset);
+        }
 
-            var srcWidth = source.Width;
+        public static void Blit<T>(this ReadOnlySpan<T> source, int sourceWidth, UIBox2i sourceRect,
+            Image<T> destination, Vector2i destinationOffset) where T : struct, IPixel<T>
+        {
+            var dstSpan = destination.GetPixelSpan();
             var dstWidth = destination.Width;
 
             var (ox, oy) = destinationOffset;
 
             for (var y = 0; y < sourceRect.Height; y++)
             {
-                var sourceRowOffset = srcWidth * (y + sourceRect.Top) + sourceRect.Left;
+                var sourceRowOffset = sourceWidth * (y + sourceRect.Top) + sourceRect.Left;
                 var destRowOffset = dstWidth * (y + oy) + ox;
 
                 for (var x = 0; x < sourceRect.Width; x++)
                 {
-                    var pixel = srcSpan[x + sourceRowOffset];
+                    var pixel = source[x + sourceRowOffset];
                     dstSpan[x + destRowOffset] = pixel;
                 }
             }
         }
-
     }
 }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Graphics;
+using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
@@ -151,12 +152,20 @@ namespace Robust.Client.Graphics
                     throw new NotImplementedException();
                 }
 
-                Image<Alpha8> bitmapImage;
+                var column = count % atlasEntriesHorizontal;
+                var row = count / atlasEntriesVertical;
+                var offsetX = column * maxGlyphSize.X;
+                var offsetY = row * maxGlyphSize.Y;
+                count += 1;
+                atlasRegions.Add(glyph, UIBox2i.FromDimensions(offsetX, offsetY, bitmap.Width, bitmap.Rows));
+
                 switch (bitmap.PixelMode)
                 {
                     case PixelMode.Mono:
                     {
-                        bitmapImage = MonoBitMapToImage(bitmap);
+                        var bitmapImage = MonoBitMapToImage(bitmap);
+                        bitmapImage.Blit(new UIBox2i(0, 0, bitmapImage.Width, bitmapImage.Height), atlas,
+                            (offsetX, offsetY));
                         break;
                     }
 
@@ -168,7 +177,8 @@ namespace Robust.Client.Graphics
                             span = new ReadOnlySpan<Alpha8>((void*) bitmap.Buffer, bitmap.Pitch * bitmap.Rows);
                         }
 
-                        bitmapImage = Image.LoadPixelData(span, bitmap.Width, bitmap.Rows);
+                        span.Blit(bitmap.Pitch, UIBox2i.FromDimensions(0, 0, bitmap.Pitch, bitmap.Rows), atlas,
+                            (offsetX, offsetY));
                         break;
                     }
 
@@ -181,15 +191,6 @@ namespace Robust.Client.Graphics
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
-
-                var column = count % atlasEntriesHorizontal;
-                var row = count / atlasEntriesVertical;
-                var offsetX = column * maxGlyphSize.X;
-                var offsetY = row * maxGlyphSize.Y;
-                atlas.Mutate(x => x.DrawImage(bitmapImage, new Point(column * maxGlyphSize.X, row * maxGlyphSize.Y),
-                    PixelColorBlendingMode.Overlay, 1));
-                count += 1;
-                atlasRegions.Add(glyph, UIBox2i.FromDimensions(offsetX, offsetY, bitmap.Width, bitmap.Rows));
             }
 
             var atlasDictionary = new Dictionary<uint, AtlasTexture>();

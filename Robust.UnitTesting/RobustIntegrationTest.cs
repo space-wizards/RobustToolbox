@@ -15,7 +15,7 @@ using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
-using ServerEntryPoint = Robust.Server.EntryPoint;
+using ServerProgram = Robust.Server.Program;
 
 namespace Robust.UnitTesting
 {
@@ -252,14 +252,13 @@ namespace Robust.UnitTesting
                     IoCManager.Register<INetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IServerNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
-                    IoCManager.Register<ICommandLineArgs, CommandLineArgs>(true);
                     IoCManager.Register<ISystemConsoleManager, SystemConsoleManagerDummy>(true);
                     IoCManager.Register<IModLoader, ModLoader>(true);
                     IoCManager.Register<ModLoader, ModLoader>(true);
                     _options?.InitIoC?.Invoke();
                     IoCManager.BuildGraph();
-                    ServerEntryPoint.SetupLogging();
-                    ServerEntryPoint.InitReflectionManager();
+                    ServerProgram.SetupLogging();
+                    ServerProgram.InitReflectionManager();
 
                     var server = DependencyCollection.Resolve<IBaseServerInternal>();
 
@@ -295,18 +294,6 @@ namespace Robust.UnitTesting
                 }
 
                 _fromInstanceWriter.TryWrite(new ShutDownMessage(null));
-            }
-
-            private sealed class CommandLineArgs : ICommandLineArgs
-            {
-                public bool Parse(string[] args)
-                {
-                    // No-op.
-                    return true;
-                }
-
-                public string ConfigFile => null;
-                public string DataDir => null;
             }
         }
 

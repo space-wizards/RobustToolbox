@@ -42,6 +42,11 @@ namespace Robust.Lite
         [Dependency] private readonly IInputManager _inputManager;
 #pragma warning restore 649
 
+        public void SetCommandLineArgs(CommandLineArgs args)
+        {
+            // Nada.
+        }
+
         public bool LoadConfigAndUserData { get; set; }
         public string ContentRootDir { get; set; }
 

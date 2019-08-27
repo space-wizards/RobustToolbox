@@ -44,7 +44,6 @@ namespace Robust.Server
 
             IoCManager.Register<IBaseServer, BaseServer>();
             IoCManager.Register<IBaseServerInternal, BaseServer>();
-            IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
             IoCManager.Register<IComponentFactory, ServerComponentFactory>();
             IoCManager.Register<IConGroupController, ConGroupController>();
             IoCManager.Register<IConsoleShell, ConsoleShell>();

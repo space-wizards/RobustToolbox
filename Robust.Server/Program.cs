@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using CommandLine;
 using Robust.Server.Interfaces;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Log;
@@ -11,18 +12,24 @@ using Robust.Shared;
 
 namespace Robust.Server
 {
-    internal static class EntryPoint
+    internal static class Program
     {
         internal static void Main(string[] args)
+        {
+            Parser.Default.ParseArguments<CommandLineArgs>(args).WithParsed(ParsedMain);
+        }
+
+        private static void ParsedMain(CommandLineArgs args)
         {
             IoCManager.InitThread();
             ServerIoC.RegisterIoC();
             IoCManager.BuildGraph();
             SetupLogging();
             InitReflectionManager();
-            HandleCommandLineArgs(args);
 
-            var server = IoCManager.Resolve<IBaseServer>();
+            var server = IoCManager.Resolve<IBaseServerInternal>();
+
+            server.SetCommandLineArgs(args);
 
             Logger.Info("Server -> Starting");
 
@@ -45,15 +52,6 @@ namespace Robust.Server
             // Used to dispose of systems that want to be disposed.
             // Such as the log manager.
             IoCManager.Clear();
-        }
-
-        private static void HandleCommandLineArgs(string[] args)
-        {
-            var commandLine = IoCManager.Resolve<ICommandLineArgs>();
-            if (!commandLine.Parse(args))
-            {
-                Environment.Exit(0);
-            }
         }
 
         internal static void InitReflectionManager()

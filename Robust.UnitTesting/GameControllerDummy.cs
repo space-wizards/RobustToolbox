@@ -11,6 +11,10 @@ namespace Robust.UnitTesting
         {
         }
 
+        public void SetCommandLineArgs(CommandLineArgs args)
+        {
+        }
+
         public bool LoadConfigAndUserData { get; set; } = true;
 
         public void Startup()

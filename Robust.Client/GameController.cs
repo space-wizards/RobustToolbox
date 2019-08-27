@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Reflection;
 using Robust.Client.Console;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.GameObjects;
@@ -72,20 +70,25 @@ namespace Robust.Client
         [Dependency] private readonly ISignalHandler _signalHandler;
 #pragma warning restore 649
 
+        private CommandLineArgs _commandLineArgs;
+
         public string ContentRootDir { get; set; } = "../../../";
 
         public bool LoadConfigAndUserData { get; set; } = true;
+
+        public void SetCommandLineArgs(CommandLineArgs args)
+        {
+            _commandLineArgs = args;
+        }
 
         public void Startup()
         {
             SetupLogging(_logManager);
 
-            var args = GetCommandLineArgs();
-
             _taskManager.Initialize();
 
             // Figure out user data directory.
-            var userDataDir = _getUserDataDir(args);
+            var userDataDir = GetUserDataDir();
 
             if (LoadConfigAndUserData)
             {
@@ -110,7 +113,8 @@ namespace Robust.Client
             _resourceCache.MountContentDirectory(@"Resources/");
 #else
             _resourceCache.MountContentDirectory($@"{ContentRootDir}RobustToolbox/Resources/");
-            _resourceCache.MountContentDirectory($@"{ContentRootDir}bin/Content.Client/", new ResourcePath("/Assemblies/"));
+            _resourceCache.MountContentDirectory($@"{ContentRootDir}bin/Content.Client/",
+                new ResourcePath("/Assemblies/"));
             _resourceCache.MountContentDirectory($@"{ContentRootDir}Resources/");
 #endif
 
@@ -163,7 +167,7 @@ namespace Robust.Client
 
             _clyde.Ready();
 
-            if (args.Contains("--connect"))
+            if (_commandLineArgs?.Connect == true)
             {
                 _client.ConnectToServer("127.0.0.1", 1212);
             }
@@ -248,17 +252,12 @@ namespace Robust.Client
             logManager.GetSawmill("discord").Level = LogLevel.Warning;
         }
 
-        public static ICollection<string> GetCommandLineArgs()
+        private string GetUserDataDir()
         {
-            return Environment.GetCommandLineArgs();
-        }
-
-        private static string _getUserDataDir(ICollection<string> commandLineArgs)
-        {
-            if (commandLineArgs.Contains("--self-contained"))
+            if (_commandLineArgs?.SelfContained == true)
             {
                 // Self contained mode. Data is stored in a directory called user_data next to Robust.Client.exe.
-                var exeDir = Assembly.GetExecutingAssembly().Location;
+                var exeDir = typeof(GameController).Assembly.Location;
                 if (string.IsNullOrEmpty(exeDir))
                 {
                     throw new Exception("Unable to locate client exe");

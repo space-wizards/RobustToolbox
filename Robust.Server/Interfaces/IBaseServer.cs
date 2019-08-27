@@ -46,5 +46,7 @@ namespace Robust.Server.Interfaces
     {
         void OverrideMainLoop(IGameLoop gameLoop);
         string ContentRootDir { get; set; }
+
+        void SetCommandLineArgs(CommandLineArgs args);
     }
 }

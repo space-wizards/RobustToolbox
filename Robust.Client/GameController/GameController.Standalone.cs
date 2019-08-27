@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using CommandLine;
 using Robust.Client.Interfaces;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
@@ -16,23 +17,22 @@ namespace Robust.Client
         [Dependency] private IGameTiming _gameTiming;
 #pragma warning restore 649
 
-        public static void Main()
+        public static void Main(string[] args)
+        {
+            Parser.Default.ParseArguments<CommandLineArgs>(args)
+                .WithParsed(ParsedMain);
+        }
+
+        private static void ParsedMain(CommandLineArgs args)
         {
             IoCManager.InitThread();
 
-            DisplayMode mode;
-            if (Environment.GetCommandLineArgs().Contains("--headless"))
-            {
-                mode = DisplayMode.Headless;
-            }
-            else
-            {
-                mode = DisplayMode.Clyde;
-            }
+            var mode = args.Headless ? DisplayMode.Headless : DisplayMode.Clyde;
 
             InitIoC(mode);
 
             var gc = (GameController) IoCManager.Resolve<IGameController>();
+            gc.SetCommandLineArgs(args);
             gc.Startup();
             gc.MainLoop(mode);
 

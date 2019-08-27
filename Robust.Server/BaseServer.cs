@@ -36,11 +36,9 @@ namespace Robust.Server
     /// <summary>
     /// The master class that runs the rest of the engine.
     /// </summary>
-    public class BaseServer : IBaseServerInternal
+    internal sealed class BaseServer : IBaseServerInternal
     {
 #pragma warning disable 649
-        [Dependency]
-        private readonly ICommandLineArgs _commandLine;
         [Dependency]
         private readonly IConfigurationManager _config;
         [Dependency]
@@ -75,6 +73,7 @@ namespace Robust.Server
         private readonly IModLoader _modLoader;
 #pragma warning restore 649
 
+        private CommandLineArgs _commandLineArgs;
         private FileLogHandler fileLogHandler;
         private IGameLoop _mainLoop;
 
@@ -112,14 +111,23 @@ namespace Robust.Server
             fileLogHandler.Dispose();
         }
 
+        public void SetCommandLineArgs(CommandLineArgs args)
+        {
+            _commandLineArgs = args;
+        }
+
         /// <inheritdoc />
         public bool Start()
         {
-
             // Sets up the configMgr
-            if (_commandLine.ConfigFile != null)
+            if (_commandLineArgs?.ConfigFile != null)
             {
-                _config.LoadFromFile(_commandLine.ConfigFile);
+                // If a config file path was passed, use it literally.
+                // This ensures it's working-directory relative
+                // (for people passing config file through the terminal or something).
+                // Otherwise use the one next to the executable.
+                var configPath = _commandLineArgs.ConfigFile ?? PathHelpers.ExecutableRelativeFile("server_config.toml");
+                _config.LoadFromFile(configPath);
             }
 
             //Sets up Logging
@@ -159,7 +167,7 @@ namespace Robust.Server
                 return true;
             }
 
-            var dataDir = _commandLine.DataDir;
+            var dataDir = _commandLineArgs?.DataDir ?? PathHelpers.ExecutableRelativeFile("data");
 
             // Set up the VFS
             _resources.Initialize(dataDir);

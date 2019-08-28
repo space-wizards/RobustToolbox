@@ -131,78 +131,82 @@ namespace Robust.Client.Graphics
                 (int) Math.Round(atlasEntriesHorizontal * maxGlyphSize.X / 4f, MidpointRounding.AwayFromZero) * 4;
             var atlasDimY =
                 (int) Math.Round(atlasEntriesVertical * maxGlyphSize.Y / 4f, MidpointRounding.AwayFromZero) * 4;
-            var atlas = new Image<Alpha8>(atlasDimX, atlasDimY);
 
-            var atlasRegions = new Dictionary<uint, UIBox2>();
-            count = 0;
-            foreach (var glyph in metricsMap.Keys)
+            using (var atlas = new Image<Alpha8>(atlasDimX, atlasDimY))
             {
-                face.LoadGlyph(glyph, LoadFlags.Default, LoadTarget.Normal);
-                face.Glyph.RenderGlyph(RenderMode.Normal);
-
-                var bitmap = face.Glyph.Bitmap;
-                if (bitmap.Pitch == 0)
+                var atlasRegions = new Dictionary<uint, UIBox2>();
+                count = 0;
+                foreach (var glyph in metricsMap.Keys)
                 {
-                    count += 1;
-                    continue;
-                }
+                    face.LoadGlyph(glyph, LoadFlags.Default, LoadTarget.Normal);
+                    face.Glyph.RenderGlyph(RenderMode.Normal);
 
-                if (bitmap.Pitch < 0)
-                {
-                    throw new NotImplementedException();
-                }
-
-                var column = count % atlasEntriesHorizontal;
-                var row = count / atlasEntriesVertical;
-                var offsetX = column * maxGlyphSize.X;
-                var offsetY = row * maxGlyphSize.Y;
-                count += 1;
-                atlasRegions.Add(glyph, UIBox2i.FromDimensions(offsetX, offsetY, bitmap.Width, bitmap.Rows));
-
-                switch (bitmap.PixelMode)
-                {
-                    case PixelMode.Mono:
+                    var bitmap = face.Glyph.Bitmap;
+                    if (bitmap.Pitch == 0)
                     {
-                        var bitmapImage = MonoBitMapToImage(bitmap);
-                        bitmapImage.Blit(new UIBox2i(0, 0, bitmapImage.Width, bitmapImage.Height), atlas,
-                            (offsetX, offsetY));
-                        break;
+                        count += 1;
+                        continue;
                     }
 
-                    case PixelMode.Gray:
+                    if (bitmap.Pitch < 0)
                     {
-                        ReadOnlySpan<Alpha8> span;
-                        unsafe
+                        throw new NotImplementedException();
+                    }
+
+                    var column = count % atlasEntriesHorizontal;
+                    var row = count / atlasEntriesVertical;
+                    var offsetX = column * maxGlyphSize.X;
+                    var offsetY = row * maxGlyphSize.Y;
+                    count += 1;
+                    atlasRegions.Add(glyph, UIBox2i.FromDimensions(offsetX, offsetY, bitmap.Width, bitmap.Rows));
+
+                    switch (bitmap.PixelMode)
+                    {
+                        case PixelMode.Mono:
                         {
-                            span = new ReadOnlySpan<Alpha8>((void*) bitmap.Buffer, bitmap.Pitch * bitmap.Rows);
+                            using (var bitmapImage = MonoBitMapToImage(bitmap))
+                            {
+                                bitmapImage.Blit(new UIBox2i(0, 0, bitmapImage.Width, bitmapImage.Height), atlas,
+                                    (offsetX, offsetY));
+                            }
+
+                            break;
                         }
 
-                        span.Blit(bitmap.Pitch, UIBox2i.FromDimensions(0, 0, bitmap.Pitch, bitmap.Rows), atlas,
-                            (offsetX, offsetY));
-                        break;
+                        case PixelMode.Gray:
+                        {
+                            ReadOnlySpan<Alpha8> span;
+                            unsafe
+                            {
+                                span = new ReadOnlySpan<Alpha8>((void*) bitmap.Buffer, bitmap.Pitch * bitmap.Rows);
+                            }
+
+                            span.Blit(bitmap.Pitch, UIBox2i.FromDimensions(0, 0, bitmap.Pitch, bitmap.Rows), atlas,
+                                (offsetX, offsetY));
+                            break;
+                        }
+
+                        case PixelMode.Gray2:
+                        case PixelMode.Gray4:
+                        case PixelMode.Lcd:
+                        case PixelMode.VerticalLcd:
+                        case PixelMode.Bgra:
+                            throw new NotImplementedException();
+                        default:
+                            throw new ArgumentOutOfRangeException();
                     }
-
-                    case PixelMode.Gray2:
-                    case PixelMode.Gray4:
-                    case PixelMode.Lcd:
-                    case PixelMode.VerticalLcd:
-                    case PixelMode.Bgra:
-                        throw new NotImplementedException();
-                    default:
-                        throw new ArgumentOutOfRangeException();
                 }
+
+                var atlasDictionary = new Dictionary<uint, AtlasTexture>();
+                var texture = Texture.LoadFromImage(atlas, $"font-{face.FamilyName}-{instance.Size}-{(uint) (BaseFontDPI * scale)}");
+
+                foreach (var (glyph, region) in atlasRegions)
+                {
+                    atlasDictionary.Add(glyph, new AtlasTexture(texture, region));
+                }
+
+                return (new FontTextureAtlas(texture, atlasDictionary), metricsMap);
             }
-
-            var atlasDictionary = new Dictionary<uint, AtlasTexture>();
-            var texture = Texture.LoadFromImage(atlas,
-                $"font-{face.FamilyName}-{instance.Size}-{(uint) (BaseFontDPI * scale)}");
-
-            foreach (var (glyph, region) in atlasRegions)
-            {
-                atlasDictionary.Add(glyph, new AtlasTexture(texture, region));
-            }
-
-            return (new FontTextureAtlas(texture, atlasDictionary), metricsMap);
         }
 
         private static Image<Alpha8> MonoBitMapToImage(FTBitmap bitmap)

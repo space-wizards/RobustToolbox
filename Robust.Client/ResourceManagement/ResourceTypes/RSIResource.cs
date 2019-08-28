@@ -171,26 +171,29 @@ namespace Robust.Client.ResourceManagement
                 var dimensionX = (int) Math.Ceiling(Math.Sqrt(images.Count));
                 var dimensionY = (int) Math.Ceiling((float) images.Count / dimensionX);
 
-                var sheet = new Image<Rgba32>((int) (dimensionX * size.X), (int) (dimensionY * size.Y));
-
-                var i = 0;
-                foreach (var list in directionFramesList)
+                int i;
+                Texture texture;
+                using (var sheet = new Image<Rgba32>((int) (dimensionX * size.X), (int) (dimensionY * size.Y)))
                 {
-                    for (var j = 0; j < list.Length; j++, i++)
+                    i = 0;
+                    foreach (var list in directionFramesList)
                     {
-                        var column = i % dimensionX;
-                        var row = i / dimensionX;
+                        for (var j = 0; j < list.Length; j++, i++)
+                        {
+                            var column = i % dimensionX;
+                            var row = i / dimensionX;
 
-                        var (image, offset) = images[i];
+                            var (image, offset) = images[i];
 
-                        var srcBox = UIBox2i.FromDimensions(offset, (Vector2i) size);
-                        var dstOffset = ((int)(column * size.X), (int)(row * size.Y));
-                        image.Blit(srcBox, sheet, dstOffset);
+                            var srcBox = UIBox2i.FromDimensions(offset, (Vector2i) size);
+                            var dstOffset = ((int)(column * size.X), (int)(row * size.Y));
+                            image.Blit(srcBox, sheet, dstOffset);
+                        }
                     }
-                }
 
-                // Load atlas.
-                var texture = Texture.LoadFromImage(sheet, path.ToString());
+                    // Load atlas.
+                    texture = Texture.LoadFromImage(sheet, path.ToString());
+                }
 
                 // Assign AtlasTexture instances.
                 i = 0;
@@ -208,6 +211,11 @@ namespace Robust.Client.ResourceManagement
                         tuple.Item1 = new AtlasTexture(texture, UIBox2.FromDimensions(pX, pY, size.X, size.Y));
                     }
                 }
+            }
+
+            foreach (var (image, _) in images)
+            {
+                image.Dispose();
             }
 
             RSI = rsi;

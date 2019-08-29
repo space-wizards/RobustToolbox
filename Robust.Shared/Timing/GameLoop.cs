@@ -87,7 +87,9 @@ namespace Robust.Shared.Timing
         // ReSharper disable once NotAccessedField.Local
         private readonly IRuntimeLog _runtimeLog;
 
+#if RELEASE
         private int _tickExceptions;
+#endif
 
         private const int MaxSoftLockExceptions = 10;
 
@@ -175,7 +177,7 @@ namespace Robust.Shared.Timing
                     try
                     {
 #endif
-                        Tick?.Invoke(this, simFrameEvent);
+                    Tick?.Invoke(this, simFrameEvent);
 #if RELEASE
                     }
                     catch (Exception exp)

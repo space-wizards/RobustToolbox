@@ -8,7 +8,7 @@ using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects.Components.Container
 {
@@ -22,6 +22,9 @@ namespace Robust.Server.GameObjects.Components.Container
 
         private readonly Dictionary<string, IContainer> EntityContainers = new Dictionary<string, IContainer>();
         private Dictionary<string, List<EntityUid>> _entitiesWaitingResolve;
+
+        [ViewVariables]
+        private IEnumerable<IContainer> _allContainers => EntityContainers.Values;
 
         /// <summary>
         /// Shortcut method to make creation of containers easier.

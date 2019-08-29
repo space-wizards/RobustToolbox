@@ -9,6 +9,7 @@ using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects.Components.Container
 {

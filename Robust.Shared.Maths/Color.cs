@@ -766,12 +766,12 @@ namespace Robust.Shared.Maths
 #else
         public static Color InterpolateBetween(in Color α, in Color β, float λ)
         {
-            ref var svA = ref Unsafe.As<Color, SysVector4>(ref Unsafe.AsRef(α));
-            ref var svB = ref Unsafe.As<Color, SysVector4>(ref Unsafe.AsRef(β));
-
-            var res = SysVector4.Lerp(svA, svB, λ);
-
-            return Unsafe.As<SysVector4, Color>(ref res);
+            return new Color(
+                (β.R - α.R) * λ + α.R,
+                (β.G - α.G) * λ + α.G,
+                (β.B - α.B) * λ + α.B,
+                (β.A - α.A) * λ + α.A
+            );
         }
 #endif
 

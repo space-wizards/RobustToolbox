@@ -84,6 +84,7 @@ namespace Robust.Server.ViewVariables.Traits
 
         private void _refresh()
         {
+            _cache.Clear();
             _enumerator = _enumerable.GetEnumerator();
         }
     }

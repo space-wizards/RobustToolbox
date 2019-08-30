@@ -36,6 +36,11 @@ namespace Robust.Server.ViewVariables.Traits
                     continue;
                 }
 
+                if (!property.IsBasePropertyDefinition())
+                {
+                    continue;
+                }
+
                 dataList.Add(new ViewVariablesBlobMembers.MemberData
                 {
                     Editable = attr.Access == VVAccess.ReadWrite,

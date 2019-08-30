@@ -1,34 +1,42 @@
+using System.Diagnostics.CodeAnalysis;
 using NUnit.Framework;
-using Robust.Client;
-using Robust.Server;
 using Robust.Shared.Utility;
-using Robust.Shared.Maths;
 
 namespace Robust.UnitTesting.Shared.Utility
 {
     [TestFixture]
     [TestOf(typeof(TypeHelpers))]
+    [SuppressMessage("ReSharper", "UnusedMember.Local")]
     public class TypeHelpers_Test
     {
-        public void TestIsServerSide()
+        [Test]
+        public void TestIsBasePropertyDefinition()
         {
-            Assert.That(typeof(BaseServer).IsServerSide());
-            Assert.That(!typeof(BaseClient).IsServerSide());
-            Assert.That(!typeof(Vector2).IsServerSide());
+            // Easy, the definition of the virtual property.
+            Assert.That(typeof(Parent).GetProperty("X").IsBasePropertyDefinition(), Is.True);
+            Assert.That(typeof(Child).GetProperty("X").IsBasePropertyDefinition(), Is.False);
+            Assert.That(typeof(SealedChild).GetProperty("X").IsBasePropertyDefinition(), Is.False);
+            Assert.That(typeof(Hidden).GetProperty("X").IsBasePropertyDefinition(), Is.True);
         }
 
-        public void TestIsClientSide()
+        private class Parent
         {
-            Assert.That(!typeof(BaseServer).IsClientSide());
-            Assert.That(typeof(BaseClient).IsClientSide());
-            Assert.That(!typeof(Vector2).IsClientSide());
+            public virtual int X => 0;
         }
 
-        public void TestIsSharedSide()
+        private class Child : Parent
         {
-            Assert.That(!typeof(BaseServer).IsSharedSide());
-            Assert.That(!typeof(BaseClient).IsSharedSide());
-            Assert.That(typeof(Vector2).IsSharedSide());
+            public override int X => 5;
+        }
+
+        private class SealedChild : Parent
+        {
+            public sealed override int X => 6;
+        }
+
+        private class Hidden : Parent
+        {
+            public new int X { get; } = 5;
         }
     }
 }

@@ -83,6 +83,11 @@ namespace Robust.Client.ViewVariables
                     continue;
                 }
 
+                if (!propertyInfo.IsBasePropertyDefinition())
+                {
+                    continue;
+                }
+
                 members.Add((propertyInfo, attr.Access, propertyInfo.GetValue(obj),
                     v => propertyInfo.GetSetMethod(true).Invoke(obj, new[] {v}), propertyInfo.PropertyType));
             }

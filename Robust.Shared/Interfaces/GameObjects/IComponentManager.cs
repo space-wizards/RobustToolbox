@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components.Transform;
 
 namespace Robust.Shared.Interfaces.GameObjects
 {
@@ -83,10 +84,18 @@ namespace Robust.Shared.Interfaces.GameObjects
         void RemoveComponent(EntityUid uid, IComponent component);
 
         /// <summary>
-        ///     Removes ALL components from an entity.
+        ///     Removes all components from an entity, except the required components.
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>
         void RemoveComponents(EntityUid uid);
+
+        /// <summary>
+        ///     Removes ALL components from an entity. This includes the required components,
+        ///     <see cref="TransformComponent"/> and <see cref="MetaDataComponent"/>. This should ONLY be
+        ///     used when deleting an entity.
+        /// </summary>
+        /// <param name="uid">Entity UID to modify.</param>
+        void DisposeComponents(EntityUid uid);
 
         /// <summary>
         ///     Checks if the entity has a component type.

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
@@ -278,6 +279,9 @@ namespace Robust.Shared.GameObjects
             // allocate the required MetaDataComponent
             _componentManager.AddComponent<MetaDataComponent>(entity);
 
+            // allocate the required TransformComponent
+            _componentManager.AddComponent<TransformComponent>(entity);
+
             Entities[entity.Uid] = entity;
             _allEntities.Add(entity);
 
@@ -322,7 +326,7 @@ namespace Robust.Shared.GameObjects
         #endregion Entity Management
 
         #region ComponentEvents
-
+        
         public void SubscribeEvent<T>(EntityEventHandler<T> eventHandler, IEntityEventSubscriber s)
             where T : EntityEventArgs
         {

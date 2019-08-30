@@ -345,7 +345,7 @@ namespace Robust.Shared.GameObjects
                     }
                     target.Components[component.Key] = new YamlMappingNode(component.Value.AsEnumerable());
                 }
-            next:;
+                next:;
             }
 
             // Copy all simple data over.
@@ -397,9 +397,20 @@ namespace Robust.Shared.GameObjects
             }
             foreach (var (name, data) in Components)
             {
-                var component = (Component)factory.GetComponent(name);
+                var compRegistration = factory.GetRegistration(name);
 
-                component.Owner = entity;
+                Component component;
+                if (entity.TryGetComponent(compRegistration.Type, out var existingComp))
+                {
+                    component = (Component) existingComp;
+                }
+                else
+                {
+                    component = (Component) factory.GetComponent(name);
+                    component.Owner = entity;
+                    entity.AddComponent(component);
+                }
+
                 ObjectSerializer ser;
                 if (context != null)
                 {
@@ -411,8 +422,6 @@ namespace Robust.Shared.GameObjects
                     ser = YamlObjectSerializer.NewReader(data, defaultContext);
                 }
                 component.ExposeData(ser);
-
-                entity.AddComponent(component);
             }
 
             if (context == null)

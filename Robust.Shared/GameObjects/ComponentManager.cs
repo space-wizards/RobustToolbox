@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.IoC;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -83,6 +86,12 @@ namespace Robust.Shared.GameObjects
                 if (!overwrite)
                     throw new InvalidOperationException($"Component reference type {type} already occupied by {duplicate}");
 
+                // these two components are required on all entities and cannot be overwritten.
+                if (duplicate is ITransformComponent || duplicate is IMetaDataComponent)
+                {
+                    throw new InvalidOperationException("Tried to overwrite a protected component.");
+                }
+
                 RemoveComponentImmediate((Component) duplicate);
             }
 
@@ -136,14 +145,14 @@ namespace Robust.Shared.GameObjects
         public void RemoveComponent(EntityUid uid, Type type)
         {
             var component = GetComponent(uid, type);
-            RemoveComponentDeferred(component as Component);
+            RemoveComponentDeferred(component as Component, false);
         }
 
         /// <inheritdoc />
         public void RemoveComponent(EntityUid uid, uint netId)
         {
             var comp = GetComponent(uid, netId);
-            RemoveComponentDeferred(comp as Component);
+            RemoveComponentDeferred(comp as Component, false);
         }
 
         /// <inheritdoc />
@@ -155,7 +164,7 @@ namespace Robust.Shared.GameObjects
             if (component.Owner == null || component.Owner.Uid != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
-            RemoveComponentDeferred(component as Component);
+            RemoveComponentDeferred(component as Component, false);
         }
 
         /// <inheritdoc />
@@ -163,20 +172,43 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var kvTypeDict in _dictComponents)
             {
-                if (kvTypeDict.Value.TryGetValue(uid, out var comp))
+                // because we are iterating over references instead of instances, and a comp instance
+                // can have multiple references, we filter out already deleted instances. 
+                if (kvTypeDict.Value.TryGetValue(uid, out var comp) && !comp.Deleted)
                 {
-                    RemoveComponentDeferred(comp);
+                    RemoveComponentDeferred(comp, false);
                 }
             }
         }
 
-        private void RemoveComponentDeferred(Component component)
+        /// <inheritdoc />
+        public void DisposeComponents(EntityUid uid)
+        {
+            foreach (var kvTypeDict in _dictComponents)
+            {
+                // because we are iterating over references instead of instances, and a comp instance
+                // can have multiple references, we filter out already deleted instances.
+                if (kvTypeDict.Value.TryGetValue(uid, out var comp) && !comp.Deleted)
+                {
+                    RemoveComponentDeferred(comp, true);
+                }
+            }
+        }
+
+        private void RemoveComponentDeferred(Component component, bool removeProtected)
         {
             if (component == null)
                 throw new ArgumentNullException(nameof(component));
-
+            
             if (component.Deleted)
                 return;
+
+            // these two components are required on all entities and cannot be removed normally.
+            if (!removeProtected && (component is ITransformComponent || component is IMetaDataComponent))
+            {
+                DebugTools.Assert("Tried to remove a protected component.");
+                return;
+            }
 
             _deleteList.Add(component);
 
@@ -194,6 +226,13 @@ namespace Robust.Shared.GameObjects
 
             if (component.Deleted)
                 return;
+
+            // these two components are required on all entities and cannot be removed.
+            if (component is ITransformComponent || component is IMetaDataComponent)
+            {
+                DebugTools.Assert("Tried to remove a protected component.");
+                return;
+            }
 
             if (component.Running)
                 component.Shutdown();

@@ -180,6 +180,11 @@ namespace Robust.Client.UserInterface.Controls
 
             foreach (var child in Children)
             {
+                if (!child.Visible)
+                {
+                    continue;
+                }
+
                 var (childWidth, childHeight) = child.CombinedMinimumSize;
                 if (Vertical)
                 {

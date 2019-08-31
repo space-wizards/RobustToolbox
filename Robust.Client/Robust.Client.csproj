@@ -29,7 +29,7 @@
     <PackageReference Include="OpenTK" Version="3.1.0"  />
     <PackageReference Include="SharpFont" Version="4.0.1"  />
     <!-- Including SharpFont.Dependencies to silence a warning -->
-    <PackageReference Include="SharpFont.Dependencies" Version="2.6.0"  />
+    <PackageReference Include="SharpFont.Dependencies" Version="2.6.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
@@ -37,7 +37,7 @@
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="$(SolutionDir)\packages\opentk\3.0.1\content\OpenTK.dll.config">
+    <Content Include="$(SolutionDir)\packages\opentk\3.1.0\content\OpenTK.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>false</Visible>
     </Content>

@@ -53,7 +53,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [ViewVariables]
-        public float Value
+        public virtual float Value
         {
             get => _value;
             set

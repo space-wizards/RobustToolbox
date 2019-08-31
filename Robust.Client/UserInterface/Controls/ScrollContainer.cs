@@ -167,12 +167,12 @@ namespace Robust.Client.UserInterface.Controls
 
             if (_vScrollEnabled)
             {
-                _vScrollBar.Value -= args.Delta.Y * 50;
+                _vScrollBar.ValueTarget -= args.Delta.Y * 50;
             }
 
             if (_vScrollEnabled)
             {
-                _hScrollBar.Value += args.Delta.X * 50;
+                _hScrollBar.ValueTarget += args.Delta.X * 50;
             }
         }
 

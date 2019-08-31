@@ -1,9 +1,9 @@
 ﻿using System;
 using JetBrains.Annotations;
 using Robust.Client.Graphics.Drawing;
-using Robust.Client.Input;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -16,6 +16,28 @@ namespace Robust.Client.UserInterface.Controls
         private readonly OrientationMode _orientation;
         private bool _isHovered;
         private (Vector2 pos, float value)? _grabData;
+        private float _valueTarget;
+
+        public float ValueTarget
+        {
+            get => _valueTarget;
+            set => _valueTarget = ClampValue(value);
+        }
+
+        private bool _updating;
+
+        public override float Value
+        {
+            get => base.Value;
+            set
+            {
+                if (!_updating)
+                {
+                    ValueTarget = value;
+                }
+                base.Value = value;
+            }
+        }
 
         protected ScrollBar(OrientationMode orientation)
         {
@@ -28,7 +50,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                var offset = Value + Page;
+                var offset = ValueTarget + Page;
                 return offset > MaxValue || FloatMath.CloseTo(offset, MaxValue);
             }
         }
@@ -36,7 +58,24 @@ namespace Robust.Client.UserInterface.Controls
         public void MoveToEnd()
         {
             // Will be clamped as necessary.
-            Value = MaxValue;
+            ValueTarget = MaxValue;
+        }
+
+        protected override void FrameUpdate(FrameEventArgs args)
+        {
+            base.FrameUpdate(args);
+
+            if (!VisibleInTree || FloatMath.CloseTo(Value, ValueTarget))
+            {
+                Value = ValueTarget;
+            }
+            else
+            {
+                var oldTarget = ValueTarget;
+                _updating = true;
+                Value = FloatMath.Lerp(Value, ValueTarget, args.DeltaSeconds * 20);
+                _updating = false;
+            }
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)

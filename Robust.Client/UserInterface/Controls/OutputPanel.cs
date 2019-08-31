@@ -144,8 +144,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            _scrollBar.Value -= _getScrollSpeed() * args.Delta.Y;
-            _isAtBottom = _scrollBar.IsAtEnd;
+            _scrollBar.ValueTarget -= _getScrollSpeed() * args.Delta.Y;
         }
 
         protected override void Resized()

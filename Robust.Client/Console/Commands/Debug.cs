@@ -546,4 +546,24 @@ namespace Robust.Client.Console.Commands
             return false;
         }
     }
+
+    internal class GcCommand : IConsoleCommand
+    {
+        public string Command => "gc";
+        public string Description => "Run the GC.";
+        public string Help => "gc [generation]";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            if (args.Length == 0)
+            {
+                GC.Collect();
+            }
+            else
+            {
+                GC.Collect(int.Parse(args[0]));
+            }
+            return false;
+        }
+    }
 }

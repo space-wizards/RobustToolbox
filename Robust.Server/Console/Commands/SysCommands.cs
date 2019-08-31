@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Player;
@@ -110,6 +111,25 @@ namespace Robust.Server.Console.Commands
         {
             var timing = IoCManager.Resolve<IGameTiming>();
             shell.SendText(player, $"Paused: {timing.Paused}, CurTick: {timing.CurTick}, CurTime: {timing.CurTime}, RealTime: {timing.RealTime}");
+        }
+    }
+
+    internal class GcCommand : IClientCommand
+    {
+        public string Command => "gc";
+        public string Description => "Run the GC.";
+        public string Help => "gc [generation]";
+
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            if (args.Length == 0)
+            {
+                GC.Collect();
+            }
+            else
+            {
+                GC.Collect(int.Parse(args[0]));
+            }
         }
     }
 }

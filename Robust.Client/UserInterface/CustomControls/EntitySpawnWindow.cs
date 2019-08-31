@@ -132,6 +132,13 @@ namespace Robust.Client.UserInterface.CustomControls
             this.placementManager.PlacementCanceled += OnPlacementCanceled;
         }
 
+        public override void Close()
+        {
+            base.Close();
+
+            Dispose();
+        }
+
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);

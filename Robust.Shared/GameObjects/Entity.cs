@@ -173,14 +173,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel channel = null)
         {
-            if (message.Directed)
-            {
-                EntityManager.EntityNetManager.SendDirectedComponentNetworkMessage(channel, this, owner, message);
-            }
-            else
-            {
-                EntityManager.EntityNetManager.SendComponentNetworkMessage(this, owner, message);
-            }
+            EntityManager.EntityNetManager.SendComponentNetworkMessage(channel, this, owner, message);
         }
 
         #endregion Unified Messaging

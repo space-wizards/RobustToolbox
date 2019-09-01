@@ -9,12 +9,17 @@ namespace Robust.Shared.GameObjects
     {
         /// <summary>
         /// Allows a component owned by this entity to send a message to a counterpart component on the
-        /// counterpart entities on all clients.
+        /// counterpart entities on clients.
         /// </summary>
-        /// <param name="entity"></param>
+        /// <param name="channel">
+        /// Intended recipient of the message. On Server, if this is null, broadcast the message to all clients.
+        /// On clients, this should always be null.
+        /// </param>
+        /// <param name="entity">Entity sending the message (also entity to send to).</param>
         /// <param name="component">Component that sent the message.</param>
         /// <param name="message">Message to send.</param>
-        void SendComponentNetworkMessage(IEntity entity, IComponent component, ComponentMessage message);
+        void SendComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component,
+            ComponentMessage message);
 
         /// <summary>
         /// Sends an arbitrary entity network message
@@ -42,16 +47,6 @@ namespace Robust.Shared.GameObjects
         ///    Thrown if called on the client.
         /// </exception>
         void SendSystemNetworkMessage(EntitySystemMessage message, INetChannel channel);
-
-        /// <summary>
-        /// Allows a component owned by this entity to send a message to a counterpart component on the
-        /// counterpart entities on all clients.
-        /// </summary>
-        /// <param name="entity">Entity sending the message (also entity to send to)</param>
-        /// <param name="component">Component that sent the message.</param>
-        /// <param name="channel">Intended recipient of the message. If this is null, broadcast the message to all clients.</param>
-        /// <param name="message">Message to send.</param>
-        void SendDirectedComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component, ComponentMessage message);
 
         /// <summary>
         /// Converts a raw NetIncomingMessage to an IncomingEntityMessage object

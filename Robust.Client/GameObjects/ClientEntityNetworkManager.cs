@@ -31,13 +31,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendDirectedComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component, ComponentMessage message)
-        {
-            SendComponentNetworkMessage(entity, component, message);
-        }
-
-        /// <inheritdoc />
-        public void SendComponentNetworkMessage(IEntity entity, IComponent component, ComponentMessage message)
+        public void SendComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component, ComponentMessage message)
         {
             if (!component.NetID.HasValue)
                 throw new ArgumentException($"Component {component.Name} does not have a NetID.", nameof(component));

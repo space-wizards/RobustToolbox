@@ -24,17 +24,8 @@ namespace Robust.Server.GameObjects
             throw new NotImplementedException();
         }
 
-        public void SendComponentNetworkMessage(IEntity entity, IComponent component, ComponentMessage message)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion IEntityNetworkManager Members
-
-        #region Sending
-
         /// <inheritdoc />
-        public void SendDirectedComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component, ComponentMessage message)
+        public void SendComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component, ComponentMessage message)
         {
             if (_mNetManager.IsClient)
                 return;
@@ -59,6 +50,10 @@ namespace Robust.Server.GameObjects
             }
         }
 
+        #endregion IEntityNetworkManager Members
+
+        #region Sending
+        
         /// <summary>
         /// Sends a message to the relevant system(s) on all clients.
         /// </summary>
@@ -98,8 +93,7 @@ namespace Robust.Server.GameObjects
                     return new IncomingEntityMessage(message);
 
                 case EntityMessageType.EntityMessage:
-                    // TODO: Handle this.
-                    break;
+                    return null;
 
                 case EntityMessageType.SystemMessage:
                     _entitySystemManager.HandleSystemMessage(message);

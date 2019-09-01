@@ -64,9 +64,18 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public bool CheckClick(GridCoordinates worldPos, out int drawdepth)
+        //TODO: This needs to accept MapPosition, not a Vector2
+        public bool CheckClick(Vector2 worldPos, out int drawdepth)
         {
-            var component = Owner.GetComponent<IClickTargetComponent>();
+            if (LocalBounds.HasValue)
+            {
+                var worldBounds = LocalBounds.Value.Translated(Owner.Transform.WorldPosition);
+                if (!worldBounds.Contains(worldPos))
+                {
+                    drawdepth = default;
+                    return false;
+                }
+            }
 
             if (Owner.TryGetComponent(out ISpriteComponent sprite) && !sprite.Visible)
             {
@@ -74,6 +83,7 @@ namespace Robust.Client.GameObjects
                 return false;
             }
 
+            var component = Owner.GetComponent<IClickTargetComponent>();
             drawdepth = (int)component.DrawDepth;
             return true;
         }

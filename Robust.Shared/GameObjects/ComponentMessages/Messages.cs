@@ -18,18 +18,6 @@ namespace Robust.Shared.GameObjects
     }
 
     [Serializable, NetSerializable]
-    public class ClientChangedHandMsg : ComponentMessage
-    {
-        public string Index { get; }
-
-        public ClientChangedHandMsg(string index)
-        {
-            Directed = true;
-            Index = index;
-        }
-    }
-
-    [Serializable, NetSerializable]
     public class ClientEntityClickMsg : ComponentMessage
     {
         public EntityUid Uid { get; }

@@ -108,15 +108,7 @@ namespace Robust.Server.Maps
                 }
 
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, (YamlMappingNode)data.RootNode, map);
-                try
-                {
-                    context.Deserialize();
-                }
-                catch (Exception e)
-                {
-                    Logger.ErrorS("map", $"    Failed to deserialize map.");
-                }
-
+                context.Deserialize();
                 grid = context.Grids[0];
 
                 if (!context.MapIsPostInit && _pauseManager.IsMapInitialized(map))

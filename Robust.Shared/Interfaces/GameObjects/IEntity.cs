@@ -11,6 +11,9 @@ namespace Robust.Shared.Interfaces.GameObjects
     {
         GameTick LastModifiedTick { get; }
 
+        /// <summary>
+        /// The Entity Manager that controls this entity.
+        /// </summary>
         IEntityManager EntityManager { get; }
 
         /// <summary>
@@ -190,13 +193,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="owner"></param>
         /// <param name="message">Message to send.</param>
         void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel channel = null);
-
-        /// <summary>
-        /// Func to handle an incoming network message
-        /// </summary>
-        /// <param name="message"></param>
-        void HandleNetworkMessage(IncomingEntityMessage message);
-
+        
         /// <summary>
         ///     Serverside method to prepare an entity state object
         /// </summary>

@@ -67,7 +67,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         protected readonly List<Entity> _allEntities = new List<Entity>();
 
-        protected readonly Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
+        protected readonly Queue<IncomingEntityMessage> NetworkMessageBuffer = new Queue<IncomingEntityMessage>();
 
         protected int NextUid = (int)EntityUid.FirstUid;
 
@@ -82,12 +82,9 @@ namespace Robust.Shared.GameObjects
 
         public bool Started { get; protected set; }
 
-        #region IEntityManager Members
-
         public virtual void Initialize()
         {
-            _network.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
-
+            EntityNetworkManager.SetupNetworking();
             _componentManager.ComponentRemoved += (sender, args) => RemoveSubscribedEvents(args.Component);
         }
 
@@ -105,7 +102,7 @@ namespace Robust.Shared.GameObjects
 
         public virtual void Update(float frameTime)
         {
-            ProcessMsgBuffer();
+            ProcessMessageBuffer();
             EntitySystemManager.Update(frameTime);
             ProcessEventQueue();
             CullDeletedEntities();
@@ -247,7 +244,7 @@ namespace Robust.Shared.GameObjects
         {
             var entity = AllocEntity(uid);
 
-            if (string.IsNullOrWhiteSpace(prototypeName))
+            if (String.IsNullOrWhiteSpace(prototypeName))
                 return entity;
 
             var prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
@@ -323,10 +320,31 @@ namespace Robust.Shared.GameObjects
             entity.StartAllComponents();
         }
 
+        private void CullDeletedEntities()
+        {
+            // Culling happens in updates.
+            // It doesn't matter because to-be culled entities can't be accessed.
+            // This should prevent most cases of "somebody is iterating while we're removing things"
+            for (var i = 0; i < _allEntities.Count; i++)
+            {
+                var entity = _allEntities[i];
+                if (!entity.Deleted)
+                {
+                    continue;
+                }
+
+                _allEntities.RemoveSwap(i);
+                Entities.Remove(entity.Uid);
+
+                // Process the one we just swapped next.
+                i--;
+            }
+        }
+
         #endregion Entity Management
 
-        #region ComponentEvents
-        
+        #region Entity Events
+
         public void SubscribeEvent<T>(EntityEventHandler<T> eventHandler, IEntityEventSubscriber s)
             where T : EntityEventArgs
         {
@@ -407,12 +425,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        #endregion ComponentEvents
-
-        #endregion IEntityManager Members
-
-        #region ComponentEvents
-
         private void ProcessEventQueue()
         {
             while (_eventQueue.Count != 0)
@@ -437,27 +449,38 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        #endregion ComponentEvents
+        #endregion Entity Events
 
         #region message processing
 
-        protected void ProcessMsgBuffer()
+        /// <inheritdoc />
+        public void HandleEntityNetworkMessage(MsgEntity msg)
         {
+            var incomingEntity = new IncomingEntityMessage(msg);
+
             if (!Started)
             {
+                if (incomingEntity.Message.Type != EntityMessageType.Error) NetworkMessageBuffer.Enqueue(incomingEntity);
                 return;
             }
 
-            if (MessageBuffer.Count == 0)
-            {
-                return;
-            }
+            if (!Entities.TryGetValue(incomingEntity.Message.EntityUid, out var entity))
+                NetworkMessageBuffer.Enqueue(incomingEntity);
+            else
+                ProcessEntityMessage(incomingEntity.Message);
+        }
+
+        private void ProcessMessageBuffer()
+        {
+            if (!Started) return;
+
+            if (NetworkMessageBuffer.Count == 0) return;
 
             var misses = new List<IncomingEntityMessage>();
 
-            while (MessageBuffer.Count != 0)
+            while (NetworkMessageBuffer.Count != 0)
             {
-                var incomingEntity = MessageBuffer.Dequeue();
+                var incomingEntity = NetworkMessageBuffer.Dequeue();
                 if (!Entities.TryGetValue(incomingEntity.Message.EntityUid, out var entity))
                 {
                     incomingEntity.LastProcessingAttempt = DateTime.Now;
@@ -466,67 +489,48 @@ namespace Robust.Shared.GameObjects
                 }
                 else
                 {
-                    entity.HandleNetworkMessage(incomingEntity);
+                    ProcessEntityMessage(incomingEntity.Message);
                 }
             }
 
             foreach (var miss in misses)
-                MessageBuffer.Enqueue(miss);
+            {
+                NetworkMessageBuffer.Enqueue(miss);
+            }
         }
 
-        /// <summary>
-        /// Handle an incoming network message by passing the message to the EntityNetworkManager
-        /// and handling the parsed result.
-        /// </summary>
-        /// <param name="msg">Incoming raw network message</param>
-        private void HandleEntityNetworkMessage(MsgEntity msg)
+        private void ProcessEntityMessage(MsgEntity msgEntity)
         {
-            var incomingEntity = EntityNetworkManager.HandleEntityNetworkMessage(msg);
-            // bad message or handled by something else
-            if (incomingEntity == null)
-                return;
-
-            if (!Started)
+            switch (msgEntity.Type)
             {
-                if (incomingEntity.Message.Type != EntityMessageType.Error)
-                {
-                    MessageBuffer.Enqueue(incomingEntity);
-                }
-                return;
+                case EntityMessageType.ComponentMessage:
+                    DispatchComponentMessage(msgEntity);
+                    break;
             }
+        }
 
-            if (!Entities.TryGetValue(incomingEntity.Message.EntityUid, out var entity))
+        private void DispatchComponentMessage(MsgEntity msgEntity)
+        {
+            var compMsg = msgEntity.ComponentMessage;
+            var compChannel = msgEntity.MsgChannel;
+            compMsg.Remote = true;
+
+            var uid = msgEntity.EntityUid;
+            if (compMsg.Directed)
             {
-                MessageBuffer.Enqueue(incomingEntity);
+                if (_componentManager.TryGetComponent(uid, msgEntity.NetId, out var component))
+                    component.HandleMessage(compMsg, compChannel);
             }
             else
             {
-                entity.HandleNetworkMessage(incomingEntity);
+                foreach (var component in _componentManager.GetComponents(uid))
+                {
+                    component.HandleMessage(compMsg, compChannel);
+                }
             }
         }
 
         #endregion message processing
-
-        private void CullDeletedEntities()
-        {
-            // Culling happens in updates.
-            // It doesn't matter because to-be culled entities can't be accessed.
-            // This should prevent most cases of "somebody is iterating while we're removing things"
-            for (var i = 0; i < _allEntities.Count; i++)
-            {
-                var entity = _allEntities[i];
-                if (!entity.Deleted)
-                {
-                    continue;
-                }
-
-                _allEntities.RemoveSwap(i);
-                Entities.Remove(entity.Uid);
-
-                // Process the one we just swapped next.
-                i--;
-            }
-        }
     }
 
     public enum EntityMessageType

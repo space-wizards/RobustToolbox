@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Interfaces.GameObjects
@@ -114,6 +115,12 @@ namespace Robust.Shared.Interfaces.GameObjects
 
         void RemoveSubscribedEvents(IEntityEventSubscriber subscriber);
 
+        /// <summary>
+        /// Converts a raw NetIncomingMessage to an IncomingEntityMessage object
+        /// </summary>
+        /// <param name="message">raw network message</param>
+        /// <returns>An IncomingEntityMessage object</returns>
+        void HandleEntityNetworkMessage(MsgEntity message);
         #endregion ComponentEvents
     }
 }

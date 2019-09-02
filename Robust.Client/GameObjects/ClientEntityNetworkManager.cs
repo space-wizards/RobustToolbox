@@ -12,7 +12,14 @@ namespace Robust.Client.GameObjects
 #pragma warning disable 649
         [Dependency] private readonly IClientNetManager _network;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager;
+        [Dependency] private readonly IEntityManager _entityManager;
 #pragma warning restore 649
+
+        /// <inheritdoc />
+        public void SetupNetworking()
+        {
+            _network.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
+        }
 
         /// <summary>
         /// Sends a message to the relevant system(s) server side.
@@ -59,22 +66,21 @@ namespace Robust.Client.GameObjects
         /// </summary>
         /// <param name="message">raw network message</param>
         /// <returns>An IncomingEntityMessage object</returns>
-        public IncomingEntityMessage HandleEntityNetworkMessage(MsgEntity message)
+        private void HandleEntityNetworkMessage(MsgEntity message)
         {
             switch (message.Type)
             {
                 case EntityMessageType.ComponentMessage:
-                    return new IncomingEntityMessage(message);
+                    _entityManager.HandleEntityNetworkMessage(message);
+                    return;
 
                 case EntityMessageType.EntityMessage:
-                    // TODO: Handle this.
-                    break;
+                    return;
 
                 case EntityMessageType.SystemMessage:
                     _entitySystemManager.HandleSystemMessage(message);
-                    break;
+                    return;
             }
-            return null;
         }
     }
 }

@@ -9,14 +9,19 @@ namespace Robust.Server.GameObjects
 {
     public class ServerEntityNetworkManager : IEntityNetworkManager
     {
-        [Dependency]
 #pragma warning disable 649
-        private readonly IServerNetManager _mNetManager;
-        [Dependency]
-        private readonly IEntitySystemManager _entitySystemManager;
+        [Dependency] private readonly IServerNetManager _mNetManager;
+        [Dependency] private readonly IEntitySystemManager _entitySystemManager;
+        [Dependency] private readonly IEntityManager _entityManager;
 #pragma warning restore 649
 
         #region IEntityNetworkManager Members
+
+        /// <inheritdoc />
+        public void SetupNetworking()
+        {
+            _mNetManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
+        }
 
         /// <inheritdoc />
         public void SendEntityNetworkMessage(IEntity entity, EntityEventArgs message)
@@ -85,21 +90,21 @@ namespace Robust.Server.GameObjects
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public IncomingEntityMessage HandleEntityNetworkMessage(MsgEntity message)
+        private void HandleEntityNetworkMessage(MsgEntity message)
         {
             switch (message.Type)
             {
                 case EntityMessageType.ComponentMessage:
-                    return new IncomingEntityMessage(message);
+                    _entityManager.HandleEntityNetworkMessage(message);
+                    return;
 
                 case EntityMessageType.EntityMessage:
-                    return null;
+                    return;
 
                 case EntityMessageType.SystemMessage:
                     _entitySystemManager.HandleSystemMessage(message);
-                    break;
+                    return;
             }
-            return null;
         }
     }
 }

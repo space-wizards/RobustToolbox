@@ -1,12 +1,16 @@
 ﻿using System;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Network.Messages;
 
 namespace Robust.Shared.GameObjects
 {
     public interface IEntityNetworkManager
     {
+        /// <summary>
+        /// Initializes networking for this manager. This should only be called once.
+        /// </summary>
+        void SetupNetworking();
+
         /// <summary>
         /// Allows a component owned by this entity to send a message to a counterpart component on the
         /// counterpart entities on clients.
@@ -47,12 +51,5 @@ namespace Robust.Shared.GameObjects
         ///    Thrown if called on the client.
         /// </exception>
         void SendSystemNetworkMessage(EntitySystemMessage message, INetChannel channel);
-
-        /// <summary>
-        /// Converts a raw NetIncomingMessage to an IncomingEntityMessage object
-        /// </summary>
-        /// <param name="message">raw network message</param>
-        /// <returns>An IncomingEntityMessage object</returns>
-        IncomingEntityMessage HandleEntityNetworkMessage(MsgEntity message);
     }
 }

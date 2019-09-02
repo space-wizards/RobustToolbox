@@ -157,7 +157,7 @@ namespace Robust.Shared.GameObjects
 
         #endregion Initialization
 
-        #region Unified Messaging
+        #region Component Messaging
 
         /// <inheritdoc />
         public void SendMessage(IComponent owner, ComponentMessage message)
@@ -176,43 +176,9 @@ namespace Robust.Shared.GameObjects
             EntityManager.EntityNetManager.SendComponentNetworkMessage(channel, this, owner, message);
         }
 
-        #endregion Unified Messaging
+        #endregion Component Messaging
 
-        #region Network messaging
-
-        /// <inheritdoc />
-        public void HandleNetworkMessage(IncomingEntityMessage message)
-        {
-            switch (message.Message.Type)
-            {
-                case EntityMessageType.ComponentMessage:
-                    {
-                        var compMsg = message.Message.ComponentMessage;
-                        var compChannel = message.Message.MsgChannel;
-                        compMsg.Remote = true;
-
-                        if (compMsg.Directed)
-                        {
-                            if (EntityManager.ComponentManager.TryGetComponent(Uid, message.Message.NetId, out var component))
-                                component.HandleMessage(compMsg, compChannel);
-                        }
-                        else
-                        {
-                            foreach (var component in EntityManager.ComponentManager.GetComponents(Uid))
-                            {
-                                component.HandleMessage(compMsg, compChannel);
-                            }
-                        }
-                    }
-                    break;
-            }
-        }
-
-        #endregion Network messaging
-
-        #region IEntity Members
-
-        #region Component Events
+        #region Entity Events
 
         /// <inheritdoc />
         public void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s)
@@ -234,9 +200,7 @@ namespace Robust.Shared.GameObjects
             EntityManager.RaiseEvent(this, toRaise);
         }
 
-        #endregion Component Events
-
-        #endregion IEntity Members
+        #endregion Entity Events
 
         #region Components
 

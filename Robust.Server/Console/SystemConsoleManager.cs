@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Console;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Con = System.Console;
 
@@ -10,9 +11,10 @@ namespace Robust.Server.Console
 {
     internal sealed class SystemConsoleManager : ISystemConsoleManager, IPostInjectInit, IDisposable
     {
-        [Dependency]
 #pragma warning disable 649
-        private readonly IConsoleShell _conShell;
+        [Dependency] private readonly IConsoleShell _conShell;
+        [Dependency] private readonly ITaskManager _taskManager;
+        [Dependency] private readonly IBaseServer _baseServer;
 #pragma warning restore 649
 
         private readonly Dictionary<int, string> commandHistory = new Dictionary<int, string>();
@@ -72,6 +74,7 @@ namespace Robust.Server.Console
                                 currentBuffer = currentBuffer.Remove(internalCursor - 1, 1);
                                 internalCursor--;
                             }
+
                             break;
 
                         case ConsoleKey.Delete:
@@ -79,6 +82,7 @@ namespace Robust.Server.Console
                             {
                                 currentBuffer = currentBuffer.Remove(internalCursor, 1);
                             }
+
                             break;
 
                         case ConsoleKey.UpArrow:
@@ -122,14 +126,17 @@ namespace Robust.Server.Console
                             {
                                 tabCompleteList.Clear();
                             }
+
                             string tabCompleteResult = TabComplete();
                             if (tabCompleteResult != String.Empty)
                             {
                                 currentBuffer = tabCompleteResult;
                                 internalCursor = currentBuffer.Length;
                             }
+
                             break;
                     }
+
                     lastKeyPressed = key.Key;
                     DrawCommandLine();
                 }
@@ -154,12 +161,11 @@ namespace Robust.Server.Console
             Con.SetCursorPosition(internalCursor + 2, Con.CursorTop); //+2 is for the "> " at the beginning of the line
         }
 
-        public void ClearCurrentLine()
+        private static void ClearCurrentLine()
         {
-            int currentLineCursor = Con.CursorTop;
+            var currentLineCursor = Con.CursorTop;
             Con.SetCursorPosition(0, Con.CursorTop);
-            for (int i = 0; i < Con.WindowWidth; i++)
-                Con.Write(" ");
+            Con.Write(new string(' ', Con.WindowWidth-1));
             Con.SetCursorPosition(0, currentLineCursor);
         }
 
@@ -183,16 +189,18 @@ namespace Robust.Server.Console
             {
                 tabCompleteIndex = 0;
             }
+
             string result = tabCompleteList[tabCompleteIndex];
             tabCompleteIndex++;
             return result;
         }
 
-        private static void CancelKeyHandler(object sender, ConsoleCancelEventArgs args)
+        private void CancelKeyHandler(object sender, ConsoleCancelEventArgs args)
         {
-            // Handle process exiting ourself.
+            // Handle process exiting ourselves.
             args.Cancel = true;
-            IoCManager.Resolve<IBaseServer>().Shutdown(null);
+
+            _taskManager.RunOnMainThread(() => { _baseServer.Shutdown("CancelKey"); });
         }
     }
 }

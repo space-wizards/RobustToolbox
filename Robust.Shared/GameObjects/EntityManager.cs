@@ -348,6 +348,10 @@ namespace Robust.Shared.GameObjects
         public void SubscribeEvent<T>(EntityEventHandler<T> eventHandler, IEntityEventSubscriber s)
             where T : EntityEventArgs
         {
+            // adding a null handler delegate should do nothing, since trying to invoke it would throw a NullRefException
+            if(eventHandler == null)
+                return;
+
             var eventType = typeof(T);
             if (!_eventSubscriptions.TryGetValue(eventType, out var subscriptions))
             {

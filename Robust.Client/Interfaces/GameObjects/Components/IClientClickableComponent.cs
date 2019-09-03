@@ -5,6 +5,7 @@ using Robust.Shared.Input;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 
 namespace Robust.Client.Interfaces.GameObjects.Components
 {
@@ -19,7 +20,7 @@ namespace Robust.Client.Interfaces.GameObjects.Components
         /// Used by <see cref="GameScreen" /> to sort and pick the highest successful one when multiple overlapping entities passed.
         /// </param>
         /// <returns>True if the click worked, false otherwise.</returns>
-        bool CheckClick(GridCoordinates worldPos, out int drawdepth);
+        bool CheckClick(Vector2 worldPos, out int drawdepth);
 
         /// <summary>
         /// Sends the click to the sister component on the server and things subscribed to

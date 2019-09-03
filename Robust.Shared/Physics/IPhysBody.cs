@@ -2,14 +2,16 @@
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 
-namespace Robust.Shared.Interfaces.Physics
+namespace Robust.Shared.Physics
 {
-    public interface ICollidable
+    /// <summary>
+    /// 
+    /// </summary>
+    public interface IPhysBody
     {
         /// <summary>
-        ///     Entity that this collidable represents.
+        ///     Entity that this physBody represents.
         /// </summary>
         IEntity Owner { get; }
 
@@ -23,40 +25,44 @@ namespace Robust.Shared.Interfaces.Physics
         /// </summary>
         Box2 AABB { get; }
 
+        List<IPhysShape> PhysicsShapes { get; }
+
         /// <summary>
-        ///     Enables or disabled collision processing of this body.
+        /// Enables or disabled collision processing of this body.
         /// </summary>
         bool CollisionEnabled { get; set; }
 
         /// <summary>
-        ///     True if collisions should prevent movement, or just trigger bumps.
+        /// True if collisions should prevent movement, or just trigger bumps.
         /// </summary>
         bool IsHardCollidable { get; set; }
 
         /// <summary>
-        ///     Bitmask of the collision layers this component is a part of.
+        /// Bitmask of the collision layers this body is a part of. The layers are calculated from
+        /// all of the shapes of this body.
         /// </summary>
-        int CollisionLayer { get; set; }
+        int CollisionLayer { get; }
 
         /// <summary>
-        ///     Bitmask of the layers this component collides with.
+        /// Bitmask of the layers this body collides with. The mask is calculated from
+        /// all of the shapes of this body.
         /// </summary>
-        int CollisionMask { get; set; }
+        int CollisionMask { get; }
 
         /// <summary>
-        /// Called when the collidable is bumped into by someone/something
+        /// Called when the physBody is bumped into by someone/something
         /// </summary>
         /// <param name="bumpedby"></param>
         void Bumped(IEntity bumpedby);
 
         /// <summary>
-        /// Called when the collidable bumps into this entity
+        /// Called when the physBody bumps into this entity
         /// </summary>
         /// <param name="bumpedinto"></param>
         void Bump(List<IEntity> bumpedinto);
 
         /// <summary>
-        ///     The map index this collidable is located upon
+        ///     The map index this physBody is located upon
         /// </summary>
         MapId MapID { get; }
     }

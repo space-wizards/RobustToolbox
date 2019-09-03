@@ -30,7 +30,6 @@ namespace Robust.Server.GameObjects
 
             Register<CollidableComponent>();
             RegisterReference<CollidableComponent, ICollidableComponent>();
-            Register<BoundingBoxComponent>();
             Register<PointLightComponent>();
 
             RegisterIgnore("Input");

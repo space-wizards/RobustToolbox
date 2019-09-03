@@ -2,9 +2,8 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Physics;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -91,16 +90,6 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override void Initialize()
-        {
-            // This component requires that the entity has an AABB.
-            if (!Owner.HasComponent<BoundingBoxComponent>())
-                Logger.Error($"[ECS] {Owner.Prototype.Name} - {nameof(PhysicsComponent)} requires {nameof(BoundingBoxComponent)}. ");
-
-            base.Initialize();
-        }
-
-        /// <inheritdoc />
         public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);
@@ -165,7 +154,7 @@ namespace Robust.Server.GameObjects
             VelocityConsumers.Clear();
         }
 
-        public bool PreventCollide(ICollidable collidedwith)
+        public bool PreventCollide(IPhysBody collidedwith)
         {
             var velocityConsumers = GetVelocityConsumers();
             if (velocityConsumers.Count == 1 || !collidedwith.Owner.TryGetComponent<PhysicsComponent>(out var physicsComponent))

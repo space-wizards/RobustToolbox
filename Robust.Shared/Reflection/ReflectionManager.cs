@@ -24,7 +24,14 @@ namespace Robust.Shared.Reflection
 
         public IReadOnlyList<Assembly> Assemblies => assemblies;
 
+        /// <inheritdoc />
         public IEnumerable<Type> GetAllChildren<T>(bool inclusive = false)
+        {
+            return GetAllChildren(typeof(T), inclusive);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<Type> GetAllChildren(Type baseType, bool inclusive = false)
         {
             var typeLists = new List<Type[]>(Assemblies.Count);
             try
@@ -52,7 +59,7 @@ namespace Robust.Shared.Reflection
             {
                 foreach (var type in t)
                 {
-                    if (!typeof(T).IsAssignableFrom(type) || type.IsAbstract)
+                    if (!baseType.IsAssignableFrom(type) || type.IsAbstract)
                     {
                         continue;
                     }
@@ -64,7 +71,7 @@ namespace Robust.Shared.Reflection
                         continue;
                     }
 
-                    if (typeof(T) == type && !inclusive)
+                    if (baseType == type && !inclusive)
                     {
                         continue;
                     }

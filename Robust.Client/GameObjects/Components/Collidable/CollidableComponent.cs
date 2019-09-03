@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
 {
@@ -20,6 +21,7 @@ namespace Robust.Client.GameObjects
 
         private bool _collisionIsActuallyEnabled;
         private bool _collisionEnabled;
+        private List<IPhysShape> _physShapes;
 
         /// <inheritdoc />
         public override string Name => "Collidable";
@@ -31,22 +33,54 @@ namespace Robust.Client.GameObjects
         public override Type StateType => typeof(CollidableComponentState);
 
         /// <inheritdoc />
-        Box2 ICollidable.WorldAABB => Owner.GetComponent<BoundingBoxComponent>().WorldAABB;
+        [ViewVariables]
+        Box2 IPhysBody.WorldAABB
+        {
+            get
+            {
+                var pos = Owner.Transform.WorldPosition;
+                return ((IPhysBody) this).AABB.Translated(pos);
+            }
+        }
 
         /// <inheritdoc />
-        Box2 ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB;
+        [ViewVariables]
+        Box2 IPhysBody.AABB
+        {
+            get
+            {
+                var angle = Owner.Transform.WorldRotation;
+                var bounds = new Box2();
+
+                foreach (var shape in _physShapes)
+                {
+                    var shapeBounds = shape.CalculateLocalBounds(angle);
+                    bounds = bounds.IsEmpty() ? shapeBounds : bounds.Union(shapeBounds);
+                }
+
+                return bounds;
+            }
+        }
 
         /// <inheritdoc />
+        [ViewVariables]
+        public List<IPhysShape> PhysicsShapes
+        {
+            get => _physShapes;
+        }
+
+        /// <inheritdoc />
+        [ViewVariables]
         public MapId MapID => Owner.Transform.MapID;
 
         /// <inheritdoc />
-        void ICollidable.Bumped(IEntity bumpedby)
+        void IPhysBody.Bumped(IEntity bumpedby)
         {
             SendMessage(new BumpedEntMsg(bumpedby));
         }
 
         /// <inheritdoc />
-        void ICollidable.Bump(List<IEntity> bumpedinto)
+        void IPhysBody.Bump(List<IEntity> bumpedinto)
         {
             var collidecomponents = Owner.GetAllComponents<ICollideBehavior>().ToList();
 
@@ -57,6 +91,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public bool CollisionEnabled
         {
             get => _collisionEnabled;
@@ -80,12 +115,15 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public bool IsHardCollidable { get; set; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public int CollisionLayer { get; set; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public int CollisionMask { get; set; }
 
         /// <summary>
@@ -95,9 +133,13 @@ namespace Robust.Client.GameObjects
         {
             base.Initialize();
 
+            // normally ExposeData would create this
+            if(_physShapes == null)
+                _physShapes = new List<IPhysShape>{new PhysShapeAabb()};
+
             if (_collisionEnabled && !_collisionIsActuallyEnabled)
             {
-                _physicsManager.AddCollidable(this);
+                _physicsManager.AddBody(this);
                 _collisionIsActuallyEnabled = true;
             }
         }
@@ -109,7 +151,7 @@ namespace Robust.Client.GameObjects
         {
             if (_collisionEnabled)
             {
-                _physicsManager.RemoveCollidable(this);
+                _physicsManager.RemoveBody(this);
             }
 
             base.Shutdown();
@@ -131,6 +173,8 @@ namespace Robust.Client.GameObjects
                 EnableCollision();
             else
                 DisableCollision();
+
+            _physShapes = newState.PhysShapes;
         }
 
         /// <inheritdoc />
@@ -140,23 +184,23 @@ namespace Robust.Client.GameObjects
         }
 
         /// <summary>
-        ///     Enables collidable
+        ///     Enables PhysicsBody
         /// </summary>
         private void EnableCollision()
         {
             _collisionEnabled = true;
             _collisionIsActuallyEnabled = true;
-            _physicsManager.AddCollidable(this);
+            _physicsManager.AddBody(this);
         }
 
         /// <summary>
-        ///     Disables Collidable
+        ///     Disables PhysicsBody
         /// </summary>
         private void DisableCollision()
         {
             _collisionEnabled = false;
             _collisionIsActuallyEnabled = false;
-            _physicsManager.RemoveCollidable(this);
+            _physicsManager.RemoveBody(this);
         }
     }
 }

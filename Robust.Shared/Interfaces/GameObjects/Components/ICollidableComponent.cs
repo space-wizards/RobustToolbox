@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Robust.Shared.Interfaces.Physics;
+﻿using System.Collections.Generic;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 
 namespace Robust.Shared.Interfaces.GameObjects.Components
 {
-    public interface ICollidableComponent : IComponent, ICollidable
+    public interface ICollidableComponent : IComponent, IPhysBody
     {
         bool TryCollision(Vector2 offset, bool bump = false);
     }
 
     public interface ICollideSpecial
     {
-        bool PreventCollide(ICollidable collidedwith);
+        bool PreventCollide(IPhysBody collidedwith);
     }
 
     public interface ICollideBehavior

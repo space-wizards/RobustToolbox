@@ -37,6 +37,15 @@ namespace Robust.Shared.Interfaces.Reflection
         IEnumerable<Type> GetAllChildren<T>(bool inclusive = false);
 
         /// <summary>
+        /// Gets all known types that are assignable to the given type.
+        /// </summary>
+        /// <param name="baseType">The base type to search for.</param>
+        /// <param name="inclusive">When <code>true</code>, include <typeparamref name="T"/> in the
+        /// returned results if it is a known type.</param>
+        /// <returns>An enumerable over all the types. Order is in no way guaranteed.</returns>
+        IEnumerable<Type> GetAllChildren(Type baseType, bool inclusive = false);
+
+        /// <summary>
         /// All loaded assemblies.
         /// </summary>
         IReadOnlyList<Assembly> Assemblies { get; }

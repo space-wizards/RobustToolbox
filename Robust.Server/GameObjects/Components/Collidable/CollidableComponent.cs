@@ -7,6 +7,7 @@ using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -20,9 +21,9 @@ namespace Robust.Server.GameObjects
 
         private bool _collisionEnabled;
         private bool _isHardCollidable;
-        private int _collisionLayer;
-        private int _collisionMask;
         private bool _isScrapingFloor;
+        private BodyType _bodyType;
+        private List<IPhysShape> _physShapes;
 
         /// <inheritdoc />
         public override string Name => "Collidable";
@@ -40,22 +41,47 @@ namespace Robust.Server.GameObjects
 
             serializer.DataField(ref _collisionEnabled, "on", true);
             serializer.DataField(ref _isHardCollidable, "hard", true);
-            serializer.DataField(ref _collisionLayer, "layer", 1);
-            serializer.DataField(ref _collisionMask, "mask", 1);
             serializer.DataField(ref _isScrapingFloor, "IsScrapingFloor", false);
+            serializer.DataField(ref _bodyType, "type", BodyType.None);
+            serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape>{new PhysShapeAabb()});
         }
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new CollidableComponentState(_collisionEnabled, _isHardCollidable, _collisionLayer, _collisionMask);
+            return new CollidableComponentState(_collisionEnabled, _isHardCollidable, _isScrapingFloor, _physShapes);
         }
 
         /// <inheritdoc />
-        Box2 ICollidable.WorldAABB => Owner.GetComponent<BoundingBoxComponent>().WorldAABB;
+        [ViewVariables]
+        Box2 IPhysBody.WorldAABB
+        {
+            get
+            {
+                var pos = Owner.Transform.WorldPosition;
+                return ((IPhysBody)this).AABB.Translated(pos);
+            }
+        }
 
         /// <inheritdoc />
-        Box2 ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB;
+        [ViewVariables]
+        Box2 IPhysBody.AABB
+        {
+            get
+            {
+                var angle = Owner.Transform.WorldRotation;
+                var bounds = new Box2();
+
+                foreach (var shape in _physShapes)
+                    bounds = bounds.Union(shape.CalculateLocalBounds(angle));
+
+                return bounds;
+            }
+        }
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public List<IPhysShape> PhysicsShapes => _physShapes;
 
         /// <summary>
         ///     Enables or disabled collision processing of this component.
@@ -81,8 +107,13 @@ namespace Robust.Server.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public int CollisionLayer
         {
-            get => _collisionLayer;
-            set => _collisionLayer = value;
+            get
+            {
+                var layers = 0x0;
+                foreach (var shape in _physShapes)
+                    layers = layers | shape.CollisionLayer;
+                return layers;
+            }
         }
 
         /// <summary>
@@ -91,8 +122,13 @@ namespace Robust.Server.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public int CollisionMask
         {
-            get => _collisionMask;
-            set => _collisionMask = value;
+            get
+            {
+                var mask = 0x0;
+                foreach (var shape in _physShapes)
+                    mask = mask | shape.CollisionMask;
+                return mask;
+            }
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -103,13 +139,13 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        void ICollidable.Bumped(IEntity bumpedby)
+        void IPhysBody.Bumped(IEntity bumpedby)
         {
             SendMessage(new BumpedEntMsg(bumpedby));
         }
 
         /// <inheritdoc />
-        void ICollidable.Bump(List<IEntity> bumpedinto)
+        void IPhysBody.Bump(List<IEntity> bumpedinto)
         {
             var collidecomponents = Owner.GetAllComponents<ICollideBehavior>().ToList();
 
@@ -124,13 +160,13 @@ namespace Robust.Server.GameObjects
         {
             base.Startup();
 
-            _physicsManager.AddCollidable(this);
+            _physicsManager.AddBody(this);
         }
 
         /// <inheritdoc />
         public override void Shutdown()
         {
-            _physicsManager.RemoveCollidable(this);
+            _physicsManager.RemoveBody(this);
 
             base.Shutdown();
         }

@@ -296,11 +296,14 @@
         {
             DetachParent();
 
-            foreach (var child in _children.ToArray())
+            // Entities are cast to purgatory when they die.
+            GridPosition = GridCoordinates.Nullspace;
+
+            // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
+            foreach (var childUid in _children.ToArray())
             {
-                var transform = Owner.EntityManager.GetEntity(child).Transform;
-                transform.DetachParent();
-                transform.GridPosition = GridCoordinates.Nullspace;
+                // Recursion: DeleteEntity calls the Transform.OnRemove function of child entities.
+                Owner.EntityManager.DeleteEntity(childUid);
             }
 
             base.OnRemove();

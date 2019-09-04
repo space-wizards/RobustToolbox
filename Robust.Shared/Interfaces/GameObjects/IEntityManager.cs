@@ -96,6 +96,12 @@ namespace Robust.Shared.Interfaces.GameObjects
         void DeleteEntity(IEntity e);
 
         /// <summary>
+        /// Shuts-down and removes the entity with the given <see cref="EntityUid"/>. This is also broadcast to all clients.
+        /// </summary>
+        /// <param name="uid">Uid of entity to remove.</param>
+        void DeleteEntity(EntityUid uid);
+
+        /// <summary>
         /// Checks whether an entity with the specified ID exists.
         /// </summary>
         bool EntityExists(EntityUid uid);

@@ -53,11 +53,6 @@ namespace Robust.Client.Player
         public string Name => SessionId.Username;
 
         /// <summary>
-        ///     The client's entity has moved. This only is raised when the player is attached to an entity.
-        /// </summary>
-        public event EventHandler<MoveEventArgs> EntityMoved;
-
-        /// <summary>
         ///     The status of the client's session has changed.
         /// </summary>
         public event EventHandler<StatusEventArgs> StatusChanged;
@@ -90,9 +85,6 @@ namespace Robust.Client.Player
             }
             eye.Current = true;
 
-            var transform = ControlledEntity.Transform;
-            transform.OnMove += OnPlayerMoved;
-
             EntityAttached?.Invoke(new EntityAttachedEventArgs(entity));
             entity.SendMessage(null, new PlayerAttachedMsg());
 
@@ -109,9 +101,6 @@ namespace Robust.Client.Player
             if (ControlledEntity != null && ControlledEntity.Initialized)
             {
                 ControlledEntity.GetComponent<EyeComponent>().Current = false;
-                var transform = ControlledEntity.Transform;
-                if (transform != null)
-                    transform.OnMove -= OnPlayerMoved;
                 ControlledEntity.SendMessage(null, new PlayerDetachedMsg());
 
                 // notify ECS Systems
@@ -124,11 +113,6 @@ namespace Robust.Client.Player
             {
                 EntityDetached?.Invoke(new EntityDetachedEventArgs(previous));
             }
-        }
-
-        private void OnPlayerMoved(object sender, MoveEventArgs args)
-        {
-            EntityMoved?.Invoke(sender, args);
         }
 
         /// <summary>

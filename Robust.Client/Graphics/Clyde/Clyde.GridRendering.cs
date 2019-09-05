@@ -18,8 +18,14 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _drawGrids()
         {
-            var map = _eyeManager.CurrentMap;
-
+            var mapId = _eyeManager.CurrentMap;
+            if (!_mapManager.TryGetMap(mapId, out var map))
+            {
+                // fall back to the default eye's map
+                _eyeManager.CurrentEye = null;
+                map = _mapManager.GetMap(_eyeManager.CurrentMap);
+            }
+            
             var atlasTexture = _tileDefinitionManager.TileTextureAtlas;
             var loadedTex = _loadedTextures[((ClydeTexture) atlasTexture).TextureId];
 
@@ -45,7 +51,7 @@ namespace Robust.Client.Graphics.Clyde
             gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
             gridProgram.SetUniform(UniIModulate, Color.White);
 
-            foreach (var mapGrid in _mapManager.GetMap(map).GetAllGrids())
+            foreach (var mapGrid in map.GetAllGrids())
             {
                 var grid = (IMapGridInternal) mapGrid;
 

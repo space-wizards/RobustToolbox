@@ -116,7 +116,7 @@
             private set
             {
                 var entMessage = new EntParentChangedMessage(Owner, Parent?.Owner);
-                var compMessage = new ParentChangedMessage(Owner, Parent?.Owner);
+                var compMessage = new ParentChangedMessage(value?.Owner, Parent?.Owner);
                 _parent = value?.Owner.Uid ?? EntityUid.Invalid;
                 Owner.EntityManager.RaiseEvent(Owner, entMessage);
                 Owner.SendMessage(this, compMessage);
@@ -290,6 +290,15 @@
 
         /// <inheritdoc />
         public Vector2 LerpDestination => _nextPosition;
+
+        /// <inheritdoc />
+        public override void Startup()
+        {
+            base.Startup();
+
+            // Keep the cached matrices in sync with the fields.
+            RebuildMatrices();
+        }
 
         /// <inheritdoc />
         public override void OnRemove()

@@ -53,6 +53,7 @@ namespace Robust.Client.UserInterface
         public float UIScale { get; private set; } = 1;
         public Control RootControl { get; private set; }
         public Control WindowRoot { get; private set; }
+        public Control PopupRoot { get; private set; }
         public DebugConsole DebugConsole { get; private set; }
         public IDebugMonitors DebugMonitors => _debugMonitors;
         private DebugMonitors _debugMonitors;
@@ -122,6 +123,14 @@ namespace Robust.Client.UserInterface
             };
             WindowRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             RootControl.AddChild(WindowRoot);
+
+            PopupRoot = new Control
+            {
+                Name = "PopupRoot",
+                MouseFilter = Control.MouseFilterMode.Ignore
+            };
+            PopupRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
+            RootControl.AddChild(PopupRoot);
 
             ModalRoot = new Control
             {
@@ -635,7 +644,7 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
-        ///     Converts 
+        ///     Converts
         /// </summary>
         /// <param name="args">Event data values for a bound key state change.</param>
         private void OnUIKeyBindStateChanged(BoundKeyEventArgs args)

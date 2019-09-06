@@ -10,11 +10,18 @@ namespace Robust.Client.Interfaces.Graphics.ClientEye
     public interface IEye
     {
         /// <summary>
-        ///     Whether this is the current eye. If true, this one will be used.
+        /// Current zoom level of this eye. Zoom is the inverse of Scale (Zoom = 1 / Scale).
         /// </summary>
-        bool Current { get; set; }
-
         Vector2 Zoom { get; set; }
+
+        /// <summary>
+        /// Current position of the center of the eye in the game world.
+        /// </summary>
         MapCoordinates Position { get; }
+
+        /// <summary>
+        /// Returns the view matrix for this eye.
+        /// </summary>
+        Matrix3 GetViewMatrix();
     }
 }

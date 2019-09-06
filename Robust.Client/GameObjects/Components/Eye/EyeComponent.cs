@@ -1,6 +1,8 @@
 ﻿using Robust.Client.Graphics.ClientEye;
+using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -10,9 +12,14 @@ namespace Robust.Client.GameObjects
 {
     public class EyeComponent : Component
     {
+#pragma warning disable 649
+        [Dependency] private readonly IEyeManager _eyeManager;
+#pragma warning restore 649
+
+        /// <inheritdoc />
         public override string Name => "Eye";
 
-        private Eye eye;
+        private Eye _eye;
 
         // Horrible hack to get around ordering issues.
         private bool setCurrentOnInitialize;
@@ -22,32 +29,35 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Current
         {
-            get => eye.Current;
+            get => _eyeManager.CurrentEye == _eye;
             set
             {
-                if (eye == null)
+                if (_eye == null)
                 {
                     setCurrentOnInitialize = value;
                     return;
                 }
 
-                eye.Current = value;
+                if (_eyeManager.CurrentEye == _eye == value)
+                    return;
+
+                _eyeManager.CurrentEye = value ? _eye : null;
             }
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Zoom
         {
-            get => eye?.Zoom ?? setZoomOnInitialize;
+            get => _eye?.Zoom ?? setZoomOnInitialize;
             set
             {
-                if (eye == null)
+                if (_eye == null)
                 {
                     setZoomOnInitialize = value;
                 }
                 else
                 {
-                    eye.Zoom = value;
+                    _eye.Zoom = value;
                 }
             }
         }
@@ -58,40 +68,35 @@ namespace Robust.Client.GameObjects
             get => offset;
             set
             {
+                if(offset == value)
+                    return;
+
                 offset = value;
-                _updateCameraPosition();
+                UpdateEyePosition();
             }
         }
 
         [ViewVariables]
-        public MapCoordinates? Position => eye?.Position;
+        public MapCoordinates? Position => _eye?.Position;
 
-        private ITransformComponent transform;
-
+        /// <inheritdoc />
         public override void Initialize()
         {
             base.Initialize();
 
-            transform = Owner.GetComponent<ITransformComponent>();
-            eye = new Eye
+            _eye = new Eye
             {
-                Current = setCurrentOnInitialize,
-                Position = transform.MapPosition,
+                Position = Owner.Transform.MapPosition,
                 Zoom = setZoomOnInitialize,
             };
 
-            transform.OnMove += Transform_OnMove;
+            if (_eyeManager.CurrentEye == _eye != setCurrentOnInitialize)
+            {
+                _eyeManager.CurrentEye = setCurrentOnInitialize ? _eye : null;
+            }
         }
 
-        public override void OnRemove()
-        {
-            base.OnRemove();
-            transform.OnMove -= Transform_OnMove;
-
-            eye.Dispose();
-            eye = null;
-        }
-
+        /// <inheritdoc />
         public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);
@@ -99,15 +104,14 @@ namespace Robust.Client.GameObjects
             serializer.DataFieldCached(ref setZoomOnInitialize, "zoom", Vector2.One);
         }
 
-        private void Transform_OnMove(object sender, Shared.Enums.MoveEventArgs e)
+        /// <summary>
+        /// Updates the Eye of this entity with the transform position. This has to be called every frame to
+        /// keep the view following the entity.
+        /// </summary>
+        public void UpdateEyePosition()
         {
-            _updateCameraPosition();
-        }
-
-        private void _updateCameraPosition()
-        {
-            var pos = transform.MapPosition.Position + offset;
-            eye.Position = new MapCoordinates(pos, transform.MapPosition.MapId);
+            var mapPos = Owner.Transform.MapPosition;
+            _eye.Position = new MapCoordinates(mapPos.Position + offset, mapPos.MapId);
         }
     }
 }

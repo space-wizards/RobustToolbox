@@ -1,5 +1,4 @@
-﻿using System;
-using Robust.Client.Interfaces.Graphics;
+﻿using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
@@ -8,7 +7,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.ClientEye
 {
-    public sealed class EyeManager : IEyeManager, IDisposable
+    public sealed class EyeManager : IEyeManager
     {
         // If you modify this make sure to edit the value in the Robust.Shared.Audio.AudioParams struct default too!
         // No I can't be bothered to make this a shared constant.
@@ -24,6 +23,7 @@ namespace Robust.Client.Graphics.ClientEye
 
         private IEye currentEye;
 
+        /// <inheritdoc />
         public IEye CurrentEye
         {
             get => currentEye;
@@ -63,14 +63,9 @@ namespace Robust.Client.Graphics.ClientEye
             currentEye = defaultEye;
         }
 
-        public void Dispose()
-        {
-            defaultEye?.Dispose();
-        }
-
         public Vector2 WorldToScreen(Vector2 point)
         {
-            var matrix = CurrentEye.GetMatrix();
+            var matrix = CurrentEye.GetViewMatrix();
             point = matrix.Transform(point);
             point *= new Vector2(1, -1) * PIXELSPERMETER;
             point += _displayManager.ScreenSize/2f;
@@ -106,7 +101,7 @@ namespace Robust.Client.Graphics.ClientEye
 
         public MapCoordinates ScreenToMap(Vector2 point)
         {
-            var matrix = Matrix3.Invert(CurrentEye.GetMatrix());
+            var matrix = Matrix3.Invert(CurrentEye.GetViewMatrix());
             point -= _displayManager.ScreenSize / 2f;
             var worldPos = matrix.Transform(point / PIXELSPERMETER * new Vector2(1, -1));
             return new MapCoordinates(worldPos, CurrentMap);

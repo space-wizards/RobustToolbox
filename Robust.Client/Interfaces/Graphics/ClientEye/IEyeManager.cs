@@ -5,7 +5,14 @@ namespace Robust.Client.Interfaces.Graphics.ClientEye
 {
     public interface IEyeManager
     {
+        /// <summary>
+        /// The current eye that is being used to render the game.
+        /// </summary>
+        /// <remarks>
+        /// Setting this property to null will use the default eye.
+        /// </remarks>
         IEye CurrentEye { get; set; }
+
         /// <summary>
         ///     The ID of the map on which the current eye is "placed".
         /// </summary>

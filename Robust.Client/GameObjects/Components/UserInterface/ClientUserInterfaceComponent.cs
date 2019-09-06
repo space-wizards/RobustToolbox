@@ -18,6 +18,7 @@ namespace Robust.Client.GameObjects.Components.UserInterface
         private Dictionary<object, PrototypeData> _interfaceData;
 #pragma warning disable 649
         [Dependency] private readonly IReflectionManager _reflectionManager;
+        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory;
 #pragma warning restore 649
 
         public override void ExposeData(ObjectSerializer serializer)
@@ -84,7 +85,7 @@ namespace Robust.Client.GameObjects.Components.UserInterface
             var data = _interfaceData[wrapped.UiKey];
             // TODO: This type should be cached, but I'm too lazy.
             var type = _reflectionManager.LooseGetType(data.ClientType);
-            var boundInterface = (BoundUserInterface) Activator.CreateInstance(type, this, wrapped.UiKey);
+            var boundInterface = (BoundUserInterface) _dynamicTypeFactory.CreateInstance(type, new[]{this, wrapped.UiKey});
             boundInterface.Open();
             _openInterfaces[wrapped.UiKey] = boundInterface;
         }

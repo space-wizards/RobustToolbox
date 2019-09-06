@@ -18,6 +18,7 @@ using Robust.Client.Graphics.Overlays;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Shared.Interfaces.Map;
+using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
@@ -72,23 +73,16 @@ namespace Robust.Client.GameObjects
 
         public void CreateEffect(EffectSystemMessage message)
         {
-            var gametime = gameTiming.CurTime;
+            var gameTime = gameTiming.CurTime;
 
-            /*
-            // TODO: Fix this, it doesn't work. Probably because CurTime isn't synchronized with the server.
-            if (gametime > message.DeathTime) //Did we already die in transit? That's pretty troubling isn't it
+            if (gameTime > message.DeathTime) //Did we already die in transit? That's pretty troubling isn't it
             {
-                Logger.Warning(string.Format("Effect using sprite {0} died in transit to the client", message.EffectSprite), message);
+                Logger.Warning("Effect using sprite {0} died in transit to the client", message.EffectSprite);
                 return;
             }
-            */
 
             //Create effect from creation message
             var effect = new Effect(message, resourceCache, _mapManager);
-
-            //Remove this
-            effect.Age = gametime;
-            effect.Deathtime = effect.Age + TimeSpan.FromSeconds(4);
 
             //Age the effect through a single update to the previous update tick of the effect system
             //effect.Update((float)((lasttimeprocessed - effect.Age).TotalSeconds));

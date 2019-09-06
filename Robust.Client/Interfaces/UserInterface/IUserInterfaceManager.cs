@@ -19,6 +19,8 @@ namespace Robust.Client.Interfaces.UserInterface
 
         Control WindowRoot { get; }
 
+        Control PopupRoot { get; }
+
         Control ModalRoot { get; }
 
         Control CurrentlyHovered { get; }

@@ -112,14 +112,14 @@ namespace Robust.Client.UserInterface.CustomControls
                 {
                     texture = _resourceCache.GetResource<TextureResource>($"/Textures/Tiles/{entry.SpriteName}.png");
                 }
-                TileList.AddItem(entry.DisplayName, texture);
+                TileList.Add(new Item() {Text = entry.DisplayName, Icon = texture});
             }
         }
 
         private void OnPlacementCanceled(object sender, EventArgs e)
         {
             _clearingSelections = true;
-            TileList.ClearSelections();
+            TileList.ClearSelected();
             _clearingSelections = false;
         }
         private void TileListOnOnItemSelected(ItemList.ItemListSelectedEventArgs args)

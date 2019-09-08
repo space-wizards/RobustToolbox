@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using JetBrains.Annotations;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Utility;
@@ -11,6 +12,9 @@ namespace Robust.Shared.IoC
     /// <inheritdoc />
     internal class DependencyCollection : IDependencyCollection
     {
+        private delegate void InjectorDelegate(object target, object[] services);
+        private static readonly Type[] InjectorParameters = {typeof(object), typeof(object[])};
+
         /// <summary>
         /// Dictionary that maps the types passed to <see cref="Resolve{T}"/> to their implementation.
         /// </summary>
@@ -21,6 +25,9 @@ namespace Robust.Shared.IoC
         /// This is pulled from to make a service if it doesn't exist yet.
         /// </summary>
         private readonly Dictionary<Type, Type> _resolveTypes = new Dictionary<Type, Type>();
+
+        private readonly Dictionary<Type, (InjectorDelegate @delegate, object[] services)> _injectorCache =
+            new Dictionary<Type, (InjectorDelegate @delegate, object[] services)>();
 
         /// <inheritdoc />
         public void Register<TInterface, TImplementation>(bool overwrite = false)
@@ -42,25 +49,28 @@ namespace Robust.Shared.IoC
             {
                 throw new InvalidOperationException
                 (
-                    string.Format("Attempted to register already registered interface {0}. New implementation: {1}, Old implementation: {2}",
+                    string.Format(
+                        "Attempted to register already registered interface {0}. New implementation: {1}, Old implementation: {2}",
                         interfaceType, implementationType, _resolveTypes[interfaceType]
                     ));
             }
 
             if (_services.ContainsKey(interfaceType))
             {
-                throw new InvalidOperationException($"Attempted to overwrite already instantiated interface {interfaceType}.");
+                throw new InvalidOperationException(
+                    $"Attempted to overwrite already instantiated interface {interfaceType}.");
             }
         }
 
         /// <inheritdoc />
         public void RegisterInstance<TInterface>(object implementation, bool overwrite = false)
         {
-            if(implementation == null)
+            if (implementation == null)
                 throw new ArgumentNullException(nameof(implementation));
 
-            if(!(implementation is TInterface))
-                throw new InvalidOperationException($"Implementation type {implementation.GetType()} is not assignable to interface type {typeof(TInterface)}");
+            if (!(implementation is TInterface))
+                throw new InvalidOperationException(
+                    $"Implementation type {implementation.GetType()} is not assignable to interface type {typeof(TInterface)}");
 
             CheckRegisterInterface(typeof(TInterface), implementation.GetType(), overwrite);
 
@@ -81,6 +91,7 @@ namespace Robust.Shared.IoC
             {
                 service.Dispose();
             }
+
             _services.Clear();
             _resolveTypes.Clear();
         }
@@ -89,7 +100,7 @@ namespace Robust.Shared.IoC
         [System.Diagnostics.Contracts.Pure]
         public T Resolve<T>()
         {
-            return (T)ResolveType(typeof(T));
+            return (T) ResolveType(typeof(T));
         }
 
         /// <inheritdoc />
@@ -104,11 +115,11 @@ namespace Robust.Shared.IoC
             if (_resolveTypes.ContainsKey(type))
             {
                 // If we have the type registered but not created that means we haven't been told to initialize the graph yet.
-                throw new InvalidOperationException($"Attempted to resolve type {type} before the object graph for it has been populated.");
+                throw new InvalidOperationException(
+                    $"Attempted to resolve type {type} before the object graph for it has been populated.");
             }
 
             throw new UnregisteredTypeException(type);
-
         }
 
         /// <inheritdoc />
@@ -124,7 +135,8 @@ namespace Robust.Shared.IoC
                 // Find a potential dupe by checking other registered types that have already been instantiated that have the same instance type.
                 // Can't catch ourselves because we're not instantiated.
                 // Ones that aren't yet instantiated are about to be and will find us instead.
-                KeyValuePair<Type, Type> dupeType = _resolveTypes.FirstOrDefault(p => _services.ContainsKey(p.Key) && p.Value == currentType.Value);
+                KeyValuePair<Type, Type> dupeType =
+                    _resolveTypes.FirstOrDefault(p => _services.ContainsKey(p.Key) && p.Value == currentType.Value);
 
                 // Interface key can't be null so since KeyValuePair<> is a struct,
                 // this effectively checks whether we found something.
@@ -150,7 +162,7 @@ namespace Robust.Shared.IoC
             // Graph built, go over ones that need injection.
             foreach (var implementation in injectList)
             {
-                InjectDependencies(implementation);
+                InjectDependencies(implementation, true);
             }
 
             foreach (var injectedItem in injectList.OfType<IPostInjectInit>())
@@ -160,11 +172,34 @@ namespace Robust.Shared.IoC
         }
 
         /// <inheritdoc />
-        public void InjectDependencies(object obj)
+        public void InjectDependencies(object obj, bool oneOff=false)
         {
-            foreach (var field in obj.GetType().GetAllFields())
+            var type = obj.GetType();
+
+            if (!_injectorCache.TryGetValue(type, out var injector))
             {
-                if (Attribute.GetCustomAttribute(field, typeof(DependencyAttribute)) == null)
+                if (oneOff)
+                {
+                    // If this is a one-off injection then use the old reflection method.
+                    // Won't cache a bunch of later-unused stuff.
+                    InjectDependenciesReflection(obj);
+                    return;
+                }
+
+                CacheInjector(type);
+                injector = _injectorCache[type];
+            }
+
+            var (@delegate, services) = injector;
+            @delegate(obj, services);
+        }
+
+        private void InjectDependenciesReflection(object obj)
+        {
+            var type = obj.GetType();
+            foreach (var field in type.GetAllFields())
+            {
+                if (!Attribute.IsDefined(field, typeof(DependencyAttribute)))
                 {
                     continue;
                 }
@@ -180,12 +215,67 @@ namespace Robust.Shared.IoC
                         continue;
                     }
 
-                    throw new UnregisteredDependencyException(obj.GetType(), field.FieldType, field.Name);
+                    throw new UnregisteredDependencyException(type, field.FieldType, field.Name);
                 }
 
                 // Quick note: this DOES work with read only fields, though it may be a CLR implementation detail.
                 field.SetValue(obj, _services[field.FieldType]);
             }
+        }
+
+        private void CacheInjector(Type type)
+        {
+            var dynamicMethod = new DynamicMethod($"_injector<>{type}", null, InjectorParameters, type);
+
+            dynamicMethod.DefineParameter(1, ParameterAttributes.In, "target");
+            dynamicMethod.DefineParameter(2, ParameterAttributes.In, "services");
+
+            var i = 0;
+            var services = new List<object>();
+
+            var generator = dynamicMethod.GetILGenerator();
+
+            foreach (var field in type.GetAllFields())
+            {
+                if (!Attribute.IsDefined(field, typeof(DependencyAttribute)))
+                {
+                    continue;
+                }
+
+                // Load object to inject into.
+                generator.Emit(OpCodes.Ldarg_0);
+
+                // Not using Resolve<T>() because we're literally building it right now.
+                if (!_services.TryGetValue(field.FieldType, out var service))
+                {
+                    // A hard-coded special case so the DependencyCollection can inject itself.
+                    // This is not put into the services so it can be overridden if needed.
+                    if (field.FieldType == typeof(IDependencyCollection))
+                    {
+                        service = this;
+                        continue;
+                    }
+
+                    throw new UnregisteredDependencyException(type, field.FieldType, field.Name);
+                }
+
+                services.Add(service);
+
+                // Load services array.
+                generator.Emit(OpCodes.Ldarg_1);
+                // Load service from array.
+                generator.Emit(OpCodes.Ldc_I4, i++);
+                generator.Emit(OpCodes.Ldelem_Ref);
+
+                // Set service into field.
+                generator.Emit(OpCodes.Stfld, field);
+            }
+
+            generator.Emit(OpCodes.Ret);
+
+
+            var @delegate = (InjectorDelegate)dynamicMethod.CreateDelegate(typeof(InjectorDelegate));
+            _injectorCache.Add(type, (@delegate, services.ToArray()));
         }
     }
 }

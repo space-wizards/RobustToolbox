@@ -98,10 +98,11 @@ namespace Robust.Shared.IoC
         ///     This does NOT initialize IPostInjectInit objects!
         /// </remarks>
         /// <param name="obj">The object to inject into.</param>
+        /// <param name="oneOff">If true, this object type is not expected to be injected commonly.</param>
         /// <exception cref="UnregisteredDependencyException">
         ///     Thrown if a dependency field on the object is not registered.
         /// </exception>
         /// <seealso cref="DependencyCollection.BuildGraph"/>
-        void InjectDependencies(object obj);
+        void InjectDependencies(object obj, bool oneOff=false);
     }
 }

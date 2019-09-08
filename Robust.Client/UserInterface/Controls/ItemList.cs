@@ -69,9 +69,10 @@ namespace Robust.Client.UserInterface.Controls
             _updateScrollbarVisibility();
         }
 
-        void ICollection<Item>.Add(Item item)
+        public void Add(Item item)
         {
             if (item == null) return;
+            if(item.Owner != this) throw new ArgumentException("Item is owned by another ItemList!");
 
             _itemList.Add(item);
 
@@ -85,8 +86,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public Item AddItem(string text, Texture icon = null, bool selectable = true)
         {
-            var item = new Item() {Text = text, Icon = icon, Selectable = selectable};
-            ((ICollection<Item>)this).Add(item);
+            var item = new Item(this) {Text = text, Icon = icon, Selectable = selectable};
+            Add(item);
             return item;
         }
 
@@ -148,7 +149,17 @@ namespace Robust.Client.UserInterface.Controls
 
         public void Insert(int index, Item item)
         {
+            if (item == null) return;
+            if(item.Owner != this) throw new ArgumentException("Item is owned by another ItemList!");
+
             _itemList.Insert(index, item);
+
+            item.OnSelected += Select;
+            item.OnDeselected += Deselect;
+
+            RecalculateContentHeight();
+            if (_isAtBottom && ScrollFollowing)
+                _scrollBar.MoveToEnd();
         }
 
         public Item this[int index]
@@ -567,6 +578,7 @@ namespace Robust.Client.UserInterface.Controls
         private bool _selected = false;
         private bool _disabled = false;
 
+        public ItemList Owner { get; }
         public string Text { get; set; }
         public string TooltipText { get; set; }
         public Texture Icon { get; set; }
@@ -605,6 +617,11 @@ namespace Robust.Client.UserInterface.Controls
                     return Vector2.Zero;
                 return IconRegion.Size != Vector2.Zero ? IconRegion.Size : Icon.Size;
             }
+        }
+
+        public Item(ItemList owner)
+        {
+            Owner = owner;
         }
     }
 }

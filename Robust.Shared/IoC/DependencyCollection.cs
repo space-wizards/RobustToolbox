@@ -248,7 +248,7 @@ namespace Robust.Shared.IoC
                 return;
             }
 
-            var dynamicMethod = new DynamicMethod($"_injector<>{type}", null, InjectorParameters, type);
+            var dynamicMethod = new DynamicMethod($"_injector<>{type}", null, InjectorParameters, type, true);
 
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "target");
             dynamicMethod.DefineParameter(2, ParameterAttributes.In, "services");

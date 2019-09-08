@@ -26,6 +26,8 @@ namespace Robust.Shared.IoC
         /// </summary>
         private readonly Dictionary<Type, Type> _resolveTypes = new Dictionary<Type, Type>();
 
+        // To do injection of common types like components, we make DynamicMethods to do the actual injecting.
+        // This is way faster than reflection and should be allocation free outside setup.
         private readonly Dictionary<Type, (InjectorDelegate @delegate, object[] services)> _injectorCache =
             new Dictionary<Type, (InjectorDelegate @delegate, object[] services)>();
 
@@ -94,6 +96,7 @@ namespace Robust.Shared.IoC
 
             _services.Clear();
             _resolveTypes.Clear();
+            _injectorCache.Clear();
         }
 
         /// <inheritdoc />
@@ -130,32 +133,31 @@ namespace Robust.Shared.IoC
 
             // First we build every type we have registered but isn't yet built.
             // This allows us to run this after the content assembly has been loaded.
-            foreach (KeyValuePair<Type, Type> currentType in _resolveTypes.Where(p => !_services.ContainsKey(p.Key)))
+            foreach (var (key, value) in _resolveTypes.Where(p => !_services.ContainsKey(p.Key)))
             {
                 // Find a potential dupe by checking other registered types that have already been instantiated that have the same instance type.
                 // Can't catch ourselves because we're not instantiated.
                 // Ones that aren't yet instantiated are about to be and will find us instead.
-                KeyValuePair<Type, Type> dupeType =
-                    _resolveTypes.FirstOrDefault(p => _services.ContainsKey(p.Key) && p.Value == currentType.Value);
+                var (type, _) = _resolveTypes.FirstOrDefault(p => _services.ContainsKey(p.Key) && p.Value == value);
 
                 // Interface key can't be null so since KeyValuePair<> is a struct,
                 // this effectively checks whether we found something.
-                if (dupeType.Key != null)
+                if (type != null)
                 {
                     // We have something with the same instance type, use that.
-                    _services[currentType.Key] = _services[dupeType.Key];
+                    _services[key] = _services[type];
                     continue;
                 }
 
                 try
                 {
-                    var instance = Activator.CreateInstance(currentType.Value);
-                    _services[currentType.Key] = instance;
+                    var instance = Activator.CreateInstance(value);
+                    _services[key] = instance;
                     injectList.Add(instance);
                 }
                 catch (TargetInvocationException e)
                 {
-                    throw new ImplementationConstructorException(currentType.Value, e.InnerException);
+                    throw new ImplementationConstructorException(value, e.InnerException);
                 }
             }
 
@@ -191,7 +193,10 @@ namespace Robust.Shared.IoC
             }
 
             var (@delegate, services) = injector;
-            @delegate(obj, services);
+
+            // If @delegate is null then the type has no dependencies.
+            // So running an initializer would be quite wasteful.
+            @delegate?.Invoke(obj, services);
         }
 
         private void InjectDependenciesReflection(object obj)
@@ -225,6 +230,24 @@ namespace Robust.Shared.IoC
 
         private void CacheInjector(Type type)
         {
+            var fields = new List<FieldInfo>();
+
+            foreach (var field in type.GetAllFields())
+            {
+                if (!Attribute.IsDefined(field, typeof(DependencyAttribute)))
+                {
+                    continue;
+                }
+
+                fields.Add(field);
+            }
+
+            if (fields.Count == 0)
+            {
+                _injectorCache.Add(type, (null, null));
+                return;
+            }
+
             var dynamicMethod = new DynamicMethod($"_injector<>{type}", null, InjectorParameters, type);
 
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "target");
@@ -235,13 +258,8 @@ namespace Robust.Shared.IoC
 
             var generator = dynamicMethod.GetILGenerator();
 
-            foreach (var field in type.GetAllFields())
+            foreach (var field in fields)
             {
-                if (!Attribute.IsDefined(field, typeof(DependencyAttribute)))
-                {
-                    continue;
-                }
-
                 // Load object to inject into.
                 generator.Emit(OpCodes.Ldarg_0);
 
@@ -253,10 +271,11 @@ namespace Robust.Shared.IoC
                     if (field.FieldType == typeof(IDependencyCollection))
                     {
                         service = this;
-                        continue;
                     }
-
-                    throw new UnregisteredDependencyException(type, field.FieldType, field.Name);
+                    else
+                    {
+                        throw new UnregisteredDependencyException(type, field.FieldType, field.Name);
+                    }
                 }
 
                 services.Add(service);
@@ -272,7 +291,6 @@ namespace Robust.Shared.IoC
             }
 
             generator.Emit(OpCodes.Ret);
-
 
             var @delegate = (InjectorDelegate)dynamicMethod.CreateDelegate(typeof(InjectorDelegate));
             _injectorCache.Add(type, (@delegate, services.ToArray()));

@@ -25,7 +25,7 @@ namespace Robust.UnitTesting.Shared.IoC
             // test so that each test is isolated.
             IoCManager.Clear();
         }
-        
+
         [Test]
         public void IoCTestFieldInjection()
         {
@@ -35,7 +35,7 @@ namespace Robust.UnitTesting.Shared.IoC
 
             tester.Test();
         }
-        
+
         [Test]
         public void IoCTestBasic()
         {
@@ -46,7 +46,7 @@ namespace Robust.UnitTesting.Shared.IoC
 
             Assert.That(IoCManager.ResolveType(typeof(TestFieldInjection)), Is.Not.Null);
         }
-        
+
         [Test]
         public void IoCTestOverwrite()
         {
@@ -111,6 +111,14 @@ namespace Robust.UnitTesting.Shared.IoC
             IoCManager.RegisterInstance<IIoCTestPriorities>(obj);
 
             Assert.That(IoCManager.Resolve<IIoCTestPriorities>(), Is.EqualTo(obj));
+        }
+
+        [Test]
+        public void TestExplicitInjection()
+        {
+            // This will explicitly cause the DynamicMethod code path to be taken.
+            // To ensure that works.
+            IoCManager.InjectDependencies(new ExplicitInjectionTest());
         }
     }
 
@@ -188,5 +196,10 @@ namespace Robust.UnitTesting.Shared.IoC
         {
             throw new Exception("UNIT TEST EXCEPTION");
         }
+    }
+
+    public class ExplicitInjectionTest
+    {
+        [Dependency] private readonly IDependencyCollection _dependencyCollection;
     }
 }

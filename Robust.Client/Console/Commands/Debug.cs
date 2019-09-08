@@ -472,7 +472,7 @@ namespace Robust.Client.Console.Commands
             tabContainer.AddChild(itemList);
             for (var i = 0; i < 10; i++)
             {
-                itemList.Add(new Item() {Text = i.ToString()});
+                itemList.AddItem(i.ToString());
             }
 
             var grid = new GridContainer {Columns = 3};

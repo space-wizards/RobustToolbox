@@ -69,7 +69,7 @@ namespace Robust.Client.UserInterface.Controls
             _updateScrollbarVisibility();
         }
 
-        public void Add(Item item)
+        void ICollection<Item>.Add(Item item)
         {
             if (item == null) return;
 
@@ -81,7 +81,13 @@ namespace Robust.Client.UserInterface.Controls
             RecalculateContentHeight();
             if (_isAtBottom && ScrollFollowing)
                 _scrollBar.MoveToEnd();
+        }
 
+        public Item AddItem(string text, Texture icon = null, bool selectable = true)
+        {
+            var item = new Item() {Text = text, Icon = icon, Selectable = selectable};
+            ((ICollection<Item>)this).Add(item);
+            return item;
         }
 
         public void Clear()
@@ -561,13 +567,14 @@ namespace Robust.Client.UserInterface.Controls
         private bool _selected = false;
         private bool _disabled = false;
 
-        public string Text;
-        public string TooltipText;
-        public Texture Icon;
-        public UIBox2 IconRegion;
-        public Color IconModulate = Color.White;
-        public bool Selectable = true;
-        public bool TooltipEnabled = true;
+        public string Text { get; set; }
+        public string TooltipText { get; set; }
+        public Texture Icon { get; set; }
+        public UIBox2 IconRegion { get; set; }
+        public Color IconModulate { get; set; } = Color.White;
+        public bool Selectable { get; set; } = true;
+        public bool TooltipEnabled { get; set; } = true;
+        public UIBox2? Region { get; set; }
 
         public bool Disabled
         {
@@ -589,8 +596,6 @@ namespace Robust.Client.UserInterface.Controls
                 else OnDeselected?.Invoke(this);
             }
         }
-
-        public UIBox2? Region;
 
         public Vector2 IconSize
         {

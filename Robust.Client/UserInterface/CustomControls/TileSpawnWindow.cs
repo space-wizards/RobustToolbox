@@ -112,7 +112,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 {
                     texture = _resourceCache.GetResource<TextureResource>($"/Textures/Tiles/{entry.SpriteName}.png");
                 }
-                TileList.Add(new Item() {Text = entry.DisplayName, Icon = texture});
+                TileList.AddItem(entry.DisplayName, texture);
             }
         }
 

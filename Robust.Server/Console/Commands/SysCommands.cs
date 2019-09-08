@@ -16,6 +16,7 @@ namespace Robust.Server.Console.Commands
         public string Command => "restart";
         public string Description => "Gracefully restarts the server (not just the round).";
         public string Help => "restart";
+
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             IoCManager.Resolve<IBaseServer>().Restart();
@@ -27,6 +28,7 @@ namespace Robust.Server.Console.Commands
         public string Command => "shutdown";
         public string Description => "Gracefully shuts down the server.";
         public string Help => "shutdown";
+
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             IoCManager.Resolve<IBaseServer>().Shutdown(null);
@@ -50,9 +52,10 @@ namespace Robust.Server.Console.Commands
         public string Command => "netaudit";
         public string Description => "Prints into about NetMsg security.";
         public string Help => "netaudit";
+
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
-            var network = (NetManager)IoCManager.Resolve<INetManager>();
+            var network = (NetManager) IoCManager.Resolve<INetManager>();
 
             var callbacks = network.CallbackAudit;
 
@@ -73,14 +76,19 @@ namespace Robust.Server.Console.Commands
     class HelpCommand : IClientCommand
     {
         public string Command => "help";
-        public string Description => "When no arguments are provided, displays a generic help text. When an argument is passed, display the help text for the command with that name.";
+
+        public string Description =>
+            "When no arguments are provided, displays a generic help text. When an argument is passed, display the help text for the command with that name.";
+
         public string Help => "Help";
+
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             switch (args.Length)
             {
                 case 0:
-                    shell.SendText(player, "To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'.");
+                    shell.SendText(player,
+                        "To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'.");
                     break;
 
                 case 1:
@@ -110,7 +118,8 @@ namespace Robust.Server.Console.Commands
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             var timing = IoCManager.Resolve<IGameTiming>();
-            shell.SendText(player, $"Paused: {timing.Paused}, CurTick: {timing.CurTick}, CurTime: {timing.CurTime}, RealTime: {timing.RealTime}");
+            shell.SendText(player,
+                $"Paused: {timing.Paused}, CurTick: {timing.CurTick}, CurTime: {timing.CurTime}, RealTime: {timing.RealTime}");
         }
     }
 
@@ -131,5 +140,30 @@ namespace Robust.Server.Console.Commands
                 GC.Collect(int.Parse(args[0]));
             }
         }
+    }
+
+    internal sealed class MemCommand : IClientCommand
+    {
+        public string Command => "mem";
+        public string Description => "prints memory info";
+        public string Help => "mem";
+
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+#if !NETCOREAPP
+            shell.SendText(player, "Memory info is only available on .NET Core");
+#else
+            var info = GC.GetGCMemoryInfo();
+
+            shell.SendText(player, $@"Heap Size: {FormatBytes(info.HeapSizeBytes)} Total Allocated: {FormatBytes(GC.GetTotalMemory(false))}");
+#endif
+        }
+
+#if NETCOREAPP
+        private static string FormatBytes(long bytes)
+        {
+            return $"{bytes / 1024} KiB";
+        }
+#endif
     }
 }

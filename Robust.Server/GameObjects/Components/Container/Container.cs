@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Server.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Server.Interfaces.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects.Components.Container
@@ -12,39 +14,38 @@ namespace Robust.Server.GameObjects.Components.Container
     /// this logic should go on the systems that are holding this container.
     /// For example, inventory containers should be modified only through an inventory component.
     /// </summary>
+    [UsedImplicitly]
     public sealed class Container : BaseContainer
     {
         /// <summary>
         /// The generic container class uses a list of entities
         /// </summary>
-        private readonly List<IEntity> ContainerList = new List<IEntity>();
+        private readonly List<IEntity> _containerList = new List<IEntity>();
 
         /// <inheritdoc />
-        public Container(string id, IContainerManager manager) : base(id, manager)
-        {
-        }
+        public Container(string id, IContainerManager manager) : base(id, manager) { }
 
         /// <inheritdoc />
-        public override IReadOnlyCollection<IEntity> ContainedEntities => ContainerList.AsReadOnly();
+        public override IReadOnlyCollection<IEntity> ContainedEntities => _containerList.AsReadOnly();
 
         /// <inheritdoc />
         protected override void InternalInsert(IEntity toinsert)
         {
-            ContainerList.Add(toinsert);
+            _containerList.Add(toinsert);
             base.InternalInsert(toinsert);
         }
 
         /// <inheritdoc />
         protected override void InternalRemove(IEntity toremove)
         {
-            ContainerList.Remove(toremove);
+            _containerList.Remove(toremove);
             base.InternalRemove(toremove);
         }
 
         /// <inheritdoc />
         public override bool Contains(IEntity contained)
         {
-            return ContainerList.Contains(contained);
+            return _containerList.Contains(contained);
         }
 
         /// <inheritdoc />
@@ -52,17 +53,20 @@ namespace Robust.Server.GameObjects.Components.Container
         {
             base.Shutdown();
 
-            foreach (var entity in ContainerList)
+            foreach (var entity in _containerList)
             {
                 entity.Delete();
             }
         }
     }
 
+    /// <summary>
+    /// Base container class that all container inherit from.
+    /// </summary>
     public abstract class BaseContainer : IContainer
     {
         /// <inheritdoc />
-        public IContainerManager Manager { get; protected set; }
+        public IContainerManager Manager { get; private set; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -74,14 +78,14 @@ namespace Robust.Server.GameObjects.Components.Container
 
         /// <inheritdoc />
         [ViewVariables]
-        public bool Deleted { get; protected set; } = false;
+        public bool Deleted { get; private set; }
 
         /// <inheritdoc />
         public abstract IReadOnlyCollection<IEntity> ContainedEntities { get; }
 
         /// <summary>
         /// DO NOT CALL THIS METHOD DIRECTLY!
-        /// You want <see cref="IContainerManager.MakeContainer{T}(string)" /> or <see cref="Create" /> instead.
+        /// You want <see cref="IContainerManager.MakeContainer{T}(string)" /> instead.
         /// </summary>
         protected BaseContainer(string id, IContainerManager manager)
         {
@@ -92,22 +96,22 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <inheritdoc />
         public bool Insert(IEntity toinsert)
         {
-            if (CanInsert(toinsert)) //Verify we can insert and that the object got properly removed from its current location
+            //Verify we can insert and that the object got properly removed from its current location
+            if (!CanInsert(toinsert))
+                return false;
+
+            var transform = toinsert.Transform;
+            // The transform.Parent.Owner != Owner is there because map deserialization of containers still uses Insert()
+            // In which case the child is already parented. To us. Don't reject him hand him to the orphanage.
+            // Perhaps making it not use Insert() is a good idea but eh.
+            if (!transform.IsMapTransform && transform.Parent.Owner != Owner && !transform.Parent.Owner.GetComponent<IContainerManager>().Remove(toinsert))
             {
-                var transform = toinsert.Transform;
-                // The transform.Parent.Owner != Owner is there because map deserialization of containers still uses Insert()
-                // In which case the child is already parented. To us. Don't reject him hand him to the orphanage.
-                // Perhaps making it not use Insert() is a good idea but eh.
-                if (!transform.IsMapTransform && transform.Parent.Owner != Owner && !transform.Parent.Owner.GetComponent<IContainerManager>().Remove(toinsert))
-                {
-                    // Can't detach the entity from its parent, can't insert.
-                    return false;
-                }
-                InternalInsert(toinsert);
-                transform.AttachParent(Owner.Transform);
-                return true;
+                // Can't detach the entity from its parent, can't insert.
+                return false;
             }
-            return false;
+            InternalInsert(toinsert);
+            transform.AttachParent(Owner.Transform);
+            return true;
         }
 
         /// <summary>
@@ -117,6 +121,7 @@ namespace Robust.Server.GameObjects.Components.Container
         protected virtual void InternalInsert(IEntity toinsert)
         {
             Owner.EntityManager.RaiseEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, this));
+            Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toinsert, false));
         }
 
         /// <inheritdoc />
@@ -151,6 +156,7 @@ namespace Robust.Server.GameObjects.Components.Container
             return true;
         }
 
+        /// <inheritdoc />
         public void ForceRemove(IEntity toRemove)
         {
             InternalRemove(toRemove);
@@ -163,6 +169,7 @@ namespace Robust.Server.GameObjects.Components.Container
         protected virtual void InternalRemove(IEntity toremove)
         {
             Owner?.EntityManager.RaiseEvent(Owner, new EntRemovedFromContainerMessage(toremove, this));
+            Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toremove, true));
         }
 
         /// <inheritdoc />
@@ -179,6 +186,40 @@ namespace Robust.Server.GameObjects.Components.Container
         {
             Deleted = true;
             Manager = null;
+        }
+    }
+
+    /// <summary>
+    /// The contents of this container have been changed.
+    /// </summary>
+    public class ContainerContentsModifiedMessage : ComponentMessage
+    {
+        /// <summary>
+        /// Container whose contents were modified.
+        /// </summary>
+        public IContainer Container { get; }
+
+        /// <summary>
+        /// Entity that was added or removed from the container.
+        /// </summary>
+        public IEntity Entity { get; }
+
+        /// <summary>
+        /// If true, the entity was removed. If false, it was added to the container.
+        /// </summary>
+        public bool Removed { get; }
+
+        /// <summary>
+        /// Constructs a new instance of <see cref="ContainerContentsModifiedMessage"/>.
+        /// </summary>
+        /// <param name="container">Container whose contents were modified.</param>
+        /// <param name="entity">Entity that was added or removed in the container.</param>
+        /// <param name="removed">If true, the entity was removed. If false, it was added to the container.</param>
+        public ContainerContentsModifiedMessage(IContainer container, IEntity entity, bool removed)
+        {
+            Container = container;
+            Entity = entity;
+            Removed = removed;
         }
     }
 }

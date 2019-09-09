@@ -4,6 +4,7 @@ using Robust.Server.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects.Components.Container
@@ -89,6 +90,9 @@ namespace Robust.Server.GameObjects.Components.Container
         /// </summary>
         protected BaseContainer(string id, IContainerManager manager)
         {
+            DebugTools.Assert(!string.IsNullOrEmpty(id));
+            DebugTools.Assert(manager != null);
+
             ID = id;
             Manager = manager;
         }
@@ -96,6 +100,8 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <inheritdoc />
         public bool Insert(IEntity toinsert)
         {
+            DebugTools.Assert(!Deleted);
+
             //Verify we can insert and that the object got properly removed from its current location
             if (!CanInsert(toinsert))
                 return false;
@@ -120,6 +126,8 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <param name="toinsert"></param>
         protected virtual void InternalInsert(IEntity toinsert)
         {
+            DebugTools.Assert(!Deleted);
+
             Owner.EntityManager.RaiseEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, this));
             Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toinsert, false));
         }
@@ -127,6 +135,8 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <inheritdoc />
         public virtual bool CanInsert(IEntity toinsert)
         {
+            DebugTools.Assert(!Deleted);
+
             // cannot insert into itself.
             if (Owner == toinsert)
                 return false;
@@ -140,6 +150,8 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <inheritdoc />
         public bool Remove(IEntity toremove)
         {
+            DebugTools.Assert(!Deleted);
+
             if (toremove == null)
                 return true;
 
@@ -159,6 +171,8 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <inheritdoc />
         public void ForceRemove(IEntity toRemove)
         {
+            DebugTools.Assert(!Deleted);
+
             InternalRemove(toRemove);
         }
 
@@ -168,6 +182,10 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <param name="toremove"></param>
         protected virtual void InternalRemove(IEntity toremove)
         {
+            DebugTools.Assert(!Deleted);
+            DebugTools.Assert(Manager != null);
+            DebugTools.Assert(toremove != null && toremove.IsValid());
+
             Owner?.EntityManager.RaiseEvent(Owner, new EntRemovedFromContainerMessage(toremove, this));
             Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toremove, true));
         }
@@ -175,6 +193,7 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <inheritdoc />
         public virtual bool CanRemove(IEntity toremove)
         {
+            DebugTools.Assert(!Deleted);
             return Contains(toremove);
         }
 

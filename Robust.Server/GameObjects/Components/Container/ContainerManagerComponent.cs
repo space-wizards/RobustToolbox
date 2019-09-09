@@ -118,6 +118,13 @@ namespace Robust.Server.GameObjects.Components.Container
         {
             foreach (var containers in EntityContainers.Values)
             {
+                // Container has previously been disposed
+                if (containers.Deleted)
+                {
+                    EntityContainers[containers.ID] = null;
+                    return;
+                }
+
                 if (containers.Contains(entity))
                 {
                     containers.ForceRemove(entity);
@@ -142,7 +149,8 @@ namespace Robust.Server.GameObjects.Components.Container
         {
             base.OnRemove();
 
-            foreach(var container in EntityContainers.Values)
+            // IContianer.Shutdown modifies the EntityContainers collection
+            foreach(var container in EntityContainers.Values.ToArray())
             {
                 container.Shutdown();
             }

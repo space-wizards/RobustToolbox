@@ -36,6 +36,8 @@ namespace Robust.Shared.Serialization
             {
                 { typeof(Color), new ColorSerializer() },
                 { typeof(Vector2), new Vector2Serializer() },
+                { typeof(Vector3), new Vector3Serializer() },
+                { typeof(Vector4), new Vector4Serializer() },
                 { typeof(Angle), new AngleSerializer() },
                 { typeof(UIBox2), new UIBox2Serializer() },
                 { typeof(Box2), new Box2Serializer() },
@@ -835,6 +837,34 @@ namespace Robust.Shared.Serialization
             {
                 var vec = (Vector2)obj;
                 return new YamlScalarNode($"{vec.X.ToString(CultureInfo.InvariantCulture)},{vec.Y.ToString(CultureInfo.InvariantCulture)}");
+            }
+        }
+
+        class Vector3Serializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
+            {
+                return node.AsVector3();
+            }
+
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
+            {
+                var vec = (Vector3)obj;
+                return new YamlScalarNode($"{vec.X.ToString(CultureInfo.InvariantCulture)},{vec.Y.ToString(CultureInfo.InvariantCulture)},{vec.Z.ToString(CultureInfo.InvariantCulture)}");
+            }
+        }
+
+        class Vector4Serializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
+            {
+                return node.AsVector4();
+            }
+
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
+            {
+                var vec = (Vector4)obj;
+                return new YamlScalarNode($"{vec.X.ToString(CultureInfo.InvariantCulture)},{vec.Y.ToString(CultureInfo.InvariantCulture)},{vec.Z.ToString(CultureInfo.InvariantCulture)},{vec.W.ToString(CultureInfo.InvariantCulture)}");
             }
         }
 

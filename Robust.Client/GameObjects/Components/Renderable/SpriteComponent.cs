@@ -1041,7 +1041,11 @@ namespace Robust.Client.GameObjects
                 {
                     angle -= new Angle(MathHelper.PiOver2);
                 }
-                transform = Matrix3.CreateRotation(angle);
+
+                var mOffset = Matrix3.CreateTranslation(Offset);
+                var mRotation = Matrix3.CreateRotation(angle);
+                Matrix3.Multiply(ref mOffset, ref mRotation, out transform);
+
                 var worldTransform = Owner.Transform.WorldMatrix;
                 transform.Multiply(ref worldTransform);
             }

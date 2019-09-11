@@ -80,5 +80,31 @@ namespace Robust.Shared.Utility
             list.RemoveAt(list.Count-1);
             return t;
         }
+
+        /// <summary>
+        ///     Just like FirstOrDefault but returns null for value types as well.
+        /// </summary>
+        /// <param name="source">An <see cref="T:System.Collections.Generic.IEnumerable`1" /> to return an element from.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <typeparam name="TSource">The type of the elements of <paramref name="source" />.</typeparam>
+        /// <returns> null if <paramref name="source" /> is empty or if no element passes the test specified by <paramref name="predicate" />; otherwise, the first element in <paramref name="source" /> that passes the test specified by <paramref name="predicate" />.</returns>
+        /// <exception cref="T:System.ArgumentNullException">
+        /// <paramref name="source" /> or <paramref name="predicate" /> is <see langword="null" />.</exception>
+        public static TSource? FirstOrNull<TSource>(
+            this IEnumerable<TSource> source,
+            Func<TSource, bool> predicate)
+        where TSource: struct
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof (source));
+            if (predicate == null)
+                throw new ArgumentNullException(nameof (predicate));
+            foreach (TSource source1 in source)
+            {
+                if (predicate(source1))
+                    return source1;
+            }
+            return null;
+        }
     }
 }

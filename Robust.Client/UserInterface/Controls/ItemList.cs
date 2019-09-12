@@ -14,7 +14,7 @@ using Timer = Robust.Shared.Timers.Timer;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    public class ItemList : Control, IList<Item>
+    public class ItemList : Control, IList<ItemList.Item>
     {
         private bool _isAtBottom = true;
         private int _totalContentHeight;
@@ -162,6 +162,8 @@ namespace Robust.Client.UserInterface.Controls
                 _scrollBar.MoveToEnd();
         }
 
+        // Without this attribute, this would compile into a property called "Item", causing problems with the Item class.
+        [System.Runtime.CompilerServices.IndexerName("IndexItem")]
         public Item this[int index]
         {
             get => _itemList[index];
@@ -568,60 +570,60 @@ namespace Robust.Client.UserInterface.Controls
             Multiple,
             Button,
         }
-    }
 
-    public sealed class Item
-    {
-        public event Action<Item> OnSelected;
-        public event Action<Item> OnDeselected;
-
-        private bool _selected = false;
-        private bool _disabled = false;
-
-        public ItemList Owner { get; }
-        public string Text { get; set; }
-        public string TooltipText { get; set; }
-        public Texture Icon { get; set; }
-        public UIBox2 IconRegion { get; set; }
-        public Color IconModulate { get; set; } = Color.White;
-        public bool Selectable { get; set; } = true;
-        public bool TooltipEnabled { get; set; } = true;
-        public UIBox2? Region { get; set; }
-
-        public bool Disabled
+        public sealed class Item
         {
-            get => _disabled;
-            set
+            public event Action<Item> OnSelected;
+            public event Action<Item> OnDeselected;
+
+            private bool _selected = false;
+            private bool _disabled = false;
+
+            public ItemList Owner { get; }
+            public string Text { get; set; }
+            public string TooltipText { get; set; }
+            public Texture Icon { get; set; }
+            public UIBox2 IconRegion { get; set; }
+            public Color IconModulate { get; set; } = Color.White;
+            public bool Selectable { get; set; } = true;
+            public bool TooltipEnabled { get; set; } = true;
+            public UIBox2? Region { get; set; }
+
+            public bool Disabled
             {
-                _disabled = value;
-                if (Selected) Selected = false;
+                get => _disabled;
+                set
+                {
+                    _disabled = value;
+                    if (Selected) Selected = false;
+                }
             }
-        }
-        public bool Selected
-        {
-            get => _selected;
-            set
+            public bool Selected
             {
-                if (!Selectable) return;
-                _selected = value;
-                if(_selected) OnSelected?.Invoke(this);
-                else OnDeselected?.Invoke(this);
+                get => _selected;
+                set
+                {
+                    if (!Selectable) return;
+                    _selected = value;
+                    if(_selected) OnSelected?.Invoke(this);
+                    else OnDeselected?.Invoke(this);
+                }
             }
-        }
 
-        public Vector2 IconSize
-        {
-            get
+            public Vector2 IconSize
             {
-                if (Icon == null)
-                    return Vector2.Zero;
-                return IconRegion.Size != Vector2.Zero ? IconRegion.Size : Icon.Size;
+                get
+                {
+                    if (Icon == null)
+                        return Vector2.Zero;
+                    return IconRegion.Size != Vector2.Zero ? IconRegion.Size : Icon.Size;
+                }
             }
-        }
 
-        public Item(ItemList owner)
-        {
-            Owner = owner;
+            public Item(ItemList owner)
+            {
+                Owner = owner;
+            }
         }
     }
 }

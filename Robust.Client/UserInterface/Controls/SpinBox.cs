@@ -39,41 +39,55 @@ namespace Robust.Client.UserInterface.Controls
 
         public void InitDefaultButtons()
         {
-            _leftButtons.Add(new Button
-            {
-                Text = "-"
-            });
-            _leftButtons[0].OnPressed += (args) => { Value -= 1; };
-            AddChild(_leftButtons[0]);
+            ClearButtons();
+            AddLeftButton(-1, "-");
+            AddRightButton(1, "+");
+            UpdateButtonOrder();
+        }
 
-            _rightButtons.Add(new Button
-            {
-                Text = "+"
-            });
-            _rightButtons[0].OnPressed += (args) => { Value += 1; };
-            AddChild(_rightButtons[0]);
-            ReflowVBox();
+        public void AddRightButton(int num, string text)
+        {
+            var button = new Button { Text = text };
+            button.OnPressed += (args) => Value += num;
+            _rightButtons.Add(button);
+        }
+
+        public void AddLeftButton(int num, string text)
+        {
+            var button = new Button { Text = text };
+            button.OnPressed += (args) => Value += num;
+            _leftButtons.Add(button);
         }
 
         public void SetButtons(List<int> leftButtons, List<int> rightButtons)
         {
-            // TODO Implement clearing _leftButtons and _rightButtons
+            ClearButtons();
             foreach (var num in leftButtons)
             {
-                var button = new Button { Text = num.ToString() };
-                button.OnPressed += (args) => Value += num;
-                _leftButtons.Add(button);
+                AddLeftButton(num, num.ToString());
             }
             foreach (var num in rightButtons)
             {
-                var button = new Button { Text = num.ToString() };
-                button.OnPressed += (args) => Value += num;
-                _rightButtons.Add(button);
+                AddRightButton(num, num.ToString());
             }
-            ReflowVBox();
+            UpdateButtonOrder();
         }
 
-        public void ReflowVBox()
+        public void ClearButtons()
+        {
+            foreach (var button in _leftButtons)
+            {
+                button.Dispose();
+            }
+            _leftButtons.Clear();
+            foreach (var button in _rightButtons)
+            {
+                button.Dispose();
+            }
+            _rightButtons.Clear();
+        }
+
+        public void UpdateButtonOrder()
         {
             RemoveAllChildren();
 
@@ -87,12 +101,6 @@ namespace Robust.Client.UserInterface.Controls
                 AddChild(button);
             }
         }
-/*
-        protected override Vector2 CalculateMinimumSize()
-        {
-            return _lineEdit.CombinedMinimumSize;
-            //_hBox.CombinedMinimumSize;
-        }*/
 
         protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
         {

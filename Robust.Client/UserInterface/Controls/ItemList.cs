@@ -1,20 +1,25 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Threading.Tasks;
+using System.Timers;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Input;
 using Robust.Shared.Input;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Timer = Robust.Shared.Timers.Timer;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    public class ItemList : Control
+    public class ItemList : Control, IList<ItemList.Item>
     {
         private bool _isAtBottom = true;
         private int _totalContentHeight;
 
-        private VScrollBar _scrollBar = new VScrollBar();
+        private VScrollBar _scrollBar;
         private readonly List<Item> _itemList = new List<Item>();
         public event Action<ItemListSelectedEventArgs> OnItemSelected;
         public event Action<ItemListDeselectedEventArgs> OnItemDeselected;
@@ -25,9 +30,11 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertySelectedItemBackground = "selected-item-background";
         public const string StylePropertyDisabledItemBackground = "disabled-item-background";
 
-        public int ItemCount => _itemList.Count;
+        public int Count => _itemList.Count;
+        public bool IsReadOnly => false;
 
         public bool ScrollFollowing { get; set; } = true;
+        public int ButtonDeselectDelay { get; set; } = 100;
 
         public ItemListSelectMode SelectMode { get; set; } = ItemListSelectMode.Single;
 
@@ -62,26 +69,155 @@ namespace Robust.Client.UserInterface.Controls
             _updateScrollbarVisibility();
         }
 
-        public void AddItem(string text, Texture icon = null, bool selectable = true)
+        public void Add(Item item)
         {
-            var item = new Item {Text = text, Icon = icon, Selectable = selectable};
+            if (item == null) return;
+            if(item.Owner != this) throw new ArgumentException("Item is owned by another ItemList!");
+
             _itemList.Add(item);
+
+            item.OnSelected += Select;
+            item.OnDeselected += Deselect;
+
             RecalculateContentHeight();
             if (_isAtBottom && ScrollFollowing)
-            {
                 _scrollBar.MoveToEnd();
-            }
         }
 
-        public void AddIconItem(Texture icon, bool selectable = true)
+        public Item AddItem(string text, Texture icon = null, bool selectable = true)
         {
-            AddItem(null, icon, selectable);
+            var item = new Item(this) {Text = text, Icon = icon, Selectable = selectable};
+            Add(item);
+            return item;
         }
 
         public void Clear()
         {
-            _itemList.Clear();
+            foreach (var item in _itemList.ToArray())
+            {
+                Remove(item);
+            }
+
             _totalContentHeight = 0;
+        }
+
+        public bool Contains(Item item)
+        {
+            return _itemList.Contains(item);
+        }
+
+        public void CopyTo(Item[] array, int arrayIndex)
+        {
+            _itemList.CopyTo(array, arrayIndex);
+        }
+
+        public bool Remove(Item item)
+        {
+            if (item == null) return false;
+
+            var value =  _itemList.Remove(item);
+
+            item.OnSelected -= Select;
+            item.OnDeselected -= Deselect;
+
+            RecalculateContentHeight();
+            if (_isAtBottom && ScrollFollowing)
+                _scrollBar.MoveToEnd();
+
+            return value;
+        }
+
+        public void RemoveAt(int index)
+        {
+            Remove(this[index]);
+        }
+
+        public IEnumerator<Item> GetEnumerator()
+        {
+            return _itemList.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public int IndexOf(Item item)
+        {
+            return _itemList.IndexOf(item);
+        }
+
+        public void Insert(int index, Item item)
+        {
+            if (item == null) return;
+            if(item.Owner != this) throw new ArgumentException("Item is owned by another ItemList!");
+
+            _itemList.Insert(index, item);
+
+            item.OnSelected += Select;
+            item.OnDeselected += Deselect;
+
+            RecalculateContentHeight();
+            if (_isAtBottom && ScrollFollowing)
+                _scrollBar.MoveToEnd();
+        }
+
+        // Without this attribute, this would compile into a property called "Item", causing problems with the Item class.
+        [System.Runtime.CompilerServices.IndexerName("IndexItem")]
+        public Item this[int index]
+        {
+            get => _itemList[index];
+            set => _itemList[index] = value;
+        }
+
+        public IEnumerable<Item> GetSelected()
+        {
+            var list = new List<Item>();
+
+            for (var i = 0; i < _itemList.Count; i++)
+            {
+                var item = _itemList[i];
+                if (item.Selected) list.Add(item);
+            }
+
+            return list;
+        }
+
+        private void Select(int idx)
+        {
+            OnItemSelected?.Invoke(new ItemListSelectedEventArgs(idx, this));
+        }
+
+        private void Select(Item item)
+        {
+            var idx = IndexOf(item);
+            if (idx != -1)
+                Select(idx);
+        }
+
+        private void Deselect(int idx)
+        {
+            OnItemDeselected?.Invoke(new ItemListDeselectedEventArgs(idx, this));
+        }
+
+        private void Deselect(Item item)
+        {
+            var idx = IndexOf(item);
+            if (idx == -1) return;
+            Deselect(idx);
+        }
+
+        public void ClearSelected()
+        {
+            foreach (var item in GetSelected())
+            {
+                item.Selected = false;
+            }
+        }
+
+        public void SortItemsByText()
+        {
+            _itemList.Sort((p, q) => string.Compare(p.Text, q.Text, StringComparison.Ordinal));
         }
 
         public void EnsureCurrentIsVisible()
@@ -92,113 +228,6 @@ namespace Robust.Client.UserInterface.Controls
         public int GetItemAtPosition(Vector2 position, bool exact = false)
         {
             throw new NotImplementedException();
-        }
-
-        public bool IsSelected(int idx)
-        {
-            return _itemList[idx].Selected;
-        }
-
-        public void RemoveItem(int idx)
-        {
-            _itemList.RemoveAt(idx);
-            RecalculateContentHeight();
-        }
-
-        public void Select(int idx, bool single = true)
-        {
-            if (single)
-            {
-                for (var jdx = 0; jdx < _itemList.Count; jdx++)
-                {
-                    Unselect(jdx);
-                }
-            }
-
-            var i = _itemList[idx];
-
-            if (i.Selectable)
-            {
-                i.Selected = true;
-                OnItemSelected?.Invoke(new ItemListSelectedEventArgs(idx, this));
-            }
-        }
-
-        public void Select(Item item, bool single = true)
-        {
-            var idx = _itemList.IndexOf(item);
-            if (idx != -1)
-                Select(idx, single);
-        }
-
-        public void SetItemDisabled(int idx, bool disabled)
-        {
-            Unselect(idx);
-            var i = _itemList[idx];
-            i.Disabled = disabled;
-        }
-
-        public void SetItemIcon(int idx, Texture icon)
-        {
-            _itemList[idx].Icon = icon;
-        }
-
-        public void SetItemIconRegion(int idx, UIBox2 region)
-        {
-            _itemList[idx].IconRegion = region;
-        }
-
-        public void SetItemSelectable(int idx, bool selectable)
-        {
-            _itemList[idx].Selectable = selectable;
-        }
-
-        public void SetItemText(int idx, string text)
-        {
-            _itemList[idx].Text = text;
-        }
-
-        public void SetItemTooltip(int idx, string tooltip)
-        {
-            _itemList[idx].TooltipText = tooltip;
-        }
-
-        public void SetItemTooltipEnabled(int idx, bool enabled)
-        {
-            _itemList[idx].TooltipEnabled = true;
-        }
-
-        public void SortItemsByText()
-        {
-            _itemList.Sort((p, q) => string.Compare(p.Text, q.Text, StringComparison.Ordinal));
-        }
-
-        public void Unselect(int idx)
-        {
-            {
-                var i = _itemList[idx];
-                if (!i.Selected) return;
-                i.Selected = false;
-                OnItemDeselected?.Invoke(new ItemListDeselectedEventArgs(idx, this));
-            }
-        }
-
-        public void Unselect(Item item)
-        {
-            var idx = _itemList.IndexOf(item);
-            if (idx == -1) return;
-            Unselect(idx);
-        }
-
-        public void ClearSelections()
-        {
-            foreach (var item in _itemList)
-            {
-                if (item.Selected)
-                {
-                    Unselect(item);
-                }
-            }
         }
 
         public Font ActualFont
@@ -306,7 +335,10 @@ namespace Robust.Client.UserInterface.Controls
                     bg = iconDisabledBg;
 
                 if (item.Selected)
+                {
+                    Logger.Info("we draw");
                     bg = iconSelectedBg;
+                }
 
                 var itemHeight = 0f;
                 if (item.Icon != null)
@@ -393,13 +425,25 @@ namespace Robust.Client.UserInterface.Controls
             {
                 if (item.Region == null)
                     continue;
+
                 if (!item.Region.Value.Contains(args.RelativePosition))
                     continue;
+
                 if (item.Selectable && !item.Disabled)
-                    if (item.Selected)
-                        Unselect(item);
-                    else
-                        Select(item, SelectMode == ItemListSelectMode.Single);
+                {
+                    if (item.Selected && SelectMode != ItemListSelectMode.Button)
+                    {
+                        ClearSelected();
+                        item.Selected = false;
+                        return;
+                    }
+
+                    if(SelectMode != ItemListSelectMode.Multiple)
+                        ClearSelected();
+                    item.Selected = true;
+                    if (SelectMode == ItemListSelectMode.Button)
+                        Timer.Spawn(ButtonDeselectDelay, () => {  item.Selected = false; } );
+                }
                 break;
             }
         }
@@ -467,31 +511,6 @@ namespace Robust.Client.UserInterface.Controls
             _scrollBar.Visible = _totalContentHeight + ActualBackground.MinimumSize.Y > PixelHeight;
         }
 
-        public sealed class Item
-        {
-            public string Text;
-            public string TooltipText;
-            public Texture Icon;
-            public UIBox2 IconRegion;
-            public Color IconModulate = Color.White;
-            public bool Selected;
-            public bool Selectable = true;
-            public bool TooltipEnabled = true;
-            public bool Disabled;
-
-            public UIBox2? Region;
-
-            public Vector2 IconSize
-            {
-                get
-                {
-                    if (Icon == null)
-                        return Vector2.Zero;
-                    return IconRegion.Size != Vector2.Zero ? IconRegion.Size : Icon.Size;
-                }
-            }
-        }
-
         public class ItemListEventArgs : EventArgs
         {
             /// <summary>
@@ -548,7 +567,63 @@ namespace Robust.Client.UserInterface.Controls
         {
             None,
             Single,
-            Multiple
+            Multiple,
+            Button,
+        }
+
+        public sealed class Item
+        {
+            public event Action<Item> OnSelected;
+            public event Action<Item> OnDeselected;
+
+            private bool _selected = false;
+            private bool _disabled = false;
+
+            public ItemList Owner { get; }
+            public string Text { get; set; }
+            public string TooltipText { get; set; }
+            public Texture Icon { get; set; }
+            public UIBox2 IconRegion { get; set; }
+            public Color IconModulate { get; set; } = Color.White;
+            public bool Selectable { get; set; } = true;
+            public bool TooltipEnabled { get; set; } = true;
+            public UIBox2? Region { get; set; }
+
+            public bool Disabled
+            {
+                get => _disabled;
+                set
+                {
+                    _disabled = value;
+                    if (Selected) Selected = false;
+                }
+            }
+            public bool Selected
+            {
+                get => _selected;
+                set
+                {
+                    if (!Selectable) return;
+                    _selected = value;
+                    if(_selected) OnSelected?.Invoke(this);
+                    else OnDeselected?.Invoke(this);
+                }
+            }
+
+            public Vector2 IconSize
+            {
+                get
+                {
+                    if (Icon == null)
+                        return Vector2.Zero;
+                    return IconRegion.Size != Vector2.Zero ? IconRegion.Size : Icon.Size;
+                }
+            }
+
+            public Item(ItemList owner)
+            {
+                Owner = owner;
+            }
         }
     }
 }

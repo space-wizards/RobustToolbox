@@ -119,7 +119,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private void OnPlacementCanceled(object sender, EventArgs e)
         {
             _clearingSelections = true;
-            TileList.ClearSelections();
+            TileList.ClearSelected();
             _clearingSelections = false;
         }
         private void TileListOnOnItemSelected(ItemList.ItemListSelectedEventArgs args)

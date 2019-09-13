@@ -44,7 +44,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         ///     Determines whether the LineEdit text gets changed by the input text.
         /// </summary>
-        public Func<string, bool> IsValid;
+        public Func<string, bool> IsValid { get; set; }
 
         public AlignMode TextAlign { get; set; }
 

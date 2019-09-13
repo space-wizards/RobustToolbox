@@ -6,12 +6,10 @@ using System.Diagnostics.Contracts;
 namespace Robust.Client.UserInterface.Controls
 {
     /// <summary>
-    ///     Input for numbers.
+    ///     Number input LineEdit with increment buttons.
     /// </summary>
-    public class SpinBox : BoxContainer
+    public class SpinBox : HBoxContainer
     {
-        private protected override bool Vertical => false;
-
         private LineEdit _lineEdit;
         private List<Button> _leftButtons = new List<Button>();
         private List<Button> _rightButtons = new List<Button>();
@@ -37,28 +35,42 @@ namespace Robust.Client.UserInterface.Controls
             _lineEdit.IsValid = (str) => int.TryParse(str, out int i);
         }
 
+        /// <summary>
+        ///     Creates and sets buttons to - and +.
+        /// </summary>
         public void InitDefaultButtons()
         {
             ClearButtons();
             AddLeftButton(-1, "-");
             AddRightButton(1, "+");
-            UpdateButtonOrder();
         }
 
+        /// <summary>
+        ///     Adds a button to the right of the SpinBox LineEdit.
+        /// </summary>
         public void AddRightButton(int num, string text)
         {
             var button = new Button { Text = text };
             button.OnPressed += (args) => Value += num;
+            AddChild(button);
             _rightButtons.Add(button);
         }
 
+        /// <summary>
+        ///     Adds a button to the left of the SpinBox LineEdit.
+        /// </summary>
         public void AddLeftButton(int num, string text)
         {
             var button = new Button { Text = text };
             button.OnPressed += (args) => Value += num;
+            AddChild(button);
+            button.SetPositionInParent(_leftButtons.Count);
             _leftButtons.Add(button);
         }
 
+        /// <summary>
+        ///     Creates and sets buttons for each int in leftButtons and rightButtons.
+        /// </summary>
         public void SetButtons(List<int> leftButtons, List<int> rightButtons)
         {
             ClearButtons();
@@ -70,9 +82,11 @@ namespace Robust.Client.UserInterface.Controls
             {
                 AddRightButton(num, num.ToString());
             }
-            UpdateButtonOrder();
         }
 
+        /// <summary>
+        ///     Removes all buttons inside the SpinBox.
+        /// </summary>
         public void ClearButtons()
         {
             foreach (var button in _leftButtons)
@@ -87,24 +101,14 @@ namespace Robust.Client.UserInterface.Controls
             _rightButtons.Clear();
         }
 
-        public void UpdateButtonOrder()
-        {
-            RemoveAllChildren();
-
-            foreach (var button in _leftButtons)
-            {
-                AddChild(button);
-            }
-            AddChild(_lineEdit);
-            foreach (var button in _rightButtons)
-            {
-                AddChild(button);
-            }
-        }
-
         protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
         {
             base.MouseWheel(args);
+
+            if (!_lineEdit.HasKeyboardFocus())
+            {
+                return;
+            }
 
             if (args.Delta.Y > 0)
                 Value += _stepSize;

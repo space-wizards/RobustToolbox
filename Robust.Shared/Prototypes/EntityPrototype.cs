@@ -41,7 +41,7 @@ namespace Robust.Shared.GameObjects
         /// The "in game name" of the object. What is displayed to most players.
         /// </summary>
         [ViewVariables]
-        public string Name { get; private set; }
+        public string Name { get; private set; } = string.Empty;
 
         /// <summary>
         /// The description of the object that shows upon using examine

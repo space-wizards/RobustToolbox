@@ -41,6 +41,11 @@ namespace Robust.Client.UserInterface.Controls
             KeyboardFocusOnClick = true;
         }
 
+        /// <summary>
+        ///     Determines whether the LineEdit text gets changed by the input text.
+        /// </summary>
+        public Func<string, bool> IsValid { get; set; }
+
         public AlignMode TextAlign { get; set; }
 
         public string Text
@@ -53,7 +58,10 @@ namespace Robust.Client.UserInterface.Controls
                     value = "";
                 }
 
-                _text = value;
+                if (!SetText(value))
+                {
+                    return;
+                }
                 _cursorPosition = 0;
                 _updatePseudoClass();
             }
@@ -148,10 +156,24 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            _text = _text.Insert(_cursorPosition, new string(chars.ToArray()));
+            if (!SetText(_text.Insert(_cursorPosition, new string(chars.ToArray()))))
+            {
+                return;
+            }
             _cursorPosition += chars.Count;
             OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
             _updatePseudoClass();
+        }
+
+        protected bool SetText(string newText)
+        {
+            if (IsValid != null && !IsValid(newText))
+            {
+                return false;
+            }
+
+            _text = newText;
+            return true;
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)
@@ -250,7 +272,10 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            _text = _text.Insert(_cursorPosition, ((char) args.CodePoint).ToString());
+            if (!SetText(_text.Insert(_cursorPosition, ((char)args.CodePoint).ToString())))
+            {
+                return;
+            }
             _cursorPosition += 1;
             OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
             _updatePseudoClass();

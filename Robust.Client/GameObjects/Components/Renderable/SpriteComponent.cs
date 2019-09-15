@@ -19,6 +19,7 @@ using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Robust.Shared.Animations;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.ViewVariables;
 
@@ -41,7 +42,7 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     Z-index for drawing.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public DrawDepth DrawDepth
         {
             get => drawDepth;
@@ -53,7 +54,8 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     A scale applied to all layers.
         /// </summary>
-        [ViewVariables]
+        [Animatable]
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Scale
         {
             get => scale;
@@ -62,6 +64,7 @@ namespace Robust.Client.GameObjects
 
         private Angle rotation;
 
+        [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
         public Angle Rotation
         {
@@ -74,7 +77,8 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     Offset applied to all layers.
         /// </summary>
-        [ViewVariables]
+        [Animatable]
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Offset
         {
             get => offset;
@@ -83,6 +87,7 @@ namespace Robust.Client.GameObjects
 
         private Color color = Color.White;
 
+        [Animatable]
         [ViewVariables]
         public Color Color
         {

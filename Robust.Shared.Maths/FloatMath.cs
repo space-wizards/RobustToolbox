@@ -72,6 +72,18 @@ namespace Robust.Shared.Maths
             return a + (b - a) * blend;
         }
 
+        public static float InterpolateCubic(float preA, float a, float b, float postB, float t)
+        {
+            return a + 0.5f * t *
+                   (b - preA + t * (2.0f * preA - 5.0f * a + 4.0f * b - postB + t * (3.0f * (a - b) + postB - preA)));
+        }
+
+        public static double InterpolateCubic(double preA, double a, double b, double postB, double t)
+        {
+            return a + 0.5 * t *
+                   (b - preA + t * (2.0 * preA - 5.0 * a + 4.0 * b - postB + t * (3.0 * (a - b) + postB - preA)));
+        }
+
         // Clamps value between 0 and 1 and returns value
         public static float Clamp01(float value)
         {

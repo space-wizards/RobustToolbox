@@ -93,7 +93,7 @@ namespace Robust.Client.Animations
                 case double d:
                     return FloatMath.Lerp(d, (double) b, t);
                 case Angle angle:
-                    return Angle.Lerp(angle, (Angle) b, t);
+                    return (Angle)FloatMath.Lerp(angle, (Angle) b, t);
                 case Color color:
                     return Color.InterpolateBetween(color, (Color) b, t);
                 case int i:

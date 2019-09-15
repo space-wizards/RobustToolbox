@@ -1049,7 +1049,7 @@ namespace Robust.Client.GameObjects
 
                 var mOffset = Matrix3.CreateTranslation(Offset);
                 var mRotation = Matrix3.CreateRotation(angle);
-                Matrix3.Multiply(ref mOffset, ref mRotation, out transform);
+                Matrix3.Multiply(ref mRotation, ref mOffset, out transform);
 
                 var worldTransform = Owner.Transform.WorldMatrix;
                 transform.Multiply(ref worldTransform);

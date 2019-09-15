@@ -4,6 +4,7 @@ using Robust.Server.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -117,6 +118,11 @@ namespace Robust.Server.GameObjects.Components.Container
             }
             InternalInsert(toinsert);
             transform.AttachParent(Owner.Transform);
+
+            // spatially move the object to the location of the container. If you don't want this functionality, the
+            // calling code can save the local position before calling this function, and apply it afterwords.
+            transform.LocalPosition = Vector2.Zero;
+
             return true;
         }
 

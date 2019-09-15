@@ -62,6 +62,10 @@ namespace Robust.Server.Interfaces.GameObjects
         /// <summary>
         /// Attempts to insert the entity into this container.
         /// </summary>
+        /// <remarks>
+        /// If the insertion is successful, the inserted entity will end up parented to the
+        /// container entity, and the inserted entity's local position will be set to the zero vector.
+        /// </remarks>
         /// <param name="toinsert">The entity to insert.</param>
         /// <returns>False if the entity could not be inserted.</returns>
         /// <exception cref="InvalidOperationException">

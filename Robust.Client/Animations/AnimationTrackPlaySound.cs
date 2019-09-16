@@ -6,7 +6,7 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Animations
 {
     /// <summary>
-    ///     An animation track that plays RSI state animations manually, so they can be precisely controlled etc.
+    ///     An animation track that plays a sound as keyframes.
     /// </summary>
     public sealed class AnimationTrackPlaySound : AnimationTrack
     {

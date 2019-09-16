@@ -16,6 +16,8 @@ using System.Globalization;
 using Robust.Shared.Interfaces.GameObjects;
 using System.Linq;
 using Robust.Server.Interfaces.Timing;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
 
 namespace Robust.Server.Maps
 {
@@ -62,7 +64,7 @@ namespace Robust.Server.Maps
                     var stream = new YamlStream();
 
                     stream.Add(document);
-                    stream.Save(writer, false);
+                    stream.Save(new YamlMappingFix(new Emitter(writer)), false);
                 }
             }
         }
@@ -144,7 +146,7 @@ namespace Robust.Server.Maps
                     var stream = new YamlStream();
 
                     stream.Add(document);
-                    stream.Save(writer, false);
+                    stream.Save(new YamlMappingFix(new Emitter(writer)), false);
                 }
             }
         }
@@ -696,6 +698,28 @@ namespace Robust.Server.Maps
 
                 RootNode = stream.Documents[0].RootNode;
                 GridCount = ((YamlSequenceNode)RootNode["grids"]).Children.Count;
+            }
+        }
+
+        private class YamlMappingFix : IEmitter
+        {
+            //TODO: This fix exists because of https://github.com/aaubry/YamlDotNet/issues/409.
+            //Credit: https://stackoverflow.com/a/56452440
+
+            private readonly IEmitter _next;
+
+            public YamlMappingFix(IEmitter next)
+            {
+                _next = next;
+            }
+
+            public void Emit(ParsingEvent @event)
+            {
+                if (@event is MappingStart mapping)
+                {
+                    @event = new MappingStart(mapping.Anchor, mapping.Tag, false, mapping.Style, mapping.Start, mapping.End);
+                }
+                _next.Emit(@event);
             }
         }
     }

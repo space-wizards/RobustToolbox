@@ -239,6 +239,11 @@ namespace Robust.Client.UserInterface.CustomControls
                 return true;
             }
 
+            if (string.IsNullOrEmpty(prototype.Name))
+            {
+                return false;
+            }
+
             if (prototype.Name.ToLowerInvariant().Contains(searchStr))
             {
                 return true;

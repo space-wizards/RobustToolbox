@@ -1,14 +1,12 @@
 ﻿using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Shared.Localization;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 using Robust.Shared.Serialization;
@@ -40,8 +38,8 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// The "in game name" of the object. What is displayed to most players.
         /// </summary>
-        [ViewVariables]
-        public string Name { get; private set; } = string.Empty;
+        [ViewVariables, CanBeNull]
+        public string Name { get; private set; }
 
         /// <summary>
         /// The description of the object that shows upon using examine
@@ -377,7 +375,7 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            if (string.IsNullOrEmpty(target.Name))
+            if (target.Name == null)
             {
                 target.Name = source.Name;
             }

@@ -116,18 +116,18 @@ namespace Robust.Server.GameObjects.Components.Container
 
         public void ForceRemove(IEntity entity)
         {
-            foreach (var containers in EntityContainers.Values)
+            foreach (var container in EntityContainers.Values)
             {
                 // Container has previously been disposed
-                if (containers.Deleted)
+                if (container.Deleted && EntityContainers.ContainsKey(container.ID))
                 {
-                    EntityContainers[containers.ID] = null;
+                    EntityContainers.Remove(container.ID);
                     return;
                 }
 
-                if (containers.Contains(entity))
+                if (container.Contains(entity))
                 {
-                    containers.ForceRemove(entity);
+                    container.ForceRemove(entity);
                 }
             }
         }

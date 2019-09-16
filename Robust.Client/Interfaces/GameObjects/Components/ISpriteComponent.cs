@@ -10,7 +10,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Interfaces.GameObjects.Components
 {
-    public interface ISpriteComponent : IComponent
+    public interface ISpriteComponent : IComponent, IAnimationProperties
     {
         void FrameUpdate(float delta);
 
@@ -24,21 +24,25 @@ namespace Robust.Client.Interfaces.GameObjects.Components
         /// <summary>
         ///     A scale applied to all layers.
         /// </summary>
+        [Animatable]
         Vector2 Scale { get; set; }
 
         /// <summary>
         ///     A rotation applied to all layers.
         /// </summary>
+        [Animatable]
         Angle Rotation { get; set; }
 
         /// <summary>
         ///     Offset applied to all layers.
         /// </summary>
+        [Animatable]
         Vector2 Offset { get; set; }
 
         /// <summary>
         ///     Color to multiply all layers with.
         /// </summary>
+        [Animatable]
         Color Color { get; set; }
 
         /// <summary>

@@ -18,6 +18,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using Robust.Shared.Animations;
 using Robust.Shared.Interfaces.Reflection;
@@ -1581,6 +1582,35 @@ namespace Robust.Client.GameObjects
                     Color = Color.White,
                     AutoAnimated = true,
                 };
+            }
+        }
+
+        void IAnimationProperties.SetAnimatableProperty(string name, object value)
+        {
+            if (!name.StartsWith("layer/"))
+            {
+                AnimationHelper.SetAnimatableProperty(this, name, value);
+                return;
+            }
+
+            var delimiter = name.IndexOf("/", 6, StringComparison.Ordinal);
+            var indexString = name.Substring(6, delimiter - 6);
+            var index = int.Parse(indexString, CultureInfo.InvariantCulture);
+            var layerProp = name.Substring(delimiter+1);
+
+            switch (layerProp)
+            {
+                case "texture":
+                    LayerSetTexture(index, (string) value);
+                    return;
+                case "state":
+                    LayerSetState(index, (string) value);
+                    return;
+                case "color":
+                    LayerSetColor(index, (Color) value);
+                    return;
+                default:
+                    throw new ArgumentException($"Unknown layer property '{layerProp}'");
             }
         }
     }

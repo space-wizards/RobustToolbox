@@ -42,7 +42,7 @@ namespace Robust.Server.GameObjects
             serializer.DataField(ref _collisionEnabled, "on", true);
             serializer.DataField(ref _isHardCollidable, "hard", true);
             serializer.DataField(ref _isScrapingFloor, "IsScrapingFloor", false);
-            serializer.DataField(ref _bodyType, "type", BodyType.None);
+            serializer.DataField(ref _bodyType, "bodyType", BodyType.None);
             serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape>{new PhysShapeAabb()});
         }
 

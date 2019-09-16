@@ -5,9 +5,16 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Animations
 {
+    /// <summary>
+    ///     Animation that changes the value of a property based on keyframes.
+    /// </summary>
     public abstract class AnimationTrackProperty : AnimationTrack
     {
         public readonly List<KeyFrame> KeyFrames = new List<KeyFrame>();
+
+        /// <summary>
+        ///     How to interpolate values when between two keyframes.
+        /// </summary>
         public AnimationInterpolationMode InterpolationMode { get; set; } = AnimationInterpolationMode.Linear;
 
         public override (int KeyFrameIndex, float FramePlayingTime) InitPlayback()
@@ -39,9 +46,9 @@ namespace Robust.Client.Animations
                 return (keyFrameIndex, playingTime);
             }
 
-            if (nextKeyFrame == KeyFrames.Count)
+            if (nextKeyFrame == KeyFrames.Count || InterpolationMode == AnimationInterpolationMode.Previous)
             {
-                // After the last keyframe.
+                // After the last keyframe, or doing previous interpolation.
                 value = KeyFrames[keyFrameIndex].Value;
             }
             else
@@ -65,6 +72,7 @@ namespace Robust.Client.Animations
                     case AnimationInterpolationMode.Nearest:
                         value = t < 0.5f ? KeyFrames[keyFrameIndex].Value : KeyFrames[nextKeyFrame].Value;
                         break;
+
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -93,13 +101,14 @@ namespace Robust.Client.Animations
                 case double d:
                     return FloatMath.Lerp(d, (double) b, t);
                 case Angle angle:
-                    return (Angle)FloatMath.Lerp(angle, (Angle) b, t);
+                    return (Angle) FloatMath.Lerp(angle, (Angle) b, t);
                 case Color color:
                     return Color.InterpolateBetween(color, (Color) b, t);
                 case int i:
                     return (int) FloatMath.Lerp((double) i, (int) b, t);
                 default:
-                    throw new NotSupportedException($"Cannot linear interpolate object of type '{a.GetType()}'");
+                    // Fall back to "previous" interpolation, treating this as a discrete value.
+                    return a;
             }
         }
 
@@ -108,11 +117,11 @@ namespace Robust.Client.Animations
             switch (a)
             {
                 case Vector2 vector2:
-                    return Vector2.InterpolateCubic((Vector2)preA, vector2, (Vector2) b, (Vector2) postB, t);
+                    return Vector2.InterpolateCubic((Vector2) preA, vector2, (Vector2) b, (Vector2) postB, t);
                 case Vector3 vector3:
-                    return Vector3.InterpolateCubic((Vector3)preA, vector3, (Vector3) b, (Vector3) postB, t);
+                    return Vector3.InterpolateCubic((Vector3) preA, vector3, (Vector3) b, (Vector3) postB, t);
                 case Vector4 vector4:
-                    return Vector4.InterpolateCubic((Vector4)preA, vector4, (Vector4) b, (Vector4) postB, t);
+                    return Vector4.InterpolateCubic((Vector4) preA, vector4, (Vector4) b, (Vector4) postB, t);
                 case float f:
                     return FloatMath.InterpolateCubic((float) preA, f, (float) b, (float) postB, t);
                 case double d:
@@ -120,12 +129,16 @@ namespace Robust.Client.Animations
                 case int i:
                     return (int) FloatMath.InterpolateCubic((int) preA, (double) i, (int) b, (int) postB, t);
                 default:
-                    throw new NotSupportedException($"Cannot cubic interpolate object of type '{a.GetType()}'");
+                    // Fall back to "previous" interpolation, treating this as a discrete value.
+                    return a;
             }
         }
 
         public struct KeyFrame
         {
+            /// <summary>
+            ///     The value of the property at this keyframe.
+            /// </summary>
             public readonly object Value;
 
             /// <summary>

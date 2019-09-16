@@ -377,7 +377,7 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            if (target.Name == null)
+            if (string.IsNullOrEmpty(target.Name))
             {
                 target.Name = source.Name;
             }

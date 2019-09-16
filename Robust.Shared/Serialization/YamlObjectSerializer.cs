@@ -550,7 +550,7 @@ namespace Robust.Shared.Serialization
             var type = obj.GetType();
 
             // val primitives and val enums
-            if (type.IsPrimitive || type == typeof(Enum))
+            if (type.IsPrimitive || type.IsEnum)
             {
                 // All primitives and enums implement IConvertible.
                 // Need it for the culture overload.

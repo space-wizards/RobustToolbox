@@ -138,7 +138,7 @@ namespace Robust.Shared.Serialization
                 if (typeof(T).IsAbstract || typeof(T).IsInterface)
                 {
                     var concreteType = value == null ? defaultValue.GetType() : value.GetType();
-                    val.Tag = $"type:{concreteType.Name}";
+                    val.Tag = $"!type:{concreteType.Name}";
                 }
 
                 WriteMap.Add(key, val);
@@ -213,6 +213,14 @@ namespace Robust.Shared.Serialization
 
                 var key = name;
                 var val = value == null ? TypeToNode(WriteConvertFunc(defaultValue)) : TypeToNode(WriteConvertFunc(value));
+
+                // write the concrete type tag
+                if (typeof(TTarget).IsAbstract || typeof(TTarget).IsInterface)
+                {
+                    var concreteType = value == null ? defaultValue.GetType() : value.GetType();
+                    val.Tag = $"!type:{concreteType.Name}";
+                }
+
                 WriteMap.Add(key, val);
             }
         }
@@ -373,6 +381,14 @@ namespace Robust.Shared.Serialization
 
             var key = name;
             var val = value == null ? TypeToNode(defaultValue) : TypeToNode(value);
+
+            // write the concrete type tag
+            if (typeof(T).IsAbstract || typeof(T).IsInterface)
+            {
+                var concreteType = value == null ? defaultValue.GetType() : value.GetType();
+                val.Tag = $"!type:{concreteType.Name}";
+            }
+
             WriteMap.Add(key, val);
         }
 
@@ -550,6 +566,14 @@ namespace Robust.Shared.Serialization
                 foreach (var entry in (IEnumerable)obj)
                 {
                     var entryNode = TypeToNode(entry);
+                    
+                    // write the concrete type tag
+                    if (listType.IsAbstract || listType.IsInterface)
+                    {
+                        var concreteType =  entry.GetType();
+                        entryNode.Tag = $"!type:{concreteType.Name}";
+                    }
+
                     node.Add(entryNode);
                 }
 
@@ -565,6 +589,13 @@ namespace Robust.Shared.Serialization
                 {
                     var keyNode = TypeToNode(entry.Key);
                     var valNode = TypeToNode(entry.Value);
+
+                    // write the concrete type tag
+                    if (valType.IsAbstract || valType.IsInterface)
+                    {
+                        var concreteType = entry.GetType();
+                        valNode.Tag = $"!type:{concreteType.Name}";
+                    }
 
                     node.Add(keyNode, valNode);
                 }

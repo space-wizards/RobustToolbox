@@ -71,18 +71,17 @@ namespace Robust.Shared.Input
         }
     }
 
-    public delegate void PointerInputCmdDelegate(ICommonSession session, GridCoordinates coords, EntityUid uid);
+    public delegate bool PointerInputCmdDelegate(ICommonSession session, GridCoordinates coords, EntityUid uid);
 
-    public delegate void PointerInputCmdDelegate2(in PointerInputCmdHandler.PointerInputCmdArgs args);
+    public delegate bool PointerInputCmdDelegate2(in PointerInputCmdHandler.PointerInputCmdArgs args);
 
     public class PointerInputCmdHandler : InputCmdHandler
     {
         private PointerInputCmdDelegate2 _callback;
 
-        public PointerInputCmdHandler(PointerInputCmdDelegate callback) : this((in PointerInputCmdArgs args) =>
-            callback(args.Session, args.Coordinates, args.EntityUid))
-        {
-        }
+        public PointerInputCmdHandler(PointerInputCmdDelegate callback)
+            : this((in PointerInputCmdArgs args) =>
+            callback(args.Session, args.Coordinates, args.EntityUid)) { }
 
         public PointerInputCmdHandler(PointerInputCmdDelegate2 callback)
         {
@@ -94,9 +93,8 @@ namespace Robust.Shared.Input
             if (!(message is FullInputCmdMessage msg) || msg.State != BoundKeyState.Down)
                 return false;
 
-            _callback?.Invoke(new PointerInputCmdArgs(session, msg.Coordinates, msg.ScreenCoordinates, msg.Uid));
-
-            return true;
+            var handled = _callback?.Invoke(new PointerInputCmdArgs(session, msg.Coordinates, msg.ScreenCoordinates, msg.Uid));
+            return handled.HasValue && handled.Value;
         }
 
         public readonly struct PointerInputCmdArgs

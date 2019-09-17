@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects
@@ -68,11 +69,13 @@ namespace Robust.Shared.GameObjects
         ///     Checks if the ID value is valid. Does not check if it identifies
         ///     a valid Entity.
         /// </summary>
+        [Pure]
         public bool IsValid()
         {
             return _uid > 0;
         }
 
+        [Pure]
         public bool IsClientSide()
         {
             return (_uid & (2 << 29)) != 0;

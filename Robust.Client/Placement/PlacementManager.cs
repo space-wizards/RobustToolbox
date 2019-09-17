@@ -217,13 +217,13 @@ namespace Robust.Client.Placement
                 (session, coords, uid) =>
                 {
                     if (!IsActive)
-                        return;
+                        return false;
 
                     if (Eraser)
                     {
                         if (uid == EntityUid.Invalid)
                         {
-                            return;
+                            return false;
                         }
                         HandleDeletion(_entityManager.GetEntity(uid));
                     }
@@ -231,17 +231,20 @@ namespace Robust.Client.Placement
                     {
                         _placenextframe = true;
                     }
+
+                    return true;
                 },
                 (session, coords, uid) =>
                 {
                     if (!IsActive || Eraser || !_placenextframe)
-                        return;
+                        return false;
 
                     //Places objects for non-tile entities
                     if (!CurrentPermission.IsTile)
                         HandlePlacement();
 
                     _placenextframe = false;
+                    return true;
                 }));
             inputSys.BindMap.BindFunction(EngineKeyFunctions.EditorRotateObject, InputCmdHandler.FromDelegate(
                 session =>

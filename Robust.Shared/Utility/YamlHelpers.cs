@@ -2,39 +2,45 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Utility
 {
     public static class YamlHelpers
     {
+        // To fetch nodes by key name with YAML, we NEED a YamlScalarNode.
+        // We use a thread local one to avoid allocating one every fetch, since we just replace the inner value.
+        // Obviously thread local to avoid threading issues.
+        private static readonly ThreadLocal<YamlScalarNode> FetchNode =
+            new ThreadLocal<YamlScalarNode>(() => new YamlScalarNode());
+
         // Easy conversions for YamlScalarNodes.
         // All of these take regular nodes, to make the API easier and less copy paste.
         [Pure]
         public static int AsInt(this YamlNode node)
         {
-            return int.Parse(((YamlScalarNode)node).Value, CultureInfo.InvariantCulture);
+            return int.Parse(((YamlScalarNode) node).Value, CultureInfo.InvariantCulture);
         }
 
         [Pure]
         public static string AsString(this YamlNode node)
         {
-            return ((YamlScalarNode)node).Value;
+            return ((YamlScalarNode) node).Value;
         }
 
         [Pure]
         public static float AsFloat(this YamlNode node)
         {
-            return float.Parse(((YamlScalarNode)node).Value, CultureInfo.InvariantCulture);
+            return float.Parse(((YamlScalarNode) node).Value, CultureInfo.InvariantCulture);
         }
 
         [Pure]
         public static bool AsBool(this YamlNode node)
         {
-            return bool.Parse(((YamlScalarNode)node).Value);
+            return bool.Parse(((YamlScalarNode) node).Value);
         }
 
         [Pure]
@@ -48,7 +54,7 @@ namespace Robust.Shared.Utility
             }
 
             return new Vector2(float.Parse(args[0], CultureInfo.InvariantCulture),
-                                float.Parse(args[1], CultureInfo.InvariantCulture));
+                float.Parse(args[1], CultureInfo.InvariantCulture));
         }
 
         [Pure]
@@ -62,7 +68,7 @@ namespace Robust.Shared.Utility
             }
 
             return new Vector2i(int.Parse(args[0], CultureInfo.InvariantCulture),
-                                int.Parse(args[1], CultureInfo.InvariantCulture));
+                int.Parse(args[1], CultureInfo.InvariantCulture));
         }
 
         [Pure]
@@ -76,8 +82,8 @@ namespace Robust.Shared.Utility
             }
 
             return new Vector3(float.Parse(args[0], CultureInfo.InvariantCulture),
-                                float.Parse(args[1], CultureInfo.InvariantCulture),
-                                float.Parse(args[2], CultureInfo.InvariantCulture));
+                float.Parse(args[1], CultureInfo.InvariantCulture),
+                float.Parse(args[2], CultureInfo.InvariantCulture));
         }
 
         [Pure]
@@ -91,15 +97,15 @@ namespace Robust.Shared.Utility
             }
 
             return new Vector4(float.Parse(args[0], CultureInfo.InvariantCulture),
-                                float.Parse(args[1], CultureInfo.InvariantCulture),
-                                float.Parse(args[2], CultureInfo.InvariantCulture),
-                                float.Parse(args[3], CultureInfo.InvariantCulture));
+                float.Parse(args[1], CultureInfo.InvariantCulture),
+                float.Parse(args[2], CultureInfo.InvariantCulture),
+                float.Parse(args[3], CultureInfo.InvariantCulture));
         }
 
         [Pure]
         public static T AsEnum<T>(this YamlNode node)
         {
-            return (T)Enum.Parse(typeof(T), node.AsString(), true);
+            return (T) Enum.Parse(typeof(T), node.AsString(), true);
         }
 
         [Pure]
@@ -115,6 +121,7 @@ namespace Robust.Shared.Utility
             {
                 return color;
             }
+
             return node.AsHexColor(fallback);
         }
 
@@ -144,7 +151,7 @@ namespace Robust.Shared.Utility
         [Pure]
         public static T GetNode<T>(this YamlMappingNode mapping, string key) where T : YamlNode
         {
-            return (T)mapping[new YamlScalarNode(key)];
+            return (T) mapping[_getFetchNode(key)];
         }
 
         /// <summary>
@@ -178,10 +185,9 @@ namespace Robust.Shared.Utility
         [Pure]
         public static bool TryGetNode<T>(this YamlMappingNode mapping, string key, out T returnNode) where T : YamlNode
         {
-            var dummy = new YamlScalarNode(key);
-            if (mapping.Children.TryGetValue(dummy, out var node))
+            if (mapping.Children.TryGetValue(_getFetchNode(key), out var node))
             {
-                returnNode = (T)node;
+                returnNode = (T) node;
                 return true;
             }
 
@@ -200,7 +206,7 @@ namespace Robust.Shared.Utility
         /// <returns>True if the value could be found, false otherwise.</returns>
         public static bool TryGetNode(this YamlMappingNode mapping, string key, out YamlNode returnNode)
         {
-            return mapping.Children.TryGetValue(new YamlScalarNode(key), out returnNode);
+            return mapping.Children.TryGetValue(_getFetchNode(key), out returnNode);
         }
 
         [Pure]
@@ -218,6 +224,13 @@ namespace Robust.Shared.Utility
         public static Dictionary<string, YamlNode> YamlMappingToDict(YamlMappingNode mapping)
         {
             return mapping.ToDictionary(p => p.Key.AsString(), p => p.Value);
+        }
+
+        private static YamlScalarNode _getFetchNode(string key)
+        {
+            var node = FetchNode.Value;
+            node.Value = key;
+            return node;
         }
     }
 }

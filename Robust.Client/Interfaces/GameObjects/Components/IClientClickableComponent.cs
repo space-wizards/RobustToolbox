@@ -23,13 +23,6 @@ namespace Robust.Client.Interfaces.GameObjects.Components
         bool CheckClick(Vector2 worldPos, out int drawdepth);
 
         /// <summary>
-        /// Sends the click to the sister component on the server and things subscribed to
-        /// </summary>
-        /// <param name="userUID">The entity owned by the player that clicked.</param>
-        /// <param name="clickType">See <see cref="MouseClickType" />.</param>
-        void DispatchClick(IEntity user, ClickType clickType);
-
-        /// <summary>
         ///     Invoked whenever the mouse hovers over this entity.
         /// </summary>
         void OnMouseEnter();

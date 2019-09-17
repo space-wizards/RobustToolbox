@@ -31,7 +31,6 @@ namespace Robust.Client
         public void MouseMove(MouseMoveEventArgs mouseMoveEventArgs)
         {
             _userInterfaceManager.MouseMove(mouseMoveEventArgs);
-            _stateManager.MouseMove(mouseMoveEventArgs);
         }
 
         /// <summary>
@@ -44,7 +43,6 @@ namespace Robust.Client
             {
                 return;
             }
-            _stateManager.MouseWheelMove(mouseWheelEventArgs);
         }
     }
 }

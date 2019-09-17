@@ -83,36 +83,10 @@ namespace Robust.Client.State.States
             }
         }
 
-        public override void MouseDown(MouseButtonEventArgs eventargs)
-        {
-            if (playerManager.LocalPlayer == null)
-                return;
-
-            var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(eventargs.Position));
-            var entityToClick = GetEntityUnderPosition(mousePosWorld);
-
-            //Dispatches clicks to relevant clickable components, another single exit point for UI
-            if (entityToClick == null)
-                return;
-
-            var clickable = entityToClick.GetComponent<IClientClickableComponent>();
-            clickable.DispatchClick(playerManager.LocalPlayer.ControlledEntity, eventargs.ClickType);
-        }
-
         public IEntity GetEntityUnderPosition(GridCoordinates coordinates)
         {
             var entitiesUnderPosition = GetEntitiesUnderPosition(coordinates);
             return entitiesUnderPosition.Count > 0 ? entitiesUnderPosition[0] : null;
-        }
-
-        /// <summary>
-        ///     Gets all the entities currently under the mouse cursor.
-        /// </summary>
-        /// <returns>A list of the entities, sorted such that the first entry is the top entity.</returns>
-        public IList<IEntity> GetEntitiesUnderMouse()
-        {
-            var mousePosWorld = eyeManager.ScreenToWorld(new ScreenCoordinates(inputManager.MouseScreenPosition));
-            return GetEntitiesUnderPosition(mousePosWorld);
         }
 
         public IList<IEntity> GetEntitiesUnderPosition(GridCoordinates coordinates)

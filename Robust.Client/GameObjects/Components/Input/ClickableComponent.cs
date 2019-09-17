@@ -89,13 +89,6 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public void DispatchClick(IEntity user, ClickType clickType)
-        {
-            var message = new ClientEntityClickMsg(user.Uid, clickType);
-            SendMessage(message);
-        }
-
-        /// <inheritdoc />
         public void OnMouseEnter()
         {
             if (Owner.TryGetComponent(out ISpriteComponent sprite))

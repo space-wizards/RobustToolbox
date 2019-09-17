@@ -17,20 +17,6 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    [Serializable, NetSerializable]
-    public class ClientEntityClickMsg : ComponentMessage
-    {
-        public EntityUid Uid { get; }
-        public ClickType Click { get; }
-
-        public ClientEntityClickMsg(EntityUid uid, ClickType click)
-        {
-            Directed = true;
-            Uid = uid;
-            Click = click;
-        }
-    }
-
     public class RelayMovementEntityMessage : ComponentMessage
     {
         public IEntity Entity { get; set; }

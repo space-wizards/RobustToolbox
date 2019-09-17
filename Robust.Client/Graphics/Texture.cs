@@ -92,19 +92,31 @@ namespace Robust.Client.Graphics
         /// </summary>
         public TextureSampleParameters SampleParameters { get; set; }
 
+        /// <summary>
+        ///     If true, the image data will be treated as sRGB.
+        /// </summary>
+        public bool Srgb { get; set; }
+
         public static TextureLoadParameters FromYaml(YamlMappingNode yaml)
         {
+            var loadParams = TextureLoadParameters.Default;
             if (yaml.TryGetNode("sample", out YamlMappingNode sampleNode))
             {
-                return new TextureLoadParameters {SampleParameters = TextureSampleParameters.FromYaml(sampleNode)};
+                loadParams.SampleParameters = TextureSampleParameters.FromYaml(sampleNode);
             }
 
-            return Default;
+            if (yaml.TryGetNode("srgb", out var srgb))
+            {
+                loadParams.Srgb = srgb.AsBool();
+            }
+
+            return loadParams;
         }
 
         public static readonly TextureLoadParameters Default = new TextureLoadParameters
         {
-            SampleParameters = TextureSampleParameters.Default
+            SampleParameters = TextureSampleParameters.Default,
+            Srgb = true
         };
     }
 

@@ -17,6 +17,7 @@ namespace Robust.UnitTesting.Client.Graphics
             var defaultParams = TextureLoadParameters.Default;
             Assert.That(loaded.SampleParameters.Filter, Is.EqualTo(defaultParams.SampleParameters.Filter));
             Assert.That(loaded.SampleParameters.WrapMode, Is.EqualTo(defaultParams.SampleParameters.WrapMode));
+            Assert.That(loaded.Srgb, Is.EqualTo(defaultParams.Srgb));
         }
 
         [Test]
@@ -37,6 +38,7 @@ namespace Robust.UnitTesting.Client.Graphics
             var loaded = TextureLoadParameters.FromYaml(yaml);
             Assert.That(loaded.SampleParameters.Filter, Is.EqualTo(true));
             Assert.That(loaded.SampleParameters.WrapMode, Is.EqualTo(TextureWrapMode.Repeat));
+            Assert.That(loaded.Srgb, Is.EqualTo(false));
         }
 
         [Test]
@@ -67,6 +69,7 @@ namespace Robust.UnitTesting.Client.Graphics
 sample:
   filter: true
   wrap: repeat
+srgb: false
 ";
 
         private const string TestDataTwo = @"

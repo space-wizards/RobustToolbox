@@ -22,6 +22,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
 
+            // Load using Rgba32.
             using (var image = Image.Load(stream))
             {
                 return LoadTextureFromImage(image, name, loadParams);
@@ -33,11 +34,12 @@ namespace Robust.Client.Graphics.Clyde
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
 
+            var actualParams = loadParams ?? TextureLoadParameters.Default;
             var pixelType = typeof(T);
 
             var texture = new OGLHandle((uint) GL.GenTexture());
             GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
-            _applySampleParameters(loadParams?.SampleParameters);
+            _applySampleParameters(actualParams.SampleParameters);
 
             PixelInternalFormat internalFormat;
             PixelFormat pixelDataFormat;
@@ -45,7 +47,7 @@ namespace Robust.Client.Graphics.Clyde
 
             if (pixelType == typeof(Rgba32))
             {
-                internalFormat = PixelInternalFormat.Srgb8Alpha8;
+                internalFormat = actualParams.Srgb ? PixelInternalFormat.Srgb8Alpha8 : PixelInternalFormat.Rgba8;
                 pixelDataFormat = PixelFormat.Rgba;
                 pixelDataType = PixelType.UnsignedByte;
             }
@@ -62,6 +64,23 @@ namespace Robust.Client.Graphics.Clyde
                 // TODO: Does it make sense to default to 1 for RGB parameters?
                 // It might make more sense to pass some options to change swizzling.
                 var swizzle = new[] {(int) All.One, (int) All.One, (int) All.One, (int) All.Red};
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleRgba, swizzle);
+            }
+            else if (pixelType == typeof(Gray8) && !actualParams.Srgb)
+            {
+                // Can only use R8 for Gray8 if sRGB is OFF.
+                // Because OpenGL doesn't provide non-sRGB single/dual channel image formats.
+                // Vulkan when?
+                if (image.Width % 4 != 0 || image.Height % 4 != 0)
+                {
+                    throw new ArgumentException("Gray8 non-sRGB images must have multiple of 4 sizes.");
+                }
+
+                internalFormat = PixelInternalFormat.R8;
+                pixelDataFormat = PixelFormat.Red;
+                pixelDataType = PixelType.UnsignedByte;
+
+                var swizzle = new[] {(int) All.Red, (int) All.Red, (int) All.Red, (int) All.One};
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleRgba, swizzle);
             }
             else

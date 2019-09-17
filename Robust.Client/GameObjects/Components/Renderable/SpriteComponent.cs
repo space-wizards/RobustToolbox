@@ -18,7 +18,9 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
+using Robust.Shared.Animations;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.ViewVariables;
 
@@ -41,7 +43,7 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     Z-index for drawing.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public DrawDepth DrawDepth
         {
             get => drawDepth;
@@ -53,7 +55,8 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     A scale applied to all layers.
         /// </summary>
-        [ViewVariables]
+        [Animatable]
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Scale
         {
             get => scale;
@@ -62,6 +65,7 @@ namespace Robust.Client.GameObjects
 
         private Angle rotation;
 
+        [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
         public Angle Rotation
         {
@@ -74,7 +78,8 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     Offset applied to all layers.
         /// </summary>
-        [ViewVariables]
+        [Animatable]
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Offset
         {
             get => offset;
@@ -83,6 +88,7 @@ namespace Robust.Client.GameObjects
 
         private Color color = Color.White;
 
+        [Animatable]
         [ViewVariables]
         public Color Color
         {
@@ -1044,7 +1050,7 @@ namespace Robust.Client.GameObjects
 
                 var mOffset = Matrix3.CreateTranslation(Offset);
                 var mRotation = Matrix3.CreateRotation(angle);
-                Matrix3.Multiply(ref mOffset, ref mRotation, out transform);
+                Matrix3.Multiply(ref mRotation, ref mOffset, out transform);
 
                 var worldTransform = Owner.Transform.WorldMatrix;
                 transform.Multiply(ref worldTransform);
@@ -1576,6 +1582,35 @@ namespace Robust.Client.GameObjects
                     Color = Color.White,
                     AutoAnimated = true,
                 };
+            }
+        }
+
+        void IAnimationProperties.SetAnimatableProperty(string name, object value)
+        {
+            if (!name.StartsWith("layer/"))
+            {
+                AnimationHelper.SetAnimatableProperty(this, name, value);
+                return;
+            }
+
+            var delimiter = name.IndexOf("/", 6, StringComparison.Ordinal);
+            var indexString = name.Substring(6, delimiter - 6);
+            var index = int.Parse(indexString, CultureInfo.InvariantCulture);
+            var layerProp = name.Substring(delimiter+1);
+
+            switch (layerProp)
+            {
+                case "texture":
+                    LayerSetTexture(index, (string) value);
+                    return;
+                case "state":
+                    LayerSetState(index, (string) value);
+                    return;
+                case "color":
+                    LayerSetColor(index, (Color) value);
+                    return;
+                default:
+                    throw new ArgumentException($"Unknown layer property '{layerProp}'");
             }
         }
     }

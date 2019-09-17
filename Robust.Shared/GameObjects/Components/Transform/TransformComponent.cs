@@ -1,6 +1,7 @@
 ﻿﻿using System;
  using System.Collections.Generic;
  using System.Linq;
+ using Robust.Shared.Animations;
  using Robust.Shared.Enums;
  using Robust.Shared.GameObjects.EntitySystemMessages;
  using Robust.Shared.Interfaces.GameObjects;
@@ -72,6 +73,7 @@
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public Angle LocalRotation
         {
             get => GetLocalRotation();
@@ -272,6 +274,7 @@
         public MapCoordinates MapPosition => new MapCoordinates(WorldPosition, MapID);
 
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public Vector2 LocalPosition
         {
             get => GetLocalPosition();

@@ -250,6 +250,13 @@ namespace Robust.Shared.Maths
             return Lerp(a, b, factor);
         }
 
+        public static Vector2 InterpolateCubic(Vector2 preA, Vector2 a, Vector2 b, Vector2 postB, float t)
+        {
+            return a +
+                   (b - preA + (preA * 2.0f - a * 5.0f + b * 4.0f - postB + ((a - b) * 3.0f + postB - preA) * t) * t) *
+                   t * 0.5f;
+        }
+
         public void Deconstruct(out float x, out float y)
         {
             x = X;

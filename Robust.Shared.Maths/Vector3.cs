@@ -609,6 +609,13 @@ namespace Robust.Shared.Maths
             result.Z = blend * (b.Z - a.Z) + a.Z;
         }
 
+        public static Vector3 InterpolateCubic(Vector3 preA, Vector3 a, Vector3 b, Vector3 postB, float t)
+        {
+            return a +
+                   (b - preA + (preA * 2.0f - a * 5.0f + b * 4.0f - postB + ((a - b) * 3.0f + postB - preA) * t) * t) *
+                   t * 0.5f;
+        }
+
         #endregion
 
         #region Barycentric

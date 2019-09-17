@@ -1,7 +1,11 @@
 ﻿using System;
+using Robust.Client.Graphics;
+using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -55,6 +59,13 @@ namespace Robust.Client.GameObjects
             set => _rotation = value;
         }
 
+        /// <summary>
+        ///     Set a mask texture that will be applied to the light while rendering.
+        ///     The mask's red channel will be linearly multiplied.p
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public Texture Mask { get; set; }
+
         [ViewVariables(VVAccess.ReadWrite)]
         public float Energy
         {
@@ -106,7 +117,8 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null, IComponent component = null)
+        public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null,
+            IComponent component = null)
         {
             base.HandleMessage(message, netChannel, component);
 
@@ -126,7 +138,6 @@ namespace Robust.Client.GameObjects
 
             if (obj.NewParent != null && obj.NewParent.IsValid())
             {
-
                 _lightOnParent = true;
             }
             else
@@ -144,6 +155,11 @@ namespace Robust.Client.GameObjects
             serializer.DataFieldCached(ref _energy, "energy", 1f);
             serializer.DataFieldCached(ref _maskAutoRotate, "autoRot", false);
             serializer.DataFieldCached(ref _visibleNested, "nestedvisible", true);
+
+            if (serializer.Reading && serializer.TryReadDataField("mask", out string value))
+            {
+                Mask = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value);
+            }
         }
 
         /// <inheritdoc />

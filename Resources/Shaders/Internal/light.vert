@@ -2,7 +2,10 @@
 
 // Vertex position.
 layout (location = 0) in vec2 aPos;
+// Texture coordinates.
+layout (location = 1) in vec2 tCoord;
 
+out vec2 UV;
 out vec2 worldPosition;
 
 uniform mat3 modelMatrix;
@@ -20,4 +23,5 @@ void main()
     transformed = projectionMatrix * viewMatrix * transformed;
 
     gl_Position = vec4(transformed, 1.0);
+    UV = tCoord;
 }

@@ -204,6 +204,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 RenderOverlays(OverlaySpace.ScreenSpace);
             }
+
             using (DebugGroup("UI"))
             {
                 _userInterfaceManager.Render(_renderHandle);
@@ -275,19 +276,34 @@ namespace Robust.Client.Graphics.Clyde
 
             var map = _eyeManager.CurrentMap;
 
-            void DrawLight(Vector2 pos, float range, float power, Color color)
+            void DrawLight(Vector2 pos, float range, float power, Color color, Texture mask, Angle rotation)
             {
+                var maskTexture = mask ?? Texture.White;
+                var maskHandle = _loadedTextures[((ClydeTexture) maskTexture).TextureId].OpenGLObject;
+                GL.ActiveTexture(TextureUnit.Texture0);
+                GL.BindTexture(TextureTarget.Texture2D, maskHandle.Handle);
                 _lightShader.SetUniform("lightCenter", pos);
                 _lightShader.SetUniform("lightRange", range);
                 _lightShader.SetUniform("lightPower", power);
                 _lightShader.SetUniform("lightColor", color);
+                _lightShader.SetUniformTexture("lightMask", TextureUnit.Texture0);
 
-                var a = pos - new Vector2(range, range);
-                var b = pos + new Vector2(range, range);
+                var offset = new Vector2(range, range);
 
-                var matrix = Matrix3.Identity;
+                Matrix3 matrix;
+                if (mask == null)
+                {
+                    matrix = Matrix3.Identity;
+                }
+                else
+                {
+                    // Only apply rotation if a mask is said, because else it doesn't matter.
+                    matrix = Matrix3.CreateRotation(rotation);
+                }
 
-                _drawQuad(a, b, ref matrix, _lightShader);
+                (matrix.R0C2, matrix.R1C2) = pos;
+
+                _drawQuad(-offset, offset, ref matrix, _lightShader);
             }
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, LightRenderTarget.ObjectHandle.Handle);
@@ -309,8 +325,23 @@ namespace Robust.Client.Graphics.Clyde
                     continue;
                 }
 
-                var lightPos = component.Owner.Transform.WorldMatrix.Transform(component.Offset);
-                DrawLight(lightPos, component.Radius, component.Energy, component.Color);
+                var transform = component.Owner.Transform;
+                var lightPos = transform.WorldMatrix.Transform(component.Offset);
+
+                Texture mask = null;
+                var rotation = Angle.Zero;
+                if (component.Mask != null)
+                {
+                    mask = component.Mask;
+                    rotation = component.Rotation;
+
+                    if (component.MaskAutoRotate)
+                    {
+                        rotation += transform.WorldRotation;
+                    }
+                }
+
+                DrawLight(lightPos, component.Radius, component.Energy, component.Color, mask, rotation);
             }
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
@@ -496,10 +527,13 @@ namespace Robust.Client.Graphics.Clyde
             else
             {
                 bl = _currentModelMatrix.Transform(command.Angle.RotateVec(command.PositionA));
-                br = _currentModelMatrix.Transform(command.Angle.RotateVec(new Vector2(command.PositionB.X, command.PositionA.Y)));
+                br = _currentModelMatrix.Transform(
+                    command.Angle.RotateVec(new Vector2(command.PositionB.X, command.PositionA.Y)));
                 tr = _currentModelMatrix.Transform(command.Angle.RotateVec(command.PositionB));
-                tl = _currentModelMatrix.Transform(command.Angle.RotateVec(new Vector2(command.PositionA.X, command.PositionB.Y)));
+                tl = _currentModelMatrix.Transform(
+                    command.Angle.RotateVec(new Vector2(command.PositionA.X, command.PositionB.Y)));
             }
+
             var vIdx = BatchIndex * 4;
             BatchVertexData[vIdx + 0] = new Vertex2D(bl, sr.BottomLeft);
             BatchVertexData[vIdx + 1] = new Vertex2D(br, sr.BottomRight);

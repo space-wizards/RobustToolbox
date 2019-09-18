@@ -131,7 +131,7 @@ namespace Robust.Shared.GameObjects
             if (entity.Initialized)
             {
                 component.Initialize();
-                component.Startup();
+                component.Running = true;
             }
         }
 
@@ -212,9 +212,7 @@ namespace Robust.Shared.GameObjects
 
             _deleteList.Add(component);
 
-            if (component.Running)
-                component.Shutdown();
-
+            component.Running = false;
             component.OnRemove();
             ComponentRemoved?.Invoke(this, new ComponentEventArgs(component));
         }
@@ -234,9 +232,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            if (component.Running)
-                component.Shutdown();
-
+            component.Running = false;
             component.OnRemove();
             ComponentRemoved?.Invoke(this, new ComponentEventArgs(component));
 

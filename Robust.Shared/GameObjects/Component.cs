@@ -50,9 +50,25 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public bool Initialized { get; private set; }
 
+        private bool _running;
         /// <inheritdoc />
-        [ViewVariables]
-        public bool Running { get; private set; }
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool Running
+        {
+            get => _running;
+            set
+            {
+                if(_running == value)
+                    return;
+
+                if(value)
+                    Startup();
+                else
+                    Shutdown();
+
+                _running = value;
+            }
+        }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -106,8 +122,11 @@ namespace Robust.Shared.GameObjects
             CreationTick = Owner.EntityManager.CurrentTick;
         }
 
-        /// <inheritdoc />
-        public virtual void Startup()
+        /// <summary>
+        ///     Starts up a component. This is called automatically after all components are Initialized and the entity is Initialized.
+        ///     This can be called multiple times during the component's life, and at any time.
+        /// </summary>
+        protected virtual void Startup()
         {
             if (!Initialized)
                 throw new InvalidOperationException("Cannot Start an uninitialized component!");
@@ -118,11 +137,14 @@ namespace Robust.Shared.GameObjects
             if (Deleted)
                 throw new InvalidOperationException("Cannot Start a Deleted component!");
 
-            Running = true;
+            _running = true;
         }
 
-        /// <inheritdoc />
-        public virtual void Shutdown()
+        /// <summary>
+        ///     Shuts down the component. The is called Automatically by OnRemove. This can be called multiple times during
+        ///     the component's life, and at any time.
+        /// </summary>
+        protected virtual void Shutdown()
         {
             if (!Initialized)
                 throw new InvalidOperationException("Cannot Shutdown an uninitialized component!");
@@ -133,7 +155,7 @@ namespace Robust.Shared.GameObjects
             if (Deleted)
                 throw new InvalidOperationException("Cannot Shutdown a Deleted component!");
 
-            Running = false;
+            _running = false;
         }
 
         /// <inheritdoc />

@@ -30,8 +30,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public MapIndices Position { get; private set; }
         public SnapGridOffset Offset => _offset;
 
-
-        public override void Startup()
+        /// <inheritdoc />
+        protected override void Startup()
         {
             base.Startup();
 
@@ -39,7 +39,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
             UpdatePosition();
         }
 
-        public override void Shutdown()
+        /// <inheritdoc />
+        protected override void Shutdown()
         {
             base.Shutdown();
 

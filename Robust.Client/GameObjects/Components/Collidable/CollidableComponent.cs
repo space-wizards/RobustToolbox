@@ -147,7 +147,7 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     removes the AABB from the CollisionManager.
         /// </summary>
-        public override void Shutdown()
+        protected override void Shutdown()
         {
             if (_collisionEnabled)
             {

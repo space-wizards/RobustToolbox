@@ -295,7 +295,7 @@
         public Vector2 LerpDestination => _nextPosition;
 
         /// <inheritdoc />
-        public override void Startup()
+        protected override void Startup()
         {
             base.Startup();
 

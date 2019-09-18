@@ -144,8 +144,8 @@ namespace Robust.Shared.GameObjects
             foreach (var t in components)
             {
                 var comp = (Component)t;
-                if (comp != null && comp.Initialized && !comp.Running && !comp.Deleted)
-                    comp.Startup();
+                if (comp != null && comp.Initialized && !comp.Deleted)
+                    comp.Running = true;
             }
         }
 

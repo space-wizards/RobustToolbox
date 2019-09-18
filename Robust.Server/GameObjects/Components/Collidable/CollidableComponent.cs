@@ -156,7 +156,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override void Startup()
+        protected override void Startup()
         {
             base.Startup();
 
@@ -164,7 +164,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override void Shutdown()
+        protected override void Shutdown()
         {
             _physicsManager.RemoveBody(this);
 

@@ -60,9 +60,9 @@ namespace Robust.Shared.Interfaces.GameObjects
         Type StateType { get; }
 
         /// <summary>
-        ///     This is true when the component is active. This value is changed when Startup and Shutdown are called.
+        ///     This is true when the component is active. Set this value to start or stop the component.
         /// </summary>
-        bool Running { get; }
+        bool Running { get; set; }
 
         /// <summary>
         ///     True if the component has been removed from its owner, AKA deleted.
@@ -96,18 +96,6 @@ namespace Robust.Shared.Interfaces.GameObjects
         ///     But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.
         /// </summary>
         void Initialize();
-
-        /// <summary>
-        ///     Starts up a component. This is called automatically after all components are Initialized and the entity is Initialized.
-        ///     This can be called multiple times during the component's life, and at any time.
-        /// </summary>
-        void Startup();
-
-        /// <summary>
-        ///     Shuts down the component. The is called Automatically by OnRemove. This can be called multiple times during
-        ///     the component's life, and at any time.
-        /// </summary>
-        void Shutdown();
 
         /// <summary>
         ///     This allows setting of the component's parameters from YAML once it is instantiated.

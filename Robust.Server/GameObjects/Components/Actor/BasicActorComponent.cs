@@ -15,7 +15,8 @@ namespace Robust.Server.GameObjects
         [ViewVariables]
         public IPlayerSession playerSession { get; internal set; }
 
-        public override void Shutdown()
+        /// <inheritdoc />
+        protected override void Shutdown()
         {
             base.Shutdown();
 

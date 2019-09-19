@@ -336,7 +336,6 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (item.Selected)
                 {
-                    Logger.Info("we draw");
                     bg = iconSelectedBg;
                 }
 

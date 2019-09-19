@@ -308,11 +308,33 @@ namespace Robust.Client.Graphics.Clyde
             return new AudioStream(handle, length, wav.NumChannels, name);
         }
 
-        public AudioStream LoadAudioRawPCM(ushort[] data, string name = null)
+        public AudioStream LoadAudioMonoPCM(ushort[] data, string name = null)
         {
             var buffer = AL.GenBuffer();
 
             ALFormat format = ALFormat.Mono16;
+
+            unsafe
+            {
+                fixed (ushort* ptr = data)
+                {
+                    AL.BufferData(buffer, format, (IntPtr) ptr, (int) data.Length, 44100);
+                }
+            }
+
+            _checkAlError();
+
+            var handle = new ClydeHandle(_audioSampleBuffers.Count);
+            _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
+            var length = TimeSpan.FromSeconds(data.Length / 44100f);
+            return new AudioStream(handle, length, 1, name);
+        }
+
+        public AudioStream LoadAudioStereoPCM(ushort[] data, string name = null)
+        {
+            var buffer = AL.GenBuffer();
+
+            ALFormat format = ALFormat.Stereo16;
 
             unsafe
             {

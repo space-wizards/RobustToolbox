@@ -32,5 +32,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Commons.Music.Midi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\..\packages\managed-midi\1.9.9\lib\net45\Commons.Music.Midi.dll</HintPath>
+    </Reference>
+  </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
 </Project>

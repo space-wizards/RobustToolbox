@@ -98,6 +98,12 @@ namespace Robust.Client.Graphics.Clyde
             return new AudioStream(default, default, 1, name);
         }
 
+        public AudioStream LoadAudioRawPCM(ushort[] data, string name = null)
+        {
+            // TODO: Might wanna actually load this so the length gets reported correctly.
+            return new AudioStream(default, default, 1, name);
+        }
+
         public IClydeAudioSource CreateAudioSource(AudioStream stream)
         {
             return DummyAudioSource.Instance;

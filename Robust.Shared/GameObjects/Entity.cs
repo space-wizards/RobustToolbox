@@ -478,7 +478,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Name} ({Uid}, {Prototype.ID})";
+            return $"{Name} ({Uid}, {Prototype?.ID})";
         }
     }
 }

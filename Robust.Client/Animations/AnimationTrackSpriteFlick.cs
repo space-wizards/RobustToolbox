@@ -48,8 +48,7 @@ namespace Robust.Client.Animations
                 var keyFrame = KeyFrames[keyFrameIndex];
                 // Advance animation on current key frame.
                 var rsi = sprite.LayerGetActualRSI(LayerKey);
-                rsi.TryGetState(keyFrame.State, out var state);
-                if (state != null)
+                if (rsi.TryGetState(keyFrame.State, out var state))
                 {
                     DebugTools.Assert(state.AnimationLength != null, "state.AnimationLength != null");
                     var animationTime = Math.Min(state.AnimationLength.Value - 0.01f, playingTime);

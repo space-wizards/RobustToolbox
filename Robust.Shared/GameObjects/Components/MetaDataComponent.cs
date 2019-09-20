@@ -158,7 +158,9 @@ namespace Robust.Shared.GameObjects
 
             _entityName = state.Name;
             _entityDescription = state.Description;
-            _entityPrototype = _prototypes.Index<EntityPrototype>(state.PrototypeId);
+
+            if(state.PrototypeId != null)
+                _entityPrototype = _prototypes.Index<EntityPrototype>(state.PrototypeId);
         }
 
         /// <inheritdoc />

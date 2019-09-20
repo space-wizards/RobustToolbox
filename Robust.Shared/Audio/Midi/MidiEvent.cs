@@ -50,7 +50,7 @@ namespace Robust.Shared.Audio.Midi
                     var d = ExtraData[i];
                     data[i+1] = d;
                 }
-                return null;
+                return data;
             }
         }
 
@@ -66,6 +66,7 @@ namespace Robust.Shared.Audio.Midi
         public static explicit operator MidiEvent(MidiReceivedEventArgs midiEvent)
         {
             var b = new byte[]{midiEvent.Data[1], midiEvent.Data[2]};
+
             return new MidiEvent(midiEvent.Data[0], b);
         }
     }

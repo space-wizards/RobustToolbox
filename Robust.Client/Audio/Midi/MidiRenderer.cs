@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using NFluidsynth;
 using Commons.Music.Midi;
+using Commons.Music.Midi.Alsa;
 using Namotion.Reflection;
 using NFluidsynth.MidiManager;
 using Robust.Shared.Audio.Midi;
@@ -36,6 +37,7 @@ namespace Robust.Client.Audio.Midi
         private Synth _synth;
         private MidiPlayer _player;
         private IMidiAccess _access;
+        private MidiDriver _driver;
         private List<int> _notesPlaying = new List<int>();
 
         private IMidiInput _input;
@@ -58,7 +60,7 @@ namespace Robust.Client.Audio.Midi
         internal bool Free { get; set; } = false;
         internal bool NeedsRendering { get; private set; } = false;
 
-        internal MidiRenderer(Settings settings, IMidiAccess access)
+        internal MidiRenderer(Settings settings, IMidiAccess2 access)
         {
             _settings = settings;
             _synth = new Synth(_settings);
@@ -70,7 +72,6 @@ namespace Robust.Client.Audio.Midi
             if (IsMidiOpen || IsInputOpen) return;
             _input = _access.OpenInputAsync(id).Result;
             _input.MessageReceived += InputOnEventReceived;
-            Logger.Info($"Opened MIDI input: {_input.Details.Id} | {_input.Details.Name} | {_input.Connection}");
         }
 
         public void OpenMidi(Stream stream)
@@ -111,9 +112,11 @@ namespace Robust.Client.Audio.Midi
         ///     or only one buffer for both channels (left).
         /// </summary>
         /// <returns></returns>
-        internal (ushort[] left, ushort[] right) Render()
+        internal (ushort[] left, ushort[] right) Render(int length = 44100)
         {
-            var length = (int) _settings["synth.sample-rate"].DoubleValue;
+            if (_notesPlaying.Count == 0)
+                return (new ushort[0], new ushort[0]);
+
             ushort[] left = null, right = null;
             if (Mono)
             {
@@ -141,29 +144,47 @@ namespace Robust.Client.Audio.Midi
 
         private void InputOnEventReceived(object sender, MidiReceivedEventArgs e)
         {
-            Logger.Info("Got input event");
-            SendMidiEvent((MidiEvent) e);
+            System.Console.WriteLine("---");
+            for (var i = 0; i < e.Length; i++)
+            {
+                var type = e.Data[i];
+                System.Console.WriteLine(i);
+                switch (type)
+                {
+                    case MidiEvent.NoteOffEvent:
+                        SendMidiEvent(MidiEvent.NoteOff(e.Data[i+1]));
+                        i += 1;
+                        break;
+                    case MidiEvent.NoteOnEvent:
+                        SendMidiEvent(MidiEvent.NoteOn(e.Data[i + 1], e.Data[i + 2]));
+                        i += 2;
+                        break;
+                }
+            }
         }
 
         public void SendMidiEvent(MidiEvent midiEvent)
         {
-            Logger.Info($"MIDI event received: {midiEvent.EventType}");
             var ch = midiEvent.Channel;
-            var msg = midiEvent.ExtraData;
+            var msg = midiEvent.Data;
 
             switch (midiEvent.EventType)
             {
                 case MidiEvent.NoteOffEvent:
-                    _synth.NoteOff(ch, msg[1]);
                     if (_notesPlaying.Contains(msg[1]))
+                    {
+                        _synth.NoteOff(ch, msg[1]);
                         _notesPlaying.Remove(msg[1]);
+                    }
                     break;
                 case MidiEvent.NoteOnEvent:
                     if (msg[2] == 0)
                     {
-                        _synth.NoteOff(ch, msg[1]);
                         if (_notesPlaying.Contains(msg[1]))
+                        {
+                            _synth.NoteOff(ch, msg[1]);
                             _notesPlaying.Remove(msg[1]);
+                        }
                     }
                     else
                     {
@@ -172,12 +193,6 @@ namespace Robust.Client.Audio.Midi
                             _notesPlaying.Add(msg[1]);
                     }
 
-                    break;
-                case MidiEvent.CCEvent:
-                    _synth.CC(ch, msg[1], msg[2]);
-                    break;
-                case MidiEvent.PitchEvent:
-                    _synth.PitchBend(ch, msg[1] + msg[2] * 0x80);
                     break;
                 default:
                     break;
@@ -188,10 +203,10 @@ namespace Robust.Client.Audio.Midi
 
         public void Dispose()
         {
-            _settings?.Dispose();
-            _synth?.Dispose();
-            _player?.Dispose();
-            _input?.Dispose();
+            _settings = null;
+            _synth = null;
+            _player = null;
+            _input = null;
         }
     }
 }

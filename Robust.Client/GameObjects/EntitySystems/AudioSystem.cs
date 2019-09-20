@@ -39,7 +39,7 @@ namespace Robust.Client.GameObjects.EntitySystems
         public override void FrameUpdate(float frameTime)
         {
             // Update positions of streams every frame.
-            foreach (var stream in PlayingClydeStreams)
+            foreach (var stream in PlayingClydeStreams.ToArray())
             {
                 if (!stream.Source.IsPlaying)
                 {

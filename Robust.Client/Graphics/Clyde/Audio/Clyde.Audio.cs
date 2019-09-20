@@ -167,6 +167,8 @@ namespace Robust.Client.Graphics.Clyde
         public IClydeAudioSource CreateAudioSource(AudioStream stream)
         {
             var source = AL.GenSource();
+            if (_audioSources.ContainsKey(source))
+                return CreateAudioSource(stream);
             // ReSharper disable once PossibleInvalidOperationException
             AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[stream.ClydeHandle.Value.Handle].BufferHandle);
             var audioSource = new AudioSource(this, source, stream);
@@ -311,12 +313,13 @@ namespace Robust.Client.Graphics.Clyde
         public AudioStream LoadAudioMonoPCM(ushort[] data, string name = null)
         {
             var buffer = AL.GenBuffer();
+            var memory = new ReadOnlyMemory<ushort>(data);
 
             ALFormat format = ALFormat.Mono16;
 
             unsafe
             {
-                fixed (ushort* ptr = data)
+                fixed (ushort* ptr = memory.Span)
                 {
                     AL.BufferData(buffer, format, (IntPtr) ptr, (int) data.Length, 44100);
                 }
@@ -333,12 +336,13 @@ namespace Robust.Client.Graphics.Clyde
         public AudioStream LoadAudioStereoPCM(ushort[] data, string name = null)
         {
             var buffer = AL.GenBuffer();
+            var memory = new ReadOnlyMemory<ushort>(data);
 
             ALFormat format = ALFormat.Stereo16;
 
             unsafe
             {
-                fixed (ushort* ptr = data)
+                fixed (ushort* ptr = memory.Span)
                 {
                     AL.BufferData(buffer, format, (IntPtr) ptr, (int) data.Length, 44100);
                 }

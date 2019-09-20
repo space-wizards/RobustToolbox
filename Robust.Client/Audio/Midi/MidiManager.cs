@@ -25,7 +25,7 @@ namespace Robust.Client.Audio.Midi
 
         private bool _alive = true;
         private Settings _settings;
-        private IMidiAccess _access;
+        private IMidiAccess2 _access;
         private List<MidiRenderer> _renderers = new List<MidiRenderer>();
         private Thread _midiThread;
 
@@ -52,7 +52,7 @@ namespace Robust.Client.Audio.Midi
             _settings["synth.lock-memory"].IntValue = 0;
             _settings["audio.driver"].StringValue = "file";
 
-            _access = MidiAccessManager.Default;
+            _access = (IMidiAccess2) MidiAccessManager.Default;
             _midiThread = new Thread(ThreadUpdate);
             _midiThread.Start();
         }
@@ -76,7 +76,7 @@ namespace Robust.Client.Audio.Midi
                         renderer.Render();
                 }
 
-                Thread.Sleep(1000);
+                Thread.Sleep(50);
             }
         }
 

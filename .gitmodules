@@ -1,0 +1,4 @@
+[submodule "nfluidsynth"]
+	path = nfluidsynth
+	url = https://github.com/space-wizards/nfluidsynth.git
+	branch = wizards

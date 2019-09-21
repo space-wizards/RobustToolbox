@@ -7,6 +7,8 @@ using Commons.Music.Midi;
 using Commons.Music.Midi.Alsa;
 using Namotion.Reflection;
 using NFluidsynth.MidiManager;
+using OpenTK.Audio.OpenAL;
+using Robust.Client.Graphics;
 using Robust.Shared.Audio.Midi;
 using Logger = Robust.Shared.Log.Logger;
 using MidiEvent = Robust.Shared.Audio.Midi.MidiEvent;
@@ -39,6 +41,11 @@ namespace Robust.Client.Audio.Midi
         private IMidiAccess _access;
         private MidiDriver _driver;
         private List<int> _notesPlaying = new List<int>();
+        private int _source;
+        private int[] _buffers;
+        private const int SampleRate = 44100;
+        private const int Buffers = 5;
+        private byte _inputMode = 0;
 
         private IMidiInput _input;
         public IReadOnlyCollection<int> NotesPlaying => _notesPlaying;
@@ -65,6 +72,23 @@ namespace Robust.Client.Audio.Midi
             _settings = settings;
             _synth = new Synth(_settings);
             _access = access;
+            _source = AL.GenSource();
+            _buffers = AL.GenBuffers(Buffers);
+            EmptyBuffers();
+            AL.SourcePlay(_source);
+        }
+
+        private unsafe void EmptyBuffers()
+        {
+            for (var i = 0; i < Buffers; i++)
+            {
+                var empty = new ushort[SampleRate / Buffers];
+                fixed (ushort* ptr = empty)
+                {
+                    AL.BufferData(_buffers[i], ALFormat.Mono16, (IntPtr) ptr, SampleRate/Buffers, SampleRate);
+                    AL.SourceQueueBuffers(_source, 1, new []{_buffers[i]});
+                }
+            }
         }
 
         public void OpenInput(string id)
@@ -112,29 +136,41 @@ namespace Robust.Client.Audio.Midi
         ///     or only one buffer for both channels (left).
         /// </summary>
         /// <returns></returns>
-        internal (ushort[] left, ushort[] right) Render(int length = 44100)
+        internal void Render(int length = SampleRate/10)
         {
-            if (_notesPlaying.Count == 0)
-                return (new ushort[0], new ushort[0]);
+            var status = AL.GetSourceState(_source);
+            AL.GetSource(_source, ALGetSourcei.BuffersProcessed, out var buffersProcessed);
+            //AL.GetSource(_source, ALGetSourcei.BuffersQueued, out var buffersQueued);
+            if (buffersProcessed == 0) return;
 
-            ushort[] left = null, right = null;
-            if (Mono)
+            //System.Console.WriteLine(buffersProcessed + " " + buffersQueued + " " + status);
+
+            while (buffersProcessed > 0)
             {
-                left = new ushort[length];
-                right = new ushort[length];
-                _synth.WriteSample16(length, left, 0, 1, right, 0, 1);
-            }
-            else
-            {
-                left = new ushort[length * 2];
-                _synth.WriteSample16(length, left, 0, 2, left, 1, 2);
+                int uiBuffer = -1;
+                AL.SourceUnqueueBuffers(_source, 1, ref uiBuffer);
+
+                ushort[]left = null, right = null;
+                if (Mono)
+                {
+                    left = new ushort[length];
+                    right = new ushort[length];
+                    _synth.WriteSample16(length, left, 0, 1, right, 0, 1);
+
+                }
+                else
+                {
+                    left = new ushort[length];
+                    _synth.WriteSample16(length, left, 0, 2, left, 1, 2);
+                }
+
+                AL.BufferData(uiBuffer, ALFormat.Mono16, left, length, SampleRate);
+
+                AL.SourceQueueBuffers(_source, 1, new []{uiBuffer});
+                buffersProcessed--;
             }
 
-            if (_notesPlaying.Count == 0)
-                NeedsRendering = false;
-            var t = (left, right);
-            OnSampleRendered?.Invoke(t);
-            return t;
+            if(status != ALSourceState.Playing) AL.SourcePlay(_source);
         }
 
         public void PlayerOnEventReceived(Commons.Music.Midi.MidiEvent midiEvent)
@@ -142,22 +178,29 @@ namespace Robust.Client.Audio.Midi
             SendMidiEvent((MidiEvent) midiEvent);
         }
 
+        /// <summary>
+        ///     The received data might be either a command with arguments (NoteOn with key/velocity)
+        ///     or just the arguments for the prior command. Because of this, we need to set the "_inputMode"
+        ///     and check if the received data is either a command, or just straight up data.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void InputOnEventReceived(object sender, MidiReceivedEventArgs e)
         {
-            System.Console.WriteLine("---");
-            for (var i = 0; i < e.Length; i++)
+            var type = e.Data[0];
+            if (type == MidiEvent.NoteOffEvent || type == MidiEvent.NoteOnEvent)
+                _inputMode = type;
+
+            for (var i = type == _inputMode ? 1 : 0; i < e.Length; i++)
             {
-                var type = e.Data[i];
-                System.Console.WriteLine(i);
-                switch (type)
+                switch (_inputMode)
                 {
-                    case MidiEvent.NoteOffEvent:
-                        SendMidiEvent(MidiEvent.NoteOff(e.Data[i+1]));
+                    case MidiEvent.NoteOnEvent:
+                        SendMidiEvent(MidiEvent.NoteOn(e.Data[i], e.Data[i+1]));
                         i += 1;
                         break;
-                    case MidiEvent.NoteOnEvent:
-                        SendMidiEvent(MidiEvent.NoteOn(e.Data[i + 1], e.Data[i + 2]));
-                        i += 2;
+                    case MidiEvent.NoteOffEvent:
+                        SendMidiEvent(MidiEvent.NoteOff(e.Data[i]));
                         break;
                 }
             }

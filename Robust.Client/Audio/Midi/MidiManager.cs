@@ -72,11 +72,10 @@ namespace Robust.Client.Audio.Midi
                 for (var i = 0; i < _renderers.Count; i++)
                 {
                     var renderer = _renderers[i];
-                    if (renderer.NeedsRendering)
-                        renderer.Render();
+                    renderer?.Render();
                 }
 
-                Thread.Sleep(50);
+                Thread.Sleep(1);
             }
         }
 

@@ -48,14 +48,16 @@ namespace Robust.Client.Animations
                 var keyFrame = KeyFrames[keyFrameIndex];
                 // Advance animation on current key frame.
                 var rsi = sprite.LayerGetActualRSI(LayerKey);
-                var state = rsi[keyFrame.State];
-                DebugTools.Assert(state.AnimationLength != null, "state.AnimationLength != null");
-                var animationTime = Math.Min(state.AnimationLength.Value - 0.01f, playingTime);
-                sprite.LayerSetAutoAnimated(LayerKey, false);
-                // TODO: Doesn't setting the state explicitly reset the animation
-                // so it's slightly more inefficient?
-                sprite.LayerSetState(LayerKey, keyFrame.State);
-                sprite.LayerSetAnimationTime(LayerKey, animationTime);
+                if (rsi.TryGetState(keyFrame.State, out var state))
+                {
+                    DebugTools.Assert(state.AnimationLength != null, "state.AnimationLength != null");
+                    var animationTime = Math.Min(state.AnimationLength.Value - 0.01f, playingTime);
+                    sprite.LayerSetAutoAnimated(LayerKey, false);
+                    // TODO: Doesn't setting the state explicitly reset the animation
+                    // so it's slightly more inefficient?
+                    sprite.LayerSetState(LayerKey, keyFrame.State);
+                    sprite.LayerSetAnimationTime(LayerKey, animationTime);
+                }
             }
 
             return (keyFrameIndex, playingTime);

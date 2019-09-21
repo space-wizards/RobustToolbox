@@ -7,7 +7,9 @@ using NFluidsynth;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.IoC;
+using Robust.Shared.Timing;
 using MidiEvent = Commons.Music.Midi.MidiEvent;
+using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace Robust.Client.Audio.Midi
 {
@@ -47,7 +49,7 @@ namespace Robust.Client.Audio.Midi
         {
             _settings = new Settings();
 
-            _settings["synth.sample-rate"].DoubleValue = 44100;
+            _settings["synth.sample-rate"].DoubleValue = 48000;
             _settings["player.timing-source"].StringValue = "sample";
             _settings["synth.lock-memory"].IntValue = 0;
             _settings["audio.driver"].StringValue = "file";

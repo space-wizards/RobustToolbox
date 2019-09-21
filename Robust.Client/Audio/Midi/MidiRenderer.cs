@@ -10,6 +10,8 @@ using NFluidsynth.MidiManager;
 using OpenTK.Audio.OpenAL;
 using Robust.Client.Graphics;
 using Robust.Shared.Audio.Midi;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Map;
 using Logger = Robust.Shared.Log.Logger;
 using MidiEvent = Robust.Shared.Audio.Midi.MidiEvent;
 
@@ -29,6 +31,7 @@ namespace Robust.Client.Audio.Midi
         void CloseMidi();
         void LoadSoundfont(string filename);
         event Action<(ushort[] left, ushort[] right)> OnSampleRendered;
+        IEntity Position { get; set; }
 
         void SendMidiEvent(MidiEvent midiEvent);
     }
@@ -43,8 +46,8 @@ namespace Robust.Client.Audio.Midi
         private List<int> _notesPlaying = new List<int>();
         private int _source;
         private int[] _buffers;
-        private const int SampleRate = 44100;
-        private const int Buffers = 5;
+        private const int SampleRate = 48000;
+        private const int Buffers = 48;
         private byte _inputMode = 0;
 
         private IMidiInput _input;
@@ -63,6 +66,7 @@ namespace Robust.Client.Audio.Midi
         public bool IsInputOpen => _input != null;
         public bool IsMidiOpen => _player != null;
         public bool Mono { get; set; } = true;
+        public IEntity Position { get; set; } = null;
 
         internal bool Free { get; set; } = false;
         internal bool NeedsRendering { get; private set; } = false;
@@ -136,9 +140,11 @@ namespace Robust.Client.Audio.Midi
         ///     or only one buffer for both channels (left).
         /// </summary>
         /// <returns></returns>
-        internal void Render(int length = SampleRate/10)
+        internal void Render(int length = SampleRate/500)
         {
             var status = AL.GetSourceState(_source);
+            if(Position != null)
+                AL.Source(_source, ALSource3f.Position, Position.Transform.GridPosition.X, Position.Transform.GridPosition.Y, 0f);
             AL.GetSource(_source, ALGetSourcei.BuffersProcessed, out var buffersProcessed);
             //AL.GetSource(_source, ALGetSourcei.BuffersQueued, out var buffersQueued);
             if (buffersProcessed == 0) return;
@@ -148,7 +154,9 @@ namespace Robust.Client.Audio.Midi
             while (buffersProcessed > 0)
             {
                 int uiBuffer = -1;
+
                 AL.SourceUnqueueBuffers(_source, 1, ref uiBuffer);
+
 
                 ushort[]left = null, right = null;
                 if (Mono)
@@ -160,13 +168,14 @@ namespace Robust.Client.Audio.Midi
                 }
                 else
                 {
-                    left = new ushort[length];
-                    _synth.WriteSample16(length, left, 0, 2, left, 1, 2);
+                    left = new ushort[length*2];
+                    _synth.WriteSample16(length, left, 0, 1, left, 1, 2);
                 }
 
-                AL.BufferData(uiBuffer, ALFormat.Mono16, left, length, SampleRate);
+                AL.BufferData(uiBuffer, Mono ? ALFormat.Mono16 : ALFormat.Stereo16, Mono ? left.Zip(right, (x, y) => (ushort)(x + y)).ToArray() : left, length, SampleRate);
 
                 AL.SourceQueueBuffers(_source, 1, new []{uiBuffer});
+
                 buffersProcessed--;
             }
 

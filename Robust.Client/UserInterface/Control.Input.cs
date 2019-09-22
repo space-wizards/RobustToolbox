@@ -9,12 +9,24 @@ namespace Robust.Client.UserInterface
 {
     public partial class Control
     {
+        /// <summary>
+        ///     Invoked when the mouse enters the area of this control / when it hovers over the control.
+        /// </summary>
+        public event Action<GUIMouseHoverEventArgs> OnMouseEntered;
+
         protected internal virtual void MouseEntered()
         {
+            OnMouseEntered?.Invoke(new GUIMouseHoverEventArgs(this));
         }
+
+        /// <summary>
+        ///     Invoked when the mouse exits the area of this control / when it stops hovering over the control.
+        /// </summary>
+        public event Action<GUIMouseHoverEventArgs> OnMouseExited;
 
         protected internal virtual void MouseExited()
         {
+            OnMouseExited?.Invoke(new GUIMouseHoverEventArgs(this));
         }
 
         protected internal virtual void MouseWheel(GUIMouseWheelEventArgs args)
@@ -42,6 +54,19 @@ namespace Robust.Client.UserInterface
 
         protected internal virtual void TextEntered(GUITextEventArgs args)
         {
+        }
+    }
+
+    public class GUIMouseHoverEventArgs : EventArgs
+    {
+        /// <summary>
+        ///     The control this event originated from.
+        /// </summary>
+        public Control SourceControl { get; }
+
+        public GUIMouseHoverEventArgs(Control sourceControl)
+        {
+            SourceControl = sourceControl;
         }
     }
 

@@ -172,7 +172,7 @@ namespace Robust.Client.Audio.Midi
                     _synth.WriteSample16(length, left, 0, 1, left, 1, 2);
                 }
 
-                AL.BufferData(uiBuffer, Mono ? ALFormat.Mono16 : ALFormat.Stereo16, Mono ? left.Zip(right, (x, y) => (ushort)(x + y)).ToArray() : left, length, SampleRate);
+                AL.BufferData(uiBuffer, Mono ? ALFormat.Mono16 : ALFormat.Stereo16, Mono ? left.Zip(right, (x, y) => (ushort)(x + y)).ToArray() : left, Mono ? length : length*2, SampleRate);
 
                 AL.SourceQueueBuffers(_source, 1, new []{uiBuffer});
 

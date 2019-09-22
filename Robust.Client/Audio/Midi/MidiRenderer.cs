@@ -6,14 +6,12 @@ using NFluidsynth;
 using Commons.Music.Midi;
 using Commons.Music.Midi.Alsa;
 using Namotion.Reflection;
-using NFluidsynth.MidiManager;
 using OpenTK.Audio.OpenAL;
 using Robust.Client.Graphics;
-using Robust.Shared.Audio.Midi;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using Logger = Robust.Shared.Log.Logger;
-using MidiEvent = Robust.Shared.Audio.Midi.MidiEvent;
+using MidiEvent = NFluidsynth.MidiEvent;
 
 namespace Robust.Client.Audio.Midi
 {
@@ -26,7 +24,7 @@ namespace Robust.Client.Audio.Midi
         bool IsMidiOpen { get; }
         bool Mono { get; set; }
         void OpenInput(string id);
-        void OpenMidi(Stream stream);
+        void OpenMidi(string filename);
         void CloseInput();
         void CloseMidi();
         void LoadSoundfont(string filename);
@@ -40,14 +38,14 @@ namespace Robust.Client.Audio.Midi
     {
         private Settings _settings;
         private Synth _synth;
-        private MidiPlayer _player;
+        private NFluidsynth.Player _player;
         private IMidiAccess _access;
         private MidiDriver _driver;
         private List<int> _notesPlaying = new List<int>();
         private int _source;
         private int[] _buffers;
         private const int SampleRate = 48000;
-        private const int Buffers = 48;
+        private const int Buffers = SampleRate/1000;
         private byte _inputMode = 0;
 
         private IMidiInput _input;
@@ -66,6 +64,7 @@ namespace Robust.Client.Audio.Midi
         public bool IsInputOpen => _input != null;
         public bool IsMidiOpen => _player != null;
         public bool Mono { get; set; } = true;
+        public bool Rendering { get; set; } = false;
         public IEntity Position { get; set; } = null;
 
         internal bool Free { get; set; } = false;
@@ -75,6 +74,7 @@ namespace Robust.Client.Audio.Midi
         {
             _settings = settings;
             _synth = new Synth(_settings);
+            _driver = new MidiDriver(_settings, MidiDriverEventHandler);
             _access = access;
             _source = AL.GenSource();
             _buffers = AL.GenBuffers(Buffers);
@@ -84,12 +84,14 @@ namespace Robust.Client.Audio.Midi
 
         private unsafe void EmptyBuffers()
         {
+            var length = (SampleRate / Buffers) * (Mono ? 1 : 2);
+
             for (var i = 0; i < Buffers; i++)
             {
-                var empty = new ushort[SampleRate / Buffers];
+                var empty = new Span<ushort>(new ushort[length]);
                 fixed (ushort* ptr = empty)
                 {
-                    AL.BufferData(_buffers[i], ALFormat.Mono16, (IntPtr) ptr, SampleRate/Buffers, SampleRate);
+                    AL.BufferData(_buffers[i], Mono ? ALFormat.Mono16 : ALFormat.Stereo16, (IntPtr) ptr, length, SampleRate);
                     AL.SourceQueueBuffers(_source, 1, new []{_buffers[i]});
                 }
             }
@@ -98,16 +100,13 @@ namespace Robust.Client.Audio.Midi
         public void OpenInput(string id)
         {
             if (IsMidiOpen || IsInputOpen) return;
-            _input = _access.OpenInputAsync(id).Result;
-            _input.MessageReceived += InputOnEventReceived;
         }
 
-        public void OpenMidi(Stream stream)
+        public void OpenMidi(string filename)
         {
-            _player = new MidiPlayer(MidiMusic.Read(stream));
-            _player.EventReceived += PlayerOnEventReceived;
+            _player = new NFluidsynth.Player(_synth);
+            _player.Add(filename);
             _player.Play();
-            _player.Finished += CloseMidi;
         }
 
         public void CloseInput()
@@ -140,109 +139,91 @@ namespace Robust.Client.Audio.Midi
         ///     or only one buffer for both channels (left).
         /// </summary>
         /// <returns></returns>
-        internal void Render(int length = SampleRate/500)
+        internal void Render(int length = SampleRate/1000)
         {
             var status = AL.GetSourceState(_source);
-            if(Position != null)
+            if(Position != null && Mono)
                 AL.Source(_source, ALSource3f.Position, Position.Transform.GridPosition.X, Position.Transform.GridPosition.Y, 0f);
             AL.GetSource(_source, ALGetSourcei.BuffersProcessed, out var buffersProcessed);
-            //AL.GetSource(_source, ALGetSourcei.BuffersQueued, out var buffersQueued);
+            AL.GetSource(_source, ALGetSourcei.BuffersQueued, out var buffersQueued);
             if (buffersProcessed == 0) return;
 
-            //System.Console.WriteLine(buffersProcessed + " " + buffersQueued + " " + status);
+            Rendering = true;
 
-            while (buffersProcessed > 0)
+            System.Console.WriteLine(buffersProcessed + " " + buffersQueued + " " + status);
+
+
+            unsafe
             {
-                int uiBuffer = -1;
+                var buffers = AL.SourceUnqueueBuffers(_source, buffersProcessed);
 
-                AL.SourceUnqueueBuffers(_source, 1, ref uiBuffer);
-
-
-                ushort[]left = null, right = null;
-                if (Mono)
+                for (var i = 0; i < buffers.Length; i++)
                 {
-                    left = new ushort[length];
-                    right = new ushort[length];
-                    _synth.WriteSample16(length, left, 0, 1, right, 0, 1);
+                    var buffer = buffers[i];
 
+                    ushort[] left;
+                    if (Mono)
+                    {
+                        left = new ushort[length];
+                        var right = new ushort[length];
+                        _synth.WriteSample16(length, left, 0, 1, right, 0, 1);
+                        left = left.Zip(right, (x, y) => (ushort) (x + y)).ToArray();
+
+                    }
+                    else
+                    {
+                        left = new ushort[length*2];
+                        _synth.WriteSample16(length*2, left, 0, 1, left, 1, 2);
+                    }
+
+                    fixed (ushort* ptr = left)
+                    {
+                        AL.BufferData(buffer, Mono ? ALFormat.Mono16 : ALFormat.Stereo16, (IntPtr) ptr, Mono ? length * sizeof(ushort) : length*sizeof(ushort)*2, SampleRate);
+                    }
                 }
-                else
-                {
-                    left = new ushort[length*2];
-                    _synth.WriteSample16(length, left, 0, 1, left, 1, 2);
-                }
 
-                AL.BufferData(uiBuffer, Mono ? ALFormat.Mono16 : ALFormat.Stereo16, Mono ? left.Zip(right, (x, y) => (ushort)(x + y)).ToArray() : left, Mono ? length : length*2, SampleRate);
-
-                AL.SourceQueueBuffers(_source, 1, new []{uiBuffer});
-
-                buffersProcessed--;
+                AL.SourceQueueBuffers(_source, buffersProcessed, buffers);
             }
 
             if(status != ALSourceState.Playing) AL.SourcePlay(_source);
+
+            Rendering = false;
         }
 
-        public void PlayerOnEventReceived(Commons.Music.Midi.MidiEvent midiEvent)
-        {
-            SendMidiEvent((MidiEvent) midiEvent);
-        }
 
-        /// <summary>
-        ///     The received data might be either a command with arguments (NoteOn with key/velocity)
-        ///     or just the arguments for the prior command. Because of this, we need to set the "_inputMode"
-        ///     and check if the received data is either a command, or just straight up data.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void InputOnEventReceived(object sender, MidiReceivedEventArgs e)
+        private int MidiDriverEventHandler(byte[] data, MidiEvent evt)
         {
-            var type = e.Data[0];
-            if (type == MidiEvent.NoteOffEvent || type == MidiEvent.NoteOnEvent)
-                _inputMode = type;
-
-            for (var i = type == _inputMode ? 1 : 0; i < e.Length; i++)
-            {
-                switch (_inputMode)
-                {
-                    case MidiEvent.NoteOnEvent:
-                        SendMidiEvent(MidiEvent.NoteOn(e.Data[i], e.Data[i+1]));
-                        i += 1;
-                        break;
-                    case MidiEvent.NoteOffEvent:
-                        SendMidiEvent(MidiEvent.NoteOff(e.Data[i]));
-                        break;
-                }
-            }
+            SendMidiEvent(evt);
+            return 0;
         }
 
         public void SendMidiEvent(MidiEvent midiEvent)
         {
             var ch = midiEvent.Channel;
-            var msg = midiEvent.Data;
 
-            switch (midiEvent.EventType)
+            switch (midiEvent.Type)
             {
-                case MidiEvent.NoteOffEvent:
-                    if (_notesPlaying.Contains(msg[1]))
+                case 128:
+                    if (_notesPlaying.Contains(midiEvent.Key))
                     {
-                        _synth.NoteOff(ch, msg[1]);
-                        _notesPlaying.Remove(msg[1]);
+                        _synth.NoteOff(ch, midiEvent.Key);
+                        _notesPlaying.Remove(midiEvent.Key);
                     }
                     break;
-                case MidiEvent.NoteOnEvent:
-                    if (msg[2] == 0)
+                case 144:
+                    if (midiEvent.Velocity == 0)
                     {
-                        if (_notesPlaying.Contains(msg[1]))
+                        if (_notesPlaying.Contains(midiEvent.Key))
                         {
-                            _synth.NoteOff(ch, msg[1]);
-                            _notesPlaying.Remove(msg[1]);
+                            _synth.NoteOff(ch, midiEvent.Key);
+                            _notesPlaying.Remove(midiEvent.Key);
                         }
                     }
                     else
                     {
-                        _synth.NoteOn(ch, msg[1], msg[2]);
-                        if (!_notesPlaying.Contains(msg[1]))
-                            _notesPlaying.Add(msg[1]);
+                        _synth.NoteOn(ch, midiEvent.Key, midiEvent.Velocity);
+                        if (!_notesPlaying.Contains(midiEvent.Key))
+                            _notesPlaying.Add(midiEvent.Key);
                     }
 
                     break;

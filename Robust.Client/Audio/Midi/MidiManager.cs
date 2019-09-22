@@ -52,6 +52,7 @@ namespace Robust.Client.Audio.Midi
             _settings["synth.sample-rate"].DoubleValue = 48000;
             _settings["player.timing-source"].StringValue = "sample";
             _settings["synth.lock-memory"].IntValue = 0;
+            _settings["synth.threadsafe-api"].IntValue = 1;
             _settings["audio.driver"].StringValue = "file";
 
             _access = (IMidiAccess2) MidiAccessManager.Default;
@@ -74,10 +75,11 @@ namespace Robust.Client.Audio.Midi
                 for (var i = 0; i < _renderers.Count; i++)
                 {
                     var renderer = _renderers[i];
-                    renderer?.Render();
+                    if(renderer != null && !renderer.Rendering)
+                        renderer.Render();
                 }
 
-                Thread.Sleep(1);
+                Thread.Sleep(2);
             }
         }
 

@@ -15,7 +15,6 @@ namespace Robust.Client.Audio.Midi
 {
     public interface IMidiManager
     {
-        IEnumerable<(string Id, string Name)> Inputs { get; }
         IMidiRenderer GetNewRenderer();
     }
 
@@ -27,23 +26,9 @@ namespace Robust.Client.Audio.Midi
 
         private bool _alive = true;
         private Settings _settings;
-        private IMidiAccess2 _access;
+        private SoundFontLoader _soundfontLoader;
         private List<MidiRenderer> _renderers = new List<MidiRenderer>();
         private Thread _midiThread;
-
-        public IEnumerable<(string Id, string Name)> Inputs
-        {
-            get
-            {
-                var inputIds = new List<(string, string)>();
-                foreach (var input in _access.Inputs)
-                {
-                    inputIds.Add((input.Id, input.Name));
-                }
-
-                return inputIds;
-            }
-        }
 
         public void PostInject()
         {
@@ -54,15 +39,15 @@ namespace Robust.Client.Audio.Midi
             _settings["synth.lock-memory"].IntValue = 0;
             _settings["synth.threadsafe-api"].IntValue = 1;
             _settings["audio.driver"].StringValue = "file";
+            _settings["midi.autoconnect"].IntValue = 1;
 
-            _access = (IMidiAccess2) MidiAccessManager.Default;
             _midiThread = new Thread(ThreadUpdate);
             _midiThread.Start();
         }
 
         public IMidiRenderer GetNewRenderer()
         {
-            var renderer = new MidiRenderer(_settings, _access);
+            var renderer = new MidiRenderer(_settings, _soundfontLoader);
             _renderers.Add(renderer);
 
             return renderer;
@@ -79,7 +64,7 @@ namespace Robust.Client.Audio.Midi
                         renderer.Render();
                 }
 
-                Thread.Sleep(2);
+                Thread.Sleep(1);
             }
         }
 

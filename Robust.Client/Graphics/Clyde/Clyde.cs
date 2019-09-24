@@ -229,12 +229,10 @@ namespace Robust.Client.Graphics.Clyde
                 _gameController.TextEntered(new TextEventArgs(eventArgs.KeyChar));
             };
 
-#if !NETCOREAPP
             using (var iconFile = _resourceCache.ContentFileRead("/Textures/Logo/icon.ico"))
             {
                 _window.Icon = new Icon(iconFile);
             }
-#endif
 
             _initOpenGL();
         }

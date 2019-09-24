@@ -76,6 +76,7 @@ namespace Robust.Shared.Prototypes
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     [BaseTypeRequired(typeof(IPrototype))]
+    [MeansImplicitUse]
     public class PrototypeAttribute : Attribute
     {
         private readonly string type;

@@ -5,8 +5,12 @@ using System.Threading;
 using Commons.Music.Midi;
 using NFluidsynth;
 using Robust.Client.Interfaces.Graphics;
+using Robust.Client.Reflection;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Interfaces.Reflection;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
+using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using MidiEvent = Commons.Music.Midi.MidiEvent;
 using Stopwatch = System.Diagnostics.Stopwatch;
@@ -40,6 +44,7 @@ namespace Robust.Client.Audio.Midi
             _settings["synth.threadsafe-api"].IntValue = 1;
             _settings["audio.driver"].StringValue = "file";
             _settings["midi.autoconnect"].IntValue = 1;
+            _settings["player.reset-synth"].IntValue = 0;
 
             _midiThread = new Thread(ThreadUpdate);
             _midiThread.Start();

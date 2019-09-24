@@ -2,23 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using NFluidsynth;
-using Commons.Music.Midi;
-using Commons.Music.Midi.Alsa;
-using Namotion.Reflection;
 using OpenTK.Audio.OpenAL;
-using Robust.Client.Graphics;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.IoC;
-using Robust.Shared.Map;
-using Logger = Robust.Shared.Log.Logger;
 using MidiEvent = NFluidsynth.MidiEvent;
 
 namespace Robust.Client.Audio.Midi
 {
     public interface IMidiRenderer : IDisposable
     {
+        bool LoopMidi { get; set; }
         IReadOnlyCollection<int> NotesPlaying { get; }
         int MidiProgram { set; }
         bool IsInputOpen { get; }
@@ -26,14 +20,15 @@ namespace Robust.Client.Audio.Midi
         bool Mono { get; set; }
         void OpenInput();
         void OpenMidi(string filename);
-        void OpenMidi(Stream stream);
+        void OpenMidi(Span<byte> stream);
         void CloseInput();
         void CloseMidi();
+        void StopAllNotes();
         void LoadSoundfont(string filename);
         event Action<Shared.Audio.Midi.MidiEvent> OnMidiEvent;
         event Action OnMidiPlayerFinished;
         IEntity Position { get; set; }
-        void SendMidiEvent(MidiEvent midiEvent);
+        void SendMidiEvent(Shared.Audio.Midi.MidiEvent midiEvent);
     }
 
     public class MidiRenderer : IMidiRenderer
@@ -43,18 +38,33 @@ namespace Robust.Client.Audio.Midi
         private NFluidsynth.Player _player;
         private MidiDriver _driver;
         private List<int> _notesPlaying = new List<int>();
+        private int _midiprogram = 1;
         private int _source;
         private int[] _buffers;
+        private bool _loopMidi = false;
         private const int SampleRate = 48000;
         private const int Buffers = SampleRate/1000;
         public IReadOnlyCollection<int> NotesPlaying => _notesPlaying;
 
         public int MidiProgram
         {
+            get => _midiprogram;
             set
             {
                 for (var i = 0; i < 16; i++)
                     _synth.ProgramChange(i, value);
+
+                _midiprogram = value;
+            }
+        }
+
+        public bool LoopMidi
+        {
+            get => _loopMidi;
+            set
+            {
+                _player?.SetLoop(value ? -1 : 1);
+                _loopMidi = value;
             }
         }
 
@@ -99,21 +109,25 @@ namespace Robust.Client.Audio.Midi
 
         public void OpenMidi(string filename)
         {
-            _player = new NFluidsynth.Player(_synth);
-            _player.Add(filename);
-            _player.SetPlaybackCallback(MidiPlayerEventHandler);
-            _player.Play();
+            OpenMidi(File.ReadAllBytes(filename));
         }
 
-        public void OpenMidi(Stream stream)
+        public void OpenMidi(Span<byte> buffer)
         {
-            throw new NotImplementedException();
+            if(_player == null)
+                _player = new NFluidsynth.Player(_synth);
+            _player.Stop();
+            _player.AddMem(buffer);
+            _player.SetPlaybackCallback(MidiPlayerEventHandler);
+            _player.Play();
+            _player.SetLoop(LoopMidi ? -1 : 1);
         }
 
         public void CloseInput()
         {
             _driver?.Dispose();
             _driver = null;
+            StopAllNotes();
         }
 
         public void CloseMidi()
@@ -121,11 +135,20 @@ namespace Robust.Client.Audio.Midi
             _player?.Stop();
             _player?.Dispose();
             _player = null;
+            StopAllNotes();
+        }
+
+        public void StopAllNotes()
+        {
+            foreach (var note in _notesPlaying.ToArray())
+            {
+                SendMidiEvent(new Shared.Audio.Midi.MidiEvent(){Type = 128, Key = note});
+            }
         }
 
         public void LoadSoundfont(string filename)
         {
-            _synth.LoadSoundFont(filename, false);
+            _synth.LoadSoundFont(filename, true);
             for (var i = 0; i < 16; i++)
                 _synth.SoundFontSelect(i, 0);
             MidiProgram = 1;
@@ -186,22 +209,21 @@ namespace Robust.Client.Audio.Midi
             Rendering = false;
         }
 
-        private int MidiPlayerEventHandler(MidiEvent evt)
+        private int MidiPlayerEventHandler(MidiEvent midiEvent)
         {
             if (IsMidiOpen == false) return 0;
-            SendMidiEvent(evt);
-            System.Console.WriteLine(evt.Type);
+            SendMidiEvent((Shared.Audio.Midi.MidiEvent) midiEvent);
             return 0;
         }
 
         private int MidiDriverEventHandler(MidiEvent midiEvent)
         {
             if (IsInputOpen == false) return 0;
-            SendMidiEvent(midiEvent);
+            SendMidiEvent((Shared.Audio.Midi.MidiEvent) midiEvent);
             return 0;
         }
 
-        public void SendMidiEvent(MidiEvent midiEvent)
+        public void SendMidiEvent(Shared.Audio.Midi.MidiEvent midiEvent)
         {
             var ch = midiEvent.Channel;
 
@@ -209,6 +231,7 @@ namespace Robust.Client.Audio.Midi
             {
                 switch (midiEvent.Type)
                 {
+                    // NoteOff
                     case 128:
                         if (_notesPlaying.Contains(midiEvent.Key))
                         {
@@ -217,7 +240,9 @@ namespace Robust.Client.Audio.Midi
                         }
 
                         break;
+                    // NoteOn
                     case 144:
+                        // NoteOn with 0 velocity is the same as NoteOff
                         if (midiEvent.Velocity == 0)
                         {
                             if (_notesPlaying.Contains(midiEvent.Key))
@@ -241,7 +266,7 @@ namespace Robust.Client.Audio.Midi
             catch (FluidSynthInteropException interopException)
             { }
 
-            OnMidiEvent?.Invoke((Shared.Audio.Midi.MidiEvent) midiEvent);
+            OnMidiEvent?.Invoke(midiEvent);
 
             NeedsRendering = true;
         }

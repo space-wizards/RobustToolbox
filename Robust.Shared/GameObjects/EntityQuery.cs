@@ -3,9 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Shared.Interfaces.Physics;
-using Robust.Shared.IoC;
 using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -72,6 +71,8 @@ namespace Robust.Shared.GameObjects
         /// <param name="componentType">Type of the component to match.</param>
         public TypeEntityQuery(Type componentType)
         {
+            DebugTools.Assert(typeof(IComponent).IsAssignableFrom(componentType), "componentType must inherit IComponent");
+
             ComponentType = componentType;
         }
 
@@ -82,6 +83,22 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<IEntity> Match(IEntityManager entityMan)
         {
             return entityMan.ComponentManager.GetAllComponents(ComponentType).Select(component => component.Owner);
+        }
+    }
+
+    /// <summary>
+    ///     An entity query that will match one type of component.
+    ///     This the fastest and most common query, and should be the default choice.
+    /// </summary>
+    /// <typeparamref name="T">Type of component to match.</typeparamref>
+    [PublicAPI]
+    public class TypeEntityQuery<T> : IEntityQuery where T : IComponent
+    {
+        public bool Match(IEntity entity) => entity.HasComponent<T>();
+
+        public IEnumerable<IEntity> Match(IEntityManager entityMan)
+        {
+            return entityMan.ComponentManager.GetAllComponents<T>().Select(component => component.Owner);
         }
     }
 

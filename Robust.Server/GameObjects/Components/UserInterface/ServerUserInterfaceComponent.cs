@@ -192,7 +192,9 @@ namespace Robust.Server.GameObjects.Components.UserInterface
                 return;
             }
 
-            SendMessage(new CloseBoundInterfaceMessage(), session);
+            var msg = new CloseBoundInterfaceMessage();
+            SendMessage(msg, session);
+            OnClosed?.Invoke(new ServerBoundUserInterfaceMessage(msg, session));
             _subscribedSessions.Remove(session);
         }
 

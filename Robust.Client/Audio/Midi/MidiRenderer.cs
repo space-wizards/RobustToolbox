@@ -33,6 +33,8 @@ namespace Robust.Client.Audio.Midi
 
     public class MidiRenderer : IMidiRenderer
     {
+        private const int NoteLimit = 15;
+
         private Settings _settings;
         private Synth _synth;
         private NFluidsynth.Player _player;
@@ -75,7 +77,6 @@ namespace Robust.Client.Audio.Midi
         public IEntity Position { get; set; } = null;
 
         internal bool Free { get; set; } = false;
-        internal bool NeedsRendering { get; private set; } = false;
 
         internal MidiRenderer(Settings settings, SoundFontLoader soundfont)
         {
@@ -104,6 +105,8 @@ namespace Robust.Client.Audio.Midi
 
         public void OpenInput()
         {
+            StopAllNotes();
+
             _driver = new MidiDriver(_settings, MidiDriverEventHandler);
         }
 
@@ -114,13 +117,19 @@ namespace Robust.Client.Audio.Midi
 
         public void OpenMidi(Span<byte> buffer)
         {
+            StopAllNotes();
+
             if(_player == null)
                 _player = new NFluidsynth.Player(_synth);
-            _player.Stop();
-            _player.AddMem(buffer);
-            _player.SetPlaybackCallback(MidiPlayerEventHandler);
-            _player.Play();
-            _player.SetLoop(LoopMidi ? -1 : 1);
+
+            lock (_player)
+            {
+                _player.Stop();
+                _player.AddMem(buffer);
+                _player.SetPlaybackCallback(MidiPlayerEventHandler);
+                _player.Play();
+                _player.SetLoop(LoopMidi ? -1 : 1);
+            }
         }
 
         public void CloseInput()
@@ -132,9 +141,14 @@ namespace Robust.Client.Audio.Midi
 
         public void CloseMidi()
         {
-            _player?.Stop();
-            _player?.Dispose();
-            _player = null;
+            if (_player == null) return;
+            lock (_player)
+            {
+                _player?.Stop();
+                _player?.Dispose();
+                _player = null;
+            }
+
             StopAllNotes();
         }
 
@@ -225,7 +239,8 @@ namespace Robust.Client.Audio.Midi
 
         public void SendMidiEvent(Shared.Audio.Midi.MidiEvent midiEvent)
         {
-            var ch = midiEvent.Channel;
+            // We play every note on channel 0 to prevent a bug where some notes didn't get turned off correctly.
+            const int ch = 0;
 
             try
             {
@@ -253,6 +268,10 @@ namespace Robust.Client.Audio.Midi
                         }
                         else
                         {
+                            // If we're at the limit of notes at once, we drop this one.
+                            if (_notesPlaying.Count >= NoteLimit)
+                                return;
+
                             _synth.NoteOn(ch, midiEvent.Key, midiEvent.Velocity);
                             if (!_notesPlaying.Contains(midiEvent.Key))
                                 _notesPlaying.Add(midiEvent.Key);
@@ -260,6 +279,11 @@ namespace Robust.Client.Audio.Midi
 
                         break;
                     default:
+                        if (_notesPlaying.Contains(midiEvent.Key))
+                        {
+                            _synth.NoteOff(ch, midiEvent.Key);
+                            _notesPlaying.Remove(midiEvent.Key);
+                        }
                         break;
                 }
             }
@@ -267,8 +291,6 @@ namespace Robust.Client.Audio.Midi
             { }
 
             OnMidiEvent?.Invoke(midiEvent);
-
-            NeedsRendering = true;
         }
 
         public void Dispose()

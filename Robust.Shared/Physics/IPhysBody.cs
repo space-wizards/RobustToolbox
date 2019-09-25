@@ -16,6 +16,18 @@ namespace Robust.Shared.Physics
         IEntity Owner { get; }
 
         /// <summary>
+        ///     Returns the dynamic body if it exists, or null.
+        /// </summary>
+        IPhysDynamicBody DynamicBody { get; }
+
+        /// <summary>
+        ///     Determines if this body is processed by the physics system. If this is set to true, nothing
+        ///     will collide with this body, the body will not generate any events, and the body cannot be moved.
+        ///     This will always return false if the entity is paused, regardless of what the value is set to.
+        /// </summary>
+        bool Disabled { get; }
+
+        /// <summary>
         ///     AABB of this entity in world space.
         /// </summary>
         Box2 WorldAABB { get; }
@@ -65,5 +77,7 @@ namespace Robust.Shared.Physics
         ///     The map index this physBody is located upon
         /// </summary>
         MapId MapID { get; }
+
+        bool IsScrapingFloor { get; set; }
     }
 }

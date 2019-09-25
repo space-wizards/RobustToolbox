@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -14,7 +15,7 @@ namespace Robust.Server.GameObjects
     ///     in the physics system as a dynamic ridged body object that has physics. This behavior overrides
     ///     the BoundingBoxComponent behavior of making the entity static.
     /// </summary>
-    public class PhysicsComponent : Component, Shared.Interfaces.GameObjects.Components.ICollideSpecial
+    public class PhysicsComponent : Component, ICollideSpecial, IPhysDynamicBody
     {
         private float _mass;
         private Vector2 _linVelocity;
@@ -25,6 +26,9 @@ namespace Robust.Server.GameObjects
 
         /// <inheritdoc />
         public override uint? NetID => NetIDs.PHYSICS;
+
+        public ICollidableComponent Collidable => Owner.GetComponent<ICollidableComponent>();
+        public ITransformComponent Transform => Owner.GetComponent<ITransformComponent>();
 
         /// <summary>
         ///     Current mass of the entity in kilograms.
@@ -128,11 +132,11 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private List<PhysicsComponent> VelocityConsumers { get; } = new List<PhysicsComponent>();
+        public List<IPhysDynamicBody> VelocityConsumers { get; } = new List<IPhysDynamicBody>();
 
-        public List<PhysicsComponent> GetVelocityConsumers()
+        public List<IPhysDynamicBody> GetVelocityConsumers()
         {
-            var result = new List<PhysicsComponent> { this };
+            var result = new List<IPhysDynamicBody> { this };
             foreach(var velocityConsumer in VelocityConsumers)
             {
                 result.AddRange(velocityConsumer.GetVelocityConsumers());
@@ -140,7 +144,7 @@ namespace Robust.Server.GameObjects
             return result;
         }
 
-        private void AddVelocityConsumer(PhysicsComponent physicsComponent)
+        public void AddVelocityConsumer(IPhysDynamicBody physicsComponent)
         {
             if (!physicsComponent.VelocityConsumers.Contains(this) && !VelocityConsumers.Contains(physicsComponent))
             {
@@ -148,7 +152,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        internal void ClearVelocityConsumers()
+        public void ClearVelocityConsumers()
         {
             VelocityConsumers.ForEach(x => x.ClearVelocityConsumers());
             VelocityConsumers.Clear();

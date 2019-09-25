@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Interfaces.GameObjects;
+﻿using System;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -23,7 +24,12 @@ namespace Robust.Shared.Interfaces.Physics
 
         void AddBody(IPhysBody physBody);
         void RemoveBody(IPhysBody physBody);
-        void BuildCollisionGrid();
+
+        /// <summary>
+        /// Updates the given simulation by a given amount of time.
+        /// </summary>
+        /// <param name="deltaTime"></param>
+        void UpdateSimulation(TimeSpan deltaTime);
 
         /// <summary>
         ///     Casts a ray in the world and returns the first thing it hit.

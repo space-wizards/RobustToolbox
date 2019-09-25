@@ -33,6 +33,20 @@ namespace Robust.Client.GameObjects
         public override Type StateType => typeof(CollidableComponentState);
 
         /// <inheritdoc />
+        public IPhysDynamicBody DynamicBody
+        {
+            get
+            {
+                if (Owner.TryGetComponent(out PhysicsComponent physComp))
+                    return physComp;
+                return default;
+            }
+        }
+
+        /// <inheritdoc />
+        public bool Disabled { get; set; }
+
+        /// <inheritdoc />
         [ViewVariables]
         Box2 IPhysBody.WorldAABB
         {
@@ -72,6 +86,8 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         [ViewVariables]
         public MapId MapID => Owner.Transform.MapID;
+
+        public bool IsScrapingFloor { get; set; }
 
         /// <inheritdoc />
         void IPhysBody.Bumped(IEntity bumpedby)

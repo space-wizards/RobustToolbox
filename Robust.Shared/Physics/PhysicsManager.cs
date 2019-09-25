@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -13,7 +16,16 @@ namespace Robust.Shared.Physics
     /// <inheritdoc />
     public class PhysicsManager : IPhysicsManager
     {
+#pragma warning disable 649
+        [Dependency] private readonly IPhysicsManager _physicsManager;
+        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
+        [Dependency] private readonly IMapManager _mapManager;
+#pragma warning restore 649
+
+        private const float Epsilon = 1.0e-6f;
+
         private readonly List<IPhysBody> _bodies = new List<IPhysBody>();
+        private readonly List<IPhysBody> _bodyEnumCache = new List<IPhysBody>();
         private readonly List<IPhysBody> _results = new List<IPhysBody>();
 
         /// <summary>
@@ -169,6 +181,32 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
+        public void UpdateSimulation(TimeSpan deltaTime)
+        {
+            BuildCollisionGrid();
+
+            _bodyEnumCache.Clear();
+            _bodyEnumCache.AddRange(_bodies);
+
+            // Collision callback modify the _bodies collection.
+            foreach (var body in _bodyEnumCache)
+            {
+                if(body.DynamicBody == null || body.Disabled)
+                    continue;
+
+                HandleMovement(body.Owner, (float) deltaTime.TotalSeconds, _mapManager, _tileDefinitionManager, body.DynamicBody);
+            }
+
+            foreach (var body in _bodies)
+            {
+                if (body.DynamicBody == null || body.Disabled)
+                    continue;
+
+                DoMovement((float)deltaTime.TotalSeconds, body.DynamicBody, body.DynamicBody.Transform);
+            }
+        }
+
+        /// <inheritdoc />
         public RayCastResults IntersectRay(Ray ray, float maxLength = 50, IEntity ignoredEnt = null)
         {
             IEntity entity = null;
@@ -204,7 +242,7 @@ namespace Robust.Shared.Physics
         public void BuildCollisionGrid()
         {
             _collisionGrid.Clear();
-            _bodies.ForEach(body =>
+            foreach (var body in _bodies)
             {
                 var snappedLocation = SnapLocationToGrid(body.WorldAABB);
                 if (!_collisionGrid.ContainsKey(snappedLocation))
@@ -212,7 +250,7 @@ namespace Robust.Shared.Physics
                     _collisionGrid[snappedLocation] = new List<IPhysBody>();
                 }
                 _collisionGrid[snappedLocation].Add(body);
-            });
+            }
         }
 
         private Vector2 SnapLocationToGrid(Box2 worldAAAB)
@@ -223,7 +261,7 @@ namespace Robust.Shared.Physics
             return result;
         }
 
-        public List<IPhysBody> GetCollidablesForLocation(Box2 location)
+        private List<IPhysBody> GetCollidablesForLocation(Box2 location)
         {
             var snappedLocation = SnapLocationToGrid(location);
             var result = new List<IPhysBody>();
@@ -236,6 +274,120 @@ namespace Robust.Shared.Physics
                 }
             }
             return result;
+        }
+
+        private static void HandleMovement(IEntity entity, float frameTime, IMapManager mapManager, ITileDefinitionManager tileDefinitionManager, IPhysDynamicBody physicsComponent)
+        {
+            if (physicsComponent.DidMovementCalculations)
+            {
+                physicsComponent.DidMovementCalculations = false;
+                return;
+            }
+
+            if (physicsComponent.AngularVelocity == 0 && physicsComponent.LinearVelocity == Vector2.Zero)
+            {
+                return;
+            }
+            var transform = physicsComponent.Transform;
+            if (transform.Parent != null)
+            {
+                transform.Parent.Owner.SendMessage(transform, new RelayMovementEntityMessage(entity));
+                physicsComponent.LinearVelocity = Vector2.Zero;
+                return;
+            }
+
+            var velocityConsumers = physicsComponent.GetVelocityConsumers();
+            var initialMovement = physicsComponent.LinearVelocity;
+            int velocityConsumerCount;
+            float totalMass;
+            Vector2 lowestMovement;
+            do
+            {
+                velocityConsumerCount = velocityConsumers.Count;
+                totalMass = 0;
+                lowestMovement = initialMovement;
+                lowestMovement = velocityConsumers.Select(velocityConsumer =>
+                {
+                    totalMass += velocityConsumer.Mass;
+                    var movement = lowestMovement * physicsComponent.Mass / totalMass;
+                    velocityConsumer.AngularVelocity = physicsComponent.AngularVelocity;
+                    velocityConsumer.LinearVelocity = movement;
+                    return CalculateMovement(velocityConsumer, frameTime, mapManager, tileDefinitionManager, velocityConsumer.Transform, velocityConsumer.Collidable) / frameTime;
+                }).OrderBy(x=>x.LengthSquared).First();
+                velocityConsumers = physicsComponent.GetVelocityConsumers();
+            }
+            while (velocityConsumers.Count != velocityConsumerCount);
+            physicsComponent.ClearVelocityConsumers();
+
+            velocityConsumers.ForEach(velocityConsumer =>
+            {
+                velocityConsumer.LinearVelocity = lowestMovement;
+                velocityConsumer.DidMovementCalculations = true;
+            });
+            physicsComponent.DidMovementCalculations = false;
+        }
+
+        private static Vector2 CalculateMovement(IPhysDynamicBody dynamicBody, float frameTime, IMapManager mapManager, ITileDefinitionManager tileDefinitionManager, ITransformComponent transform, ICollidableComponent collider)
+        {
+            var movement = dynamicBody.LinearVelocity * frameTime;
+            if (movement.LengthSquared <= Epsilon)
+            {
+                return Vector2.Zero;
+            }
+
+            //Check for collision
+            if (collider != null)
+            {
+                var collided = collider.TryCollision(movement, true);
+
+                if (collided)
+                {
+                    if (dynamicBody.EdgeSlide)
+                    {
+                        //Slide along the blockage in the non-blocked direction
+                        var xBlocked = collider.TryCollision(new Vector2(movement.X, 0));
+                        var yBlocked = collider.TryCollision(new Vector2(0, movement.Y));
+
+                        movement = new Vector2(xBlocked ? 0 : movement.X, yBlocked ? 0 : movement.Y);
+                    }
+                    else
+                    {
+                        //Stop movement entirely at first blockage
+                        movement = new Vector2(0, 0);
+                    }
+                }
+
+                if (movement != Vector2.Zero && collider.IsScrapingFloor)
+                {
+                    var grid = mapManager.GetGrid(transform.GridPosition.GridID);
+                    var tile = grid.GetTileRef(transform.GridPosition);
+                    var tileDef = tileDefinitionManager[tile.Tile.TypeId];
+                    if (tileDef.Friction != 0)
+                    {
+                        movement -= movement * tileDef.Friction;
+                        if (movement.LengthSquared <= dynamicBody.Mass * Epsilon / (1 - tileDef.Friction))
+                        {
+                            movement = Vector2.Zero;
+                        }
+                    }
+                }
+            }
+            return movement;
+        }
+
+        private static void DoMovement(float frameTime, IPhysDynamicBody dynamicBody, ITransformComponent transform)
+        {
+            if (dynamicBody.LinearVelocity.LengthSquared < Epsilon && dynamicBody.AngularVelocity < Epsilon)
+                return;
+
+            float angImpulse = 0;
+            if (dynamicBody.AngularVelocity > Epsilon)
+            {
+                angImpulse = dynamicBody.AngularVelocity * frameTime;
+            }
+
+            transform.LocalRotation += angImpulse;
+            transform.WorldPosition += dynamicBody.LinearVelocity * frameTime;
         }
     }
 }

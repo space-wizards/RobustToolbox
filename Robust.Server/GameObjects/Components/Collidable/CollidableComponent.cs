@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Robust.Server.Interfaces.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
@@ -17,6 +18,7 @@ namespace Robust.Server.GameObjects
     {
 #pragma warning disable 649
         [Dependency] private readonly IPhysicsManager _physicsManager;
+        [Dependency] private readonly IPauseManager _pauseManager;
 #pragma warning restore 649
 
         private bool _collisionEnabled;
@@ -50,6 +52,26 @@ namespace Robust.Server.GameObjects
         public override ComponentState GetComponentState()
         {
             return new CollidableComponentState(_collisionEnabled, _isHardCollidable, _isScrapingFloor, _physShapes);
+        }
+
+        /// <inheritdoc />
+        public IPhysDynamicBody DynamicBody
+        {
+            get
+            {
+                if (Owner.TryGetComponent(out PhysicsComponent physComp))
+                    return physComp;
+                return default;
+            }
+        }
+
+        private bool _physDisabled;
+
+        /// <inheritdoc />
+        public bool Disabled
+        {
+            get => _pauseManager.IsEntityPaused(Owner) || _physDisabled;
+            set => _physDisabled = value;
         }
 
         /// <inheritdoc />

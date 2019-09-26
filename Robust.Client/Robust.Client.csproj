@@ -53,9 +53,6 @@
   </ItemGroup>
   <ItemGroup>
     <!--Hahaha everything hurts and NuGet is making the package dirs inconsistently on some systems.-->
-    <Reference Include="NFluidsynth, Version=1.0.7038.27709, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\packages\nfluidsynth\0.1.0\lib\net40\NFluidsynth.dll</HintPath>
-    </Reference>
     <Reference Condition="Exists('..\..\packages\sharpfont\4.0.1\lib\net45\SharpFont.dll')" Include="SharpFont, Version=4.0.1.200, Culture=neutral, PublicKeyToken=48add4c483071cdf">
       <HintPath>..\..\packages\sharpfont\4.0.1\lib\net45\SharpFont.dll</HintPath>
     </Reference>

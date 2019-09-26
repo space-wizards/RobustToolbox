@@ -3,21 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Commons.Music.Midi;
 using NFluidsynth;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.Reflection;
-using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
-using Robust.Shared.Serialization;
-using Robust.Shared.Timing;
-using Robust.Shared.Utility;
-using Logger = Robust.Shared.Log.Logger;
-using MidiEvent = Commons.Music.Midi.MidiEvent;
-using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace Robust.Client.Audio.Midi
 {

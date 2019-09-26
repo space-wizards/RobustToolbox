@@ -34,8 +34,6 @@ namespace Robust.Client.Interfaces.Graphics
         // AUDIO SYSTEM DOWN BELOW.
         AudioStream LoadAudioOggVorbis(Stream stream, string name = null);
         AudioStream LoadAudioWav(Stream stream, string name = null);
-        AudioStream LoadAudioMonoPCM(ushort[] data, string name = null);
-        AudioStream LoadAudioStereoPCM(ushort[] data, string name = null);
 
         IClydeAudioSource CreateAudioSource(AudioStream stream);
         IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers);

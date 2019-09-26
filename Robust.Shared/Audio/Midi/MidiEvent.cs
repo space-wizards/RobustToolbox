@@ -3,6 +3,10 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Audio.Midi
 {
+    /// <summary>
+    ///     This class is a data representation of a Midi Event.
+    ///     It's 'compatible' with NFluidsynth's own MidiEvent class.
+    /// </summary>
     [Serializable, NetSerializable]
     public class MidiEvent
     {

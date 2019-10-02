@@ -56,10 +56,11 @@ namespace Robust.Server.Player
                 if (_status == value)
                     return;
 
+                var old = _status;
                 _status = value;
                 UpdatePlayerState();
 
-                PlayerStatusChanged?.Invoke(this, new SessionStatusEventArgs(this, _status, value));
+                PlayerStatusChanged?.Invoke(this, new SessionStatusEventArgs(this, old, value));
             }
         }
 

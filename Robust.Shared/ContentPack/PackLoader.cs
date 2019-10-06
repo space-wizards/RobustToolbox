@@ -49,12 +49,14 @@ namespace Robust.Shared.ContentPack
                 // this way people can read the stream however many times they want to,
                 // without the performance hit of deflating it every time.
                 stream = new MemoryStream();
-                using (var zipStream = _zip.GetInputStream(entry))
+                lock (_zip)
                 {
-                    zipStream.CopyTo(stream);
-                    stream.Position = 0;
+                    using (var zipStream = _zip.GetInputStream(entry))
+                    {
+                        zipStream.CopyTo(stream);
+                        stream.Position = 0;
+                    }
                 }
-
                 return true;
             }
 

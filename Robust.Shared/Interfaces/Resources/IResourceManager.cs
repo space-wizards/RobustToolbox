@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Interfaces.Resources

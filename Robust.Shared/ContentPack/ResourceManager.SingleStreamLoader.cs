@@ -27,7 +27,10 @@ namespace Robust.Shared.ContentPack
                 if (relPath == _resourcePath)
                 {
                     stream = new MemoryStream();
-                    _stream.CopyTo(stream);
+                    lock (_stream)
+                    {
+                        _stream.CopyTo(stream);
+                    }
                     stream.Position = 0;
                     return true;
                 }

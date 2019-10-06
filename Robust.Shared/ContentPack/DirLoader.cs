@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using Robust.Shared.Log;
+using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -16,14 +16,17 @@ namespace Robust.Shared.ContentPack
         class DirLoader : IContentRoot
         {
             private readonly DirectoryInfo _directory;
+            private readonly ISawmill _sawmill;
 
             /// <summary>
             ///     Constructor.
             /// </summary>
             /// <param name="directory">Directory to mount.</param>
-            public DirLoader(DirectoryInfo directory)
+            /// <param name="sawmill"></param>
+            public DirLoader(DirectoryInfo directory, ISawmill sawmill)
             {
                 _directory = directory;
+                _sawmill = sawmill;
             }
 
             /// <inheritdoc />
@@ -76,7 +79,6 @@ namespace Robust.Shared.ContentPack
             [Conditional("DEBUG")]
             private void CheckPathCasing(ResourcePath path)
             {
-                var sawmill = Logger.GetSawmill("res");
                 // Run this inside the thread pool due to overhead.
                 Task.Run(() =>
                 {
@@ -116,7 +118,7 @@ namespace Robust.Shared.ContentPack
 
                     if (mismatch)
                     {
-                        sawmill.Warning("Path '{0}' has mismatching case from file on disk ('{1}'). " +
+                        _sawmill.Warning("Path '{0}' has mismatching case from file on disk ('{1}'). " +
                                         "This can cause loading failures on certain file system configurations " +
                                         "and should be corrected.", path, diskPath);
                     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
@@ -19,6 +20,8 @@ namespace Robust.Shared.ContentPack
 #pragma warning disable 649
         private readonly IConfigurationManager _config;
 #pragma warning restore 649
+
+        private readonly ReaderWriterLockSlim _contentRootsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 
         private readonly List<(ResourcePath prefix, IContentRoot root)> _contentRoots =
             new List<(ResourcePath, IContentRoot)>();
@@ -89,7 +92,15 @@ namespace Robust.Shared.ContentPack
             //create new PackLoader
             var loader = new PackLoader(packInfo);
             loader.Mount();
-            _contentRoots.Add((prefix, loader));
+            _contentRootsLock.EnterWriteLock();
+            try
+            {
+                _contentRoots.Add((prefix, loader));
+            }
+            finally
+            {
+                _contentRootsLock.ExitWriteLock();
+            }
         }
 
         /// <inheritdoc />
@@ -112,9 +123,17 @@ namespace Robust.Shared.ContentPack
                 throw new DirectoryNotFoundException("Specified directory does not exist: " + pathInfo.FullName);
             }
 
-            var loader = new DirLoader(pathInfo);
+            var loader = new DirLoader(pathInfo, Logger.GetSawmill("res"));
             loader.Mount();
-            _contentRoots.Add((prefix, loader));
+            _contentRootsLock.EnterWriteLock();
+            try
+            {
+                _contentRoots.Add((prefix, loader));
+            }
+            finally
+            {
+                _contentRootsLock.ExitWriteLock();
+            }
         }
 
         /// <inheritdoc />
@@ -158,21 +177,30 @@ namespace Robust.Shared.ContentPack
                 throw new FileNotFoundException($"Path '{path}' contains invalid characters/filenames.");
             }
 #endif
-            foreach (var (prefix, root) in _contentRoots)
+            _contentRootsLock.EnterReadLock();
+
+            try
             {
-                if (!path.TryRelativeTo(prefix, out var relative))
+                foreach (var (prefix, root) in _contentRoots)
                 {
-                    continue;
+                    if (!path.TryRelativeTo(prefix, out var relative))
+                    {
+                        continue;
+                    }
+
+                    if (root.TryGetFile(relative, out fileStream))
+                    {
+                        return true;
+                    }
                 }
 
-                if (root.TryGetFile(relative, out fileStream))
-                {
-                    return true;
-                }
+                fileStream = null;
+                return false;
             }
-
-            fileStream = null;
-            return false;
+            finally
+            {
+                _contentRootsLock.ExitReadLock();
+            }
         }
 
         /// <inheritdoc />
@@ -207,22 +235,31 @@ namespace Robust.Shared.ContentPack
             }
 
             var alreadyReturnedFiles = new HashSet<ResourcePath>();
-            foreach (var (prefix, root) in _contentRoots)
-            {
-                if (!path.TryRelativeTo(prefix, out var relative))
-                {
-                    continue;
-                }
 
-                foreach (var filename in root.FindFiles(relative))
+            _contentRootsLock.EnterReadLock();
+            try
+            {
+                foreach (var (prefix, root) in _contentRoots)
                 {
-                    var newPath = prefix / filename;
-                    if (!alreadyReturnedFiles.Contains(newPath))
+                    if (!path.TryRelativeTo(prefix, out var relative))
                     {
-                        alreadyReturnedFiles.Add(newPath);
-                        yield return newPath;
+                        continue;
+                    }
+
+                    foreach (var filename in root.FindFiles(relative))
+                    {
+                        var newPath = prefix / filename;
+                        if (!alreadyReturnedFiles.Contains(newPath))
+                        {
+                            alreadyReturnedFiles.Add(newPath);
+                            yield return newPath;
+                        }
                     }
                 }
+            }
+            finally
+            {
+                _contentRootsLock.ExitReadLock();
             }
         }
 
@@ -230,20 +267,28 @@ namespace Robust.Shared.ContentPack
         public bool TryGetDiskFilePath(ResourcePath path, out string diskPath)
         {
             // loop over each root trying to get the file
-            foreach (var (prefix, root) in _contentRoots)
+            _contentRootsLock.EnterReadLock();
+            try
             {
-                if (!(root is DirLoader dirLoader) || !path.TryRelativeTo(prefix, out var tempPath))
+                foreach (var (prefix, root) in _contentRoots)
                 {
-                    continue;
+                    if (!(root is DirLoader dirLoader) || !path.TryRelativeTo(prefix, out var tempPath))
+                    {
+                        continue;
+                    }
+
+                    diskPath = dirLoader.GetPath(tempPath);
+                    if (File.Exists(diskPath))
+                        return true;
                 }
 
-                diskPath = dirLoader.GetPath(tempPath);
-                if (File.Exists(diskPath))
-                    return true;
+                diskPath = null;
+                return false;
             }
-
-            diskPath = null;
-            return false;
+            finally
+            {
+                _contentRootsLock.ExitReadLock();
+            }
         }
 
         public void MountStreamAt(MemoryStream stream, ResourcePath path)
@@ -255,7 +300,15 @@ namespace Robust.Shared.ContentPack
 
             var loader = new SingleStreamLoader(stream, path.ToRelativePath());
             loader.Mount();
-            _contentRoots.Add((ResourcePath.Root, loader));
+            _contentRootsLock.EnterWriteLock();
+            try
+            {
+                _contentRoots.Add((ResourcePath.Root, loader));
+            }
+            finally
+            {
+                _contentRootsLock.ExitWriteLock();
+            }
         }
 
         internal static bool IsPathValid(ResourcePath path)

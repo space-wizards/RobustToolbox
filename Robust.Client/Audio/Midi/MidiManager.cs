@@ -12,14 +12,38 @@ namespace Robust.Client.Audio.Midi
 {
     public interface IMidiManager
     {
+        /// <summary>
+        ///     This method returns a midi renderer ready to be used.
+        ///     You only need to set the <see cref="IMidiRenderer.MidiProgram"/> afterwards.
+        /// </summary>
         IMidiRenderer GetNewRenderer();
+
+        /// <summary>
+        ///     Checks whether the file at the given path is a valid midi file or not.
+        /// </summary>
+        /// <remarks>
+        ///     We add this here so content doesn't need to reference NFluidsynth.
+        /// </remarks>
         bool IsMidiFile(string filename);
+
+        /// <summary>
+        ///     Checks whether the file at the given path is a valid midi file or not.
+        /// </summary>
+        /// <remarks>
+        ///     We add this here so content doesn't need to reference NFluidsynth.
+        /// </remarks>
         bool IsSoundfontFile(string filename);
     }
 
-    public class MidiManager : IPostInjectInit, IDisposable, IMidiManager
+    internal class MidiManager : IPostInjectInit, IDisposable, IMidiManager
     {
-        public static readonly string[] LinuxSoundfonts =
+        private bool _alive = true;
+        private Settings _settings;
+        private SoundFontLoader _soundFontLoader;
+        private List<MidiRenderer> _renderers = new List<MidiRenderer>();
+        private Thread _midiThread;
+
+        private static readonly string[] LinuxSoundfonts =
         {
             "/usr/share/soundfonts/default.sf2",
             "/usr/share/soundfonts/FluidR3_GM.sf2",
@@ -29,22 +53,12 @@ namespace Robust.Client.Audio.Midi
             "/usr/share/sounds/sf2/FluidR3_GS.sf2",
         };
 
-        public static readonly string WindowsSoundfont = "c:\\WINDOWS\\system32\\drivers\\gm.dls";
+        private static readonly string WindowsSoundfont = "c:\\WINDOWS\\system32\\drivers\\gm.dls";
 
-        public static readonly string OSXSoundfont =
+        private static readonly string OSXSoundfont =
             "/System/Library/Components/CoreAudio.component/Contents/Resources/gs_instruments.dls";
-        public static readonly string FallbackSoundfont = "/Resources/Midi/fallback.sf2";
 
-#pragma warning disable 169
-        [Dependency] private IClydeAudio _clydeAudio;
-        [Dependency] private IResourceCache _resourceCache;
-#pragma warning enable 169
-
-        private bool _alive = true;
-        private Settings _settings;
-        private SoundFontLoader _soundFontLoader;
-        private List<MidiRenderer> _renderers = new List<MidiRenderer>();
-        private Thread _midiThread;
+        private static readonly string FallbackSoundfont = "/Resources/Midi/fallback.sf2";
 
         public void PostInject()
         {
@@ -63,36 +77,19 @@ namespace Robust.Client.Audio.Midi
             _midiThread.Start();
         }
 
-        /// <summary>
-        ///     Checks whether the file at the given path is a valid midi file or not.
-        /// </summary>
-        /// <remarks>
-        ///     We add this here so content doesn't need to reference NFluidsynth.
-        /// </remarks>
         public bool IsMidiFile(string filename)
         {
             return SoundFont.IsMidiFile(filename);
         }
 
-        /// <summary>
-        ///     Checks whether the file at the given path is a valid midi file or not.
-        /// </summary>
-        /// <remarks>
-        ///     We add this here so content doesn't need to reference NFluidsynth.
-        /// </remarks>
         public bool IsSoundfontFile(string filename)
         {
             return SoundFont.IsSoundFont(filename);
         }
 
-        /// <summary>
-        ///     This method returns a midi renderer ready to be used.
-        ///     You only need to set the <see cref="IMidiRenderer.MidiProgram"/> afterwards.
-        /// </summary>
         public IMidiRenderer GetNewRenderer()
         {
             var renderer = new MidiRenderer(_settings, _soundFontLoader);
-            _renderers.Add(renderer);
 
             // Since the last loaded soundfont takes priority, we load the fallback soundfont first.
             renderer.LoadSoundfont(FallbackSoundfont);
@@ -124,6 +121,9 @@ namespace Robust.Client.Audio.Midi
                     renderer.LoadSoundfont(WindowsSoundfont, true);
             }
 
+            lock (_renderers)
+                _renderers.Add(renderer);
+
             return renderer;
         }
 
@@ -134,12 +134,12 @@ namespace Robust.Client.Audio.Midi
         {
             while (_alive)
             {
-                for (var i = 0; i < _renderers.Count; i++)
-                {
-                    var renderer = _renderers[i];
-                    if(renderer != null && !renderer.Rendering)
-                        renderer.Render();
-                }
+                lock(_renderers)
+                    for (var i = 0; i < _renderers.Count; i++)
+                    {
+                        var renderer = _renderers[i];
+                        renderer?.Render();
+                    }
 
                 Thread.Sleep(1);
             }
@@ -148,6 +148,7 @@ namespace Robust.Client.Audio.Midi
         public void Dispose()
         {
             _alive = false;
+            _midiThread.Join();
             _settings?.Dispose();
             foreach (var renderer in _renderers)
             {

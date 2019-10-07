@@ -145,7 +145,6 @@ namespace Robust.Client.Audio.Midi
         public bool IsInputOpen => _driver != null;
         public bool IsMidiOpen => _player != null;
         public bool Mono { get; set; } = true;
-        public bool Rendering { get; set; } = false;
         public IEntity Position { get; set; } = null;
 
         internal bool Free { get; set; } = false;
@@ -252,8 +251,6 @@ namespace Robust.Client.Audio.Midi
             AL.GetSource(_source, ALGetSourcei.BuffersProcessed, out var buffersProcessed);
             if (buffersProcessed == 0) return;
 
-            Rendering = true;
-
             unsafe
             {
                 var buffers = AL.SourceUnqueueBuffers(_source, buffersProcessed);
@@ -293,7 +290,6 @@ namespace Robust.Client.Audio.Midi
 
             if(status != ALSourceState.Playing) AL.SourcePlay(_source);
 
-            Rendering = false;
         }
 
         private int MidiPlayerEventHandler(MidiEvent midiEvent)

@@ -301,11 +301,12 @@ namespace Robust.Client.Audio.Midi
                 AL.SourceQueueBuffers(_source, buffersProcessed, buffers);
             }
 
-            if (Status == MidiRendererStatus.File && _player.Status == FluidPlayerStatus.Done)
-            {
-                _taskManager.RunOnMainThread(() => { OnMidiPlayerFinished?.Invoke(); });
-                CloseMidi();
-            }
+            lock(_player)
+                if (Status == MidiRendererStatus.File && _player.Status == FluidPlayerStatus.Done)
+                {
+                    _taskManager.RunOnMainThread(() => { OnMidiPlayerFinished?.Invoke(); });
+                    CloseMidi();
+                }
 
             if(status != ALSourceState.Playing) AL.SourcePlay(_source);
 

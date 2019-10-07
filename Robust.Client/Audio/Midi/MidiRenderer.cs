@@ -371,13 +371,18 @@ namespace Robust.Client.Audio.Midi
             if(IsInputOpen) CloseInput();
             if(IsMidiOpen) CloseMidi();
 
+            AL.DeleteBuffers(_buffers);
+            AL.DeleteSource(_source);
+
             _synth?.Dispose();
+            _player?.Dispose();
             _driver?.Dispose();
 
             _settings = null;
             _synth = null;
             _player = null;
             _driver = null;
+            _soundFontLoader = null;
         }
     }
 }

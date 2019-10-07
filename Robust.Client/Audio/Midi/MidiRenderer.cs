@@ -10,6 +10,13 @@ using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Client.Audio.Midi
 {
+    public enum MidiRendererStatus
+    {
+        None,
+        Input,
+        File,
+    }
+
     public interface IMidiRenderer : IDisposable
     {
         /// <summary>
@@ -28,14 +35,12 @@ namespace Robust.Client.Audio.Midi
         int MidiProgram { get; set; }
 
         /// <summary>
-        ///     Whether the renderer is listening for midi input or not.
+        ///     The current status of the renderer.
+        ///     "None" if the renderer isn't playing from input or a midi file.
+        ///     "Input" if the renderer is playing from midi input.
+        ///     "File" if the renderer is playing from a midi file.
         /// </summary>
-        bool IsInputOpen { get; }
-
-        /// <summary>
-        ///     Whether a midi file is being played or not.
-        /// </summary>
-        bool IsMidiOpen { get; }
+        MidiRendererStatus Status { get; }
 
         /// <summary>
         ///     Whether the sound will play in stereo or mono.
@@ -132,6 +137,8 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
+        public MidiRendererStatus Status { get; private set; } = MidiRendererStatus.None;
+
         public bool LoopMidi
         {
             get => _loopMidi;
@@ -142,8 +149,7 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
-        public bool IsInputOpen => _driver != null;
-        public bool IsMidiOpen => _player != null;
+
         public bool Mono { get; set; } = true;
         public IEntity Position { get; set; } = null;
 
@@ -176,6 +182,8 @@ namespace Robust.Client.Audio.Midi
 
         public void OpenInput()
         {
+            if (Status != MidiRendererStatus.File) CloseMidi();
+            Status = MidiRendererStatus.Input;
             StopAllNotes();
 
             _driver = new MidiDriver(_settings, MidiDriverEventHandler);
@@ -188,6 +196,8 @@ namespace Robust.Client.Audio.Midi
 
         public void OpenMidi(ReadOnlySpan<byte> buffer)
         {
+            if (Status == MidiRendererStatus.Input) CloseInput();
+            Status = MidiRendererStatus.File;
             StopAllNotes();
 
             if(_player == null)
@@ -205,6 +215,8 @@ namespace Robust.Client.Audio.Midi
 
         public void CloseInput()
         {
+            if (Status != MidiRendererStatus.Input) return;
+            Status = MidiRendererStatus.None;
             _driver?.Dispose();
             _driver = null;
             StopAllNotes();
@@ -212,6 +224,8 @@ namespace Robust.Client.Audio.Midi
 
         public void CloseMidi()
         {
+            if (Status != MidiRendererStatus.File) return;
+            Status = MidiRendererStatus.None;
             if (_player == null) return;
             lock (_player)
             {
@@ -280,7 +294,7 @@ namespace Robust.Client.Audio.Midi
                 AL.SourceQueueBuffers(_source, buffersProcessed, buffers);
             }
 
-            if (IsMidiOpen && _player.Status == FluidPlayerStatus.Done)
+            if (Status == MidiRendererStatus.File && _player.Status == FluidPlayerStatus.Done)
             {
                 OnMidiPlayerFinished?.Invoke();
                 CloseMidi();
@@ -292,14 +306,14 @@ namespace Robust.Client.Audio.Midi
 
         private int MidiPlayerEventHandler(MidiEvent midiEvent)
         {
-            if (IsMidiOpen == false) return 0;
+            if (Status != MidiRendererStatus.File) return 0;
             SendMidiEvent((Shared.Audio.Midi.MidiEvent) midiEvent);
             return 0;
         }
 
         private int MidiDriverEventHandler(MidiEvent midiEvent)
         {
-            if (IsInputOpen == false) return 0;
+            if (Status != MidiRendererStatus.Input) return 0;
             SendMidiEvent((Shared.Audio.Midi.MidiEvent) midiEvent);
             return 0;
         }
@@ -362,8 +376,15 @@ namespace Robust.Client.Audio.Midi
 
         public void Dispose()
         {
-            if(IsInputOpen) CloseInput();
-            if(IsMidiOpen) CloseMidi();
+            switch (Status)
+            {
+                case MidiRendererStatus.Input:
+                    CloseInput();
+                    break;
+                case MidiRendererStatus.File:
+                    CloseMidi();
+                    break;
+            }
 
             AL.DeleteBuffers(_buffers);
             AL.DeleteSource(_source);

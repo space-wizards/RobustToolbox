@@ -56,8 +56,8 @@ namespace Robust.Client.Audio.Midi
         /// <summary>
         ///     Start playing a midi file.
         /// </summary>
-        /// <param name="stream">Bytes of the midi file</param>
-        void OpenMidi(Span<byte> stream);
+        /// <param name="buffer">Bytes of the midi file</param>
+        void OpenMidi(ReadOnlySpan<byte> buffer);
 
         /// <summary>
         ///     Stops listening for midi input.
@@ -188,7 +188,7 @@ namespace Robust.Client.Audio.Midi
             OpenMidi(File.ReadAllBytes(filename));
         }
 
-        public void OpenMidi(Span<byte> buffer)
+        public void OpenMidi(ReadOnlySpan<byte> buffer)
         {
             StopAllNotes();
 

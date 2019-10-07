@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using NFluidsynth;
 using OpenTK.Audio.OpenAL;
+using OpenTK.Graphics.OpenGL;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
@@ -270,43 +271,49 @@ namespace Robust.Client.Audio.Midi
             AL.GetSource(_source, ALGetSourcei.BuffersProcessed, out var buffersProcessed);
             if (buffersProcessed == 0) return;
 
+            int bufferLength = length * 2;
+
             unsafe
             {
                 var buffers = AL.SourceUnqueueBuffers(_source, buffersProcessed);
 
+                // or new.
+                Span<ushort> audio = stackalloc ushort[bufferLength];
+
                 for (var i = 0; i < buffers.Length; i++)
                 {
+                    audio.Clear();
+
                     var buffer = buffers[i];
 
-                    ushort[] left;
-                    if (Mono)
-                    {
-                        left = new ushort[length];
-                        var right = new ushort[length];
-                        _synth?.WriteSample16( left, 0, 1, right, 0, 1);
-                        left = left.Zip(right, (x, y) => (ushort) (x + y)).ToArray();
-                    }
-                    else
-                    {
-                        left = new ushort[length*2];
-                        _synth?.WriteSample16( left, 0, 1, left, 1, 2);
-                    }
+                    // This here is to blame for the crash. Comment it out and it won't crash at all.
+                    _synth?.WriteSample16( audio, 0, 1,
+                        audio, Mono ? length : 1, Mono ? 1 : 2);
 
-                    fixed (ushort* ptr = left)
+                    if (Mono)
+                        // Turn audio to mono
+                        for (var j = 0; j < length; j++)
+                        {
+                            var k = j + length - 1;
+                            audio[j] += audio[k];
+                        }
+
+                    fixed (ushort* ptr = audio)
                     {
-                        AL.BufferData(buffer, Mono ? ALFormat.Mono16 : ALFormat.Stereo16, (IntPtr) ptr, Mono ? length * sizeof(ushort) : length*sizeof(ushort)*2, SampleRate);
+                        AL.BufferData(buffer, Mono ? ALFormat.Mono16 : ALFormat.Stereo16, (IntPtr) ptr, Mono ? length * sizeof(ushort) : bufferLength*sizeof(ushort), SampleRate);
                     }
                 }
 
                 AL.SourceQueueBuffers(_source, buffersProcessed, buffers);
             }
 
-            lock(_player)
-                if (Status == MidiRendererStatus.File && _player.Status == FluidPlayerStatus.Done)
-                {
-                    _taskManager.RunOnMainThread(() => { OnMidiPlayerFinished?.Invoke(); });
-                    CloseMidi();
-                }
+            if(_player != null)
+                lock(_player)
+                    if (Status == MidiRendererStatus.File && _player.Status == FluidPlayerStatus.Done)
+                    {
+                        _taskManager.RunOnMainThread(() => { OnMidiPlayerFinished?.Invoke(); });
+                        CloseMidi();
+                    }
 
             if(status != ALSourceState.Playing) AL.SourcePlay(_source);
 

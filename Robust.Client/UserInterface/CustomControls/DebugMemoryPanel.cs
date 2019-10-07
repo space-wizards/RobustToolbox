@@ -52,7 +52,8 @@ namespace Robust.Client.UserInterface.CustomControls
 #if NETCOREAPP
             var info = GC.GetGCMemoryInfo();
             return $@"Heap Size: {FormatBytes(info.HeapSizeBytes)}
-Total Allocated: {FormatBytes(GC.GetTotalMemory(false))}";
+Total Allocated: {FormatBytes(GC.GetTotalMemory(false))}
+Collections: {GC.CollectionCount(0)} {GC.CollectionCount(1)} {GC.CollectionCount(2)}";
 #else
             return "Memory information needs .NET Core";
 #endif

@@ -20,6 +20,14 @@ namespace Robust.Client.Audio.Midi
         IMidiRenderer GetNewRenderer();
 
         /// <summary>
+        ///     This method is used to dispose a renderer.
+        ///     You should use this instead of disposing the renderer manually.
+        /// </summary>
+        /// <param name="renderer"></param>
+        /// <returns>Whether it could be returned or not</returns>
+        bool DisposeRenderer(IMidiRenderer renderer);
+
+        /// <summary>
         ///     Checks whether the file at the given path is a valid midi file or not.
         /// </summary>
         /// <remarks>
@@ -126,6 +134,19 @@ namespace Robust.Client.Audio.Midi
                 _renderers.Add(renderer);
 
             return renderer;
+        }
+
+        public bool DisposeRenderer(IMidiRenderer renderer)
+        {
+            var midiRenderer = renderer as MidiRenderer;
+            var result = false;
+            lock(_renderers)
+            {
+                if (midiRenderer == null || !_renderers.Contains(midiRenderer)) return false;
+                result = _renderers.Remove(midiRenderer);
+                midiRenderer.Dispose();
+            }
+            return result;
         }
 
         /// <summary>

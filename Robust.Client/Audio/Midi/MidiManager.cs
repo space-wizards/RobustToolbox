@@ -7,6 +7,7 @@ using NFluidsynth;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Shared.IoC;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Audio.Midi
 {
@@ -161,17 +162,18 @@ namespace Robust.Client.Audio.Midi
         /// </summary>
         private class ResourceLoaderCallbacks : SoundFontLoaderCallbacks
         {
-            private BinaryReader _file;
-            private byte[] _fileData;
+            private readonly Dictionary<int, Stream> _openStreams = new Dictionary<int, Stream>();
+            private int _nextStreamId = 1;
 
-            public override unsafe IntPtr Open(string filename)
+            public override IntPtr Open(string filename)
             {
                 Stream stream;
                 if (filename.StartsWith("/Resources/"))
                 {
                     if (!IoCManager.Resolve<IResourceCache>().TryContentFileRead(filename.Substring(10), out stream))
                         return IntPtr.Zero;
-                } else if (File.Exists(filename))
+                }
+                else if (File.Exists(filename))
                 {
                     stream = File.OpenRead(filename);
                 }
@@ -180,40 +182,53 @@ namespace Robust.Client.Audio.Midi
                     return IntPtr.Zero;
                 }
 
-                _file = new BinaryReader(stream);
-                _fileData = _file.ReadBytes((int) stream.Length);
-                _file.BaseStream.Position = 0;
-                fixed (byte* ptr = _fileData)
-                {
-                    return (IntPtr) ptr;
-                }
+                var id = _nextStreamId++;
+
+                _openStreams.Add(id, stream);
+
+                return (IntPtr) id;
             }
 
             public override unsafe int Read(IntPtr buf, long count, IntPtr sfHandle)
             {
-                var length = (int)count;
+                var length = (int) count;
                 var span = new Span<byte>(buf.ToPointer(), length);
-                _file.ReadBytes((int)count).CopyTo(span);
+                var stream = _openStreams[(int) sfHandle];
+
+                byte[] buffer;
+                try
+                {
+                    buffer = stream.ReadExact(length);
+                }
+                catch (EndOfStreamException)
+                {
+                    return -1;
+                }
+                buffer.CopyTo(span);
                 return 0;
             }
 
             public override int Seek(IntPtr sfHandle, int offset, SeekOrigin origin)
             {
-                _file.BaseStream.Seek(offset, origin);
+                var stream = _openStreams[(int) sfHandle];
+
+                stream.Seek(offset, origin);
+
                 return 0;
             }
 
             public override int Tell(IntPtr sfHandle)
             {
-                return (int) _file.BaseStream.Position;
+                var stream = _openStreams[(int) sfHandle];
+
+                return (int) stream.Position;
             }
 
             public override int Close(IntPtr sfHandle)
             {
-                _file.BaseStream.Close();
-                _file.Close();
-                _file = null;
-                _fileData = null;
+                var stream = _openStreams[(int) sfHandle];
+                stream.Dispose();
+                _openStreams.Remove((int) sfHandle);
                 return 0;
             }
         }

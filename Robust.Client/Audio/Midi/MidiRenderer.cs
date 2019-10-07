@@ -165,15 +165,13 @@ namespace Robust.Client.Audio.Midi
         {
             var length = (SampleRate / Buffers) * (Mono ? 1 : 2);
 
-            for (var i = 0; i < Buffers; i++)
-            {
-                var empty = new Span<ushort>(new ushort[length]);
-                fixed (ushort* ptr = empty)
-                {
-                    AL.BufferData(_buffers[i], Mono ? ALFormat.Mono16 : ALFormat.Stereo16, (IntPtr) ptr, length*sizeof(ushort), SampleRate);
-                    AL.SourceQueueBuffers(_source, 1, new []{_buffers[i]});
-                }
-            }
+            var empty = new ushort[length];
+            fixed (ushort* ptr = empty)
+                for (var i = 0; i < Buffers; i++)
+                    AL.BufferData(_buffers[i], Mono ? ALFormat.Mono16 : ALFormat.Stereo16, (IntPtr) ptr,
+                        length * sizeof(ushort), SampleRate);
+
+            AL.SourceQueueBuffers(_source, Buffers, _buffers);
         }
 
         public void OpenInput()

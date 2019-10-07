@@ -5,8 +5,10 @@ namespace Robust.UnitTesting.Shared.Utility
 {
     [Parallelizable(ParallelScope.All)]
     [TestFixture]
+    [TestOf(typeof(MarshalHelper))]
     public sealed class MarshalHelper_Test
     {
+        [Test]
         public unsafe void FindNullTerminatorTest()
         {
             var data = stackalloc byte[]

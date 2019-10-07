@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using NFluidsynth;
 using OpenTK.Audio.OpenAL;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.IoC;
 using MidiEvent = NFluidsynth.MidiEvent;
 using Logger = Robust.Shared.Log.Logger;
 
@@ -109,6 +111,10 @@ namespace Robust.Client.Audio.Midi
 
     public class MidiRenderer : IMidiRenderer
     {
+#pragma warning disable 649
+        [Dependency] private ITaskManager _taskManager;
+#pragma warning restore 649
+
         private const int NoteLimit = 15;
 
         private Settings _settings;
@@ -157,6 +163,7 @@ namespace Robust.Client.Audio.Midi
 
         internal MidiRenderer(Settings settings, SoundFontLoader soundFontLoader)
         {
+            IoCManager.InjectDependencies(this);
             _settings = settings;
             _soundFontLoader = soundFontLoader;
             _synth = new Synth(_settings);
@@ -296,7 +303,7 @@ namespace Robust.Client.Audio.Midi
 
             if (Status == MidiRendererStatus.File && _player.Status == FluidPlayerStatus.Done)
             {
-                OnMidiPlayerFinished?.Invoke();
+                _taskManager.RunOnMainThread(() => { OnMidiPlayerFinished?.Invoke(); });
                 CloseMidi();
             }
 
@@ -371,7 +378,7 @@ namespace Robust.Client.Audio.Midi
             catch (FluidSynthInteropException interopException)
             { }
 
-            OnMidiEvent?.Invoke(midiEvent);
+            _taskManager.RunOnMainThread(() => { OnMidiEvent?.Invoke(midiEvent); });
         }
 
         public void Dispose()

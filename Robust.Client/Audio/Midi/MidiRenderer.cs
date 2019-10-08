@@ -308,7 +308,7 @@ namespace Robust.Client.Audio.Midi
                 lock(_player)
                     if (Status == MidiRendererStatus.File && _player.Status == FluidPlayerStatus.Done)
                     {
-                        _taskManager.RunOnMainThread(() => { OnMidiPlayerFinished?.Invoke(); });
+                        _taskManager.RunOnMainThread(() => OnMidiPlayerFinished?.Invoke());
                         CloseMidi();
                     }
 
@@ -339,29 +339,14 @@ namespace Robust.Client.Audio.Midi
             {
                 switch (midiEvent.Type)
                 {
-                    // NoteOff
-                    case 128:
-                        if (_notesPlaying.Contains(midiEvent.Key))
-                        {
-                            _synth.NoteOff(ch, midiEvent.Key);
-                            _notesPlaying.Remove(midiEvent.Key);
-                        }
-
-                        break;
                     // NoteOn
                     case 144:
                         // NoteOn with 0 velocity is the same as NoteOff
                         if (midiEvent.Velocity == 0)
-                        {
-                            if (_notesPlaying.Contains(midiEvent.Key))
-                            {
-                                _synth.NoteOff(ch, midiEvent.Key);
-                                _notesPlaying.Remove(midiEvent.Key);
-                            }
-                        }
+                            goto case 128;
                         else
                         {
-                            // If we're at the limit of notes at once, we drop this one.
+                            // If we're at the limit of notes being played at once, we drop this one.
                             if (_notesPlaying.Count >= NoteLimit)
                                 return;
 
@@ -371,19 +356,27 @@ namespace Robust.Client.Audio.Midi
                         }
 
                         break;
+                    // NoteOff. Any other midi event is also treated as a NoteOff.
+                    case 128:
                     default:
                         if (_notesPlaying.Contains(midiEvent.Key))
                         {
                             _synth.NoteOff(ch, midiEvent.Key);
                             _notesPlaying.Remove(midiEvent.Key);
                         }
+
                         break;
                 }
             }
-            catch (FluidSynthInteropException interopException)
-            { }
+            catch (FluidSynthInteropException e)
+            {
+                _taskManager.RunOnMainThread(() => Logger.ErrorS("midi",
+                    "Exception while sending midi event of type {0}: {1}",
+                    midiEvent.Type,
+                    e));
+            }
 
-            _taskManager.RunOnMainThread(() => { OnMidiEvent?.Invoke(midiEvent); });
+            _taskManager.RunOnMainThread(() => OnMidiEvent?.Invoke(midiEvent));
         }
 
         public void Dispose()

@@ -266,35 +266,32 @@ namespace Robust.Client.Audio.Midi
         internal void Render(int length = SampleRate/1000)
         {
             var status = AL.GetSourceState(_source);
-            if(Position != null && Mono)
-                AL.Source(_source, ALSource3f.Position, Position.Transform.GridPosition.X, Position.Transform.GridPosition.Y, 0f);
+            if(Mono && Position != null)
+                lock(Position)
+                    AL.Source(_source, ALSource3f.Position, Position.Transform.GridPosition.X, Position.Transform.GridPosition.Y, 0f);
             AL.GetSource(_source, ALGetSourcei.BuffersProcessed, out var buffersProcessed);
             if (buffersProcessed == 0) return;
 
-            int bufferLength = length * 2;
+            var bufferLength = length * 2;
 
             unsafe
             {
                 var buffers = AL.SourceUnqueueBuffers(_source, buffersProcessed);
 
-                // or new.
                 Span<ushort> audio = stackalloc ushort[bufferLength];
 
                 for (var i = 0; i < buffers.Length; i++)
                 {
-                    audio.Clear();
-
                     var buffer = buffers[i];
 
-                    // This here is to blame for the crash. Comment it out and it won't crash at all.
-                    _synth?.WriteSample16( audio, 0, 1,
+                    _synth?.WriteSample16(length, audio, 0, Mono ? 1 : 2,
                         audio, Mono ? length : 1, Mono ? 1 : 2);
 
                     if (Mono)
                         // Turn audio to mono
                         for (var j = 0; j < length; j++)
                         {
-                            var k = j + length - 1;
+                            var k = j + length;
                             audio[j] += audio[k];
                         }
 

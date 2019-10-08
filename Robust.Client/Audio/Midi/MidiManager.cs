@@ -57,9 +57,9 @@ namespace Robust.Client.Audio.Midi
             "/usr/share/soundfonts/default.sf2",
             "/usr/share/soundfonts/FluidR3_GM.sf2",
             "/usr/share/soundfonts/freepats-general-midi.sf2",
+            "/usr/share/sounds/sf2/default.sf2",
             "/usr/share/sounds/sf2/FluidR3_GM.sf2",
             "/usr/share/sounds/sf2/TimGM6mb.sf2",
-            "/usr/share/sounds/sf2/FluidR3_GS.sf2",
         };
 
         private static readonly string WindowsSoundfont = "c:\\WINDOWS\\system32\\drivers\\gm.dls";
@@ -81,6 +81,7 @@ namespace Robust.Client.Audio.Midi
             _settings["audio.driver"].StringValue = "file";
             _settings["midi.autoconnect"].IntValue = 1;
             _settings["player.reset-synth"].IntValue = 0;
+            _settings["synth.midi-bank-select"].StringValue = "gm";
 
             _midiThread = new Thread(ThreadUpdate);
             _midiThread.Start();

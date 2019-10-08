@@ -1,8 +1,8 @@
-using Robust.Server.Interfaces.Player;
+﻿using Robust.Server.Interfaces.Player;
 
 namespace Robust.Server.Console
 {
-    internal interface IConGroupController
+    public interface IConGroupController
     {
         void Initialize();
 

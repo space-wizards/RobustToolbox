@@ -117,6 +117,7 @@ namespace Robust.Client.Audio.Midi
 #pragma warning restore 649
 
         private const int NoteLimit = 15;
+        private const int MidiSizeLimit = 2000000;
 
         private Settings _settings;
         private Synth _synth;
@@ -207,6 +208,14 @@ namespace Robust.Client.Audio.Midi
             if (Status == MidiRendererStatus.Input) CloseInput();
             Status = MidiRendererStatus.File;
             StopAllNotes();
+
+            if (buffer.Length > MidiSizeLimit)
+            {
+                Logger.ErrorS("midi", "Midi file selected is too big! It was {0} MB but it should be less than {1} MB.",
+                    buffer.Length*0.000001d, MidiSizeLimit*0.000001d);
+                CloseMidi();
+                return;
+            }
 
             if(_player == null)
                 _player = new NFluidsynth.Player(_synth);
@@ -346,24 +355,28 @@ namespace Robust.Client.Audio.Midi
                             goto case 128;
                         else
                         {
-                            // If we're at the limit of notes being played at once, we drop this one.
-                            if (_notesPlaying.Count >= NoteLimit)
-                                return;
+                            lock (_notesPlaying)
+                            {
+                                // If we're at the limit of notes being played at once, we drop this one.
+                                if (_notesPlaying.Count >= NoteLimit)
+                                    return;
 
-                            _synth.NoteOn(ch, midiEvent.Key, midiEvent.Velocity);
-                            if (!_notesPlaying.Contains(midiEvent.Key))
-                                _notesPlaying.Add(midiEvent.Key);
+                                _synth.NoteOn(ch, midiEvent.Key, midiEvent.Velocity);
+                                if (!_notesPlaying.Contains(midiEvent.Key))
+                                    _notesPlaying.Add(midiEvent.Key);
+                            }
                         }
 
                         break;
                     // NoteOff. Any other midi event is also treated as a NoteOff.
                     case 128:
                     default:
-                        if (_notesPlaying.Contains(midiEvent.Key))
-                        {
-                            _synth.NoteOff(ch, midiEvent.Key);
-                            _notesPlaying.Remove(midiEvent.Key);
-                        }
+                        lock(_notesPlaying)
+                            if (_notesPlaying.Contains(midiEvent.Key))
+                            {
+                                _synth.NoteOff(ch, midiEvent.Key);
+                                _notesPlaying.Remove(midiEvent.Key);
+                            }
 
                         break;
                 }

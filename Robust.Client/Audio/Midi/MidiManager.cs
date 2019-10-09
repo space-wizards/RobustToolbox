@@ -48,7 +48,6 @@ namespace Robust.Client.Audio.Midi
     {
         private bool _alive = true;
         private Settings _settings;
-        private SoundFontLoader _soundFontLoader;
         private List<MidiRenderer> _renderers = new List<MidiRenderer>();
         private Thread _midiThread;
 
@@ -69,11 +68,11 @@ namespace Robust.Client.Audio.Midi
 
         private static readonly string FallbackSoundfont = "/Resources/Midi/fallback.sf2";
 
+        private ResourceLoaderCallbacks _soundfontLoaderCallbacks;
+
         public void PostInject()
         {
             _settings = new Settings();
-            _soundFontLoader = SoundFontLoader.NewDefaultSoundFontLoader(_settings);
-            _soundFontLoader.SetCallbacks(new ResourceLoaderCallbacks());
             _settings["synth.sample-rate"].DoubleValue = 48000;
             _settings["player.timing-source"].StringValue = "sample";
             _settings["synth.lock-memory"].IntValue = 0;
@@ -85,6 +84,8 @@ namespace Robust.Client.Audio.Midi
 
             _midiThread = new Thread(ThreadUpdate);
             _midiThread.Start();
+
+            _soundfontLoaderCallbacks = new ResourceLoaderCallbacks();
         }
 
         public bool IsMidiFile(string filename)
@@ -99,7 +100,10 @@ namespace Robust.Client.Audio.Midi
 
         public IMidiRenderer GetNewRenderer()
         {
-            var renderer = new MidiRenderer(_settings, _soundFontLoader);
+            var soundfontLoader = SoundFontLoader.NewDefaultSoundFontLoader(_settings);
+            soundfontLoader.SetCallbacks(_soundfontLoaderCallbacks);
+
+            var renderer = new MidiRenderer(_settings, soundfontLoader);
 
             // Since the last loaded soundfont takes priority, we load the fallback soundfont first.
             renderer.LoadSoundfont(FallbackSoundfont);

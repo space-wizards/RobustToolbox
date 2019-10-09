@@ -1,6 +1,6 @@
 ﻿namespace Robust.Server.Console
 {
-    internal struct ConGroupIndex
+    public struct ConGroupIndex
     {
         public int Index { get; }
 

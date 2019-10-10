@@ -73,7 +73,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 var oldTarget = ValueTarget;
                 _updating = true;
-                Value = FloatMath.Lerp(Value, ValueTarget, args.DeltaSeconds * 20);
+                Value = FloatMath.Lerp(Value, ValueTarget, args.DeltaSeconds * 15);
                 _updating = false;
             }
         }

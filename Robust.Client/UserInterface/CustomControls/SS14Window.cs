@@ -169,8 +169,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
             if (CurrentDrag != DragMode.None)
             {
-                DragOffsetTopLeft = args.PointerLocation.Position - Position;
-                DragOffsetBottomRight = Position + Size - args.PointerLocation.Position;
+                DragOffsetTopLeft = args.PointerLocation.Position / UIScale - Position;
+                DragOffsetBottomRight = Position + Size - args.PointerLocation.Position / UIScale;
             }
 
             MoveToFront();

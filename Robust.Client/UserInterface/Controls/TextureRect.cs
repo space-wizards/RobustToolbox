@@ -84,12 +84,12 @@ namespace Robust.Client.UserInterface.Controls
                 // TODO: Implement Tile.
                 case StretchMode.Keep:
                     handle.DrawTextureRect(_texture,
-                        UIBox2.FromDimensions(Vector2.Zero, _texture.Size * _textureScale));
+                        UIBox2.FromDimensions(Vector2.Zero, _texture.Size * _textureScale * UIScale));
                     break;
                 case StretchMode.KeepCentered:
                 {
-                    var position = (PixelSize - _texture.Size * _textureScale) / 2;
-                    handle.DrawTexture(_texture, position);
+                    var position = (PixelSize - _texture.Size * _textureScale * UIScale) / 2;
+                    handle.DrawTextureRect(_texture, UIBox2.FromDimensions(position, _texture.Size * _textureScale * UIScale));
                     break;
                 }
 

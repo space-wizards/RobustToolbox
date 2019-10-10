@@ -76,7 +76,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            return Scale * (TextureNormal?.Size ?? Vector2.Zero) / UIScale;
+            return Scale * (TextureNormal?.Size ?? Vector2.Zero);
         }
     }
 }

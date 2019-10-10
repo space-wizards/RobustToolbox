@@ -118,6 +118,7 @@ namespace Robust.Client.Audio.Midi
 
         private const int NoteLimit = 15;
         private const int MidiSizeLimit = 2000000;
+        private const double BytesToMegabytes = 0.000001d;
 
         private Settings _settings;
         private Synth _synth;
@@ -213,7 +214,7 @@ namespace Robust.Client.Audio.Midi
             if (buffer.Length > MidiSizeLimit)
             {
                 Logger.ErrorS("midi", "Midi file selected is too big! It was {0} MB but it should be less than {1} MB.",
-                    buffer.Length*0.000001d, MidiSizeLimit*0.000001d);
+                    buffer.Length*BytesToMegabytes, MidiSizeLimit*BytesToMegabytes);
                 CloseMidi();
                 return false;
             }

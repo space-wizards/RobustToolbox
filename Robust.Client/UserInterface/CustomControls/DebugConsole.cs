@@ -1,10 +1,10 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using Robust.Client.Console;
 using Robust.Client.Graphics.Drawing;
-using Robust.Client.Input;
 using Robust.Client.Interfaces.Console;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
@@ -39,6 +39,8 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly List<string> CommandHistory = new List<string>();
         private int _historyPosition;
         private bool _currentCommandEdited;
+
+        private bool _targetVisible;
 
         public DebugConsole(IClientConsole console, IResourceManager resMan)
         {
@@ -83,20 +85,44 @@ namespace Robust.Client.UserInterface.CustomControls
             _loadHistoryFromDisk();
         }
 
-        protected override void Update(FrameEventArgs args)
+        protected override void FrameUpdate(FrameEventArgs args)
         {
-            base.Update(args);
+            base.FrameUpdate(args);
 
             _flushQueue();
+
+            var targetLocation = _targetVisible ? 0 : -Height;
+            var (posX, posY) = Position;
+
+            if (Math.Abs(targetLocation - posY) <= 1)
+            {
+                if (!_targetVisible)
+                {
+                    Visible = false;
+                }
+
+                posY = targetLocation;
+            }
+            else
+            {
+                posY = FloatMath.Lerp(posY, targetLocation, args.DeltaSeconds * 20);
+            }
+
+            Position = (posX, posY);
         }
 
         public void Toggle()
         {
-            Visible = !Visible;
-            if (Visible)
+            _targetVisible = !_targetVisible;
+            if (_targetVisible)
             {
+                Visible = true;
                 CommandBar.IgnoreNext = true;
                 CommandBar.GrabKeyboardFocus();
+            }
+            else
+            {
+                CommandBar.ReleaseKeyboardFocus();
             }
         }
 
@@ -114,6 +140,7 @@ namespace Robust.Client.UserInterface.CustomControls
                     {
                         CommandHistory.RemoveAt(0);
                     }
+
                     _historyPosition = CommandHistory.Count;
                     _flushHistoryToDisk();
                 }

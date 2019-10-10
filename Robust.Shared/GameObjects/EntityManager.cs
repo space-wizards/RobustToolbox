@@ -4,7 +4,6 @@ using System.Linq;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -33,9 +32,6 @@ namespace Robust.Shared.GameObjects
 
         [Dependency]
         private readonly IComponentFactory ComponentFactory;
-
-        [Dependency]
-        private readonly INetManager _network;
 
         [Dependency]
         private readonly IComponentManager _componentManager;

@@ -53,29 +53,29 @@ namespace Robust.Client.Audio.Midi
         /// <summary>
         ///     Start listening for midi input.
         /// </summary>
-        void OpenInput();
+        bool OpenInput();
 
         /// <summary>
         ///     Start playing a midi file.
         /// </summary>
         /// <param name="filename">Path to the midi file</param>
-        void OpenMidi(string filename);
+        bool OpenMidi(string filename);
 
         /// <summary>
         ///     Start playing a midi file.
         /// </summary>
         /// <param name="buffer">Bytes of the midi file</param>
-        void OpenMidi(ReadOnlySpan<byte> buffer);
+        bool OpenMidi(ReadOnlySpan<byte> buffer);
 
         /// <summary>
         ///     Stops listening for midi input.
         /// </summary>
-        void CloseInput();
+        bool CloseInput();
 
         /// <summary>
         ///     Stops playing midi files.
         /// </summary>
-        void CloseMidi();
+        bool CloseMidi();
 
         /// <summary>
         ///     Stops all notes being played currently.
@@ -189,21 +189,22 @@ namespace Robust.Client.Audio.Midi
             AL.SourceQueueBuffers(_source, Buffers, _buffers);
         }
 
-        public void OpenInput()
+        public bool OpenInput()
         {
             if (Status != MidiRendererStatus.File) CloseMidi();
             Status = MidiRendererStatus.Input;
             StopAllNotes();
 
             _driver = new MidiDriver(_settings, MidiDriverEventHandler);
+            return true;
         }
 
-        public void OpenMidi(string filename)
+        public bool OpenMidi(string filename)
         {
-            OpenMidi(File.ReadAllBytes(filename));
+            return OpenMidi(File.ReadAllBytes(filename));
         }
 
-        public void OpenMidi(ReadOnlySpan<byte> buffer)
+        public bool OpenMidi(ReadOnlySpan<byte> buffer)
         {
             if (Status == MidiRendererStatus.Input) CloseInput();
             Status = MidiRendererStatus.File;
@@ -214,7 +215,7 @@ namespace Robust.Client.Audio.Midi
                 Logger.ErrorS("midi", "Midi file selected is too big! It was {0} MB but it should be less than {1} MB.",
                     buffer.Length*0.000001d, MidiSizeLimit*0.000001d);
                 CloseMidi();
-                return;
+                return false;
             }
 
             if(_player == null)
@@ -228,22 +229,25 @@ namespace Robust.Client.Audio.Midi
                 _player.Play();
                 _player.SetLoop(LoopMidi ? -1 : 1);
             }
+
+            return true;
         }
 
-        public void CloseInput()
+        public bool CloseInput()
         {
-            if (Status != MidiRendererStatus.Input) return;
+            if (Status != MidiRendererStatus.Input) return false;
             Status = MidiRendererStatus.None;
             _driver?.Dispose();
             _driver = null;
             StopAllNotes();
+            return true;
         }
 
-        public void CloseMidi()
+        public bool CloseMidi()
         {
-            if (Status != MidiRendererStatus.File) return;
+            if (Status != MidiRendererStatus.File) return false;
             Status = MidiRendererStatus.None;
-            if (_player == null) return;
+            if (_player == null) return false;
             lock (_player)
             {
                 _player?.Stop();
@@ -252,6 +256,7 @@ namespace Robust.Client.Audio.Midi
             }
 
             StopAllNotes();
+            return true;
         }
 
         public void StopAllNotes()

@@ -67,5 +67,20 @@ namespace Robust.Shared.Utility
                 yield return t;
             }
         }
+
+        /// <summary>
+        ///     Returns ALL nested types of the specified type, including private types of its parent.
+        /// </summary>
+        public static IEnumerable<Type> GetAllNestedTypes(this Type t)
+        {
+            foreach (var p in GetClassHierarchy(t))
+            {
+                foreach (var field in p.GetNestedTypes(BindingFlags.NonPublic | BindingFlags.Instance |
+                                                       BindingFlags.DeclaredOnly | BindingFlags.Public))
+                {
+                    yield return field;
+                }
+            }
+        }
     }
 }

@@ -33,7 +33,7 @@ namespace Robust.Client.UserInterface.Controls
         public int Count => _itemList.Count;
         public bool IsReadOnly => false;
 
-        public bool ScrollFollowing { get; set; } = true;
+        public bool ScrollFollowing { get; set; } = false;
         public int ButtonDeselectDelay { get; set; } = 100;
 
         public ItemListSelectMode SelectMode { get; set; } = ItemListSelectMode.Single;

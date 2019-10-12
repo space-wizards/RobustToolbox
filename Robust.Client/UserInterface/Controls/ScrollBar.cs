@@ -97,7 +97,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindDown(args);
 
-            if (args.Function != EngineKeyFunctions.Use)
+            if (!args.CanFocus)
             {
                 return;
             }
@@ -116,7 +116,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindUp(args);
 
-            if (args.Function != EngineKeyFunctions.Use)
+            if (!args.CanFocus)
             {
                 return;
             }

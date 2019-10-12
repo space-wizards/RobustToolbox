@@ -415,7 +415,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindDown(args);
 
-            if (SelectMode == ItemListSelectMode.None || args.Function != EngineKeyFunctions.Use)
+            if (SelectMode == ItemListSelectMode.None || !args.CanFocus)
             {
                 return;
             }

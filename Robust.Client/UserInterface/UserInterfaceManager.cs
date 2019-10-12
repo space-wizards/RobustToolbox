@@ -208,9 +208,10 @@ namespace Robust.Client.UserInterface
                     }
                 }
 
+                ReleaseKeyboardFocus();
+
                 if (control == null)
                 {
-                    ReleaseKeyboardFocus();
                     return;
                 }
 

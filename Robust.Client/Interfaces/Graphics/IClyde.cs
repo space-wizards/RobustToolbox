@@ -36,6 +36,7 @@ namespace Robust.Client.Interfaces.Graphics
         AudioStream LoadAudioWav(Stream stream, string name = null);
 
         IClydeAudioSource CreateAudioSource(AudioStream stream);
+        IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers);
     }
 
     internal interface IClydeInternal : IClyde
@@ -74,6 +75,16 @@ namespace Robust.Client.Interfaces.Graphics
         void SetPitch(float pitch);
         void SetGlobal();
         void SetVolume(float decibels);
+    }
+
+    public interface IClydeBufferedAudioSource : IClydeAudioSource
+    {
+        int SampleRate { get; set; }
+        int GetNumberOfBuffersProcessed();
+        int[] GetBuffersProcessed();
+        void WriteBuffer(int handle, ReadOnlySpan<ushort> data);
+        void QueueBuffers(int[] handles);
+        void EmptyBuffers();
     }
 
     // TODO: Maybe implement IDisposable for render targets. I got lazy and didn't.

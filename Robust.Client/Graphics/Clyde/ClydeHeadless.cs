@@ -102,6 +102,11 @@ namespace Robust.Client.Graphics.Clyde
             return DummyAudioSource.Instance;
         }
 
+        public IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers)
+        {
+            return DummyBufferedAudioSource.Instance;
+        }
+
         public IntPtr GetNativeWindowHandle()
         {
             return default;
@@ -140,6 +145,73 @@ namespace Robust.Client.Graphics.Clyde
             public void SetVolume(float decibels)
             {
                 // Nada.
+            }
+        }
+
+        private sealed class DummyBufferedAudioSource : IClydeBufferedAudioSource
+        {
+            public static DummyBufferedAudioSource Instance { get; } = new DummyBufferedAudioSource();
+            public bool IsPlaying => default;
+            public int SampleRate { get; set; } = 0;
+
+            public void Dispose()
+            {
+                // Nada.
+            }
+
+            public void StartPlaying()
+            {
+                // Nada.
+            }
+
+            public void SetPosition(Vector2 position)
+            {
+                // Nada.
+            }
+
+            public void SetPitch(float pitch)
+            {
+                // Nada.
+            }
+
+            public void SetGlobal()
+            {
+                // Nada.
+            }
+
+            public void SetVolume(float decibels)
+            {
+                // Nada.
+            }
+
+            public void WriteBuffer(int handle, ReadOnlySpan<ushort> data)
+            {
+                // Nada.
+            }
+
+            public void QueueBuffer(int handle)
+            {
+                // Nada.
+            }
+
+            public void QueueBuffers(int[] handles)
+            {
+                // Nada.
+            }
+
+            public void EmptyBuffers()
+            {
+                // Nada.
+            }
+
+            public int GetNumberOfBuffersProcessed()
+            {
+                return 0;
+            }
+
+            public int[] GetBuffersProcessed()
+            {
+                return null;
             }
         }
 

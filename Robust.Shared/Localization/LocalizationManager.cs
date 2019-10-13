@@ -67,7 +67,7 @@ namespace Robust.Shared.Localization
                 return n == 1 ? text : pluralText;
             }
             var catalog = _catalogs[_defaultCulture];
-            return catalog.GetParticularString(text, pluralText, n);
+            return catalog.GetPluralString(text, pluralText, n);
         }
 
         public string GetPluralString(string text, string pluralText, long n, params object[] args)
@@ -77,7 +77,7 @@ namespace Robust.Shared.Localization
                 return string.Format(n == 1 ? text : pluralText, args);
             }
             var catalog = _catalogs[_defaultCulture];
-            return catalog.GetParticularString(text, pluralText, n, args);
+            return catalog.GetPluralString(text, pluralText, n, args);
         }
 
         public string GetParticularPluralString(string context, string text, string pluralText, long n)
@@ -87,7 +87,7 @@ namespace Robust.Shared.Localization
                 return n == 1 ? text : pluralText;
             }
             var catalog = _catalogs[_defaultCulture];
-            return catalog.GetParticularString(context, text, n, pluralText);
+            return catalog.GetParticularPluralString(context, text, pluralText, n, pluralText);
         }
 
         public string GetParticularPluralString(string context, string text, string pluralText, long n, params object[] args)

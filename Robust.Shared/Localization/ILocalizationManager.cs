@@ -33,7 +33,7 @@ namespace Robust.Shared.Localization
 
         string GetPluralString(string text, string pluralText, long n);
 
-        [StringFormatMethod("text")]
+        [StringFormatMethod("pluralText")]
         string GetPluralString(string text, string pluralText, long n, params object[] args);
 
         string GetParticularPluralString(string context, string text, string pluralText, long n);

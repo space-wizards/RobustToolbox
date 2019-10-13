@@ -8,7 +8,9 @@ using System.Text;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.Debugging;
+using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Lighting;
+using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
@@ -563,6 +565,30 @@ namespace Robust.Client.Console.Commands
             {
                 GC.Collect(int.Parse(args[0]));
             }
+            return false;
+        }
+    }
+
+    internal class ChunkInfoCommand : IConsoleCommand
+    {
+        public string Command => "chunkinfo";
+        public string Description => "Gets info about a chunk under your mouse cursor.";
+        public string Help => Command;
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var mapMan = IoCManager.Resolve<IMapManager>();
+            var inputMan = IoCManager.Resolve<IInputManager>();
+            var eyeMan = IoCManager.Resolve<IEyeManager>();
+
+            var mousePos = eyeMan.ScreenToWorld(inputMan.MouseScreenPosition);
+
+            var grid = (IMapGridInternal) mapMan.GetGrid(mousePos.GridID);
+
+            var chunkIndex = grid.LocalToChunkIndices(mousePos);
+            var chunk = grid.GetChunk(chunkIndex);
+
+            console.AddLine($"worldBounds: {chunk.CalcWorldBounds()} localBounds: {chunk.CalcLocalBounds()}");
             return false;
         }
     }

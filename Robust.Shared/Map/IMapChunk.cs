@@ -54,7 +54,7 @@ namespace Robust.Shared.Map
         /// <param name="ignoreEmpty">Will empty (space) tiles be added to the collection?</param>
         /// <returns></returns>
         IEnumerable<TileRef> GetAllTiles(bool ignoreEmpty = true);
-        
+
         /// <summary>
         ///     Replaces a single tile inside of the chunk.
         /// </summary>
@@ -83,5 +83,7 @@ namespace Robust.Shared.Map
         void RemoveFromSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset, SnapGridComponent snap);
 
         Box2i CalcLocalBounds();
+
+        Box2 CalcWorldBounds();
     }
 }

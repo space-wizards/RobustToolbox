@@ -16,7 +16,7 @@ namespace Robust.Client.Graphics.Clyde
         private int _verticesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
         private int _indicesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 5;
 
-        private void _drawGrids()
+        private void _drawGrids(Box2 worldBounds)
         {
             var mapId = _eyeManager.CurrentMap;
             if (!_mapManager.TryGetMap(mapId, out var map))
@@ -25,7 +25,7 @@ namespace Robust.Client.Graphics.Clyde
                 _eyeManager.CurrentEye = null;
                 map = _mapManager.GetMap(_eyeManager.CurrentMap);
             }
-            
+
             var atlasTexture = _tileDefinitionManager.TileTextureAtlas;
             var loadedTex = _loadedTextures[((ClydeTexture) atlasTexture).TextureId];
 
@@ -51,7 +51,7 @@ namespace Robust.Client.Graphics.Clyde
             gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
             gridProgram.SetUniform(UniIModulate, Color.White);
 
-            foreach (var mapGrid in map.GetAllGrids())
+            foreach (var mapGrid in map.FindGridsIntersecting(worldBounds))
             {
                 var grid = (IMapGridInternal) mapGrid;
 
@@ -59,13 +59,20 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     continue;
                 }
+
                 var model = Matrix3.Identity;
                 model.R0C2 = grid.WorldPosition.X;
                 model.R1C2 = grid.WorldPosition.Y;
                 gridProgram.SetUniform(UniIModelMatrix, model);
 
-                foreach (var (index, chunk) in grid.GetMapChunks())
+                foreach (var (_, chunk) in grid.GetMapChunks())
                 {
+                    // Calc world bounds for chunk.
+                    if (!chunk.CalcWorldBounds().Intersects(worldBounds))
+                    {
+                        continue;
+                    }
+
                     if (_isChunkDirty(grid, chunk))
                     {
                         _updateChunkMesh(grid, chunk);

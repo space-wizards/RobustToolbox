@@ -348,6 +348,20 @@ namespace Robust.Shared.Map
             return _cachedBounds;
         }
 
+        public Box2 CalcWorldBounds()
+        {
+            var worldPos = _grid.WorldPosition + (Vector2i)Indices * _grid.TileSize * ChunkSize;
+            var localBounds = CalcLocalBounds();
+            var ts = _grid.TileSize;
+
+            var scaledLocalBounds = new Box2(
+                localBounds.Left * ts,
+                localBounds.Bottom * ts,
+                localBounds.Right * ts,
+                localBounds.Top * ts);
+
+            return scaledLocalBounds.Translated(worldPos);
+        }
 
         /// <inheritdoc />
         public override string ToString()

@@ -13,6 +13,7 @@ using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -108,14 +109,19 @@ namespace Robust.Client.Graphics.Clyde
 
                 _setSpace(CurrentSpace.WorldSpace);
 
+                // Calculate world-space AABB for camera, to cull off-screen things.
+                var eye = _eyeManager.CurrentEye;
+                var worldBounds = Box2.CenteredAround(eye.Position.Position,
+                    _windowSize / EyeManager.PIXELSPERMETER * eye.Zoom);
+
                 using (DebugGroup("Lights"))
                 {
-                    _drawLights();
+                    _drawLights(worldBounds);
                 }
 
                 using (DebugGroup("Grids"))
                 {
-                    _drawGrids();
+                    _drawGrids(worldBounds);
                 }
 
                 using (DebugGroup("Entities"))
@@ -123,10 +129,16 @@ namespace Robust.Client.Graphics.Clyde
                     var entityList = new List<SpriteComponent>(100);
                     var map = _eyeManager.CurrentMap;
 
-                    foreach (var entity in _entityManager.GetEntities())
+                    // So we could calculate the correct size of the entities based on the contents of their sprite...
+                    // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
+                    // TODO: Make this check more accurate.
+                    var widerBounds = worldBounds.Enlarged(5);
+
+                    foreach (var sprite in _componentManager.GetAllComponents<SpriteComponent>())
                     {
+                        var entity = sprite.Owner;
                         if (!entity.Transform.IsMapTransform || entity.Transform.MapID != map ||
-                            !entity.TryGetComponent(out SpriteComponent sprite) || !sprite.Visible)
+                            !widerBounds.Contains(entity.Transform.WorldPosition) || !sprite.Visible)
                         {
                             continue;
                         }
@@ -267,7 +279,7 @@ namespace Robust.Client.Graphics.Clyde
             return new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
         }
 
-        private void _drawLights()
+        private void _drawLights(Box2 worldBounds)
         {
             if (!_lightManager.Enabled)
             {
@@ -327,6 +339,13 @@ namespace Robust.Client.Graphics.Clyde
 
                 var transform = component.Owner.Transform;
                 var lightPos = transform.WorldMatrix.Transform(component.Offset);
+
+                var lightBounds = Box2.CenteredAround(lightPos, Vector2.One * component.Radius * 2);
+
+                if (!lightBounds.Intersects(worldBounds))
+                {
+                    continue;
+                }
 
                 Texture mask = null;
                 var rotation = Angle.Zero;

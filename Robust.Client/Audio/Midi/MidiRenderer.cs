@@ -5,9 +5,11 @@ using System.Linq;
 using NFluidsynth;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Graphics.OpenGL;
+using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 using MidiEvent = NFluidsynth.MidiEvent;
 using Logger = Robust.Shared.Log.Logger;
 
@@ -113,6 +115,7 @@ namespace Robust.Client.Audio.Midi
     public class MidiRenderer : IMidiRenderer
     {
 #pragma warning disable 649
+        [Dependency] private IClydeAudio _clydeAudio;
         [Dependency] private ITaskManager _taskManager;
 #pragma warning restore 649
 
@@ -120,6 +123,7 @@ namespace Robust.Client.Audio.Midi
         private const int MidiSizeLimit = 2000000;
         private const double BytesToMegabytes = 0.000001d;
 
+        private bool _mono;
         private Settings _settings;
         private Synth _synth;
         private NFluidsynth.Player _player;
@@ -127,11 +131,10 @@ namespace Robust.Client.Audio.Midi
         private SoundFontLoader _soundFontLoader;
         private List<int> _notesPlaying = new List<int>();
         private int _midiprogram = 1;
-        private int _source;
-        private int[] _buffers;
         private bool _loopMidi = false;
         private const int SampleRate = 48000;
         private const int Buffers = SampleRate/1000;
+        private IClydeBufferedAudioSource _audioSource;
         public IReadOnlyCollection<int> NotesPlaying => _notesPlaying;
 
         public int MidiProgram
@@ -159,35 +162,35 @@ namespace Robust.Client.Audio.Midi
         }
 
 
-        public bool Mono { get; set; } = true;
+        public bool Mono
+        {
+            get => _mono;
+            set
+            {
+                _mono = value;
+                if(_mono)
+                    _audioSource?.SetPosition(Position?.Transform.GridPosition.Position ?? new Vector2(0,0));
+                else
+                    _audioSource.SetGlobal();
+            }
+        }
+
         public IEntity Position { get; set; } = null;
 
         internal bool Free { get; set; } = false;
 
-        internal MidiRenderer(Settings settings, SoundFontLoader soundFontLoader)
+        internal MidiRenderer(Settings settings, SoundFontLoader soundFontLoader, bool mono = true)
         {
             IoCManager.InjectDependencies(this);
+            _audioSource = _clydeAudio.CreateBufferedAudioSource(Buffers);
+            _audioSource.SampleRate = SampleRate;
             _settings = settings;
             _soundFontLoader = soundFontLoader;
             _synth = new Synth(_settings);
             _synth.AddSoundFontLoader(_soundFontLoader);
-            _source = AL.GenSource();
-            _buffers = AL.GenBuffers(Buffers);
-            EmptyBuffers();
-            AL.SourcePlay(_source);
-        }
-
-        private unsafe void EmptyBuffers()
-        {
-            var length = (SampleRate / Buffers) * (Mono ? 1 : 2);
-
-            var empty = new ushort[length];
-            fixed (ushort* ptr = empty)
-                for (var i = 0; i < Buffers; i++)
-                    AL.BufferData(_buffers[i], Mono ? ALFormat.Mono16 : ALFormat.Stereo16, (IntPtr) ptr,
-                        length * sizeof(ushort), SampleRate);
-
-            AL.SourceQueueBuffers(_source, Buffers, _buffers);
+            Mono = mono;
+            _audioSource.EmptyBuffers();
+            _audioSource.StartPlaying();
         }
 
         public bool OpenInput()
@@ -280,18 +283,17 @@ namespace Robust.Client.Audio.Midi
 
         internal void Render(int length = SampleRate/1000)
         {
-            var status = AL.GetSourceState(_source);
             if(Mono && Position != null)
                 lock(Position)
-                    AL.Source(_source, ALSource3f.Position, Position.Transform.GridPosition.X, Position.Transform.GridPosition.Y, 0f);
-            AL.GetSource(_source, ALGetSourcei.BuffersProcessed, out var buffersProcessed);
+                    _audioSource.SetPosition(Position.Transform.GridPosition.Position);
+            var buffersProcessed = _audioSource.GetNumberOfBuffersProcessed();
             if (buffersProcessed == 0) return;
 
             var bufferLength = length * 2;
 
             unsafe
             {
-                var buffers = AL.SourceUnqueueBuffers(_source, buffersProcessed);
+                var buffers = _audioSource.GetBuffersProcessed();
 
                 Span<ushort> audio = stackalloc ushort[bufferLength];
 
@@ -310,13 +312,10 @@ namespace Robust.Client.Audio.Midi
                             audio[j] += audio[k];
                         }
 
-                    fixed (ushort* ptr = audio)
-                    {
-                        AL.BufferData(buffer, Mono ? ALFormat.Mono16 : ALFormat.Stereo16, (IntPtr) ptr, Mono ? length * sizeof(ushort) : bufferLength*sizeof(ushort), SampleRate);
-                    }
+                    _audioSource.WriteBuffer(buffer, audio);
                 }
 
-                AL.SourceQueueBuffers(_source, buffersProcessed, buffers);
+                _audioSource.QueueBuffers(buffers);
             }
 
             if(_player != null)
@@ -327,7 +326,7 @@ namespace Robust.Client.Audio.Midi
                         CloseMidi();
                     }
 
-            if(status != ALSourceState.Playing) AL.SourcePlay(_source);
+            if(!_audioSource.IsPlaying) _audioSource.StartPlaying();
 
         }
 
@@ -410,9 +409,7 @@ namespace Robust.Client.Audio.Midi
                     break;
             }
 
-            AL.DeleteBuffers(_buffers);
-            AL.DeleteSource(_source);
-
+            _audioSource?.Dispose();
             _synth?.Dispose();
             _player?.Dispose();
             _driver?.Dispose();

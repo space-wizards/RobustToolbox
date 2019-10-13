@@ -10,27 +10,28 @@ namespace Robust.UnitTesting.Shared.Maths
     [TestOf(typeof(Box2))]
     public class Box2_Test
     {
-        private static IEnumerable<(float left, float bottom, float right, float top)> Sources => new (float, float, float, float)[]
-        {
-            (0, 0, 0, 0),
-            (0, 0, 0, 1),
-            (0, 0, 1, 0),
-            (0, 0, 1, 1),
-            (0, -1, 0, 0),
-            (0, -1, 0, 1),
-            (0, -1, 1, 0),
-            (0, -1, 1, 1),
-            (-1, 0, 0, 0),
-            (-1, 0, 0, 1),
-            (-1, 0, 1, 0),
-            (-1, 0, 1, 1),
-            (-1, -1, 0, 0),
-            (-1, -1, 0, 1),
-            (-1, -1, 1, 0),
-            (-1, -1, 1, 1)
-        };
+        private static IEnumerable<(float left, float bottom, float right, float top)> Sources =>
+            new (float, float, float, float)[]
+            {
+                (0, 0, 0, 0),
+                (0, 0, 0, 1),
+                (0, 0, 1, 0),
+                (0, 0, 1, 1),
+                (0, -1, 0, 0),
+                (0, -1, 0, 1),
+                (0, -1, 1, 0),
+                (0, -1, 1, 1),
+                (-1, 0, 0, 0),
+                (-1, 0, 0, 1),
+                (-1, 0, 1, 0),
+                (-1, 0, 1, 1),
+                (-1, -1, 0, 0),
+                (-1, -1, 0, 1),
+                (-1, -1, 1, 0),
+                (-1, -1, 1, 1)
+            };
 
-        private static IEnumerable<(float x, float y)> SmallTranslations => new []
+        private static IEnumerable<(float x, float y)> SmallTranslations => new[]
         {
             (0, 0.1f),
             (0.1f, 0),
@@ -54,7 +55,7 @@ namespace Robust.UnitTesting.Shared.Maths
             (-5, -5)
         };
 
-        private static IEnumerable<float> Scalars => new []
+        private static IEnumerable<float> Scalars => new[]
         {
             0.0f,
             0.1f,
@@ -165,7 +166,8 @@ namespace Robust.UnitTesting.Shared.Maths
         }
 
         [Test]
-        public void Box2IntersectsWithSmallTranslation([ValueSource(nameof(SmallTranslations))] (float, float) test)
+        public void Box2IntersectsWithSmallTranslation([ValueSource(nameof(SmallTranslations))]
+            (float, float) test)
         {
             var (x, y) = test;
 
@@ -176,7 +178,8 @@ namespace Robust.UnitTesting.Shared.Maths
         }
 
         [Test]
-        public void Box2NotIntersectsWithLargeTranslation([ValueSource(nameof(LargeTranslations))] (float, float) test)
+        public void Box2NotIntersectsWithLargeTranslation([ValueSource(nameof(LargeTranslations))]
+            (float, float) test)
         {
             var (x, y) = test;
 
@@ -189,8 +192,8 @@ namespace Robust.UnitTesting.Shared.Maths
         [Test]
         public void Box2Intersect()
         {
-            var boxOne = new Box2(-1,-1,1,1);
-            var boxTwo = new Box2(0,0,2,2);
+            var boxOne = new Box2(-1, -1, 1, 1);
+            var boxTwo = new Box2(0, 0, 2, 2);
 
             var result = boxOne.Intersect(boxTwo);
 
@@ -203,7 +206,7 @@ namespace Robust.UnitTesting.Shared.Maths
         [Test]
         public void Box2NotIntersect()
         {
-            var boxOne = new Box2(-1, -1,0, 0);
+            var boxOne = new Box2(-1, -1, 0, 0);
             var boxTwo = new Box2(0, 0, 2, 2);
 
             var result = boxOne.Intersect(boxTwo);
@@ -266,7 +269,8 @@ namespace Robust.UnitTesting.Shared.Maths
         }
 
         [Test]
-        public void Box2TranslatedNotEncloses([ValueSource(nameof(LargeTranslations))] (float, float) test)
+        public void Box2TranslatedNotEncloses([ValueSource(nameof(LargeTranslations))]
+            (float, float) test)
         {
             var (x, y) = test;
 
@@ -310,7 +314,8 @@ namespace Robust.UnitTesting.Shared.Maths
         }
 
         [Test]
-        public void Box2Contains([ValueSource(nameof(SmallTranslations))] (float, float) test)
+        public void Box2Contains([ValueSource(nameof(SmallTranslations))]
+            (float, float) test)
         {
             var (x, y) = test;
             var vec = new Vector2(x, y);
@@ -323,7 +328,8 @@ namespace Robust.UnitTesting.Shared.Maths
         }
 
         [Test]
-        public void Box2NotContains([ValueSource(nameof(LargeTranslations))] (float, float) test)
+        public void Box2NotContains([ValueSource(nameof(LargeTranslations))]
+            (float, float) test)
         {
             var (x, y) = test;
             var vec = new Vector2(x, y);
@@ -353,7 +359,8 @@ namespace Robust.UnitTesting.Shared.Maths
         }
 
         [Test]
-        public void Box2Translated([ValueSource(nameof(LargeTranslations))] (float, float) test)
+        public void Box2Translated([ValueSource(nameof(LargeTranslations))]
+            (float, float) test)
         {
             var (x, y) = test;
             var vec = new Vector2(x, y);
@@ -421,6 +428,26 @@ namespace Robust.UnitTesting.Shared.Maths
 #pragma warning restore CS1718 // Comparison made to same variable
             Assert.That(controlBox != differentBox);
             Assert.That(controlBox != sameBox, Is.False);
+        }
+
+        [Test]
+        public void Box2CenteredAround()
+        {
+            var center = new Vector2(1, 1);
+            var size = new Vector2(1, 1);
+
+            var box = Box2.CenteredAround(center, size);
+
+            Assert.That(box.Center, Is.EqualTo(center));
+            Assert.That(box.Size, Is.EqualTo(size));
+        }
+
+        [Test]
+        public void Enlarged()
+        {
+            var box = new Box2(1, 1, 2, 2).Enlarged(1);
+
+            Assert.That(box, Is.EqualTo(new Box2(0, 0, 3, 3)));
         }
     }
 }

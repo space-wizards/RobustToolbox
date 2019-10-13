@@ -65,10 +65,20 @@ namespace Robust.Shared.Maths
             return FromDimensions(bottomLeft.X, bottomLeft.Y, size.X, size.Y);
         }
 
+        public static Box2 CenteredAround(Vector2 center, Vector2 size)
+        {
+            return FromDimensions(center - size / 2, size);
+        }
+
         public bool Intersects(in Box2 other)
         {
             return other.Bottom <= this.Top && other.Top >= this.Bottom && other.Right >= this.Left &&
                    other.Left <= this.Right;
+        }
+
+        public Box2 Enlarged(float size)
+        {
+            return new Box2(Left - size, Bottom - size, Right + size, Top + size);
         }
 
         /// <summary>

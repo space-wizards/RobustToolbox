@@ -367,6 +367,11 @@ namespace Robust.Shared.GameObjects
                 target.PlacementRange = source.PlacementRange;
             }
 
+            if (target.Description == null)
+            {
+                target.Description = source.Description;
+            }
+
             if (!target._snapOverriden)
             {
                 foreach (var flag in source._snapFlags)

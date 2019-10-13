@@ -29,7 +29,7 @@ namespace Robust.Shared.Utility
             _tags = new List<Tag>(capacity);
         }
 
-        public static FormattedMessage FromMarkup(ReadOnlySpan<char> markup)
+        public static FormattedMessage FromMarkup(string markup)
         {
             var msg = new FormattedMessage();
             msg.AddMarkup(markup);

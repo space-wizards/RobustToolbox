@@ -50,7 +50,7 @@ namespace Robust.Shared.Utility
         private static readonly Parser<char, IEnumerable<Tag>> Parse =
             ParseTagText.Cast<Tag>().Or(ParseEnclosedTag).Many();
 
-        public void AddMarkup(ReadOnlySpan<char> markup)
+        public void AddMarkup(string markup)
         {
             _tags.AddRange(Parse.ParseOrThrow(markup));
         }

@@ -560,7 +560,7 @@ namespace Robust.Client.Graphics.Clyde
                 _checkDisposed();
                 fixed(uint* ptr = handles)
                     // ReSharper disable once PossibleInvalidOperationException
-                    AL.SourceUnqueueBuffers(SourceHandle.Value, Math.Min(handles.Length, GetNumberOfBuffersProcessed()), ptr);
+                    AL.SourceUnqueueBuffers(SourceHandle.Value, Math.Min(Math.Min(handles.Length, BufferHandles.Length), GetNumberOfBuffersProcessed()), ptr);
 
                 for (var i = 0; i < handles.Length; i++)
                     handles[i] = BufferMap[handles[i]];
@@ -570,7 +570,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _checkDisposed();
 
-                if (handle >= BufferHandles.Length) throw new ArgumentOutOfRangeException(nameof(handle));
+                if (handle >= BufferHandles.Length)
+                    throw new ArgumentOutOfRangeException(nameof(handle), $"Got {handle}. Expected less than {BufferHandles.Length}");
 
                 fixed (ushort* ptr = data)
                 {
@@ -606,9 +607,13 @@ namespace Robust.Client.Graphics.Clyde
 
                 var empty = new ushort[length];
                 var span = (Span<ushort>) empty;
+                Span<uint> handles = stackalloc uint[BufferHandles.Length];
                 for (var i = 0; i < BufferHandles.Length; i++)
-                    WriteBuffer(BufferHandles[i], span);
-                QueueBuffers(BufferHandles);
+                {
+                    WriteBuffer(BufferMap[BufferHandles[i]], span);
+                    handles[i] = BufferMap[BufferHandles[i]];
+                }
+                QueueBuffers(handles);
             }
         }
     }

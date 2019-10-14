@@ -81,9 +81,9 @@ namespace Robust.Client.Interfaces.Graphics
     {
         int SampleRate { get; set; }
         int GetNumberOfBuffersProcessed();
-        int[] GetBuffersProcessed();
-        void WriteBuffer(int handle, ReadOnlySpan<ushort> data);
-        void QueueBuffers(int[] handles);
+        Span<uint> GetBuffersProcessed();
+        void WriteBuffer(uint handle, ReadOnlySpan<ushort> data);
+        void QueueBuffers(ReadOnlySpan<uint> handles);
         void EmptyBuffers();
     }
 

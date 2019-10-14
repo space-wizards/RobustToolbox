@@ -23,8 +23,8 @@ namespace Robust.Client.Graphics.Clyde
         private readonly Dictionary<int, WeakReference<AudioSource>> _audioSources =
             new Dictionary<int, WeakReference<AudioSource>>();
 
-        private readonly Dictionary<int, WeakReference<BufferedAudioSource>> _bufferedAudioSources =
-            new Dictionary<int, WeakReference<BufferedAudioSource>>();
+        private readonly Dictionary<uint, WeakReference<BufferedAudioSource>> _bufferedAudioSources =
+            new Dictionary<uint, WeakReference<BufferedAudioSource>>();
 
         private readonly HashSet<string> _alcExtensions = new HashSet<string>();
         private readonly HashSet<string> _alContextExtensions = new HashSet<string>();
@@ -32,7 +32,7 @@ namespace Robust.Client.Graphics.Clyde
         // Used to track audio sources that were disposed in the finalizer thread,
         // so we need to properly send them off in the main thread.
         private readonly ConcurrentQueue<int> _sourceDisposeQueue = new ConcurrentQueue<int>();
-        private readonly ConcurrentQueue<int> _bufferedSourceDisposeQueue = new ConcurrentQueue<int>();
+        private readonly ConcurrentQueue<uint> _bufferedSourceDisposeQueue = new ConcurrentQueue<uint>();
 
         private bool _alcHasExtension(string extension) => _alcExtensions.Contains(extension);
         private bool _alContentHasExtension(string extension) => _alContextExtensions.Contains(extension);
@@ -150,7 +150,7 @@ namespace Robust.Client.Graphics.Clyde
             while (_bufferedSourceDisposeQueue.TryDequeue(out var handle))
             {
                 Logger.DebugS("oal", "Cleaning out buffered source {0} which finalized in another thread.", handle);
-                AL.DeleteSource(handle);
+                AL.DeleteSource((int)handle);
                 _checkAlError();
                 _bufferedAudioSources.Remove(handle);
             }
@@ -168,10 +168,15 @@ namespace Robust.Client.Graphics.Clyde
 
         public IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers)
         {
-            var source = AL.GenSource();
+            var source = (uint) AL.GenSource();
             // ReSharper disable once PossibleInvalidOperationException
             var bufferHandles = AL.GenBuffers(buffers);
-            var audioSource = new BufferedAudioSource(this, source, bufferHandles);
+            var unsignedBufferHandles = new uint[bufferHandles.Length];
+
+            for (var i = 0; i < bufferHandles.Length; i++)
+                unsignedBufferHandles[i] = (uint)bufferHandles[i];
+
+            var audioSource = new BufferedAudioSource(this, source, unsignedBufferHandles);
             _bufferedAudioSources.Add(source, new WeakReference<BufferedAudioSource>(audioSource));
             return audioSource;
         }
@@ -310,9 +315,9 @@ namespace Robust.Client.Graphics.Clyde
             _sourceDisposeQueue.Enqueue(sourceHandle);
         }
 
-        private void DeleteBufferedSourceOnMainThread(int bufferedSourceHandle)
+        private void DeleteBufferedSourceOnMainThread(uint bufferedSourceHandle)
         {
-            _sourceDisposeQueue.Enqueue(bufferedSourceHandle);
+            _bufferedSourceDisposeQueue.Enqueue(bufferedSourceHandle);
         }
 
         private sealed class AudioSource : IClydeAudioSource
@@ -429,24 +434,31 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class BufferedAudioSource : IClydeBufferedAudioSource
         {
-            private int SourceHandle;
-            private int[] BufferHandles;
+            private uint? SourceHandle = null;
+            private uint[] BufferHandles;
+            private Dictionary<uint, uint> BufferMap = new Dictionary<uint, uint>();
             private readonly Clyde _master;
             private bool _mono = true;
 
             public int SampleRate { get; set; } = 44100;
 
-            public BufferedAudioSource(Clyde master, int sourceHandle, int[] bufferHandles)
+            public BufferedAudioSource(Clyde master, uint sourceHandle, uint[] bufferHandles)
             {
                 _master = master;
                 SourceHandle = sourceHandle;
                 BufferHandles = bufferHandles;
+                for (uint i = 0; i < BufferHandles.Length; i++)
+                {
+                    var bufferHandle = BufferHandles[i];
+                    BufferMap[bufferHandle] = i;
+                }
             }
 
             public void StartPlaying()
             {
                 _checkDisposed();
-                AL.SourcePlay(SourceHandle);
+                // ReSharper disable once PossibleInvalidOperationException
+                AL.SourcePlay(SourceHandle.Value);
                 _checkAlError();
             }
 
@@ -455,7 +467,8 @@ namespace Robust.Client.Graphics.Clyde
                 get
                 {
                     _checkDisposed();
-                    var state = AL.GetSourceState(SourceHandle);
+                    // ReSharper disable once PossibleInvalidOperationException
+                    var state = AL.GetSourceState(SourceHandle.Value);
                     return state == ALSourceState.Playing;
                 }
             }
@@ -464,14 +477,16 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _checkDisposed();
                 _mono = false;
-                AL.Source(SourceHandle, ALSourceb.SourceRelative, true);
+                // ReSharper disable once PossibleInvalidOperationException
+                AL.Source(SourceHandle.Value, ALSourceb.SourceRelative, true);
                 _checkAlError();
             }
 
             public void SetVolume(float decibels)
             {
                 _checkDisposed();
-                AL.Source(SourceHandle, ALSourcef.Gain, (float) Math.Pow(10, decibels / 10));
+                // ReSharper disable once PossibleInvalidOperationException
+                AL.Source(SourceHandle.Value, ALSourcef.Gain, (float) Math.Pow(10, decibels / 10));
                 _checkAlError();
             }
 
@@ -481,14 +496,16 @@ namespace Robust.Client.Graphics.Clyde
 
                 _mono = true;
                 var (x, y) = position;
-                AL.Source(SourceHandle, ALSource3f.Position, x, y, 0);
+                // ReSharper disable once PossibleInvalidOperationException
+                AL.Source(SourceHandle.Value, ALSource3f.Position, x, y, 0);
                 _checkAlError();
             }
 
             public void SetPitch(float pitch)
             {
                 _checkDisposed();
-                AL.Source(SourceHandle, ALSourcef.Pitch, pitch);
+                // ReSharper disable once PossibleInvalidOperationException
+                AL.Source(SourceHandle.Value, ALSourcef.Pitch, pitch);
                 _checkAlError();
             }
 
@@ -505,24 +522,26 @@ namespace Robust.Client.Graphics.Clyde
 
             private void Dispose(bool disposing)
             {
+                if (SourceHandle == null) return;
                 if (!disposing)
                 {
                     // We can't run this code inside the finalizer thread so tell Clyde to clear it up later.
-                    _master.DeleteBufferedSourceOnMainThread(SourceHandle);
+                    _master.DeleteBufferedSourceOnMainThread(SourceHandle.Value);
                 }
                 else
                 {
-                    AL.DeleteSource(SourceHandle);
-                    _master._bufferedAudioSources.Remove(SourceHandle);
+
+                    AL.DeleteSource((int)SourceHandle.Value);
+                    _master._bufferedAudioSources.Remove(SourceHandle.Value);
                     _checkAlError();
                 }
 
-                SourceHandle = -1;
+                SourceHandle = null;
             }
 
             private void _checkDisposed()
             {
-                if (SourceHandle == -1)
+                if (SourceHandle == null)
                 {
                     throw new ObjectDisposedException(nameof(AudioSource));
                 }
@@ -530,31 +549,62 @@ namespace Robust.Client.Graphics.Clyde
 
             public int GetNumberOfBuffersProcessed()
             {
-                AL.GetSource(SourceHandle, ALGetSourcei.BuffersProcessed, out var buffersProcessed);
+                _checkDisposed();
+                // ReSharper disable once PossibleInvalidOperationException
+                AL.GetSource(SourceHandle.Value, ALGetSourcei.BuffersProcessed, out var buffersProcessed);
                 return buffersProcessed;
             }
 
-            public int[] GetBuffersProcessed()
+            public unsafe Span<uint> GetBuffersProcessed()
             {
-                return AL.SourceUnqueueBuffers(SourceHandle, GetNumberOfBuffersProcessed());
+                _checkDisposed();
+                var span = new Span<uint>();
+                fixed(uint* ptr = span)
+                    // ReSharper disable once PossibleInvalidOperationException
+                    AL.SourceUnqueueBuffers(SourceHandle.Value, GetNumberOfBuffersProcessed(), ptr);
+
+                for (var i = 0; i < span.Length; i++)
+                    span[i] = BufferMap[span[i]];
+
+                return span;
             }
 
-            public unsafe void WriteBuffer(int handle, ReadOnlySpan<ushort> data)
+            public unsafe void WriteBuffer(uint handle, ReadOnlySpan<ushort> data)
             {
+                _checkDisposed();
+
+                if (handle >= BufferHandles.Length) throw new ArgumentOutOfRangeException(nameof(handle));
+
                 fixed (ushort* ptr = data)
                 {
-                    AL.BufferData(handle, _mono ? ALFormat.Mono16 : ALFormat.Stereo16, (IntPtr) ptr,
+                    AL.BufferData(BufferHandles[handle], _mono ? ALFormat.Mono16 : ALFormat.Stereo16, (IntPtr) ptr,
                         _mono ? data.Length/2 * sizeof(ushort) : data.Length * sizeof(ushort), SampleRate);
                 }
             }
 
-            public void QueueBuffers(int[] handles)
+            public unsafe void QueueBuffers(ReadOnlySpan<uint> handles)
             {
-                AL.SourceQueueBuffers(SourceHandle, handles.Length, handles);
+                _checkDisposed();
+
+                var realHandles = new Span<uint>();
+                handles.CopyTo(realHandles);
+
+                for (var i = 0; i < realHandles.Length; i++)
+                {
+                    var handle = realHandles[i];
+                    if(handle >= BufferHandles.Length)
+                        throw new ArgumentOutOfRangeException(nameof(handles), $"Invalid handle with index {i}!");
+                    realHandles[i] = BufferHandles[handle];
+                }
+
+                fixed(uint* ptr = handles)
+                    // ReSharper disable once PossibleInvalidOperationException
+                    AL.SourceQueueBuffers(SourceHandle.Value, handles.Length, ptr);
             }
 
             public unsafe void EmptyBuffers()
             {
+                _checkDisposed();
                 var length = (SampleRate / BufferHandles.Length) * (_mono ? 1 : 2);
 
                 var empty = new ushort[length];

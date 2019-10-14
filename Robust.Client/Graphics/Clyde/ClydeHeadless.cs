@@ -112,7 +112,7 @@ namespace Robust.Client.Graphics.Clyde
             return default;
         }
 
-        private sealed class DummyAudioSource : IClydeAudioSource
+        private class DummyAudioSource : IClydeAudioSource
         {
             public static DummyAudioSource Instance { get; } = new DummyAudioSource();
             public bool IsPlaying => default;
@@ -148,53 +148,22 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class DummyBufferedAudioSource : IClydeBufferedAudioSource
+        private sealed class DummyBufferedAudioSource : DummyAudioSource, IClydeBufferedAudioSource
         {
-            public static DummyBufferedAudioSource Instance { get; } = new DummyBufferedAudioSource();
-            public bool IsPlaying => default;
+            public new static DummyBufferedAudioSource Instance { get; } = new DummyBufferedAudioSource();
             public int SampleRate { get; set; } = 0;
 
-            public void Dispose()
+            public void WriteBuffer(uint handle, ReadOnlySpan<ushort> data)
             {
                 // Nada.
             }
 
-            public void StartPlaying()
+            public void QueueBuffer(uint handle)
             {
                 // Nada.
             }
 
-            public void SetPosition(Vector2 position)
-            {
-                // Nada.
-            }
-
-            public void SetPitch(float pitch)
-            {
-                // Nada.
-            }
-
-            public void SetGlobal()
-            {
-                // Nada.
-            }
-
-            public void SetVolume(float decibels)
-            {
-                // Nada.
-            }
-
-            public void WriteBuffer(int handle, ReadOnlySpan<ushort> data)
-            {
-                // Nada.
-            }
-
-            public void QueueBuffer(int handle)
-            {
-                // Nada.
-            }
-
-            public void QueueBuffers(int[] handles)
+            public void QueueBuffers(ReadOnlySpan<uint> handles)
             {
                 // Nada.
             }
@@ -209,7 +178,7 @@ namespace Robust.Client.Graphics.Clyde
                 return 0;
             }
 
-            public int[] GetBuffersProcessed()
+            public Span<uint> GetBuffersProcessed()
             {
                 return null;
             }

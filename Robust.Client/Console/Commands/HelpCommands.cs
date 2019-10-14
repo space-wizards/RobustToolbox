@@ -1,5 +1,5 @@
-﻿using Robust.Client.Interfaces.Console;
-using Robust.Shared.Console;
+﻿using System.Linq;
+using Robust.Client.Interfaces.Console;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -54,7 +54,7 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            foreach (IConsoleCommand command in console.Commands.Values)
+            foreach (var command in console.Commands.Values.OrderBy(c => c.Command))
             {
                 console.AddLine(command.Command + ": " + command.Description);
             }

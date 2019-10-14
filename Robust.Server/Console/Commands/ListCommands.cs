@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Player;
 
@@ -13,7 +14,7 @@ namespace Robust.Server.Console.Commands
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             var builder = new StringBuilder("SIDE NAME            DESC\n-------------------------\n");
-            foreach (var command in shell.AvailableCommands.Values)
+            foreach (var command in shell.AvailableCommands.Values.OrderBy(c => c.Command))
             {
                 //TODO: Make this actually check permissions.
 

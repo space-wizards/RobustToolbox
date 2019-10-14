@@ -290,9 +290,10 @@ namespace Robust.Client.Audio.Midi
 
             unsafe
             {
-                var buffers = _audioSource.GetBuffersProcessed();
-
+                Span<uint> buffers = stackalloc uint[buffersProcessed];
                 Span<ushort> audio = stackalloc ushort[bufferLength];
+
+                _audioSource.GetBuffersProcessed(buffers);
 
                 for (var i = 0; i < buffers.Length; i++)
                 {

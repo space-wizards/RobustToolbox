@@ -555,18 +555,15 @@ namespace Robust.Client.Graphics.Clyde
                 return buffersProcessed;
             }
 
-            public unsafe Span<uint> GetBuffersProcessed()
+            public unsafe void GetBuffersProcessed(Span<uint> handles)
             {
                 _checkDisposed();
-                var span = new Span<uint>();
-                fixed(uint* ptr = span)
+                fixed(uint* ptr = handles)
                     // ReSharper disable once PossibleInvalidOperationException
-                    AL.SourceUnqueueBuffers(SourceHandle.Value, GetNumberOfBuffersProcessed(), ptr);
+                    AL.SourceUnqueueBuffers(SourceHandle.Value, Math.Min(handles.Length, GetNumberOfBuffersProcessed()), ptr);
 
-                for (var i = 0; i < span.Length; i++)
-                    span[i] = BufferMap[span[i]];
-
-                return span;
+                for (var i = 0; i < handles.Length; i++)
+                    handles[i] = BufferMap[handles[i]];
             }
 
             public unsafe void WriteBuffer(uint handle, ReadOnlySpan<ushort> data)
@@ -586,7 +583,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _checkDisposed();
 
-                var realHandles = new Span<uint>();
+                Span<uint> realHandles = stackalloc uint[handles.Length];
                 handles.CopyTo(realHandles);
 
                 for (var i = 0; i < realHandles.Length; i++)
@@ -597,7 +594,7 @@ namespace Robust.Client.Graphics.Clyde
                     realHandles[i] = BufferHandles[handle];
                 }
 
-                fixed(uint* ptr = handles)
+                fixed(uint* ptr = realHandles)
                     // ReSharper disable once PossibleInvalidOperationException
                     AL.SourceQueueBuffers(SourceHandle.Value, handles.Length, ptr);
             }

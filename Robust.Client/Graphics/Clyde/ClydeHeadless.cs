@@ -173,14 +173,14 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
+            public void GetBuffersProcessed(Span<uint> handles)
+            {
+                // Nada.
+            }
+
             public int GetNumberOfBuffersProcessed()
             {
                 return 0;
-            }
-
-            public Span<uint> GetBuffersProcessed()
-            {
-                return null;
             }
         }
 

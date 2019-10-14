@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using NFluidsynth;
-using OpenTK.Audio.OpenAL;
-using OpenTK.Graphics.OpenGL;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Interfaces.GameObjects;
@@ -304,13 +301,15 @@ namespace Robust.Client.Audio.Midi
                     _synth?.WriteSample16(length, audio, 0, Mono ? 1 : 2,
                         audio, Mono ? length : 1, Mono ? 1 : 2);
 
-                    if (Mono)
-                        // Turn audio to mono
+                    if (Mono) // Turn audio to mono
+                    {
                         for (var j = 0; j < length; j++)
                         {
                             var k = j + length;
                             audio[j] += audio[k];
                         }
+
+                    }
 
                     _audioSource.WriteBuffer(buffer, audio);
                 }

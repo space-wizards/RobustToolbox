@@ -27,6 +27,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         public event Action OnPositionChanged;
 
+        private GridId _lastGrid;
         public MapIndices Position { get; private set; }
         public SnapGridOffset Offset => _offset;
 
@@ -47,7 +48,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             Owner.Transform.OnMove -= OnTransformMove;
             if (IsSet)
             {
-                if (!_mapManager.TryGetGrid(Owner.Transform.GridID, out var grid))
+                if (!_mapManager.TryGetGrid(_lastGrid, out var grid))
                 {
                     Logger.WarningS(LogCategory, "Entity {0} snapgrid didn't find grid {1}. Race condition?", Owner.Uid, Owner.Transform.GridID);
                     return;
@@ -118,21 +119,28 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         private void UpdatePosition()
         {
+            if (IsSet)
+            {
+                if (!_mapManager.TryGetGrid(_lastGrid, out var lastGrid))
+                {
+                    Logger.WarningS(LogCategory, "Entity {0} snapgrid didn't find grid {1}. Race condition?", Owner.Uid, Owner.Transform.GridID);
+                    return;
+                }
+
+                lastGrid.RemoveFromSnapGridCell(Position, Offset, this);
+            }
+
             if (!_mapManager.TryGetGrid(Owner.Transform.GridID, out var grid))
             {
                 Logger.WarningS(LogCategory, "Entity {0} snapgrid didn't find grid {1}. Race condition?", Owner.Uid, Owner.Transform.GridID);
                 return;
             }
 
-            if (IsSet)
-            {
-                grid.RemoveFromSnapGridCell(Position, Offset, this);
-            }
-
             IsSet = true;
 
             var oldPos = Position;
             Position = grid.SnapGridCellFor(Owner.Transform.GridPosition, Offset);
+            _lastGrid = Owner.Transform.GridID;
             grid.AddToSnapGridCell(Position, Offset, this);
 
             if (oldPos != Position)

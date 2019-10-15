@@ -120,15 +120,12 @@ namespace Robust.Server
         public bool Start()
         {
             // Sets up the configMgr
-            if (_commandLineArgs?.ConfigFile != null)
-            {
-                // If a config file path was passed, use it literally.
-                // This ensures it's working-directory relative
-                // (for people passing config file through the terminal or something).
-                // Otherwise use the one next to the executable.
-                var configPath = _commandLineArgs.ConfigFile ?? PathHelpers.ExecutableRelativeFile("server_config.toml");
-                _config.LoadFromFile(configPath);
-            }
+            // If a config file path was passed, use it literally.
+            // This ensures it's working-directory relative
+            // (for people passing config file through the terminal or something).
+            // Otherwise use the one next to the executable.
+            var configPath = _commandLineArgs.ConfigFile ?? PathHelpers.ExecutableRelativeFile("server_config.toml");
+            _config.LoadFromFile(configPath);
 
             //Sets up Logging
             _config.RegisterCVar("log.path", "logs", CVar.ARCHIVE);

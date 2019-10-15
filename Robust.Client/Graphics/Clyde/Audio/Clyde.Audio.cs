@@ -33,6 +33,7 @@ namespace Robust.Client.Graphics.Clyde
         // so we need to properly send them off in the main thread.
         private readonly ConcurrentQueue<int> _sourceDisposeQueue = new ConcurrentQueue<int>();
         private readonly ConcurrentQueue<uint> _bufferedSourceDisposeQueue = new ConcurrentQueue<uint>();
+        private readonly ConcurrentQueue<uint> _bufferDisposeQueue = new ConcurrentQueue<uint>();
 
         private bool _alcHasExtension(string extension) => _alcExtensions.Contains(extension);
         private bool _alContentHasExtension(string extension) => _alContextExtensions.Contains(extension);
@@ -153,6 +154,13 @@ namespace Robust.Client.Graphics.Clyde
                 AL.DeleteSource((int)handle);
                 _checkAlError();
                 _bufferedAudioSources.Remove(handle);
+            }
+
+            // Clear out finalized audio buffers.
+            while (_bufferDisposeQueue.TryDequeue(out var handle))
+            {
+                AL.DeleteBuffer((int)handle);
+                _checkAlError();
             }
         }
 
@@ -318,6 +326,11 @@ namespace Robust.Client.Graphics.Clyde
         private void DeleteBufferedSourceOnMainThread(uint bufferedSourceHandle)
         {
             _bufferedSourceDisposeQueue.Enqueue(bufferedSourceHandle);
+        }
+
+        private void DeleteAudioBufferOnMainThread(uint bufferHandle)
+        {
+            _bufferDisposeQueue.Enqueue(bufferHandle);
         }
 
         private sealed class AudioSource : IClydeAudioSource
@@ -527,11 +540,14 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     // We can't run this code inside the finalizer thread so tell Clyde to clear it up later.
                     _master.DeleteBufferedSourceOnMainThread(SourceHandle.Value);
+                    for (var i = 0; i < BufferHandles.Length; i++)
+                        _master.DeleteAudioBufferOnMainThread(BufferHandles[i]);
                 }
                 else
                 {
 
                     AL.DeleteSource((int)SourceHandle.Value);
+                    AL.DeleteBuffers(BufferHandles);
                     _master._bufferedAudioSources.Remove(SourceHandle.Value);
                     _checkAlError();
                 }

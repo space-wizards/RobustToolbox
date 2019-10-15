@@ -5,24 +5,45 @@ using Robust.Shared.Maths;
 namespace Robust.Client.Graphics.Drawing
 {
     /// <summary>
-    ///     Equivalent to Godot's <c>StyleBox</c> class,
-    ///     this is for drawing pretty fancy boxes using minimal code.
+    ///     This is for drawing modestly fancy boxes using minimal code.
     /// </summary>
     [PublicAPI]
     public abstract class StyleBox
     {
+        private float? _contentMarginTopOverride;
+        private float? _contentMarginLeftOverride;
+        private float? _contentMarginBottomOverride;
+        private float? _contentMarginRightOverride;
+
+        private float _paddingLeft;
+        private float _paddingBottom;
+        private float _paddingRight;
+        private float _paddingTop;
+
+        protected StyleBox()
+        {
+        }
+
+        protected StyleBox(StyleBox other)
+        {
+            _contentMarginBottomOverride = other._contentMarginBottomOverride;
+            _contentMarginTopOverride = other._contentMarginTopOverride;
+            _contentMarginLeftOverride = other._contentMarginLeftOverride;
+            _contentMarginRightOverride = other._contentMarginRightOverride;
+
+            _paddingLeft = other._paddingLeft;
+            _paddingBottom = other._paddingBottom;
+            _paddingRight = other._paddingRight;
+            _paddingTop = other._paddingTop;
+        }
+
         public Vector2 MinimumSize =>
             new Vector2(GetContentMargin(Margin.Left) + GetContentMargin(Margin.Right),
                 GetContentMargin(Margin.Top) + GetContentMargin(Margin.Bottom));
 
-        private float? _contentMarginTop;
-        private float? _contentMarginLeft;
-        private float? _contentMarginBottom;
-        private float? _contentMarginRight;
-
         public float? ContentMarginLeftOverride
         {
-            get => _contentMarginLeft;
+            get => _contentMarginLeftOverride;
             set
             {
                 if (value < 0)
@@ -30,13 +51,13 @@ namespace Robust.Client.Graphics.Drawing
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
                 }
 
-                _contentMarginLeft = value;
+                _contentMarginLeftOverride = value;
             }
         }
 
         public float? ContentMarginTopOverride
         {
-            get => _contentMarginTop;
+            get => _contentMarginTopOverride;
             set
             {
                 if (value < 0)
@@ -44,13 +65,13 @@ namespace Robust.Client.Graphics.Drawing
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
                 }
 
-                _contentMarginTop = value;
+                _contentMarginTopOverride = value;
             }
         }
 
         public float? ContentMarginRightOverride
         {
-            get => _contentMarginRight;
+            get => _contentMarginRightOverride;
             set
             {
                 if (value < 0)
@@ -58,13 +79,13 @@ namespace Robust.Client.Graphics.Drawing
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
                 }
 
-                _contentMarginRight = value;
+                _contentMarginRightOverride = value;
             }
         }
 
         public float? ContentMarginBottomOverride
         {
-            get => _contentMarginBottom;
+            get => _contentMarginBottomOverride;
             set
             {
                 if (value < 0)
@@ -72,15 +93,89 @@ namespace Robust.Client.Graphics.Drawing
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
                 }
 
-                _contentMarginBottom = value;
+                _contentMarginBottomOverride = value;
             }
         }
 
+        public float PaddingLeft
+        {
+            get => _paddingLeft;
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
+                }
+
+                _paddingLeft = value;
+            }
+        }
+
+        public float PaddingBottom
+        {
+            get => _paddingBottom;
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
+                }
+
+                _paddingBottom = value;
+            }
+        }
+
+        public float PaddingRight
+        {
+            get => _paddingRight;
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
+                }
+
+                _paddingRight = value;
+            }
+        }
+
+        public float PaddingTop
+        {
+            get => _paddingTop;
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
+                }
+
+                _paddingTop = value;
+            }
+        }
+
+        /// <summary>
+        ///     Draw this style box to the screen at the specified coordinates.
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="box"></param>
         public void Draw(DrawingHandleScreen handle, UIBox2 box)
         {
+            box = new UIBox2(
+                box.Left + PaddingLeft,
+                box.Top + PaddingTop,
+                box.Right - PaddingRight,
+                box.Bottom - PaddingBottom
+            );
+
             DoDraw(handle, box);
         }
 
+        /// <summary>
+        ///     Gets the offset from a margin of the box to where content should actually be drawn.
+        /// </summary>
+        /// <exception cref="ArgumentException">
+        ///     Thrown if <paramref name="margin"/> is a compound is not a single margin flag.
+        /// </exception>
         public float GetContentMargin(Margin margin)
         {
             float? marginData;
@@ -102,7 +197,25 @@ namespace Robust.Client.Graphics.Drawing
                     throw new ArgumentException("Margin must be a single margin flag.", nameof(margin));
             }
 
-            return marginData ?? GetDefaultContentMargin(margin);
+            var contentMargin = marginData ?? GetDefaultContentMargin(margin);
+            return contentMargin + GetPadding(margin);
+        }
+
+        public float GetPadding(Margin margin)
+        {
+            switch (margin)
+            {
+                case Margin.Top:
+                    return PaddingTop;
+                case Margin.Bottom:
+                    return PaddingBottom;
+                case Margin.Right:
+                    return PaddingRight;
+                case Margin.Left:
+                    return PaddingLeft;
+                default:
+                    throw new ArgumentException("Margin must be a single margin flag.", nameof(margin));
+            }
         }
 
         /// <summary>
@@ -171,6 +284,29 @@ namespace Robust.Client.Graphics.Drawing
             }
         }
 
+        public void SetPadding(Margin margin, float value)
+        {
+            if ((margin & Margin.Left) != 0)
+            {
+                PaddingLeft = value;
+            }
+
+            if ((margin & Margin.Top) != 0)
+            {
+                PaddingTop = value;
+            }
+
+            if ((margin & Margin.Right) != 0)
+            {
+                PaddingRight = value;
+            }
+
+            if ((margin & Margin.Bottom) != 0)
+            {
+                PaddingBottom = value;
+            }
+        }
+
         protected abstract void DoDraw(DrawingHandleScreen handle, UIBox2 box);
 
         protected virtual float GetDefaultContentMargin(Margin margin)
@@ -178,309 +314,48 @@ namespace Robust.Client.Graphics.Drawing
             return 0;
         }
 
+        /// <summary>
+        ///     Describes margins of a style box.
+        /// </summary>
         [Flags]
         public enum Margin
         {
             None = 0,
+
+            /// <summary>
+            ///     The top margin.
+            /// </summary>
             Top = 1,
+
+            /// <summary>
+            ///     The bottom margin.
+            /// </summary>
             Bottom = 2,
+
+            /// <summary>
+            ///     The right margin.
+            /// </summary>
             Right = 4,
+
+            /// <summary>
+            ///     The left margin.
+            /// </summary>
             Left = 8,
+
+            /// <summary>
+            ///     All margins.
+            /// </summary>
             All = Top | Bottom | Right | Left,
+
+            /// <summary>
+            ///     The vertical margins.
+            /// </summary>
             Vertical = Top | Bottom,
+
+            /// <summary>
+            ///     The horizontal margins.
+            /// </summary>
             Horizontal = Left | Right,
-        }
-    }
-
-    /// <summary>
-    ///     Style box based on a 9-patch texture.
-    /// </summary>
-    public class StyleBoxTexture : StyleBox
-    {
-        public StyleBoxTexture()
-        {
-        }
-
-        /// <summary>
-        ///     Clones a stylebox so it can be separately modified.
-        /// </summary>
-        public StyleBoxTexture(StyleBoxTexture copy)
-        {
-            PatchMarginTop = copy.PatchMarginTop;
-            PatchMarginLeft = copy.PatchMarginLeft;
-            PatchMarginBottom = copy.PatchMarginBottom;
-            PatchMarginRight = copy.PatchMarginRight;
-            Texture = copy.Texture;
-            Modulate = copy.Modulate;
-        }
-
-        public float ExpandMarginLeft { get; set; }
-
-        public float ExpandMarginTop { get; set; }
-
-        public float ExpandMarginBottom { get; set; }
-
-        public float ExpandMarginRight { get; set; }
-
-        private float _patchMarginLeft;
-
-        public float PatchMarginLeft
-        {
-            get => _patchMarginLeft;
-            set
-            {
-                if (value < 0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
-                }
-
-                _patchMarginLeft = value;
-            }
-        }
-
-        private float _patchMarginRight;
-
-        public float PatchMarginRight
-        {
-            get => _patchMarginRight;
-            set
-            {
-                if (value < 0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
-                }
-
-                _patchMarginRight = value;
-            }
-        }
-
-        private float _patchMarginTop;
-
-        public float PatchMarginTop
-        {
-            get => _patchMarginTop;
-            set
-            {
-                if (value < 0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
-                }
-
-                _patchMarginTop = value;
-            }
-        }
-
-        private float _patchMarginBottom;
-
-        public float PatchMarginBottom
-        {
-            get => _patchMarginBottom;
-            set
-            {
-                if (value < 0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "Value cannot be less than zero.");
-                }
-
-                _patchMarginBottom = value;
-            }
-        }
-
-        public Color Modulate { get; set; } = Color.White;
-
-        public Texture Texture { get; set; }
-
-        [Obsolete("Use SetPatchMargin")]
-        public void SetMargin(Margin margin, float value)
-        {
-            SetPatchMargin(margin, value);
-        }
-
-        public void SetPatchMargin(Margin margin, float value)
-        {
-            if ((margin & Margin.Top) != 0)
-            {
-                PatchMarginTop = value;
-            }
-
-            if ((margin & Margin.Bottom) != 0)
-            {
-                PatchMarginBottom = value;
-            }
-
-            if ((margin & Margin.Right) != 0)
-            {
-                PatchMarginRight = value;
-            }
-
-            if ((margin & Margin.Left) != 0)
-            {
-                PatchMarginLeft = value;
-            }
-        }
-
-        public void SetExpandMargin(Margin margin, float value)
-        {
-            if ((margin & Margin.Top) != 0)
-            {
-                ExpandMarginTop = value;
-            }
-
-            if ((margin & Margin.Bottom) != 0)
-            {
-                ExpandMarginBottom = value;
-            }
-
-            if ((margin & Margin.Right) != 0)
-            {
-                ExpandMarginRight = value;
-            }
-
-            if ((margin & Margin.Left) != 0)
-            {
-                ExpandMarginLeft = value;
-            }
-        }
-
-        protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box)
-        {
-            box = new UIBox2(
-                box.Left - ExpandMarginLeft,
-                box.Top - ExpandMarginTop,
-                box.Right + ExpandMarginRight,
-                box.Bottom + ExpandMarginBottom);
-
-            if (PatchMarginLeft > 0)
-            {
-                if (PatchMarginTop > 0)
-                {
-                    // Draw top left
-                    var topLeftBox = new UIBox2(0, 0, PatchMarginLeft, PatchMarginTop)
-                        .Translated(box.TopLeft);
-                    handle.DrawTextureRectRegion(Texture, topLeftBox,
-                        new UIBox2(0, 0, PatchMarginLeft, PatchMarginTop), Modulate);
-                }
-
-                {
-                    // Draw left
-                    var leftBox =
-                        new UIBox2(0, PatchMarginTop, PatchMarginLeft, box.Height - PatchMarginBottom)
-                            .Translated(box.TopLeft);
-                    handle.DrawTextureRectRegion(Texture, leftBox,
-                        new UIBox2(0, PatchMarginTop, PatchMarginLeft, Texture.Height - PatchMarginBottom), Modulate);
-                }
-
-                if (PatchMarginBottom > 0)
-                {
-                    // Draw bottom left
-                    var bottomLeftBox =
-                        new UIBox2(0, box.Height - PatchMarginBottom, PatchMarginLeft, box.Height)
-                            .Translated(box.TopLeft);
-                    handle.DrawTextureRectRegion(Texture, bottomLeftBox,
-                        new UIBox2(0, Texture.Height - PatchMarginBottom, PatchMarginLeft, Texture.Height), Modulate);
-                }
-            }
-
-            if (PatchMarginRight > 0)
-            {
-                if (PatchMarginTop > 0)
-                {
-                    // Draw top right
-                    var topRightBox = new UIBox2(box.Width - PatchMarginRight, 0, box.Width, PatchMarginTop)
-                        .Translated(box.TopLeft);
-                    handle.DrawTextureRectRegion(Texture, topRightBox,
-                        new UIBox2(Texture.Width - PatchMarginRight, 0, Texture.Width, PatchMarginTop), Modulate);
-                }
-
-                {
-                    // Draw right
-                    var rightBox =
-                        new UIBox2(box.Width - PatchMarginRight, PatchMarginTop, box.Width,
-                                box.Height - PatchMarginBottom)
-                            .Translated(box.TopLeft);
-                    handle.DrawTextureRectRegion(Texture, rightBox,
-                        new UIBox2(Texture.Width - PatchMarginRight, PatchMarginTop, Texture.Width,
-                            Texture.Height - PatchMarginBottom), Modulate);
-                }
-
-                if (PatchMarginBottom > 0)
-                {
-                    // Draw bottom right
-                    var bottomRightBox =
-                        new UIBox2(box.Width - PatchMarginRight, box.Height - PatchMarginBottom, box.Width, box.Height)
-                            .Translated(box.TopLeft);
-                    handle.DrawTextureRectRegion(Texture, bottomRightBox,
-                        new UIBox2(Texture.Width - PatchMarginRight, Texture.Height - PatchMarginBottom, Texture.Width,
-                            Texture.Height), Modulate);
-                }
-            }
-
-            if (PatchMarginTop > 0)
-            {
-                // Draw top
-                var topBox =
-                    new UIBox2(PatchMarginLeft, 0, box.Width - PatchMarginRight, PatchMarginTop)
-                        .Translated(box.TopLeft);
-                handle.DrawTextureRectRegion(Texture, topBox,
-                    new UIBox2(PatchMarginLeft, 0, Texture.Width - PatchMarginRight, PatchMarginTop), Modulate);
-            }
-
-            if (PatchMarginBottom > 0)
-            {
-                // Draw bottom
-                var bottomBox =
-                    new UIBox2(PatchMarginLeft, box.Height - PatchMarginBottom, box.Width - PatchMarginRight,
-                            box.Height)
-                        .Translated(box.TopLeft);
-                handle.DrawTextureRectRegion(Texture, bottomBox,
-                    new UIBox2(PatchMarginLeft, Texture.Height - PatchMarginBottom, Texture.Width - PatchMarginRight,
-                        Texture.Height), Modulate);
-            }
-
-            // Draw center
-            {
-                var centerBox = new UIBox2(PatchMarginLeft, PatchMarginTop, box.Width - PatchMarginRight,
-                    box.Height - PatchMarginBottom).Translated(box.TopLeft);
-
-                handle.DrawTextureRectRegion(Texture, centerBox,
-                    new UIBox2(PatchMarginLeft, PatchMarginTop, Texture.Width - PatchMarginRight,
-                        Texture.Height - PatchMarginBottom), Modulate);
-            }
-        }
-
-        protected override float GetDefaultContentMargin(Margin margin)
-        {
-            switch (margin)
-            {
-                case Margin.Top:
-                    return PatchMarginTop;
-                case Margin.Bottom:
-                    return PatchMarginBottom;
-                case Margin.Right:
-                    return PatchMarginRight;
-                case Margin.Left:
-                    return PatchMarginLeft;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(margin), margin, null);
-            }
-        }
-    }
-
-    public class StyleBoxFlat : StyleBox
-    {
-        public Color BackgroundColor { get; set; }
-
-        protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box)
-        {
-            handle.DrawRect(box, BackgroundColor);
-        }
-    }
-
-    public class StyleBoxEmpty : StyleBox
-    {
-        protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box)
-        {
-            // It's empty what more do you want?
         }
     }
 }

@@ -558,11 +558,12 @@ namespace Robust.Client.Graphics.Clyde
             public unsafe void GetBuffersProcessed(Span<uint> handles)
             {
                 _checkDisposed();
+                var entries = Math.Min(Math.Min(handles.Length, BufferHandles.Length), GetNumberOfBuffersProcessed());
                 fixed(uint* ptr = handles)
                     // ReSharper disable once PossibleInvalidOperationException
-                    AL.SourceUnqueueBuffers(SourceHandle.Value, Math.Min(Math.Min(handles.Length, BufferHandles.Length), GetNumberOfBuffersProcessed()), ptr);
+                    AL.SourceUnqueueBuffers(SourceHandle.Value, entries, ptr);
 
-                for (var i = 0; i < handles.Length; i++)
+                for (var i = 0; i < entries; i++)
                     handles[i] = BufferMap[handles[i]];
             }
 

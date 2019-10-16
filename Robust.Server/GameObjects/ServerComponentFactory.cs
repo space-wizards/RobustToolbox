@@ -34,7 +34,6 @@ namespace Robust.Server.GameObjects
 
             RegisterIgnore("Input");
 
-            Register<ParticleSystemComponent>();
             Register<PhysicsComponent>();
             Register<SpriteComponent>();
 

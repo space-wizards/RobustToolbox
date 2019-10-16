@@ -5,7 +5,6 @@
         public const uint META_DATA = 4;
         public const uint TRANSFORM = 5;
         public const uint PHYSICS = 6;
-        public const uint PARTICLE_SYSTEM = 7;
         public const uint SPRITE = 8;
         public const uint POINT_LIGHT = 10;
         public const uint COLLIDABLE = 12;

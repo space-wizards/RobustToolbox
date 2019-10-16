@@ -102,12 +102,17 @@ namespace Robust.Client.Graphics.Clyde
             return DummyAudioSource.Instance;
         }
 
+        public IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers)
+        {
+            return DummyBufferedAudioSource.Instance;
+        }
+
         public IntPtr GetNativeWindowHandle()
         {
             return default;
         }
 
-        private sealed class DummyAudioSource : IClydeAudioSource
+        private class DummyAudioSource : IClydeAudioSource
         {
             public static DummyAudioSource Instance { get; } = new DummyAudioSource();
             public bool IsPlaying => default;
@@ -140,6 +145,42 @@ namespace Robust.Client.Graphics.Clyde
             public void SetVolume(float decibels)
             {
                 // Nada.
+            }
+        }
+
+        private sealed class DummyBufferedAudioSource : DummyAudioSource, IClydeBufferedAudioSource
+        {
+            public new static DummyBufferedAudioSource Instance { get; } = new DummyBufferedAudioSource();
+            public int SampleRate { get; set; } = 0;
+
+            public void WriteBuffer(uint handle, ReadOnlySpan<ushort> data)
+            {
+                // Nada.
+            }
+
+            public void QueueBuffer(uint handle)
+            {
+                // Nada.
+            }
+
+            public void QueueBuffers(ReadOnlySpan<uint> handles)
+            {
+                // Nada.
+            }
+
+            public void EmptyBuffers()
+            {
+                // Nada.
+            }
+
+            public void GetBuffersProcessed(Span<uint> handles)
+            {
+                // Nada.
+            }
+
+            public int GetNumberOfBuffersProcessed()
+            {
+                return 0;
             }
         }
 

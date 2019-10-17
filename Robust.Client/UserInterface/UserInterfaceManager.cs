@@ -170,12 +170,24 @@ namespace Robust.Client.UserInterface
             while (_styleUpdateQueue.Count != 0)
             {
                 var control = _styleUpdateQueue.Dequeue();
+
+                if (control.Disposed)
+                {
+                    continue;
+                }
+
                 control.DoStyleUpdate();
             }
 
             while (_layoutUpdateQueue.Count != 0)
             {
                 var control = _layoutUpdateQueue.Dequeue();
+
+                if (control.Disposed)
+                {
+                    continue;
+                }
+
                 control.DoLayoutUpdate();
 
                 if (control is Container container)

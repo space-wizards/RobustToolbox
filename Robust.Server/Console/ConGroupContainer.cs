@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Robust.Shared.Console;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Utility;

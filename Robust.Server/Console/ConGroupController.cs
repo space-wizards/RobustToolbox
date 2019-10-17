@@ -3,9 +3,11 @@ using System.Net;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Log;
+using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 
@@ -21,6 +23,7 @@ namespace Robust.Server.Console
         [Dependency] private readonly IConfigurationManager _configurationManager;
         [Dependency] private readonly ILogManager _logManager;
         [Dependency] private readonly IPlayerManager _playerManager;
+        [Dependency] private readonly INetManager _netManager;
 #pragma warning restore 649
 
         private ConGroupContainer _groups;
@@ -32,6 +35,8 @@ namespace Robust.Server.Console
 
             _configurationManager.RegisterCVar("console.loginlocal", true, CVar.ARCHIVE);
 
+            _netManager.RegisterNetMessage<MsgConGroupUpdate>(MsgConGroupUpdate.Name);
+
             _playerManager.PlayerStatusChanged += _onClientStatusChanged;
 
             // load the permission groups in the console
@@ -40,6 +45,8 @@ namespace Robust.Server.Console
 
             // set up the session group container
             _sessions = new SessionGroupContainer(_configurationManager, logger);
+
+            UpdateAllClientData();
         }
 
         private void _onClientStatusChanged(object sender, SessionStatusEventArgs e)
@@ -53,6 +60,7 @@ namespace Robust.Server.Console
                 if (Equals(address, IPAddress.Loopback) || Equals(address, IPAddress.IPv6Loopback))
                 {
                     SetGroup(session, new ConGroupIndex(_configurationManager.GetCVar<int>("console.adminGroup")));
+                    UpdateClientData(session);
                 }
             }
         }
@@ -88,6 +96,7 @@ namespace Robust.Server.Console
         {
             _groups.Clear();
             _groups.LoadGroups();
+            UpdateAllClientData();
         }
 
         public void SetGroup(IPlayerSession session, ConGroupIndex newGroup)
@@ -99,6 +108,32 @@ namespace Robust.Server.Console
                 return;
 
             _sessions.SetSessionGroup(session, newGroup);
+            UpdateClientData(session);
+        }
+
+        /// <summary>
+        /// Update a single clients group data.
+        /// </summary>
+        /// <param name="session">The client session to update.</param>
+        private void UpdateClientData(IPlayerSession session)
+        {
+            var group = _sessions.GetSessionGroup(session);
+            var groupData = _groups.Groups[group];
+
+            var msg = _netManager.CreateNetMessage<MsgConGroupUpdate>();
+            msg.ClientConGroup = groupData;
+            _netManager.ServerSendMessage(msg, session.ConnectedClient);
+        }
+
+        /// <summary>
+        /// Update group data for all clients.
+        /// </summary>
+        private void UpdateAllClientData()
+        {
+            foreach (var session in _playerManager.GetAllPlayers())
+            {
+                UpdateClientData(session);
+            }
         }
     }
 }

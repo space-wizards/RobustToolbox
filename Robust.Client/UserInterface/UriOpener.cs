@@ -74,7 +74,7 @@ namespace Robust.Client.UserInterface
             Process.Start(new ProcessStartInfo
             {
                 FileName = "xdg-open",
-                Arguments = $"'{uri}'"
+                Arguments = $"\"{uri}\""
             });
         }
     }
@@ -87,7 +87,7 @@ namespace Robust.Client.UserInterface
             Process.Start(new ProcessStartInfo
             {
                 FileName = "open",
-                Arguments = $"'{uri}'"
+                Arguments = $"\"{uri}\""
             });
         }
     }

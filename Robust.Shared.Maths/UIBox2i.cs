@@ -123,6 +123,13 @@ namespace Robust.Shared.Maths
             return new UIBox2(box.Left, box.Top, box.Right, box.Bottom);
         }
 
+        public static UIBox2i operator +(UIBox2i box, (int lo, int to, int ro, int bo) offsets)
+        {
+            var (lo, to, ro, bo) = offsets;
+
+            return new UIBox2i(box.Left + lo, box.Top + to, box.Right + ro, box.Bottom + bo);
+        }
+
         public override string ToString()
         {
             return $"({Left}, {Top}, {Right}, {Bottom})";

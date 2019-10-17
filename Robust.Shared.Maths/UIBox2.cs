@@ -160,6 +160,13 @@ namespace Robust.Shared.Maths
             return !(a == b);
         }
 
+        public static UIBox2 operator +(UIBox2 box, (float lo, float to, float ro, float bo) offsets)
+        {
+            var (lo, to, ro, bo) = offsets;
+
+            return new UIBox2(box.Left + lo, box.Top + to, box.Right + ro, box.Bottom + bo);
+        }
+
         public override string ToString()
         {
             return $"({Left}, {Top}, {Right}, {Bottom})";

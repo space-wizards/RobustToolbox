@@ -1,5 +1,6 @@
 using System;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Drawing
 {
@@ -39,6 +40,8 @@ namespace Robust.Client.Graphics.Drawing
         public float ExpandMarginBottom { get; set; }
 
         public float ExpandMarginRight { get; set; }
+
+        public StretchMode Mode { get; set; } = StretchMode.Stretch;
 
         private float _patchMarginLeft;
 
@@ -184,8 +187,8 @@ namespace Robust.Client.Graphics.Drawing
                     var leftBox =
                         new UIBox2(0, PatchMarginTop, PatchMarginLeft, box.Height - PatchMarginBottom)
                             .Translated(box.TopLeft);
-                    handle.DrawTextureRectRegion(Texture, leftBox,
-                        new UIBox2(0, PatchMarginTop, PatchMarginLeft, Texture.Height - PatchMarginBottom), Modulate);
+                    DrawStretchingArea(handle, leftBox,
+                        new UIBox2(0, PatchMarginTop, PatchMarginLeft, Texture.Height - PatchMarginBottom));
                 }
 
                 if (PatchMarginBottom > 0)
@@ -216,9 +219,11 @@ namespace Robust.Client.Graphics.Drawing
                         new UIBox2(box.Width - PatchMarginRight, PatchMarginTop, box.Width,
                                 box.Height - PatchMarginBottom)
                             .Translated(box.TopLeft);
-                    handle.DrawTextureRectRegion(Texture, rightBox,
-                        new UIBox2(Texture.Width - PatchMarginRight, PatchMarginTop, Texture.Width,
-                            Texture.Height - PatchMarginBottom), Modulate);
+
+                    DrawStretchingArea(handle, rightBox,
+                        new UIBox2(Texture.Width - PatchMarginRight, PatchMarginTop,
+                            Texture.Width,
+                            Texture.Height - PatchMarginBottom));
                 }
 
                 if (PatchMarginBottom > 0)
@@ -239,8 +244,8 @@ namespace Robust.Client.Graphics.Drawing
                 var topBox =
                     new UIBox2(PatchMarginLeft, 0, box.Width - PatchMarginRight, PatchMarginTop)
                         .Translated(box.TopLeft);
-                handle.DrawTextureRectRegion(Texture, topBox,
-                    new UIBox2(PatchMarginLeft, 0, Texture.Width - PatchMarginRight, PatchMarginTop), Modulate);
+                DrawStretchingArea(handle, topBox,
+                    new UIBox2(PatchMarginLeft, 0, Texture.Width - PatchMarginRight, PatchMarginTop));
             }
 
             if (PatchMarginBottom > 0)
@@ -250,9 +255,11 @@ namespace Robust.Client.Graphics.Drawing
                     new UIBox2(PatchMarginLeft, box.Height - PatchMarginBottom, box.Width - PatchMarginRight,
                             box.Height)
                         .Translated(box.TopLeft);
-                handle.DrawTextureRectRegion(Texture, bottomBox,
-                    new UIBox2(PatchMarginLeft, Texture.Height - PatchMarginBottom, Texture.Width - PatchMarginRight,
-                        Texture.Height), Modulate);
+
+                DrawStretchingArea(handle, bottomBox,
+                    new UIBox2(PatchMarginLeft, Texture.Height - PatchMarginBottom,
+                        Texture.Width - PatchMarginRight,
+                        Texture.Height));
             }
 
             // Draw center
@@ -260,9 +267,40 @@ namespace Robust.Client.Graphics.Drawing
                 var centerBox = new UIBox2(PatchMarginLeft, PatchMarginTop, box.Width - PatchMarginRight,
                     box.Height - PatchMarginBottom).Translated(box.TopLeft);
 
-                handle.DrawTextureRectRegion(Texture, centerBox,
-                    new UIBox2(PatchMarginLeft, PatchMarginTop, Texture.Width - PatchMarginRight,
-                        Texture.Height - PatchMarginBottom), Modulate);
+                DrawStretchingArea(handle, centerBox, new UIBox2(PatchMarginLeft, PatchMarginTop, Texture.Width - PatchMarginRight,
+                    Texture.Height - PatchMarginBottom));
+            }
+        }
+
+        private void DrawStretchingArea(DrawingHandleScreen handle, UIBox2 area, UIBox2 texCoords)
+        {
+            if (Mode == StretchMode.Stretch)
+            {
+                handle.DrawTextureRectRegion(Texture, area, texCoords, Modulate);
+                return;
+            }
+
+            DebugTools.Assert(Mode == StretchMode.Tile);
+
+            // TODO: this is an insanely expensive way to do tiling, seriously.
+            // This should 100% be implemented in a shader instead.
+
+            var texWidth = texCoords.Width;
+            var texHeight = texCoords.Height;
+
+            for (var x = area.Left; area.Right - x > 0; x += texWidth)
+            {
+                for (var y = area.Top; area.Bottom - y > 0; y += texHeight)
+                {
+                    var w = Math.Min(area.Right - x, texWidth);
+                    var h = Math.Min(area.Bottom - y, texHeight);
+
+                    handle.DrawTextureRectRegion(
+                        Texture,
+                        UIBox2.FromDimensions(x, y, w, h),
+                        UIBox2.FromDimensions(texCoords.Left, texCoords.Top, w, h),
+                        Modulate);
+                }
             }
         }
 
@@ -281,6 +319,15 @@ namespace Robust.Client.Graphics.Drawing
                 default:
                     throw new ArgumentOutOfRangeException(nameof(margin), margin, null);
             }
+        }
+
+        /// <summary>
+        ///     Specifies how to stretch the sides and center of the style box.
+        /// </summary>
+        public enum StretchMode
+        {
+            Stretch,
+            Tile,
         }
     }
 }

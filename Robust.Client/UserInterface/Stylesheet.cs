@@ -169,6 +169,21 @@ namespace Robust.Client.UserInterface
             PseudoClass = pseudoClass;
         }
 
+        public static SelectorElement Type(Type elementType)
+        {
+            return new SelectorElement(elementType, null, null, null);
+        }
+
+        public static SelectorElement Class(params string[] classes)
+        {
+            return new SelectorElement(null, classes, null, null);
+        }
+
+        public static SelectorElement Id(string id)
+        {
+            return new SelectorElement(null, null, id, null);
+        }
+
         public Type ElementType { get; }
         public IReadOnlyCollection<string> ElementClasses { get; }
         public string ElementId { get; }

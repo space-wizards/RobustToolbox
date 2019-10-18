@@ -9,5 +9,6 @@ namespace Robust.Client.Interfaces.UserInterface
         bool ShowTime { get; set; }
         bool ShowFrameGraph { get; set; }
         bool ShowMemory { get; set; }
+        bool ShowClyde { get; set; }
     }
 }

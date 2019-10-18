@@ -24,6 +24,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public Vector2 MouseScreenPosition => ScreenSize / 2;
         public IClydeDebugInfo DebugInfo => null;
+        public IClydeDebugStats DebugStats => null;
 
         public override void SetWindowTitle(string title)
         {

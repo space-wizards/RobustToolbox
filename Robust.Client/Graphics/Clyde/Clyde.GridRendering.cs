@@ -89,6 +89,7 @@ namespace Robust.Client.Graphics.Clyde
                     datum.EBO.Use();
                     datum.VBO.Use();
 
+                    _debugStats.LastGLDrawCalls += 1;
                     GL.DrawElements(BeginMode.TriangleStrip, datum.TileCount * 5, DrawElementsType.UnsignedShort, 0);
                 }
             }

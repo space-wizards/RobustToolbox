@@ -11,7 +11,7 @@ using Robust.Shared.Interfaces.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    public class DebugMonitors : VBoxContainer, IDebugMonitors
+    internal sealed class DebugMonitors : VBoxContainer, IDebugMonitors
     {
         public bool ShowFPS { get => _fpsCounter.Visible; set => _fpsCounter.Visible = value; }
         public bool ShowCoords { get => _debugCoordsPanel.Visible; set => _debugCoordsPanel.Visible = value; }
@@ -19,34 +19,20 @@ namespace Robust.Client.UserInterface.CustomControls
         public bool ShowTime { get => _timeDebug.Visible; set => _timeDebug.Visible = value; }
         public bool ShowFrameGraph { get => _frameGraph.Visible; set => _frameGraph.Visible = value; }
         public bool ShowMemory { get => _debugMemoryPanel.Visible; set => _debugMemoryPanel.Visible = value; }
+        public bool ShowClyde { get => _debugMemoryPanel.Visible; set => _debugMemoryPanel.Visible = value; }
 
-        private FpsCounter _fpsCounter;
-        private DebugCoordsPanel _debugCoordsPanel;
-        private DebugNetPanel _debugNetPanel;
-        private DebugTimePanel _timeDebug;
-        private FrameGraph _frameGraph;
-        private DebugMemoryPanel _debugMemoryPanel;
-
-        private readonly IGameTiming _gameTiming;
-        private readonly IPlayerManager _playerManager;
-        private readonly IEyeManager _eyeManager;
-        private readonly IInputManager _inputManager;
-        private readonly IStateManager _stateManager;
-        private readonly IClyde _displayManager;
-        private readonly IClientNetManager _netManager;
-        private readonly IMapManager _mapManager;
+        private readonly FpsCounter _fpsCounter;
+        private readonly DebugCoordsPanel _debugCoordsPanel;
+        private readonly DebugNetPanel _debugNetPanel;
+        private readonly DebugTimePanel _timeDebug;
+        private readonly FrameGraph _frameGraph;
+        private readonly DebugMemoryPanel _debugMemoryPanel;
+        private readonly DebugClydePanel _debugClydePanel;
 
         //TODO: Think about a factory for this
         public DebugMonitors(IGameTiming gameTiming, IPlayerManager playerManager, IEyeManager eyeManager, IInputManager inputManager, IStateManager stateManager, IClyde displayManager, IClientNetManager netManager, IMapManager mapManager)
         {
-            _gameTiming = gameTiming;
-            _playerManager = playerManager;
-            _eyeManager = eyeManager;
-            _inputManager = inputManager;
-            _stateManager = stateManager;
-            _displayManager = displayManager;
-            _netManager = netManager;
-            _mapManager = mapManager;
+            var gameTiming1 = gameTiming;
 
             MouseFilter = MouseFilterMode.Ignore;
             Visible = false;
@@ -56,25 +42,30 @@ namespace Robust.Client.UserInterface.CustomControls
             MarginLeft = 2;
             MarginTop = 2;
 
-            _fpsCounter = new FpsCounter(_gameTiming);
+            _fpsCounter = new FpsCounter(gameTiming1);
             AddChild(_fpsCounter);
 
-            _debugCoordsPanel = new DebugCoordsPanel(_playerManager, _eyeManager, _inputManager, _stateManager, _displayManager, _mapManager);
+            _debugCoordsPanel = new DebugCoordsPanel(playerManager, eyeManager, inputManager, stateManager, displayManager, mapManager);
             AddChild(_debugCoordsPanel);
 
-            _debugNetPanel = new DebugNetPanel(_netManager, _gameTiming);
+            _debugNetPanel = new DebugNetPanel(netManager, gameTiming1);
             AddChild(_debugNetPanel);
 
-            _timeDebug = new DebugTimePanel(_gameTiming)
+            _timeDebug = new DebugTimePanel(gameTiming1)
             {
                 Visible = false,
             };
             AddChild(_timeDebug);
 
-            _frameGraph = new FrameGraph(_gameTiming);
+            _frameGraph = new FrameGraph(gameTiming1);
             AddChild(_frameGraph);
 
             AddChild(_debugMemoryPanel = new DebugMemoryPanel());
+
+            AddChild(_debugClydePanel = new DebugClydePanel
+            {
+                SizeFlagsHorizontal = SizeFlags.None
+            });
         }
     }
 }

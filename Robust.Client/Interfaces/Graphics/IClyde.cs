@@ -60,6 +60,8 @@ namespace Robust.Client.Interfaces.Graphics
 
         IClydeDebugInfo DebugInfo { get; }
 
+        IClydeDebugStats DebugStats { get; }
+
         /// <summary>
         ///     Gets the platform specific window handle exposed by OpenTK.
         ///     Seriously please avoid using this unless absolutely necessary.
@@ -151,7 +153,7 @@ namespace Robust.Client.Interfaces.Graphics
         public Vector2i NewSize { get; }
     }
 
-    public interface IClydeDebugInfo
+    internal interface IClydeDebugInfo
     {
         Version OpenGLVersion { get; }
         Version MinimumVersion { get; }
@@ -159,5 +161,29 @@ namespace Robust.Client.Interfaces.Graphics
         string Renderer { get; }
         string Vendor { get; }
         string VersionString { get; }
+    }
+
+    /// <summary>
+    ///     Provides frame statistics about rendering.
+    /// </summary>
+    internal interface IClydeDebugStats
+    {
+        /// <summary>
+        ///     The amount of draw calls sent to OpenGL last frame.
+        /// </summary>
+        int LastGLDrawCalls { get; }
+
+        /// <summary>
+        ///     The amount of Clyde draw calls done last frame.
+        /// </summary>
+        /// <remarks>
+        ///     This is stuff like <see cref="DrawingHandleScreen.DrawTexture"/>.
+        /// </remarks>
+        int LastClydeDrawCalls { get; }
+
+        /// <summary>
+        ///     The amount of batches made.
+        /// </summary>
+        int LastBatches { get; }
     }
 }

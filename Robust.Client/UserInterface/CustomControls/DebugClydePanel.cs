@@ -1,0 +1,47 @@
+using Robust.Client.Graphics.Drawing;
+using Robust.Client.Interfaces.Graphics;
+using Robust.Client.UserInterface.Controls;
+using Robust.Shared.IoC;
+using Robust.Shared.Maths;
+using Robust.Shared.Timing;
+
+namespace Robust.Client.UserInterface.CustomControls
+{
+    internal sealed class DebugClydePanel : PanelContainer
+    {
+        [Dependency] private readonly IClydeInternal _clydeInternal;
+
+        private readonly Label _label;
+
+        public DebugClydePanel()
+        {
+            IoCManager.InjectDependencies(this);
+
+            PanelOverride = new StyleBoxFlat
+            {
+                BackgroundColor = new Color(67, 105, 255, 138),
+            };
+
+            PanelOverride.SetContentMarginOverride(StyleBox.Margin.All, 5);
+
+            AddChild(_label = new Label());
+        }
+
+        protected override void FrameUpdate(FrameEventArgs args)
+        {
+            if (!VisibleInTree)
+            {
+                return;
+            }
+
+            var info = _clydeInternal.DebugInfo;
+            var stats = _clydeInternal.DebugStats;
+
+            _label.Text = $@"Renderer: {info.Renderer}
+Vendor: {info.Vendor}
+Version: {info.VersionString}
+Draw Calls: Cly: {stats.LastClydeDrawCalls} GL: {stats.LastGLDrawCalls}
+Batches: {stats.LastBatches}";
+        }
+    }
+}

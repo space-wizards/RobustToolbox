@@ -96,6 +96,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private ShaderProgram _currentProgram;
 
+        private ClydeDebugStats _debugStats;
+
         public override Vector2i ScreenSize
         {
             get => new Vector2i(_window.Width, _window.Height);
@@ -118,6 +120,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public override void Initialize(bool lite = false)
         {
+            _debugStats = new ClydeDebugStats();
             _lite = lite;
             _initWindow();
             _initializeAudio();
@@ -142,6 +145,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public Vector2 MouseScreenPosition { get; private set; }
         public IClydeDebugInfo DebugInfo { get; private set; }
+        public IClydeDebugStats DebugStats => _debugStats;
 
         protected override void ReadConfig()
         {
@@ -757,6 +761,20 @@ namespace Robust.Client.Graphics.Clyde
             public string Renderer { get; }
             public string Vendor { get; }
             public string VersionString { get; }
+        }
+
+        private sealed class ClydeDebugStats : IClydeDebugStats
+        {
+            public int LastGLDrawCalls { get; set; }
+            public int LastClydeDrawCalls { get; set; }
+            public int LastBatches { get; set; }
+
+            public void Reset()
+            {
+                LastGLDrawCalls = 0;
+                LastClydeDrawCalls = 0;
+                LastBatches = 0;
+            }
         }
     }
 

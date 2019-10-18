@@ -13,7 +13,6 @@ using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -70,6 +69,8 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Render()
         {
+            _debugStats.Reset();
+
             // Basic pre-render busywork.
             // Clear screen to black.
             ClearFramebuffer(Color.Black);
@@ -385,11 +386,13 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     case RenderCommandType.Texture:
                         _drawCommandTexture(ref command.Texture);
+                        _debugStats.LastClydeDrawCalls += 1;
                         break;
 
                     case RenderCommandType.Line:
                         _flushBatchBuffer();
                         _drawCommandLine(ref command.Line);
+                        _debugStats.LastClydeDrawCalls += 1;
                         break;
 
                     case RenderCommandType.ModelMatrix:
@@ -608,6 +611,7 @@ namespace Robust.Client.Graphics.Clyde
             (rectTransform.R0C2, rectTransform.R1C2) = a;
             rectTransform.Multiply(ref _currentModelMatrix);
             program.SetUniformMaybe(UniIModelMatrix, rectTransform);
+            _debugStats.LastGLDrawCalls += 1;
             GL.DrawArrays(PrimitiveType.Lines, 0, 2);
         }
 
@@ -620,6 +624,7 @@ namespace Robust.Client.Graphics.Clyde
             rectTransform.Multiply(ref modelMatrix);
             program.SetUniformMaybe(UniIModelMatrix, rectTransform);
 
+            _debugStats.LastGLDrawCalls += 1;
             GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
         }
 
@@ -646,6 +651,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 return;
             }
+
+            _debugStats.LastBatches += 1;
 
             DebugTools.Assert(BatchingTexture.HasValue);
             var loadedTexture = _loadedTextures[BatchingTexture.Value];
@@ -687,6 +694,7 @@ namespace Robust.Client.Graphics.Clyde
             program.SetUniformMaybe(UniIModulate, BatchingModulate.Value);
             program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
 
+            _debugStats.LastGLDrawCalls += 1;
             GL.DrawElements(PrimitiveType.TriangleStrip, BatchIndex * 5, DrawElementsType.UnsignedShort, 0);
 
             // Reset batch state.

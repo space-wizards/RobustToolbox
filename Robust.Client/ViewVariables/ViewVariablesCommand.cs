@@ -77,6 +77,18 @@ namespace Robust.Client.ViewVariables
                 return false;
             }
 
+            if (valArg.StartsWith("guihover"))
+            {
+                // UI element.
+                var obj = IoCManager.Resolve<IUserInterfaceManager>().CurrentlyHovered;
+                if (obj == null)
+                {
+                    console.AddLine("Not currently hovering any control.");
+                }
+                vvm.OpenVV(obj);
+                return false;
+            }
+
             // Entity.
             if (!EntityUid.TryParse(args[0], out var uid))
             {

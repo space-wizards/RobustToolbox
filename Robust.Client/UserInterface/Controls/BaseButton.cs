@@ -1,5 +1,5 @@
 ﻿using System;
-using Robust.Shared.Input;
+using System.Collections.Generic;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
@@ -17,6 +17,37 @@ namespace Robust.Client.UserInterface.Controls
         private bool _disabled;
         private bool _pressed;
         private bool _enableAllKeybinds;
+        private ButtonGroup _group;
+        private bool _toggleMode;
+
+        /// <summary>
+        ///     Specifies the group this button belongs to.
+        /// </summary>
+        /// <remarks>
+        ///     Of multiple buttons in the same group, only one can be pressed (radio buttons).
+        /// </remarks>
+        public ButtonGroup Group
+        {
+            get => _group;
+            set
+            {
+                // Remove from old group.
+                _group?.Buttons.Remove(this);
+
+                _group = value;
+
+                if (_group == null)
+                {
+                    return;
+                }
+
+                _group.Buttons.Add(this);
+                ToggleMode = true;
+
+                // Set us to pressed if we're the first button.
+                Pressed = value.Buttons.Count == 0;
+            }
+        }
 
         /// <summary>
         ///     Controls mode of operation in relation to press/release events.
@@ -57,7 +88,18 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     return;
                 }
+
+                if (!value && Group != null)
+                {
+                    throw new InvalidOperationException("Cannot directly unset a grouped button. Set another button in the group instead.");
+                }
+
                 _pressed = value;
+
+                if (Group != null)
+                {
+                    UnsetOtherGroupButtons();
+                }
 
                 DrawModeChanged();
             }
@@ -76,7 +118,19 @@ namespace Robust.Client.UserInterface.Controls
         ///     If <c>true</c>, this button functions as a toggle, not as a regular push button.
         /// </summary>
         [ViewVariables]
-        public bool ToggleMode { get; set; }
+        public bool ToggleMode
+        {
+            get => _toggleMode;
+            set
+            {
+                if (Group != null && !value)
+                {
+                    throw new InvalidOperationException("Cannot disable toggle mode on a button in a group.");
+                }
+
+                _toggleMode = value;
+            }
+        }
 
         /// <summary>
         ///     If <c>true</c>, this button is currently being hovered over by the mouse.
@@ -156,9 +210,14 @@ namespace Robust.Client.UserInterface.Controls
             {
                 if (ToggleMode)
                 {
-                    _pressed = !_pressed;
-                    OnPressed?.Invoke(buttonEventArgs);
-                    OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
+                    // Can't un press a radio button directly.
+                    if (Group == null || !_pressed)
+                    {
+                        _pressed = !_pressed;
+                        OnPressed?.Invoke(buttonEventArgs);
+                        OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
+                        UnsetOtherGroupButtons();
+                    }
                 }
                 else
                 {
@@ -189,15 +248,20 @@ namespace Robust.Client.UserInterface.Controls
             if (Mode == ActionMode.Release && _attemptingPress &&
                 this == UserInterfaceManagerInternal.MouseGetControl(args.PointerLocation.Position))
             {
-                if (ToggleMode)
+                // Can't un press a radio button directly.
+                if (Group == null || !_pressed)
                 {
-                    _pressed = !_pressed;
-                }
+                    if (ToggleMode)
+                    {
+                        _pressed = !_pressed;
+                    }
 
-                OnPressed?.Invoke(buttonEventArgs);
-                if (ToggleMode && args.CanFocus)
-                {
-                    OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
+                    OnPressed?.Invoke(buttonEventArgs);
+                    if (ToggleMode && args.CanFocus)
+                    {
+                        OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
+                        UnsetOtherGroupButtons();
+                    }
                 }
             }
 
@@ -205,6 +269,23 @@ namespace Robust.Client.UserInterface.Controls
             if (drawMode != DrawMode)
             {
                 DrawModeChanged();
+            }
+        }
+
+        private void UnsetOtherGroupButtons()
+        {
+            if (_group == null)
+            {
+                return;
+            }
+
+            foreach (var button in _group.Buttons)
+            {
+                if (button != this && button.Pressed)
+                {
+                    button._pressed = false;
+                    button.DrawModeChanged();
+                }
             }
         }
 
@@ -288,5 +369,17 @@ namespace Robust.Client.UserInterface.Controls
             /// </summary>
             Release = 1
         }
+    }
+
+    /// <summary>
+    ///     Represents a group of buttons.
+    /// </summary>
+    /// <remarks>
+    ///     Of all buttons in a group, only one can be pressed down.
+    ///     Yes, it's for radio buttons.
+    /// </remarks>
+    public sealed class ButtonGroup
+    {
+        internal readonly List<BaseButton> Buttons = new List<BaseButton>();
     }
 }

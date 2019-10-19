@@ -459,6 +459,7 @@ namespace Robust.Client.Console.Commands
                 child = tree.CreateItem();
                 child.Text = $"Bar {i}";
             }
+
             vBox.AddChild(tree);
 
             var rich = new RichTextLabel();
@@ -487,6 +488,23 @@ namespace Robust.Client.Console.Commands
                     CustomMinimumSize = (50, 50),
                     Text = $"{x}, {y}"
                 });
+            }
+
+            {
+                var group = new ButtonGroup();
+                var vBoxRadioButtons = new VBoxContainer { Name = "Radio Buttons" };
+                for (var i = 0; i < 10; i++)
+                {
+                    vBoxRadioButtons.AddChild(new Button
+                    {
+                        Text = i.ToString(),
+                        Group = group
+                    });
+
+                    // ftftftftftftft
+                }
+
+                tabContainer.AddChild(vBoxRadioButtons);
             }
 
             window.OpenCenteredMinSize();
@@ -565,6 +583,7 @@ namespace Robust.Client.Console.Commands
             {
                 GC.Collect(int.Parse(args[0]));
             }
+
             return false;
         }
     }

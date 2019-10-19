@@ -77,71 +77,17 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            var firstRow = true;
-            var totalMinSize = Vector2i.Zero;
-            var thisRowSize = Vector2i.Zero;
-            var currentRowCount = 0;
-            var (h, v) = (Vector2i)(Separations * UIScale);
-
-            foreach (var child in Children)
-            {
-                if (!child.Visible)
-                {
-                    continue;
-                }
-
-                var (minSizeX, minSizeY) = child.CombinedPixelMinimumSize;
-                thisRowSize = (thisRowSize.X + minSizeX, Math.Max(thisRowSize.Y, minSizeY));
-                if (currentRowCount != 0)
-                {
-                    thisRowSize += (h, 0);
-                }
-
-                if (++currentRowCount == _columns)
-                {
-                    totalMinSize = (Math.Max(thisRowSize.X, totalMinSize.X), totalMinSize.Y + thisRowSize.Y);
-                    if (!firstRow)
-                    {
-                        totalMinSize += (0, v);
-                    }
-                    firstRow = false;
-
-                    thisRowSize = Vector2i.Zero;
-                    currentRowCount = 0;
-                }
-            }
-
-            if (currentRowCount != 0)
-            {
-                totalMinSize = (Math.Max(thisRowSize.X, totalMinSize.X), totalMinSize.Y + thisRowSize.Y);
-                if (!firstRow)
-                {
-                    totalMinSize += (0, v);
-                }
-            }
-
-            return totalMinSize / UIScale;
-        }
-
-        protected internal override void SortChildren()
-        {
+            var (wSep, hSep) = (Vector2i) (Separations * UIScale);
             var rows = Rows;
 
             // Minimum width of the columns.
-            var columnSizes = new int[_columns];
-            // Minimum height of the columns.
-            var rowSizes = new int[rows];
-            // Columns that are set to expand horizontally.
-            var columnExpand = new bool[_columns];
-            // Columns that are set to expand vertically.
-            var rowExpand = new bool[rows];
+            Span<int> columnSizes = stackalloc int[_columns];
+            // Minimum height of the rows.
+            Span<int> rowSizes = stackalloc int[rows];
 
-            // Get minSize and size flag expand of each column and row.
-            // All we need to apply the same logic BoxContainer does.
             var index = 0;
-            for (var i = 0; i < ChildCount; i++, index++)
+            foreach (var child in Children)
             {
-                var child = GetChild(i);
                 if (!child.Visible)
                 {
                     index--;
@@ -154,12 +100,75 @@ namespace Robust.Client.UserInterface.Controls
                 var (minSizeX, minSizeY) = child.CombinedPixelMinimumSize;
                 columnSizes[column] = Math.Max(minSizeX, columnSizes[column]);
                 rowSizes[row] = Math.Max(minSizeY, rowSizes[row]);
+
+                index += 1;
+            }
+
+            var minWidth = AccumSizes(columnSizes, wSep);
+            var minHeight = AccumSizes(rowSizes, hSep);
+
+            return new Vector2(minWidth, minHeight) / UIScale;
+        }
+
+        private static int AccumSizes(Span<int> sizes, int separator)
+        {
+            var totalSize = 0;
+            var firstColumn = true;
+
+            foreach (var size in sizes)
+            {
+                totalSize += size;
+
+                if (firstColumn)
+                {
+                    firstColumn = false;
+                }
+                else
+                {
+                    totalSize += separator;
+                }
+            }
+
+            return totalSize;
+        }
+
+        protected internal override void SortChildren()
+        {
+            var rows = Rows;
+
+            // Minimum width of the columns.
+            Span<int> columnSizes = stackalloc int[_columns];
+            // Minimum height of the rows.
+            Span<int> rowSizes = stackalloc int[rows];
+            // Columns that are set to expand horizontally.
+            Span<bool> columnExpand = stackalloc bool[_columns];
+            // Columns that are set to expand vertically.
+            Span<bool> rowExpand = stackalloc bool[rows];
+
+            // Get minSize and size flag expand of each column and row.
+            // All we need to apply the same logic BoxContainer does.
+            var index = 0;
+            foreach (var child in Children)
+            {
+                if (!child.Visible)
+                {
+                    continue;
+                }
+
+                var row = index / _columns;
+                var column = index % _columns;
+
+                var (minSizeX, minSizeY) = child.CombinedPixelMinimumSize;
+                columnSizes[column] = Math.Max(minSizeX, columnSizes[column]);
+                rowSizes[row] = Math.Max(minSizeY, rowSizes[row]);
                 columnExpand[column] = columnExpand[column] || (child.SizeFlagsHorizontal & SizeFlags.Expand) != 0;
                 rowExpand[row] = rowExpand[row] || (child.SizeFlagsVertical & SizeFlags.Expand) != 0;
+
+                index += 1;
             }
 
             // Basically now we just apply BoxContainer logic on rows and columns.
-            var (vSep, hSep) = (Vector2i)(Separations * UIScale);
+            var (vSep, hSep) = (Vector2i) (Separations * UIScale);
             var stretchMinX = 0;
             var stretchMinY = 0;
             // We do not use stretch ratios because Godot doesn't,

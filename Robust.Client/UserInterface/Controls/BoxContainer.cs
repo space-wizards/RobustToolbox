@@ -34,7 +34,7 @@ namespace Robust.Client.UserInterface.Controls
                     return separation;
                 }
 
-                return SeparationOverride ?? 1;
+                return SeparationOverride ?? DefaultSeparation;
             }
         }
 

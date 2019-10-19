@@ -124,8 +124,22 @@ namespace Robust.Server
             // This ensures it's working-directory relative
             // (for people passing config file through the terminal or something).
             // Otherwise use the one next to the executable.
-            var configPath = _commandLineArgs?.ConfigFile ?? PathHelpers.ExecutableRelativeFile("server_config.toml");
-            _config.LoadFromFile(configPath);
+            if (_commandLineArgs?.ConfigFile != null)
+            {
+                _config.LoadFromFile(_commandLineArgs.ConfigFile);
+            }
+            else
+            {
+                var path = PathHelpers.ExecutableRelativeFile("server_config.toml");
+                if (File.Exists(path))
+                {
+                    _config.LoadFromFile(path);
+                }
+                else
+                {
+                    _config.SetSaveFile(path);
+                }
+            }
 
             //Sets up Logging
             _config.RegisterCVar("log.path", "logs", CVar.ARCHIVE);

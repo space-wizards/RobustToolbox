@@ -110,6 +110,7 @@ namespace Robust.Client.UserInterface.Controls
 
             _grabData = (args.RelativePosition, Value);
             _updatePseudoClass();
+            args.Handle();
         }
 
         protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)

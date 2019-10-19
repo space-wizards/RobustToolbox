@@ -478,6 +478,12 @@ namespace Robust.Client.UserInterface
         {
             _calculatedMinimumSize = null;
             OnMinimumSizeChanged?.Invoke(this);
+
+            // TODO: this is a terrible hack.
+            if (!(Parent is Container))
+            {
+                DoLayoutUpdate();
+            }
         }
 
         /// <summary>
@@ -771,6 +777,14 @@ namespace Robust.Client.UserInterface
             UpdateLayout();
         }
 
+        /// <summary>
+        ///     Forces this component to immediately calculate layout.
+        /// </summary>
+        /// <remarks>
+        ///     This should only be used for unit testing,
+        ///     where running the deferred layout updating system in the UI manager can be annoying.
+        ///     If you are forced to use this in regular code, you have found a bug.
+        /// </remarks>
         public void ForceRunLayoutUpdate()
         {
             DoLayoutUpdate();

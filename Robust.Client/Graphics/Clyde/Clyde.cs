@@ -42,7 +42,6 @@ namespace Robust.Client.Graphics.Clyde
         [Shared.IoC.Dependency] private readonly IEyeManager _eyeManager;
         [Shared.IoC.Dependency] private readonly IMapManager _mapManager;
         [Shared.IoC.Dependency] private readonly IOverlayManager _overlayManager;
-        [Shared.IoC.Dependency] private readonly IEntityManager _entityManager;
         [Shared.IoC.Dependency] private readonly IComponentManager _componentManager;
         [Shared.IoC.Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
         [Shared.IoC.Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager;
@@ -51,7 +50,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private static readonly Version MinimumOpenGLVersion = new Version(3, 3);
 
-        private Vector2i _windowSize;
+        private Vector2i _screenSize;
         private GameWindow _window;
 
         private const int ProjViewBindingIndex = 0;
@@ -100,8 +99,13 @@ namespace Robust.Client.Graphics.Clyde
 
         public override Vector2i ScreenSize
         {
-            get => new Vector2i(_window.Width, _window.Height);
-            set => _window.Size = new Size(value.X, value.Y);
+            get => _screenSize;
+            set
+            {
+                _window.Size = new Size(value.X, value.Y);
+                var s = _window.ClientSize;
+                _screenSize = new Vector2i(s.Width, s.Height);
+            }
         }
 
         private readonly HashSet<string> OpenGLExtensions = new HashSet<string>();
@@ -199,7 +203,8 @@ namespace Robust.Client.Graphics.Clyde
             VSyncChanged();
             WindowModeChanged();
 
-            _windowSize = new Vector2i(_window.Width, _window.Height);
+            var winSize = _window.ClientSize;
+            _screenSize = new Vector2i(winSize.Width, winSize.Height);
 
             _mainThread = Thread.CurrentThread;
 
@@ -208,11 +213,12 @@ namespace Robust.Client.Graphics.Clyde
             _window.Closed += _onWindowClosed;
             _window.Resize += (sender, eventArgs) =>
             {
-                var oldSize = _windowSize;
-                _windowSize = new Vector2i(_window.Width, _window.Height);
-                GL.Viewport(0, 0, _window.Width, _window.Height);
+                var oldSize = _screenSize;
+                var newWinSize = _window.ClientSize;
+                _screenSize = new Vector2i(newWinSize.Width, newWinSize.Height);
+                GL.Viewport(0, 0, newWinSize.Width, newWinSize.Height);
                 _regenerateLightRenderTarget();
-                OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _windowSize));
+                OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _screenSize));
             };
             _window.MouseDown += (sender, eventArgs) => { _gameController.KeyDown((KeyEventArgs) eventArgs); };
             _window.MouseUp += (sender, eventArgs) => { _gameController.KeyUp((KeyEventArgs) eventArgs); };
@@ -358,7 +364,7 @@ namespace Robust.Client.Graphics.Clyde
 
             _renderHandle = new RenderHandle(this);
 
-            GL.Viewport(0, 0, _window.Width, _window.Height);
+            GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
 
             // Quickly do a render with _drawingSplash = true so the screen isn't blank.
             if (!_lite)
@@ -381,11 +387,11 @@ namespace Robust.Client.Graphics.Clyde
         {
             if (!_quartResLights)
             {
-                return (_window.Width, _window.Height);
+                return (ScreenSize.X, ScreenSize.Y);
             }
 
-            var w = (int) Math.Ceiling(_window.Width / 2f);
-            var h = (int) Math.Ceiling(_window.Height / 2f);
+            var w = (int) Math.Ceiling(ScreenSize.X / 2f);
+            var h = (int) Math.Ceiling(ScreenSize.Y / 2f);
 
             return (w, h);
         }

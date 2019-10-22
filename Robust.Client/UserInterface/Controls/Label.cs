@@ -16,7 +16,9 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyFontColor = "font-color";
         public const string StylePropertyFont = "font";
 
-        private (int Height, List<int> Widths)? _textDimensionCache;
+        private int _cachedTextHeight;
+        private readonly List<int> _cachedTextWidths = new List<int>();
+        private bool _textDimensionCacheValid;
         private string _text;
         private bool _clipText;
 
@@ -36,7 +38,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _text = value;
-                _textDimensionCache = null;
+                _textDimensionCacheValid = false;
                 MinimumSizeChanged();
             }
         }
@@ -111,10 +113,10 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            if (!_textDimensionCache.HasValue)
+            if (!_textDimensionCacheValid)
             {
                 _calculateTextDimension();
-                DebugTools.Assert(_textDimensionCache.HasValue);
+                DebugTools.Assert(_textDimensionCacheValid);
             }
 
             int vOffset;
@@ -125,10 +127,10 @@ namespace Robust.Client.UserInterface.Controls
                     break;
                 case VAlignMode.Fill:
                 case VAlignMode.Center:
-                    vOffset = (PixelSize.Y - _textDimensionCache.Value.Height) / 2;
+                    vOffset = (PixelSize.Y - _cachedTextHeight) / 2;
                     break;
                 case VAlignMode.Bottom:
-                    vOffset = PixelSize.Y - _textDimensionCache.Value.Height;
+                    vOffset = PixelSize.Y - _cachedTextHeight;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -140,7 +142,7 @@ namespace Robust.Client.UserInterface.Controls
 
             Vector2 CalcBaseline()
             {
-                DebugTools.Assert(_textDimensionCache.HasValue);
+                DebugTools.Assert(_textDimensionCacheValid);
 
                 int hOffset;
                 switch (Align)
@@ -150,10 +152,10 @@ namespace Robust.Client.UserInterface.Controls
                         break;
                     case AlignMode.Center:
                     case AlignMode.Fill:
-                        hOffset = (PixelSize.X - _textDimensionCache.Value.Widths[newlines]) / 2;
+                        hOffset = (PixelSize.X - _cachedTextWidths[newlines]) / 2;
                         break;
                     case AlignMode.Right:
-                        hOffset = PixelSize.X - _textDimensionCache.Value.Widths[newlines];
+                        hOffset = PixelSize.X - _cachedTextWidths[newlines];
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -195,49 +197,51 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            if (!_textDimensionCache.HasValue)
+            if (!_textDimensionCacheValid)
             {
                 _calculateTextDimension();
-                DebugTools.Assert(_textDimensionCache.HasValue);
+                DebugTools.Assert(_textDimensionCacheValid);
             }
 
             if (ClipText)
             {
-                return (0, _textDimensionCache.Value.Height / UIScale);
+                return (0, _cachedTextHeight / UIScale);
             }
 
             var totalWidth = 0;
-            foreach (var width in _textDimensionCache.Value.Widths)
+            foreach (var width in _cachedTextWidths)
             {
                 totalWidth = Math.Max(totalWidth, width);
             }
 
-            return (totalWidth / UIScale, _textDimensionCache.Value.Height / UIScale);
+            return (totalWidth / UIScale, _cachedTextHeight / UIScale);
         }
 
         protected internal override void UIScaleChanged()
         {
-            _textDimensionCache = null;
+            _textDimensionCacheValid = false;
 
             base.UIScaleChanged();
         }
 
         private void _calculateTextDimension()
         {
+            _cachedTextWidths.Clear();
+            _cachedTextWidths.Add(0);
+
             if (_text == null)
             {
-                _textDimensionCache = (0, new List<int> {0});
+                _cachedTextHeight = 0;
                 return;
             }
 
             var font = ActualFont;
             var height = font.GetHeight(UIScale);
-            var lineSizeList = new List<int> { 0 };
             foreach (var chr in _text)
             {
                 if (chr == '\n')
                 {
-                    lineSizeList.Add(0);
+                    _cachedTextWidths.Add(0);
                     height += font.GetLineHeight(UIScale);
                 }
                 else
@@ -248,16 +252,16 @@ namespace Robust.Client.UserInterface.Controls
                         continue;
                     }
 
-                    lineSizeList[lineSizeList.Count-1] += metrics.Value.Advance;
+                    _cachedTextWidths[_cachedTextWidths.Count-1] += metrics.Value.Advance;
                 }
             }
 
-            _textDimensionCache = (height, lineSizeList);
+            _cachedTextHeight = height;
         }
 
         protected override void StylePropertiesChanged()
         {
-            _textDimensionCache = null;
+            _textDimensionCacheValid = false;
 
             base.StylePropertiesChanged();
         }

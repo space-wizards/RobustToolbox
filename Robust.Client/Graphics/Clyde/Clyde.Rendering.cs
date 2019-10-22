@@ -67,6 +67,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool _isScissoring;
 
+        private readonly List<SpriteComponent> _sortingSpritesList = new List<SpriteComponent>();
+
         public void Render()
         {
             _debugStats.Reset();
@@ -113,7 +115,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Calculate world-space AABB for camera, to cull off-screen things.
                 var eye = _eyeManager.CurrentEye;
                 var worldBounds = Box2.CenteredAround(eye.Position.Position,
-                    _windowSize / EyeManager.PIXELSPERMETER * eye.Zoom);
+                    _screenSize / EyeManager.PIXELSPERMETER * eye.Zoom);
 
                 using (DebugGroup("Lights"))
                 {
@@ -127,7 +129,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 using (DebugGroup("Entities"))
                 {
-                    var entityList = new List<SpriteComponent>(100);
+                    _sortingSpritesList.Clear();
                     var map = _eyeManager.CurrentMap;
 
                     // So we could calculate the correct size of the entities based on the contents of their sprite...
@@ -144,10 +146,10 @@ namespace Robust.Client.Graphics.Clyde
                             continue;
                         }
 
-                        entityList.Add(sprite);
+                        _sortingSpritesList.Add(sprite);
                     }
 
-                    entityList.Sort((a, b) =>
+                    _sortingSpritesList.Sort((a, b) =>
                     {
                         var cmp = ((int) a.DrawDepth).CompareTo((int) b.DrawDepth);
                         if (cmp != 0)
@@ -165,7 +167,7 @@ namespace Robust.Client.Graphics.Clyde
                         return a.Owner.Uid.CompareTo(b.Owner.Uid);
                     });
 
-                    foreach (var sprite in entityList)
+                    foreach (var sprite in _sortingSpritesList)
                     {
                         Vector2i roundedPos = default;
                         if (sprite.PostShader != null)
@@ -250,8 +252,8 @@ namespace Robust.Client.Graphics.Clyde
 
             // Screen projection matrix.
             var projMatrixScreen = Matrix3.Identity;
-            projMatrixScreen.R0C0 = 2f / _window.Width;
-            projMatrixScreen.R1C1 = -2f / _window.Height;
+            projMatrixScreen.R0C0 = 2f / ScreenSize.X;
+            projMatrixScreen.R1C1 = -2f / ScreenSize.Y;
             projMatrixScreen.R0C2 = -1;
             projMatrixScreen.R1C2 = 1;
 
@@ -274,8 +276,8 @@ namespace Robust.Client.Graphics.Clyde
             viewMatrixWorld.R1C2 = -cameraWorldAdjusted.Y / eye.Zoom.Y;
 
             var projMatrixWorld = Matrix3.Identity;
-            projMatrixWorld.R0C0 = EyeManager.PIXELSPERMETER * 2f / _window.Width;
-            projMatrixWorld.R1C1 = EyeManager.PIXELSPERMETER * 2f / _window.Height;
+            projMatrixWorld.R0C0 = EyeManager.PIXELSPERMETER * 2f / ScreenSize.X;
+            projMatrixWorld.R1C1 = EyeManager.PIXELSPERMETER * 2f / ScreenSize.Y;
 
             return new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
         }
@@ -289,36 +291,6 @@ namespace Robust.Client.Graphics.Clyde
 
             var map = _eyeManager.CurrentMap;
 
-            void DrawLight(Vector2 pos, float range, float power, Color color, Texture mask, Angle rotation)
-            {
-                var maskTexture = mask ?? Texture.White;
-                var maskHandle = _loadedTextures[((ClydeTexture) maskTexture).TextureId].OpenGLObject;
-                GL.ActiveTexture(TextureUnit.Texture0);
-                GL.BindTexture(TextureTarget.Texture2D, maskHandle.Handle);
-                _lightShader.SetUniform("lightCenter", pos);
-                _lightShader.SetUniform("lightRange", range);
-                _lightShader.SetUniform("lightPower", power);
-                _lightShader.SetUniform("lightColor", color);
-                _lightShader.SetUniformTexture("lightMask", TextureUnit.Texture0);
-
-                var offset = new Vector2(range, range);
-
-                Matrix3 matrix;
-                if (mask == null)
-                {
-                    matrix = Matrix3.Identity;
-                }
-                else
-                {
-                    // Only apply rotation if a mask is said, because else it doesn't matter.
-                    matrix = Matrix3.CreateRotation(rotation);
-                }
-
-                (matrix.R0C2, matrix.R1C2) = pos;
-
-                _drawQuad(-offset, offset, ref matrix, _lightShader);
-            }
-
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, LightRenderTarget.ObjectHandle.Handle);
             var converted = Color.FromSrgb(new Color(0.1f, 0.1f, 0.1f));
             GL.ClearColor(converted.R, converted.G, converted.B, 1);
@@ -330,6 +302,11 @@ namespace Robust.Client.Graphics.Clyde
             _lightShader.Use();
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
+
+            var lastRange = float.NaN;
+            var lastPower = float.NaN;
+            var lastColor = new Color(float.NaN, float.NaN, float.NaN, float.NaN);
+            Texture lastMask = null;
 
             foreach (var component in _componentManager.GetAllComponents<PointLightComponent>())
             {
@@ -361,13 +338,58 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                DrawLight(lightPos, component.Radius, component.Energy, component.Color, mask, rotation);
+                var maskTexture = mask ?? Texture.White;
+                if (lastMask != maskTexture)
+                {
+                    var maskHandle = _loadedTextures[((ClydeTexture) maskTexture).TextureId].OpenGLObject;
+                    GL.ActiveTexture(TextureUnit.Texture0);
+                    GL.BindTexture(TextureTarget.Texture2D, maskHandle.Handle);
+                    lastMask = maskTexture;
+                    _lightShader.SetUniformTexture("lightMask", TextureUnit.Texture0);
+                }
+
+                if (!FloatMath.CloseTo(lastRange, component.Radius))
+                {
+                    lastRange = component.Radius;
+                    _lightShader.SetUniform("lightRange", lastRange);
+                }
+
+                if (!FloatMath.CloseTo(lastPower, component.Energy))
+                {
+                    lastPower = component.Energy;
+                    _lightShader.SetUniform("lightPower", lastPower);
+                }
+
+                if (lastColor != component.Color)
+                {
+                    lastColor = component.Color;
+                    _lightShader.SetUniform("lightColor", lastColor);
+                }
+
+                _lightShader.SetUniform("lightCenter", lightPos);
+
+                var offset = new Vector2(component.Radius, component.Radius);
+
+                Matrix3 matrix;
+                if (mask == null)
+                {
+                    matrix = Matrix3.Identity;
+                }
+                else
+                {
+                    // Only apply rotation if a mask is said, because else it doesn't matter.
+                    matrix = Matrix3.CreateRotation(rotation);
+                }
+
+                (matrix.R0C2, matrix.R1C2) = lightPos;
+
+                _drawQuad(-offset, offset, ref matrix, _lightShader);
             }
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            GL.Viewport(0, 0, _window.Width, _window.Height);
+            GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
 
             _lightingReady = true;
         }
@@ -880,8 +902,8 @@ namespace Robust.Client.Graphics.Clyde
                     ref var commandViewMatrix = ref CommandList.RenderCommands.AllocAdd();
                     commandViewMatrix.Type = RenderCommandType.ViewMatrix;
 
-                    var ofsX = position.X - _clyde._window.Width / 2f;
-                    var ofsY = position.Y - _clyde._window.Height / 2f;
+                    var ofsX = position.X - _clyde.ScreenSize.X / 2f;
+                    var ofsY = position.Y - _clyde.ScreenSize.Y / 2f;
                     ref var viewMatrix = ref commandViewMatrix.ViewMatrix.Matrix;
                     viewMatrix = Matrix3.Identity;
                     viewMatrix.R0C0 = scale.X;

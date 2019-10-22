@@ -152,15 +152,6 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables] private Dictionary<object, int> LayerMap = new Dictionary<object, int>();
         [ViewVariables] private bool _layerMapShared;
-
-        // To a future Clusterfack:
-        // REALLY BIG OPTIMIZATION POTENTIAL:
-        // Layer is god damn huge. Copying it is expensive.
-        // To be fair making it a class might be a good idea, making the following moot.
-        // List<T> doesn't allow ref indexers because... reasons. Array does.
-        // It may be a good idea to re-implement this list to use Layer[],
-        // use ref locals EVERYWHERE, and handle the resizing ourselves.
-        // This may be worth the overhead of basically reimplementing List<T>.
         [ViewVariables] private List<Layer> Layers;
 
 #pragma warning disable 649
@@ -242,8 +233,7 @@ namespace Robust.Client.GameObjects
 
         public int AddBlankLayer(int? newIndex = null)
         {
-            var layer = Layer.New();
-            layer.Visible = false;
+            var layer = new Layer {Visible = false};
             return AddLayer(layer, newIndex);
         }
 
@@ -269,15 +259,13 @@ namespace Robust.Client.GameObjects
 
         public int AddLayer(Texture texture, int? newIndex = null)
         {
-            var layer = Layer.New();
-            layer.Texture = texture;
+            var layer = new Layer {Texture = texture};
             return AddLayer(layer, newIndex);
         }
 
         public int AddLayer(RSI.StateId stateId, int? newIndex = null)
         {
-            var layer = Layer.New();
-            layer.State = stateId;
+            var layer = new Layer {State = stateId};
             if (BaseRSI.TryGetState(stateId, out var state))
             {
                 (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref layer, state), 0);
@@ -323,9 +311,7 @@ namespace Robust.Client.GameObjects
 
         public int AddLayer(RSI.StateId stateId, RSI rsi, int? newIndex = null)
         {
-            var layer = Layer.New();
-            layer.State = stateId;
-            layer.RSI = rsi;
+            var layer = new Layer {State = stateId, RSI = rsi};
             if (rsi.TryGetState(stateId, out var state))
             {
                 (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref layer, state), 0);
@@ -426,9 +412,8 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var thelayer = Layers[layer];
-            thelayer.Shader = shader;
-            Layers[layer] = thelayer;
+            var theLayer = Layers[layer];
+            theLayer.Shader = shader;
         }
 
         public void LayerSetShader(object layerKey, ShaderInstance shader)
@@ -510,10 +495,9 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var thelayer = Layers[layer];
-            thelayer.State = null;
-            thelayer.Texture = texture;
-            Layers[layer] = thelayer;
+            var theLayer = Layers[layer];
+            theLayer.State = null;
+            theLayer.Texture = texture;
         }
 
         public void LayerSetTexture(object layerKey, Texture texture)
@@ -574,37 +558,35 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var thelayer = Layers[layer];
-            if (thelayer.State == stateId)
+            var theLayer = Layers[layer];
+            if (theLayer.State == stateId)
             {
                 return;
             }
 
-            thelayer.State = stateId;
-            var rsi = thelayer.RSI ?? BaseRSI;
+            theLayer.State = stateId;
+            var rsi = theLayer.RSI ?? BaseRSI;
             if (rsi == null)
             {
                 Logger.ErrorS(LogCategory, "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
-                thelayer.Texture = null;
+                theLayer.Texture = null;
             }
             else
             {
                 if (rsi.TryGetState(stateId, out var state))
                 {
-                    thelayer.AnimationFrame = 0;
-                    thelayer.AnimationTime = 0;
-                    (thelayer.Texture, thelayer.AnimationTimeLeft) =
-                        state.GetFrame(CorrectLayerDir(ref thelayer, state), 0);
+                    theLayer.AnimationFrame = 0;
+                    theLayer.AnimationTime = 0;
+                    (theLayer.Texture, theLayer.AnimationTimeLeft) =
+                        state.GetFrame(CorrectLayerDir(ref theLayer, state), 0);
                 }
                 else
                 {
                     Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId,
                         Environment.StackTrace);
-                    thelayer.Texture = null;
+                    theLayer.Texture = null;
                 }
             }
-
-            Layers[layer] = thelayer;
         }
 
         public void LayerSetState(object layerKey, RSI.StateId stateId)
@@ -628,33 +610,31 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var thelayer = Layers[layer];
-            thelayer.State = stateId;
-            thelayer.RSI = rsi;
-            var actualrsi = thelayer.RSI ?? BaseRSI;
-            if (actualrsi == null)
+            var theLayer = Layers[layer];
+            theLayer.State = stateId;
+            theLayer.RSI = rsi;
+            var actualRsi = theLayer.RSI ?? BaseRSI;
+            if (actualRsi == null)
             {
                 Logger.ErrorS(LogCategory, "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
-                thelayer.Texture = null;
+                theLayer.Texture = null;
             }
             else
             {
-                if (actualrsi.TryGetState(stateId, out var state))
+                if (actualRsi.TryGetState(stateId, out var state))
                 {
-                    thelayer.AnimationFrame = 0;
-                    thelayer.AnimationTime = 0;
-                    (thelayer.Texture, thelayer.AnimationTimeLeft) =
-                        state.GetFrame(CorrectLayerDir(ref thelayer, state), 0);
+                    theLayer.AnimationFrame = 0;
+                    theLayer.AnimationTime = 0;
+                    (theLayer.Texture, theLayer.AnimationTimeLeft) =
+                        state.GetFrame(CorrectLayerDir(ref theLayer, state), 0);
                 }
                 else
                 {
                     Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId,
                         Environment.StackTrace);
-                    thelayer.Texture = null;
+                    theLayer.Texture = null;
                 }
             }
-
-            Layers[layer] = thelayer;
         }
 
         public void LayerSetState(object layerKey, RSI.StateId stateId, RSI rsi)
@@ -710,37 +690,34 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var thelayer = Layers[layer];
-            thelayer.RSI = rsi;
-            if (!thelayer.State.IsValid)
+            var theLayer = Layers[layer];
+            theLayer.RSI = rsi;
+            if (!theLayer.State.IsValid)
             {
-                Layers[layer] = thelayer;
                 return;
             }
 
             // Gotta do this because somebody might use null as argument (totally valid).
-            var actualRsi = thelayer.RSI ?? BaseRSI;
+            var actualRsi = theLayer.RSI ?? BaseRSI;
             if (actualRsi == null)
             {
                 Logger.ErrorS(LogCategory, "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
-                thelayer.Texture = null;
+                theLayer.Texture = null;
             }
             else
             {
-                if (rsi.TryGetState(thelayer.State, out var state))
+                if (rsi.TryGetState(theLayer.State, out var state))
                 {
-                    (thelayer.Texture, thelayer.AnimationTimeLeft) =
-                        state.GetFrame(CorrectLayerDir(ref thelayer, state), 0);
+                    (theLayer.Texture, theLayer.AnimationTimeLeft) =
+                        state.GetFrame(CorrectLayerDir(ref theLayer, state), 0);
                 }
                 else
                 {
-                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in set RSI. Trace:\n{1}", thelayer.State,
+                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in set RSI. Trace:\n{1}", theLayer.State,
                         Environment.StackTrace);
-                    thelayer.Texture = null;
+                    theLayer.Texture = null;
                 }
             }
-
-            Layers[layer] = thelayer;
         }
 
         public void LayerSetRSI(object layerKey, RSI rsi)
@@ -796,9 +773,8 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var thelayer = Layers[layer];
-            thelayer.Scale = scale;
-            Layers[layer] = thelayer;
+            var theLayer = Layers[layer];
+            theLayer.Scale = scale;
         }
 
         public void LayerSetScale(object layerKey, Vector2 scale)
@@ -823,9 +799,8 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var thelayer = Layers[layer];
-            thelayer.Rotation = rotation;
-            Layers[layer] = thelayer;
+            var theLayer = Layers[layer];
+            theLayer.Rotation = rotation;
         }
 
         public void LayerSetRotation(object layerKey, Angle rotation)
@@ -849,9 +824,8 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var thelayer = Layers[layer];
-            thelayer.Visible = visible;
-            Layers[layer] = thelayer;
+            var theLayer = Layers[layer];
+            theLayer.Visible = visible;
         }
 
         public void LayerSetVisible(object layerKey, bool visible)
@@ -875,9 +849,8 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var thelayer = Layers[layer];
-            thelayer.Color = color;
-            Layers[layer] = thelayer;
+            var theLayer = Layers[layer];
+            theLayer.Color = color;
         }
 
         public void LayerSetColor(object layerKey, Color color)
@@ -901,12 +874,9 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var thelayer = Layers[layer];
-            thelayer.DirOffset = offset;
-            Layers[layer] = thelayer;
+            var theLayer = Layers[layer];
+            theLayer.DirOffset = offset;
             _recalcDirections = true;
-            // Do NOT queue redraw.
-            // FrameUpdate handles it.
         }
 
         public void LayerSetDirOffset(object layerKey, DirectionOffset offset)
@@ -957,7 +927,6 @@ namespace Robust.Client.GameObjects
             _advanceFrameAnimation(ref theLayer, state, correctDir);
             // And set to said frame.
             theLayer.Texture = state.GetFrame(correctDir, theLayer.AnimationFrame).icon;
-            Layers[layer] = theLayer;
         }
 
         public void LayerSetAnimationTime(object layerKey, float animationTime)
@@ -983,7 +952,6 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.AutoAnimated = autoAnimated;
-            Layers[layer] = theLayer;
         }
 
         public void LayerSetAutoAnimated(object layerKey, bool autoAnimated)
@@ -1120,7 +1088,11 @@ namespace Robust.Client.GameObjects
             {
                 LayerMap = serializer.GetCacheData<Dictionary<object, int>>(LayerMapSerializationCache);
                 _layerMapShared = true;
-                Layers = layers.ShallowClone();
+                Layers = new List<Layer>(layers.Count);
+                foreach (var clone in layers)
+                {
+                    Layers.Add(new Layer(clone));
+                }
                 // Do this because the directions in the cache may not be correct for us.
                 _recalcDirections = true;
                 return;
@@ -1153,7 +1125,7 @@ namespace Robust.Client.GameObjects
             foreach (var layerDatum in layerData)
             {
                 var anyTextureAttempted = false;
-                var layer = Layer.New();
+                var layer = new Layer();
                 if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
                 {
                     var path = TextureRoot / layerDatum.RsiPath;
@@ -1339,8 +1311,6 @@ namespace Robust.Client.GameObjects
 
                 _advanceFrameAnimation(ref layer, state, layerSpecificDir);
                 layer.Texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame).icon;
-
-                Layers[i] = layer;
             }
         }
 
@@ -1391,18 +1361,18 @@ namespace Robust.Client.GameObjects
             }
 
             // Maybe optimize this to NOT full clear.
-            // At least we're not doing extra allocations,
-            // because the list doesn't reallocate.
             Layers.Clear();
             for (var i = 0; i < thestate.Layers.Count; i++)
             {
                 var netlayer = thestate.Layers[i];
-                var layer = Layer.New();
-                // These are easy so do them here.
-                layer.Scale = netlayer.Scale;
-                layer.Rotation = netlayer.Rotation;
-                layer.Visible = netlayer.Visible;
-                layer.Color = netlayer.Color;
+                var layer = new Layer
+                {
+                    // These are easy so do them here.
+                    Scale = netlayer.Scale,
+                    Rotation = netlayer.Rotation,
+                    Visible = netlayer.Visible,
+                    Color = netlayer.Color
+                };
                 Layers.Add(layer);
 
                 // Using the public API to handle errors.
@@ -1556,7 +1526,7 @@ namespace Robust.Client.GameObjects
             Flip = 3,
         }
 
-        private struct Layer
+        private class Layer
         {
             public ShaderInstance Shader;
             public Texture Texture;
@@ -1566,22 +1536,36 @@ namespace Robust.Client.GameObjects
             public float AnimationTimeLeft;
             public float AnimationTime;
             public int AnimationFrame;
-            public Vector2 Scale;
+            public Vector2 Scale = Vector2.One;
             public Angle Rotation;
-            public bool Visible;
-            public Color Color;
+            public bool Visible = true;
+            public Color Color = Color.White;
             public DirectionOffset DirOffset;
-            public bool AutoAnimated;
+            public bool AutoAnimated = true;
 
-            public static Layer New()
+            public Layer()
             {
-                return new Layer
-                {
-                    Scale = Vector2.One,
-                    Visible = true,
-                    Color = Color.White,
-                    AutoAnimated = true,
-                };
+                Visible = true;
+                Scale = Vector2.One;
+                Color = Color.White;
+                AutoAnimated = true;
+            }
+
+            public Layer(Layer toClone)
+            {
+                Shader = toClone.Shader;
+                Texture = toClone.Texture;
+                RSI = toClone.RSI;
+                State = toClone.State;
+                AnimationTimeLeft = toClone.AnimationTimeLeft;
+                AnimationTime = toClone.AnimationTime;
+                AnimationFrame = toClone.AnimationFrame;
+                Scale = toClone.Scale;
+                Rotation = toClone.Rotation;
+                Visible = toClone.Visible;
+                Color = toClone.Color;
+                DirOffset = toClone.DirOffset;
+                AutoAnimated = toClone.AutoAnimated;
             }
         }
 

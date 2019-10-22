@@ -108,7 +108,7 @@ namespace Robust.Client.Graphics
 
             public override int GetHashCode()
             {
-                return Name.GetHashCode() ^ Selectors.GetHashCode();
+                return Name.GetHashCode() ^ (int)Selectors;
             }
         }
     }

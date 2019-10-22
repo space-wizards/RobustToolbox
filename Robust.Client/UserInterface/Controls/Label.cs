@@ -232,6 +232,7 @@ namespace Robust.Client.UserInterface.Controls
             if (_text == null)
             {
                 _cachedTextHeight = 0;
+                _textDimensionCacheValid = true;
                 return;
             }
 
@@ -257,6 +258,7 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             _cachedTextHeight = height;
+            _textDimensionCacheValid = true;
         }
 
         protected override void StylePropertiesChanged()

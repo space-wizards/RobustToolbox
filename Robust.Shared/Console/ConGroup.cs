@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Robust.Server.Console
+namespace Robust.Shared.Console
 {
     internal class ConGroup
     {

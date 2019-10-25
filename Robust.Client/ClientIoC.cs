@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Robust.Client.Console;
 using Robust.Client.Debugging;
 using Robust.Client.GameObjects;
@@ -127,6 +127,7 @@ namespace Robust.Client
 #endif
 
             IoCManager.Register<ISignalHandler, ClientSignalHandler>();
+            IoCManager.Register<IClientConGroupController, ClientConGroupController>();
         }
     }
 }

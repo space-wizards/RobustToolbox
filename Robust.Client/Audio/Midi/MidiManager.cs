@@ -6,6 +6,7 @@ using System.Threading;
 using NFluidsynth;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
@@ -34,10 +35,22 @@ namespace Robust.Client.Audio.Midi
         ///     We add this here so content doesn't need to reference NFluidsynth.
         /// </remarks>
         bool IsSoundfontFile(string filename);
+
+
+        /// <summary>
+        ///     Method called every frame.
+        ///     Should be used to update positional audio.
+        /// </summary>
+        /// <param name="frameTime"></param>
+        void FrameUpdate(float frameTime);
     }
 
     internal class MidiManager : IPostInjectInit, IDisposable, IMidiManager
     {
+#pragma warning disable 649
+        [Dependency] private readonly IMapManager _mapManager;
+#pragma warning restore 649
+
         private bool _alive = true;
         private Settings _settings;
         private List<MidiRenderer> _renderers = new List<MidiRenderer>();
@@ -131,6 +144,30 @@ namespace Robust.Client.Audio.Midi
                 _renderers.Add(renderer);
 
             return renderer;
+        }
+
+        public void FrameUpdate(float frameTime)
+        {
+            // Update positions of streams every frame.
+            lock (_renderers)
+                for (var i = 0; i < _renderers.Count; i++)
+                {
+                    var renderer = _renderers[i];
+                    if (!renderer.Mono)
+                    {
+                        renderer.Source.SetGlobal();
+                        continue;
+                    }
+
+                    if (renderer.TrackingCoordinates != null)
+                    {
+                        renderer.Source.SetPosition(renderer.TrackingCoordinates.Value.ToWorld(_mapManager).Position);
+                    }
+                    else if (renderer.TrackingEntity != null)
+                    {
+                        renderer.Source.SetPosition(renderer.TrackingEntity.Transform.WorldPosition);
+                    }
+                }
         }
 
         /// <summary>

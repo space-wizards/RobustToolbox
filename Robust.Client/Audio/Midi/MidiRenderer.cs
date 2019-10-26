@@ -7,6 +7,7 @@ using Robust.Shared.Asynchronous;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using MidiEvent = NFluidsynth.MidiEvent;
 
@@ -100,7 +101,14 @@ namespace Robust.Client.Audio.Midi
         ///     The entity whose position will be used for positional audio.
         ///     This is only used if <see cref="Mono"/> is set to True.
         /// </summary>
-        IEntity Position { get; set; }
+        IEntity TrackingEntity { get; set; }
+
+        /// <summary>
+        ///     The position that will be used for positional audio.
+        ///     This is only used if <see cref="Mono"/> is set to True
+        ///     and <see cref="TrackingEntity"/> is null.
+        /// </summary>
+        GridCoordinates? TrackingCoordinates { get; set; }
 
         /// <summary>
         ///     Send a midi event for the renderer to play.
@@ -122,7 +130,6 @@ namespace Robust.Client.Audio.Midi
         private const double BytesToMegabytes = 0.000001d;
 
         private ISawmill _midiSawmill;
-        private bool _mono;
         private Settings _settings;
         private Synth _synth;
         private NFluidsynth.Player _player;
@@ -133,8 +140,8 @@ namespace Robust.Client.Audio.Midi
         private bool _loopMidi = false;
         private const int SampleRate = 48000;
         private const int Buffers = SampleRate/1000;
-        private IClydeBufferedAudioSource _audioSource;
         private readonly object _playerStateLock = new object();
+        public IClydeBufferedAudioSource Source;
         public IReadOnlyCollection<int> NotesPlaying => _notesPlaying;
         public bool Disposed { get; private set; } = false;
 
@@ -151,6 +158,7 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
+        public bool Mono { get; set; }
         public MidiRendererStatus Status { get; private set; } = MidiRendererStatus.None;
 
         public bool LoopMidi
@@ -164,21 +172,8 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
-
-        public bool Mono
-        {
-            get => _mono;
-            set
-            {
-                _mono = value;
-                if(_mono)
-                    _audioSource?.SetPosition(Position?.Transform.GridPosition.Position ?? new Vector2(0,0));
-                else
-                    _audioSource.SetGlobal();
-            }
-        }
-
-        public IEntity Position { get; set; } = null;
+        public IEntity TrackingEntity { get; set; } = null;
+        public GridCoordinates? TrackingCoordinates { get; set; } = null;
 
         internal bool Free { get; set; } = false;
 
@@ -186,15 +181,15 @@ namespace Robust.Client.Audio.Midi
         {
             IoCManager.InjectDependencies(this);
             _midiSawmill = _logger.GetSawmill("midi");
-            _audioSource = _clydeAudio.CreateBufferedAudioSource(Buffers);
-            _audioSource.SampleRate = SampleRate;
+            Source = _clydeAudio.CreateBufferedAudioSource(Buffers);
+            Source.SampleRate = SampleRate;
             _settings = settings;
             _soundFontLoader = soundFontLoader;
             _synth = new Synth(_settings);
             _synth.AddSoundFontLoader(_soundFontLoader);
             Mono = mono;
-            _audioSource.EmptyBuffers();
-            _audioSource.StartPlaying();
+            Source.EmptyBuffers();
+            Source.StartPlaying();
         }
 
         public bool OpenInput()
@@ -290,10 +285,7 @@ namespace Robust.Client.Audio.Midi
         internal void Render(int length = SampleRate/1000)
         {
             if (Disposed) return;
-            if(Mono && Position != null)
-                lock(Position)
-                    _audioSource.SetPosition(Position.Transform.GridPosition.Position);
-            var buffersProcessed = _audioSource.GetNumberOfBuffersProcessed();
+            var buffersProcessed = Source.GetNumberOfBuffersProcessed();
             if (buffersProcessed == 0) return;
 
             var bufferLength = length * 2;
@@ -303,7 +295,7 @@ namespace Robust.Client.Audio.Midi
                 Span<uint> buffers = stackalloc uint[buffersProcessed];
                 Span<ushort> audio = stackalloc ushort[bufferLength];
 
-                _audioSource.GetBuffersProcessed(buffers);
+                Source.GetBuffersProcessed(buffers);
 
                 for (var i = 0; i < buffers.Length; i++)
                 {
@@ -323,10 +315,10 @@ namespace Robust.Client.Audio.Midi
 
                     }
 
-                    _audioSource.WriteBuffer(buffer, audio);
+                    Source.WriteBuffer(buffer, audio);
                 }
 
-                _audioSource.QueueBuffers(buffers);
+                Source.QueueBuffers(buffers);
             }
 
             lock (_playerStateLock)
@@ -338,7 +330,7 @@ namespace Robust.Client.Audio.Midi
                 }
             }
 
-            if(!_audioSource.IsPlaying) _audioSource.StartPlaying();
+            if(!Source.IsPlaying) Source.StartPlaying();
 
         }
 
@@ -422,13 +414,13 @@ namespace Robust.Client.Audio.Midi
                     break;
             }
 
-            _audioSource?.Dispose();
+            Source?.Dispose();
             _synth?.Dispose();
             _player?.Dispose();
             _driver?.Dispose();
 
             _settings = null;
-            _audioSource = null;
+            Source = null;
             _synth = null;
             _player = null;
             _driver = null;

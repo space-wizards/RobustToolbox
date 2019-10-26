@@ -5,10 +5,10 @@ using NFluidsynth;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Log;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using MidiEvent = NFluidsynth.MidiEvent;
-using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Client.Audio.Midi
 {
@@ -114,12 +114,14 @@ namespace Robust.Client.Audio.Midi
 #pragma warning disable 649
         [Dependency] private IClydeAudio _clydeAudio;
         [Dependency] private ITaskManager _taskManager;
+        [Dependency] private ILogManager _logger;
 #pragma warning restore 649
 
         private const int NoteLimit = 15;
         private const int MidiSizeLimit = 2000000;
         private const double BytesToMegabytes = 0.000001d;
 
+        private ISawmill _midiSawmill;
         private bool _mono;
         private Settings _settings;
         private Synth _synth;
@@ -182,6 +184,7 @@ namespace Robust.Client.Audio.Midi
         internal MidiRenderer(Settings settings, SoundFontLoader soundFontLoader, bool mono = true)
         {
             IoCManager.InjectDependencies(this);
+            _midiSawmill = _logger.GetSawmill("midi");
             _audioSource = _clydeAudio.CreateBufferedAudioSource(Buffers);
             _audioSource.SampleRate = SampleRate;
             _settings = settings;
@@ -216,7 +219,7 @@ namespace Robust.Client.Audio.Midi
 
             if (buffer.Length > MidiSizeLimit)
             {
-                Logger.ErrorS("midi", "Midi file selected is too big! It was {0} MB but it should be less than {1} MB.",
+                _midiSawmill.Error("Midi file selected is too big! It was {0} MB but it should be less than {1} MB.",
                     buffer.Length*BytesToMegabytes, MidiSizeLimit*BytesToMegabytes);
                 CloseMidi();
                 return false;
@@ -397,10 +400,7 @@ namespace Robust.Client.Audio.Midi
             }
             catch (FluidSynthInteropException e)
             {
-                _taskManager.RunOnMainThread(() => Logger.ErrorS("midi",
-                    "Exception while sending midi event of type {0}: {1}",
-                    midiEvent.Type,
-                    e));
+                _midiSawmill.Error("Exception while sending midi event of type {0}: {1}", midiEvent.Type, e);
             }
 
             _taskManager.RunOnMainThread(() => OnMidiEvent?.Invoke(midiEvent));

@@ -132,6 +132,7 @@ namespace Robust.Client.Audio.Midi
         private const int SampleRate = 48000;
         private const int Buffers = SampleRate/1000;
         private IClydeBufferedAudioSource _audioSource;
+        private readonly object _playerStateLock = new object();
         public IReadOnlyCollection<int> NotesPlaying => _notesPlaying;
 
         public int MidiProgram
@@ -139,8 +140,9 @@ namespace Robust.Client.Audio.Midi
             get => _midiprogram;
             set
             {
-                for (var i = 0; i < 16; i++)
-                    _synth.ProgramChange(i, value);
+                lock(_playerStateLock)
+                    for (var i = 0; i < 16; i++)
+                        _synth.ProgramChange(i, value);
 
                 _midiprogram = value;
             }
@@ -153,7 +155,8 @@ namespace Robust.Client.Audio.Midi
             get => _loopMidi;
             set
             {
-                _player?.SetLoop(value ? -1 : 1);
+                lock(_playerStateLock)
+                    _player?.SetLoop(value ? -1 : 1);
                 _loopMidi = value;
             }
         }
@@ -219,11 +222,10 @@ namespace Robust.Client.Audio.Midi
                 return false;
             }
 
-            if(_player == null)
-                _player = new NFluidsynth.Player(_synth);
-
-            lock (_player)
+            lock (_playerStateLock)
             {
+                if(_player == null)
+                    _player = new NFluidsynth.Player(_synth);
                 _player.Stop();
                 _player.AddMem(buffer);
                 _player.SetPlaybackCallback(MidiPlayerEventHandler);
@@ -248,9 +250,9 @@ namespace Robust.Client.Audio.Midi
         {
             if (Status != MidiRendererStatus.File) return false;
             Status = MidiRendererStatus.None;
-            if (_player == null) return false;
-            lock (_player)
+            lock (_playerStateLock)
             {
+                if (_player == null) return false;
                 _player?.Stop();
                 _player?.Dispose();
                 _player = null;
@@ -270,9 +272,12 @@ namespace Robust.Client.Audio.Midi
 
         public void LoadSoundfont(string filename, bool resetPresets = false)
         {
-            _synth.LoadSoundFont(filename, resetPresets);
-            for (var i = 0; i < 16; i++)
-                _synth.SoundFontSelect(i, 1);
+            lock (_playerStateLock)
+            {
+                _synth.LoadSoundFont(filename, resetPresets);
+                for (var i = 0; i < 16; i++)
+                    _synth.SoundFontSelect(i, 1);
+            }
         }
 
         public event Action<Shared.Audio.Midi.MidiEvent> OnMidiEvent;
@@ -299,8 +304,9 @@ namespace Robust.Client.Audio.Midi
                 {
                     var buffer = buffers[i];
 
-                    _synth?.WriteSample16(length, audio, 0, Mono ? 1 : 2,
-                        audio, Mono ? length : 1, Mono ? 1 : 2);
+                    lock(_playerStateLock)
+                        _synth?.WriteSample16(length, audio, 0, Mono ? 1 : 2,
+                            audio, Mono ? length : 1, Mono ? 1 : 2);
 
                     if (Mono) // Turn audio to mono
                     {
@@ -318,13 +324,14 @@ namespace Robust.Client.Audio.Midi
                 _audioSource.QueueBuffers(buffers);
             }
 
-            if(_player != null)
-                lock(_player)
-                    if (Status == MidiRendererStatus.File && _player.Status == FluidPlayerStatus.Done)
-                    {
-                        _taskManager.RunOnMainThread(() => OnMidiPlayerFinished?.Invoke());
-                        CloseMidi();
-                    }
+            lock (_playerStateLock)
+            {
+                if (Status == MidiRendererStatus.File && _player.Status == FluidPlayerStatus.Done)
+                {
+                    _taskManager.RunOnMainThread(() => OnMidiPlayerFinished?.Invoke());
+                    CloseMidi();
+                }
+            }
 
             if(!_audioSource.IsPlaying) _audioSource.StartPlaying();
 
@@ -366,7 +373,8 @@ namespace Robust.Client.Audio.Midi
                                 if (_notesPlaying.Count >= NoteLimit)
                                     return;
 
-                                _synth.NoteOn(ch, midiEvent.Key, midiEvent.Velocity);
+                                lock(_playerStateLock)
+                                    _synth.NoteOn(ch, midiEvent.Key, midiEvent.Velocity);
                                 if (!_notesPlaying.Contains(midiEvent.Key))
                                     _notesPlaying.Add(midiEvent.Key);
                             }
@@ -379,7 +387,8 @@ namespace Robust.Client.Audio.Midi
                         lock(_notesPlaying)
                             if (_notesPlaying.Contains(midiEvent.Key))
                             {
-                                _synth.NoteOff(ch, midiEvent.Key);
+                                lock(_playerStateLock)
+                                    _synth.NoteOff(ch, midiEvent.Key);
                                 _notesPlaying.Remove(midiEvent.Key);
                             }
 

@@ -136,6 +136,7 @@ namespace Robust.Client.Audio.Midi
         private IClydeBufferedAudioSource _audioSource;
         private readonly object _playerStateLock = new object();
         public IReadOnlyCollection<int> NotesPlaying => _notesPlaying;
+        public bool Disposed { get; private set; } = false;
 
         public int MidiProgram
         {
@@ -288,6 +289,7 @@ namespace Robust.Client.Audio.Midi
 
         internal void Render(int length = SampleRate/1000)
         {
+            if (Disposed) return;
             if(Mono && Position != null)
                 lock(Position)
                     _audioSource.SetPosition(Position.Transform.GridPosition.Position);
@@ -408,6 +410,8 @@ namespace Robust.Client.Audio.Midi
 
         public void Dispose()
         {
+            Disposed = true;
+
             switch (Status)
             {
                 case MidiRendererStatus.Input:
@@ -424,6 +428,7 @@ namespace Robust.Client.Audio.Midi
             _driver?.Dispose();
 
             _settings = null;
+            _audioSource = null;
             _synth = null;
             _player = null;
             _driver = null;

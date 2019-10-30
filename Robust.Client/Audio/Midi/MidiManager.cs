@@ -204,7 +204,7 @@ namespace Robust.Client.Audio.Midi
         public void Dispose()
         {
             _alive = false;
-            _midiThread.Join();
+            _midiThread?.Join();
             _settings?.Dispose();
             foreach (var renderer in _renderers)
             {

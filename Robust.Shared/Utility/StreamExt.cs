@@ -20,5 +20,26 @@ namespace Robust.Shared.Utility
                 return memStream.ToArray();
             }
         }
+
+        /// <exception cref="EndOfStreamException">
+        /// Thrown if not exactly <paramref name="amount"/> bytes could be read.
+        /// </exception>
+        public static byte[] ReadExact(this Stream stream, int amount)
+        {
+            var buffer = new byte[amount];
+            var read = 0;
+            while (read < amount)
+            {
+                var cRead = stream.Read(buffer, read, amount - read);
+                if (cRead == 0)
+                {
+                    throw new EndOfStreamException();
+                }
+
+                read += cRead;
+            }
+
+            return buffer;
+        }
     }
 }

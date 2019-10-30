@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using Robust.Client.Audio.Midi;
 using Robust.Client.Console;
 using Robust.Client.Debugging;
 using Robust.Client.GameObjects;
@@ -79,6 +80,7 @@ namespace Robust.Client
             IoCManager.Register<IClientConsole, ClientConsole>();
             IoCManager.Register<IFontManager, FontManager>();
             IoCManager.Register<IFontManagerInternal, FontManager>();
+            IoCManager.Register<IMidiManager, MidiManager>();
             switch (mode)
             {
                 case GameController.DisplayMode.Headless:

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -109,6 +110,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         public IEnumerable<IPlayerSession> SubscribedSessions => _subscribedSessions;
 
         public event Action<ServerBoundUserInterfaceMessage> OnReceiveMessage;
+        public event Action<ServerBoundUserInterfaceMessage> OnClosed;
 
         public BoundUserInterface(object uiKey, ServerUserInterfaceComponent owner)
         {
@@ -190,8 +192,19 @@ namespace Robust.Server.GameObjects.Components.UserInterface
                 return;
             }
 
-            SendMessage(new CloseBoundInterfaceMessage(), session);
+            var msg = new CloseBoundInterfaceMessage();
+            SendMessage(msg, session);
+            OnClosed?.Invoke(new ServerBoundUserInterfaceMessage(msg, session));
             _subscribedSessions.Remove(session);
+        }
+
+        /// <summary>
+        ///     Closes this interface for any clients that have it open.
+        /// </summary>
+        public void CloseAll()
+        {
+            foreach (var session in _subscribedSessions.ToArray())
+                Close(session);
         }
 
         /// <summary>
@@ -253,8 +266,10 @@ namespace Robust.Server.GameObjects.Components.UserInterface
 
             switch (wrappedMessage)
             {
-                case CloseBoundInterfaceMessage _:
+                case CloseBoundInterfaceMessage msg:
+                    var closeMsg = new ServerBoundUserInterfaceMessage(msg, session);
                     _subscribedSessions.Remove(session);
+                    OnClosed?.Invoke(closeMsg);
                     break;
 
                 case BoundUserInterfaceMessage msg:

@@ -45,7 +45,7 @@ namespace Robust.Client.Audio.Midi
         void FrameUpdate(float frameTime);
     }
 
-    internal class MidiManager : IPostInjectInit, IDisposable, IMidiManager
+    internal class MidiManager : IDisposable, IMidiManager
     {
 #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
@@ -75,13 +75,18 @@ namespace Robust.Client.Audio.Midi
 
         private ResourceLoaderCallbacks _soundfontLoaderCallbacks;
 
-        public void PostInject()
+        public bool FluidsynthInitialized { get; private set; } = false;
+
+        private void InitializeFluidsynth()
         {
-            _settings = new Settings();
+            if (FluidsynthInitialized) return;
+
+                _settings = new Settings();
             _settings["synth.sample-rate"].DoubleValue = 48000;
             _settings["player.timing-source"].StringValue = "sample";
             _settings["synth.lock-memory"].IntValue = 0;
             _settings["synth.threadsafe-api"].IntValue = 1;
+            _settings["synth.gain"].DoubleValue = 0.5d;
             _settings["audio.driver"].StringValue = "file";
             _settings["midi.autoconnect"].IntValue = 1;
             _settings["player.reset-synth"].IntValue = 0;
@@ -91,6 +96,8 @@ namespace Robust.Client.Audio.Midi
             _midiThread.Start();
 
             _soundfontLoaderCallbacks = new ResourceLoaderCallbacks();
+
+            FluidsynthInitialized = true;
         }
 
         public bool IsMidiFile(string filename)
@@ -105,6 +112,9 @@ namespace Robust.Client.Audio.Midi
 
         public IMidiRenderer GetNewRenderer()
         {
+            if(!FluidsynthInitialized)
+                InitializeFluidsynth();
+
             var soundfontLoader = SoundFontLoader.NewDefaultSoundFontLoader(_settings);
             soundfontLoader.SetCallbacks(_soundfontLoaderCallbacks);
 

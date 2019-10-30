@@ -16,6 +16,7 @@
     <PackageReference Include="CommandLineParser" Version="2.6.0" />
     <PackageReference Include="DiscordRichPresence" Version="1.0.121" />
     <PackageReference Include="JetBrains.Annotations" Version="2019.1.3" />
+    <PackageReference Include="nfluidsynth" Version="0.2.4" />
     <PackageReference Include="NVorbis" Version="0.8.6" />
     <PackageReference Include="SharpZipLib" Version="1.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
@@ -33,7 +34,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
-    <ProjectReference Include="..\nfluidsynth\NFluidsynth\NFluidsynth.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
   </ItemGroup>

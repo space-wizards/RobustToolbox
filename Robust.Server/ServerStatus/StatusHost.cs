@@ -31,6 +31,7 @@ namespace Robust.Server.ServerStatus
         private Thread _listenerThread;
         private ManualResetEventSlim _stop;
         public event Action<JObject> OnStatusRequest;
+        public event Action<JObject> OnInfoRequest;
 
         private readonly List<StatusHostHandler> _handlers = new List<StatusHostHandler>();
 
@@ -41,8 +42,9 @@ namespace Robust.Server.ServerStatus
 
         public void Start()
         {
-            _configurationManager.RegisterCVar("status.enabled", false, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("status.enabled", true, CVar.ARCHIVE);
             _configurationManager.RegisterCVar("status.bind", "localhost:1212", CVar.ARCHIVE);
+            _configurationManager.RegisterCVar<string>("status.connectaddress", null, CVar.ARCHIVE);
 
             if (!_configurationManager.GetCVar<bool>("status.enabled"))
             {
@@ -63,6 +65,7 @@ namespace Robust.Server.ServerStatus
 
             AddHandler(_handleTeapot);
             AddHandler(_handleStatus);
+            AddHandler(_handleInfo);
         }
 
         public void Dispose()
@@ -177,6 +180,45 @@ namespace Robust.Server.ServerStatus
                 serializer.Serialize(jsonWriter, jObject);
                 jsonWriter.Flush();
             }
+
+            response.Close();
+
+            return true;
+        }
+
+        private bool _handleInfo(HttpMethod method, HttpListenerRequest request, HttpListenerResponse response)
+        {
+            if (!method.IsGetLike() || request.Url.AbsolutePath != "/info")
+            {
+                return false;
+            }
+
+            response.StatusCode = (int) HttpStatusCode.OK;
+            response.StatusDescription = "OK";
+            response.ContentType = "application/json";
+            response.ContentEncoding = EncodingHelpers.UTF8;
+
+            if (method == HttpMethod.Head)
+            {
+                response.Close();
+                return true;
+            }
+
+            var jObject = new JObject
+            {
+                ["connect_address"] = _configurationManager.GetCVar<string>("status.connectaddress")
+            };
+
+            OnInfoRequest?.Invoke(jObject);
+
+            using (var streamWriter = new StreamWriter(response.OutputStream, EncodingHelpers.UTF8))
+            using (var jsonWriter = new JsonTextWriter(streamWriter))
+            {
+                var serializer = new JsonSerializer();
+                serializer.Serialize(jsonWriter, jObject);
+                jsonWriter.Flush();
+            }
+
             response.Close();
 
             return true;

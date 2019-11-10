@@ -268,7 +268,7 @@ namespace Robust.Client.Console.Commands
             var offset = SnapGridOffset.Center;
             if (args.Length == 3)
             {
-                offset = (SnapGridOffset) Enum.Parse(typeof(SnapGridOffset), args[2]);
+                offset = (SnapGridOffset)Enum.Parse(typeof(SnapGridOffset), args[2]);
             }
 
             var mapMan = IoCManager.Resolve<IMapManager>();
@@ -312,10 +312,10 @@ namespace Robust.Client.Console.Commands
 
             var type = reflection.LooseGetType(args[1]);
             var getResourceMethod =
-                resourceCache.GetType().GetMethod("GetResource", new[] {typeof(string), typeof(bool)});
+                resourceCache.GetType().GetMethod("GetResource", new[] { typeof(string), typeof(bool) });
             DebugTools.Assert(getResourceMethod != null);
             var generic = getResourceMethod.MakeGenericMethod(type);
-            generic.Invoke(resourceCache, new object[] {args[0], true});
+            generic.Invoke(resourceCache, new object[] { args[0], true });
             return false;
         }
     }
@@ -332,10 +332,10 @@ namespace Robust.Client.Console.Commands
             var reflection = IoCManager.Resolve<IReflectionManager>();
 
             var type = reflection.LooseGetType(args[1]);
-            var getResourceMethod = resourceCache.GetType().GetMethod("ReloadResource", new[] {typeof(string)});
+            var getResourceMethod = resourceCache.GetType().GetMethod("ReloadResource", new[] { typeof(string) });
             DebugTools.Assert(getResourceMethod != null);
             var generic = getResourceMethod.MakeGenericMethod(type);
-            generic.Invoke(resourceCache, new object[] {args[0]});
+            generic.Invoke(resourceCache, new object[] { args[0] });
             return false;
         }
     }
@@ -438,7 +438,7 @@ namespace Robust.Client.Console.Commands
             var vBox = new VBoxContainer();
             scroll.AddChild(vBox);
 
-            var progressBar = new ProgressBar {MaxValue = 10, Value = 5};
+            var progressBar = new ProgressBar { MaxValue = 10, Value = 5 };
             vBox.AddChild(progressBar);
 
             var optionButton = new OptionButton();
@@ -449,7 +449,7 @@ namespace Robust.Client.Console.Commands
             optionButton.OnItemSelected += eventArgs => optionButton.SelectId(eventArgs.Id);
             vBox.AddChild(optionButton);
 
-            var tree = new Tree {SizeFlagsVertical = Control.SizeFlags.FillExpand};
+            var tree = new Tree { SizeFlagsVertical = Control.SizeFlags.FillExpand };
             var root = tree.CreateItem();
             root.Text = "Honk!";
             var child = tree.CreateItem();
@@ -478,34 +478,34 @@ namespace Robust.Client.Console.Commands
                 itemList.AddItem(i.ToString());
             }
 
-            var grid = new GridContainer {Columns = 3};
+            var grid = new GridContainer { Columns = 3 };
             tabContainer.AddChild(grid);
             for (var y = 0; y < 3; y++)
-            for (var x = 0; x < 3; x++)
             {
-                grid.AddChild(new Button
+                for (var x = 0; x < 3; x++)
                 {
-                    CustomMinimumSize = (50, 50),
-                    Text = $"{x}, {y}"
-                });
-            }
-
-            {
-                var group = new ButtonGroup();
-                var vBoxRadioButtons = new VBoxContainer { Name = "Radio Buttons" };
-                for (var i = 0; i < 10; i++)
-                {
-                    vBoxRadioButtons.AddChild(new Button
+                    grid.AddChild(new Button
                     {
-                        Text = i.ToString(),
-                        Group = group
+                        CustomMinimumSize = (50, 50),
+                        Text = $"{x}, {y}"
                     });
-
-                    // ftftftftftftft
                 }
-
-                tabContainer.AddChild(vBoxRadioButtons);
             }
+
+            var group = new ButtonGroup();
+            var vBoxRadioButtons = new VBoxContainer { Name = "Radio Buttons" };
+            for (var i = 0; i < 10; i++)
+            {
+                vBoxRadioButtons.AddChild(new Button
+                {
+                    Text = i.ToString(),
+                    Group = group
+                });
+
+                // ftftftftftftft
+            }
+
+            tabContainer.AddChild(vBoxRadioButtons);
 
             window.OpenCenteredMinSize();
 
@@ -602,7 +602,7 @@ namespace Robust.Client.Console.Commands
 
             var mousePos = eyeMan.ScreenToWorld(inputMan.MouseScreenPosition);
 
-            var grid = (IMapGridInternal) mapMan.GetGrid(mousePos.GridID);
+            var grid = (IMapGridInternal)mapMan.GetGrid(mousePos.GridID);
 
             var chunkIndex = grid.LocalToChunkIndices(mousePos);
             var chunk = grid.GetChunk(chunkIndex);

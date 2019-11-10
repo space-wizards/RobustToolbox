@@ -45,9 +45,11 @@ namespace Robust.Shared.Map
                     // NetSerializer doesn't do multi-dimensional arrays.
                     // This is probably really expensive.
                     for (var x = 0; x < grid.ChunkSize; x++)
-                    for (var y = 0; y < grid.ChunkSize; y++)
                     {
-                        tileBuffer[x * grid.ChunkSize + y] = chunk.GetTile((ushort) x, (ushort) y);
+                        for (var y = 0; y < grid.ChunkSize; y++)
+                        {
+                            tileBuffer[x * grid.ChunkSize + y] = chunk.GetTile((ushort)x, (ushort)y);
+                        }
                     }
 
                     chunkData.Add(new GameStateMapData.ChunkDatum(index, tileBuffer));
@@ -152,13 +154,15 @@ namespace Robust.Shared.Map
 
                         var counter = 0;
                         for (ushort x = 0; x < grid.ChunkSize; x++)
-                        for (ushort y = 0; y < grid.ChunkSize; y++)
                         {
-                            var tile = chunkData.TileData[counter++];
-                            if (chunk.GetTileRef(x, y).Tile != tile)
+                            for (ushort y = 0; y < grid.ChunkSize; y++)
                             {
-                                chunk.SetTile(x, y, tile);
-                                modified.Add((new MapIndices(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));
+                                var tile = chunkData.TileData[counter++];
+                                if (chunk.GetTileRef(x, y).Tile != tile)
+                                {
+                                    chunk.SetTile(x, y, tile);
+                                    modified.Add((new MapIndices(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));
+                                }
                             }
                         }
                     }

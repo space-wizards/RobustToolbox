@@ -68,11 +68,13 @@ namespace Robust.Server.Maps
             using (var writer = new BinaryWriter(stream))
             {
                 for (ushort y = 0; y < chunk.ChunkSize; y++)
-                for (ushort x = 0; x < chunk.ChunkSize; x++)
                 {
-                    var tile = chunk.GetTile(x, y);
-                    writer.Write(tile.TypeId);
-                    writer.Write(tile.Data);
+                    for (ushort x = 0; x < chunk.ChunkSize; x++)
+                    {
+                        var tile = chunk.GetTile(x, y);
+                        writer.Write(tile.TypeId);
+                        writer.Write(tile.Data);
+                    }
                 }
             }
 
@@ -124,16 +126,18 @@ namespace Robust.Server.Maps
                 mapMan.SuppressOnTileChanged = true;
 
                 for (var y = 0; y < grid.ChunkSize; y++)
-                for (var x = 0; x < grid.ChunkSize; x++)
                 {
-                    var id = reader.ReadUInt16();
-                    var data = reader.ReadUInt16();
+                    for (var x = 0; x < grid.ChunkSize; x++)
+                    {
+                        var id = reader.ReadUInt16();
+                        var data = reader.ReadUInt16();
 
-                    var defName = tileDefMapping[id];
-                    id = tileDefinitionManager[defName].TileId;
+                        var defName = tileDefMapping[id];
+                        id = tileDefinitionManager[defName].TileId;
 
-                    var tile = new Tile(id, data);
-                    grid.SetTile(new MapIndices(chunkOffsetX + x, chunkOffsetY + y), tile);
+                        var tile = new Tile(id, data);
+                        grid.SetTile(new MapIndices(chunkOffsetX + x, chunkOffsetY + y), tile);
+                    }
                 }
 
                 mapMan.SuppressOnTileChanged = false;

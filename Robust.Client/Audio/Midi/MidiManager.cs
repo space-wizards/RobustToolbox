@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -133,7 +133,7 @@ namespace Robust.Client.Audio.Midi
                     {
                         renderer.LoadSoundfont(filepath, true);
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         continue;
                     }

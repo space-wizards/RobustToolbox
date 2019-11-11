@@ -165,13 +165,38 @@ namespace Robust.Client
             _discord.Initialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
-            _stateManager.RequestStateChange<MainScreen>();
+            if (_commandLineArgs?.Launcher == true)
+            {
+                _stateManager.RequestStateChange<LauncherConnecting>();
+            }
+            else
+            {
+                _stateManager.RequestStateChange<MainScreen>();
+            }
+
+            if (_commandLineArgs?.Username != null)
+            {
+                _client.PlayerNameOverride = _commandLineArgs.Username;
+            }
 
             _clyde.Ready();
 
-            if (_commandLineArgs?.Connect == true)
+            if (_commandLineArgs?.Connect == true || _commandLineArgs?.Launcher == true)
             {
-                _client.ConnectToServer("127.0.0.1", 1212);
+                var addr = _commandLineArgs.ConnectAddress;
+                if (!addr.Contains("://"))
+                {
+                    addr = "udp://" + addr;
+                }
+
+                var uri = new Uri(addr);
+
+                if (uri.Scheme != "udp")
+                {
+                    Logger.Warning($"connect-address '{uri}' does not have URI scheme of udp://..");
+                }
+
+                _client.ConnectToServer(uri.Host, (ushort) (uri.IsDefaultPort ? 1212 : uri.Port));
             }
 
             _checkOpenGLVersion();

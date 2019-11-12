@@ -145,7 +145,7 @@
         {
             if (_parent.IsValid())
             {
-                var parentMatrix = Parent.WorldMatrix;
+                var parentMatrix = ((TransformComponent)Parent).GetWorldMatrixRounded(roundTo);
                 var myMatrix = GetWorldMatrixRoundedImpl(roundTo);
                 Matrix3.Multiply(ref myMatrix, ref parentMatrix, out var result);
                 return result;

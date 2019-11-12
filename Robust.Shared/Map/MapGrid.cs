@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -88,10 +90,16 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Vector2 WorldPosition
         {
-            get => _worldPosition;
+            get
+            {
+                //TODO: Make grids real parents of entities.
+                if(GridEntity.IsValid())
+                return IoCManager.Resolve<IEntityManager>().GetEntity(GridEntity).Transform.WorldPosition;
+                return Vector2.Zero;
+            }
             set
             {
-                _worldPosition = value;
+                IoCManager.Resolve<IEntityManager>().GetEntity(GridEntity).Transform.WorldPosition = value;
                 LastModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }

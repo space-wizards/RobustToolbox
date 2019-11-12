@@ -6,6 +6,7 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -62,12 +63,12 @@ namespace Robust.Shared.Map
 
         public void PostInject()
         {
-            CreateMap(MapId.Nullspace, GridId.Nullspace);
         }
 
         /// <inheritdoc />
         public void Initialize()
         {
+            CreateMap(MapId.Nullspace, GridId.Nullspace);
             // So uh I removed the contents from this but I'm too lazy to remove the Initialize method.
             // Deal with it.
         }
@@ -110,6 +111,9 @@ namespace Robust.Shared.Map
             {
                 throw new InvalidOperationException($"Attempted to delete nonexistant map '{mapID}'");
             }
+
+            if(mapID == MapId.Nullspace)
+                throw new InvalidOperationException("Trying to delete nullspace.");
 
             // grids are cached because Delete modifies collection
             foreach (var grid in GetAllMapGrids(mapID).ToList())
@@ -156,6 +160,7 @@ namespace Robust.Shared.Map
 
             _maps.Add(actualID);
             _mapCreationTick.Add(actualID, _gameTiming.CurTick);
+            Logger.InfoS("map", $"Creating new map {actualID}");
             MapCreated?.Invoke(this, new MapEventArgs(actualID));
             var newDefaultGrid = CreateGrid(actualID, defaultGridID);
             _defaultGrids.Add(actualID, newDefaultGrid.Index);
@@ -213,6 +218,7 @@ namespace Robust.Shared.Map
 
             var grid = new MapGrid(this, actualID, chunkSize, snapSize, currentMapID);
             _grids.Add(actualID, grid);
+            Logger.DebugS("map", $"Creating new grid {actualID}");
 
             if(actualID != GridId.Nullspace)
             {
@@ -230,6 +236,7 @@ namespace Robust.Shared.Map
                 if (result != null)
                 {
                     grid.GridEntity = result.Owner.Uid;
+                    Logger.DebugS("map", $"Rebinding grid {actualID} to entity {grid.GridEntity}");
                 }
                 else
                 {
@@ -238,6 +245,7 @@ namespace Robust.Shared.Map
 
                     var gridComp = newEnt.AddComponent<MapGridComponent>();
                     gridComp.GridIndex = grid.Index;
+                    Logger.DebugS("map", $"Binding grid {actualID} to entity {grid.GridEntity}");
                 }
             }
 
@@ -293,6 +301,9 @@ namespace Robust.Shared.Map
         public void DeleteGrid(GridId gridID)
         {
             var grid = _grids[gridID];
+
+            if(GetDefaultGridId(grid.ParentMapId) == gridID)
+                throw new InvalidOperationException($"Tried to delete the default grid {gridID} of map {grid.ParentMapId}");
 
             grid.Dispose();
             _grids.Remove(grid.Index);

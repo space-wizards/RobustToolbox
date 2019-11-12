@@ -2,6 +2,7 @@
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -45,6 +46,17 @@ namespace Robust.Shared.GameObjects.Components.Map
 
         /// <inheritdoc />
         public IMapGrid Grid => _mapManager.GetGrid(_gridIndex);
+
+        public override void OnRemove()
+        {
+            if(_mapManager.GridExists(_gridIndex))
+            {
+                Logger.DebugS("map", $"Entity {Owner.Uid} removed grid component, removing bound grid {_gridIndex}");
+                _mapManager.DeleteGrid(_gridIndex);
+            }
+
+            base.OnRemove();
+        }
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()

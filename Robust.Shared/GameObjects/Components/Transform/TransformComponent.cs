@@ -229,6 +229,10 @@
                     // Eh.
                     if (_mapManager.TryGetGrid(GridID, out var grid))
                     {
+                        // prevents infinite recursion, we ARE the grid's transform
+                        if (grid.GridEntity == Owner.Uid)
+                            return GetLocalPosition();
+
                         return grid.LocalToWorld(GetLocalPosition());
                     }
                     return GetLocalPosition();

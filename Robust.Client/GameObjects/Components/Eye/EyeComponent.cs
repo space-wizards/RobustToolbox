@@ -111,7 +111,9 @@ namespace Robust.Client.GameObjects
         public void UpdateEyePosition()
         {
             var mapPos = Owner.Transform.MapPosition;
-            _eye.Position = new MapCoordinates(mapPos.Position + offset, mapPos.MapId);
+            var pos = mapPos.Position + offset;
+            pos = (pos * EyeManager.PIXELSPERMETER).Rounded() / EyeManager.PIXELSPERMETER;
+            _eye.Position = new MapCoordinates(pos, mapPos.MapId);
         }
     }
 }

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using Robust.Shared.Animations;
+using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.ViewVariables;
 
@@ -1020,7 +1021,8 @@ namespace Robust.Client.GameObjects
                 var mRotation = Matrix3.CreateRotation(angle);
                 Matrix3.Multiply(ref mRotation, ref mOffset, out transform);
 
-                var worldTransform = Owner.Transform.WorldMatrix;
+                var worldTransform = ((TransformComponent)Owner.Transform).GetWorldMatrixRounded(1f / EyeManager.PIXELSPERMETER);
+                //var worldTransform = Owner.Transform.WorldMatrix;
                 transform.Multiply(ref worldTransform);
             }
             else

@@ -141,6 +141,18 @@
             }
         }
 
+        internal Matrix3 GetWorldMatrixRounded(float roundTo)
+        {
+            if (_parent.IsValid())
+            {
+                var parentMatrix = Parent.WorldMatrix;
+                var myMatrix = GetWorldMatrixRoundedImpl(roundTo);
+                Matrix3.Multiply(ref myMatrix, ref parentMatrix, out var result);
+                return result;
+            }
+            return GetWorldMatrixRoundedImpl(roundTo);
+        }
+
         /// <inheritdoc />
         public Matrix3 InvWorldMatrix
         {
@@ -530,6 +542,29 @@
 
             if (!_parent.IsValid())
                 pos = _mapManager.GetGrid(_gridID).LocalToWorld(pos);
+
+            var rot = GetLocalRotation().Theta;
+
+            var posMat = Matrix3.CreateTranslation(pos);
+            var rotMat = Matrix3.CreateRotation((float)rot);
+
+            Matrix3.Multiply(ref rotMat, ref posMat, out var transMat);
+
+            return transMat;
+        }
+
+        protected virtual Matrix3 GetWorldMatrixRoundedImpl(float roundTo)
+        {
+            if (_gameTiming.InSimulation || Owner.Uid.IsClientSide())
+                return _worldMatrix;
+
+            // there really is no point trying to cache this because it will only be used in one frame
+            var pos = GetLocalPosition();
+
+            if (!_parent.IsValid())
+                pos = _mapManager.GetGrid(_gridID).LocalToWorld(pos);
+
+            pos = (pos / roundTo).Rounded() * roundTo;
 
             var rot = GetLocalRotation().Theta;
 

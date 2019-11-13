@@ -90,13 +90,15 @@ namespace Robust.Shared.Map
         public IEnumerable<TileRef> GetAllTiles(bool ignoreEmpty = true)
         {
             for (var x = 0; x < ChunkSize; x++)
-            for (var y = 0; y < ChunkSize; y++)
             {
-                if (ignoreEmpty && _tiles[x, y].IsEmpty)
-                    continue;
+                for (var y = 0; y < ChunkSize; y++)
+                {
+                    if (ignoreEmpty && _tiles[x, y].IsEmpty)
+                        continue;
 
-                var indices = ChunkTileToGridTile(new MapIndices(x, y));
-                yield return new TileRef(_grid.ParentMapId, _grid.Index, indices.X, indices.Y, _tiles[x, y]);
+                    var indices = ChunkTileToGridTile(new MapIndices(x, y));
+                    yield return new TileRef(_grid.ParentMapId, _grid.Index, indices.X, indices.Y, _tiles[x, y]);
+                }
             }
         }
 
@@ -131,13 +133,15 @@ namespace Robust.Shared.Map
         public IEnumerator<TileRef> GetEnumerator()
         {
             for (var x = 0; x < ChunkSize; x++)
-            for (var y = 0; y < ChunkSize; y++)
             {
-                if (_tiles[x, y].IsEmpty)
-                    continue;
+                for (var y = 0; y < ChunkSize; y++)
+                {
+                    if (_tiles[x, y].IsEmpty)
+                        continue;
 
-                var gridTile = ChunkTileToGridTile(new MapIndices(x, y));
-                yield return new TileRef(_grid.ParentMapId, _grid.Index, gridTile.X, gridTile.Y, _tiles[x, y]);
+                    var gridTile = ChunkTileToGridTile(new MapIndices(x, y));
+                    yield return new TileRef(_grid.ParentMapId, _grid.Index, gridTile.X, gridTile.Y, _tiles[x, y]);
+                }
             }
         }
 

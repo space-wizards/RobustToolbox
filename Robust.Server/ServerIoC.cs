@@ -1,8 +1,10 @@
-using Robust.Server.Console;
+﻿using Robust.Server.Console;
+using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Console;
+using Robust.Server.Interfaces.Debugging;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.GameState;
 using Robust.Server.Interfaces.Maps;
@@ -66,6 +68,7 @@ namespace Robust.Server
             IoCManager.Register<ISystemConsoleManager, SystemConsoleManager>();
             IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
             IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
+            IoCManager.Register<IDebugDrawingManager, DebugDrawingManager>();
         }
     }
 }

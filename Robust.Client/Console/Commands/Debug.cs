@@ -192,16 +192,16 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
+            if (args.Length != 1)
+            {
+                console.AddLine("Must specify ray lifetime.", Color.Red);
+                return false;
+            }
             var mgr = IoCManager.Resolve<IDebugDrawingManager>();
             mgr.DebugDrawRays = !mgr.DebugDrawRays;
             console.AddLine("Toggled showing rays to:" + mgr.DebugDrawRays.ToString(), Color.Green);
-            if(args[0] != null)
-            {
-                var indexSplit = args[0].Split(',');
-                mgr.DebugRayLifetime = int.Parse(indexSplit[0], CultureInfo.InvariantCulture);
-            }
-
-           
+            var indexSplit = args[0].Split(',');
+            mgr.DebugRayLifetime = int.Parse(indexSplit[0], CultureInfo.InvariantCulture);   
             return false;
         }
     }

@@ -184,6 +184,28 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    internal class ShowRayCommand : IConsoleCommand
+    {
+        public string Command => "showrays";
+        public string Help => "showrays <raylifetime>";
+        public string Description => "Toggles debug drawing of physics rays.";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var mgr = IoCManager.Resolve<IDebugDrawingManager>();
+            mgr.DebugDrawRays = !mgr.DebugDrawRays;
+            console.AddLineFormatted("Toggled showing rays to {0}", mgr.DebugDrawRays, Color.Green);
+            if(args[0] != null)
+            {
+                var indexSplit = args[0].Split(',');
+                mgr.DebugRayLifetime = int.Parse(indexSplit[0], CultureInfo.InvariantCulture);
+            }
+
+           
+            return false;
+        }
+    }
+
     internal class DisconnectCommand : IConsoleCommand
     {
         public string Command => "disconnect";

@@ -26,6 +26,7 @@ namespace Robust.Shared.Network.Messages
             var origin = buffer.ReadVector2();
             var dir = buffer.ReadVector2();
             var mask = buffer.ReadInt32();
+            RayToSend = new Ray(origin, dir, mask);
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)

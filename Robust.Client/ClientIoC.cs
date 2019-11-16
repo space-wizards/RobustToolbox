@@ -75,13 +75,13 @@ namespace Robust.Client
             IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
             IoCManager.Register<IUserInterfaceManagerInternal, UserInterfaceManager>();
             IoCManager.Register<IDebugDrawing, DebugDrawing>();
+            IoCManager.Register<IDebugDrawingManager, DebugDrawingManager>();
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
             IoCManager.Register<IClientConsole, ClientConsole>();
             IoCManager.Register<IFontManager, FontManager>();
             IoCManager.Register<IFontManagerInternal, FontManager>();
             IoCManager.Register<IMidiManager, MidiManager>();
-            IoCManager.Register<IDebugDrawingManager, DebugDrawingManager>();
             switch (mode)
             {
                 case GameController.DisplayMode.Headless:

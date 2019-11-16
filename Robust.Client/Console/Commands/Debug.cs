@@ -194,7 +194,7 @@ namespace Robust.Client.Console.Commands
         {
             var mgr = IoCManager.Resolve<IDebugDrawingManager>();
             mgr.DebugDrawRays = !mgr.DebugDrawRays;
-            console.AddLineFormatted("Toggled showing rays to {0}", mgr.DebugDrawRays, Color.Green);
+            console.AddLine("Toggled showing rays to:" + mgr.DebugDrawRays.ToString(), Color.Green);
             if(args[0] != null)
             {
                 var indexSplit = args[0].Split(',');

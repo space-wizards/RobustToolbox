@@ -24,10 +24,16 @@ namespace Robust.Client.Debugging
         [Dependency] private readonly IOverlayManager _overlayManager;
 #pragma warning restore 649
 
-        protected Dictionary<Ray, float> rays;
+        private List<RayWithLifetime> raysWithLifeTime;
         private float timer = 0f;
         private float _rayLifeTime = 2f;
         private bool _debugDrawRays;
+
+        private struct RayWithLifetime
+        {
+            public Ray TheRay;
+            public float LifeTime;
+        }
         public bool DebugDrawRays
         {
             get => _debugDrawRays;
@@ -42,7 +48,7 @@ namespace Robust.Client.Debugging
 
                 if (value)
                 {
-                    _overlayManager.AddOverlay(new DebugDrawRayOverlay(rays));
+                    _overlayManager.AddOverlay(new DebugDrawRayOverlay(raysWithLifeTime));
                 }
                 else
                 {
@@ -66,13 +72,23 @@ namespace Robust.Client.Debugging
         public void Initialize()
         {
             _net.RegisterNetMessage<MsgRay>(MsgRay.NAME, HandleDrawRay);
-            rays = new Dictionary<Ray, float>();
+            raysWithLifeTime = new List<RayWithLifetime>();
         }
 
         private void HandleDrawRay(MsgRay msg)
         {
             var newRay = msg.RayToSend;
-            rays.Add(newRay, timer + _rayLifeTime);
+            var newRayWithLifetime = new RayWithLifetime
+            {
+                TheRay = newRay,
+                LifeTime = timer + _rayLifeTime
+            };
+            if(!raysWithLifeTime.Contains(newRayWithLifetime))
+            {
+                raysWithLifeTime.Add(newRayWithLifetime);
+            }
+           
+           
         }
 
         public void FrameUpdate(FrameEventArgs frameEventArgs)
@@ -82,42 +98,41 @@ namespace Robust.Client.Debugging
                 return;
             }
             timer += frameEventArgs.DeltaSeconds;
-            var keysToRemove = new List<Ray>();
-            foreach (var ray in rays)
+            var keysToRemove = new List<RayWithLifetime>();
+            foreach (var rayWL in raysWithLifeTime)
             {
-                if (ray.Value < timer)
+                if (rayWL.LifeTime < timer)
                 {
-                    keysToRemove.Add(ray.Key);
+                    keysToRemove.Add(rayWL);
                 }
             }
 
             foreach (var key in keysToRemove)
             {
-                rays.Remove(key);
+                raysWithLifeTime.Remove(key);
             }
         }
 
         private sealed class DebugDrawRayOverlay : Overlay
         {
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
-            private Dictionary<Ray, float> rays;
-            public DebugDrawRayOverlay(Dictionary<Ray,float> _rays) : base(nameof(DebugDrawRayOverlay))
+            private List<RayWithLifetime> raysWithLifeTime;
+            public DebugDrawRayOverlay(List<RayWithLifetime> _rays) : base(nameof(DebugDrawRayOverlay))
             {
-                rays = _rays;
+                raysWithLifeTime = _rays;
             }
             protected override void Dispose(bool disposing)
             {
                 base.Dispose(disposing);
-                rays = null;
-                rays = new Dictionary<Ray, float>();
+                raysWithLifeTime = null;
+                raysWithLifeTime = new List<RayWithLifetime>();
             }
             protected override void Draw(DrawingHandleBase handle)
             {
                 var worldhandle = (DrawingHandleBase)handle;
-                foreach(var item in rays)
+                foreach(var rayWL in raysWithLifeTime)
                 {
-                    var ray = item.Key;
-                    worldhandle.DrawLine(ray.Position, ray.Direction, Color.Green);
+                    worldhandle.DrawLine(rayWL.TheRay.Position, rayWL.TheRay.Direction, Color.Green);   
                 }
 
             }

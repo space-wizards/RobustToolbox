@@ -132,7 +132,7 @@ namespace Robust.Client.Debugging
                 var worldhandle = (DrawingHandleBase)handle;
                 foreach(var rayWL in raysWithLifeTime)
                 {
-                    worldhandle.DrawLine(rayWL.TheRay.Position, rayWL.TheRay.Direction, Color.Green);   
+                    worldhandle.DrawLine(rayWL.TheRay.Position, rayWL.TheRay.Direction, Color.Magenta);   
                 }
 
             }

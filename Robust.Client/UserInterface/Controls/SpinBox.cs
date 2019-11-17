@@ -1,7 +1,6 @@
-﻿using Robust.Client.Graphics.Drawing;
-using Robust.Shared.Maths;
+﻿using Robust.Shared.Maths;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -15,10 +14,22 @@ namespace Robust.Client.UserInterface.Controls
         private List<Button> _rightButtons = new List<Button>();
         private int _stepSize = 1;
 
+        /// <summary>
+        ///     Determines whether the SpinBox value gets changed by the input text.
+        /// </summary>
+        public Func<int, bool> IsValid { get; set; }
+
         public int Value
         {
             get => int.TryParse(_lineEdit.Text, out int i) ? i : 0;
-            set => _lineEdit.Text = value.ToString();
+            set
+            {
+                if (IsValid != null && !IsValid(value))
+                {
+                    return;
+                }
+                _lineEdit.Text = value.ToString();
+            }
         }
 
         public SpinBox() : base()

@@ -103,37 +103,47 @@ namespace Robust.Client.Console.Commands
     internal class ToggleMonitorCommand : IConsoleCommand
     {
         public string Command => "monitor";
-        public string Help => "Usage: monitor <name>\nPossible monitors are: fps, net, coord, time, frames, mem";
+
+        public string Help =>
+            "Usage: monitor <name>\nPossible monitors are: fps, net, coord, time, frames, mem, clyde, input";
+
         public string Description => "Toggles a debug monitor in the F3 menu.";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
+            var monitor = IoCManager.Resolve<IUserInterfaceManager>().DebugMonitors;
+
             if (args.Length != 1)
             {
-                throw new InvalidOperationException("Must have exactly 1 argument.");
+                console.AddLine($"Must provide exactly 1 argument!");
+                return false;
             }
-
-            var monitor = IoCManager.Resolve<IUserInterfaceManager>().DebugMonitors;
 
             switch (args[0])
             {
                 case "fps":
-                    monitor.ShowFPS = !monitor.ShowFPS;
+                    monitor.ShowFPS ^= true;
                     break;
                 case "net":
-                    monitor.ShowNet = !monitor.ShowNet;
+                    monitor.ShowNet ^= true;
                     break;
                 case "coord":
-                    monitor.ShowCoords = !monitor.ShowCoords;
+                    monitor.ShowCoords ^= true;
                     break;
                 case "time":
-                    monitor.ShowTime = !monitor.ShowTime;
+                    monitor.ShowTime ^= true;
                     break;
                 case "frames":
-                    monitor.ShowFrameGraph = !monitor.ShowFrameGraph;
+                    monitor.ShowFrameGraph ^= true;
                     break;
                 case "mem":
                     monitor.ShowMemory ^= true;
+                    break;
+                case "clyde":
+                    monitor.ShowClyde ^= true;
+                    break;
+                case "input":
+                    monitor.ShowInput ^= true;
                     break;
                 default:
                     console.AddLine($"Invalid key: {args[0]}");

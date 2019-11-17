@@ -1,6 +1,7 @@
 ﻿using Robust.Shared;
 using Robust.Shared.IoC;
 using System;
+using System.Collections.Generic;
 using Robust.Client.Input;
 using Robust.Shared.Maths;
 using Robust.Shared.Input;
@@ -56,5 +57,7 @@ namespace Robust.Client.Interfaces.Input
         ///     If UIKeyBindStateChanged did not handle the BoundKeyEvent, KeyBindStateChanged is called.
         /// </summary>
         event Action<BoundKeyEventArgs> KeyBindStateChanged;
+
+        IEnumerable<BoundKeyFunction> DownKeyFunctions { get; }
     }
 }

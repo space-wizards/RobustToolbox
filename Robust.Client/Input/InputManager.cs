@@ -30,7 +30,9 @@ namespace Robust.Client.Input
         [Dependency] private readonly IReflectionManager _reflectionManager;
 #pragma warning restore 649
 
-        private readonly Dictionary<BoundKeyFunction, InputCmdHandler> _commands = new Dictionary<BoundKeyFunction, InputCmdHandler>();
+        private readonly Dictionary<BoundKeyFunction, InputCmdHandler> _commands =
+            new Dictionary<BoundKeyFunction, InputCmdHandler>();
+
         private readonly List<KeyBinding> _bindings = new List<KeyBinding>();
         private readonly bool[] _keysPressed = new bool[256];
 
@@ -45,6 +47,11 @@ namespace Robust.Client.Input
 
         /// <inheritdoc />
         public event Action<BoundKeyEventArgs> KeyBindStateChanged;
+
+        public IEnumerable<BoundKeyFunction> DownKeyFunctions => _bindings
+            .Where(x => x.State == BoundKeyState.Down)
+            .Select(x => x.Function)
+            .ToList();
 
         /// <inheritdoc />
         public void Initialize()
@@ -76,6 +83,7 @@ namespace Robust.Client.Input
                 {
                     continue;
                 }
+
                 SetBindState(bind, BoundKeyState.Up);
             }
         }
@@ -97,7 +105,7 @@ namespace Robust.Client.Input
             foreach (var binding in _bindings)
             {
                 // check if our binding is even in the active context
-                if(!Contexts.ActiveContext.FunctionExistsHierarchy(binding.Function))
+                if (!Contexts.ActiveContext.FunctionExistsHierarchy(binding.Function))
                     continue;
 
                 if (PackedMatchesPressedState(binding.PackedKeyCombo))
@@ -128,6 +136,7 @@ namespace Robust.Client.Input
             {
                 return;
             }
+
             var internalKey = KeyToInternal(args.Key);
             foreach (var binding in _bindings)
             {
@@ -135,7 +144,8 @@ namespace Robust.Client.Input
                 if (!Contexts.ActiveContext.FunctionExistsHierarchy(binding.Function))
                     continue;
 
-                if (PackedContainsKey(binding.PackedKeyCombo, internalKey) && PackedMatchesPressedState(binding.PackedKeyCombo))
+                if (PackedContainsKey(binding.PackedKeyCombo, internalKey) &&
+                    PackedMatchesPressedState(binding.PackedKeyCombo))
                 {
                     UpBind(binding);
                 }
@@ -161,6 +171,7 @@ namespace Robust.Client.Input
             {
                 return SetBindState(binding, BoundKeyState.Down);
             }
+
             return false;
         }
 
@@ -178,7 +189,8 @@ namespace Robust.Client.Input
         {
             binding.State = state;
 
-            var eventArgs = new BoundKeyEventArgs(binding.Function, binding.State, new ScreenCoordinates(MouseScreenPosition), binding.CanFocus);
+            var eventArgs = new BoundKeyEventArgs(binding.Function, binding.State,
+                new ScreenCoordinates(MouseScreenPosition), binding.CanFocus);
 
             UIKeyBindStateChanged?.Invoke(eventArgs);
             if (state == BoundKeyState.Up || !eventArgs.Handled)
@@ -195,21 +207,22 @@ namespace Robust.Client.Input
             {
                 cmd?.Enabled(null);
             }
+
             return (eventArgs.Handled);
         }
 
         private bool PackedMatchesPressedState(int packedKeyCombo)
         {
-            var key = (byte)(packedKeyCombo & 0x000000FF);
+            var key = (byte) (packedKeyCombo & 0x000000FF);
             if (!_keysPressed[key]) return false;
 
-            key = (byte)((packedKeyCombo & 0x0000FF00) >> 8);
+            key = (byte) ((packedKeyCombo & 0x0000FF00) >> 8);
             if (key != 0x00 && !_keysPressed[key]) return false;
 
-            key = (byte)((packedKeyCombo & 0x00FF0000) >> 16);
+            key = (byte) ((packedKeyCombo & 0x00FF0000) >> 16);
             if (key != 0x00 && !_keysPressed[key]) return false;
 
-            key = (byte)((packedKeyCombo & 0xFF000000) >> 24);
+            key = (byte) ((packedKeyCombo & 0xFF000000) >> 24);
             if (key != 0x00 && !_keysPressed[key]) return false;
 
             return true;
@@ -217,16 +230,16 @@ namespace Robust.Client.Input
 
         private static bool PackedContainsKey(int packedKeyCombo, byte key)
         {
-            var cKey = (byte)(packedKeyCombo & 0x000000FF);
+            var cKey = (byte) (packedKeyCombo & 0x000000FF);
             if (cKey == key) return true;
 
-            cKey = (byte)((packedKeyCombo & 0x0000FF00) >> 8);
+            cKey = (byte) ((packedKeyCombo & 0x0000FF00) >> 8);
             if (cKey != 0x00 && cKey == key) return true;
 
-            cKey = (byte)((packedKeyCombo & 0x00FF0000) >> 16);
+            cKey = (byte) ((packedKeyCombo & 0x00FF0000) >> 16);
             if (cKey != 0x00 && cKey == key) return true;
 
-            cKey = (byte)((packedKeyCombo & 0xFF000000) >> 24);
+            cKey = (byte) ((packedKeyCombo & 0xFF000000) >> 24);
             if (cKey != 0x00 && cKey == key) return true;
 
             return false;
@@ -236,18 +249,19 @@ namespace Robust.Client.Input
         {
             for (var i = 0; i < 32; i += 8)
             {
-                var key = (byte)(subPackedCombo >> i);
+                var key = (byte) (subPackedCombo >> i);
                 if (!PackedContainsKey(packedCombo, key))
                 {
                     return false;
                 }
             }
+
             return true;
         }
 
         private static byte KeyToInternal(Keyboard.Key key)
         {
-            return (byte)key;
+            return (byte) key;
         }
 
         private void LoadKeyFile(ResourcePath yamlFile)
@@ -262,7 +276,7 @@ namespace Robust.Client.Input
                 document = yamlStream.Documents[0];
             }
 
-            var mapping = (YamlMappingNode)document.RootNode;
+            var mapping = (YamlMappingNode) document.RootNode;
             foreach (var keyMapping in mapping.GetNode<YamlSequenceNode>("binds").Cast<YamlMappingNode>())
             {
                 var function = keyMapping.GetNode("function").AsString();
@@ -271,6 +285,7 @@ namespace Robust.Client.Input
                     Logger.ErrorS("input", "Key function in {0} does not exist: '{1}'", yamlFile, function);
                     continue;
                 }
+
                 var key = keyMapping.GetNode("key").AsEnum<Keyboard.Key>();
 
                 var canFocus = false;
@@ -312,7 +327,8 @@ namespace Robust.Client.Input
 
         public void AddClickBind()
         {
-            RegisterBinding(new KeyBinding(EngineKeyFunctions.Use, KeyBindingType.State, Keyboard.Key.MouseLeft, true, false));
+            RegisterBinding(new KeyBinding(EngineKeyFunctions.Use, KeyBindingType.State, Keyboard.Key.MouseLeft, true,
+                false));
         }
 
         private void RegisterBinding(KeyBinding binding)
@@ -332,6 +348,7 @@ namespace Robust.Client.Input
             {
                 return binding;
             }
+
             throw new KeyNotFoundException($"No keys are bound for function '{function}'");
         }
 
@@ -377,12 +394,12 @@ namespace Robust.Client.Input
             public bool CanRepeat { get; internal set; }
 
             public KeyBinding(BoundKeyFunction function,
-                              KeyBindingType bindingType,
-                              Keyboard.Key baseKey,
-                              bool canFocus, bool canRepeat,
-                              Keyboard.Key mod1 = Keyboard.Key.Unknown,
-                              Keyboard.Key mod2 = Keyboard.Key.Unknown,
-                              Keyboard.Key mod3 = Keyboard.Key.Unknown)
+                KeyBindingType bindingType,
+                Keyboard.Key baseKey,
+                bool canFocus, bool canRepeat,
+                Keyboard.Key mod1 = Keyboard.Key.Unknown,
+                Keyboard.Key mod2 = Keyboard.Key.Unknown,
+                Keyboard.Key mod3 = Keyboard.Key.Unknown)
             {
                 Function = function;
                 BindingType = bindingType;
@@ -393,9 +410,9 @@ namespace Robust.Client.Input
             }
 
             private static int PackKeyCombo(Keyboard.Key baseKey,
-                                           Keyboard.Key mod1 = Keyboard.Key.Unknown,
-                                           Keyboard.Key mod2 = Keyboard.Key.Unknown,
-                                           Keyboard.Key mod3 = Keyboard.Key.Unknown)
+                Keyboard.Key mod1 = Keyboard.Key.Unknown,
+                Keyboard.Key mod2 = Keyboard.Key.Unknown,
+                Keyboard.Key mod3 = Keyboard.Key.Unknown)
             {
                 if (baseKey == Keyboard.Key.Unknown)
                     throw new ArgumentOutOfRangeException(nameof(baseKey), baseKey, "Cannot bind Unknown key.");
@@ -424,7 +441,6 @@ namespace Robust.Client.Input
                 return combo;
             }
         }
-
     }
 
     public enum KeyBindingType

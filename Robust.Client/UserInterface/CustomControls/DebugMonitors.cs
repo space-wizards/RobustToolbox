@@ -19,7 +19,8 @@ namespace Robust.Client.UserInterface.CustomControls
         public bool ShowTime { get => _timeDebug.Visible; set => _timeDebug.Visible = value; }
         public bool ShowFrameGraph { get => _frameGraph.Visible; set => _frameGraph.Visible = value; }
         public bool ShowMemory { get => _debugMemoryPanel.Visible; set => _debugMemoryPanel.Visible = value; }
-        public bool ShowClyde { get => _debugMemoryPanel.Visible; set => _debugMemoryPanel.Visible = value; }
+        public bool ShowClyde { get => _debugClydePanel.Visible; set => _debugClydePanel.Visible = value; }
+        public bool ShowInput { get => _debugInputPanel.Visible; set => _debugInputPanel.Visible = value; }
 
         private readonly FpsCounter _fpsCounter;
         private readonly DebugCoordsPanel _debugCoordsPanel;
@@ -28,6 +29,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly FrameGraph _frameGraph;
         private readonly DebugMemoryPanel _debugMemoryPanel;
         private readonly DebugClydePanel _debugClydePanel;
+        private readonly DebugInputPanel _debugInputPanel;
 
         //TODO: Think about a factory for this
         public DebugMonitors(IGameTiming gameTiming, IPlayerManager playerManager, IEyeManager eyeManager, IInputManager inputManager, IStateManager stateManager, IClyde displayManager, IClientNetManager netManager, IMapManager mapManager)
@@ -63,6 +65,11 @@ namespace Robust.Client.UserInterface.CustomControls
             AddChild(_debugMemoryPanel = new DebugMemoryPanel());
 
             AddChild(_debugClydePanel = new DebugClydePanel
+            {
+                SizeFlagsHorizontal = SizeFlags.None
+            });
+
+            AddChild(_debugInputPanel = new DebugInputPanel
             {
                 SizeFlagsHorizontal = SizeFlags.None
             });

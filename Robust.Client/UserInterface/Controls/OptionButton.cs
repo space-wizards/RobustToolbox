@@ -14,6 +14,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public event Action<ItemSelectedEventArgs> OnItemSelected;
 
+        public string Prefix { get; set; }
+
         public void AddItem(Texture icon, string label, int? id = null)
         {
             AddItem(label, id);
@@ -112,7 +114,7 @@ namespace Robust.Client.UserInterface.Controls
             prev.Button.Pressed = false;
             var data = _buttonData[idx];
             SelectedId = data.Id;
-            Text = data.Text;
+            Text = Prefix + data.Text;
             data.Button.Pressed = true;
         }
 
@@ -177,6 +179,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public OptionButton()
         {
+            Prefix = "";
             OnPressed += _onPressed;
             _popup = new Popup();
             UserInterfaceManager.ModalRoot.AddChild(_popup);

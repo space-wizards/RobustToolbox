@@ -71,6 +71,10 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Render()
         {
+            var size = ScreenSize;
+            if (size.X == 0 || size.Y == 0)
+                return;
+
             _debugStats.Reset();
 
             // Basic pre-render busywork.

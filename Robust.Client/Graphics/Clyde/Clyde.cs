@@ -217,7 +217,10 @@ namespace Robust.Client.Graphics.Clyde
                 var newWinSize = _window.ClientSize;
                 _screenSize = new Vector2i(newWinSize.Width, newWinSize.Height);
                 GL.Viewport(0, 0, newWinSize.Width, newWinSize.Height);
-                _regenerateLightRenderTarget();
+                if (newWinSize.Width != 0 && newWinSize.Height != 0)
+                {
+                    _regenerateLightRenderTarget();
+                }
                 OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _screenSize));
             };
             _window.MouseDown += (sender, eventArgs) => { _gameController.KeyDown((KeyEventArgs) eventArgs); };

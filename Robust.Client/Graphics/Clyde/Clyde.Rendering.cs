@@ -71,6 +71,10 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Render()
         {
+            if(_renderHandle.Clyde.ScreenSize.X <= 0 || _renderHandle.Clyde.ScreenSize.Y <= 0)
+            {
+                return;
+            }
             _debugStats.Reset();
 
             // Basic pre-render busywork.
@@ -797,6 +801,14 @@ namespace Robust.Client.Graphics.Clyde
 
             public DrawingHandleScreen DrawingHandleScreen { get; }
             public DrawingHandleWorld DrawingHandleWorld { get; }
+
+            public Clyde Clyde
+            {
+                get
+                {
+                    return _clyde;
+                }
+            }
 
             public RenderHandle(Clyde clyde)
             {

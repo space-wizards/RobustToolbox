@@ -201,7 +201,7 @@ namespace Robust.Client.Console.Commands
             mgr.DebugDrawRays = !mgr.DebugDrawRays;
             console.AddLine("Toggled showing rays to:" + mgr.DebugDrawRays.ToString(), Color.Green);
             var indexSplit = args[0].Split(',');
-            mgr.DebugRayLifetime = int.Parse(indexSplit[0], CultureInfo.InvariantCulture);   
+            mgr.DebugRayLifetime = new TimeSpan(0,0,int.Parse(indexSplit[0], CultureInfo.InvariantCulture));   
             return false;
         }
     }

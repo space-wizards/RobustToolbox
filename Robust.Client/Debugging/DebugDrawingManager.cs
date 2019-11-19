@@ -14,6 +14,7 @@ using Robust.Shared.Maths;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
+using Robust.Shared.Interfaces.Timing;
 
 namespace Robust.Client.Debugging
 {
@@ -22,17 +23,17 @@ namespace Robust.Client.Debugging
 #pragma warning disable 649
         [Dependency] private readonly IClientNetManager _net;
         [Dependency] private readonly IOverlayManager _overlayManager;
+        [Dependency] private readonly IGameTiming _gameTimer;
 #pragma warning restore 649
 
         private List<RayWithLifetime> raysWithLifeTime;
-        private float timer = 0f;
-        private float _rayLifeTime = 2f;
+        private TimeSpan _rayLifeTime;
         private bool _debugDrawRays;
 
         private struct RayWithLifetime
         {
             public Ray TheRay;
-            public float LifeTime;
+            public TimeSpan LifeTime;
         }
         public bool DebugDrawRays
         {
@@ -57,15 +58,13 @@ namespace Robust.Client.Debugging
             }
         }
 
-        public float DebugRayLifetime
+        public TimeSpan DebugRayLifetime
         {
             get => _rayLifeTime;
             set
             {
-                if (value >= 0f)
-                {
-                    _rayLifeTime = value;
-                }
+               _rayLifeTime = value;
+
             }
         }
 
@@ -73,6 +72,7 @@ namespace Robust.Client.Debugging
         {
             _net.RegisterNetMessage<MsgRay>(MsgRay.NAME, HandleDrawRay);
             raysWithLifeTime = new List<RayWithLifetime>();
+            _rayLifeTime = new TimeSpan(0, 0, 5);
         }
 
         private void HandleDrawRay(MsgRay msg)
@@ -81,7 +81,7 @@ namespace Robust.Client.Debugging
             var newRayWithLifetime = new RayWithLifetime
             {
                 TheRay = newRay,
-                LifeTime = timer + _rayLifeTime
+                LifeTime = _gameTimer.RealTime + _rayLifeTime
             };
             if(!raysWithLifeTime.Contains(newRayWithLifetime))
             {
@@ -97,20 +97,12 @@ namespace Robust.Client.Debugging
             {
                 return;
             }
-            timer += frameEventArgs.DeltaSeconds;
-            var keysToRemove = new List<RayWithLifetime>();
+
             foreach (var rayWL in raysWithLifeTime)
             {
-                if (rayWL.LifeTime < timer)
-                {
-                    keysToRemove.Add(rayWL);
-                }
+                raysWithLifeTime.RemoveAll(r => r.LifeTime < _rayLifeTime);
             }
 
-            foreach (var key in keysToRemove)
-            {
-                raysWithLifeTime.Remove(key);
-            }
         }
 
         private sealed class DebugDrawRayOverlay : Overlay
@@ -124,7 +116,6 @@ namespace Robust.Client.Debugging
             protected override void Dispose(bool disposing)
             {
                 base.Dispose(disposing);
-                raysWithLifeTime = null;
                 raysWithLifeTime = new List<RayWithLifetime>();
             }
             protected override void Draw(DrawingHandleBase handle)

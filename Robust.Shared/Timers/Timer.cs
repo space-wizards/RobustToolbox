@@ -126,5 +126,30 @@ namespace Robust.Shared.Timers
         {
             Spawn((int)duration.TotalMilliseconds, onFired, cancellationToken);
         }
+
+        /// <summary>
+        ///     Schedule an action to be fired after a certain delay.
+        ///     The action will be resumed on the main game logic thread.
+        /// </summary>
+        /// <param name="milliseconds">The length of time, in milliseconds, to wait before firing the action.</param>
+        /// <param name="onFired">The action to fire.</param>
+        /// <param name="cancellationToken"></param>
+        public static void SpawnRepeating(int milliseconds, Action onFired, CancellationToken cancellationToken)
+        {
+            var timer = new Timer(milliseconds, true, onFired);
+            IoCManager.Resolve<ITimerManager>().AddTimer(timer, cancellationToken);
+        }
+
+        /// <summary>
+        ///     Schedule an action to be fired after a certain delay.
+        ///     The action will be resumed on the main game logic thread.
+        /// </summary>
+        /// <param name="duration">The length of time, to wait before firing the action.</param>
+        /// <param name="onFired">The action to fire.</param>
+        /// <param name="cancellationToken"></param>
+        public static void SpawnRepeating(TimeSpan duration, Action onFired, CancellationToken cancellationToken)
+        {
+            SpawnRepeating((int)duration.TotalMilliseconds, onFired, cancellationToken);
+        }
     }
 }

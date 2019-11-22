@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network.Messages;
 
 namespace Robust.Shared.Physics
 {
@@ -174,7 +177,10 @@ namespace Robust.Shared.Physics
             IEntity entity = null;
             var hitPosition = Vector2.Zero;
             var minDist = maxLength;
-
+            var _network = IoCManager.Resolve<INetManager>();
+            var msg = _network.CreateNetMessage<MsgRay>();
+            msg.RayToSend = ray;
+            _network.ServerSendToAll(msg);
             foreach (var body in _bodies)
             {
                 if ((ray.CollisionMask & body.CollisionLayer) == 0x0)

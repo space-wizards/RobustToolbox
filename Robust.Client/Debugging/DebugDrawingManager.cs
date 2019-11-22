@@ -72,11 +72,11 @@ namespace Robust.Client.Debugging
         {
             _net.RegisterNetMessage<MsgRay>(MsgRay.NAME, HandleDrawRay);
             raysWithLifeTime = new List<RayWithLifetime>();
-            _rayLifeTime = new TimeSpan(0, 0, 5);
+            _rayLifeTime = TimeSpan.FromSeconds(5);
         }
 
         private void HandleDrawRay(MsgRay msg)
-        {
+        {   
             var newRay = msg.RayToSend;
             var newRayWithLifetime = new RayWithLifetime
             {

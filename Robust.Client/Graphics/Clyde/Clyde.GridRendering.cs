@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde
 {

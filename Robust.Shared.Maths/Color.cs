@@ -25,11 +25,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using SysVector3 = System.Numerics.Vector3;
 using SysVector4 = System.Numerics.Vector4;
+
 #if NETCOREAPP
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -775,44 +777,58 @@ namespace Robust.Shared.Maths
         }
 #endif
 
+        public static Color? TryFromHex(string hexColor)
+        {
+            if (hexColor.Length <= 0 || hexColor[0] != '#') return null;
+            if (hexColor.Length == 9)
+            {
+                if (!byte.TryParse(hexColor.Substring(1, 2), NumberStyles.HexNumber, null, out var r)) return null;
+                if (!byte.TryParse(hexColor.Substring(3, 2), NumberStyles.HexNumber, null, out var g)) return null;
+                if (!byte.TryParse(hexColor.Substring(5, 2), NumberStyles.HexNumber, null, out var b)) return null;
+                if (!byte.TryParse(hexColor.Substring(7, 2), NumberStyles.HexNumber, null, out var a)) return null;
+                return new Color(r, g, b, a);
+            }
+            if (hexColor.Length == 7)
+            {
+                if (!byte.TryParse(hexColor.Substring(1, 2), NumberStyles.HexNumber, null, out var r)) return null;
+                if (!byte.TryParse(hexColor.Substring(3, 2), NumberStyles.HexNumber, null, out var g)) return null;
+                if (!byte.TryParse(hexColor.Substring(5, 2), NumberStyles.HexNumber, null, out var b)) return null;
+                return new Color(r, g, b);
+            }
+            if (hexColor.Length == 5)
+            {
+                var r = hexColor[1].ToString();
+                var g = hexColor[2].ToString();
+                var b = hexColor[3].ToString();
+                var a = hexColor[4].ToString();
+
+                if (!byte.TryParse(r + r, NumberStyles.HexNumber, null, out var rByte)) return null;
+                if (!byte.TryParse(g + g, NumberStyles.HexNumber, null, out var gByte)) return null;
+                if (!byte.TryParse(b + b, NumberStyles.HexNumber, null, out var bByte)) return null;
+                if (!byte.TryParse(a + a, NumberStyles.HexNumber, null, out var aByte)) return null;
+
+                return new Color(rByte, gByte, bByte, aByte);
+            }
+            if (hexColor.Length == 4)
+            {
+                var r = hexColor[1].ToString();
+                var g = hexColor[2].ToString();
+                var b = hexColor[3].ToString();
+
+                if (!byte.TryParse(r + r, NumberStyles.HexNumber, null, out var rByte)) return null;
+                if (!byte.TryParse(g + g, NumberStyles.HexNumber, null, out var gByte)) return null;
+                if (!byte.TryParse(b + b, NumberStyles.HexNumber, null, out var bByte)) return null;
+
+                return new Color(rByte, gByte, bByte);
+            }
+            return null;
+        }
+
         public static Color FromHex(string hexColor, Color? fallback = null)
         {
-            if (hexColor.Length > 0 && hexColor[0] == '#')
-            {
-                if (hexColor.Length == 9)
-                    return new Color(Convert.ToByte(hexColor.Substring(1, 2), 16),
-                        Convert.ToByte(hexColor.Substring(3, 2), 16),
-                        Convert.ToByte(hexColor.Substring(5, 2), 16),
-                        Convert.ToByte(hexColor.Substring(7, 2), 16));
-                if (hexColor.Length == 7)
-                    return new Color(Convert.ToByte(hexColor.Substring(1, 2), 16),
-                        Convert.ToByte(hexColor.Substring(3, 2), 16),
-                        Convert.ToByte(hexColor.Substring(5, 2), 16));
-                if (hexColor.Length == 5)
-                {
-                    var r = hexColor[1].ToString();
-                    var g = hexColor[2].ToString();
-                    var b = hexColor[3].ToString();
-                    var a = hexColor[4].ToString();
-
-                    return new Color(Convert.ToByte(r + r, 16),
-                        Convert.ToByte(g + g, 16),
-                        Convert.ToByte(b + b, 16),
-                        Convert.ToByte(a + a, 16));
-                }
-
-                if (hexColor.Length == 4)
-                {
-                    var r = hexColor[1].ToString();
-                    var g = hexColor[2].ToString();
-                    var b = hexColor[3].ToString();
-
-                    return new Color(Convert.ToByte(r + r, 16),
-                        Convert.ToByte(g + g, 16),
-                        Convert.ToByte(b + b, 16));
-                }
-            }
-
+            var color = TryFromHex(hexColor);
+            if (color.HasValue)
+                return color.Value;
             if (fallback.HasValue)
                 return fallback.Value;
             throw new ArgumentException("Invalid color code and no fallback provided.", nameof(hexColor));
@@ -1797,7 +1813,8 @@ namespace Robust.Shared.Maths
 
         #endregion
 
-        private static readonly Dictionary<Color, string> DefaultColorsInverted = DefaultColors.ToLookup(pair => pair.Value).ToDictionary(i => i.Key, i => i.First().Key);
+        private static readonly Dictionary<Color, string> DefaultColorsInverted =
+            DefaultColors.ToLookup(pair => pair.Value).ToDictionary(i => i.Key, i => i.First().Key);
 
         [CanBeNull]
         public string Name()

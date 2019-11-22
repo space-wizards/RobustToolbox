@@ -94,6 +94,7 @@ namespace Robust.Client.Graphics.Clyde
         private bool _drawingSplash;
 
         private ShaderProgram _currentProgram;
+        private ClydeHandle _currentShaderInstance;
 
         private ClydeDebugStats _debugStats;
 
@@ -135,6 +136,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             _renderTime += eventArgs.DeltaSeconds;
             _updateAudio();
+            ClearDeadShaderInstances();
         }
 
         public void ProcessInput(FrameEventArgs frameEventArgs)

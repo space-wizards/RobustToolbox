@@ -51,6 +51,11 @@ namespace Robust.Client.Interfaces.Graphics
         void Ready();
 
         ClydeHandle LoadShader(ParsedShader shader, string name = null);
+
+        /// <summary>
+        ///     Creates a new instance of a shader.
+        /// </summary>
+        /// <param name="handle">The handle of the loaded shader as returned by <see cref="LoadShader"/>.</param>
         ShaderInstance InstanceShader(ClydeHandle handle);
 
         /// <summary>

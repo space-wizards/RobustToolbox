@@ -46,7 +46,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private int BatchIndex;
 
-        private int? BatchingTexture;
+        private ClydeHandle? BatchingTexture;
 
         // We break batching when modulate changes too.
         // This simplifies the rendering and catches most cases for now.
@@ -455,7 +455,7 @@ namespace Robust.Client.Graphics.Clyde
 
                     case RenderCommandType.UseShader:
                         _flushBatchBuffer();
-                        if (command.UseShader.Handle == _currentShader.Handle)
+                        if (command.UseShader.Handle.Value == _currentShader.Value)
                         {
                             break;
                         }
@@ -475,7 +475,7 @@ namespace Robust.Client.Graphics.Clyde
 
                     case RenderCommandType.RenderTarget:
                         _flushBatchBuffer();
-                        if (command.RenderTarget.RenderTarget.Handle == 0)
+                        if (command.RenderTarget.RenderTarget.Value == 0)
                         {
                             _popDebugGroupMaybe();
                             // Bind window framebuffer.
@@ -603,8 +603,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _drawCommandLine(ref RenderCommandLine renderCommandLine)
         {
-            var loaded = _loadedShaders[_currentShader.Handle];
-            var program = loaded.Program;
+            var (program, loaded) = ActivateShaderInstance(_currentShader);
 
             program.Use();
             program.SetUniformMaybe(UniIModUV, new Vector4(0, 0, 1, 1));
@@ -665,9 +664,8 @@ namespace Robust.Client.Graphics.Clyde
             _flushBatchBuffer();
 
             // Reset renderer state.
-            _currentShader = _defaultShader;
+            _currentShader = _defaultShader.Handle;
             _currentModelMatrix = Matrix3.Identity;
-            _currentShader = _defaultShader;
             _disableScissor();
         }
 
@@ -688,8 +686,7 @@ namespace Robust.Client.Graphics.Clyde
             _writeBuffer(BatchVBO, new Span<Vertex2D>(BatchVertexData, 0, BatchIndex * 4));
             _writeBuffer(BatchEBO, new Span<ushort>(BatchIndexData, 0, BatchIndex * 5));
 
-            var loaded = _loadedShaders[_currentShader.Handle];
-            var program = loaded.Program;
+            var (program, loaded) = ActivateShaderInstance(_currentShader);
 
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
@@ -705,8 +702,6 @@ namespace Robust.Client.Graphics.Clyde
                 var white = _loadedTextures[((ClydeTexture) Texture.White).TextureId].OpenGLObject;
                 GL.BindTexture(TextureTarget.Texture2D, white.Handle);
             }
-
-            program.Use();
 
             program.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
             program.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
@@ -786,6 +781,62 @@ namespace Robust.Client.Graphics.Clyde
             {
                 buffer.WriteSubData(data);
             }
+        }
+
+        private (ShaderProgram, LoadedShader) ActivateShaderInstance(ClydeHandle handle)
+        {
+            var instance = _shaderInstances[handle];
+            var shader = _loadedShaders[instance.ShaderHandle];
+            var program = shader.Program;
+
+            program.Use();
+
+            if (shader.ActiveInstance == instance.ShaderHandle)
+            {
+                return (program, shader);
+            }
+
+            // Assign shader parameters to uniform since they may be dirty.
+            foreach (var (name, value) in instance.Parameters)
+            {
+                switch (value)
+                {
+                    case float f:
+                        program.SetUniform(name, f);
+                        break;
+                    case Vector2 vector2:
+                        program.SetUniform(name, vector2);
+                        break;
+                    case Vector3 vector3:
+                        program.SetUniform(name, vector3);
+                        break;
+                    case Vector4 vector4:
+                        program.SetUniform(name, vector4);
+                        break;
+                    case Color color:
+                        program.SetUniform(name, color);
+                        break;
+                    case int i:
+                        program.SetUniform(name, i);
+                        break;
+                    case Vector2i vector2I:
+                        program.SetUniform(name, vector2I);
+                        break;
+                    case bool b:
+                        program.SetUniform(name, b ? 1 : 0);
+                        break;
+                    case Matrix3 matrix3:
+                        program.SetUniform(name, matrix3);
+                        break;
+                    case Matrix4 matrix4:
+                        program.SetUniform(name, matrix4);
+                        break;
+                    default:
+                        throw new InvalidOperationException($"Unable to handle shader parameter {name}: {value}");
+                }
+            }
+
+            return (program, shader);
         }
 
         [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
@@ -935,12 +986,17 @@ namespace Robust.Client.Graphics.Clyde
 
             public void UseShader(ShaderInstance shader)
             {
+                if (shader != null && shader.Disposed)
+                {
+                    throw new ArgumentException("Unable to use disposed shader instance.", nameof(shader));
+                }
+
                 var clydeShader = (ClydeShaderInstance) shader;
 
                 ref var command = ref CommandList.RenderCommands.AllocAdd();
                 command.Type = RenderCommandType.UseShader;
 
-                command.UseShader.Handle = clydeShader?.ShaderHandle.Handle ?? _clyde._defaultShader.Handle;
+                command.UseShader.Handle = clydeShader?.Handle ?? _clyde._defaultShader.Handle;
             }
 
             public void Viewport(Box2i viewport)
@@ -1122,7 +1178,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private struct RenderCommandTexture
         {
-            public int TextureId;
+            public ClydeHandle TextureId;
             public bool HasSubRegion;
             public UIBox2 SubRegion;
 
@@ -1151,7 +1207,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private struct RenderCommandUseShader
         {
-            public int Handle;
+            public ClydeHandle Handle;
         }
 
         private struct RenderCommandLine

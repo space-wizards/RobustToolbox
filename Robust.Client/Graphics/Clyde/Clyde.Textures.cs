@@ -14,8 +14,7 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private readonly Dictionary<int, LoadedTexture> _loadedTextures = new Dictionary<int, LoadedTexture>();
-        private int _nextTextureId;
+        private readonly Dictionary<ClydeHandle, LoadedTexture> _loadedTextures = new Dictionary<ClydeHandle, LoadedTexture>();
 
         public Texture LoadTextureFromPNGStream(Stream stream, string name = null,
             TextureLoadParameters? loadParams = null)
@@ -161,7 +160,7 @@ namespace Robust.Client.Graphics.Clyde
                 Name = name
             };
 
-            var id = ++_nextTextureId;
+            var id = AllocRid();
             _loadedTextures.Add(id, loaded);
 
             return new ClydeTexture(id, size, this);
@@ -203,14 +202,14 @@ namespace Robust.Client.Graphics.Clyde
         {
             private readonly Clyde _clyde;
 
-            internal int TextureId { get; }
+            internal ClydeHandle TextureId { get; }
 
             public override void Delete()
             {
                 _clyde._deleteTexture(this);
             }
 
-            internal ClydeTexture(int id, Vector2i size, Clyde clyde) : base(size)
+            internal ClydeTexture(ClydeHandle id, Vector2i size, Clyde clyde) : base(size)
             {
                 TextureId = id;
                 _clyde = clyde;

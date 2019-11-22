@@ -9,8 +9,6 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private int _nextRenderTarget = 1;
-
         private readonly Dictionary<ClydeHandle, RenderTarget> _renderTargets =
             new Dictionary<ClydeHandle, RenderTarget>();
 
@@ -74,7 +72,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, boundReadBuffer);
 
             var textureObject = _genTexture(texture, size, name);
-            var handle = new ClydeHandle(_nextRenderTarget++);
+            var handle = AllocRid();
             var renderTarget = new RenderTarget(size, textureObject, fbo, this, handle);
             _renderTargets.Add(handle, renderTarget);
             return renderTarget;

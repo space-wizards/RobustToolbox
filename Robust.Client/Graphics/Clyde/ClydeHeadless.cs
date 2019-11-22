@@ -17,6 +17,7 @@ namespace Robust.Client.Graphics.Clyde
     {
         // Would it make sense to report a fake resolution like 720p here so code doesn't break? idk.
         public override Vector2i ScreenSize { get; set; } = (1280, 720);
+
         public ShaderInstance InstanceShader(ClydeHandle handle)
         {
             return new DummyShaderInstance();
@@ -31,7 +32,7 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public override void Initialize(bool lite=false)
+        public override void Initialize(bool lite = false)
         {
             // Nada.
         }
@@ -199,47 +200,52 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class DummyShaderInstance : ShaderInstance
         {
-            public override void SetParameter(string name, float value)
+            protected override ShaderInstance DuplicateImpl()
+            {
+                return new DummyShaderInstance();
+            }
+
+            protected override void SetParameterImpl(string name, float value)
             {
             }
 
-            public override void SetParameter(string name, Vector2 value)
+            protected override void SetParameterImpl(string name, Vector2 value)
             {
             }
 
-            public override void SetParameter(string name, Vector3 value)
+            protected override void SetParameterImpl(string name, Vector3 value)
             {
             }
 
-            public override void SetParameter(string name, Vector4 value)
+            protected override void SetParameterImpl(string name, Vector4 value)
             {
             }
 
-            public override void SetParameter(string name, int value)
+            protected override void SetParameterImpl(string name, Color value)
             {
             }
 
-            public override void SetParameter(string name, Vector2i value)
+            protected override void SetParameterImpl(string name, int value)
             {
             }
 
-            public override void SetParameter(string name, bool value)
+            protected override void SetParameterImpl(string name, Vector2i value)
             {
             }
 
-            public override void SetParameter(string name, in Matrix3 matrix)
+            protected override void SetParameterImpl(string name, bool value)
             {
             }
 
-            public override void SetParameter(string name, in Matrix4 matrix)
+            protected override void SetParameterImpl(string name, in Matrix3 value)
             {
             }
 
-            public override void SetParameter(string name, Texture texture)
+            protected override void SetParameterImpl(string name, in Matrix4 value)
             {
             }
 
-            public override void Dispose()
+            protected override void SetParameterImpl(string name, Texture value)
             {
             }
         }

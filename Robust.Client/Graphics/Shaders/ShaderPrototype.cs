@@ -31,24 +31,54 @@ namespace Robust.Client.Graphics.Shaders
         // Canvas shader variables.
         private ClydeHandle CompiledCanvasShader;
 
+        private ShaderInstance _cachedInstance;
+
         /// <summary>
-        ///     Creates a new instance of this shader.
+        ///     Retrieves a ready-to-use instance of this shader.
         /// </summary>
+        /// <remarks>
+        ///     This instance is shared. As such, it is immutable.
+        ///     Use <see cref="InstanceUnique"/> to get a mutable and unique shader instance.
+        /// </remarks>
         public ShaderInstance Instance()
         {
+            if (_cachedInstance == null)
+            {
+                _cacheInstance();
+            }
+
+            DebugTools.AssertNotNull(_cachedInstance);
+
+            return _cachedInstance;
+        }
+
+        private void _cacheInstance()
+        {
+            DebugTools.AssertNull(_cachedInstance);
+
+            ShaderInstance instance;
             switch (Kind)
             {
                 case ShaderKind.Source:
-                    var instance = _clyde.InstanceShader(Source.ClydeHandle);
+                    instance = _clyde.InstanceShader(Source.ClydeHandle);
                     _applyDefaultParameters(instance);
-                    return instance;
+                    break;
 
                 case ShaderKind.Canvas:
-                    return _clyde.InstanceShader(CompiledCanvasShader);
+                    instance = _clyde.InstanceShader(CompiledCanvasShader);
+                    break;
 
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            instance.MakeImmutable();
+            _cachedInstance = instance;
+        }
+
+        public ShaderInstance InstanceUnique()
+        {
+            return Instance().Duplicate();
         }
 
         public void LoadFrom(YamlMappingNode mapping)
@@ -205,12 +235,14 @@ namespace Robust.Client.Graphics.Shaders
                     case Vector4 i:
                         instance.SetParameter(key, i);
                         break;
+                    case Color i:
+                        instance.SetParameter(key, i);
+                        break;
                     case bool i:
                         instance.SetParameter(key, i);
                         break;
                 }
             }
-
         }
 
         private enum ShaderKind

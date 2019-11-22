@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -11,12 +13,18 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private ClydeHandle _defaultShader;
+        private ClydeShaderInstance _defaultShader;
 
         private string _shaderWrapCodeSpriteFrag;
         private string _shaderWrapCodeSpriteVert;
 
-        private readonly List<LoadedShader> _loadedShaders = new List<LoadedShader>();
+        private readonly Dictionary<ClydeHandle, LoadedShader> _loadedShaders =
+            new Dictionary<ClydeHandle, LoadedShader>();
+
+        private readonly Dictionary<ClydeHandle, LoadedShaderInstance> _shaderInstances =
+            new Dictionary<ClydeHandle, LoadedShaderInstance>();
+
+        private readonly ConcurrentQueue<ClydeHandle> _deadShaderInstances = new ConcurrentQueue<ClydeHandle>();
 
         private ShaderProgram _lightShader;
 
@@ -25,6 +33,15 @@ namespace Robust.Client.Graphics.Clyde
             public ShaderProgram Program;
             public bool HasLighting = true;
             public ShaderBlendMode BlendMode;
+            public ClydeHandle ActiveInstance;
+        }
+
+        private class LoadedShaderInstance
+        {
+            public ClydeHandle ShaderHandle;
+
+            // TODO(perf): Maybe store these parameters not boxed with a tagged union.
+            public readonly Dictionary<string, object> Parameters = new Dictionary<string, object>();
         }
 
         public ClydeHandle LoadShader(ParsedShader shader, string name = null)
@@ -50,14 +67,21 @@ namespace Robust.Client.Graphics.Clyde
                 HasLighting = shader.LightMode != ShaderLightMode.Unshaded,
                 BlendMode = shader.BlendMode
             };
-            var ret = _loadedShaders.Count;
-            _loadedShaders.Add(loaded);
-            return new ClydeHandle(ret);
+            var handle = AllocRid();
+            _loadedShaders.Add(handle, loaded);
+            return handle;
         }
 
         public ShaderInstance InstanceShader(ClydeHandle handle)
         {
-            return new ClydeShaderInstance(handle);
+            var newHandle = AllocRid();
+            var loaded = new LoadedShaderInstance
+            {
+                ShaderHandle = handle
+            };
+            var instance = new ClydeShaderInstance(newHandle, this);
+            _shaderInstances.Add(newHandle, loaded);
+            return instance;
         }
 
         private void _loadStockShaders()
@@ -65,10 +89,13 @@ namespace Robust.Client.Graphics.Clyde
             _shaderWrapCodeSpriteFrag = _readFile("/Shaders/Internal/sprite.frag");
             _shaderWrapCodeSpriteVert = _readFile("/Shaders/Internal/sprite.vert");
 
-            _defaultShader =
-                _resourceCache.GetResource<ShaderSourceResource>("/Shaders/Internal/default-sprite.swsl").ClydeHandle;
 
-            _currentShader = _defaultShader;
+            var defaultLoadedShader = _resourceCache
+                .GetResource<ShaderSourceResource>("/Shaders/Internal/default-sprite.swsl").ClydeHandle;
+
+            _defaultShader = (ClydeShaderInstance) InstanceShader(defaultLoadedShader);
+
+            _currentShader = _defaultShader.Handle;
 
             var lightVert = _readFile("/Shaders/Internal/light.vert");
             var lightFrag = _readFile("/Shaders/Internal/light.frag");
@@ -193,68 +220,113 @@ namespace Robust.Client.Graphics.Clyde
             return (header.ToString(), vertexMain?.Body ?? "", fragmentMain?.Body ?? "");
         }
 
+        private void ClearDeadShaderInstances()
+        {
+            while (_deadShaderInstances.TryDequeue(out var handle))
+            {
+                _shaderInstances.Remove(handle);
+            }
+        }
+
         private sealed class ClydeShaderInstance : ShaderInstance
         {
-            public readonly ClydeHandle ShaderHandle;
+            public readonly ClydeHandle Handle;
+            public readonly Clyde Parent;
 
-            public ClydeShaderInstance(ClydeHandle shaderHandle)
+            public ClydeShaderInstance(ClydeHandle handle, Clyde parent)
             {
-                ShaderHandle = shaderHandle;
+                Handle = handle;
+                Parent = parent;
             }
 
-            public override void SetParameter(string name, float value)
+            protected override ShaderInstance DuplicateImpl()
             {
-//                throw new System.NotImplementedException();
+                var instanceData = Parent._shaderInstances[Handle];
+                var newData = new LoadedShaderInstance
+                {
+                    ShaderHandle = instanceData.ShaderHandle
+                };
+
+                foreach (var (name, value) in instanceData.Parameters)
+                {
+                    newData.Parameters.Add(name, value);
+                }
+
+                var newHandle = Parent.AllocRid();
+                Parent._shaderInstances.Add(newHandle, newData);
+                return new ClydeShaderInstance(newHandle, Parent);
             }
 
-            public override void SetParameter(string name, Vector2 value)
+            protected override void Dispose(bool disposing)
             {
-//                throw new System.NotImplementedException();
+                Parent._deadShaderInstances.Enqueue(Handle);
             }
 
-            public override void SetParameter(string name, Vector3 value)
+            // TODO: Verify that parameters actually exist before assigning them like this.
+
+            protected override void SetParameterImpl(string name, float value)
             {
-//                throw new System.NotImplementedException();
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
             }
 
-            public override void SetParameter(string name, Vector4 value)
+            protected override void SetParameterImpl(string name, Vector2 value)
             {
-//                throw new System.NotImplementedException();
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
             }
 
-            public override void SetParameter(string name, int value)
+            protected override void SetParameterImpl(string name, Vector3 value)
             {
-//                throw new System.NotImplementedException();
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
             }
 
-            public override void SetParameter(string name, Vector2i value)
+            protected override void SetParameterImpl(string name, Vector4 value)
             {
-//                throw new System.NotImplementedException();
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
             }
 
-            public override void SetParameter(string name, bool value)
+            protected override void SetParameterImpl(string name, Color value)
             {
-//                throw new System.NotImplementedException();
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
             }
 
-            public override void SetParameter(string name, in Matrix3 matrix)
+            protected override void SetParameterImpl(string name, int value)
             {
-//                throw new System.NotImplementedException();
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
             }
 
-            public override void SetParameter(string name, in Matrix4 matrix)
+            protected override void SetParameterImpl(string name, Vector2i value)
             {
-//                throw new System.NotImplementedException();
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
             }
 
-            public override void SetParameter(string name, Texture texture)
+            protected override void SetParameterImpl(string name, bool value)
             {
-//                throw new System.NotImplementedException();
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
             }
 
-            public override void Dispose()
+            protected override void SetParameterImpl(string name, in Matrix3 value)
             {
-//                throw new System.NotImplementedException();
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
+            }
+
+            protected override void SetParameterImpl(string name, in Matrix4 value)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
+            }
+
+            protected override void SetParameterImpl(string name, Texture value)
+            {
+                throw new NotImplementedException();
             }
         }
     }

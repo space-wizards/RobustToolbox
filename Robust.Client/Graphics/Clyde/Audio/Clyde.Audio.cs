@@ -168,7 +168,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             var source = AL.GenSource();
             // ReSharper disable once PossibleInvalidOperationException
-            AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[stream.ClydeHandle.Value.Handle].BufferHandle);
+            AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[stream.ClydeHandle.Value.Value].BufferHandle);
             var audioSource = new AudioSource(this, source, stream);
             _audioSources.Add(source, new WeakReference<AudioSource>(audioSource));
             return audioSource;

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -44,7 +43,8 @@ namespace Robust.Client.Graphics.Clyde
                 GL.BindTexture(TextureTarget.Texture2D, white.Handle);
             }
 
-            var gridProgram = _loadedShaders[_defaultShader.Handle].Program;
+            var instance = _shaderInstances[_defaultShader.Handle];
+            var gridProgram = _loadedShaders[instance.ShaderHandle].Program;
             gridProgram.Use();
             gridProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
             gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);

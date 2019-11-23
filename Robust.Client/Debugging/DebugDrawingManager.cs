@@ -4,15 +4,10 @@ using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Robust.Client.Graphics.Clyde;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Maths;
 using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Shared.Log;
 using Robust.Shared.Timing;
 using Robust.Shared.Interfaces.Timing;
 
@@ -26,15 +21,17 @@ namespace Robust.Client.Debugging
         [Dependency] private readonly IGameTiming _gameTimer;
 #pragma warning restore 649
 
-        private List<RayWithLifetime> raysWithLifeTime;
-        private TimeSpan _rayLifeTime;
+        private readonly List<RayWithLifetime> raysWithLifeTime = new List<RayWithLifetime>();
         private bool _debugDrawRays;
 
         private struct RayWithLifetime
         {
-            public Ray TheRay;
+            public Vector2 RayOrigin;
+            public Vector2 RayHit;
             public TimeSpan LifeTime;
+            public bool DidActuallyHit;
         }
+
         public bool DebugDrawRays
         {
             get => _debugDrawRays;
@@ -49,7 +46,7 @@ namespace Robust.Client.Debugging
 
                 if (value)
                 {
-                    _overlayManager.AddOverlay(new DebugDrawRayOverlay(raysWithLifeTime));
+                    _overlayManager.AddOverlay(new DebugDrawRayOverlay(this));
                 }
                 else
                 {
@@ -58,74 +55,59 @@ namespace Robust.Client.Debugging
             }
         }
 
-        public TimeSpan DebugRayLifetime
-        {
-            get => _rayLifeTime;
-            set
-            {
-               _rayLifeTime = value;
-
-            }
-        }
+        public TimeSpan DebugRayLifetime { get; set; } = TimeSpan.FromSeconds(5);
 
         public void Initialize()
         {
             _net.RegisterNetMessage<MsgRay>(MsgRay.NAME, HandleDrawRay);
-            raysWithLifeTime = new List<RayWithLifetime>();
-            _rayLifeTime = TimeSpan.FromSeconds(5);
         }
 
         private void HandleDrawRay(MsgRay msg)
-        {   
-            var newRay = msg.RayToSend;
-            var newRayWithLifetime = new RayWithLifetime
-            {
-                TheRay = newRay,
-                LifeTime = _gameTimer.RealTime + _rayLifeTime
-            };
-            if(!raysWithLifeTime.Contains(newRayWithLifetime))
-            {
-                raysWithLifeTime.Add(newRayWithLifetime);
-            }
-           
-           
-        }
-
-        public void FrameUpdate(FrameEventArgs frameEventArgs)
         {
+            // Rays are disposed with DebugDrawRayOverlay.FrameUpdate.
+            // We don't accept incoming rays when that's off because else they'd pile up constantly.
             if (!_debugDrawRays)
             {
                 return;
             }
 
-            foreach (var rayWL in raysWithLifeTime)
+            var newRayWithLifetime = new RayWithLifetime
             {
-                raysWithLifeTime.RemoveAll(r => r.LifeTime < _rayLifeTime);
-            }
+                DidActuallyHit = msg.DidHit,
+                RayOrigin = msg.RayOrigin,
+                RayHit = msg.RayHit,
+                LifeTime = _gameTimer.RealTime + DebugRayLifetime
+            };
 
+            raysWithLifeTime.Add(newRayWithLifetime);
         }
 
         private sealed class DebugDrawRayOverlay : Overlay
         {
+            private readonly DebugDrawingManager _owner;
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
-            private List<RayWithLifetime> raysWithLifeTime;
-            public DebugDrawRayOverlay(List<RayWithLifetime> _rays) : base(nameof(DebugDrawRayOverlay))
+
+            public DebugDrawRayOverlay(DebugDrawingManager owner) : base(nameof(DebugDrawRayOverlay))
             {
-                raysWithLifeTime = _rays;
+                _owner = owner;
             }
-            protected override void Dispose(bool disposing)
-            {
-                base.Dispose(disposing);
-                raysWithLifeTime = new List<RayWithLifetime>();
-            }
+
             protected override void Draw(DrawingHandleBase handle)
             {
-                var worldhandle = (DrawingHandleBase)handle;
-                foreach(var rayWL in raysWithLifeTime)
+                foreach (var ray in _owner.raysWithLifeTime)
                 {
-                    worldhandle.DrawLine(rayWL.TheRay.Position, rayWL.TheRay.Direction, Color.Magenta);   
+                    handle.DrawLine(
+                        ray.RayOrigin,
+                        ray.RayHit,
+                        ray.DidActuallyHit ? Color.Yellow : Color.Magenta);
                 }
+            }
 
+            internal override void FrameUpdate(FrameEventArgs args)
+            {
+                base.FrameUpdate(args);
+
+                _owner.raysWithLifeTime.RemoveAll(r => r.LifeTime < _owner._gameTimer.RealTime);
             }
         }
     }

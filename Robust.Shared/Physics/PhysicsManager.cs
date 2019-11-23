@@ -177,10 +177,6 @@ namespace Robust.Shared.Physics
             IEntity entity = null;
             var hitPosition = Vector2.Zero;
             var minDist = maxLength;
-            var _network = IoCManager.Resolve<INetManager>();
-            var msg = _network.CreateNetMessage<MsgRay>();
-            msg.RayToSend = ray;
-            _network.ServerSendToAll(msg);
             foreach (var body in _bodies)
             {
                 if ((ray.CollisionMask & body.CollisionLayer) == 0x0)
@@ -198,11 +194,18 @@ namespace Robust.Shared.Physics
                 }
             }
 
+            RayCastResults results = default;
             if (entity != null)
-                return new RayCastResults(minDist, hitPosition, entity);
+            {
+                results = new RayCastResults(minDist, hitPosition, entity);
+            }
 
-            return default;
+            DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, results));
+
+            return results;
         }
+
+        public event Action<DebugRayData> DebugDrawRay;
 
         private Dictionary<Vector2, List<IPhysBody>> _collisionGrid = new Dictionary<Vector2, List<IPhysBody>>();
         private float _collisionGridResolution = 5;

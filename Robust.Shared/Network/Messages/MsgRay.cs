@@ -1,5 +1,4 @@
-﻿using System;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Maths;
 
@@ -11,29 +10,29 @@ namespace Robust.Shared.Network.Messages
 
         public const MsgGroups GROUP = MsgGroups.Command;
         public const string NAME = nameof(MsgRay);
-        public uint RequestId { get; set; }
-        public uint SessionId { get; set; }
-
-        public Ray RayToSend { get; set; }
 
         public MsgRay(INetChannel channel) : base(NAME, GROUP)
         {
         }
 
         #endregion
+
+        public Vector2 RayOrigin { get; set; }
+        public Vector2 RayHit { get; set; }
+        public bool DidHit { get; set; }
+
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            var origin = buffer.ReadVector2();
-            var dir = buffer.ReadVector2();
-            var mask = buffer.ReadInt32();
-            RayToSend = new Ray(origin, dir, mask);
+            DidHit = buffer.ReadBoolean();
+            RayOrigin = buffer.ReadVector2();
+            RayHit = buffer.ReadVector2();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
-            buffer.Write(RayToSend.Position);
-            buffer.Write(RayToSend.Direction);
-            buffer.Write(RayToSend.CollisionMask);
+            buffer.Write(DidHit);
+            buffer.Write(RayOrigin);
+            buffer.Write(RayHit);
         }
     }
 }

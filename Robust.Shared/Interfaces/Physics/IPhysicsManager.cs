@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Interfaces.GameObjects;
+﻿using System;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -33,5 +34,21 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="ignoredEnt">A single entity that can be ignored by the RayCast. Useful if the ray starts inside the body of an entity.</param>
         /// <returns>A result object describing the hit, if any.</returns>
         RayCastResults IntersectRay(Ray ray, float maxLength = 50, IEntity ignoredEnt = null);
+
+        event Action<DebugRayData> DebugDrawRay;
+    }
+
+    public struct DebugRayData
+    {
+        public DebugRayData(Ray ray, float maxLength, RayCastResults results)
+        {
+            Ray = ray;
+            MaxLength = maxLength;
+            Results = results;
+        }
+
+        public Ray Ray { get; }
+        public RayCastResults Results { get; }
+        public float MaxLength { get; }
     }
 }

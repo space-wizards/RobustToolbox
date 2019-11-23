@@ -7,11 +7,10 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.Interfaces.Debugging
 {
-    public interface IDebugDrawingManager 
+    public interface IDebugDrawingManager
     {
         bool DebugDrawRays { get; set; }
         TimeSpan DebugRayLifetime { get; set; }
         void Initialize();
-        void FrameUpdate(FrameEventArgs frameEventArgs);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Client.Interfaces;
+using Robust.Client.Interfaces.Debugging;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.State;
@@ -50,6 +51,9 @@ namespace Robust.Client
 
         [Dependency]
         private readonly IClientGameStateManager _gameStates;
+
+        [Dependency]
+        private readonly IDebugDrawingManager _debugDrawMan;
 #pragma warning restore 649
 
         /// <inheritdoc />
@@ -68,12 +72,12 @@ namespace Robust.Client
         public void Initialize()
         {
             _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, HandleServerInfo);
-
             _net.Connected += OnConnected;
             _net.ConnectFailed += OnConnectFailed;
             _net.Disconnect += OnNetDisconnect;
 
             _playMan.Initialize();
+            _debugDrawMan.Initialize();
             Reset();
         }
 

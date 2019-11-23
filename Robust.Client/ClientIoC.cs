@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Console;
 using Robust.Client.Debugging;
@@ -75,6 +75,7 @@ namespace Robust.Client
             IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
             IoCManager.Register<IUserInterfaceManagerInternal, UserInterfaceManager>();
             IoCManager.Register<IDebugDrawing, DebugDrawing>();
+            IoCManager.Register<IDebugDrawingManager, DebugDrawingManager>();
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
             IoCManager.Register<IClientConsole, ClientConsole>();

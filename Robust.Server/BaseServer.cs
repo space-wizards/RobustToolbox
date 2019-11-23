@@ -30,6 +30,7 @@ using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Exceptions;
 using Robust.Shared.Localization;
+using Robust.Server.Interfaces.Debugging;
 
 namespace Robust.Server
 {
@@ -229,6 +230,7 @@ namespace Robust.Server
             _mapManager.Initialize();
             IoCManager.Resolve<IPlacementManager>().Initialize();
             IoCManager.Resolve<IViewVariablesHost>().Initialize();
+            IoCManager.Resolve<IDebugDrawingManager>().Initialize();
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);

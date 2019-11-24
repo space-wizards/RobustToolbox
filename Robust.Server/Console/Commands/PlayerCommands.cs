@@ -43,7 +43,8 @@ namespace Robust.Server.Console.Commands
             else
                 grid = mapMgr.GetGrid(transform.GridPosition.GridID).ParentMap.FindGridAt(position);
 
-            transform.GridPosition = new GridCoordinates(position, grid);
+            var gridPos = grid.WorldToLocal(position);
+            transform.GridPosition = new GridCoordinates(gridPos, grid);
 
             shell.SendText(player, $"Teleported {player} to {grid.ParentMapId}:{posX},{posY}.");
         }

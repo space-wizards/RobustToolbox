@@ -71,7 +71,6 @@ namespace Robust.Client.UserInterface.Controls
             }
             else
             {
-                var oldTarget = ValueTarget;
                 _updating = true;
                 Value = FloatMath.Lerp(Value, ValueTarget, args.DeltaSeconds * 15);
                 _updating = false;
@@ -161,7 +160,7 @@ namespace Robust.Client.UserInterface.Controls
             var grabberOffset = GetAsRatio() * _getOrientationSize();
             grabberOffset = (float) Math.Round(grabberOffset);
 
-            var grabberEnd = (Value + Page - MinValue) / (MaxValue - MinValue) * _getOrientationSize();
+            var grabberEnd = (Value + Page - MinValue) / (MaxValue - MinValue) * _getOrientationSize() + _getGrabberBoxMinSize();
             grabberEnd = (float) Math.Round(grabberEnd);
 
             if (_orientation == OrientationMode.Horizontal)
@@ -170,6 +169,12 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             return new UIBox2(0, grabberOffset, PixelWidth, grabberEnd);
+        }
+
+        private float _getGrabberBoxMinSize()
+        {
+            StyleBox styleBox = _getGrabberStyleBox();
+            return _orientation == OrientationMode.Horizontal ? styleBox.MinimumSize.X : styleBox.MinimumSize.Y;
         }
 
         [System.Diagnostics.Contracts.Pure]
@@ -189,10 +194,10 @@ namespace Robust.Client.UserInterface.Controls
         {
             if (_orientation == OrientationMode.Horizontal)
             {
-                return PixelWidth;
+                return PixelWidth - _getGrabberBoxMinSize();
             }
 
-            return PixelHeight;
+            return PixelHeight - _getGrabberBoxMinSize();
         }
 
         private void _updatePseudoClass()

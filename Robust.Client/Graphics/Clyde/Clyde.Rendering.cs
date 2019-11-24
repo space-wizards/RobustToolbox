@@ -947,6 +947,11 @@ namespace Robust.Client.Graphics.Clyde
 
             public void DrawEntity(IEntity entity, Vector2 position, Vector2 scale)
             {
+                if (entity.Deleted)
+                {
+                    throw new ArgumentException("Tried to draw an entity has been deleted.", nameof(entity));
+                }
+
                 var sprite = entity.GetComponent<SpriteComponent>();
 
                 // Switch rendering to world space.

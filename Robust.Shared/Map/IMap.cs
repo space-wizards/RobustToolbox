@@ -1,9 +1,8 @@
 ﻿using System;
-using Robust.Shared.Map;
 using System.Collections.Generic;
 using Robust.Shared.Maths;
 
-namespace Robust.Shared.Interfaces.Map
+namespace Robust.Shared.Map
 {
     public interface IMap
     {

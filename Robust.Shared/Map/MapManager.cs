@@ -20,7 +20,7 @@ namespace Robust.Shared.Map
         public IGameTiming GameTiming => _gameTiming;
 
         /// <inheritdoc />
-        public IMap DefaultMap => GetMap(MapId.Nullspace);
+        public MapId DefaultMap => MapId.Nullspace;
 
         /// <inheritdoc />
         public event EventHandler<TileChangedEventArgs> TileChanged;
@@ -48,10 +48,7 @@ namespace Robust.Shared.Map
         private MapId HighestMapID = MapId.Nullspace;
         private GridId HighestGridID = GridId.Nullspace;
 
-        /// <summary>
-        ///     Holds an indexed collection of map grids.
-        /// </summary>
-        private readonly Dictionary<MapId, Map> _maps = new Dictionary<MapId, Map>();
+        private readonly HashSet<MapId> _maps = new HashSet<MapId>();
         private readonly Dictionary<MapId, GameTick> _mapCreationTick = new Dictionary<MapId, GameTick>();
 
         private readonly Dictionary<GridId, MapGrid> _grids = new Dictionary<GridId, MapGrid>();
@@ -79,7 +76,7 @@ namespace Robust.Shared.Map
 
         public void Shutdown()
         {
-            foreach (var map in _maps.Keys.ToArray())
+            foreach (var map in _maps.ToArray())
             {
                 if (map != MapId.Nullspace)
                 {
@@ -106,18 +103,18 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void DeleteMap(MapId mapID)
         {
-            if (!_maps.TryGetValue(mapID, out var map))
+            if (!_maps.Contains(mapID))
             {
                 throw new InvalidOperationException($"Attempted to delete nonexistant map '{mapID}'");
             }
 
             // grids are cached because Delete modifies collection
-            foreach (var grid in GetAllMapGrids(map).ToList())
+            foreach (var grid in GetAllMapGrids(mapID).ToList())
             {
                 DeleteGrid(grid.Index);
             }
 
-            MapDestroyed?.Invoke(this, new MapEventArgs(_maps[mapID]));
+            MapDestroyed?.Invoke(this, new MapEventArgs(mapID));
             _maps.Remove(mapID);
             _mapCreationTick.Remove(mapID);
 
@@ -128,7 +125,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public IMap CreateMap(MapId? mapID = null, GridId? defaultGridID = null)
+        public MapId CreateMap(MapId? mapID = null, GridId? defaultGridID = null)
         {
             if (defaultGridID != null && GridExists(defaultGridID.Value))
             {
@@ -154,38 +151,24 @@ namespace Robust.Shared.Map
                 HighestMapID = actualID;
             }
 
-            var newMap = new Map(actualID);
-            _maps.Add(actualID, newMap);
+            _maps.Add(actualID);
             _mapCreationTick.Add(actualID, _gameTiming.CurTick);
-            MapCreated?.Invoke(this, new MapEventArgs(newMap));
-            var newDefaultGrid = CreateGrid(newMap.Index, defaultGridID);
+            MapCreated?.Invoke(this, new MapEventArgs(actualID));
+            var newDefaultGrid = CreateGrid(actualID, defaultGridID);
             _defaultGrids.Add(actualID, newDefaultGrid.Index);
 
-            return newMap;
-        }
-
-        /// <inheritdoc />
-        public IMap GetMap(MapId mapID)
-        {
-            return _maps[mapID];
+            return actualID;
         }
 
         /// <inheritdoc />
         public bool MapExists(MapId mapID)
         {
-            return _maps.ContainsKey(mapID);
+            return _maps.Contains(mapID);
         }
 
-        /// <inheritdoc />
-        public bool TryGetMap(MapId mapID, out IMap map)
+        public IEnumerable<MapId> GetAllMapIds()
         {
-            if (_maps.TryGetValue(mapID, out var mapinterface))
-            {
-                map = mapinterface;
-                return true;
-            }
-            map = null;
-            return false;
+            return _maps;
         }
 
         public IMapGrid GetDefaultGrid(MapId mapID)
@@ -193,24 +176,9 @@ namespace Robust.Shared.Map
             return _grids[_defaultGrids[mapID]];
         }
 
-        public IMapGrid GetDefaultGrid(IMap map)
-        {
-            return GetDefaultGrid(map.Index);
-        }
-
         public GridId GetDefaultGridId(MapId mapID)
         {
             return _defaultGrids[mapID];
-        }
-
-        public GridId GetDefaultGridId(IMap map)
-        {
-            return _defaultGrids[map.Index];
-        }
-
-        public IEnumerable<IMap> GetAllMaps()
-        {
-            return _maps.Values;
         }
 
         public IEnumerable<IMapGrid> GetAllGrids()
@@ -220,8 +188,6 @@ namespace Robust.Shared.Map
 
         public IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16, float snapSize = 1)
         {
-            var map = _maps[currentMapID];
-
             GridId actualID;
             if (gridID != null)
             {
@@ -274,11 +240,6 @@ namespace Robust.Shared.Map
             return _grids.Values.Where(m => m.ParentMapId == mapId);
         }
 
-        public IEnumerable<IMapGrid> GetAllMapGrids(IMap map)
-        {
-            return _grids.Values.Where(m => m.ParentMapId == map.Index);
-        }
-
         public IMapGrid FindGridAt(MapId mapId, Vector2 worldPos)
         {
             var defaultGrid = GetDefaultGrid(mapId);
@@ -298,15 +259,9 @@ namespace Robust.Shared.Map
             return GetAllMapGrids(mapId).Where(grid => grid.WorldBounds.Intersects(worldArea));
         }
 
-        public IEnumerable<IMapGrid> FindGridsIntersecting(IMap map, Box2 worldArea)
-        {
-            return FindGridsIntersecting(map.Index, worldArea);
-        }
-
         public void DeleteGrid(GridId gridID)
         {
             var grid = _grids[gridID];
-            var map = (Map)grid.ParentMap;
 
             grid.Dispose();
             _grids.Remove(grid.Index);
@@ -329,12 +284,12 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Map that is being modified.
         /// </summary>
-        public IMap Map { get; }
+        public MapId Map { get; }
 
         /// <summary>
         ///     Creates a new instance of this class.
         /// </summary>
-        public MapEventArgs(IMap map)
+        public MapEventArgs(MapId map)
         {
             Map = map;
         }

@@ -1,15 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -63,8 +57,8 @@ namespace Robust.Shared.Map
 
             var mapDeletionsData = _mapDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.mapId).ToList();
             var gridDeletionsData = _gridDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.gridId).ToList();
-            var mapCreations = _maps.Values.Where(m => _mapCreationTick[m.Index] >= fromTick)
-                .ToDictionary(m => m.Index, m => _defaultGrids[m.Index]);
+            var mapCreations = _mapCreationTick.Where(kv => kv.Value >= fromTick)
+                .ToDictionary(kv => kv.Key, kv => _defaultGrids[kv.Key]);
             var gridCreations = _grids.Values.Where(g => g.CreatedTick >= fromTick).ToDictionary(g => g.Index,
                 grid => new GameStateMapData.GridCreationDatum(grid.ChunkSize, grid.SnapSize,
                     grid.IsDefaultGrid));
@@ -103,18 +97,17 @@ namespace Robust.Shared.Map
             {
                 foreach (var (mapId, gridId) in data.CreatedMaps)
                 {
-                    if (_maps.ContainsKey(mapId))
+                    if (_maps.Contains(mapId))
                     {
                         continue;
                     }
                     var gridCreation = data.CreatedGrids[gridId];
                     DebugTools.Assert(gridCreation.IsTheDefault);
 
-                    var newMap = new Map(mapId);
-                    _maps.Add(mapId, newMap);
+                    _maps.Add(mapId);
                     _mapCreationTick[mapId] = _gameTiming.CurTick;
-                    MapCreated?.Invoke(this, new MapEventArgs(newMap));
-                    var newDefaultGrid = CreateGrid(newMap.Index, gridId, gridCreation.ChunkSize, gridCreation.SnapSize);
+                    MapCreated?.Invoke(this, new MapEventArgs(mapId));
+                    var newDefaultGrid = CreateGrid(mapId, gridId, gridCreation.ChunkSize, gridCreation.SnapSize);
                     _defaultGrids.Add(mapId, newDefaultGrid.Index);
                 }
             }
@@ -201,7 +194,7 @@ namespace Robust.Shared.Map
             {
                 foreach (var map in data.DeletedMaps)
                 {
-                    if (_maps.ContainsKey(map))
+                    if (_maps.Contains(map))
                     {
                         DeleteMap(map);
                     }

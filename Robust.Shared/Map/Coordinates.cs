@@ -109,7 +109,7 @@ namespace Robust.Shared.Map
         /// <returns>True if the two points are within a given range.</returns>
         public bool InRange(IMapManager mapManager, GridCoordinates otherCoords, float range)
         {
-            if (mapManager.GetGrid(otherCoords.GridID).ParentMap != mapManager.GetGrid(GridID).ParentMap)
+            if (mapManager.GetGrid(otherCoords.GridID).ParentMapId != mapManager.GetGrid(GridID).ParentMapId)
             {
                 return false;
             }

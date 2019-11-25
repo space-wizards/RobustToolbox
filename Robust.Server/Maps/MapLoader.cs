@@ -69,7 +69,7 @@ namespace Robust.Server.Maps
         }
 
         /// <inheritdoc />
-        public IMapGrid LoadBlueprint(IMap map, string path)
+        public IMapGrid LoadBlueprint(MapId mapId, string path)
         {
             TextReader reader;
             var resPath = new ResourcePath(path).ToRootedPath();
@@ -108,11 +108,11 @@ namespace Robust.Server.Maps
                     throw new InvalidDataException("Cannot instance map with multiple grids as blueprint.");
                 }
 
-                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, (YamlMappingNode)data.RootNode, map);
+                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, (YamlMappingNode)data.RootNode, mapId);
                 context.Deserialize();
                 grid = context.Grids[0];
 
-                if (!context.MapIsPostInit && _pauseManager.IsMapInitialized(map))
+                if (!context.MapIsPostInit && _pauseManager.IsMapInitialized(mapId))
                 {
                     foreach (var entity in context.Entities)
                     {
@@ -125,10 +125,10 @@ namespace Robust.Server.Maps
         }
 
         /// <inheritdoc />
-        public void SaveMap(IMap map, string yamlPath)
+        public void SaveMap(MapId mapId, string yamlPath)
         {
             var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager);
-            foreach (var grid in _mapManager.GetAllMapGrids(map))
+            foreach (var grid in _mapManager.GetAllMapGrids(mapId))
             {
                 context.RegisterGrid(grid);
             }
@@ -189,7 +189,7 @@ namespace Robust.Server.Maps
                     throw new InvalidDataException("Cannot instance map with multiple grids as blueprint.");
                 }
 
-                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, (YamlMappingNode)data.RootNode, _mapManager.GetMap(mapId));
+                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, (YamlMappingNode)data.RootNode, mapId);
                 context.Deserialize();
 
                 if (!context.MapIsPostInit && _pauseManager.IsMapInitialized(mapId))
@@ -223,7 +223,7 @@ namespace Robust.Server.Maps
             private int uidCounter;
 
             private readonly YamlMappingNode RootNode;
-            private readonly IMap TargetMap;
+            private readonly MapId TargetMap;
 
             private Dictionary<string, YamlMappingNode> CurrentReadingEntityComponents;
 
@@ -244,7 +244,8 @@ namespace Robust.Server.Maps
                 RootNode = new YamlMappingNode();
             }
 
-            public MapContext(IMapManager maps, ITileDefinitionManager tileDefs, IServerEntityManagerInternal entities, IPauseManager pauseManager, YamlMappingNode node, IMap targetMap)
+            public MapContext(IMapManager maps, ITileDefinitionManager tileDefs, IServerEntityManagerInternal entities,
+                IPauseManager pauseManager, YamlMappingNode node, MapId targetMapId)
             {
                 _mapManager = maps;
                 _tileDefinitionManager = tileDefs;
@@ -252,7 +253,7 @@ namespace Robust.Server.Maps
                 _pauseManager = pauseManager;
 
                 RootNode = node;
-                TargetMap = targetMap;
+                TargetMap = targetMapId;
             }
 
             // Deserialization
@@ -422,7 +423,7 @@ namespace Robust.Server.Maps
                 var isPostInit = false;
                 foreach (var grid in Grids)
                 {
-                    if (_pauseManager.IsMapInitialized(grid.ParentMap))
+                    if (_pauseManager.IsMapInitialized(grid.ParentMapId))
                     {
                         isPostInit = true;
                         break;

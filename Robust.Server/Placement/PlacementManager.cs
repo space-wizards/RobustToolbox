@@ -112,18 +112,18 @@ namespace Robust.Server.Placement
             }
             else
             {
-                PlaceNewTile(coordinates, tileType, _mapManager.GetGrid(coordinates.GridID).ParentMap, coordinates.ToWorld(_mapManager).Position);
+                PlaceNewTile(coordinates, tileType, _mapManager.GetGrid(coordinates.GridID).ParentMapId, coordinates.ToWorld(_mapManager).Position);
             }
         }
 
-        private void PlaceNewTile(GridCoordinates coordinates, ushort tileType, IMap map, Vector2 position)
+        private void PlaceNewTile(GridCoordinates coordinates, ushort tileType, MapId mapId, Vector2 position)
         {
             // tile can snap up to 0.75m away from grid
             var gridSearchBox = new Box2(-0.5f, -0.5f, 0.5f, 0.5f)
                 .Scale(1.5f)
                 .Translated(position);
 
-            var gridsInArea = _mapManager.FindGridsIntersecting(map, gridSearchBox);
+            var gridsInArea = _mapManager.FindGridsIntersecting(mapId, gridSearchBox);
 
             IMapGrid closest = null;
             float distance = float.PositiveInfinity;
@@ -160,7 +160,7 @@ namespace Robust.Server.Placement
                 {
                     var tileBounds = Box2.UnitCentered.Scale(closest.TileSize).Translated(newTilePos);
 
-                    var collideCount = _mapManager.FindGridsIntersecting(map, tileBounds).Count();
+                    var collideCount = _mapManager.FindGridsIntersecting(mapId, tileBounds).Count();
 
                     // prevent placing a tile if it overlaps more than one grid
                     if(collideCount > 1)
@@ -172,7 +172,7 @@ namespace Robust.Server.Placement
             }
             else // create a new grid
             {
-                var newGrid = _mapManager.CreateGrid(map.Index);
+                var newGrid = _mapManager.CreateGrid(mapId);
                 newGrid.WorldPosition = position + (newGrid.TileSize / 2f); // assume bottom left tile origin
                 var tilePos = newGrid.WorldToTile(position);
                 newGrid.SetTile(tilePos, new Tile(tileType));

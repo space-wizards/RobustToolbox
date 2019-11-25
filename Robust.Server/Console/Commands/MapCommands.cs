@@ -113,14 +113,14 @@ namespace Robust.Server.Console.Commands
             }
 
             var mapManager = IoCManager.Resolve<IMapManager>();
-            if (!mapManager.TryGetMap(mapId, out var map))
+            if (!mapManager.MapExists(mapId))
             {
                 shell.SendText(player, "Target map does not exist.");
                 return;
             }
 
             var mapLoader = IoCManager.Resolve<IMapLoader>();
-            mapLoader.LoadBlueprint(map, args[1]);
+            mapLoader.LoadBlueprint(mapId, args[1]);
         }
     }
 
@@ -145,11 +145,11 @@ namespace Robust.Server.Console.Commands
                 return;
 
             var mapManager = IoCManager.Resolve<IMapManager>();
-            if (!mapManager.TryGetMap(mapID, out var map))
+            if (!mapManager.MapExists(mapID))
                 return;
 
             // TODO: Parse path
-            IoCManager.Resolve<IMapLoader>().SaveMap(map, "Maps/Demo/DemoMap.yaml");
+            IoCManager.Resolve<IMapLoader>().SaveMap(mapID, "Maps/Demo/DemoMap.yaml");
         }
     }
 
@@ -313,19 +313,19 @@ namespace Robust.Server.Console.Commands
             var arg = args[0];
             var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
 
-            if (!mapManager.TryGetMap(mapId, out var map))
+            if (!mapManager.MapExists(mapId))
             {
                 shell.SendText(player, "Map does not exist!");
                 return;
             }
 
-            if (pauseManager.IsMapInitialized(map))
+            if (pauseManager.IsMapInitialized(mapId))
             {
                 shell.SendText(player, "Map is already initialized!");
                 return;
             }
 
-            pauseManager.DoMapInitialize(map);
+            pauseManager.DoMapInitialize(mapId);
         }
     }
 
@@ -342,12 +342,12 @@ namespace Robust.Server.Console.Commands
 
             var msg = new StringBuilder();
 
-            foreach (var map in mapManager.GetAllMaps().OrderBy(map => map.Index.Value))
+            foreach (var mapId in mapManager.GetAllMapIds().OrderBy(id => id.Value))
             {
                 msg.AppendFormat("{0}: default grid: {1}, init: {2}, paused: {3} , grids: {4}\n",
-                    map.Index, mapManager.GetDefaultGridId(map), pauseManager.IsMapInitialized(map),
-                    pauseManager.IsMapPaused(map),
-                    string.Join(",", mapManager.GetAllMapGrids(map).Select(grid => grid.Index)));
+                    mapId, mapManager.GetDefaultGridId(mapId), pauseManager.IsMapInitialized(mapId),
+                    pauseManager.IsMapPaused(mapId),
+                    string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.Index)));
             }
 
             shell.SendText(player, msg.ToString());
@@ -369,7 +369,7 @@ namespace Robust.Server.Console.Commands
             foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.Index.Value))
             {
                 msg.AppendFormat("{0}: map: {1}, default: {2}, pos: {3} \n",
-                    grid.Index, grid.ParentMap.Index, grid.IsDefaultGrid, grid.WorldPosition);
+                    grid.Index, grid.ParentMapId, grid.IsDefaultGrid, grid.WorldPosition);
             }
 
             shell.SendText(player, msg.ToString());

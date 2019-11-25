@@ -252,7 +252,7 @@
                 else // has no parent
                 {
                     var worldPos = value;
-                    var grid = _mapManager.GetMap(MapID).FindGridAt(worldPos); // resolve grid id at location
+                    var grid = _mapManager.FindGridAt(MapID, worldPos); // resolve grid id at location
                     var localPos = grid.WorldToLocal(worldPos);
 
                     // this prevents the component being marked as dirty
@@ -601,7 +601,7 @@
                 // transform localPosition from parent coords to world coords
                 var worldPos = Parent.WorldMatrix.Transform(localPosition);
                 var grid = _mapManager.GetGrid(gridId);
-                var lc = new GridCoordinates(worldPos, grid.ParentMap);
+                var lc = new GridCoordinates(worldPos, _mapManager.GetDefaultGridId(grid.ParentMapId));
 
                 // then to parent grid coords
                 return lc.ConvertToGrid(_mapManager, _mapManager.GetGrid(Parent.GridPosition.GridID));

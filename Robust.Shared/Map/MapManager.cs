@@ -4,6 +4,7 @@ using System.Linq;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -51,8 +52,10 @@ namespace Robust.Shared.Map
         ///     Holds an indexed collection of map grids.
         /// </summary>
         private readonly Dictionary<MapId, Map> _maps = new Dictionary<MapId, Map>();
+        private readonly Dictionary<MapId, GameTick> _mapCreationTick = new Dictionary<MapId, GameTick>();
 
         private readonly Dictionary<GridId, MapGrid> _grids = new Dictionary<GridId, MapGrid>();
+        private readonly Dictionary<MapId, GridId> _defaultGrids = new Dictionary<MapId, GridId>();
 
         private readonly List<(GameTick tick, GridId gridId)> _gridDeletionHistory = new List<(GameTick, GridId)>();
         private readonly List<(GameTick tick, MapId mapId)> _mapDeletionHistory = new List<(GameTick, MapId)>();
@@ -100,7 +103,6 @@ namespace Robust.Shared.Map
             TileChanged?.Invoke(this, new TileChangedEventArgs(tileRef, oldTile));
         }
 
-
         /// <inheritdoc />
         public void DeleteMap(MapId mapID)
         {
@@ -110,13 +112,14 @@ namespace Robust.Shared.Map
             }
 
             // grids are cached because Delete modifies collection
-            foreach (var grid in map.GetAllGrids().ToList())
+            foreach (var grid in GetAllMapGrids(map).ToList())
             {
                 DeleteGrid(grid.Index);
             }
 
             MapDestroyed?.Invoke(this, new MapEventArgs(_maps[mapID]));
             _maps.Remove(mapID);
+            _mapCreationTick.Remove(mapID);
 
             if (_netManager.IsClient)
                 return;
@@ -151,10 +154,12 @@ namespace Robust.Shared.Map
                 HighestMapID = actualID;
             }
 
-            var newMap = new Map(this, actualID);
+            var newMap = new Map(actualID);
             _maps.Add(actualID, newMap);
+            _mapCreationTick.Add(actualID, _gameTiming.CurTick);
             MapCreated?.Invoke(this, new MapEventArgs(newMap));
-            newMap.DefaultGrid = CreateGrid(newMap.Index, defaultGridID);
+            var newDefaultGrid = CreateGrid(newMap.Index, defaultGridID);
+            _defaultGrids.Add(actualID, newDefaultGrid.Index);
 
             return newMap;
         }
@@ -181,6 +186,26 @@ namespace Robust.Shared.Map
             }
             map = null;
             return false;
+        }
+
+        public IMapGrid GetDefaultGrid(MapId mapID)
+        {
+            return _grids[_defaultGrids[mapID]];
+        }
+
+        public IMapGrid GetDefaultGrid(IMap map)
+        {
+            return GetDefaultGrid(map.Index);
+        }
+
+        public GridId GetDefaultGridId(MapId mapID)
+        {
+            return _defaultGrids[mapID];
+        }
+
+        public GridId GetDefaultGridId(IMap map)
+        {
+            return _defaultGrids[map.Index];
         }
 
         public IEnumerable<IMap> GetAllMaps()
@@ -219,7 +244,6 @@ namespace Robust.Shared.Map
 
             var grid = new MapGrid(this, actualID, chunkSize, snapSize, currentMapID);
             _grids.Add(actualID, grid);
-            map.AddGrid(grid);
             OnGridCreated?.Invoke(actualID);
             return grid;
         }
@@ -245,22 +269,55 @@ namespace Robust.Shared.Map
             return _grids.ContainsKey(gridID);
         }
 
+        public IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId)
+        {
+            return _grids.Values.Where(m => m.ParentMapId == mapId);
+        }
+
+        public IEnumerable<IMapGrid> GetAllMapGrids(IMap map)
+        {
+            return _grids.Values.Where(m => m.ParentMapId == map.Index);
+        }
+
+        public IMapGrid FindGridAt(MapId mapId, Vector2 worldPos)
+        {
+            var defaultGrid = GetDefaultGrid(mapId);
+            foreach (var grid in GetAllMapGrids(mapId))
+                if (grid.WorldBounds.Contains(worldPos) && grid != defaultGrid)
+                    return grid;
+            return defaultGrid;
+        }
+
+        public IMapGrid FindGridAt(MapCoordinates mapCoords)
+        {
+            return FindGridAt(mapCoords.MapId, mapCoords.Position);
+        }
+
+        public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea)
+        {
+            return GetAllMapGrids(mapId).Where(grid => grid.WorldBounds.Intersects(worldArea));
+        }
+
+        public IEnumerable<IMapGrid> FindGridsIntersecting(IMap map, Box2 worldArea)
+        {
+            return FindGridsIntersecting(map.Index, worldArea);
+        }
+
         public void DeleteGrid(GridId gridID)
         {
             var grid = _grids[gridID];
             var map = (Map)grid.ParentMap;
 
             grid.Dispose();
-            map.RemoveGrid(grid);
             _grids.Remove(grid.Index);
 
+            if (_defaultGrids.ContainsKey(grid.ParentMapId))
+                _defaultGrids.Remove(grid.ParentMapId);
+            
             OnGridRemoved?.Invoke(gridID);
 
-            if (_netManager.IsClient)
-            {
-                return;
-            }
-            _gridDeletionHistory.Add((_gameTiming.CurTick, gridID));
+            if (_netManager.IsServer)
+                _gridDeletionHistory.Add((_gameTiming.CurTick, gridID));
         }
     }
 

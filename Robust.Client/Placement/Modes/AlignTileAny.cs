@@ -28,7 +28,7 @@ namespace Robust.Client.Placement.Modes
                 var gridSearchBox = Box2.UnitCentered.Scale(SearchBoxSize).Translated(MouseCoords.Position);
 
                 // find grids in search box
-                var gridsInArea = mapGrid.ParentMap.FindGridsIntersecting(gridSearchBox);
+                var gridsInArea = pManager.MapManager.FindGridsIntersecting(mapGrid.ParentMapId, gridSearchBox);
 
                 // find closest grid intersecting our search box.
                 IMapGrid closest = null;

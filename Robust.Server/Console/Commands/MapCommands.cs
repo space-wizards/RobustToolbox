@@ -345,9 +345,9 @@ namespace Robust.Server.Console.Commands
             foreach (var map in mapManager.GetAllMaps().OrderBy(map => map.Index.Value))
             {
                 msg.AppendFormat("{0}: default grid: {1}, init: {2}, paused: {3} , grids: {4}\n",
-                    map.Index, map.DefaultGrid.Index, pauseManager.IsMapInitialized(map),
+                    map.Index, mapManager.GetDefaultGridId(map), pauseManager.IsMapInitialized(map),
                     pauseManager.IsMapPaused(map),
-                    string.Join(",", map.GetAllGrids().Select(grid => grid.Index)));
+                    string.Join(",", mapManager.GetAllMapGrids(map).Select(grid => grid.Index)));
             }
 
             shell.SendText(player, msg.ToString());

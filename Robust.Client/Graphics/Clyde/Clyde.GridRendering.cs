@@ -52,7 +52,7 @@ namespace Robust.Client.Graphics.Clyde
             gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
             gridProgram.SetUniform(UniIModulate, Color.White);
 
-            foreach (var mapGrid in map.FindGridsIntersecting(worldBounds))
+            foreach (var mapGrid in _mapManager.FindGridsIntersecting(map, worldBounds))
             {
                 var grid = (IMapGridInternal) mapGrid;
 

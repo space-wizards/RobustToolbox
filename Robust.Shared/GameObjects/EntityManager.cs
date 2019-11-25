@@ -128,8 +128,7 @@ namespace Robust.Shared.GameObjects
 
         public IEntity SpawnEntityAt(string entityType, MapCoordinates coordinates)
         {
-            var map = _mapManager.GetMap(coordinates.MapId);
-            var grid = map.FindGridAt(coordinates.Position);
+            var grid = _mapManager.FindGridAt(coordinates);
             var gridCoords = new GridCoordinates(grid.WorldToLocal(coordinates.Position), grid);
 
             return SpawnEntityAt(entityType, gridCoords);

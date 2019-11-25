@@ -24,7 +24,7 @@ namespace Robust.Shared.Map
         public GameTick CurTick => _mapManager.GameTiming.CurTick;
 
         /// <inheritdoc />
-        public bool IsDefaultGrid => ParentMap.DefaultGrid == this;
+        public bool IsDefaultGrid => _mapManager.GetDefaultGridId(ParentMapId) == Index;
 
         /// <inheritdoc />
         public IMap ParentMap => _mapManager.GetMap(ParentMapId);
@@ -362,7 +362,8 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public GridCoordinates LocalToWorld(GridCoordinates posLocal)
         {
-            return new GridCoordinates(posLocal.Position + WorldPosition, _mapManager.GetGrid(posLocal.GridID).ParentMap);
+            return new GridCoordinates(posLocal.Position + WorldPosition,
+                _mapManager.GetDefaultGridId(_mapManager.GetGrid(posLocal.GridID).ParentMapId));
         }
 
         /// <inheritdoc />

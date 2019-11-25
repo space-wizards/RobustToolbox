@@ -123,7 +123,7 @@ namespace Robust.Server.Placement
                 .Scale(1.5f)
                 .Translated(position);
 
-            var gridsInArea = map.FindGridsIntersecting(gridSearchBox);
+            var gridsInArea = _mapManager.FindGridsIntersecting(map, gridSearchBox);
 
             IMapGrid closest = null;
             float distance = float.PositiveInfinity;
@@ -160,7 +160,7 @@ namespace Robust.Server.Placement
                 {
                     var tileBounds = Box2.UnitCentered.Scale(closest.TileSize).Translated(newTilePos);
 
-                    var collideCount = map.FindGridsIntersecting(tileBounds).Count();
+                    var collideCount = _mapManager.FindGridsIntersecting(map, tileBounds).Count();
 
                     // prevent placing a tile if it overlaps more than one grid
                     if(collideCount > 1)
@@ -172,7 +172,7 @@ namespace Robust.Server.Placement
             }
             else // create a new grid
             {
-                var newGrid = map.CreateGrid();
+                var newGrid = _mapManager.CreateGrid(map.Index);
                 newGrid.WorldPosition = position + (newGrid.TileSize / 2f); // assume bottom left tile origin
                 var tilePos = newGrid.WorldToTile(position);
                 newGrid.SetTile(tilePos, new Tile(tileType));

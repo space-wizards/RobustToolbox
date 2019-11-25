@@ -63,8 +63,8 @@ namespace Robust.Shared.Map
 
             var mapDeletionsData = _mapDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.mapId).ToList();
             var gridDeletionsData = _gridDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.gridId).ToList();
-            var mapCreations = _maps.Values.Where(m => m.CreatedTick >= fromTick)
-                .ToDictionary(m => m.Index, m => m.DefaultGrid.Index);
+            var mapCreations = _maps.Values.Where(m => _mapCreationTick[m.Index] >= fromTick)
+                .ToDictionary(m => m.Index, m => _defaultGrids[m.Index]);
             var gridCreations = _grids.Values.Where(g => g.CreatedTick >= fromTick).ToDictionary(g => g.Index,
                 grid => new GameStateMapData.GridCreationDatum(grid.ChunkSize, grid.SnapSize,
                     grid.IsDefaultGrid));
@@ -110,10 +110,12 @@ namespace Robust.Shared.Map
                     var gridCreation = data.CreatedGrids[gridId];
                     DebugTools.Assert(gridCreation.IsTheDefault);
 
-                    var newMap = new Map(this, mapId);
+                    var newMap = new Map(mapId);
                     _maps.Add(mapId, newMap);
+                    _mapCreationTick[mapId] = _gameTiming.CurTick;
                     MapCreated?.Invoke(this, new MapEventArgs(newMap));
-                    newMap.DefaultGrid = CreateGrid(newMap.Index, gridId, gridCreation.ChunkSize, gridCreation.SnapSize);
+                    var newDefaultGrid = CreateGrid(newMap.Index, gridId, gridCreation.ChunkSize, gridCreation.SnapSize);
+                    _defaultGrids.Add(mapId, newDefaultGrid.Index);
                 }
             }
 

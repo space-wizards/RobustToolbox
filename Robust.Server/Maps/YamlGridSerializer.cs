@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Robust.Shared.Interfaces.Map;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -102,7 +101,7 @@ namespace Robust.Server.Maps
                     worldPos = kvInfo.Value.AsVector2();
             }
 
-            var grid = map.CreateGrid(gridId, csz, sgsz);
+            var grid = mapMan.CreateGrid(map.Index, gridId);
 
             gridId = grid.Index;
 

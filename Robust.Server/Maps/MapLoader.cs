@@ -128,7 +128,7 @@ namespace Robust.Server.Maps
         public void SaveMap(IMap map, string yamlPath)
         {
             var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager);
-            foreach (var grid in map.GetAllGrids())
+            foreach (var grid in _mapManager.GetAllMapGrids(map))
             {
                 context.RegisterGrid(grid);
             }

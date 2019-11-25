@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Interfaces.Map
@@ -70,12 +71,23 @@ namespace Robust.Shared.Interfaces.Map
 
         bool TryGetMap(MapId mapID, out IMap map);
 
+        IMapGrid GetDefaultGrid(MapId mapID);
+        IMapGrid GetDefaultGrid(IMap map);
+        GridId GetDefaultGridId(MapId mapID);
+        GridId GetDefaultGridId(IMap map);
+
         void DeleteMap(MapId mapID);
 
         IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16, float snapSize = 1);
         IMapGrid GetGrid(GridId gridID);
         bool TryGetGrid(GridId gridId, out IMapGrid grid);
         bool GridExists(GridId gridID);
+        IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId);
+        IEnumerable<IMapGrid> GetAllMapGrids(IMap mapId);
+        IMapGrid FindGridAt(MapId mapId, Vector2 worldPos);
+        IMapGrid FindGridAt(MapCoordinates mapCoords);
+        IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea);
+        IEnumerable<IMapGrid> FindGridsIntersecting(IMap map, Box2 worldArea);
         void DeleteGrid(GridId gridID);
 
         /// <summary>

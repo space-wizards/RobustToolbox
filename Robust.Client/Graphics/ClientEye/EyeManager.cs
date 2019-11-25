@@ -90,7 +90,7 @@ namespace Robust.Client.Graphics.ClientEye
             IMapGrid grid;
             if (_mapManager.TryGetMap(currentEye.Position.MapId, out var map))
             {
-                grid = map.FindGridAt(mapPos);
+                grid = _mapManager.FindGridAt(map.Index, mapPos);
             }
             else
             {

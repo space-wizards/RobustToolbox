@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -193,7 +194,10 @@ namespace Robust.Shared.Map
                     if(!grid.GridEntity.IsClientSide())
                         continue;
 
-                    _entityManager.GetEntity(grid.GridEntity).Delete();
+                    var cEntity = _entityManager.GetEntity(grid.GridEntity);
+                    var cGridComp = cEntity.GetComponent<IMapGridComponent>();
+                    cGridComp.ClearGridId();
+                    cEntity.Delete();
 
                     var gridComps = _entityManager.ComponentManager.GetAllComponents<IMapGridComponent>();
                     foreach (var gridComp in gridComps)
@@ -201,6 +205,7 @@ namespace Robust.Shared.Map
                         if (gridComp.GridIndex == kvNewGrid.Key)
                         {
                             grid.GridEntity = gridComp.Owner.Uid;
+                            Logger.DebugS("map", $"Grid {grid.Index} pivoted bound entity from {cEntity.Uid} to {grid.GridEntity}.");
                             break;
                         }
                     }

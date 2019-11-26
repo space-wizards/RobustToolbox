@@ -107,13 +107,16 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void DeleteMap(MapId mapID)
         {
+            if (mapID == MapId.Nullspace)
+            {
+                Logger.DebugS("map", "Blocked deletion of nullspace map.");
+                return;
+            }
+
             if (!_maps.Contains(mapID))
             {
                 throw new InvalidOperationException($"Attempted to delete nonexistant map '{mapID}'");
             }
-
-            if(mapID == MapId.Nullspace)
-                throw new InvalidOperationException("Trying to delete nullspace.");
 
             // grids are cached because Delete modifies collection
             foreach (var grid in GetAllMapGrids(mapID).ToList())
@@ -220,7 +223,7 @@ namespace Robust.Shared.Map
             _grids.Add(actualID, grid);
             Logger.DebugS("map", $"Creating new grid {actualID}");
 
-            if(actualID != GridId.Nullspace)
+            if(actualID != GridId.Nullspace) // nullspace default grid is not bound to an entity
             {
                 // the entity may already exist from map deserialization
                 IMapGridComponent result = null;
@@ -300,10 +303,11 @@ namespace Robust.Shared.Map
 
         public void DeleteGrid(GridId gridID)
         {
-            var grid = _grids[gridID];
+            // nullspace grid cannot be deleted
+            if(gridID == GridId.Nullspace)
+                return;
 
-            if(GetDefaultGridId(grid.ParentMapId) == gridID)
-                throw new InvalidOperationException($"Tried to delete the default grid {gridID} of map {grid.ParentMapId}");
+            var grid = _grids[gridID];
 
             grid.Dispose();
             _grids.Remove(grid.Index);

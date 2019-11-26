@@ -16,6 +16,7 @@ namespace Robust.Shared.GameObjects.Components.Map
     {
         GridId GridIndex { get; }
         IMapGrid Grid { get; }
+        void ClearGridId();
     }
 
     /// <inheritdoc cref="IMapGridComponent"/>
@@ -47,12 +48,20 @@ namespace Robust.Shared.GameObjects.Components.Map
         /// <inheritdoc />
         public IMapGrid Grid => _mapManager.GetGrid(_gridIndex);
 
+        public void ClearGridId()
+        {
+            _gridIndex = GridId.Nullspace;
+        }
+
         public override void OnRemove()
         {
-            if(_mapManager.GridExists(_gridIndex))
+            if(GridIndex != GridId.Nullspace) // MapManager won't let us delete nullspace, no point trying
             {
-                Logger.DebugS("map", $"Entity {Owner.Uid} removed grid component, removing bound grid {_gridIndex}");
-                _mapManager.DeleteGrid(_gridIndex);
+                if(_mapManager.GridExists(_gridIndex))
+                {
+                    Logger.DebugS("map", $"Entity {Owner.Uid} removed grid component, removing bound grid {_gridIndex}");
+                    _mapManager.DeleteGrid(_gridIndex);
+                }
             }
 
             base.OnRemove();

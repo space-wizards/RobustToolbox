@@ -92,13 +92,19 @@ namespace Robust.Shared.Map
         {
             get
             {
+                if(IsDefaultGrid) // Default grids cannot be moved.
+                    return Vector2.Zero;
+
                 //TODO: Make grids real parents of entities.
                 if(GridEntity.IsValid())
-                return IoCManager.Resolve<IEntityManager>().GetEntity(GridEntity).Transform.WorldPosition;
+                    return IoCManager.Resolve<IEntityManager>().GetEntity(GridEntity).Transform.WorldPosition;
                 return Vector2.Zero;
             }
             set
             {
+                if (IsDefaultGrid) // Default grids cannot be moved.
+                    return;
+
                 IoCManager.Resolve<IEntityManager>().GetEntity(GridEntity).Transform.WorldPosition = value;
                 LastModifiedTick = _mapManager.GameTiming.CurTick;
             }

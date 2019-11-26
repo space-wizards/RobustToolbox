@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map
@@ -17,11 +16,6 @@ namespace Robust.Shared.Map
         ///     True if we are the default grid of our map.
         /// </summary>
         bool IsDefaultGrid { get; }
-
-        /// <summary>
-        ///     The map that this grid exists inside of.
-        /// </summary>
-        IMap ParentMap { get; }
 
         /// <summary>
         ///     The integer ID of the map this grid is currently located within.

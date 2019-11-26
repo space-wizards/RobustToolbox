@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Interfaces.Map
@@ -22,11 +23,9 @@ namespace Robust.Shared.Interfaces.Map
     public interface IMapManager
     {
         /// <summary>
-        ///     The default <see cref="IMap" /> that is always available. Equivalent to SS13 Null space.
+        ///     The default <see cref="MapId" /> that is always available. Equivalent to SS13 Null space.
         /// </summary>
-        IMap DefaultMap { get; }
-
-        IEnumerable<IMap> GetAllMaps();
+        MapId DefaultMap { get; }
 
         IEnumerable<IMapGrid> GetAllGrids();
 
@@ -50,6 +49,7 @@ namespace Robust.Shared.Interfaces.Map
         /// <param name="mapID">
         ///     If provided, the new map will use this ID. If not provided, a new ID will be selected automatically.
         /// </param>
+        /// <param name="defaultGridID"></param>
         /// <param name="defaultGapID">
         ///     If provided, the new map will use this grid ID as default grid. If not provided, a new ID will be selected automatically.
         /// </param>
@@ -57,7 +57,7 @@ namespace Robust.Shared.Interfaces.Map
         /// <exception cref="InvalidOperationException">
         ///     Throw if an explicit ID for the map or default grid is passed and a map or grid with the specified ID already exists, respectively.
         /// </exception>
-        IMap CreateMap(MapId? mapID = null, GridId? defaultGridID = null);
+        MapId CreateMap(MapId? mapID = null, GridId? defaultGridID = null);
 
         /// <summary>
         ///     Check whether a map with specified ID exists.
@@ -66,9 +66,10 @@ namespace Robust.Shared.Interfaces.Map
         /// <returns>True if the map exists, false otherwise.</returns>
         bool MapExists(MapId mapID);
 
-        IMap GetMap(MapId mapID);
+        IEnumerable<MapId> GetAllMapIds();
 
-        bool TryGetMap(MapId mapID, out IMap map);
+        IMapGrid GetDefaultGrid(MapId mapID);
+        GridId GetDefaultGridId(MapId mapID);
 
         void DeleteMap(MapId mapID);
 
@@ -76,6 +77,10 @@ namespace Robust.Shared.Interfaces.Map
         IMapGrid GetGrid(GridId gridID);
         bool TryGetGrid(GridId gridId, out IMapGrid grid);
         bool GridExists(GridId gridID);
+        IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId);
+        IMapGrid FindGridAt(MapId mapId, Vector2 worldPos);
+        IMapGrid FindGridAt(MapCoordinates mapCoords);
+        IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea);
         void DeleteGrid(GridId gridID);
 
         /// <summary>

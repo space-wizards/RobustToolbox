@@ -4,6 +4,7 @@ using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Enums;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
@@ -32,17 +33,20 @@ namespace Robust.Server.Console.Commands
             var mapMgr = IoCManager.Resolve<IMapManager>();
 
             var position = new Vector2(posX, posY);
-            var entity = player.AttachedEntity;
-            var transform = entity.Transform;
+            var transform = player.AttachedEntity?.Transform;
+
+            if(transform == null)
+                return;
 
             transform.DetachParent();
 
-            IMapGrid grid;
-            if (args.Length == 3 && int.TryParse(args[2], out var mapId) && mapMgr.TryGetMap(new MapId(mapId), out var map))
-                grid = map.FindGridAt(position);
+            MapId mapId;
+            if (args.Length == 3 && int.TryParse(args[2], out var intMapId))
+                mapId = new MapId(intMapId);
             else
-                grid = mapMgr.GetGrid(transform.GridPosition.GridID).ParentMap.FindGridAt(position);
+                mapId = transform.MapID;
 
+            var grid = mapMgr.FindGridAt(mapId, position);
             var gridPos = grid.WorldToLocal(position);
             transform.GridPosition = new GridCoordinates(gridPos, grid);
 

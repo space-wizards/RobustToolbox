@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Timing;
@@ -20,7 +20,6 @@ namespace Robust.Server.Timing
         [ViewVariables] private readonly HashSet<MapId> _pausedMaps = new HashSet<MapId>();
         [ViewVariables] private readonly HashSet<MapId> _unInitializedMaps = new HashSet<MapId>();
 
-        public void SetMapPaused(IMap map, bool paused) => SetMapPaused(map.Index, paused);
         public void SetMapPaused(MapId mapId, bool paused)
         {
             if (paused)
@@ -33,7 +32,6 @@ namespace Robust.Server.Timing
             }
         }
 
-        public void DoMapInitialize(IMap map) => DoMapInitialize(map.Index);
         public void DoMapInitialize(MapId mapId)
         {
             if (IsMapInitialized(mapId))
@@ -68,13 +66,11 @@ namespace Robust.Server.Timing
             }
         }
 
-        public void AddUninitializedMap(IMap map) => AddUninitializedMap(map.Index);
         public void AddUninitializedMap(MapId mapId)
         {
             _unInitializedMaps.Add(mapId);
         }
 
-        public bool IsMapPaused(IMap map) => IsMapPaused(map.Index);
         public bool IsMapPaused(MapId mapId) => _pausedMaps.Contains(mapId) || _unInitializedMaps.Contains(mapId);
         public bool IsGridPaused(IMapGrid grid) => IsMapPaused(grid.ParentMapId);
 
@@ -84,7 +80,6 @@ namespace Robust.Server.Timing
             return IsGridPaused(grid);
         }
 
-        public bool IsMapInitialized(IMap map) => IsMapInitialized(map.Index);
         public bool IsMapInitialized(MapId mapId)
         {
             return !_unInitializedMaps.Contains(mapId);
@@ -94,8 +89,8 @@ namespace Robust.Server.Timing
         {
             _mapManager.MapDestroyed += (sender, args) =>
             {
-                _pausedMaps.Remove(args.Map.Index);
-                _unInitializedMaps.Add(args.Map.Index);
+                _pausedMaps.Remove(args.Map);
+                _unInitializedMaps.Add(args.Map);
             };
         }
     }

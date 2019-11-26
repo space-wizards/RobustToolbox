@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -24,10 +23,7 @@ namespace Robust.Shared.Map
         public GameTick CurTick => _mapManager.GameTiming.CurTick;
 
         /// <inheritdoc />
-        public bool IsDefaultGrid => ParentMap.DefaultGrid == this;
-
-        /// <inheritdoc />
-        public IMap ParentMap => _mapManager.GetMap(ParentMapId);
+        public bool IsDefaultGrid => _mapManager.GetDefaultGridId(ParentMapId) == Index;
 
         /// <inheritdoc />
         public MapId ParentMapId { get; set; }
@@ -362,7 +358,8 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public GridCoordinates LocalToWorld(GridCoordinates posLocal)
         {
-            return new GridCoordinates(posLocal.Position + WorldPosition, _mapManager.GetGrid(posLocal.GridID).ParentMap);
+            return new GridCoordinates(posLocal.Position + WorldPosition,
+                _mapManager.GetDefaultGridId(_mapManager.GetGrid(posLocal.GridID).ParentMapId));
         }
 
         /// <inheritdoc />

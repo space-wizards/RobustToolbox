@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Robust.Shared.Interfaces.Map;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -81,7 +80,9 @@ namespace Robust.Server.Maps
             return Convert.ToBase64String(barr);
         }
 
-        public static void DeserializeGrid(IMapManager mapMan, IMap map, ref GridId? gridId, YamlMappingNode info, YamlSequenceNode chunks, IReadOnlyDictionary<ushort, string> tileDefMapping, ITileDefinitionManager tileDefinitionManager)
+        public static void DeserializeGrid(IMapManager mapMan, MapId mapId, ref GridId? gridId, YamlMappingNode info,
+            YamlSequenceNode chunks, IReadOnlyDictionary<ushort, string> tileDefMapping,
+            ITileDefinitionManager tileDefinitionManager)
         {
             ushort csz = 0;
             ushort tsz = 0;
@@ -102,7 +103,7 @@ namespace Robust.Server.Maps
                     worldPos = kvInfo.Value.AsVector2();
             }
 
-            var grid = map.CreateGrid(gridId, csz, sgsz);
+            var grid = mapMan.CreateGrid(mapId, gridId);
 
             gridId = grid.Index;
 

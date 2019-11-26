@@ -19,11 +19,11 @@ namespace Robust.Client.Graphics.Clyde
         private void _drawGrids(Box2 worldBounds)
         {
             var mapId = _eyeManager.CurrentMap;
-            if (!_mapManager.TryGetMap(mapId, out var map))
+            if (!_mapManager.MapExists(mapId))
             {
                 // fall back to the default eye's map
                 _eyeManager.CurrentEye = null;
-                map = _mapManager.GetMap(_eyeManager.CurrentMap);
+                mapId = _eyeManager.CurrentMap;
             }
 
             var atlasTexture = _tileDefinitionManager.TileTextureAtlas;
@@ -52,7 +52,7 @@ namespace Robust.Client.Graphics.Clyde
             gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
             gridProgram.SetUniform(UniIModulate, Color.White);
 
-            foreach (var mapGrid in map.FindGridsIntersecting(worldBounds))
+            foreach (var mapGrid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
                 var grid = (IMapGridInternal) mapGrid;
 

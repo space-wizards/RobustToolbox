@@ -28,9 +28,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
   - type: Transform
 ";
 
-        private IMap MapA;
+        private MapId MapA;
         private IMapGrid GridA;
-        private IMap MapB;
+        private MapId MapB;
         private IMapGrid GridB;
 
         [OneTimeSetUp]
@@ -45,10 +45,10 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             // build the net dream
             MapA = MapManager.CreateMap();
-            GridA = MapA.CreateGrid();
+            GridA = MapManager.CreateGrid(MapA);
 
             MapB = MapManager.CreateMap();
-            GridB = MapB.CreateGrid();
+            GridB = MapManager.CreateGrid(MapB);
 
             //NOTE: The grids have not moved, so we can assert worldpos == localpos for the test
         }

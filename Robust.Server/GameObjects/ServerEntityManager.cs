@@ -47,7 +47,7 @@ namespace Robust.Server.GameObjects
             entity.Transform.GridPosition = coordinates;
             InitializeAndStartEntity(entity);
             var grid = _mapManager.GetGrid(coordinates.GridID);
-            if (_pauseManager.IsMapInitialized(grid.ParentMap))
+            if (_pauseManager.IsMapInitialized(grid.ParentMapId))
             {
                 entity.RunMapInit();
             }

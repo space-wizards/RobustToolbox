@@ -59,14 +59,6 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
-        ///     Construct new grid local coordinates relative to the default grid of a map.
-        /// </summary>
-        /// <param name="position">Position relative to the default grid.</param>
-        /// <param name="map">Map to use the default grid of.</param>
-        public GridCoordinates(Vector2 position, IMap map)
-            : this(position, map.DefaultGrid.Index) { }
-
-        /// <summary>
         ///     Constructs new grid local coordinates.
         /// </summary>
         /// <param name="x">X axis of the position.</param>
@@ -85,15 +77,6 @@ namespace Robust.Shared.Map
             : this(new Vector2(x, y), gridId) { }
 
         /// <summary>
-        ///     Construct new grid local coordinates relative to the default grid of a map.
-        /// </summary>
-        /// <param name="x">X axis of the position.</param>
-        /// <param name="y">Y axis of the position.</param>
-        /// <param name="map">Map to use the default grid of.</param>
-        public GridCoordinates(float x, float y, IMap map)
-            : this(new Vector2(x, y), map) { }
-
-        /// <summary>
         ///     Converts this set of coordinates to another grid, preserving the same world position.
         /// </summary>
         public GridCoordinates ConvertToGrid(IMapManager mapManager, IMapGrid argGrid)
@@ -106,7 +89,7 @@ namespace Robust.Shared.Map
         /// </summary>
         public GridCoordinates ToWorld(IMapManager mapManager)
         {
-            return ConvertToGrid(mapManager, mapManager.GetGrid(GridID).ParentMap.DefaultGrid);
+            return ConvertToGrid(mapManager, mapManager.GetDefaultGrid(mapManager.GetGrid(GridID).ParentMapId));
         }
 
         /// <summary>
@@ -126,7 +109,7 @@ namespace Robust.Shared.Map
         /// <returns>True if the two points are within a given range.</returns>
         public bool InRange(IMapManager mapManager, GridCoordinates otherCoords, float range)
         {
-            if (mapManager.GetGrid(otherCoords.GridID).ParentMap != mapManager.GetGrid(GridID).ParentMap)
+            if (mapManager.GetGrid(otherCoords.GridID).ParentMapId != mapManager.GetGrid(GridID).ParentMapId)
             {
                 return false;
             }

@@ -320,7 +320,7 @@ namespace Robust.Client.Placement
 
         private void HandleTileChanged(object sender, TileChangedEventArgs args)
         {
-            var coords = MapManager.GetMap(args.NewTile.MapIndex).GetGrid(args.NewTile.GridIndex).GridTileToLocal(args.NewTile.GridIndices);
+            var coords = MapManager.GetGrid(args.NewTile.GridIndex).GridTileToLocal(args.NewTile.GridIndices);
             _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
         }
 

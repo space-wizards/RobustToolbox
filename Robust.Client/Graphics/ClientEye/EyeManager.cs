@@ -88,9 +88,10 @@ namespace Robust.Client.Graphics.ClientEye
             var mapPos = ScreenToMap(point).Position;
 
             IMapGrid grid;
-            if (_mapManager.TryGetMap(currentEye.Position.MapId, out var map))
+            var mapId = currentEye.Position.MapId;
+            if (_mapManager.MapExists(mapId))
             {
-                grid = map.FindGridAt(mapPos);
+                grid = _mapManager.FindGridAt(mapId, mapPos);
             }
             else
             {

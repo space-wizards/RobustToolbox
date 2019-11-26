@@ -44,12 +44,16 @@ namespace Robust.Shared.Audio
         /// </summary>
         public AudioMixTarget MixTarget { get; set; }
 
+        public bool Loop { get; set; }
+
+        public float PlayOffsetSeconds { get; set; }
+
         // For the max distance value: it's 2000 in Godot, but I assume that's PIXELS due to the 2D positioning,
         // so that's divided by 32 (EyeManager.PIXELSPERMETER).
         /// <summary>
         ///     The "default" audio configuration.
         /// </summary>
-        public static readonly AudioParams Default = new AudioParams(0, 1, "Master", 62.5f, 1, AudioMixTarget.Stereo);
+        public static readonly AudioParams Default = new AudioParams(0, 1, "Master", 62.5f, 1, AudioMixTarget.Stereo, false, 0f);
 
         public void ExposeData(ObjectSerializer serializer)
         {
@@ -59,9 +63,12 @@ namespace Robust.Shared.Audio
             MaxDistance = serializer.ReadDataField("maxdistance", 62.5f);
             Attenuation = serializer.ReadDataField("attenuation", 1f);
             MixTarget = serializer.ReadDataField("mixtarget", AudioMixTarget.Stereo);
+            Loop = serializer.ReadDataField("loop", false);
+            PlayOffsetSeconds = serializer.ReadDataField("playoffset", 0f);
         }
 
-        public AudioParams(float volume, float pitchScale, string busName, float maxDistance, float attenuation, AudioMixTarget mixTarget) : this()
+        public AudioParams(float volume, float pitchScale, string busName, float maxDistance, float attenuation,
+            AudioMixTarget mixTarget, bool loop, float playOffsetSeconds) : this()
         {
             Volume = volume;
             PitchScale = pitchScale;
@@ -69,6 +76,8 @@ namespace Robust.Shared.Audio
             MaxDistance = maxDistance;
             Attenuation = attenuation;
             MixTarget = mixTarget;
+            Loop = loop;
+            PlayOffsetSeconds = playOffsetSeconds;
         }
 
         /// <summary>
@@ -139,6 +148,26 @@ namespace Robust.Shared.Audio
         {
             var me = this;
             me.MixTarget = mixTarget;
+            return me;
+        }
+
+        /// <summary>
+        ///     Returns a copy of this instance with a loop set, for easy chaining.
+        /// </summary>
+        /// <param name="loop">The new loop.</param>
+        [Pure]
+        public AudioParams WithLoop(bool loop)
+        {
+            var me = this;
+            me.Loop = loop;
+            return me;
+        }
+
+        [Pure]
+        public AudioParams WithPlayOffset(float offset)
+        {
+            var me = this;
+            me.PlayOffsetSeconds = offset;
             return me;
         }
     }

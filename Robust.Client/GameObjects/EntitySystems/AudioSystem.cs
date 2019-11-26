@@ -1,4 +1,5 @@
-﻿using Robust.Client.Audio;
+﻿using System;
+using Robust.Client.Audio;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Audio;
@@ -14,9 +15,11 @@ using Robust.Shared.Map;
 using Robust.Shared.Utility;
 using System.Collections.Generic;
 using System.IO;
+using JetBrains.Annotations;
 
 namespace Robust.Client.GameObjects.EntitySystems
 {
+    [UsedImplicitly]
     public class AudioSystem : EntitySystem
     {
 #pragma warning disable 649
@@ -45,6 +48,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                 {
                     stream.Source.Dispose();
                     stream.Done = true;
+                    stream.DoPlaybackDone();
                     continue;
                 }
 
@@ -66,9 +70,9 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// </summary>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="audioParams"></param>
-        public void Play(string filename, AudioParams? audioParams = null)
+        public IPlayingAudioStream Play(string filename, AudioParams? audioParams = null)
         {
-            Play(resourceCache.GetResource<AudioResource>(new ResourcePath(filename)), audioParams);
+            return Play(resourceCache.GetResource<AudioResource>(new ResourcePath(filename)), audioParams);
         }
 
         /// <summary>
@@ -76,22 +80,19 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// </summary>
         /// <param name="stream">The audio stream to play.</param>
         /// <param name="audioParams"></param>
-        public void Play(AudioStream stream, AudioParams? audioParams = null)
+        public IPlayingAudioStream Play(AudioStream stream, AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
-            if (audioParams.HasValue)
-            {
-                source.SetPitch(audioParams.Value.PitchScale);
-                source.SetVolume(audioParams.Value.Volume);
-            }
+            ApplyAudioParams(audioParams, source);
 
             source.SetGlobal();
             source.StartPlaying();
             var playing = new PlayingStream
             {
-                Source = source,
+                Source = source
             };
             PlayingClydeStreams.Add(playing);
+            return playing;
         }
 
         /// <summary>
@@ -100,9 +101,9 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="entity">The entity "emitting" the audio.</param>
         /// <param name="audioParams"></param>
-        public void Play(string filename, IEntity entity, AudioParams? audioParams = null)
+        public IPlayingAudioStream Play(string filename, IEntity entity, AudioParams? audioParams = null)
         {
-            Play(resourceCache.GetResource<AudioResource>(new ResourcePath(filename)), entity, audioParams);
+            return Play(resourceCache.GetResource<AudioResource>(new ResourcePath(filename)), entity, audioParams);
         }
 
         /// <summary>
@@ -111,15 +112,11 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="stream">The audio stream to play.</param>
         /// <param name="entity">The entity "emitting" the audio.</param>
         /// <param name="audioParams"></param>
-        public void Play(AudioStream stream, IEntity entity, AudioParams? audioParams = null)
+        public IPlayingAudioStream Play(AudioStream stream, IEntity entity, AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
             source.SetPosition(entity.Transform.WorldPosition);
-            if (audioParams.HasValue)
-            {
-                source.SetPitch(audioParams.Value.PitchScale);
-                source.SetVolume(audioParams.Value.Volume);
-            }
+            ApplyAudioParams(audioParams, source);
 
             source.StartPlaying();
             var playing = new PlayingStream
@@ -128,6 +125,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                 TrackingEntity = entity,
             };
             PlayingClydeStreams.Add(playing);
+            return playing;
         }
 
         /// <summary>
@@ -136,9 +134,9 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         /// <param name="audioParams"></param>
-        public void Play(string filename, GridCoordinates coordinates, AudioParams? audioParams = null)
+        public IPlayingAudioStream Play(string filename, GridCoordinates coordinates, AudioParams? audioParams = null)
         {
-            Play(resourceCache.GetResource<AudioResource>(new ResourcePath(filename)), coordinates, audioParams);
+            return Play(resourceCache.GetResource<AudioResource>(new ResourcePath(filename)), coordinates, audioParams);
         }
 
         /// <summary>
@@ -147,23 +145,34 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="stream">The audio stream to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         /// <param name="audioParams"></param>
-        public void Play(AudioStream stream, GridCoordinates coordinates, AudioParams? audioParams = null)
+        public IPlayingAudioStream Play(AudioStream stream, GridCoordinates coordinates,
+            AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
             source.SetPosition(coordinates.ToWorld(_mapManager).Position);
-            if (audioParams.HasValue)
-            {
-                source.SetPitch(audioParams.Value.PitchScale);
-                source.SetVolume(audioParams.Value.Volume);
-            }
+            ApplyAudioParams(audioParams, source);
 
             source.StartPlaying();
             var playing = new PlayingStream
             {
                 Source = source,
-                TrackingCoordinates = coordinates
+                TrackingCoordinates = coordinates,
             };
             PlayingClydeStreams.Add(playing);
+            return playing;
+        }
+
+        private static void ApplyAudioParams(AudioParams? audioParams, IClydeAudioSource source)
+        {
+            if (!audioParams.HasValue)
+            {
+                return;
+            }
+
+            source.SetPitch(audioParams.Value.PitchScale);
+            source.SetVolume(audioParams.Value.Volume);
+            source.SetPlaybackPosition(audioParams.Value.PlayOffsetSeconds);
+            source.IsLooping = audioParams.Value.Loop;
         }
 
         public override void HandleNetMessage(INetChannel channel, EntitySystemMessage message)
@@ -205,12 +214,31 @@ namespace Robust.Client.GameObjects.EntitySystems
             }
         }
 
-        private class PlayingStream
+        private class PlayingStream : IPlayingAudioStream
         {
             public IClydeAudioSource Source;
             public IEntity TrackingEntity;
             public GridCoordinates? TrackingCoordinates;
             public bool Done;
+
+            public void Stop()
+            {
+                Source.StopPlaying();
+            }
+
+            public event Action PlaybackDone;
+
+            public void DoPlaybackDone()
+            {
+                PlaybackDone?.Invoke();
+            }
         }
+    }
+
+    public interface IPlayingAudioStream
+    {
+        void Stop();
+
+        event Action PlaybackDone;
     }
 }

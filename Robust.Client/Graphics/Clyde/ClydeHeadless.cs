@@ -117,7 +117,9 @@ namespace Robust.Client.Graphics.Clyde
         private class DummyAudioSource : IClydeAudioSource
         {
             public static DummyAudioSource Instance { get; } = new DummyAudioSource();
+
             public bool IsPlaying => default;
+            public bool IsLooping { get; set; }
 
             public void Dispose()
             {
@@ -125,6 +127,11 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void StartPlaying()
+            {
+                // Nada.
+            }
+
+            public void StopPlaying()
             {
                 // Nada.
             }
@@ -144,7 +151,17 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
+            public void SetLooping()
+            {
+                // Nada.
+            }
+
             public void SetVolume(float decibels)
+            {
+                // Nada.
+            }
+
+            public void SetPlaybackPosition(float seconds)
             {
                 // Nada.
             }

@@ -151,7 +151,7 @@ namespace Robust.Client.Graphics.Clyde
             while (_bufferedSourceDisposeQueue.TryDequeue(out var handle))
             {
                 Logger.DebugS("oal", "Cleaning out buffered source {0} which finalized in another thread.", handle);
-                AL.DeleteSource((int)handle);
+                AL.DeleteSource((int) handle);
                 _checkAlError();
                 _bufferedAudioSources.Remove(handle);
             }
@@ -159,7 +159,7 @@ namespace Robust.Client.Graphics.Clyde
             // Clear out finalized audio buffers.
             while (_bufferDisposeQueue.TryDequeue(out var handle))
             {
-                AL.DeleteBuffer((int)handle);
+                AL.DeleteBuffer((int) handle);
                 _checkAlError();
             }
         }
@@ -182,7 +182,7 @@ namespace Robust.Client.Graphics.Clyde
             var unsignedBufferHandles = new uint[bufferHandles.Length];
 
             for (var i = 0; i < bufferHandles.Length; i++)
-                unsignedBufferHandles[i] = (uint)bufferHandles[i];
+                unsignedBufferHandles[i] = (uint) bufferHandles[i];
 
             var audioSource = new BufferedAudioSource(this, source, unsignedBufferHandles);
             _bufferedAudioSources.Add(source, new WeakReference<BufferedAudioSource>(audioSource));
@@ -356,6 +356,13 @@ namespace Robust.Client.Graphics.Clyde
                 _checkAlError();
             }
 
+            public void StopPlaying()
+            {
+                _checkDisposed();
+                AL.SourceStop(SourceHandle);
+                _checkAlError();
+            }
+
             public bool IsPlaying
             {
                 get
@@ -363,6 +370,23 @@ namespace Robust.Client.Graphics.Clyde
                     _checkDisposed();
                     var state = AL.GetSourceState(SourceHandle);
                     return state == ALSourceState.Playing;
+                }
+            }
+
+            public bool IsLooping
+            {
+                get
+                {
+                    _checkDisposed();
+                    AL.GetSource(SourceHandle, ALSourceb.Looping, out var ret);
+                    _checkAlError();
+                    return ret;
+                }
+                set
+                {
+                    _checkDisposed();
+                    AL.Source(SourceHandle, ALSourceb.Looping, value);
+                    _checkAlError();
                 }
             }
 
@@ -377,6 +401,13 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _checkDisposed();
                 AL.Source(SourceHandle, ALSourcef.Gain, (float) Math.Pow(10, decibels / 10));
+                _checkAlError();
+            }
+
+            public void SetPlaybackPosition(float seconds)
+            {
+                _checkDisposed();
+                AL.Source(SourceHandle, ALSourcef.SecOffset, seconds);
                 _checkAlError();
             }
 
@@ -475,6 +506,14 @@ namespace Robust.Client.Graphics.Clyde
                 _checkAlError();
             }
 
+            public void StopPlaying()
+            {
+                _checkDisposed();
+                // ReSharper disable once PossibleInvalidOperationException
+                AL.SourceStop(SourceHandle.Value);
+                _checkAlError();
+            }
+
             public bool IsPlaying
             {
                 get
@@ -486,6 +525,12 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            public bool IsLooping
+            {
+                get => throw new NotImplementedException();
+                set => throw new NotImplementedException();
+            }
+
             public void SetGlobal()
             {
                 _checkDisposed();
@@ -495,11 +540,24 @@ namespace Robust.Client.Graphics.Clyde
                 _checkAlError();
             }
 
+            public void SetLooping()
+            {
+                // TODO?waaaaddDDDDD
+            }
+
             public void SetVolume(float decibels)
             {
                 _checkDisposed();
                 // ReSharper disable once PossibleInvalidOperationException
                 AL.Source(SourceHandle.Value, ALSourcef.Gain, (float) Math.Pow(10, decibels / 10));
+                _checkAlError();
+            }
+
+            public void SetPlaybackPosition(float seconds)
+            {
+                _checkDisposed();
+                // ReSharper disable once PossibleInvalidOperationException
+                AL.Source(SourceHandle.Value, ALSourcef.SecOffset, seconds);
                 _checkAlError();
             }
 
@@ -545,8 +603,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 else
                 {
-
-                    AL.DeleteSource((int)SourceHandle.Value);
+                    AL.DeleteSource((int) SourceHandle.Value);
                     AL.DeleteBuffers(BufferHandles);
                     _master._bufferedAudioSources.Remove(SourceHandle.Value);
                     _checkAlError();
@@ -575,7 +632,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _checkDisposed();
                 var entries = Math.Min(Math.Min(handles.Length, BufferHandles.Length), GetNumberOfBuffersProcessed());
-                fixed(uint* ptr = handles)
+                fixed (uint* ptr = handles)
                     // ReSharper disable once PossibleInvalidOperationException
                     AL.SourceUnqueueBuffers(SourceHandle.Value, entries, ptr);
 
@@ -588,12 +645,13 @@ namespace Robust.Client.Graphics.Clyde
                 _checkDisposed();
 
                 if (handle >= BufferHandles.Length)
-                    throw new ArgumentOutOfRangeException(nameof(handle), $"Got {handle}. Expected less than {BufferHandles.Length}");
+                    throw new ArgumentOutOfRangeException(nameof(handle),
+                        $"Got {handle}. Expected less than {BufferHandles.Length}");
 
                 fixed (ushort* ptr = data)
                 {
                     AL.BufferData(BufferHandles[handle], _mono ? ALFormat.Mono16 : ALFormat.Stereo16, (IntPtr) ptr,
-                        _mono ? data.Length/2 * sizeof(ushort) : data.Length * sizeof(ushort), SampleRate);
+                        _mono ? data.Length / 2 * sizeof(ushort) : data.Length * sizeof(ushort), SampleRate);
                 }
             }
 
@@ -607,12 +665,12 @@ namespace Robust.Client.Graphics.Clyde
                 for (var i = 0; i < realHandles.Length; i++)
                 {
                     var handle = realHandles[i];
-                    if(handle >= BufferHandles.Length)
+                    if (handle >= BufferHandles.Length)
                         throw new ArgumentOutOfRangeException(nameof(handles), $"Invalid handle with index {i}!");
                     realHandles[i] = BufferHandles[handle];
                 }
 
-                fixed(uint* ptr = realHandles)
+                fixed (uint* ptr = realHandles)
                     // ReSharper disable once PossibleInvalidOperationException
                     AL.SourceQueueBuffers(SourceHandle.Value, handles.Length, ptr);
             }
@@ -630,6 +688,7 @@ namespace Robust.Client.Graphics.Clyde
                     WriteBuffer(BufferMap[BufferHandles[i]], span);
                     handles[i] = BufferMap[BufferHandles[i]];
                 }
+
                 QueueBuffers(handles);
             }
         }

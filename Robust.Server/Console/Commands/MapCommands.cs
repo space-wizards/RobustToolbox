@@ -43,6 +43,33 @@ namespace Robust.Server.Console.Commands
         }
     }
 
+    class RemoveMapCommand : IClientCommand
+    {
+        public string Command => "rmmap";
+        public string Description => "Removes a map from the world. You cannot remove nullspace.";
+        public string Help => "rmmap <mapId>";
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            if (args.Length != 1)
+            {
+                shell.SendText(player, "Wrong number of args.");
+                return;
+            }
+
+            var mapId = new MapId(int.Parse(args[0]));
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
+            if (!mapManager.MapExists(mapId))
+            {
+                shell.SendText(player, $"Map {mapId.Value} does not exist.");
+                return;
+            }
+
+            mapManager.DeleteMap(mapId);
+            shell.SendText(player, $"Map {mapId.Value} was removed.");
+        }
+    }
+
     public class SaveBp : IClientCommand
     {
         public string Command => "savebp";
@@ -290,6 +317,33 @@ namespace Robust.Server.Console.Commands
 
                 shell.SendText(player, "Grid was teleported.");
             }
+        }
+    }
+
+    class RemoveGridCommand : IClientCommand
+    {
+        public string Command => "rmgrid";
+        public string Description => "Removes a grid from a map. You cannot remove the default grid.";
+        public string Help => "rmgrid <gridId>";
+        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        {
+            if (args.Length != 1)
+            {
+                shell.SendText(player, "Wrong number of args.");
+                return;
+            }
+
+            var gridId = new GridId(int.Parse(args[0]));
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
+            if (!mapManager.GridExists(gridId))
+            {
+                shell.SendText(player, $"Grid {gridId.Value} does not exist.");
+                return;
+            }
+
+            mapManager.DeleteGrid(gridId);
+            shell.SendText(player, $"Grid {gridId.Value} was removed.");
         }
     }
 

@@ -186,7 +186,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void BuildEntityList(string searchStr = null)
         {
-            PrototypeList.DisposeAllChildren();
+            PrototypeList.RemoveAllChildren();
             SelectedButton = null;
             searchStr = searchStr?.ToLowerInvariant();
 

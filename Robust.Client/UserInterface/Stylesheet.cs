@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
 
@@ -144,11 +145,14 @@ namespace Robust.Client.UserInterface
 
     public sealed class SelectorElement : Selector
     {
+        private readonly string[] _elementClasses;
+        private readonly string[] _pseudoClasses;
+
         public SelectorElement(
             Type elementType,
-            IReadOnlyCollection<string> elementClasses,
+            IEnumerable<string> elementClasses,
             string elementId,
-            IReadOnlyCollection<string> pseudoClass)
+            IEnumerable<string> pseudoClass)
         {
             if (elementType != null)
             {
@@ -164,9 +168,9 @@ namespace Robust.Client.UserInterface
             }
 
             ElementType = elementType;
-            ElementClasses = elementClasses;
+            _elementClasses = elementClasses?.ToArray();
             ElementId = elementId;
-            PseudoClass = pseudoClass;
+            _pseudoClasses = pseudoClass?.ToArray();
         }
 
         public static SelectorElement Type(Type elementType)
@@ -185,10 +189,9 @@ namespace Robust.Client.UserInterface
         }
 
         public Type ElementType { get; }
-        public IReadOnlyCollection<string> ElementClasses { get; }
+        public IReadOnlyList<string> ElementClasses => _elementClasses;
         public string ElementId { get; }
-
-        public IReadOnlyCollection<string> PseudoClass { get; }
+        public IReadOnlyList<string> PseudoClasses => _pseudoClasses;
 
         public override bool Matches(Control control)
         {
@@ -202,9 +205,9 @@ namespace Robust.Client.UserInterface
                 return false;
             }
 
-            if (ElementClasses != null)
+            if (_elementClasses != null)
             {
-                foreach (var elementClass in ElementClasses)
+                foreach (var elementClass in _elementClasses)
                 {
                     if (!control.HasStyleClass(elementClass))
                     {
@@ -213,9 +216,9 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            if (PseudoClass != null)
+            if (_pseudoClasses != null)
             {
-                foreach (var elementClass in PseudoClass)
+                foreach (var elementClass in _pseudoClasses)
                 {
                     if (!control.HasStylePseudoClass(elementClass))
                     {
@@ -230,7 +233,7 @@ namespace Robust.Client.UserInterface
         public override StyleSpecificity CalculateSpecificity()
         {
             var countId = ElementId == null ? 0 : 1;
-            var countClasses = (ElementClasses?.Count ?? 0) + (PseudoClass?.Count ?? 0);
+            var countClasses = (ElementClasses?.Count ?? 0) + (PseudoClasses?.Count ?? 0);
             var countTypes = 0;
             if (ElementType != null)
             {

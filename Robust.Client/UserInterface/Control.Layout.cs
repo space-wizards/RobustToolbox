@@ -482,7 +482,7 @@ namespace Robust.Client.UserInterface
             // TODO: this is a terrible hack.
             if (!(Parent is Container))
             {
-                DoLayoutUpdate();
+                UpdateLayout();
             }
         }
 

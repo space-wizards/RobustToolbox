@@ -21,12 +21,7 @@ namespace Robust.Client.UserInterface
     [PublicAPI]
     public partial class Control : IDisposable
     {
-        private readonly Dictionary<string, (Control, int orderedIndex)> _children =
-            new Dictionary<string, (Control, int)>();
-
         private readonly List<Control> _orderedChildren = new List<Control>();
-
-        private string _name;
 
         private bool _visible = true;
 
@@ -46,41 +41,7 @@ namespace Robust.Client.UserInterface
         ///     Names must be unique between the siblings of the control.
         /// </summary>
         [ViewVariables]
-        public string Name
-        {
-            get => _name;
-            set
-            {
-                if (value == _name)
-                {
-                    return;
-                }
-
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    throw new ArgumentException("New name may not be null or whitespace.", nameof(value));
-                }
-
-                var index = 0;
-                if (Parent != null)
-                {
-                    if (Parent.HasChild(value))
-                    {
-                        throw new ArgumentException($"Parent already has a child with name {value}.");
-                    }
-
-                    index = Parent._children[_name].orderedIndex;
-                    Parent._children.Remove(_name);
-                }
-
-                _name = value;
-
-                if (Parent != null)
-                {
-                    Parent._children[_name] = (this, index);
-                }
-            }
-        }
+        public string Name { get; set; }
 
         /// <summary>
         ///     Our parent inside the control tree.
@@ -355,8 +316,6 @@ namespace Robust.Client.UserInterface
             UserInterfaceManagerInternal = IoCManager.Resolve<IUserInterfaceManagerInternal>();
             StyleClasses = new StyleClassCollection(this);
             Children = new OrderedChildCollection(this);
-
-            Name = GetType().Name;
         }
 
         /// <summary>
@@ -493,20 +452,7 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            var origChildName = child.Name;
-            var childName = origChildName;
-            while (_children.ContainsKey(childName))
-            {
-                childName = $"{origChildName}_{++_uniqueChildId}";
-            }
-
-            if (origChildName != childName)
-            {
-                child.Name = childName;
-            }
-
             child.Parent = this;
-            _children[child.Name] = (child, _orderedChildren.Count);
             _orderedChildren.Add(child);
 
             child.Parented(this);
@@ -545,15 +491,12 @@ namespace Robust.Client.UserInterface
         /// </exception>
         public void RemoveChild(Control child)
         {
-            if (!_children.ContainsKey(child.Name) || _children[child.Name].Item1 != child)
+            if (child.Parent != this)
             {
                 throw new InvalidOperationException("The provided control is not a direct child of this control.");
             }
 
-            var index = _children[child.Name].orderedIndex;
-            _orderedChildren.RemoveAt(index);
-            _children.Remove(child.Name);
-            _updateChildIndices();
+            _orderedChildren.Remove(child);
 
             child.Parent = null;
 
@@ -606,27 +549,6 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
-        ///     Gets a child of this control with the specified name.
-        /// </summary>
-        /// <param name="name">
-        ///     The name of the child. This name can use / as delimiter to get grandchildren controls and so on.
-        /// </param>
-        /// <typeparam name="T">The type to cast the found control to, if it is found.</typeparam>
-        /// <returns>The control.</returns>
-        /// <exception cref="KeyNotFoundException">
-        ///     Thrown if the child with the specified name does not exist.
-        /// </exception>
-        /// <exception cref="InvalidCastException">
-        ///     Thrown if the control exists, but it is of the wrong type.
-        /// </exception>
-        public T GetChild<T>(string name) where T : Control
-        {
-            return (T) GetChild(name);
-        }
-
-        private static readonly char[] SectionSplitDelimiter = {'/'};
-
-        /// <summary>
         ///     Gets the immediate child of this control with the specified index.
         /// </summary>
         /// <param name="index">The index of the child.</param>
@@ -634,76 +556,6 @@ namespace Robust.Client.UserInterface
         public Control GetChild(int index)
         {
             return _orderedChildren[index];
-        }
-
-        /// <summary>
-        ///     Gets a child of this control with the specified name.
-        /// </summary>
-        /// <param name="name">
-        ///     The name of the child. This name can use / as delimiter to get grandchildren controls and so on.
-        /// </param>
-        /// <returns>The control.</returns>
-        /// <exception cref="KeyNotFoundException">
-        ///     Thrown if the child with the specified name does not exist.
-        /// </exception>
-        public Control GetChild(string name)
-        {
-            if (name.IndexOf('/') != -1)
-            {
-                var current = this;
-                foreach (var section in name.Split(SectionSplitDelimiter, StringSplitOptions.RemoveEmptyEntries))
-                {
-                    current = current.GetChild(section);
-                }
-
-                return current;
-            }
-
-            if (TryGetChild(name, out var control))
-            {
-                return control;
-            }
-
-            throw new KeyNotFoundException($"No child UI element {name}");
-        }
-
-        /// <summary>
-        ///     Try-get version of <see cref="GetChild{T}"/>.
-        ///     Note that it still throws if the node is found but the type invalid.
-        /// </summary>
-        public bool TryGetChild<T>(string name, out T child) where T : Control
-        {
-            if (_children.TryGetValue(name, out var control))
-            {
-                child = (T) control.Item1;
-                return true;
-            }
-
-            child = default;
-            return false;
-        }
-
-        /// <summary>
-        ///     Try-get version of <see cref="GetChild(string)"/>.
-        /// </summary>
-        public bool TryGetChild(string name, out Control child)
-        {
-            if (_children.TryGetValue(name, out var childEntry))
-            {
-                child = childEntry.Item1;
-                return true;
-            }
-
-            child = default;
-            return false;
-        }
-
-        /// <summary>
-        ///     See if this control has an immediate child with the specified name.
-        /// </summary>
-        public bool HasChild(string name)
-        {
-            return _children.ContainsKey(name);
         }
 
         /// <summary>
@@ -720,7 +572,7 @@ namespace Robust.Client.UserInterface
                 throw new InvalidOperationException("This control has no parent!");
             }
 
-            return Parent._children[Name].orderedIndex;
+            return Parent._orderedChildren.IndexOf(this);
         }
 
         /// <summary>
@@ -744,7 +596,6 @@ namespace Robust.Client.UserInterface
 
             Parent._orderedChildren.RemoveAt(posInParent);
             Parent._orderedChildren.Insert(position, this);
-            Parent._updateChildIndices();
             Parent.ChildMoved(this, posInParent, position);
         }
 
@@ -848,18 +699,6 @@ namespace Robust.Client.UserInterface
         /// </summary>
         protected virtual void FrameUpdate(FrameEventArgs args)
         {
-        }
-
-        /// <summary>
-        ///     Updates the indices stored inside <see cref="_children" />.
-        /// </summary>
-        private void _updateChildIndices()
-        {
-            for (var i = 0; i < _orderedChildren.Count; i++)
-            {
-                var child = _orderedChildren[i];
-                _children[child._name] = (child, i);
-            }
         }
 
         public enum CursorShape

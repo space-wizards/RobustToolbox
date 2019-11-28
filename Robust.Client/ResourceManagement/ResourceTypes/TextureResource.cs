@@ -11,7 +11,7 @@ namespace Robust.Client.ResourceManagement
 {
     public class TextureResource : BaseResource
     {
-        public override ResourcePath Fallback { get; } = new ResourcePath("/Textures/noSprite.png");
+        public override ResourcePath Fallback => new ResourcePath("/Textures/noSprite.png");
         public Texture Texture { get; private set; }
 
         public override void Load(IResourceCache cache, ResourcePath path)

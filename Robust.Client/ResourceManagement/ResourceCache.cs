@@ -4,12 +4,17 @@ using Robust.Shared.Log;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Robust.Client.ResourceManagement
 {
     internal class ResourceCache : ResourceManager, IResourceCacheInternal, IDisposable
     {
-        private Dictionary<(ResourcePath, Type), BaseResource> CachedResources = new Dictionary<(ResourcePath, Type), BaseResource>();
+        private readonly Dictionary<Type, Dictionary<ResourcePath, BaseResource>> CachedResources =
+            new Dictionary<Type, Dictionary<ResourcePath, BaseResource>>();
+
+        private readonly Dictionary<Type, BaseResource> _fallbacks = new Dictionary<Type, BaseResource>();
 
         public T GetResource<T>(string path, bool useFallback = true) where T : BaseResource, new()
         {
@@ -18,28 +23,31 @@ namespace Robust.Client.ResourceManagement
 
         public T GetResource<T>(ResourcePath path, bool useFallback = true) where T : BaseResource, new()
         {
-            if (CachedResources.TryGetValue((path, typeof(T)), out var cached))
+            var cache = GetTypeDict<T>();
+            if (cache.TryGetValue(path, out var cached))
             {
-                return (T)cached;
+                return (T) cached;
             }
 
             var _resource = new T();
             try
             {
                 _resource.Load(this, path);
-                CachedResources[(path, typeof(T))] = _resource;
+                cache[path] = _resource;
                 return _resource;
             }
             catch (Exception e)
             {
                 if (useFallback && _resource.Fallback != null)
                 {
-                    Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', resorting to fallback.\n{Environment.StackTrace}\n{e}");
+                    Logger.Error(
+                        $"Exception while loading resource {typeof(T)} at '{path}', resorting to fallback.\n{Environment.StackTrace}\n{e}");
                     return GetResource<T>(_resource.Fallback, false);
                 }
                 else
                 {
-                    Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', no fallback available\n{Environment.StackTrace}\n{e}");
+                    Logger.Error(
+                        $"Exception while loading resource {typeof(T)} at '{path}', no fallback available\n{Environment.StackTrace}\n{e}");
                     throw;
                 }
             }
@@ -52,17 +60,19 @@ namespace Robust.Client.ResourceManagement
 
         public bool TryGetResource<T>(ResourcePath path, out T resource) where T : BaseResource, new()
         {
-            if (CachedResources.TryGetValue((path, typeof(T)), out var cached))
+            var cache = GetTypeDict<T>();
+            if (cache.TryGetValue(path, out var cached))
             {
-                resource = (T)cached;
+                resource = (T) cached;
                 return true;
             }
+
             var _resource = new T();
             try
             {
                 _resource.Load(this, path);
                 resource = _resource;
-                CachedResources[(path, typeof(T))] = resource;
+                cache[path] = resource;
                 return true;
             }
             catch
@@ -79,11 +89,12 @@ namespace Robust.Client.ResourceManagement
 
         public void ReloadResource<T>(ResourcePath path) where T : BaseResource, new()
         {
+            var cache = GetTypeDict<T>();
             var resource = new T();
             try
             {
                 resource.Load(this, path);
-                CachedResources[(path, typeof(T))] = resource;
+                cache[path] = resource;
             }
             catch (Exception e)
             {
@@ -109,17 +120,25 @@ namespace Robust.Client.ResourceManagement
 
         public void CacheResource<T>(ResourcePath path, T resource) where T : BaseResource, new()
         {
-            CachedResources[(path, typeof(T))] = resource;
+            GetTypeDict<T>()[path] = resource;
         }
 
         public T GetFallback<T>() where T : BaseResource, new()
         {
+            if (_fallbacks.TryGetValue(typeof(T), out var fallback))
+            {
+                return (T)fallback;
+            }
+
             var res = new T();
             if (res.Fallback == null)
             {
                 throw new InvalidOperationException($"Resource of type '{typeof(T)}' has no fallback.");
             }
-            return GetResource<T>(res.Fallback, useFallback: false);
+
+            fallback = GetResource<T>(res.Fallback, useFallback: false);
+            _fallbacks.Add(typeof(T), fallback);
+            return (T)fallback;
         }
 
         #region IDisposable Members
@@ -141,7 +160,7 @@ namespace Robust.Client.ResourceManagement
 
             if (disposing)
             {
-                foreach (var res in CachedResources.Values)
+                foreach (var res in CachedResources.Values.SelectMany(dict => dict.Values))
                 {
                     res.Dispose();
                 }
@@ -156,5 +175,17 @@ namespace Robust.Client.ResourceManagement
         }
 
         #endregion IDisposable Members
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Dictionary<ResourcePath, BaseResource> GetTypeDict<T>()
+        {
+            if (!CachedResources.TryGetValue(typeof(T), out var ret))
+            {
+                ret = new Dictionary<ResourcePath, BaseResource>();
+                CachedResources.Add(typeof(T), ret);
+            }
+
+            return ret;
+        }
     }
 }

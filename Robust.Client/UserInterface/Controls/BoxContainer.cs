@@ -45,7 +45,7 @@ namespace Robust.Client.UserInterface.Controls
             var separation = (int) (ActualSeparation * UIScale);
 
             // Step one: figure out the sizes of all our children and whether they want to stretch.
-            var sizeList = new List<(Control control, int minSize, int finalSize, bool stretch)>();
+            var sizeList = new List<(Control control, int minSize, int finalSize, bool stretch)>(ChildCount);
             var totalStretchRatio = 0f;
             // Amount of space not available for stretching.
             var stretchMin = 0;

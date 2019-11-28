@@ -1,4 +1,5 @@
 ﻿// Because System.IO.Path sucks.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,30 +60,34 @@ namespace Robust.Shared.Utility
             {
                 throw new ArgumentException("Yeah no.", nameof(separator));
             }
+
             Separator = separator;
 
             if (path == null)
             {
                 throw new ArgumentNullException(nameof(path));
             }
+
             if (separator == null)
             {
                 throw new ArgumentNullException(nameof(separator));
             }
+
             if (path == "")
             {
-                Segments = new string[] { "." };
+                Segments = new string[] {"."};
                 return;
             }
 
-            var segments = new List<string>();
-            var splitSegments = path.Split(new string[] { separator }, StringSplitOptions.None);
+            var splitSegments = path.Split(new string[] {separator}, StringSplitOptions.None);
+            var segments = new List<string>(splitSegments.Length);
             var i = 0;
             if (splitSegments[0] == "")
             {
                 i = 1;
                 segments.Add(separator);
             }
+
             for (; i < splitSegments.Length; i++)
             {
                 var segment = splitSegments[i];
@@ -90,6 +95,7 @@ namespace Robust.Shared.Utility
                 {
                     continue;
                 }
+
                 if (i == 1 && segments[0] == ".")
                 {
                     segments[0] = segment;
@@ -99,7 +105,8 @@ namespace Robust.Shared.Utility
                     segments.Add(segment);
                 }
             }
-            Segments = segments.ToArray();
+
+            Segments = ListToArray(segments);
         }
 
         private ResourcePath(string[] segments, string separator)
@@ -118,6 +125,7 @@ namespace Robust.Shared.Utility
                 i = 1;
                 builder.Append(Separator);
             }
+
             for (; i < Segments.Length; i++)
             {
                 builder.Append(Segments[i]);
@@ -126,6 +134,7 @@ namespace Robust.Shared.Utility
                     builder.Append(Separator);
                 }
             }
+
             return builder.ToString();
         }
 
@@ -162,6 +171,7 @@ namespace Robust.Shared.Utility
                 {
                     return "";
                 }
+
                 var index = filename.LastIndexOf('.');
                 if (index == 0 || index == -1 || index == filename.Length - 1)
                 {
@@ -171,6 +181,7 @@ namespace Robust.Shared.Utility
                     // Non of these cases are truly an extension.
                     return "";
                 }
+
                 return filename.Substring(index + 1);
             }
         }
@@ -203,11 +214,13 @@ namespace Robust.Shared.Utility
                 {
                     return filename;
                 }
+
                 var index = filename.LastIndexOf('.');
                 if (index == 0 || index == -1 || index == filename.Length - 1)
                 {
                     return filename;
                 }
+
                 return filename.Substring(0, index);
             }
         }
@@ -245,10 +258,12 @@ namespace Robust.Shared.Utility
             {
                 throw new ArgumentException("Yeah no.", nameof(newSeparator));
             }
+
             if (newSeparator == null)
             {
                 throw new ArgumentNullException(nameof(newSeparator));
             }
+
             // Convert the segments into a string path, then re-parse it.
             // Solves the edge case of the segments containing the new separator.
             var path = new ResourcePath(Segments, newSeparator).ToString();
@@ -271,14 +286,17 @@ namespace Robust.Shared.Utility
             {
                 throw new ArgumentException("Both separators must be the same.");
             }
+
             if (b.IsRooted)
             {
                 return b;
             }
+
             if (b.IsSelf)
             {
                 return a;
             }
+
             string[] segments = new string[a.Segments.Length + b.Segments.Length];
             a.Segments.CopyTo(segments, 0);
             b.Segments.CopyTo(segments, a.Segments.Length);
@@ -330,7 +348,7 @@ namespace Robust.Shared.Utility
                 return new ResourcePath(".", Separator);
             }
 
-            return new ResourcePath(segments.ToArray(), Separator);
+            return new ResourcePath(ListToArray(segments), Separator);
         }
 
         /// <summary>
@@ -354,6 +372,7 @@ namespace Robust.Shared.Utility
                     }
                 }
             }
+
             return true;
         }
 
@@ -454,11 +473,13 @@ namespace Robust.Shared.Utility
             {
                 throw new ArgumentException("Separators must be the same.", nameof(basePath));
             }
+
             if (Segments.Length < basePath.Segments.Length)
             {
                 relative = null;
                 return false;
             }
+
             if (Segments.Length == basePath.Segments.Length)
             {
                 if (this == basePath)
@@ -472,6 +493,7 @@ namespace Robust.Shared.Utility
                     return false;
                 }
             }
+
             for (var i = 0; i < basePath.Segments.Length; i++)
             {
                 if (Segments[i] != basePath.Segments[i])
@@ -514,10 +536,12 @@ namespace Robust.Shared.Utility
                     break;
                 }
             }
+
             if (i == 0)
             {
                 throw new ArgumentException($"{this} and {other} have no common base.");
             }
+
             var segments = new string[i];
             Array.Copy(Segments, segments, i);
             return new ResourcePath(segments, Separator);
@@ -550,7 +574,7 @@ namespace Robust.Shared.Utility
                 throw new ArgumentException("New file name cannot be '.'");
             }
 
-            var newSegments = (string[])Segments.Clone();
+            var newSegments = (string[]) Segments.Clone();
             newSegments[newSegments.Length - 1] = name;
 
             return new ResourcePath(newSegments, Separator);
@@ -572,6 +596,7 @@ namespace Robust.Shared.Utility
                 // Skip '/' root.
                 return Segments.Skip(1);
             }
+
             return Segments;
         }
 
@@ -581,8 +606,12 @@ namespace Robust.Shared.Utility
             var code = Separator.GetHashCode();
             foreach (var segment in Segments)
             {
-                code |= segment.GetHashCode();
+                unchecked
+                {
+                    code = code * 31 + segment.GetHashCode();
+                }
             }
+
             return code;
         }
 
@@ -605,21 +634,49 @@ namespace Robust.Shared.Utility
             {
                 return false;
             }
-            return other.Separator == Separator && Segments.SequenceEqual(other.Segments);
+
+            if (other.Separator != Separator || Segments.Length != other.Segments.Length)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < Segments.Length; i++)
+            {
+                if (Segments[i] != other.Segments[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public static bool operator ==(ResourcePath a, ResourcePath b)
         {
-            if ((object)a == null)
+            if ((object) a == null)
             {
-                return (object)b == null;
+                return (object) b == null;
             }
+
             return a.Equals(b);
         }
 
         public static bool operator !=(ResourcePath a, ResourcePath b)
         {
             return !(a == b);
+        }
+
+        // While profiling I found that List<T>.ToArray() is just incredibly slow. No idea why honestly.
+        private static string[] ListToArray(List<string> list)
+        {
+            var array = new string[list.Count];
+
+            for (var i = 0; i < list.Count; i++)
+            {
+                array[i] = list[i];
+            }
+
+            return array;
         }
     }
 }

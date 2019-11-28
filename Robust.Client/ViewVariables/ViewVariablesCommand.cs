@@ -64,19 +64,6 @@ namespace Robust.Client.ViewVariables
                 return false;
             }
 
-            if (valArg.StartsWith("gui/"))
-            {
-                // UI element.
-                var obj = IoCManager.Resolve<IUserInterfaceManager>().RootControl;
-                if (!obj.TryGetChild(valArg.Substring(4), out var control))
-                {
-                    console.AddLine("That control does not exist.");
-                    return false;
-                }
-                vvm.OpenVV(control);
-                return false;
-            }
-
             if (valArg.StartsWith("guihover"))
             {
                 // UI element.

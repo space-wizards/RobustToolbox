@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -57,6 +58,7 @@ namespace Robust.Shared.Map
 
         private readonly Dictionary<GridId, MapGrid> _grids = new Dictionary<GridId, MapGrid>();
         private readonly Dictionary<MapId, GridId> _defaultGrids = new Dictionary<MapId, GridId>();
+        private readonly Dictionary<MapId, EntityUid> _mapEntities = new Dictionary<MapId, EntityUid>();
 
         private readonly List<(GameTick tick, GridId gridId)> _gridDeletionHistory = new List<(GameTick, GridId)>();
         private readonly List<(GameTick tick, MapId mapId)> _mapDeletionHistory = new List<(GameTick, MapId)>();
@@ -164,6 +166,37 @@ namespace Robust.Shared.Map
             _maps.Add(actualID);
             _mapCreationTick.Add(actualID, _gameTiming.CurTick);
             Logger.InfoS("map", $"Creating new map {actualID}");
+
+            if (actualID != MapId.Nullspace) // nullspace isn't bound to an entity
+            {
+                var mapComps = _entityManager.ComponentManager.GetAllComponents<IMapComponent>();
+
+                IMapComponent result = null;
+                foreach (var mapComp in mapComps)
+                {
+                    if (mapComp.WorldMap != actualID)
+                        continue;
+
+                    result = mapComp;
+                    break;
+                }
+
+                if (result != null)
+                {
+                    _mapEntities.Add(actualID, result.Owner.Uid);
+                    Logger.DebugS("map", $"Rebinding map {actualID} to entity {result.Owner.Uid}");
+                }
+                else
+                {
+                    var newEnt = _entityManager.SpawnEntity(null);
+                    _mapEntities.Add(actualID, newEnt.Uid);
+
+                    var mapComp = newEnt.AddComponent<MapComponent>();
+                    mapComp.WorldMap = actualID;
+                    Logger.DebugS("map", $"Binding map {actualID} to entity {newEnt.Uid}");
+                }
+            }
+
             MapCreated?.Invoke(this, new MapEventArgs(actualID));
             var newDefaultGrid = CreateGrid(actualID, defaultGridID);
             _defaultGrids.Add(actualID, newDefaultGrid.Index);

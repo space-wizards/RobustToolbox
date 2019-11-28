@@ -106,11 +106,7 @@ namespace Robust.Shared.Map
                     var gridCreation = data.CreatedGrids[gridId];
                     DebugTools.Assert(gridCreation.IsTheDefault);
 
-                    _maps.Add(mapId);
-                    _mapCreationTick[mapId] = _gameTiming.CurTick;
-                    MapCreated?.Invoke(this, new MapEventArgs(mapId));
-                    var newDefaultGrid = CreateGrid(mapId, gridId, gridCreation.ChunkSize, gridCreation.SnapSize);
-                    _defaultGrids.Add(mapId, newDefaultGrid.Index);
+                    CreateMap(mapId, gridId);
                 }
             }
 
@@ -181,6 +177,44 @@ namespace Robust.Shared.Map
             if(data == null) // if there is no data, there is nothing to do!
                 return;
 
+            // maps created on the client in pre-state are linked to client entities
+            // resolve new maps with their shared component that the server just gave us
+            // and delete the client entities
+            if (data.CreatedMaps != null)
+            {
+                foreach (var (mapId, defaultGridId) in data.CreatedMaps)
+                {
+                    // CreateMap should have set this
+                    DebugTools.Assert(_mapEntities.ContainsKey(mapId));
+
+                    // this was already linked in a previous state.
+                    if(!_mapEntities[mapId].IsClientSide())
+                        continue;
+
+                    // remove the existing client entity for the map.
+                    var cEntity = _entityManager.GetEntity(_mapEntities[mapId]);
+                    var cGridComp = cEntity.GetComponent<IMapComponent>();
+                    cGridComp.ClearMapId();
+                    cEntity.Delete();
+
+                    // locate the entity that represents this map that was just sent to us
+                    var mapComps = _entityManager.ComponentManager.GetAllComponents<IMapComponent>();
+                    foreach (var mapComp in mapComps)
+                    {
+                        if (mapComp.WorldMap == mapId)
+                        {
+                            _mapEntities[mapId] = mapComp.Owner.Uid;
+                            Logger.DebugS("map", $"Map {mapId} pivoted bound entity from {cEntity.Uid} to {mapComp.Owner.Uid}.");
+                            break;
+                        }
+                    }
+
+                    // verify shared entity was found
+                    DebugTools.Assert(!_mapEntities[mapId].IsClientSide());
+                }
+            }
+
+
             // grids created on the client in pre-state are linked to client entities
             // resolve new grids with their shared component that the server just gave us
             // and delete the client entities
@@ -194,6 +228,7 @@ namespace Robust.Shared.Map
                     if(!grid.GridEntity.IsClientSide())
                         continue;
 
+                    // remove the existing client entity.
                     var cEntity = _entityManager.GetEntity(grid.GridEntity);
                     var cGridComp = cEntity.GetComponent<IMapGridComponent>();
                     cGridComp.ClearGridId();

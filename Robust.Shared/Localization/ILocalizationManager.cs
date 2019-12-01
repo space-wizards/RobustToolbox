@@ -3,6 +3,19 @@ using JetBrains.Annotations;
 
 namespace Robust.Shared.Localization
 {
+    // ReSharper disable once CommentTypo
+    /// <summary>
+    ///     Provides facilities to automatically translate in-game text.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///     The translation API is similar to GNU gettext.
+    ///     You pass a string through it (most often the English version),
+    ///     and when the game is ran in another language with adequate translation, the translation is returned instead.
+    ///     </para>
+    /// </remarks>
+    /// <seealso cref="Loc"/>
+    [PublicAPI]
     public interface ILocalizationManager
     {
         /// <summary>
@@ -38,7 +51,7 @@ namespace Robust.Shared.Localization
 
         string GetParticularPluralString(string context, string text, string pluralText, long n);
 
-        [StringFormatMethod("text")]
+        [StringFormatMethod("pluralText")]
         string GetParticularPluralString(string context, string text, string pluralText, long n, params object[] args);
 
         /// <summary>

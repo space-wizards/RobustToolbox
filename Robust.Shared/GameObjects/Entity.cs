@@ -259,18 +259,24 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public T GetComponent<T>()
         {
+            DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
+
             return (T)EntityManager.ComponentManager.GetComponent(Uid, typeof(T));
         }
 
         /// <inheritdoc />
         public IComponent GetComponent(Type type)
         {
+            DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
+
             return EntityManager.ComponentManager.GetComponent(Uid, type);
         }
 
         /// <inheritdoc />
         public IComponent GetComponent(uint netId)
         {
+            DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
+
             return EntityManager.ComponentManager.GetComponent(Uid, netId);
         }
 
@@ -278,18 +284,24 @@ namespace Robust.Shared.GameObjects
         public bool TryGetComponent<T>(out T component)
             where T : class
         {
+            DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
+
             return EntityManager.ComponentManager.TryGetComponent(Uid, out component);
         }
 
         /// <inheritdoc />
         public bool TryGetComponent(Type type, out IComponent component)
         {
+            DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
+
             return EntityManager.ComponentManager.TryGetComponent(Uid, type, out component);
         }
 
         /// <inheritdoc />
         public bool TryGetComponent(uint netId, out IComponent component)
         {
+            DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
+
             return EntityManager.ComponentManager.TryGetComponent(Uid, netId, out component);
         }
 

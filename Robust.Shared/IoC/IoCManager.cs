@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Robust.Shared.IoC
 {
@@ -22,6 +23,14 @@ namespace Robust.Shared.IoC
     /// <para>
     /// To use the IoCManager, it first needs some types registered through <see cref="Register{TInterface, TImplementation}"/>.
     /// These implementations can then be fetched with <see cref="Resolve{T}"/>, or through field injection with <see cref="DependencyAttribute" />.
+    /// </para>
+    /// <para>
+    /// <c>IoCManager</c> is actually a static wrapper class around a thread local <see cref="IDependencyCollection"/>.
+    /// As such, <c>IoCManager</c> will not work in other threads,
+    /// unless they have first been initialized with <see cref="InitThread(Robust.Shared.IoC.IDependencyCollection)"/>.
+    /// You should not initialize IoC in thread pools like that of <see cref="Task.Run(Action)"/>,
+    /// since said thread pool might be used by different running instances
+    /// (for example, server and client running in the same process, they have a different IoC instance).
     /// </para>
     /// </remarks>
     /// <seealso cref="Interfaces.Reflection.IReflectionManager"/>

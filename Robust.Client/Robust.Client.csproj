@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\MSBuild\Robust.Properties.targets" />
   <PropertyGroup>
     <!-- Work around https://github.com/dotnet/project-system/issues/4314 -->
@@ -49,7 +49,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Graphics\RSI\RSISchema.json" />
+    <EmbeddedResource Include="Graphics\RSI\RSISchema.json">
+      <LogicalName>Robust.Client.Graphics.RSI.RSISchema.json</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <!--Hahaha everything hurts and NuGet is making the package dirs inconsistently on some systems.-->

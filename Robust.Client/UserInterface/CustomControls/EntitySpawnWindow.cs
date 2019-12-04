@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Robust.Client.GameObjects;
 using Robust.Client.Interfaces.Placement;
 using Robust.Client.Interfaces.ResourceManagement;
@@ -9,6 +10,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -20,12 +23,19 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly ILocalizationManager _loc;
 
         private VBoxContainer MainVBox;
-        private VBoxContainer PrototypeList;
+        private PrototypeListContainer PrototypeList;
         private LineEdit SearchBar;
         private OptionButton OverrideMenu;
         private Button ClearButton;
         private Button EraseButton;
+        private EntitySpawnButton MeasureButton;
         protected override Vector2 ContentsMinimumSize => MainVBox?.CombinedMinimumSize ?? Vector2.Zero;
+
+        // List of prototypes that are visible based on current filter criteria.
+        private readonly List<EntityPrototype> _filteredPrototypes = new List<EntityPrototype>();
+        // The indices of the visible prototypes last time UpdateVisiblePrototypes was ran.
+        // This is inclusive, so end is the index of the last prototype, not right after it.
+        private (int start, int end) _lastPrototypeIndices;
 
         private static readonly string[] initOpts =
         {
@@ -46,6 +56,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private const int TARGET_ICON_HEIGHT = 32;
 
         private EntitySpawnButton SelectedButton;
+        private EntityPrototype SelectedPrototype;
 
         public EntitySpawnWindow(IPlacementManager placementManager,
             IPrototypeManager prototypeManager,
@@ -89,11 +100,7 @@ namespace Robust.Client.UserInterface.CustomControls
                         SizeFlagsVertical = SizeFlags.FillExpand,
                         Children =
                         {
-                            (PrototypeList = new VBoxContainer
-                            {
-                                MouseFilter = MouseFilterMode.Ignore,
-                                SeparationOverride = 2,
-                            })
+                            (PrototypeList = new PrototypeListContainer())
                         }
                     },
                     new HBoxContainer
@@ -113,7 +120,8 @@ namespace Robust.Client.UserInterface.CustomControls
                                 ToolTip = _loc.GetString("Override placement")
                             })
                         }
-                    }
+                    },
+                    (MeasureButton = new EntitySpawnButton {Visible = false})
                 }
             });
 
@@ -186,11 +194,14 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void BuildEntityList(string searchStr = null)
         {
+            _filteredPrototypes.Clear();
+            PrototypeList.RemoveAllChildren();
+            // Reset last prototype indices so it automatically updates the entire list.
+            _lastPrototypeIndices = (0, -1);
             PrototypeList.RemoveAllChildren();
             SelectedButton = null;
             searchStr = searchStr?.ToLowerInvariant();
 
-            var prototypes = new List<EntityPrototype>();
             foreach (var prototype in prototypeManager.EnumeratePrototypes<EntityPrototype>())
             {
                 if (prototype.Abstract)
@@ -203,32 +214,107 @@ namespace Robust.Client.UserInterface.CustomControls
                     continue;
                 }
 
-                prototypes.Add(prototype);
+                _filteredPrototypes.Add(prototype);
             }
 
-            prototypes.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+            _filteredPrototypes.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
 
-            foreach (var prototype in prototypes)
+            PrototypeList.TotalItemCount = _filteredPrototypes.Count;
+        }
+
+        private void UpdateVisiblePrototypes()
+        {
+            // Update visible buttons in the prototype list.
+
+            // Calculate index of first prototype to render based on current scroll.
+            var height = MeasureButton.CombinedMinimumSize.Y + PrototypeListContainer.Separation;
+            var offset = -PrototypeList.Position.Y;
+            var startIndex = (int) Math.Floor(offset / height);
+            PrototypeList.ItemOffset = startIndex;
+
+            var (prevStart, prevEnd) = _lastPrototypeIndices;
+
+            // Calculate index of final one.
+            var endIndex = startIndex - 1;
+            var spaceUsed = -height; // -height instead of 0 because else it cuts off the last button.
+
+            while (spaceUsed < PrototypeList.Parent.Height)
             {
-                var button = new EntitySpawnButton
-                {
-                    Prototype = prototype,
-                };
-                button.ActualButton.OnToggled += OnItemButtonToggled;
-                button.EntityLabel.Text = prototype.Name;
+                spaceUsed += height;
+                endIndex += 1;
+            }
 
-                var tex = IconComponent.GetPrototypeIcon(prototype, resourceCache);
-                var rect = button.EntityTextureRect;
-                if (tex != null)
-                {
-                    rect.Texture = tex.Default;
-                }
-                else
-                {
-                    rect.Dispose();
-                }
+            endIndex = Math.Min(endIndex, _filteredPrototypes.Count - 1);
 
-                PrototypeList.AddChild(button);
+            if (endIndex == prevEnd && startIndex == prevStart)
+            {
+                // Nothing changed so bye.
+                return;
+            }
+
+            _lastPrototypeIndices = (startIndex, endIndex);
+
+            // Delete buttons at the start of the list that are no longer visible (scrolling down).
+            for (var i = prevStart; i < startIndex && i <= prevEnd; i++)
+            {
+                var control = (EntitySpawnButton) PrototypeList.GetChild(0);
+                DebugTools.Assert(control.Index == i);
+                PrototypeList.RemoveChild(control);
+            }
+
+            // Delete buttons at the end of the list that are no longer visible (scrolling up).
+            for (var i = prevEnd; i > endIndex && i >= prevStart; i--)
+            {
+                var control = (EntitySpawnButton) PrototypeList.GetChild(PrototypeList.ChildCount - 1);
+                DebugTools.Assert(control.Index == i);
+                PrototypeList.RemoveChild(control);
+            }
+
+            // Create buttons at the start of the list that are now visible (scrolling up).
+            for (var i = Math.Min(prevStart - 1, endIndex); i >= startIndex; i--)
+            {
+                InsertEntityButton(_filteredPrototypes[i], true, i);
+            }
+
+            // Create buttons at the end of the list that are now visible (scrolling down).
+            for (var i = Math.Max(prevEnd + 1, startIndex); i <= endIndex; i++)
+            {
+                InsertEntityButton(_filteredPrototypes[i], false, i);
+            }
+        }
+
+        // Create a spawn button and insert it into the start or end of the list.
+        private void InsertEntityButton(EntityPrototype prototype, bool insertFirst, int index)
+        {
+            var button = new EntitySpawnButton
+            {
+                Prototype = prototype,
+                Index = index // We track this index purely for debugging.
+            };
+            button.ActualButton.OnToggled += OnItemButtonToggled;
+            button.EntityLabel.Text = prototype.Name;
+
+            if (prototype == SelectedPrototype)
+            {
+                SelectedButton = button;
+                SelectedButton.ActualButton.Pressed = true;
+            }
+
+            var tex = IconComponent.GetPrototypeIcon(prototype, resourceCache);
+            var rect = button.EntityTextureRect;
+            if (tex != null)
+            {
+                rect.Texture = tex.Default;
+            }
+            else
+            {
+                rect.Dispose();
+            }
+
+            PrototypeList.AddChild(button);
+            if (insertFirst)
+            {
+                button.SetPositionInParent(0);
             }
         }
 
@@ -258,6 +344,7 @@ namespace Robust.Client.UserInterface.CustomControls
             if (SelectedButton == item)
             {
                 SelectedButton = null;
+                SelectedPrototype = null;
                 placementManager.Clear();
                 return;
             }
@@ -267,6 +354,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             SelectedButton = null;
+            SelectedPrototype = null;
 
             var overrideMode = initOpts[OverrideMenu.SelectedId];
             var newObjInfo = new PlacementInformation
@@ -280,8 +368,83 @@ namespace Robust.Client.UserInterface.CustomControls
             placementManager.BeginPlacing(newObjInfo);
 
             SelectedButton = item;
+            SelectedPrototype = item.Prototype;
         }
 
+        protected override void FrameUpdate(FrameEventArgs args)
+        {
+            base.FrameUpdate(args);
+            UpdateVisiblePrototypes();
+        }
+
+        private class PrototypeListContainer : Container
+        {
+            // Quick and dirty container to do virtualization of the list.
+            // Basically, get total item count and offset to put the current buttons at.
+            // Get a constant minimum height and move the buttons in the list up to match the scrollbar.
+            private int _totalItemCount;
+            private int _itemOffset;
+
+            public int TotalItemCount
+            {
+                get => _totalItemCount;
+                set
+                {
+                    _totalItemCount = value;
+                    MinimumSizeChanged();
+                }
+            }
+
+            public int ItemOffset
+            {
+                get => _itemOffset;
+                set
+                {
+                    _itemOffset = value;
+                    UpdateLayout();
+                }
+            }
+
+            public const float Separation = 2;
+
+            public PrototypeListContainer()
+            {
+                MouseFilter = MouseFilterMode.Ignore;
+            }
+
+            protected override Vector2 CalculateMinimumSize()
+            {
+                if (ChildCount == 0)
+                {
+                    return Vector2.Zero;
+                }
+
+                var first = GetChild(0);
+
+                return (first.Width, first.CombinedMinimumSize.Y * TotalItemCount + (TotalItemCount - 1) * Separation);
+            }
+
+            protected internal override void SortChildren()
+            {
+                if (ChildCount == 0)
+                {
+                    return;
+                }
+
+                var first = GetChild(0);
+
+                var height = first.CombinedMinimumSize.Y;
+                var offset = ItemOffset * height + (ItemOffset - 1) * Separation;
+
+                foreach (var child in Children)
+                {
+                    FitChildInBox(child, UIBox2.FromDimensions(0, offset, Width, height));
+                    offset += Separation + height;
+                }
+            }
+        }
+
+        [DebuggerDisplay("spawnbutton {" + nameof(Index) + "}")]
         private class EntitySpawnButton : PanelContainer
         {
             public string PrototypeID => Prototype.ID;
@@ -289,6 +452,7 @@ namespace Robust.Client.UserInterface.CustomControls
             public Button ActualButton { get; private set; }
             public Label EntityLabel { get; private set; }
             public TextureRect EntityTextureRect { get; private set; }
+            public int Index { get; set; }
 
             public EntitySpawnButton()
             {
@@ -323,7 +487,9 @@ namespace Robust.Client.UserInterface.CustomControls
                 EntityLabel = new Label
                 {
                     SizeFlagsVertical = SizeFlags.ShrinkCenter,
-                    Text = "Backpack"
+                    SizeFlagsHorizontal = SizeFlags.FillExpand,
+                    Text = "Backpack",
+                    ClipText = true
                 };
 
                 hBoxContainer.AddChild(textureWrap);

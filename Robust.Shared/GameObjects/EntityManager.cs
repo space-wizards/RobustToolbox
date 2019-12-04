@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -67,21 +66,17 @@ namespace Robust.Shared.GameObjects
 
         protected int NextUid = (int)EntityUid.FirstUid;
 
-        private readonly Dictionary<Type, List<Delegate>> _eventSubscriptions
-            = new Dictionary<Type, List<Delegate>>();
+        private readonly IEntityEventBus _eventBus = new EntityEventBus();
 
-        private readonly Dictionary<IEntityEventSubscriber, Dictionary<Type, Delegate>> _inverseEventSubscriptions
-            = new Dictionary<IEntityEventSubscriber, Dictionary<Type, Delegate>>();
-
-        private readonly Queue<(object sender, EntityEventArgs eventArgs)> _eventQueue
-            = new Queue<(object, EntityEventArgs)>();
+        /// <inheritdoc />
+        public IEventBus EventBus => _eventBus;
 
         public bool Started { get; protected set; }
 
         public virtual void Initialize()
         {
             EntityNetworkManager.SetupNetworking();
-            _componentManager.ComponentRemoved += (sender, args) => RemoveSubscribedEvents(args.Component);
+            _componentManager.ComponentRemoved += (sender, args) => _eventBus.UnsubscribeEvents(args.Component);
         }
 
         public virtual void Startup()
@@ -100,23 +95,13 @@ namespace Robust.Shared.GameObjects
         {
             ProcessMessageBuffer();
             EntitySystemManager.Update(frameTime);
-            ProcessEventQueue();
+            _eventBus.ProcessEventQueue();
             CullDeletedEntities();
         }
 
         public virtual void FrameUpdate(float frameTime)
         {
             EntitySystemManager.FrameUpdate(frameTime);
-        }
-
-        /// <summary>
-        /// Retrieves template with given name from prototypemanager.
-        /// </summary>
-        /// <param name="prototypeName">name of the template</param>
-        /// <returns>Template</returns>
-        public EntityPrototype GetTemplate(string prototypeName)
-        {
-            return PrototypeManager.Index<EntityPrototype>(prototypeName);
         }
 
         #region Entity Management
@@ -337,118 +322,6 @@ namespace Robust.Shared.GameObjects
         }
 
         #endregion Entity Management
-
-        #region Entity Events
-
-        public void SubscribeEvent<T>(EntityEventHandler<T> eventHandler, IEntityEventSubscriber s)
-            where T : EntityEventArgs
-        {
-            // adding a null handler delegate should do nothing, since trying to invoke it would throw a NullRefException
-            if(eventHandler == null)
-                return;
-
-            var eventType = typeof(T);
-            if (!_eventSubscriptions.TryGetValue(eventType, out var subscriptions))
-            {
-                _eventSubscriptions.Add(eventType, new List<Delegate> { eventHandler });
-            }
-            else if (!subscriptions.Contains(eventHandler))
-            {
-                subscriptions.Add(eventHandler);
-            }
-
-            if (!_inverseEventSubscriptions.TryGetValue(s, out var inverseSubscription))
-            {
-                inverseSubscription = new Dictionary<Type, Delegate>
-                {
-                    {eventType, eventHandler}
-                };
-
-                _inverseEventSubscriptions.Add(
-                    s,
-                    inverseSubscription
-                );
-            }
-
-            else if (!inverseSubscription.ContainsKey(eventType))
-            {
-                inverseSubscription.Add(eventType, eventHandler);
-            }
-        }
-
-        public void UnsubscribeEvent<T>(IEntityEventSubscriber s)
-            where T : EntityEventArgs
-        {
-            var eventType = typeof(T);
-
-            if (_inverseEventSubscriptions.TryGetValue(s, out var inverse)
-                && inverse.TryGetValue(eventType, out var @delegate))
-            {
-                UnsubscribeEvent(eventType, @delegate, s);
-            }
-        }
-
-        private void UnsubscribeEvent(Type eventType, Delegate evh, IEntityEventSubscriber s)
-        {
-            if (_eventSubscriptions.TryGetValue(eventType, out var subscriptions) && subscriptions.Contains(evh))
-            {
-                subscriptions.Remove(evh);
-            }
-
-            if (_inverseEventSubscriptions.TryGetValue(s, out var inverse) && inverse.ContainsKey(eventType))
-            {
-                inverse.Remove(eventType);
-            }
-        }
-
-        public void RaiseEvent(object sender, EntityEventArgs toRaise)
-        {
-            ProcessSingleEvent((sender, toRaise));
-        }
-
-        public void QueueEvent(object sender, EntityEventArgs toRaise)
-        {
-            _eventQueue.Enqueue((sender, toRaise));
-        }
-
-        public void RemoveSubscribedEvents(IEntityEventSubscriber subscriber)
-        {
-            if (!_inverseEventSubscriptions.TryGetValue(subscriber, out var val))
-            {
-                return;
-            }
-
-            foreach (var (type, @delegate) in val.ToList())
-            {
-                UnsubscribeEvent(type, @delegate, subscriber);
-            }
-        }
-
-        private void ProcessEventQueue()
-        {
-            while (_eventQueue.Count != 0)
-            {
-                var current = _eventQueue.Dequeue();
-                ProcessSingleEvent(current);
-            }
-        }
-
-        private void ProcessSingleEvent((object sender, EntityEventArgs eventArgs) argsTuple)
-        {
-            var (sender, eventArgs) = argsTuple;
-            var eventType = eventArgs.GetType();
-            if (!_eventSubscriptions.TryGetValue(eventType, out var subs))
-            {
-                return;
-            }
-
-            foreach (var handler in subs)
-            {
-                handler.DynamicInvoke(sender, eventArgs);
-            }
-        }
-
-        #endregion Entity Events
 
         #region message processing
 

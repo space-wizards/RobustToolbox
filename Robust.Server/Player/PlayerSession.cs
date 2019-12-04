@@ -91,7 +91,8 @@ namespace Robust.Server.Player
             actorComponent.playerSession = this;
             AttachedEntity = a;
             a.SendMessage(actorComponent, new PlayerAttachedMsg(this));
-            a.EntityManager.RaiseEvent(this, new PlayerAttachSystemMessage(a, this));
+            EntityEventArgs toRaise = new PlayerAttachSystemMessage(a, this);
+            a.EntityManager.EventBus.RaiseEvent((object) this, toRaise);
             SetAttachedEntityName();
             UpdatePlayerState();
         }
@@ -110,7 +111,8 @@ namespace Robust.Server.Player
             if (AttachedEntity.TryGetComponent<BasicActorComponent>(out var actor))
             {
                 AttachedEntity.SendMessage(actor, new PlayerDetachedMsg(this));
-                AttachedEntity.EntityManager.RaiseEvent(this, new PlayerDetachedSystemMessage(AttachedEntity));
+                EntityEventArgs toRaise = new PlayerDetachedSystemMessage(AttachedEntity);
+                AttachedEntity.EntityManager.EventBus.RaiseEvent((object) this, toRaise);
                 AttachedEntity.RemoveComponent<BasicActorComponent>();
                 AttachedEntity = null;
                 UpdatePlayerState();

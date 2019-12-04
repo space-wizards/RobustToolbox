@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Robust.Server.Interfaces.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
@@ -7,6 +8,7 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
@@ -37,9 +39,11 @@ namespace Robust.Server.GameObjects.EntitySystems
                 {
                     continue;
                 }
+
                 HandleMovement(entity, frameTime);
             }
-            foreach(var entity in entities)
+
+            foreach (var entity in entities)
             {
                 DoMovement(entity, frameTime);
             }
@@ -58,6 +62,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             {
                 return;
             }
+
             var transform = entity.Transform;
             if (transform.Parent != null)
             {
@@ -76,24 +81,29 @@ namespace Robust.Server.GameObjects.EntitySystems
                 velocityConsumerCount = velocityConsumers.Count;
                 totalMass = 0;
                 lowestMovement = initialMovement;
-                lowestMovement = velocityConsumers.Select(velocityConsumer =>
+                var copy = new List<Vector2>(velocityConsumers.Count);
+                foreach (var consumer in velocityConsumers)
                 {
-                    totalMass += velocityConsumer.Mass;
+                    totalMass += consumer.Mass;
                     var movement = lowestMovement * velocity.Mass / totalMass;
-                    velocityConsumer.AngularVelocity = velocity.AngularVelocity;
-                    velocityConsumer.LinearVelocity = movement;
-                    return CalculateMovement(velocityConsumer, frameTime, velocityConsumer.Owner) / frameTime;
-                }).OrderBy(x=>x.LengthSquared).First();
+                    consumer.AngularVelocity = velocity.AngularVelocity;
+                    consumer.LinearVelocity = movement;
+                    copy.Add(CalculateMovement(consumer, frameTime, consumer.Owner) / frameTime);
+                }
+
+                copy.Sort(LengthComparer);
+                lowestMovement = copy[0];
                 velocityConsumers = velocity.GetVelocityConsumers();
-            }
-            while (velocityConsumers.Count != velocityConsumerCount);
+            } while (velocityConsumers.Count != velocityConsumerCount);
+
             velocity.ClearVelocityConsumers();
 
-            velocityConsumers.ForEach(velocityConsumer =>
+            foreach (var consumer in velocityConsumers)
             {
-                velocityConsumer.LinearVelocity = lowestMovement;
-                velocityConsumer.DidMovementCalculations = true;
-            });
+                consumer.LinearVelocity = lowestMovement;
+                consumer.DidMovementCalculations = true;
+            }
+
             velocity.DidMovementCalculations = false;
         }
 
@@ -101,7 +111,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         {
             var velocity = entity.GetComponent<PhysicsComponent>();
 
-            if(velocity.LinearVelocity.LengthSquared < Epsilon && velocity.AngularVelocity < Epsilon)
+            if (velocity.LinearVelocity.LengthSquared < Epsilon && velocity.AngularVelocity < Epsilon)
                 return;
 
             float angImpulse = 0;
@@ -109,6 +119,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             {
                 angImpulse = velocity.AngularVelocity * frameTime;
             }
+
             var transform = entity.Transform;
             transform.LocalRotation += angImpulse;
             transform.WorldPosition += velocity.LinearVelocity * frameTime;
@@ -117,10 +128,11 @@ namespace Robust.Server.GameObjects.EntitySystems
         private Vector2 CalculateMovement(PhysicsComponent velocity, float frameTime, IEntity entity)
         {
             var movement = velocity.LinearVelocity * frameTime;
-            if(movement.LengthSquared <= Epsilon)
+            if (movement.LengthSquared <= Epsilon)
             {
                 return Vector2.Zero;
             }
+
             //Check for collision
             if (entity.TryGetComponent(out CollidableComponent collider))
             {
@@ -159,7 +171,11 @@ namespace Robust.Server.GameObjects.EntitySystems
                     }
                 }
             }
+
             return movement;
         }
+
+        private static readonly IComparer<Vector2> LengthComparer =
+            Comparer<Vector2>.Create((a, b) => a.LengthSquared.CompareTo(b.LengthSquared));
     }
 }

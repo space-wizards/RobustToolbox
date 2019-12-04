@@ -98,13 +98,13 @@ namespace Robust.Client.Player
         public void DetachEntity()
         {
             var previous = ControlledEntity;
-            if (ControlledEntity != null && ControlledEntity.Initialized)
+            if (previous != null && previous.Initialized && !previous.Deleted)
             {
-                ControlledEntity.GetComponent<EyeComponent>().Current = false;
-                ControlledEntity.SendMessage(null, new PlayerDetachedMsg());
+                previous.GetComponent<EyeComponent>().Current = false;
+                previous.SendMessage(null, new PlayerDetachedMsg());
 
                 // notify ECS Systems
-                ControlledEntity.EntityManager.RaiseEvent(this, new PlayerAttachSysMessage(null));
+                previous.EntityManager.RaiseEvent(this, new PlayerAttachSysMessage(null));
             }
 
             ControlledEntity = null;

@@ -96,6 +96,13 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        public override void OnRemove()
+        {
+            base.OnRemove();
+
+            Current = false;
+        }
+
         /// <inheritdoc />
         public override void ExposeData(ObjectSerializer serializer)
         {

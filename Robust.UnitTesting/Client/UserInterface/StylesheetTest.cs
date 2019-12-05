@@ -23,7 +23,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             var selectorElementLabel = new SelectorElement(typeof(Label), null, null, null);
 
             var label = new Label();
-            var panel = new Panel {StyleIdentifier = "bar"};
+            var panel = new PanelContainer {StyleIdentifier = "bar"};
             Assert.That(selectorElementLabel.Matches(label), Is.True);
             Assert.That(selectorElementLabel.Matches(panel), Is.False);
 

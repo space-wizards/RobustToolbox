@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.ResourceManagement;
@@ -16,8 +15,6 @@ using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Localization;
 using Robust.Shared.Network;
 using Robust.Shared.Utility;
-using Robust.Shared.Input;
-using Robust.Client.Interfaces.Input;
 
 namespace Robust.Client.State.States
 {
@@ -232,21 +229,21 @@ namespace Robust.Client.State.States
             {
                 MouseFilter = MouseFilterMode.Ignore;
 
-                SetAnchorAndMarginPreset(LayoutPreset.Wide);
+                LayoutContainer.SetAnchorPreset(this, LayoutContainer.LayoutPreset.Wide);
+
+                var layout = new LayoutContainer();
+                AddChild(layout);
 
                 var vBox = new VBoxContainer
                 {
-                    AnchorLeft = 1,
-                    AnchorRight = 1,
-                    AnchorBottom = 0,
-                    AnchorTop = 0,
-                    MarginTop = 30,
-                    MarginLeft = -350,
-                    MarginRight = -25,
-                    MarginBottom = 0,
                     StyleIdentifier = "mainMenuVBox",
                 };
-                AddChild(vBox);
+
+                layout.AddChild(vBox);
+                LayoutContainer.SetAnchorPreset(vBox, LayoutContainer.LayoutPreset.TopRight);
+                LayoutContainer.SetMarginRight(vBox, -25);
+                LayoutContainer.SetMarginTop(vBox, 30);
+                LayoutContainer.SetGrowHorizontal(vBox, LayoutContainer.GrowDirection.Begin);
 
                 var logoTexture = _resourceCache.GetResource<TextureResource>("/Textures/Logo/logo.png");
                 var logo = new TextureRect
@@ -322,13 +319,13 @@ namespace Robust.Client.State.States
 
                 VersionLabel = new Label
                 {
-                    GrowHorizontal = GrowDirection.Begin,
-                    GrowVertical = GrowDirection.Begin,
                     Text = $"v0.1"
                 };
 
-                AddChild(VersionLabel);
-                VersionLabel.SetAnchorAndMarginPreset(LayoutPreset.BottomRight);
+                LayoutContainer.SetAnchorPreset(VersionLabel, LayoutContainer.LayoutPreset.BottomRight);
+                LayoutContainer.SetGrowHorizontal(VersionLabel, LayoutContainer.GrowDirection.Begin);
+                LayoutContainer.SetGrowVertical(VersionLabel, LayoutContainer.GrowDirection.Begin);
+                layout.AddChild(VersionLabel);
             }
         }
     }

@@ -40,7 +40,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public int? SeparationOverride { get; set; }
 
-        protected internal override void SortChildren()
+        protected override void LayoutUpdateOverride()
         {
             var separation = (int) (ActualSeparation * UIScale);
 

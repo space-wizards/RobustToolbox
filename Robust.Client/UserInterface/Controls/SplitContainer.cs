@@ -10,9 +10,9 @@ namespace Robust.Client.UserInterface.Controls
 
         private protected abstract bool Vertical { get; }
 
-        protected internal override void SortChildren()
+        protected override void LayoutUpdateOverride()
         {
-            base.SortChildren();
+            base.LayoutUpdateOverride();
 
             if (ChildCount != 2)
             {

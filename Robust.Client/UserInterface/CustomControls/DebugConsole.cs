@@ -32,6 +32,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private LineEdit CommandBar;
         private OutputPanel Output;
+        private Control MainControl;
 
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => _console.Commands;
         private readonly ConcurrentQueue<FormattedMessage> _messageQueue = new ConcurrentQueue<FormattedMessage>();
@@ -54,26 +55,35 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             Visible = false;
 
-            AnchorRight = 1f;
-            AnchorBottom = 0.35f;
-
-            var boxContainer = new VBoxContainer {SeparationOverride = 0};
-            boxContainer.SetAnchorPreset(LayoutPreset.Wide);
-            AddChild(boxContainer);
             var styleBox = new StyleBoxFlat
             {
                 BackgroundColor = Color.FromHex("#25252add"),
             };
             styleBox.SetContentMarginOverride(StyleBox.Margin.All, 3);
-            Output = new OutputPanel
-            {
-                SizeFlagsVertical = SizeFlags.FillExpand,
-                StyleBoxOverride = styleBox
-            };
-            boxContainer.AddChild(Output);
 
-            CommandBar = new LineEdit {PlaceHolder = "Command Here"};
-            boxContainer.AddChild(CommandBar);
+            AddChild(new LayoutContainer
+            {
+                Children =
+                {
+                    (MainControl = new VBoxContainer
+                    {
+                        SeparationOverride = 0,
+                        Children =
+                        {
+                            (Output = new OutputPanel
+                            {
+                                SizeFlagsVertical = SizeFlags.FillExpand,
+                                StyleBoxOverride = styleBox
+                            }),
+                            (CommandBar = new LineEdit {PlaceHolder = "Command Here"})
+                        }
+                    })
+                }
+            });
+
+            LayoutContainer.SetAnchorPreset(MainControl, LayoutContainer.LayoutPreset.TopWide);
+            LayoutContainer.SetAnchorBottom(MainControl, 0.35f);
+
             CommandBar.OnKeyBindDown += CommandBarOnOnKeyBindDown;
             CommandBar.OnTextEntered += CommandEntered;
             CommandBar.OnTextChanged += CommandBarOnOnTextChanged;
@@ -91,8 +101,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
             _flushQueue();
 
-            var targetLocation = _targetVisible ? 0 : -Height;
-            var (posX, posY) = Position;
+            var targetLocation = _targetVisible ? 0 : -MainControl.Height;
+            var (posX, posY) = MainControl.Position;
 
             if (Math.Abs(targetLocation - posY) <= 1)
             {
@@ -108,7 +118,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 posY = FloatMath.Lerp(posY, targetLocation, args.DeltaSeconds * 20);
             }
 
-            Position = (posX, posY);
+            LayoutContainer.SetPosition(MainControl, (posX, posY));
         }
 
         public void Toggle()

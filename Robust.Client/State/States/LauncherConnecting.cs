@@ -25,7 +25,7 @@ namespace Robust.Client.State.States
 
             _userInterfaceManager.StateRoot.AddChild(_control);
 
-            _control.SetAnchorAndMarginPreset(Control.LayoutPreset.Wide);
+            //_control.SetAnchorAndMarginPreset(Control.LayoutPreset.Wide);
         }
 
         public override void Shutdown()

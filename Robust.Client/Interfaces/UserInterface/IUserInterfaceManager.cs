@@ -2,6 +2,7 @@
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -15,13 +16,13 @@ namespace Robust.Client.Interfaces.UserInterface
 
         Control KeyboardFocused { get; }
 
-        Control StateRoot { get; }
+        LayoutContainer StateRoot { get; }
 
-        Control WindowRoot { get; }
+        LayoutContainer WindowRoot { get; }
 
-        Control PopupRoot { get; }
+        LayoutContainer PopupRoot { get; }
 
-        Control ModalRoot { get; }
+        LayoutContainer ModalRoot { get; }
 
         Control CurrentlyHovered { get; }
 

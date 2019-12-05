@@ -1,8 +1,9 @@
+using System;
 using NUnit.Framework;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface;
 using Robust.Shared.IoC;
-using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Client.UserInterface
 {
@@ -10,137 +11,21 @@ namespace Robust.UnitTesting.Client.UserInterface
     [TestOf(typeof(Control))]
     public class ControlTest : RobustUnitTest
     {
+        private static readonly AttachedProperty _refTypeAttachedProperty
+            = AttachedProperty.Create("_refType", typeof(ControlTest), typeof(string), "foo", v => (string) v != "bar");
+
+        private static readonly AttachedProperty _valueTypeAttachedProperty
+            = AttachedProperty.Create("_valueType", typeof(ControlTest), typeof(float));
+
+        private static readonly AttachedProperty _nullableAttachedProperty
+            = AttachedProperty.Create("_nullable", typeof(ControlTest), typeof(float?));
+
         public override UnitTestProject Project => UnitTestProject.Client;
 
         [OneTimeSetUp]
         public void Setup()
         {
             IoCManager.Resolve<IUserInterfaceManagerInternal>().InitializeTesting();
-        }
-
-        [Test]
-        public void TestMarginLayoutBasic()
-        {
-            var control = new Control {Size = new Vector2(100, 100)};
-            var child = new Control
-            {
-                MarginRight = 5,
-                MarginBottom = 5,
-            };
-            control.AddChild(child);
-            Assert.That(child.Size, Is.EqualTo(new Vector2(5, 5)));
-            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
-
-            child.MarginTop = 3;
-            child.MarginLeft = 3;
-            Assert.That(child.Size, Is.EqualTo(new Vector2(2, 2)));
-            Assert.That(child.Position, Is.EqualTo(new Vector2(3, 3)));
-        }
-
-        [Test]
-        public void TestAnchorLayoutBasic()
-        {
-            var control = new Control {Size = new Vector2(100, 100)};
-            var child = new Control {AnchorRight = 1, AnchorBottom = 1};
-            control.AddChild(child);
-
-            control.ForceRunLayoutUpdate();
-
-            Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
-            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
-
-            child.AnchorLeft = 0.5f;
-            Assert.That(child.Position, Is.EqualTo(new Vector2(50, 0)));
-            Assert.That(child.Size, Is.EqualTo(new Vector2(50, 100)));
-            child.AnchorTop = 0.5f;
-
-            Assert.That(child.Position, Is.EqualTo(new Vector2(50, 50)));
-            Assert.That(child.Size, Is.EqualTo(new Vector2(50, 50)));
-        }
-
-        [Test]
-        public void TestMarginLayoutMinimumSize()
-        {
-            var control = new Control {Size = new Vector2(100, 100)};
-            var child = new Control
-            {
-                CustomMinimumSize = new Vector2(50, 50),
-                MarginRight = 20,
-                MarginBottom = 20
-            };
-
-            control.AddChild(child);
-            Assert.That(child.Size, Is.EqualTo(new Vector2(50, 50)));
-            Assert.That(child.MarginRight, Is.EqualTo(20));
-            Assert.That(child.MarginBottom, Is.EqualTo(20));
-        }
-
-        [Test]
-        public void TestMarginAnchorLayout()
-        {
-            var control = new Control {Size = new Vector2(100, 100)};
-            var child = new Control
-            {
-                MarginRight = -10,
-                MarginBottom = -10,
-                MarginTop = 10,
-                MarginLeft = 10,
-                AnchorRight = 1,
-                AnchorBottom = 1
-            };
-
-            control.AddChild(child);
-            control.ForceRunLayoutUpdate();
-
-            Assert.That(child.Position, Is.EqualTo(new Vector2(10, 10)));
-            Assert.That(child.Size, Is.EqualTo(new Vector2(80, 80)));
-        }
-
-        [Test]
-        public void TestLayoutSet()
-        {
-            var control = new Control {Size = new Vector2(100, 100)};
-            var child = new Control();
-
-            control.AddChild(child);
-            control.ForceRunLayoutUpdate();
-
-            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
-            Assert.That(child.Size, Is.EqualTo(Vector2.Zero));
-
-            child.Size = new Vector2(50, 50);
-            Assert.That(child.Size, Is.EqualTo(new Vector2(50, 50)));
-            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
-
-            Assert.That(child.MarginTop, Is.EqualTo(0));
-            Assert.That(child.MarginLeft, Is.EqualTo(0));
-            Assert.That(child.MarginRight, Is.EqualTo(50));
-            Assert.That(child.MarginBottom, Is.EqualTo(50));
-
-            child.Position = new Vector2(50, 50);
-            Assert.That(child.Size, Is.EqualTo(new Vector2(50, 50)));
-            Assert.That(child.Position, Is.EqualTo(new Vector2(50, 50)));
-
-            Assert.That(child.MarginTop, Is.EqualTo(50));
-            Assert.That(child.MarginLeft, Is.EqualTo(50));
-            Assert.That(child.MarginRight, Is.EqualTo(100));
-            Assert.That(child.MarginBottom, Is.EqualTo(100));
-        }
-
-        [Test]
-        public void TestLayoutSetMinSizeConstrained()
-        {
-            // Test changing a Control Size to a new value,
-            // when the old value was minsize (due to margins trying to go lower)
-            var control = new Control {Size = new Vector2(100, 100)};
-            var child = new Control {CustomMinimumSize = new Vector2(30, 30)};
-            control.AddChild(child);
-            control.ForceRunLayoutUpdate();
-
-            Assert.That(child.Size, Is.EqualTo(new Vector2(30, 30)));
-
-            child.Size = new Vector2(50, 50);
-            Assert.That(child.Size, Is.EqualTo(new Vector2(50, 50)));
         }
 
         /// <summary>
@@ -198,89 +83,47 @@ namespace Robust.UnitTesting.Client.UserInterface
             control1.Dispose();
         }
 
-        // Test that a control grows its size instead of position by default. (GrowDirection.End)
         [Test]
-        public void TestGrowEnd()
+        public void TestAttachedPropertiesBasic()
         {
-            var parent = new Control {Size = (50, 50)};
-            var child = new Control();
-            parent.AddChild(child);
-            parent.ForceRunLayoutUpdate();
+            var control = new Control();
 
-            // Child should be at 0,0.
-            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
+            control.SetValue(_refTypeAttachedProperty, "honk");
 
-            // Making the child have a bigger minimum size should grow it to the bottom left.
-            // i.e. size should change, position should not.
-            child.CustomMinimumSize = (100, 100);
-            parent.ForceRunLayoutUpdate();
-
-            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
-            Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
+            Assert.AreEqual(control.GetValue(_refTypeAttachedProperty), "honk");
         }
 
-        // Test GrowDirection.Begin
         [Test]
-        public void TestGrowBegin()
+        public void TestAttachedPropertiesValidate()
         {
-            var parent = new Control {Size = (50, 50)};
-            var child = new Control {GrowHorizontal = Control.GrowDirection.Begin};
-            parent.AddChild(child);
-            parent.ForceRunLayoutUpdate();
+            var control = new Control();
 
-            // Child should be at 0,0.
-            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
-
-            // Making the child have a bigger minimum size should grow it to the bottom right.
-            // i.e. size should change, position should not.
-            child.CustomMinimumSize = (100, 100);
-            parent.ForceRunLayoutUpdate();
-
-            Assert.That(child.Position, Is.EqualTo(new Vector2(-100, 0)));
-            Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
+            Assert.Throws<ArgumentException>(() => control.SetValue(_refTypeAttachedProperty, "bar"));
         }
 
-        // Test GrowDirection.Both
         [Test]
-        public void TestGrowBoth()
+        public void TestAttachedPropertiesInvalidType()
         {
-            var parent = new Control {Size = (50, 50)};
-            var child = new Control {GrowHorizontal = Control.GrowDirection.Both};
-            parent.AddChild(child);
-            parent.ForceRunLayoutUpdate();
+            var control = new Control();
 
-            // Child should be at 0,0.
-            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
-
-            child.CustomMinimumSize = (100, 100);
-            parent.ForceRunLayoutUpdate();
-
-            Assert.That(child.Position, Is.EqualTo(new Vector2(-50, 0)));
-            Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
+            Assert.Throws<ArgumentException>(() => control.SetValue(_refTypeAttachedProperty, new object()));
+            Assert.Throws<ArgumentException>(() => control.SetValue(_valueTypeAttachedProperty, new object()));
         }
 
-        // Test that changing a grow direction updates the position correctly.
         [Test]
-        public void TestGrowDirectionChange()
+        public void TestAttachedPropertiesInvalidNull()
         {
-            var parent = new Control {Size = (50, 50)};
-            var child = new Control();
-            parent.AddChild(child);
-            parent.ForceRunLayoutUpdate();
+            var control = new Control();
 
-            // Child should be at 0,0.
-            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
+            Assert.Throws<ArgumentNullException>(() => control.SetValue(_valueTypeAttachedProperty, null));
+        }
 
-            child.CustomMinimumSize = (100, 100);
-            parent.ForceRunLayoutUpdate();
+        [Test]
+        public void TestAttachedPropertiesValidNull()
+        {
+            var control = new Control();
 
-            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
-            Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
-
-            child.GrowHorizontal = Control.GrowDirection.Begin;
-            parent.ForceRunLayoutUpdate();
-
-            Assert.That(child.Position, Is.EqualTo(new Vector2(-100, 0)));
+            control.SetValue(_nullableAttachedProperty, null);
         }
     }
 }

@@ -59,7 +59,8 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 var newValue = ClampValue(value);
-                if (!FloatMath.CloseTo(newValue, _value))
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (newValue != _value)
                 {
                     _value = newValue;
                     OnValueChanged?.Invoke(this);

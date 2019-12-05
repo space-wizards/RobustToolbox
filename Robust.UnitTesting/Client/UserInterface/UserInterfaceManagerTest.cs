@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -32,21 +33,21 @@ namespace Robust.UnitTesting.Client.UserInterface
             // Control 3 pass,
             // Control 4 ignore.
             // We check that 4 and 1 do not receive events, that 3 receives before 2, and that positions are correct.
-            var control1 = new Control
+            var control1 = new LayoutContainer
             {
                 CustomMinimumSize = new Vector2(50, 50)
             };
-            var control2 = new Control
+            var control2 = new LayoutContainer
             {
                 CustomMinimumSize = new Vector2(50, 50),
                 MouseFilter = Control.MouseFilterMode.Stop
             };
-            var control3 = new Control
+            var control3 = new LayoutContainer
             {
                 CustomMinimumSize = new Vector2(50, 50),
                 MouseFilter = Control.MouseFilterMode.Pass
             };
-            var control4 = new Control
+            var control4 = new LayoutContainer
             {
                 CustomMinimumSize = new Vector2(50, 50),
                 MouseFilter = Control.MouseFilterMode.Ignore
@@ -55,11 +56,13 @@ namespace Robust.UnitTesting.Client.UserInterface
             _userInterfaceManager.RootControl.AddChild(control1);
             control1.AddChild(control2);
             // Offsets to test relative positioning on the events.
-            control2.Position = new Vector2(5, 5);
+            LayoutContainer.SetPosition(control2, (5, 5));
             control2.AddChild(control3);
-            control3.Position = new Vector2(5, 5);
+            LayoutContainer.SetPosition(control3, (5, 5));
             control3.AddChild(control4);
-            control4.Position = new Vector2(5, 5);
+            LayoutContainer.SetPosition(control4, (5, 5));
+
+            control1.ForceRunLayoutUpdate();
 
             var mouseEvent = new BoundKeyEventArgs(EngineKeyFunctions.Use, BoundKeyState.Down,
                 new Robust.Shared.Map.ScreenCoordinates(30, 30), true);

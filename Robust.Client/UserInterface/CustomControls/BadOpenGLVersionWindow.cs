@@ -10,8 +10,6 @@ namespace Robust.Client.UserInterface.CustomControls
     // And there's at least one person that would've ran into this.
     internal sealed class BadOpenGLVersionWindow : SS14Window
     {
-        protected override Vector2? CustomSize { get; }
-
         public BadOpenGLVersionWindow(IClydeDebugInfo debugInfo)
         {
             Title = "Unsupported OpenGL version!";
@@ -30,8 +28,6 @@ Version: {debugInfo.VersionString}";
 
             var label = new Label {Text = message};
             Contents.AddChild(label);
-
-            Size = CombinedMinimumSize;
         }
     }
 }

@@ -220,10 +220,8 @@ namespace Robust.Client.UserInterface.Controls
             FitChildInPixelBox(child, _getContentBox());
         }
 
-        protected internal override void SortChildren()
+        protected override void LayoutUpdateOverride()
         {
-            base.SortChildren();
-
             if (ChildCount == 0 || _currentTab >= ChildCount)
             {
                 return;

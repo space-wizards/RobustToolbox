@@ -113,6 +113,9 @@ namespace Robust.Client.UserInterface
                 _visible = value;
 
                 _propagateVisibilityChanged(value);
+                // TODO: unhardcode this.
+                // Many containers ignore children if they're invisible, so that's why we're replicating that ehre.
+                Parent?.MinimumSizeChanged();
             }
         }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameStates;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -103,6 +104,7 @@ namespace Robust.Shared.Map
                     {
                         continue;
                     }
+
                     var gridCreation = data.CreatedGrids[gridId];
                     DebugTools.Assert(gridCreation.IsTheDefault);
 
@@ -131,6 +133,7 @@ namespace Robust.Shared.Map
                 // Ok good all the grids and maps exist now.
                 foreach (var (gridId, gridDatum) in data.GridData)
                 {
+
                     var grid = _grids[gridId];
                     if (grid.ParentMapId != gridDatum.Coordinates.MapId)
                     {
@@ -191,26 +194,38 @@ namespace Robust.Shared.Map
                     if(!_mapEntities[mapId].IsClientSide())
                         continue;
 
-                    // remove the existing client entity for the map.
+                    // get the existing client entity for the map.
                     var cEntity = _entityManager.GetEntity(_mapEntities[mapId]);
-                    var cGridComp = cEntity.GetComponent<IMapComponent>();
-                    cGridComp.ClearMapId();
-                    cEntity.Delete();
 
                     // locate the entity that represents this map that was just sent to us
+                    IEntity sharedMapEntity = null;
                     var mapComps = _entityManager.ComponentManager.GetAllComponents<IMapComponent>();
                     foreach (var mapComp in mapComps)
                     {
-                        if (mapComp.WorldMap == mapId)
+                        if (!mapComp.Owner.Uid.IsClientSide() && mapComp.WorldMap == mapId)
                         {
+                            sharedMapEntity = mapComp.Owner;
                             _mapEntities[mapId] = mapComp.Owner.Uid;
                             Logger.DebugS("map", $"Map {mapId} pivoted bound entity from {cEntity.Uid} to {mapComp.Owner.Uid}.");
                             break;
                         }
                     }
 
-                    // verify shared entity was found
+                    // verify shared entity was found (the server sent us one)
+                    DebugTools.AssertNotNull(sharedMapEntity);
                     DebugTools.Assert(!_mapEntities[mapId].IsClientSide());
+
+                    // Transfer client child grids made in GameStatePre to the shared component
+                    // so they are not deleted
+                    foreach (var childGridTrans in cEntity.Transform.Children.ToList())
+                    {
+                        childGridTrans.AttachParent(sharedMapEntity);
+                    }
+
+                    // remove client entity
+                    var cGridComp = cEntity.GetComponent<IMapComponent>();
+                    cGridComp.ClearMapId();
+                    cEntity.Delete();
                 }
             }
 
@@ -232,7 +247,7 @@ namespace Robust.Shared.Map
                     var cEntity = _entityManager.GetEntity(grid.GridEntity);
                     var cGridComp = cEntity.GetComponent<IMapGridComponent>();
                     cGridComp.ClearGridId();
-                    cEntity.Delete();
+                    cEntity.Delete(); // normal entities are already parented to the shared comp, client comp has no children
 
                     var gridComps = _entityManager.ComponentManager.GetAllComponents<IMapGridComponent>();
                     foreach (var gridComp in gridComps)

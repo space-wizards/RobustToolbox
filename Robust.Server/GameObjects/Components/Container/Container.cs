@@ -4,6 +4,7 @@ using Robust.Server.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -98,6 +99,21 @@ namespace Robust.Server.GameObjects.Components.Container
             Manager = manager;
         }
 
+        private static bool RecursiveFindContainerMan(ITransformComponent transform,
+            out IContainerManager containerManager)
+        {
+            if (transform == null)
+            {
+                containerManager = default;
+                return false;
+            }
+
+            if (transform.Owner.TryGetComponent(out containerManager))
+                return true;
+
+            return RecursiveFindContainerMan(transform.Parent, out containerManager);
+        }
+
         /// <inheritdoc />
         public bool Insert(IEntity toinsert)
         {
@@ -108,10 +124,14 @@ namespace Robust.Server.GameObjects.Components.Container
                 return false;
 
             var transform = toinsert.Transform;
+
             // The transform.Parent.Owner != Owner is there because map deserialization of containers still uses Insert()
             // In which case the child is already parented. To us. Don't reject him hand him to the orphanage.
             // Perhaps making it not use Insert() is a good idea but eh.
-            if (!transform.IsMapTransform && transform.Parent.Owner != Owner && !transform.Parent.Owner.GetComponent<IContainerManager>().Remove(toinsert))
+            if (transform.Parent == null // Only true if Parent is the map entity
+                || transform.Parent.Owner == Owner
+                || !transform.Parent.Owner.TryGetComponent(out IContainerManager containerManager)
+                || !containerManager.Remove(toinsert))
             {
                 // Can't detach the entity from its parent, can't insert.
                 return false;

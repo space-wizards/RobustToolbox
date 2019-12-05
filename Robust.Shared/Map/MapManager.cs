@@ -15,7 +15,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Map
 {
     /// <inheritdoc cref="IMapManager"/>
-    public partial class MapManager : IMapManagerInternal, IPostInjectInit
+    public partial class MapManager : IMapManagerInternal
     {
 #pragma warning disable 649
         [Dependency] private readonly IGameTiming _gameTiming;
@@ -62,10 +62,6 @@ namespace Robust.Shared.Map
 
         private readonly List<(GameTick tick, GridId gridId)> _gridDeletionHistory = new List<(GameTick, GridId)>();
         private readonly List<(GameTick tick, MapId mapId)> _mapDeletionHistory = new List<(GameTick, MapId)>();
-
-        public void PostInject()
-        {
-        }
 
         /// <inheritdoc />
         public void Initialize()
@@ -188,7 +184,7 @@ namespace Robust.Shared.Map
                 }
                 else
                 {
-                    var newEnt = _entityManager.SpawnEntity(null);
+                    var newEnt = _entityManager.CreateEntityUninitialized(null, GridCoordinates.Nullspace);
                     _mapEntities.Add(actualID, newEnt.Uid);
 
                     var mapComp = newEnt.AddComponent<MapComponent>();
@@ -210,6 +206,16 @@ namespace Robust.Shared.Map
             return _maps.Contains(mapID);
         }
 
+        public EntityUid GetMapEntityId(MapId mapId)
+        {
+            return _mapEntities[mapId];
+        }
+
+        public IEntity GetMapEntity(MapId mapId)
+        {
+            return _entityManager.GetEntity(_mapEntities[mapId]);
+        }
+
         public IEnumerable<MapId> GetAllMapIds()
         {
             return _maps;
@@ -222,7 +228,9 @@ namespace Robust.Shared.Map
 
         public GridId GetDefaultGridId(MapId mapID)
         {
-            return _defaultGrids[mapID];
+            if(_defaultGrids.TryGetValue(mapID, out var gridID))
+                return gridID;
+            return GridId.Nullspace; //TODO: Hack to make shutdown work
         }
 
         public IEnumerable<IMapGrid> GetAllGrids()
@@ -276,12 +284,15 @@ namespace Robust.Shared.Map
                 }
                 else
                 {
-                    var newEnt = _entityManager.SpawnEntity(null, new GridCoordinates(0, 0, actualID));
+                    var newEnt = _entityManager.CreateEntityUninitialized(null, new MapCoordinates(Vector2.Zero, currentMapID));
                     grid.GridEntity = newEnt.Uid;
+
+                    Logger.DebugS("map", $"Binding grid {actualID} to entity {grid.GridEntity}");
 
                     var gridComp = newEnt.AddComponent<MapGridComponent>();
                     gridComp.GridIndex = grid.Index;
-                    Logger.DebugS("map", $"Binding grid {actualID} to entity {grid.GridEntity}");
+
+                    newEnt.Transform.AttachParent(_entityManager.GetEntity(_mapEntities[currentMapID]));
                 }
             }
 

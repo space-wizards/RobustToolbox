@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -446,6 +446,12 @@ namespace Robust.Client.Console.Commands
                 }
 
                 members.Add((propertyInfo.Name, propertyInfo.GetValue(control)?.ToString() ?? "null"));
+            }
+
+            foreach (var (attachedProperty, value) in control.AllAttachedProperties)
+            {
+                members.Add(($"{attachedProperty.OwningType.Name}.{attachedProperty.Name}",
+                    value?.ToString() ?? "null"));
             }
 
             members.Sort((a, b) => string.Compare(a.Item1, b.Item1, StringComparison.Ordinal));

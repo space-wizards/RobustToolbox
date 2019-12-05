@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 
 namespace Robust.Client.UserInterface
@@ -157,5 +158,8 @@ namespace Robust.Client.UserInterface
 
             property.Changed?.Invoke(this, changed);
         }
+
+        public IEnumerable<KeyValuePair<AttachedProperty, object>> AllAttachedProperties =>
+            _attachedProperties ?? Enumerable.Empty<KeyValuePair<AttachedProperty, object>>();
     }
 }

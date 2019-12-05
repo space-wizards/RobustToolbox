@@ -21,8 +21,8 @@ namespace Robust.Client.UserInterface.Controls
 
             if (box != null)
             {
-                Position = box.Value.TopLeft;
-                Size = box.Value.Size;
+                LayoutContainer.SetPosition(this, box.Value.TopLeft);
+                LayoutContainer.SetSize(this, box.Value.Size);
             }
 
             Visible = true;

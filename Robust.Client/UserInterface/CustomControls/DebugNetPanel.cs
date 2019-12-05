@@ -11,7 +11,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    public class DebugNetPanel : Panel
+    public class DebugNetPanel : PanelContainer
     {
         // Float so I don't have to cast it to prevent integer division down below.
         const float ONE_KIBIBYTE = 1024;
@@ -42,14 +42,14 @@ namespace Robust.Client.UserInterface.CustomControls
             contents = new Label
             {
                 FontColorShadowOverride = Color.Black,
-                MarginTop = 5,
-                MarginLeft = 5
             };
             AddChild(contents);
 
             PanelOverride = new StyleBoxFlat
             {
                 BackgroundColor = new Color(255, 105, 67, 138),
+                ContentMarginLeftOverride = 5,
+                ContentMarginTopOverride = 5
             };
 
             MouseFilter = contents.MouseFilter = MouseFilterMode.Ignore;

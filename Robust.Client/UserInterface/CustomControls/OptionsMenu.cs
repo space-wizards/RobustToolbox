@@ -23,7 +23,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             var vBox = new VBoxContainer();
             Contents.AddChild(vBox);
-            vBox.SetAnchorAndMarginPreset(LayoutPreset.Wide);
+            //vBox.SetAnchorAndMarginPreset(LayoutPreset.Wide);
 
             VSyncCheckBox = new CheckBox {Text = "VSync"};
             vBox.AddChild(VSyncCheckBox);

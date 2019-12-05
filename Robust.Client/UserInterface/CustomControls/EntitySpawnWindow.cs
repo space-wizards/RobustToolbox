@@ -58,6 +58,8 @@ namespace Robust.Client.UserInterface.CustomControls
         private EntitySpawnButton SelectedButton;
         private EntityPrototype SelectedPrototype;
 
+        protected override Vector2? CustomSize => (250, 300);
+
         public EntitySpawnWindow(IPlacementManager placementManager,
             IPrototypeManager prototypeManager,
             IResourceCache resourceCache,
@@ -69,7 +71,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
             _loc = loc;
 
-            Size = new Vector2(250.0f, 300.0f);
             Title = _loc.GetString("Entity Spawn Panel");
 
             Contents.AddChild(MainVBox = new VBoxContainer
@@ -421,10 +422,12 @@ namespace Robust.Client.UserInterface.CustomControls
 
                 var first = GetChild(0);
 
-                return (first.Width, first.CombinedMinimumSize.Y * TotalItemCount + (TotalItemCount - 1) * Separation);
+                var (minX, minY) = first.CombinedMinimumSize;
+
+                return (minX, minY * TotalItemCount + (TotalItemCount - 1) * Separation);
             }
 
-            protected internal override void SortChildren()
+            protected override void LayoutUpdateOverride()
             {
                 if (ChildCount == 0)
                 {
@@ -445,7 +448,7 @@ namespace Robust.Client.UserInterface.CustomControls
         }
 
         [DebuggerDisplay("spawnbutton {" + nameof(Index) + "}")]
-        private class EntitySpawnButton : PanelContainer
+        private class EntitySpawnButton : Control
         {
             public string PrototypeID => Prototype.ID;
             public EntityPrototype Prototype { get; set; }
@@ -456,45 +459,36 @@ namespace Robust.Client.UserInterface.CustomControls
 
             public EntitySpawnButton()
             {
-                ActualButton = new Button
+                AddChild(ActualButton = new Button
                 {
                     SizeFlagsHorizontal = SizeFlags.FillExpand,
                     SizeFlagsVertical = SizeFlags.FillExpand,
                     ToggleMode = true,
-                };
-                AddChild(ActualButton);
+                });
 
-                var hBoxContainer = new HBoxContainer
+                AddChild(new HBoxContainer
                 {
                     MouseFilter = MouseFilterMode.Ignore,
-                };
-                var textureWrap = new Control
-                {
-                    CustomMinimumSize = new Vector2(32.0f, 32.0f),
-                    MouseFilter = MouseFilterMode.Ignore,
-                    RectClipContent = true
-                };
-                EntityTextureRect = new TextureRect
-                {
-                    AnchorRight = 1.0f,
-                    AnchorBottom = 1.0f,
-                    MouseFilter = MouseFilterMode.Ignore,
-                    SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
-                    SizeFlagsVertical = SizeFlags.ShrinkCenter
-                };
-                textureWrap.AddChild(EntityTextureRect);
-
-                EntityLabel = new Label
-                {
-                    SizeFlagsVertical = SizeFlags.ShrinkCenter,
-                    SizeFlagsHorizontal = SizeFlags.FillExpand,
-                    Text = "Backpack",
-                    ClipText = true
-                };
-
-                hBoxContainer.AddChild(textureWrap);
-                hBoxContainer.AddChild(EntityLabel);
-                AddChild(hBoxContainer);
+                    Children =
+                    {
+                        (EntityTextureRect = new TextureRect
+                        {
+                            CustomMinimumSize = (32, 32),
+                            MouseFilter = MouseFilterMode.Ignore,
+                            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
+                            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+                            Stretch = TextureRect.StretchMode.KeepAspectCentered,
+                            CanShrink = true
+                        }),
+                        (EntityLabel = new Label
+                        {
+                            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+                            SizeFlagsHorizontal = SizeFlags.FillExpand,
+                            Text = "Backpack",
+                            ClipText = true
+                        })
+                    }
+                });
             }
         }
 

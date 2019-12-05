@@ -24,10 +24,8 @@ namespace Robust.Client.UserInterface.Controls
             style?.Draw(handle, PixelSizeBox);
         }
 
-        protected internal override void SortChildren()
+        protected override void LayoutUpdateOverride()
         {
-            base.SortChildren();
-
             var contentBox = _getStyleBox()?.GetContentBox(PixelSizeBox) ?? SizeBox;
 
             foreach (var child in Children)

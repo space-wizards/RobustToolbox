@@ -29,7 +29,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 _columns = value;
                 MinimumSizeChanged();
-                QueueSortChildren();
+                UpdateLayout();
             }
         }
 
@@ -132,7 +132,7 @@ namespace Robust.Client.UserInterface.Controls
             return totalSize;
         }
 
-        protected internal override void SortChildren()
+        protected override void LayoutUpdateOverride()
         {
             var rows = Rows;
 

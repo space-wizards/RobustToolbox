@@ -211,7 +211,7 @@ namespace Robust.Client.Console.Commands
             mgr.DebugDrawRays = !mgr.DebugDrawRays;
             console.AddLine("Toggled showing rays to:" + mgr.DebugDrawRays.ToString(), Color.Green);
             var indexSplit = args[0].Split(',');
-            mgr.DebugRayLifetime = TimeSpan.FromSeconds((double)int.Parse(indexSplit[0], CultureInfo.InvariantCulture));   
+            mgr.DebugRayLifetime = TimeSpan.FromSeconds((double)int.Parse(indexSplit[0], CultureInfo.InvariantCulture));
             return false;
         }
     }
@@ -466,7 +466,7 @@ namespace Robust.Client.Console.Commands
             window.Contents.AddChild(tabContainer);
             var scroll = new ScrollContainer();
             tabContainer.AddChild(scroll);
-            scroll.SetAnchorAndMarginPreset(Control.LayoutPreset.Wide);
+            //scroll.SetAnchorAndMarginPreset(Control.LayoutPreset.Wide);
             var vBox = new VBoxContainer();
             scroll.AddChild(vBox);
 

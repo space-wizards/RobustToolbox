@@ -55,7 +55,7 @@ namespace Robust.Client.ViewVariables.Instances
             var type = obj.GetType();
 
             var scrollContainer = new ScrollContainer();
-            scrollContainer.SetAnchorPreset(Control.LayoutPreset.Wide, true);
+            //scrollContainer.SetAnchorPreset(Control.LayoutPreset.Wide, true);
             window.Contents.AddChild(scrollContainer);
             var vBoxContainer = new VBoxContainer
             {

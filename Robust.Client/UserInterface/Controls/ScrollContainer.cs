@@ -22,12 +22,20 @@ namespace Robust.Client.UserInterface.Controls
             RectClipContent = true;
 
             Action<Range> ev = _scrollValueChanged;
-            _hScrollBar = new HScrollBar {Visible = false};
-            _vScrollBar = new VScrollBar {Visible = false};
+            _hScrollBar = new HScrollBar
+            {
+                Visible = false,
+                SizeFlagsVertical = SizeFlags.ShrinkEnd,
+                SizeFlagsHorizontal = SizeFlags.Fill
+            };
+            _vScrollBar = new VScrollBar
+            {
+                Visible = false,
+                SizeFlagsVertical = SizeFlags.Fill,
+                SizeFlagsHorizontal = SizeFlags.ShrinkEnd
+            };
             AddChild(_hScrollBar);
             AddChild(_vScrollBar);
-            _hScrollBar.SetAnchorAndMarginPreset(LayoutPreset.BottomWide);
-            _vScrollBar.SetAnchorAndMarginPreset(LayoutPreset.RightWide);
             _hScrollBar.OnValueChanged += ev;
             _vScrollBar.OnValueChanged += ev;
         }
@@ -52,7 +60,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected internal override void SortChildren()
+        protected override void LayoutUpdateOverride()
         {
             if (_vScrollBar?.Parent == null || _hScrollBar?.Parent == null)
             {
@@ -109,6 +117,9 @@ namespace Robust.Client.UserInterface.Controls
                 // I really don't think this can throw an exception but oh well let's finally it.
                 _suppressScrollValueChanged = false;
             }
+
+            FitChildInPixelBox(_vScrollBar, PixelSizeBox);
+            FitChildInPixelBox(_hScrollBar, PixelSizeBox);
 
             foreach (var child in Children)
             {
@@ -213,7 +224,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            QueueSortChildren();
+            UpdateLayout();
         }
     }
 }

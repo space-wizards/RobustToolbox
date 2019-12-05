@@ -29,9 +29,13 @@ namespace Robust.Client.UserInterface.Controls
         {
             RectClipContent = true;
 
-            _scrollBar = new VScrollBar {Name = "_v_scroll"};
+            _scrollBar = new VScrollBar
+            {
+                Name = "_v_scroll",
+                SizeFlagsVertical = SizeFlags.Fill,
+                SizeFlagsHorizontal = SizeFlags.ShrinkEnd
+            };
             AddChild(_scrollBar);
-            _scrollBar.SetAnchorAndMarginPreset(LayoutPreset.RightWide);
             _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
         }
 
@@ -66,6 +70,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 Clear();
             }
+
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
         }
 

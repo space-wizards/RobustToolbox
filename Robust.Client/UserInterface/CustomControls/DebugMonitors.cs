@@ -39,10 +39,12 @@ namespace Robust.Client.UserInterface.CustomControls
             MouseFilter = MouseFilterMode.Ignore;
             Visible = false;
 
+            /*
             SetAnchorPreset(LayoutPreset.Wide);
 
             MarginLeft = 2;
             MarginTop = 2;
+            */
 
             _fpsCounter = new FpsCounter(gameTiming1);
             AddChild(_fpsCounter);

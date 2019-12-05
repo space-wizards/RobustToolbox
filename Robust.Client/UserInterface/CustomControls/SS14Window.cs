@@ -8,7 +8,7 @@ using Robust.Shared.Timing;
 namespace Robust.Client.UserInterface.CustomControls
 {
     // ReSharper disable once InconsistentNaming
-    public class SS14Window : Panel
+    public class SS14Window : Control
     {
         public const string StyleClassWindowTitle = "windowTitle";
         public const string StyleClassWindowPanel = "windowPanel";
@@ -19,78 +19,72 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public SS14Window()
         {
-            PanelOverride = new StyleBoxFlat
+            AddChild(new PanelContainer
             {
-                BackgroundColor = new Color(37, 37, 42)
-            };
+                StyleClasses = {StyleClassWindowPanel}
+            });
 
-            // Setup header. Includes the title label and close button.
-            var header = new Panel
+            AddChild(new VBoxContainer
             {
-                AnchorRight = 1.0f, MarginBottom = 25.0f,
-                MouseFilter = MouseFilterMode.Ignore,
-                StyleClasses = {StyleClassWindowHeader}
-            };
+                SeparationOverride = 0,
+                Children =
+                {
+                    new PanelContainer
+                    {
+                        MouseFilter = MouseFilterMode.Ignore,
+                        StyleClasses = {StyleClassWindowHeader},
+                        CustomMinimumSize = (0, HEADER_SIZE_Y),
+                        Children =
+                        {
+                            new HBoxContainer
+                            {
+                                Children =
+                                {
+                                    new MarginContainer
+                                    {
+                                        MarginLeftOverride = 5,
+                                        SizeFlagsHorizontal = SizeFlags.FillExpand,
+                                        MouseFilter = MouseFilterMode.Ignore,
+                                        Children =
+                                        {
+                                            (TitleLabel = new Label
+                                            {
+                                                StyleIdentifier = "foo",
+                                                ClipText = true,
+                                                Text = "Exemplary Window Title Here",
+                                                VAlign = Label.VAlignMode.Center,
+                                                StyleClasses = {StyleClassWindowTitle}
+                                            })
+                                        }
+                                    },
+                                    (CloseButton = new TextureButton
+                                    {
+                                        StyleClasses = {StyleClassWindowCloseButton},
+                                        SizeFlagsVertical = SizeFlags.ShrinkCenter
+                                    })
+                                }
+                            }
+                        }
+                    },
+                    (Contents = new MarginContainer
+                    {
+                        MarginBottomOverride = 10,
+                        MarginLeftOverride = 10,
+                        MarginRightOverride = 10,
+                        MarginTopOverride = 10,
+                        RectClipContent = true,
+                        MouseFilter = MouseFilterMode.Ignore,
+                        SizeFlagsVertical = SizeFlags.FillExpand
+                    })
+                }
+            });
 
-            header.AddStyleClass(StyleClassWindowHeader);
-            TitleLabel = new Label
-            {
-                ClipText = true,
-                AnchorRight = 1.0f,
-                AnchorBottom = 1.0f,
-                MarginRight = -25.0f,
-                MarginLeft = 5,
-                Text = "Exemplary Window Title Here",
-                VAlign = Label.VAlignMode.Center,
-                StyleClasses = {StyleClassWindowTitle}
-            };
-            CloseButton = new TextureButton
-            {
-                AnchorLeft = 1.0f, AnchorRight = 1.0f, AnchorBottom = 1.0f, MarginLeft = -25.0f,
-                StyleClasses = {StyleClassWindowCloseButton}
-            };
             CloseButton.OnPressed += CloseButtonPressed;
-            header.AddChild(TitleLabel);
-            header.AddChild(CloseButton);
-
-            // Setup content area.
-            Contents = new MarginContainer
-            {
-                AnchorRight = 1.0f,
-                AnchorBottom = 1.0f,
-                MarginTop = 30.0f,
-                MarginBottomOverride = 10,
-                MarginLeftOverride = 10,
-                MarginRightOverride = 10,
-                MarginTopOverride = 10,
-                RectClipContent = true,
-                MouseFilter = MouseFilterMode.Ignore
-            };
-            Contents.OnMinimumSizeChanged += _ => MinimumSizeChanged();
-            AddChild(header);
-            AddChild(Contents);
-
-            AddStyleClass(StyleClassWindowPanel);
-            MarginLeft = 100.0f;
-            MarginTop = 38.0f;
-            MarginRight = 878.0f;
-            MarginBottom = 519.0f;
 
             if (CustomSize != null)
             {
-                Size = CustomSize.Value;
+                LayoutContainer.SetSize(this, CustomSize.Value);
             }
-        }
-
-        [Flags]
-        enum DragMode
-        {
-            None = 0,
-            Move = 1,
-            Top = 1 << 1,
-            Bottom = 1 << 2,
-            Left = 1 << 3,
-            Right = 1 << 4,
         }
 
         public MarginContainer Contents { get; private set; }
@@ -104,7 +98,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            return Vector2.ComponentMax(ContentsMinimumSize, Contents.CombinedMinimumSize) + (0, Contents.MarginTop);
+            return Vector2.ComponentMax(ContentsMinimumSize, base.CalculateMinimumSize());
         }
 
         private DragMode CurrentDrag = DragMode.None;
@@ -205,7 +199,7 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 var globalPos = args.GlobalPosition;
                 globalPos = Vector2.Clamp(globalPos, Vector2.Zero, Parent.Size);
-                Position = globalPos - DragOffsetTopLeft;
+                LayoutContainer.SetPosition(this, globalPos - DragOffsetTopLeft);
                 return;
             }
 
@@ -271,8 +265,8 @@ namespace Robust.Client.UserInterface.CustomControls
                 }
 
                 var rect = new UIBox2(left, top, right, bottom);
-                Position = rect.TopLeft;
-                Size = rect.Size;
+                LayoutContainer.SetPosition(this, rect.TopLeft);
+                LayoutContainer.SetSize(this, rect.Size);
             }
         }
 
@@ -282,39 +276,6 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 DefaultCursorShape = CursorShape.Arrow;
             }
-        }
-
-        private DragMode GetDragModeFor(Vector2 relativeMousePos)
-        {
-            var mode = DragMode.None;
-
-            if (Resizable)
-            {
-                if (relativeMousePos.Y < DRAG_MARGIN_SIZE)
-                {
-                    mode = DragMode.Top;
-                }
-                else if (relativeMousePos.Y > Size.Y - DRAG_MARGIN_SIZE)
-                {
-                    mode = DragMode.Bottom;
-                }
-
-                if (relativeMousePos.X < DRAG_MARGIN_SIZE)
-                {
-                    mode |= DragMode.Left;
-                }
-                else if (relativeMousePos.X > Size.X - DRAG_MARGIN_SIZE)
-                {
-                    mode |= DragMode.Right;
-                }
-            }
-
-            if (mode == DragMode.None && relativeMousePos.Y < HEADER_SIZE_Y)
-            {
-                mode = DragMode.Move;
-            }
-
-            return mode;
         }
 
         public void MoveToFront()
@@ -365,35 +326,80 @@ namespace Robust.Client.UserInterface.CustomControls
         public void OpenCentered()
         {
             Open();
-            Position = (Parent.Size - Size) / 2;
+            LayoutContainer.SetPosition(this, (Parent.Size - Size) / 2);
         }
 
         public void OpenCenteredMinSize()
         {
-            Size = ContentsMinimumSize;
+            LayoutContainer.SetSize(this, ContentsMinimumSize);
             OpenCentered();
         }
 
         public void OpenToLeft()
         {
             Open();
-            Position = new Vector2(0, (Parent.Size.Y - Size.Y) / 2);
+            LayoutContainer.SetPosition(this, (0, (Parent.Size.Y - Size.Y) / 2));
         }
 
         // Prevent window headers from getting off screen due to game window resizes.
+
         protected override void Update(FrameEventArgs args)
         {
             var (spaceX, spaceY) = Parent.Size;
             if (Position.Y > spaceY)
             {
-                Position = new Vector2(Position.X, spaceY - HEADER_SIZE_Y);
+                LayoutContainer.SetPosition(this, (Position.X, spaceY - HEADER_SIZE_Y));
             }
 
             if (Position.X > spaceX)
             {
                 // 50 is arbitrary here. As long as it's bumped back into view.
-                Position = new Vector2(spaceX - 50, Position.Y);
+                LayoutContainer.SetPosition(this, (spaceX - 50, Position.Y));
             }
+        }
+
+        private DragMode GetDragModeFor(Vector2 relativeMousePos)
+        {
+            var mode = DragMode.None;
+
+            if (Resizable)
+            {
+                if (relativeMousePos.Y < DRAG_MARGIN_SIZE)
+                {
+                    mode = DragMode.Top;
+                }
+                else if (relativeMousePos.Y > Size.Y - DRAG_MARGIN_SIZE)
+                {
+                    mode = DragMode.Bottom;
+                }
+
+                if (relativeMousePos.X < DRAG_MARGIN_SIZE)
+                {
+                    mode |= DragMode.Left;
+                }
+                else if (relativeMousePos.X > Size.X - DRAG_MARGIN_SIZE)
+                {
+                    mode |= DragMode.Right;
+                }
+            }
+
+            if (mode == DragMode.None && relativeMousePos.Y < HEADER_SIZE_Y)
+            {
+                mode = DragMode.Move;
+            }
+
+            return mode;
+        }
+
+        [Flags]
+        private enum DragMode
+        {
+            None = 0,
+            Move = 1,
+            Top = 1 << 1,
+            Bottom = 1 << 2,
+            Left = 1 << 3,
+            Right = 1 << 4,
         }
     }
 }

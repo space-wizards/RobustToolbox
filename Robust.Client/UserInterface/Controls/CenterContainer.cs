@@ -7,7 +7,7 @@ namespace Robust.Client.UserInterface.Controls
     /// </summary>
     public class CenterContainer : Container
     {
-        protected internal override void SortChildren()
+        protected override void LayoutUpdateOverride()
         {
             foreach (var child in Children)
             {
@@ -16,18 +16,6 @@ namespace Robust.Client.UserInterface.Controls
 
                 FitChildInBox(child, UIBox2.FromDimensions(childPos, childSize));
             }
-        }
-
-        protected override Vector2 CalculateMinimumSize()
-        {
-            var min = Vector2.Zero;
-
-            foreach (var child in Children)
-            {
-                min = Vector2.ComponentMax(child.CombinedMinimumSize, min);
-            }
-
-            return min;
         }
     }
 }

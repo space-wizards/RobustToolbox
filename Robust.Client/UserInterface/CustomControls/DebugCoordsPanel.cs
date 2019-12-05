@@ -15,7 +15,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    internal class DebugCoordsPanel : Panel
+    internal class DebugCoordsPanel : PanelContainer
     {
         private readonly IPlayerManager playerManager;
         private readonly IEyeManager eyeManager;
@@ -46,14 +46,14 @@ namespace Robust.Client.UserInterface.CustomControls
             contents = new Label
             {
                 FontColorShadowOverride = Color.Black,
-                MarginTop = 5,
-                MarginLeft = 5
             };
             AddChild(contents);
 
             PanelOverride = new StyleBoxFlat
             {
                 BackgroundColor = new Color(67, 105, 255, 138),
+                ContentMarginLeftOverride = 5,
+                ContentMarginTopOverride = 5
             };
 
             MouseFilter = contents.MouseFilter = MouseFilterMode.Ignore;

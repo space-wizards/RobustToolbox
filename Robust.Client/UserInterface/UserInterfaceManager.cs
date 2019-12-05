@@ -47,13 +47,13 @@ namespace Robust.Client.UserInterface
         // So we keep track of which control is "focused" by the mouse.
         private Control _controlFocused;
 
-        public Control StateRoot { get; private set; }
-        public Control ModalRoot { get; private set; }
+        public LayoutContainer StateRoot { get; private set; }
+        public LayoutContainer ModalRoot { get; private set; }
         public Control CurrentlyHovered { get; private set; }
         public float UIScale { get; private set; } = 1;
         public Control RootControl { get; private set; }
-        public Control WindowRoot { get; private set; }
-        public Control PopupRoot { get; private set; }
+        public LayoutContainer WindowRoot { get; private set; }
+        public LayoutContainer PopupRoot { get; private set; }
         public DebugConsole DebugConsole { get; private set; }
         public IDebugMonitors DebugMonitors => _debugMonitors;
         private DebugMonitors _debugMonitors;
@@ -104,44 +104,39 @@ namespace Robust.Client.UserInterface
                 MouseFilter = Control.MouseFilterMode.Ignore,
                 IsInsideTree = true
             };
-            RootControl.SetAnchorPreset(Control.LayoutPreset.Wide);
             RootControl.Size = _displayManager.ScreenSize / UIScale;
             _displayManager.OnWindowResized += args => _updateRootSize();
 
-            StateRoot = new Control
+            StateRoot = new LayoutContainer
             {
                 Name = "StateRoot",
                 MouseFilter = Control.MouseFilterMode.Ignore
             };
-            StateRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             RootControl.AddChild(StateRoot);
 
-            WindowRoot = new Control
+            WindowRoot = new LayoutContainer
             {
                 Name = "WindowRoot",
                 MouseFilter = Control.MouseFilterMode.Ignore
             };
-            WindowRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             RootControl.AddChild(WindowRoot);
 
-            PopupRoot = new Control
+            PopupRoot = new LayoutContainer
             {
                 Name = "PopupRoot",
                 MouseFilter = Control.MouseFilterMode.Ignore
             };
-            PopupRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             RootControl.AddChild(PopupRoot);
 
-            ModalRoot = new Control
+            ModalRoot = new LayoutContainer
             {
                 Name = "ModalRoot",
                 MouseFilter = Control.MouseFilterMode.Ignore,
             };
-            ModalRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             RootControl.AddChild(ModalRoot);
 
             _tooltip = new Tooltip();
-            RootControl.AddChild(_tooltip);
+            PopupRoot.AddChild(_tooltip);
             _tooltip.Visible = false;
         }
 
@@ -189,11 +184,6 @@ namespace Robust.Client.UserInterface
                 }
 
                 control.DoLayoutUpdate();
-
-                if (control is Container container)
-                {
-                    container.SortChildren();
-                }
             }
 
             _tooltipTimer -= args.DeltaSeconds;
@@ -607,19 +597,19 @@ namespace Robust.Client.UserInterface
 
             _tooltip.Visible = true;
             _tooltip.Text = hovered.ToolTip;
-            _tooltip.Position = _inputManager.MouseScreenPosition;
-            _tooltip.Size = _tooltip.CustomMinimumSize;
+            LayoutContainer.SetPosition(_tooltip, _inputManager.MouseScreenPosition);
+            LayoutContainer.SetSize(_tooltip, _tooltip.CustomMinimumSize);
 
             var (right, bottom) = _tooltip.Position + _tooltip.Size;
 
             if (right > RootControl.Size.X)
             {
-                _tooltip.Position = (RootControl.Size.X - _tooltip.Size.X, _tooltip.Position.Y);
+                LayoutContainer.SetPosition(_tooltip, (RootControl.Size.X - _tooltip.Size.X, _tooltip.Position.Y));
             }
 
             if (bottom > RootControl.Size.Y)
             {
-                _tooltip.Position = (_tooltip.Position.X, RootControl.Size.Y - _tooltip.Size.Y);
+                LayoutContainer.SetPosition(_tooltip, (_tooltip.Position.X, RootControl.Size.Y - _tooltip.Size.Y));
             }
         }
 

@@ -14,14 +14,17 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         [Test]
         public void TestLayoutBasic()
         {
+            var root = new LayoutContainer();
             var boxContainer = new VBoxContainer {CustomMinimumSize = (50, 60)};
             var control1 = new Control {CustomMinimumSize = (20, 20)};
             var control2 = new Control {CustomMinimumSize = (30, 30)};
 
+            root.AddChild(boxContainer);
+
             boxContainer.AddChild(control1);
             boxContainer.AddChild(control2);
 
-            boxContainer.ForceRunLayoutUpdate();
+            root.ForceRunLayoutUpdate();
 
             Assert.That(control1.Position, Is.EqualTo(Vector2.Zero));
             Assert.That(control1.Size, Is.EqualTo(new Vector2(50, 20)));
@@ -34,6 +37,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         [Test]
         public void TestLayoutExpand()
         {
+            var root = new LayoutContainer();
             var boxContainer = new VBoxContainer {CustomMinimumSize = (50, 60)};
             var control1 = new Control
             {
@@ -44,7 +48,9 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             boxContainer.AddChild(control1);
             boxContainer.AddChild(control2);
 
-            boxContainer.ForceRunLayoutUpdate();
+            root.AddChild(boxContainer);
+
+            root.ForceRunLayoutUpdate();
 
             Assert.That(control1.Position, Is.EqualTo(Vector2.Zero));
             Assert.That(control1.Size, Is.EqualTo(new Vector2(50, 29)));
@@ -73,6 +79,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         [Test]
         public void TestTwoExpand()
         {
+            var root = new LayoutContainer();
             var boxContainer = new VBoxContainer {CustomMinimumSize = (30, 82)};
             var control1 = new Control
             {
@@ -84,11 +91,13 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             };
             var control3 = new Control {CustomMinimumSize = (0, 50)};
 
+            root.AddChild(boxContainer);
+
             boxContainer.AddChild(control1);
             boxContainer.AddChild(control3);
             boxContainer.AddChild(control2);
 
-            boxContainer.ForceRunLayoutUpdate();
+            root.ForceRunLayoutUpdate();
 
             Assert.That(control1.Position, Is.EqualTo(Vector2.Zero));
             Assert.That(control1.Size, Is.EqualTo(new Vector2(30, 15)));

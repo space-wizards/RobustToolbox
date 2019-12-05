@@ -30,9 +30,13 @@ namespace Robust.Client.UserInterface.Controls
         {
             RectClipContent = true;
 
-            _scrollBar = new VScrollBar {Name = "_v_scroll"};
+            _scrollBar = new VScrollBar
+            {
+                Name = "_v_scroll",
+                SizeFlagsVertical = SizeFlags.Fill,
+                SizeFlagsHorizontal = SizeFlags.ShrinkEnd
+            };
             AddChild(_scrollBar);
-            _scrollBar.SetAnchorAndMarginPreset(LayoutPreset.RightWide);
         }
 
         public void Clear()

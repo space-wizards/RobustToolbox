@@ -25,11 +25,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             SizeFlagsHorizontal = SizeFlags.None;
 
-            AddChild(_label = new Label
-            {
-                MarginTop = 5,
-                MarginLeft = 5
-            });
+            AddChild(_label = new Label());
 
             PanelOverride = new StyleBoxFlat
             {

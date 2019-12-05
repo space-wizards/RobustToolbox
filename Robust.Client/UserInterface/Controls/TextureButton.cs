@@ -2,12 +2,14 @@
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Maths;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
 {
     public class TextureButton : BaseButton
     {
         private Vector2 _scale = (1, 1);
+        private Texture _textureNormal;
         public const string StylePropertyTexture = "texture";
         public const string StylePseudoClassNormal = "normal";
         public const string StylePseudoClassHover = "hover";
@@ -19,8 +21,16 @@ namespace Robust.Client.UserInterface.Controls
             DrawModeChanged();
         }
 
-        public Texture TextureNormal { get; set; }
-        public Texture TextureHover { get; set; }
+        [ViewVariables]
+        public Texture TextureNormal
+        {
+            get => _textureNormal;
+            set
+            {
+                _textureNormal = value;
+                MinimumSizeChanged();
+            }
+        }
 
         public Vector2 Scale
         {
@@ -57,11 +67,6 @@ namespace Robust.Client.UserInterface.Controls
         {
             var texture = TextureNormal;
 
-            if (IsHovered && TextureHover != null)
-            {
-                texture = TextureHover;
-            }
-
             if (texture == null)
             {
                 TryGetStyleProperty(StylePropertyTexture, out texture);
@@ -76,7 +81,14 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            return Scale * (TextureNormal?.Size ?? Vector2.Zero);
+            var texture = TextureNormal;
+
+            if (texture == null)
+            {
+                TryGetStyleProperty(StylePropertyTexture, out texture);
+            }
+
+            return Scale * (texture?.Size ?? Vector2.Zero);
         }
     }
 }

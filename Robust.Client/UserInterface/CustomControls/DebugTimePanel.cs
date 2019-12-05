@@ -9,7 +9,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    public class DebugTimePanel : Panel
+    public class DebugTimePanel : PanelContainer
     {
         private readonly IGameTiming _gameTiming;
 
@@ -22,8 +22,8 @@ namespace Robust.Client.UserInterface.CustomControls
             _contents = new Label
             {
                 FontColorShadowOverride = Color.Black,
-                MarginTop = 5,
-                MarginLeft = 5
+                /*MarginTop = 5,
+                MarginLeft = 5*/
             };
             AddChild(_contents);
 

@@ -185,7 +185,6 @@ namespace Robust.Client.UserInterface.Controls
             UserInterfaceManager.ModalRoot.AddChild(_popup);
             _popupVBox = new VBoxContainer();
             _popup.AddChild(_popupVBox);
-            _popupVBox.SetAnchorAndMarginPreset(LayoutPreset.Wide);
         }
 
         protected override void Dispose(bool disposing)

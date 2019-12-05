@@ -210,8 +210,6 @@ namespace Robust.Client
 
             if (eventArgs.NewStatus == SessionStatus.InGame)
             {
-                _stateManager.RequestStateChange<GameScreen>();
-
                 OnPlayerJoinedGame(_playMan.LocalPlayer.Session);
             }
         }

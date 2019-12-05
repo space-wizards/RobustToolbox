@@ -84,10 +84,6 @@ namespace Robust.Client.UserInterface.CustomControls
                 mouseWorldGrid = (int) coords.GridID;
                 mouseWorldPos = coords;
                 worldToScreen = eyeManager.WorldToScreen(coords);
-                if (stateManager.CurrentState is GameScreen gameScreen)
-                {
-                    mouseEntity = gameScreen.GetEntityUnderPosition(coords);
-                }
 
                 tile = _mapManager.GetGrid(coords.GridID).GetTileRef(coords);
             }

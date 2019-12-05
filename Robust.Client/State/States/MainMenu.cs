@@ -139,11 +139,7 @@ namespace Robust.Client.State.States
 
         private void RunLevelChanged(object obj, RunLevelChangedEventArgs args)
         {
-            if (args.NewLevel == ClientRunLevel.InGame)
-            {
-                stateManager.RequestStateChange<GameScreen>();
-            }
-            else if (args.NewLevel == ClientRunLevel.Initialize)
+            if (args.NewLevel == ClientRunLevel.Initialize)
             {
                 _setConnectingState(false);
                 _netManager.ConnectFailed -= _onConnectFailed;

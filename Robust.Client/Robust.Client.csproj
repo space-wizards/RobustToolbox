@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\MSBuild\Robust.Properties.targets" />
   <PropertyGroup>
     <!-- Work around https://github.com/dotnet/project-system/issues/4314 -->
@@ -30,7 +30,7 @@
     <PackageReference Include="OpenTK" Version="3.1.0" />
     <PackageReference Include="SharpFont" Version="4.0.1" />
     <!-- Including SharpFont.Dependencies to silence a warning -->
-    <PackageReference Include="SharpFont.Dependencies" Version="2.6.0" />
+    <!--<PackageReference Include="SharpFont.Dependencies" Version="2.6.0" />-->
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />

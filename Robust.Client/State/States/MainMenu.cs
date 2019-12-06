@@ -223,8 +223,7 @@ namespace Robust.Client.State.States
                 lastFramePos = position;
             }
         }
-        
-        
+               
         private sealed class MainMenuControl : Control
         {
             private readonly IResourceCache _resourceCache;

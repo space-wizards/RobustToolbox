@@ -18,13 +18,6 @@ namespace Robust.Client.GameObjects
     // Notice: Most actual logic for clicking is done by the game screen.
     public class ClickableComponent : Component, IClientClickableComponent
     {
-#pragma warning disable 649
-        [Dependency] private readonly IPrototypeManager _prototypeManager;
-#pragma warning restore 649
-
-        private ShaderInstance _selectionShaderInstance;
-
-        private string _selectionShader;
         private Box2? _localBounds;
 
         public override string Name => "Clickable";
@@ -38,22 +31,10 @@ namespace Robust.Client.GameObjects
             set => _localBounds = value;
         }
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        public string SelectionShader => _selectionShader;
-
         /// <inheritdoc />
         public override void ExposeData(ObjectSerializer serializer)
         {
-            serializer.DataFieldCached(ref _selectionShader, "selectionshader", "selection_outline");
             serializer.DataField(ref _localBounds, "bounds", null);
-        }
-
-        /// <inheritdoc />
-        public override void Initialize()
-        {
-            base.Initialize();
-
-            _selectionShaderInstance = _prototypeManager.Index<ShaderPrototype>(_selectionShader).Instance();
         }
 
         /// <inheritdoc />
@@ -86,26 +67,6 @@ namespace Robust.Client.GameObjects
             var component = Owner.GetComponent<IClickTargetComponent>();
             drawdepth = (int)component.DrawDepth;
             return true;
-        }
-
-        /// <inheritdoc />
-        public void OnMouseEnter()
-        {
-            if (Owner.TryGetComponent(out ISpriteComponent sprite))
-            {
-                sprite.PostShader = _selectionShaderInstance;
-                sprite.RenderOrder = Owner.EntityManager.CurrentTick.Value;
-            }
-        }
-
-        /// <inheritdoc />
-        public void OnMouseLeave()
-        {
-            if (Owner.TryGetComponent(out ISpriteComponent sprite))
-            {
-                sprite.PostShader = null;
-                sprite.RenderOrder = 0;
-            }
         }
     }
 }

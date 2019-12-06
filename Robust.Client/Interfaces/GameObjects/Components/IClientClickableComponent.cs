@@ -21,15 +21,5 @@ namespace Robust.Client.Interfaces.GameObjects.Components
         /// </param>
         /// <returns>True if the click worked, false otherwise.</returns>
         bool CheckClick(Vector2 worldPos, out int drawdepth);
-
-        /// <summary>
-        ///     Invoked whenever the mouse hovers over this entity.
-        /// </summary>
-        void OnMouseEnter();
-
-        /// <summary>
-        ///     Invoked whenever the mouse stops hovering over this entity.
-        /// </summary>
-        void OnMouseLeave();
     }
 }

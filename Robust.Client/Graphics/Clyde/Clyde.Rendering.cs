@@ -799,6 +799,13 @@ namespace Robust.Client.Graphics.Clyde
             // Assign shader parameters to uniform since they may be dirty.
             foreach (var (name, value) in instance.Parameters)
             {
+                if (!program.HasUniform(name))
+                {
+                    // Can happen if the GLSL compiler removes uniforms due to them being unused.
+                    // Safe to just ignore them then I'd say.
+                    continue;
+                }
+
                 switch (value)
                 {
                     case float f:

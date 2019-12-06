@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Text.RegularExpressions;
+using Robust.Client.Graphics;
 using Robust.Client.Interfaces;
+using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface;
@@ -13,8 +15,11 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Localization;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Utility;
+using Robust.Shared.Timing;
+using Robust.Client.Graphics.Drawing;
 
 namespace Robust.Client.State.States
 {
@@ -31,6 +36,7 @@ namespace Robust.Client.State.States
         [Dependency] private readonly IClientNetManager _netManager;
         [Dependency] private readonly IConfigurationManager _configurationManager;
         [Dependency] private readonly IGameController _controllerProxy;
+        [Dependency] private readonly IInputManager _inputManager;
         [Dependency] private readonly ILocalizationManager _loc;
         [Dependency] private readonly IResourceCache _resourceCache;
         [Dependency] private readonly IStateManager stateManager;
@@ -47,7 +53,7 @@ namespace Robust.Client.State.States
         /// <inheritdoc />
         public override void Startup()
         {
-            _mainMenuControl = new MainMenuControl(_resourceCache, _configurationManager);
+            _mainMenuControl = new MainMenuControl(_resourceCache, _configurationManager, _inputManager);
             userInterfaceManager.StateRoot.AddChild(_mainMenuControl);
 
             _mainMenuControl.QuitButton.OnPressed += QuitButtonPressed;
@@ -200,10 +206,31 @@ namespace Robust.Client.State.States
 #endif
         }
 
+        private sealed class MouseMoveRect : Control
+        {
+            private readonly IInputManager _inputManager;
+            private Vector2 lastFramePos;
+            public Texture texture;
+
+            public MouseMoveRect(IInputManager inputMngr)
+            {
+                _inputManager = inputMngr;
+            }
+            
+            protected internal override void Draw(DrawingHandleScreen handle)
+            {
+                var position = Vector2.Lerp(lastFramePos, (Parent.Size - _inputManager.MouseScreenPosition - texture.Size * UIScale / 2), 0.05f);
+                handle.DrawTextureRect(texture, UIBox2.FromDimensions(position, texture.Size * UIScale));
+                lastFramePos = position;
+            }
+        }
+        
+        
         private sealed class MainMenuControl : Control
         {
             private readonly IResourceCache _resourceCache;
             private readonly IConfigurationManager _configurationManager;
+            private readonly IInputManager _inputManager;
 
             public LineEdit UserNameBox { get; private set; }
             public Button JoinPublicServerButton { get; private set; }
@@ -212,11 +239,11 @@ namespace Robust.Client.State.States
             public Button OptionsButton { get; private set; }
             public Button QuitButton { get; private set; }
             public Label VersionLabel { get; private set; }
-
-            public MainMenuControl(IResourceCache resCache, IConfigurationManager configMan)
+            public MainMenuControl(IResourceCache resCache, IConfigurationManager configMan, IInputManager inputManager)
             {
                 _resourceCache = resCache;
                 _configurationManager = configMan;
+                _inputManager = inputManager;
 
                 PerformLayout();
             }
@@ -229,6 +256,11 @@ namespace Robust.Client.State.States
 
                 var layout = new LayoutContainer();
                 AddChild(layout);
+
+                var spaceEffect = new MouseMoveRect(_inputManager);
+                spaceEffect.texture = _resourceCache.GetResource<TextureResource>("/Textures/UserInterface/nebula_parallax.png");
+
+                layout.AddChild(spaceEffect);
 
                 var vBox = new VBoxContainer
                 {

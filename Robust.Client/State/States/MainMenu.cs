@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using Robust.Client.Graphics;
+using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.ResourceManagement;
@@ -18,8 +19,6 @@ using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Utility;
-using Robust.Shared.Timing;
-using Robust.Client.Graphics.Drawing;
 
 namespace Robust.Client.State.States
 {

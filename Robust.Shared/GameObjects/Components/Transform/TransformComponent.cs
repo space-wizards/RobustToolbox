@@ -120,7 +120,7 @@
                 var entMessage = new EntParentChangedMessage(Owner, Parent?.Owner);
                 var compMessage = new ParentChangedMessage(value?.Owner, Parent?.Owner);
                 _parent = value?.Owner.Uid ?? EntityUid.Invalid;
-                Owner.EntityManager.EventBus.RaiseEvent((object) Owner, (EntityEventArgs) entMessage);
+                Owner.EntityManager.EventBus.RaiseEvent(Owner, entMessage);
                 Owner.SendMessage(this, compMessage);
             }
         }

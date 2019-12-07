@@ -134,8 +134,7 @@ namespace Robust.Server.GameObjects.Components.Container
         {
             DebugTools.Assert(!Deleted);
 
-            EntityEventArgs toRaise = new EntInsertedIntoContainerMessage(toinsert, this);
-            Owner.EntityManager.EventBus.RaiseEvent((object) Owner, toRaise);
+            Owner.EntityManager.EventBus.RaiseEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, this));
             Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toinsert, false));
         }
 
@@ -193,12 +192,7 @@ namespace Robust.Server.GameObjects.Components.Container
             DebugTools.Assert(Manager != null);
             DebugTools.Assert(toremove != null && toremove.IsValid());
 
-            IEntity tempQualifier = Owner;
-            if (tempQualifier != null)
-            {
-                EntityEventArgs toRaise = new EntRemovedFromContainerMessage(toremove, this);
-                tempQualifier.EntityManager.EventBus.RaiseEvent((object) Owner, toRaise);
-            }
+            Owner?.EntityManager.EventBus.RaiseEvent(Owner, new EntRemovedFromContainerMessage(toremove, this));
 
             Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toremove, true));
         }

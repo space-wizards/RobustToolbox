@@ -199,7 +199,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void RaiseEvent(EntityEventArgs toRaise)
         {
-            EntityManager.EventBus.RaiseEvent((object) this, toRaise);
+            EntityManager.EventBus.RaiseEvent(this, toRaise);
         }
 
         #endregion Entity Events

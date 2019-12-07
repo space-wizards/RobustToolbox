@@ -78,29 +78,29 @@ namespace Robust.Shared.GameObjects.Systems
         protected void SubscribeEvent<T>(EntityEventHandler<EntitySystemMessage> evh)
             where T : EntitySystemMessage
         {
-            EntityManager.EventBus.SubscribeEvent(evh, (IEntityEventSubscriber) this);
+            EntityManager.EventBus.SubscribeEvent(evh, this);
         }
 
         protected void SubscribeEvent<T>(EntityEventHandler<T> evh)
             where T : EntitySystemMessage
         {
-            EntityManager.EventBus.SubscribeEvent(evh, (IEntityEventSubscriber) this);
+            EntityManager.EventBus.SubscribeEvent(evh, this);
         }
 
         protected void UnsubscribeEvent<T>()
             where T : EntitySystemMessage
         {
-            EntityManager.EventBus.UnsubscribeEvent<T>((IEntityEventSubscriber) this);
+            EntityManager.EventBus.UnsubscribeEvent<T>(this);
         }
 
         protected void RaiseEvent(EntitySystemMessage message)
         {
-            EntityManager.EventBus.RaiseEvent((object) this, (EntityEventArgs) message);
+            EntityManager.EventBus.RaiseEvent(this, message);
         }
 
         protected void QueueEvent(EntitySystemMessage message)
         {
-            EntityManager.EventBus.QueueEvent((object) this, (EntityEventArgs) message);
+            EntityManager.EventBus.QueueEvent(this, message);
         }
 
         protected void RaiseNetworkEvent(EntitySystemMessage message)

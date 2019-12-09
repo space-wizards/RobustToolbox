@@ -186,20 +186,20 @@ namespace Robust.Shared.GameObjects
         public void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s)
             where T : EntityEventArgs
         {
-            EntityManager.SubscribeEvent<T>(evh, s);
+            EntityManager.EventBus.SubscribeEvent(evh, s);
         }
 
         /// <inheritdoc />
         public void UnsubscribeEvent<T>(IEntityEventSubscriber s)
             where T : EntityEventArgs
         {
-            EntityManager.UnsubscribeEvent<T>(s);
+            EntityManager.EventBus.UnsubscribeEvent<T>(s);
         }
 
         /// <inheritdoc />
         public void RaiseEvent(EntityEventArgs toRaise)
         {
-            EntityManager.RaiseEvent(this, toRaise);
+            EntityManager.EventBus.RaiseEvent(this, toRaise);
         }
 
         #endregion Entity Events

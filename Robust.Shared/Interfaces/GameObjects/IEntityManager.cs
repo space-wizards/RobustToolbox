@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -27,6 +26,7 @@ namespace Robust.Shared.Interfaces.GameObjects
 
         IComponentManager ComponentManager { get; }
         IEntityNetworkManager EntityNetManager { get; }
+        IEventBus EventBus { get; }
 
         #region Entity Management
 
@@ -109,17 +109,6 @@ namespace Robust.Shared.Interfaces.GameObjects
         #endregion Entity Management
 
         #region ComponentEvents
-
-        void SubscribeEvent<T>(EntityEventHandler<T> eventHandler, IEntityEventSubscriber s)
-            where T : EntityEventArgs;
-
-        void UnsubscribeEvent<T>(IEntityEventSubscriber s)
-            where T : EntityEventArgs;
-
-        void RaiseEvent(object sender, EntityEventArgs toRaise);
-        void QueueEvent(object sender, EntityEventArgs toRaise);
-
-        void RemoveSubscribedEvents(IEntityEventSubscriber subscriber);
 
         /// <summary>
         /// Converts a raw NetIncomingMessage to an IncomingEntityMessage object

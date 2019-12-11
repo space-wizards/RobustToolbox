@@ -35,12 +35,6 @@ namespace Robust.Client.Graphics
             _library = new Library();
         }
 
-        static FontManager()
-        {
-            DllMapHelper.RegisterExplicitMap(typeof(Library).Assembly, "freetype6", "libfreetype.so.6",
-                "/Library/Frameworks/Mono.framework/Libraries/libfreetype.6.dylib");
-        }
-
         public IFontFaceHandle Load(Stream stream)
         {
             var face = new Face(_library, stream.CopyToArray(), 0);

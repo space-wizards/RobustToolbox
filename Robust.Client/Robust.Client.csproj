@@ -28,9 +28,7 @@
     <PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="YamlDotNet" Version="6.1.2" />
     <PackageReference Include="OpenTK" Version="3.1.0" />
-    <PackageReference Include="SharpFont" Version="4.0.1" />
-    <!-- Including SharpFont.Dependencies to silence a warning -->
-    <!--<PackageReference Include="SharpFont.Dependencies" Version="2.6.0" />-->
+    <PackageReference Include="SpaceWizards.SharpFont" Version="1.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
@@ -52,15 +50,6 @@
     <EmbeddedResource Include="Graphics\RSI\RSISchema.json">
       <LogicalName>Robust.Client.Graphics.RSI.RSISchema.json</LogicalName>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <!--Hahaha everything hurts and NuGet is making the package dirs inconsistently on some systems.-->
-    <Reference Condition="Exists('..\..\packages\sharpfont\4.0.1\lib\net45\SharpFont.dll')" Include="SharpFont, Version=4.0.1.200, Culture=neutral, PublicKeyToken=48add4c483071cdf">
-      <HintPath>..\..\packages\sharpfont\4.0.1\lib\net45\SharpFont.dll</HintPath>
-    </Reference>
-    <Reference Condition="Exists('..\packages\sharpfont\4.0.1\lib\net45\SharpFont.dll')" Include="SharpFont, Version=4.0.1.200, Culture=neutral, PublicKeyToken=48add4c483071cdf">
-      <HintPath>..\packages\sharpfont\4.0.1\lib\net45\SharpFont.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
   <Target Name="RobustAfterBuild" DependsOnTargets="CopyMiscDependencies;CopySwnfd" AfterTargets="Build" />

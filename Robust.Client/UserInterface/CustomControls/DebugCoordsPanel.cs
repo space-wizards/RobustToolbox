@@ -8,7 +8,6 @@ using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Player;
-using Robust.Client.State.States;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Timing;
@@ -74,7 +73,6 @@ namespace Robust.Client.UserInterface.CustomControls
             int mouseWorldMap;
             int mouseWorldGrid;
             GridCoordinates mouseWorldPos;
-            ScreenCoordinates worldToScreen;
             IEntity mouseEntity = null;
             TileRef tile;
             try
@@ -83,7 +81,6 @@ namespace Robust.Client.UserInterface.CustomControls
                 mouseWorldMap = (int) _mapManager.GetGrid(coords.GridID).ParentMapId;
                 mouseWorldGrid = (int) coords.GridID;
                 mouseWorldPos = coords;
-                worldToScreen = eyeManager.WorldToScreen(coords);
 
                 tile = _mapManager.GetGrid(coords.GridID).GetTileRef(coords);
             }
@@ -92,7 +89,6 @@ namespace Robust.Client.UserInterface.CustomControls
                 mouseWorldPos = eyeManager.ScreenToWorld(mouseScreenPos);
                 mouseWorldGrid = 0;
                 mouseWorldMap = 0;
-                worldToScreen = new ScreenCoordinates();
                 tile = new TileRef();
             }
 
@@ -101,13 +97,9 @@ Screen Size: {0}
 Mouse Pos:
     Screen: {1}
     World: {2}
-    W2S: {3}
-    Grid: {4}
-    Tile: {8}
-    Map: {5}
-    Entity: {6}
-    GUI: {7}
-", screenSize, mouseScreenPos, mouseWorldPos, worldToScreen, mouseWorldGrid, mouseWorldMap, mouseEntity,
+    Map: {3}
+    Tile: {5}
+    GUI: {4}", screenSize, mouseScreenPos, mouseWorldPos, mouseWorldMap,
                 UserInterfaceManager.CurrentlyHovered, tile);
 
             stringBuilder.AppendLine("\nAttached Entity:");

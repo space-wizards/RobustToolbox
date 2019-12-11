@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.IoC;
+using Robust.Shared.Network;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -173,7 +174,7 @@ namespace Robust.Shared.GameObjects
             foreach (var kvTypeDict in _dictComponents)
             {
                 // because we are iterating over references instead of instances, and a comp instance
-                // can have multiple references, we filter out already deleted instances. 
+                // can have multiple references, we filter out already deleted instances.
                 if (kvTypeDict.Value.TryGetValue(uid, out var comp) && !comp.Deleted)
                 {
                     RemoveComponentDeferred(comp, false);
@@ -199,7 +200,7 @@ namespace Robust.Shared.GameObjects
         {
             if (component == null)
                 throw new ArgumentNullException(nameof(component));
-            
+
             if (component.Deleted)
                 return;
 

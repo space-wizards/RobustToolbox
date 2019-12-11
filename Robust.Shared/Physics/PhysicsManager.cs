@@ -212,16 +212,22 @@ namespace Robust.Shared.Physics
 
         public void BuildCollisionGrid()
         {
-            _collisionGrid.Clear();
-            _bodies.ForEach(body =>
+            foreach (var bodies in _collisionGrid.Values)
+            {
+                bodies.Clear();
+            }
+
+            foreach (var body in _bodies)
             {
                 var snappedLocation = SnapLocationToGrid(body.WorldAABB);
-                if (!_collisionGrid.ContainsKey(snappedLocation))
+                if (!_collisionGrid.TryGetValue(snappedLocation, out var bodies))
                 {
-                    _collisionGrid[snappedLocation] = new List<IPhysBody>();
+                    bodies = new List<IPhysBody>();
+                    _collisionGrid.Add(snappedLocation, bodies);
                 }
-                _collisionGrid[snappedLocation].Add(body);
-            });
+
+                bodies.Add(body);
+            }
         }
 
         private Vector2 SnapLocationToGrid(Box2 worldAAAB)
@@ -232,19 +238,26 @@ namespace Robust.Shared.Physics
             return result;
         }
 
-        public List<IPhysBody> GetCollidablesForLocation(Box2 location)
+        private IEnumerable<IPhysBody> GetCollidablesForLocation(Box2 location)
         {
             var snappedLocation = SnapLocationToGrid(location);
-            var result = new List<IPhysBody>();
-            for(int xOffset = -1; xOffset <= 1; xOffset++)
+
+            for (var xOffset = -1; xOffset <= 1; xOffset++)
             {
-                for (int yOffset = -1; yOffset <= 1; yOffset++)
+                for (var yOffset = -1; yOffset <= 1; yOffset++)
                 {
                     var offsetLocation = snappedLocation + new Vector2(xOffset, yOffset);
-                    result.AddRange(_collisionGrid.ContainsKey(offsetLocation) ? _collisionGrid[offsetLocation] : Enumerable.Empty<IPhysBody>());
+                    if (!_collisionGrid.TryGetValue(offsetLocation, out var bodies))
+                    {
+                        continue;
+                    }
+
+                    foreach (var body in bodies)
+                    {
+                        yield return body;
+                    }
                 }
             }
-            return result;
         }
     }
 }

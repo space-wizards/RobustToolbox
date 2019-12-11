@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,6 +45,12 @@ namespace Robust.Shared.Network
         private readonly Dictionary<NetConnection, NetSessionId> _assignedSessions =
             new Dictionary<NetConnection, NetSessionId>();
 
+        // Used for processing incoming net messages.
+        private readonly (Func<INetChannel, NetMessage>, Type)[] _netMsgFunctions = new (Func<INetChannel, NetMessage>, Type)[256];
+
+        // Used for processing outgoing net messages.
+        private readonly Dictionary<Type, Func<NetMessage>> _blankNetMsgFunctions = new Dictionary<Type, Func<NetMessage>>();
+
 #pragma warning disable 649
         [Dependency] private readonly IConfigurationManager _config;
 #pragma warning restore 649
@@ -73,7 +81,21 @@ namespace Robust.Shared.Network
         public bool IsClient => !IsServer;
 
         /// <inheritdoc />
-        public bool IsConnected => _netPeers.Any(p => p.ConnectionsCount > 0);
+        public bool IsConnected
+        {
+            get
+            {
+                foreach (var p in _netPeers)
+                {
+                    if (p.ConnectionsCount > 0)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
 
         public bool IsRunning => _netPeers.Count != 0;
 
@@ -564,20 +586,19 @@ namespace Robust.Shared.Network
 
             var id = msg.ReadByte();
 
-            if (!_strings.TryGetString(id, out string name))
+            if (_netMsgFunctions[id].Item1 == null)
             {
-                Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}:  No string in table with ID {id}.");
-                return true;
+                if (!CacheNetMsgFunction(id))
+                {
+                    Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: Got net message with invalid ID {id}.");
+                    return true;
+                }
             }
 
-            if (!_messages.TryGetValue(name, out Type packetType))
-            {
-                Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: No message with Name {name}.");
-                return true;
-            }
+            var (func, type) = _netMsgFunctions[id];
 
             var channel = GetChannel(msg.SenderConnection);
-            var instance = (NetMessage) Activator.CreateInstance(packetType, channel);
+            var instance = func(channel);
             instance.MsgChannel = channel;
 
             try
@@ -587,17 +608,49 @@ namespace Robust.Shared.Network
             catch (Exception e) // yes, we want to catch ALL exeptions for security
             {
                 Logger.WarningS("net",
-                    $"{msg.SenderConnection.RemoteEndPoint}: Failed to deserialize {packetType.Name} packet: {e.Message}");
+                    $"{msg.SenderConnection.RemoteEndPoint}: Failed to deserialize {type.Name} packet: {e.Message}");
             }
 
-            if (!_callbacks.TryGetValue(packetType, out ProcessMessage callback))
+            if (!_callbacks.TryGetValue(type, out ProcessMessage callback))
             {
                 Logger.WarningS("net",
-                    $"{msg.SenderConnection.RemoteEndPoint}: Received packet {id}:{name}, but callback was not registered.");
+                    $"{msg.SenderConnection.RemoteEndPoint}: Received packet {id}:{type}, but callback was not registered.");
                 return true;
             }
 
             callback?.Invoke(instance);
+            return true;
+        }
+
+        private bool CacheNetMsgFunction(byte id)
+        {
+            if (!_strings.TryGetString(id, out var name))
+            {
+                return false;
+            }
+
+            if (!_messages.TryGetValue(name, out var packetType))
+            {
+                return false;
+            }
+
+            var constructor = packetType.GetConstructor(new[] {typeof(INetChannel)});
+
+            DebugTools.AssertNotNull(constructor);
+
+            var dynamicMethod = new DynamicMethod($"_netMsg<>{id}", typeof(NetMessage), new[]{typeof(INetChannel)}, packetType, false);
+
+            dynamicMethod.DefineParameter(1, ParameterAttributes.In, "channel");
+
+            var gen = dynamicMethod.GetILGenerator();
+            gen.Emit(OpCodes.Ldarg_0);
+            gen.Emit(OpCodes.Newobj, constructor);
+            gen.Emit(OpCodes.Ret);
+
+            var @delegate =
+                (Func<INetChannel, NetMessage>) dynamicMethod.CreateDelegate(typeof(Func<INetChannel, NetMessage>));
+
+            _netMsgFunctions[id] = (@delegate, packetType);
             return true;
         }
 
@@ -619,7 +672,29 @@ namespace Robust.Shared.Network
         public T CreateNetMessage<T>()
             where T : NetMessage
         {
-            return (T) Activator.CreateInstance(typeof(T), (INetChannel) null);
+            if (!_blankNetMsgFunctions.TryGetValue(typeof(T), out var func))
+            {
+                CacheBlankFunction(typeof(T));
+                func = _blankNetMsgFunctions[typeof(T)];
+            }
+            return (T) func();
+        }
+
+        private void CacheBlankFunction(Type type)
+        {
+            var constructor = type.GetConstructor(new[] {typeof(INetChannel)});
+
+            DebugTools.AssertNotNull(constructor);
+
+            var dynamicMethod = new DynamicMethod($"_netMsg<>{type.Name}", typeof(NetMessage), Array.Empty<Type>(), type, false);
+            var gen = dynamicMethod.GetILGenerator();
+            gen.Emit(OpCodes.Ldnull);
+            gen.Emit(OpCodes.Newobj, constructor);
+            gen.Emit(OpCodes.Ret);
+
+            var @delegate = (Func<NetMessage>) dynamicMethod.CreateDelegate(typeof(Func<NetMessage>));
+
+            _blankNetMsgFunctions.Add(type, @delegate);
         }
 
         private NetOutgoingMessage BuildMessage(NetMessage message, NetPeer peer)

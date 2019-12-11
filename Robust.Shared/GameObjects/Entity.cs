@@ -442,9 +442,9 @@ namespace Robust.Shared.GameObjects
         private List<ComponentState> GetComponentStates(GameTick fromTick)
         {
             var list = new List<ComponentState>();
-            foreach (var component in GetAllComponents())
+            foreach (var component in EntityManager.ComponentManager.GetNetComponents(Uid))
             {
-                if (component.NetID == null || !component.NetSyncEnabled || component.LastModifiedTick < fromTick)
+                if (!component.NetSyncEnabled || component.LastModifiedTick < fromTick)
                 {
                     continue;
                 }

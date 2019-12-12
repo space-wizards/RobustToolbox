@@ -10,7 +10,7 @@ namespace Robust.Shared.ContentPack
     internal class WritableDirProvider : IWritableDirProvider
     {
         /// <inheritdoc />
-        public string RootDir { get; private set; }
+        public string RootDir { get; }
 
         /// <summary>
         /// Constructs an instance of <see cref="WritableDirProvider"/>.

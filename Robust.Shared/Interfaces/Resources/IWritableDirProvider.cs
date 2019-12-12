@@ -13,6 +13,12 @@ namespace Robust.Shared.Interfaces.Resources
     public interface IWritableDirProvider
     {
         /// <summary>
+        /// The root path of this provider.
+        /// Can be null if it's a virtual provider.
+        /// </summary>
+        string RootDir { get; }
+
+        /// <summary>
         /// Creates a directory. If the directory exists, does nothing.
         /// </summary>
         /// <param name="path">Path of directory to create.</param>

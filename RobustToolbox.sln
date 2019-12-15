@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Robust.Client", "Robust.Cli
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Robust.Shared.Maths", "Robust.Shared.Maths\Robust.Shared.Maths.csproj", "{93F23A82-00C5-4572-964E-E7C9457726D4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenToolkit.GraphicsLibraryFramework", "OpenToolkit.GraphicsLibraryFramework\OpenToolkit.GraphicsLibraryFramework.csproj", "{52710F44-4240-4140-9B33-F36EBD9D3FC2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -73,6 +75,14 @@ Global
 		{93F23A82-00C5-4572-964E-E7C9457726D4}.Release|x64.ActiveCfg = Release|x64
 		{93F23A82-00C5-4572-964E-E7C9457726D4}.Release|x64.Build.0 = Release|x64
 		{93F23A82-00C5-4572-964E-E7C9457726D4}.Release|x86.ActiveCfg = Release|x64
+		{52710F44-4240-4140-9B33-F36EBD9D3FC2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{52710F44-4240-4140-9B33-F36EBD9D3FC2}.Debug|x64.Build.0 = Debug|Any CPU
+		{52710F44-4240-4140-9B33-F36EBD9D3FC2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{52710F44-4240-4140-9B33-F36EBD9D3FC2}.Debug|x86.Build.0 = Debug|Any CPU
+		{52710F44-4240-4140-9B33-F36EBD9D3FC2}.Release|x64.ActiveCfg = Release|Any CPU
+		{52710F44-4240-4140-9B33-F36EBD9D3FC2}.Release|x64.Build.0 = Release|Any CPU
+		{52710F44-4240-4140-9B33-F36EBD9D3FC2}.Release|x86.ActiveCfg = Release|Any CPU
+		{52710F44-4240-4140-9B33-F36EBD9D3FC2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

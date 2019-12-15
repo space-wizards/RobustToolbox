@@ -9,7 +9,7 @@ version: 0.1.0.{build}
 pull_requests:
   do_not_increment_build_number: true
 
-image: Visual Studio 2017
+image: Visual Studio 2019
 install:
 - ps: >
     if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER -And $env:APPVEYOR_REPO_BRANCH -Eq "master")
@@ -20,7 +20,6 @@ install:
 before_build:
 - cmd: py -3.5 -m pip install --user requests
 - cmd: py -3.5 RUN_THIS.py --no-prompt
-- cmd: nuget restore RobustToolbox.sln
 - ps: >
     if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER -And $env:APPVEYOR_REPO_BRANCH -Eq "master")
     {
@@ -40,12 +39,10 @@ build:
   verbosity: minimal
 
 build_script:
-- ps: msbuild RobustToolbox.sln /verbosity:minimal /nologo /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Platform=x64 /p:Configuration=Debug /p:AppVeyor=yes
+- ps: dotnet build RobustToolbox.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:AppVeyor=yes
 
 test_script:
 - ps: nunit3-console.exe .\bin\UnitTesting\Robust.UnitTesting.dll;
-
-
 
 after_test:
 - ps: >

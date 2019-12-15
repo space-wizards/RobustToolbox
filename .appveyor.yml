@@ -42,7 +42,7 @@ build_script:
 - ps: dotnet build RobustToolbox.sln /p:AppVeyor=yes
 
 test_script:
-- ps: nunit3-console.exe .\bin\UnitTesting\Robust.UnitTesting.dll;
+- ps: dotnet test
 
 after_test:
 - ps: >

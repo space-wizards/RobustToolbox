@@ -7,4 +7,4 @@ set -e
 PATH="~/.dotnet:$PATH"
 
 dotnet build RobustToolbox.sln /p:Python=python3.5
-dotnet test
+dotnet test Robust.UnitTesting/Robust.UnitTesting.csproj

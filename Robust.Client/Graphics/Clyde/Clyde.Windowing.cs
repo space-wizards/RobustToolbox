@@ -110,8 +110,6 @@ namespace Robust.Client.Graphics.Clyde
 
             _glfwWindow = GLFW.CreateWindow(width, height, string.Empty, monitor, null);
 
-            VSyncChanged();
-
             LoadWindowIcon();
 
             GLFW.SetCharCallback(_glfwWindow, _charCallback);
@@ -123,6 +121,8 @@ namespace Robust.Client.Graphics.Clyde
             GLFW.SetMouseButtonCallback(_glfwWindow, _mouseButtonCallback);
 
             GLFW.MakeContextCurrent(_glfwWindow);
+
+            VSyncChanged();
 
             GLFW.GetFramebufferSize(_glfwWindow, out var fbW, out var fbH);
             _screenSize = (fbW, fbH);
@@ -140,6 +140,12 @@ namespace Robust.Client.Graphics.Clyde
 
         private void LoadWindowIcon()
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                // Does nothing on macOS so don't bother.
+                return;
+            }
+
             var icons = new List<Image<Rgba32>>();
             foreach (var file in _resourceCache.ContentFindFiles("/Textures/Logo/icon"))
             {

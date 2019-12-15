@@ -4,17 +4,15 @@ import sys
 import urllib.request
 import shutil
 
-CURRENT_VERSION = "robust_v0.1.0"
-RELEASES_ROOT = "https://github.com/space-wizards/nativefiledialog/releases/download/" \
-                + CURRENT_VERSION + "/"
-WINDOWS_FILENAME = "swnfd.dll"
-MACOS_FILENAME = "libswnfd.dylib"
-LINUX_FILENAME = "libswnfd.so"
+CURRENT_VERSION = "3.3"
+RELEASES_ROOT = "https://github.com/space-wizards/build-dependencies/raw/master/natives/glfw/3.3/"
+WINDOWS_FILENAME = "glfw3.dll"
+MACOS_FILENAME = "libglfw.3.dylib"
+LINUX_FILENAME = "libglfw.so.3"
 
-WINDOWS_TARGET_FILENAME = "swnfd.dll"
-LINUX_TARGET_FILENAME = "libswnfd.so"
-MACOS_TARGET_FILENAME = "libswnfd.dylib"
-
+WINDOWS_TARGET_FILENAME = "glfw3.dll"
+MACOS_TARGET_FILENAME = "libglfw.3.dylib"
+LINUX_TARGET_FILENAME = "libglfw.so.3"
 
 def main():
     platform = sys.argv[1]
@@ -23,12 +21,12 @@ def main():
     target_dir = " ".join(sys.argv[3:])
 
     if platform != "x64":
-        print("Error: Unable to download swnfd for any platform outside x64. "
+        print("Error: Unable to download GLFW for any platform outside x64. "
               "If you REALLY want x86 support for some misguided reason, I'm not providing it.")
         exit(1)
 
     repo_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    dependencies_dir = os.path.join(repo_dir, "Dependencies", "swnfd")
+    dependencies_dir = os.path.join(repo_dir, "Dependencies", "glfw")
     version_file = os.path.join(dependencies_dir, "VERSION")
     os.makedirs(dependencies_dir, exist_ok=True)
 

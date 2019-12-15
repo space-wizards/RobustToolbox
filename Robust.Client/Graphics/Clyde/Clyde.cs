@@ -29,29 +29,29 @@ using Matrix3 = Robust.Shared.Maths.Matrix3;
 using Vector2 = Robust.Shared.Maths.Vector2;
 using Vector3 = Robust.Shared.Maths.Vector3;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
+using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Client.Graphics.Clyde
 {
     /// <summary>
     ///     Responsible for most things rendering on OpenGL mode.
     /// </summary>
-    internal sealed partial class Clyde : DisplayManager, IClydeInternal, IClydeAudio, IDisposable
+    internal sealed partial class Clyde : ClydeBase, IClydeInternal, IClydeAudio, IDisposable
     {
 #pragma warning disable 649
-        [Shared.IoC.Dependency] private readonly IResourceCache _resourceCache;
-        [Shared.IoC.Dependency] private readonly IEyeManager _eyeManager;
-        [Shared.IoC.Dependency] private readonly IMapManager _mapManager;
-        [Shared.IoC.Dependency] private readonly IOverlayManager _overlayManager;
-        [Shared.IoC.Dependency] private readonly IComponentManager _componentManager;
-        [Shared.IoC.Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
-        [Shared.IoC.Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager;
-        [Shared.IoC.Dependency] private readonly ILightManager _lightManager;
+        [Dependency] private readonly IResourceCache _resourceCache;
+        [Dependency] private readonly IEyeManager _eyeManager;
+        [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IOverlayManager _overlayManager;
+        [Dependency] private readonly IComponentManager _componentManager;
+        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
+        [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager;
+        [Dependency] private readonly ILightManager _lightManager;
 #pragma warning restore 649
 
         private static readonly Version MinimumOpenGLVersion = new Version(3, 3);
 
-        private Vector2i _screenSize;
-        private GameWindow _window;
+        //private GameWindow _window;
 
         private const int ProjViewBindingIndex = 0;
         private const int UniformConstantsBindingIndex = 1;
@@ -90,24 +90,12 @@ namespace Robust.Client.Graphics.Clyde
 
         // Thread the window is instantiated on.
         // OpenGL is allergic to multi threading so we need to check this.
-        private Thread _mainThread;
         private bool _drawingSplash;
 
         private ShaderProgram _currentProgram;
         private ClydeHandle _currentShaderInstance;
 
         private ClydeDebugStats _debugStats;
-
-        public override Vector2i ScreenSize
-        {
-            get => _screenSize;
-            set
-            {
-                _window.Size = new Size(value.X, value.Y);
-                var s = _window.ClientSize;
-                _screenSize = new Vector2i(s.Width, s.Height);
-            }
-        }
 
         private readonly HashSet<string> OpenGLExtensions = new HashSet<string>();
 
@@ -118,18 +106,18 @@ namespace Robust.Client.Graphics.Clyde
         private bool _disposing;
         private bool _lite;
 
-        public override void SetWindowTitle(string title)
-        {
-            _window.Title = title;
-        }
-
-        public override void Initialize(bool lite = false)
+        public override bool Initialize(bool lite = false)
         {
             _debugStats = new ClydeDebugStats();
             _lite = lite;
-            _initWindow();
+            if (!InitWindowing())
+            {
+                return false;
+            }
             _initializeAudio();
             ReloadConfig();
+
+            return true;
         }
 
         public void FrameProcess(FrameEventArgs eventArgs)
@@ -139,17 +127,11 @@ namespace Robust.Client.Graphics.Clyde
             ClearDeadShaderInstances();
         }
 
-        public void ProcessInput(FrameEventArgs frameEventArgs)
-        {
-            _window.ProcessEvents();
-        }
-
         public void Ready()
         {
             _drawingSplash = false;
         }
 
-        public Vector2 MouseScreenPosition { get; private set; }
         public IClydeDebugInfo DebugInfo { get; private set; }
         public IClydeDebugStats DebugStats => _debugStats;
 
@@ -178,81 +160,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public override event Action<WindowResizedEventArgs> OnWindowResized;
 
-        private void _initWindow()
-        {
-            var width = _configurationManager.GetCVar<int>("display.width");
-            var height = _configurationManager.GetCVar<int>("display.height");
-
-            _window = new GameWindow(
-                width,
-                height,
-                GraphicsMode.Default,
-                string.Empty,
-                GameWindowFlags.Default,
-                DisplayDevice.Default,
-                3, 3,
-#if DEBUG
-                GraphicsContextFlags.Debug | GraphicsContextFlags.ForwardCompatible
-#else
-                GraphicsContextFlags.ForwardCompatible
-#endif
-            )
-            {
-                Visible = true
-            };
-
-            // Actually set VSync.
-            VSyncChanged();
-            WindowModeChanged();
-
-            var winSize = _window.ClientSize;
-            _screenSize = new Vector2i(winSize.Width, winSize.Height);
-
-            _mainThread = Thread.CurrentThread;
-
-            _window.KeyDown += (sender, eventArgs) => { _gameController.KeyDown((KeyEventArgs) eventArgs); };
-            _window.KeyUp += (sender, eventArgs) => { _gameController.KeyUp((KeyEventArgs) eventArgs); };
-            _window.Closed += _onWindowClosed;
-            _window.Resize += (sender, eventArgs) =>
-            {
-                var oldSize = _screenSize;
-                var newWinSize = _window.ClientSize;
-                _screenSize = new Vector2i(newWinSize.Width, newWinSize.Height);
-                GL.Viewport(0, 0, newWinSize.Width, newWinSize.Height);
-                if (newWinSize.Width != 0 && newWinSize.Height != 0)
-                {
-                    _regenerateLightRenderTarget();
-                }
-                OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _screenSize));
-            };
-            _window.MouseDown += (sender, eventArgs) => { _gameController.KeyDown((KeyEventArgs) eventArgs); };
-            _window.MouseUp += (sender, eventArgs) => { _gameController.KeyUp((KeyEventArgs) eventArgs); };
-            _window.MouseMove += (sender, eventArgs) =>
-            {
-                MouseScreenPosition = new Vector2(eventArgs.X, eventArgs.Y);
-                _gameController.MouseMove((MouseMoveEventArgs) eventArgs);
-            };
-            _window.MouseWheel += (sender, eventArgs) =>
-            {
-                _gameController.MouseWheel((MouseWheelEventArgs) eventArgs);
-            };
-            _window.KeyPress += (sender, eventArgs) =>
-            {
-                // If this is a surrogate it has to be specifically handled and I'm not doing that yet.
-                DebugTools.Assert(!char.IsSurrogate(eventArgs.KeyChar));
-
-                _gameController.TextEntered(new TextEventArgs(eventArgs.KeyChar));
-            };
-
-            using (var iconFile = _resourceCache.ContentFileRead("/Textures/Logo/icon.ico"))
-            {
-                _window.Icon = new Icon(iconFile);
-            }
-
-            _initOpenGL();
-        }
-
-        private void _initOpenGL()
+        private void InitOpenGL()
         {
             _loadExtensions();
 
@@ -261,9 +169,9 @@ namespace Robust.Client.Graphics.Clyde
             var vendor = GL.GetString(StringName.Vendor);
             var renderer = GL.GetString(StringName.Renderer);
             var version = GL.GetString(StringName.Version);
-            Logger.DebugS("ogl", "OpenGL Vendor: {0}", vendor);
-            Logger.DebugS("ogl", "OpenGL Renderer: {0}", renderer);
-            Logger.DebugS("ogl", "OpenGL Version: {0}", version);
+            Logger.DebugS("clyde.ogl", "OpenGL Vendor: {0}", vendor);
+            Logger.DebugS("clyde.ogl", "OpenGL Renderer: {0}", renderer);
+            Logger.DebugS("clyde.ogl", "OpenGL Version: {0}", version);
             _loadVendorSettings(vendor, renderer, version);
 
             var major = GL.GetInteger(GetPName.MajorVersion);
@@ -406,7 +314,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             if (!HasKHRDebug)
             {
-                Logger.DebugS("ogl", "KHR_debug not present, OpenGL debug logging not enabled.");
+                Logger.DebugS("clyde.ogl", "KHR_debug not present, OpenGL debug logging not enabled.");
                 return;
             }
 
@@ -550,33 +458,8 @@ namespace Robust.Client.Graphics.Clyde
         public void Dispose()
         {
             _disposing = true;
-            _window.Dispose();
+            ShutdownWindowing();
             _shutdownAudio();
-        }
-
-        public IntPtr GetNativeWindowHandle()
-        {
-            return _window.WindowInfo.Handle;
-        }
-
-        protected override void VSyncChanged()
-        {
-            if (_window == null)
-            {
-                return;
-            }
-
-            _window.VSync = VSync ? VSyncMode.On : VSyncMode.Off;
-        }
-
-        protected override void WindowModeChanged()
-        {
-            if (_window == null)
-            {
-                return;
-            }
-
-            _window.WindowState = WindowMode == WindowMode.Fullscreen ? WindowState.Fullscreen : WindowState.Normal;
         }
 
         protected override void HighResLightsChanged(bool newValue)
@@ -597,18 +480,6 @@ namespace Robust.Client.Graphics.Clyde
                 LightRenderTarget = CreateRenderTarget(_lightMapSize(), RenderTargetColorFormat.Rgba16F,
                     name: "LightRenderTarget");
             }
-        }
-
-        private void _onWindowClosed(object sender, EventArgs args)
-        {
-            if (_disposing)
-            {
-                // OpenTK seems to fire Closed when closing the window via Dispose on Windows.
-                // So uh, ignore it.
-                return;
-            }
-
-            _gameController.Shutdown("Window closed");
         }
 
         [StructLayout(LayoutKind.Sequential)]

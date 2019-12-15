@@ -13,10 +13,10 @@ namespace Robust.Client.Graphics.Clyde
     /// <summary>
     ///     Hey look, it's Clyde's evil twin brother!
     /// </summary>
-    internal sealed class ClydeHeadless : DisplayManager, IClydeInternal, IClydeAudio
+    internal sealed class ClydeHeadless : ClydeBase, IClydeInternal, IClydeAudio
     {
         // Would it make sense to report a fake resolution like 720p here so code doesn't break? idk.
-        public override Vector2i ScreenSize { get; set; } = (1280, 720);
+        public override Vector2i ScreenSize { get; } = (1280, 720);
 
         public ShaderInstance InstanceShader(ClydeHandle handle)
         {
@@ -32,9 +32,9 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public override void Initialize(bool lite = false)
+        public override bool Initialize(bool lite = false)
         {
-            // Nada.
+            return true;
         }
 
 #pragma warning disable CS0067
@@ -109,9 +109,14 @@ namespace Robust.Client.Graphics.Clyde
             return DummyBufferedAudioSource.Instance;
         }
 
-        public IntPtr GetNativeWindowHandle()
+        public string GetText()
         {
-            return default;
+            return string.Empty;
+        }
+
+        public void SetText(string text)
+        {
+            // Nada.
         }
 
         private class DummyAudioSource : IClydeAudioSource

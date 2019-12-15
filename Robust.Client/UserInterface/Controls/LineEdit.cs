@@ -333,12 +333,6 @@ namespace Robust.Client.UserInterface.Controls
                     if (Editable)
                     {
                         var clipboard = IoCManager.Resolve<IClipboardManager>();
-                        if (!clipboard.Available)
-                        {
-                            UserInterfaceManager.Popup(clipboard.NotAvailableReason, "Clipboard not available!");
-                            return;
-                        }
-
                         InsertAtCursor(clipboard.GetText());
                     }
                 }

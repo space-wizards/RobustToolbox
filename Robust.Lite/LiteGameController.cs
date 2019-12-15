@@ -26,7 +26,6 @@ namespace Robust.Lite
         private IGameLoop _mainLoop;
 
 #pragma warning disable 649
-        [Dependency] private readonly IClipboardManagerInternal _clipboardManager;
         [Dependency] private readonly IClydeInternal _clyde;
         [Dependency] private readonly IConfigurationManager _configurationManager;
         [Dependency] private readonly IEyeManager _eyeManager;
@@ -56,7 +55,7 @@ namespace Robust.Lite
             _mainLoop.Running = false;
         }
 
-        public void Startup()
+        public bool Startup()
         {
             throw new NotSupportedException();
         }
@@ -97,7 +96,6 @@ namespace Robust.Lite
             }
 
             _fontManager.Initialize();
-            _clipboardManager.Initialize();
 
             _eyeManager.Initialize();
 

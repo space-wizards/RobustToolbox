@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace Robust.Shared.Utility
 {
@@ -32,6 +33,27 @@ namespace Robust.Shared.Utility
             var length = FindNullTerminator(ptr);
 
             return EncodingHelpers.UTF8.GetString(ptr, length);
+        }
+
+        public static unsafe IntPtr StringToCoTaskMemUTF8(string str)
+        {
+            if (str == null)
+            {
+                return IntPtr.Zero;
+            }
+
+            var maxByteLength = System.Text.Encoding.UTF8.GetMaxByteCount(str.Length);
+
+            var ptr = (byte*)Marshal.AllocCoTaskMem(maxByteLength + 1);
+
+            int actualLen;
+            fixed (char* pChar = str)
+            {
+                actualLen = System.Text.Encoding.UTF8.GetBytes(pChar, str.Length, ptr, maxByteLength);
+            }
+            ptr[actualLen] = 0;
+
+            return (IntPtr)ptr;
         }
     }
 }

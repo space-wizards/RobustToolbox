@@ -91,7 +91,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _drawSplash(_renderHandle);
                 _flushRenderHandle(_renderHandle);
-                _window.SwapBuffers();
+                SwapBuffers();
                 return;
             }
 
@@ -231,7 +231,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             // And finally, swap those buffers!
-            _window.SwapBuffers();
+            SwapBuffers();
         }
 
         private void _drawSplash(IRenderHandle handle)
@@ -438,7 +438,7 @@ namespace Robust.Client.Graphics.Clyde
 
                             ref var s = ref command.Scissor.Scissor;
                             // Don't forget to flip it, these coordinates have bottom left as origin.
-                            GL.Scissor(s.Left, _window.Height - s.Bottom, s.Width, s.Height);
+                            GL.Scissor(s.Left, _screenSize.Y - s.Bottom, s.Width, s.Height);
                         }
                         else if (oldIsScissoring)
                         {

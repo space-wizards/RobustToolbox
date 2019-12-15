@@ -41,7 +41,6 @@ namespace Robust.Client
     {
 #pragma warning disable 649
         [Dependency] private readonly IConfigurationManager _configurationManager;
-        [Dependency] private readonly IClipboardManagerInternal _clipboardManager;
         [Dependency] private readonly IResourceCacheInternal _resourceCache;
         [Dependency] private readonly IResourceManager _resourceManager;
         [Dependency] private readonly IRobustSerializer _serializer;
@@ -82,7 +81,7 @@ namespace Robust.Client
             _commandLineArgs = args;
         }
 
-        public void Startup()
+        public bool Startup()
         {
             SetupLogging(_logManager);
 
@@ -124,11 +123,14 @@ namespace Robust.Client
             _localizationManager.LoadCulture(new CultureInfo("en-US"));
 
             // Bring display up as soon as resources are mounted.
-            _clyde.Initialize();
+            if (!_clyde.Initialize())
+            {
+                return false;
+            }
+
             _clyde.SetWindowTitle("Space Station 14");
 
             _fontManager.Initialize();
-            _clipboardManager.Initialize();
 
             //identical code for server in baseserver
             if (!_modLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))
@@ -200,6 +202,7 @@ namespace Robust.Client
             }
 
             _checkOpenGLVersion();
+            return true;
         }
 
         private void _checkOpenGLVersion()

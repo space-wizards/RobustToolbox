@@ -33,7 +33,11 @@ namespace Robust.Client
 
             var gc = (GameController) IoCManager.Resolve<IGameController>();
             gc.SetCommandLineArgs(args);
-            gc.Startup();
+            if (!gc.Startup())
+            {
+                Logger.Fatal("Failed to start game controller!");
+                return;
+            }
             gc.MainLoop(mode);
 
             Logger.Debug("Goodbye");

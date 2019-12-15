@@ -284,12 +284,10 @@ namespace Robust.Client.UserInterface
             if (target != null)
             {
                 var guiArgs = new GUIMouseMoveEventArgs(mouseMoveEventArgs.Relative / UIScale,
-                    mouseMoveEventArgs.Speed / UIScale, target,
-                    mouseMoveEventArgs.ButtonMask, mouseMoveEventArgs.Position / UIScale, mouseMoveEventArgs.Position,
+                    target,
+                    mouseMoveEventArgs.Position / UIScale, mouseMoveEventArgs.Position,
                     mouseMoveEventArgs.Position / UIScale - target.GlobalPosition,
-                    mouseMoveEventArgs.Position - target.GlobalPixelPosition,
-                    mouseMoveEventArgs.Alt,
-                    mouseMoveEventArgs.Control, mouseMoveEventArgs.Shift, mouseMoveEventArgs.System);
+                    mouseMoveEventArgs.Position - target.GlobalPixelPosition);
 
                 _doMouseGuiInput(target, guiArgs, (c, ev) => c.MouseMove(ev));
             }
@@ -305,10 +303,9 @@ namespace Robust.Client.UserInterface
 
             args.Handle();
 
-            var guiArgs = new GUIMouseWheelEventArgs(args.Delta, control, Mouse.ButtonMask.None,
+            var guiArgs = new GUIMouseWheelEventArgs(args.Delta, control,
                 args.Position / UIScale, args.Position,
-                args.Position / UIScale - control.GlobalPosition, args.Position - control.GlobalPixelPosition, args.Alt,
-                args.Control, args.Shift, args.System);
+                args.Position / UIScale - control.GlobalPosition, args.Position - control.GlobalPixelPosition);
 
             _doMouseGuiInput(control, guiArgs, (c, ev) => c.MouseWheel(ev), true);
         }

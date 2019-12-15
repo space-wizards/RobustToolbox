@@ -18,7 +18,7 @@ namespace Robust.Client.Graphics
     /// <summary>
     ///     Manages the game window, resolutions, fullscreen mode, VSync, etc...
     /// </summary>
-    internal abstract class DisplayManager : IPostInjectInit
+    internal abstract class ClydeBase : IPostInjectInit
     {
         private const string CVarVSync = "display.vsync";
         private const string CVarWindowMode = "display.windowmode";
@@ -41,9 +41,9 @@ namespace Robust.Client.Graphics
             _configurationManager.RegisterCVar("audio.device", "");
         }
 
-        public abstract Vector2i ScreenSize { get; set; }
+        public abstract Vector2i ScreenSize { get; }
         public abstract void SetWindowTitle(string title);
-        public abstract void Initialize(bool lite=false);
+        public abstract bool Initialize(bool lite=false);
 
         protected virtual void ReloadConfig()
         {

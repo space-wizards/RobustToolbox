@@ -12,7 +12,7 @@ namespace Robust.Client.Interfaces
     {
         void SetCommandLineArgs(CommandLineArgs args);
         bool LoadConfigAndUserData { get; set; }
-        void Startup();
+        bool Startup();
         void MainLoop(GameController.DisplayMode mode);
         string ContentRootDir { get; set; }
         void KeyDown(KeyEventArgs keyEvent);

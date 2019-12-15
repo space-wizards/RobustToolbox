@@ -17,14 +17,13 @@ namespace Robust.UnitTesting
 
         public bool LoadConfigAndUserData { get; set; } = true;
 
-        public void Startup()
+        public bool Startup()
         {
-
+            return true;
         }
 
         public void MainLoop(GameController.DisplayMode mode)
         {
-
         }
 
         public string ContentRootDir { get; set; }

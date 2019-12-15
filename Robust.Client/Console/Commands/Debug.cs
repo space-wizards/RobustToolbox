@@ -560,12 +560,6 @@ namespace Robust.Client.Console.Commands
         public bool Execute(IDebugConsole console, params string[] args)
         {
             var mgr = IoCManager.Resolve<IClipboardManager>();
-            if (!mgr.Available)
-            {
-                console.AddLine(mgr.NotAvailableReason, Color.Red);
-                return false;
-            }
-
             mgr.SetText(args[0]);
             return false;
         }
@@ -580,13 +574,6 @@ namespace Robust.Client.Console.Commands
         public bool Execute(IDebugConsole console, params string[] args)
         {
             var mgr = IoCManager.Resolve<IClipboardManager>();
-            if (!mgr.Available)
-            {
-                console.AddLine(mgr.NotAvailableReason, Color.Red);
-                return false;
-            }
-
-            console.AddLine(mgr.GetText());
             return false;
         }
     }

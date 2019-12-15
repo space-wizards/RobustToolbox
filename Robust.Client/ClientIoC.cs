@@ -86,6 +86,7 @@ namespace Robust.Client
             {
                 case GameController.DisplayMode.Headless:
                     IoCManager.Register<IClyde, ClydeHeadless>();
+                    IoCManager.Register<IClipboardManager, ClydeHeadless>();
                     IoCManager.Register<IClydeAudio, ClydeHeadless>();
                     IoCManager.Register<IClydeInternal, ClydeHeadless>();
                     IoCManager.Register<IInputManager, InputManager>();
@@ -94,6 +95,7 @@ namespace Robust.Client
                     break;
                 case GameController.DisplayMode.Clyde:
                     IoCManager.Register<IClyde, Clyde>();
+                    IoCManager.Register<IClipboardManager, Clyde>();
                     IoCManager.Register<IClydeAudio, Clyde>();
                     IoCManager.Register<IClydeInternal, Clyde>();
                     IoCManager.Register<IInputManager, ClydeInputManager>();
@@ -117,18 +119,6 @@ namespace Robust.Client
             IoCManager.Register<IOverlayManagerInternal, OverlayManager>();
             IoCManager.Register<IViewVariablesManager, ViewVariablesManager>();
             IoCManager.Register<IViewVariablesManagerInternal, ViewVariablesManager>();
-
-#if LINUX
-            IoCManager.Register<IClipboardManager, ClipboardManagerLinux>();
-            IoCManager.Register<IClipboardManagerInternal, ClipboardManagerLinux>();
-#elif WINDOWS
-            IoCManager.Register<IClipboardManager, ClipboardManagerWindows>();
-            IoCManager.Register<IClipboardManagerInternal, ClipboardManagerWindows>();
-#else
-            IoCManager.Register<IClipboardManager, ClipboardManagerUnsupported>();
-            IoCManager.Register<IClipboardManagerInternal, ClipboardManagerUnsupported>();
-#endif
-
             IoCManager.Register<ISignalHandler, ClientSignalHandler>();
             IoCManager.Register<IClientConGroupController, ClientConGroupController>();
         }

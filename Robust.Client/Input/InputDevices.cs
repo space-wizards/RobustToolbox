@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using TKKey = OpenTK.Input.Key;
-using TKButton = OpenTK.Input.MouseButton;
+﻿using System.Collections.Generic;
+using GlfwKey = OpenToolkit.GraphicsLibraryFramework.Keys;
+using GlfwButton = OpenToolkit.GraphicsLibraryFramework.MouseButton;
 
 namespace Robust.Client.Input
 {
@@ -24,25 +23,12 @@ namespace Robust.Client.Input
             LastButton,
         }
 
-        /// <summary>
-        ///     Represents mouse buttons, but in bitflag form.
-        /// </summary>
-        [Flags]
-        public enum ButtonMask
-        {
-            // These match Godot's
-            None = 0,
-            Left = 1,
-            Middle = 2,
-            Right = 4,
-        }
-
         public static Keyboard.Key MouseButtonToKey(Button button)
         {
             return _mouseKeyMap[button];
         }
 
-        public static Button ConvertOpenTKButton(OpenTK.Input.MouseButton button)
+        public static Button ConvertGlfwButton(GlfwButton button)
         {
             return _openTKButtonMap[button];
         }
@@ -61,17 +47,16 @@ namespace Robust.Client.Input
             {Button.LastButton, Keyboard.Key.Unknown},
         };
 
-        private static readonly Dictionary<TKButton, Button> _openTKButtonMap = new Dictionary<TKButton, Button>
+        private static readonly Dictionary<GlfwButton, Button> _openTKButtonMap = new Dictionary<GlfwButton, Button>
         {
-            {TKButton.Left, Button.Left},
-            {TKButton.Middle, Button.Middle},
-            {TKButton.Right, Button.Right},
-            {TKButton.Button1, Button.Button4},
-            {TKButton.Button2, Button.Button5},
-            {TKButton.Button3, Button.Button6},
-            {TKButton.Button4, Button.Button7},
-            {TKButton.Button5, Button.Button8},
-            {TKButton.Button6, Button.Button9},
+            {GlfwButton.Left, Button.Left},
+            {GlfwButton.Middle, Button.Middle},
+            {GlfwButton.Right, Button.Right},
+            {GlfwButton.Button4, Button.Button4},
+            {GlfwButton.Button5, Button.Button5},
+            {GlfwButton.Button6, Button.Button6},
+            {GlfwButton.Button7, Button.Button7},
+            {GlfwButton.Button8, Button.Button8},
         };
     }
 
@@ -151,13 +136,11 @@ namespace Robust.Client.Input
             SemiColon,
             Comma,
             Period,
-            Quote,
             Apostrophe,
             Slash,
             BackSlash,
             Tilde,
             Equal,
-            Dash,
             Space,
             Return,
             NumpadEnter,
@@ -169,13 +152,12 @@ namespace Robust.Client.Input
             Home,
             Insert,
             Delete,
-            Plus,
             Minus,
-            Asterisk,
             NumpadAdd,
             NumpadSubtract,
             NumpadDivide,
             NumpadMultiply,
+            NumpadDecimal,
             Left,
             Right,
             Up,
@@ -198,9 +180,9 @@ namespace Robust.Client.Input
             Pause,
         }
 
-        internal static Key ConvertOpenTKKey(TKKey key)
+        internal static Key ConvertGlfwKey(GlfwKey key)
         {
-            if (OpenTKKeyMap.TryGetValue(key, out var result))
+            if (_glfwKeyMap.TryGetValue(key, out var result))
             {
                 return result;
             }
@@ -208,113 +190,111 @@ namespace Robust.Client.Input
             return Key.Unknown;
         }
 
-        private static readonly Dictionary<TKKey, Key> OpenTKKeyMap = new Dictionary<OpenTK.Input.Key, Key>
+        private static readonly Dictionary<GlfwKey, Key> _glfwKeyMap = new Dictionary<GlfwKey, Key>
         {
-            // TODO: Missing keys OpenTK has but we don't:
-            // Scroll Lock, Caps Lock, Print Screen, Num Lock, Clear, Sleep, F keys above 15, NonUSBackSlash, LastKey.
-            {TKKey.Unknown, Key.Unknown},
-            {TKKey.LShift, Key.Shift},
-            {TKKey.RShift, Key.Shift},
-            {TKKey.LControl, Key.Control},
-            {TKKey.RControl, Key.Control},
-            {TKKey.LAlt, Key.Alt},
-            {TKKey.RAlt, Key.Alt},
-            {TKKey.LWin, Key.LSystem},
-            {TKKey.RWin, Key.RSystem},
-            {TKKey.Menu, Key.Menu},
-            {TKKey.F1, Key.F1},
-            {TKKey.F2, Key.F2},
-            {TKKey.F3, Key.F3},
-            {TKKey.F4, Key.F4},
-            {TKKey.F5, Key.F5},
-            {TKKey.F6, Key.F6},
-            {TKKey.F7, Key.F7},
-            {TKKey.F8, Key.F8},
-            {TKKey.F9, Key.F9},
-            {TKKey.F10, Key.F10},
-            {TKKey.F11, Key.F11},
-            {TKKey.F12, Key.F12},
-            {TKKey.F13, Key.F13},
-            {TKKey.F14, Key.F14},
-            {TKKey.F15, Key.F15},
-            {TKKey.Up, Key.Up},
-            {TKKey.Down, Key.Down},
-            {TKKey.Left, Key.Left},
-            {TKKey.Right, Key.Right},
-            {TKKey.Enter, Key.Return},
-            {TKKey.Escape, Key.Escape},
-            {TKKey.Space, Key.Space},
-            {TKKey.Tab, Key.Tab},
-            {TKKey.Back, Key.BackSpace},
-            {TKKey.Insert, Key.Insert},
-            {TKKey.Delete, Key.Delete},
-            {TKKey.PageUp, Key.PageUp},
-            {TKKey.PageDown, Key.PageDown},
-            {TKKey.Home, Key.Home},
-            {TKKey.End, Key.End},
-            {TKKey.Pause, Key.Pause},
-            {TKKey.Keypad0, Key.NumpadNum0},
-            {TKKey.Keypad1, Key.NumpadNum1},
-            {TKKey.Keypad2, Key.NumpadNum2},
-            {TKKey.Keypad3, Key.NumpadNum3},
-            {TKKey.Keypad4, Key.NumpadNum4},
-            {TKKey.Keypad5, Key.NumpadNum5},
-            {TKKey.Keypad6, Key.NumpadNum6},
-            {TKKey.Keypad7, Key.NumpadNum7},
-            {TKKey.Keypad8, Key.NumpadNum8},
-            {TKKey.Keypad9, Key.NumpadNum9},
-            {TKKey.KeypadDivide, Key.NumpadDivide},
-            {TKKey.KeypadMultiply, Key.NumpadMultiply},
-            {TKKey.KeypadMinus, Key.Minus},
-            {TKKey.KeypadAdd, Key.NumpadAdd},
-            {TKKey.KeypadEnter, Key.NumpadEnter},
-            {TKKey.A, Key.A},
-            {TKKey.B, Key.B},
-            {TKKey.C, Key.C},
-            {TKKey.D, Key.D},
-            {TKKey.E, Key.E},
-            {TKKey.F, Key.F},
-            {TKKey.G, Key.G},
-            {TKKey.H, Key.H},
-            {TKKey.I, Key.I},
-            {TKKey.J, Key.J},
-            {TKKey.K, Key.K},
-            {TKKey.L, Key.L},
-            {TKKey.M, Key.M},
-            {TKKey.N, Key.N},
-            {TKKey.O, Key.O},
-            {TKKey.P, Key.P},
-            {TKKey.Q, Key.Q},
-            {TKKey.R, Key.R},
-            {TKKey.S, Key.S},
-            {TKKey.T, Key.T},
-            {TKKey.U, Key.U},
-            {TKKey.V, Key.V},
-            {TKKey.W, Key.W},
-            {TKKey.X, Key.X},
-            {TKKey.Y, Key.Y},
-            {TKKey.Z, Key.Z},
-            {TKKey.Number0, Key.Num0},
-            {TKKey.Number1, Key.Num1},
-            {TKKey.Number2, Key.Num2},
-            {TKKey.Number3, Key.Num3},
-            {TKKey.Number4, Key.Num4},
-            {TKKey.Number5, Key.Num5},
-            {TKKey.Number6, Key.Num6},
-            {TKKey.Number7, Key.Num7},
-            {TKKey.Number8, Key.Num8},
-            {TKKey.Number9, Key.Num9},
-            {TKKey.Tilde, Key.Tilde},
-            {TKKey.Minus, Key.Minus},
-            {TKKey.Plus, Key.Plus},
-            {TKKey.LBracket, Key.LBracket},
-            {TKKey.RBracket, Key.RBracket},
-            {TKKey.Semicolon, Key.SemiColon},
-            {TKKey.Quote, Key.Quote},
-            {TKKey.Comma, Key.Comma},
-            {TKKey.Period, Key.Period},
-            {TKKey.Slash, Key.Slash},
-            {TKKey.BackSlash, Key.BackSlash},
+            {GlfwKey.A, Key.A},
+            {GlfwKey.B, Key.B},
+            {GlfwKey.C, Key.C},
+            {GlfwKey.D, Key.D},
+            {GlfwKey.E, Key.E},
+            {GlfwKey.F, Key.F},
+            {GlfwKey.G, Key.G},
+            {GlfwKey.H, Key.H},
+            {GlfwKey.I, Key.I},
+            {GlfwKey.J, Key.J},
+            {GlfwKey.K, Key.K},
+            {GlfwKey.L, Key.L},
+            {GlfwKey.M, Key.M},
+            {GlfwKey.N, Key.N},
+            {GlfwKey.O, Key.O},
+            {GlfwKey.P, Key.P},
+            {GlfwKey.Q, Key.Q},
+            {GlfwKey.R, Key.R},
+            {GlfwKey.S, Key.S},
+            {GlfwKey.T, Key.T},
+            {GlfwKey.U, Key.U},
+            {GlfwKey.V, Key.V},
+            {GlfwKey.W, Key.W},
+            {GlfwKey.X, Key.X},
+            {GlfwKey.Y, Key.Y},
+            {GlfwKey.Z, Key.Z},
+            {GlfwKey.D0, Key.Num0},
+            {GlfwKey.D1, Key.Num1},
+            {GlfwKey.D2, Key.Num2},
+            {GlfwKey.D3, Key.Num3},
+            {GlfwKey.D4, Key.Num4},
+            {GlfwKey.D5, Key.Num5},
+            {GlfwKey.D6, Key.Num6},
+            {GlfwKey.D7, Key.Num7},
+            {GlfwKey.D8, Key.Num8},
+            {GlfwKey.D9, Key.Num9},
+            {GlfwKey.KeyPad0, Key.NumpadNum0},
+            {GlfwKey.KeyPad1, Key.NumpadNum1},
+            {GlfwKey.KeyPad2, Key.NumpadNum2},
+            {GlfwKey.KeyPad3, Key.NumpadNum3},
+            {GlfwKey.KeyPad4, Key.NumpadNum4},
+            {GlfwKey.KeyPad5, Key.NumpadNum5},
+            {GlfwKey.KeyPad6, Key.NumpadNum6},
+            {GlfwKey.KeyPad7, Key.NumpadNum7},
+            {GlfwKey.KeyPad8, Key.NumpadNum8},
+            {GlfwKey.KeyPad9, Key.NumpadNum9},
+            {GlfwKey.Escape, Key.Escape},
+            {GlfwKey.LeftControl, Key.Control},
+            {GlfwKey.RightControl, Key.Control},
+            {GlfwKey.RightShift, Key.Shift},
+            {GlfwKey.LeftShift, Key.Shift},
+            {GlfwKey.LeftAlt, Key.Alt},
+            {GlfwKey.RightAlt, Key.Alt},
+            {GlfwKey.LeftSuper, Key.LSystem},
+            {GlfwKey.RightSuper, Key.RSystem},
+            {GlfwKey.Menu, Key.Menu},
+            {GlfwKey.LeftBracket, Key.LBracket},
+            {GlfwKey.RightBracket, Key.RBracket},
+            {GlfwKey.Semicolon, Key.SemiColon},
+            {GlfwKey.Comma, Key.Comma},
+            {GlfwKey.Period, Key.Period},
+            {GlfwKey.Apostrophe, Key.Apostrophe},
+            {GlfwKey.Slash, Key.Slash},
+            {GlfwKey.Backslash, Key.BackSlash},
+            {GlfwKey.GraveAccent, Key.Tilde},
+            {GlfwKey.Equal, Key.Equal},
+            {GlfwKey.Space, Key.Space},
+            {GlfwKey.Enter, Key.Return},
+            {GlfwKey.KeyPadEnter, Key.NumpadEnter},
+            {GlfwKey.Backspace, Key.BackSpace},
+            {GlfwKey.Tab, Key.Tab},
+            {GlfwKey.PageUp, Key.PageUp},
+            {GlfwKey.PageDown, Key.PageDown},
+            {GlfwKey.End, Key.End},
+            {GlfwKey.Home, Key.Home},
+            {GlfwKey.Insert, Key.Insert},
+            {GlfwKey.Delete, Key.Delete},
+            {GlfwKey.Minus, Key.Minus},
+            {GlfwKey.KeyPadAdd, Key.NumpadAdd},
+            {GlfwKey.KeyPadSubtract, Key.NumpadSubtract},
+            {GlfwKey.KeyPadDivide, Key.NumpadDivide},
+            {GlfwKey.KeyPadMultiply, Key.NumpadMultiply},
+            {GlfwKey.KeyPadDecimal, Key.NumpadDecimal},
+            {GlfwKey.Left, Key.Left},
+            {GlfwKey.Right, Key.Right},
+            {GlfwKey.Up, Key.Up},
+            {GlfwKey.Down, Key.Down},
+            {GlfwKey.F1, Key.F1},
+            {GlfwKey.F2, Key.F2},
+            {GlfwKey.F3, Key.F3},
+            {GlfwKey.F4, Key.F4},
+            {GlfwKey.F5, Key.F5},
+            {GlfwKey.F6, Key.F6},
+            {GlfwKey.F7, Key.F7},
+            {GlfwKey.F8, Key.F8},
+            {GlfwKey.F9, Key.F9},
+            {GlfwKey.F10, Key.F10},
+            {GlfwKey.F11, Key.F11},
+            {GlfwKey.F12, Key.F12},
+            {GlfwKey.F13, Key.F13},
+            {GlfwKey.F14, Key.F14},
+            {GlfwKey.F15, Key.F15},
+            {GlfwKey.Pause, Key.Pause},
         };
     }
 }

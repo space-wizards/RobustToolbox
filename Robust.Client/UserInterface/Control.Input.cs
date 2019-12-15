@@ -1,5 +1,4 @@
 ﻿using Robust.Client.Input;
-using Robust.Client.Utility;
 using Robust.Shared.Input;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -123,18 +122,12 @@ namespace Robust.Client.UserInterface
         }
     }
 
-    public abstract class GUIMouseEventArgs : ModifierInputEventArgs
+    public abstract class GUIMouseEventArgs : InputEventArgs
     {
         /// <summary>
         ///     The control spawning this event.
         /// </summary>
         public Control SourceControl { get; internal set; }
-
-        /// <summary>
-        ///     <c>InputEventMouse.button_mask</c> in Godot.
-        ///     Which mouse buttons are currently held maybe?
-        /// </summary>
-        public Mouse.ButtonMask ButtonMask { get; }
 
         /// <summary>
         ///     Position of the mouse, relative to the screen.
@@ -151,19 +144,12 @@ namespace Robust.Client.UserInterface
         public Vector2 RelativePixelPosition { get; internal set; }
 
         protected GUIMouseEventArgs(Control sourceControl,
-            Mouse.ButtonMask buttonMask,
             Vector2 globalPosition,
             Vector2 globalPixelPosition,
             Vector2 relativePosition,
-            Vector2 relativePixelPosition,
-            bool alt,
-            bool control,
-            bool shift,
-            bool system)
-            : base(alt, control, shift, system)
+            Vector2 relativePixelPosition)
         {
             SourceControl = sourceControl;
-            ButtonMask = buttonMask;
             GlobalPosition = globalPosition;
             RelativePosition = relativePosition;
             RelativePixelPosition = relativePixelPosition;
@@ -178,30 +164,16 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public Vector2 Relative { get; }
 
-        // TODO: Godot's docs aren't exactly clear on what this is.
-        //         Speed how?
-        /// <summary>
-        ///     The speed of the movement.
-        /// </summary>
-        public Vector2 Speed { get; }
-
         // ALL the parameters!
         public GUIMouseMoveEventArgs(Vector2 relative,
-            Vector2 speed,
             Control sourceControl,
-            Mouse.ButtonMask buttonMask,
             Vector2 globalPosition,
             Vector2 globalPixelPosition,
             Vector2 relativePosition,
-            Vector2 relativePixelPosition,
-            bool alt,
-            bool control,
-            bool shift,
-            bool system)
-            : base(sourceControl, buttonMask, globalPosition, globalPixelPosition, relativePosition, relativePixelPosition, alt, control, shift, system)
+            Vector2 relativePixelPosition)
+            : base(sourceControl, globalPosition, globalPixelPosition, relativePosition, relativePixelPosition)
         {
             Relative = relative;
-            Speed = speed;
         }
     }
 
@@ -211,16 +183,11 @@ namespace Robust.Client.UserInterface
 
         public GUIMouseWheelEventArgs(Vector2 delta,
             Control sourceControl,
-            Mouse.ButtonMask buttonMask,
             Vector2 globalPosition,
             Vector2 globalPixelPosition,
             Vector2 relativePosition,
-            Vector2 relativePixelPosition,
-            bool alt,
-            bool control,
-            bool shift,
-            bool system)
-            : base(sourceControl, buttonMask, globalPosition, globalPixelPosition, relativePosition, relativePixelPosition, alt, control, shift, system)
+            Vector2 relativePixelPosition)
+            : base(sourceControl, globalPosition, globalPixelPosition, relativePosition, relativePixelPosition)
         {
             Delta = delta;
         }

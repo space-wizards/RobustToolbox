@@ -7,6 +7,7 @@ using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Input;
+using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -15,7 +16,7 @@ namespace Robust.Client.Interfaces.Graphics
 {
     public interface IClyde
     {
-        Vector2i ScreenSize { get; set; }
+        Vector2i ScreenSize { get; }
         void SetWindowTitle(string title);
         event Action<WindowResizedEventArgs> OnWindowResized;
 
@@ -39,7 +40,7 @@ namespace Robust.Client.Interfaces.Graphics
         IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers);
     }
 
-    internal interface IClydeInternal : IClyde
+    internal interface IClydeInternal : IClyde, IClipboardManager
     {
         // Basic main loop hooks.
         void Render();
@@ -47,7 +48,7 @@ namespace Robust.Client.Interfaces.Graphics
         void ProcessInput(FrameEventArgs frameEventArgs);
 
         // Init.
-        void Initialize(bool lite=false);
+        bool Initialize(bool lite = false);
         void Ready();
 
         ClydeHandle LoadShader(ParsedShader shader, string name = null);
@@ -66,12 +67,6 @@ namespace Robust.Client.Interfaces.Graphics
         IClydeDebugInfo DebugInfo { get; }
 
         IClydeDebugStats DebugStats { get; }
-
-        /// <summary>
-        ///     Gets the platform specific window handle exposed by OpenTK.
-        ///     Seriously please avoid using this unless absolutely necessary.
-        /// </summary>
-        IntPtr GetNativeWindowHandle();
     }
 
     public interface IClydeAudioSource : IDisposable

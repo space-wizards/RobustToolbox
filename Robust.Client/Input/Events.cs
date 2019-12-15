@@ -7,10 +7,23 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Input
 {
+    public abstract class InputEventArgs : EventArgs
+    {
+        public bool Handled { get; private set; }
+
+        /// <summary>
+        ///     Mark this event as handled.
+        /// </summary>
+        public void Handle()
+        {
+            Handled = true;
+        }
+    }
+
     /// <summary>
     ///     Generic input event that has modifier keys like control.
     /// </summary>
-    public abstract class ModifierInputEventArgs : EventArgs
+    public abstract class ModifierInputEventArgs : InputEventArgs
     {
         /// <summary>
         ///     Whether the alt key (⌥ Option on MacOS) is held.
@@ -32,22 +45,12 @@ namespace Robust.Client.Input
         /// </summary>
         public bool System { get; }
 
-        public bool Handled { get; private set; }
-
         protected ModifierInputEventArgs(bool alt, bool control, bool shift, bool system)
         {
             Alt = alt;
             Control = control;
             Shift = shift;
             System = system;
-        }
-
-        /// <summary>
-        ///     Mark this event as handled.
-        /// </summary>
-        public void Handle()
-        {
-            Handled = true;
         }
     }
 
@@ -79,41 +82,17 @@ namespace Robust.Client.Input
             Key = key;
             IsRepeat = repeat;
         }
-
-        public static explicit operator KeyEventArgs(OpenTK.Input.KeyboardKeyEventArgs args)
-        {
-            return new KeyEventArgs(Keyboard.ConvertOpenTKKey(args.Key), args.IsRepeat, args.Alt, args.Control, args.Shift, false);
-        }
-
-        public static explicit operator KeyEventArgs(OpenTK.Input.MouseButtonEventArgs args)
-        {
-            return new KeyEventArgs(Mouse.MouseButtonToKey(Mouse.ConvertOpenTKButton(args.Button)), false,
-                false, false, false, false);
-        }
     }
 
-    public abstract class MouseEventArgs : ModifierInputEventArgs
+    public abstract class MouseEventArgs : InputEventArgs
     {
-        /// <summary>
-        ///     <c>InputEventMouse.button_mask</c> in Godot.
-        ///     Which mouse buttons are currently held maybe?
-        /// </summary>
-        public Mouse.ButtonMask ButtonMask { get; }
-
         /// <summary>
         ///     Position of the mouse relative to the screen.
         /// </summary>
         public Vector2 Position { get; }
 
-        protected MouseEventArgs(Mouse.ButtonMask buttonMask,
-            Vector2 position,
-            bool alt,
-            bool control,
-            bool shift,
-            bool system)
-            : base(alt, control, shift, system)
+        protected MouseEventArgs(Vector2 position)
         {
-            ButtonMask = buttonMask;
             Position = position;
         }
     }
@@ -125,66 +104,11 @@ namespace Robust.Client.Input
         /// </summary>
         public Mouse.Button Button { get; }
 
-        /// <summary>
-        ///     True if this action was a double click.
-        ///     Can't be true if this was a release event.
-        /// </summary>
-        public bool DoubleClick { get; }
-
-        public ClickType ClickType
-        {
-            get
-            {
-                ClickType type = ClickType.None;
-                switch (Button)
-                {
-                    case Mouse.Button.Left:
-                        type = ClickType.Left;
-                        break;
-                    case Mouse.Button.Right:
-                        type = ClickType.Right;
-                        break;
-                    case Mouse.Button.Middle:
-                        type = ClickType.Middle;
-                        break;
-                    default:
-                        return type;
-                }
-
-                if (Alt)
-                    type |= ClickType.Alt;
-                if (Control)
-                    type |= ClickType.Cntrl;
-                if (Shift)
-                    type |= ClickType.Shift;
-                if (System)
-                    type |= ClickType.System;
-                return type;
-            }
-        }
-
         // ALL the parameters!
-        public MouseButtonEventArgs(Mouse.Button button,
-            bool doubleClick,
-            Mouse.ButtonMask buttonMask,
-            Vector2 position,
-            bool alt,
-            bool control,
-            bool shift,
-            bool system)
-            : base(buttonMask, position, alt, control, shift, system)
+        public MouseButtonEventArgs(Mouse.Button button, Vector2 position)
+            : base(position)
         {
             Button = button;
-            DoubleClick = doubleClick;
-        }
-
-        public static explicit operator MouseButtonEventArgs(OpenTK.Input.MouseButtonEventArgs inputEvent)
-        {
-            return new MouseButtonEventArgs(
-                Mouse.ConvertOpenTKButton(inputEvent.Button),
-                false, Mouse.ButtonMask.None,
-                new Vector2(inputEvent.X, inputEvent.Y),
-                false, false, false, false);
         }
     }
 
@@ -196,28 +120,10 @@ namespace Robust.Client.Input
         public Vector2 Delta { get; }
 
         // ALL the parameters!
-        public MouseWheelEventArgs(Vector2 delta,
-            Mouse.ButtonMask buttonMask,
-            Vector2 position,
-            bool alt,
-            bool control,
-            bool shift,
-            bool system)
-            : base(buttonMask, position, alt, control, shift, system)
+        public MouseWheelEventArgs(Vector2 delta, Vector2 position)
+            : base(position)
         {
             Delta = delta;
-        }
-
-        public static explicit operator MouseWheelEventArgs(OpenTK.Input.MouseWheelEventArgs inputEvent)
-        {
-            return new MouseWheelEventArgs(
-                // OpenTK 3 doesn't support horizontal scrolling.
-                // This is a necessary feature, so the events do have the API.
-                // Eventually when we switch to OpenTK 4 this will be fixed.
-                (0, inputEvent.DeltaPrecise),
-                Mouse.ButtonMask.None,
-                new Vector2(inputEvent.X, inputEvent.Y),
-                false, false, false, false);
         }
     }
 
@@ -228,35 +134,11 @@ namespace Robust.Client.Input
         /// </summary>
         public Vector2 Relative { get; }
 
-        // TODO: Godot's docs aren't exactly clear on what this is.
-        //         Speed how?
-        /// <summary>
-        ///     The speed of the movement.
-        /// </summary>
-        public Vector2 Speed { get; }
-
         // ALL the parameters!
-        public MouseMoveEventArgs(Vector2 relative,
-            Vector2 speed,
-            Mouse.ButtonMask buttonMask,
-            Vector2 position,
-            bool alt,
-            bool control,
-            bool shift,
-            bool system)
-            : base(buttonMask, position, alt, control, shift, system)
+        public MouseMoveEventArgs(Vector2 relative, Vector2 position)
+            : base(position)
         {
             Relative = relative;
-            Speed = speed;
-        }
-
-        public static explicit operator MouseMoveEventArgs(OpenTK.Input.MouseMoveEventArgs inputEvent)
-        {
-            return new MouseMoveEventArgs(
-                new Vector2(inputEvent.XDelta, inputEvent.YDelta),
-                Vector2.Zero, Mouse.ButtonMask.None,
-                new Vector2(inputEvent.X, inputEvent.Y),
-                false, false, false, false);
         }
     }
 }

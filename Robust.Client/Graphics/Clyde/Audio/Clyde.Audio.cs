@@ -63,9 +63,9 @@ namespace Robust.Client.Graphics.Clyde
                 _alContextExtensions.Add(extension);
             }
 
-            Logger.DebugS("oal", "OpenAL Vendor: {0}", AL.Get(ALGetString.Vendor));
-            Logger.DebugS("oal", "OpenAL Renderer: {0}", AL.Get(ALGetString.Renderer));
-            Logger.DebugS("oal", "OpenAL Version: {0}", AL.Get(ALGetString.Version));
+            Logger.DebugS("clyde.oal", "OpenAL Vendor: {0}", AL.Get(ALGetString.Vendor));
+            Logger.DebugS("clyde.oal", "OpenAL Renderer: {0}", AL.Get(ALGetString.Renderer));
+            Logger.DebugS("clyde.oal", "OpenAL Version: {0}", AL.Get(ALGetString.Version));
         }
 
         private void _audioOpenDevice()
@@ -84,7 +84,7 @@ namespace Robust.Client.Graphics.Clyde
                 _openALDevice = Alc.OpenDevice(preferredDevice);
                 if (_openALDevice == IntPtr.Zero)
                 {
-                    Logger.WarningS("oal", "Unable to open preferred audio device '{0}': {1}. Falling back default.",
+                    Logger.WarningS("clyde.oal", "Unable to open preferred audio device '{0}': {1}. Falling back default.",
                         preferredDevice, Alc.GetError(IntPtr.Zero));
 
                     _openALDevice = Alc.OpenDevice(null);
@@ -141,7 +141,7 @@ namespace Robust.Client.Graphics.Clyde
             // Clear out finalized audio sources.
             while (_sourceDisposeQueue.TryDequeue(out var handle))
             {
-                Logger.DebugS("oal", "Cleaning out source {0} which finalized in another thread.", handle);
+                Logger.DebugS("clyde.oal", "Cleaning out source {0} which finalized in another thread.", handle);
                 AL.DeleteSource(handle);
                 _checkAlError();
                 _audioSources.Remove(handle);
@@ -150,7 +150,7 @@ namespace Robust.Client.Graphics.Clyde
             // Clear out finalized buffered audio sources.
             while (_bufferedSourceDisposeQueue.TryDequeue(out var handle))
             {
-                Logger.DebugS("oal", "Cleaning out buffered source {0} which finalized in another thread.", handle);
+                Logger.DebugS("clyde.oal", "Cleaning out buffered source {0} which finalized in another thread.", handle);
                 AL.DeleteSource((int) handle);
                 _checkAlError();
                 _bufferedAudioSources.Remove(handle);
@@ -196,7 +196,7 @@ namespace Robust.Client.Graphics.Clyde
             var error = Alc.GetError(device);
             if (error != AlcError.NoError)
             {
-                Logger.ErrorS("oal", "[{0}:{1}] ALC error: {2}", callerMember, callerLineNumber, error);
+                Logger.ErrorS("clyde.oal", "[{0}:{1}] ALC error: {2}", callerMember, callerLineNumber, error);
             }
         }
 
@@ -206,7 +206,7 @@ namespace Robust.Client.Graphics.Clyde
             var error = AL.GetError();
             if (error != ALError.NoError)
             {
-                Logger.ErrorS("oal", "[{0}:{1}] AL error: {2}", callerMember, callerLineNumber, error);
+                Logger.ErrorS("clyde.oal", "[{0}:{1}] AL error: {2}", callerMember, callerLineNumber, error);
             }
         }
 
@@ -421,7 +421,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (_sourceStream.ChannelCount > 1 && !_didPositionWarning)
                 {
                     _didPositionWarning = true;
-                    Logger.WarningS("oal",
+                    Logger.WarningS("clyde.oal",
                         "Attempting to set position on audio source with multiple audio channels! Stream: '{0}'",
                         _sourceStream.Name);
                 }

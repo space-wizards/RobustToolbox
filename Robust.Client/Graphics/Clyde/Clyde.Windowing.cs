@@ -173,7 +173,7 @@ namespace Robust.Client.Graphics.Clyde
                 .ToList();
 
             Span<GCHandle> handles = stackalloc GCHandle[images.Count];
-            Span<GlfwImage> glfwImages = stackalloc GlfwImage[images.Count];
+            Span<GlfwImage> glfwImages = new GlfwImage[images.Count];
 
             for (var i = 0; i < images.Count; i++)
             {

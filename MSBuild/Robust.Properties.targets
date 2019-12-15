@@ -26,17 +26,6 @@
     <TargetOS Condition="'$(TargetOS)' == ''">$(ActualOS)</TargetOS>
     <Python>python3</Python>
     <Python Condition="'$(ActualOS)' == 'Windows'">py -3</Python>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
   </PropertyGroup>
-  <Choose>
-    <When Condition="'$(UseNetCore)' == 'true'">
-      <PropertyGroup>
-        <TargetFramework>netcoreapp3.0</TargetFramework>
-      </PropertyGroup>
-    </When>
-    <Otherwise>
-      <PropertyGroup>
-        <TargetFramework>net472</TargetFramework>
-      </PropertyGroup>
-    </Otherwise>
-  </Choose>
 </Project>

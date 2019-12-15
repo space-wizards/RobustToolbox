@@ -26,8 +26,5 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup>
-    <Reference Condition="'$(UseNetCore)' != 'true'" Include="System.Net.Http" />
-  </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
 </Project>

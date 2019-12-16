@@ -9,7 +9,8 @@ namespace Robust.Shared.ContentPack
     /// <inheritdoc />
     internal class WritableDirProvider : IWritableDirProvider
     {
-        private readonly string _rootDirString;
+        /// <inheritdoc />
+        public string RootDir { get; }
 
         /// <summary>
         /// Constructs an instance of <see cref="WritableDirProvider"/>.
@@ -18,7 +19,7 @@ namespace Robust.Shared.ContentPack
         public WritableDirProvider(DirectoryInfo rootDir)
         {
             // FullName does not have a trailing separator, and we MUST have a separator.
-            _rootDirString = rootDir.FullName + Path.DirectorySeparatorChar.ToString();
+            RootDir = rootDir.FullName + Path.DirectorySeparatorChar.ToString();
         }
 
         #region File Access
@@ -54,11 +55,11 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public (IEnumerable<ResourcePath> files, IEnumerable<ResourcePath> directories) Find(string pattern, bool recursive = true)
         {
-            var rootLen = _rootDirString.Length - 1;
+            var rootLen = RootDir.Length - 1;
             var option = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
 
-            var files = Directory.GetFiles(_rootDirString, pattern, option);
-            var dirs = Directory.GetDirectories(_rootDirString, pattern, option);
+            var files = Directory.GetFiles(RootDir, pattern, option);
+            var dirs = Directory.GetDirectories(RootDir, pattern, option);
 
             var resFiles = new List<ResourcePath>(files.Length);
             var resDirs = new List<ResourcePath>(dirs.Length);
@@ -101,7 +102,7 @@ namespace Robust.Shared.ContentPack
 
         private string GetFullPath(ResourcePath path)
         {
-            return GetFullPath(_rootDirString, path);
+            return GetFullPath(RootDir, path);
         }
 
         private static string GetFullPath(string root, ResourcePath path)

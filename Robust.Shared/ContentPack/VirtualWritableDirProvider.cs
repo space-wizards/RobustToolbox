@@ -16,6 +16,9 @@ namespace Robust.Shared.ContentPack
         // Just a simple tree. No need to over complicate this.
         private readonly DirectoryNode _rootDirectoryNode = new DirectoryNode();
 
+        /// <inheritdoc />
+        public string RootDir => null;
+
         public void CreateDir(ResourcePath path)
         {
             if (!path.IsRooted)

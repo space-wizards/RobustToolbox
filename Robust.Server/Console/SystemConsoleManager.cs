@@ -43,6 +43,11 @@ namespace Robust.Server.Console
 
         public void Update()
         {
+            if (Con.IsInputRedirected)
+            {
+                return;
+            }
+
             // Process keyboard input
             while (Con.KeyAvailable)
             {

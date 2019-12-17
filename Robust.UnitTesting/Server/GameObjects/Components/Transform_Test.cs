@@ -98,7 +98,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             childTrans.DetachParent();
 
-            Assert.That(childTrans.GridPosition, Is.EqualTo(oldLpos));
+            // the gridId won't match, because we just detached from the grid entity
+            Assert.That(childTrans.GridPosition.Position, Is.EqualTo(oldLpos.Position));
             Assert.That(childTrans.WorldPosition, Is.EqualTo(oldWpos));
         }
 

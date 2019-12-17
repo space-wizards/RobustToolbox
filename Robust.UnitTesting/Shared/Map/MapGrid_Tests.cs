@@ -1,15 +1,22 @@
 ﻿using System.Linq;
 using Moq;
 using NUnit.Framework;
+using Robust.Server.GameObjects;
+using Robust.Server.Interfaces.Timing;
+using Robust.Server.Timing;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 using MapGrid = Robust.Shared.Map.MapGrid;
 
 namespace Robust.UnitTesting.Shared.Map
 {
-    [TestFixture, Parallelizable, TestOf(typeof(MapGrid))]
-    class MapGrid_Tests
+    [TestFixture, TestOf(typeof(MapGrid))]
+    class MapGrid_Tests : RobustUnitTest
     {
         [Test]
         public void GetTileRefCoords()
@@ -21,7 +28,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             Assert.That(grid.ChunkCount, Is.EqualTo(1));
             Assert.That(grid.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new MapIndices(-2, -1)));
-            Assert.That(result, Is.EqualTo(new TileRef(new MapId(3), new GridId(1), new MapIndices(-9,-1), new Tile(1, 2))));
+            Assert.That(result, Is.EqualTo(new TileRef(new MapId(5), new GridId(1), new MapIndices(-9,-1), new Tile(1, 2))));
         }
 
         /// <summary>
@@ -113,21 +120,29 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(foundTile, Is.True);
             Assert.That(grid.ChunkCount, Is.EqualTo(1));
             Assert.That(grid.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new MapIndices(-2, -1)));
-            Assert.That(tileRef, Is.EqualTo(new TileRef(new MapId(3), new GridId(1), new MapIndices(-9, -1), new Tile(1, 2))));
+            Assert.That(tileRef, Is.EqualTo(new TileRef(new MapId(5), new GridId(1), new MapIndices(-9, -1), new Tile(1, 2))));
         }
         
         private static IMapGridInternal MapGridFactory(GridId id)
         {
-            var timing = new Mock<IGameTiming>();
-            var mapMan = new Mock<IMapManagerInternal>();
-            mapMan.SetupGet(p => p.GameTiming).Returns(timing.Object);
+            var entMan = (ServerEntityManager)IoCManager.Resolve<IEntityManager>();
+            entMan.CullDeletionHistory(GameTick.MaxValue);
 
-            var newGrid = new MapGrid(mapMan.Object, id, 8, 1, new MapId(3))
-            {
-                WorldPosition = new Vector2(3, 5)
-            };
+            var mapId = new MapId(5);
+            var mapMan = IoCManager.Resolve<IMapManager>();
 
-            return newGrid;
+            if(mapMan.MapExists(mapId))
+                mapMan.DeleteMap(mapId);
+
+            mapMan.CreateMap(mapId);
+
+            if(mapMan.GridExists(id))
+                mapMan.DeleteGrid(id);
+
+            var newGrid = mapMan.CreateGrid(mapId, id, 8, 1);
+            newGrid.WorldPosition = new Vector2(3, 5);
+
+            return (IMapGridInternal)newGrid;
         }
     }
 }

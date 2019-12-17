@@ -126,6 +126,12 @@ namespace Robust.Shared.Map
             _maps.Remove(mapID);
             _mapCreationTick.Remove(mapID);
 
+            var ent = _mapEntities[mapID];
+            if(_entityManager.TryGetEntity(ent, out var mapEnt))
+                mapEnt.Delete();
+
+            _mapEntities.Remove(mapID);
+
             if (_netManager.IsClient)
                 return;
 
@@ -252,7 +258,7 @@ namespace Robust.Shared.Map
 
             if (GridExists(actualID))
             {
-                throw new InvalidOperationException($"A map with ID {actualID} already exists");
+                throw new InvalidOperationException($"A grid with ID {actualID} already exists");
             }
 
             if (HighestGridID.Value < actualID.Value)
@@ -358,7 +364,10 @@ namespace Robust.Shared.Map
 
             if (_defaultGrids.ContainsKey(grid.ParentMapId))
                 _defaultGrids.Remove(grid.ParentMapId);
-            
+
+            if(_entityManager.TryGetEntity(grid.GridEntity, out var gridEnt))
+                gridEnt.Delete();
+
             OnGridRemoved?.Invoke(gridID);
 
             if (_netManager.IsServer)

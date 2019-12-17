@@ -68,10 +68,10 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var parentTrans = parent.Transform;
             var childTrans = child.Transform;
 
-            var compState = new TransformComponent.TransformComponentState(new Vector2(5, 5), GridB.Index, new Angle(0), EntityUid.Invalid);
+            var compState = new TransformComponent.TransformComponentState(new Vector2(5, 5), GridB.Index, new Angle(0), GridB.GridEntity);
             parentTrans.HandleComponentState(compState, null);
 
-            compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), GridB.Index, new Angle(0), EntityUid.Invalid);
+            compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), GridB.Index, new Angle(0), GridB.GridEntity);
             childTrans.HandleComponentState(compState, null);
             // World pos should be 6, 6 now.
 
@@ -105,7 +105,7 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var node2Trans = node2.Transform;
             var node3Trans = node3.Transform;
 
-            var compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), GridB.Index, Angle.FromDegrees(135), EntityUid.Invalid);
+            var compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), GridB.Index, Angle.FromDegrees(135), GridB.GridEntity);
             node1Trans.HandleComponentState(compState, null);
             compState = new TransformComponent.TransformComponentState(new Vector2(1, 1), GridB.Index, Angle.FromDegrees(45), node1.Uid);
             node2Trans.HandleComponentState(compState, null);

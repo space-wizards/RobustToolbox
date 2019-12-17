@@ -401,6 +401,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (!TryGetComponent(kvStates.Key, out var component))
                 {
+                    DebugTools.Assert("Component does not exist for state.");
                     continue;
                 }
 
